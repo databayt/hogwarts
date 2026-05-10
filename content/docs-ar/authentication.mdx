@@ -1,0 +1,145 @@
+---
+title: المصادقة
+description: مصادقة متعدّدة المستأجرين مبنية على Auth.js v5 — جلسات، توجيهات، حماية المسارات، وحلّ المستأجر.
+---
+
+تعمل المصادقة على Next.js App Router مع Auth.js (NextAuth v5). يصادق المستخدمون عبر OAuth (Google، Facebook) أو بيانات الاعتماد، مع 2FA اختياري، تحقق من البريد، وإعادة تعيين كلمة المرور. الجلسات هي JWTs محصورة عبر cookies على `.databayt.org` لتسجيل دخول موحَّد عبر النطاقات الفرعية.
+
+لتفاصيل الموفّر راجع [credentials](/en/docs/credentials)، [oauth](/en/docs/oauth)، و[flow diagrams](/en/docs/flow-diagrams).
+
+## نقاط الدخول
+
+| #   | المدخل            | المُحفِّز                           | إعادة التوجيه بعد الدخول                                                                   |
+| --- | ----------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1   | رأس التسويق       | أيقونة الدخول على `ed.databayt.org` | `DEVELOPER` → `/dashboard`، مستخدم مدرسة → `{school}.databayt.org/dashboard`، `USER` → `/` |
+| 2   | Get Started       | CTA تسويقي                          | `/login?callbackUrl=/onboarding` ثم معالج بـ 15 خطوة                                       |
+| 3   | نطاق فرعي للمدرسة | `{school}.databayt.org/login`       | مثل #1، محصور بالمدرسة                                                                     |
+| 4   | مسار محمي         | URL مباشر                           | `/login?callbackUrl={original_url}`، يعود بعد المصادقة                                     |
+
+دور `USER` يُعاد توجيهه إلى `/{locale}` (الصفحة الرئيسية)، لا إلى `/onboarding`. الـ onboarding متاح فقط عبر `callbackUrl` صريح.
+
+## أولوية إعادة التوجيه
+
+سلسلة القرار في `src/auth.ts` redirect callback و`src/components/auth/login/action.ts`:
+
+1. Callback URL — cookie / URL params / baseUrl params (محفوظ عبر OAuth بـ httpOnly cookie)
+2. مسار نسبي صريح من `signIn({ redirectTo })`
+3. كشف النطاق الفرعي — على نطاق فرعي لمدرسة → لوحة تلك المدرسة
+4. توجيه ذكي — فك JWT، البحث عن المدرسة، التوجيه إلى لوحة المدرسة
+5. احتياطي — لوحة النطاق الرئيسي
+
+## الجلسة وJWT
+
+```ts
+// JWT (jwt callback)
+token = {
+  id: string
+  role: UserRole
+  schoolId: string | null
+  provider: string
+  providerAccountId: string
+  sessionToken: string
+  updatedAt: number
+  hash: string
+  exp: number
+}
+
+// Session (session callback)
+session.user = {
+  id: string
+  email: string
+  role: UserRole          // الدور الفعّال — preview إن كان نشطاً
+  schoolId: string | null
+  isPreviewMode: boolean
+}
+```
+
+إعدادات الجلسة: `strategy: "jwt"`، `maxAge: 24 * 60 * 60` (24 ساعة)، `updateAge: 5 * 60` (5 دقائق في الإنتاج).
+
+## سياق المستأجر
+
+```ts
+import { getTenantContext } from "@/lib/tenant-context"
+
+const { schoolId, requestId, role, isPlatformAdmin } = await getTenantContext()
+// الأولوية: cookie الانتحال → header x-subdomain → الجلسة
+```
+
+ذاكرة تخزين مؤقت بطبقتين للنطاق الفرعي → `schoolId`: Upstash Redis (5 دقائق، مشتركة) → in-memory Map (دقيقة واحدة، حد أقصى 100 إدخال، احتياطي لكل instance). Redis اختياري. التفاصيل الكاملة في [تعدد المستأجرين](/ar/docs/multi-tenancy).
+
+## الأدوار
+
+```ts
+enum UserRole {
+  DEVELOPER   // 8 - مدير منصة (عابر للمدارس)
+  ADMIN       // 7 - مدير مدرسة
+  TEACHER     // 6 - كادر تدريسي
+  ACCOUNTANT  // 5 - كادر مالي
+  STAFF       // 4 - كادر عام
+  GUARDIAN    // 3 - ولي أمر
+  STUDENT     // 2 - طالب مسجَّل
+  USER        // 1 - افتراضي
+}
+```
+
+ثمانية أدوار في المجموع. الهرمية في `src/lib/school-access.ts`؛ يجب أن تبقى متزامنة مع `roleRoutes` في `src/routes.ts`. راجع [authorization](/en/docs/authorization) لفحوصات الصلاحيات على مستوى الميزة.
+
+## حماية المسارات
+
+Edge middleware يفك JWT، يفحص `roleRoutes`، يكتشف النطاق الفرعي (نطاق مخصّص → بحث في Redis)، يضبط header `x-subdomain` للمستهلكين اللاحقين.
+
+```ts
+// Server component
+import { auth } from "@/auth"
+
+export default async function ProtectedPage() {
+  const session = await auth()
+  if (!session) redirect("/login")
+  return <Dashboard schoolId={session.user.schoolId} />
+}
+```
+
+```tsx
+"use client"
+
+import { RoleGate } from "@/components/auth/role-gate"
+import { useCurrentRole } from "@/components/auth/use-current-role"
+import { useCurrentUser } from "@/components/auth/use-current-user"
+
+;<RoleGate allowedRole={UserRole.ADMIN}>
+  <AdminPanel />
+</RoleGate>
+```
+
+## مسارات التسجيل
+
+| الخيار        | الطريقة                                                         | الحالة |
+| ------------- | --------------------------------------------------------------- | ------ |
+| تسجيل ذاتي    | OAuth (Google/Facebook)                                         | يعمل   |
+| إنشاء بالجملة | المسؤول يستورد CSV بأدوار مُسبقة                                | يعمل   |
+| رموز الانضمام | رموز من 6 أحرف (`ABCDEFGHJKMNPQRSTUVWXYZ2345679`) — 481M تركيبة | يعمل   |
+| الدعوات       | روابط دعوة بريدية مع الدور                                      | جزئي   |
+
+مفتاح التسجيل الذاتي: `SchoolBranding.allowSelfEnrollment` — التفعيل يعطي انضماماً فورياً، التعطيل ينشئ `MembershipRequest` معلَّقاً.
+
+## وضع المعاينة
+
+يتيح للمسؤولين رؤية الواجهة كدور آخر دون تغيير دورهم الفعلي. يستخدم cookies `preview-mode` و`preview-role`؛ session callback يطغى على الدور ويضبط `isPreviewMode: true`.
+
+| Hook               | يعيد                                            |
+| ------------------ | ----------------------------------------------- |
+| `useEffectiveRole` | `UserRole` — preview إن كان نشطاً، وإلا الفعلي  |
+| `useIsPreviewMode` | `boolean`                                       |
+| `useRoleInfo`      | `{ actual, preview, effective, isPreviewMode }` |
+
+## الانتحال
+
+يمكن لـ `DEVELOPER`s انتحال سياقات المدارس لأغراض التصحيح. cookie `impersonate_schoolId` هو `httpOnly`، `secure`، بـ `maxAge` ساعة واحدة. أحداث `IMPERSONATION_STARTED` و`IMPERSONATION_STOPPED` تُسجَّل في التدقيق. الانتحال له الأولوية على كل طرق حلّ المستأجر الأخرى.
+
+## انظر أيضاً
+
+- [Credentials](/en/docs/credentials)
+- [OAuth](/en/docs/oauth) — موفّرون، محوّل متعدّد المستأجرين، cookies عبر النطاقات الفرعية
+- [Flow diagrams](/en/docs/flow-diagrams)
+- [Onboarding](/ar/docs/onboarding)
+- [تعدد المستأجرين](/ar/docs/multi-tenancy)

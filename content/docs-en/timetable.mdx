@@ -1,42 +1,27 @@
 ---
-title: "Timetable"
-description: "Complete guide to the timetable module - structure catalog, role-based views, slot management, AI generation, conflict detection, substitutions, templates, analytics, and export"
+title: Timetable
+description: School schedule management — structure catalog, role-based views, slot assignment, AI generation, conflict detection, substitutions, templates, analytics, and export.
 ---
 
-## Overview
+The timetable module handles school schedules end-to-end: choose a structure during onboarding, configure working days and periods, assign weekly slots, detect conflicts, generate via AI, export to PDF, and serve role-specific views. All operations are scoped by `schoolId`.
 
-The Timetable module handles school schedule management end-to-end: choosing a timetable structure during onboarding, configuring working days and periods, assigning weekly slots, detecting conflicts, managing substitutions, AI-powered generation, PDF export, and role-specific views. All operations are tenant-scoped by `schoolId`.
+## Permissions
 
-### Module Flow
+| Role       | Access            | Modify | Export | Conflicts | Settings |
+| ---------- | ----------------- | :----: | :----: | :-------: | :------: |
+| DEVELOPER  | Full              |   Y    |   Y    |     Y     |    Y     |
+| ADMIN      | Full              |   Y    |   Y    |     Y     |    Y     |
+| ACCOUNTANT | Read (admin grid) |   —    |   —    |     —     |    —     |
+| STAFF      | Read (admin grid) |   —    |   —    |     —     |    —     |
+| TEACHER    | Read + own        |   —    |   Y    |     —     |    —     |
+| STUDENT    | Read              |   —    |   Y    |     —     |    —     |
+| GUARDIAN   | Read              |   —    |   —    |     —     |    —     |
 
-### Permissions
+## Routes
 
-Role-based access via `permissions-config.ts`:
+`layout.tsx` renders role-based tabs via `PageNav`. Admin tabs: Overview, Analytics, Generate, Conflicts, Settings. Non-admin tabs: Today, Full Week.
 
-| Role       | Access Level           | Can Modify | Can Export | Can Manage Conflicts | Can Configure Settings |
-| ---------- | ---------------------- | ---------- | ---------- | -------------------- | ---------------------- |
-| DEVELOPER  | Full                   | Yes        | Yes        | Yes                  | Yes                    |
-| ADMIN      | Full                   | Yes        | Yes        | Yes                  | Yes                    |
-| ACCOUNTANT | Read Only (Admin grid) | No         | No         | No                   | No                     |
-| STAFF      | Read Only (Admin grid) | No         | No         | No                   | No                     |
-| TEACHER    | Read + Own             | No         | Yes        | No                   | No                     |
-| STUDENT    | Read Only              | No         | Yes        | No                   | No                     |
-| GUARDIAN   | Read Only              | No         | No         | No                   | No                     |
-
-All operations are tenant-scoped by `schoolId`.
-
-## Routes and Navigation
-
-### Layout Tabs
-
-The timetable `layout.tsx` renders role-based tabs via `PageNav`:
-
-- **Admin tabs**: Overview, Analytics, Generate, Conflicts, Settings
-- **Non-admin tabs**: Today, Full Week
-
-### Route Map
-
-| Route                   | Page Component              | Access Roles                 |
+| Route                   | Component                   | Access                       |
 | ----------------------- | --------------------------- | ---------------------------- |
 | `/timetable`            | `TimetableContent`          | ADMIN, TEACHER, DEVELOPER    |
 | `/timetable/full`       | `TimetableContent` (full)   | ADMIN, TEACHER, DEVELOPER    |
@@ -48,49 +33,33 @@ The timetable `layout.tsx` renders role-based tabs via `PageNav`:
 | `/timetable/templates`  | `TemplatesContent`          | ADMIN, DEVELOPER             |
 | `/timetable/analytics`  | `TimetableAnalyticsContent` | ADMIN, DEVELOPER             |
 | `/timetable/settings`   | `TimetableSettingsContent`  | ADMIN, DEVELOPER             |
-| `/my-timetable`         | (Student/Guardian route)    | STUDENT, GUARDIAN, DEVELOPER |
+| `/my-timetable`         | (student / guardian)        | STUDENT, GUARDIAN, DEVELOPER |
 
-Every route has `error.tsx` and `loading.tsx` boundaries.
+Every route has `error.tsx` and `loading.tsx`. The `by-class`, `by-teacher`, `by-room`, and `templates` routes are **orphaned** — accessible by URL only, not linked from layout tabs or sidebar.
 
-**Orphaned routes**: The `by-class`, `by-teacher`, `by-room`, and `templates` routes have page components but are **not linked** in the layout tabs or sidebar navigation. They're only accessible via direct URL.
+Sidebar entry: `href: "/timetable"`, icon `clock`, visible to ADMIN / TEACHER / STUDENT.
 
-### Sidebar
+## Role-based views
 
-Timetable appears in the platform sidebar for ADMIN, TEACHER, and STUDENT roles with `href: "/timetable"` and icon `clock`.
+`content-production.tsx` wraps `RoleRouter` in `SessionProvider`. `RoleRouter` calls `getPersonalizedTimetable()` to determine `viewType` + `editable` and renders the matching view.
 
----
+| Role       | View           | Data                                           | Sees                                              |
+| ---------- | -------------- | ---------------------------------------------- | ------------------------------------------------- |
+| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room / teacher grid, editable slots, slot editor  |
+| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                 |
+| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload, current / next class |
+| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | All enrolled subjects (grade-based), PDF export   |
+| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + each child's enrolled classes    |
+| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)   |
+| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only                        |
 
-## Role-Based Experience
+Routing: role → `viewType` switch + `editable` flag (default `true`); ACCOUNTANT / STAFF get `editable: false`. `AdminView` passes `editable` to `SimpleGrid` and conditionally disables `onSlotClick`.
 
-The production entry point is `content-production.tsx` which wraps `RoleRouter` in a `SessionProvider`. The `RoleRouter` calls `getPersonalizedTimetable()` to determine `viewType` and routes to the appropriate view.
+Known bugs: admin views lack a class / grade filter mode; teacher view has no export button despite `canExport` permission.
 
-### Data Flow Per Role
+## Student grade resolution
 
-| Role       | View Component | Data Function                                  | What They See                                         | Known Bugs                                        |
-| ---------- | -------------- | ---------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------- |
-| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room/Teacher grid, editable slots, slot editor        | No class/grade filter mode                        |
-| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                     | Same                                              |
-| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload stats, current/next class | No export button (despite `canExport` permission) |
-| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | All enrolled subjects (grade-based), PDF export       | None                                              |
-| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + all enrolled classes per child       | None                                              |
-| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)       | None                                              |
-| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)       | None                                              |
-
-### How Routing Works
-
-1. `getPersonalizedTimetable()` reads the user's role from session
-2. Role → `viewType` mapping in a switch statement, plus `editable` flag (default `true`)
-3. ACCOUNTANT and STAFF get `viewType = "admin"` with `editable = false`
-4. `RoleRouter` renders the matching view component, passing `editable` to `AdminView`
-5. `AdminView` passes `editable` prop to `SimpleGrid` and conditionally disables `onSlotClick`
-
----
-
-## Grade-Based Filtering
-
-### Student Grade Resolution Chain
-
-The student view resolves a student's timetable through enrollment records:
+Student timetable resolves through enrollment:
 
 ```
 User (session)
@@ -100,74 +69,51 @@ User (session)
         → Timetable (db.timetable.findMany where classId IN classIds)
 ```
 
-Grade name comes from a separate chain:
+Grade name: `Student → StudentYearLevel → YearLevel.levelName`.
 
-````
-Student → StudentYearLevel → YearLevel.levelName
+## Onboarding schedule step
 
----
+Inserted between Capacity (order 5) and Branding (order 6).
 
-## Onboarding: Schedule Step
+```
+1. Read school country, schoolType, schoolLevel
+2. getRecommendedStructures(...) — show top recommendations + alternatives
+3. User picks (auto-saves to school.system) or skips
+4. "Next" always enabled — step is optional
+```
 
-The schedule step is inserted between **Capacity** (order 5) and **Branding** (order 6) in the onboarding flow.
+Each structure card shows name, description, period count, time range, working days, color-coded timeline (blue = class, amber = break, green = lunch), "Recommended" badge.
 
-### Behavior
+| File                                                                         | Purpose                                           |
+| ---------------------------------------------------------------------------- | ------------------------------------------------- |
+| `src/app/[lang]/onboarding/[id]/schedule/page.tsx`                           | Route                                             |
+| `src/components/onboarding/schedule/content.tsx`                             | Step UI                                           |
+| `src/components/onboarding/schedule/structure-preview.tsx`                   | Visual timeline                                   |
+| `src/components/onboarding/schedule/actions.ts`                              | `getSchoolScheduleData()`, `saveScheduleChoice()` |
+| `src/components/onboarding/schedule/{config,validation,config-row}.{ts,tsx}` | Constants, Zod schema, row UI                     |
 
-1. Reads the school's `country`, `schoolType`, and `schoolLevel` from saved data.
-2. Calls `getRecommendedStructures()` with those inputs.
-3. Shows recommended structures at top with visual timeline preview, alternatives below.
-4. User picks one (auto-saves to `school.system` field) or skips to customize later.
-5. The step is **optional** - the "Next" button is always enabled.
+## Applying a structure
 
-### Structure Preview Component
-
-Each structure card shows:
-
-- Name and description
-- Period count, time range, working days
-- Color-coded visual timeline bar (blue = class, amber = break, green = lunch)
-- "Recommended" badge on the default structure
-
-### Key Files
-
-| File                                                       | Purpose                                           |
-| ---------------------------------------------------------- | ------------------------------------------------- |
-| `src/app/[lang]/onboarding/[id]/schedule/page.tsx`         | Route page                                        |
-| `src/components/onboarding/schedule/content.tsx`           | Main step UI                                      |
-| `src/components/onboarding/schedule/structure-preview.tsx` | Visual timeline component                         |
-| `src/components/onboarding/schedule/actions.ts`            | `getSchoolScheduleData()`, `saveScheduleChoice()` |
-| `src/components/onboarding/schedule/config.ts`             | Step constants                                    |
-| `src/components/onboarding/schedule/validation.ts`         | Zod schema                                        |
-| `src/components/onboarding/schedule/config-row.tsx`        | Config row display component                      |
-
----
-
-## Applying a Structure
-
-The `applyTimetableStructure()` server action creates Period records from a structure definition and updates the school's week configuration.
-
-### What It Does
-
-1. Validates admin access and tenant context.
-2. Looks up the structure by slug (supports legacy template names via `LEGACY_TEMPLATE_MAP`).
-3. Optionally deletes existing periods for the year (`replaceExisting: true`).
-4. Creates `Period` records for each entry in the structure (class, break, and lunch periods).
-5. Upserts `SchoolWeekConfig` with the structure's working days and lunch position.
-6. Logs the action for audit trail.
-
-### Usage
+`applyTimetableStructure()` creates Period records and updates `SchoolWeekConfig`.
 
 ```typescript
-// From timetable settings (replacing existing periods)
 await applyTimetableStructure({
   yearId: "clx...",
   structureSlug: "sd-gov-default",
   replaceExisting: true,
 })
 
-// Legacy template names still work
+// Legacy template names map automatically via LEGACY_TEMPLATE_MAP
 await applyTimetableStructure({
   yearId: "clx...",
-  structureSlug: "standard_8", // mapped to sd-gov-default
+  structureSlug: "standard_8", // → sd-gov-default
 })
-````
+```
+
+Steps: validate admin + tenant, look up structure (legacy map), optionally delete existing periods (`replaceExisting`), create `Period` rows for each entry (class, break, lunch), upsert `SchoolWeekConfig` with working days + lunch position, log audit entry.
+
+## See also
+
+- [Onboarding](/docs/onboarding) — schedule step
+- [Multi-tenancy](/docs/multi-tenancy) — tenant scoping
+- [Attendance](/docs/attendance) — period auto-detection consumer

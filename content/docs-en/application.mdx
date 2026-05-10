@@ -1,34 +1,38 @@
 ---
-title: "Application"
-description: "Applicant-facing admission flow - campaign selection, 6-step wizard, session management, payment, status tracking, tour booking, and inquiry form"
+title: Application
+description: Public applicant flow — campaign selection, 6-step wizard, session management, payment, status tracking, tour booking, and inquiry capture.
 ---
 
-## Pipeline Overview (Applicant Side)
+The applicant-facing portal runs at `school.databayt.org`. After choosing a campaign, the applicant enters a 6-step wizard with auto-save (every 30 s + localStorage), submits, optionally pays, and tracks status via OTP or login.
 
-## Application Flow (A to Z)
+## Steps
 
-This section walks through the entire application flow from the applicant's first click to submission and payment.
+```
+1. Visit /admissions
+2. Choose campaign / start application
+3. Overview — 3 phases
+4. Wizard — 6 steps
+5. Submit
+6. Payment (if required)
+7. Success page
+```
 
-### Step 1: Applicant Visits the School Site
+## Wizard
 
-The applicant navigates to the school's public site at `school.databayt.org` and clicks **Admissions** in the navigation. This leads to the admissions info page with a hero section, process overview, and a **Start Application** CTA.
+Single shared `FormFooter` with three progress bars (one per phase). 30 s auto-save + localStorage backup.
 
-**Route:** `/{lang}/admissions`
+| #   | Step        | Required fields                                                                      | Route                                  |
+| --- | ----------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| 1   | Attachments | All optional (photo, degree, transcript, ID, resume, other) — triggers AI extraction | `/{lang}/application/{id}/attachments` |
+| 2   | Personal    | name, dateOfBirth, gender, nationality                                               | `/{lang}/application/{id}/personal`    |
+| 3   | Contact     | email, phone (international format)                                                  | `/{lang}/application/{id}/contact`     |
+| 4   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                 | `/{lang}/application/{id}/location`    |
+| 5   | Guardian    | fatherName, motherName (tabbed)                                                      | `/{lang}/application/{id}/guardian`    |
+| 6   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                             | `/{lang}/application/{id}/academic`    |
 
-### Step 2: Campaign Selection
+The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`. Academic is the final step — the button reads "Submit Application".
 
-The applicant is taken to the application landing page. Two options are presented:
-
-- **Start from scratch** — begin a new application
-- **Import from profile** — auto-fill from documents or LinkedIn (same flow, pre-populated via AI extraction)
-
-Both link to the overview page. If the applicant is logged in, they can also see saved draft applications.
-
-**Route:** `/{lang}/application`
-
-### Step 3: Overview Page
-
-After selecting a campaign, the applicant sees an overview of the 3 phases:
+### Phase grouping
 
 | Phase | Label              | Steps                 |
 | ----- | ------------------ | --------------------- |
@@ -36,400 +40,138 @@ After selecting a campaign, the applicant sees an overview of the 3 phases:
 | 2     | Details            | Contact, Location     |
 | 3     | Family & Education | Guardian, Academic    |
 
-Phase descriptions:
+## Submit flow
 
-- Phase 1: "Provide your personal and contact details"
-- Phase 2: "Add guardian info and academic background"
-- Phase 3: "Upload documents and review your application"
-
-Clicking **Get Started** initializes a session and enters the wizard.
-
-**Route:** `/{lang}/application/overview?id={campaignId}`
-
-### Step 4: The 6-Step Wizard
-
-The wizard uses a shared `FormFooter` with 3 progress bars (one per phase). Each step auto-saves to the server every 30 seconds and persists to localStorage as a backup.
-
-#### Step 1: Attachments (Optional)
-
-Upload documents via drag-and-drop cards. All fields are optional — the applicant can skip this step entirely.
-
-| Slot       | Type                     |
-| ---------- | ------------------------ |
-| Photo      | Avatar (profile picture) |
-| Degree     | Document                 |
-| Transcript | Document                 |
-| ID         | Document                 |
-| Resume     | Document                 |
-| Other      | Document                 |
-
-Documents uploaded here trigger AI extraction — extracted data auto-fills subsequent steps (name, contact, academic info).
-
-**Route:** `/{lang}/application/{campaignId}/attachments`
-
-#### Step 2: Personal Information (Required)
-
-The name field format depends on the school's `nameFormat` setting — either a single "Full Name" field or separate first/last name fields.
-
-| Field         | Required | Validation                            |
-| ------------- | -------- | ------------------------------------- |
-| Full Name     | Yes      | 2-200 chars (when nameFormat=full)    |
-| First Name    | Yes      | 2-50 chars (when nameFormat=parts)    |
-| Last Name     | Yes      | 2-50 chars (when nameFormat=parts)    |
-| Date of Birth | Yes      | Date picker (year range 1990-now)     |
-| Gender        | Yes      | MALE / FEMALE                         |
-| Nationality   | Yes      | Country selector with flags           |
-| Category      | No       | General / Special Needs / Scholarship |
-
-**Next enabled when:** name, dateOfBirth, gender, and nationality are all filled.
-
-**Route:** `/{lang}/application/{campaignId}/personal`
-
-#### Step 3: Contact Information (Required)
-
-| Field           | Required | Validation                                    |
-| --------------- | -------- | --------------------------------------------- |
-| Email           | Yes      | Valid email, max 100                          |
-| Phone           | Yes      | International format with country code picker |
-| Alternate Phone | No       | Same format                                   |
-
-**Next enabled when:** email and phone are filled.
-
-**Route:** `/{lang}/application/{campaignId}/contact`
-
-#### Step 4: Location (Required)
-
-If `NEXT_PUBLIC_MAPBOX_TOKEN` is configured, shows an interactive map with geocoding search. The applicant searches for an address or taps the map to place a pin. The system reverse-geocodes to fill address fields automatically.
-
-If Mapbox is not configured, falls back to manual input fields.
-
-| Field       | Required | Validation       |
-| ----------- | -------- | ---------------- |
-| Address     | Yes      | 1-200 chars      |
-| City        | Yes      | 1-100 chars      |
-| State       | Yes      | 1-100 chars      |
-| Postal Code | No       | Max 20 chars     |
-| Country     | Yes      | Country selector |
-
-**Next enabled when:** address, city, state, country are all filled.
-
-**Route:** `/{lang}/application/{campaignId}/location`
-
-#### Step 5: Guardian Information (Required)
-
-Uses a tabbed interface with **Father** and **Mother** tabs.
-
-**Father tab:**
-
-| Field         | Required         |
-| ------------- | ---------------- |
-| Father's Name | Yes (2-50 chars) |
-| Occupation    | No               |
-| Phone         | No               |
-| Email         | No               |
-
-**Mother tab:**
-
-| Field         | Required         |
-| ------------- | ---------------- |
-| Mother's Name | Yes (2-50 chars) |
-| Occupation    | No               |
-| Phone         | No               |
-| Email         | No               |
-
-**Next enabled when:** fatherName and motherName are both filled.
-
-**Route:** `/{lang}/application/{campaignId}/guardian`
-
-#### Step 6: Academic Information (Final Step — Triggers Submit)
-
-Organized in sections: Previous Education, Applying For, Languages.
-
-| Field              | Required | Notes                               |
-| ------------------ | -------- | ----------------------------------- |
-| Previous School    | No       | Free text                           |
-| Previous Class     | No       | Free text                           |
-| Previous Marks     | No       | e.g., "450/500"                     |
-| Percentage         | No       | e.g., "90%"                         |
-| Applying for Class | **Yes**  | Select from 14 Arabic grade levels  |
-| Preferred Stream   | No       | Science / Arts / Commerce / General |
-| Second Language    | No       | Arabic / English / French / Quran   |
-| Third Language     | No       | Same options                        |
-| Achievements       | No       | Textarea (max 500 chars)            |
-
-**Available Grades:** KG1, KG2, Grade 1 through Grade 12 (14 levels, Arabic labels stored as values).
-
-The final button says **"Submit Application"** instead of "Next".
-
-**Route:** `/{lang}/application/{campaignId}/academic`
-
-### Step 5: Submit
-
-When the applicant clicks "Submit Application", the system:
-
-1. Saves the academic step data
-2. Checks completeness across all steps (name, email, phone, fatherName, motherName, applyingForClass)
-3. Flattens all step data into a single object
-4. Calls `submitApplicationAction()` which delegates to `submitApplication()`
-
-**Server-side submit flow:**
-
+```typescript
+// Server-side
 1. Resolve school from subdomain
-2. Validate with `createFullApplicationSchema()` (Zod)
+2. Validate via createFullApplicationSchema (Zod)
 3. Verify session belongs to this school
-4. Check campaign is still OPEN and not expired
-5. Check for duplicate email + campaign combination
-6. Generate unique application number (`APP-{year}-{random6}`)
+4. Check campaign OPEN and not expired
+5. Check duplicate email + campaign
+6. Generate application number `APP-{year}-{random6}`
 7. Generate access token (32 chars, 6-month expiry)
-8. Create `Application` record with status `SUBMITTED`
+8. Create Application (status: SUBMITTED)
 9. Mark session as converted
-10. Send confirmation email via Resend
-11. Check if payment is required (`campaign.applicationFee > 0`)
-
-**Post-submit routing:** After successful submission, the academic step checks `result.requiresPayment`:
-
-- **Payment required** → redirects to `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
-- **No payment** → redirects to `/{lang}/application/{applicationId}/success?number={applicationNumber}`
-
-### Step 6: Payment (If Required)
-
-If the campaign has an application fee, the applicant is redirected to the payment page.
-
-| Payment Method | Description                              |
-| -------------- | ---------------------------------------- |
-| Pay with Card  | Stripe Checkout redirect                 |
-| Pay at School  | Cash payment — shows reference number    |
-| Bank Transfer  | Shows bank details with reference number |
-
-After selecting cash or bank transfer, a confirmation card with the reference number is shown. A "Continue" button navigates to the success page.
-
-**Stripe Webhook:** When a card payment succeeds, the Stripe webhook (`/api/webhooks/stripe`) updates `applicationFeePaid = true` and dispatches a `fee_paid` notification (in-app + email) to the applicant confirming payment receipt.
-
-**Route:** `/{lang}/application/{applicationId}/payment?number={applicationNumber}`
-
-### Step 7: Success Page
-
-Displays:
-
-- Confetti celebration modal on first visit (animated via `success-modal.tsx`)
-- Application number in a card
-- Account credentials (email + default password) for the applicant to log in
-- **"Complete Payment" CTA** if payment is required but not yet received — links to the payment page
-- Payment status (paid/pending) with method-specific details
-- Next steps timeline (email confirmation → review → interview → decision)
-- Links to explore school and schedule a school tour
-
-**Route:** `/{lang}/application/{applicationId}/success?number={applicationNumber}`
-
-## Application Status Banner
-
-When a logged-in applicant visits the school site, a banner displays their application status at the top of the page. The banner is:
-
-- **Server-rendered** — queries the most recent non-draft application for the current user
-- **Client-interactive** — dismissible via localStorage per application
-- **Status-aware** — shows different messages and CTAs by status
-
-| Status          | Banner Message                                 | CTA                                   |
-| --------------- | ---------------------------------------------- | ------------------------------------- |
-| SUBMITTED       | "Application #\{number\} — Submitted"          | None                                  |
-| UNDER_REVIEW    | "Application #\{number\} — Under Review"       | None                                  |
-| SHORTLISTED     | "Application #\{number\} — Shortlisted"        | None                                  |
-| SELECTED        | "Congratulations! You've been accepted"        | **"Complete Payment"** → payment page |
-| SELECTED + paid | "Congratulations! Accepted — Payment received" | **"Go to Dashboard"**                 |
-| ADMITTED        | "Welcome! Enrollment confirmed"                | **"Go to Dashboard"**                 |
-| WAITLISTED      | "Application #\{number\} — Waitlisted"         | None                                  |
-| REJECTED        | "Application #\{number\} — Not Selected"       | None                                  |
-
-The banner includes a **timeline progress indicator** (4 dots: Submitted → Review → Decision → Enrolled) showing the applicant's position in the pipeline.
-
----
-
-## Session Management
-
-### How Sessions Work
-
-**Storage key:** `hogwarts_apply_session_{campaignId}`
-
-**Session state:**
-
-- `sessionToken` — server-generated nanoid(32), null until first save
-- `campaignId` — which admission campaign
-- `formData` — keyed by step name (attachments, personal, contact, location, guardian, academic)
-- `currentStep` — current step name
-- `lastSaved`, `isDirty`, `isLoading`, `isSaving`, `error`
-
-**Auto-save:** Every 30 seconds when `isDirty` is true.
-
-**Session expiry:** 7 days.
-
-**Resume methods:**
-
-1. **localStorage** — automatic on page load
-2. **Email link** — `/{lang}/application/continue?token=xxx`
-3. **User account** — authenticated users see their drafts on the application landing page
-
-**Unsaved changes:** The browser warns before navigating away when `isDirty` is true.
-
-### First Save Email
-
-On the first successful save, the system sends a "resume application" email with a token link so the applicant can continue from any device.
-
----
-
-## Status Tracking
-
-### OTP Verification
-
-Parents can track their application status without creating an account:
-
-1. Navigate to `/{lang}/application/status`
-2. Enter application number + email
-3. Receive 6-digit OTP via email (10-minute expiry)
-4. Rate limited: max 3 OTPs per hour, max 5 verification attempts
-5. On verification, view application timeline
-
-### Status Timeline
-
-```
-DRAFT → SUBMITTED → UNDER_REVIEW → SHORTLISTED → SELECTED → ADMITTED
-                                  ↘ WAITLISTED
-                                  ↘ REJECTED
-                                  ↘ WITHDRAWN
+10. Send confirmation email (Resend)
+11. requiresPayment = campaign.applicationFee > 0
 ```
 
-The timeline shows each completed stage with dates and next steps.
+Post-submit routing: payment page if `requiresPayment`, otherwise success page.
 
----
+## Payment
 
-## Tour Booking
+| Method        | Behaviour                          |
+| ------------- | ---------------------------------- |
+| Pay with Card | Stripe Checkout redirect           |
+| Pay at School | Cash — shows reference number      |
+| Bank Transfer | Bank details with reference number |
 
-The school can offer self-service tour scheduling at `/{lang}/tour`:
+Stripe webhook (`/api/webhooks/stripe`) sets `applicationFeePaid = true` and dispatches `fee_paid` notification on success.
 
-1. **Calendar View** — select available dates
-2. **Time Slots** — show available times with capacity
-3. **Booking Form** — collect visitor information (name, email, phone, student name, grade interest, number of attendees, special requests)
-4. **Confirmation** — booking number, email with calendar invite
+## Success page
 
-### Slot Types
+- Confetti modal on first visit
+- Application number
+- Account credentials (email + default password)
+- "Complete Payment" CTA if unpaid
+- Next steps timeline (email → review → interview → decision)
+- Links to school explore + tour booking
 
-| Type        | Purpose                 |
+## Application status banner
+
+Server-rendered banner on the school site for logged-in applicants. Dismissible per application via localStorage.
+
+| Status          | Message                                 | CTA              |
+| --------------- | --------------------------------------- | ---------------- |
+| SUBMITTED       | "Application #N — Submitted"            | —                |
+| UNDER_REVIEW    | "Application #N — Under Review"         | —                |
+| SHORTLISTED     | "Application #N — Shortlisted"          | —                |
+| SELECTED        | "Congratulations! You've been accepted" | Complete Payment |
+| SELECTED + paid | "Accepted — Payment received"           | Go to Dashboard  |
+| ADMITTED        | "Welcome! Enrollment confirmed"         | Go to Dashboard  |
+| WAITLISTED      | "Application #N — Waitlisted"           | —                |
+| REJECTED        | "Application #N — Not Selected"         | —                |
+
+Banner includes a 4-dot timeline: Submitted → Review → Decision → Enrolled.
+
+## Sessions
+
+Storage key `hogwarts_apply_session_{campaignId}`. Session token is server-generated `nanoid(32)`, 7-day expiry. Auto-save every 30 s when dirty. Browser warns on unsaved navigation.
+
+Three resume paths: localStorage (auto), email link `/{lang}/application/continue?token=xxx`, authenticated user drafts on the landing page. The first save triggers a "resume application" email.
+
+## Status tracking (no account)
+
+```
+/{lang}/application/status
+  → enter application number + email
+  → 6-digit OTP via email (10-min expiry)
+  → max 3 OTPs / hour, 5 verify attempts
+  → view timeline
+```
+
+For the full status flow, see [Admission → Status flow](/docs/admission#status-flow). Branches: `WAITLISTED`, `REJECTED`, `WITHDRAWN`.
+
+## Tour booking
+
+Self-service at `/{lang}/tour`. Calendar → time slots → booking form (visitor name, email, phone, student name, grade interest, attendees, notes) → confirmation with calendar invite.
+
+| Slot type   | Purpose                 |
 | ----------- | ----------------------- |
 | TOUR        | Campus tour             |
 | INTERVIEW   | Admission interview     |
 | ORIENTATION | New student orientation |
 | OPEN_HOUSE  | Open house event        |
 
-### Booking Management
+View / reschedule / cancel at `/{lang}/tour/{bookingId}`.
 
-Parents can view, reschedule, or cancel their bookings at `/{lang}/tour/{bookingId}`.
+## Inquiry form
 
----
+Lead capture at `/{lang}/inquiry` for families not ready to apply. Required: parent name, email. Optional: phone, student name, DOB, target grade, source (website / social / referral / open house / ad), message, newsletter opt-in.
 
-## Inquiry Form
+Status flow: `NEW → CONTACTED → QUALIFIED → CONVERTED → CLOSED`.
 
-Lead capture for families not ready to apply, at `/{lang}/inquiry`:
+## Server actions (public, no auth)
 
-| Field            | Required | Purpose                                                 |
-| ---------------- | -------- | ------------------------------------------------------- |
-| Parent Name      | Yes      | Contact name                                            |
-| Email            | Yes      | Follow-up                                               |
-| Phone            | No       | Alternative contact                                     |
-| Student Name     | No       | Personalization                                         |
-| Student DOB      | No       | Grade suggestion                                        |
-| Interested Grade | No       | Target grade                                            |
-| Source           | No       | Attribution (website, social, referral, open house, ad) |
-| Message          | No       | Questions                                               |
-| Newsletter       | No       | Opt-in                                                  |
-
-**Status flow:** `NEW → CONTACTED → QUALIFIED → CONVERTED → CLOSED`
-
----
-
-## Wizard Configuration
-
-```typescript
-// config.client.ts
-{
-  steps: ["attachments", "personal", "contact", "location", "guardian", "academic"],
-  groups: {
-    1: ["attachments", "personal"],    // Basic Information
-    2: ["contact", "location"],         // Details
-    3: ["guardian", "academic"],         // Family & Education
-  },
-  groupLabels: {
-    1: "Basic Information",
-    2: "Details",
-    3: "Family & Education"
-  }
-}
-```
-
----
-
-## File Structure
-
----
-
-## Server Actions Reference (Public, No Auth Required)
-
-| Action                       | Purpose              | Parameters                                                  |
-| ---------------------------- | -------------------- | ----------------------------------------------------------- |
-| `getActiveCampaigns()`       | List open campaigns  | subdomain                                                   |
-| `saveApplicationSession()`   | Auto-save progress   | subdomain, formData, step, email, campaignId, sessionToken? |
-| `resumeApplicationSession()` | Load saved session   | sessionToken                                                |
-| `submitApplication()`        | Final submission     | subdomain, sessionToken, formData                           |
-| `requestStatusOTP()`         | Send tracking OTP    | subdomain, appNumber, email                                 |
-| `verifyStatusOTP()`          | Verify OTP code      | subdomain, appNumber, otp                                   |
-| `getApplicationStatus()`     | Get status timeline  | accessToken                                                 |
-| `getAvailableSlots()`        | List tour time slots | subdomain, slotType, date                                   |
-| `createTourBooking()`        | Book a tour          | subdomain, bookingData                                      |
-| `submitInquiry()`            | Submit inquiry       | subdomain, inquiryData                                      |
-
----
+| Action                       | Parameters                                                  |
+| ---------------------------- | ----------------------------------------------------------- |
+| `getActiveCampaigns()`       | subdomain                                                   |
+| `saveApplicationSession()`   | subdomain, formData, step, email, campaignId, sessionToken? |
+| `resumeApplicationSession()` | sessionToken                                                |
+| `submitApplication()`        | subdomain, sessionToken, formData                           |
+| `requestStatusOTP()`         | subdomain, appNumber, email                                 |
+| `verifyStatusOTP()`          | subdomain, appNumber, otp                                   |
+| `getApplicationStatus()`     | accessToken                                                 |
+| `getAvailableSlots()`        | subdomain, slotType, date                                   |
+| `createTourBooking()`        | subdomain, bookingData                                      |
+| `submitInquiry()`            | subdomain, inquiryData                                      |
 
 ## Troubleshooting
 
-**Application Not Saving**
+| Symptom                       | Likely cause                                                              |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| Application not saving        | Network error, expired session (7 d), subdomain not resolving             |
+| Submit fails validation       | Missing required field across steps; check error message field names      |
+| OTP not received              | Spam folder, wrong email, rate limit (3 / h)                              |
+| Payment page shows no methods | `AdmissionSettings.paymentMethods` empty, fee = 0, Stripe webhook missing |
 
-- Check browser console for network errors
-- Verify session hasn't expired (7-day limit)
-- Ensure the school's subdomain resolves correctly
+## Key files
 
-**Submit Fails with Validation Error**
+| Purpose        | Path                                                                                                                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Routes         | `src/app/[lang]/s/[subdomain]/application/`                                                                                                                                                              |
+| Step config    | `src/components/school-marketing/application/config.client.ts`                                                                                                                                           |
+| Context        | `src/components/school-marketing/application/application-context.tsx`                                                                                                                                    |
+| Submit         | `src/components/school-marketing/application/submit-action.ts` + `admission/actions/application.ts`                                                                                                      |
+| Validation     | `src/components/school-marketing/admission/validation.ts`                                                                                                                                                |
+| Payment        | `src/components/school-marketing/application/payment/actions.ts`                                                                                                                                         |
+| Stripe webhook | `src/app/api/webhooks/stripe/route.ts`                                                                                                                                                                   |
+| Schema         | `prisma/models/admission.prisma`                                                                                                                                                                         |
+| Tests          | `school-marketing/admission/__tests__/{status-banner.test.tsx, status/__tests__/status-display.test.tsx, actions/__tests__/status-tracking.test.ts}` + `app/api/webhooks/stripe/__tests__/route.test.ts` |
 
-- The error message includes field names (e.g., "Validation failed: postalCode: ...")
-- Check that all required fields are filled across all steps
-- The completeness check requires: name, email, phone, fatherName, motherName, applyingForClass
+## See also
 
-**OTP Not Received**
-
-- Check spam folder
-- Verify email matches the application
-- Rate limit: max 3 OTPs per hour
-
-**Payment Page Shows No Methods**
-
-- Check `AdmissionSettings.paymentMethods` for the school
-- Ensure campaign has `applicationFee > 0`
-- Stripe requires webhook configuration for card payments
-
----
-
-## Key Files
-
-| Purpose               | Path                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| Application routes    | `src/app/[lang]/s/[subdomain]/application/`                                           |
-| Step config           | `src/components/school-marketing/application/config.client.ts`                        |
-| Application context   | `src/components/school-marketing/application/application-context.tsx`                 |
-| Submit action         | `src/components/school-marketing/application/submit-action.ts`                        |
-| Core submission logic | `src/components/school-marketing/admission/actions/application.ts`                    |
-| Validation schemas    | `src/components/school-marketing/admission/validation.ts`                             |
-| Payment actions       | `src/components/school-marketing/application/payment/actions.ts`                      |
-| Stripe webhook        | `src/app/api/webhooks/stripe/route.ts`                                                |
-| Prisma schema         | `prisma/models/admission.prisma`                                                      |
-| Admission types       | `src/components/school-marketing/admission/types.ts`                                  |
-| Status banner tests   | `src/components/school-marketing/admission/__tests__/status-banner.test.tsx`          |
-| Status display tests  | `src/components/school-marketing/admission/status/__tests__/status-display.test.tsx`  |
-| Status tracking tests | `src/components/school-marketing/admission/actions/__tests__/status-tracking.test.ts` |
-| Stripe webhook tests  | `src/app/api/webhooks/stripe/__tests__/route.test.ts`                                 |
+- [Admission](/docs/admission) — admin-side flow
+- [Multi-tenancy](/docs/multi-tenancy) — subdomain resolution
+- [Notifications](/docs/notifications) — `fee_paid` dispatch

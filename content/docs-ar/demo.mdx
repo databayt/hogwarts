@@ -1,138 +1,66 @@
 ---
-title: العرض الحي
-description: شاهد منصة إدارة المدرسة هوجوورتس قيد التنفيذ
+title: عرض حي
+description: شاهد منصة إدارة المدرسة Hogwarts قيد العمل — سجّل الدخول واستكشف.
 ---
 
-اختبر المنصة مباشرة. سجّل الدخول واستكشف الميزات أدناه.
-
-<div className="not-prose mt-4 mb-6 flex gap-2">
-  <a
-    href="https://demo.databayt.org/en/dashboard"
-    target="_blank"
-    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded px-3 py-1.5 text-sm"
-  >
-    افتح العرض
-  </a>
-  <span className="bg-muted rounded px-2 py-1.5 text-xs">
-    admin@databayt.org / 1234
-  </span>
-</div>
-
----
+جرّب المنصة مباشرة. افتح [demo.databayt.org/ar/dashboard](https://demo.databayt.org/ar/dashboard) وسجّل الدخول بـ `admin@databayt.org` / `1234`.
 
 ## جولة سريعة
 
-الأماكن الأساسية للاستكشاف في 5 دقائق.
+خمسة مواقع لاستكشافها في خمس دقائق.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">5 خطوات</span>
-  <span className="rounded bg-green-500/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400">
-    موصى به
-  </span>
-</div>
-
-- **الإعدادات** ← غيّر الدور لرؤية لوحات تحكم مختلفة <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-orange-500/20 text-orange-700 dark:text-orange-400 rounded font-medium">جرّب أولاً</span>
-- **المظهر** ← بدّل الوضع الداكن/الفاتح واللغة <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">i18n</span>
-- **الطلاب** ← تصفح القائمة، أضف طالب، عرض تبويبات الملف <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">crud</span>
-- **الجدول** ← منشئ الجدول بالسحب والإفلات <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-400 rounded font-medium">تفاعلي</span>
-- **الحضور** ← سجّل الحضور اليومي للفصل <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-pink-500/20 text-pink-700 dark:text-pink-400 rounded font-medium">تتبع</span>
-
----
+1. **الإعدادات** — بدّل الدور لرؤية لوحات تحكم مختلفة.
+2. **المظهر** — بدّل بين الوضع الداكن والفاتح، وبين العربية والإنجليزية.
+3. **الطلاب** — تصفّح القائمة، أضف طالباً، اطّلع على تبويبات الملف الشخصي.
+4. **الجدول الدراسي** — منشئ الجدول بالسحب والإفلات.
+5. **الحضور** — تسجيل الحضور اليومي للفصل.
 
 ## حسابات العرض
 
-جميع الحسابات تستخدم كلمة المرور `1234`.
+كل الحسابات تستخدم كلمة المرور `1234`.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">6 أدوار</span>
-  <span className="rounded bg-violet-500/20 px-2 py-1 text-xs font-medium text-violet-700 dark:text-violet-400">
-    rbac
-  </span>
-</div>
+| البريد الإلكتروني         | الدور      | الصلاحيات                                |
+| ------------------------- | ---------- | ---------------------------------------- |
+| `admin@databayt.org`      | ADMIN      | وصول كامل، إدارة كل شيء                  |
+| `teacher@databayt.org`    | TEACHER    | الفصول المكلَّف بها، الحضور، الدرجات     |
+| `student@databayt.org`    | STUDENT    | الجدول الشخصي، الدرجات، الواجبات         |
+| `parent@databayt.org`     | GUARDIAN   | عرض بيانات الأبناء المرتبطين (قراءة فقط) |
+| `staff@databayt.org`      | STAFF      | إدارة محدودة على الكيانات المخصَّصة      |
+| `accountant@databayt.org` | ACCOUNTANT | الفوترة والفواتير فقط                    |
 
-- **admin@databayt.org** ← وصول كامل، إدارة كل شيء <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">مدير</span>
-- **teacher@databayt.org** ← الفصول المُعيّنة، الحضور، الدرجات <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">معلم</span>
-- **student@databayt.org** ← الجدول الشخصي، الدرجات، الواجبات <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">طالب</span>
-- **parent@databayt.org** ← عرض بيانات الأبناء (قراءة فقط) <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">ولي أمر</span>
-- **staff@databayt.org** ← إدارة محدودة للكيانات المُعيّنة <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 rounded font-medium">موظف</span>
-- **accountant@databayt.org** ← الفوترة والفواتير فقط <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded font-medium">محاسب</span>
+## ما يستحق التجربة
 
----
-
-## الميزات للاختبار
-
-<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الطلاب</h3>
-    <p className="text-muted-foreground text-sm">
-      التسجيل، الملفات، روابط الأوصياء، تصدير CSV.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">القوائم</h3>
-    <p className="text-muted-foreground text-sm">
-      المواد، الفصول، المعلمين، إدارة الأولياء.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الحضور</h3>
-    <p className="text-muted-foreground text-sm">
-      التسجيل اليومي، التقارير، تحليلات الاتجاهات.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الجدول</h3>
-    <p className="text-muted-foreground text-sm">
-      جدولة بالسحب والإفلات، اكتشاف التعارضات.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الامتحانات</h3>
-    <p className="text-muted-foreground text-sm">
-      الجدولة، التصحيح، إدارة النتائج.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الإعدادات</h3>
-    <p className="text-muted-foreground text-sm">
-      تبديل الأدوار، المظهر، تبديل اللغة.
-    </p>
-  </div>
-</div>
-
----
+<CardGrid cols={3}>
+  <DocCard
+    title="الطلاب"
+    description="التسجيل، الملفات، روابط أولياء الأمور، تصدير CSV."
+  />
+  <DocCard
+    title="القوائم"
+    description="المواد، الفصول، المعلمون، أولياء الأمور."
+  />
+  <DocCard
+    title="الحضور"
+    description="التسجيل اليومي، التقارير، تحليلات الاتجاهات."
+  />
+  <DocCard
+    title="الجدول الدراسي"
+    description="جدولة بالسحب والإفلات، اكتشاف التعارضات."
+  />
+  <DocCard title="الامتحانات" description="الجدولة، التقييم، النتائج." />
+  <DocCard title="الإعدادات" description="تبديل الدور، المظهر، اللغة." />
+</CardGrid>
 
 ## القيود
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">يُعاد يومياً</span>
-  <span className="rounded bg-gray-500/20 px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-400">
-    بيئة اختبار
-  </span>
-</div>
+نسخة العرض تُعاد ضبطها يومياً وتعمل في وضع sandbox:
 
-- إشعارات البريد معطلة
-- رفع الملفات محدود بـ 1MB
-- لا يمكن إنشاء حسابات جديدة
-- إعدادات المدرسة مقفلة
-
----
+- إشعارات البريد معطّلة.
+- رفع الملفات محدود بـ 1 ميغابايت.
+- لا يمكن إنشاء حسابات مستخدمين جديدة.
+- إعدادات المدرسة مقفلة.
 
 ## الملاحظات
 
-<div className="not-prose mt-4 flex gap-2">
-  <a
-    href="https://github.com/databayt/hogwarts/issues/new"
-    target="_blank"
-    className="bg-muted hover:bg-muted/80 rounded px-3 py-1.5 text-sm"
-  >
-    إبلاغ عن مشكلة
-  </a>
-  <a
-    href="https://discord.gg/databayt"
-    target="_blank"
-    className="bg-muted hover:bg-muted/80 rounded px-3 py-1.5 text-sm"
-  >
-    انضم لـ Discord
-  </a>
-</div>
+- [أبلغ عن مشكلة](https://github.com/databayt/hogwarts/issues/new) على GitHub.
+- [انضم إلى Discord](https://discord.gg/databayt) للنقاش المباشر.

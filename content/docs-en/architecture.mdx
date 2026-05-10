@@ -25,47 +25,13 @@ For route `/abc`:
 - `app/[lang]/abc/` — `page.tsx`, `layout.tsx`
 - `components/abc/` — `content.tsx`, `actions.ts`, `form.tsx`, `validation.ts`, `types.ts`, `use-abc.ts`, `README.md`
 
-<Structure />
-
 ## Tech Stack
 
-- **Framework**: Next.js 16.1.0 with App Router and Turbopack, React 19.2.0, TypeScript 5.8.3
-- **Database**: PostgreSQL with Prisma ORM 6.19.0 (264 models, 132 enums), Neon Serverless
-- **Authentication**: NextAuth v5 (beta.30) with custom multi-tenant Prisma adapter
-- **Styling**: Tailwind CSS v4 with OKLCH color format
-- **UI Components**: Radix UI primitives + shadcn/ui (35 component directories)
-- **Validation**: Zod 4.0.14 schemas with React Hook Form 7.61.1
-- **Internationalization**: Arabic (RTL) + English (LTR) with on-demand translation
-- **Documentation**: MDX with Fumadocs
-- **Runtime Strategy**: Node.js for Prisma/bcrypt pages, Edge for middleware/static
-- **Storage**: AWS S3 + CloudFront CDN for images, Upstash Redis for custom domains
+See [/docs/stack](/docs/stack) for the canonical version table.
 
 ## Standardized File Patterns
 
-Each feature directory follows these naming conventions:
-
-| File               | Purpose                                                                             |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| `content.tsx`      | Server component: data fetching, composition, layout orchestration                  |
-| `client.tsx`       | Client boundary: single `"use client"` wrapper per feature (NEW)                    |
-| `actions.ts`       | Server actions & API calls: validate, scope tenant, mutate                          |
-| `queries.ts`       | Read-only database queries: select objects, where-builders, pagination, stats       |
-| `authorization.ts` | RBAC permission checks: check/assert/can/getAllowedActions per feature              |
-| `config.ts`        | Enums, option lists, labels, defaults for the feature                               |
-| `validation.ts`    | Zod schemas & refinements; parse and infer types                                    |
-| `types.ts`         | Domain and UI types; generic helpers for forms/tables                               |
-| `form.tsx`         | Typed forms (RHF) with resolvers and submit handling                                |
-| `card.tsx`         | Card components for KPIs, summaries, quick actions                                  |
-| `all.tsx`          | List view with table, filters, pagination                                           |
-| `featured.tsx`     | Curated feature list showcasing selections                                          |
-| `detail.tsx`       | Detail view with sections, relations, actions                                       |
-| `util.ts`          | Pure utilities and mappers used in the feature                                      |
-| `columns.tsx`      | Typed Table column builders and cell renderers                                      |
-| `use-abc.ts`       | Feature hooks: fetching, mutations, derived state                                   |
-| `table.tsx`        | Client component wrapping DataTable atom with columns, toolbar, modals              |
-| `list-params.ts`   | URL search parameter cache via nuqs for type-safe table state                       |
-| `README.md`        | Feature context: quick-reference tables, files, decisions, entry points (~40 lines) |
-| `ISSUE.md`         | Active issues, completed log, tech debt tracker (~40 lines)                         |
+See [/docs/pattern](/docs/pattern) for the per-file canonical contract.
 
 ## Decision Framework
 
@@ -80,27 +46,23 @@ Each feature directory follows these naming conventions:
 
 ## Naming Conventions
 
-- **Components**: kebab-case for files (`button.tsx`, `user-profile.tsx`)
-- **Pages**: kebab-case for route segments (`user-profile`, `sign-in`)
-- **Hooks**: use-prefix convention (`use-leads.ts`, `use-upwork.ts`)
-- **Types**: PascalCase for interfaces and types
-- **Constants**: UPPER_SNAKE_CASE or camelCase for objects
+See [/docs/pattern](/docs/pattern) for the canonical naming reference.
 
 ## Critical Files Reference
 
-| File                          | Lines    | Purpose                                                                   |
-| ----------------------------- | -------- | ------------------------------------------------------------------------- |
-| `src/proxy.ts`                | 388      | Edge middleware: subdomain detection, RBAC, URL rewriting, custom domains |
-| `src/auth.ts`                 | 777      | NextAuth: JWT callbacks, session management, redirect logic               |
-| `src/auth.config.ts`          | 151      | OAuth providers: Google, Facebook, Credentials                            |
-| `src/routes.ts`               | 410      | RBAC matrix: role-based route protection                                  |
-| `src/lib/rate-limit.ts`       | 537      | Rate limiting: 14 configs across routes                                   |
-| `src/lib/tenant-context.ts`   | 189      | Tenant resolution with caching                                            |
-| `src/lib/catalog-setup.ts`    | 366      | Catalog bridge: academic structure provisioning                           |
-| `src/lib/dns-service.ts`      | 644      | DNS verification: multi-provider custom domains                           |
-| `src/lib/security-headers.ts` | 173      | CSP, HSTS, XSS protection                                                 |
-| `prisma/models/`              | 57 files | 264 models, 132 enums                                                     |
-| `CLAUDE.md`                   | —        | Project-wide architectural guidelines                                     |
+| File                          | Purpose                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `src/proxy.ts`                | Edge middleware: subdomain detection, RBAC, URL rewriting, custom domains |
+| `src/auth.ts`                 | NextAuth: JWT callbacks, session management, redirect logic               |
+| `src/auth.config.ts`          | OAuth providers: Google, Facebook, Credentials                            |
+| `src/routes.ts`               | RBAC matrix: role-based route protection                                  |
+| `src/lib/rate-limit.ts`       | Rate limiting configs across routes                                       |
+| `src/lib/tenant-context.ts`   | Tenant resolution with two-tier cache (Redis 5 min → in-memory Map 1 min) |
+| `src/lib/catalog-setup.ts`    | Catalog bridge: academic structure provisioning                           |
+| `src/lib/dns-service.ts`      | DNS verification: multi-provider custom domains                           |
+| `src/lib/security-headers.ts` | CSP, HSTS, XSS protection                                                 |
+| `prisma/models/`              | Prisma multi-file schema (see [/docs/database](/docs/database))           |
+| `CLAUDE.md`                   | Project-wide architectural guidelines                                     |
 
 ## Anti-patterns
 

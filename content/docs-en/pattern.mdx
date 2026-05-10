@@ -79,7 +79,7 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/students/page.tsx
 | ------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
 | `page.tsx`                | Route entry. Auth + tenant + render `<XxxContent />`. Thin.            | [page](/docs/page)                   |
 | `content.tsx`             | Server (data fetching) or client (interaction) — composes the feature. | [content](/docs/content)             |
-| `client.tsx`              | Single `"use client"` boundary; receives server data as props.         | [client](/docs/client)               |
+| `client.tsx`              | Single `"use client"` boundary; receives server data as props.         | [content](/docs/content)             |
 | `actions.ts`              | Server actions — mutations only.                                       | [actions](/docs/actions)             |
 | `queries.ts`              | Server-side database reads.                                            | [queries](/docs/queries)             |
 | `authorization.ts`        | RBAC permission checks (`canCreate`, `canRead`, …).                    | [authorization](/docs/authorization) |

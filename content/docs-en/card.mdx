@@ -1,26 +1,30 @@
 ---
 title: Card
-description: Canonical patterns for writing card.tsx display components in feature directories.
+description: Feature-specific display cards composed from shadcn primitives.
 ---
 
-`card.tsx` renders feature-specific display cards composed from shadcn `Card` primitives. KPIs, entity summaries, onboarding step tiles. Pure presentation — no data fetching, no mutations.
+`card.tsx` renders display cards composed from shadcn `Card` primitives — KPIs, entity summaries, onboarding tiles. Pure presentation, no data fetching, no mutations.
 
 ## Categories
 
-| Category        | Shape                                                                | Reference                             |
-| --------------- | -------------------------------------------------------------------- | ------------------------------------- |
-| Entity display  | Full / compact / health / stats variants for one domain entity.      | `saas-dashboard/billing/card.tsx`     |
-| KPI / stats     | Single metric with label, trend, icon.                               | `school-dashboard/dashboard/card.tsx` |
-| Onboarding step | Visual card representing a wizard option (level, curriculum, theme). | `onboarding/branding/card.tsx`        |
-| Atom lab        | Showcase cards in `atom/lab/` for the design system.                 | `atom/lab/*-card.tsx`                 |
+| Category        | Shape                                                   | Reference                             |
+| --------------- | ------------------------------------------------------- | ------------------------------------- |
+| Entity display  | Full / compact / health / stats variants for one entity | `saas-dashboard/billing/card.tsx`     |
+| KPI / stats     | Single metric with label, trend, icon                   | `school-dashboard/dashboard/card.tsx` |
+| Onboarding step | Visual card for a wizard option                         | `onboarding/branding/card.tsx`        |
+| Atom lab        | Showcase cards in `atom/lab/`                           | `atom/lab/*-card.tsx`                 |
 
-## Five rules
+## Rules
 
-1. **Compose from shadcn `Card` primitives.** `Card`, `CardHeader`, `CardContent`, `CardFooter`, `CardTitle`, `CardDescription`. Don't reinvent.
-2. **Typed entity props.** Import the entity type from `types.ts`. No `any`.
-3. **Formatters from `util.ts`.** Currency, dates, names — formatting helpers live in `util.ts`, not in the card.
-4. **Multiple variants per file.** When a feature needs both `EntityCard` and `CompactCard`, export both from one `card.tsx`. Don't split into two files.
-5. **`showActions` prop for conditional footers.** Lets the same card render in interactive (table cell) and read-only (detail page) contexts.
+| #   | Rule                                                                         |
+| --- | ---------------------------------------------------------------------------- |
+| 1   | Compose from shadcn `Card` primitives — never reinvent                       |
+| 2   | Typed entity props from `types.ts` — no `any`                                |
+| 3   | Formatters from `util.ts` — no inline `Intl.NumberFormat`                    |
+| 4   | Multiple variants per file — `EntityCard`, `CompactCard` from one `card.tsx` |
+| 5   | `showActions` prop for conditional footers                                   |
+
+## Canonical example
 
 ```tsx
 import { Badge } from "@/components/ui/badge"
@@ -72,45 +76,39 @@ export function TenantCompactCard({ tenant }: { tenant: TenantDto }) {
 }
 ```
 
-## Templates
+## Variant suffixes
 
-| Template       | File                                                 |
-| -------------- | ---------------------------------------------------- |
-| Entity display | `src/components/saas-dashboard/billing/card.tsx`     |
-| KPI / stats    | `src/components/school-dashboard/dashboard/card.tsx` |
-| Onboarding     | `src/components/onboarding/branding/card.tsx`        |
-
-## Naming for multi-variant exports
-
-Pick a consistent suffix system:
-
-| Variant           | Suffix    | Example             |
-| ----------------- | --------- | ------------------- |
-| Full / default    | none      | `TenantCard`        |
-| Compact / minimal | `Compact` | `TenantCompactCard` |
-| Health / status   | `Health`  | `TenantHealthCard`  |
-| Metric / KPI      | `Stats`   | `TenantStatsCard`   |
-| Detail-only       | `Detail`  | `TenantDetailCard`  |
-
-The codebase currently mixes `Compact`, `Health`, `Summary`, `Stats`. Settle on the table above for new code.
+| Variant         | Suffix    | Example             |
+| --------------- | --------- | ------------------- |
+| Full / default  | none      | `TenantCard`        |
+| Compact         | `Compact` | `TenantCompactCard` |
+| Health / status | `Health`  | `TenantHealthCard`  |
+| Metric / KPI    | `Stats`   | `TenantStatsCard`   |
+| Detail-only     | `Detail`  | `TenantDetailCard`  |
 
 ## Anti-patterns
 
-- **Form logic inside cards** — 12 onboarding card files mix card display with form state. Cards are presentation; lift state to `client.tsx` or the form component.
-- **Reinventing card primitives** — using raw `<div className="rounded-lg border p-6">` instead of `Card`. Use the primitive.
-- **Inline formatters** — `new Intl.NumberFormat(...)` in the card body. Move to `util.ts`.
-- **Untyped props** — `any` for the entity. Import from `types.ts`.
-- **Hardcoded labels** — should come from the dictionary slice for translatable text.
+- Form logic inside cards — 12 onboarding files do this. Lift state to `client.tsx` or the form.
+- Reinventing primitives — use `Card`, not `<div className="rounded-lg border p-6">`.
+- Inline formatters — `Intl.NumberFormat` belongs in `util.ts`.
+- Untyped props — import from `types.ts`.
+- Hardcoded labels — use the dictionary slice for translatable text.
 
-## Relationship to siblings
+## Sibling roles
 
-- `card.tsx` is rendered by `content.tsx`, `client.tsx`, or `detail.tsx`.
-- It imports from `types.ts` (entity shape), `util.ts` (formatters), and `config.ts` (status options).
-- It does **not** import from `actions.ts`, `queries.ts`, or `form.tsx`.
-- It does **not** call server actions. Action handlers live one level up.
+- Rendered by `content.tsx`, `client.tsx`, or `detail.tsx`.
+- Imports from `types.ts`, `util.ts`, `config.ts`.
+- Does **not** import from `actions.ts`, `queries.ts`, `form.tsx`.
+- Does **not** call server actions — handlers live one level up.
 
 ## Naming
 
-- Filename: `card.tsx`. Always.
-- Function: `<Feature>Card` for the default; suffix-coded variants per the table above.
-- Named exports.
+- File: `card.tsx`.
+- Function: `<Feature>Card` for default, suffix-coded variants per the table above.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Util](/docs/util)
+- [Types](/docs/types)
+- [Detail](/docs/detail)

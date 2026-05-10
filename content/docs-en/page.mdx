@@ -1,24 +1,24 @@
 ---
 title: Page
-description: Canonical patterns for writing page.tsx in Next.js 16.
+description: The route entry — auth, tenant, render the matching content component.
 ---
 
-`page.tsx` is the route entry. It does **not** own logic — its job is `auth()` + `getTenantContext()` (when needed) + render `<XxxContent />` from the matching feature directory.
+`page.tsx` is the route entry. It does **not** own logic — `auth()` + `getTenantContext()` (when needed) + render `<XxxContent />` from the matching feature directory.
 
-## Eight rules
+## Rules
 
-1. **`export default async function Page()`.** Always. Never arrow functions, never feature names.
-2. **Promise-based `params` and `searchParams`.** Next.js 16 makes these promises; await them inside the function.
-3. **Mirror pattern.** Page imports from `@/components/<feature>/content`. Pages stay thin (auth, tenant, render).
-4. **Parallelise data fetching with `Promise.all`.** When a page needs multiple awaits, parallelise them.
-5. **Export `metadata` or `generateMetadata`.** Every public page should have a title and description.
-6. **`import type` for type-only imports** (`Metadata`, `Locale`). Keep runtime imports separate.
-7. **No inline data-fetching.** Move queries to `queries.ts` and call from `content.tsx`.
-8. **No inline try/catch.** Use `error.tsx` boundaries.
+| #   | Rule                                                                      |
+| --- | ------------------------------------------------------------------------- |
+| 1   | `export default async function Page()` — never arrow, never feature-named |
+| 2   | `params` and `searchParams` are `Promise<...>` in Next.js 16 — await them |
+| 3   | Import from `@/components/<feature>/content` (mirror pattern)             |
+| 4   | Parallelise multiple awaits with `Promise.all`                            |
+| 5   | Export `metadata` or `generateMetadata`                                   |
+| 6   | `import type` for `Metadata`, `Locale`                                    |
+| 7   | No inline data fetching — move to `queries.ts`                            |
+| 8   | No inline try/catch — `error.tsx` boundaries handle exceptions            |
 
-## Templates
-
-### Server page with content delegate
+## Canonical example
 
 ```tsx
 import type { Metadata } from "next"
@@ -47,104 +47,45 @@ export default async function Page({ params, searchParams }: Props) {
 }
 ```
 
-### Page with `generateMetadata`
+## Variants
+
+| Variant                           | When                                           |
+| --------------------------------- | ---------------------------------------------- |
+| Server page with content delegate | Default for every dashboard route              |
+| `generateMetadata`                | Title needs runtime data (entity name, locale) |
+| Static page                       | No params, no auth (marketing landing)         |
+| Auth page                         | Pre-tenant flows (login, register, reset)      |
+| Parallel data fetch               | Multiple awaits — wrap in `Promise.all`        |
+
+## Parallel fetching
 
 ```tsx
-import type { Metadata } from "next"
-
-import { getDictionary } from "@/components/internationalization/dictionaries"
-
-interface Props {
-  params: Promise<{ lang: Locale; id: string }>
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const d = await getDictionary(lang)
-  return { title: d.school.exams.detailTitle }
-}
-
-export default async function Page({ params }: Props) {
-  const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
-  return (
-    <ExamDetailContent
-      id={id}
-      dictionary={dictionary.school.exams}
-      lang={lang}
-    />
-  )
-}
+const [dictionary, school, applicants] = await Promise.all([
+  getDictionary(lang),
+  getSchoolById(id),
+  getApplicantList(id),
+])
 ```
-
-### Static page (no params)
-
-```tsx
-import type { Metadata } from "next"
-
-import HomeContent from "@/components/saas-marketing/home/content"
-
-export const metadata: Metadata = { title: "Hogwarts" }
-
-export default function Page() {
-  return <HomeContent />
-}
-```
-
-### Auth page (pre-tenant)
-
-```tsx
-import LoginContent from "@/components/auth/login/content"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-
-interface Props {
-  params: Promise<{ lang: Locale }>
-}
-
-export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  return <LoginContent dictionary={dictionary.auth} lang={lang} />
-}
-```
-
-### Page with parallel data fetching
-
-```tsx
-export default async function Page({ params }: Props) {
-  const { lang, id } = await params
-  const [dictionary, school, applicants] = await Promise.all([
-    getDictionary(lang),
-    getSchoolById(id),
-    getApplicantList(id),
-  ])
-  return <AdmissionContent {...{ dictionary, school, applicants, lang }} />
-}
-```
-
-## `PageProps` type helper — don't use it
-
-Next.js exports `PageProps` but it's parameterised badly for `[lang]` routes. Define `interface Props` per page; you'll see the awaited shape clearly and TypeScript is just as happy.
 
 ## Anti-patterns
 
-- **Arrow function exports** — use named function declarations.
-- **Inline data fetching in the page body** — move to `queries.ts` consumed by `content.tsx`.
-- **Re-fetching what the layout provides** — if the parent `layout.tsx` fetches the school, don't refetch in the child page; consume via context or pass through.
-- **Wrapping the page body in `<Suspense>`** — use `loading.tsx` instead. The framework already does the suspense dance.
-- **Loading the entire dictionary when only one slice is needed** — pass through `dictionary.school.students` not `dictionary`.
-- **Different types for `generateMetadata` and `Page`** — share the `Props` interface.
-- **Inline try/catch** — let `error.tsx` handle exceptions.
+- Arrow function exports — use named function declarations.
+- Inline data fetching — move to `queries.ts` consumed by `content.tsx`.
+- Re-fetching what the layout provides.
+- Wrapping the body in `<Suspense>` — use `loading.tsx`.
+- Loading the entire dictionary — pass the slice (`dictionary.school.students`).
+- Different types for `generateMetadata` vs `Page` — share the `Props` interface.
+- Inline try/catch — let `error.tsx` handle exceptions.
+- Using Next.js's `PageProps` helper — define `interface Props` per page.
 
 ## Naming
 
-- Filename: `page.tsx` (Next.js convention).
-- Function: `Page`. Not `LoginPage`, not `Students`, not `DashboardPage`.
+- File: `page.tsx`.
+- Function: `Page`. Never `LoginPage`, `Students`, `DashboardPage`.
 - Default export, async by default.
 
-## Next.js 16 reference
+## See also
 
-- `params` and `searchParams` are now `Promise<...>`. Await them.
-- Server components are the default; do not add `"use client"` to a `page.tsx`.
-- Layouts can fetch independently of pages — same `Promise.all` rules apply.
-- `revalidatePath` is called in server actions, not in pages.
+- [Pattern](/docs/pattern)
+- [Content](/docs/content)
+- [Queries](/docs/queries)

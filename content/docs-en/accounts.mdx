@@ -1,303 +1,119 @@
 ---
 title: Test Accounts
-description: Comprehensive guide to all test accounts, personas, relationships, and simulation scenarios
+description: 8 named test accounts and ~3,100 bulk accounts seeded for the demo school.
 ---
 
-The seed creates **8 named test accounts** and **~3,100 bulk accounts** for the demo school. All accounts use password **`1234`**.
+The seed creates 8 named test accounts plus ~3,100 bulk accounts in **Demo Academy** (subdomain `demo`). All accounts use password `1234`. Named accounts are mapped to Harry Potter characters with Arabic names.
 
-All named accounts are mapped to **Harry Potter characters** with Arabic names.
+## Named accounts
 
----
+| Email                     | Role       | Arabic / English                       | Personal                       | School                   |
+| ------------------------- | ---------- | -------------------------------------- | ------------------------------ | ------------------------ |
+| `dev@databayt.org`        | DEVELOPER  | سيفيروس سنيب / Severus Snape           | severus-snape@hotmail.com      | Platform (no `schoolId`) |
+| `user@databayt.org`       | USER       | نيفيل لونغبوتوم / Neville Longbottom   | —                              | None (onboarding)        |
+| `admin@databayt.org`      | ADMIN      | ألباس دمبلدور / Albus Dumbledore       | albus-dumbledore@hotmail.com   | Demo                     |
+| `teacher@databayt.org`    | TEACHER    | مينيرفا ماكغونغال / Minerva McGonagall | minerva-mcgonagall@hotmail.com | Demo                     |
+| `student@databayt.org`    | STUDENT    | هاري بوتر / Harry Potter               | harry-potter@gmail.com         | Demo                     |
+| `parent@databayt.org`     | GUARDIAN   | جيمس بوتر / James Potter (father)      | james-potter@gmail.com         | Demo                     |
+| `parent1@databayt.org`    | GUARDIAN   | ليلي بوتر / Lily Potter (mother)       | lily-potter@gmail.com          | Demo                     |
+| `accountant@databayt.org` | ACCOUNTANT | فيليوس فليتويك / Filius Flitwick       | filius-flitwick@hotmail.com    | Demo                     |
+| `staff@databayt.org`      | STAFF      | روبياس هاغريد / Rubeus Hagrid          | rubeus-hagrid@hotmail.com      | Demo                     |
 
-## Quick Reference
+## Platform accounts
 
-| Email                     | Password | Role       | Arabic Name       | English Name       | Personal Email                 | schoolId          |
-| ------------------------- | -------- | ---------- | ----------------- | ------------------ | ------------------------------ | ----------------- |
-| `dev@databayt.org`        | 1234     | DEVELOPER  | سيفيروس سنيب      | Severus Snape      | severus-snape@hotmail.com      | None (platform)   |
-| `user@databayt.org`       | 1234     | USER       | نيفيل لونغبوتوم   | Neville Longbottom | —                              | None (onboarding) |
-| `admin@databayt.org`      | 1234     | ADMIN      | ألباس دمبلدور     | Albus Dumbledore   | albus-dumbledore@hotmail.com   | Demo School       |
-| `teacher@databayt.org`    | 1234     | TEACHER    | مينيرفا ماكغونغال | Minerva McGonagall | minerva-mcgonagall@hotmail.com | Demo School       |
-| `student@databayt.org`    | 1234     | STUDENT    | هاري بوتر         | Harry Potter       | harry-potter@gmail.com         | Demo School       |
-| `parent@databayt.org`     | 1234     | GUARDIAN   | جيمس بوتر         | James Potter       | james-potter@gmail.com         | Demo School       |
-| `parent1@databayt.org`    | 1234     | GUARDIAN   | ليلي بوتر         | Lily Potter        | lily-potter@gmail.com          | Demo School       |
-| `accountant@databayt.org` | 1234     | ACCOUNTANT | فيليوس فليتويك    | Filius Flitwick    | filius-flitwick@hotmail.com    | Demo School       |
-| `staff@databayt.org`      | 1234     | STAFF      | روبياس هاغريد     | Rubeus Hagrid      | rubeus-hagrid@hotmail.com      | Demo School       |
+`dev@databayt.org` — only DEVELOPER can access the SaaS dashboard at `ed.databayt.org/en/dashboard` (or `localhost:3000/en/dashboard`). Capabilities: view all schools, platform analytics, system config.
 
----
+`user@databayt.org` — fresh user for onboarding tests. Reset with `pnpm db:reset-test-user`.
 
-## Platform Accounts (No schoolId)
+## Demo school accounts
 
-These accounts exist at the platform level and are **not tied to any school**.
+Demo Academy: `demo.databayt.org` (production) or `demo.localhost:3000` (local).
 
-### dev@databayt.org — DEVELOPER (سيفيروس سنيب / Severus Snape)
+| Account       | Notable data                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------- |
+| `admin@`      | Full school dashboard — manages teachers, students, classes, exams, finance, settings                    |
+| `teacher@`    | EMP0001, Languages dept (Arabic), qualifications + multi-level classes                                   |
+| `student@`    | GR0001, Grade 10, 16 subjects, 2 guardians, ~60 attendance days, midterm + final + 2 quizzes per subject |
+| `parent@`     | Father, primary guardian for `student@`                                                                  |
+| `parent1@`    | Mother, secondary guardian for `student@`                                                                |
+| `accountant@` | Finance dashboard — fees, payments, invoices, reports                                                    |
+| `staff@`      | STAFF001, Keeper of Keys and Grounds — admin operations, non-teaching                                    |
 
-- **Purpose**: Platform administrator with access to the SaaS dashboard
-- **Access**: `ed.databayt.org/en/dashboard` (production) or `localhost:3000/en/dashboard` (local)
-- **Capabilities**: View all schools, platform analytics, system configuration
-- **Note**: Only the DEVELOPER role can access the SaaS dashboard
+### Harry's 16 Grade 10 subjects
 
-### user@databayt.org — USER (نيفيل لونغبوتوم / Neville Longbottom)
+Arabic, English, French, Mathematics, Physics, Chemistry, Biology, Computer Science, History, Geography, Civics, Islamic Studies, Quran, ICT, Art, PE.
 
-- **Purpose**: Fresh user for testing the onboarding flow
-- **Access**: Main domain only (no school subdomain)
-- **Flow**: Login → "Get Started" → Onboarding wizard → Create new school
-- **Reset**: `pnpm db:reset-test-user` (restores to fresh state with no schoolId)
-- **Note**: This account should always remain in a "fresh" state for onboarding tests
+## Email pattern
 
----
+Every account has two emails:
 
-## Demo School Accounts
+| Field          | Example                         | Use                          |
+| -------------- | ------------------------------- | ---------------------------- |
+| Login email    | `teacher@databayt.org`          | Authentication               |
+| Personal email | `firstname-lastname@domain.com` | Profile and membership table |
 
-All accounts below are scoped to **Demo Academy** (subdomain: `demo`).
+Bulk accounts use `generatePersonalEmail()` → `firstname-lastname{index}@{gmail|yahoo|hotmail|outlook}.com`.
 
-- **Production**: `demo.databayt.org`
-- **Local**: `demo.localhost:3000`
+## Access matrix
 
-### admin@databayt.org — ADMIN (ألباس دمبلدور / Albus Dumbledore)
+| Account       | URL pattern                     | Behavior                         |
+| ------------- | ------------------------------- | -------------------------------- |
+| `dev@`        | `localhost:3000/en/dashboard`   | SaaS platform dashboard          |
+| `user@`       | `localhost:3000`                | Onboarding (Get Started)         |
+| `admin@`      | `demo.localhost:3000/en/s/demo` | Full school dashboard            |
+| `teacher@`    | `demo.localhost:3000/en/s/demo` | Teacher view (classes, students) |
+| `student@`    | `demo.localhost:3000/en/s/demo` | Student view (16 classes)        |
+| `parent@`     | `demo.localhost:3000/en/s/demo` | Guardian view                    |
+| `accountant@` | `demo.localhost:3000/en/s/demo` | Finance dashboard                |
+| `staff@`      | `demo.localhost:3000/en/s/demo` | Staff operations                 |
 
-- **Purpose**: School administrator with full access to all school features
-- **Personal Email**: albus-dumbledore@hotmail.com
-- **Capabilities**: Manage teachers, students, classes, exams, finance, settings
-
-### teacher@databayt.org — TEACHER (مينيرفا ماكغونغال / Minerva McGonagall)
-
-- **Employee ID**: EMP0001
-- **Department**: اللغات (Languages)
-- **Specialty**: Arabic
-- **Gender**: Female
-- **Personal Email**: minerva-mcgonagall@hotmail.com
-- **Data**:
-  - Qualifications and experience records
-  - Phone numbers and contact info
-  - Subject expertise (Arabic language)
-  - Assigned classes across multiple year levels
-
-### student@databayt.org — STUDENT (هاري بوتر / Harry Potter)
-
-- **GR Number**: GR0001
-- **Grade**: الصف العاشر (Grade 10, Secondary)
-- **Gender**: Male
-- **Age**: 15-16
-- **Personal Email**: harry-potter@gmail.com
-- **16 Subjects**: Arabic, English, French, Mathematics, Physics, Chemistry, Biology, Computer Science, History, Geography, Civics, Islamic Studies, Quran, ICT, Art, PE
-- **Guardians**: 2 (parent@databayt.org as father, parent1@databayt.org as mother)
-- **Data**:
-  - Attendance records (~60 days)
-  - Exam results (Midterm + Final + 2 Quizzes per subject)
-  - Class enrollments in all 16 Grade 10 subjects
-  - Fee assignments (grade-appropriate fee structure)
-
-### parent@databayt.org — GUARDIAN (جيمس بوتر / James Potter — Father)
-
-- **Relationship**: الأب (Father) — Primary guardian
-- **Personal Email**: james-potter@gmail.com
-- **Child**: student@databayt.org (هاري بوتر / Harry Potter, Grade 10)
-- **Capabilities**: View child's grades, attendance, fee status, exam results
-
-### parent1@databayt.org — GUARDIAN (ليلي بوتر / Lily Potter — Mother)
-
-- **Relationship**: الأم (Mother) — Secondary guardian
-- **Personal Email**: lily-potter@gmail.com
-- **Child**: student@databayt.org (هاري بوتر / Harry Potter)
-
-### accountant@databayt.org — ACCOUNTANT (فيليوس فليتويك / Filius Flitwick)
-
-- **Purpose**: Finance dashboard access
-- **Personal Email**: filius-flitwick@hotmail.com
-- **Capabilities**: Fees, payments, invoices, financial reports
-
-### staff@databayt.org — STAFF (روبياس هاغريد / Rubeus Hagrid)
-
-- **Staff ID**: STAFF001
-- **Position**: حارس المفاتيح والأراضي (Keeper of Keys and Grounds)
-- **Personal Email**: rubeus-hagrid@hotmail.com
-- **Capabilities**: Administrative operations, non-teaching staff functions
-
----
-
-## Relationship Graph
-
-```
-student@databayt.org (هاري بوتر / Harry Potter — Grade 10)
-├── Father: parent@databayt.org (جيمس بوتر / James Potter — primary guardian)
-├── Mother: parent1@databayt.org (ليلي بوتر / Lily Potter — secondary guardian)
-├── Classes: 16 subjects
-│   ├── Arabic, English, French
-│   ├── Mathematics, Physics, Chemistry, Biology
-│   ├── Computer Science, ICT
-│   ├── History, Geography, Civics
-│   ├── Islamic Studies, Quran
-│   └── Art, PE
-├── Teacher (Arabic): teacher@databayt.org (مينيرفا ماكغونغال / Minerva McGonagall)
-├── Attendance: ~60 days of records
-├── Exams: Midterm + Final + 2 Quizzes per subject
-└── Fees: Grade-appropriate fee structure
-```
-
----
-
-## Email Pattern
-
-Each account has two emails:
-
-1. **Login email** — used for authentication (`teacher@databayt.org`)
-2. **Personal email** — shown in the membership table and profile (`firstname-lastname@domain.com`)
-
-Bulk accounts use `generatePersonalEmail()` which produces `firstname-lastname{index}@{gmail.com|yahoo.com|hotmail.com|outlook.com}`.
-
----
-
-## Access Matrix
-
-| Account       | Domain | URL Pattern                     | Expected Behavior                  |
-| ------------- | ------ | ------------------------------- | ---------------------------------- |
-| `dev@`        | Main   | `localhost:3000/en/dashboard`   | SaaS platform dashboard            |
-| `user@`       | Main   | `localhost:3000`                | Onboarding flow ("Get Started")    |
-| `admin@`      | Demo   | `demo.localhost:3000/en/s/demo` | Full school dashboard              |
-| `teacher@`    | Demo   | `demo.localhost:3000/en/s/demo` | Teacher view (classes, students)   |
-| `student@`    | Demo   | `demo.localhost:3000/en/s/demo` | Student view (16 Grade 10 classes) |
-| `parent@`     | Demo   | `demo.localhost:3000/en/s/demo` | Guardian view (child's data)       |
-| `accountant@` | Demo   | `demo.localhost:3000/en/s/demo` | Finance dashboard                  |
-| `staff@`      | Demo   | `demo.localhost:3000/en/s/demo` | Staff operations                   |
-
----
-
-## Bulk Accounts
+## Bulk accounts
 
 ### Teachers (100)
 
-- `teacher1@databayt.org` through `teacher99@databayt.org`
-- Distributed across 6 departments: Languages, Sciences, Mathematics, Social Studies, Islamic Studies, Technology
-- Each has qualifications, experience, and subject assignments
-- Personal emails: `firstname-lastname{index}@{gmail,yahoo,hotmail,outlook}.com`
+`teacher1@` … `teacher99@databayt.org`. Distributed across 6 departments: Languages, Sciences, Mathematics, Social Studies, Islamic Studies, Technology. Each has qualifications, experience, and subject assignments.
 
 ### Students (1,000)
 
-- `student1@databayt.org` through `student999@databayt.org`
-- Distributed across K-12 year levels:
+`student1@` … `student999@databayt.org`, distributed across K-12.
 
-| Section      | Levels       | Students per Level | Total |
-| ------------ | ------------ | ------------------ | ----- |
-| Kindergarten | KG1, KG2     | 50                 | 100   |
-| Primary      | Grades 1-6   | 80                 | 480   |
-| Intermediate | Grades 7-9   | 70                 | 210   |
-| Secondary    | Grades 10-12 | 60                 | 180   |
+| Section      | Levels       | Per level | Total |
+| ------------ | ------------ | --------: | ----: |
+| Kindergarten | KG1, KG2     |        50 |   100 |
+| Primary      | Grades 1-6   |        80 |   480 |
+| Intermediate | Grades 7-9   |        70 |   210 |
+| Secondary    | Grades 10-12 |        60 |   180 |
 
-**Note**: student@databayt.org (Harry Potter) is reassigned to Grade 10 after initial distribution (KG1 has 49, Grade 10 has 61).
+Note: `student@databayt.org` (Harry) is reassigned to Grade 10 after distribution (KG1 ends at 49, Grade 10 at 61).
 
 ### Guardians (2,000)
 
-- `parent1@databayt.org` through `parent1999@databayt.org`
-- 2 guardians per student (father + mother)
-- Linked to corresponding student by index
-- Personal emails: `firstname-lastName{index}@{gmail,yahoo,hotmail,outlook}.com`
+`parent1@` … `parent1999@databayt.org`. Two guardians per student (father + mother), linked by index.
 
----
+## Simulation flows
 
-## Simulation Scenarios
+| Flow       | Steps                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------- |
+| Student    | Login `student@` → 16 classes, exams, attendance, fee status                           |
+| Parent     | Login `parent@` → child profile (Harry), grades, attendance, fee/payment               |
+| Teacher    | Login `teacher@` → assigned Arabic classes, roster, marks, attendance                  |
+| Admin      | Login `admin@` → full dashboard, finance overview, school settings                     |
+| Accountant | Login `accountant@` → fees, payments, invoices, reports                                |
+| Developer  | Login `dev@` on main domain → `/en/dashboard` platform analytics                       |
+| Onboarding | Login `user@` → Get Started → wizard → new school. Reset via `pnpm db:reset-test-user` |
 
-### 1. As Harry Potter (Student)
+## Role protection
 
-```
-1. Open demo.localhost:3000
-2. Login: student@databayt.org / 1234
-3. See 16 Grade 10 classes on dashboard
-4. View exam results (midterm, final, quizzes)
-5. Check attendance records
-6. View fee status
-```
+`dev@databayt.org` has an immutable `DEVELOPER` role. Enforced at multiple layers:
 
-### 2. As James Potter (Parent)
+| Layer            | Mechanism                                         | File                                     |
+| ---------------- | ------------------------------------------------- | ---------------------------------------- |
+| Seed scripts     | `PROTECTED_EMAILS` exclusion in bulk `updateMany` | `prisma/seeds/reset-test-user.ts`        |
+| OAuth adapter    | Returns `role` field to prevent JWT loss          | `src/lib/multi-tenant-prisma-adapter.ts` |
+| Claude rule      | Path-scoped warning when touching auth/seed code  | `.claude/rules/accounts.md`              |
+| PostToolUse hook | Detects unguarded bulk role changes               | `.claude/hooks/check-roles.sh`           |
 
-```
-1. Open demo.localhost:3000
-2. Login: parent@databayt.org / 1234
-3. See child's profile (هاري بوتر / Harry Potter, Grade 10)
-4. View grades and exam results
-5. Check attendance summary
-6. Review fee/payment status
-```
-
-### 3. As Minerva McGonagall (Teacher)
-
-```
-1. Open demo.localhost:3000
-2. Login: teacher@databayt.org / 1234
-3. See assigned Arabic classes across levels
-4. View student roster per class
-5. Enter marks/grades
-6. Check class attendance
-```
-
-### 4. As Albus Dumbledore (Admin)
-
-```
-1. Open demo.localhost:3000
-2. Login: admin@databayt.org / 1234
-3. Full dashboard access
-4. Manage teachers, students, classes
-5. View finance overview
-6. Configure school settings
-```
-
-### 5. As Filius Flitwick (Accountant)
-
-```
-1. Open demo.localhost:3000
-2. Login: accountant@databayt.org / 1234
-3. Finance dashboard
-4. Manage fees, payments, invoices
-5. Generate financial reports
-```
-
-### 6. As Severus Snape (Developer / SaaS)
-
-```
-1. Open localhost:3000
-2. Login: dev@databayt.org / 1234
-3. Navigate to /en/dashboard
-4. Platform-wide analytics
-5. View and manage all schools
-```
-
-### 7. As Neville Longbottom (Fresh User / Onboarding)
-
-```
-1. Open localhost:3000
-2. Login: user@databayt.org / 1234
-3. Click "Get Started"
-4. Complete onboarding wizard
-5. Create new school
-6. Reset after: pnpm db:reset-test-user
-```
-
----
-
-## Role Protection
-
-### Protected Accounts
-
-The `dev@databayt.org` account has an **immutable DEVELOPER role** that must never be changed by any automated process. This is enforced at multiple levels:
-
-| Layer            | Mechanism                                           | File                                     |
-| ---------------- | --------------------------------------------------- | ---------------------------------------- |
-| Seed scripts     | `PROTECTED_EMAILS` exclusion in bulk `updateMany`   | `prisma/seeds/reset-test-user.ts`        |
-| OAuth adapter    | Returns `role` field to prevent JWT role loss       | `src/lib/multi-tenant-prisma-adapter.ts` |
-| Claude Code rule | Path-scoped rule warns when touching auth/seed code | `.claude/rules/accounts.md`              |
-| PostToolUse hook | Detects unguarded bulk role changes in written code | `.claude/hooks/check-roles.sh`           |
-
-### Resettable Accounts
-
-These accounts are designed to be manually reset for fresh testing:
-
-- **`user@databayt.org`** — Reset via `pnpm db:reset-test-user` after onboarding wizard testing
-- **`applicant@databayt.org`** — Reset via `pnpm db:reset-test-applicant` after application wizard testing
-
-### The `PROTECTED_EMAILS` Pattern
-
-Any seed script or server action that performs bulk role updates must exclude protected emails:
-
-```typescript
+```ts
 const PROTECTED_EMAILS = ["dev@databayt.org"]
 
 await prisma.user.updateMany({
@@ -309,28 +125,27 @@ await prisma.user.updateMany({
 })
 ```
 
----
+Resettable: `user@databayt.org` (`pnpm db:reset-test-user`) and `applicant@databayt.org` (`pnpm db:reset-test-applicant`).
 
-## Known Gaps
-
-- **No second school** for cross-tenant testing (only Demo Academy exists)
-- **No OAuth test accounts** (GitHub, Google) — only credentials-based login
-- **No suspended/inactive users** for testing disabled account flows
-- **No multi-school user** — architecture limitation: User has a single `schoolId`
-
----
-
-## Reset Procedures
+## Reset
 
 ```bash
-# Reset only user@databayt.org to fresh state (no schoolId, USER role)
-pnpm db:reset-test-user
-
-# Full re-seed (all data, additive/idempotent)
-pnpm db:seed
-
-# Nuclear option: drop all data and re-seed (MANUAL ONLY)
-pnpm prisma migrate reset && pnpm db:seed
+pnpm db:reset-test-user                              # Fresh state for user@databayt.org
+pnpm db:seed                                         # Full re-seed (idempotent, ~45-120 min)
+pnpm prisma migrate reset && pnpm db:seed            # Nuclear (manual only)
+pnpm db:seed:single <name>                           # Single module — much faster
 ```
 
-**Important**: `pnpm db:seed` takes 45-120 minutes. For individual modules, use `pnpm db:seed:single <name>` instead. Seeds use `upsert` operations and are idempotent.
+Seeds use `upsert` and are idempotent.
+
+## Known gaps
+
+- No second school for cross-tenant testing.
+- No OAuth test accounts (Google/Facebook).
+- No suspended/inactive user.
+- No multi-school user — `User.schoolId` is single-valued by design.
+
+## See also
+
+- [Authentication](/docs/authentication)
+- [Safe seeds](/docs/safe-seeds)

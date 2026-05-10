@@ -1,32 +1,24 @@
 ---
-title: "Prettier"
-description: "Code formatting with shadcn/ui patterns, import ordering, and Tailwind class sorting"
+title: Prettier
+description: Code formatting with shadcn/ui patterns — import ordering and Tailwind class sorting.
 ---
 
-## Prettier
+We use Prettier with shadcn/ui's official patterns: no semicolons, double quotes, ES5 trailing commas, and automatic import + Tailwind class sorting.
 
-We use Prettier with shadcn/ui's official formatting patterns for consistent, beautiful code across the entire codebase.
+## Configuration
 
-### Configuration
-
-Our configuration follows [shadcn/ui's prettier.config.cjs](https://github.com/shadcn-ui/ui/blob/main/prettier.config.cjs):
+`prettier.config.js` mirrors [shadcn/ui's prettier.config.cjs](https://github.com/shadcn-ui/ui/blob/main/prettier.config.cjs):
 
 ```js
-// prettier.config.js
 /** @type {import('prettier').Config} */
 module.exports = {
-  // shadcn/ui official patterns
   semi: false,
   singleQuote: false,
   trailingComma: "es5",
-
-  // Standard settings
   tabWidth: 2,
   printWidth: 80,
   bracketSpacing: true,
   endOfLine: "lf",
-
-  // Import ordering (shadcn/ui pattern)
   importOrder: [
     "^(react/(.*)$)|^(react$)",
     "^(next/(.*)$)|^(next$)",
@@ -46,8 +38,6 @@ module.exports = {
     "^[./]",
   ],
   importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
-
-  // Plugins (order matters: tailwind must be last)
   plugins: [
     "@ianvs/prettier-plugin-sort-imports",
     "prettier-plugin-tailwindcss",
@@ -55,72 +45,64 @@ module.exports = {
 }
 ```
 
-### Key Differences from Default
+## Differences from defaults
 
 | Option          | shadcn/ui | Default | Why                                        |
 | --------------- | --------- | ------- | ------------------------------------------ |
 | `semi`          | `false`   | `true`  | Cleaner code, matches shadcn/ui components |
 | `trailingComma` | `"es5"`   | `"all"` | Better compatibility, smaller diffs        |
 
-### Commands
+## Commands
 
 ```bash
-pnpm format           # Format entire project
-pnpm format:check     # Check formatting (CI)
-pnpm format:staged    # Format staged files only
-pnpm format:cache     # Format with caching (faster)
+pnpm format            # Format entire project
+pnpm format:check      # CI check
+pnpm format:staged     # Staged files only
+pnpm format:cache      # With caching (faster)
 ```
 
-### Import Ordering
+## Import groups
 
-Imports are automatically sorted into logical groups:
+Imports auto-sort into logical groups: React/Next → third-party → internal (env, types, config, lib, hooks, ui, components, styles, app) → relative.
 
-```typescript
-// 1. React & Next.js
+```ts
+// 1. React + Next
 import * as React from "react"
-import { useCallback, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-// 2. Third-party packages
-import { zodResolver } from "@hookform/resolvers/zod"
+// 2. Third-party
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-// 3. Internal imports (grouped by type)
+// 3. Internal
 import { env } from "@/env"
 import type { Student } from "@/types/student"
 import { db } from "@/lib/db"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { StudentForm } from "@/components/students/form"
 
-// 4. Relative imports
+// 4. Relative
 import { localHelper } from "./helpers"
 ```
 
-### Tailwind Class Sorting
-
-Classes are automatically sorted by Tailwind conventions:
+## Tailwind class sorting
 
 ```tsx
 // Before
 <div className="p-4 flex bg-blue-500 items-center text-white">
 
-// After (automatically sorted)
+// After
 <div className="flex items-center bg-blue-500 p-4 text-white">
 ```
 
-### Plugins
+## Plugins
 
-| Plugin                                                                                       | Purpose                                      |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [@ianvs/prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports) | Intelligent import sorting with regex groups |
-| [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)   | Sorts Tailwind CSS classes                   |
+| Plugin                                                                                       | Purpose                                     |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| [@ianvs/prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports) | Intelligent import sorting via regex groups |
+| [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)   | Sorts Tailwind classes                      |
 
-**Important**: Tailwind plugin must be **last** in the plugins array.
+The Tailwind plugin must be **last** in the plugins array.
 
-### ESLint Integration
+## ESLint integration
 
 ESLint runs alongside Prettier with conflict rules disabled via `eslint-config-prettier`.
 
@@ -141,26 +123,18 @@ export default [
 ]
 ```
 
-#### Rules and conventions
-
-- TypeScript-first: prefer typed modules, avoid `any`.
-- React 19 / Next 16 safe patterns: server components by default, client only when needed.
-- Imports: absolute aliases from `components.json` (e.g. `@/components/ui/button`).
-- Lint before commit: run `pnpm lint`.
-
-#### Commands
-
 ```bash
 pnpm lint
 pnpm lint --fix
 ```
 
-### IDE Setup
+Conventions: TypeScript-first (no `any`), server components by default, absolute aliases (`@/components/ui/button`).
 
-#### VS Code
+## IDE setup
 
-1. Install [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-2. Add to `.vscode/settings.json`:
+### VS Code
+
+Install [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode), then add to `.vscode/settings.json`:
 
 ```json
 {
@@ -170,22 +144,18 @@ pnpm lint --fix
 }
 ```
 
-#### WebStorm
+### WebStorm
 
-1. **Settings** > **Languages & Frameworks** > **JavaScript** > **Prettier**
-2. Enable "On save" and "On 'Reformat Code' action"
-3. Set Prettier package to `node_modules/prettier`
+Settings → Languages & Frameworks → JavaScript → Prettier. Enable "On save" and "On 'Reformat Code' action". Set Prettier package to `node_modules/prettier`.
 
-### Pre-commit Hook
-
-Formatting runs automatically on staged files:
+## Pre-commit hook
 
 ```bash
 # .husky/pre-commit
 npx pretty-quick --staged
 ```
 
-### Ignored Files
+## Ignored
 
 ```text
 # .prettierignore
@@ -197,28 +167,13 @@ build
 pnpm-lock.yaml
 ```
 
-### Troubleshooting
+## Troubleshooting
 
-#### Import sorting not working
+**Import sorting not working** — verify plugin order: sort-imports first, tailwindcss last.
 
-Ensure plugins are in correct order (sort-imports first, tailwindcss last):
+**VS Code not formatting** — check Prettier extension installed, `editor.defaultFormatter` set, `prettier.config.js` exists in root.
 
-```js
-plugins: [
-  "@ianvs/prettier-plugin-sort-imports", // First
-  "prettier-plugin-tailwindcss", // Last
-]
-```
-
-#### VS Code not formatting
-
-1. Check Prettier extension is installed
-2. Verify `editor.defaultFormatter` is set to `esbenp.prettier-vscode`
-3. Ensure `prettier.config.js` exists in project root
-
-#### Different formatting locally vs CI
-
-Lock Prettier version in `package.json`:
+**Different formatting locally vs CI** — pin Prettier version in `package.json`:
 
 ```json
 {
@@ -228,19 +183,7 @@ Lock Prettier version in `package.json`:
 }
 ```
 
-### Agent
+## See also
 
-Use `/agents/prettier` for:
-
-- Configuration optimization
-- Plugin troubleshooting
-- ESLint conflict resolution
-- IDE integration help
-- CI/CD setup
-
-### Resources
-
-- [Prettier Options](https://prettier.io/docs/options)
-- [shadcn/ui prettier.config.cjs](https://github.com/shadcn-ui/ui/blob/main/prettier.config.cjs)
-- [@ianvs/prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports)
-- [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier)
+- [GitHub workflow](/docs/github)
+- [Pattern](/docs/pattern)

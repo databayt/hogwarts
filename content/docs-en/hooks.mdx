@@ -1,34 +1,38 @@
 ---
 title: Hooks
-description: Canonical patterns for writing use-*.ts custom hooks in feature directories.
+description: Custom hooks colocated next to the feature that owns them.
 ---
 
-Custom hooks live next to the feature that owns them. Cross-feature hooks live in `src/lib/hooks/`. Naming is `use-<concept>.ts`, kebab-case.
+Custom hooks live next to the feature they serve. Cross-feature hooks live in `src/lib/hooks/`. Naming is `use-<concept>.ts`, kebab-case.
 
 ## Categories
 
-| Category            | Purpose                                                                   | Reference                            |
-| ------------------- | ------------------------------------------------------------------------- | ------------------------------------ |
-| Form / state        | Complex form state, multi-step orchestration, draft persistence.          | `form/use-form.ts`                   |
-| Data fetching       | Server-action wrappers with loading state, error handling, optimistic UX. | `use-domains.ts`, `use-billing.ts`   |
-| File operations     | Upload progress, drag-and-drop, file validation, image preview.           | `file/use-upload.ts`                 |
-| Real-time           | Socket.IO subscriptions, polling fallback.                                | `notifications/use-notifications.ts` |
-| URL state           | `nuqs` wrappers for typed search params.                                  | `listings/students/use-students.ts`  |
-| Wizard              | Step state, validation context, navigation.                               | `wizard/use-wizard.ts`               |
-| Layout / responsive | Media query, mobile detect, scroll lock.                                  | `src/lib/hooks/use-media-query.ts`   |
-| Permissions         | Reactive RBAC checks against the current session.                         | `auth/use-permissions.ts`            |
-| Drag and drop       | DnD-kit wrappers per feature.                                             | `timetable/use-dnd.ts`               |
-| Tables              | Sorting, pagination, selection wrappers around `@tanstack/react-table`.   | `table/use-table.ts`                 |
-| Animations          | Framer Motion presets, scroll-triggered animations.                       | `atom/use-scroll-animation.ts`       |
-| Browser APIs        | Clipboard, localStorage, intersection observer, idle.                     | `src/lib/hooks/use-clipboard.ts`     |
+| Category            | Purpose                                        | Reference                            |
+| ------------------- | ---------------------------------------------- | ------------------------------------ |
+| Form / state        | Multi-step orchestration, draft persistence    | `form/use-form.ts`                   |
+| Data fetching       | Server-action wrappers with loading + error    | `use-domains.ts`                     |
+| File operations     | Upload progress, drag-and-drop                 | `file/use-upload.ts`                 |
+| Real-time           | Socket.IO subscriptions, polling fallback      | `notifications/use-notifications.ts` |
+| URL state           | `nuqs` wrappers for typed search params        | `listings/students/use-students.ts`  |
+| Wizard              | Step state, validation context                 | `wizard/use-wizard.ts`               |
+| Layout / responsive | Media query, mobile detect, scroll lock        | `src/lib/hooks/use-media-query.ts`   |
+| Permissions         | Reactive RBAC checks against the session       | `auth/use-permissions.ts`            |
+| Drag and drop       | DnD-kit wrappers                               | `timetable/use-dnd.ts`               |
+| Tables              | Sorting, pagination wrappers around TanStack   | `table/use-table.ts`                 |
+| Animations          | Framer Motion presets                          | `atom/use-scroll-animation.ts`       |
+| Browser APIs        | Clipboard, localStorage, intersection observer | `src/lib/hooks/use-clipboard.ts`     |
 
-## Five rules
+## Rules
 
-1. **`"use client"` at the top.** Hooks always run client-side.
-2. **Named exports only.** No defaults.
-3. **Return an object, not a tuple.** `{ value, set, isLoading }` — easy to destructure and extend without breaking callers.
-4. **Stay under ~150 lines.** A 523-line `use-form.ts` exporting 5 hooks should be 5 files.
-5. **Lift duplicates.** When the same hook lives in 3+ places, move it to `src/lib/hooks/`.
+| #   | Rule                                                                   |
+| --- | ---------------------------------------------------------------------- |
+| 1   | `"use client"` at the top — hooks always run client-side               |
+| 2   | Named exports only                                                     |
+| 3   | Return an object, not a tuple — `{ value, set, isLoading }`            |
+| 4   | Stay under ~150 lines — a 523-line file with 5 hooks should be 5 files |
+| 5   | Lift duplicates to `src/lib/hooks/` when used in 3+ places             |
+
+## Canonical example
 
 ```typescript
 "use client"
@@ -56,30 +60,9 @@ export function useSubjectActions() {
 }
 ```
 
-## Anti-patterns
-
-- **`use-media-query` duplicated 5 times** — and `use-callback-ref` 3×, `use-mobile` 3×, `use-lock-body` 2×, `use-debounced-callback` 2×. Lift to `src/lib/hooks/` and import.
-- **Multi-hook files** — `form/use-form.ts` is 523 lines exporting 5 hooks. Split.
-- **Returning tuples** — `[value, setValue, loading]` is hard to extend; switch to an object.
-- **Side effects in render** — wrap in `useEffect`. `useTransition` for async work.
-- **Reading `window` without a guard** — SSR-safe code uses `typeof window !== "undefined"` or `useSyncExternalStore`.
-
-## Relationship to siblings
-
-- Hooks consume server actions from `actions.ts` and read-only queries via fetched-then-passed props.
-- Hooks don't import from `db` directly — that's a server-only module.
-- Hooks export to `client.tsx`, `form.tsx`, `table.tsx`. Server components don't use custom hooks.
-
-## Naming
-
-- Filename: `use-<concept>.ts` (kebab-case).
-- Function: `use<Concept>` (camelCase, `use` prefix).
-- Cross-feature hooks: `src/lib/hooks/use-<concept>.ts`.
-- Single-purpose; resist the temptation to export 5 hooks from one file.
-
 ## Shared hooks already lifted
 
-These live in `src/lib/hooks/` and shouldn't be reinvented:
+These live in `src/lib/hooks/` — don't reinvent.
 
 | Hook                        | Purpose                       |
 | --------------------------- | ----------------------------- |
@@ -92,4 +75,30 @@ These live in `src/lib/hooks/` and shouldn't be reinvented:
 | `use-local-storage`         | Reactive `localStorage` state |
 | `use-intersection-observer` | Visibility detection          |
 
-If you find yourself writing one of these, import instead.
+## Anti-patterns
+
+- `use-media-query` duplicated 5 times, `use-callback-ref` 3×, `use-mobile` 3× — lift to `src/lib/hooks/`.
+- Multi-hook files — `form/use-form.ts` is 523 lines exporting 5 hooks. Split.
+- Returning tuples (`[value, setValue, loading]`) — switch to objects.
+- Side effects in render — wrap in `useEffect` or `useTransition`.
+- Reading `window` without an SSR guard — use `typeof window !== "undefined"` or `useSyncExternalStore`.
+
+## Naming
+
+- File: `use-<concept>.ts` (kebab-case).
+- Function: `use<Concept>` (camelCase, `use` prefix).
+- Cross-feature: `src/lib/hooks/use-<concept>.ts`.
+- Single-purpose — resist exporting 5 hooks per file.
+
+## Sibling roles
+
+- Hooks consume server actions from `actions.ts`.
+- Hooks don't import `db` directly — server-only.
+- Hooks export to `client.tsx`, `form.tsx`, `table.tsx`. Server components don't use them.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Actions](/docs/actions)
+- [Util](/docs/util)
+- [Content](/docs/content)

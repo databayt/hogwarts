@@ -1,92 +1,64 @@
 ---
 title: Database Safety
-description: Seed system, destructive command protection, and Neon branch protocol
+description: Layered protection — destructive command blocking, single-module seeds, and Neon branch-before-touch.
 ---
 
-## Overview
+Hogwarts is a multi-tenant SaaS — one database serves every school. A stray `DROP TABLE`, `TRUNCATE`, or unreviewed migration wipes data for every tenant. Protection is layered.
 
-Hogwarts is a multi-tenant SaaS platform where a single database serves all schools. A destructive command (accidental `DROP TABLE`, `TRUNCATE`, or unreviewed migration) can wipe data for every tenant simultaneously. This page documents the layered safety mechanisms that prevent data loss.
+## Active mechanisms
 
-## Active Safety Mechanisms
+| Layer                     | Mechanism                                | Blocks                                                                                                           |
+| ------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| PreToolUse hook           | Grep on every Bash command               | `migrate reset`, `db execute`, `accept-data-loss`, `DROP TABLE`, `TRUNCATE`, `DELETE FROM`, `ALTER TABLE...DROP` |
+| Permission deny list      | Hard deny in `settings.json`             | `pnpm db:seed`, `prisma migrate reset`, `prisma db push --accept-data-loss`, `prisma db execute`                 |
+| Pre-commit seed check     | Scans staged seed files                  | `deleteMany`, `.delete()`, `TRUNCATE`, `DROP`, `$executeRaw`                                                     |
+| `ensure-demo.ts`          | Idempotent build script                  | Safe to repeat                                                                                                   |
+| `single.ts` `global` flag | Skips school resolution for global seeds | Failure when `schools` table empty                                                                               |
 
-| Layer                       | Mechanism                                   | What it blocks                                                                                                   |
-| --------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **PreToolUse hook**         | Grep pattern on every Bash command          | `migrate reset`, `db execute`, `accept-data-loss`, `DROP TABLE`, `TRUNCATE`, `DELETE FROM`, `ALTER TABLE...DROP` |
-| **Permission deny list**    | Hard deny in `settings.json`                | `pnpm db:seed`, `prisma migrate reset`, `prisma db push --accept-data-loss`, `prisma db execute`                 |
-| **Pre-commit seed check**   | Scans staged seed files for destructive ops | `deleteMany`, `.delete()`, `TRUNCATE`, `DROP`, `$executeRaw`                                                     |
-| **`ensure-demo.ts`**        | Idempotent build script                     | Safe to run repeatedly without data loss                                                                         |
-| **`single.ts` global flag** | Skips school resolution for global seeds    | Prevents failures when `schools` table is empty                                                                  |
+## Seed system
 
-## Seed System
+Seeds split into global and school-scoped in `prisma/seeds/single.ts`.
 
-### Global vs School-Scoped Seeds
-
-Seeds are split into two categories in `prisma/seeds/single.ts`:
-
-**Global seeds** (`global: true`) run without a school. They populate platform-wide reference data:
+**Global** (`global: true`) — populate platform-wide reference data:
 
 | Seed                | Description                                                   |
 | ------------------- | ------------------------------------------------------------- |
 | `catalog`           | Global catalog (subjects, chapters, lessons)                  |
 | `catalog-images`    | Upload ClickView images to S3/CloudFront                      |
 | `clickview-catalog` | ClickView US catalog (62 subjects, 201 chapters, 986 lessons) |
-| `clickview-images`  | Upload ClickView subject images to S3/CloudFront              |
+| `clickview-images`  | Upload ClickView subject images                               |
 | `school`            | Demo school + branding                                        |
 
-**School-scoped seeds** require the demo school to exist first. They populate school-specific data (students, teachers, classes, attendance, etc.).
-
-### Usage
+**School-scoped** — require demo school to exist (students, teachers, classes, attendance, etc.).
 
 ```bash
-# List all seeds (grouped by global vs school-scoped)
-pnpm db:seed:single --list
-
-# Run a global seed (works even with empty database)
-pnpm db:seed:single clickview-catalog
-
-# Run a school-scoped seed (requires demo school)
-pnpm db:seed:single subjects
-
-# BLOCKED — full seed is forbidden (60-120s, risky)
-pnpm db:seed  # ← denied by settings.json
+pnpm db:seed:single --list                  # List all seeds
+pnpm db:seed:single clickview-catalog       # Global seed (works on empty DB)
+pnpm db:seed:single subjects                # School-scoped seed (requires demo)
+pnpm db:seed                                # BLOCKED — see below
 ```
 
-### Why `pnpm db:seed` is Blocked
+### Why `pnpm db:seed` is blocked
 
-The full seed script runs all modules sequentially (60-120 seconds). It is blocked because:
+The full seed runs every module sequentially and takes **45–120 minutes**. Blocked because: it's slow and always times out in CI, it re-seeds foundations risking duplicates, and single-module seeding always suffices for development. Run it manually outside Claude Code only if you genuinely need a full reset.
 
-1. It is slow and often times out in CI
-2. It re-seeds foundations that may already exist, risking duplicates
-3. Single-module seeding (`pnpm db:seed:single <name>`) is always sufficient
+## Neon branch-before-touch
 
-If you genuinely need a full seed, run it manually in a terminal outside Claude Code.
+Before any schema change or operation that could affect existing data:
 
-## Neon Branch-Before-Touch Protocol
-
-Before ANY schema change or data operation that could affect existing data:
-
-1. **Create a Neon branch** using Neon MCP `create_branch`
-2. **Test the operation** on the branch
-3. **If successful**, apply to main
-4. **If failed**, delete the branch — zero damage
+1. Create a Neon branch (Neon MCP `create_branch`).
+2. Test the operation on the branch.
+3. If successful → apply to main.
+4. If failed → delete the branch — zero damage.
 
 ```bash
-# Example workflow
-# 1. Create branch (via Neon MCP)
 neon branches create --name "test-migration"
-
-# 2. Run migration on branch
 prisma migrate dev --create-only
-
-# 3. Review generated SQL
-cat prisma/migrations/<timestamp>/migration.sql
-
-# 4. If safe, apply to main database
-# 5. If not, delete the branch
-neon branches delete "test-migration"
+cat prisma/migrations/<timestamp>/migration.sql   # Review SQL
+# If safe → apply to main. Else → neon branches delete "test-migration"
 ```
 
-## Safe Commands Reference
+## Command reference
 
 ### Safe (always allowed)
 
@@ -98,60 +70,46 @@ neon branches delete "test-migration"
 | `pnpm db:seed:single <name>`       | Seed one module                       |
 | `pnpm db:seed:single --list`       | List available seeds                  |
 
-### Blocked (denied or hook-blocked)
+### Blocked
 
-| Command                             | Why                       |
-| ----------------------------------- | ------------------------- |
-| `pnpm db:seed`                      | Too slow, risky full seed |
-| `prisma migrate reset`              | Drops entire database     |
-| `prisma db push --accept-data-loss` | Drops tables with data    |
-| `prisma db execute`                 | Raw SQL execution         |
-| `DROP TABLE` / `TRUNCATE`           | Destroys data             |
-| `DELETE FROM`                       | Bulk row deletion         |
-| `ALTER TABLE...DROP`                | Column drops              |
+| Command                             | Why                    |
+| ----------------------------------- | ---------------------- |
+| `pnpm db:seed`                      | Slow, full-DB risk     |
+| `prisma migrate reset`              | Drops entire database  |
+| `prisma db push --accept-data-loss` | Drops tables with data |
+| `prisma db execute`                 | Raw SQL                |
+| `DROP TABLE` / `TRUNCATE`           | Destroys data          |
+| `DELETE FROM`                       | Bulk row delete        |
+| `ALTER TABLE...DROP`                | Column drops           |
 
-### Ask (requires confirmation)
+### Ask first
 
-| Command                    | When to use                                   |
-| -------------------------- | --------------------------------------------- |
-| `prisma migrate dev`       | Create and apply migration (review SQL first) |
-| `ALTER TABLE...ADD COLUMN` | Adding columns is safe but confirm schema     |
+| Command                    | When                                        |
+| -------------------------- | ------------------------------------------- |
+| `prisma migrate dev`       | Create + apply migration (review SQL first) |
+| `ALTER TABLE...ADD COLUMN` | Adding columns is safe but confirm schema   |
 
-## Recovery Procedures
+## Recovery
 
-### Schema out of sync
+**Schema out of sync** — `prisma db push`. Adds missing tables/columns without dropping data.
+
+**Missing tables** —
 
 ```bash
 prisma db push
-```
-
-Review any warnings before proceeding. This adds missing tables/columns without dropping data.
-
-### Missing tables
-
-```bash
-# 1. Push schema to create tables
-prisma db push
-
-# 2. Seed the specific module
 pnpm db:seed:single school
 pnpm db:seed:single auth
 ```
 
-### Need to add a column
-
-Write targeted SQL instead of re-running migrations:
+**Need a column** — write targeted SQL:
 
 ```sql
 ALTER TABLE "YourTable" ADD COLUMN IF NOT EXISTS "newColumn" TEXT;
 ```
 
-### Accidental data loss
+**Accidental data loss** — if a Neon branch existed before the operation, restore from it. Otherwise contact the team to restore from Neon's automatic backups.
 
-If you created a Neon branch before the operation:
+## See also
 
-1. Note the branch point-in-time
-2. Restore from the branch
-3. Delete the damaged branch
-
-If no branch exists, contact the team to restore from Neon's automatic backups.
+- [Accounts](/docs/accounts)
+- [Architecture](/docs/architecture)

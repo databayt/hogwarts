@@ -1,17 +1,20 @@
 ---
 title: Multi-Tenancy
-description: Subdomain routing, tenant context resolution, RBAC, schoolId scoping, and security guarantees.
+description: Subdomain routing, tenant context resolution, and database isolation via schoolId scoping.
 ---
 
 Hogwarts is a multi-tenant SaaS platform: each school operates on its own subdomain (`school.databayt.org`) with complete data isolation via `schoolId` scoping. This page covers the path from edge middleware to database query.
 
+For authentication, OAuth, and RBAC see [authentication](/docs/authentication), [oauth](/docs/oauth), and [authorization](/docs/authorization).
+
 ## Request flow
 
-A request to `school.databayt.org/dashboard` traverses three layers:
+A request to `school.databayt.org/dashboard` traverses four layers:
 
-1. **Edge middleware** (`src/proxy.ts`) skips static files, detects locale and subdomain, performs lightweight JWT decode for RBAC, and rewrites the URL to `/en/s/school/dashboard`. The `x-subdomain` header is set for downstream consumers.
-2. **Tenant context** (`src/lib/tenant-context.ts`) resolves the canonical `schoolId` with priority: impersonation cookie → `x-subdomain` header → session JWT.
+1. **Edge middleware** skips static files, detects locale and subdomain, performs lightweight JWT decode for RBAC, and rewrites the URL to `/en/s/school/dashboard`. The `x-subdomain` header is set for downstream consumers.
+2. **Tenant context** resolves the canonical `schoolId` with priority: impersonation cookie → `x-subdomain` header → session JWT.
 3. **Server component / action** uses `getTenantContext()` and includes `schoolId` in every database query.
+4. **Database** enforces tenant safety through `@@unique` constraints and `@@index([schoolId])` per business model.
 
 ## Entry points
 
@@ -22,32 +25,11 @@ A request to `school.databayt.org/dashboard` traverses three layers:
 | School Marketing | `{school}.databayt.org` | `/s/[subdomain]/(school-marketing)` | Public         | School public pages    |
 | School Dashboard | `{school}.databayt.org` | `/s/[subdomain]/(school-dashboard)` | Authenticated  | School management      |
 
-## Critical files
-
-| File                          | Lines | Purpose                                                    |
-| ----------------------------- | ----- | ---------------------------------------------------------- |
-| `src/proxy.ts`                | 388   | Edge middleware — subdomain detection, URL rewriting, RBAC |
-| `src/lib/tenant-context.ts`   | 189   | Tenant resolution with in-memory caching                   |
-| `src/auth.ts`                 | 777   | Auth configuration — JWT, cookies, redirects               |
-| `src/auth.config.ts`          | 151   | Auth providers, JWT strategy                               |
-| `src/routes.ts`               | 410   | RBAC matrix — role-based route protection                  |
-| `src/lib/rate-limit.ts`       | 537   | Rate limiting — 14 configs                                 |
-| `src/lib/security-headers.ts` | 173   | CSP, HSTS, XSS protection                                  |
-| `src/lib/dns-service.ts`      | 644   | DNS verification — multi-provider support                  |
-
 ## Edge middleware
 
-Runs on every non-static request. Stays under the 1 MB Edge size limit by avoiding heavy imports.
+The edge proxy runs on every non-static request and stays under the Edge size limit by avoiding heavy imports. Processing order: skip static and API paths, detect locale (`NEXT_LOCALE` cookie → `Accept-Language` → default `ar`), detect subdomain, classify the route, perform a lightweight JWT decode for RBAC pre-checks, then rewrite the URL with `x-subdomain` set for downstream consumers.
 
-Processing order:
-
-1. Skip `/_next`, `/api/`, image/font/CSS files.
-2. Detect locale: `NEXT_LOCALE` cookie → `Accept-Language` → default `ar`.
-3. Detect subdomain (see below).
-4. Classify route: public, auth, school-marketing, or protected.
-5. Auth check via session cookie presence.
-6. RBAC: decode JWT role, check `isRouteAllowedForRole()`.
-7. Rewrite URL: `/dashboard` → `/en/s/school/dashboard`.
+JWT role decoding at the edge uses base64 only — full crypto verification happens in server actions via `auth()`. The JWT is already in an httpOnly secure cookie; the edge decode is for routing only.
 
 ### Subdomain detection
 
@@ -69,7 +51,7 @@ if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
 }
 ```
 
-`ed.databayt.org` is the main domain, not a tenant. The `!host.startsWith("ed.")` check prevents it from being misclassified.
+`ed.databayt.org` is the main domain, not a tenant. The `!host.startsWith("ed.")` check prevents misclassification.
 
 ### URL rewriting
 
@@ -87,15 +69,7 @@ const response = NextResponse.rewrite(url)
 response.headers.set("x-subdomain", subdomain)
 ```
 
-### JWT decode at the edge
-
-Role extraction uses lightweight base64 decoding without crypto verification — verification happens in server actions via `auth()`. The JWT is already in an httpOnly secure cookie; the decode is for routing only.
-
-### Gotchas
-
-- `/login` and `/join` exist globally at `/[lang]/(auth)/*`, not within the subdomain structure — they aren't rewritten.
-- The matcher `["/((?!_next/|api/|.*\\..*).*)"]` excludes static files and API routes.
-- Missing locale triggers a redirect (not rewrite) to add it.
+`/login` and `/join` exist globally at `/[lang]/(auth)/*`, not within the subdomain structure — they aren't rewritten. The matcher excludes `/_next/`, `/api/`, and any path with a file extension.
 
 ## Tenant context
 
@@ -122,8 +96,6 @@ export async function getTenantContext(): Promise<TenantContext> {
 }
 ```
 
-Subdomain-to-schoolId lookups are cached in an in-memory `Map`: 60-second TTL, max 100 entries, per serverless instance. Failed lookups are not cached.
-
 ```typescript
 type TenantContext = {
   schoolId: string | null
@@ -133,73 +105,9 @@ type TenantContext = {
 }
 ```
 
-Limitations:
+Subdomain → `schoolId` lookups use a two-tier cache: Upstash Redis (5 minutes, shared across instances) → in-memory `Map` (1 minute, max 100 entries, per-instance fallback). Failed lookups are not cached. Redis is optional — without it, the Map tier still serves traffic with cold starts hitting the database.
 
-- Cache is per-instance, not shared across Vercel functions. Each cold start hits the database.
-- No cache invalidation. Subdomain changes propagate within 60s per instance.
-- The `catch` block returns an empty context — could mask database issues silently.
-
-## Authentication and SSO
-
-JWT-based sessions, configured for edge performance:
-
-```typescript
-session: {
-  strategy: "jwt",
-  maxAge: 24 * 60 * 60,      // 24 hours
-  updateAge: 5 * 60,         // 5 minutes in production
-}
-```
-
-Payload includes `id`, `email`, `role`, `schoolId`, `provider`, `sessionToken`, `updatedAt`, `hash`.
-
-### Cross-subdomain SSO
-
-All cookies share the `.databayt.org` domain.
-
-```typescript
-cookies: {
-  sessionToken: {
-    name: "authjs.session-token",
-    options: {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      domain: process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
-      maxAge: 24 * 60 * 60,
-    },
-  },
-}
-```
-
-| Cookie                      | Purpose                     | maxAge     |
-| --------------------------- | --------------------------- | ---------- |
-| `authjs.session-token`      | JWT session (httpOnly)      | 24 hours   |
-| `authjs.callback-url`       | OAuth callback preservation | No expiry  |
-| `authjs.pkce.code_verifier` | OAuth PKCE                  | 15 minutes |
-| `authjs.csrf-token`         | CSRF protection             | Session    |
-| `NEXT_LOCALE`               | Language preference         | 1 year     |
-| `impersonate_schoolId`      | DEVELOPER debugging         | 1 hour     |
-
-### Multi-tenant Prisma adapter
-
-Standard NextAuth assumes `email` is `@unique` on `User`, but Hogwarts uses `@@unique([email, schoolId])` for multi-tenancy. A custom adapter at `src/lib/multi-tenant-prisma-adapter.ts` overrides `getUserByEmail()` and `createUser()`.
-
-### Login redirects by user type
-
-| User type   | Origin                  | Action      | Redirect                          |
-| ----------- | ----------------------- | ----------- | --------------------------------- |
-| DEVELOPER   | `ed.databayt.org`       | Login       | Stay on SaaS marketing            |
-| DEVELOPER   | `ed.databayt.org`       | Get Started | `/onboarding`                     |
-| DEVELOPER   | Any                     | Platform    | Dashboard (always allowed)        |
-| School user | `ed.databayt.org`       | Login       | Stay on SaaS marketing            |
-| School user | `{school}.databayt.org` | Login       | Stay on school marketing          |
-| School user | `{school}.databayt.org` | Platform    | `{school}.databayt.org/dashboard` |
-| Fresh user  | `ed.databayt.org`       | Get Started | `/onboarding` (create school)     |
-| Fresh user  | `{school}.databayt.org` | Platform    | `/access-denied` (not a member)   |
-
-OAuth callback uses a 5-method URL recovery for the post-login destination: server-side `oauth_callback_intended` cookie (most reliable), URL `searchParams.callbackUrl`, regex match fallback, client-side cookies, session storage.
+Limitations: the Map tier is per-instance, so cold starts may hit Redis or the database. Subdomain changes propagate within 5 minutes globally and 1 minute per instance.
 
 ## Database isolation
 
@@ -222,14 +130,6 @@ model Student {
 }
 ```
 
-### Models without schoolId
-
-About 44 models intentionally lack `schoolId`:
-
-- **Auth tokens** (4): `Account`, `VerificationToken`, `PasswordResetToken`, `TwoFactorToken`. Email-scoped, ephemeral.
-- **Catalog globals** (7+): `CatalogSubject`, `CatalogChapter`, `CatalogLesson`, etc. Platform-wide reference content shared across schools; bridge models scope to `schoolId`.
-- **Subscription tiers** (1): platform-wide pricing.
-
 ### Query patterns
 
 ```typescript
@@ -244,7 +144,7 @@ await db.student.findMany({
 })
 ```
 
-`schoolId` injection is currently manual. Automatic injection via Prisma extensions is tracked separately.
+`schoolId` injection is currently manual. Auth tokens, catalog globals, and platform-wide subscription tiers intentionally lack `schoolId` — see [database](/docs/database) for the full list.
 
 ## Domain management
 
@@ -257,130 +157,18 @@ model School {
 }
 ```
 
-`DnsService` (`src/lib/dns-service.ts`) validates subdomains:
-
-- 3 to 63 characters.
-- Alphanumeric and hyphens only (RFC 1035), no consecutive hyphens.
-- 20 reserved words blocked: `www`, `api`, `admin`, `mail`, `ftp`, `app`, `dashboard`, `portal`, `dev`, `test`, `staging`, `demo`, `preview`, etc.
-
-The `DomainRequest` model supports custom domain approval with a `pending → approved → verified` (or `rejected → pending`) flow. DNS provider integrations (Cloudflare, Route 53, Vercel) are tracked separately; for now schools configure DNS manually.
-
-## RBAC matrix
-
-8 roles with graduated permissions:
-
-```typescript
-type Role =
-  | "DEVELOPER" // platform admin (no schoolId, all schools)
-  | "ADMIN" // school administrator
-  | "TEACHER"
-  | "STUDENT"
-  | "GUARDIAN"
-  | "ACCOUNTANT" // school finance
-  | "STAFF" // general school staff
-  | "USER" // default role (no school, onboarding only)
-```
-
-| Route                                                | Allowed roles                                |
-| ---------------------------------------------------- | -------------------------------------------- |
-| `/admin/*`, `/settings/*`                            | ADMIN, DEVELOPER                             |
-| `/teachers/*`                                        | ADMIN, DEVELOPER                             |
-| `/students/*`, `/parents/*`                          | ADMIN, TEACHER, STAFF, DEVELOPER             |
-| `/subjects/*`, `/classes/*`, `/exams/*`, `/grades/*` | ADMIN, TEACHER, DEVELOPER                    |
-| `/attendance/*`                                      | ADMIN, TEACHER, STAFF, DEVELOPER             |
-| `/finance/*`, `/fees/*`, `/invoice/*`, `/banking/*`  | All 7 roles (role-specific views in UI)      |
-| `/announcements/*`, `/messaging/*`                   | ADMIN, TEACHER, STAFF, ACCOUNTANT, DEVELOPER |
-| `/my-grades`, `/my-attendance`, `/my-fees`           | STUDENT, GUARDIAN, DEVELOPER                 |
-| `/library/*`, `/events/*`                            | All authenticated                            |
-| `/operator/*`                                        | DEVELOPER only                               |
-| `/dashboard` (main domain)                           | DEVELOPER only (SaaS)                        |
-| `/dashboard` (subdomain)                             | All authenticated (school dashboard)         |
-
-RBAC enforces at two layers: edge middleware (lightweight JWT decode for fast blocking) and server actions (full `auth()` with crypto verification — the source of truth). DEVELOPER bypasses route checks. Unmapped routes default to allowing all authenticated users.
-
-The path `/dashboard` resolves differently per domain:
-
-| Domain                | Meaning                     | Access           |
-| --------------------- | --------------------------- | ---------------- |
-| `ed.databayt.org`     | SaaS platform dashboard     | DEVELOPER only   |
-| `school.databayt.org` | School management dashboard | All school roles |
-
-## Server action pattern
-
-Every server action follows the same shape for tenant safety.
-
-```typescript
-"use server"
-
-import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
-
-import { db } from "@/lib/db"
-
-import { itemSchema } from "./validation"
-
-export async function createItem(data: FormData) {
-  // 1. authenticate and resolve schoolId
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-  if (!schoolId) throw new Error("Unauthorized")
-
-  // 2. validate input
-  const validated = itemSchema.parse(Object.fromEntries(data))
-
-  // 3. execute scoped by schoolId — never omit
-  const item = await db.item.create({
-    data: { ...validated, schoolId },
-  })
-
-  // 4. revalidate and return
-  revalidatePath("/items")
-  return { success: true, item }
-}
-```
-
-Omitting `schoolId` from a query is the #1 cause of tenant data leaks.
-
-## Security
-
-### Headers
-
-| Header                      | Value                                          | Purpose                        |
-| --------------------------- | ---------------------------------------------- | ------------------------------ |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`          | Force HTTPS for all subdomains |
-| `X-Frame-Options`           | `SAMEORIGIN`                                   | Prevent clickjacking           |
-| `X-Content-Type-Options`    | `nosniff`                                      | Prevent MIME sniffing          |
-| `Referrer-Policy`           | `origin-when-cross-origin`                     | Strip path cross-origin        |
-| `Permissions-Policy`        | `camera=(), microphone=(), geolocation=(self)` | Limit browser APIs             |
-
-CSP uses dynamic nonce with fallback to `'unsafe-inline'`. Allows Stripe iframes, Sentry connections, Vercel analytics.
-
-### Rate limiting
-
-| Endpoint      | Limit        | Window     |
-| ------------- | ------------ | ---------- |
-| AUTH (login)  | 5 requests   | 1 minute   |
-| ONBOARDING    | 10 requests  | 1 minute   |
-| API (general) | 100 requests | 1 minute   |
-| MESSAGE_SEND  | 10 messages  | 1 minute   |
-| MESSAGE_BURST | 5 messages   | 10 seconds |
-
-Composite key (IP + User-Agent), sliding window, standard rate-limit headers, 429 with `Retry-After`. Storage is per-process (`Map()`), not distributed.
-
-### Impersonation
-
-DEVELOPERs can impersonate school contexts for debugging. Cookie `impersonate_schoolId` is `httpOnly`, `secure`, 1-hour `maxAge`. `IMPERSONATION_STARTED` and `IMPERSONATION_STOPPED` events are audit-logged. Impersonation takes priority over all other tenant resolution methods.
+`DnsService` validates subdomains: 3 to 63 characters, alphanumeric and hyphens only (RFC 1035), no consecutive hyphens, with reserved words blocked (`www`, `api`, `admin`, `mail`, `dashboard`, `portal`, `dev`, `test`, `staging`, `demo`, `preview`, etc.). The `DomainRequest` model supports custom domain approval with a `pending → approved → verified` flow; DNS provider integrations (Cloudflare, Route 53, Vercel) are tracked separately. See [onboarding](/docs/onboarding) for the assignment step.
 
 ## Caching
 
-| Layer                | Technology    | TTL     | Scope                   |
-| -------------------- | ------------- | ------- | ----------------------- |
-| Tenant resolution    | In-memory Map | 60s     | Per serverless instance |
-| Custom domain lookup | Upstash Redis | varies  | Shared (edge)           |
-| Database queries     | None          | —       | No caching              |
-| Images               | Next.js Image | 60s min | CDN                     |
+| Layer             | Technology    | TTL     | Scope                   |
+| ----------------- | ------------- | ------- | ----------------------- |
+| Tenant resolution | Upstash Redis | 5 min   | Shared across instances |
+| Tenant resolution | In-memory Map | 1 min   | Per instance (fallback) |
+| Database queries  | None          | —       | No caching              |
+| Images            | Next.js Image | 60s min | CDN                     |
 
-Tenant resolution cache is per-instance; cold starts hit the database. Domain changes propagate within 60s per instance.
+Two-tier cache: Redis is checked first, then the Map; missing entries fall through to the database. The Map holds a maximum of 100 entries.
 
 ## Deployment
 
@@ -390,25 +178,17 @@ Tenant resolution cache is per-instance; cold starts hit the database. Domain ch
 | Preview     | `tenant---branch.vercel.app` | `demo---feature-x.vercel.app` |
 | Development | `*.localhost:3000`           | `demo.localhost:3000`         |
 
-Production checklist:
-
-- Wildcard DNS `*.databayt.org` pointing to Vercel.
-- SSL certificate covering `*.databayt.org`.
-- `NEXT_PUBLIC_ROOT_DOMAIN=databayt.org`.
-- Cookie domain set to `.databayt.org`.
-- OAuth callback URLs registered for `ed.databayt.org`.
-- Sentry DSN configured.
-- `NODE_OPTIONS=--max_old_space_size=4096` for builds.
+Production requires wildcard DNS `*.databayt.org` pointing to Vercel, an SSL certificate covering `*.databayt.org`, and `NEXT_PUBLIC_ROOT_DOMAIN=databayt.org`.
 
 ## Testing
 
-Multi-tenant safety is covered by Playwright atomic tests under `/tests`. Story groups exercise: SaaS marketing public access, login UI, protected route redirects, DEVELOPER login + dashboard, ADMIN login + dashboard, RBAC restrictions per role, tenant isolation, locale switching, fresh user flow, cross-subdomain SSO. Run `pnpm test:e2e:multi-tenant` to execute the suite.
+Multi-tenant safety is covered by Playwright atomic tests under `/tests`. Story groups exercise: SaaS marketing public access, login UI, protected route redirects, RBAC restrictions per role, tenant isolation, locale switching, fresh user flow, cross-subdomain SSO. Run `pnpm test:e2e:multi-tenant` to execute the suite.
 
-## References
+## See also
 
-- [Architecture](/docs/architecture) — mirror pattern, file conventions
-- [Authentication](/docs/authentication) — auth flows, OAuth setup
-- [Database](/docs/database) — Prisma models, migrations
+- [Authentication](/docs/authentication) — JWT, sessions, redirect priority chain
+- [OAuth](/docs/oauth) — providers, multi-tenant adapter, callback preservation, cookies
+- [Authorization](/docs/authorization) — feature-level RBAC permission checks
+- [Database](/docs/database) — Prisma models, schoolId scoping, models without `schoolId`
 - [Vercel platforms starter kit](https://github.com/vercel/platforms)
 - [NextAuth.js documentation](https://authjs.dev/)
-- [Prisma multi-tenancy patterns](https://www.prisma.io/docs/concepts/components/prisma-client/multi-tenancy)

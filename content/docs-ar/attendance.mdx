@@ -1,0 +1,173 @@
+---
+title: الحضور
+description: حضور متعدّد الطرق — يدوي، QR، باركود، رفع جماعي، geofence — مع إشراك الأهل، إنذار مبكّر، تدخّلات، وتقارير.
+---
+
+تتبّع وحدة الحضور حضور الطلاب عبر طرق التقاط متعدّدة، مع وصول مبني على الأدوار، إشعارات للأهل، مستويات خطر وفق US DoE، تتبّع للتدخّلات، وتصدير CSV / Excel / PDF. المعلمون يرون فصولهم المسندة فقط؛ الطلاب وأولياء الأمور يرون سجلاتهم فقط.
+
+## الحالة
+
+| الميزة                                                                         | الحالة     | ملاحظات                                     |
+| ------------------------------------------------------------------------------ | ---------- | ------------------------------------------- |
+| يدوي / حصة / QR / باركود / رفع جماعي                                           | Production | طرق التقاط متعدّدة (راجع جدول طرق الالتقاط) |
+| إشعارات الأهل + تقديم الأعذار                                                  | Production | داخل التطبيق + SMS + بريد؛ يراجعها الكادر   |
+| الإنذار المبكّر                                                                | Production | مستويات خطر US DoE، تتبّع التدخّلات         |
+| تصدير التقارير                                                                 | Production | CSV، Excel (5 أوراق)، PDF (بهوية المدرسة)   |
+| الحذف الناعم + الاستعادة                                                       | Production | `deletedAt`                                 |
+| العذر التلقائي                                                                 | Production | `AbsenceIntention` معتمَد → EXCUSED         |
+| أسماء حسّاسة للّغة                                                             | Production | `getDisplayText()` يترجم عند الطلب          |
+| Geofence / Master gate / محرّك السياسات / تقارير الامتثال                      | موصول      | يعمل، الواجهة لا تزال تنضج                  |
+| الإعدادات                                                                      | UI فقط     | الحفظ غير موصول                             |
+| توقّعات AI / Gamification / Hall pass / Kiosk / نوايا الغياب / خطابات الامتثال | مكوّن      | لا صفحة route                               |
+
+## المسارات
+
+كلها تحت `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/`. التبويبات: `/`, `/manual`, `/qr-code`, `/records`, `/excuses`, `/analytics`, `/reports`, `/settings`. صفحات خارج التبويبات (URL فقط): `/barcode`, `/bulk-upload`, `/bulk`, `/interventions`, `/geo`, `/analysis`, `/recent`. `/parent/attendance` يعيد التوجيه إلى `/attendance/records`. راجع جدول طرق الالتقاط أدناه لغرض كل route؛ راجع RBAC للوصول حسب الدور.
+
+## RBAC
+
+| الإجراء                 | DEVELOPER | ADMIN | TEACHER (فصوله) | STAFF | STUDENT | GUARDIAN (أبناؤه) |
+| ----------------------- | :-------: | :---: | :-------------: | :---: | :-----: | :---------------: |
+| تسجيل الحضور            |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
+| قراءة سجلاته            |     Y     |   Y   |        —        |   —   |    Y    |         Y         |
+| قراءة سجلات الفصل       |     Y     |   Y   |        Y        |   —   |    —    |         —         |
+| قراءة على مستوى المدرسة |     Y     |   Y   |        —        |   Y   |    —    |         —         |
+| حذف                     |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
+| استعادة                 |     Y     |   Y   |        —        |   —   |    —    |         —         |
+| رفع جماعي               |     Y     |   Y   |        Y        |   —   |    —    |         —         |
+| تصدير                   |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
+| تحليلات                 |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
+| امتثال / إعدادات        |     Y     |   Y   |        —        |   —   |    —    |         —         |
+| مراجعة الأعذار          |     Y     |   Y   |        Y        |   Y   |    —    |         —         |
+| تقديم الأعذار           |     Y     |   Y   |        —        |   —   |    —    |         Y         |
+
+`getTeacherClassIds()` (`actions/helpers.ts`) يجمع المعلم الأساسي + أدوار `ClassTeacher` المشاركة.
+
+فلتر الصف: الـactions تقبل `gradeId` للفلترة عبر `Class.gradeId → AcademicGrade` (helper `getClassIdsByGrade()`).
+
+## الحضور اليدوي
+
+شريط أدوات مسطّح inline (`PlatformToolbar`): محدّد الفصل، منتقي التاريخ، أزرار حالة جماعية، Save. `getCurrentPeriod()` يختار تلقائياً الفصل المطابق لحصة الجدول الحالية؛ الأسماء تُترجَم عند الطلب عبر `getDisplayText()`. لوحة المفاتيح: `P` / `A` / `L` لحاضر / غائب / متأخر، `Cmd/Ctrl+S` للحفظ. أولياء الأمور للطلاب الغائبين يُخطَرون تلقائياً عند الحفظ؛ `AbsenceIntention` معتمَد يحوّل ABSENT → EXCUSED.
+
+## طرق الالتقاط
+
+| الطريقة     | المسار                 | ملاحظات                                                          |
+| ----------- | ---------------------- | ---------------------------------------------------------------- |
+| Manual      | `/manual`              | قائمة منسدلة لكل طالب + أزرار جماعية                             |
+| Period      | `/manual` (بحسب الحصة) | `getCurrentPeriod()`، تحليلات الحصة                              |
+| QR          | `/qr-code`             | صلاحية افتراضية 30 دقيقة؛ التحقّق من التسجيل، إزالة التكرار      |
+| Barcode     | `/barcode`             | يبحث في `StudentIdentifier`                                      |
+| Bulk upload | `/bulk-upload`         | CSV: `studentId, date, status, checkInTime, checkOutTime, notes` |
+| Geofence    | `/geo`                 | متتبّع موقع (للطلاب)، مناطق (للمشرفين)                           |
+| Master gate | server actions         | `recordMasterAttendance()`, `getPrefillFromMaster()`             |
+
+## إشراك الأهل
+
+`triggerAbsenceNotification()` يُطلَق عند الغياب: داخل التطبيق (أولوية عالية)، SMS عبر Twilio (إن كان مهيّأً)، بريد. يستخدم `preferredLanguage` للمدرسة.
+
+أسباب العذر: طبّي، طارئ عائلي، ديني، نشاط مدرسي، نقل، طقس، أخرى. معتمَد → `EXCUSED`؛ مرفوض → غير معذور.
+
+عرض الطالب / ولي الأمر: نسبة + اتجاه، تقويم تاريخي، تفصيل الحالات، تقديم عذر للغيابات غير المعذورة.
+
+## الإنذار المبكّر
+
+مستويات خطر US DoE:
+
+| الخطر       | معدّل الحضور | معدّل الغياب |
+| ----------- | ------------ | ------------ |
+| مُرضٍ       | ≥95%         | <5%          |
+| في خطر      | 90 – 94.9%   | 5 – 9.9%     |
+| مزمن متوسّط | 80 – 89.9%   | 10 – 19.9%   |
+| مزمن حادّ   | <80%         | ≥20%         |
+
+تتبّع التدخّلات في `/attendance/interventions` — 14 نوع تدخّل (تواصل مع ولي الأمر، زيارة منزلية، إحالة لمرشد / أخصائي اجتماعي / إداري، عقد حضور، إحالة تغيّب، مورد مجتمعي، دعم أكاديمي، إرشاد، تحفيز، أخرى) مع حالات Scheduled → In Progress → Completed / Cancelled / Escalated. محرّك السياسات في `actions/policy.ts` يقيّم المُحفّزات ويدير الاستثناءات.
+
+## التحليلات والتقارير
+
+تحليلات بـ7 تبويبات في `/analytics`: Summary، Calendar، Trends، Patterns، Methods، Classes، At Risk.
+
+التقارير في `/reports`: فلترة بالفصل، الطالب، الحالة، نطاق التاريخ، الحصة. تصدير: CSV، Excel (5 أوراق — summary، detailed، by status، by class، by date)، PDF (بهوية المدرسة).
+
+الامتثال: `getComplianceDashboard()`, `getComplianceReport()`, `getScheduledReports()`.
+
+## Server actions
+
+الـactions مقسّمة عبر وحدات حسب المعنى تحت `src/components/.../attendance/actions/`.
+
+| الوحدة        | الملف              | السطح                                                                  |
+| ------------- | ------------------ | ---------------------------------------------------------------------- |
+| Core          | `core.ts`          | تسجيل، قائمة، تسجيل سريع، تسجيل خروج، حذف + استعادة جماعية             |
+| Analytics     | `analytics.ts`     | إحصاءات، اتجاهات، استخدام الطرق، تقويم، مقارنة فصول، في خطر، نشاط حديث |
+| Periods       | `periods.ts`       | تسجيل لكل حصة، اكتشاف الحصة الحالية، تحليلات الحصة                     |
+| QR            | `qr.ts`            | توليد جلسة، مسح، جلسات نشطة                                            |
+| Identifiers   | `identifiers.ts`   | CRUD باركود الطالب / معرّف البطاقة + بحث                               |
+| Excuses       | `excuses.ts`       | تقديم، مراجعة، قائمة المعلَّق / غير المعذور                            |
+| Interventions | `interventions.ts` | إنشاء، تحديث، تصعيد، قائمة، إحصاءات، مكلَّفون                          |
+| Bulk          | `bulk.ts`          | رفع CSV / Excel، مولِّد التقارير، تصدير CSV، عمليات الرفع الأخيرة      |
+| Dashboard     | `dashboard.ts`     | نظرة اليوم، حسب الخطر، إنذار مبكّر، فصول غير مسجَّلة، ملخّص ولي الأمر  |
+| Policy        | `policy.ts`        | تقييم السياسات، المحفّزات، الاستثناءات، الإلغاءات                      |
+| Master        | `master.ts`        | دخول / خروج بوّابة المدرسة، prefill من master                          |
+| Compliance    | `compliance.ts`    | لوحة الامتثال + التقارير المجدولة                                      |
+| Records       | `records.ts`       | الطالب لذاته + أبناء ولي الأمر                                         |
+
+توقيعات نموذجية:
+
+```typescript
+markAttendance(input: {
+  classId: string
+  date: string
+  records: Array<{ studentId: string; status: 'present' | 'absent' | 'late' }>
+})
+
+markPeriodAttendance(input: {
+  classId: string
+  date: string
+  periodId: string
+  records: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT' | 'LATE'; notes?: string }>
+})
+
+getAttendanceList({ classId, date, lang? })  // lang يُطلق الترجمة
+deleteAttendance(id: string)                  // حذف ناعم
+restoreAttendance(id: string)
+```
+
+## Schema
+
+```prisma
+model Attendance {
+  id           String           @id @default(cuid())
+  schoolId     String
+  studentId    String
+  classId      String
+  date         DateTime         @db.Date
+  status       AttendanceStatus
+  method       AttendanceMethod @default(MANUAL)
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  notes        String?
+  markedBy     String?
+  markedAt     DateTime         @default(now())
+  deletedAt    DateTime?
+
+  periodId    String?
+  timetableId String?
+  periodName  String?
+
+  @@unique([schoolId, studentId, classId, date, periodId])
+  @@index([schoolId, date, periodId])
+}
+```
+
+نماذج داعمة: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`, `StudentIdentifier`, `AbsenceIntention`, `PolicyTrigger`, `PolicyExemption`, `MasterAttendance`, `HallPass`, `KioskLog`, `AttendanceReward`, `StudentBadge`, `AttendanceStreak`.
+
+## Seed
+
+```bash
+pnpm db:seed:single attendance
+```
+
+## انظر أيضاً
+
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — RBAC + نطاق المستأجر
+- [الإشعارات](/en/docs/notifications) — إرسال الغياب
+- [الجدول](/en/docs/timetable) — اكتشاف الحصة تلقائياً

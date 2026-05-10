@@ -1,0 +1,80 @@
+---
+title: Roadmap
+description: Hogwarts forward direction — quarterly themes, per-epic maturity, and active structural initiatives. Updated 2026-05-10.
+---
+
+The [MVP](/docs/mvp) doc records what is shipped today across 14 epics. This roadmap records what is coming next. Themes here map to real branches, issues, and audits in flight — not a wish list. Anchor date: 2026-05-10.
+
+For requirements and constraints see [PRD](/docs/prd). For commercial direction see [Business model](/docs/business-model).
+
+## Quarter outlook
+
+| Quarter       | Theme                              | Headline outcomes                                                                                                                                                      |
+| ------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q2 2026 (now) | Finance reorg + transport landing  | Payment umbrella P0 (#263) lands. Fee auto-provisioning ships (#264). Transportation production-ready surfaces stabilise. Translation audit covers high-traffic pages. |
+| Q3 2026       | Exam hardening + role-aware UI     | Exam block production audit P0/P1 close out. Role-aware UI sweep finishes across school dashboard. Attendance Phase 2 (section-centric) rolls out.                     |
+| Q4 2026       | Mobile-web polish + LMS catalog    | Stream catalog cross-school discovery. WhatsApp merge into Messages. Section-based architecture validated end-to-end. Library borrow flow polish.                      |
+| 2027+         | Health, mobile native, marketplace | Health module (clinic UI on existing schema). Native iOS/Android track if PMF holds. Marketplace plans only after multi-school catalog adoption signal.                |
+
+## Epic maturity
+
+| Epic            | Maturity       | Notes                                                                                         |
+| --------------- | -------------- | --------------------------------------------------------------------------------------------- |
+| Onboarding      | Built + Polish | 18-step wizard live; copy and step ordering tweaks ongoing.                                   |
+| Authentication  | Built          | NextAuth v5, OAuth, 2FA, invitations, audit log all in production.                            |
+| Multi-tenancy   | Built          | Edge subdomain routing, custom-domain via Upstash, `schoolId` enforced server-side.           |
+| Admission       | Built          | 9-step public application, OTP tracker, AI doc review, merit ranking, multi-gateway pay.      |
+| Application     | Built + Polish | Auto-save and resume work; UX polish on offer-acceptance flow.                                |
+| Students        | Built          | 12-step wizard, 8-tab profile, CSV bulk import.                                               |
+| Teachers        | Built          | 9-step wizard, expertise + qualifications + experience.                                       |
+| Classrooms      | Built          | Section-centric model in place; UI validation pending Phase 2.                                |
+| Attendance      | Built + Polish | Phase 1 fixes shipped. Phase 2 (section-centric migration) in progress.                       |
+| Timetable       | Built          | Visual builder, conflict detection, generation, templates, substitutions.                     |
+| Exams           | Built + Audit  | Production audit in flight — 14 P0 / 22 P1 / 18 P2 across the block.                          |
+| Fees + Invoice  | Built + Polish | Payment umbrella reorg active (#263); auto-provisioning planned (#264).                       |
+| Notifications   | Built          | In-app + email + push + WhatsApp bridge with retry.                                           |
+| Stream / LMS    | Built + Polish | Proposer → approve → catalog pipeline complete; instructor-switcher and rejection paths live. |
+| Library / Books | Built          | Catalog browse, contribute, borrow records.                                                   |
+| Catalog         | Built          | Bridge pattern + community contributions; 4 curricula seeded.                                 |
+| Transportation  | Built          | Shipped 2026-05 with writable settings, /me + /fees surfaces, geofence-boarding webhook.      |
+| Messages        | Built + Polish | WhatsApp merge into Messages settings dialog planned (#164).                                  |
+
+## Active initiatives
+
+These are the structural changes shaping the next two quarters. Each is an end-to-end audit or refactor — not a single ticket.
+
+| Initiative                          | Summary                                                                                                                                                                                                                    |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payment umbrella (#263)             | End-to-end finance audit + phased P0/P1/P2/P3 roadmap. Today only Stripe works E2E; Tap is a stub; double-entry engine has no callers. See [Fees](/docs/fees).                                                             |
+| Fee auto-provisioning (#264)        | Hybrid sync mirroring `catalog-setup.ts` so new schools never see an empty fees page. Replaces the seed-script approach in #263 P0-3.                                                                                      |
+| Exam block production audit         | 14 P0 / 22 P1 / 18 P2 across the exams block. Top P0s: User.id-as-Student.id submission bug, in-memory rate limiter on serverless, 17 models missing `lang`, RBAC + calculator 0% test coverage. See [Exams](/docs/exams). |
+| Translation audit                   | Systematic Playwright MCP audit of school-dashboard pages for hardcoded English. Fix per-page before moving on. See [Translation](/docs/translation).                                                                      |
+| Role-aware UI sweep                 | Sidebar / PageNav / Toolbar / row-action gating across school dashboard. Listings wired with `permissions.ts` + UIPermissions; finance + school + sales pending.                                                           |
+| Section-based architecture          | Deployed and DB migrated. Needs Playwright MCP testing on the section-centric attendance + timetable surfaces. See [Attendance](/docs/attendance).                                                                         |
+| WhatsApp merge into Messages (#164) | Move WhatsApp settings into Messages settings dialog and auto-bridge messages to WhatsApp.                                                                                                                                 |
+| Transportation production-ready     | Shipped 2026-05. Remaining work is hardening: tighter geofence accuracy, fee preview accuracy, parent-app notification windows. See [transportation block](/docs/structure).                                               |
+
+## Not on the roadmap (this year)
+
+A few things look adjacent but are explicitly deferred. Listing them so contributors do not start speculative work.
+
+- **Catalog split refactor.** Splitting `catalog-setup.ts` into per-curriculum configs is parked until a non-SD school onboards. Single DB table is fine for now.
+- **Mobile API beyond current routes.** Existing routes (auth + transportation geofence-boarding) are enough. No broader mobile-first API surface this year.
+- **Marketplace plans.** No instructor / content marketplace until cross-school catalog adoption signals real demand.
+- **Hostel and cafeteria modules.** Dictionary mentions only; no schema, no UI, no roadmap entry.
+- **Native iOS / Android apps.** Mobile web works today. React Native track only opens after PMF is clear.
+
+## How decisions are made
+
+- **Requirements:** [PRD](/docs/prd) defines scope, NFRs, and constraints. New work proves it fits these before it gets added here.
+- **Shipped state:** [MVP](/docs/mvp) is the source of truth for what works today. If it conflicts with this doc, MVP wins for "what is" and roadmap wins for "what is next".
+- **Commercial direction:** [Business model](/docs/business-model) shapes which initiatives get prioritised — finance and admission ship first because they tie to revenue.
+- **Architecture:** [Architecture](/docs/architecture) is the canonical design doc. Initiatives that violate it (e.g. weakening multi-tenant isolation, bilingual columns, breaking the mirror pattern) are rejected.
+- **Issues over chat.** Anything on this page is also tracked in GitHub issues. If a roadmap item has no issue, it is a draft and should not be picked up yet.
+
+## See also
+
+- [MVP](/docs/mvp) — shipped state across 14 epics with maturity badges
+- [PRD](/docs/prd) — product requirements, role model, NFRs, constraints
+- [Business model](/docs/business-model) — pricing, tiers, ARR projections
+- [Architecture](/docs/architecture) — system design and patterns

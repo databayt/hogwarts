@@ -1,0 +1,115 @@
+---
+title: أمان قاعدة البيانات
+description: حماية متعدّدة الطبقات — حظر الأوامر التدميرية، seeds وحيدة المعيار، وبروتوكول Neon branch-before-touch.
+---
+
+Hogwarts منصة SaaS متعدّدة المستأجرين — قاعدة بيانات واحدة تخدم كل المدارس. أمر `DROP TABLE` أو `TRUNCATE` شارد، أو migration بلا مراجعة، يمسح بيانات كل المستأجرين. الحماية متعدّدة الطبقات.
+
+## الآليات الفعّالة
+
+| الطبقة                        | الآلية                          | ما تحظره                                                                                                         |
+| ----------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| PreToolUse hook               | Grep على كل أمر Bash            | `migrate reset`, `db execute`, `accept-data-loss`, `DROP TABLE`, `TRUNCATE`, `DELETE FROM`, `ALTER TABLE...DROP` |
+| قائمة منع الأذونات            | منع صلب في `settings.json`      | `pnpm db:seed`, `prisma migrate reset`, `prisma db push --accept-data-loss`, `prisma db execute`                 |
+| فحص seed قبل الـcommit        | يفحص ملفات seed المُجَهَّزة     | `deleteMany`, `.delete()`, `TRUNCATE`, `DROP`, `$executeRaw`                                                     |
+| `ensure-demo.ts`              | سكربت بناء idempotent           | آمن للتكرار                                                                                                      |
+| علامة `global` في `single.ts` | تتجاوز حلّ المدرسة لـseeds عامة | فشل عندما يكون جدول `schools` فارغاً                                                                             |
+
+## نظام الـseed
+
+Seeds مقسومة إلى عامة ومُحدَّدة بالمدرسة في `prisma/seeds/single.ts`.
+
+**عامة** (`global: true`) — تملأ بيانات مرجعية على مستوى المنصة:
+
+| Seed                | الوصف                                             |
+| ------------------- | ------------------------------------------------- |
+| `catalog`           | الكتالوج العام (مواد، فصول، دروس)                 |
+| `catalog-images`    | رفع صور ClickView إلى S3/CloudFront               |
+| `clickview-catalog` | كتالوج ClickView US (62 مادة، 201 فصل، 986 درساً) |
+| `clickview-images`  | رفع صور مواد ClickView                            |
+| `school`            | المدرسة التجريبية + علامتها                       |
+
+**مُحدَّدة بالمدرسة** — تتطلب وجود المدرسة التجريبية (طلاب، مدرّسون، فصول، حضور، وما إلى ذلك).
+
+```bash
+pnpm db:seed:single --list                  # عرض كل الـseeds
+pnpm db:seed:single clickview-catalog       # seed عام (يعمل على DB فارغة)
+pnpm db:seed:single subjects                # seed مُحدَّد بالمدرسة (يتطلب التجريبية)
+pnpm db:seed                                # محظور — راجع أدناه
+```
+
+### لماذا `pnpm db:seed` محظور
+
+الـseed الكامل يشغّل كل معيار بالتسلسل ويأخذ **45–120 دقيقة**. محظور لأن: بطيء ودائماً ينتهي بـtimeout في CI، يعيد seed الأساسات مع خطر التكرار، وseed المعيار الواحد يكفي دائماً للتطوير. شغّله يدوياً خارج Claude Code فقط لو احتجت فعلاً إعادة تعيين كاملة. الحظر مفروض تلقائياً عبر hook حسب القاعدة رقم 8 في CLAUDE.md.
+
+## Neon branch-before-touch
+
+قبل أي تغيير في schema أو عملية قد تؤثر على البيانات الموجودة:
+
+1. أنشئ Neon branch (Neon MCP `create_branch`).
+2. اختبر العملية على الـbranch.
+3. لو نجحت → طبّقها على main.
+4. لو فشلت → احذف الـbranch — صفر ضرر.
+
+```bash
+neon branches create --name "test-migration"
+prisma migrate dev --create-only
+cat prisma/migrations/<timestamp>/migration.sql   # راجع SQL
+# لو آمنة → طبّق على main. وإلا → neon branches delete "test-migration"
+```
+
+## مرجع الأوامر
+
+### آمنة (مسموحة دائماً)
+
+| الأمر                              | الغرض                                        |
+| ---------------------------------- | -------------------------------------------- |
+| `prisma generate`                  | إعادة توليد Prisma client من الـschema       |
+| `prisma db push`                   | مزامنة الـschema (بدون `--accept-data-loss`) |
+| `prisma migrate dev --create-only` | توليد SQL الـmigration للمراجعة              |
+| `pnpm db:seed:single <name>`       | seed معيار واحد                              |
+| `pnpm db:seed:single --list`       | عرض الـseeds المتاحة                         |
+
+### محظورة
+
+| الأمر                               | السبب                     |
+| ----------------------------------- | ------------------------- |
+| `pnpm db:seed`                      | بطيء، خطر على كامل DB     |
+| `prisma migrate reset`              | يُسقط كامل قاعدة البيانات |
+| `prisma db push --accept-data-loss` | يُسقط الجداول مع البيانات |
+| `prisma db execute`                 | SQL خام                   |
+| `DROP TABLE` / `TRUNCATE`           | يدمّر البيانات            |
+| `DELETE FROM`                       | حذف صفوف بالجملة          |
+| `ALTER TABLE...DROP`                | إسقاط أعمدة               |
+
+### اسأل أولاً
+
+| الأمر                      | متى                                      |
+| -------------------------- | ---------------------------------------- |
+| `prisma migrate dev`       | إنشاء + تطبيق migration (راجع SQL أولاً) |
+| `ALTER TABLE...ADD COLUMN` | إضافة الأعمدة آمنة لكن أكّد الـschema    |
+
+## الاسترداد
+
+**Schema غير متزامن** — `prisma db push`. يضيف الجداول/الأعمدة الناقصة بدون إسقاط البيانات.
+
+**جداول ناقصة** —
+
+```bash
+prisma db push
+pnpm db:seed:single school
+pnpm db:seed:single auth
+```
+
+**تحتاج عموداً** — اكتب SQL مستهدفاً:
+
+```sql
+ALTER TABLE "YourTable" ADD COLUMN IF NOT EXISTS "newColumn" TEXT;
+```
+
+**فقدان بيانات عرضي** — لو كان هناك Neon branch قبل العملية، استرجع منه. وإلا تواصل مع الفريق للاسترجاع من نسخ Neon الاحتياطية التلقائية.
+
+## انظر أيضاً
+
+- [Accounts](/en/docs/accounts)
+- [البنية المعمارية](/ar/docs/architecture)

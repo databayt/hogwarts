@@ -1,280 +1,300 @@
 ---
-title: "المنتج الأدنى القابل للتطبيق"
-description: "خارطة تنفيذ المنتج الأدنى القابل للتطبيق لمنصة هوجوورتس لأتمتة المدارس - 9 ملاحم أساسية"
+title: MVP
+description: الحالة المنجزة لـHogwarts — 14 ملحمة بشارات نضج، إضافة إلى ما هو schema-only وما لم يُبنَ بعد.
 ---
 
-**انقر على شارة readme و issue في الملاحم أدناه لمعرفة المزيد.**
+لقطة لما هو مبنيّ فعلاً اليوم. للمتطلبات راجع [PRD](/ar/docs/prd)، وللتوجه راجع [Roadmap](/ar/docs/roadmap).
 
-يمكن للمدرسة تسجيل الطلاب، وإدارة الفصول، وتتبع الحضور، وتقييم الواجبات، وتحصيل الرسوم، والتواصل مع أولياء الأمور - كل ذلك في منصة واحدة.
+## شارات النضج
 
-<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">البنية التحتية</h3>
-    <p className="text-muted-foreground text-sm">
-      بنية متعددة المستأجرين، توجيه النطاقات الفرعية، والإعداد التقني الأساسي.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">المصادقة</h3>
-    <p className="text-muted-foreground text-sm">
-      إدارة المستخدمين، التحكم في الوصول المستند إلى الأدوار، وتدفقات المصادقة
-      الآمنة.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">التكوين</h3>
-    <p className="text-muted-foreground text-sm">
-      ملف تعريف المدرسة، الهيكل الأكاديمي، العلامة التجارية، والإعدادات.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الطالب</h3>
-    <p className="text-muted-foreground text-sm">
-      دورة حياة الطالب من التسجيل إلى التخرج مع الملفات الشخصية.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">القوائم</h3>
-    <p className="text-muted-foreground text-sm">
-      المواد، الفصول، المعلمين، أولياء الأمور، وسجلات الموظفين.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الحضور</h3>
-    <p className="text-muted-foreground text-sm">
-      تتبع الحضور اليومي، التقارير، وإدارة الغياب.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الامتحانات</h3>
-    <p className="text-muted-foreground text-sm">
-      جدولة الامتحانات، الدرجات، النتائج، وبطاقات التقارير.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">الجدول الزمني</h3>
-    <p className="text-muted-foreground text-sm">
-      جدولة الفصول، إدارة الحصص، وكشف التعارضات.
-    </p>
-  </div>
-  <div className="rounded-lg border p-6">
-    <h3 className="mb-2 text-base font-medium">القبول</h3>
-    <p className="text-muted-foreground text-sm">
-      معالجة الطلبات، سير عمل التسجيل، وإدارة التسجيل.
-    </p>
-  </div>
-</div>
+| الشارة            | المعنى                                                |
+| ----------------- | ----------------------------------------------------- |
+| `مُنفَّذ`         | مشحون من البداية للنهاية: backend، UI، i18n، اختبارات |
+| `مُنفَّذ + تحسين` | مشحون مع تحسينات أو ترحيل قيد العمل                   |
+| `قيد التنفيذ`     | backend أو UI جزئي، يتم متابعته فعلياً                |
+| `مخطط فقط`        | نموذج Prisma موجود، بلا UI                            |
+| `مخطط`            | نصوص قاموس فقط، بلا كود                               |
 
----
+## الملاحم في لمحة (14)
 
-## الملحمة 01: البنية التحتية
+<CardGrid cols={3}>
+  <DocCard
+    title="01 — البنية التحتية"
+    href="/ar/docs/architecture"
+    description="نطاق فرعي متعدد المستأجرين، edge proxy، Sentry، CI/CD."
+  />
+  <DocCard
+    title="02 — المصادقة"
+    href="/ar/docs/authentication"
+    description="NextAuth v5، 2FA، OAuth، الدعوات، audit log."
+  />
+  <DocCard
+    title="03 — الإعداد"
+    href="/ar/docs/onboarding"
+    description="ملف المدرسة، السنة الأكاديمية، العلامة التجارية، 18 خطوة onboarding."
+  />
+  <DocCard
+    title="04 — الأشخاص"
+    href="/en/docs/students"
+    description="طلاب، معلمون، أهل، كادر مع معالجات متعدّدة الخطوات."
+  />
+  <DocCard
+    title="05 — القبول"
+    href="/ar/docs/admission"
+    description="9 خطوات تقديم عام، OTP، مراجعة وثائق بـAI، ترتيب جدارة، عدة بوابات دفع."
+  />
+  <DocCard
+    title="06 — الحضور"
+    href="/ar/docs/attendance"
+    description="11 وضع التقاط، كشك، geofence، تحفيز، رؤى AI."
+  />
+  <DocCard
+    title="07 — الامتحانات"
+    href="/en/docs/exams"
+    description="امتحانات تجريبية، qbank بـAI، شهادات، transcripts، ترقية."
+  />
+  <DocCard
+    title="08 — الجدول"
+    href="/en/docs/timetable"
+    description="منشئ بصري، اكتشاف تعارضات، توليد، قوالب."
+  />
+  <DocCard
+    title="09 — المالية"
+    href="/ar/docs/fees"
+    description="مزدوج القيد، 6 بوابات دفع، Plaid + Dwolla، رواتب."
+  />
+  <DocCard
+    title="10 — الاتصال"
+    href="/en/docs/messages"
+    description="إعلانات، مراسلة فورية، WhatsApp Evolution API."
+  />
+  <DocCard
+    title="11 — Stream / LMS"
+    href="/en/docs/clickview"
+    description="مساقات، دروس، شهادات، ClickView CDN."
+  />
+  <DocCard
+    title="12 — المكتبة"
+    href="/en/docs/library"
+    description="تصفّح الكتالوج، إسهام، سجلات إعارة."
+  />
+  <DocCard
+    title="13 — النقل"
+    description="سائقون، مركبات، مسارات، صعود مع geofence."
+  />
+  <DocCard
+    title="14 — الكتالوج"
+    href="/en/docs/catalog"
+    description="مواد ومناهج عامة، تدفق مساهمة."
+  />
+</CardGrid>
 
-إعداد الأساس حيث تحصل كل مدرسة على نطاقها الفرعي الخاص مع بيانات معزولة.
-رائع لتعلم التطبيقات متعددة المستأجرين، والوسيطات، وكيفية الحفاظ على البيانات منفصلة وآمنة.
+## 01 — البنية التحتية · `مُنفَّذ + تحسين`
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">15 قصة</span>
-  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
-    عالي
-  </span>
-</div>
+الأساس متعدد المستأجرين. راجع [البنية المعمارية](/ar/docs/architecture) و[تعدد المستأجرين](/ar/docs/multi-tenancy).
 
-- مخطط قاعدة بيانات متعدد المستأجرين مع نطاق schoolId
-- توجيه النطاقات الفرعية (school.databayt.org)
-- Next.js 16 + React 19 + Prisma 6 مُكوَّن
-- خط أنابيب CI/CD مع اختبارات آلية
-- مراقبة الأخطاء (Sentry) تعمل
-- التدويل (العربية/الإنجليزية) يعمل
-- بيئات التطوير/الاختبار/الإنتاج
-- نمط singleton لقاعدة البيانات مُنفَّذ
-- بنية الاختبار (Vitest، Playwright)
-- Tailwind CSS 4 مع دعم RTL/LTR
+- 302 نموذج Prisma عبر 73 ملف schema، مع `schoolId` على كل نموذج خاص بالمستأجر.
+- توجيه نطاق فرعي عبر edge `proxy.ts` في Next.js 16.
+- ربط نطاقات مخصصة عبر Upstash Redis.
+- Vercel + Neon (PostgreSQL serverless) + AWS S3 + CloudFront (`cdn.databayt.org`).
+- مراقبة Sentry، تتعامل بسلاسة بدون DSN.
+- 11 cron job يومياً (إشعارات، تذكيرات، تأخّر رسوم، تنظيف).
+- 245 ملف اختبار مخصّص، ومجموعات Playwright لـauth، multi-tenant، RBAC، smoke.
+- نظافة الحزم: `outputFileTracingExcludes` تُبقي الدوال serverless تحت حد Vercel البالغ 300 ميغابايت.
 
----
+## 02 — المصادقة والمستخدمون · `مُنفَّذ`
 
-## الملحمة 02: المصادقة
+NextAuth v5 مع بريد + OAuth + 2FA + دعوات + audit. راجع [المصادقة](/ar/docs/authentication).
 
-بناء تسجيل دخول آمن مع البريد الإلكتروني وكلمة المرور والموفرين الاجتماعيين بالإضافة إلى أدوار المستخدمين للمعلمين والطلاب وأولياء الأمور.
-مثالي لتعلم الرموز والمسارات المحمية وأنماط المصادقة الحديثة.
+- NextAuth v5 (beta.30)، استراتيجية JWT، Prisma adapter متعدد المستأجرين.
+- بريد + كلمة مرور (bcrypt cost 12)، OAuth Google، Facebook.
+- 2FA عبر `TwoFactorToken` + `TwoFactorConfirmation`.
+- 8 أدوار: `DEVELOPER`, `ADMIN`, `TEACHER`, `STUDENT`, `GUARDIAN`, `ACCOUNTANT`, `STAFF`, `USER`.
+- صلاحيات CASL (`@casl/ability` + `@casl/prisma`) لتحكّم دقيق.
+- إعادة تعيين كلمة المرور، التحقق من البريد، تجديد الجلسة تلقائياً.
+- صفحات ملف لكل دور (admin / teacher / student / parent / staff).
+- الدعوات: `src/lib/invitation-utils.ts`, `accept-invite/page.tsx`, cron يومي `expire-invitations`.
+- نموذج `AuditLog` + حماية brute-force عبر `LoginAttempt`.
+- نماذج الامتثال: `LegalConsent`, `LegalDocument`, `ComplianceLog`.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">18 قصة</span>
-  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
-    عالي
-  </span>
-</div>
+## 03 — الإعداد · `مُنفَّذ`
 
-- NextAuth v5 مُكوَّن مع استراتيجية JWT
-- مصادقة البريد الإلكتروني/كلمة المرور مع تجزئة bcrypt
-- موفرو OAuth (جوجل، فيسبوك) يعمل
-- المصادقة الثنائية (2FA) وظيفية
-- أدوار DEVELOPER، ADMIN، TEACHER، STUDENT، GUARDIAN، ACCOUNTANT، STAFF، USER
-- التحكم في الوصول المستند إلى الأدوار مُطبَّق على المسارات
-- تدفق إعادة تعيين كلمة المرور كامل
-- إدارة الجلسات مع التجديد التلقائي
+معالج onboarding من 18 خطوة ينشئ المدارس end-to-end. راجع [Onboarding](/ar/docs/onboarding).
 
----
+- الخطوات: about-school · branding · capacity · description · discount · finish-setup · import · join · legal · location · price · schedule · stand-out · subdomain · title · visibility · congratulations · overview.
+- نموذج `School` مع year، term، period، و`YearLevel` / `AcademicLevel` / `AcademicGrade`.
+- `StreamType`: `GENERAL`, `SCIENCE`, `ARTS`, `COMMERCE`, `TECHNICAL`, `RELIGIOUS`.
+- محرّرات إعدادات في `school/configuration/` لـ branding، capacity، discount، domain، hero، legal، location، modules، name format، plan، price، schedule، title، visibility.
+- رفع شعار، منتقي ألوان، سمة (`UserTheme`)، منطقة زمنية.
+- تدفّق طلب نطاق مخصّص.
 
-## الملحمة 03: التكوين
+## 04 — الأشخاص · `مُنفَّذ`
 
-السماح لكل مدرسة بتخصيص مظهرها بالشعارات والألوان والعلامة التجارية.
-طريقة رائعة لتعلم معالجة النماذج وتحميل الملفات وأنظمة السمات.
+CRUD لأنواع الأشخاص الأربعة. راجع [الطلاب](/en/docs/students)، [المعلمون](/en/docs/teachers)، [القوائم](/en/docs/listings).
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">12 قصة</span>
-  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
-    متوسط
-  </span>
-</div>
+| الكيان                | خطوات المعالج  | أبرز الميزات                                                                                                   |
+| --------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| الطلاب                | 12             | شخصي، تواصل، رسوم، تسجيل، موقع، صحة، أكاديمي، تعليم سابق، ولي أمر، مرفقات، صورة. ملف بـ8 تبويبات. استيراد CSV. |
+| المعلمون              | 9              | معلومات، تواصل، توظيف، خبرة، مؤهلات، تجربة، موقع، صورة، مرفقات.                                                |
+| الأهل / أولياء الأمور | متعدّد الخطوات | معلومات، تواصل. إجراء ربط طفل.                                                                                 |
+| الكادر                | CRUD كامل      | `StaffMember`, `StaffAccessCard`, `StaffSalaryStructure`, `StaffSalarySlip`, `StaffTimesheetEntry`.            |
 
-- إنشاء وإدارة ملف تعريف المدرسة
-- إعداد السنة الأكاديمية مع تواريخ البداية/النهاية
-- تكوين الفصول/الفترات
-- تكوين المستوى الدراسي/الصف
-- إدارة الأقسام
-- العلامة التجارية للمدرسة (تحميل الشعار)
-- منتقي الألوان لألوان المدرسة
-- تكوين المنطقة الزمنية
+انتقالات الحالة: `enrolled`, `transferred`, `graduated`. تصدير دفعي، ورفع صور إلى S3 + CloudFront.
 
----
+## 05 — القبول · `مُنفَّذ`
 
-## الملحمة 04: الطالب
+بوابة عامة مع مراجعة مستندات بـAI وتحويل تلقائي للتسجيل. راجع [القبول](/ar/docs/admission).
 
-إدارة رحلة الطالب الكاملة من التسجيل إلى التخرج مع ملفات شخصية غنية وروابط أولياء الأمور.
-مثالي لتعلم النماذج المعقدة وعلاقات البيانات والتعامل مع الكثير من السجلات بكفاءة.
+- 9 خطوات تقديم عام: personal → contact → location → academic → fees → attachments → offer → payment → success.
+- حفظ تلقائي مع استئناف عبر `ApplicationSession`.
+- متتبّع حالة بـOTP — يفحص المتقدّم حالته بدون حساب.
+- AI في `school-dashboard/admission/ai/`: `classify.ts`, `completeness.ts`, `merit-engine.ts`، استخراج إيصالات بنكية.
+- حجز جولة (`TourBooking`) مع إدارة المواعيد للأدمن.
+- تدفّق القبول: `admissionOffered`, `offerDate`, `offerExpiryDate`, `offerAccepted`.
+- تحويل تسجيل في معاملة واحدة عبر `enrollStudentInGradeClasses` — ينشئ Student + User + Guardian + StudentYearLevel + AcademicGrade + FeeAssignments + UserInvoices + StudentDocuments.
+- ترتيب جدارة، `AdmissionCampaign` بمنتقي مدى تواريخ.
+- دفع رسوم متعدّد البوابات — راجع الملحمة 09.
+- إشعارات (بريد + WhatsApp + push) عند كل انتقال حالة.
+- 5 اختبارات مخصّصة تغطّي actions، إشعارات التسجيل، خط أنابيب التسجيل، انتهاء العرض، التحقق.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">20 قصة</span>
-  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
-    عالي
-  </span>
-</div>
+## 06 — الحضور · `مُنفَّذ + تحسين`
 
-- نموذج تسجيل الطالب يعمل
-- هيكل صفحة ملف الطالب (7 علامات تبويب)
-- علامة المعلومات الشخصية كاملة
-- علامة المعلومات الأكاديمية كاملة
-- علامة السجلات الصحية كاملة
-- علامة المستندات مع قدرة التحميل
-- علامة الإنجازات مع التتبع
-- وظيفة بحث الطلاب
-- نظام التصفية المتقدم
-- علاقات وربط أولياء الأمور
+حضور يومي بـ11 وضع التقاط. ترحيل section-centric جارٍ. راجع [الحضور](/ar/docs/attendance).
 
----
+- 11 وضع `AttendanceMethod`: `MANUAL`, `GEOFENCE`, `QR_CODE`, `BARCODE`, `RFID`, `FINGERPRINT`, `FACE_RECOGNITION`, `NFC`, `BLUETOOTH`, `BULK_UPLOAD`, `KIOSK`.
+- 24 مساراً تشمل manual، kiosk، bulk-upload، QR، barcode، geofence، hall-pass، intentions، excuses، letters (auto-gen)، interventions، gamification، early-warning، AI، analytics، reports.
+- 33+ نموذج Prisma موزّعة بين `attendance.prisma`, `attendance-enhanced.prisma`, `geo-attendance.prisma`.
+- الحالات: حاضر / غائب / متأخر / معذور، إشعار الأهل بالغياب + تتبّع التأخير.
+- تحليل اتجاهات، ملخصات شهرية، تقارير الفصل / الطالب.
+- **ترحيل section-centric `قيد التنفيذ`** — راجع `.bmad/planning/architecture-section-timetable-attendance.md`. اليوم: توافق رجعي مع `StudentClass`. التالي: `Section.id` في كل مكان.
 
-## الملحمة 05: القوائم
+## 07 — الامتحانات والتقييم · `مُنفَّذ`
 
-تتبع المواد والفصول والمعلمين وأولياء الأمور والموظفين مع صفحات الملفات وجداول البيانات.
-مثالي لإتقان عمليات CRUD وفهم كيفية ارتباط الكيانات ببعضها.
+دورة حياة التقييم end-to-end. راجع [الامتحانات](/en/docs/exams) و[معالج الامتحان](/en/docs/exam-wizard).
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">18 قصة</span>
-  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
-    عالي
-  </span>
-</div>
+- 40+ نموذج Prisma عبر `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`, `grading-scheme.prisma`, `school-assignment.prisma`, `progress-reports.prisma`.
+- جدولة الامتحانات بأنواعها: midterm، final، quiz، mock.
+- بنك أسئلة مع توليد بـAI، تقطيع مادة المصدر، تحليلات، تدفّق مراجعة.
+- توليد ورقة الامتحان مع غلاف / رأس / تذييل / قوالب أنواع الأسئلة.
+- تصحيح مع rubrics + معايير + حدود درجات + تجاوزات.
+- كروت الدرجات، الدرجات، transcripts (PDF + CSV).
+- شهادات بتحقّق-بكود في `/certificate/[shareToken]` و`/verify/[code]`.
+- تدفّق ترقية: `PromotionBatch`, `PromotionCandidate`, `PromotionPolicy`, `Transcript`.
 
-- إنشاء كتالوج المواد
-- إدارة المواد (عمليات CRUD)
-- إنشاء الفصول مع التفاصيل
-- إدارة سعة الفصل
-- تسجيل الطلاب في الفصول
-- تعيين المعلمين للفصول
-- تخصيص المعلم-المادة
-- نموذج إنشاء ملف المعلم
-- إدارة ملف ولي الأمر/الوصي
+## 08 — الجدول الدراسي · `مُنفَّذ`
 
----
+منشئ بصري مع اكتشاف تعارضات. راجع [الجدول](/en/docs/timetable).
 
-## الملحمة 06: الحضور
+- جدولة حصص بالسحب والإفلات مع إدارة فواصل.
+- توزيع غرف عبر `RoomConstraint`.
+- اكتشاف تعارضات عبر المعلمين والغرف والطلاب.
+- مشاهد لكل معلم / فصل / غرفة.
+- بدائل (`SubstitutionRecord`)، قيود معلم + فترات غير متاحة.
+- محرّك توليد مع حلّ تعارضات، قوالب (`TimetableTemplate`, `TemplateApplication`).
+- استثناءات جدول، تحليلات، تصدير PDF / طباعة.
 
-تتبع من يحضر كل يوم مع التأشير البسيط أو خيارات مثل رموز QR وتسجيل الموقع.
-رائع لتعلم التحديثات الفورية وتصور البيانات وأنظمة الإشعارات.
+## 09 — المالية والفوترة · `مُنفَّذ`
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">12 قصة</span>
-  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
-    عالي
-  </span>
-</div>
+نظام مالي شامل — أكبر بكثير من MVP المعتاد. راجع [الرسوم](/ar/docs/fees) و[الفاتورة](/ar/docs/invoice).
 
-- واجهة تأشير الحضور اليومي
-- خيارات حالة الحضور (حاضر/غائب/متأخر/معذور)
-- تأشير الحضور بالجملة
-- تقارير الحضور حسب الفصل
-- تقارير الحضور حسب الطالب
-- ملخص الحضور الشهري
-- إشعار الغياب لأولياء الأمور
-- تتبع التأخير
+- 36 نموذج Prisma عبر 7 ملفات schema مالية.
+- **محاسبة مزدوجة القيد** — `ChartOfAccount`, `JournalEntry`, `LedgerEntry`, `AccountBalance`, `FiscalYear`.
+- **6 بوابات دفع** في `src/lib/payment/providers/`: Stripe, bankak, tap, bank-transfer, cash, mobile-money.
+- **بنوك** — Plaid + Dwolla، `BankAccount`, `BankReconciliation`, `Transaction`, `Transfer`, `PlaidItem`, `DwollaCustomer`.
+- **رسوم** — `FeeStructure`, `FeeAssignment` مع جدول أقساط، `Payment`, `Refund`, `Scholarship`, `ScholarshipApplication`, `Fine`.
+- **فوترة** — `UserInvoice` ببنود، عناوين، توقيع، إعدادات.
+- **إيصالات** — PDF عبر `@react-pdf/renderer`.
+- **رواتب** — `PayrollRun`, `SalaryStructure`, `SalarySlip`, `SalaryAllowance`, `SalaryDeduction`, `TimesheetEntry`, `TimesheetPeriod`.
+- **ميزانية** — `Budget`, `BudgetAllocation`, `Expense`, `ExpenseCategory`, `Wallet`, `WalletTransaction`.
+- **اشتراكات على مستوى المدرسة** — `Subscription`, `Invoice`, `BillingHistory`, `BillingPaymentMethod`, `BillingPreferences`, `SubscriptionTier`, `UsageMetrics`, `Discount`, `AppliedDiscount`, `CreditNote`.
+- **تقارير + صلاحيات** — `FinancialReport`, `FinancePermission`.
 
----
+## 10 — الاتصال والمراسلة · `مُنفَّذ`
 
-## الملحمة 07: الامتحانات
+إعلانات، رسائل فورية، إشعارات، WhatsApp. راجع [الرسائل](/en/docs/messages).
 
-التعامل مع الامتحانات من الجدولة إلى التقييم، وحساب المعدلات، وإنشاء بطاقات التقارير بصيغة PDF.
-طريقة ممتعة لتعلم إنشاء PDF وحسابات الدرجات والعمل مع البيانات التعليمية.
+- **إعلانات** (`announcement.prisma`، 5 نماذج): النطاق (مدرسة / فصل / دور)، الأولوية، نشر مجدول، انتهاء صلاحية، تثبيت / إبراز، إشعارات قراءة، قوالب.
+- **رسائل** (`messages.prisma`، 11 نموذج): `Conversation`, `ConversationInvite`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageDraft`, `MessageReaction`, `MessageReadReceipt`, `PinnedMessage`, `StarredMessage`, `TypingIndicator`. Realtime عبر مخدّم Socket.io مخصّص (`server.js`).
+- **إشعارات** (`notifications.prisma`، 7 نماذج): in-app + بريد + push.
+- **WhatsApp** (`whatsapp.prisma`، 5 نماذج) — جسر Evolution API كامل مع إعادة محاولة بـ exponential backoff.
+- قوالب React Email في `src/lib/email-templates/`.
+- 11 cron job يومياً يسلّم الرسائل المجدولة.
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">15 قصة</span>
-  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
-    متوسط
-  </span>
-</div>
+## 11 — Stream / LMS · `مُنفَّذ + تحسين`
 
-- إنشاء وجدولة الامتحانات
-- تكوين نوع الامتحان (نصف الفصل/نهائي/اختبار قصير)
-- واجهة إدخال الدرجات
-- تكوين مقياس الدرجات
-- حساب النتائج (المعدلات الموزونة)
-- إنشاء بطاقة التقرير
-- قوالب بطاقات التقارير
-- إشعار النتائج لأولياء الأمور
+LMS بنطاق المدرسة. موجة أصول ClickView جزئية. راجع [ClickView](/en/docs/clickview).
 
----
+- 8 نماذج Prisma (`stream.prisma`): `StreamCourse`, `StreamCategory`, `StreamChapter`, `StreamLesson`, `StreamEnrollment`, `StreamLessonProgress`, `StreamCertificate`, `StreamAttachment`.
+- إدارة CRUD للمساقات + الفئات، محرّر Tiptap rich-text.
+- مشغّل فيديو مع تتبّع تقدّم، تسجيل طلاب + شهادات إكمال.
+- تدفّق دفع Stripe (cancel / success)، حصة تخزين لكل مدرسة (`videoStorageUsedBytes` / `videoStorageQuotaBytes`).
+- **ClickView CDN جزئي** — ~32–40 من ~986 درساً مُنزّلة، الباقي يعتمد على ClickView CDN. يُتابَع في [Roadmap](/ar/docs/roadmap).
 
-## الملحمة 08: الجدول الزمني
+## 12 — المكتبة · `مُنفَّذ`
 
-بناء منشئ جدول مرئي مع السحب والإفلات، ومنع الحجز المزدوج للمعلمين أو القاعات.
-ممتاز لتعلم واجهات السحب والإفلات وحل مشاكل الجدولة الحقيقية.
+كتالوج، مساهمة، سجلات إعارة، إدارة المدرسة. راجع [المكتبة](/en/docs/library).
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">12 قصة</span>
-  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
-    متوسط
-  </span>
-</div>
+- مكونات في `src/components/library/`: admin, book-detail, book-list, catalog, contribute, my-profile.
+- النماذج: `Book`, `Textbook`, `SchoolBook`, `BorrowRecord`.
+- تصفّح + بحث + إعارة للطلاب، CRUD للأدمن + تقارير دوران.
+- لكل مدرسة عبر `SchoolBook` مع الاستفادة من كتالوج `Book` / `Textbook` العام.
 
-- منشئ الجدول المرئي
-- جدولة السحب والإفلات
-- الجدولة حسب الحصة
-- إدارة الاستراحات في الجدول
-- تخصيص القاعات
-- كشف تعارض المعلمين
-- كشف تعارض القاعات
-- عرض جدول المعلم
-- عرض جدول الفصل
-- تصدير الجدول (PDF/طباعة)
+## 13 — النقل · `مُنفَّذ`
 
----
+سائقون، مركبات، مسارات، صعود geofence، إشعارات الأهل. أحدث ملحمة — مدمجة 2026-04 (PR #291).
 
-## الملحمة 09: القبول
+- 7 نماذج Prisma (`transportation.prisma`): `Driver`, `Vehicle`, `Route`, `RouteStop`, `RouteAssignment`, `Trip`, `TripBoarding`.
+- المسارات: drivers, vehicles, routes, trips, assignments, reports, settings.
+- ترتيب توقّفات بالسحب والإفلات عبر dnd-kit.
+- صعود مرتبط بـgeofence مع إشعارات الأهل عند الصعود / النزول.
+- Mapbox + Leaflet لتصوير المسارات.
+- تقارير الرحلات: استخدام، ساعات، إحصاءات، معاينة رسوم.
+- دليل الكتلة في `src/components/school-dashboard/transportation/CLAUDE.md`.
 
-إرشاد الطلاب الجدد خلال التقديمات من ملء النماذج إلى القبول والتسجيل.
-مقدمة رائعة لأنظمة سير العمل وآلات الحالة في التطبيقات الحقيقية.
+## 14 — الكتالوج · `مُنفَّذ + تحسين`
 
-<div className="not-prose mt-4 mb-4 flex gap-2">
-  <span className="bg-muted rounded px-2 py-1 text-xs">10 قصص</span>
-  <span className="rounded bg-green-500/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400">
-    منخفض
-  </span>
-</div>
+مكتبة محتوى تعليمي على مستوى المنصة. راجع [الكتالوج](/en/docs/catalog).
 
-- نموذج التقديم عبر الإنترنت
-- تتبع حالة التقديم
-- تحميل المستندات للتقديمات
-- سير عمل مراجعة التقديم
-- قرار القبول (قبول/رفض/قائمة انتظار)
-- تأكيد التسجيل
-- تكامل دفع الرسوم
-- تقارير القبول
+- 22+ نموذج عبر `catalog.prisma`, `curriculum.prisma`, `chapter.prisma`, `lesson.prisma`, `material.prisma`, `book.prisma`, `textbook.prisma`, `video.prisma`, `image.prisma`, `document.prisma`, `assignment.prisma`, `question.prisma`, `quiz.prisma`, `bridge.prisma`، إضافة إلى `proposal.prisma`, `enrollment.prisma`.
+- **نمط الجسر** (`bridge.prisma`) — المدارس تشترك في كتالوج مشترك وتطبّق `ContentOverride`, `BookSelection`, `SubjectSelection`, `InstructorPreference`.
+- 4 مناهج على القرص: SD (السودان، 12 صفاً، مواد ثنائية اللغة)، US (246 مجلد مادة)، IN (246)، FR.
+- المخزون المستهدف: 62 مادة، 201 فصل، 986 درساً.
+- لوحة المشغّل في `/[lang]/(saas-dashboard)/(catalog)/catalog/...`.
+- تدفّق مساهمة مجتمعية مع `Proposal` (proposed → reviewed → approved → published).
+- مكتبة ClickView المصدر: [نظرة عامة](/en/docs/clickview) — 62 مادة، 240 سجل كتالوج خاص بالصف، ثلاث مراحل (ابتدائي/متوسط/ثانوي).
+
+## لم يُبنَ بعد
+
+| الوحدة                       | الحالة     | ملاحظات                                                                              |
+| ---------------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| الصحة                        | `مخطط فقط` | `HealthRecord` على ملف الطالب، بلا UI عيادة. يُتابَع في [Roadmap](/ar/docs/roadmap). |
+| السكن                        | `مخطط`     | إشارات قاموس فقط                                                                     |
+| المطعم                       | `مخطط`     | إشارات قاموس فقط                                                                     |
+| تطبيق native (iOS / Android) | `مخطط`     | الويب يعمل اليوم، مسار React Native في [Roadmap](/ar/docs/roadmap)                   |
+
+## مفاجآت تجاوزت MVP الأصلي
+
+ميزات شُحنت في المسار وتعيش داخل الملحمة المعنية أعلاه:
+
+- تصنيف وثائق القبول بـAI + ترتيب جدارة + استخراج إيصالات (Anthropic، الملحمة 05).
+- تكامل البنوك Plaid + Dwolla (الملحمة 09).
+- ست بوابات دفع (الملحمة 09).
+- 11 وضع التقاط حضور، يشمل بيومتري وgeofence وكشك (الملحمة 06).
+- بنك أسئلة مع توليد بـAI وتقطيع مادة (الملحمة 07).
+- تحقّق شهادة بكود (الملحمة 07).
+- جسر WhatsApp Evolution API (الملحمة 10).
+- self-service للنطاقات المخصّصة عبر Upstash Redis (الملحمة 01).
+- نظام hall-pass، gamification، تدخّلات إنذار مبكر (الملحمة 06).
+- مساهمة مجتمعية للكتالوج عبر proposals (الملحمة 14).
+- وحدة Sales / Lead بـkanban (`sales.prisma`).
+- تخصيص سمة (`UserTheme`).
+- 11 cron job يومياً (الملحمة 01).
+- AGENTS.md.draft + منظومة `.claude/` (50 agents، 47 commands، 16 skills، 13 دليل CLAUDE.md على مستوى الكتل).
+- 4 مناهج دول مع أسماء مواد ثنائية اللغة خاصة بالسودان (الملحمة 14).
+
+## انظر أيضاً
+
+- [PRD](/ar/docs/prd) — متطلبات المنتج، البنية، NFRs، القيود
+- [Roadmap](/ar/docs/roadmap) — التالي والرؤية البعيدة
+- [البنية المعمارية](/ar/docs/architecture) — تصميم النظام والأنماط
+- [Issues مفتوحة](https://github.com/databayt/hogwarts/issues) — قائمة العمل

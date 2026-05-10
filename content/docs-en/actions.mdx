@@ -1,31 +1,35 @@
 ---
 title: Actions
-description: Canonical patterns for writing actions.ts server actions in feature directories.
+description: Server actions — auth, tenant, permission, validate, execute, revalidate.
 ---
 
-`actions.ts` files run on the server and mutate state. They authenticate, resolve tenant, check permissions, validate input with Zod, execute the database write, then revalidate the cache. Read-only queries belong in `queries.ts`, not here.
+`actions.ts` runs on the server and mutates state. Every action follows the 5-step flow: authenticate → tenant → permission → validate → execute + revalidate. Reads belong in `queries.ts`.
 
 ## Categories
 
-| Category              | Shape                                                               | Reference                                          |
-| --------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
-| CRUD                  | Create, read, update, delete on a Prisma model. 200–1,300 lines.    | `listings/grades/actions.ts` (661)                 |
-| Form step             | Validate a single multi-step-form step, no DB write. 15–50 lines.   | `school-marketing/application/personal/actions.ts` |
-| Integration           | External API calls (Stripe, AI, email). Wraps third-party SDKs.     | `billing/actions.ts` (1,056)                       |
-| SaaS / platform admin | DEVELOPER-only operations on tenants and platform-wide records.     | `saas-dashboard/tenants/actions.ts`                |
-| Auth                  | Pre-tenant flows; uses singular `action.ts`. No `getTenantContext`. | `auth/login/action.ts`                             |
-| File / upload         | Signed URL minting, S3 confirms. Uses `auth()` + `schoolId` claim.  | `file/upload/actions.ts`                           |
+| Category      | Shape                                             | Reference                           |
+| ------------- | ------------------------------------------------- | ----------------------------------- |
+| CRUD          | Create / read / update / delete (200–1,300 lines) | `listings/grades/actions.ts`        |
+| Form step     | Validate one wizard step, no DB write             | `apply/personal/actions.ts`         |
+| Integration   | External API wrappers (Stripe, AI, email)         | `billing/actions.ts`                |
+| SaaS admin    | DEVELOPER-only platform operations                | `saas-dashboard/tenants/actions.ts` |
+| Auth          | Pre-tenant; uses singular `action.ts`             | `auth/login/action.ts`              |
+| File / upload | Signed URL minting, S3 confirms                   | `file/upload/actions.ts`            |
 
-## Eight rules
+## Rules
 
-1. **`"use server"` at the top.** Required for every action file.
-2. **The 5-step flow.** Auth → tenant → permission → validate → execute + revalidate. See the template below.
-3. **Import `ActionResponse` from `@/lib/action-response`.** Don't redefine it. The shared shape is `{ success: true, data } | { success: false, error?, errorCode? }`.
-4. **Validate with Zod.** Schemas live in `validation.ts`. Don't accept raw `FormData` without parsing.
-5. **Mutations only.** Read functions belong in `queries.ts`. Never mix.
-6. **Wrap in `try/catch` with structured error returns.** Surface `errorCode` for translation; never throw to the client.
-7. **Include `schoolId` in every query.** Missing `schoolId` = tenant data leak.
-8. **Stay under ~300 lines.** Beyond that, split into an `actions/` subdirectory by capability (`crud.ts`, `notifications.ts`, `bulk.ts`).
+| #   | Rule                                                                           |
+| --- | ------------------------------------------------------------------------------ |
+| 1   | `"use server"` at the top                                                      |
+| 2   | The 5-step flow — auth → tenant → permission → validate → execute + revalidate |
+| 3   | Import `ActionResponse` from `@/lib/action-response`, never redefine           |
+| 4   | Validate with Zod schemas from `validation.ts` — never raw `FormData`          |
+| 5   | Mutations only — reads in `queries.ts`                                         |
+| 6   | `try/catch` with structured errors — return `errorCode`, never throw           |
+| 7   | Include `schoolId` in every query                                              |
+| 8   | Stay under ~300 lines — split into `actions/` subdirectory by capability       |
+
+## Canonical example — the 5 steps
 
 ```typescript
 "use server"
@@ -77,44 +81,9 @@ export async function createSubject(
 }
 ```
 
-## Templates
-
-Pick the closest reference and adapt:
-
-| Template    | File                                                              |
-| ----------- | ----------------------------------------------------------------- |
-| CRUD        | `src/components/school-dashboard/listings/grades/actions.ts`      |
-| Form step   | `src/components/school-marketing/application/personal/actions.ts` |
-| SaaS admin  | `src/components/saas-dashboard/tenants/actions.ts`                |
-| Integration | `src/components/billing/actions.ts`                               |
-
-The CRUD template typically exports `create`, `update`, `delete`, plus optional `bulkCreate`, `bulkDelete`. Each one runs the 5-step flow. Form-step actions skip auth/tenant when the step runs before login (e.g. application form pre-OTP).
-
-## Anti-patterns
-
-- **Redefining `ActionResponse` locally** — 27+ files do this. Import from `@/lib/action-response` instead.
-- **Monolith files** — anything over 300 lines should split. The 5,692-line `timetable/actions.ts` is the canonical bad example; replace with an `actions/` subdirectory.
-- **Duplicate function names across files** — `createPeriod`, `getInvoices`, `setActiveTerm` defined in 2–4 places. Pick a home, re-export if needed.
-- **`console.log` of auth data** — never log emails, tokens, or session content. The `login/action.ts` and verification flows had 21 such logs.
-- **Raw `FormData.get() as string`** — always parse with Zod first.
-- **`any` types** — 150+ in the codebase. Use the inferred Zod type or a Prisma payload type.
-- **Read functions** — they belong in `queries.ts`. Move them.
-- **Mixing read + write** — split the file.
-
-## Naming
-
-`actions.ts` (plural) for feature directories; `action.ts` (singular) only for the auth flows that pre-date the convention. Don't introduce new singular files.
-
-## Relationship to other files
-
-- Imports schemas + types **from** `validation.ts`.
-- Imports permission helpers **from** `authorization.ts`.
-- Doesn't import from `form.tsx` or `table.tsx`. Actions don't know about UI.
-- Action files in features **never** import from another feature's actions; cross-feature coordination happens in `src/lib/` or via shared queries.
-
 ## Error codes
 
-Return error codes, not English strings. The dictionary maps them on the client via `useI18nMessages(dictionary).error`. Common codes:
+Return codes; the dictionary maps them on the client via `useI18nMessages(dictionary).error`.
 
 | Code             | Meaning                              |
 | ---------------- | ------------------------------------ |
@@ -126,12 +95,38 @@ Return error codes, not English strings. The dictionary maps them on the client 
 | `CONFLICT`       | Unique constraint violation          |
 | `SERVER_ERROR`   | Unexpected exception                 |
 
-Return shape:
-
 ```typescript
 type ActionResponse<T> =
   | { success: true; data: T }
   | { success: false; errorCode: ErrorCode; error?: string }
 ```
 
-The `error` field is for developer diagnostics only — never display it to users.
+The `error` field is for developer diagnostics only — never show to users.
+
+## Anti-patterns
+
+- Redefining `ActionResponse` (27+ files) — import from `@/lib/action-response`.
+- Monolith files — 5,692-line `timetable/actions.ts` is the canonical bad example. Split into `actions/`.
+- Duplicate function names across files (`createPeriod`, `getInvoices`).
+- `console.log` of auth data — never log emails, tokens, sessions.
+- Raw `FormData.get() as string` — parse with Zod first.
+- `any` types (150+ in codebase) — use inferred Zod or Prisma payloads.
+- Read functions in `actions.ts` — move to `queries.ts`.
+
+## Naming
+
+- File: `actions.ts` (plural). `action.ts` (singular) only for legacy auth flows.
+
+## Sibling roles
+
+- Imports schemas + types from `validation.ts`.
+- Imports permission helpers from `authorization.ts`.
+- Never imports from `form.tsx` / `table.tsx`.
+- Never imports from another feature's actions.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Validation](/docs/validation)
+- [Authorization](/docs/authorization)
+- [Queries](/docs/queries)

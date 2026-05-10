@@ -1,244 +1,153 @@
 ---
-title: "Listings"
-description: "A unified pattern for data tables, grids, and CRUD operations across the platform with optimistic updates, auto-refresh, and consistent UX."
+title: Listings
+description: Unified pattern for data tables, grids, and CRUD operations — optimistic updates, URL-persisted views, infinite scroll, type-safe queries.
 ---
 
-## Overview
+Listings are the backbone of data-driven features. 11 entities follow the same shape — students, teachers, classrooms, assignments, etc. — with consistent UX and optimistic updates.
 
-**Listings** are the backbone of data-driven features in the platform. They provide a unified pattern for displaying, searching, filtering, creating, editing, and deleting records—all with a consistent UX and optimistic updates.
+## Features
 
-The platform currently has **11 listing entities**, each following the same structure. This makes the codebase predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classrooms, Assignments, or any other entity—the pattern remains the same.
+| Feature             | Behaviour                                                         |
+| ------------------- | ----------------------------------------------------------------- |
+| Optimistic updates  | Add / update / remove instantly with automatic rollback on errors |
+| URL-persisted views | Table / grid view toggle via URL query params (`nuqs`)            |
+| Infinite scroll     | Load-more pagination, no page reloads                             |
+| Centralised queries | Type-safe query builders with role-based authorisation per module |
 
-## Key features
+## File patterns
 
-<CardGrid cols={2}>
-  <DocCard
-    title="Optimistic updates"
-    description="Add, update, and remove items instantly with automatic rollback on errors."
-  />
-  <DocCard
-    title="URL-persisted views"
-    description="Table / grid view toggle persists via URL query params (nuqs)."
-  />
-  <DocCard
-    title="Infinite scroll"
-    description="Load-more pagination — no page reloads."
-  />
-  <DocCard
-    title="Centralised queries"
-    description="Type-safe query builders with role-based authorisation per module."
-  />
-</CardGrid>
+Every listing follows the [mirror pattern](/docs/pattern) — the URL produces two directories: one in `app/` for routing, one in `components/<feature>/` for everything else.
 
----
+| File               | Purpose                                          |
+| ------------------ | ------------------------------------------------ |
+| `content.tsx`      | Server component — data fetching, tenant context |
+| `table.tsx`        | Client component — interactive table with state  |
+| `columns.tsx`      | Column definitions (client, uses hooks)          |
+| `form.tsx`         | Create / edit form with validation               |
+| `actions.ts`       | Server actions — validate, scope tenant, mutate  |
+| `queries.ts`       | Query builders with Prisma                       |
+| `authorization.ts` | RBAC permission checks                           |
+| `validation.ts`    | Zod schemas + refinements                        |
+| `types.ts`         | TypeScript interfaces                            |
+| `config.ts`        | Constants, options, labels                       |
+| `list-params.ts`   | URL params (`nuqs`)                              |
+| `README.md`        | Feature documentation                            |
+| `ISSUE.md`         | Known issues tracker                             |
 
-## Listing Structure
-
-Every listing follows the **mirror pattern** — the URL route produces two directories: one in `app/` for routing, one in `components/` for feature logic. Replace `abc` with your feature name.
-
-<ListingStructure />
-
----
-
-## Standardized File Patterns
-
-Each listing directory follows these naming conventions:
-
-| File               | Purpose                                         |
-| ------------------ | ----------------------------------------------- |
-| `content.tsx`      | Server component: data fetching, tenant context |
-| `table.tsx`        | Client component: interactive table with state  |
-| `columns.tsx`      | Column definitions (client, uses hooks)         |
-| `form.tsx`         | Create/Edit form with validation                |
-| `actions.ts`       | Server actions: validate, scope tenant, mutate  |
-| `queries.ts`       | Query builders with Prisma                      |
-| `authorization.ts` | RBAC permission checks                          |
-| `validation.ts`    | Zod schemas & refinements                       |
-| `types.ts`         | TypeScript interfaces                           |
-| `config.ts`        | Constants, options, labels                      |
-| `list-params.ts`   | URL params (nuqs)                               |
-| `README.md`        | Feature documentation                           |
-| `ISSUE.md`         | Known issues tracker                            |
-
----
-
-## Page Layout Composition
+## Page composition
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  PageTitle                     src/components/atom/page-title.tsx│
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │ Abc Management                                              ││
-│  │ Manage all abc records in your school                       ││
-│  └─────────────────────────────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────────┤
-│  PageNav                         src/components/atom/page-nav.tsx│
-│  ┌──────────┬──────────┬──────────┬──────────┐                  │
-│  │ All      │ Active   │ Archive  │ Settings │                  │
-│  └──────────┴──────────┴──────────┴──────────┘                  │
-├─────────────────────────────────────────────────────────────────┤
-│  Toolbar                         src/components/atom/toolbar.tsx │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │ SearchInput    Filters           ViewToggle Export Create   ││
-│  │ [🔍 Search...] [Status▾][Type▾]  [≡/⊞]     [↓]    [+]      ││
-│  └─────────────────────────────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────────┤
-│  DataTable                   src/components/table/data-table.tsx │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │ ☐ │ Name        │ Status   │ Created    │ Actions          ││
-│  │───┼─────────────┼──────────┼────────────┼──────────────────││
-│  │ ☐ │ Item 1      │ Active   │ 2025-01-20 │ [···]            ││
-│  │ ☐ │ Item 2      │ Draft    │ 2025-01-19 │ [···]            ││
-│  └─────────────────────────────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────────┤
-│  OR GridContainer          src/components/atom/grid-container.tsx│
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐                            │
-│  │ Card 1  │ │ Card 2  │ │ Card 3  │                            │
-│  └─────────┘ └─────────┘ └─────────┘                            │
-├─────────────────────────────────────────────────────────────────┤
-│  Modal (when open)              src/components/atom/modal/modal  │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │ ModalFormLayout  src/components/atom/modal/modal-form-layout ││
-│  │ ┌──────────────┐  ┌───────────────────────────────────────┐││
-│  │ │ Create Abc   │  │  Form (listings/abc/form.tsx)         │││
-│  │ │ Add new item │  │  - Field 1                           │││
-│  │ └──────────────┘  └───────────────────────────────────────┘││
-│  │ ModalFooter      src/components/atom/modal/modal-footer     ││
-│  │ [━━━━━━━━━━━━━━━━━━━━━━━━━━━━]                              ││
-│  │ Step 1 of 2: Basic Info              [Cancel] [Next]       ││
-│  └─────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────┘
+PageTitle              src/components/atom/page-title.tsx
+  Abc Management — "Manage all abc records in your school"
+
+PageNav                src/components/atom/page-nav.tsx
+  All | Active | Archive | Settings
+
+Toolbar                src/components/atom/toolbar.tsx
+  [search] [filters]  [view ≡/⊞] [export ↓] [create +]
+
+DataTable              src/components/table/data-table.tsx
+OR GridContainer       src/components/atom/grid-container.tsx
+
+Modal (when open)      src/components/atom/modal/modal
+  ModalFormLayout
+    Form (listings/abc/form.tsx)
+  ModalFooter
+    Step 1 of 2: Basic Info     [Cancel] [Next]
 ```
 
----
-
-## Component Flow
+## Component flow
 
 ```
 Route (page.tsx)
-    │
-    ▼
-Content (content.tsx) ──── Server Component
-    │ • getTenantContext()
-    │ • Parse URL params
-    │ • Fetch data via queries.ts
-    │
-    ▼
-Table (table.tsx) ──────── Client Component
-    │ • useModal()
-    │ • usePlatformView()
-    │ • useDataTable()
-    │
-    ├──► Toolbar
-    │      • SearchInput
-    │      • ViewToggle
-    │      • ExportButton
-    │      • CreateButton
-    │
-    ├──► DataTable / GridContainer
-    │      • Columns (columns.tsx)
-    │      • Row actions
-    │      • Pagination
-    │
-    └──► Modal
-           • Form (form.tsx)
-           • ModalFormLayout
-           • ModalFooter
+  → Content (content.tsx) ── Server
+      • getTenantContext()
+      • Parse URL params
+      • Fetch via queries.ts
+  → Table (table.tsx) ── Client
+      • useModal()
+      • usePlatformView()
+      • useDataTable()
+      ├─ Toolbar (Search, ViewToggle, Export, Create)
+      ├─ DataTable / GridContainer (Columns, row actions, pagination)
+      └─ Modal (Form, ModalFormLayout, ModalFooter)
 ```
 
----
+## Reference implementation
 
-## Reference Implementation
+Grades is the canonical reference. All paths under `src/components/school-dashboard/listings/grades/`:
 
-The **Grades** module serves as the reference implementation with the complete pattern:
+| Pattern        | File               |
+| -------------- | ------------------ |
+| Server actions | `actions.ts`       |
+| Queries        | `queries.ts`       |
+| Authorization  | `authorization.ts` |
+| Validation     | `validation.ts`    |
+| Table          | `table.tsx`        |
+| Columns        | `columns.tsx`      |
+| Form           | `form.tsx`         |
+| Content        | `content.tsx`      |
 
-| Pattern        | Reference File                                                     |
-| -------------- | ------------------------------------------------------------------ |
-| Server Actions | `src/components/school-dashboard/listings/grades/actions.ts`       |
-| Queries        | `src/components/school-dashboard/listings/grades/queries.ts`       |
-| Authorization  | `src/components/school-dashboard/listings/grades/authorization.ts` |
-| Validation     | `src/components/school-dashboard/listings/grades/validation.ts`    |
-| Table          | `src/components/school-dashboard/listings/grades/table.tsx`        |
-| Columns        | `src/components/school-dashboard/listings/grades/columns.tsx`      |
-| Form           | `src/components/school-dashboard/listings/grades/form.tsx`         |
-| Content        | `src/components/school-dashboard/listings/grades/content.tsx`      |
+## Core hooks
 
----
+| Hook              | Path                                     | Purpose                                                   |
+| ----------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `usePlatformData` | `src/hooks/use-platform-data.ts`         | Data fetching with optimistic updates and infinite scroll |
+| `usePlatformView` | `src/hooks/use-platform-view.ts`         | View mode (table / grid) with URL persistence             |
+| `useDataTable`    | `src/components/table/use-data-table.ts` | TanStack Table state management                           |
+| `useModal`        | `src/components/atom/modal/context.tsx`  | Modal open / close state                                  |
 
-## Core Hooks
+## Modules
 
-| Hook            | Path                                     | Purpose                                                   |
-| --------------- | ---------------------------------------- | --------------------------------------------------------- |
-| usePlatformData | `src/hooks/use-platform-data.ts`         | Data fetching with optimistic updates and infinite scroll |
-| usePlatformView | `src/hooks/use-platform-view.ts`         | View mode (table/grid) with URL persistence               |
-| useDataTable    | `src/components/table/use-data-table.ts` | TanStack Table state management                           |
-| useModal        | `src/components/atom/modal/context.tsx`  | Modal open/close state management                         |
+All 11 listings ship table, grid, search, and export:
 
----
+Announcements, Assignments, Classes, Classrooms, Events, Grades, Parents, Staff, Students, Subjects, Teachers.
 
-## Modules Status
+## Best practices
 
-| Module            | Table | Grid | Search | Export |
-| ----------------- | ----- | ---- | ------ | ------ |
-| **Announcements** | ✅    | ✅   | ✅     | ✅     |
-| **Assignments**   | ✅    | ✅   | ✅     | ✅     |
-| **Classes**       | ✅    | ✅   | ✅     | ✅     |
-| **Classrooms**    | ✅    | ✅   | ✅     | ✅     |
-| **Events**        | ✅    | ✅   | ✅     | ✅     |
-| **Grades**        | ✅    | ✅   | ✅     | ✅     |
-| **Parents**       | ✅    | ✅   | ✅     | ✅     |
-| **Staff**         | ✅    | ✅   | ✅     | ✅     |
-| **Students**      | ✅    | ✅   | ✅     | ✅     |
-| **Subjects**      | ✅    | ✅   | ✅     | ✅     |
-| **Teachers**      | ✅    | ✅   | ✅     | ✅     |
+### Multi-tenant safety
 
----
+- **Always include `schoolId`** in every database query.
+- Get from session: `const { schoolId } = session.user`.
+- Missing `schoolId` breaks tenant isolation.
 
-## Best Practices
+### Column definitions
 
-### Multi-Tenant Safety
+- Define handlers **before** the columns `useMemo`.
+- Columns with hooks (`useModal`) must be generated in **client** components.
+- Pass callbacks via `getColumns(dictionary, lang, { onDelete, onEdit, onView })`.
 
-- **ALWAYS include `schoolId`** in every database query
-- Get schoolId from session: `const { schoolId } = session.user`
-- Missing schoolId breaks tenant isolation
+### Optimistic updates
 
-### Column Definitions
+- Call `optimisticRemove(id)` before server request.
+- Call `refresh()` on error to rollback.
+- Use `optimisticUpdate(id, updater)` for in-place updates.
 
-- Define handlers **BEFORE** columns `useMemo`
-- Columns with hooks (useModal) must be generated in **client components**
-- Pass callbacks via `getColumns(dictionary, lang, { onDelete, onEdit, onView })`
+### Server actions
 
-### Optimistic Updates
+- Start with `"use server"`.
+- Validate with Zod on both client (UX) and server (security).
+- Call `revalidatePath()` or `redirect()` after mutations.
+- Return typed `ActionResponse<T>`.
 
-- Call `optimisticRemove(id)` before server request
-- Call `refresh()` on error to rollback
-- Use `optimisticUpdate(id, updater)` for in-place updates
+### Modal forms
 
-### Server Actions
+- Use `ModalFormLayout` for two-column header / form layout.
+- Use `ModalFooter` for progress bar and navigation.
+- Call `onSuccess()` after successful mutations.
 
-- Start with `"use server"` directive
-- Validate with Zod on both client (UX) and server (security)
-- Call `revalidatePath()` or `redirect()` after mutations
-- Return typed `ActionResponse<T>` results
+## Maturity levels
 
-### Modal Forms
+| Level | Feature                                       | Status      |
+| ----- | --------------------------------------------- | ----------- |
+| 1     | Basic CRUD                                    | Complete    |
+| 2     | Relationship context (counts, quick links)    | In progress |
+| 3     | Rich detail pages with related data tabs      | In progress |
+| 4     | Cross-listing actions (bulk operations)       | In progress |
+| 5     | Automated workflows (triggers, notifications) | Planned     |
 
-- Use `ModalFormLayout` for two-column header/form layout
-- Use `ModalFooter` for progress bar and navigation
-- Call `onSuccess()` callback after successful mutations
+## See also
 
----
-
-## Listing Maturity Levels
-
-| Level | Feature                                       | Status         |
-| ----- | --------------------------------------------- | -------------- |
-| **1** | Basic CRUD (create, read, update, delete)     | ✅ Complete    |
-| **2** | Relationship context (counts, quick links)    | 🔄 In Progress |
-| **3** | Rich detail pages with related data tabs      | 🔄 In Progress |
-| **4** | Cross-listing actions (bulk operations)       | 🔄 In Progress |
-| **5** | Automated workflows (triggers, notifications) | ⏳ Planned     |
-
----
-
-The Listings pattern ensures consistency across all data-driven features. By following this pattern, you get auto-refresh, optimistic updates, view toggles, and export functionality—all with type-safe queries and role-based authorization.
+- [Pattern](/docs/pattern) — mirror pattern, naming conventions
+- [Students](/docs/students) — listing with wizard flow
+- [Multi-tenancy](/docs/multi-tenancy) — `schoolId` scoping

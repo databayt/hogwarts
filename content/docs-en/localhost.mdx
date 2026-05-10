@@ -1,154 +1,100 @@
 ---
-title: "Localhost"
-description: "Detailed guide to setup environment and run localhost"
+title: Localhost
+description: Step-by-step environment setup — fork, clone, install, and run the dev server locally.
 ---
 
 import Image from "next/image"
 
+The detailed walkthrough. For the fast path see [Get started](/docs/get-started).
+
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
+- [Node.js](https://nodejs.org/) v22+ (LTS recommended)
+- [Git](https://git-scm.com/)
+- An editor — [VS Code](https://code.visualstudio.com/) recommended
 
-- **[Node.js](https://nodejs.org/)** (v22 or higher, recommended LTS version)
-- **[Git](https://git-scm.com/)** (version control)
-- **[IDE](https://code.visualstudio.com/)** (recommended VS Code)
+## 1. Fork the repository
 
-### Step 1: Fork the Project
-
-Start by creating your own copy of the repository on GitHub.
-
-1. **Navigate to [Hogwarts repository](https://github.com/databayt/hogwarts)**
-2. **Click the "Fork" button** in the top-right corner
+Open [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) and click **Fork** in the top-right.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/fork.png"
-    alt="Click the Fork button on GitHub repository page"
+    alt="Fork button on GitHub"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 2: Create Your Fork
-
-Ensure the repository name is available and create your fork.
-
-1. **Verify the repository name** is available
-2. **Keep the default settings** (unless you need to change them)
-3. **Click "Create fork"** to complete the process
+Keep default settings unless you need a custom name. Click **Create fork**.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/create-fork.png"
-    alt="Create fork dialog with repository name and settings"
+    alt="Create fork dialog"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 3: Open VS Code
+## 2. Clone in VS Code
 
-Launch your code editor and prepare to clone the repository.
-
-1. **Open a new window** in VS Code
-2. **Click on the Git icon** in the left sidebar
-3. **Click Clone**
-4. **Paste your repository URL** or connect with GitHub from top search bar
+Open VS Code → Git icon in the sidebar → **Clone**. Paste your fork URL or pick the repo from the GitHub picker.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/clone.png"
-    alt="VS Code editor with clone repository option highlighted"
+    alt="VS Code clone option"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 4: Clone from GitHub
-
-Get your forked repository URL and clone it locally.
-
-1. **Go back to your forked repository** on GitHub
-2. **Click the green "Code" button**
-3. **Copy the HTTPS URL** to your clipboard
-4. **Paste it in your editor's clone dialog**
+If you don't have the URL handy: open your fork on GitHub → click the green **Code** button → copy the HTTPS URL.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/clone-from-github.png"
-    alt="GitHub clone dialog showing HTTPS URL copy button"
+    alt="Copy HTTPS URL from GitHub"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 5: Choose Local Directory
-
-Select where you want to store the project on your computer.
-
-1. **Choose a directory** for your projects (e.g., `~/Documents/projects/`)
-2. **Create a new folder** if needed
-3. **Select the location** and confirm
+Choose a parent directory (e.g. `~/Documents/projects/`).
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/repo-destination.png"
-    alt="File explorer showing directory selection for cloning"
+    alt="Select destination directory"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 6: Open in Editor
-
-Open the cloned project in your code editor.
-
-1. **Wait for the cloning process** to complete
-2. **Click "Open"** when prompted
-3. **Your project is now ready** for development
+When the clone finishes, open the project in VS Code.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/open-repo.png"
-    alt="Project successfully opened in VS Code or Cursor"
+    alt="Project opened in VS Code"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### Step 7: Install Dependencies
+## 3. Install, env, Prisma, dev
 
-Use pnpm to install all required dependencies.
+After cloning, follow [Get started](/docs/get-started) from step 3 onward.
 
-1. **Open the integrated terminal** (`Ctrl/Cmd + ~`)
-2. **Run the install command**:
+## Next
 
-```bash
-pnpm install
-```
-
-3. **Wait for installation** to complete
-
-### Step 8: Set Up Environment
-
-1. **Create `.env`** file in the root folder
-2. **Paste the content** from WhatsApp group
-
-### Step 9: Start Development Server
-
-Launch the development server and see your app running.
-
-1. **Run the development command**:
-
-```bash
-pnpm dev
-```
-
-2. **Wait for the server** to start
-3. **Open your browser** to `http://localhost:3000`
+- [Get started](/docs/get-started) — fast version of the same flow
+- [Contributing](/docs/contributing) — commit conventions, your first PR
+- [Architecture](/docs/architecture) — mirror pattern, multi-tenancy

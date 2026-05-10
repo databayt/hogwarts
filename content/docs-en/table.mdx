@@ -1,276 +1,38 @@
 ---
-title: "Table"
-description: "Canonical patterns for writing columns.tsx and table.tsx in feature directories"
+title: Table
+description: DataTable wrapper plus column definitions for a feature.
 ---
 
-## Current Progress (Audit)
-
-33 columns.tsx files (~6,595 lines) and 36 table.tsx files (~7,393 lines) audited across the codebase:
-
-| Area                                         | Status | Detail                                                                                 |
-| -------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| `"use client"` directive                     | PASS   | All columns.tsx and table.tsx files include the directive                              |
-| `ColumnDef<RowType>` typed                   | PASS   | 100% use typed ColumnDef arrays                                                        |
-| `useMemo` for column generation in table.tsx | PASS   | Consistent across DataTable consumers                                                  |
-| DataTable atom usage                         | PASS   | 30/36 tables use the shared DataTable atom from `@/components/table/`                  |
-| `useModal` hooks inside cell renderers       | FAIL   | 19 files use hooks in column cell functions (causes re-renders, breaks Rules of Hooks) |
-| Row type defined inline in columns.tsx       | FAIL   | 16 files define RowType inline instead of importing from types.ts                      |
-| 657-line transaction-history monolith        | FAIL   | Single columns file with inline actions, modals, and data fetching                     |
-| Inconsistent naming (column vs columns)      | FAIL   | Some files export `columns`, others `getColumns`, others `columnDefs`                  |
-| Stub files                                   | FAIL   | products/columns.tsx is 2 lines (empty array)                                          |
-| receipt/table.tsx shadows DataTable name     | FAIL   | Local component named `DataTable` shadows the atom import                              |
-
-## 3 Categories of columns.tsx
-
-### Category 1: Factory Function with Callbacks (3 files, newer/better)
-
-Exports `get<Entity>Columns(dictionary, lang, callbacks)`. Parent table component passes action handlers as callbacks. No hooks inside columns.
-
-Reference: `listings/teachers/columns.tsx` (442 lines)
-
-### Category 2: Factory Function with useModal in Cells (19 files, older)
-
-Exports `get<Entity>Columns(dictionary)`. Cell renderers call `useModal()` directly -- this works but couples columns to the modal system and risks Rules of Hooks violations.
-
-Reference: `listings/students/columns.tsx`, `listings/classes/columns.tsx`
-
-### Category 3: Static Array (11 files)
-
-Exports `const <entity>Columns: ColumnDef<RowType>[]`. No factory function, no i18n, no callbacks. Simplest pattern for admin/SaaS tables.
-
-Reference: `saas-dashboard/domains/columns.tsx` (83 lines)
-
-## 3 Categories of table.tsx
-
-### Category 1: DataTable Atom with Load-More (24 files)
-
-Uses `useDataTable` hook + `DataTable` atom with `paginationMode="load-more"`. Incrementally loads data via server actions.
-
-Reference: `saas-dashboard/domains/table.tsx` (83 lines)
-
-### Category 2: DataTable Atom with Pagination (6 files)
-
-Uses `useDataTable` hook + `DataTable` atom with server-side pagination (page numbers in URL via nuqs).
-
-Reference: `listings/teachers/table.tsx` (419 lines)
-
-### Category 3: Raw Table (5 files)
-
-Uses shadcn/ui `<Table>` directly without the DataTable atom. For simple, non-interactive displays.
-
-Reference: `billing/invoice-table.tsx`
-
-## The 6 Rules
-
-### 1. Always `"use client"` for both files
-
-Both columns.tsx and table.tsx are client components. Column definitions use JSX (cell renderers) and table.tsx uses hooks.
-
-```typescript
-// columns.tsx
-"use client"
-
-import { useMemo } from "react"
-import { ColumnDef } from "@tanstack/react-table"
-
-import { DataTable } from "@/components/table/data-table"
-
-// ...
-
-// table.tsx
-
-;("use client")
-
-// ...
-```
-
-### 2. Row types in types.ts, not inline in columns.tsx
-
-Row types should be defined in types.ts and imported. Inline types in columns.tsx can't be reused by table.tsx or other consumers.
-
-```typescript
-// GOOD: Type in types.ts, imported by both files
-// types.ts
-export type TeacherRow = {
-  id: string
-  name: string
-  email: string
-  department: string | null
-  status: string
-}
-
-// columns.tsx
-import type { TeacherRow } from "./types"
-export const getTeacherColumns = (...): ColumnDef<TeacherRow>[] => [...]
-
-// BAD: Type inline in columns.tsx (16 files do this)
-// columns.tsx
-export type TeacherRow = { ... } // can't be imported by table.tsx without circular deps
-```
-
-### 3. Use callback pattern for actions (not hooks in cells)
-
-Column cell renderers should call callbacks passed from the parent, not invoke hooks directly.
-
-```typescript
-// GOOD: Callbacks passed from parent (teachers/columns.tsx pattern)
-export interface TeacherColumnCallbacks {
-  onView?: (row: TeacherRow) => void
-  onEdit?: (row: TeacherRow) => void
-  onDelete?: (row: TeacherRow) => void
-}
-
-export const getTeacherColumns = (
-  dictionary?: Dictionary["school"]["teachers"],
-  lang?: Locale,
-  callbacks?: TeacherColumnCallbacks
-): ColumnDef<TeacherRow>[] => [
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuItem onClick={() => callbacks?.onEdit?.(row.original)}>
-          Edit
-        </DropdownMenuItem>
-      </DropdownMenu>
-    ),
-  },
-]
-
-// BAD: Hook inside cell renderer (19 files do this)
-export const getColumns = (dictionary: any): ColumnDef<Row>[] => [
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const { openModal } = useModal() // Hook inside render function!
-      return <Button onClick={() => openModal(row.original.id)}>Edit</Button>
-    },
-  },
-]
-```
-
-### 4. useMemo for column generation in table.tsx
-
-Wrap column generation in `useMemo` to prevent re-creating column definitions on every render.
-
-```typescript
-// GOOD: Memoized columns
-export function TeachersTable({ data, dictionary, lang }: Props) {
-  const columns = useMemo(
-    () => getTeacherColumns(dictionary, lang, callbacks),
-    [dictionary, lang, callbacks]
-  )
-
-  const { table } = useDataTable<TeacherRow>({ data, columns, pageCount: 1 })
-  return <DataTable table={table} />
-}
-
-// ALSO GOOD: Static columns (no dependencies, stable reference)
-const columns = useMemo(() => domainColumns, [])
-```
-
-### 5. Use the shared DataTable atom
-
-Always use `DataTable` + `useDataTable` from `@/components/table/`. Don't build custom table implementations.
-
-```typescript
-// GOOD: Shared atom
-
-// BAD: Raw TanStack Table without the atom
-import { getCoreRowModel, useReactTable } from "@tanstack/react-table"
-
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-```
-
-### 6. Max ~200 lines per file
-
-Split large column files by extracting cell renderers and helper functions. Split large table files by extracting toolbar and action logic.
-
-## 3 Canonical Templates
-
-### Template A: Static Columns (Minimal)
-
-Direct `ColumnDef[]` array export. Best for admin/SaaS tables without i18n. Reference: `saas-dashboard/domains/columns.tsx` (83 lines).
-
-```typescript
-"use client"
-
-import { ColumnDef } from "@tanstack/react-table"
-
-import { Badge } from "@/components/ui/badge"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
-
-// Rule 2: Import row type from types.ts, not defined inline
-import type { DomainRow } from "./types"
-
-export const domainColumns: ColumnDef<DomainRow>[] = [
-  {
-    accessorKey: "schoolName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="School" />
-    ),
-    meta: { label: "School", variant: "text", placeholder: "Search school" },
-  },
-  {
-    accessorKey: "domain",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Domain" />
-    ),
-    meta: { label: "Domain", variant: "text", placeholder: "Search domain" },
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
-    meta: {
-      label: "Status",
-      variant: "select",
-      options: [
-        { label: "Pending", value: "pending" },
-        { label: "Approved", value: "approved" },
-        { label: "Rejected", value: "rejected" },
-        { label: "Verified", value: "verified" },
-      ],
-    },
-    cell: ({ getValue }) => {
-      const v = (getValue<string>() ?? "").toLowerCase()
-      const variant =
-        v === "verified" ? "default"
-        : v === "approved" ? "secondary"
-        : v === "rejected" ? "destructive"
-        : "outline"
-      return <Badge variant={variant}>{v.charAt(0).toUpperCase() + v.slice(1)}</Badge>
-    },
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created" />
-    ),
-    cell: ({ getValue }) => {
-      const v = getValue<string | undefined>()
-      return (
-        <span className="text-muted-foreground text-xs tabular-nums">
-          {v ? new Date(v).toLocaleDateString() : "-"}
-        </span>
-      )
-    },
-  },
-]
-```
-
-Key points:
-
-- `meta` property on each column for toolbar integration (`variant: "text"` for search, `variant: "select"` for dropdown)
-- `DataTableColumnHeader` for sortable headers
-- Custom `cell` renderers for badges and dates
-- No factory function needed when there's no i18n or callbacks
-
-### Template B: Minimal Table
-
-Simplest table component. Reference: `saas-dashboard/catalog/table.tsx` (27 lines).
+`table.tsx` and `columns.tsx` are client leaves rendered by `client.tsx`. Both are always `"use client"` — TanStack Table requires hooks and cells use JSX. Data is fetched on the server and passed in as props.
+
+## Categories — `columns.tsx`
+
+| Category                                  | Shape                                             | Reference                            |
+| ----------------------------------------- | ------------------------------------------------- | ------------------------------------ |
+| Factory with callbacks (newer, preferred) | `get<Entity>Columns(dictionary, lang, callbacks)` | `listings/teachers/columns.tsx`      |
+| Factory with `useModal` in cells (legacy) | Hook inside cell renderer (anti-pattern)          | `listings/students/columns.tsx`      |
+| Static array                              | `const <entity>Columns: ColumnDef<RowType>[]`     | `saas-dashboard/domains/columns.tsx` |
+
+## Categories — `table.tsx`
+
+| Category               | Shape                                            | Reference                          |
+| ---------------------- | ------------------------------------------------ | ---------------------------------- |
+| DataTable + load-more  | `useDataTable` with `paginationMode="load-more"` | `saas-dashboard/domains/table.tsx` |
+| DataTable + pagination | URL-based pagination via nuqs                    | `listings/teachers/table.tsx`      |
+| Raw shadcn `<Table>`   | Simple non-interactive displays                  | `billing/invoice-table.tsx`        |
+
+## Rules
+
+| #   | Rule                                                                      |
+| --- | ------------------------------------------------------------------------- |
+| 1   | `"use client"` for both files                                             |
+| 2   | Row types in `types.ts`, never inline in `columns.tsx`                    |
+| 3   | Use callback pattern for actions — never call hooks inside cell renderers |
+| 4   | `useMemo` for column generation in `table.tsx`                            |
+| 5   | Use the shared `DataTable` + `useDataTable` from `@/components/table/`    |
+| 6   | Stay under ~200 lines per file                                            |
+
+## Canonical example — minimal table
 
 ```typescript
 "use client"
@@ -302,278 +64,115 @@ export function CatalogTable({ data }: Props) {
 }
 ```
 
-Key points:
-
-- `useMemo` wraps static columns (stable reference)
-- `pageCount: 1` for client-side-only data
-- `pageSize: data.length` shows all rows without pagination
-- Bare `<DataTable table={table} />` with no toolbar
-
-### Template C: Table with Load-More
-
-Incremental data loading via server action. Reference: `saas-dashboard/domains/table.tsx` (83 lines).
+## Callback pattern (avoid hooks in cells)
 
 ```typescript
-"use client"
-
-import { useCallback, useState } from "react"
-import { ColumnDef } from "@tanstack/react-table"
-
-import { DataTable } from "@/components/table/data-table"
-import { DataTableToolbar } from "@/components/table/data-table-toolbar"
-import { useDataTable } from "@/components/table/use-data-table"
-
-import { getDomains } from "./actions"
-
-import type { DomainRow } from "./types"
-
-interface DomainsTableProps {
-  initialData: DomainRow[]
-  columns: ColumnDef<DomainRow, unknown>[]
-  total: number
-  perPage?: number
+// columns.tsx
+export interface TeacherColumnCallbacks {
+  onView?: (row: TeacherRow) => void
+  onEdit?: (row: TeacherRow) => void
+  onDelete?: (row: TeacherRow) => void
 }
 
-export function DomainsTable({
-  initialData,
-  columns,
-  total,
-  perPage = 10,
-}: DomainsTableProps) {
-  const [data, setData] = useState<DomainRow[]>(initialData)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const hasMore = data.length < total
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return
-
-    setIsLoading(true)
-    try {
-      const nextPage = currentPage + 1
-      const result = await getDomains({ page: nextPage, perPage })
-
-      if (result.success && result.data.length > 0) {
-        setData((prev) => [...prev, ...result.data])
-        setCurrentPage(nextPage)
-      }
-    } catch (error) {
-      console.error("Failed to load more:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentPage, perPage, isLoading, hasMore])
-
-  const { table } = useDataTable<DomainRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: { pageIndex: 0, pageSize: data.length },
-    },
-  })
-
-  return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table} />
-    </DataTable>
-  )
-}
-```
-
-Key points:
-
-- `initialData` + incremental loading via server action
-- Functional `setData(prev => [...prev, ...newData])` for safe state updates
-- `paginationMode="load-more"` with `hasMore`, `isLoading`, `onLoadMore`
-- `<DataTableToolbar>` rendered as child of `<DataTable>` (slot pattern)
-- Columns received as prop for flexibility
-
-> **Streaming tip:** Wrap server-rendered table content in `<Suspense fallback={<TableSkeleton />}>` for progressive loading. The table skeleton should match the table layout to prevent layout shift.
-
-## Anti-Patterns
-
-### 1. useModal hooks inside cell renderers (19 files)
-
-Calling hooks inside column cell functions violates Rules of Hooks and couples columns to the modal system.
-
-```typescript
-// BAD: Hook inside cell (19 files)
-{
-  id: "actions",
-  cell: ({ row }) => {
-    const { openModal } = useModal() // React Hook in non-component!
-    return <Button onClick={() => openModal(row.original.id)}>Edit</Button>
+export const getTeacherColumns = (
+  dictionary?: Dictionary["school"]["teachers"],
+  lang?: Locale,
+  callbacks?: TeacherColumnCallbacks
+): ColumnDef<TeacherRow>[] => [
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <Button onClick={() => callbacks?.onEdit?.(row.original)}>Edit</Button>
+    ),
   },
-}
+]
 
-// GOOD: Callback from parent
-{
-  id: "actions",
-  cell: ({ row }) => (
-    <Button onClick={() => callbacks?.onEdit?.(row.original)}>Edit</Button>
-  ),
-}
+// table.tsx
+const columns = useMemo(
+  () => getTeacherColumns(dictionary, lang, callbacks),
+  [dictionary, lang, callbacks]
+)
 ```
 
-### 2. Row type inline in columns.tsx (16 files)
-
-Defining the row type in columns.tsx prevents table.tsx from importing it without circular dependencies.
-
-```typescript
-// BAD: Type defined in columns.tsx
-// columns.tsx
-export type StudentRow = { id: string; name: string; ... }
-
-// GOOD: Type in types.ts
-// types.ts
-export type StudentRow = { id: string; name: string; ... }
-
-// columns.tsx
-import type { StudentRow } from "./types"
-```
-
-### 3. 657-line transaction-history monolith
-
-Single columns file with inline server action calls, modal logic, and data fetching.
-
-```
-# BAD: transaction-history/columns.tsx (657 lines)
-
-# GOOD: Split concerns
-transaction-history/
-  columns.tsx    # Column definitions only (~150 lines)
-  table.tsx      # Table component with data loading
-  actions.tsx    # Action cell renderers
-  types.ts       # Row types
-```
-
-### 4. receipt/table.tsx shadows DataTable name
-
-Local component named `DataTable` shadows the atom import, causing confusion.
-
-```typescript
-// BAD: Name collision
-import { DataTable } from "@/components/table/data-table"
-export function DataTable() { ... } // Shadows the import!
-
-// GOOD: Feature-specific name
-export function ReceiptTable() { ... }
-```
-
-## Server-First Architecture
-
-table.tsx and columns.tsx are always client components -- TanStack Table requires hooks, and column cell renderers use JSX. However, **data must always be fetched on the server**.
-
-### Data Flow
-
-```
-page.tsx (server) → content.tsx (server, fetches data) → client.tsx ("use client") → table.tsx
-```
-
-Never fetch data inside table.tsx. Data comes from the server via props:
-
-```typescript
-// GOOD: Server-fetched data via props
-interface TeachersTableProps {
-  initialData: TeacherRow[]
-  total: number
-  dictionary: Dictionary["school"]["teachers"]
-  lang: Locale
-}
-
-export function TeachersTable({ initialData, total }: TeachersTableProps) {
-  // Table receives pre-fetched data
-  const { table } = useDataTable({ data: initialData, columns, pageCount })
-  return <DataTable table={table} />
-}
-
-// BAD: Fetching inside table.tsx
-export function TeachersTable() {
-  const [data, setData] = useState([])
-  useEffect(() => {
-    getTeachers().then(setData) // Should be in content.tsx
-  }, [])
-}
-```
-
-### Load-More Exception
-
-The one acceptable case for server action calls in table.tsx is incremental loading (load-more pagination), where the initial data comes from the server and subsequent pages are loaded on demand:
+## Load-more pattern
 
 ```typescript
 const handleLoadMore = useCallback(async () => {
-  const result = await getItems({ page: nextPage }) // OK for pagination
-  setData((prev) => [...prev, ...result.data])
-}, [nextPage])
+  if (isLoading || !hasMore) return
+  setIsLoading(true)
+  try {
+    const result = await getDomains({ page: nextPage, perPage })
+    if (result.success && result.data.length > 0) {
+      setData((prev) => [...prev, ...result.data])
+      setCurrentPage(nextPage)
+    }
+  } finally {
+    setIsLoading(false)
+  }
+}, [currentPage, perPage, isLoading, hasMore])
+
+return (
+  <DataTable
+    table={table}
+    paginationMode="load-more"
+    hasMore={hasMore}
+    isLoading={isLoading}
+    onLoadMore={handleLoadMore}
+  >
+    <DataTableToolbar table={table} />
+  </DataTable>
+)
 ```
 
-### Boundary Placement
-
-table.tsx should be imported by client.tsx, which manages modal state and callbacks:
-
-```
-content.tsx (server, fetches data)
-    → client.tsx ("use client", modal state, callbacks)
-        → table.tsx (client leaf, renders DataTable)
-        → columns.tsx (client leaf, column definitions)
-```
-
-## Quick Reference
-
-### Naming Conventions
-
-| Export                      | Pattern                                           | Example                  |
-| --------------------------- | ------------------------------------------------- | ------------------------ |
-| Static columns              | `export const <entity>Columns`                    | `domainColumns`          |
-| Factory columns (with i18n) | `export const get<Entity>Columns(dict, lang, cb)` | `getTeacherColumns(...)` |
-| Callback interface          | `<Entity>ColumnCallbacks`                         | `TeacherColumnCallbacks` |
-| Row type                    | `<Entity>Row`                                     | `TeacherRow`             |
-| Table component             | `<Entity>Table`                                   | `DomainsTable`           |
-
-### Import Direction
-
-```
-types.ts          (RowType)
-    |
-columns.tsx       (imports RowType, exports ColumnDef[])
-    |
-table.tsx         (imports columns, uses useDataTable + DataTable)
-    |
-content.tsx       (renders table with server data)
-```
-
-### Co-located File Structure
-
-```
-src/components/<feature>/
-  types.ts          # RowType definition
-  config.ts         # Status variants, filter options
-  columns.tsx       # ColumnDef[] (this file)
-  table.tsx         # DataTable consumer (this file)
-  actions.ts        # Server actions (table calls for load-more)
-  content.tsx       # Server component (passes data to table)
-```
-
-### Column Meta for Toolbar Integration
+## Column meta for toolbar
 
 ```typescript
 meta: {
-  label: "Status",           // Toolbar filter label
-  variant: "text",           // "text" = search input, "select" = dropdown
-  placeholder: "Search...",  // Input placeholder
-  options: [                 // For "select" variant
+  label: "Status",
+  variant: "select",          // "text" = search input, "select" = dropdown
+  placeholder: "Search...",
+  options: [
     { label: "Active", value: "active" },
     { label: "Inactive", value: "inactive" },
   ],
 }
 ```
 
-> **URL state:** This project uses [nuqs](https://nuqs.47ng.com/) for URL-based search params. Table filters, sorting, and pagination should sync to URL params via `createSearchParamsCache()` for shareable links and browser back/forward support.
+URL state syncs via `nuqs` and `createSearchParamsCache()` — see [List Params](/docs/list-params).
+
+## Anti-patterns
+
+- `useModal()` inside cell renderers — violates Rules of Hooks. Use callbacks.
+- Row type inlined in `columns.tsx` — define in `types.ts` instead.
+- Monolithic `columns.tsx` files (e.g. `transaction-history/columns.tsx`) — split concerns.
+- `receipt/table.tsx` shadowing the `DataTable` import — rename to `ReceiptTable`.
+- Fetching inside `table.tsx` — server fetches via `content.tsx`. Load-more is the only exception.
+
+## Naming
+
+| Export          | Pattern                   | Example                  |
+| --------------- | ------------------------- | ------------------------ |
+| Static columns  | `<entity>Columns`         | `domainColumns`          |
+| Factory columns | `get<Entity>Columns`      | `getTeacherColumns`      |
+| Callbacks       | `<Entity>ColumnCallbacks` | `TeacherColumnCallbacks` |
+| Row type        | `<Entity>Row`             | `TeacherRow`             |
+| Table component | `<Entity>Table`           | `DomainsTable`           |
+
+## File layout
+
+```
+src/components/<feature>/
+  types.ts          # RowType
+  config.ts         # Status variants, filter options
+  columns.tsx       # ColumnDef[]
+  table.tsx         # DataTable consumer
+  actions.ts        # Server actions (load-more)
+  content.tsx       # Server component (passes data)
+```
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Types](/docs/types)
+- [List Params](/docs/list-params)
+- [Content](/docs/content)

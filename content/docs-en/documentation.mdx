@@ -1,448 +1,192 @@
 ---
-title: "Docs Factory"
-description: "Complete guide to the documentation system architecture and how to add new documentation"
+title: Docs Factory
+description: Fumadocs MDX with flat per-language directories, runtime shiki highlighting, and a catch-all dynamic route.
 ---
 
-## Overview
-
-The documentation system mirrors the shadcn/ui structure, using fumadocs MDX with catch-all dynamic routing. This provides a scalable, maintainable documentation platform with automatic navigation generation.
+The docs system is wired with [fumadocs-mdx](https://fumadocs.vercel.app): one flat MDX directory per language, a single `meta.json` for ordering, and a catch-all dynamic route that statically generates every page.
 
 ## Architecture
 
-### File Structure
-
 ```
-content/docs/                       # Root docs content directory
-├── meta.json                       # Root navigation config
-├── getting-started/                # Section folder
-│   ├── meta.json                   # Section config
-│   ├── index.mdx                   # Section landing page
-│   └── *.mdx                       # Doc pages
-├── components/                     # Component docs
-├── operations/                     # Operations guides
-├── contribute/                     # Contributing guides
-└── business/                       # Business docs
+content/
+├── docs-en/                # 88 .mdx files, FLAT (no subdirs)
+│   ├── meta.json           # Single nav config for the whole sidebar
+│   ├── index.mdx           # /en/docs landing
+│   └── *.mdx
+└── docs-ar/                # 16 .mdx files, FLAT
+    ├── meta.json
+    └── *.mdx
 
-src/app/[lang]/(root)/docs/         # Route handlers
-├── [[...slug]]/                    # Catch-all dynamic route
-│   └── page.tsx                    # Doc page component
-└── layout.tsx                      # Docs layout with sidebar
-
-src/components/docs/                # Doc components
-├── docs-sidebar.tsx                # Dynamic sidebar
-└── toc.tsx                         # Table of contents
+source.config.ts            # defineDocs({ dir: "content/docs-en" }) + docsArabic
+src/app/[lang]/(root)/docs/
+├── [[...slug]]/page.tsx    # Catch-all renderer, source-aware per locale
+└── layout.tsx              # Sidebar + TOC layout
+src/components/docs/
+├── docs-sidebar.tsx        # Renders fumadocs pageTree
+└── toc.tsx                 # Table of contents
+src/mdx-components.tsx      # Component overrides (incl. runtime shiki)
+src/lib/detect-npm-command.ts  # Package-manager-tab logic
 ```
 
-## How It Works
+There is no `getting-started/` or `components/` subdirectory. Files are flat; ordering is controlled entirely by `meta.json`.
 
-### 1. Content Processing
+## Runtime shiki (the OOM story)
 
-- MDX files stored in `content/docs/` directory
-- Fumadocs processes MDX at build time
-- Frontmatter provides metadata (title, description)
-- `meta.json` files define navigation structure
+Build-time syntax highlighting via `rehype-pretty-code` was disabled because it OOM'd Vercel Hobby's 8 GB heap when compiling 111 MDX files with two themes (light + dark). After 12 deploy attempts we moved highlighting to render time.
 
-### 2. Routing
-
-- Catch-all route `[[...slug]]` handles all doc paths
-- Dynamic generation based on file structure
-- Static paths generated at build time
-- URLs mirror content directory structure
-
-### 3. Navigation
-
-- Sidebar reads from fumadocs `pageTree`
-- Automatic generation from folder structure
-- `meta.json` controls page ordering
-- Nested sections supported
-
-### 4. Components
-
-- **DocsSidebar**: Dynamic navigation from pageTree
-- **DocsTableOfContents**: Extracted from MDX headings
-- **Navigation**: Previous/next page links
-- **Breadcrumbs**: Path visualization
-
-## How to Add Documentation
-
-### Step 1: Choose Section
-
-Determine which section your doc belongs to:
-
-- `getting-started/` - Introduction, setup guides
-- `components/` - UI component documentation
-- `operations/` - Feature implementation guides
-- `contribute/` - Contributing guidelines
-- `business/` - Business-related docs
-
-### Step 2: Create MDX File
-
-Create your `.mdx` file in the appropriate section:
-
-```mdx
----
-title: "Your Page Title"
-description: "Brief description for SEO and previews"
----
-
-# Your Page Title
-
-Your content here...
-
-## Section 1
-
-Content...
-
-## Section 2
-
-More content...
+```ts
+// source.config.ts
+export default defineConfig({
+  mdxOptions: {
+    rehypeCodeOptions: false, // build-time shiki off
+  },
+})
 ```
 
-### Step 3: Update meta.json
+Code blocks now highlight in the browser via `fumadocs-ui/DynamicCodeBlock`:
 
-Add your page to the section's `meta.json`:
+- Lazy `import("shiki")` only when a code block enters the viewport
+- JS regex engine, no oniguruma WASM
+- See `src/mdx-components.tsx` for the `pre` / `code` overrides
+- See `src/lib/detect-npm-command.ts` for the package-manager tab logic that previously rode along with the shiki transformer
 
-```json
-{
-  "title": "Section Name",
-  "pages": [
-    "existing-page",
-    "your-new-page", // Add your page ID (filename without .mdx)
-    "another-page"
-  ]
-}
-```
+**Trade-off**: a ~100-200 ms shiki hydration flash on the first code block visible. Acceptable for free-tier hosting; the alternative was paying for a build with more heap.
 
-### Step 4: Import Components (Optional)
+## Add a doc
 
-You can import and use React components in MDX:
+1. Create the MDX file in the right language directory:
 
-```mdx
-import { Button } from "@/components/ui/button"
-import { CustomChart } from "@/components/charts/custom-chart"
+   ```mdx
+   ---
+   title: "Your Page Title"
+   description: "Brief description for SEO and previews"
+   ---
 
-# Using Components
+   Your content here.
 
-<Button>Click me</Button>
+   ## Section 1
 
-<CustomChart data={[1, 2, 3]} />
-```
+   ...
+   ```
 
-### Step 5: Build and Test
+2. Add the slug to `meta.json` (English example):
 
-```bash
-# Generate MDX files
-pnpm fumadocs-mdx
+   ```json
+   // content/docs-en/meta.json
+   {
+     "title": "Documentation",
+     "pages": ["index", "your-new-page", "..."]
+   }
+   ```
 
-# Build to verify
-pnpm build
+3. Optional — import React components inline:
 
-# Or run dev server
-pnpm dev
-```
+   ```mdx
+   import { Button } from "@/components/ui/button"
 
-## MDX Features
+   <Button>Click me</Button>
+   ```
 
-### Frontmatter
+4. Build and test:
 
-Required fields:
+   ```bash
+   pnpm fumadocs-mdx
+   pnpm dev
+   ```
+
+## Frontmatter
+
+Required: `title`, `description`. Optional: `links`, `publishedAt`, `updatedAt`, `author`, `tags`.
 
 ```yaml
 ---
-title: "Page Title" # Required: Page heading
-description: "Description" # Required: SEO description
----
-```
-
-Optional fields:
-
-```yaml
----
+title: "Page Title"
+description: "Description"
 links:
   doc: "https://docs.example.com"
   api: "https://api.example.com"
 publishedAt: 2024-01-01
 updatedAt: 2024-01-15
-author: "John Doe"
+author: "Jane Doe"
 tags: ["react", "tutorial"]
 ---
 ```
 
-### Code Blocks
+## MDX features
 
-Syntax highlighting with language support:
-
-````mdx
-```typescript
-interface User {
-  name: string
-  email: string
-}
-```
-````
-
-### Tables
-
-Markdown tables are supported:
+Code blocks (`typescript`, `bash`, etc.), Markdown tables, and custom callouts:
 
 ```mdx
-| Feature | Status |
-| ------- | ------ |
-| Docs    | ✅     |
-| Search  | 🚧     |
-| i18n    | ✅     |
+<Callout type="info">An informational callout.</Callout>
+<Callout type="warning">A warning.</Callout>
 ```
 
-### Callouts
+## Navigation config
 
-Use custom callout components:
-
-```mdx
-<Callout type="info">This is an informational callout.</Callout>
-
-<Callout type="warning">This is a warning message.</Callout>
-```
-
-## Navigation Configuration
-
-### Root meta.json
-
-`content/docs/meta.json`:
+A single `meta.json` per language sits at the directory root and lists every page in render order:
 
 ```json
+// content/docs-en/meta.json
 {
   "title": "Documentation",
-  "pages": [
-    "getting-started", // Section folders
-    "components",
-    "operations",
-    "contribute",
-    "business"
-  ]
+  "pages": ["index", "get-started", "architecture", "..."]
 }
 ```
 
-### Section meta.json
-
-`content/docs/getting-started/meta.json`:
-
-```json
-{
-  "title": "Getting Started",
-  "pages": [
-    "index", // index.mdx (landing page)
-    "installation", // installation.mdx
-    "configuration", // configuration.mdx
-    "first-steps" // first-steps.mdx
-  ]
-}
-```
+There are no nested section `meta.json` files — the sidebar groups visually, but storage is flat.
 
 ## Customization
 
-### Custom Components
+**Custom MDX components** — register in `src/mdx-components.tsx`:
 
-Add to `mdx-components.tsx`:
-
-```typescript
+```ts
 export const mdxComponents = {
-  // Override default components
-  h1: ({ children }) => (
-    <h1 className="custom-heading">{children}</h1>
-  ),
-  // Add custom components
+  h1: ({ children }) => <h1 className="custom-heading">{children}</h1>,
   Button,
   Alert,
   CodeBlock,
 }
 ```
 
-### Sidebar Sections
+**Sidebar sections** — edit `src/components/docs/docs-sidebar.tsx`:
 
-Edit `src/components/docs/docs-sidebar.tsx`:
-
-```typescript
+```ts
 const TOP_LEVEL_SECTIONS = [
   { name: "Get Started", href: "/docs" },
   { name: "Components", href: "/docs/components" },
-  // Add new sections here
 ]
 ```
 
-### Styling
+**Styling** — `container-wrapper`, Tailwind prose classes, CSS variables in `globals.css`, dark mode via `next-themes`.
 
-- Container: `container-wrapper` class
-- Typography: Tailwind prose classes
-- Theme: CSS variables in `globals.css`
-- Dark mode: Automatic with next-themes
+## Conventions
 
-## Best Practices
-
-### 1. File Naming
-
-- Use kebab-case: `my-doc-page.mdx`
-- Be descriptive: `authentication-setup.mdx`
-- Index pages: `index.mdx` for section landing
-
-### 2. Content Structure
-
-- Start with H1 matching title
-- Use logical heading hierarchy
-- Keep sections focused
-- Include code examples
-
-### 3. Frontmatter
-
-- Always include title and description
-- Keep titles concise (less than 60 chars)
-- Write clear descriptions (less than 160 chars)
-
-### 4. Images
-
-- Store in `public/docs/`
-- Use descriptive alt text
-- Optimize for web (WebP preferred)
-
-### 5. Links
-
-- Use relative paths for internal links
-- Open external links in new tabs
-- Check links regularly
+- File names: kebab-case (`my-doc-page.mdx`, `authentication-setup.mdx`); language landing is `index.mdx`.
+- Start with a single H1 matching the title; logical heading hierarchy; focused sections; code examples.
+- Title under 60 chars; description under 160 chars.
+- Images: store in `public/docs/`, descriptive `alt`, prefer WebP.
+- Internal links: use `/docs/<page-name>` so the locale segment is added by the router.
 
 ## Troubleshooting
 
-### Common Issues
-
-**Build Errors**
+**Build errors** — regenerate the MDX index, clear cache:
 
 ```bash
-# Regenerate MDX
 pnpm fumadocs-mdx
-
-# Clear cache
 rm -rf .next
 pnpm build
 ```
 
-**Missing Frontmatter**
-Ensure all MDX files have required frontmatter:
+**Missing frontmatter** — every MDX file must have `title` and `description`.
 
-```mdx
----
-title: "Title Here"
-description: "Description Here"
----
-```
+**Import errors** — use absolute aliases (`@/components/ui/component`).
 
-**Import Errors**
-Use absolute imports with `@/` alias:
+**Navigation not updating** — make sure the slug is listed in `meta.json` for the right language → run `pnpm fumadocs-mdx` → restart dev.
 
-```mdx
-import Component from "@/components/ui/component"
-```
+**OOM on Vercel** — never re-enable `rehype-pretty-code`. If you need to, you must also drop one of the themes or shrink the docs surface; otherwise the build will fail at 8 GB heap. See the runtime shiki section above.
 
-**Navigation Not Updating**
+## See also
 
-1. Check `meta.json` includes your page
-2. Regenerate with `pnpm fumadocs-mdx`
-3. Restart dev server
-
-## Advanced Features
-
-### Custom Layouts
-
-Create section-specific layouts:
-
-```typescript
-// src/app/[lang]/(root)/docs/components/layout.tsx
-export default function ComponentsLayout({ children }) {
-  return (
-    <div className="components-layout">
-      {children}
-    </div>
-  )
-}
-```
-
-### Dynamic Content
-
-Load dynamic content in MDX:
-
-```mdx
-export const getStaticProps = async () => {
-  const data = await fetchData()
-  return { props: { data } }
-}
-
-# Dynamic Content
-
-Latest version: {props.data.version}
-```
-
-### Search Integration
-
-Fumadocs provides built-in search:
-
-```typescript
-import { SearchDialog } from 'fumadocs-ui/components/dialog/search'
-
-<SearchDialog />
-```
-
-## Migration Guide
-
-### From Individual Routes
-
-1. Move `.mdx` files to `content/docs/`
-2. Delete old route folders
-3. Update imports to use `@/` alias
-4. Add frontmatter if missing
-5. Create/update `meta.json` files
-
-### From Other Systems
-
-1. Export existing content
-2. Convert to MDX format
-3. Add required frontmatter
-4. Organize into sections
-5. Configure navigation
-
-## Performance
-
-### Optimization
-
-- Static generation at build time
-- Automatic code splitting
-- Image optimization with Next.js
-- Lazy loading for heavy components
-
-### Metrics
-
-- Build time: approximately 30s for 100 pages
-- Page load: less than 1s with caching
-- Search index: Generated at build
-- Bundle size: Minimal JS per page
-
-## Future Enhancements
-
-### Planned Features
-
-- [ ] Full-text search
-- [ ] Version switching
-- [ ] Multi-language support
-- [ ] API documentation
-- [ ] Interactive examples
-- [ ] Video embeds
-- [ ] PDF export
-- [ ] Edit on GitHub links
-
-### Community Contributions
-
-We welcome contributions! See [Contributing](/docs/contributing) for guidelines.
-
-## Resources
-
-- [Fumadocs Documentation](https://fumadocs.vercel.app)
-- [MDX Documentation](https://mdxjs.com)
+- [Fumadocs](https://fumadocs.vercel.app)
+- [MDX](https://mdxjs.com)
 - [shadcn/ui Docs](https://ui.shadcn.com)
-- [Next.js Documentation](https://nextjs.org/docs)

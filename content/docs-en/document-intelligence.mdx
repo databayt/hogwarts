@@ -3,167 +3,152 @@ title: Document Intelligence
 description: Platform-wide AI document processing — admissions, exams, finance, library — with shared extraction, queue, and budget infrastructure.
 ---
 
-The Document Intelligence Initiative brings AI-powered document handling to every Hogwarts module: admission docs, bank receipts, textbook ingestion, exam answer sheets, expense receipts, library content. It transforms manual entry into automated extraction, classification, validation.
+The Document Intelligence Initiative brings AI-powered document handling to every Hogwarts module: admission docs, bank receipts, textbook ingestion, exam answer sheets, expense receipts, library content. Manual entry becomes automated extraction, classification, and validation.
 
-For the focused architecture and implementation details, read [AI Document Processing](/docs/ai-document-processing). This page is the epic-level scope and the references that ground the work.
+For focused architecture see [AI Document Processing](/docs/ai-document-processing). This page is the epic-level scope.
 
 ## Scope
 
-8 epics, 42 stories, 233 story points. Each epic depends on the foundation epic; domain epics can ship independently of one another once the foundation is live.
+8 epics, 42 stories, 233 story points. Each epic depends on the foundation; domain epics ship independently of one another.
 
-| Epic                                        | Goal                                                                                                        | Points |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -----: |
-| EPIC-0 — Foundation                         | Generalized extraction service, async processing queue, per-school budget, status UI atoms.                 |     34 |
-| EPIC-1 — Admission Document Intelligence    | Classify and extract fields from applicant docs; auto-merit; bank-receipt verification; bulk processing.    |     45 |
-| EPIC-2 — Textbook Intelligence              | Upload + chapter extraction + content chunking + chapter summaries + browse UI.                             |     30 |
-| EPIC-3 — Exam Generation from Content       | Topic-based question generation, past-exam ingestion, mock-exam auto-gen, curriculum-standard alignment.    |     32 |
-| EPIC-4 — Bulk Scan Grading                  | Upload answer sheets, OCR, auto-grade vs answer key, review queue, analytics.                               |     22 |
-| EPIC-5 — Financial Document Intelligence    | Wire invoice PDF generation, bank-statement OCR, expense-receipt enhancements, financial report generation. |     20 |
-| EPIC-6 — Onboarding & Provider Optimization | Apply the generic extractor to onboarding-step ingestion; multi-provider routing; quality eval.             |     28 |
-| EPIC-7 — Library & Content Search           | Index `CatalogMaterial` / `CatalogBook` for semantic search; reading-level metadata; recommendations.       |     22 |
+| Epic                           | Goal                                                                                                 | Points |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- | -----: |
+| EPIC-0 — Foundation            | Generalized extraction service, async processing queue, per-school budget, status UI atoms           |     34 |
+| EPIC-1 — Admission             | Classify and extract from applicant docs, auto-merit, bank-receipt verification, bulk processing     |     45 |
+| EPIC-2 — Textbook              | Upload + chapter extraction + content chunking + summaries + browse UI                               |     30 |
+| EPIC-3 — Exam Generation       | Topic-based question generation, past-exam ingestion, mock-exam auto-gen, standard alignment         |     32 |
+| EPIC-4 — Bulk Scan Grading     | Upload answer sheets, OCR, auto-grade, review queue, analytics                                       |     22 |
+| EPIC-5 — Financial             | Wire invoice PDFs, bank-statement OCR, expense-receipt enhancements, financial reports               |     20 |
+| EPIC-6 — Onboarding & Provider | Apply generic extractor to onboarding, multi-provider routing, quality eval                          |     28 |
+| EPIC-7 — Library & Search      | Index `CatalogMaterial` / `CatalogBook` for semantic search, reading-level metadata, recommendations |     22 |
 
 ## Architecture context
 
 The plan extends existing infrastructure rather than replacing it.
 
-| Component           | Location                                     | Current state                                                                                           |
-| ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Document extraction | `src/lib/document-extraction/`               | Claude 3.5 Sonnet via Vercel AI SDK `generateObject()` with Zod schemas. Hardcoded to onboarding steps. |
-| AI providers        | `src/lib/ai/providers.ts`                    | Multi-provider routing (Anthropic + Groq) with task-based selection and cost estimation.                |
-| Rate limiter        | `src/lib/ai/rate-limiter.ts`                 | Priority queue, 5 concurrent, exponential backoff.                                                      |
-| AI config           | `src/lib/ai/config.ts`                       | `AIServiceConfig` with `monthlyCostLimit`, fallback behaviour, confidence thresholds.                   |
-| AI services         | `src/lib/ai/openai.ts`                       | Essay grading, OCR, question generation guarded by `isAIServiceAvailable()`.                            |
-| Receipt OCR         | `finance/receipt/ai/extract-receipt-data.ts` | Receipt OCR pattern using `generateObject()` + Zod + DB status update.                                  |
-| QBank engine        | `qbank-automation/engine/`                   | PDF parse + LangChain chunking + embeddings (placeholder `findRelevantChunks()`).                       |
-| PDF templates       | `src/components/file/generate/`              | `@react-pdf/renderer` templates for invoice, receipt, certificate, report card, ID card, transcript.    |
+| Component           | Location                                     | Current state                                                                                |
+| ------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Document extraction | `src/lib/document-extraction/`               | Claude 3.5 Sonnet via Vercel AI SDK `generateObject()` + Zod. Hardcoded to onboarding steps. |
+| AI providers        | `src/lib/ai/providers.ts`                    | Multi-provider routing (Anthropic + Groq), task-based selection, cost estimation             |
+| Rate limiter        | `src/lib/ai/rate-limiter.ts`                 | Priority queue, 5 concurrent, exponential backoff                                            |
+| AI config           | `src/lib/ai/config.ts`                       | `AIServiceConfig` — `monthlyCostLimit`, fallback, confidence thresholds                      |
+| AI services         | `src/lib/ai/openai.ts`                       | Essay grading, OCR, question generation guarded by `isAIServiceAvailable()`                  |
+| Receipt OCR         | `finance/receipt/ai/extract-receipt-data.ts` | Working pattern: `generateObject()` + Zod + DB status update                                 |
+| QBank engine        | `qbank-automation/engine/`                   | PDF parse + LangChain chunking + embeddings (placeholder `findRelevantChunks()`)             |
+| PDF templates       | `src/components/file/generate/`              | `@react-pdf/renderer` for invoice, receipt, certificate, report card, ID card, transcript    |
 
-## Key schema facts
+## Schema facts
 
 - `Application.documents` is `Json?` — untyped URL array, no AI processing today.
-- `Application.entranceScore`, `interviewScore`, `meritScore` are manually entered `Decimal?`.
-- `SourceMaterial` + `SourceChunk` models exist but `findRelevantChunks()` returns empty.
-- `CatalogMaterial` and `CatalogBook` have `fileUrl`/`digitalFileUrl` but no processing pipeline.
-- `FinancialReport` exists with `status: GENERATING | COMPLETED | FAILED` + `fileUrl`; generation is stub.
+- `Application.entranceScore`, `interviewScore`, `meritScore` are manual `Decimal?`.
+- `SourceMaterial` + `SourceChunk` exist; `findRelevantChunks()` returns empty.
+- `CatalogMaterial`, `CatalogBook` have `fileUrl` / `digitalFileUrl` but no pipeline.
+- `FinancialReport` has `status: GENERATING | COMPLETED | FAILED` + `fileUrl`; generation stubbed.
 - `Payment` supports `BANK_TRANSFER` with `receiptUrl`.
-- `ExpenseReceipt` already has a working OCR pipeline.
-- `StudentAnswer` has `uploadUrl`, `ocrText`, `ocrConfidence`, and a single-answer `processOCRWithAI()` action.
+- `ExpenseReceipt` has a working OCR pipeline.
+- `StudentAnswer` has `uploadUrl`, `ocrText`, `ocrConfidence`, single-answer `processOCRWithAI()`.
 
-## Patterns followed
+## Patterns
 
 Every epic follows the same conventions:
 
 - Server actions are `"use server"` with `auth()` + `schoolId` guard.
 - Server components call `getTenantContext()`.
-- Server actions return error codes, not strings (per the translation rules).
-- All queries are scoped by `schoolId`.
-- All UI text is dictionary-driven (i18n).
+- Server actions return error codes, not strings.
+- Queries scoped by `schoolId`.
+- All UI text dictionary-driven (i18n).
 
-## EPIC-0 — Foundation
+## Stories per epic
 
-The shared infrastructure every other epic depends on.
+### EPIC-0 — Foundation (34 pts)
 
-| Story | Title                                                  | Points | Type     |
-| ----- | ------------------------------------------------------ | -----: | -------- |
-| 0.1   | Generalize the document extraction service             |      8 | API      |
-| 0.2   | Create the document processing queue with Prisma model |      5 | Database |
-| 0.3   | Implement the AI budget enforcement service            |      5 | API      |
-| 0.4   | Build the document processing queue runner             |      8 | API      |
-| 0.5   | Build processing-status UI components                  |      5 | UI       |
-| 0.6   | Add document-processing settings to school settings    |      3 | UI       |
+| Story | Title                                  | Pts | Type |
+| ----- | -------------------------------------- | --: | ---- |
+| 0.1   | Generalize document extraction service |   8 | API  |
+| 0.2   | `DocumentProcessingJob` Prisma model   |   5 | DB   |
+| 0.3   | AI budget enforcement service          |   5 | API  |
+| 0.4   | Queue runner                           |   8 | API  |
+| 0.5   | Processing-status UI components        |   5 | UI   |
+| 0.6   | Document-processing settings           |   3 | UI   |
 
-The foundation refactors `src/lib/document-extraction/` to accept any Zod schema + prompt at call time (instead of looking them up by step id), adds `DocumentProcessingJob` + `AIUsageLog` Prisma models, enforces per-school monthly spend caps with per-domain toggles, and ships a queue runner with retry + cost attribution. UI atoms render job state badges, progress bars, and retry/cancel actions.
+Refactors `src/lib/document-extraction/` to accept any Zod schema + prompt at call time. Adds `DocumentProcessingJob` + `AIUsageLog`, per-school monthly caps with per-domain toggles, queue runner with retry + cost attribution. UI atoms render job state badges, progress, retry/cancel.
 
-## EPIC-1 — Admission Document Intelligence
+### EPIC-1 — Admission (45 pts)
 
-Classify and extract structured data from applicant documents.
+| Story | Title                                | Pts |
+| ----- | ------------------------------------ | --: |
+| 1.1   | Define admission schemas and prompts |   5 |
+| 1.2   | Admission processing actions         |   8 |
+| 1.3   | Admission review UI                  |   5 |
+| 1.4   | Document completeness validation     |   3 |
+| 1.5   | Auto-compute merit scores            |   8 |
+| 1.6   | Bank-transfer receipt verification   |   8 |
+| 1.7   | Bulk processing for campaigns        |   8 |
 
-| Story | Title                                                     | Points | Type |
-| ----- | --------------------------------------------------------- | -----: | ---- |
-| 1.1   | Define admission document schemas and extraction prompts  |      5 | API  |
-| 1.2   | Build admission document processing actions               |      8 | API  |
-| 1.3   | Build admission document review UI                        |      5 | UI   |
-| 1.4   | Document completeness validation                          |      3 | API  |
-| 1.5   | Auto-compute merit scores from extracted data             |      8 | API  |
-| 1.6   | Bank-transfer receipt verification for admission payments |      8 | API  |
-| 1.7   | Bulk document processing for admission campaigns          |      8 | API  |
+### EPIC-2 — Textbook (30 pts)
 
-## EPIC-2 — Textbook Intelligence
+| Story | Title                                 | Pts |
+| ----- | ------------------------------------- | --: |
+| 2.1   | Textbook upload + metadata extraction |   8 |
+| 2.2   | Auto-extract chapter structure        |   8 |
+| 2.3   | Content chunking and embeddings       |   5 |
+| 2.4   | AI chapter summaries                  |   5 |
+| 2.5   | Textbook management UI                |   4 |
 
-Upload textbooks, extract chapter structure, chunk and embed content, summarise chapters.
+### EPIC-3 — Exam Generation (32 pts)
 
-| Story | Title                                          | Points |
-| ----- | ---------------------------------------------- | -----: |
-| 2.1   | Textbook upload + metadata extraction pipeline |      8 |
-| 2.2   | Auto-extract chapter structure from textbooks  |      8 |
-| 2.3   | Content chunking and embedding pipeline        |      5 |
-| 2.4   | Generate chapter summaries with AI             |      5 |
-| 2.5   | Build textbook management UI                   |      4 |
+| Story | Title                                            | Pts |
+| ----- | ------------------------------------------------ | --: |
+| 3.1   | Wire `findRelevantChunks` to question generation |   5 |
+| 3.2   | Topic-based question generation UI               |   5 |
+| 3.3   | Past exam paper ingestion                        |   5 |
+| 3.4   | Mock exam auto-generation                        |   8 |
+| 3.5   | Mock exam UI + student take flow                 |   5 |
+| 3.6   | Curriculum-standards alignment                   |   4 |
 
-## EPIC-3 — Exam Generation from Content
+### EPIC-4 — Bulk Scan Grading (22 pts)
 
-Wire `findRelevantChunks` into question generation; ingest past exams; auto-generate mocks aligned to the curriculum.
+| Story | Title                           | Pts |
+| ----- | ------------------------------- | --: |
+| 4.1   | Bulk answer-sheet upload + jobs |   5 |
+| 4.2   | Bulk OCR processing             |   5 |
+| 4.3   | Auto-grade against answer keys  |   5 |
+| 4.4   | Review queue                    |   4 |
+| 4.5   | Analytics and reporting         |   3 |
 
-| Story | Title                                                  | Points |
-| ----- | ------------------------------------------------------ | -----: |
-| 3.1   | Wire findRelevantChunks to question generation         |      5 |
-| 3.2   | Build topic-based question generation UI               |      5 |
-| 3.3   | Past exam paper ingestion                              |      5 |
-| 3.4   | Build mock exam auto-generation                        |      8 |
-| 3.5   | Mock exam generation UI and student take flow          |      5 |
-| 3.6   | Curriculum-standards alignment for generated questions |      4 |
+### EPIC-5 — Financial (20 pts)
 
-## EPIC-4 — Bulk Scan Grading
+| Story | Title                                   | Pts |
+| ----- | --------------------------------------- | --: |
+| 5.1   | Wire invoice PDF generation             |   3 |
+| 5.2   | Bank statement OCR + reconciliation     |   5 |
+| 5.3   | Expense receipt extraction enhancements |   4 |
+| 5.4   | Financial report generation pipeline    |   5 |
+| 5.5   | Wire remaining PDF templates            |   3 |
 
-Upload bulk answer sheets, OCR, auto-grade against the answer key, review queue, analytics.
+### EPIC-6 — Onboarding & Provider (28 pts)
 
-| Story | Title                                      | Points |
-| ----- | ------------------------------------------ | -----: |
-| 4.1   | Bulk answer-sheet upload and job creation  |      5 |
-| 4.2   | Bulk OCR processing for answer sheets      |      5 |
-| 4.3   | Auto-grade OCR results against answer keys |      5 |
-| 4.4   | Review queue for bulk-graded answers       |      4 |
-| 4.5   | Bulk grading analytics and reporting       |      3 |
+| Story | Title                                            | Pts |
+| ----- | ------------------------------------------------ | --: |
+| 6.1   | Migrate onboarding extraction to generic service |   4 |
+| 6.2   | Multi-provider routing per task                  |   5 |
+| 6.3   | Provider quality eval harness                    |   5 |
+| 6.4   | Confidence thresholds and fallback               |   5 |
+| 6.5   | DEVELOPER cost dashboard                         |   4 |
+| 6.6   | Provider failover and retry policy               |   5 |
 
-## EPIC-5 — Financial Document Intelligence
+### EPIC-7 — Library & Search (22 pts)
 
-Wire the existing PDF templates into UI flows; extend OCR for bank statements; deepen expense receipt extraction.
+| Story | Title                                                       | Pts |
+| ----- | ----------------------------------------------------------- | --: |
+| 7.1   | Index `CatalogMaterial` / `CatalogBook` for semantic search |   5 |
+| 7.2   | Reading-level metadata extraction                           |   4 |
+| 7.3   | Recommendation surface (UI)                                 |   5 |
+| 7.4   | Search ranking and filters                                  |   4 |
+| 7.5   | Content access analytics                                    |   4 |
 
-| Story | Title                                   | Points |
-| ----- | --------------------------------------- | -----: |
-| 5.1   | Wire invoice PDF generation to UI       |      3 |
-| 5.2   | Bank statement OCR + reconciliation     |      5 |
-| 5.3   | Expense receipt extraction enhancements |      4 |
-| 5.4   | Financial report generation pipeline    |      5 |
-| 5.5   | Wire the rest of the PDF templates      |      3 |
+## See also
 
-## EPIC-6 — Onboarding and Provider Optimization
-
-Apply the generic extractor to onboarding ingestion; route between providers; evaluate quality.
-
-| Story | Title                                                    | Points |
-| ----- | -------------------------------------------------------- | -----: |
-| 6.1   | Migrate onboarding extraction to the generalized service |      4 |
-| 6.2   | Multi-provider routing (Anthropic + Groq) per task       |      5 |
-| 6.3   | Add provider quality eval harness                        |      5 |
-| 6.4   | Confidence thresholds and fallback behaviour             |      5 |
-| 6.5   | Cost dashboard for DEVELOPER role                        |      4 |
-| 6.6   | Provider failover and retry policy                       |      5 |
-
-## EPIC-7 — Library and Content Search
-
-Index catalog content for semantic search, attach reading-level metadata, surface recommendations.
-
-| Story | Title                                                   | Points |
-| ----- | ------------------------------------------------------- | -----: |
-| 7.1   | Index CatalogMaterial / CatalogBook for semantic search |      5 |
-| 7.2   | Reading-level metadata extraction                       |      4 |
-| 7.3   | Recommendation surface (UI)                             |      5 |
-| 7.4   | Search ranking and filters                              |      4 |
-| 7.5   | Content access analytics                                |      4 |
-
-## References
-
-- [AI Document Processing](/docs/ai-document-processing) — focused architecture and infrastructure spec.
-- [Multi-Tenancy](/docs/multi-tenancy) — `schoolId` scoping and budget isolation.
-- [Architecture](/docs/architecture) — mirror pattern that every epic respects.
-- Open issues for individual stories live in GitHub Issues; this page is the epic-level scope.
+- [AI Document Processing](/docs/ai-document-processing)
+- [Multi-tenancy](/docs/multi-tenancy)
+- [Architecture](/docs/architecture)

@@ -1,15 +1,15 @@
 ---
 title: Onboarding
-description: Multi-step wizard for school registration, configuration, and business setup. Mirror pattern, 16 steps in 3 groups.
+description: Multi-step wizard for school registration, configuration, and business setup. 16 steps in 3 groups, ~166 files.
 ---
 
-The onboarding system guides new schools through registration, configuration, and business setup. It follows the mirror pattern and spans ~166 files across 16 steps in 3 groups, with `WizardLayout` driving navigation. Completion takes 10–30 minutes for typical schools.
+The onboarding system guides new schools through registration, configuration, and business setup. Mirror pattern, ~166 files, 16 active steps in 3 groups, driven by `WizardLayout`. Typical completion: 10–30 minutes.
 
 ## Steps
 
 ### Group 1 — Basic information
 
-| Step         | Path            | Required | Database fields                         |
+| Step         | Path            | Required | Database                                |
 | ------------ | --------------- | -------- | --------------------------------------- |
 | About school | `/about-school` | No       | static welcome                          |
 | Title        | `/title`        | Yes      | `School.name`                           |
@@ -19,18 +19,18 @@ The onboarding system guides new schools through registration, configuration, an
 
 ### Group 2 — School setup
 
-| Step         | Path            | Required | Database fields                            |
+| Step         | Path            | Required | Database                                   |
 | ------------ | --------------- | -------- | ------------------------------------------ |
 | Capacity     | `/capacity`     | Yes      | `maxStudents`, `maxTeachers`, `maxClasses` |
 | Branding     | `/branding`     | No       | `primaryColor`, `borderRadius`, `shadow`   |
 | Import       | `/import`       | No       | bulk insert (CSV / Excel)                  |
 | Finish setup | `/finish-setup` | No       | static review                              |
 
-The `schedule` step is defined in `OnboardingStep` and has its own component directory but is **not** in the active navigation. It lives at `order: 5.5` in `config.ts` for future activation.
+The `schedule` step is defined in `OnboardingStep` with its own component directory but is **not** in active navigation. Lives at `order: 5.5` in `config.ts` for future activation.
 
 ### Group 3 — Business and legal
 
-| Step       | Path          | Required | Database fields                                               |
+| Step       | Path          | Required | Database                                                      |
 | ---------- | ------------- | -------- | ------------------------------------------------------------- |
 | Join       | `/join`       | Yes      | `User`                                                        |
 | Visibility | `/visibility` | No       | `School.isPublished`                                          |
@@ -39,30 +39,30 @@ The `schedule` step is defined in `OnboardingStep` and has its own component dir
 | Legal      | `/legal`      | Yes      | `LegalConsent`                                                |
 | Subdomain  | `/subdomain`  | No       | `School.domain`                                               |
 
-After all steps the user lands on `/congratulations`, which performs a smart redirect (school subdomain dashboard or main domain depending on session state).
+After all steps the user lands on `/congratulations` for a smart redirect (school subdomain dashboard or main domain depending on session state).
 
-The active step order is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`. The authoritative metadata (labels, validation, group, order) is `ONBOARDING_STEPS` in `src/components/onboarding/config.ts`.
+Active step order is `ONBOARDING_CONFIG` in `src/components/form/footer.tsx`. Authoritative metadata (labels, validation, group, order) is `ONBOARDING_STEPS` in `src/components/onboarding/config.ts`.
 
-## Auth integration
+## Auth handshake
 
-The flow is a four-stage handshake:
+Four-stage flow:
 
-1. **Start** — User visits `/get-started` or `/onboarding` while unauthenticated. `start-onboarding` action persists intent in a cookie and redirects to `/login`.
-2. **Authenticate** — Standard login. After auth, the callback URL routes the user back to `/onboarding`.
-3. **Provision** — `initializeSchoolSetup()` calls `ensureUserSchool()` from `src/lib/school-access.ts`, which runs an atomic Prisma `$transaction` to create the `School` row, the `SchoolMember` row binding the user as ADMIN, and to seed default `YearLevel`s. Idempotent: if a school already exists for this user, returns it.
-4. **Refresh and redirect** — `_sessionRefreshRequired: true` instructs the client to refetch `/api/auth/session`, then `_redirect` sends the user to the next step.
+1. **Start** — Unauthenticated user visits `/get-started` or `/onboarding`. `start-onboarding` action persists intent in a cookie and redirects to `/login`.
+2. **Authenticate** — Standard login. Callback URL routes back to `/onboarding`.
+3. **Provision** — `initializeSchoolSetup()` calls `ensureUserSchool()` (`src/lib/school-access.ts`) — atomic `db.$transaction` creates the `School` row, `SchoolMember` (binds user as ADMIN), seeds default `YearLevel`s. Idempotent.
+4. **Refresh + redirect** — `_sessionRefreshRequired: true` triggers client refetch of `/api/auth/session`; `_redirect` sends to next step.
 
-Ownership is enforced by `requireSchoolOwnership(id)` on every step's load. Cross-tenant access raises `TenantError`.
+Ownership enforced by `requireSchoolOwnership(id)` on every step's load. Cross-tenant access raises `TenantError`.
 
 ## Multi-tenant integration
 
-- **Subdomain routing** — `/onboarding` and child routes live on the main domain (`ed.databayt.org`), not on a subdomain. Subdomain assignment happens at the Subdomain step.
+- **Subdomain routing** — `/onboarding` and children live on the main domain (`ed.databayt.org`), not on a subdomain. Subdomain assignment happens at the Subdomain step.
 - **Database scoping** — every read uses `requireSchoolOwnership(id)` first, then queries scoped by `schoolId`.
-- **Session schoolId** — the JWT carries `schoolId` after step 1; subsequent steps trust it after re-verification.
+- **Session schoolId** — JWT carries `schoolId` after step 1; subsequent steps trust it after re-verification.
 
 ## Validation
 
-Each step has a Zod schema co-located with its component. Schemas use the i18n factory pattern so the same schema produces Arabic or English error messages depending on the dictionary slice passed in.
+Each step has a Zod schema co-located with its component. Schemas use the i18n factory pattern — same schema produces Arabic or English error messages depending on the dictionary slice.
 
 ```typescript
 import { createTitleSchema } from "@/components/onboarding/title/validation"
@@ -71,11 +71,11 @@ const schema = createTitleSchema(dictionary)
 const result = schema.safeParse(input)
 ```
 
-The root `validation.ts` exports `validateStep(step, data, dictionary)` and `getRequiredFieldsForStep(step)` for shared step-aware validation.
+Root `validation.ts` exports `validateStep(step, data, dictionary)` and `getRequiredFieldsForStep(step)` for shared step-aware validation.
 
 ## Auto-provisioning
 
-When `completeOnboarding()` runs at the legal step, the school is marked active and a 5-step provisioning chain creates the academic infrastructure. Each step is wrapped in `try/catch` so one failure doesn't block the rest.
+When `completeOnboarding()` runs at the legal step, the school is marked active and a 5-step provisioning chain creates academic infrastructure. Each step is wrapped in `try/catch` so one failure doesn't block the rest.
 
 Source: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`.
 
@@ -87,7 +87,7 @@ Source: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.
 | `setupRolesForSchool()`         | Permission templates for the 8 roles                                  |
 | `setupNotificationsForSchool()` | Default notification preferences for ADMIN role                       |
 
-`setupCatalogForSchool` resolves the curriculum via `inferCurriculum()`:
+`setupCatalogForSchool` resolves curriculum via `inferCurriculum()`:
 
 | Priority | Strategy                             | Example                            |
 | -------- | ------------------------------------ | ---------------------------------- |
@@ -105,34 +105,34 @@ Source: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.
 
 ## Server actions
 
-All in `src/components/onboarding/actions.ts`:
+In `src/components/onboarding/actions.ts`:
 
-| Action                               | Purpose                                                               |
-| ------------------------------------ | --------------------------------------------------------------------- |
-| `initializeSchoolSetup()`            | Creates or retrieves school for the current user; returns `_redirect` |
-| `getListing(id)`                     | Fetch school with ownership verification                              |
-| `updateListing(id, data)`            | Update fields for a step                                              |
-| `getSchoolSetupStatus(schoolId)`     | Completion percentage based on 6 checks                               |
-| `reserveSubdomainForSchool(id, sub)` | Reserve a subdomain (delegates to `src/lib/subdomain-actions.ts`)     |
-| `getCurrentUserSchool()`             | Returns the current user's `schoolId`                                 |
-| `getUserSchools()`                   | Lists schools owned by or associated with the current user            |
-| `proceedToTitle(schoolId)`           | Validates ownership and redirects to the about-school step            |
+| Action                               | Purpose                                                           |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `initializeSchoolSetup()`            | Creates or retrieves school for current user; returns `_redirect` |
+| `getListing(id)`                     | Fetch school with ownership verification                          |
+| `updateListing(id, data)`            | Update fields for a step                                          |
+| `getSchoolSetupStatus(schoolId)`     | Completion percentage (6 checks)                                  |
+| `reserveSubdomainForSchool(id, sub)` | Reserve subdomain (delegates to `src/lib/subdomain-actions.ts`)   |
+| `getCurrentUserSchool()`             | Returns current user's `schoolId`                                 |
+| `getUserSchools()`                   | Lists schools owned by or associated with current user            |
+| `proceedToTitle(schoolId)`           | Validates ownership and redirects to about-school step            |
 
 ## Key files
 
-| Path                                             | Purpose                                       |
-| ------------------------------------------------ | --------------------------------------------- |
-| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | Each step page (16 routes)                    |
-| `src/components/onboarding/actions.ts`           | Server actions                                |
-| `src/components/onboarding/config.ts`            | Step config (authoritative)                   |
-| `src/components/onboarding/types.ts`             | `OnboardingStep` type, `OnboardingSchoolData` |
-| `src/components/onboarding/validation.ts`        | Root Zod schemas                              |
-| `src/components/onboarding/use-listing.tsx`      | `ListingProvider` context                     |
-| `src/components/onboarding/use-onboarding.ts`    | Navigation + validation hook                  |
-| `src/components/onboarding/auth-helpers.ts`      | `getAuthContext`, `requireSchoolOwnership`    |
-| `src/components/form/footer.tsx`                 | `FormFooter` + `ONBOARDING_CONFIG`            |
-| `src/lib/school-access.ts`                       | `ensureUserSchool()` atomic transaction       |
-| `src/lib/catalog-setup.ts`                       | Provisioning chain                            |
+| Path                                             | Purpose                                    |
+| ------------------------------------------------ | ------------------------------------------ |
+| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | Each step page (16 routes)                 |
+| `src/components/onboarding/actions.ts`           | Server actions                             |
+| `src/components/onboarding/config.ts`            | Step config (authoritative)                |
+| `src/components/onboarding/types.ts`             | `OnboardingStep`, `OnboardingSchoolData`   |
+| `src/components/onboarding/validation.ts`        | Root Zod schemas                           |
+| `src/components/onboarding/use-listing.tsx`      | `ListingProvider` context                  |
+| `src/components/onboarding/use-onboarding.ts`    | Navigation + validation hook               |
+| `src/components/onboarding/auth-helpers.ts`      | `getAuthContext`, `requireSchoolOwnership` |
+| `src/components/form/footer.tsx`                 | `FormFooter` + `ONBOARDING_CONFIG`         |
+| `src/lib/school-access.ts`                       | `ensureUserSchool()` atomic transaction    |
+| `src/lib/catalog-setup.ts`                       | Provisioning chain                         |
 
 ## Troubleshooting
 
@@ -140,7 +140,13 @@ All in `src/components/onboarding/actions.ts`:
 | ----------------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
 | Build hangs at "Environments: .env" | TypeScript errors in onboarding components     | Run `pnpm tsc --noEmit`                                         |
 | Session missing `schoolId`          | Session not refreshed after atomic transaction | Fetch `/api/auth/session` after `_sessionRefreshRequired: true` |
-| Cross-tenant access denied          | User trying to access a school they don't own  | `requireSchoolOwnership(id)` throws `TenantError`               |
+| Cross-tenant access denied          | User accessing a school they don't own         | `requireSchoolOwnership(id)` throws `TenantError`               |
 | Subdomain already taken             | Another school reserved it                     | Action returns `errorCode: "DOMAIN_TAKEN"`                      |
 | Form data not persisting            | Missing `revalidatePath()` after mutation      | All update actions call `revalidatePath("/onboarding")`         |
 | Dictionary property not found       | Missing translation key                        | Use optional chaining: `dictionary?.onboarding?.title?.label`   |
+
+## See also
+
+- [Multi-tenancy](/docs/multi-tenancy) — auth handshake, tenant context
+- [Pattern](/docs/pattern) — mirror pattern, file conventions
+- [Authentication](/docs/authentication) — login flow

@@ -3,7 +3,7 @@ title: GitHub Workflow
 description: Branch protection, pull-request flow, CI checks, and CODEOWNERS for contributing to Hogwarts.
 ---
 
-All changes go through Pull Requests → Code Review → CI → Merge. The `main` branch is protected: no force pushes, no deletes, no merging without approval.
+All changes go through pull requests → review → CI → merge. The `main` branch is protected: no force pushes, no deletes, no merging without approval.
 
 ## Branch protection
 
@@ -14,54 +14,87 @@ All changes go through Pull Requests → Code Review → CI → Merge. The `main
 | All CI checks passing                 | Merge without approval |
 | Conversation resolution               |                        |
 
-## Pull request flow
+## PR flow
 
 ```bash
-# 1. fork via GitHub UI, then clone your fork
+# 1. Fork via GitHub UI, then clone your fork
 git clone git@github.com:YOUR_USERNAME/hogwarts.git
 cd hogwarts
 git remote add upstream git@github.com:abdout/hogwarts.git
 
-# 2. branch from latest main
+# 2. Branch from latest main
 git checkout main
 git pull upstream main
-git checkout -b feature/your-feature-name
+git checkout -b feat/your-feature-name
 
-# 3. commit with a conventional message
+# 3. Commit with a conventional message
 git add .
 git commit -m "feat(platform): add attendance export to CSV"
 
-# 4. push and open the PR via GitHub
-git push origin feature/your-feature-name
+# 4. Push and open the PR via GitHub
+git push origin feat/your-feature-name
 ```
 
-Branch prefixes:
+## Branch prefixes
 
-| Prefix      | Use           |
-| ----------- | ------------- |
-| `feature/`  | New features  |
-| `fix/`      | Bug fixes     |
-| `docs/`     | Documentation |
-| `refactor/` | Refactoring   |
+| Branch prefix | Use            |
+| ------------- | -------------- |
+| `feat/`       | New features   |
+| `fix/`        | Bug fixes      |
+| `docs/`       | Documentation  |
+| `refactor/`   | Refactoring    |
+| `chore/`      | Tooling, infra |
+| `test/`       | Test-only work |
 
-Commit message format: `type(scope): description`. Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`. Scope is the folder name (`platform`, `auth`, `marketing`, `onboarding`, `ui`, `atom`, `template`, `docs`).
+Examples from this repo: `feat/transportation-production-ready`, `fix/credentials-dialog`, `docs/fumadocs-shiki`.
+
+## Commit format (SSOT)
+
+Format: `category(scope): description`. This is the canonical reference — `contributing.mdx` links here.
+
+| Category           | Use for                                    |
+| ------------------ | ------------------------------------------ |
+| `feat` / `feature` | New code, new features                     |
+| `fix`              | Bug fixes (link issue if present)          |
+| `refactor`         | Code change that's not a fix nor a feature |
+| `docs`             | Docs only                                  |
+| `build`            | Build / dependency changes                 |
+| `test`             | New or updated tests                       |
+| `ci`               | CI / GitHub Actions changes                |
+| `style`            | Formatting only                            |
+| `chore`            | Anything else                              |
+
+Use the folder name as scope:
+
+```
+feat(marketing)     # SaaS marketing
+feat(operator)      # SaaS dashboard
+feat(site)          # School marketing
+feat(platform)      # School dashboard
+feat(auth)          # Authentication
+feat(onboarding)    # Onboarding flow
+feat(ui)            # shadcn/ui primitives
+feat(atom)          # Atomic components
+feat(template)      # Templates / sections
+fix(docs)           # Doc fixes
+```
+
+See [conventionalcommits.org](https://www.conventionalcommits.org/) for the upstream spec.
 
 ## CI checks
 
 Every PR runs `pr-check.yml`:
 
-| Job         | Purpose             | Must pass |
-| ----------- | ------------------- | --------- |
-| `typecheck` | `pnpm tsc --noEmit` | yes       |
-| `lint`      | ESLint              | yes       |
-| `test`      | Vitest unit tests   | yes       |
-| `build`     | Production build    | yes       |
+| Job         | Purpose             |
+| ----------- | ------------------- |
+| `typecheck` | `pnpm tsc --noEmit` |
+| `lint`      | ESLint              |
+| `test`      | Vitest unit tests   |
+| `build`     | Production build    |
 
 Security: `codeql.yml` scans on every PR + weekly. Dependencies: `dependabot.yml` opens grouped PRs every Monday.
 
-## Auto-labeling
-
-PRs are auto-labeled by file paths:
+## Auto-labels
 
 | Label            | Files                                |
 | ---------------- | ------------------------------------ |
@@ -73,11 +106,9 @@ PRs are auto-labeled by file paths:
 | `type: ci`       | `.github/**`                         |
 | `type: tests`    | `*.test.*`, `tests/**`               |
 
-Stale: issues / PRs marked stale after 30 days of inactivity, closed after 7 more. Exempt labels: `pinned`, `security`, `help wanted`, `good first issue`.
+Stale: issues / PRs marked stale after 30 days, closed after 7 more. Exempt labels: `pinned`, `security`, `help wanted`, `good first issue`.
 
 ## CODEOWNERS
-
-The `.github/CODEOWNERS` file defines who must review which paths:
 
 ```
 * @abdout
@@ -87,19 +118,19 @@ The `.github/CODEOWNERS` file defines who must review which paths:
 /.github/ @abdout
 ```
 
-Modifying files in those paths auto-requests the owner.
+Modifying these paths auto-requests the owner.
 
 ## Issue templates
 
-When opening an issue, pick the template. Bug reports include description, repro steps, expected vs actual, screenshots, browser / OS, affected area. Feature requests include problem, proposed solution, alternatives, priority, willingness to contribute. Doc issues include location, what's wrong, suggested improvement.
+Bug reports include description, repro, expected vs actual, screenshots, browser/OS, area. Feature requests include problem, proposed solution, alternatives, priority. Doc issues include location, what's wrong, suggested improvement.
 
 ## Security
 
-**Don't** open public issues for vulnerabilities. Email `security@databayt.org` with type, affected files, repro, impact. Response within 48 hours. See `SECURITY.md` for the full policy.
+Don't open public issues for vulnerabilities — email `security@databayt.org` (response within 48 hours). See `SECURITY.md`.
 
 When contributing:
 
-- Always include `schoolId` in database queries (multi-tenant safety).
+- Always include `schoolId` in DB queries (multi-tenant safety).
 - Use Zod schemas for input validation.
 - Never commit secrets or credentials.
 - Keep dependencies up to date.
@@ -113,30 +144,29 @@ When contributing:
 - Docs updated if needed
 - PR template filled out
 
-## Essential git commands
+## Essential git
 
 ```bash
-# stay synced with upstream
+# Stay synced with upstream
 git checkout main
 git fetch upstream
 git merge upstream/main
 git push origin main
 
-# rebase your feature branch
-git checkout feature/your-feature
+# Rebase your feature branch
+git checkout feat/your-feature
 git rebase main
 
-# undo last commit (keep changes)
+# Undo last commit (keep changes)
 git reset --soft HEAD~1
 
-# delete local + remote branch
-git branch -d feature/your-feature
-git push origin --delete feature/your-feature
+# Delete local + remote branch
+git branch -d feat/your-feature
+git push origin --delete feat/your-feature
 ```
 
-## Resources
+## See also
 
-- [Contributing](/docs/contributing) — first-PR walkthrough and commit conventions.
-- [Code of Conduct](/docs/code-of-conduct) — community standards.
-- [Conventional Commits](https://www.conventionalcommits.org/) — commit-message spec.
-- [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow) — branch-based workflow.
+- [Contributing](/docs/contributing)
+- [Code of conduct](/docs/code-of-conduct)
+- [Conventional Commits](https://www.conventionalcommits.org/)

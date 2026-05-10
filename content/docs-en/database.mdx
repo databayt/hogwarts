@@ -1,317 +1,215 @@
 ---
-title: "Database"
-description: "Multi-tenant PostgreSQL database architecture with Prisma ORM — 264 models, 132 enums, 57 schema files"
+title: Database
+description: Multi-tenant PostgreSQL with Prisma — 302 models, 149 enums, 73 schema files. Strict isolation via schoolId.
 ---
 
-The database is engineered as a **multi-tenant school management system** supporting multiple schools in a single PostgreSQL database with complete data isolation. Built with Prisma ORM across **264 models**, **132 enums**, and **57 schema files**, it provides a comprehensive foundation for K-12 educational institutions while maintaining strict security boundaries between tenants.
+Hogwarts runs on a multi-tenant PostgreSQL database. All schools share the schema; data is isolated by `schoolId` on every tenant-scoped row. ORM is Prisma 6.19+ with multi-file schema organisation.
 
-## Core Principles
+## Principles
 
-- **Row-Level Security** -- Every model includes a `schoolId` field ensuring complete data isolation between schools
-- **Shared Schema Architecture** -- All schools use the same database schema, optimizing resource utilization
-- **Domain-Based Tenant Identification** -- Schools are uniquely identified by subdomain (e.g., `demo.databayt.org`), with optional custom domains via CNAME
-- **Type-Safe Database Operations** -- Prisma ORM provides end-to-end type safety from database to frontend
-- **Multi-File Schema Organization** -- Schema is organized into 57 logical domain files for maintainability
-- **Single-Language Storage** -- Content stored in one language with a `lang` field; translation happens on-demand via Google Translate API with database caching
+- **Row-level isolation** — every tenant model has `schoolId`.
+- **Shared schema** — one schema, many schools.
+- **Subdomain-based identity** — schools are unique by subdomain (e.g. `kingfahad.databayt.org`); custom domains via CNAME.
+- **End-to-end type safety** — Prisma → Zod → TypeScript with no manual handoffs.
+- **Multi-file schema** — 73 logical `.prisma` files in `prisma/models/` for maintainability.
+- **Single-language storage** — content stored in one language with a `lang` field; translation on-demand via Google Translate cached in `TranslationCache`.
 
-## Database Design
+## Layout
 
-The database follows a comprehensive relational design that captures all aspects of school management from core infrastructure to daily operations.
+<img src="/database.png" alt="Database schema diagram" />
 
-<img src="/database.png" alt="Database Schema Diagram" />
+302 models across 73 schema files, grouped by domain. Catalog models intentionally **omit `schoolId`** — they're platform-wide reference content shared across schools via the [bridge pattern](/docs/integration-flow).
 
-The entity relationship diagram above illustrates the interconnected nature of the school management system, showing how entities relate through foreign key relationships while maintaining multi-tenant isolation through the `schoolId` field present in every table.
+| Domain                                          | Models | Files                                                                                                                                                                                                  |
+| ----------------------------------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Core (school, year, term, period, subscription) |     12 | `school.prisma`                                                                                                                                                                                        |
+| Auth and users                                  |      7 | `auth.prisma`                                                                                                                                                                                          |
+| People (students, teachers, parents, staff)     |     32 | `students.prisma`, `staff.prisma`, `staff-member.prisma`, `profile.prisma`                                                                                                                             |
+| Academic structure                              |     13 | `academic-structure.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                               |
+| Catalog (global)                                |    22+ | `catalog.prisma`, `bridge.prisma`, `chapter.prisma`, `lesson.prisma`, etc.                                                                                                                             |
+| Attendance                                      |    33+ | `attendance.prisma`, `attendance-enhanced.prisma`, `geo-attendance.prisma`                                                                                                                             |
+| Exams and assessment                            |    40+ | `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`, etc.                                                                        |
+| Finance                                         |     36 | `finance-core.prisma`, `finance-fees.prisma`, `finance-invoices.prisma`, `finance-payroll.prisma`, `finance-banking.prisma`, `finance-budgets.prisma`, `finance-reports.prisma`, `subscription.prisma` |
+| Messaging                                       |     11 | `messages.prisma`                                                                                                                                                                                      |
+| Notifications                                   |      7 | `notifications.prisma`                                                                                                                                                                                 |
+| WhatsApp                                        |      5 | `whatsapp.prisma`                                                                                                                                                                                      |
+| Announcements                                   |      5 | `announcement.prisma`                                                                                                                                                                                  |
+| Admission                                       |     12 | `admission.prisma`, `visit.prisma`, `membership.prisma`, `promotion.prisma`                                                                                                                            |
+| Stream / LMS                                    |      8 | `stream.prisma`                                                                                                                                                                                        |
+| Timetable                                       |      9 | `timetable.prisma`, `schedule.prisma`                                                                                                                                                                  |
+| Transportation                                  |      7 | `transportation.prisma`                                                                                                                                                                                |
+| Library                                         |      4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
+| Files / documents                               |     15 | `files.prisma`, `file-record.prisma`, `document.prisma`, `document-processing.prisma`, `image.prisma`, `video.prisma`                                                                                  |
+| Audit / security / misc                         |     10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation-cache.prisma`, `purge-tokens.prisma`                                                                                    |
 
-## Multi-Tenant Isolation Strategy
+## Multi-tenant isolation
 
-The tenant isolation strategy ensures that each school's data remains completely separate while sharing the same database infrastructure.
-
-### Tenant Entity (School Model)
+### School model
 
 ```prisma
 model School {
-  id          String   @id @default(cuid())
-  name        String
-  domain      String   @unique // e.g., "demo"
+  id           String  @id @default(cuid())
+  name         String
+  domain       String  @unique          // e.g. "kingfahad"
   preferredLanguage String @default("ar")
-  logoUrl     String?
-  address     String?
-  phoneNumber String?
-  email       String?
-  timezone    String   @default("Africa/Khartoum")
-
-  // School classification
-  schoolType  String? // private, public, international, technical, special
-  schoolLevel String? // primary, secondary, both
-  system      String? // clickview, national, british, ib
-
-  // Subscription/billing
-  planType    String  @default("basic")
-  maxStudents Int     @default(100)
-  maxTeachers Int     @default(10)
-  isActive    Boolean @default(true)
+  logoUrl      String?
+  address      String?
+  phoneNumber  String?
+  email        String?
+  timezone     String  @default("Africa/Khartoum")
+  schoolType   String?                  // private, public, international, technical, special
+  schoolLevel  String?                  // primary, secondary, both
+  system       String?                  // clickview, national, british, ib
+  planType     String  @default("basic")
+  maxStudents  Int     @default(100)
+  maxTeachers  Int     @default(10)
+  isActive     Boolean @default(true)
 }
 ```
 
-### Data Isolation Example
+### Query rules
 
 ```typescript
-// Correct - Always include schoolId
-const students = await prisma.student.findMany({
-  where: { schoolId: "school_123" },
-})
+// correct — always include schoolId
+await db.student.findMany({ where: { schoolId } })
 
-// Wrong - Missing schoolId (security risk)
-const students = await prisma.student.findMany()
+// wrong — leaks data across tenants
+await db.student.findMany()
 ```
 
-## Schema Overview
+Every tenant-scoped Prisma model has:
 
-The 264 models are organized across 57 `.prisma` files in `prisma/models/`, grouped by domain.
+- `schoolId String` field.
+- `school School @relation(...)` with `onDelete: Cascade`.
+- `@@unique([schoolId, ...])` so cross-tenant collisions are impossible.
+- `@@index([schoolId])` for query performance.
 
-| Category             | Models | Enums | Prisma Files                                                                     | Key Tables                                                         |
-| -------------------- | ------ | ----- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Core                 | 7      | 0     | school.prisma                                                                    | School, Subscription, Invoice, SchoolYear, Period, Term, YearLevel |
-| Auth and Users       | 6      | 1     | auth.prisma                                                                      | User, Account, VerificationToken, TwoFactorConfirmation            |
-| People               | 32     | 4     | students.prisma, staff.prisma, staff-member.prisma, profile.prisma               | Student, Guardian, Teacher, Department, StaffMember                |
-| Academic Structure   | 13     | 3     | academic-structure.prisma, subjects.prisma, classrooms.prisma, enrollment.prisma | Subject, Class, Classroom, AcademicLevel, AcademicGrade            |
-| Catalog (Global)     | 9      | 5     | catalog.prisma, catalog-bridge.prisma + 3 more                                   | CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam         |
-| Attendance           | 29     | 18    | attendance.prisma, attendance-enhanced.prisma, geo-attendance.prisma             | Attendance, AttendanceBadge, GeoFence, BiometricTemplate           |
-| Exams and Assessment | 44     | 29    | exam.prisma, qbank.prisma, assessments.prisma + 6 more                           | Exam, ExamResult, QuestionBank, QuizGame, GradingScheme            |
-| Finance              | 40     | 24    | finance-core.prisma + 6 more                                                     | ChartOfAccount, Payment, PayrollRun, Budget, FeeStructure          |
-| Messaging            | 10     | 3     | messages.prisma                                                                  | Conversation, Message, MessageReaction, PinnedMessage              |
-| Admission            | 9      | 8     | admission.prisma                                                                 | AdmissionCampaign, Application, TourBooking, AdmissionOTP          |
-| Stream/LMS           | 8      | 3     | stream.prisma                                                                    | StreamCourse, StreamCategory, StreamEnrollment                     |
-| Timetable            | 10     | 0     | timetable.prisma, schedule.prisma                                                | Timetable, TeacherConstraint, SubstitutionRecord                   |
-| Other                | 47     | 34    | notifications.prisma, events.prisma, library.prisma + 15 more                    | Announcement, Notification, Book, FileMetadata, AuditLog           |
+### Models without `schoolId`
 
-Catalog models are intentionally **without schoolId** -- they represent platform-wide educational content (ClickView-sourced) shared across all schools via the bridge pattern. See [Catalog](/docs/catalog) and [Integration Flow](/docs/integration-flow) for details.
+About 44 models intentionally omit `schoolId`:
 
-### Dual LMS Architecture
+- **Auth tokens** (4): `Account`, `VerificationToken`, `PasswordResetToken`, `TwoFactorToken` — email-scoped, ephemeral.
+- **Catalog globals** (22+): `Subject`, `Chapter`, `Lesson`, `Book`, `Textbook`, `CurriculumStandard`, etc. — platform-wide reference content; bridge models scope per-school selections.
+- **Subscription tiers** (1): platform-wide pricing.
 
-The platform operates two parallel content systems:
+## Dual LMS architecture
 
-| System      | Scope                         | Models                                                       | Content Source            |
-| ----------- | ----------------------------- | ------------------------------------------------------------ | ------------------------- |
-| **Stream**  | School-scoped (`schoolId`)    | StreamCourse, StreamCategory, StreamEnrollment, StreamLesson | School-created courses    |
-| **Catalog** | Platform-wide (no `schoolId`) | CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam   | ClickView/curated content |
+Two parallel content systems:
 
-The `SchoolSubjectSelection` bridge model connects catalog content to school-specific academic structure, allowing each school to select which platform-wide subjects they use. `SchoolContentOverride` lets schools customize catalog content without modifying the shared originals.
+| System      | Scope                         | Models                                                                                    | Source                 |
+| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------- | ---------------------- |
+| **Stream**  | School-scoped (`schoolId`)    | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | School-created courses |
+| **Catalog** | Platform-wide (no `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | ClickView / curated    |
 
-## Subscription and Pricing
+The `bridge.prisma` models (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) connect catalog content to school-specific academic structure. Schools select which subjects they use and override content without touching shared originals.
 
-The subscription system supports tiered pricing plans with flexible discounting capabilities.
+## User roles
+
+8 roles in `prisma/models/auth.prisma:UserRole`. See [Multi-tenancy](/docs/multi-tenancy) for the RBAC matrix.
+
+| Role         | School scope | Use                                          |
+| ------------ | ------------ | -------------------------------------------- |
+| `DEVELOPER`  | All schools  | Platform admin, cross-tenant ops             |
+| `ADMIN`      | Single       | School management, user oversight            |
+| `TEACHER`    | Single       | Class management, grading, attendance        |
+| `STUDENT`    | Single       | Own grades, attendance, assignments          |
+| `GUARDIAN`   | Single       | Linked-student data, payments, notifications |
+| `ACCOUNTANT` | Single       | Billing, financial reporting (no academic)   |
+| `STAFF`      | Single       | Operational support                          |
+| `USER`       | None         | Default post-signup, pre-onboarding          |
+
+## Subscription and billing
 
 ```prisma
 model SubscriptionTier {
-  id                String   @id @default(cuid())
-  name              String   // basic, premium, enterprise
-  description       String
-  monthlyPrice      Int      // Price in cents
-  annualPrice       Int      // Price in cents
-  maxStudents       Int
-  maxTeachers       Int
-  maxClasses        Int
-  features          String[] // Array of feature identifiers
-  isActive          Boolean  @default(true)
+  id           String   @id @default(cuid())
+  name         String   // basic, premium, enterprise
+  monthlyPrice Int      // cents
+  annualPrice  Int      // cents
+  maxStudents  Int
+  features     String[]
+  isActive     Boolean  @default(true)
 
-  subscriptions     Subscription[]
-  discounts         Discount[]
+  subscriptions Subscription[]
+  discounts     Discount[]
 }
 
 model Discount {
-  id                String   @id @default(cuid())
-  schoolId          String
-  tierId            String
-  code              String   @unique
-  type              String   // percentage, fixed
-  value             Int
-  description       String
-  validFrom         DateTime
-  validUntil        DateTime
-  maxUses           Int?
-  currentUses       Int      @default(0)
-  isActive          Boolean  @default(true)
+  id          String   @id @default(cuid())
+  schoolId    String
+  tierId      String
+  code        String   @unique
+  type        String   // percentage, fixed
+  value       Int
+  validFrom   DateTime
+  validUntil  DateTime
+  maxUses     Int?
+  currentUses Int      @default(0)
 
-  school            School           @relation(fields: [schoolId], references: [id])
-  subscriptionTier  SubscriptionTier @relation(fields: [tierId], references: [id])
-  appliedDiscounts  AppliedDiscount[]
+  school           School           @relation(fields: [schoolId], references: [id])
+  subscriptionTier SubscriptionTier @relation(fields: [tierId], references: [id])
 }
 ```
 
-The subscription module also includes `BillingPaymentMethod`, `BillingHistory`, `UsageMetrics`, `CreditNote`, and `BillingPreferences` models for complete billing lifecycle management.
+Plus `BillingPaymentMethod`, `BillingHistory`, `UsageMetrics`, `CreditNote`, `BillingPreferences`, `AppliedDiscount` for the full billing lifecycle.
 
-## Legal and Compliance
-
-The legal system provides comprehensive consent tracking and compliance logging.
+## Legal and compliance
 
 ```prisma
 model LegalConsent {
-  id                String   @id @default(cuid())
-  schoolId          String
-  userId            String
-  documentType      String   // terms, privacy, data-processing
-  documentVersion   String
-  consentType       String   // explicit, implicit, parental
-  ipAddress         String?
-  userAgent         String?
-  consentedAt       DateTime @default(now())
-  revokedAt         DateTime?
-  metadata          Json?
-
-  school            School   @relation(fields: [schoolId], references: [id])
-  user              User     @relation(fields: [userId], references: [id])
+  id              String    @id @default(cuid())
+  schoolId        String
+  userId          String
+  documentType    String    // terms, privacy, data-processing
+  documentVersion String
+  consentType     String    // explicit, implicit, parental
+  ipAddress       String?
+  userAgent       String?
+  consentedAt     DateTime  @default(now())
+  revokedAt       DateTime?
 
   @@unique([schoolId, userId, documentType, documentVersion])
 }
 
 model LegalDocument {
-  id                String   @id @default(cuid())
-  schoolId          String
-  type              String   // terms, privacy, data-processing
-  version           String
-  content           String   @db.Text
-  effectiveFrom     DateTime
-  effectiveUntil    DateTime?
-  isActive          Boolean  @default(true)
-  requiresExplicit  Boolean  @default(true)
-
-  school            School   @relation(fields: [schoolId], references: [id])
+  id               String    @id @default(cuid())
+  schoolId         String
+  type             String    // terms, privacy, data-processing
+  version          String
+  content          String    @db.Text
+  effectiveFrom    DateTime
+  effectiveUntil   DateTime?
+  isActive         Boolean   @default(true)
+  requiresExplicit Boolean   @default(true)
 }
 
 model ComplianceLog {
-  id                String   @id @default(cuid())
-  schoolId          String
-  eventType         String
-  eventData         Json
-  userId            String?
-  timestamp         DateTime @default(now())
-
-  school            School   @relation(fields: [schoolId], references: [id])
-  user              User?    @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  schoolId  String
+  eventType String
+  eventData Json
+  userId    String?
+  timestamp DateTime @default(now())
 }
 ```
 
-## Authentication and User Roles
+## Single-language storage
 
-The system supports **8 distinct user roles** with varying levels of access and school-specific constraints.
-
-| Role       | Description               | School Access | Typical Use Case                            |
-| ---------- | ------------------------- | ------------- | ------------------------------------------- |
-| DEVELOPER  | Platform administrator    | All schools   | System maintenance, cross-tenant operations |
-| ADMIN      | School administrator      | Single school | School management, user oversight           |
-| TEACHER    | Teaching staff            | Single school | Class management, grading, attendance       |
-| STUDENT    | Enrolled students         | Single school | Learning management, assignment submission  |
-| GUARDIAN   | Student parents/guardians | Single school | Monitor child's progress, communication     |
-| ACCOUNTANT | Finance staff             | Single school | Billing, financial reporting                |
-| STAFF      | General school staff      | Single school | Administrative support                      |
-| USER       | Default role              | None          | Base level access, onboarding               |
-
-## Security and Data Protection
-
-### Automatic Tenant Filtering
-
-Every database query must include the `schoolId` to ensure proper data isolation:
-
-```typescript
-// Server action with tenant context
-export async function getStudents() {
-  const schoolId = getSchoolId() // From middleware context
-
-  return await prisma.student.findMany({
-    where: { schoolId },
-  })
-}
-```
-
-### Unique Constraints with School Scope
-
-All unique constraints include `schoolId` to allow data duplication across schools:
-
-```prisma
-// Teachers can have same email across different schools
-@@unique([schoolId, emailAddress])
-
-// Departments can have same names across schools
-@@unique([schoolId, departmentName])
-```
-
-## Performance Optimization
-
-### Recommended Database Indexes
-
-```sql
--- Critical indexes for multi-tenant queries
-CREATE INDEX idx_students_school_id ON students(school_id);
-CREATE INDEX idx_teachers_school_id ON teachers(school_id);
-CREATE INDEX idx_classes_school_id ON classes(school_id);
-CREATE INDEX idx_attendance_school_id ON attendance(school_id);
-```
-
-### Query Performance Guidelines
-
-- Always filter by `schoolId` first in WHERE clauses
-- Use composite indexes for frequently queried field combinations
-- Implement connection pooling for high-traffic scenarios
-- Consider read replicas for reporting and analytics
-
-## Deployment Configuration
-
-### Environment Variables
-
-```bash
-# Database Connection
-DATABASE_URL="postgresql://username:password@host:port/database"
-
-# Multi-tenancy Configuration
-DEFAULT_SCHOOL_DOMAIN="demo"
-ALLOW_SCHOOL_SIGNUP="true"
-
-# Subscription Limits
-BASIC_MAX_STUDENTS=100
-PREMIUM_MAX_STUDENTS=500
-ENTERPRISE_MAX_STUDENTS=2000
-```
-
-### Migration Commands
-
-```bash
-# Generate Prisma Client
-pnpm prisma generate
-
-# Create and apply migrations
-pnpm prisma migrate dev --name init
-
-# Deploy to production
-pnpm prisma migrate deploy
-
-# Seed specific module (ALWAYS use this)
-pnpm db:seed:single <name>
-```
-
-## Single-Language Storage with On-Demand Translation
-
-Content is stored in **one language** with a `lang` field. When a user views content in a different locale, translation happens on-demand via Google Translate API with database caching.
-
-### Storage Pattern
+Content stored in one language with a `lang` field. Translation on-demand via Google Translate API, cached in `TranslationCache`.
 
 ```prisma
 model Announcement {
   title String?
   body  String? @db.Text
-  lang  String  @default("ar") // "ar" or "en"
+  lang  String  @default("ar")
 }
-```
 
-### Translation Cache
-
-```prisma
 model TranslationCache {
   id             String   @id @default(cuid())
   schoolId       String
   sourceText     String   @db.Text
-  sourceLanguage String   // "ar" or "en"
-  targetLanguage String   // "ar" or "en"
+  sourceLanguage String                       // "ar" or "en"
+  targetLanguage String                       // "ar" or "en"
   translatedText String   @db.Text
   provider       String   @default("google")
   hitCount       Int      @default(0)
@@ -323,61 +221,85 @@ model TranslationCache {
 }
 ```
 
-### Translation Flow
-
 ```typescript
 import { getDisplayText } from "@/lib/content-display"
 
-// Content stored in Arabic, user viewing in English
+// Stored in Arabic, viewing in English → translates and caches
 const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
-// Returns "Hello" (translated and cached)
 
-// Same language - no API call
+// Same language → returns directly, no API call
 const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
-// Returns "مرحبا" directly
 ```
 
-### Models Using `lang` Field
+### Models with `lang`
 
-| Model                 | Content Fields     | Default Lang |
-| --------------------- | ------------------ | ------------ |
-| Announcement          | title, body        | ar           |
-| AnnouncementTemplate  | title, body        | ar           |
-| NotificationTemplate  | title, body        | ar           |
-| Subject               | subjectName        | ar           |
-| Class                 | name               | ar           |
-| YearLevel             | levelName          | ar           |
-| Department            | departmentName     | ar           |
-| AcademicLevel         | name               | ar           |
-| AcademicGrade         | name               | ar           |
-| AcademicStream        | name               | ar           |
-| AttendanceBadge       | name, description  | ar           |
-| AttendanceCompetition | name               | ar           |
-| CatalogSubject        | name               | ar           |
-| CatalogChapter        | name               | ar           |
-| CatalogLesson         | name               | ar           |
-| CatalogExam           | title, description | ar           |
-| CatalogMaterial       | title, description | ar           |
-| CatalogAssignment     | title, description | ar           |
-| CurriculumStandard    | name, description  | ar           |
-| GradingScheme         | name               | ar           |
-| QuickAssessment       | title              | ar           |
-| LessonVideo           | title, description | ar           |
-| StreamCourse          | title              | en           |
-| StreamCategory        | name               | en           |
+`Announcement`, `AnnouncementTemplate`, `NotificationTemplate`, `Subject`, `Class`, `YearLevel`, `Department`, `AcademicLevel`, `AcademicGrade`, `AcademicStream`, `AttendanceBadge`, `AttendanceCompetition`, `Chapter`, `Lesson`, `Book`, `Textbook`, `Material`, `CurriculumStandard`, `GradingScheme`, `QuickAssessment`, `Video`, `StreamCourse`, `StreamCategory`. Default `lang = "ar"` for school-content; `lang = "en"` for Stream/LMS.
 
-## Demo School and Test Data
+See [Internationalization](/docs/internationalization) and [Translation](/docs/translation).
 
-The seeding system creates a **single demo school** (`demo.databayt.org`) with a complete K-12 Sudanese school simulation. See [Seeds](/docs/safe-seeds) for full seed details.
+## Performance
 
-| Entity      | Count  | Notes                               |
-| ----------- | ------ | ----------------------------------- |
-| Users       | 3,105  | All roles with @databayt.org emails |
-| Teachers    | 100    | Arabic names, 6 departments         |
-| Students    | 970    | KG1-Grade 12 distribution           |
-| Guardians   | ~1,940 | 2 per student                       |
-| Departments | 6      | Arabic primary + lang field         |
-| Subjects    | 19     | Arabic primary + lang field         |
-| Year Levels | 14     | KG1-12                              |
-| Classrooms  | 28     | Labs, rooms, special facilities     |
-| Classes     | 187    | Subject-level combinations          |
+Recommended indexes:
+
+```sql
+CREATE INDEX idx_students_school_id   ON students(school_id);
+CREATE INDEX idx_teachers_school_id   ON teachers(school_id);
+CREATE INDEX idx_classes_school_id    ON classes(school_id);
+CREATE INDEX idx_attendance_school_id ON attendance(school_id);
+```
+
+Guidelines:
+
+- Always filter by `schoolId` first in `WHERE` clauses.
+- Use composite indexes for frequently queried field combinations.
+- Connection pooling via Neon serverless.
+- Read replicas for reporting and analytics.
+
+## Deployment
+
+### Environment
+
+```bash
+DATABASE_URL="postgresql://username:password@host:port/database"
+DEFAULT_SCHOOL_DOMAIN="demo"
+ALLOW_SCHOOL_SIGNUP="true"
+BASIC_MAX_STUDENTS=100
+PREMIUM_MAX_STUDENTS=500
+ENTERPRISE_MAX_STUDENTS=2000
+```
+
+### Migrations
+
+```bash
+pnpm prisma generate                       # Regenerate client
+pnpm prisma migrate dev --name <name>      # Create + apply migration
+pnpm prisma migrate deploy                 # Production deploy
+pnpm db:seed:single <name>                 # Seed one module — never `pnpm db:seed`
+```
+
+Destructive ops (`db execute`, `db push --accept-data-loss`, `migrate reset`, `DROP TABLE`, `TRUNCATE`) are blocked by hooks. Use Neon's **Branch-Before-Touch** protocol for risky DB ops.
+
+## Demo school
+
+Single demo tenant (`demo.databayt.org`) with full K-12 Sudanese simulation. See [Safe seeds](/docs/safe-seeds).
+
+| Entity      |  Count | Notes                             |
+| ----------- | -----: | --------------------------------- |
+| Users       |  3,105 | All roles, `@databayt.org` emails |
+| Teachers    |    100 | Arabic names, 6 departments       |
+| Students    |    970 | KG1–Grade 12                      |
+| Guardians   | ~1,940 | 2 per student                     |
+| Departments |      6 | Arabic primary + lang field       |
+| Subjects    |     19 | Arabic primary + lang field       |
+| Year levels |     14 | KG1–12                            |
+| Classrooms  |     28 | Labs, rooms, special facilities   |
+| Classes     |    187 | Subject-level combinations        |
+
+## See also
+
+- [Multi-tenancy](/docs/multi-tenancy) — request flow, RBAC, isolation guarantees
+- [Internationalization](/docs/internationalization) — i18n contract
+- [Translation](/docs/translation) — dictionary coverage
+- [Catalog](/docs/catalog) — global content + bridge pattern
+- [Seeds](/docs/seeds) — full seed catalogue
+- [Safe seeds](/docs/safe-seeds) — protected dev accounts

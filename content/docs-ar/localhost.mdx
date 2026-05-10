@@ -1,154 +1,123 @@
 ---
-title: "بيئة التطوير المحلية"
-description: "دليل مفصل لإعداد البيئة وتشغيل الخادم المحلي"
+title: البيئة المحلية
+description: خطوات تهيئة البيئة — fork، استنساخ، تثبيت، وتشغيل المخدّم محلياً.
 ---
 
 import Image from "next/image"
 
-## المتطلبات المسبقة
+الدليل التفصيلي. للطريق السريع راجع [ابدأ الآن](/ar/docs/get-started).
 
-قبل البدء، تأكد من تثبيت ما يلي:
+## المتطلبات الأولية
 
-- **[Node.js](https://nodejs.org/)** (الإصدار 22 أو أعلى، يُنصح بإصدار LTS)
-- **[Git](https://git-scm.com/)** (التحكم في الإصدارات)
-- **[IDE](https://code.visualstudio.com/)** (يُنصح بـ VS Code)
+- [Node.js](https://nodejs.org/) v22+ (يُنصح بـ LTS)
+- [Git](https://git-scm.com/)
+- محرر — [VS Code](https://code.visualstudio.com/) يُنصح به
 
-### الخطوة 1: عمل Fork للمشروع
+## 1. عمل Fork للمستودع
 
-ابدأ بإنشاء نسختك الخاصة من المستودع على GitHub.
-
-1. **انتقل إلى [مستودع Hogwarts](https://github.com/databayt/hogwarts)**
-2. **انقر على زر "Fork"** في الزاوية العلوية اليمنى
+افتح [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) واضغط **Fork** أعلى يمين الصفحة.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/fork.png"
-    alt="انقر على زر Fork في صفحة مستودع GitHub"
+    alt="زر Fork في GitHub"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 2: إنشاء Fork الخاص بك
-
-تأكد من أن اسم المستودع متاح وأنشئ Fork الخاص بك.
-
-1. **تحقق من أن اسم المستودع** متاح
-2. **احتفظ بالإعدادات الافتراضية** (إلا إذا كنت بحاجة لتغييرها)
-3. **انقر على "Create fork"** لإتمام العملية
+اترك الإعدادات الافتراضية إلا إن احتجت اسماً مخصصاً. اضغط **Create fork**.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/create-fork.png"
-    alt="مربع حوار إنشاء fork مع اسم المستودع والإعدادات"
+    alt="نافذة إنشاء fork"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 3: فتح VS Code
+## 2. الاستنساخ في VS Code
 
-شغّل محرر الكود وتحضّر لاستنساخ المستودع.
-
-1. **افتح نافذة جديدة** في VS Code
-2. **انقر على أيقونة Git** في الشريط الجانبي الأيسر
-3. **انقر على Clone**
-4. **الصق عنوان URL للمستودع الخاص بك** أو اتصل بـ GitHub من شريط البحث العلوي
+افتح VS Code → أيقونة Git في الشريط الجانبي → **Clone**. الصق رابط الـ fork أو اختر المستودع من منتقي GitHub.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/clone.png"
-    alt="محرر VS Code مع خيار استنساخ المستودع محدد"
+    alt="خيار الاستنساخ في VS Code"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 4: الاستنساخ من GitHub
-
-احصل على عنوان URL لمستودعك المُفَرَّع واستنسخه محلياً.
-
-1. **ارجع إلى مستودعك المُفَرَّع** على GitHub
-2. **انقر على زر "Code" الأخضر**
-3. **انسخ عنوان HTTPS URL** إلى الحافظة
-4. **الصقه في مربع حوار الاستنساخ في محررك**
+إن لم يكن الرابط متاحاً: افتح الـ fork في GitHub → اضغط زر **Code** الأخضر → انسخ رابط HTTPS.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/clone-from-github.png"
-    alt="مربع حوار GitHub clone يظهر زر نسخ HTTPS URL"
+    alt="نسخ رابط HTTPS من GitHub"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 5: اختيار الدليل المحلي
-
-اختر أين تريد تخزين المشروع على جهازك.
-
-1. **اختر دليلاً** لمشاريعك (مثل `~/Documents/projects/`)
-2. **أنشئ مجلداً جديداً** إذا لزم الأمر
-3. **حدد الموقع** وأكد
+اختر مجلداً أباً (مثلاً `~/Documents/projects/`).
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/repo-destination.png"
-    alt="مستكشف الملفات يظهر اختيار الدليل للاستنساخ"
+    alt="اختيار مجلد الوجهة"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 6: الفتح في المحرر
-
-افتح المشروع المستنسخ في محرر الكود الخاص بك.
-
-1. **انتظر اكتمال عملية الاستنساخ**
-2. **انقر على "Open"** عند المطالبة
-3. **مشروعك جاهز الآن** للتطوير
+عند انتهاء الاستنساخ، افتح المشروع في VS Code.
 
 <div className="my-8 overflow-hidden rounded-lg border">
   <Image
     src="/localhost/open-repo.png"
-    alt="المشروع مفتوح بنجاح في VS Code أو Cursor"
+    alt="المشروع مفتوح في VS Code"
     width={800}
     height={400}
     className="h-auto w-full"
   />
 </div>
 
-### الخطوة 7: تثبيت التبعيات
+## 3. تثبيت التبعيات
 
-استخدم pnpm لتثبيت جميع التبعيات المطلوبة.
-
-1. **افتح الطرفية المدمجة** (`Ctrl/Cmd + ~`)
-2. **شغّل أمر التثبيت**:
+افتح Terminal المدمج (`Ctrl/Cmd + ~`):
 
 ```bash
 pnpm install
 ```
 
-3. **انتظر اكتمال التثبيت**
+## 4. إعداد البيئة
 
-### الخطوة 8: إعداد البيئة
+أنشئ ملف `.env` في جذر المشروع والصق محتواه من مجموعة WhatsApp. لا يوجد سوى **`.env` واحد** — لا `.env.local` ولا `.env.development` ولا غيرها.
 
-1. **أنشئ ملف `.env`** في المجلد الجذر
-2. **الصق المحتوى** من مجموعة WhatsApp
+## 5. توليد Prisma client وتشغيل الـ migrations
 
-### الخطوة 9: بدء خادم التطوير
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev
+```
 
-شغّل خادم التطوير وشاهد تطبيقك يعمل.
-
-1. **شغّل أمر التطوير**:
+## 6. تشغيل مخدّم التطوير
 
 ```bash
 pnpm dev
 ```
 
-2. **انتظر بدء الخادم**
-3. **افتح متصفحك** على `http://localhost:3000`
+افتح [http://localhost:3000](http://localhost:3000). سجّل الدخول بـ `admin@databayt.org` / `1234`.
+
+## التالي
+
+- [ابدأ الآن](/ar/docs/get-started) — النسخة السريعة من نفس التدفق
+- [المساهمة](/ar/docs/contributing) — أعراف الـcommits، أول PR
+- [البنية المعمارية](/ar/docs/architecture) — نمط المرآة، تعدد المستأجرين

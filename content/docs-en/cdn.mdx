@@ -1,18 +1,18 @@
 ---
-title: "CDN Assets"
-description: "Static assets served via S3 + CloudFront with the asset() helper"
+title: CDN Assets
+description: Static assets served from S3 + CloudFront via the asset() helper, organized into 5 flat directories.
 ---
 
-All platform UI assets are served from **S3 + CloudFront** via a single `asset()` helper function.
+All platform UI assets live on S3 + CloudFront. Reference them through `asset()`; the helper prepends the CDN domain and the response is cached `immutable` for one year. 155 assets across 5 directories.
 
 ## Infrastructure
 
 | Component        | Value                                                          |
 | ---------------- | -------------------------------------------------------------- |
-| S3 Bucket        | `hogwarts-databayt` (`us-east-1`)                              |
+| S3 bucket        | `hogwarts-databayt` (`us-east-1`)                              |
 | CloudFront CNAME | `cdn.databayt.org` (preferred)                                 |
 | CloudFront raw   | `d1dlwtcfl0db67.cloudfront.net` (still works — additive alias) |
-| Cache            | `public, max-age=31536000, immutable` (1 year)                 |
+| Cache            | `public, max-age=31536000, immutable`                          |
 | Env var          | `NEXT_PUBLIC_CDN_DOMAIN` (build-time, set on Vercel)           |
 
 ## Usage
@@ -26,348 +26,121 @@ import { asset } from "@/lib/asset-url"
 <source src={asset("/media/story.mp4")} />
 ```
 
-The `asset()` function prepends the CloudFront domain:
+`asset("/icons/logo.png")` → `https://cdn.databayt.org/icons/logo.png`.
 
-```
-asset("/icons/logo.png")
-→ https://cdn.databayt.org/icons/logo.png
-```
+## Directory layout
 
-## Directory Structure
+| Directory        | Purpose                                  |   Count |
+| ---------------- | ---------------------------------------- | ------: |
+| `icons/`         | Small functional SVGs, logos, small PNGs |      42 |
+| `illustrations/` | Art, decorative, complex                 |      88 |
+| `animations/`    | Lottie JSON                              |       3 |
+| `photos/`        | Real photographs                         |      22 |
+| `media/`         | Video and audio                          |       1 |
+| **Total**        |                                          | **155** |
 
-Five flat directories in S3 — no nesting within each:
+Five flat directories, no nesting.
 
-| Directory        | Purpose                                             | Count |
-| ---------------- | --------------------------------------------------- | ----- |
-| `icons/`         | Small, simple, functional (SVGs, logos, small PNGs) | 42    |
-| `illustrations/` | Art, decorative, complex                            | 88    |
-| `animations/`    | Lottie JSON files                                   | 3     |
-| `photos/`        | Real photographs                                    | 22    |
-| `media/`         | Video and audio                                     | 1     |
-
-**Total: 155 assets on CDN**
-
-## Naming Conventions
+## Naming conventions
 
 | Rule                     | Example            | Anti-pattern       |
 | ------------------------ | ------------------ | ------------------ |
 | kebab-case               | `data-science.png` | `dataScience.png`  |
 | Lowercase                | `visa.svg`         | `Visa.svg`         |
 | No spaces                | `hands-build.svg`  | `Hands Build.svg`  |
-| No prefixes (default)    | `visa.svg`         | `payment-visa.svg` |
-| Rename on collision only | `site-ball.png`    | Prefix everything  |
+| No prefixes by default   | `visa.svg`         | `payment-visa.svg` |
+| Rename only on collision | `site-ball.png`    | Prefix everything  |
 
----
+## icons/ (42)
 
-## icons/ (42 files)
+| Group            | Keys                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brand            | `logo.png`, `master-card.png`, `z.png`                                                                                                            |
+| Anthropic UI     | `graduation-cap.svg`, `star-outline.svg`, `book-open.svg`, `anthropic-user.svg`, `users.svg`, `check-circle.svg`, `document.svg`, `news.svg`      |
+| Payment          | `visa.svg`, `mastercard.svg`, `amex.svg`, `apple-pay.svg`, `google-pay.svg`, `paypal.svg`, `mada.svg`, `stcpay.svg`, `fawry.svg`                  |
+| Exam types       | `multiple-choice.svg`, `true-false.svg`, `short-answer.svg`, `essay.svg`, `fill-in-blank.svg`, `matching.svg`, `ordering.svg`, `multi-select.svg` |
+| Form attachments | `degree.png`, `transcript.png`, `id.png`, `resume.png`, `files.png`, `image.png`                                                                  |
+| Mission          | `hands-build.svg`, `hands-stack.svg`, `objects-puzzle.svg`                                                                                        |
+| Sponsors         | `faisal.png`, `mtdt.png`, `zain.png`, `khartoum.png`, `dal.png`, `249.png`, `uok.png`                                                             |
 
-Small, simple, functional assets.
+## illustrations/ (88)
 
-### Brand
+| Group               | Highlights                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anthropic art       | `hands-build.svg`, `hands-stack.svg`, `objects-puzzle.svg`, `category-01.svg` … `category-14.svg`, `claude-code-best-practices.svg`, `think-tool.svg`, `eng-long-running-agents.svg`, `anthropic-abstract.svg`                                                                                                                                                                                                                                                                                                                                 |
+| Feature (32)        | `student.png`, `teacher.png`, `fees.png`, `exam.png`, `assigment.png`, `attendance.png`, `gradebook.png`, `timetable.png`, `library.png`, `events.png`, `video.png`, `payroll.png`, `invoicing.png`, `wallet-3.png`, `credit-card.png`, `app-store.png`, `email.png`, `offer.png`, `canteen.png`, `parent.png`, `transport.png`, `headphone.png`, `notifications.png`, `calendar-2.png`, `id-cards.png`, `phone.png`, `messaging.png`, `graduate.png`, `blackboard.png`, `download.png`, `role-based.png`, `cover-letter.png`, `admission.png` |
+| Site art            | `site-ball.png`, `hat.png`, `glass.png`, `tent.png`, `teleport.png`, `community.png`, `champion.png`, `world.png`, `light-bulb.png`, `ball.png`, `robot.png`, `ai-fluency-hero.webp`                                                                                                                                                                                                                                                                                                                                                           |
+| Stream              | `teach.jpg`, `inspire.jpg`, `reward.jpg`, `generative-ai.png`, `it-certifications.png`, `data-science.png`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Onboarding          | `private.png`, `onboarding-public.png`, `international.png`, `techincal.png`, `espical.png`, `onboarding-step2.svg`                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| GitHub achievements | `starstruck-detail.png`, `galaxy-brain-detail.png`, `pull-shark-detail.png`, `yolo-detail.png`, `pair-extraordinaire-detail.png`, `quickdraw-detail.png`, `public-sponsor-detail.png`                                                                                                                                                                                                                                                                                                                                                          |
 
-| CDN Key                 | Old Path           | Used By                              |
-| ----------------------- | ------------------ | ------------------------------------ |
-| `icons/logo.png`        | `/logo.png`        | manifest, headers, invoices, lessons |
-| `icons/master-card.png` | `/master-card.png` | finance content                      |
-| `icons/z.png`           | `/site/z.png`      | school marketing footer              |
+Feature illustrations are used by `feature-tabs.tsx` and `dream-section.tsx`.
 
-### Anthropic UI Icons
+## animations/ (3)
 
-| CDN Key                    | Old Path                        | Used By                                               |
-| -------------------------- | ------------------------------- | ----------------------------------------------------- |
-| `icons/graduation-cap.svg` | `/anthropic/graduation-cap.svg` | faculty, testimonials, merit table, grades table      |
-| `icons/star-outline.svg`   | `/anthropic/star-outline.svg`   | faculty, testimonials                                 |
-| `icons/book-open.svg`      | `/anthropic/book-open.svg`      | faculty, classes table                                |
-| `icons/anthropic-user.svg` | `/anthropic/user.svg`           | faculty                                               |
-| `icons/users.svg`          | `/anthropic/users.svg`          | testimonials, sales, students/teachers/parents tables |
-| `icons/check-circle.svg`   | `/anthropic/check-circle.svg`   | testimonials                                          |
-| `icons/document.svg`       | `/anthropic/document.svg`       | admission tables                                      |
-| `icons/news.svg`           | `/anthropic/news.svg`           | announcements table                                   |
+| Key                   | Used by                         |
+| --------------------- | ------------------------------- |
+| `confetti.json`       | success modal, completion modal |
+| `anthropic-hero.json` | hero illustration               |
+| `education.json`      | education animation             |
 
-### Payment Methods
+## photos/ (22)
 
-| CDN Key                | Old Path                  | Used By        |
-| ---------------------- | ------------------------- | -------------- |
-| `icons/visa.svg`       | `/payment/visa.svg`       | secure payment |
-| `icons/mastercard.svg` | `/payment/mastercard.svg` | secure payment |
-| `icons/amex.svg`       | `/payment/amex.svg`       | secure payment |
-| `icons/apple-pay.svg`  | `/payment/apple-pay.svg`  | secure payment |
-| `icons/google-pay.svg` | `/payment/google-pay.svg` | secure payment |
-| `icons/paypal.svg`     | `/payment/paypal.svg`     | secure payment |
-| `icons/mada.svg`       | `/payment/mada.svg`       | secure payment |
-| `icons/stcpay.svg`     | `/payment/stcpay.svg`     | secure payment |
-| `icons/fawry.svg`      | `/payment/fawry.svg`      | secure payment |
+| Group        | Keys                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| Contributors | `contributors-h.jpeg`, `contributors-d.jpeg`, `contributor-1.jpg` … `contributor-6.jpg`, `mazin.jpg` |
+| Site         | `harry-potter.png`, `site-h.jpeg`, `trian.jpeg`, `site-a.jpeg`, `site-b.jpeg`, `map.jpeg`            |
+| Faculty      | `dumbledore.jpeg`, `snape.jpeg`, `mcgonagall.jpeg`, `hagrid.jpeg`                                    |
+| Houses       | `gryffindor.jpeg`, `ravenclaw.jpeg`, `hupplepuff.jpeg`, `slytherin.jpg`                              |
 
-### Exam Types
+## media/ (1)
 
-| CDN Key                     | Old Path               | Used By                  |
-| --------------------------- | ---------------------- | ------------------------ |
-| `icons/multiple-choice.svg` | `/multiple-choice.svg` | catalog content sections |
-| `icons/true-false.svg`      | `/true-false.svg`      | catalog content sections |
-| `icons/short-answer.svg`    | `/short-answer.svg`    | catalog content sections |
-| `icons/essay.svg`           | `/essay.svg`           | catalog content sections |
-| `icons/fill-in-blank.svg`   | `/fill-in-blank.svg`   | catalog content sections |
-| `icons/matching.svg`        | `/matching.svg`        | catalog content sections |
-| `icons/ordering.svg`        | `/ordering.svg`        | catalog content sections |
-| `icons/multi-select.svg`    | `/multi-select.svg`    | catalog content sections |
+| Key         | Used by                    |
+| ----------- | -------------------------- |
+| `story.mp4` | story section, story video |
 
-### Form Attachments
+## Pre-existing CDN systems (do not touch)
 
-| CDN Key                | Old Path          | Used By                                      |
-| ---------------------- | ----------------- | -------------------------------------------- |
-| `icons/degree.png`     | `/degree.png`     | application/student/teacher attachment forms |
-| `icons/transcript.png` | `/transcript.png` | application/student/teacher attachment forms |
-| `icons/id.png`         | `/id.png`         | application/student/teacher attachment forms |
-| `icons/resume.png`     | `/resume.png`     | application/student/teacher attachment forms |
-| `icons/files.png`      | `/files.png`      | application/student/teacher attachment forms |
-| `icons/image.png`      | `/image.png`      | application/student/teacher attachment forms |
-
-### Mission / Profile
-
-| CDN Key                    | Old Path                    | Used By       |
-| -------------------------- | --------------------------- | ------------- |
-| `icons/hands-build.svg`    | `/icons/hands-build.svg`    | mission cards |
-| `icons/hands-stack.svg`    | `/icons/hands-stack.svg`    | mission cards |
-| `icons/objects-puzzle.svg` | `/icons/objects-puzzle.svg` | mission cards |
-
-### Sponsors
-
-| CDN Key              | Old Path                | Used By    |
-| -------------------- | ----------------------- | ---------- |
-| `icons/faisal.png`   | `/sponser/faisal.png`   | logo cloud |
-| `icons/mtdt.png`     | `/sponser/mtdt.png`     | logo cloud |
-| `icons/zain.png`     | `/sponser/zain.png`     | logo cloud |
-| `icons/khartoum.png` | `/sponser/khartoum.png` | logo cloud |
-| `icons/dal.png`      | `/sponser/dal.png`      | logo cloud |
-| `icons/249.png`      | `/sponser/249.png`      | logo cloud |
-| `icons/uok.png`      | `/sponser/uok.png`      | logo cloud |
-
----
-
-## illustrations/ (88 files)
-
-Art, decorative, complex assets.
-
-### Anthropic Art
-
-| CDN Key                                        | Old Path                                    | Used By                                             |
-| ---------------------------------------------- | ------------------------------------------- | --------------------------------------------------- |
-| `illustrations/hands-build.svg`                | `/anthropic/Hands-Build.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/hands-stack.svg`                | `/anthropic/Hands-Stack.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/objects-puzzle.svg`             | `/anthropic/Objects-Puzzle.svg`             | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-01.svg`                | `/anthropic/category-01.svg`                | ANTHROPIC_ILLUSTRATIONS, events table               |
-| `illustrations/category-02.svg`                | `/anthropic/category-02.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-03.svg`                | `/anthropic/category-03.svg`                | ANTHROPIC_ILLUSTRATIONS, registry, school marketing |
-| `illustrations/category-04.svg`                | `/anthropic/category-04.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-05.svg`                | `/anthropic/category-05.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-06.svg`                | `/anthropic/category-06.svg`                | ANTHROPIC_ILLUSTRATIONS, registry, school marketing |
-| `illustrations/category-07.svg`                | `/anthropic/category-07.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-08.svg`                | `/anthropic/category-08.svg`                | ANTHROPIC_ILLUSTRATIONS, secure payment             |
-| `illustrations/category-09.svg`                | `/anthropic/category-09.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-10.svg`                | `/anthropic/category-10.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-11.svg`                | `/anthropic/category-11.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-12.svg`                | `/anthropic/category-12.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-13.svg`                | `/anthropic/category-13.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/category-14.svg`                | `/anthropic/category-14.svg`                | ANTHROPIC_ILLUSTRATIONS                             |
-| `illustrations/claude-code-best-practices.svg` | `/anthropic/claude-code-best-practices.svg` | registry, school marketing                          |
-| `illustrations/think-tool.svg`                 | `/anthropic/think-tool.svg`                 | registry, school marketing                          |
-| `illustrations/eng-long-running-agents.svg`    | `/anthropic/eng-long-running-agents.svg`    | application overview                                |
-| `illustrations/anthropic-abstract.svg`         | `/anthropic/6903d22d...1000x1000.svg`       | stream courses content                              |
-
-### Feature Illustrations (32)
-
-| CDN Key                           | Old Path                     |
-| --------------------------------- | ---------------------------- |
-| `illustrations/student.png`       | `/feature/student.png`       |
-| `illustrations/teacher.png`       | `/feature/teacher.png`       |
-| `illustrations/fees.png`          | `/feature/fees.png`          |
-| `illustrations/exam.png`          | `/feature/exam.png`          |
-| `illustrations/assigment.png`     | `/feature/assigment.png`     |
-| `illustrations/attendance.png`    | `/feature/attendance.png`    |
-| `illustrations/gradebook.png`     | `/feature/gradebook.png`     |
-| `illustrations/timetable.png`     | `/feature/timetable.png`     |
-| `illustrations/library.png`       | `/feature/library.png`       |
-| `illustrations/events.png`        | `/feature/events.png`        |
-| `illustrations/video.png`         | `/feature/video.png`         |
-| `illustrations/payroll.png`       | `/feature/payroll.png`       |
-| `illustrations/invoicing.png`     | `/feature/invoicing.png`     |
-| `illustrations/wallet-3.png`      | `/feature/wallet-3.png`      |
-| `illustrations/credit-card.png`   | `/feature/credit-card.png`   |
-| `illustrations/app-store.png`     | `/feature/app-store.png`     |
-| `illustrations/email.png`         | `/feature/email.png`         |
-| `illustrations/offer.png`         | `/feature/offer.png`         |
-| `illustrations/canteen.png`       | `/feature/canteen.png`       |
-| `illustrations/parent.png`        | `/feature/parent.png`        |
-| `illustrations/transport.png`     | `/feature/transport.png`     |
-| `illustrations/headphone.png`     | `/feature/headphone.png`     |
-| `illustrations/notifications.png` | `/feature/notifications.png` |
-| `illustrations/calendar-2.png`    | `/feature/calendar-2.png`    |
-| `illustrations/id-cards.png`      | `/feature/id-cards.png`      |
-| `illustrations/phone.png`         | `/feature/phone.png`         |
-| `illustrations/messaging.png`     | `/feature/messaging.png`     |
-| `illustrations/graduate.png`      | `/feature/graduate.png`      |
-| `illustrations/blackboard.png`    | `/feature/blackboard.png`    |
-| `illustrations/download.png`      | `/feature/download.png`      |
-| `illustrations/role-based.png`    | `/feature/role-based.png`    |
-| `illustrations/cover-letter.png`  | `/feature/cover-letter.png`  |
-| `illustrations/admission.png`     | `/features/admission.png`    |
-
-All used by `feature-tabs.tsx` and `dream-section.tsx`.
-
-### Site Art
-
-| CDN Key                              | Old Path                | Used By               |
-| ------------------------------------ | ----------------------- | --------------------- |
-| `illustrations/site-ball.png`        | `/site/ball.png`        | hero                  |
-| `illustrations/hat.png`              | `/site/hat.png`         | houses                |
-| `illustrations/glass.png`            | `/site/glass.png`       | newsletter            |
-| `illustrations/tent.png`             | `/site/tent.png`        | features, host header |
-| `illustrations/teleport.png`         | `/site/teleport.png`    | features              |
-| `illustrations/community.png`        | `/site/community.png`   | features              |
-| `illustrations/champion.png`         | `/site/champion.png`    | features              |
-| `illustrations/world.png`            | `/site/world.png`       | features              |
-| `illustrations/light-bulb.png`       | `/site/light-bulb.png`  | features              |
-| `illustrations/ball.png`             | `/ball.png`             | about content         |
-| `illustrations/robot.png`            | `/robot.png`            | chatbot button        |
-| `illustrations/ai-fluency-hero.webp` | `/ai-fluency-hero.webp` | AI fluency section    |
-
-### Stream
-
-| CDN Key                               | Old Path                               | Used By         |
-| ------------------------------------- | -------------------------------------- | --------------- |
-| `illustrations/teach.jpg`             | `/stream/teach.jpg`                    | reasons section |
-| `illustrations/inspire.jpg`           | `/stream/inspire.jpg`                  | reasons section |
-| `illustrations/reward.jpg`            | `/stream/reward.jpg`                   | reasons section |
-| `illustrations/generative-ai.png`     | `/stream/skills/generative-ai.png`     | skills section  |
-| `illustrations/it-certifications.png` | `/stream/skills/it-certifications.png` | skills section  |
-| `illustrations/data-science.png`      | `/stream/skills/data-science.png`      | skills section  |
-
-### Onboarding
-
-| CDN Key                               | Old Path                              | Used By          |
-| ------------------------------------- | ------------------------------------- | ---------------- |
-| `illustrations/private.png`           | `/onboarding/private.png`             | description form |
-| `illustrations/onboarding-public.png` | `/onboarding/public.png`              | description form |
-| `illustrations/international.png`     | `/onboarding/international.png`       | description form |
-| `illustrations/techincal.png`         | `/onboarding/techincal.png`           | description form |
-| `illustrations/espical.png`           | `/onboarding/espical.png`             | description form |
-| `illustrations/onboarding-step2.svg`  | `/illustrations/onboarding-step2.svg` | steps overview   |
-
-### GitHub Achievements
-
-| CDN Key                                        | Old Path                                 | Used By         |
-| ---------------------------------------------- | ---------------------------------------- | --------------- |
-| `illustrations/starstruck-detail.png`          | `/github/starstruck-detail.png`          | profile sidebar |
-| `illustrations/galaxy-brain-detail.png`        | `/github/galaxy-brain-detail.png`        | profile sidebar |
-| `illustrations/pull-shark-detail.png`          | `/github/pull-shark-detail.png`          | profile sidebar |
-| `illustrations/yolo-detail.png`                | `/github/yolo-detail.png`                | profile sidebar |
-| `illustrations/pair-extraordinaire-detail.png` | `/github/pair-extraordinaire-detail.png` | profile sidebar |
-| `illustrations/quickdraw-detail.png`           | `/github/quickdraw-detail.png`           | profile sidebar |
-| `illustrations/public-sponsor-detail.png`      | `/github/public-sponsor-detail.png`      | profile sidebar |
-
----
-
-## animations/ (3 files)
-
-Lottie JSON files fetched at runtime.
-
-| CDN Key                          | Old Path                           | Used By                         |
-| -------------------------------- | ---------------------------------- | ------------------------------- |
-| `animations/confetti.json`       | `/animations/confetti.json`        | success modal, completion modal |
-| `animations/anthropic-hero.json` | `/animations/anthropic-hero.json`  | hero illustration               |
-| `animations/education.json`      | `/stream/education-animation.json` | education animation             |
-
----
-
-## photos/ (22 files)
-
-Real photographs.
-
-### Contributors
-
-| CDN Key                      | Old Path                  | Used By                 |
-| ---------------------------- | ------------------------- | ----------------------- |
-| `photos/contributors-h.jpeg` | `/contributors/h.jpeg`    | profile parent, sidebar |
-| `photos/contributors-d.jpeg` | `/contributors/d.jpeg`    | profile parent, sidebar |
-| `photos/contributor-1.jpg`   | `/contributors/1.jpg`     | testimonial             |
-| `photos/contributor-2.jpg`   | `/contributors/2.jpg`     | testimonial             |
-| `photos/contributor-3.jpg`   | `/contributors/3.jpg`     | testimonial             |
-| `photos/mazin.jpg`           | `/contributors/mazin.jpg` | testimonial             |
-| `photos/contributor-5.jpg`   | `/contributors/5.jpg`     | testimonial             |
-| `photos/contributor-6.jpg`   | `/contributors/6.jpg`     | testimonial             |
-
-### Site Photos
-
-| CDN Key                   | Old Path                 | Used By                   |
-| ------------------------- | ------------------------ | ------------------------- |
-| `photos/harry-potter.png` | `/site/harry-potter.png` | hero, collaborate section |
-| `photos/site-h.jpeg`      | `/site/h.jpeg`           | about content             |
-| `photos/trian.jpeg`       | `/site/trian.jpeg`       | about content             |
-| `photos/site-a.jpeg`      | `/site/a.jpeg`           | about content             |
-| `photos/site-b.jpeg`      | `/site/b.jpeg`           | about content             |
-| `photos/map.jpeg`         | `/site/map.jpeg`         | footer                    |
-| `photos/dumbledore.jpeg`  | `/site/dumbledore.jpeg`  | faculty                   |
-| `photos/snape.jpeg`       | `/site/snape.jpeg`       | faculty                   |
-| `photos/mcgonagall.jpeg`  | `/site/mcgonagall.jpeg`  | faculty                   |
-| `photos/hagrid.jpeg`      | `/site/hagrid.jpeg`      | faculty                   |
-| `photos/gryffindor.jpeg`  | `/site/gryffindor.jpeg`  | houses                    |
-| `photos/ravenclaw.jpeg`   | `/site/ravenclaw.jpeg`   | houses                    |
-| `photos/hupplepuff.jpeg`  | `/site/hupplepuff.jpeg`  | houses                    |
-| `photos/slytherin.jpg`    | `/site/slytherin.jpg`    | houses                    |
-
----
-
-## media/ (1 file)
-
-| CDN Key           | Old Path     | Used By                    |
-| ----------------- | ------------ | -------------------------- |
-| `media/story.mp4` | `/story.mp4` | story section, story video |
-
----
-
-## Existing CDN Systems (DO NOT TOUCH)
-
-These pre-existing systems are separate and must not be modified:
-
-| System            | S3 Prefix                                     | Helper                 |
+| System            | S3 prefix                                     | Helper                 |
 | ----------------- | --------------------------------------------- | ---------------------- |
 | Catalog images    | `catalog/subjects/{id}/thumbnail-{size}.webp` | `getCatalogImageUrl()` |
 | Video uploads     | `stream/{schoolId}/video/{timestamp}_{name}`  | `getCloudFrontUrl()`   |
 | Subject fallbacks | `public/subjects/` (local)                    | `image-map.ts`         |
 
----
+## What stays in `public/`
 
-## What Stays in public/
+| Item                        | Reason                               |
+| --------------------------- | ------------------------------------ |
+| `service-worker.js`         | Browser same-origin requirement      |
+| `leaflet/` (3 files)        | Leaflet CSS hardcodes relative paths |
+| `logo.png`                  | PWA manifest fallback                |
+| `exams-main/` (666 PDFs)    | Arabic exam papers, local access     |
+| `clickview/` (1,023 images) | Deferred                             |
+| `courses/` (57 PNGs)        | Deferred with clickview              |
+| `books/` (20 images)        | Deferred with clickview              |
+| `subjects/` (17 PNGs)       | Catalog pipeline fallback            |
 
-| Item                       | Reason                               |
-| -------------------------- | ------------------------------------ |
-| `service-worker.js`        | Browser same-origin requirement      |
-| `leaflet/` (3 files)       | Leaflet CSS hardcodes relative paths |
-| `logo.png`                 | PWA manifest fallback                |
-| `exams-main/` (666 PDFs)   | Arabic exam papers, local access     |
-| `clickview/` (1023 images) | Deferred to future phase             |
-| `courses/` (57 PNGs)       | Deferred with clickview              |
-| `books/` (20 images)       | Deferred with clickview              |
-| `subjects/` (17 PNGs)      | Catalog pipeline fallback            |
+## Adding new assets
 
----
+1. Upload to the correct directory (`icons/`, `illustrations/`, `photos/`, `animations/`, `media/`).
+2. kebab-case, lowercase filenames.
+3. Set `Content-Type` and `CacheControl: "public, max-age=31536000, immutable"`.
+4. Reference with `asset("/category/filename.ext")`.
 
-## Adding New Assets
-
-1. Upload to the correct S3 directory (`icons/`, `illustrations/`, `photos/`, `animations/`, `media/`)
-2. Use kebab-case, lowercase filenames
-3. Set `Content-Type` and `CacheControl: "public, max-age=31536000, immutable"`
-4. Reference with `asset("/category/filename.ext")`
-
-Or use the migration script:
+Or use the migration script.
 
 ```bash
-pnpm tsx scripts/migrate-assets-to-s3.ts          # dry run
-pnpm tsx scripts/migrate-assets-to-s3.ts --upload  # upload
+pnpm tsx scripts/migrate-assets-to-s3.ts            # dry run
+pnpm tsx scripts/migrate-assets-to-s3.ts --upload   # upload
 pnpm tsx scripts/migrate-assets-to-s3.ts --manifest # output JSON manifest
 ```
 
 ## Future
 
-- **Content migration**: Move clickview, courses, books to `content/` prefix in S3
-- **Multi-tenant branding**: School custom assets at `schools/{schoolId}/brand/`
+- Move `clickview/`, `courses/`, `books/` to a `content/` prefix in S3.
+- Multi-tenant branding at `schools/{schoolId}/brand/`.
+
+## See also
+
+- [File](/docs/file)
+- [Multi-Tenancy](/docs/multi-tenancy)

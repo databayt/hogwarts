@@ -1,213 +1,80 @@
 ---
-title: "Icons"
-description: "Unified icon system with 180+ icons, 12 categories, and full automation"
+title: Icons
+description: Unified icon namespace with 180+ theme-aware icons across 14 categories, plus migration tools off lucide-react.
 ---
 
 import { AnthropicShowcase, Icons } from "@/components/icons"
 
-A unified, theme-aware icon system built on the shadcn pattern. All icons use `currentColor` and inherit from parent text color.
+A single namespace exposes all icons via `Icons.name`. Icons use `currentColor` and inherit from parent text color. The Anthropic design system ships ~100 illustrative icons; the rest are stroke-based shadcn-style components.
 
-## Migration Progress
+## Status
 
-**Last Updated:** January 2026
+| Metric      | Value                                                                 |
+| ----------- | --------------------------------------------------------------------- |
+| Total icons | 180+                                                                  |
+| Categories  | 14                                                                    |
+| Theme-aware | Light/dark via `currentColor`                                         |
+| Type-safe   | `IconName` union                                                      |
+| Registry    | Full metadata for all icons                                           |
+| Migration   | In progress off `lucide-react` — run `/icon-audit` for the live count |
 
-| Metric                | Current   | Target | Status          |
-| --------------------- | --------- | ------ | --------------- |
-| Total Icons           | 180+      | -      | ✅              |
-| Direct lucide imports | 703       | 0      | 🔄 15% complete |
-| Unified imports       | 125 files | 100%   | 🔄 In progress  |
-| Error boundaries      | 45/45     | 100%   | ✅ Complete     |
-| Form components       | 47/48     | 100%   | ✅ Complete     |
-
-### Recent Additions (Phase 1)
-
-62 new icons added for form and UI components:
-
-- **Loaders**: `loader2`, `loaderCircle`
-- **Status**: `check`, `checkCircle`, `circleCheck`, `circleX`, `circleAlert`, `checkCircle2`
-- **Navigation**: `chevronLeft`, `chevronRight`, `arrowUp`
-- **Files**: `file`, `fileText`, `fileSpreadsheet`, `fileAudio`, `image`, `video`
-- **Actions**: `upload`, `download`, `save`, `send`, `edit`, `pencil`, `copy`, `trash2`
-- **Communication**: `bell`, `bellOff`, `mail`, `phone`, `smartphone`, `messageSquare`
-- **Education**: `graduationCap`, `award`, `medal`, `trophy`, `school`, `landmark`, `library`, `bookOpen`
-- **UI Elements**: `plus`, `minus`, `x`, `close`, `search`, `filter`, `settings`, `eye`, `eyeOff`, `moon`, `sun`
-- **Misc**: `user`, `clock`, `calendar`, `mapPin`, `palette`, `lightbulb`, `info`, `heart`, `wrench`, `sparkles`, `atSign`, `paperclip`, `triangleAlert`, `clipboardList`
-
-## Quick Start
+## Quick start
 
 ```tsx
 import { Icons } from "@/components/icons"
 
-export function Example() {
-  return (
-    <div className="flex items-center gap-2">
-      <Icons.github className="size-5" />
-      <Icons.check className="size-5 text-green-500" />
-      <Icons.alertCircle className="text-destructive size-5" />
-    </div>
-  )
-}
+<Icons.github className="size-5" />
+<Icons.check className="size-5 text-green-500" />
+<Icons.alertCircle className="size-5 text-destructive" />
+<Icons.spinner className="size-5 animate-spin" />
 ```
 
-## System Overview
+## Import patterns
 
-| Metric               | Value                            |
-| -------------------- | -------------------------------- |
-| **Total Icons**      | 180+                             |
-| **Categories**       | 12                               |
-| **Registry Entries** | Full metadata for all icons      |
-| **Theme Support**    | Light/dark via `currentColor`    |
-| **Import Pattern**   | Unified namespace (`Icons.name`) |
+| Pattern                                                                   | When                        |
+| ------------------------------------------------------------------------- | --------------------------- |
+| `import { Icons } from "@/components/icons"` then `Icons.github`          | Default — most readable     |
+| `import { GitHubIcon } from "@/components/icons"`                         | Tree-shaking sensitive code |
+| `import { Icon } from "@/components/icons"` then `<Icon name="github" />` | Dynamic name from data      |
 
-## Features
+## Sizing and color
 
-| Feature           | Description                                                       |
-| ----------------- | ----------------------------------------------------------------- |
-| **Theme-aware**   | Icons use `currentColor` - automatically adapt to light/dark mode |
-| **180+ icons**    | System, UI, brand, development, and illustrative icons            |
-| **12 categories** | Organized by domain and usage                                     |
-| **Full registry** | Searchable metadata with tags and descriptions                    |
-| **Tree-shakable** | Import individual icons for smaller bundles                       |
-| **Type-safe**     | Full TypeScript support with `IconName` type                      |
-| **Automation**    | CLI commands for migration, audit, and management                 |
+Use `size-*` not `w-* h-*`. Icons inherit text color by default; override via Tailwind text utilities or semantic icon classes.
 
----
+```tsx
+<Icons.github className="size-4" />     // 16px
+<Icons.github className="size-5" />     // 20px
 
-## Anthropic Design System
+<div className="text-primary"><Icons.github /></div>
+<Icons.alertCircle className="text-destructive" />
+<Icons.check className="icon-success" />
+<Icons.trash className="icon-destructive" />
+```
 
-Browse all 100+ icons and illustrations from Anthropic's design system. Click any icon for tags, path, and usage details.
+## Categories
+
+| Category        | Use for                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYSTEM`        | Core UI — alert, check, x, plus, minus, search, settings, edit, copy, trash, upload, download, eye, lock, user                                                |
+| `INTEGRATIONS`  | Brand logos — `nextjs`, `react`, `typescript`, `tailwindcss`, `shadcnui`, `prisma`, `zod`, `github`, `git`, `figma`, `discord`, `framer`, `claude`, `patreon` |
+| `CONTENT`       | Documents — `docs`, `report`, `pdf`, `logbook`, `proposal`, `fileText`                                                                                        |
+| `APPLICATIONS`  | App-specific                                                                                                                                                  |
+| `PRODUCTIVITY`  | Workflow                                                                                                                                                      |
+| `DEVELOPMENT`   | Dev tools — `mcp`, `cursor`, `extensions`                                                                                                                     |
+| `PROGRAMMING`   | Languages — `python`, `rust`, `r`                                                                                                                             |
+| `ACADEMIC`      | Education                                                                                                                                                     |
+| `FINANCE`       | `invoice`, `salary`, `subscription`                                                                                                                           |
+| `COMMUNICATION` | `mail`, `notification`                                                                                                                                        |
+| `RATINGS`       | `excellent`, `good`, `average`, `poor`                                                                                                                        |
+| `SHAPES`        | Geometric                                                                                                                                                     |
+| `ILLUSTRATIONS` | Anthropic illustrations                                                                                                                                       |
+| `BRANDING`      | Brand identity                                                                                                                                                |
+
+## Anthropic showcase
 
 <AnthropicShowcase />
 
----
-
-## Icon Categories
-
-### System Icons (Core UI)
-
-Navigation, actions, and interface elements.
-
-| Icon          | Name         | Usage                   |
-| ------------- | ------------ | ----------------------- |
-| `alertCircle` | Alert Circle | `<Icons.alertCircle />` |
-| `check`       | Check        | `<Icons.check />`       |
-| `x`           | Close/Cancel | `<Icons.x />`           |
-| `plus`        | Add          | `<Icons.plus />`        |
-| `minus`       | Remove       | `<Icons.minus />`       |
-| `search`      | Search       | `<Icons.search />`      |
-| `settings`    | Settings     | `<Icons.settings />`    |
-| `edit`        | Edit         | `<Icons.edit />`        |
-| `copy`        | Copy         | `<Icons.copy />`        |
-| `trash`       | Delete       | `<Icons.trash />`       |
-| `upload`      | Upload       | `<Icons.upload />`      |
-| `download`    | Download     | `<Icons.download />`    |
-| `eye`         | View         | `<Icons.eye />`         |
-| `eyeOff`      | Hide         | `<Icons.eyeOff />`      |
-| `lock`        | Lock         | `<Icons.lock />`        |
-| `user`        | User         | `<Icons.user />`        |
-| `users`       | Users        | `<Icons.users />`       |
-| `dashboard`   | Dashboard    | `<Icons.dashboard />`   |
-
-### Navigation Icons
-
-| Icon           | Name          | Usage                    |
-| -------------- | ------------- | ------------------------ |
-| `arrowLeft`    | Arrow Left    | `<Icons.arrowLeft />`    |
-| `arrowRight`   | Arrow Right   | `<Icons.arrowRight />`   |
-| `chevronDown`  | Chevron Down  | `<Icons.chevronDown />`  |
-| `chevronUp`    | Chevron Up    | `<Icons.chevronUp />`    |
-| `chevronLeft`  | Chevron Left  | `<Icons.chevronLeft />`  |
-| `chevronRight` | Chevron Right | `<Icons.chevronRight />` |
-
-### Theme Icons
-
-| Icon   | Name       | Usage            |
-| ------ | ---------- | ---------------- |
-| `moon` | Dark Mode  | `<Icons.moon />` |
-| `sun`  | Light Mode | `<Icons.sun />`  |
-
-### Loading & Status
-
-| Icon             | Name              | Usage                                        |
-| ---------------- | ----------------- | -------------------------------------------- |
-| `spinner`        | Loading Spinner   | `<Icons.spinner className="animate-spin" />` |
-| `refresh`        | Refresh/Retry     | `<Icons.refresh />`                          |
-| `moreHorizontal` | More (Horizontal) | `<Icons.moreHorizontal />`                   |
-| `moreVertical`   | More (Vertical)   | `<Icons.moreVertical />`                     |
-
-### Integration Icons
-
-Third-party brands and technologies.
-
-| Icon          | Name         | Usage                   |
-| ------------- | ------------ | ----------------------- |
-| `nextjs`      | Next.js      | `<Icons.nextjs />`      |
-| `react`       | React        | `<Icons.react />`       |
-| `typescript`  | TypeScript   | `<Icons.typescript />`  |
-| `tailwindcss` | Tailwind CSS | `<Icons.tailwindcss />` |
-| `shadcnui`    | shadcn/ui    | `<Icons.shadcnui />`    |
-| `prisma`      | Prisma       | `<Icons.prisma />`      |
-| `zod`         | Zod          | `<Icons.zod />`         |
-| `github`      | GitHub       | `<Icons.github />`      |
-| `git`         | Git          | `<Icons.git />`         |
-| `figma`       | Figma        | `<Icons.figma />`       |
-| `discord`     | Discord      | `<Icons.discord />`     |
-| `framer`      | Framer       | `<Icons.framer />`      |
-| `claude`      | Claude AI    | `<Icons.claude />`      |
-| `patreon`     | Patreon      | `<Icons.patreon />`     |
-
-### Development Icons
-
-| Icon         | Name         | Usage                  |
-| ------------ | ------------ | ---------------------- |
-| `mcp`        | MCP Protocol | `<Icons.mcp />`        |
-| `cursor`     | Cursor IDE   | `<Icons.cursor />`     |
-| `extensions` | Extensions   | `<Icons.extensions />` |
-
-### Programming Language Icons
-
-| Icon     | Name       | Usage              |
-| -------- | ---------- | ------------------ |
-| `python` | Python     | `<Icons.python />` |
-| `rust`   | Rust       | `<Icons.rust />`   |
-| `r`      | R Language | `<Icons.r />`      |
-
-### Content Icons
-
-| Icon       | Name          | Usage                |
-| ---------- | ------------- | -------------------- |
-| `docs`     | Documentation | `<Icons.docs />`     |
-| `report`   | Report        | `<Icons.report />`   |
-| `pdf`      | PDF           | `<Icons.pdf />`      |
-| `logbook`  | Logbook       | `<Icons.logbook />`  |
-| `proposal` | Proposal      | `<Icons.proposal />` |
-| `fileText` | File Text     | `<Icons.fileText />` |
-
-### Finance Icons
-
-| Icon           | Name         | Usage                    |
-| -------------- | ------------ | ------------------------ |
-| `invoice`      | Invoice      | `<Icons.invoice />`      |
-| `salary`       | Salary       | `<Icons.salary />`       |
-| `subscription` | Subscription | `<Icons.subscription />` |
-
-### Communication Icons
-
-| Icon           | Name         | Usage                    |
-| -------------- | ------------ | ------------------------ |
-| `mail`         | Email        | `<Icons.mail />`         |
-| `notification` | Notification | `<Icons.notification />` |
-
-### Rating Icons
-
-| Icon        | Name      | Usage                 |
-| ----------- | --------- | --------------------- |
-| `excellent` | Excellent | `<Icons.excellent />` |
-| `good`      | Good      | `<Icons.good />`      |
-| `average`   | Average   | `<Icons.average />`   |
-| `poor`      | Poor      | `<Icons.poor />`      |
-
-### Anthropic UI Icons
+## Anthropic UI icons
 
 <div className="my-6 grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8">
   <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
@@ -244,335 +111,68 @@ Third-party brands and technologies.
   </div>
 </div>
 
----
-
-## Import Patterns
-
-### Namespace Import (Recommended)
+## Anthropic illustrations
 
 ```tsx
-import { Icons } from "@/components/icons"
+import Image from "next/image"
 
-<Icons.github className="size-5" />
-<Icons.check className="size-5 text-green-500" />
-<Icons.spinner className="size-5 animate-spin" />
+import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
+
+;<Image
+  src={ANTHROPIC_ILLUSTRATIONS.handsBuild}
+  alt=""
+  width={200}
+  height={200}
+/>
 ```
 
-### Individual Import (Tree-shaking)
+Available: `handsBuild`, `handsStack`, `objectsPuzzle`, `category01` through `category14`.
+
+## Migration off lucide-react
 
 ```tsx
-import { GitHubIcon, CheckIcon } from "@/components/icons"
-
-<GitHubIcon className="size-5" />
-<CheckIcon className="size-5" />
-```
-
-### Dynamic Import (Registry)
-
-```tsx
-import { Icon } from "@/components/icons"
-
-;<Icon name="github" className="size-5" />
-```
-
----
-
-## Styling
-
-### Size Classes
-
-Use Tailwind's `size-*` utilities for consistent sizing:
-
-```tsx
-<Icons.github className="size-4" />  {/* 16px */}
-<Icons.github className="size-5" />  {/* 20px */}
-<Icons.github className="size-6" />  {/* 24px */}
-<Icons.github className="size-8" />  {/* 32px */}
-```
-
-### Color Inheritance
-
-Icons inherit color from parent by default:
-
-```tsx
-<div className="text-primary">
-  <Icons.github /> {/* Inherits text-primary */}
-</div>
-```
-
-### Direct Color Override
-
-```tsx
-<Icons.github className="text-muted-foreground" />
-<Icons.alertCircle className="text-destructive" />
-<Icons.check className="text-green-500" />
-```
-
-### Semantic Color Classes
-
-```tsx
-<Icons.check className="icon-success" />      {/* Green */}
-<Icons.trash className="icon-destructive" />  {/* Red */}
-<Icons.info className="icon-muted" />         {/* Muted */}
-<Icons.star className="icon-warning" />       {/* Yellow */}
-```
-
----
-
-## Automation Commands
-
-### `/icon-add <name>`
-
-Add a new icon to the system.
-
-```bash
-/icon-add activity
-```
-
-### `/icon-migrate <scope>`
-
-Migrate lucide-react imports to the unified system.
-
-```bash
-# Migrate a single file
-/icon-migrate src/components/example.tsx
-
-# Migrate in batches (10 files at a time)
-/icon-migrate batch
-
-# Migrate all files (with confirmation)
-/icon-migrate all
-
-# Show migration status
-/icon-migrate report
-```
-
-### `/icon-audit`
-
-Audit icon usage across the codebase.
-
-```bash
-/icon-audit
-```
-
-**Output includes:**
-
-- Unified system adoption percentage
-- Direct lucide-react import count
-- Registry completion status
-- Files needing migration
-
-### `/icon-registry <mode>`
-
-Manage the icon registry.
-
-```bash
-# Sync registry with Icons namespace
-/icon-registry sync
-
-# Add single icon to registry
-/icon-registry add alertCircle
-
-# Validate registry completeness
-/icon-registry validate
-
-# Export registry as JSON
-/icon-registry export
-```
-
-### `/icon-validate`
-
-Validate icons against design system rules.
-
-```bash
-/icon-validate
-```
-
-### `/icon-fetch <source>`
-
-Fetch icons from external sources.
-
-```bash
-# Fetch from Anthropic design system
-/icon-fetch anthropic
-
-# Fetch education-style icons
-/icon-fetch education
-
-# Fetch school operations icons
-/icon-fetch school
-
-# Fetch from all sources
-/icon-fetch all
-```
-
----
-
-## Migration Guide
-
-### From lucide-react to Unified System
-
-The unified system provides consistent theming and better maintainability.
-
-**Before (Direct Import):**
-
-```tsx
-import { AlertCircle, RefreshCw, Moon, Sun } from "lucide-react"
-
+// Before
+import { AlertCircle, RefreshCw, MoonIcon, SunIcon } from "lucide-react"
 <AlertCircle className="h-4 w-4" />
 <RefreshCw className="h-5 w-5 animate-spin" />
-```
 
-**After (Unified System):**
-
-```tsx
+// After
 import { Icons } from "@/components/icons"
-
 <Icons.alertCircle className="size-4" />
 <Icons.refresh className="size-5 animate-spin" />
 ```
 
-### Icon Name Mapping
+| lucide-react                        | Unified                                                     |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `AlertCircle`                       | `Icons.alertCircle`                                         |
+| `RefreshCw`                         | `Icons.refresh`                                             |
+| `MoonIcon` / `SunIcon`              | `Icons.moon` / `Icons.sun`                                  |
+| `ArrowLeft/Right`                   | `Icons.arrowLeft/Right`                                     |
+| `ChevronUp/Down/Left/Right`         | `Icons.chevronUp/Down/Left/Right`                           |
+| `Check` / `X` / `Plus` / `Minus`    | `Icons.check` / `Icons.x` / `Icons.plus` / `Icons.minus`    |
+| `Loader2`                           | `Icons.spinner`                                             |
+| `MoreHorizontal` / `MoreVertical`   | `Icons.moreHorizontal` / `Icons.moreVertical`               |
+| `Settings`, `User`, `Users`, `Mail` | `Icons.settings`, `Icons.user`, `Icons.users`, `Icons.mail` |
+| `Eye` / `EyeOff` / `Lock`           | `Icons.eye` / `Icons.eyeOff` / `Icons.lock`                 |
+| `Edit` / `Copy` / `Trash`           | `Icons.edit` / `Icons.copy` / `Icons.trash`                 |
+| `Upload` / `Download` / `Search`    | `Icons.upload` / `Icons.download` / `Icons.search`          |
+| `Calendar` / `FileText`             | `Icons.calendar` / `Icons.fileText`                         |
 
-| lucide-react     | Unified System         |
-| ---------------- | ---------------------- |
-| `AlertCircle`    | `Icons.alertCircle`    |
-| `RefreshCw`      | `Icons.refresh`        |
-| `MoonIcon`       | `Icons.moon`           |
-| `SunIcon`        | `Icons.sun`            |
-| `ArrowLeft`      | `Icons.arrowLeft`      |
-| `ArrowRight`     | `Icons.arrowRight`     |
-| `ChevronDown`    | `Icons.chevronDown`    |
-| `ChevronUp`      | `Icons.chevronUp`      |
-| `ChevronLeft`    | `Icons.chevronLeft`    |
-| `ChevronRight`   | `Icons.chevronRight`   |
-| `Check`          | `Icons.check`          |
-| `X`              | `Icons.x`              |
-| `Plus`           | `Icons.plus`           |
-| `Minus`          | `Icons.minus`          |
-| `Loader2`        | `Icons.spinner`        |
-| `MoreHorizontal` | `Icons.moreHorizontal` |
-| `MoreVertical`   | `Icons.moreVertical`   |
-| `Settings`       | `Icons.settings`       |
-| `User`           | `Icons.user`           |
-| `Users`          | `Icons.users`          |
-| `Mail`           | `Icons.mail`           |
-| `Eye`            | `Icons.eye`            |
-| `EyeOff`         | `Icons.eyeOff`         |
-| `Lock`           | `Icons.lock`           |
-| `Edit`           | `Icons.edit`           |
-| `Copy`           | `Icons.copy`           |
-| `Trash`          | `Icons.trash`          |
-| `Upload`         | `Icons.upload`         |
-| `Download`       | `Icons.download`       |
-| `Search`         | `Icons.search`         |
-| `Calendar`       | `Icons.calendar`       |
-| `FileText`       | `Icons.fileText`       |
+## Automation commands
 
----
+| Command                                           | Purpose                                      |
+| ------------------------------------------------- | -------------------------------------------- |
+| `/icon-add <name>`                                | Add a new icon                               |
+| `/icon-migrate <file\|batch\|all\|report>`        | Migrate lucide imports                       |
+| `/icon-audit`                                     | Adoption percentage, files needing migration |
+| `/icon-registry <sync\|add\|validate\|export>`    | Manage registry                              |
+| `/icon-validate`                                  | Validate against design system rules         |
+| `/icon-fetch <anthropic\|education\|school\|all>` | Fetch from external sources                  |
 
-## Registry System
-
-The icon registry provides metadata for all icons, enabling search, filtering, and documentation generation.
-
-### Registry Entry Structure
-
-```typescript
-interface IconMetadata {
-  id: string // kebab-case identifier
-  name: string // Display name
-  component: IconComponent // React component
-  category: IconCategory // Primary category
-  tags: string[] // Search keywords
-  description?: string // Usage description
-  viewBox: string // SVG viewBox
-  customizable: boolean // Can use className for colors
-}
-```
-
-### Search Icons
+## Adding a new icon
 
 ```tsx
-import { searchIcons } from "@/components/icons/utils"
-
-const results = searchIcons("arrow")
-// Returns icons matching "arrow" in id, name, tags, or description
-```
-
-### Get Icons by Category
-
-```tsx
-import { getIconsByCategory, IconCategory } from "@/components/icons"
-
-const systemIcons = getIconsByCategory(IconCategory.SYSTEM)
-const integrationIcons = getIconsByCategory(IconCategory.INTEGRATIONS)
-```
-
-### Available Categories
-
-| Category        | Description         |
-| --------------- | ------------------- |
-| `SYSTEM`        | Core UI icons       |
-| `INTEGRATIONS`  | Third-party logos   |
-| `CONTENT`       | Document/file icons |
-| `APPLICATIONS`  | App-specific icons  |
-| `PRODUCTIVITY`  | Workflow icons      |
-| `DEVELOPMENT`   | Developer tools     |
-| `PROGRAMMING`   | Language logos      |
-| `ACADEMIC`      | Education icons     |
-| `FINANCE`       | Financial icons     |
-| `COMMUNICATION` | Messaging icons     |
-| `RATINGS`       | Quality indicators  |
-| `SHAPES`        | Geometric shapes    |
-| `ILLUSTRATIONS` | Complex graphics    |
-| `BRANDING`      | Brand identity      |
-
----
-
-## Directory Structure
-
-```
-src/components/icons/
-├── index.tsx              # Main exports & Icons namespace
-├── types.ts               # TypeScript types & IconCategory enum
-├── constants.ts           # Category metadata & style guide
-├── utils.ts               # Helper functions (search, filter)
-├── registry.ts            # Icon registry with metadata (120+ entries)
-├── anthropic.tsx          # Anthropic design system icons
-├── anthropic-showcase.tsx # Interactive showcase component
-├── components/
-│   └── icon-wrapper.tsx   # IconWrapper for file-based icons
-└── categories/
-    ├── system.tsx         # System/UI icons (40+)
-    ├── integrations.tsx   # Brand/integration icons (15+)
-    ├── content.tsx        # Content type icons
-    ├── apps.tsx           # Application icons
-    ├── productivity.tsx   # Productivity icons
-    ├── development.tsx    # Development tool icons
-    ├── programming.tsx    # Programming language icons
-    ├── ratings.tsx        # Rating icons
-    └── shapes.tsx         # Shape icons
-```
-
----
-
-## Adding New Icons
-
-### 1. Choose the Right Category
-
-| Category           | Use For                                |
-| ------------------ | -------------------------------------- |
-| `system.tsx`       | Core UI (buttons, navigation, actions) |
-| `integrations.tsx` | Third-party brands (GitHub, Stripe)    |
-| `content.tsx`      | Documents and files                    |
-| `programming.tsx`  | Language logos                         |
-| `development.tsx`  | Dev tools (Cursor, MCP)                |
-
-### 2. Add the Icon Component
-
-```tsx
-// categories/system.tsx
-
+// 1. categories/system.tsx
 export const NewIcon = (props: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -584,156 +184,95 @@ export const NewIcon = (props: IconProps) => (
     strokeLinejoin="round"
     {...props}
   >
-    <path d="..." />
+    <path d="…" />
   </svg>
 )
-```
 
-### 3. Register in Icons Namespace
-
-```tsx
-// index.tsx
-
+// 2. index.tsx
 export const Icons = {
-  // ... existing icons
+  // …
   newIcon: SystemIcons.NewIcon,
 } as const
-```
 
-### 4. Add to Registry
-
-```tsx
-// registry.ts
-
+// 3. registry.ts
 {
   id: "new-icon",
   name: "New Icon",
   component: SystemIcons.NewIcon,
   category: IconCategory.SYSTEM,
-  tags: ["new", "icon", "example"],
-  description: "Description of the icon",
+  tags: ["new", "icon"],
   viewBox: "0 0 24 24",
   customizable: true,
 }
 ```
 
-### Icon Guidelines
+Guidelines: use `currentColor`, spread `{...props}` last, include `xmlns`, prefer `viewBox="0 0 24 24"`, stroke-based for lucide consistency.
 
-1. **Always use `currentColor`** for fill/stroke
-2. **Spread `{...props}`** last to allow overrides
-3. **Include `xmlns`** for standalone export
-4. **Prefer `viewBox="0 0 24 24"`** for UI icons
-5. **Use stroke-based** design for consistency with lucide
+## Registry
 
----
-
-## Anthropic Illustrations
-
-Large illustrative icons are available as image paths:
-
-```tsx
-import Image from "next/image"
-
-import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
-
-;<Image
-  src={ANTHROPIC_ILLUSTRATIONS.handsBuild}
-  alt="Hands building"
-  width={200}
-  height={200}
-/>
-```
-
-Available illustrations:
-
-- `handsBuild`, `handsStack`, `objectsPuzzle`
-- `category01` through `category14`
-
----
-
-## Helper Functions
-
-### Get Icon for Language
-
-```tsx
-import { getIconForLanguage } from "@/components/icons"
-
-const Icon = getIconForLanguage("ts")   // TypeScriptIcon
-const Icon = getIconForLanguage("py")   // PythonIcon
-const Icon = getIconForLanguage("rs")   // RustIcon
-
-<Icon className="size-4" />
-```
-
-### Get All Icon Names
-
-```tsx
-import { getAllIconNames, getIconCount } from "@/components/icons"
-
-const names = getAllIconNames() // ["logo", "github", "check", ...]
-const count = getIconCount() // 120+
-```
-
-### Type-Safe Icon Name
-
-```tsx
-import type { IconName } from "@/components/icons"
-
-function IconButton({ icon }: { icon: IconName }) {
-  const IconComponent = Icons[icon]
-  return <IconComponent className="size-4" />
+```ts
+interface IconMetadata {
+  id: string
+  name: string
+  component: IconComponent
+  category: IconCategory
+  tags: string[]
+  description?: string
+  viewBox: string
+  customizable: boolean
 }
 ```
 
----
-
-## Best Practices
-
-1. **Use the unified system** - Avoid direct lucide-react imports
-2. **Use namespace import** - `Icons.name` for consistency
-3. **Use `size-*` classes** - Not `w-4 h-4`
-4. **Let icons inherit color** - From parent when possible
-5. **Use semantic colors** - `.icon-destructive` for delete actions
-6. **Run `/icon-audit`** - To check migration progress
-7. **Add to registry** - When creating new icons
-
----
-
-## Troubleshooting
-
-### Icon Not Found
-
-Check if the icon exists in the `Icons` namespace:
-
 ```tsx
-import { Icons } from "@/components/icons"
+import {
+  getIconsByCategory,
+  IconCategory,
+  searchIcons,
+} from "@/components/icons"
 
-console.log(Object.keys(Icons)) // List all available icons
+const arrows = searchIcons("arrow")
+const systemIcons = getIconsByCategory(IconCategory.SYSTEM)
 ```
 
-### TypeScript Error on Icon Name
-
-Use the `IconName` type for type-safe icon names:
+## Helpers
 
 ```tsx
+import {
+  getAllIconNames,
+  getIconCount,
+  getIconForLanguage,
+} from "@/components/icons"
 import type { IconName } from "@/components/icons"
 
-const iconName: IconName = "github" // Type-checked
+const TS = getIconForLanguage("ts") // TypeScriptIcon
+const names = getAllIconNames()
+const count = getIconCount() // 180+
+
+function IconButton({ icon }: { icon: IconName }) {
+  const I = Icons[icon]
+  return <I className="size-4" />
+}
 ```
 
-### Icon Color Not Changing
+## Directory layout
 
-Ensure the icon uses `currentColor`:
-
-```tsx
-// Check the SVG has fill="currentColor" or stroke="currentColor"
-<path fill="currentColor" d="..." />
+```
+src/components/icons/
+├── index.tsx              # Icons namespace, exports
+├── types.ts               # IconCategory enum, types
+├── constants.ts           # Category metadata, style guide
+├── utils.ts               # search, filter
+├── registry.ts            # 180+ entries
+├── anthropic.tsx          # Anthropic icons
+├── anthropic-showcase.tsx
+├── components/icon-wrapper.tsx
+└── categories/
+    ├── system.tsx, integrations.tsx, content.tsx,
+    ├── apps.tsx, productivity.tsx, development.tsx,
+    ├── programming.tsx, ratings.tsx, shapes.tsx
 ```
 
-### Missing Icon in Registry
+## See also
 
-Run the registry sync command:
-
-```bash
-/icon-registry sync
-```
+- [Pattern](/docs/pattern)
+- [File](/docs/file)

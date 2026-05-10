@@ -1,63 +1,51 @@
 ---
-title: "Teachers"
-description: "Complete guide to teacher data entry, wizard flow, validation, import, and profile self-edit across all entry points"
+title: Teachers
+description: Teacher data entry across five entry points — wizard, CSV import, internal onboarding, profile self-edit, admin detail edit.
 ---
 
-## Overview
+Teachers enter the system through five entry points, all unified under a single validation schema and wizard infrastructure. Incomplete records are clearly marked for completion.
 
-Teachers enter the system through **five entry points**, each now unified under a single validation schema and wizard infrastructure. Whether an admin creates a teacher via the wizard, imports from CSV, or a teacher joins through internal onboarding — the data flows through the same pipeline and incomplete records are clearly marked for completion.
-
-```
-                        TEACHER ENTRY POINTS
-  ┌──────────────────────────────────────────────────────────────┐
-  │                                                              │
-  │  1. Admin Wizard         → 7 steps, 35+ fields, draft flow  │
-  │  2. CSV Bulk Import      → ~9 fields, marked incomplete     │
-  │  3. Internal Onboarding  → ~15 fields, marked incomplete    │
-  │  4. Profile Self-Edit    → Contact, qualifications, exp     │
-  │  5. Admin Detail Edit    → Link to wizard at any step       │
-  │                                                              │
-  └──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Wizard Flow
-
-The primary creation path is a **7-step wizard** that creates a draft record on entry and progressively fills it in. Each step saves independently, so the teacher can be resumed at any point.
-
-A **Skip & Create** fast path lets admins complete the wizard early — once the required fields (name + email) are filled, a "Skip & Create" button appears that saves the current step, marks the wizard complete, and redirects to the teacher list.
-
-### Steps
-
-| Step              | Route Segment     | Fields                                                                                        | Required?               |
-| ----------------- | ----------------- | --------------------------------------------------------------------------------------------- | ----------------------- |
-| 1. Photo          | `/photo`          | profilePhotoUrl                                                                               | None                    |
-| 2. Information    | `/information`    | firstName, lastName, gender, birthDate                                                        | firstName, lastName     |
-| 3. Contact        | `/contact`        | emailAddress, phoneNumbers[]                                                                  | emailAddress            |
-| 4. Employment     | `/employment`     | employeeId, joiningDate, employmentStatus, employmentType, contractStartDate, contractEndDate | None (defaults applied) |
-| 5. Qualifications | `/qualifications` | qualifications[] (type, name, institution, major, dates, license)                             | None                    |
-| 6. Experience     | `/experience`     | experiences[] (institution, position, dates, isCurrent)                                       | None                    |
-| 7. Expertise      | `/expertise`      | subjectExpertise[] (subjectId, expertiseLevel)                                                | None                    |
-
-### Route Structure
+## Entry points
 
 ```
-src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/
-  teachers/
-    add/
-      page.tsx              # Creates draft, redirects to step 1
-      [id]/
-        photo/page.tsx
-        information/page.tsx
-        contact/page.tsx
-        employment/page.tsx
-        qualifications/page.tsx
-        experience/page.tsx
-        expertise/page.tsx
+1. Admin Wizard         → 7 steps, 35+ fields, draft flow
+2. CSV Bulk Import      → ~9 fields, marked incomplete
+3. Internal Onboarding  → ~15 fields, marked incomplete
+4. Profile Self-Edit    → Contact, qualifications, experience
+5. Admin Detail Edit    → Link to wizard at any step
 ```
 
-### Draft Lifecycle
+## Wizard steps
+
+7-step wizard with draft flow. "Skip & Create" appears once required fields (name + email) are filled.
+
+| #   | Step           | Route             | Fields                                                                                        | Required            |
+| --- | -------------- | ----------------- | --------------------------------------------------------------------------------------------- | ------------------- |
+| 1   | Photo          | `/photo`          | profilePhotoUrl                                                                               | None                |
+| 2   | Information    | `/information`    | firstName, lastName, gender, birthDate                                                        | firstName, lastName |
+| 3   | Contact        | `/contact`        | emailAddress, phoneNumbers[]                                                                  | emailAddress        |
+| 4   | Employment     | `/employment`     | employeeId, joiningDate, employmentStatus, employmentType, contractStartDate, contractEndDate | None (defaults)     |
+| 5   | Qualifications | `/qualifications` | qualifications[] (type, name, institution, major, dates, license)                             | None                |
+| 6   | Experience     | `/experience`     | experiences[] (institution, position, dates, isCurrent)                                       | None                |
+| 7   | Expertise      | `/expertise`      | subjectExpertise[] (subjectId, expertiseLevel)                                                | None                |
+
+## Routes
+
+```
+src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/teachers/
+  add/
+    page.tsx               # Creates draft, redirects to step 1
+    [id]/
+      photo/page.tsx
+      information/page.tsx
+      contact/page.tsx
+      employment/page.tsx
+      qualifications/page.tsx
+      experience/page.tsx
+      expertise/page.tsx
+```
+
+## Draft lifecycle
 
 ```
 1. Admin clicks "Add Teacher"
@@ -65,49 +53,42 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/
 3. Each step saves fields + advances wizardStep
 4. Two completion paths:
    a. FAST: "Skip & Create" on contact step (or later) → saves + completes + redirects
-   b. FULL: Click through all 7 steps → final step completes wizard
-5. Both paths set wizardStep: null (complete)
-6. Complete teachers appear in the main list (wizardStep: null filter)
-7. Abandoned drafts can be deleted via deleteDraftTeacher()
+   b. FULL: All 7 steps → final completes wizard
+5. Both set wizardStep: null
+6. Abandoned drafts deletable via deleteDraftTeacher()
 ```
 
----
-
-## Component Structure
+## Component structure
 
 ```
 src/components/school-dashboard/listings/teachers/
-├── content.tsx           # Server component — list page
-├── table.tsx             # Client — DataTable with search, pagination
-├── columns.tsx           # Client — column definitions with incomplete badge
-├── actions.ts            # Server actions — createTeacher, updateTeacher, deleteTeacher
-├── queries.ts            # Query builders — buildTeacherWhere (supports includeDrafts)
-├── validation.ts         # Single source of truth — composed from wizard step schemas
-├── config.ts             # Enum constants (GENDER, EMPLOYMENT_STATUS, etc.)
-├── authorization.ts      # RBAC permission checks
+├── content.tsx           # Server — list page
+├── table.tsx             # Client — DataTable
+├── columns.tsx           # Client — incomplete badge
+├── actions.ts            # createTeacher, updateTeacher, deleteTeacher
+├── queries.ts            # buildTeacherWhere (supports includeDrafts)
+├── validation.ts         # Composed from wizard step schemas
+├── config.ts             # Enum constants
+├── authorization.ts      # RBAC
 ├── types.ts              # TeacherDTO, TeacherRow, form step types
-├── detail/
-│   └── content.tsx       # Teacher profile view with edit link to wizard
+├── detail/content.tsx    # Profile view with edit link
 └── wizard/
     ├── actions.ts        # createDraftTeacher, completeTeacherWizard, updateTeacherWizardStep
-    ├── config.ts         # Wizard step config (order, labels, routes)
-    ├── photo/            # Step 1: content.tsx
-    ├── information/      # Step 2: form.tsx, validation.ts, content.tsx
-    ├── contact/          # Step 3: form.tsx, validation.ts, content.tsx
-    ├── employment/       # Step 4: form.tsx, validation.ts, content.tsx
-    ├── qualifications/   # Step 5: form.tsx, validation.ts, content.tsx
-    ├── experience/       # Step 6: form.tsx, validation.ts, content.tsx
-    └── expertise/        # Step 7: form.tsx, validation.ts, content.tsx
+    ├── config.ts         # Step config
+    ├── photo/            # Step 1
+    ├── information/      # Step 2
+    ├── contact/          # Step 3
+    ├── employment/       # Step 4
+    ├── qualifications/   # Step 5
+    ├── experience/       # Step 6
+    └── expertise/        # Step 7
 ```
 
----
+## Validation
 
-## Validation (Single Source of Truth)
-
-The root `validation.ts` composes from wizard step schemas. This ensures the wizard forms, server actions, CSV import, and onboarding all validate against the same rules.
+`validation.ts` composes from wizard step schemas:
 
 ```typescript
-// teachers/validation.ts — composed from wizard step schemas
 import { contactSchema } from "./wizard/contact/validation"
 import { experienceItemSchema } from "./wizard/experience/validation"
 import { expertiseItemSchema } from "./wizard/expertise/validation"
@@ -128,7 +109,6 @@ export const teacherCreateSchema = informationSchema
       .default("FULL_TIME"),
     contractStartDate: z.coerce.date().optional(),
     contractEndDate: z.coerce.date().optional(),
-    // Nested arrays
     qualifications: z.array(qualificationSchema).optional().default([]),
     experiences: z.array(experienceItemSchema).optional().default([]),
     subjectExpertise: z.array(expertiseItemSchema).optional().default([]),
@@ -136,107 +116,58 @@ export const teacherCreateSchema = informationSchema
   .refine(/* contract dates + birth/joining cross-validation */)
 ```
 
-### Re-exported Schemas
+Re-exported schemas for consumers: `phoneNumberSchema` (CSV / onboarding), `qualificationSchema` (CSV / onboarding), `experienceSchema` (onboarding), `subjectExpertiseSchema` (onboarding).
 
-Individual schemas are re-exported for consumers:
+## Entry point details
 
-| Export                   | Source                             | Used By                |
-| ------------------------ | ---------------------------------- | ---------------------- |
-| `phoneNumberSchema`      | `wizard/contact/validation`        | CSV import, onboarding |
-| `qualificationSchema`    | `wizard/qualifications/validation` | CSV import, onboarding |
-| `experienceSchema`       | `wizard/experience/validation`     | Onboarding             |
-| `subjectExpertiseSchema` | `wizard/expertise/validation`      | Onboarding             |
-
----
-
-## Entry Point Details
-
-### 1. Admin Wizard (Primary)
-
-The full 7-step wizard. Creates a draft record, fills fields progressively, and marks complete either via **Skip & Create** (after required fields) or by completing all steps.
-
-**wizardStep lifecycle**: `"photo"` -> `"information"` -> `"contact"` -> ... -> `null` (complete)
-
-**Skip & Create**: Once firstName + lastName (information) and emailAddress (contact) are filled, the "Skip & Create" button appears on the contact step and all subsequent steps. Clicking it saves the current step, calls `completeTeacherWizard()`, and redirects to `/teachers`.
-
-### 2. CSV Bulk Import
+### CSV bulk import
 
 ```typescript
-// csv-import.ts — importTeachers()
 await tx.teacher.createMany({
   data: chunk.map((r) => ({
     schoolId,
     firstName: parts[0],
     lastName: parts.slice(1).join(" "),
     emailAddress: r.validated.email,
-    wizardStep: "employment", // Marked incomplete — CSV covers name + contact only
+    wizardStep: "employment", // CSV covers name + contact only
   })),
 })
 ```
 
-CSV-imported teachers appear in the "Incomplete" tab. Admins click to open the wizard at the `employment` step to fill in remaining details.
+CSV-imported teachers appear in the "Incomplete" tab. Click to open wizard at the `employment` step.
 
-### 3. Internal Onboarding
+### Internal onboarding
 
-When a teacher joins through the school's join page, the onboarding flow creates:
+When a teacher joins through the school's join page, onboarding creates:
 
-- Teacher record with personal + contact fields + `wizardStep: "employment"`
+- Teacher with personal + contact + `wizardStep: "employment"`
 - TeacherPhoneNumber (if phone provided)
 - TeacherQualification (if qualification provided)
 - TeacherSubjectExpertise (for selected subjects)
 
-### 4. Profile Self-Edit
+### Profile self-edit
 
-Teachers can edit their own:
+Teachers can edit contact, qualifications, experience. Cannot edit personal info, employment, subject expertise (admin only).
 
-- **Contact** information (email, phone numbers)
-- **Qualifications** (degrees, certifications, licenses)
-- **Experience** (teaching history)
+### Admin detail edit
 
-They **cannot** edit:
+Detail view's "Edit" links to `/{lang}/teachers/add/{teacherId}/information` — wizard pre-populated.
 
-- Personal information (name, gender, birth date) — admin only
-- Employment details (status, type, contract dates) — admin only
-- Subject expertise assignments — admin only
+## Incomplete records
 
-Self-edit uses the same wizard step forms rendered in a dialog on the profile page.
+| Source               | wizardStep     | Fields covered                              |
+| -------------------- | -------------- | ------------------------------------------- |
+| Wizard (in progress) | Current step   | All steps up to current                     |
+| CSV import           | `"employment"` | Name, email, phone, department              |
+| Internal onboarding  | `"employment"` | Name, email, phone, qualification, subjects |
 
-### 5. Admin Detail Edit
-
-The teacher detail view has an "Edit" button that links to `/{lang}/teachers/add/{teacherId}/information` — opening the wizard pre-populated with existing data.
-
----
-
-## Incomplete Records
-
-### How Records Become Incomplete
-
-| Source               | wizardStep Set To | Fields Covered                              |
-| -------------------- | ----------------- | ------------------------------------------- |
-| Wizard (in progress) | Current step name | All steps up to current                     |
-| CSV Import           | `"employment"`    | Name, email, phone, department              |
-| Internal Onboarding  | `"employment"`    | Name, email, phone, qualification, subjects |
-
-### How Admins Find Them
-
-- Main teacher list filters `wizardStep: null` by default (shows only complete records)
-- Toggle **"Show Incomplete"** or use the status filter to see drafts
-- Incomplete records show an **amber "Incomplete" badge** on the name column
-- The action dropdown shows **"Complete Profile"** instead of "Edit", linking directly to the wizard at the incomplete step
-- Admins can also use **Skip & Create** when completing an incomplete record — once required fields are present, skip remaining optional steps
-
-### Query Parameter
+Main list filters `wizardStep: null` by default. Toggle "Show Incomplete" or use status filter to see drafts. Incomplete records show amber "Incomplete" badge. Action dropdown shows "Complete Profile" linking to wizard at the incomplete step.
 
 ```typescript
-// To include incomplete records in queries:
 buildTeacherWhere(schoolId, { includeDrafts: true })
 ```
 
----
-
-## Config Constants
-
-`config.ts` exports enum options used by wizard step forms:
+## Config constants
 
 | Constant                     | Values                                     |
 | ---------------------------- | ------------------------------------------ |
@@ -247,19 +178,23 @@ buildTeacherWhere(schoolId, { includeDrafts: true })
 | `EXPERTISE_LEVEL_OPTIONS`    | Primary, Secondary, Certified              |
 | `CLASS_TEACHER_ROLE_OPTIONS` | Primary Teacher, Co-Teacher, Assistant     |
 
----
-
-## Key Files
+## Key files
 
 | File                             | Purpose                                                       |
 | -------------------------------- | ------------------------------------------------------------- |
 | `teachers/add/page.tsx`          | Creates draft + redirects to wizard                           |
 | `teachers/wizard/actions.ts`     | createDraftTeacher, completeTeacherWizard, deleteDraftTeacher |
-| `teachers/wizard/config.ts`      | Wizard step config with skipToComplete                        |
-| `teachers/validation.ts`         | Composed schema (single source of truth)                      |
-| `teachers/queries.ts`            | buildTeacherWhere with includeDrafts support                  |
+| `teachers/wizard/config.ts`      | Step config with skipToComplete                               |
+| `teachers/validation.ts`         | Composed schema                                               |
+| `teachers/queries.ts`            | buildTeacherWhere with includeDrafts                          |
 | `teachers/columns.tsx`           | Incomplete badge + "Complete Profile" action                  |
 | `internal-onboarding/actions.ts` | Onboarding teacher creation with subjects + wizardStep        |
-| `file/import/csv-import.ts`      | Bulk import with wizardStep marker                            |
-| `profile/edit-role-data.tsx`     | Self-edit dialog using wizard step forms                      |
+| `file/import/csv-import.ts`      | Bulk import                                                   |
+| `profile/edit-role-data.tsx`     | Self-edit dialog                                              |
 | `profile/edit-role-actions.ts`   | Permission-checked self-edit server actions                   |
+
+## See also
+
+- [Students](/docs/students) — same pattern for students
+- [Profile](/docs/profile) — self-edit
+- [Listings](/docs/listings) — DataTable conventions

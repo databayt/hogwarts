@@ -1,32 +1,32 @@
 ---
 title: Types
-description: Canonical patterns for writing types.ts in feature directories.
+description: Single source of truth for a feature's TypeScript types.
 ---
 
-`types.ts` is the single source of truth for a feature's types. DTOs, row shapes, form-step props, and component contracts live here — never duplicated in `content.tsx`, `columns.tsx`, or `actions.ts`.
+`types.ts` holds DTOs, row shapes, form-step props, and component contracts for a feature. Never duplicated in `content.tsx`, `columns.tsx`, or `actions.ts`.
 
 ## Categories
 
-| Category              | Shape                                                                      | Reference                         |
-| --------------------- | -------------------------------------------------------------------------- | --------------------------------- |
-| DTO + Row + FormProps | Compact listing-feature types derived from Zod schemas. 20–60 lines.       | `listings/teachers/types.ts`      |
-| Prisma extension      | Imports Prisma models and extends with relations using `&`.                | `finance/payroll/types.ts`        |
-| Comprehensive domain  | Full coverage — data, filters, sort, component props, API response shapes. | `saas-dashboard/tenants/types.ts` |
-| Component props       | Pure React contracts. No database, no Prisma.                              | `atom/<name>/types.ts`            |
+| Category              | Shape                                                 | Reference                         |
+| --------------------- | ----------------------------------------------------- | --------------------------------- |
+| DTO + Row + FormProps | Compact listing types from Zod schemas (20–60 lines)  | `listings/teachers/types.ts`      |
+| Prisma extension      | Extends Prisma models with relations using `&`        | `finance/payroll/types.ts`        |
+| Comprehensive domain  | Full coverage — data, filters, sort, props, responses | `saas-dashboard/tenants/types.ts` |
+| Component props       | Pure React contracts (no DB, no Prisma)               | `atom/<name>/types.ts`            |
 
-## Seven rules
+## Rules
 
-1. **Single source of truth.** Every type lives in exactly one file. If two features need it, lift to `src/lib/types.ts` or import from the canonical home.
-2. **PascalCase.** Types, interfaces, enums.
-3. **Derive from Zod with `z.infer`.** Don't hand-write a shape that mirrors a schema; infer it.
-4. **Extend Prisma, don't redefine.** Use `Prisma.StudentGetPayload<{ include: { ... } }>` for relation shapes; don't manually retype 90 fields.
-5. **`Prisma.XxxWhereInput` stays in `queries.ts` / `actions.ts`.** Components shouldn't see Prisma's internal generic types.
-6. **Stay under ~300 lines.** Beyond that, split (`types/student.ts`, `types/forms.ts`).
-7. **Import the canonical `ActionResponse`.** From `@/lib/action-response`. Don't redefine it for the 39th time.
+| #   | Rule                                                                           |
+| --- | ------------------------------------------------------------------------------ |
+| 1   | Single source of truth — share via `src/lib/types.ts` if cross-feature         |
+| 2   | PascalCase for types, interfaces, enums                                        |
+| 3   | Derive from Zod with `z.infer` — never hand-write a schema mirror              |
+| 4   | Extend Prisma with `Prisma.XxxGetPayload<{ include }>`, never retype 90 fields |
+| 5   | `Prisma.XxxWhereInput` stays in `queries.ts` / `actions.ts`                    |
+| 6   | Stay under ~300 lines — split into `types/student.ts` etc.                     |
+| 7   | Import canonical `ActionResponse` from `@/lib/action-response`                 |
 
-## Templates
-
-### DTO + Row + FormProps
+## Canonical example — DTO + Row + FormProps
 
 ```typescript
 import type { Teacher } from "@prisma/client"
@@ -53,7 +53,7 @@ export interface TeacherFormProps {
 }
 ```
 
-### Prisma extension
+## Prisma extension
 
 ```typescript
 import type { Prisma } from "@prisma/client"
@@ -64,81 +64,28 @@ export type PayrollWithRuns = Prisma.PayrollGetPayload<{
     school: { select: { id: true; name: true; currency: true } }
   }
 }>
-
-export type PayrollRunSummary = {
-  id: string
-  total: number
-  status: "DRAFT" | "APPROVED" | "PAID"
-  lineCount: number
-}
-```
-
-### Comprehensive domain
-
-```typescript
-import type { Tenant } from "@prisma/client"
-
-import type { ActionResponse } from "@/lib/action-response"
-
-export type TenantDto = Pick<
-  Tenant,
-  "id" | "name" | "domain" | "createdAt" | "isActive"
->
-
-export type TenantFilters = {
-  status?: "active" | "suspended" | "pending"
-  region?: string
-  q?: string
-}
-
-export type TenantSort = "name" | "createdAt" | "studentCount"
-
-export type TenantListResponse = ActionResponse<{
-  data: TenantDto[]
-  total: number
-  page: number
-}>
-```
-
-### Component props
-
-```typescript
-import type { ReactNode } from "react"
-
-export interface MetricCardProps {
-  title: string
-  value: string | number
-  delta?: number
-  icon?: ReactNode
-  className?: string
-}
 ```
 
 ## Anti-patterns
 
-- **Duplicate `ActionResponse`** — 38+ files redefine it. Import from `@/lib/action-response`.
-- **`ExtendedUser` redefined** — 5 files; the canonical one is `src/components/auth/user.ts`.
-- **`PaginationParams` redefined** — 10+ `queries.ts` files. Lift to `src/lib/types.ts`.
-- **Hand-written Prisma replicas** — `registration/types.ts` had 486 lines manually redefining a `Student` with 90+ fields. Use `Prisma.StudentGetPayload<...>` instead.
-- **Row types diverging from columns** — when `types.ts` says 6 fields and `columns.tsx` reads 18, the row type is lying. Update `types.ts`, not `columns.tsx`.
-- **`any` in types.ts** — 26 occurrences across the repo. Replace with the inferred Zod type or a Prisma payload.
-- **Inline type definitions in `content.tsx` / `columns.tsx` / `actions.ts`** — 268 / 80 / 110 such cases. Move to `types.ts`.
-- **Identical type files in different features** — three files were byte-identical (`exams/qbank`, `exams/generate`, `grades/generate`). Extract to `src/lib/types.ts` and import.
-
-## File layout
-
-```
-src/components/<feature>/
-  validation.ts     # Zod schemas
-  types.ts          # All TypeScript types for the feature
-  queries.ts        # Reads — uses Prisma.XxxWhereInput internally
-  actions.ts        # Mutations — returns ActionResponse<T>
-  content.tsx       # Server. Imports from types.ts.
-  form.tsx          # Client. Imports from types.ts.
-```
+- Duplicate `ActionResponse` (38+ files) — import from `@/lib/action-response`.
+- `ExtendedUser` redefined (5 files) — canonical is `src/components/auth/user.ts`.
+- `PaginationParams` redefined (10+ files) — lift to `src/lib/types.ts`.
+- Hand-written Prisma replicas — `registration/types.ts` had 486 lines retyping a `Student`. Use `Prisma.StudentGetPayload<...>`.
+- Row types diverging from columns — update `types.ts`, not `columns.tsx`.
+- `any` in types.ts (26 occurrences) — replace with inferred Zod or Prisma payload.
+- Inline type defs in `content.tsx` (268), `columns.tsx` (80), `actions.ts` (110) — move to `types.ts`.
+- Identical type files in different features — extract to `src/lib/types.ts`.
 
 ## Naming
 
-- Filename: `types.ts`. Always.
-- Types: PascalCase, suffix-coded — `<Name>Dto`, `<Name>Row`, `<Name>Input`, `<Name>Props`, `<Name>Response`, `<Name>Filters`.
-- One concept per name. Don't reuse `Conflict` for two different shapes in the same file.
+- File: `types.ts`.
+- Suffix-coded: `<Name>Dto`, `<Name>Row`, `<Name>Input`, `<Name>Props`, `<Name>Response`, `<Name>Filters`.
+- One concept per name.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Validation](/docs/validation)
+- [Queries](/docs/queries)
+- [Actions](/docs/actions)

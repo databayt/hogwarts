@@ -1,134 +1,93 @@
 ---
-title: "Flow Diagrams"
-description: "Interactive user journey flows with URL references"
+title: Flow Diagrams
+description: Interactive user-journey diagrams with URL references and test coverage.
 ---
 
-## Index
-
-1. [Platform Link Flow](#1-platform-link-flow) - School header → Dashboard
-2. [Get Started Flow](#2-get-started-flow) - SaaS hero → Onboarding
-3. [Live Demo Flow](#3-live-demo-flow) - Marketing → Demo school
-4. [Login Flow](#4-login-flow) - Authentication with role redirects
-5. [Logout Flow](#5-logout-flow) - Context-aware logout
-6. [DEVELOPER Dashboard Flow](#6-developer-dashboard-flow) - SaaS dashboard access
-7. [Onboarding Wizard Flow](#7-onboarding-wizard-flow) - School creation wizard steps
-
----
+Visual diagrams for the seven core auth and onboarding journeys. Each section embeds an MDX component and links to its E2E tests. Test credentials and URLs at top.
 
 ## Credentials
 
 <TestCredentialsReference />
 
----
-
 ## URLs
 
 <UrlsReference />
 
----
+## 1. Platform link
 
-## 1. Platform Link Flow
-
-User clicks "Platform" from school marketing header.
+User clicks "Platform" from a school marketing header.
 
 <PlatformLinkFlow />
 
-> **Test Coverage**: `school-login-flow.spec.ts`, `saas-dashboard.spec.ts` (EP-013 to EP-025)
+Tests: `school-login-flow.spec.ts`, `saas-dashboard.spec.ts`.
 
----
+## 2. Get Started
 
-## 2. Get Started Flow
+User clicks "Get Started" from the SaaS marketing hero to create a school.
 
-User clicks "Get Started" from SaaS marketing hero to create a new school.
-
-**Critical**: This is the ONLY path to /onboarding.
-
-**Security**: `/onboarding` is a protected route. Unauthenticated users are redirected to `/login?callbackUrl=/onboarding`.
+`/onboarding` is protected — unauthenticated users hit `/login?callbackUrl=/onboarding`. This is the only path to `/onboarding`.
 
 <GetStartedFlow />
 
-> **Test Coverage**: `get-started.spec.ts` (OB-001 to OB-004)
+Tests: `get-started.spec.ts`.
 
----
-
-## 3. Live Demo Flow
+## 3. Live demo
 
 User clicks "Live Demo" to explore the demo school without authentication.
 
 <LiveDemoFlow />
 
-> **Test Coverage**: `get-started.spec.ts` (OB-005 to OB-008)
+Tests: `get-started.spec.ts` (OB-005 to OB-008).
 
----
+## 4. Login
 
-## 4. Login Flow
+Two distinct contexts:
 
-There are two distinct login contexts with different behaviors:
+- **SaaS marketing login** (`localhost:3000` / `ed.databayt.org`) — only `DEVELOPER` redirects to the SaaS dashboard. Everyone else stays on the SaaS marketing page; school members should login from their own subdomain. We do NOT auto-redirect school members to their school dashboard.
+- **School marketing login** (`demo.localhost:3000` / `demo.databayt.org`) — users stay on the school marketing page after login. Dashboard access is via the "Platform" header link, which checks membership.
 
-**SaaS Marketing Login** (`localhost:3000` / `ed.databayt.org`) — This is the SaaS product website. Only DEVELOPER users get redirected to the SaaS dashboard after login. Everyone else (including school members) stays on the SaaS marketing page. School members have no business here — they should login from their own school subdomain. We do NOT auto-redirect school members to their school dashboard.
-
-**School Marketing Login** (`demo.localhost:3000` / `demo.databayt.org`) — This is a school's public website. After login, users stay on the school marketing page. Dashboard access is only available via the "Platform" link in the header, which checks membership and redirects accordingly.
-
-> **Note**: If a school member accidentally logs in on the SaaS main domain and tries to access `/dashboard`, they get `/access-denied` — the SaaS dashboard is DEVELOPER-only. This is intentional. School members should use their school's subdomain.
+If a school member accidentally logs in on the SaaS main domain and tries `/dashboard`, they hit `/access-denied` — the SaaS dashboard is `DEVELOPER`-only by design.
 
 <LoginFlow />
 
-> **Test Coverage**: `login.spec.ts` (AUTH-001 to AUTH-022), `saas-login-flow.spec.ts`
+Tests: `login.spec.ts` (AUTH-001 to AUTH-022), `saas-login-flow.spec.ts`.
 
----
+## 5. Logout
 
-## 5. Logout Flow
-
-Context-aware logout that preserves locale and stays on the current domain.
-
-**Key principle**: `LogoutButton` always navigates to `/{locale}` (e.g., `/en`). The proxy handles subdomain routing — on a school subdomain, `/en` is automatically rewritten to `/en/s/{subdomain}/`. This avoids double-rewrite bugs from constructing internal URL formats.
+Context-aware logout that preserves locale and stays on the current domain. `LogoutButton` always navigates to `/{locale}` (e.g. `/en`); the proxy rewrites this to `/en/s/{subdomain}/` on a school subdomain. This avoids double-rewrite bugs.
 
 <LogoutFlow />
 
-**Rules**:
+Rules:
 
-- Locale NEVER changes during logout
-- `/onboarding` is NEVER a logout redirect target
-- `signOut({ redirect: false })` is used — the auth.ts redirect callback is NOT invoked during logout
+- Locale never changes during logout.
+- `/onboarding` is never a logout redirect target.
+- `signOut({ redirect: false })` — the auth.ts redirect callback is NOT invoked during logout.
 
-> **Test Coverage**: `logout.spec.ts` (AUTH-038 to AUTH-045)
+Tests: `logout.spec.ts` (AUTH-038 to AUTH-045).
 
----
+## 6. DEVELOPER dashboard
 
-## 6. DEVELOPER Dashboard Flow
+Two access paths to `ed.databayt.org/en/dashboard`. Two security layers:
 
-DEVELOPER-only SaaS dashboard access at ed.databayt.org/en/dashboard.
-
-### Two Access Paths
+1. **Proxy middleware** — extracts role from JWT, blocks non-`DEVELOPER` at the edge.
+2. **Layout server component** — full `auth()` check, redirects non-`DEVELOPER` to `/access-denied`.
 
 <DeveloperDashboardFlow />
 
-### Security Layers
+Tests: `saas-dashboard.spec.ts` (EP-017 to EP-022), `saas-login-flow.spec.ts`.
 
-The SaaS dashboard is protected by two layers:
+## 7. Onboarding wizard
 
-1. **Proxy Middleware** — Extracts role from JWT, blocks non-DEVELOPER at the edge
-2. **Layout Server Component** — Full `auth()` check, redirects non-DEVELOPER to `/access-denied`
-
-> **Test Coverage**: `saas-dashboard.spec.ts` (EP-017 to EP-022), `saas-login-flow.spec.ts`
-
----
-
-## 7. Onboarding Wizard Flow
-
-Multi-step school creation wizard after user clicks "Get Started" and logs in.
-
-**Prerequisite**: User must be authenticated (redirected from Get Started flow).
+Multi-step school creation after Get Started + login. User must be authenticated.
 
 <OnboardingWizardFlow />
 
-> **Test Coverage**: `onboarding-school.spec.ts` (access control, school initialization, form steps, subdomain, complete flow, navigation)
+Tests: `onboarding-school.spec.ts` (access control, school initialization, form steps, subdomain, complete flow, navigation).
 
----
+## See also
 
-## Related Documentation
-
-- [Authentication](/docs/authentication) - Login/logout implementation
-- [Entry Points](/docs/entry-points) - Entry point architecture
-- [Multi-Tenancy](/docs/multi-tenancy) - Tenant isolation
-- [Onboarding](/docs/onboarding) - School creation wizard
+- [Authentication](/docs/authentication)
+- [Entry points](/docs/entry-points)
+- [Multi-tenancy](/docs/multi-tenancy)
+- [Onboarding](/docs/onboarding)

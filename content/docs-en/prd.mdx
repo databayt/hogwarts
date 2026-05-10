@@ -1,124 +1,165 @@
 ---
 title: PRD
-description: Product requirements for Hogwarts — scope, success metrics, non-functional requirements, and compliance.
+description: Hogwarts product requirements — scope, architecture, role model, NFRs, constraints, contribution paths.
 ---
 
-Hogwarts is a multi-tenant K-12 school management platform serving administrators, teachers, students, parents, accountants, and staff. This page captures the requirements; for implementation status see [MVP](/docs/mvp).
+Hogwarts is an open-source, multi-tenant K-12 school platform.
 
-## Classification
+| Attribute      | Value                                                                |
+| -------------- | -------------------------------------------------------------------- |
+| Repo           | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
+| Live           | [ed.databayt.org](https://ed.databayt.org)                           |
+| Docs           | [ed.databayt.org/docs](https://ed.databayt.org/docs)                 |
+| License        | SSPL-1.0                                                             |
+| Default locale | Arabic (RTL)                                                         |
+| Type           | SaaS B2B multi-tenant web app                                        |
+| Domain         | EdTech — K-12 school management                                      |
 
-- **Type:** SaaS B2B multi-tenant web application.
-- **Domain:** EdTech — K-12 school management.
-- **Complexity:** enterprise-scale (200+ functional requirements, regulated domain).
+For shipped capabilities see [MVP](/docs/mvp). For direction see [Roadmap](/docs/roadmap). For the commercial layer see [Business model](/docs/business-model).
 
-## Market context
+## Architecture
 
-Targeting Middle East and Africa first, with Arabic-first UX.
+### Stack
 
-| Region             | 2024 size | Projected      | CAGR   |
-| ------------------ | --------- | -------------- | ------ |
-| MEA EdTech         | $14.4B    | $33.0B by 2030 | ~14.6% |
-| Middle East EdTech | $11.3B    | $27.0B by 2033 | ~9.1%  |
-| GCC EdTech         | $3.02B    | $4.47B by 2030 | ~6.74% |
+| Layer                  | Choice                                                      |
+| ---------------------- | ----------------------------------------------------------- |
+| Framework              | Next.js 16.2.x (App Router)                                 |
+| Runtime                | React 19.2.x                                                |
+| Language               | TypeScript 5.x (strict)                                     |
+| ORM                    | Prisma 6.19.x (multi-file schema)                           |
+| Database               | PostgreSQL on Neon                                          |
+| Auth                   | NextAuth 5.0.0-beta.30                                      |
+| Authorization          | CASL 6.x                                                    |
+| Styles                 | Tailwind CSS 4.x (PostCSS)                                  |
+| UI primitives          | shadcn/ui (Radix)                                           |
+| Payments               | Stripe + bankak + tap + cash + mobile-money + bank-transfer |
+| Banking                | Plaid + Dwolla                                              |
+| Email / SMS / WhatsApp | Resend, Twilio, WhatsApp Evolution API                      |
+| Storage                | AWS S3 + CloudFront (`cdn.databayt.org`)                    |
+| Cache                  | Upstash Redis                                               |
+| Realtime               | Socket.io (custom Node server)                              |
+| Observability          | Sentry 10.x                                                 |
+| Docs                   | fumadocs (MDX) 16.x                                         |
+| AI                     | Anthropic + OpenAI + Groq via Vercel AI SDK                 |
 
-K-12 holds 44% of the 2025 cohort — the largest revenue-generating sector.
+### Surface area
 
-| Country      | Size     | CAGR   | Notes                       |
-| ------------ | -------- | ------ | --------------------------- |
-| Sudan        | Emerging | —      | Arabic-first target market  |
-| Saudi Arabia | $2.32B   | 12.77% | Largest MENA market         |
-| Egypt        | $302M    | 14.0%  | 234 active EdTech companies |
-| South Africa | $929M    | 11.78% | 40% of Africa EdTech 50     |
+For canonical counts of models, routes, dashboard pages, and tests, see [MVP](/docs/mvp) and [Architecture](/docs/architecture).
 
-## Success criteria
+### Tenancy
 
-### User outcomes
-
-| Metric                   | Baseline            | Target                        |
-| ------------------------ | ------------------- | ----------------------------- |
-| Administrator time saved | 40 hours/month lost | 8 hours/month (80% reduction) |
-| Parental engagement      | 65% dissatisfaction | 85% satisfaction (NPS)        |
-| Data accuracy            | 23% error rate      | &lt;1% error rate             |
-| School operational cost  | $15K-$50K/year      | 60% reduction                 |
-| Teacher admin time       | 11 hours/week       | 4 hours/week                  |
-
-### Business outcomes
-
-| Year | Schools | ARR   | NPS | Churn       |
-| ---- | ------- | ----- | --- | ----------- |
-| 1    | 100     | $240K | 98% | &lt;3%/mo   |
-| 3    | 2,500   | $6M   | 85+ | &lt;1.5%/mo |
-| 5    | 15,000  | $36M  | —   | IPO-ready   |
-
-## Scope
-
-A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents — all on one platform. See [MVP](/docs/mvp) for the 13-epic breakdown.
-
-### Beyond MVP
-
-Growth-phase features expanding capabilities and reach:
-
-- AI predictive analytics.
-- Digital classroom and LMS integration.
-- Library management.
-- Native mobile apps (React Native).
-- French, Spanish, Hindi, Mandarin locales.
-- Regional compliance certifications.
-
-### Vision
-
-- AI teaching assistant.
-- Personalized learning paths.
-- Marketplace and plugin ecosystem.
-- Blockchain credentials.
-- VR / AR learning experiences.
-- District-level management.
-- Global teacher collaboration network.
-
-## Stack
-
-Multi-tenant subdomain architecture; each school is `schoolId`-scoped. Stateless serverless on Vercel with 8-role RBAC. Stack: Next.js 16, React 19, TypeScript, Prisma, PostgreSQL, NextAuth v5, Tailwind CSS 4, shadcn/ui.
+Subdomain-based multi-tenancy resolved at the edge.
 
 ```text
-Production:   school.databayt.org → /[lang]/s/school/...
-Preview:      tenant---branch.vercel.app → /[lang]/s/tenant/...
-Development:  subdomain.localhost:3000 → /[lang]/s/subdomain/...
-Custom:       www.theirschool.com (CNAME) → Hogwarts platform
+Production:   school.databayt.org             →  /[lang]/s/school/...
+Pilot tenant: kingfahad.databayt.org          →  /[lang]/s/kingfahad/...
+Preview:      tenant---branch.vercel.app      →  /[lang]/s/tenant/...
+Development:  subdomain.localhost:3000        →  /[lang]/s/subdomain/...
+Custom:       www.theirschool.com (CNAME)     →  Hogwarts platform
 ```
+
+Resolution flow:
+
+1. Edge `proxy.ts` extracts subdomain from host.
+2. Custom domains → canonical subdomain via Upstash Redis (`custom-domain:${host}`).
+3. Internal rewrite to `/[lang]/s/[subdomain]/...` — `/s/[subdomain]` is internal only, never used in `redirect()` / `Link href` / `router.push`.
+4. `x-subdomain` header set for downstream handlers.
+5. `getTenantContext()` reads it and resolves `schoolId` for every Prisma query.
+
+### Single-language storage
+
+Hogwarts does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `TranslationCache`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getDisplayText()` (`@/lib/content-display`) is the canonical accessor.
 
 ## Roles
 
-| Role       | Key permissions                                              |
-| ---------- | ------------------------------------------------------------ |
-| DEVELOPER  | All schools, platform configuration, monitoring              |
-| ADMIN      | Full access within school, manage users, financial oversight |
-| TEACHER    | Manage assigned classes, grade assignments, mark attendance  |
-| STUDENT    | View own grades, attendance, assignments, submit work        |
-| GUARDIAN   | View linked students' data, pay fees, receive notifications  |
-| ACCOUNTANT | Manage finances, generate reports (no academic data)         |
-| STAFF      | Limited operational module access                            |
-| USER       | Minimal access pending role assignment                       |
+Eight roles in `prisma/models/auth.prisma:UserRole` (`DEVELOPER`, `ADMIN`, `TEACHER`, `STUDENT`, `GUARDIAN`, `ACCOUNTANT`, `STAFF`, `USER`). Authorization via CASL abilities (`@/lib/abilities`) and route-level role gates. Full role surface and permissions in [Authorization](/docs/authorization).
+
+## Functional scope
+
+The 14-epic shipped state is in [MVP](/docs/mvp). Next + Vision in [Roadmap](/docs/roadmap). Detail docs per epic live alongside in `content/docs-en/`. Block-level CLAUDE.md (`src/components/<feature>/CLAUDE.md`) documents per-feature implementation contracts.
+
+A school can: accept applicants → register students → manage classes / sections / subjects / timetable → mark attendance (11 capture modes) → grade exams + generate report cards → collect fees (6 payment gateways) → message parents (in-app + email + WhatsApp) → run an LMS → manage library + transport. All on one platform with `schoolId`-scoped isolation.
+
+## Non-functional requirements
+
+### Performance
+
+| Metric                 | Target           |
+| ---------------------- | ---------------- |
+| Initial page load (3G) | < 2s             |
+| Subsequent navigation  | < 500ms          |
+| API response (P95)     | < 500ms          |
+| Database queries (P95) | < 100ms          |
+| TTFB                   | < 200ms via edge |
+| Lighthouse             | ≥ 90             |
+
+### Security
+
+- AES-256 at rest, TLS 1.3 in transit.
+- Bcrypt (cost 12) passwords; JWT sessions; 2FA via `TwoFactorToken` + `TwoFactorConfirmation`.
+- Brute-force protection via `LoginAttempt` audit + rate limits.
+- RBAC on every route; multi-tenant isolation enforced server-side.
+- Zod validation server-side; SQL-injection and XSS prevention.
+- `AuditLog` retention with structured event types for sensitive mutations.
+- 11 daily cron jobs for housekeeping.
+
+### Scalability
+
+- Prisma connection pooling on Neon serverless PostgreSQL.
+- Vercel serverless, stateless functions; aggressive `outputFileTracingExcludes` to stay under 300 MB.
+- S3 + CloudFront for asset delivery.
+- `experimental.serverActions.bodySizeLimit: "10mb"` for uploads.
+
+### Accessibility
+
+- WCAG 2.1 AA targeted.
+- Keyboard nav, screen-reader support, color contrast ≥ 4.5:1.
+- Logical CSS properties — no `ml-*` / `mr-*`. RTL works without overrides.
+- Semantic HTML — no hardcoded `text-*` / `font-*` Tailwind classes.
+
+### Compliance
+
+| Regulation  | Scope                     |
+| ----------- | ------------------------- |
+| FERPA       | US student privacy        |
+| GDPR        | EU data protection        |
+| COPPA       | Parental consent under 13 |
+| WCAG 2.1 AA | Accessibility             |
+
+## Constraints
+
+These rules apply to every contribution. Enforced by hooks, agents, and review gates.
+
+- **License — SSPL-1.0.** Self-host free. Reselling Hogwarts as a hosted service requires a commercial license.
+- **Multi-tenant safety.** Every Prisma query includes `schoolId` (or the model is global and explicitly opts out). Isolation tests in `tests/multi-tenant/`.
+- **Single-language storage.** Never bilingual columns; one `lang` field per row.
+- **Logical CSS only.** `ms-*` / `me-*` / `ps-*` / `pe-*` — never `ml-*` / `mr-*` / `pl-*` / `pr-*`.
+- **No raw HTML primitives in components.** Use shadcn `ui/`. No raw `<button>` / `<input>` / `<select>` in feature code.
+- **Mirror pattern.** Routes import from `src/components/<feature>/content.tsx`. Canonical filenames per feature: `content.tsx`, `actions.ts`, `queries.ts`, `authorization.ts`, `validation.ts`, `form.tsx`, `table.tsx`, `columns.tsx`.
+- **One central `.env`.** Never `.env.local`, `.env.development`, etc.
+- **Port 3000 in dev — always.**
+- **`pnpm tsc --noEmit` before any build.** Vercel build has `typescript.ignoreBuildErrors: true` to avoid OOM, so type-check is a separate gate.
+- **Internal rewrite safety.** `/s/[subdomain]` is internal-only. UI uses clean tenant-relative paths.
+- **All UI text via dictionary keys.** No hardcoded English or Arabic strings in components.
 
 ## Subscription tiers
 
-See [Business model](/docs/business-model) for full pricing detail.
+| Tier       | Limits                                                     |
+| ---------- | ---------------------------------------------------------- |
+| FREE       | 100 students, 1 GB storage, community support              |
+| PRO        | 10 GB, priority support, custom branding, API rate-limited |
+| ENTERPRISE | Unlimited storage and API, white-label, SLA 99.9%, SSO     |
 
-| Tier       | Price               | Limits                                                  |
-| ---------- | ------------------- | ------------------------------------------------------- |
-| FREE       | $0                  | 100 students, 1 GB storage, community support           |
-| PRO        | $1.50/student/month | 10 GB, priority support, custom branding, API 1K req/hr |
-| ENTERPRISE | $1.00/student/month | Unlimited storage and API, white-label, SLA 99.9%, SSO  |
-
-Billing via Stripe Subscriptions; monthly or annual (15% discount); 14-day free trial; metered per-student pricing.
+See [Business model](/docs/business-model) for pricing and revenue. See [Sales](/docs/sales) for commercial process.
 
 ## API and integrations
 
 ### REST API v1
 
-- OpenAPI 3.0 spec with Swagger UI.
-- API key auth and tiered rate limiting (100 req/hr → unlimited).
-- Webhooks: `student.enrolled`, `payment.received`, `grade.updated`.
-- HMAC-SHA256 signing; retry with exponential backoff.
+- OpenAPI 3.0 contract.
+- API key auth with tiered rate limiting.
+- Webhook events: `student.enrolled`, `payment.received`, `grade.updated` (full log in `webhooks.prisma:ProcessedWebhookEvent`).
+- HMAC-SHA256 request signing; retry with exponential backoff.
 
 ### SSO (Enterprise)
 
@@ -126,104 +167,74 @@ Billing via Stripe Subscriptions; monthly or annual (15% discount); 14-day free 
 - OAuth 2.0 — Google Workspace, Microsoft 365.
 - SCIM for user provisioning.
 
-### Third-party
+### Third-party connections (built or wired)
 
-Google Workspace, Microsoft 365, Zoom, Stripe, Twilio, Resend, QuickBooks / Xero, Canvas / Blackboard / Moodle (LTI).
-
-## Non-functional requirements
-
-### Performance
-
-| Metric                 | Target             |
-| ---------------------- | ------------------ |
-| Initial page load (3G) | &lt;2s             |
-| Subsequent navigation  | &lt;500ms          |
-| API response (P95)     | &lt;500ms          |
-| Database queries (P95) | &lt;100ms          |
-| TTFB                   | &lt;200ms via edge |
-
-### Security
-
-- AES-256 at rest, TLS 1.3 in transit.
-- Bcrypt (cost 12), JWT (24h), 2FA, rate limiting.
-- RBAC on every route; multi-tenant isolation enforced server-side.
-- Zod server-side validation; SQL injection and XSS prevention.
-- Audit logging for all modifications, 7-year retention.
-
-### Scalability
-
-- Prisma connection pooling on Neon Serverless PostgreSQL.
-- Vercel serverless, stateless, edge caching.
-- S3-compatible storage (Cloudflare R2) with CDN delivery.
-
-### Accessibility
-
-- WCAG 2.1 AA compliance.
-- Keyboard navigation and screen-reader support.
-- Color contrast minimum 4.5:1.
-- Automated axe-core checks in CI/CD.
-
-### Compliance
-
-| Regulation | Scope                               |
-| ---------- | ----------------------------------- |
-| FERPA      | US student privacy                  |
-| GDPR       | EU data protection                  |
-| COPPA      | Parental consent for users under 13 |
-| WCAG 2.1   | AA accessibility                    |
+Stripe + bankak + tap + mobile-money + bank-transfer + cash, Plaid + Dwolla, Resend, Twilio, WhatsApp Evolution API, Google Translate, AWS S3 + CloudFront, Upstash Redis, Sentry, Mapbox + Leaflet, ClickView, Anthropic + OpenAI + Groq.
 
 ## Design system
 
-| Aspect       | Spec                                                  |
-| ------------ | ----------------------------------------------------- |
-| Arabic font  | Rubik                                                 |
-| English font | Inter                                                 |
-| Typography   | Semantic HTML only — no hardcoded `text-*` / `font-*` |
-| Colors       | OKLCH — blue primary, amber secondary                 |
-| Components   | shadcn/ui (Radix primitives)                          |
-| Theme        | Dark / light via next-themes                          |
+| Aspect       | Spec                                  |
+| ------------ | ------------------------------------- |
+| Arabic font  | Rubik                                 |
+| English font | GeistSans                             |
+| Colors       | OKLCH — blue primary, amber secondary |
+| Components   | shadcn/ui (Radix primitives)          |
+| Theme        | Dark / light via next-themes          |
+| Charts       | Recharts + Chart.js                   |
+| Tables       | TanStack Table                        |
 
 ## Internationalization
 
-| Feature     | Implementation                                     |
-| ----------- | -------------------------------------------------- |
-| Locales     | `en`, `ar`                                         |
-| RTL         | Bidirectional layouts, mirrors for Arabic          |
-| Storage     | Single-language + `lang` field                     |
-| Translation | On-demand via Google Translate API with DB caching |
-| URLs        | `/[lang]/path` → `/en/docs`, `/ar/docs`            |
+| Feature      | Implementation                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------ |
+| Locales      | `ar` (default, RTL) + `en` (LTR)                                                                             |
+| URL pattern  | `/[lang]/path` → `/ar/docs`, `/en/docs`                                                                      |
+| Dictionaries | `src/components/internationalization/dictionaries/` — EN + AR pairs across 8 top-level + 16 per-domain files |
+| RTL          | Bidirectional layouts via logical properties + `<DirectionProvider>`                                         |
+| Storage      | Single `lang` field + on-demand Google Translate cached in `TranslationCache`                                |
+
+See [Translation](/docs/translation) for the full dictionary contract.
 
 ## Development approach
 
-- 1-week sprints with weekly standups.
-- Code review (minimum 1 approver).
-- 80%+ coverage on critical paths.
+- 1-week sprint cadence.
+- Conventional commits, signed.
+- Code review with at least one approver before merge to `main`.
+- 80%+ coverage target on critical paths.
 - Performance budgets (Lighthouse ≥ 90).
 - 20% of sprint capacity reserved for tech debt.
 
 ### Testing pyramid
 
-| Layer       | Share | Tool       |
-| ----------- | ----- | ---------- |
-| Unit        | 70%   | Vitest     |
-| Integration | 20%   | Supertest  |
-| E2E         | 10%   | Playwright |
+| Layer       | Share | Tool                                         |
+| ----------- | ----- | -------------------------------------------- |
+| Unit        | 70%   | Vitest                                       |
+| Integration | 20%   | Vitest + Supertest                           |
+| E2E         | 10%   | Playwright (auth, multi-tenant, RBAC, smoke) |
 
-## Risk register
+### Local DB workflow
 
-| Risk                 | Severity | Mitigation                          |
-| -------------------- | -------- | ----------------------------------- |
-| Data breach          | Critical | Pen testing, bug bounty             |
-| Multi-tenant leak    | Critical | Isolation tests, `schoolId` scoping |
-| Non-compliance       | Critical | Legal review, audits                |
-| Performance issues   | High     | Load testing, caching               |
-| Low adoption         | High     | User research, pilots               |
-| Integration failures | Medium   | Retry logic, monitoring             |
-| Competition          | Medium   | Rapid iteration                     |
-| Funding constraints  | Medium   | Lean MVP, early revenue             |
+Destructive Prisma operations (`db execute`, `db push --accept-data-loss`, `migrate reset`, `DROP TABLE`, `TRUNCATE`) are blocked by hooks. Use the **Branch-Before-Touch** protocol on Neon for risky DB ops. Never run `pnpm db:seed` directly — always `pnpm db:seed:single <name>`.
 
-## References
+## How to contribute
 
-- [MVP](/docs/mvp) — implementation status and epic breakdown
-- [Architecture](/docs/architecture) — system design
+1. Read [Get started](/docs/get-started) for the local setup.
+2. Skim [Architecture](/docs/architecture) and [Pattern](/docs/pattern) for conventions.
+3. Pick a Roadmap "Next" item or open a feature issue.
+4. Follow the mirror pattern + the constraints above.
+5. The Claude harness in `.claude/` (50 agents, 47 commands, 16 skills) is wired to enforce most rules automatically — `pnpm dev` plus the project's `CLAUDE.md` is enough.
+
+The OSS contribution model — including how time invested converts to recognition or revenue share — lives in [Shared economy](/docs/shared-economy).
+
+> **AGENTS.md** is currently `AGENTS.md.draft` at the repo root; graduating it to `AGENTS.md` is tracked in [Roadmap](/docs/roadmap).
+
+## See also
+
+- [MVP](/docs/mvp) — 14-epic shipped state with maturity badges
+- [Roadmap](/docs/roadmap) — Next milestones and Vision
+- [Architecture](/docs/architecture) — system design and patterns
 - [Pattern](/docs/pattern) — code conventions
+- [Translation](/docs/translation) — i18n contract
+- [Shared economy](/docs/shared-economy) — OSS contribution and value-sharing
+- [Business model](/docs/business-model) — pricing, tiers, ARR projections
+- [Get started](/docs/get-started) — local setup
