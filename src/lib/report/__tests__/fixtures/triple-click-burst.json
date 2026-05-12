@@ -1,0 +1,10 @@
+{
+  "description": "The Save button on the student profile page is not saving my changes. I edit the email field and click Save but the new email is not persisted after refresh.",
+  "pageUrl": "https://ed.databayt.org/ar/dashboard/students/abc",
+  "category": "broken",
+  "viewport": "1440x900",
+  "direction": "rtl",
+  "browser": "Mozilla/5.0 Chrome/120.0",
+  "hasScreenshot": false,
+  "_expected": "First submission: verified-report. Second within 60s by same reporter: silent-reject (HF9). This is the hogwarts #302/#303/#304 case."
+}

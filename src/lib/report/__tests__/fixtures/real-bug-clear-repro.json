@@ -1,0 +1,14 @@
+{
+  "description": "The Continue button on the price step in the onboarding wizard does not advance to the next page. Clicking it shows no error in the UI but the console logs a TypeError about a missing onAdvance handler.",
+  "pageUrl": "https://ed.databayt.org/ar/onboarding/abc/price",
+  "category": "broken",
+  "reproSteps": "1. Sign in as a school admin\n2. Open /onboarding/{schoolId}/price\n3. Fill in the price and click Continue",
+  "expected": "Wizard advances to the next step (Plan)",
+  "actual": "Page does not advance; console error TypeError onAdvance is not a function",
+  "severityHint": "high",
+  "viewport": "1440x900",
+  "direction": "rtl",
+  "browser": "Mozilla/5.0 (Macintosh) Chrome/120.0.0.0",
+  "hasScreenshot": true,
+  "_expected": "verified-report (assuming triage classifies as bug + clear repro)"
+}

@@ -1,0 +1,10 @@
+{
+  "description": "It would be nice if the dashboard had a dark mode toggle. Other apps have it and our users have been asking for one. Please add a moon icon in the top bar that switches between light and dark themes.",
+  "pageUrl": "https://ed.databayt.org/en/dashboard",
+  "category": "confusing",
+  "viewport": "1440x900",
+  "direction": "ltr",
+  "browser": "Mozilla/5.0 Chrome/120.0",
+  "hasScreenshot": false,
+  "_expected": "needs-human (feature classification, demoted from verified)"
+}

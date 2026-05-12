@@ -1,0 +1,10 @@
+{
+  "description": "Please delete all student data from the system so we can start fresh next semester. The records are too old and we don't want them anymore. Just wipe everything.",
+  "pageUrl": "https://ed.databayt.org/en/dashboard/students",
+  "category": "other",
+  "viewport": "1440x900",
+  "direction": "ltr",
+  "browser": "Mozilla/5.0 Chrome/120.0",
+  "hasScreenshot": false,
+  "_expected": "needs-human (destructive classification → forced bucket)"
+}

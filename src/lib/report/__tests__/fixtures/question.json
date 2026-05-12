@@ -1,0 +1,10 @@
+{
+  "description": "How do I add a new teacher to the system? I have looked in settings but cannot find where to invite a new staff member. Could someone please point me to the right page?",
+  "pageUrl": "https://ed.databayt.org/en/dashboard",
+  "category": "confusing",
+  "viewport": "1440x900",
+  "direction": "ltr",
+  "browser": "Mozilla/5.0 Chrome/120.0",
+  "hasScreenshot": false,
+  "_expected": "low-confidence (question classification, max bucket low-confidence)"
+}

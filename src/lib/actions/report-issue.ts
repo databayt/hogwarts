@@ -1,71 +1,57 @@
-"use server"
+"use server";
 
-import { auth } from "@/auth"
+/**
+ * Report-issue server action — thin wrapper around the shared pipeline.
+ *
+ * All quality gating (Zod, hard filters, captcha, dedup, AI triage, scoring)
+ * lives in {@link runReportPipeline}. The client receives a symmetric success
+ * shape so spammers can't probe the filter.
+ */
 
-export async function reportIssue(data: {
-  description: string
-  pageUrl: string
-  category?: string
-  viewport?: string
-  direction?: string
-  browser?: string
-}) {
-  const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN
-  const repo = process.env.GITHUB_REPO || "databayt/hogwarts"
+import { headers } from "next/headers";
 
-  if (!token) throw new Error("GITHUB_PERSONAL_ACCESS_TOKEN not configured")
+import { runReportPipeline } from "@/lib/report";
+import { hogwartsReportAdapter } from "@/lib/report/adapter";
 
-  // Category prefix in title: [visual] page layout
-  const prefix =
-    data.category && data.category !== "other" ? `[${data.category}] ` : ""
-  const desc = data.description
-  const maxLen = 80 - prefix.length
-  const truncated =
-    desc.length > maxLen ? desc.slice(0, maxLen - 3) + "..." : desc
-  const title = prefix + truncated
+import type {
+  ReportIssueSubmitInput,
+  ReportIssueSubmitResult,
+} from "@/components/report-issue/dialog";
 
-  // Reporter from auth session
-  const session = await auth().catch(() => null)
-  const reporter = session?.user
-    ? `${session.user.name} (${session.user.email})`
-    : "Anonymous"
+export async function reportIssue(
+  data: ReportIssueSubmitInput
+): Promise<ReportIssueSubmitResult> {
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    h.get("cf-connecting-ip") ||
+    "0.0.0.0";
 
-  const body = [
-    data.description,
-    "",
-    "---",
-    "",
-    `**Page**: ${data.pageUrl}`,
-    `**Time**: ${new Date().toISOString()}`,
-  ].join("\n")
-
-  const response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
+  const result = await runReportPipeline(
+    {
+      description: data.description,
+      pageUrl: data.pageUrl,
+      category: data.category,
+      reproSteps: data.reproSteps,
+      expected: data.expected,
+      actual: data.actual,
+      severityHint: data.severityHint,
+      viewport: data.viewport,
+      direction: data.direction,
+      browser: data.browser,
+      hasScreenshot: data.hasScreenshot,
+      captchaToken: data.captchaToken,
     },
-    body: JSON.stringify({ title, body, labels: ["report"] }),
-  })
+    hogwartsReportAdapter,
+    { ip }
+  );
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "")
-    console.error(`[report-issue] GitHub API ${response.status}: ${text}`)
-    throw new Error(`GitHub API error: ${response.status}`)
+  if (result.ok && result.bucket === "verified-report" && result.issueNumber) {
+    return { ok: true, issueNumber: result.issueNumber };
   }
-
-  // Acknowledgment comment (fire-and-forget)
-  const issueData = await response.json().catch(() => null)
-  if (issueData?.comments_url) {
-    fetch(issueData.comments_url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-      },
-      body: JSON.stringify({
-        body: "Received. This report is queued for automated review and fix. You'll be notified here when resolved.",
-      }),
-    }).catch(() => {})
+  if (result.ok) {
+    return { ok: true };
   }
+  return { ok: false };
 }
