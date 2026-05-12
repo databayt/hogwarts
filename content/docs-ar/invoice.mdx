@@ -1,0 +1,299 @@
+---
+title: الفاتورة
+description: دورة حياة الفوترة — الإنشاء (modal + wizard)، تسليم PDF / طباعة / بريد إلكتروني، هوية المدرسة، تحليلات اللوحة، ومناطق الخدمة متعدّدة الأدوار.
+---
+
+تُدير وحدة الفاتورة الفوترة من المسودّة إلى الدفع. تدفّقا إنشاء (modal من 3 خطوات + wizard متعدّد الصفحات مع حفظ المسودّات)، توليد بالجملة من هياكل الرسوم، تسليم بالبريد عبر Resend، ولوحة تحليلات. كل العمليات تفرض `getTenantContext()` + `checkCurrentUserPermission()`.
+
+## الحالة
+
+| الوحدة الفرعية    | الحالة | ملاحظات                                             |
+| ----------------- | ------ | --------------------------------------------------- |
+| قائمة الفواتير    | إنتاج  | DataTable مع فلترة وفرز وترقيم صفحات                |
+| نموذج modal       | إنتاج  | 3 خطوات (معلومات أساسية، بنود، مراجعة)              |
+| تدفّق wizard      | إنتاج  | متعدّد الصفحات مع حفظ المسودّات                     |
+| اللوحة            | إنتاج  | تحليلات الإيرادات، توزيع الحالات، إحصائيات 30 يوماً |
+| الإعدادات         | إنتاج  | شعار، توقيع، تفضيلات الفاتورة                       |
+| التسليم بالبريد   | إنتاج  | Resend (قالب أساسي، بدون هوية المدرسة بعد)          |
+| Onboarding        | إنتاج  | إعداد الملف للمرة الأولى                            |
+| تصدير PDF بحجم A4 | جاهز   | القالب موجود، غير موصول                             |
+| طباعة المتصفح     | جاهز   | الـhook موجود، غير موصول                            |
+| تصدير CSV         | جاهز   | الأداة موجودة، بلا زرّ في الواجهة                   |
+| التوليد بالجملة   | مبدئي  | واجهة placeholder                                   |
+| المتكرّرة         | مخطّط  | فواتير متكرّرة مجدولة                               |
+
+## المسارات
+
+| المسار                                         | الصفحة                   | المكوّن                           |
+| ---------------------------------------------- | ------------------------ | --------------------------------- |
+| `.../finance/invoice`                          | اللوحة                   | `dashboard/content.tsx`           |
+| `.../finance/invoice/list`                     | قائمة الفواتير           | `content.tsx`                     |
+| `.../finance/invoice/invoice/create`           | إنشاء (يحوّل إلى wizard) | `invoice/create-edit-content.tsx` |
+| `.../finance/invoice/invoice/edit/[invoiceId]` | تعديل (يحوّل إلى wizard) | تحويل                             |
+| `.../finance/invoice/invoice/view/[id]`        | عرض (modal)              | `invoice/view-content.tsx`        |
+| `.../finance/invoice/invoice/paid/[invoiceId]` | تعليم كمدفوعة            | `invoice/paid-content.tsx`        |
+| `.../finance/invoice/add/[id]/details`         | wizard — التفاصيل        | `wizard/details/content.tsx`      |
+| `.../finance/invoice/add/[id]/items`           | wizard — البنود          | `wizard/items/content.tsx`        |
+| `.../finance/invoice/settings`                 | الإعدادات (شعار، توقيع)  | `settings/content.tsx`            |
+| `.../finance/invoice/onboarding`               | الملف للمرة الأولى       | `onboarding/content.tsx`          |
+
+## Server actions
+
+كلها في `actions.ts`، محميّة بـ`requireAuthAndTenant()`:
+
+```typescript
+async function requireAuthAndTenant() {
+  const session = await auth()
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return { success: false, error: "Missing school context" }
+  return { userId: session.user.id, schoolId }
+}
+```
+
+| Action                        | Auth | RBAC             | Tx  | الغرض                           |
+| ----------------------------- | :--: | ---------------- | :-: | ------------------------------- |
+| `createInvoice`               |  Y   | `invoice:create` |  Y  | إنشاء مع عناوين + بنود          |
+| `createInvoiceWithAutoNumber` |  Y   | `invoice:create` |  Y  | ترقيم تلقائي ثم إنشاء           |
+| `getNextInvoiceNumber`        |  Y   | —                |  —  | تسلسل `INV-XXXXXX` التالي       |
+| `updateInvoice`               |  Y   | `invoice:edit`   |  —  | تحديث بالـID                    |
+| `deleteInvoice`               |  Y   | `invoice:delete` |  —  | حذف (يعيد خطأ، بلا رمي)         |
+| `getInvoices`                 |  Y   | —                |  —  | بترقيم صفحات (يستثني المسودّات) |
+| `getInvoicesWithFilters`      |  Y   | —                |  —  | مفلتر + مفروز + بترقيم صفحات    |
+| `getInvoiceById`              |  Y   | —                |  —  | فاتورة واحدة (تحويل Decimal)    |
+| `sendInvoiceEmail`            |  Y   | `invoice:export` |  —  | إرسال عبر Resend                |
+| `updateSettings`              |  Y   | —                |  —  | upsert إعدادات فاتورة المستخدم  |
+| `getSettings`                 |  Y   | —                |  —  | جلب إعدادات الفاتورة            |
+| `getDashboardStats`           |  Y   | —                |  —  | إحصائيات مجمَّعة لـ30 يوماً     |
+| `createInvoiceFromEnrollment` |  N   | —                |  Y  | داخلي — يُستدعى من القبول       |
+| `updateUser`                  |  Y   | —                |  —  | تحديث الملف (الاسم، العملة)     |
+
+الإنشاء يلفّ العنوان + الفاتورة + البنود في `db.$transaction` لمنع البيانات اليتيمة:
+
+```typescript
+const invoice = await db.$transaction(async (tx) => {
+  const fromAddr = await tx.userAddress.create({ data: fromData })
+  const toAddr = await tx.userAddress.create({ data: toData })
+  const inv = await tx.userInvoice.create({
+    data: { ...invoiceData, fromId: fromAddr.id, toId: toAddr.id },
+  })
+  await tx.userInvoiceItem.createMany({ data: itemsData })
+  return inv
+})
+```
+
+## تدفّقات الإنشاء
+
+### Modal (3 خطوات)
+
+```
+الخطوة 1 — معلومات أساسية: من (مُعبّأ مسبقاً)، إلى (اسم العميل، البريد، العنوان)
+الخطوة 2 — العميل والبنود: رقم الفاتورة (تلقائي: I{YY}{NNN})، التواريخ، العملة، البنود
+الخطوة 3 — مراجعة: ملخّص، subtotal / discount / tax / total، ملاحظات
+```
+
+تحقّق لكل خطوة عبر `form.trigger(STEP_FIELDS[step])` مقابل `InvoiceSchemaZod`.
+
+### Wizard (متعدّد الصفحات)
+
+```
+/add/[id]/details  →  /add/[id]/items  →  Complete
+```
+
+تُحفظ المسودّات في قاعدة البيانات بحقل `wizardStep`. أكشن الـwizard (`wizard/actions.ts`):
+
+- `createDraftInvoice` — ينشئ مسودّة بـ`wizardStep`
+- `getInvoiceForWizard` — يحمّل المسودّة (بنطاق المستأجر)
+- `completeInvoiceWizard` — يتحقّق ويُنهي
+- `updateInvoiceWizardStep` — يتتبّع التقدّم
+- `deleteDraftInvoice` — للمسودّات فقط مع تنظيف cascading
+
+## صيغ الإخراج
+
+### PDF بحجم A4 (جاهز، غير موصول)
+
+| المكوّن           | المسار                                                 |
+| ----------------- | ------------------------------------------------------ |
+| `InvoiceTemplate` | `src/components/file/generate/invoice.tsx` (524 سطراً) |
+| `useGenerate()`   | `src/components/file/generate/use-generate.ts`         |
+| `InvoiceData`     | `src/components/file/generate/types.ts`                |
+
+الميزات: A4 + padding بـ40pt، RTL مع Rubik (عربي) / GeistSans (إنجليزي)، رأس المدرسة (شعار 80×80، الاسم، العنوان، الهاتف، البريد)، تفاصيل الفاتورة مع شارة حالة ملوّنة، العميل + البنود مع ضريبة لكل بند، الإجماليات (subtotal، tax، discount، total، paid، balance)، التذييل (ملاحظات، تفاصيل البنك، الشروط). الأنماط: `classic | modern | minimal | elegant`.
+
+```typescript
+interface InvoiceData extends DocumentMetadata {
+  invoiceNumber: string
+  dueDate: Date
+  status: "draft" | "pending" | "paid" | "overdue" | "cancelled"
+  clientName: string
+  clientEmail?: string
+  clientPhone?: string
+  clientAddress?: string
+  studentName?: string
+  className?: string
+  items: InvoiceItem[] // { description, quantity, unitPrice, total }
+  subtotal: number
+  taxAmount?: number
+  discount?: number
+  total: number
+  amountPaid?: number
+  balance?: number
+  currency: string
+  bankDetails?: string
+  notes?: string
+}
+```
+
+الفجوة: `UserInvoice` يستخدم `item_name` / `price`، والقالب يتوقّع `description` / `unitPrice`. مطلوب دالة mapping + زرّ تنزيل.
+
+### طباعة المتصفح (جاهز، غير موصول)
+
+| المكوّن       | المسار                                       |
+| ------------- | -------------------------------------------- |
+| `usePrint()`  | `src/components/file/print/use-print.ts`     |
+| `PrintButton` | `src/components/file/print/print-button.tsx` |
+
+الميزات: عزل iframe خفي، `@page` (A4 / Letter، هوامش مخصّصة، اتجاه)، RTL عبر `document.documentElement.dir`، grayscale عبر `print-color-adjust`، فئات page break، نسخ تلقائي للـstylesheets. الميثودات: `print(element)`, `printById(id)`, `printHtml(html)`. الفجوة: لا زرّ طباعة في أي عرض فاتورة.
+
+### البريد (Resend)
+
+`send-invoice-email.tsx` — قالب React بأنماط مدمجة:
+
+- `"Hello {firstName},"` + "Your invoice is ready for review."
+- صندوق التفاصيل: رقم الفاتورة، تاريخ الاستحقاق، الإجمالي
+- زرّ "View Invoice" → `invoiceURL`
+- التذييل
+
+القيود: لا هوية مدرسة (شعار / اسم)، لا تفصيل بنود (الإجمالي فقط)، لا توقيع، إنجليزي ثابت، المرسل `Invoice App <onboarding@resend.dev>` (placeholder)، JSX خالص (ليس primitives من React Email).
+
+`sendInvoiceEmail(id, email)` يتطلّب `invoice:export`.
+
+### CSV (جاهز، غير موصول)
+
+`exportInvoiceToCSV()` في `util.ts`. زرّ التصدير في `all.tsx` بدون click handler.
+
+## هوية المدرسة
+
+`settings/content.tsx` يوفّر accordion-ين:
+
+1. **شعار الفاتورة** — `FileUploader` إلى `finance/invoice-logos/`، حدّ أقصى 5 MB.
+2. **توقيع الفاتورة** — اسم + صورة إلى `finance/signatures/`، حدّ أقصى 2 MB.
+
+التخزين:
+
+```
+UserInvoiceSettings { id, userId (unique), schoolId, invoiceLogo?, signature → UserInvoiceSignature }
+UserInvoiceSignature { id, settingsId (unique), schoolId, name?, image? }
+```
+
+الهوية مُخزَّنة لكنّها **غير مُستهلَكة**: PDF يتوقّع `schoolLogo` / `schoolName` / `schoolAddress`؛ البريد لا يتوقّع حقول هوية. حالياً بيانات يتيمة.
+
+## مناطق الخدمة
+
+ستّة مستهلكين عبر المنصّة:
+
+1. **إدارة Admin / Accountant** — CRUD كامل عبر `/finance/invoice/`
+2. **فواتير رسوم الطلاب** — تُولَّد تلقائياً بـ`confirmEnrollment()`:
+
+   ```
+   FeeStructure → FeeAssignment (PENDING) → confirmEnrollment()
+     → createInvoiceFromEnrollment() → UserInvoice (ENR- prefix)
+   ```
+
+   يُحوّل `FeeStructure.name → item_name`, `FeeAssignment.finalAmount → price`. الحالة `UNPAID`، الاستحقاق 30 يوماً. غير قاتل — التسجيل ينجح حتى لو فشلت الفاتورة. لا FK بين `FeeAssignment` و`UserInvoice`؛ الربط في زمن التشغيل فقط.
+
+3. **لوحة الطالب** — `InvoiceHistorySection` ("Fee Payments") عبر `getInvoicesByRole("STUDENT")`
+4. **لوحة وليّ الأمر** — نفس المكوّن، يجلب فواتير الأبناء عبر `getInvoicesByRole("GUARDIAN")`
+5. **لوحة Accountant** — `accountant.tsx` مع المقاييس، `ProgressCard` ("Invoices Paid")، `InvoiceHistorySection`
+6. **محور المالية** — `finance/content.tsx` يعرض إحصائية "Unpaid Invoices" + رابط سريع
+
+## Schema
+
+5 نماذج Prisma:
+
+- **`UserInvoice`** — السجلّ الأساسي. الحقول: `id`, `invoice_no`, `invoice_date`, `due_date`, `currency` (افتراضي `USD`), `sub_total` / `discount` / `tax_percentage` / `total` (Decimal), `notes`, `status` (`InvoiceStatus`, افتراضي `UNPAID`), `wizardStep` (null = مكتملة). العلاقات: `userId`, `schoolId`, `journalEntryId`. العناوين: واحد-إلى-واحد `fromAddressId` + `toAddressId`. الفهارس: `@@unique([schoolId, invoice_no])`, `[userId]`, `[schoolId]`, `[status]`.
+- **`UserInvoiceItem`** — `id`, `item_name`, `quantity`, `price` (Decimal), `total` (Decimal), `invoiceId`, `schoolId`.
+- **`UserInvoiceAddress`** — `id`, `name`, `email?`, `address1`, `address2?`, `address3?`, `schoolId`.
+- **`UserInvoiceSettings`** — إعدادات لكل مستخدم (راجع الهوية).
+- **`UserInvoiceSignature`** — تخزين التوقيع (راجع الهوية).
+
+```typescript
+enum InvoiceStatus {
+  PAID
+  UNPAID    // افتراضي
+  OVERDUE
+  CANCELLED
+}
+```
+
+التمييز: **`UserInvoice`** = على مستوى المدرسة (هذه الوحدة). **`Invoice`** = فوترة منصّة Stripe (`@@map("invoices")`)؛ نموذج `Receipt` يرتبط بـ`Invoice`، لا بـ`UserInvoice`.
+
+## الحسابات
+
+في `util.ts`:
+
+```typescript
+calculateSubtotal(items)                                  → number
+calculateDiscount(subtotal, discountRate)                 → number
+calculateTax(taxableAmount, taxRate)                      → number
+calculateTotal(items, taxRate, discountRate)              → { subtotal, discount, taxableAmount, tax, total }
+
+isInvoiceOverdue(dueDate, status)                         → boolean
+getDaysOverdue(dueDate) / getDaysUntilDue(dueDate)        → number
+formatDueStatus(dueDate, status)                          → "Paid" | "Due in 5 days" | "Overdue by 3 days"
+getInvoiceStatusColor(status)                             → "green" | "blue" | "red" | "gray"
+```
+
+## RBAC
+
+| الدور      | إنشاء | تعديل | حذف | تصدير (بريد) | عرض  |
+| ---------- | :---: | :---: | :-: | :----------: | :--: |
+| Admin      |   Y   |   Y   |  Y  |      Y       |  Y   |
+| Accountant |   Y   |   Y   |  —  |      Y       |  Y   |
+| Teacher    |   —   |   —   |  —  |      —       | خاصة |
+| Student    |   —   |   —   |  —  |      —       | خاصة |
+| Guardian   |   —   |   —   |  —  |      —       | خاصة |
+
+`checkCurrentUserPermission(schoolId, "invoice", action)`.
+
+## تحليلات اللوحة
+
+`getDashboardStats` يعيد: إجمالي الفواتير (كل الزمن)، إجمالي الإيرادات (المدفوعة)، المعلّقة (غير مدفوعة + متأخّرة)، عدد المتأخّرة، اتجاه إيرادات 30 يوماً، توزيع الحالات.
+
+## الإعدادات
+
+خيارات العملة: `USD`, `EUR`, `GBP`, `INR`, `CAD`, `AUD`. الـwizard يضيف `SDG`, `SAR`, `AED`.
+
+```typescript
+STEP_FIELDS = {
+  1: ["from", "to"],
+  2: ["invoice_no", "currency", "invoice_date", "due_date", "items"],
+  3: ["sub_total", "discount", "tax_percentage", "total", "notes"],
+}
+```
+
+صيغ الترقيم:
+
+- Modal — `I{YY}{NNN}` (مثلاً، `I26042`)، يُولَّد على العميل
+- ترقيم تلقائي — `INV-{NNNNNN}` (مثلاً، `INV-000042`)، تسلسلي على الخادم
+- Enrollment — `INV-{NNNNNN}` نفس نمط الترقيم التلقائي
+
+## مبدئيّات (Stubs)
+
+| الملف                    | الحالة                                         |
+| ------------------------ | ---------------------------------------------- |
+| `bulk-generate.tsx`      | يعرض "Bulk invoice generation is unavailable"  |
+| `content-enhanced.tsx`   | يعرض "Enhanced invoice content is unavailable" |
+| زرّ التصدير في `all.tsx` | لا click handler                               |
+| `onboarding/actions.ts`  | `export {}`                                    |
+| `settings/actions.ts`    | `export {}`                                    |
+
+## الاختبارات
+
+131 اختباراً عبر 5 ملفات في `__tests__/`: `actions.test.ts` (50+)، `create-from-enrollment.test.ts` (20+)، `wizard-actions.test.ts` (25+)، `validation.test.ts` (20+)، `util.test.ts` (20+). كلها تستخدم mocks لـPrisma والـauth وسياق المستأجر عبر `src/test/mocks/`.
+
+## انظر أيضاً
+
+- [الرسوم](/ar/docs/fees) — هياكل الرسوم والتعيينات
+- [القبول](/ar/docs/admission) — التسجيل يولّد فواتير تلقائياً
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — نطاق `schoolId`

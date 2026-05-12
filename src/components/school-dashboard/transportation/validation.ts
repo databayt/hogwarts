@@ -101,6 +101,7 @@ export function createRouteSchema(v: ValidationHelper) {
     notes: z.string().max(2000, v.maxLength(2000)).optional(),
     vehicleId: idSchema.optional(),
     driverId: idSchema.optional(),
+    geofenceId: idSchema.nullable().optional(),
   })
 }
 export type RouteInput = z.infer<ReturnType<typeof createRouteSchema>>
@@ -252,6 +253,7 @@ export const routeSchema = z.object({
   notes: z.string().max(2000).optional(),
   vehicleId: idSchema.optional(),
   driverId: idSchema.optional(),
+  geofenceId: idSchema.nullable().optional(),
 })
 
 export const routeUpdateSchema = routeSchema.partial().extend({ id: idSchema })
@@ -378,3 +380,84 @@ export type TripStartInput = z.infer<typeof tripStartSchema>
 export type TripFinishInput = z.infer<typeof tripFinishSchema>
 export type TripCancelInput = z.infer<typeof tripCancelSchema>
 export type BoardingUpsertInput = z.infer<typeof boardingUpsertSchema>
+
+// ============================================================================
+// Trip + TripBoarding factory schemas (i18n-aware)
+// ============================================================================
+
+export function createTripSchema(v: ValidationHelper) {
+  return z.object({
+    routeId: idSchema,
+    vehicleId: idSchema.optional(),
+    driverId: idSchema.optional(),
+    direction: routeDirectionEnum.default("ROUND_TRIP"),
+    scheduledDate: z.string().datetime(),
+    scheduledTime: z.string().regex(timeHHmmRegex),
+    notes: z.string().max(2000, v.maxLength(2000)).optional(),
+  })
+}
+export type TripInput = z.infer<ReturnType<typeof createTripSchema>>
+
+export function createTripStartSchema(_v: ValidationHelper) {
+  return z.object({ id: idSchema })
+}
+
+export function createTripFinishSchema(v: ValidationHelper) {
+  return z.object({
+    id: idSchema,
+    notes: z.string().max(2000, v.maxLength(2000)).optional(),
+  })
+}
+
+export function createTripCancelSchema(v: ValidationHelper) {
+  return z.object({
+    id: idSchema,
+    reason: z.string().max(500, v.maxLength(500)).optional(),
+  })
+}
+
+export function createBoardingUpsertSchema(v: ValidationHelper) {
+  return z.object({
+    tripId: idSchema,
+    studentId: idSchema,
+    stopId: idSchema,
+    status: boardingStatusEnum,
+    notes: z.string().max(500, v.maxLength(500)).optional(),
+  })
+}
+
+// ============================================================================
+// Settings (Phase 4.1)
+// ============================================================================
+
+export function createTransportationSettingsSchema(v: ValidationHelper) {
+  return z.object({
+    defaultPickupBufferMinutes: z
+      .number()
+      .int()
+      .min(0, v.positive())
+      .max(240, v.max(240)),
+    defaultMonthlyFee: z
+      .number()
+      .nonnegative(v.positive())
+      .max(1_000_000, v.max(1_000_000))
+      .nullable()
+      .optional(),
+    notifyGuardiansOnTripStart: z.boolean(),
+    notifyGuardiansOnTripFinish: z.boolean(),
+    notifyGuardiansOnTripCancel: z.boolean(),
+    lateThresholdMinutes: z.number().int().min(0).max(240),
+  })
+}
+export type TransportationSettingsInput = z.infer<
+  ReturnType<typeof createTransportationSettingsSchema>
+>
+
+export const transportationSettingsSchema = z.object({
+  defaultPickupBufferMinutes: z.number().int().min(0).max(240),
+  defaultMonthlyFee: z.number().nonnegative().nullable().optional(),
+  notifyGuardiansOnTripStart: z.boolean(),
+  notifyGuardiansOnTripFinish: z.boolean(),
+  notifyGuardiansOnTripCancel: z.boolean(),
+  lateThresholdMinutes: z.number().int().min(0).max(240),
+})

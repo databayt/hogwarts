@@ -22,10 +22,13 @@ export async function PUT(
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: hall passes are managed by classroom staff.
+    // "SUPER_ADMIN" is dead code → "DEVELOPER"; STAFF added.
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "STAFF" &&
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }

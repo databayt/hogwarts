@@ -9,15 +9,19 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { ChatButton } from "./chat-button"
 import { ChatWindow } from "./chat-window"
 import { DEFAULT_CONFIG, DEFAULT_DICTIONARY } from "./constant"
-import type { SchoolChatbotContext } from "./prompts"
-import type { ChatbotDictionary, ChatbotProps, PromptType } from "./type"
+import type {
+  ChatbotDictionary,
+  ChatbotProps,
+  PromptType,
+  SchoolChatbotDisplay,
+} from "./type"
 import { useChatbot } from "./use-chatbot"
 
 interface ChatbotContentProps extends ChatbotProps {
   dictionary?: Partial<ChatbotDictionary>
   promptType?: PromptType
   subdomain?: string
-  schoolContext?: SchoolChatbotContext | null
+  schoolContext?: SchoolChatbotDisplay | null
 }
 
 export const ChatbotContent = forwardRef<
@@ -83,6 +87,11 @@ export const ChatbotContent = forwardRef<
       }
     }
 
+    // For school mode, pick the locale-appropriate name for the avatar alt
+    const schoolDisplayName =
+      schoolContext &&
+      (locale === "ar" ? schoolContext.schoolNameAr : schoolContext.schoolName)
+
     return (
       <>
         <ChatButton
@@ -91,6 +100,8 @@ export const ChatbotContent = forwardRef<
           position={chatbotConfig.position}
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
+          schoolLogoUrl={schoolContext?.logoUrl ?? null}
+          schoolName={schoolDisplayName ?? undefined}
         />
 
         <ChatWindow

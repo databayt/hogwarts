@@ -1,497 +1,205 @@
 ---
-title: "Add Values"
-description: "Step-by-step value delivery milestones from school signup to full automation — with real implementation status and fix plan"
+title: Add Values
+description: Twelve value milestones from school signup to full automation, with current implementation status and prioritized fix plan.
 ---
 
-## Overview
+Each milestone is a concrete moment where the platform delivers usable value to a school owner. They build sequentially from first signup to full operation.
 
-Every step below is a concrete milestone where the platform delivers real, usable value to a school owner. They are ordered from first signup to full operation. Each builds on the previous.
+## Status
 
-| #   | Add Value          | Status | What It Is                                             | Prerequisites        |
-| --- | ------------------ | ------ | ------------------------------------------------------ | -------------------- |
-| 1   | School Online      | ~93%   | Live school URL + join code after onboarding           | Complete 15 steps    |
-| 2   | Share & Invite     | ~70%   | Teachers and parents join via URL or join code         | School Online        |
-| 3   | First Announcement | ~97%   | Post visible to all school members                     | School Online        |
-| 4   | Team Onboard       | ~88%   | Add teachers manually or via CSV import                | School Online        |
-| 5   | Students In        | ~93%   | Add students manually, CSV, or admission flow          | School Online        |
-| 6   | Classes Formed     | ~90%   | Create classes linking teacher + subject + students    | Team + Students      |
-| 7   | Timetable Running  | ~95%   | Generate weekly schedule for all classes               | Classes Formed       |
-| 8   | Attendance Tracked | ~95%   | Mark daily attendance per class                        | Classes + Timetable  |
-| 9   | Grades Recorded    | ~90%   | Create exams, enter marks, generate report cards       | Classes + Students   |
-| 10  | Fees Collected     | ~78%   | Set up fee structure, record payments                  | Students In          |
-| 11  | Parents Connected  | ~85%   | Parents linked to students, see grades and attendance  | Students + Guardians |
-| 12  | School Automated   | ~60%   | Full cycle: attendance + grades + fees + communication | All above            |
+| #   | Milestone          | Status | What it is                                         | Prereq                       |
+| --- | ------------------ | -----: | -------------------------------------------------- | ---------------------------- |
+| 1   | School Online      |   ~93% | Live school URL + join code after onboarding       | Complete 15 onboarding steps |
+| 2   | Share and Invite   |   ~70% | Members join via URL or join code                  | School Online                |
+| 3   | First Announcement |   ~97% | Post visible to all members                        | School Online                |
+| 4   | Team Onboard       |   ~88% | Add teachers manually or via CSV                   | School Online                |
+| 5   | Students In        |   ~93% | Add students manually, CSV, or admission           | School Online                |
+| 6   | Classes Formed     |   ~90% | Class = teacher + subject + students               | Team + Students              |
+| 7   | Timetable Running  |   ~95% | Weekly schedule for all classes                    | Classes                      |
+| 8   | Attendance Tracked |   ~95% | Mark daily attendance per class                    | Classes + Timetable          |
+| 9   | Grades Recorded    |   ~90% | Exams, marks, report cards                         | Classes + Students           |
+| 10  | Fees Collected     |   ~78% | Fee structure + payments                           | Students                     |
+| 11  | Parents Connected  |   ~85% | Parents linked, see grades and attendance          | Students + Guardians         |
+| 12  | School Automated   |   ~60% | Cross-system triggers (attendance + grades + fees) | All above                    |
 
----
+## Per-milestone notes
 
-## 1. School Online — ~93%
+### 1. School Online — ~93%
 
-Complete [onboarding](/docs/onboarding) (15 steps) and the platform provisions a live subdomain.
+15-step [onboarding](/docs/onboarding); platform provisions a live subdomain via middleware rewrite (`school.databayt.org`).
 
-### Progress
+- All 15 steps shipped with routes, validation, server actions
+- School creation atomic (`$transaction`)
+- `completeOnboarding()` activates school, fires `provisionSchoolDefaults()`, generates join code
+- Location step uses Mapbox
 
-- All 15 onboarding steps with routes, forms, validation, and server actions
-- School creation is atomic (`$transaction`)
-- Subdomain provisioning works via middleware rewrite (`school.databayt.org`)
-- `completeOnboarding()` marks school active and fires `provisionSchoolDefaults()`
-- Join code auto-generated during provisioning
-- Location step uses Mapbox interactive map
-- Full school dashboard available immediately at the subdomain
+| Gap                                                          | Effort | Impact     |
+| ------------------------------------------------------------ | ------ | ---------- |
+| Duplicate `action.ts` + `actions.ts` in subdomain            | Quick  | Cleanup    |
+| Stripe not integrated (price/discount steps store data only) | Large  | Revenue    |
+| DNS providers stubbed (custom domains scaffolded)            | Large  | Enterprise |
 
-### Gaps
+### 2. Share and Invite — ~70%
 
-| Gap                                                                  | Effort | Impact     |
-| -------------------------------------------------------------------- | ------ | ---------- |
-| Duplicate subdomain files (`action.ts` + `actions.ts`)               | Quick  | Cleanup    |
-| Stripe not integrated (price/discount steps store data only)         | Large  | Revenue    |
-| DNS providers stubbed (custom domains scaffolded but not functional) | Large  | Enterprise |
+Backend solid (~1089 lines in `actions.ts`); UI gaps block self-enrollment.
 
-### How to Test
-
-1. Login with `user@databayt.org` / `1234`
-2. Walk through all 15 onboarding steps
-3. Verify congratulations page shows the school URL
-4. Navigate to `yourschool.localhost:3000` and confirm the dashboard loads
-5. After testing, reset: `pnpm db:reset-test-user`
-
----
-
-## 2. Share & Invite — ~70%
-
-Once the school is online, members can join. Backend is solid but key UI pieces are missing.
-
-### Progress
-
-- Full membership management (~1089 lines in `actions.ts`): invite, approve, reject, suspend, role change, bulk ops, CSV export
-- `InviteDialog` with role selection
+- `inviteMember()`, approve/reject/suspend, role change, bulk ops, CSV export
 - `MembershipRequest` model with status tracking
-- `joinSchoolByCode()` backend logic exists
-- Invitation acceptance route (`/accept-invite?token=...`) with accept/decline flow
-- Public school marketing pages exist (`school.databayt.org/` with about, academic, admissions, inquiry, tour)
-- Newcomers multi-step modal
-- `expire-invitations` cron job exists (not yet registered in vercel.json)
+- `joinSchoolByCode()` exists (no UI)
+- `/accept-invite?token=...` accept/decline flow
+- Public school marketing pages exist
+- `expire-invitations` cron exists (not yet in `vercel.json`)
 
-### Gaps
+| Gap                                       | Effort | Impact          |
+| ----------------------------------------- | ------ | --------------- |
+| No join code entry UI for users           | Quick  | Self-enrollment |
+| No join code display/copy UI for admins   | Quick  | Sharing         |
+| No bulk invite UI (paste multiple emails) | Medium | Efficiency      |
+| Register `expire-invitations` cron        | Quick  | Cleanup         |
 
-| Gap                                                                                | Effort | Impact          |
-| ---------------------------------------------------------------------------------- | ------ | --------------- |
-| No join code entry UI for users (backend `joinSchoolByCode()` exists, no frontend) | Quick  | Self-enrollment |
-| No join code display/copy UI for admins (code generated but never shown)           | Quick  | Sharing         |
-| No bulk invite UI (paste multiple emails)                                          | Medium | Efficiency      |
-| Register `expire-invitations` cron in vercel.json                                  | Quick  | Cleanup         |
+### 3. First Announcement — ~97%
 
-### How to Test
+Full CRUD (~1251 lines), audience scoping, priority, scheduling, pinning, auto-translate (Google Translate API), read tracking, in-app notifications, scheduled publishing cron, export, parent portal view.
 
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Membership > click "Invite Member"
-3. Invited user receives email with accept link
-4. Click accept link → `/accept-invite?token=...` → user joins school
+| Gap                                                                                            | Effort | Impact    |
+| ---------------------------------------------------------------------------------------------- | ------ | --------- |
+| Email notifications not wired (publish dispatches in-app only despite `emailOnPublish` toggle) | Quick  | Reach     |
+| No file attachments                                                                            | Medium | Usability |
 
----
+### 4. Team Onboard — ~88%
 
-## 3. First Announcement — ~97%
+Email invite + accept link, CSV/XLSX/JSON bulk import via `bulkImportTeachers()`, downloadable templates, role-specific profile creation, member CSV export.
 
-Fully functional announcement system with rich features.
+| Gap                                      | Effort | Impact     |
+| ---------------------------------------- | ------ | ---------- |
+| No bulk invite (paste multiple emails)   | Medium | Efficiency |
+| No post-import teacher onboarding wizard | Large  | Experience |
 
-### Progress
+### 5. Students In — ~93%
 
-- Full CRUD (~1251 lines in `actions.ts`)
-- Rich model: audience scoping, priority levels, scheduling, pinning, featuring
-- Auto-translation via Google Translate API
-- Read tracking with unread badges
-- Notification dispatch (in-app)
-- Scheduled publishing via cron job (`/api/cron/publish-announcements`)
-- Config page with templates
-- Export functionality
-- Parent portal view
+Full CRUD (7-step registration), CSV/XLSX/JSON bulk import, admission pipeline (campaigns → applications → merit list → enrollment → section placement with capacity checks), guardian linking, student access codes.
 
-### Gaps
+No critical MVP gaps.
 
-| Gap                                                                                                             | Effort | Impact    |
-| --------------------------------------------------------------------------------------------------------------- | ------ | --------- |
-| Email notifications not wired (`emailOnPublish` config toggle exists but publish action only dispatches in-app) | Quick  | Reach     |
-| No file attachments (schema has no attachment fields)                                                           | Medium | Usability |
+### 6. Classes Formed — ~90%
 
-### How to Test
+`Class = Subject + Teacher + Grade + Term + Classroom + Students`. Full CRUD (~65KB actions), `StudentClass` bridge with capacity, subject-teacher roles (`PRIMARY`, `CO_TEACHER`, `ASSISTANT`), catalog subject linking, CSV export.
 
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Announcements
-3. Create a new announcement, set audience, publish
-4. Login with `teacher@databayt.org` and verify it appears
-5. Check unread badge clears after viewing
+| Gap                                                              | Effort | Impact         |
+| ---------------------------------------------------------------- | ------ | -------------- |
+| `gradeId` not auto-derived from subject/catalog on `createClass` | Quick  | Data integrity |
 
----
+### 7. Timetable Running — ~95%
 
-## 4. Team Onboard — ~88%
+3-phase AI generation (974 lines), visual grid editor, role-based views, conflict detection (teacher/room/student), substitutions, templates, PDF/CSV export, RBAC across 28+ guarded mutations, readable preview names.
 
-Add teachers to the school via multiple channels.
+| Gap                                                         | Effort | Impact |
+| ----------------------------------------------------------- | ------ | ------ |
+| Performance optimizations (`React.memo`, virtual scrolling) | Medium | Scale  |
+| ARIA labels, keyboard nav                                   | Medium | A11y   |
 
-### Progress
+### 8. Attendance Tracked — ~95%
 
-- `inviteMember()` with email + role, accept link in email
-- Invitation acceptance page at `/accept-invite?token=...`
-- CSV/XLSX/JSON import for teachers via `bulkImportTeachers()`
-- Downloadable import templates
-- `InviteDialog` UI with role selection
-- Role-specific profile creation on approval
-- CSV export of member list
-
-### Gaps
-
-| Gap                                                                               | Effort | Impact     |
-| --------------------------------------------------------------------------------- | ------ | ---------- |
-| No bulk invite (paste multiple emails at once)                                    | Medium | Efficiency |
-| No post-import teacher onboarding flow (teacher gets account but no guided setup) | Large  | Experience |
-
-### How to Test
-
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Membership > click "Invite Member"
-3. For bulk import: School Settings > Bulk > Teachers tab
-
----
-
-## 5. Students In — ~93%
-
-Full student management with admission pipeline.
-
-### Progress
-
-- Full CRUD with multi-step registration form (7 steps)
-- CSV/XLSX/JSON bulk import with downloadable templates
-- Admission pipeline: campaigns, applications, merit list, enrollment confirmation, section placement with capacity checks
-- Guardian linking via student wizard enrollment step
-- Student access codes
-- Enrollment with grade/class/batch assignment
-
-### Gaps
-
-None critical for MVP.
-
-### How to Test
-
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Students listing > create new student
-3. Test CSV import via School Settings > Bulk > Students tab
-4. Test admission: create campaign at `/admission`, submit application, review, admit, place in section
-
----
-
-## 6. Classes Formed — ~90%
-
-Create classes that link teacher, subject, grade, and enrolled students.
-
-```
-Class = Subject + Teacher + Grade + Term + Classroom + Students
-```
-
-### Progress
-
-- Full CRUD (~65KB actions file)
-- Student enrollment via `StudentClass` bridge table with capacity checks
-- Subject-teacher assignment with roles (PRIMARY, CO_TEACHER, ASSISTANT) via `subject-teachers.tsx`
-- Subject linking from catalog
-- Term and classroom assignment
-- Capacity management
-- CSV export
-
-### Gaps
-
-| Gap                                                                                                     | Effort | Impact         |
-| ------------------------------------------------------------------------------------------------------- | ------ | -------------- |
-| `gradeId` not auto-derived on class creation (accepted from form but not inferred from subject/catalog) | Quick  | Data integrity |
-
-### How to Test
-
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Classes listing > create new class
-3. Assign teacher, subject, grade, term
-4. Use subject-teacher assignment panel for multi-teacher classes
-5. Enroll students from the class detail page
-
----
-
-## 7. Timetable Running — ~95%
-
-Generate weekly schedules with AI-powered conflict resolution.
-
-### Progress
-
-- Full 3-phase AI generation algorithm (974 lines)
-- Visual grid with click-to-assign editing
-- Role-based views (admin, teacher, student, guardian)
-- Conflict detection (teacher, room, student overlaps)
-- Slot editor for manual adjustments
-- Substitution management
-- Template system for recurring structures
-- PDF/CSV export
-- Term-based schedules
-- RBAC with 28+ guarded mutation endpoints
-- Preview uses readable names (not truncated IDs)
-
-### Gaps
-
-| Gap                                                                                | Effort | Impact |
-| ---------------------------------------------------------------------------------- | ------ | ------ |
-| Performance optimizations needed (React.memo, virtual scrolling for large schools) | Medium | Scale  |
-| Accessibility gaps (ARIA labels, keyboard navigation)                              | Medium | a11y   |
-
-### How to Test
-
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to Timetable page
-3. Click cells to edit individual slots
-4. Go to Generate tab to run AI generation
-5. Login with `teacher@databayt.org` to see teacher-specific view
-
----
-
-## 8. Attendance Tracked — ~95%
-
-The most complete subsystem. Full daily attendance with multiple input methods.
-
-### Progress
-
-- Daily marking with 6 statuses (present, absent, late, excused, early leave, sick)
-- Smart class auto-selection from current timetable period
-- Bulk marking with keyboard shortcuts (P/A/L, Ctrl+S to save)
-- QR code, barcode/RFID, geofence verification
-- Excuse system (7 categories) + intervention tracking (14 types)
-- Analytics dashboard with charts
-- CSV export, policy engine, compliance reporting
-- Kiosk mode + hall pass system
-
-### Gaps
-
-| Gap                                                                              | Effort | Impact        |
-| -------------------------------------------------------------------------------- | ------ | ------------- |
-| STAFF role has write access (can mark/delete) — should be read-only              | Quick  | Security      |
-| 24 `.tsx.bak` backup files need cleanup                                          | Quick  | Hygiene       |
-| No parent notification on absence (no `dispatchNotification` in attendance save) | Quick  | Communication |
-
-### How to Test
-
-1. Login with `admin@databayt.org` or `teacher@databayt.org` on `demo.localhost:3000`
-2. Navigate to Attendance page
-3. Select a class and date, mark students using P/A/L shortcuts
-4. Press Ctrl+S to save
-
----
-
-## 9. Grades Recorded — ~90%
-
-Extensive exam system with report card generation.
-
-### Progress
-
-- 40+ exam route pages
-- Full CRUD for exams and marks
-- Mark entry: manual, auto-calculate, AI-assisted, bulk, OCR scan
-- Question bank with AI generation + CSV import/export
-- Grading config: GPA 4.0/5.0, letter grades, CGPA
-- Report card generation (fixed: queries through `class.termId`)
-- Progress reports, certificates
-- Quick/mock/quiz exam modes
-- Exam creation wizard
-
-### Gaps
-
-| Gap                                                                         | Effort | Impact     |
-| --------------------------------------------------------------------------- | ------ | ---------- |
-| Academic metrics on admin dashboard return hardcoded zeros (GPA, pass rate) | Medium | Visibility |
-| No real-time collaboration during grading sessions                          | Large  | Workflow   |
-
-### How to Test
-
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. Navigate to `/exams` > create exam, enter marks
-3. Navigate to `/exams/report-cards/` > generate report cards for a term
-
----
-
-## 10. Fees Collected — ~78%
-
-Fee management with manual payment tracking. Invoicing module exists.
-
-### Progress
-
-- Full models: FeeStructure, FeeAssignment, Payment, Refund, Scholarship, Fine
-- Tabbed UI (5 tabs: structures, assignments, payments, scholarships, fines)
-- CRUD actions with schoolId scoping
-- Financial reports: balance sheet, income statement, trial balance
-- Invoice module with wizard, bulk generation, email sending
-- Fee overdue cron job detects overdue payments and notifies
-- Dashboard stats
-
-### Gaps
-
-| Gap                                                                                 | Effort | Impact         |
-| ----------------------------------------------------------------------------------- | ------ | -------------- |
-| Auto-invoice on fee assignment (manual invoice exists, not triggered automatically) | Quick  | Workflow       |
-| Receipt PDF generator for payments (receipt number generated, no PDF)               | Medium | Records        |
-| Late fee auto-calculation (overdue detected but no fine auto-created)               | Quick  | Revenue        |
-| Payment number uses `Date.now()+random` (no DB uniqueness constraint)               | Quick  | Data integrity |
-| No parent-facing self-service payment portal                                        | Large  | Revenue        |
-| No online payment gateway for per-school fees                                       | Large  | Revenue        |
-
-### How to Test
-
-1. Login with `admin@databayt.org` or `accountant@databayt.org` on `demo.localhost:3000`
-2. Navigate to `/finance/fees`
-3. Create fee structure, assign to students, record a payment
-
----
-
-## 11. Parents Connected — ~85%
-
-Parent portal with real data, messaging, and excuse submission.
-
-### Progress
-
-- Guardian and StudentGuardian models linked via admission/enrollment
-- Parent portal routes: attendance, announcements, events
-- Server actions: `getMyChildren()`, `getChildGrades()`, `getChildTimetable()`, `getChildOverview()`
-- Dashboard with real grade trends and term progress
-- Excuse submission form
-- Parent-teacher messaging (GUARDIAN can create direct messages)
-- Invoice history section on parent dashboard
-- Admin-side parent listing
-
-### Gaps
+Most complete subsystem. Daily marking with 6 statuses, smart class auto-select, bulk shortcuts (P/A/L, Ctrl+S), QR/barcode/RFID/geofence verification, excuses (7 categories), interventions (14 types), analytics, CSV export, kiosk mode, hall passes.
 
 | Gap                                                                                   | Effort | Impact        |
 | ------------------------------------------------------------------------------------- | ------ | ------------- |
-| No attendance → parent notification (absence not dispatched to guardians)             | Quick  | Communication |
-| No grade → parent notification (exam results not dispatched to guardians)             | Quick  | Communication |
-| No fee breakdown view for parents (invoice history exists but no detailed fee status) | Medium | Transparency  |
-| No daily digest email for parents (preference toggle exists, no implementation)       | Medium | Engagement    |
+| `STAFF` role has write access (should be read-only)                                   | Quick  | Security      |
+| 24 `.tsx.bak` files to delete                                                         | Quick  | Hygiene       |
+| No parent notification on absence (`dispatchNotification` missing in attendance save) | Quick  | Communication |
 
-### How to Test
+### 9. Grades Recorded — ~90%
 
-1. Login with `parent@databayt.org` / `1234` on `demo.localhost:3000`
-2. Dashboard shows real grade trends and attendance summary
-3. Navigate to messaging to send direct messages to teachers
+40+ exam routes, full CRUD for exams and marks, manual / auto-calculate / AI-assisted / bulk / OCR mark entry, question bank with AI generation + CSV, GPA 4.0/5.0/letter/CGPA configs, report cards (queries via `class.termId`), progress reports, certificates, exam wizard.
 
----
+| Gap                                                                         | Effort | Impact     |
+| --------------------------------------------------------------------------- | ------ | ---------- |
+| Academic metrics (GPA, pass rate) on admin dashboard return hardcoded zeros | Medium | Visibility |
+| No real-time collaboration during grading                                   | Large  | Workflow   |
 
-## 12. School Automated — ~60%
+### 10. Fees Collected — ~78%
 
-Individual subsystems work. Cross-system triggers exist for fees, assignments, and announcements but not for attendance or grades.
+Models: `FeeStructure`, `FeeAssignment`, `Payment`, `Refund`, `Scholarship`, `Fine`. Tabbed UI (5 tabs), CRUD with `schoolId` scope, financial reports (balance sheet, income statement, trial balance), invoice wizard, bulk generation, email sending, fee-overdue cron, dashboard stats.
 
-### Progress
+| Gap                                                     | Effort | Impact         |
+| ------------------------------------------------------- | ------ | -------------- |
+| Auto-invoice on fee assignment                          | Quick  | Workflow       |
+| Receipt PDF generator                                   | Medium | Records        |
+| Late fee auto-calc on overdue                           | Quick  | Revenue        |
+| `paymentNumber` uses `Date.now()+random` (no DB unique) | Quick  | Data integrity |
+| No parent self-service payment portal                   | Large  | Revenue        |
+| No online payment gateway per school                    | Large  | Revenue        |
 
-- Dashboard with `getDashboardSummary()` (parallel metric fetching)
-- Notification system: 6 models, 20 files, in-app + email channels
-- 10 active cron jobs: scheduled announcements, expiry, email processing, notifications cleanup, event/assignment/teacher reminders, fee overdue, attendance policies, scheduled reports
-- Inline notification triggers: fee assignment, payments, assignments, announcements, exams, admission, membership, substitutions
-- Each subsystem works independently
+### 11. Parents Connected — ~85%
 
-### Gaps
+`Guardian` and `StudentGuardian` linked via admission/enrollment, parent portal routes (attendance, announcements, events), `getMyChildren()` / `getChildGrades()` / `getChildTimetable()` / `getChildOverview()`, dashboard with real grade trends and term progress, excuse submission, parent-teacher messaging, invoice history, admin parent listing.
 
-| Gap                                                                 | Effort | Impact        |
-| ------------------------------------------------------------------- | ------ | ------------- |
-| Attendance save does not notify parents (most requested automation) | Quick  | Communication |
-| Grade recording does not notify parents                             | Quick  | Communication |
-| Academic performance metrics hardcoded to zero on admin dashboard   | Medium | Visibility    |
-| No daily parent digest cron (preference toggle exists in settings)  | Medium | Engagement    |
-| No cross-system analytics dashboard (siloed per module)             | Large  | Reporting     |
+| Gap                                                       | Effort | Impact        |
+| --------------------------------------------------------- | ------ | ------------- |
+| No attendance → parent dispatch                           | Quick  | Communication |
+| No grade → parent dispatch                                | Quick  | Communication |
+| No fee breakdown view for parents                         | Medium | Transparency  |
+| No daily digest email (preference toggle exists, no impl) | Medium | Engagement    |
 
-### How to Test
+### 12. School Automated — ~60%
 
-1. Login with `admin@databayt.org` / `1234` on `demo.localhost:3000`
-2. School dashboard shows enrollment/attendance/staff metrics
-3. End-to-end flow: create exam → enter marks → generate report card → verify PDF
+`getDashboardSummary()` with parallel metric fetching, notification system (6 models, 20 files, in-app + email), 10 active cron jobs (announcements, expiry, email queue, notification cleanup, event/assignment/teacher reminders, fee overdue, attendance policies, scheduled reports), inline triggers on fees, payments, assignments, announcements, exams, admission, membership, substitutions.
 
----
+| Gap                                     | Effort | Impact        |
+| --------------------------------------- | ------ | ------------- |
+| Attendance save doesn't notify parents  | Quick  | Communication |
+| Grade recording doesn't notify parents  | Quick  | Communication |
+| Hardcoded academic metrics on dashboard | Medium | Visibility    |
+| No daily parent digest cron             | Medium | Engagement    |
+| No cross-system analytics dashboard     | Large  | Reporting     |
 
-## Value Chain
+## Fix plan
 
-```
-School Online (1) .............. ~93%  ✓ MVP complete
-├── Share & Invite (2) ......... ~70%  ⚠ missing join code UI
-├── First Announcement (3) ..... ~97%  ✓ near-complete
-├── Team Onboard (4) ........... ~88%  ✓ invite acceptance works
-│   └── Classes Formed (6) ..... ~90%  ✓ subject-teacher assignment works
-│       ├── Timetable Running (7) ~95%  ✓ fully guarded
-│       │   └── Attendance (8) .. ~95%  ⚠ no parent notification
-│       └── Grades Recorded (9) . ~90%  ✓ report cards work
-├── Students In (5) ............ ~93%  ✓ MVP complete
-│   ├── Fees Collected (10) .... ~78%  ⚠ no auto-invoice, no online pay
-│   └── Parents Connected (11) . ~85%  ⚠ no event notifications
-└── School Automated (12) ...... ~60%  ⚠ attendance/grades don't notify
-```
+### Tier 1 — quick wins (under 1 hour each)
 
----
+| #   | Fix                                                                           | Milestone | Files                                             |
+| --- | ----------------------------------------------------------------------------- | --------- | ------------------------------------------------- |
+| 1   | Join code display/copy for admins                                             | 2         | `membership/content.tsx`                          |
+| 2   | Join code entry dialog (calls `joinSchoolByCode()`)                           | 2         | new `join-code-dialog.tsx`                        |
+| 3   | Announcement email dispatch (add `"email"` to channels when `emailOnPublish`) | 3         | `announcements/actions.ts` ~L1241                 |
+| 4   | Attendance → parent notification on `ABSENT`/`LATE`                           | 8, 11, 12 | `attendance/actions.ts`                           |
+| 5   | Real GPA/pass rate from `ExamResult`                                          | 9, 12     | `dashboard/actions.ts` ~L350                      |
+| 6   | Auto-invoice in `assignFee()`                                                 | 10        | `finance/fees/actions.ts`                         |
+| 7   | Late fee creation in `fee-overdue` cron                                       | 10        | `api/cron/fee-overdue/route.ts`                   |
+| 8   | `paymentNumber` `@@unique` + sequential generation                            | 10        | `prisma/models/finance.prisma`, `fees/actions.ts` |
+| 9   | `STAFF` attendance read-only                                                  | 8         | `attendance/authorization.ts`                     |
+| 10  | Subdomain duplicate cleanup (`action.ts` → `actions.ts`)                      | 1         | `onboarding/subdomain/`                           |
+| 11  | Register `expire-invitations` cron                                            | 2         | `vercel.json`                                     |
+| 12  | Delete 24 `.tsx.bak` files                                                    | 8         | `attendance/**/*.bak`                             |
+| 13  | `gradeId` auto-derive in `createClass()`                                      | 6         | `classes/actions.ts`                              |
 
-## Fix Plan
+### Tier 2 — medium (2-4 hours each)
 
-### Tier 1 — Quick Wins (< 1 hour each)
+| #   | Fix                                       | Milestone | Files                                 |
+| --- | ----------------------------------------- | --------- | ------------------------------------- |
+| 14  | Bulk invite (multi-email textarea)        | 2, 4      | `membership/invite-dialog.tsx`        |
+| 15  | Grade → parent dispatch on result publish | 11, 12    | `exams/manage/actions/crud.ts`        |
+| 16  | Receipt PDF (`@react-pdf` template)       | 10        | new `finance/receipt-pdf.tsx`         |
+| 17  | Daily parent digest cron                  | 11, 12    | new `api/cron/parent-digest/route.ts` |
+| 18  | Parent fee breakdown view                 | 11        | `dashboard/parent.tsx`                |
+| 19  | Announcement file attachments             | 3         | `prisma/models/announcement.prisma`   |
 
-These are the highest-impact, lowest-effort fixes. Each unblocks a user-visible workflow.
+### Tier 3 — large (1-2 days each)
 
-| #   | Fix                                                                                                  | Add Value    | File(s)                                           | Impact                      |
-| --- | ---------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------- | --------------------------- |
-| 1   | **Join code display/copy for admins** — show `school.joinCode` on membership page with copy button   | #2           | `membership/content.tsx`                          | Admins can share the code   |
-| 2   | **Join code entry UI** — dialog for newcomers to enter 6-char code, calls `joinSchoolByCode()`       | #2           | New: `join-code-dialog.tsx` in membership         | Self-enrollment works       |
-| 3   | **Announcement email dispatch** — when `emailOnPublish` is true, add `"email"` to channels array     | #3           | `announcements/actions.ts` (~line 1241)           | Announcements reach email   |
-| 4   | **Attendance → parent notification** — add `dispatchNotification` to attendance save for ABSENT/LATE | #8, #11, #12 | `attendance/actions.ts`                           | Parents notified of absence |
-| 5   | **Academic metrics on dashboard** — implement GPA/pass rate from `ExamResult` data instead of zeros  | #9, #12      | `dashboard/actions.ts` (~line 350)                | Dashboard shows real grades |
-| 6   | **Auto-invoice on fee assignment** — call `createInvoice()` inside `assignFee()`                     | #10          | `finance/fees/actions.ts`                         | Invoices auto-generated     |
-| 7   | **Late fee auto-creation** — add fine creation to `fee-overdue` cron when overdue detected           | #10          | `api/cron/fee-overdue/route.ts`                   | Late fees enforced          |
-| 8   | **Payment number uniqueness** — add `@@unique` on `paymentNumber` + sequential generation            | #10          | `prisma/models/finance.prisma`, `fees/actions.ts` | No collisions               |
-| 9   | **STAFF attendance read-only** — remove `mark`, `delete`, `manage_excuse` from STAFF permissions     | #8           | `attendance/authorization.ts`                     | Proper RBAC                 |
-| 10  | **Subdomain duplicate cleanup** — merge `action.ts` into `actions.ts`, update imports                | #1           | `onboarding/subdomain/`                           | Code hygiene                |
-| 11  | **Register expire-invitations cron** — add to `vercel.json`                                          | #2           | `vercel.json`                                     | Expired invites cleaned up  |
-| 12  | **Delete 24 `.tsx.bak` files** in attendance directory                                               | #8           | `attendance/**/*.bak`                             | Code hygiene                |
-| 13  | **gradeId auto-derive** — infer from subject catalog mapping in `createClass()`                      | #6           | `classes/actions.ts`                              | Data integrity              |
+| #   | Fix                                                 | Milestone | Files                  |
+| --- | --------------------------------------------------- | --------- | ---------------------- |
+| 20  | Stripe per-school payments                          | 10        | `finance/`, Stripe MCP |
+| 21  | Parent self-service payment portal                  | 10, 11    | new parent route       |
+| 22  | Cross-system analytics dashboard                    | 12        | `analytics/`           |
+| 23  | DNS provider implementation (Cloudflare/Vercel API) | 1         | `lib/dns-service.ts`   |
+| 24  | Teacher post-import onboarding wizard               | 4         | new                    |
+| 25  | Timetable a11y + performance                        | 7         | `timetable/`           |
 
-### Tier 2 — Medium (2-4 hours each)
+### Priority
 
-| #   | Fix                                                                                                           | Add Value | File(s)                                                | Impact                     |
-| --- | ------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------ | -------------------------- |
-| 14  | **Bulk invite UI** — multi-email textarea in invite dialog, loop `inviteMember()`                             | #2, #4    | `membership/invite-dialog.tsx`                         | Admin efficiency           |
-| 15  | **Grade → parent notification** — dispatch when exam results are entered/published                            | #11, #12  | `exams/manage/actions/crud.ts`                         | Parents notified of grades |
-| 16  | **Receipt PDF generator** — `@react-pdf` template for payment receipts                                        | #10       | New: `finance/receipt-pdf.tsx`                         | Recordkeeping              |
-| 17  | **Daily parent digest** — new cron aggregating attendance + grades + assignments per child                    | #11, #12  | New: `api/cron/parent-digest/route.ts`                 | Parent engagement          |
-| 18  | **Parent fee breakdown view** — dedicated page showing fee structures, assignments, payment history per child | #11       | `dashboard/parent.tsx` or new route                    | Financial transparency     |
-| 19  | **Announcement file attachments** — add `attachmentUrl` to schema, upload in form                             | #3        | `prisma/models/announcement.prisma`, announcement form | Usability                  |
+Tier 1 unblocks self-enrollment (1, 2), wires the last notification channels (3, 4), and puts real academic data on the dashboard (5). Tier 2 completes the parent notification loop and adds financial documents. Tier 3 is growth-stage — Stripe, custom domains, cross-system analytics.
 
-### Tier 3 — Large (1-2 days each)
+## See also
 
-| #   | Fix                                                                                    | Add Value | File(s)                       | Impact                    |
-| --- | -------------------------------------------------------------------------------------- | --------- | ----------------------------- | ------------------------- |
-| 20  | **Stripe per-school payments** — connect school fees to Stripe Checkout                | #10       | `finance/`, Stripe MCP        | Online revenue            |
-| 21  | **Parent self-service payment portal** — view fees, pay online                         | #10, #11  | New route under parent portal | Parent experience         |
-| 22  | **Cross-system analytics dashboard** — correlate attendance + grades + fees            | #12       | `analytics/`                  | Admin insights            |
-| 23  | **DNS provider implementation** — Cloudflare/Vercel API calls (scaffolded but stubbed) | #1        | `lib/dns-service.ts`          | Enterprise custom domains |
-| 24  | **Teacher post-import onboarding** — guided wizard for new teachers                    | #4        | New component                 | Teacher experience        |
-| 25  | **Timetable a11y + performance** — ARIA labels, keyboard nav, virtual scrolling        | #7        | `timetable/`                  | Accessibility + scale     |
-
-### Priority Order
-
-**Do Tier 1 first** — items 1-5 are the highest-impact quick wins. They collectively:
-
-- Enable join code self-enrollment (#1, #2)
-- Wire the last missing notification channel (#3, #4)
-- Light up the dashboard with real academic data (#5)
-
-**Then Tier 2** — items 14-17 complete the parent notification loop and add financial documents.
-
-**Tier 3 is optional for MVP** — Stripe, custom domains, and cross-system analytics are growth features.
-
-### After All Fixes
-
-```
-School Online (1) .............. ~98%
-├── Share & Invite (2) ......... ~95%
-├── First Announcement (3) ..... ~100%
-├── Team Onboard (4) ........... ~95%
-│   └── Classes Formed (6) ..... ~95%
-│       ├── Timetable Running (7) ~95%
-│       │   └── Attendance (8) .. ~100%
-│       └── Grades Recorded (9) . ~95%
-├── Students In (5) ............ ~95%
-│   ├── Fees Collected (10) .... ~90%
-│   └── Parents Connected (11) . ~95%
-└── School Automated (12) ...... ~85%
-```
+- [Onboarding](/docs/onboarding)
+- [Architecture](/docs/architecture)

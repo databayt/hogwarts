@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { headers } from "next/headers"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -30,6 +32,8 @@ export default async function EditorLayout({ children, params }: Props) {
     branding,
     yearCount,
     termCount,
+    levelCount,
+    gradeCount,
     discountCount,
     pendingDomainRequest,
   ] = await Promise.all([
@@ -76,6 +80,8 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
     schoolId ? db.schoolYear.count({ where: { schoolId } }).catch(() => 0) : 0,
     schoolId ? db.term.count({ where: { schoolId } }).catch(() => 0) : 0,
+    schoolId ? db.yearLevel.count({ where: { schoolId } }).catch(() => 0) : 0,
+    schoolId ? db.scoreRange.count({ where: { schoolId } }).catch(() => 0) : 0,
     schoolId
       ? db.discount
           .count({ where: { schoolId, isActive: true } })
@@ -92,12 +98,22 @@ export default async function EditorLayout({ children, params }: Props) {
       : null,
   ])
 
+  // Academic section uses a wide tabbed UI; other editors use the narrow 400px column.
+  const reqHeaders = await headers()
+  const requestPath =
+    reqHeaders.get("x-pathname") ||
+    reqHeaders.get("x-invoke-path") ||
+    reqHeaders.get("next-url") ||
+    ""
+  const isWideSection = requestPath.includes("/configuration/academic")
+
   const SECTION_KEYS = [
     "title",
     "description",
     "location",
     "capacity",
     "schedule",
+    "academic",
     "branding",
     "hero",
     "name-format",
@@ -216,6 +232,20 @@ export default async function EditorLayout({ children, params }: Props) {
             : ((cs?.terms as string) ?? "terms")
         return `${yearCount} ${yearLabel}, ${termCount} ${termLabel}`
       }
+      case "academic": {
+        // Aggregate counts across the 4 entities the academic editor manages.
+        const yearWord =
+          yearCount === 1
+            ? ((cs?.year as string) ?? "year")
+            : ((cs?.years as string) ?? "years")
+        const termWord =
+          termCount === 1
+            ? ((cs?.term as string) ?? "term")
+            : ((cs?.terms as string) ?? "terms")
+        const levelWord = (cs?.yearLevels as string) ?? "levels"
+        const gradeWord = (cs?.gradingScales as string) ?? "grades"
+        return `${yearCount} ${yearWord} · ${termCount} ${termWord} · ${levelCount} ${levelWord} · ${gradeCount} ${gradeWord}`
+      }
       case "join":
         return branding?.allowSelfEnrollment
           ? ((cs?.selfEnrollment as string) ?? "Self-enrollment with codes")
@@ -287,8 +317,20 @@ export default async function EditorLayout({ children, params }: Props) {
           <ConfigSidebar lang={lang} sectionLinks={sectionLinks} />
           <div className="lg:overflow-y-auto">
             <div className="flex min-h-full flex-col items-center justify-start py-8">
-              <div className="w-full max-w-[400px]">{children}</div>
-              <div className="text-muted-foreground w-full max-w-[400px] pt-8 pb-4 text-start text-sm">
+              <div
+                className={
+                  isWideSection ? "w-full max-w-5xl" : "w-full max-w-[400px]"
+                }
+              >
+                {children}
+              </div>
+              <div
+                className={
+                  isWideSection
+                    ? "text-muted-foreground w-full max-w-5xl pt-8 pb-4 text-start text-sm"
+                    : "text-muted-foreground w-full max-w-[400px] pt-8 pb-4 text-start text-sm"
+                }
+              >
                 <ReportIssue />
               </div>
             </div>

@@ -1,200 +1,320 @@
 ---
-title: "الهيكل"
-description: "توثيق هيكل المشروع"
+title: الهيكل
+description: تخطيط مجلدات المشروع، أعراف المسارات، وأنماط الملفات في لمحة.
 ---
 
-## هيكل الدلائل
+تستخدم Hogwarts Next.js App Router مع مكونات قائمة على الميزات. المسارات تعكس المكونات 1:1 — إن عرفت الـURL عرفت مكان الكود. راجع [الأنماط](/ar/docs/pattern) لأعراف الكود و[البنية المعمارية](/ar/docs/architecture) لشرح نمط المرآة.
 
-### نظرة عامة
-
-يتبع Databayt **بنية نمطية قائمة على الميزات** مصممة للتوسع وإعادة الاستخدام وسهولة الصيانة. يدعم هيكلنا أنماط الخدمات المصغرة والواجهات الأمامية المصغرة.
-
-### المبادئ الأساسية
-
-- **تنظيم مدفوع بـ URL**: كل مسار URL يرتبط مباشرة بهياكل دلائل متوقعة
-- **نمطية قائمة على الميزات**: كل ميزة مكتفية ذاتياً مع أنماط ملفات متسقة
-- **طبقات المكونات**: مكونات UI منظمة في طبقات ذرية وقوالب وميزات
-- **أنماط قابلة لإعادة الاستخدام**: اصطلاحات ملفات معيارية عبر جميع الميزات
-- **صديق للمصدر المفتوح**: هيكل واضح وموثق لمساهمات المجتمع
-
----
-
-## هيكل جذر المشروع
+## جذر المشروع
 
 ```text
-Databayt/
-├── public/                     # الأصول الثابتة
-├── src/                       # الكود المصدري
-│   ├── app/                   # صفحات وتوجيه Next.js App Router
-│   ├── components/            # المكونات القابلة لإعادة الاستخدام
-│   ├── lib/                   # الأدوات والتكوينات المشتركة
-│   └── types/                 # تعريفات TypeScript العامة
-├── docs/                      # التوثيق
-├── .env.local                 # متغيرات البيئة
-├── next.config.js             # تكوين Next.js
-├── package.json               # التبعيات
-├── tailwind.config.js         # تكوين Tailwind CSS
-└── tsconfig.json              # تكوين TypeScript
+hogwarts/
+├── public/                # أصول ثابتة
+├── prisma/
+│   ├── schema.prisma      # datasource + generator + imports
+│   ├── models/            # 73 ملف .prisma
+│   └── seeds/             # سكربتات seed (تُشغَّل عبر pnpm db:seed:single)
+├── src/
+│   ├── app/               # مسارات Next.js App Router
+│   ├── components/        # مكونات الميزات (مرآة لـapp/)
+│   ├── lib/               # وحدات utilities
+│   ├── types/             # تعريفات TypeScript عامة
+│   ├── styles/            # أنماط عامة (typography.css)
+│   └── proxy.ts           # Edge proxy — استخراج النطاق وإعادة الكتابة
+├── content/docs-en/       # وثائق MDX (إنجليزية)
+├── content/docs-ar/       # وثائق MDX (عربية، مرآة)
+├── scripts/               # سكربتات بناء + seed
+├── tests/                 # مجموعات E2E (Playwright)
+├── .env                   # بيئة مركزية — لا .env.local أبداً
+├── next.config.ts
+├── package.json           # pnpm فقط
+└── tsconfig.json          # @/* → ./src/*
 ```
 
-## هيكل دليل المصدر (`src/`)
+## المسارات (`src/app/`)
 
-### دليل App (`src/app/`)
+كل المسارات تحت `[lang]/` لتوجيه اللغة (`ar`, `en`). أربع نقاط دخول تُنفَّذ عبر مجموعات App Router.
+
+### نقاط الدخول
+
+| المجموعة             | الـURL                          | الغرض              | الوصول                       |
+| -------------------- | ------------------------------- | ------------------ | ---------------------------- |
+| `(saas-marketing)`   | `ed.databayt.org/`              | تسويق SaaS عام     | عام                          |
+| `(saas-dashboard)`   | `ed.databayt.org/dashboard`     | لوحة المشغّل       | DEVELOPER فقط                |
+| `(school-marketing)` | `school.databayt.org/`          | موقع المدرسة العام | عام                          |
+| `(school-dashboard)` | `school.databayt.org/dashboard` | منصة المدرسة       | أدوار المدرسة المصادَق عليها |
+
+### شجرة المسارات
 
 ```text
-src/app/
-├── globals.css               # الأنماط العامة
-├── layout.tsx                # التخطيط الجذري
-├── page.tsx                  # الصفحة الرئيسية
-├── loading.tsx               # واجهة التحميل العامة
-├── error.tsx                 # واجهة الخطأ العامة
-├── not-found.tsx             # صفحة 404
-├── gallery/                  # مسار الميزة: /gallery
-│   ├── page.tsx              # صفحة المعرض الرئيسية
-│   ├── layout.tsx            # تخطيط المعرض
-│   └── [slug]/               # مسارات المعرض الديناميكية
-└── dashboard/                # مسار الميزة: /dashboard
-    ├── page.tsx              # صفحة لوحة التحكم الرئيسية
-    └── analytics/            # مسار متداخل: /dashboard/analytics
+src/app/[lang]/
+├── (saas-marketing)/              # ed.databayt.org عام
+│   ├── page.tsx                   # الصفحة الرئيسية
+│   ├── pricing/
+│   ├── features/
+│   ├── community/                 # مركز الكتالوج
+│   └── docs/                      # عارض Fumadocs
+│
+├── (saas-dashboard)/              # المشغّل (DEVELOPER فقط)
+│   ├── dashboard/
+│   ├── tenants/                   # إدارة المدارس
+│   ├── billing/
+│   ├── sales/
+│   ├── domains/
+│   ├── observability/
+│   └── (catalog)/catalog/         # كتالوج محتوى المنصة
+│
+├── (auth)/                        # تسجيل دخول، انضمام، إعادة تعيين، OAuth
+├── onboarding/                    # معالج إنشاء المدرسة
+├── settings/
+├── my-school/                     # منتقي المدرسة
+│
+└── s/[subdomain]/                 # مسارات لكل مستأجر (هدف إعادة الكتابة)
+    ├── (school-marketing)/        # موقع المستأجر العام
+    │   ├── page.tsx               # رئيسية المدرسة
+    │   ├── admissions/
+    │   ├── academic/
+    │   ├── about/
+    │   ├── tour/
+    │   └── inquiry/
+    │
+    ├── application/               # تقديم عام من 9 خطوات
+    │
+    └── (school-dashboard)/        # المنصة المصادَق عليها
+        ├── dashboard/
+        ├── admission/             # إدارة القبول
+        ├── attendance/            # تتبّع الحضور
+        ├── timetable/
+        ├── exams/
+        ├── stream/                # LMS
+        ├── library/
+        ├── finance/
+        ├── billing/
+        ├── messages/
+        ├── notifications/
+        ├── transportation/
+        ├── settings/
+        └── (listings)/            # كيانات CRUD
+            ├── announcements/
+            ├── assignments/
+            ├── classes/
+            ├── classrooms/
+            ├── events/
+            ├── grades/
+            ├── lessons/
+            ├── parents/
+            ├── staff/
+            ├── students/
+            ├── subjects/
+            └── teachers/
 ```
 
-### دليل المكونات (`src/components/`)
+مقطع `s/[subdomain]/` **داخلي فقط**. الـmiddleware يعيد كتابة `school.databayt.org/dashboard` → `/[lang]/s/school/dashboard`. كود العميل يستخدم مسارات نسبية للمستأجر.
 
-بنية مكونات من ثلاث طبقات لأقصى قابلية لإعادة الاستخدام:
+## المكونات (`src/components/`)
+
+المسارات تعكس المكونات 1:1. ملف الصفحة رفيع — يستورد ويعرض `content.tsx` للميزة.
+
+```tsx
+// src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/students/page.tsx
+import { Content } from "@/components/school-dashboard/listings/students/content"
+
+export default function StudentsPage() {
+  return <Content />
+}
+```
+
+### مجلدات المكونات الرئيسية
+
+| المجلد                          | الغرض                                                 |
+| ------------------------------- | ----------------------------------------------------- |
+| `ui/`                           | shadcn/ui primitives (button, input, card, dialog, …) |
+| `atom/`                         | تركيبات من 2+ primitives لأنماط قابلة للإعادة         |
+| `template/`                     | تخطيطات صفحة كاملة (header, sidebar, footer)          |
+| `auth/`                         | المصادقة (login, join, reset, OAuth, بوابات الأدوار)  |
+| `onboarding/`                   | معالج إنشاء المدرسة من 18 خطوة                        |
+| `school-dashboard/`             | ميزات منصة المدرسة                                    |
+| `saas-dashboard/`               | ميزات لوحة المشغّل                                    |
+| `saas-marketing/`               | مكونات تسويق SaaS                                     |
+| `school-marketing/`             | مكونات الموقع العام للمدرسة                           |
+| `stream/`                       | LMS (مساقات، dashboard، دفع)                          |
+| `library/`                      | المكتبة الرقمية                                       |
+| `internationalization/`         | i18n (مبدّل اللغة، RTL، قواميس)                       |
+| `theme/`                        | مزوّد السمة + المبدّلات                               |
+| `providers/`                    | React contexts                                        |
+| `tenant/`, `school-switcher/`   | UI متعدد المستأجرين                                   |
+| `profile/`                      | ملف المستخدم (لكل دور)                                |
+| `docs/`, `mdx/`                 | عرض الوثائق                                           |
+| `file/`                         | رفع، تصفّح، تصدير، استيراد، طباعة، توليد              |
+| `crud-modal/`, `view-toggle/`   | أنماط CRUD وعرض عامة                                  |
+| `rich-text-editor/`, `chatbot/` | محرر نص + AI chat                                     |
+| `monitoring/`, `offline/`       | Observability + PWA                                   |
+| `billingsdk/`, `sales/`         | Billing + CRM                                         |
+
+### لوحة المدرسة (`src/components/school-dashboard/`)
+
+| الميزة الفرعية           | ما تغطّيه                                                                                                                               |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `listings/`              | 12 كياناً CRUD (announcements, assignments, classes, classrooms, events, grades, lessons, parents, staff, students, subjects, teachers) |
+| `dashboard/`             | لوحات حسب الدور (admin / teacher / student / parent / staff / accountant / principal)                                                   |
+| `attendance/`            | 11 وضع التقاط + gamification + رؤى AI                                                                                                   |
+| `timetable/`             | منشئ بصري + اكتشاف تعارضات + توليد                                                                                                      |
+| `admission/`             | تقديم من 9 خطوات + مراجعة وثائق بـAI + ترتيب جدارة                                                                                      |
+| `exams/`                 | امتحانات + mock + quizzes + qbank + شهادات + كروت درجات                                                                                 |
+| `finance/`               | مزدوج القيد + 6 بوابات دفع + Plaid + Dwolla + رواتب + فوترة                                                                             |
+| `library/`               | كتالوج + دوران                                                                                                                          |
+| `transportation/`        | سائقون + مركبات + مسارات + رحلات + صعود geofence                                                                                        |
+| `messaging/`             | 1:1 + جماعي + reactions + read receipts + جسر WhatsApp                                                                                  |
+| `notifications/`         | in-app + بريد + push                                                                                                                    |
+| `school/`                | إعداد المدرسة + علامة + أكاديمي + bulk + تقارير + أمن                                                                                   |
+| `analytics/`, `reports/` | تحليلات عابرة للميزات                                                                                                                   |
+
+### كيانات القوائم
+
+12 كياناً CRUD، كل واحد يتّبع [نمط ملفات الميزة](/ar/docs/pattern).
+
+| الكيان           | إضافات بارزة                                       |
+| ---------------- | -------------------------------------------------- |
+| `announcements/` | نطاق (مدرسة / فصل / دور)، قوالب                    |
+| `assignments/`   | تتبّع التسليم                                      |
+| `classes/`       | تصدير قائمة الفصل، تحليلات                         |
+| `classrooms/`    | السعة، النوع (مختبر، غرفة، خاصة)                   |
+| `events/`        | تسجيل                                              |
+| `grades/`        | transcripts، كروت درجات، ترقية                     |
+| `lessons/`       | صفحات لكل مادة                                     |
+| `parents/`       | إجراء ربط طفل                                      |
+| `staff/`         | راتب، timesheet                                    |
+| `students/`      | معالج 12 خطوة، ملف بـ8 تبويبات، تسجيل، أرشيف، أداء |
+| `subjects/`      | متصفّح كتالوج، مساهمات                             |
+| `teachers/`      | معالج 9 خطوات، أقسام، جدول                         |
+
+## القوالب (`src/components/template/`)
+
+| القالب                                    | الاستخدام            |
+| ----------------------------------------- | -------------------- |
+| `platform-sidebar/`                       | sidebar لوحة المدرسة |
+| `platform-header/`                        | header لوحة المدرسة  |
+| `platform-footer/`                        | footer لوحة المدرسة  |
+| `dashboard-sidebar/`, `dashboard-header/` | أسطح dashboard عامة  |
+| `marketing-header/`, `marketing-footer/`  | أسطح تسويق SaaS      |
+| `saas-header/`, `saas-sidebar/`           | لوحة المشغّل         |
+| `site-header/`, `site-footer/`            | تسويق المدرسة        |
+| `docs-sidebar/`                           | الوثائق              |
+| `mobile-nav/`                             | تنقّل الجوال         |
+| `listing.tsx`                             | قالب صفحة قائمة عام  |
+
+## نمط الملفات الموحّد للميزة
+
+كل مجلد ميزة يأخذ نفس الشكل. راجع [الأنماط](/ar/docs/pattern) للمرجع الكامل.
+
+| الملف                                 | النوع          | الغرض                                             |
+| ------------------------------------- | -------------- | ------------------------------------------------- |
+| `content.tsx`                         | خادم           | الواجهة الرئيسية، جلب بيانات، تنظيم تخطيط         |
+| `client.tsx`                          | عميل           | حدود `"use client"`، يستقبل بيانات الخادم         |
+| `actions.ts`                          | server actions | تعديلات مع auth + tenant + validation             |
+| `queries.ts`                          | خادم           | استعلامات قراءة فقط                               |
+| `authorization.ts`                    | خادم           | فحوص وصول حسب الدور                               |
+| `validation.ts`                       | مشترك          | Zod schemas                                       |
+| `types.ts`                            | مشترك          | أنواع المجال + UI                                 |
+| `config.ts`                           | مشترك          | ثوابت، enums، افتراضيات                           |
+| `form.tsx`                            | عميل           | نماذج إنشاء / تعديل (RHF + Zod)                   |
+| `table.tsx`                           | عميل           | غلاف DataTable مع أعمدة الميزة                    |
+| `columns.tsx`                         | عميل           | تعريفات الأعمدة (يستخدم `useMemo` إن وُجدت hooks) |
+| `card.tsx`, `detail.tsx`, `views.tsx` | عميل           | بطاقات KPI، صفحة تفاصيل، مبدّلات عرض              |
+| `list-params.ts`                      | عميل           | URL search-param cache (nuqs)                     |
+| `util.ts`                             | خالص           | helpers الميزة                                    |
+| `hooks.ts` / `use-<x>.ts`             | عميل           | hooks الميزة                                      |
+| `README.md`                           | وثيقة          | سياق على مستوى الكتلة (~40 سطر)                   |
+| `ISSUE.md`                            | وثيقة          | issues نشطة، سجل منجَز (~40 سطر)                  |
+
+## مخطط Prisma (`prisma/`)
 
 ```text
-src/components/
-├── ui/                       # مكونات shadcn/ui
-│   ├── button.tsx
-│   ├── input.tsx
-│   └── ...
-├── atoms/                    # مكونات ذرية قابلة لإعادة الاستخدام
-│   ├── logo.tsx
-│   ├── badge.tsx
-│   └── spinner.tsx
-├── templates/                # مكونات التخطيط والقوالب
-│   ├── header.tsx
-│   ├── footer.tsx
-│   └── sidebar.tsx
-└── gallery/                  # مكونات خاصة بالميزة
-    ├── constants.ts          # ثوابت المعرض
-    ├── types.ts              # تعريفات أنواع المعرض
-    ├── validation.ts         # مخططات التحقق
-    ├── actions.ts            # إجراءات الخادم
-    ├── use-gallery.tsx       # خطافات React المخصصة
-    ├── form.tsx              # مكونات النماذج
-    └── card.tsx              # مكون البطاقة
+prisma/
+├── schema.prisma                # datasource + generator + multi-file imports
+├── models/                      # 73 ملف .prisma (302 نموذج، 149 enum)
+│   ├── school.prisma
+│   ├── auth.prisma
+│   ├── students.prisma
+│   ├── staff.prisma
+│   ├── academic-structure.prisma
+│   ├── timetable.prisma
+│   ├── attendance.prisma
+│   ├── catalog.prisma
+│   ├── exam.prisma
+│   ├── finance-core.prisma
+│   ├── subscription.prisma
+│   ├── stream.prisma
+│   ├── transportation.prisma
+│   └── … 60 آخر
+└── seeds/                       # سكربتات seed
+    ├── index.ts                 # مدير — لا يُشغَّل مباشرة
+    ├── single.ts                # مشغّل seed وحيد — استخدمه دائماً
+    └── …
 ```
 
----
+شغّل seeds عبر `pnpm db:seed:single <name>`. لا تشغّل `pnpm db:seed`. راجع [Safe seeds](/ar/docs/safe-seeds).
 
-## نمط دليل الميزة
+## utilities المكتبة (`src/lib/`)
 
-**كل مسار URL له دليل ميزة مقابل في كل من `src/app/` و `src/components/`.**
+أبرز الأدوات التي ستلمسها كثيراً.
 
-للمسار `/gallery`:
+| الملف                 | الغرض                                                                 |
+| --------------------- | --------------------------------------------------------------------- |
+| `db.ts`               | Prisma client singleton                                               |
+| `tenant-context.ts`   | حلّ سياق متعدّد المستأجرين — مصدر الحقيقة لـ `schoolId`               |
+| `catalog-setup.ts`    | تزويد جسر الكتالوج                                                    |
+| `google-translate.ts` | عميل Google Translate API                                             |
+| `translate.ts`        | ترجمة مع تخزين DB                                                     |
+| `content-display.ts`  | `getDisplayText()` للترجمة عند الطلب                                  |
+| `auto-translate.ts`   | utilities ترجمة تلقائية                                               |
+| `stripe.ts`           | مدفوعات Stripe                                                        |
+| `cloudfront.ts`       | توقيع CloudFront CDN                                                  |
+| `rate-limit.ts`       | تحديد معدل API                                                        |
+| `oauth-redirect.ts`   | تعامل OAuth callback                                                  |
+| `school-access.ts`    | تحكّم وصول المدرسة                                                    |
+| `mapbox.ts`           | Mapbox geocoding                                                      |
+| `format-date.ts`      | تنسيق التواريخ                                                        |
+| `join-code.ts`        | توليد كود انضمام للمدرسة                                              |
+| `payment/providers/`  | 6 بوابات دفع (stripe, bankak, tap, bank-transfer, cash, mobile-money) |
+| `email-templates/`    | قوالب React Email                                                     |
 
-- `src/app/gallery/` – يحتوي مكونات صفحة Next.js ومنطق التوجيه
-- `src/components/gallery/` – يحتوي مكونات UI ومنطق خاص بالميزة
+## القواعد المفتاحية
 
-### ملفات الميزة القياسية
+| القاعدة             | التفصيل                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| مدير الحزم          | pnpm فقط (متطلب Vercel)                                            |
+| البيئة              | `.env` واحد — لا `.env.local` ولا `.env.development`               |
+| عزل المستأجرين      | كل استعلام DB يتضمّن `schoolId`                                    |
+| نمط المرآة          | مسارات `app/` تطابق 1:1 مجلدات `components/`                       |
+| HTML دلالي          | لا فئات `text-*` / `font-*` مكتوبة                                 |
+| توجيه اللغة         | كل المسارات تحت `[lang]/` لـ`ar` / `en`                            |
+| توجيه النطاق الفرعي | مسارات المدرسة تحت `s/[subdomain]/` (داخلي فقط)                    |
+| CSS منطقي           | `ms-*`, `me-*`, `ps-*`, `pe-*` — لا `ml-*`, `mr-*`, `pl-*`, `pr-*` |
+| Import alias        | `@/*` → `./src/*`                                                  |
+| المنفذ              | 3000 دائماً في التطوير                                             |
+| Seeding             | دائماً `pnpm db:seed:single <name>` — لا `pnpm db:seed`            |
 
-| الملف               | الغرض                                     |
-| ------------------- | ----------------------------------------- |
-| `constants.ts`      | ثوابت الميزة، التكوينات، البيانات الثابتة |
-| `types.ts`          | تعريفات أنواع TypeScript                  |
-| `validation.ts`     | مخططات التحقق من النماذج                  |
-| `actions.ts`        | إجراءات الخادم واستدعاءات API             |
-| `use-[feature].tsx` | خطافات React المخصصة                      |
-| `form.tsx`          | مكونات النماذج                            |
-| `card.tsx`          | مكونات البطاقات/العناصر                   |
-| `table.tsx`         | مكونات الجداول/القوائم                    |
-| `content.tsx`       | مكونات عرض المحتوى                        |
+## استيرادات شائعة
 
----
+```typescript
+import { auth } from "@/auth"
 
-## تعريفات طبقات المكونات
+import { getDisplayText } from "@/lib/content-display"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { PageHeader } from "@/components/atom/page-header"
+import { Content } from "@/components/school-dashboard/listings/students/content"
+import { PlatformSidebar } from "@/components/template/platform-sidebar"
+```
 
-### طبقة UI (`src/components/ui/`)
+## انظر أيضاً
 
-- **الغرض**: مكونات نظام التصميم الأساسية من shadcn/ui
-- **الاستخدام**: تُثبَّت عبر `npx shadcn-ui@latest add [component]`
-- **أمثلة**: Button، Input، Card، Dialog، Sheet
-
-### طبقة Atoms (`src/components/atoms/`)
-
-- **الغرض**: مكونات صغيرة قابلة لإعادة الاستخدام تتبع أنماط shadcn
-- **الاستخدام**: مكونات ذرية مخصصة مبنية فوق طبقة UI
-- **أمثلة**: Logo، Badge، Avatar، Spinner
-
-### طبقة Templates (`src/components/templates/`)
-
-- **الغرض**: مكونات التخطيط والهيكل
-- **الاستخدام**: تخطيطات الصفحات، التنقل، أقسام الصفحة الشائعة
-- **أمثلة**: Header، Footer، Sidebar، Navigation
-
-### طبقة الميزة (`src/components/[feature]/`)
-
-- **الغرض**: مكونات منطق الأعمال الخاصة بالميزة
-- **الاستخدام**: المكونات التي تنفذ ميزات أعمال محددة
-- **أمثلة**: مكونات المعرض، أدوات لوحة التحكم
-
----
-
-## اصطلاحات تسمية الملفات
-
-### المكونات
-
-- **مكونات React**: `kebab-case.tsx` (مثال: `user-profile.tsx`)
-- **الخطافات**: `use-feature-name.tsx` (مثال: `use-gallery.tsx`)
-- **الأنواع**: `kebab-case.ts` (مثال: `gallery-types.ts`)
-
-### الصفحات (App Router)
-
-- **الصفحات**: `page.tsx`
-- **التخطيطات**: `layout.tsx`
-- **التحميل**: `loading.tsx`
-- **الأخطاء**: `error.tsx`
-- **غير موجود**: `not-found.tsx`
-
-### الأدوات
-
-- **الثوابت**: `constants.ts` أو `config.ts`
-- **الإجراءات**: `actions.ts`
-- **التحقق**: `validation.ts`
-- **الأدوات**: `utils.ts`
-
----
-
-## أفضل الممارسات
-
-### تنظيم المكونات
-
-1. **مسؤولية واحدة**: كل مكون يجب أن يكون له غرض واحد واضح
-2. **تسمية متسقة**: اتبع أنماط التسمية المحددة عبر الميزات
-3. **أمان النوع**: استخدم TypeScript لجميع المكونات والأدوات
-4. **أنماط التصدير**: استخدم التصدير المسمى للمكونات، الافتراضي للصفحات
-
-### هيكل الملفات
-
-1. **مسارات متوقعة**: هيكل URL يرتبط مباشرة بهيكل الدليل
-2. **عزل الميزات**: حافظ على منطق الميزة داخل دلائل الميزة
-3. **الموارد المشتركة**: ضع الكود المشترك حقاً في `lib/` و `components/atoms|templates/`
-4. **التوثيق**: أضف ملفات README.md للميزات المعقدة
-
----
-
-## إرشادات المساهمة
-
-عند إضافة ميزة جديدة:
-
-1. **أنشئ هيكل المسار** في `src/app/[feature]/`
-2. **أنشئ دليل المكونات** في `src/components/[feature]/`
-3. **اتبع اصطلاحات الملفات** باستخدام أسماء ملفات قياسية
-4. **أضف أنواع TypeScript** لجميع هياكل البيانات
-5. **نفذ مخططات التحقق** للنماذج وAPIs
-6. **اكتب خطافات مخصصة** لإدارة الحالة
-7. **ابنِ مكونات UI** تتبع أنماط نظام التصميم
-8. **أضف التوثيق** لشرح استخدام الميزة
-
-هذا الهيكل يضمن بقاء قاعدة كودنا منظمة وقابلة للتوسع وصديقة للمساهمين.
+- [البنية المعمارية](/ar/docs/architecture) — شرح نمط المرآة
+- [الأنماط](/ar/docs/pattern) — أعراف الكود لكل ميزة
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — توجيه النطاق الفرعي + سياق المستأجر
+- [قاعدة البيانات](/ar/docs/database) — نماذج Prisma + قواعد العزل
+- [الحزمة](/ar/docs/stack) — اختيارات التقنية الكاملة

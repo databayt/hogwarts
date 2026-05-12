@@ -5,20 +5,16 @@ import Link from "next/link"
 import {
   ArrowRight,
   Bell,
-  Building,
   CheckCircle2,
   Cloud,
   Database,
   FileText,
-  GraduationCap,
   Mail,
-  School,
   Server,
   Settings,
   Shield,
   Upload,
   UserCog,
-  Users,
 } from "lucide-react"
 
 import { db } from "@/lib/db"
@@ -94,33 +90,21 @@ export default async function AdminContent({ dictionary, lang }: Props) {
       label: d?.stats?.users || "Users",
       value: totalUsers,
       sub: `${activeUsers} ${d?.stats?.activeInLast30Days || "verified"}`,
-      icon: Users,
-      color: "text-[#D97757]",
-      bg: "bg-[#D97757]/10",
     },
     {
       label: d?.stats?.teachers || "Teachers",
       value: totalTeachers,
       sub: d?.stats?.activeTeachers || "Active teachers",
-      icon: GraduationCap,
-      color: "text-[#6A9BCC]",
-      bg: "bg-[#6A9BCC]/10",
     },
     {
       label: d?.stats?.students || "Students",
       value: totalStudents,
       sub: d?.stats?.enrolledStudents || "Enrolled students",
-      icon: School,
-      color: "text-[#CBCADB]",
-      bg: "bg-[#CBCADB]/10",
     },
     {
       label: d?.stats?.departments || "Departments",
       value: totalDepartments,
       sub: d?.stats?.activeDepartments || "Active departments",
-      icon: Building,
-      color: "text-[#BCD1CA]",
-      bg: "bg-[#BCD1CA]/10",
     },
   ]
 
@@ -223,39 +207,24 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   ]
 
   return (
-    <div className="via-background min-h-full space-y-5 rounded-3xl bg-gradient-to-br from-[#6A9BCC]/[0.04] to-[#BCD1CA]/[0.04] p-2 sm:p-4 dark:from-[#6A9BCC]/[0.02] dark:to-[#BCD1CA]/[0.02]">
+    <div className="min-h-full space-y-5">
       {/* ============================================================== */}
       {/* SECTION 1 — Stat cards: 4 in a row                             */}
       {/* ============================================================== */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <Card key={stat.label} className={glass}>
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
-                      stat.bg
-                    )}
-                  >
-                    <Icon className={cn("h-5 w-5", stat.color)} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                      {stat.label}
-                    </p>
-                    <p className="text-3xl font-bold tracking-tight">
-                      {stat.value.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
+        {stats.map((stat) => (
+          <Card key={stat.label} className={glass}>
+            <CardContent className="p-5">
+              <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                {stat.label}
+              </p>
+              <p className="mt-2 text-3xl font-bold tracking-tight">
+                {stat.value.toLocaleString()}
+              </p>
+              <p className="text-muted-foreground mt-2 text-xs">{stat.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* ============================================================== */}
@@ -302,38 +271,31 @@ export default async function AdminContent({ dictionary, lang }: Props) {
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 px-6 pb-5">
-            {/* Proportional bar */}
-            <div className="bg-muted/50 flex h-3 w-full overflow-hidden rounded-full">
-              {barSegments.map((seg) => (
-                <div
-                  key={seg.label}
-                  className={cn(
-                    "h-full transition-all first:rounded-s-full last:rounded-e-full",
-                    seg.color
-                  )}
-                  style={{
-                    width: `${orgTotal > 0 ? (seg.value / orgTotal) * 100 : 0}%`,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Legend chips */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 lg:grid-cols-5">
-              {barSegments.map((seg) => (
-                <div key={seg.label} className="flex items-center gap-2">
-                  <span
-                    className={cn("h-2.5 w-2.5 shrink-0 rounded-full", seg.dot)}
-                  />
-                  <span className="text-muted-foreground truncate text-xs">
-                    {seg.label}
-                  </span>
-                  <span className="ms-auto text-sm font-semibold">
-                    {seg.value}
-                  </span>
-                </div>
-              ))}
+          <CardContent className="px-6 pb-5">
+            {/* Row breakdown — label, inline mini bar, count */}
+            <div className="divide-border/40 divide-y">
+              {barSegments.map((seg) => {
+                const pct = orgTotal > 0 ? (seg.value / orgTotal) * 100 : 0
+                return (
+                  <div
+                    key={seg.label}
+                    className="grid grid-cols-[7rem_1fr_3rem] items-center gap-4 py-2 first:pt-0 last:pb-0"
+                  >
+                    <span className="text-muted-foreground truncate text-xs">
+                      {seg.label}
+                    </span>
+                    <div className="bg-muted/50 h-1.5 w-full overflow-hidden rounded-full">
+                      <div
+                        className={cn("h-full rounded-full", seg.color)}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-end text-sm font-semibold tabular-nums">
+                      {seg.value}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>

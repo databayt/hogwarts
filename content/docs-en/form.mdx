@@ -1,32 +1,34 @@
 ---
 title: Form
-description: Canonical patterns for writing form.tsx client components in feature directories.
+description: Client component running RHF + Zod, calling a server action on submit.
 ---
 
-`form.tsx` is the client component that renders inputs, runs Zod validation via `react-hook-form`, and calls server actions on submit. Forms in this project always live next to a server `content.tsx`, a `validation.ts` (schemas), and an `actions.ts` (server actions).
+`form.tsx` renders inputs, runs Zod validation via `react-hook-form`, and calls server actions on submit. Sits next to `validation.ts` (schemas) and `actions.ts` (server actions).
 
 ## Categories
 
-A real form file is one of seven shapes. Pick the closest reference and adapt:
+| Category                | Shape                                                         | Reference                                       |
+| ----------------------- | ------------------------------------------------------------- | ----------------------------------------------- |
+| CRUD modal              | Create / edit / view via `useModal()` (130–250 lines)         | `listings/subjects/form.tsx`                    |
+| URL-routed wizard step  | Page per step under `WizardLayout`                            | `listings/teachers/wizard/information/form.tsx` |
+| Application wizard step | `forwardRef` + `useImperativeHandle` exposing `saveAndNext()` | `apply/personal/form.tsx`                       |
+| Onboarding step         | Wizard step for school onboarding                             | `onboarding/branding/form.tsx`                  |
+| Auth                    | Login / register / reset / 2FA — pre-tenant                   | `auth/login/form.tsx`                           |
+| Settings / config       | Inline update, no modal                                       | `timetable/settings/form.tsx`                   |
+| Exam / stream           | Dynamic field arrays                                          | `exams/qbank/form.tsx`                          |
 
-| Category                | Shape                                                                              | Reference                                       |
-| ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
-| CRUD modal              | Create / edit / view via `useModal()`. 130–250 lines.                              | `listings/subjects/form.tsx` (165)              |
-| URL-routed wizard step  | Page per step under `WizardLayout`, `WizardStep` save-before-navigate.             | `listings/teachers/wizard/information/form.tsx` |
-| Application wizard step | `forwardRef` + `useImperativeHandle` exposing `saveAndNext()` to the orchestrator. | `apply/personal/form.tsx` (330)                 |
-| Onboarding step         | Like wizard step but specifically for school onboarding.                           | `onboarding/branding/form.tsx`                  |
-| Auth                    | Login / register / reset / 2FA. Runs before tenant context.                        | `auth/login/form.tsx`                           |
-| Settings / config       | Update existing config inline, no modal.                                           | `timetable/settings/form.tsx`                   |
-| Exam / stream           | Dynamic field arrays (questions, options).                                         | `exams/qbank/form.tsx`                          |
+## Rules
 
-## Six rules
+| #   | Rule                                                                                      |
+| --- | ----------------------------------------------------------------------------------------- |
+| 1   | `"use client"` at the top                                                                 |
+| 2   | Schema imported from `validation.ts` — never inline                                       |
+| 3   | `zodResolver` typed with `useForm<XInput>` — never `as any`                               |
+| 4   | Use `<Name>Input` from `validation.ts` for values                                         |
+| 5   | Stay under ~200 lines                                                                     |
+| 6   | Submit through a dedicated `onSubmit` — call server action, handle response, toast, close |
 
-1. **`"use client"` at the top.** Every form is a client component.
-2. **Schema imported from `validation.ts`.** Never define Zod schemas inline; the colocated `validation.ts` is the single source of truth.
-3. **`zodResolver` is properly typed.** Use `useForm<z.infer<typeof schema>>` (or the exported `<Name>Input` type). Never `as any`.
-4. **`<Name>Input` type for values.** When the type is exported from `validation.ts`, import it; otherwise inline `z.infer<...>` is fine.
-5. **Stay under ~200 lines.** Beyond that, extract step components, field groups, or helpers to sibling files.
-6. **Submit through a dedicated `onSubmit`.** Call the server action there, handle the response, surface a toast, close the modal. Don't inline action calls in JSX.
+## Canonical example
 
 ```typescript
 "use client"
@@ -56,50 +58,26 @@ async function onSubmit(values: SubjectCreateInput) {
 }
 ```
 
-## Templates
+## Pattern selection
 
-Each template lives in the codebase. Don't copy-paste from this doc — read the source.
+| Scenario                        | Pattern                                      |
+| ------------------------------- | -------------------------------------------- |
+| Simple create form (1–5 fields) | `useActionState` + native `<form action={}>` |
+| Complex CRUD with edit mode     | `react-hook-form` + `zodResolver`            |
+| URL-routed multi-step wizard    | `WizardLayout` + `WizardStep`                |
+| Application wizard step         | `react-hook-form` + `forwardRef`             |
+| Real-time field validation      | `react-hook-form` + `zodResolver`            |
+| File uploads                    | `react-hook-form` + custom handlers          |
 
-| Template                 | File                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------- |
-| CRUD modal               | `src/components/school-dashboard/listings/subjects/form.tsx`                    |
-| Wizard step (forwardRef) | `src/components/apply/personal/form.tsx`                                        |
-| Multi-step modal         | `src/components/school-dashboard/listings/teachers/form.tsx`                    |
-| URL-routed wizard        | `src/components/school-dashboard/listings/teachers/wizard/information/form.tsx` |
+## Progressive enhancement (React 19)
 
-The shared mechanics worth knowing:
-
-- **Modal mode detection.** `useModal()` exposes `mode` and `id`. `id.startsWith("view:")` means read-only.
-- **Wizard data loading.** `createWizardProvider` ships data with retry; the step reads via `initialData`.
-- **`forwardRef` pattern.** Application steps expose `{ saveAndNext: () => Promise<boolean> }` to the parent orchestrator.
-- **`onValidChange` callback.** Wizard steps emit validity to their parent so the next-button can enable/disable.
-
-## Anti-patterns
-
-- **`zodResolver(schema) as any`** — hides type mismatches. Fix the schema or `defaultValues` instead.
-- **Inline schemas** — schemas belong in `validation.ts`. Forms import the schema and the inferred type.
-- **`dictionary: any`** — type the dictionary slice (`Dictionary["school"]["grades"]`).
-- **Monolith forms** — anything over 200 lines splits into step components or sibling files. Don't bundle CRUD + search + analytics + export in one form.
-- **Mixed concerns** — no data fetching, no table rendering, no utility functions. Data arrives via props.
-
-## Server-first architecture
-
-Form is a leaf. The boundary is narrow:
-
-```
-content.tsx (server)  →  client.tsx ("use client")  →  form.tsx (client leaf)
-```
-
-`content.tsx` fetches on the server (e.g. existing entity for edit). `client.tsx` manages modal state. `form.tsx` renders inputs.
-
-### Progressive enhancement (React 19)
-
-For simple forms (1–5 fields, no real-time validation UX), use native `<form action={}>` with `useActionState` — no `react-hook-form` needed.
+For simple forms, use native `<form action={}>` with `useActionState`:
 
 ```typescript
 "use client"
 
 import { useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -107,81 +85,53 @@ import { createItem } from "./actions"
 
 export function SimpleForm() {
   const [state, action, pending] = useActionState(createItem, null)
-
   return (
     <form action={action} className="space-y-4">
       <Input name="title" required />
-      <Input name="description" />
       {state?.error && <p className="text-destructive text-sm">{state.error}</p>}
-      <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+      <SubmitButton />
     </form>
   )
 }
-```
 
-The server action signature must be `(prevState, formData) => ...`, not just `(formData) => ...`:
-
-```typescript
-"use server"
-
-type ActionResponse = { error?: string; success?: boolean } | null
-
-export async function createItem(
-  prevState: ActionResponse,
-  formData: FormData
-): Promise<ActionResponse> {
-  const title = formData.get("title") as string
-  // validate + save…
-  return { success: true }
-}
-```
-
-For the submit button's pending state, prefer `useFormStatus` over threading `pending` through props:
-
-```typescript
-import { useFormStatus } from "react-dom"
-
-function SubmitButton({ label }: { label: string }) {
+function SubmitButton() {
   const { pending } = useFormStatus()
-  return <Button type="submit" disabled={pending}>{pending ? "Saving…" : label}</Button>
+  return <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
 }
 ```
 
-### When to pick which pattern
+The action signature must accept `(prevState, formData)`.
 
-| Scenario                        | Pattern                             |
-| ------------------------------- | ----------------------------------- |
-| Simple create form (1–5 fields) | `useActionState` + native `<form>`  |
-| Complex CRUD with edit mode     | `react-hook-form` + `zodResolver`   |
-| URL-routed multi-step wizard    | `WizardLayout` + `WizardStep`       |
-| Application wizard step         | `react-hook-form` + `forwardRef`    |
-| Real-time field validation      | `react-hook-form` + `zodResolver`   |
-| File uploads                    | `react-hook-form` + custom handlers |
+## Wizard mechanics
+
+- `useModal()` exposes `mode` and `id`. `id.startsWith("view:")` means read-only.
+- `createWizardProvider` ships data with retry; the step reads `initialData`.
+- Application steps expose `{ saveAndNext: () => Promise<boolean> }` via `forwardRef`.
+- `onValidChange` callback emits validity to the parent for next-button enable/disable.
+
+## Anti-patterns
+
+- `zodResolver(schema) as any` — fix the schema or `defaultValues` instead.
+- Inline schemas — schemas belong in `validation.ts`.
+- `dictionary: any` — type the slice.
+- Monolith forms over 200 lines — split into step components.
+- Mixed concerns — no fetching, no table rendering, no utils. Data arrives via props.
 
 ## File layout
 
-Form imports from `validation.ts` (schemas + inferred types) and `config.ts` (option arrays). Actions also import from `validation.ts`.
-
 ```
 src/components/<feature>/
-  config.ts         # Option arrays, limits
+  config.ts         # Option arrays
   validation.ts     # Zod schemas + inferred types
-  actions.ts        # Server actions (form.tsx calls these)
-  types.ts          # Props, ref types for form
+  actions.ts        # Server actions
+  types.ts          # Form props, ref types
   form.tsx          # Client component (this file)
   content.tsx       # Server component (renders form)
 ```
 
-For URL-routed wizards, each step is a directory:
+## See also
 
-```
-src/components/<feature>/wizard/
-  config.ts                  # WizardConfig (steps, groups, labels)
-  use-<entity>-wizard.ts     # createWizardProvider instance
-  actions.ts                 # createDraft, getForWizard
-  <step-name>/
-    validation.ts            # Step-specific schema
-    actions.ts               # save<Step> server action
-    form.tsx                 # useImperativeHandle exposing saveAndNext()
-    content.tsx              # WizardStep wrapper
-```
+- [Pattern](/docs/pattern)
+- [Validation](/docs/validation)
+- [Actions](/docs/actions)
+- [Content](/docs/content)

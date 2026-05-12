@@ -157,3 +157,49 @@ export async function getRoute(id: string) {
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
+
+export async function restoreRoute(id: string) {
+  const ctx = await requireContext("manage_route")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const current = await db.route.findFirst({
+      where: { id, schoolId },
+      select: { id: true, deletedAt: true },
+    })
+    if (!current) return actionError(ACTION_ERRORS.ROUTE_NOT_FOUND)
+    if (!current.deletedAt) return { success: true as const, data: { id } }
+
+    await db.route.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+
+    revalidatePath(transportationRevalidatePath("routes"))
+    return { success: true as const, data: { id } }
+  } catch {
+    return actionError(ACTION_ERRORS.ROUTE_UPDATE_FAILED)
+  }
+}
+
+/**
+ * Lists BUS_ROUTE-type geofences available to be linked to a transportation
+ * route. Filters by schoolId. Used by the route form's geofence picker.
+ */
+export async function listAvailableGeofences() {
+  const ctx = await requireContext("manage_route")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const fences = await db.geoFence.findMany({
+      where: { schoolId, type: "BUS_ROUTE", isActive: true },
+      select: { id: true, name: true, type: true },
+      orderBy: { name: "asc" },
+    })
+    return { success: true as const, data: fences }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}

@@ -1,0 +1,194 @@
+---
+title: تعدّد المستأجرين
+description: توجيه النطاقات الفرعية، حلّ سياق المستأجر، وعزل قاعدة البيانات عبر تحديد نطاق `schoolId`.
+---
+
+Hogwarts منصّة SaaS متعدّدة المستأجرين: كل مدرسة تعمل على نطاقها الفرعي الخاص (`school.databayt.org`) مع عزل كامل للبيانات عبر تحديد نطاق `schoolId`. تغطّي هذه الصفحة المسار من edge middleware حتى استعلام قاعدة البيانات.
+
+للتوثّق، OAuth، وRBAC راجع [authentication](/en/docs/authentication)، [oauth](/en/docs/oauth)، و[authorization](/en/docs/authorization).
+
+## مسار الطلب
+
+طلب إلى `school.databayt.org/dashboard` يمرّ بأربع طبقات:
+
+1. **Edge middleware** يتجاوز الملفات الثابتة، يكتشف اللغة والنطاق الفرعي، يفكّ تشفير JWT بشكل خفيف لـRBAC، ويعيد كتابة الـURL إلى `/en/s/school/dashboard`. ترويسة `x-subdomain` تُضبَط للمستهلكين في الطبقات اللاحقة.
+2. **سياق المستأجر** يحلّ `schoolId` القانوني بالأولوية: cookie الانتحال ← ترويسة `x-subdomain` ← session JWT.
+3. **مكوّن الخادم / الإجراء** يستخدم `getTenantContext()` ويُدرج `schoolId` في كل استعلام قاعدة بيانات.
+4. **قاعدة البيانات** تفرض أمان المستأجر عبر قيود `@@unique` و`@@index([schoolId])` لكل نموذج تجاري.
+
+## نقاط الدخول
+
+| نقطة الدخول      | النطاق                  | مسار التطبيق                        | التوثّق        | الغرض                  |
+| ---------------- | ----------------------- | ----------------------------------- | -------------- | ---------------------- |
+| SaaS Marketing   | `ed.databayt.org`       | `/(saas-marketing)`                 | عام            | landing، التسعير، docs |
+| SaaS Dashboard   | `ed.databayt.org`       | `/(saas-dashboard)`                 | DEVERLOPER فقط | إدارة المنصّة          |
+| School Marketing | `{school}.databayt.org` | `/s/[subdomain]/(school-marketing)` | عام            | صفحات المدرسة العامة   |
+| School Dashboard | `{school}.databayt.org` | `/s/[subdomain]/(school-dashboard)` | موثَّق         | إدارة المدرسة          |
+
+## Edge middleware
+
+يعمل edge proxy على كل طلب غير ثابت ويبقى تحت حدّ حجم Edge بتجنّب الاستيرادات الثقيلة. ترتيب المعالجة: تجاوز المسارات الثابتة وAPI، اكتشاف اللغة (`NEXT_LOCALE` cookie ← `Accept-Language` ← الافتراضي `ar`)، اكتشاف النطاق الفرعي، تصنيف المسار، فكّ تشفير JWT خفيف لفحوصات RBAC المسبقة، ثم إعادة كتابة الـURL مع ضبط `x-subdomain` للمستهلكين اللاحقين.
+
+فكّ تشفير دور JWT في edge يستخدم base64 فقط — التحقّق التشفيري الكامل يحدث في server actions عبر `auth()`. الـJWT موجود أصلاً في cookie آمن httpOnly؛ فكّ تشفير edge للتوجيه فقط.
+
+### اكتشاف النطاق الفرعي
+
+```typescript
+let subdomain: string | null = null
+
+if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+  // production: school.databayt.org → "school"
+  subdomain = host.split(".")[0]
+} else if (host.includes("---") && host.endsWith(".vercel.app")) {
+  // Vercel preview: tenant---branch.vercel.app → "tenant"
+  subdomain = host.split("---")[0]
+} else if (host.includes("localhost") && host.includes(".")) {
+  // dev: subdomain.localhost:3000 → "subdomain"
+  const parts = host.split(".")
+  if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
+    subdomain = parts[0]
+  }
+}
+```
+
+`ed.databayt.org` هو النطاق الرئيسي، ليس مستأجراً. فحص `!host.startsWith("ed.")` يمنع التصنيف الخاطئ.
+
+### إعادة كتابة الـURL
+
+المستخدمون يرون مسارات نظيفة؛ الخادم يعالج مسارات ذات نطاق المستأجر.
+
+```
+User sees:    school.databayt.org/dashboard
+Server sees:  school.databayt.org/en/s/school/dashboard
+File lives:   src/app/[lang]/s/[subdomain]/(school-dashboard)/dashboard/page.tsx
+```
+
+```typescript
+url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`
+const response = NextResponse.rewrite(url)
+response.headers.set("x-subdomain", subdomain)
+```
+
+`/login` و`/join` موجودان عالمياً في `/[lang]/(auth)/*`، خارج بنية النطاق الفرعي — لا يُعاد كتابتهما. الـmatcher يستثني `/_next/`، `/api/`، وأي مسار يحوي امتداد ملف.
+
+## سياق المستأجر
+
+`getTenantContext()` هو المصدر الوحيد للحقيقة لعزل المستأجرين. كل مكوّن خادم وإجراء خادم يجب أن يستدعيه.
+
+```typescript
+export async function getTenantContext(): Promise<TenantContext> {
+  // 1. impersonation cookie (DEVELOPER debugging)
+  const impersonatedSchoolId =
+    cookieStore.get("impersonate_schoolId")?.value ?? null
+
+  // 2. subdomain from middleware → resolve to schoolId
+  let headerSchoolId: string | null = null
+  const subdomain = hdrs.get("x-subdomain")
+  if (subdomain) {
+    headerSchoolId = await getSchoolIdFromSubdomain(subdomain)
+  }
+
+  // 3. session schoolId from JWT
+  const schoolId =
+    impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
+
+  return { schoolId, requestId: null, role, isPlatformAdmin }
+}
+```
+
+```typescript
+type TenantContext = {
+  schoolId: string | null
+  requestId: string | null
+  role: UserRole | null
+  isPlatformAdmin: boolean
+}
+```
+
+استعلامات النطاق الفرعي ← `schoolId` تستخدم cache من طبقتين: Upstash Redis (5 دقائق، مشترك بين النسخ) ← `Map` في الذاكرة (دقيقة واحدة، 100 إدخال كحدّ أقصى، احتياطي لكل نسخة). الاستعلامات الفاشلة لا تُخزَّن. Redis اختياري — بدونه، طبقة Map لا تزال تخدم الحركة مع cold starts تضرب قاعدة البيانات.
+
+القيود: طبقة Map لكل نسخة، لذا cold starts قد تضرب Redis أو قاعدة البيانات. تغييرات النطاق الفرعي تنتشر خلال 5 دقائق عالمياً ودقيقة واحدة لكل نسخة.
+
+## عزل قاعدة البيانات
+
+كل نموذج ضمن نطاق المستأجر يحمل `schoolId` بثلاث ضمانات:
+
+1. حقل `schoolId` على كل نموذج تجاري.
+2. قيود `@@unique` ضمن نطاق `schoolId` بحيث تكون التصادمات بين المستأجرين مستحيلة.
+3. `@@index([schoolId])` لأداء الاستعلام.
+
+```prisma
+model Student {
+  id       String @id @default(cuid())
+  schoolId String
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, studentId])
+  @@unique([schoolId, grNumber])
+  @@index([schoolId])
+}
+```
+
+### أنماط الاستعلام
+
+```typescript
+// correct — includes schoolId
+await db.student.findMany({
+  where: { schoolId, yearLevel: "10" },
+})
+
+// wrong — missing schoolId, breaks tenant isolation
+await db.student.findMany({
+  where: { yearLevel: "10" },
+})
+```
+
+حقن `schoolId` يدوي حالياً. رموز Auth، عموميات الكتالوج، ومستويات الاشتراك على مستوى المنصّة تفتقر إلى `schoolId` عمداً — راجع [database](/ar/docs/database) للقائمة الكاملة.
+
+## إدارة النطاقات
+
+كل مدرسة لها حقل `domain` فريد على نموذج `School` — يُسنَد أثناء onboarding.
+
+```prisma
+model School {
+  id     String @id @default(cuid())
+  domain String @unique
+}
+```
+
+`DnsService` يتحقّق من النطاقات الفرعية: من 3 إلى 63 حرفاً، أحرف وأرقام وشرطات فقط (RFC 1035)، بلا شرطات متتالية، مع حظر الكلمات المحجوزة (`www`، `api`، `admin`، `mail`، `dashboard`، `portal`، `dev`، `test`، `staging`، `demo`، `preview`، إلخ). نموذج `DomainRequest` يدعم اعتماد النطاقات المخصّصة بمسار `pending → approved → verified`؛ تكاملات مزوّدي DNS (Cloudflare، Route 53، Vercel) تُتبَّع منفصلة. راجع [onboarding](/en/docs/onboarding) لخطوة الإسناد.
+
+## التخزين المؤقّت
+
+| الطبقة                   | التقنية        | TTL                | النطاق             |
+| ------------------------ | -------------- | ------------------ | ------------------ |
+| حلّ المستأجر             | Upstash Redis  | 5 دقائق            | مشترك بين النسخ    |
+| حلّ المستأجر             | Map في الذاكرة | دقيقة              | لكل نسخة (احتياطي) |
+| استعلامات قاعدة البيانات | لا يوجد        | —                  | لا تخزين مؤقّت     |
+| الصور                    | Next.js Image  | 60 ثانية كحدّ أدنى | CDN                |
+
+cache من طبقتين: يُفحَص Redis أوّلاً، ثم Map؛ الإدخالات الناقصة تسقط إلى قاعدة البيانات. Map يحمل 100 إدخال كحدّ أقصى.
+
+## النشر
+
+| البيئة      | نمط النطاق                   | المثال                        |
+| ----------- | ---------------------------- | ----------------------------- |
+| Production  | `*.databayt.org`             | `school.databayt.org`         |
+| Preview     | `tenant---branch.vercel.app` | `demo---feature-x.vercel.app` |
+| Development | `*.localhost:3000`           | `demo.localhost:3000`         |
+
+Production يتطلّب wildcard DNS `*.databayt.org` يشير إلى Vercel، شهادة SSL تغطّي `*.databayt.org`، و`NEXT_PUBLIC_ROOT_DOMAIN=databayt.org`.
+
+## الاختبار
+
+أمان تعدّد المستأجرين مغطّى باختبارات Playwright الذرّية تحت `/tests`. مجموعات story تختبر: الوصول العام لـSaaS marketing، واجهة تسجيل الدخول، إعادة توجيه المسارات المحمية، قيود RBAC حسب الدور، عزل المستأجرين، تبديل اللغة، مسار المستخدم الجديد، SSO عبر النطاقات الفرعية. شغّل `pnpm test:e2e:multi-tenant` لتنفيذ المجموعة.
+
+## انظر أيضاً
+
+- [Authentication](/en/docs/authentication) — JWT، الجلسات، سلسلة أولويات إعادة التوجيه
+- [OAuth](/en/docs/oauth) — المزوّدون، adapter متعدّد المستأجرين، الحفاظ على callback، cookies
+- [Authorization](/en/docs/authorization) — فحوصات صلاحيات RBAC على مستوى الميزة
+- [Database](/ar/docs/database) — نماذج Prisma، تحديد نطاق schoolId، النماذج بدون `schoolId`
+- [Vercel platforms starter kit](https://github.com/vercel/platforms)
+- [NextAuth.js documentation](https://authjs.dev/)

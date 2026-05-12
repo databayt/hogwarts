@@ -1,0 +1,149 @@
+---
+title: الترجمة
+description: i18n من طبقتين — JSON قاموس للواجهة الثابتة، وgetDisplayText للمحتوى الديناميكي. فجوات التغطية وأنماط التبني.
+---
+
+تعمل الترجمة على طبقتين: ملفات JSON القاموس للواجهة الثابتة (متزامنة بين `ar.json`/`en.json`) و`getDisplayText()` لمحتوى قاعدة البيانات الديناميكي عبر Google Translate + تخزين مؤقّت في DB. البنية التحتية متينة؛ التبنّي جزئي — آلاف السلاسل الإنجليزية المكتوبة يدوياً ما زالت موجودة عبر مئات ملفات لوحة المدرسة. شغّل `/i18n-check` للعدد الحيّ.
+
+## البنية المعمارية
+
+| الطبقة             | المحتوى                                       | الآلية                                                          |
+| ------------------ | --------------------------------------------- | --------------------------------------------------------------- |
+| 1 — واجهة ثابتة    | sidebar، رؤوس الجداول، شارات الحالة، التسميات | JSON قاموس → `getDictionary()` → `dictionary.key`               |
+| 2 — محتوى ديناميكي | إعلانات، مواد، أقسام، فعاليات                 | تخزين بلغة واحدة → `getDisplayText()` → Google Translate مع كاش |
+
+## ملفات البنية التحتية
+
+| الملف                                                  | الغرض                                            |
+| ------------------------------------------------------ | ------------------------------------------------ |
+| `src/lib/content-display.ts`                           | `getDisplayText()`، `getDisplayFields()`         |
+| `src/lib/translate.ts`                                 | `translateWithCache()`، server actions           |
+| `src/lib/google-translate.ts`                          | عميل Google Translate                            |
+| `src/lib/auto-translate.ts`                            | utilities ترجمة تلقائية                          |
+| `src/components/internationalization/helpers/index.ts` | `ValidationHelper`، `ToastHelper`، `ErrorHelper` |
+| `src/components/internationalization/dictionaries.ts`  | محمّلات قاموس بنطاق المسار                       |
+
+## فجوات التغطية
+
+| الفجوة                                   | الحالة                                   |
+| ---------------------------------------- | ---------------------------------------- |
+| نص الأزرار (`Save`، `Cancel`، `Delete`…) | المفاتيح موجودة في `dictionary.common.*` |
+| التحقّق (رسائل Zod)                      | يحتاج إعادة هيكلة بمصنع schema           |
+| خيارات config / select                   | يحتاج مصانع خيارات                       |
+| تسميات النماذج وplaceholders             | تبنٍّ جزئي                               |
+| أخطاء server actions                     | يحتاج نمط رمز خطأ                        |
+| تبويبات / تسميات مجموعات المعالج         | معلّق                                    |
+| الحالات الفارغة                          | معلّق                                    |
+| رسائل Toast                              | يحتاج توصيل `ToastHelper`                |
+
+عناصر sidebar `Cards` و`Lab` تفتقد أيضاً مفاتيح القاموس. شغّل `/i18n-check` للعدد الحالي لكل منطقة.
+
+## ترتيب الأولويات
+
+1. نص الأزرار — المفاتيح موجودة بالفعل في `dictionary.common.*`.
+2. تسميات مجموعات المعالج — رؤية عالية.
+3. تسميات النماذج — أكبر أثر على UX.
+4. خيارات select — يحتاج مصنع config.
+5. التحقّق — يحتاج إعادة هيكلة بمصنع schema.
+6. أخطاء server actions — يحتاج نمط رمز خطأ.
+7. الحالات الفارغة.
+8. رسائل Toast — يحتاج توصيل القاموس.
+9. توسيع `getDisplayText` لبقية ملفات المحتوى.
+
+## نمط النموذج
+
+مرّر شرائح القاموس إلى نماذج العميل.
+
+```tsx
+// content.tsx
+const dictionary = await getDictionary(lang)
+return <StudentForm dictionary={dictionary.school.students} />
+
+// form.tsx
+<FormLabel>{dictionary.form.name}</FormLabel>
+<Input placeholder={dictionary.form.namePlaceholder} {...field} />
+```
+
+## نمط Select
+
+صدّر مصانع خيارات، لا مصفوفات ثابتة.
+
+```ts
+export const getGenderOptions = (d: Dictionary["school"]) => [
+  { value: "male", label: d.students.gender.male },
+  { value: "female", label: d.students.gender.female },
+]
+```
+
+## نمط التحقّق
+
+تتحوّل schemas إلى مصانع تستقبل `ValidationHelper`. يعمل بالفعل في onboarding وauth.
+
+```ts
+import { getValidationMessages } from "@/components/internationalization/helpers"
+
+export const createStudentSchema = (
+  v: ReturnType<typeof getValidationMessages>
+) =>
+  z.object({
+    name: z.string().min(1, v.required()),
+    email: z.string().email(v.email()),
+    phone: z.string().min(10, v.minLength(10)),
+  })
+```
+
+العائق: ملفات التحقّق عبر اللوحة بحاجة للتحوّل من schemas على مستوى الوحدة إلى مصانع.
+
+## نمط Toast
+
+```ts
+import { getToastMessages } from "@/components/internationalization/helpers"
+
+const t = useMemo(() => getToastMessages(dictionary), [dictionary])
+
+if (result.success) toast.success(t.success.student.created())
+else toast.error(t.error.student.createFailed())
+```
+
+العائق: toasts تعمل على العميل؛ `ToastHelper` يحتاج القاموس في نطاقه.
+
+## نمط أخطاء server action
+
+أعِد رموز أخطاء؛ ترجِم على العميل.
+
+```ts
+// actions.ts
+if (!session?.user) return { success: false, errorCode: "NOT_AUTHENTICATED" }
+if (!schoolId) return { success: false, errorCode: "MISSING_SCHOOL_CONTEXT" }
+
+// form.tsx
+const ERROR_MAP: Record<string, string> = {
+  NOT_AUTHENTICATED: dictionary.messages.errors.auth.notAuthenticated,
+  MISSING_SCHOOL_CONTEXT:
+    dictionary.messages.errors.tenant.missingSchoolContext,
+}
+toast.error(
+  ERROR_MAP[result.errorCode] ?? dictionary.messages.errors.server.internalError
+)
+```
+
+## الحالة لكل منطقة
+
+كل المناطق الـ21 (Dashboard، Students، Teachers، Classes، Subjects، Announcements، Events، Assignments، Parents، Grades، Classrooms، Exams، Finance، Attendance، Timetable، Profile، Settings، Notifications، Admission، School Config، Reports) تستخدم القاموس لرؤوس الجداول وsidebar لكنها جزئية على `getDisplayText`، النماذج، الـselects، التحقّق، الـtoasts، والإجراءات. Students/Teachers/Classes/Subjects/Announcements/Parents/Classrooms/Exams/Attendance/Profile تستخدم `getDisplayText` لبعض الأسطح؛ الباقي بانتظار display-text.
+
+مسارات المعالج (`/students/add`، `/teachers/add`، `/exams/manage`، `/exams/qbank`، `/finance/invoice`) فيها نماذج، selects، تحقّق، toasts، وأخطاء إجراءات مكتوبة يدوياً.
+
+## الحواجز الواقية
+
+| الطبقة                         | ما تفعله                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `.claude/rules/translation.md` | قاعدة بنطاق المسار تنطلق على تعديلات `src/components/**` و`src/app/**`                     |
+| `.claude/hooks/check-i18n.sh`  | hook PostToolUse يرفع رايات على سلاسل `<FormLabel>` و`toast.success/error` المكتوبة يدوياً |
+| `CLAUDE.md` gotcha #12         | يذكّر بأن كل نص واجهة يجب أن يستخدم مفاتيح القاموس                                         |
+
+## انظر أيضاً
+
+- [تعدد المستأجرين](/ar/docs/multi-tenancy)
+- [الأنماط](/ar/docs/pattern)
+- [التحقّق](/en/docs/validation)
+- [النماذج](/en/docs/form)

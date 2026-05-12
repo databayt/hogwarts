@@ -1,29 +1,33 @@
 ---
 title: Queries
-description: Canonical patterns for writing queries.ts read-only database query modules.
+description: Read-only database query modules colocated with each feature.
 ---
 
-`queries.ts` holds read-only database queries for a feature. Mutations live in `actions.ts`. Reads and writes never share a file.
+`queries.ts` holds read-only database queries. Mutations live in `actions.ts`. Reads and writes never share a file.
 
 ## Categories
 
 | Category            | Shape                                                                    | Reference                      |
 | ------------------- | ------------------------------------------------------------------------ | ------------------------------ |
-| CRUD entity         | Single-model queries: `getList`, `getDetail`, `getStats`. 200–350 lines. | `listings/teachers/queries.ts` |
-| Multi-entity domain | Multiple related models with separate select / where / list per model.   | `admission/queries.ts`         |
+| CRUD entity         | Single-model queries: `getList`, `getDetail`, `getStats` (200–350 lines) | `listings/teachers/queries.ts` |
+| Multi-entity domain | Multiple related models with separate select / where / list              | `admission/queries.ts`         |
 
-## Seven rules
+## Rules
 
-1. **`schoolId` as the first parameter.** Multi-tenant isolation enforced at the function signature.
-2. **`as const` on select objects.** Locks down the shape so TypeScript narrows correctly.
-3. **`Promise.all` for parallel reads.** List + count pairs always parallelise.
-4. **Named exports only.**
-5. **No mutations.** No `db.create`, `db.update`, `db.delete`. Those belong in `actions.ts`.
-6. **No formatting helpers.** `formatTeacherName`, `getInitials` belong in `util.ts`.
-7. **Stay under ~400 lines.** Beyond that, split (`queries/list.ts`, `queries/detail.ts`).
+| #   | Rule                                                                                 |
+| --- | ------------------------------------------------------------------------------------ |
+| 1   | `schoolId` as the first parameter — multi-tenant isolation enforced at the signature |
+| 2   | `as const` on select objects — locks the shape so TypeScript narrows correctly       |
+| 3   | `Promise.all` for parallel reads (list + count)                                      |
+| 4   | Named exports only                                                                   |
+| 5   | No mutations — `db.create/update/delete` belong in `actions.ts`                      |
+| 6   | No formatting helpers — move to `util.ts`                                            |
+| 7   | Stay under ~400 lines — split into `queries/list.ts`, `queries/detail.ts`            |
+| 8   | `import "server-only"` so misuse fails at build time                                 |
+
+## Canonical example
 
 ```typescript
-// listings/teachers/queries.ts
 import "server-only"
 
 import type { Prisma } from "@prisma/client"
@@ -81,41 +85,24 @@ export async function getTeacherDetail(schoolId: string, id: string) {
 }
 ```
 
-## Templates
-
-| Template            | File                                                           |
-| ------------------- | -------------------------------------------------------------- |
-| CRUD entity         | `src/components/school-dashboard/listings/teachers/queries.ts` |
-| Multi-entity domain | `src/components/school-marketing/admission/queries.ts`         |
-
 ## Anti-patterns
 
-- **Read functions in `actions.ts`** — ~70% of features still mix reads into `actions.ts`. Move them to `queries.ts`.
-- **Missing `queries.ts`** — ~25 feature directories have reads in `actions.ts` but no `queries.ts`. Create one.
-- **Inline `db.model.findMany()`** — ~25 features use raw queries without `select`. Always provide a select object.
-- **`PaginationParams` / `SortParam` redefined** — same types in all 17 files. Lift to `src/lib/types.ts`.
-- **Formatters in `queries.ts`** — move to `util.ts`.
-- **Returning Prisma payload types directly** — wrap in feature DTOs from `types.ts` so the call site doesn't depend on Prisma's internal shapes.
-
-## File layout
-
-```
-src/components/<feature>/
-  validation.ts     # Zod schemas
-  types.ts          # Domain types (DTOs, row types)
-  queries.ts        # Reads (this file)
-  actions.ts        # Writes
-  content.tsx       # Calls queries.ts
-  client.tsx        # Calls actions.ts
-```
-
-## `import "server-only"`
-
-Add `import "server-only"` at the top so a misuse from a client component fails at build time, not runtime.
+- Reads in `actions.ts` — ~70% of features still mix them. Move to `queries.ts`.
+- Missing `queries.ts` — ~25 features have reads in `actions.ts` but no `queries.ts`.
+- Inline `db.model.findMany()` without `select` (~25 features).
+- `PaginationParams` / `SortParam` redefined (17 files) — lift to `src/lib/types.ts`.
+- Formatters in `queries.ts` — move to `util.ts`.
+- Returning Prisma payloads directly — wrap in feature DTOs from `types.ts`.
 
 ## Naming
 
-- Filename: `queries.ts`. Always.
+- File: `queries.ts`.
 - Functions: `get<Entity><Variant>` — `getTeacherList`, `getTeacherDetail`, `getTeacherStats`.
 - Select objects: `<entity><Variant>Select` — `teacherListSelect`, `teacherDetailSelect`.
-- Internal types: `<Entity>QueryParams`, `<Entity>WhereInput` (when wrapping `Prisma.XxxWhereInput`).
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Actions](/docs/actions)
+- [Types](/docs/types)
+- [List Params](/docs/list-params)

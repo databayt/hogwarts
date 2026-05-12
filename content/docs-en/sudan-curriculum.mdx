@@ -1,42 +1,28 @@
 ---
-title: "Sudan Curriculum"
-description: "Sudan national curriculum integration — 97 subjects across grades 1-12, concept-based image sharing, TOC extraction from textbook PDFs, and multi-curriculum catalog architecture."
+title: Sudan Curriculum
+description: National curriculum integration — 97 subjects across grades 1-12, sourced from official Bakht Al-Rida textbooks.
 ---
 
-## 1. Overview
+Sudan covers grades 1-12 in a 6+3+3 structure (Elementary, Middle, Secondary). Content is extracted from textbook PDFs published by the **National Center for Curricula and Educational Research (Bakht Al-Rida)**. Subjects, chapters, and lessons live in the catalog with `country: "SD"` and `curriculum: "national"`.
 
-The Sudan national curriculum covers **grades 1-12** with a 6+3+3 structure (Elementary, Middle, Secondary). Content is extracted from official textbook PDFs published by the **National Center for Curricula and Educational Research (Bakht Al-Rida)**.
+## Inventory
 
-```
-Sudan Education System (6+3+3)
-================================
-Elementary (1-6)  → المرحلة الابتدائية
-Middle     (7-9)  → المرحلة المتوسطة
-Secondary  (10-12) → المرحلة الثانوية
-```
+| Country | Subjects | Chapters | Lessons | Thumbnail coverage |
+| ------- | -------: | -------: | ------: | -----------------: |
+| SD      |       97 |      406 |   1,049 |               100% |
+| US      |      240 |      750 |   3,993 |               100% |
+| Total   |      337 |    1,156 |   5,042 |               100% |
 
-### Database Counts
+## Slug convention
 
-| Country   | Subjects | Chapters | Lessons | Thumbnail Coverage |
-| --------- | -------: | -------: | ------: | -----------------: |
-| **SD**    |       97 |      406 |   1,049 |               100% |
-| **US**    |      240 |      750 |   3,993 |               100% |
-| **Total** |      337 |    1,156 |   5,042 |               100% |
+Each curriculum uses a distinct slug to prevent collision.
 
----
+| Curriculum | Pattern             | Example      | `country` | `curriculum` |
+| ---------- | ------------------- | ------------ | --------- | ------------ |
+| US K-12    | `us-g{N}-{subject}` | `us-g5-math` | `US`      | `us-k12`     |
+| Sudan      | `sd-g{N}-{subject}` | `sd-g5-math` | `SD`      | `national`   |
 
-## 2. Slug Convention
-
-Each curriculum uses a distinct slug pattern to prevent collision:
-
-| Curriculum | Pattern             | Example      | Country | Curriculum Field |
-| ---------- | ------------------- | ------------ | ------- | ---------------- |
-| US K-12    | `us-g{N}-{subject}` | `us-g5-math` | `US`    | `us-k12`         |
-| Sudan      | `sd-g{N}-{subject}` | `sd-g5-math` | `SD`    | `national`       |
-
-**Key fields on `CatalogSubject`:**
-
-```typescript
+```ts
 // US subject
 { slug: "us-g5-math", country: "US", curriculum: "us-k12", lang: "en", concept: "math" }
 
@@ -44,15 +30,11 @@ Each curriculum uses a distinct slug pattern to prevent collision:
 { slug: "sd-g5-math", country: "SD", curriculum: "national", lang: "ar", concept: "math" }
 ```
 
----
-
-## 3. Grade Distribution
-
-### Sudan (SD) — 97 Subjects
+## Grade distribution (Sudan)
 
 | Grade | Level      | Subjects | Chapters | Lessons | Notes                                     |
 | :---: | ---------- | -------: | -------: | ------: | ----------------------------------------- |
-|   1   | Elementary |        4 |       17 |     112 | Arabic, Math, Islamic Studies, English    |
+|   1   | Elementary |        4 |       17 |     112 | Arabic, Math, Islamic, English            |
 |   2   | Elementary |        7 |       36 |     195 | + Science, Arts, History                  |
 |   3   | Elementary |        6 |       35 |     212 | + Geography                               |
 |   4   | Elementary |        5 |       24 |      55 | + Computer                                |
@@ -62,22 +44,14 @@ Each curriculum uses a distinct slug pattern to prevent collision:
 |   8   | Middle     |        — |        — |       — | No textbooks available                    |
 |   9   | Middle     |        9 |       34 |      40 | + Technical Education, Communication Tech |
 |  10   | Secondary  |       11 |       49 |      80 | + Physics, Chemistry, Biology, French     |
-|  11   | Secondary  |       19 |       71 |      77 | Full subject catalog including streams    |
+|  11   | Secondary  |       19 |       71 |      77 | Full catalog including streams            |
 |  12   | Secondary  |       18 |       76 |      56 | Shahada year — all streams                |
 
-### US (K-12) — 240 Subjects
+## Subject catalog
 
-| Grade Range | Level      | Subjects per Grade | Chapters per Grade | Lessons per Grade |
-| :---------: | ---------- | -----------------: | -----------------: | ----------------: |
-|     1-6     | Elementary |                 20 |                 62 |               331 |
-|     7-9     | Middle     |                 20 |                 62 |               331 |
-|    10-12    | High       |                 20 |                 73 |               404 |
+32 unique subjects map to 19 concepts (see [Concepts](/docs/concept) for shared image keys).
 
----
-
-## 4. Subject Catalog (32 Unique Subjects)
-
-### Core Subjects (All Grades)
+### Core (most grades)
 
 | Subject           | Slug              | Concept     | Grades        | Department |
 | ----------------- | ----------------- | ----------- | ------------- | ---------- |
@@ -89,134 +63,65 @@ Each curriculum uses a distinct slug pattern to prevent collision:
 | الجغرافيا         | `geography`       | `geography` | 3, 5-6, 9-12  | Humanities |
 | العلوم            | `science`         | `science`   | 2-3, 5, 9     | Sciences   |
 
-### Elementary & Middle Supplements
+### Elementary and middle supplements
 
-| Subject                 | Slug                  | Concept            | Grades | Department    |
-| ----------------------- | --------------------- | ------------------ | ------ | ------------- |
-| الفنية                  | `arts`                | `arts`             | 2, 4-5 | Arts & Sports |
-| علوم الحاسوب            | `computer`            | `computer-science` | 4-5    | ICT           |
-| تكنولوجيا الاتصالات     | `technology`          | `computer-science` | 6      | ICT           |
-| الأرض بيئة الحياة       | `earth-environment`   | `earth-science`    | 5      | Sciences      |
-| المورد                  | `resources`           | `life-skills`      | 5      | Humanities    |
-| ملبسنا                  | `clothing`            | `life-skills`      | 5      | Arts & Sports |
-| تكنولوجيا الاتصالات     | `communication-tech`  | `computer-science` | 9      | ICT           |
-| أساسيات التربية التقنية | `technical-education` | `career-tech`      | 9      | ICT           |
+| Subject                 | Slug                  | Concept            | Grades |
+| ----------------------- | --------------------- | ------------------ | ------ |
+| الفنية                  | `arts`                | `arts`             | 2, 4-5 |
+| علوم الحاسوب            | `computer`            | `computer-science` | 4-5    |
+| تكنولوجيا الاتصالات     | `technology`          | `computer-science` | 6      |
+| الأرض بيئة الحياة       | `earth-environment`   | `earth-science`    | 5      |
+| المورد                  | `resources`           | `life-skills`      | 5      |
+| ملبسنا                  | `clothing`            | `life-skills`      | 5      |
+| تكنولوجيا الاتصالات     | `communication-tech`  | `computer-science` | 9      |
+| أساسيات التربية التقنية | `technical-education` | `career-tech`      | 9      |
 
-### Secondary Sciences (Grades 10-12)
+### Secondary streams (10-12)
 
-| Subject                   | Slug          | Concept     | Stream    | Department |
-| ------------------------- | ------------- | ----------- | --------- | ---------- |
-| الفيزياء                  | `physics`     | `physics`   | Science   | Sciences   |
-| الكيمياء                  | `chemistry`   | `chemistry` | Science   | Sciences   |
-| الأحياء                   | `biology`     | `biology`   | Science   | Sciences   |
-| العلوم الهندسية           | `engineering` | `science`   | Technical | Sciences   |
-| الرياضيات الأساسية        | `basic-math`  | `math`      | Arts      | Sciences   |
-| الإنتاج الزراعي والحيواني | `agriculture` | `biology`   | Commerce  | Sciences   |
+Sciences:
 
-### Secondary Languages & Humanities (Grades 10-12)
+| Subject                   | Slug          | Concept     | Stream    |
+| ------------------------- | ------------- | ----------- | --------- |
+| الفيزياء                  | `physics`     | `physics`   | Science   |
+| الكيمياء                  | `chemistry`   | `chemistry` | Science   |
+| الأحياء                   | `biology`     | `biology`   | Science   |
+| العلوم الهندسية           | `engineering` | `science`   | Technical |
+| الرياضيات الأساسية        | `basic-math`  | `math`      | Arts      |
+| الإنتاج الزراعي والحيواني | `agriculture` | `biology`   | Commerce  |
 
-| Subject              | Slug                | Concept            | Stream   | Department    |
-| -------------------- | ------------------- | ------------------ | -------- | ------------- |
-| اللغة الفرنسية       | `french`            | `languages`        | All      | Languages     |
-| الأدب والمطالعة      | `literature`        | `arabic`           | Arts     | Languages     |
-| البلاغة والتعبير     | `rhetoric`          | `arabic`           | Arts     | Languages     |
-| قواعد النحو          | `grammar`           | `arabic`           | Arts     | Languages     |
-| اللغة العربية الخاصة | `arabic-advanced`   | `arabic`           | Arts     | Languages     |
-| الدراسات الإسلامية   | `islamic-studies`   | `religion`         | All      | Religion      |
-| القرآن وعلومه        | `quran-studies`     | `religion`         | All      | Religion      |
-| العلوم العسكرية      | `military-sciences` | `civics`           | All      | Humanities    |
-| العلوم التجارية      | `commerce`          | `economics`        | Commerce | Humanities    |
-| العلوم الأسرية       | `family-sciences`   | `health`           | All      | Arts & Sports |
-| الفنون والتصميم      | `arts-design`       | `arts`             | All      | Arts & Sports |
-| علوم الحاسوب         | `computer-science`  | `computer-science` | All      | ICT           |
+Languages and humanities:
 
----
+| Subject              | Slug                | Concept            | Stream   |
+| -------------------- | ------------------- | ------------------ | -------- |
+| اللغة الفرنسية       | `french`            | `languages`        | All      |
+| الأدب والمطالعة      | `literature`        | `arabic`           | Arts     |
+| البلاغة والتعبير     | `rhetoric`          | `arabic`           | Arts     |
+| قواعد النحو          | `grammar`           | `arabic`           | Arts     |
+| اللغة العربية الخاصة | `arabic-advanced`   | `arabic`           | Arts     |
+| الدراسات الإسلامية   | `islamic-studies`   | `religion`         | All      |
+| القرآن وعلومه        | `quran-studies`     | `religion`         | All      |
+| العلوم العسكرية      | `military-sciences` | `civics`           | All      |
+| العلوم التجارية      | `commerce`          | `economics`        | Commerce |
+| العلوم الأسرية       | `family-sciences`   | `health`           | All      |
+| الفنون والتصميم      | `arts-design`       | `arts`             | All      |
+| علوم الحاسوب         | `computer-science`  | `computer-science` | All      |
 
-## 5. Image Architecture
+## Image architecture
 
-### Two Tiers of Thumbnails
-
-US subjects have **per-subject thumbnails** uploaded individually from ClickView illustrations. Sudan subjects use **shared concept thumbnails** — 19 concept images serve all 97 subjects.
+Sudan subjects share thumbnails via the [concept system](/docs/concept) — 23 concept images cover all 97 subjects. US subjects use per-subject thumbnails uploaded individually from ClickView.
 
 ```
-S3 Structure (grade-based concepts, shared across all curricula)
-================================================================
-
-  catalog/concepts/math-g5/thumbnail-sm.webp
-  catalog/concepts/math-g5/thumbnail-md.webp
-  catalog/concepts/math-g5/thumbnail-lg.webp
-  catalog/concepts/math-g5/thumbnail-original.webp
-  catalog/concepts/math-g5/banner-sm.webp
-  catalog/concepts/math-g5/banner-md.webp
-  catalog/concepts/math-g5/banner-lg.webp
-  catalog/concepts/math-g5/banner-original.webp
+catalog/concepts/math-g5/thumbnail-{sm,md,lg,original}.webp
+catalog/concepts/math-g5/banner-{sm,md,lg,original}.webp
 ```
 
-Each key generates 4 WebP variants via Sharp: `sm` (200px), `md` (600px), `lg` (1200px), `original`.
+URL resolution falls through `thumbnailKey` → concept static fallback. The legacy `imageKey` field has been removed in favor of the unified `thumbnail`/`banner`/`cover`/`pdf` system.
 
-### Image Resolution Chain
+## Stream assignment (grades 10-12)
 
-```
-All subjects → getCatalogImageUrl(thumbnailKey, imageKey, size)
-  1. thumbnailKey → catalog/concepts/math-g5/thumbnail-sm.webp            (shared concept S3)
-  2. imageKey    → null                                                   (not set)
-  3. concept     → SUBJECT_IMAGE_MAP["math"]                              (static fallback)
-```
+`catalog-setup.ts` patterns route subjects to academic streams:
 
-### Concept-to-Image Mapping
-
-19 concepts bridge both curricula to the same CDN images:
-
-| Concept            | SD Subjects                                                | US Subjects                 | S3 Key                                        |
-| ------------------ | ---------------------------------------------------------- | --------------------------- | --------------------------------------------- |
-| `arabic`           | اللغة العربية, العربية الخاصة, قواعد النحو, البلاغة, الأدب | —                           | `catalog/concepts/arabic/thumbnail`           |
-| `arts`             | الفنية, الفنون والتصميم                                    | Arts                        | `catalog/concepts/arts/thumbnail`             |
-| `biology`          | الأحياء                                                    | Life Science                | `catalog/concepts/biology/thumbnail`          |
-| `career-tech`      | أساسيات التربية التقنية                                    | Career & Technical Ed       | `catalog/concepts/career-tech/thumbnail`      |
-| `chemistry`        | الكيمياء                                                   | Chemical Science, Chemistry | `catalog/concepts/chemistry/thumbnail`        |
-| `civics`           | العلوم العسكرية                                            | Civics and Government       | `catalog/concepts/civics/thumbnail`           |
-| `computer-science` | علوم الحاسوب, تكنولوجيا الاتصالات                          | Computer Science & Tech     | `catalog/concepts/computer-science/thumbnail` |
-| `earth-science`    | الأرض بيئة الحياة                                          | Earth and Space Science     | `catalog/concepts/earth-science/thumbnail`    |
-| `economics`        | العلوم التجارية                                            | Business and Economics      | `catalog/concepts/economics/thumbnail`        |
-| `english`          | اللغة الإنجليزية                                           | English Language Arts       | `catalog/concepts/english/thumbnail`          |
-| `geography`        | الجغرافيا                                                  | Geography                   | `catalog/concepts/geography/thumbnail`        |
-| `health`           | العلوم الأسرية                                             | Health                      | `catalog/concepts/health/thumbnail`           |
-| `history`          | التاريخ                                                    | History, U.S. History       | `catalog/concepts/history/thumbnail`          |
-| `languages`        | اللغة الفرنسية                                             | World Languages             | `catalog/concepts/languages/thumbnail`        |
-| `life-skills`      | المورد, ملبسنا                                             | Life Skills                 | `catalog/concepts/life-skills/thumbnail`      |
-| `math`             | الرياضيات, الرياضيات الأساسية                              | Math                        | `catalog/concepts/math/thumbnail`             |
-| `physics`          | الفيزياء                                                   | Physics                     | `catalog/concepts/physics/thumbnail`          |
-| `religion`         | التربية الإسلامية, الدراسات, القرآن وعلومه                 | Religion and Ethics         | `catalog/concepts/religion/thumbnail`         |
-| `science`          | العلوم, العلوم الهندسية                                    | Physical Science            | `catalog/concepts/science/thumbnail`          |
-
----
-
-## 6. Multi-Curriculum Fallback
-
-The `findCatalogSubjects()` function in `catalog-setup.ts` uses a 4-step progressive fallback:
-
-```typescript
-// Step 1: Exact match (country + curriculum)
-//   SD school → country="SD", curriculum="national" → Sudan subjects
-
-// Step 2: Broad match (country only)
-//   SD school → country="SD" → any SD curriculum
-
-// Step 3: Nearest match (same region/language)
-//   Fallback to similar curricula
-
-// Step 4: Universal fallback
-//   US K-12 as the global default
-```
-
-When a school has `country: "SD"`, it automatically gets the Sudan curriculum. No configuration needed — the `inferCurriculum()` function maps `SD → "national"`.
-
-### Stream Assignment (Grades 10-12)
-
-Sudan secondary has academic streams. The `catalog-setup.ts` patterns handle this:
-
-```typescript
-// Science-only subjects
+```ts
 const SCIENCE_ONLY_PATTERNS = [
   "physics",
   "chemistry",
@@ -224,8 +129,6 @@ const SCIENCE_ONLY_PATTERNS = [
   "كيمياء",
   "أحياء",
 ]
-
-// Arts-only subjects
 const ARTS_ONLY_PATTERNS = [
   "philosophy",
   "فلسفة",
@@ -238,34 +141,22 @@ const ARTS_ONLY_PATTERNS = [
 ]
 ```
 
----
+Schools with `country: "SD"` automatically get the Sudan curriculum — `inferCurriculum()` maps `SD → "national"`.
 
-## 7. Data Pipeline
-
-### Source → Database Flow
+## Data pipeline
 
 ```
 ~/SD/*.pdf (260 raw files, ~112 unique textbooks)
-    |
-    ├── scripts/organize (copy + rename)
-    |       → scripts/sudan-data/pdfs/grade-{N}/sd-g{N}-{subject}.pdf
-    |
-    ├── pdftotext (extract first 10-12 pages)
-    |       → raw TOC text (Arabic chapter/lesson markers)
-    |
-    ├── parse TOC patterns (الوحدة, الباب, الدرس)
-    |       → scripts/sudan-data/toc/sd-g{N}-{subject}.json (97 files)
-    |
-    ├── assemble-sudan-curriculum.ts
-    |       → scripts/sudan-data/sudan-curriculum.json (master data file)
-    |
-    └── prisma/seeds/sudan-catalog.ts
-            → CatalogSubject + CatalogChapter + CatalogLesson (upsert)
+  → scripts/organize         → scripts/sudan-data/pdfs/grade-{N}/sd-g{N}-{subject}.pdf
+  → pdftotext                → raw TOC text (Arabic chapter/lesson markers)
+  → parse TOC patterns       → scripts/sudan-data/toc/sd-g{N}-{subject}.json (97 files)
+  → assemble-sudan-curriculum.ts
+                             → scripts/sudan-data/sudan-curriculum.json (master)
+  → prisma/seeds/sudan-catalog.ts
+                             → CatalogSubject + CatalogChapter + CatalogLesson (upsert)
 ```
 
-### TOC JSON Format
-
-Each textbook produces one JSON file:
+### TOC JSON format
 
 ```json
 {
@@ -294,92 +185,55 @@ Each textbook produces one JSON file:
 }
 ```
 
-### Master Data File
+The master file `sudan-curriculum.json` groups all TOC files by subject with `gradeChapters` indexed by grade number.
 
-`scripts/sudan-data/sudan-curriculum.json` groups all TOC files by subject:
-
-```json
-{
-  "version": "1.0",
-  "country": "SD",
-  "curriculum": "national",
-  "lang": "ar",
-  "structure": {
-    "elementary": { "grades": [1,2,3,4,5,6], "level": "ELEMENTARY" },
-    "middle": { "grades": [7,8,9], "level": "MIDDLE" },
-    "secondary": { "grades": [10,11,12], "level": "HIGH" }
-  },
-  "subjects": [
-    {
-      "name": "الرياضيات",
-      "slug": "math",
-      "department": "Sciences",
-      "concept": "math",
-      "color": "#f59e0b",
-      "gradeChapters": {
-        "1": { "level": "elementary", "chapters": [...] },
-        "2": { "level": "elementary", "chapters": [...] },
-        "3": { "level": "elementary", "chapters": [...] }
-      }
-    }
-  ]
-}
-```
-
----
-
-## 8. Seed Commands
+## Seed commands
 
 ```bash
-# Seed Sudan curriculum (97 subjects, 406 chapters, 1049 lessons)
-pnpm db:seed:single sudan-catalog
-
-# Upload concept images to S3 and set thumbnailKey on all subjects
-pnpm db:seed:single concept-images
-
-# Rebuild master JSON from individual TOC files
-npx tsx scripts/assemble-sudan-curriculum.ts
+pnpm db:seed:single sudan-catalog       # 97 subjects, 406 chapters, 1049 lessons
+pnpm db:seed:single concept-images      # Upload 19 concept images, set thumbnailKey
+npx tsx scripts/assemble-sudan-curriculum.ts   # Rebuild master JSON from TOC files
 ```
 
-### Seed Registration
+Both seeds are registered with `global: true` in `prisma/seeds/single.ts` (no `schoolId` required).
 
-Both seeds are registered in `prisma/seeds/single.ts` with `global: true` (no schoolId required) and also called from the main `prisma/seeds/catalog.ts`.
+## Source files
 
----
+| File                                       | Purpose                                        |
+| ------------------------------------------ | ---------------------------------------------- |
+| `scripts/sudan-data/sudan-curriculum.json` | Master data file                               |
+| `scripts/sudan-data/toc/*.json`            | 97 per-textbook TOC files                      |
+| `scripts/sudan-data/pdfs/grade-{N}/`       | Organized textbook PDFs                        |
+| `scripts/assemble-sudan-curriculum.ts`     | Assembles TOC files into master JSON           |
+| `prisma/seeds/sudan-catalog.ts`            | Database seed                                  |
+| `prisma/seeds/concept-images.ts`           | Concept image upload + `thumbnailKey` backfill |
+| `public/subjects/concepts/*.jpg`           | 24 source concept images                       |
+| `src/lib/catalog-setup.ts`                 | Fallback chain, stream patterns                |
+| `src/lib/catalog-image.ts`                 | Sharp pipeline (WebP variants)                 |
+| `src/lib/catalog-image-url.ts`             | URL resolution                                 |
 
-## 9. Key Files
+## Known gaps
 
-| File                                       | Purpose                                                  |
-| ------------------------------------------ | -------------------------------------------------------- |
-| `scripts/sudan-data/sudan-curriculum.json` | Master data file (32 subjects, 97 grade-levels)          |
-| `scripts/sudan-data/toc/*.json`            | Per-textbook TOC files (97 files)                        |
-| `scripts/sudan-data/pdfs/grade-{N}/`       | Organized textbook PDFs                                  |
-| `scripts/assemble-sudan-curriculum.ts`     | Assembles TOC files into master JSON                     |
-| `prisma/seeds/sudan-catalog.ts`            | Database seed script                                     |
-| `prisma/seeds/concept-images.ts`           | Concept image upload + thumbnailKey backfill             |
-| `public/subjects/concepts/*.jpg`           | Source concept images (24 files)                         |
-| `src/lib/catalog-setup.ts`                 | Fallback chain, stream patterns, weekly periods          |
-| `src/lib/catalog-image.ts`                 | Sharp processing pipeline (WebP variants)                |
-| `src/lib/catalog-image-url.ts`             | Image URL resolution (thumbnailKey → imageKey → concept) |
+| Gap                             | Impact                                 | Remedy                           |
+| ------------------------------- | -------------------------------------- | -------------------------------- |
+| Grade 6 PDFs are scanned images | 0 lessons (chapters only)              | Re-scan with OCR or manual entry |
+| Grade 7 has only 1 textbook     | Missing 8+ subjects                    | Source remaining textbooks       |
+| Grade 8 has no textbooks        | Entire grade missing                   | Source textbooks                 |
+| Garbled secondary PDFs (10-12)  | Many chapters with 0 lessons           | Re-extract with better PDF tools |
+| Per-subject SD thumbnails       | Only `thumbnailKey` (concept fallback) | Future per-subject illustrations |
 
----
+## Adding a curriculum
 
-## 10. Known Gaps
+For a new country (e.g. Egypt `EG`):
 
-| Gap                                      | Impact                                    | Remedy                            |
-| ---------------------------------------- | ----------------------------------------- | --------------------------------- |
-| Grade 6 PDFs are scanned images          | 0 lessons (chapters only)                 | Re-scan with OCR or manual entry  |
-| Grade 7 has only 1 English activity book | Missing 8+ subjects                       | Source remaining textbooks        |
-| Grade 8 has no textbooks                 | Entire grade missing                      | Source textbooks                  |
-| Secondary garbled PDFs (10-12)           | Many subjects have chapters but 0 lessons | Re-extract with better PDF tools  |
-| No `imageKey` for SD subjects            | Only `thumbnailKey` (Layer 1)             | Future: per-subject illustrations |
+1. Add TOC JSON files under a per-country directory.
+2. Add subject metadata to `scripts/assemble-sudan-curriculum.ts`.
+3. Add `EG → "national"` mapping in `inferCurriculum()` at `src/lib/catalog-setup.ts`.
+4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/concept-images.ts`.
+5. Run `pnpm db:seed:single {country}-catalog` and `pnpm db:seed:single concept-images`.
 
-### Adding a New Curriculum
+## See also
 
-To add a new country (e.g., Egypt `EG`):
-
-1. Create TOC JSON files in `scripts/sudan-data/toc/` (or a new directory)
-2. Add subject metadata to `scripts/assemble-sudan-curriculum.ts`
-3. Add `EG → "national"` mapping in `inferCurriculum()` at `src/lib/catalog-setup.ts`
-4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/concept-images.ts`
-5. Run `pnpm db:seed:single {country}-catalog` and `pnpm db:seed:single concept-images`
+- [Catalog](/docs/catalog)
+- [Concepts](/docs/concept)
+- [Curriculum engineering](/docs/curriculum-engineering)

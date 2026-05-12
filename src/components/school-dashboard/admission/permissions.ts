@@ -28,9 +28,11 @@ export function getTabsForRole(
     { name: d?.enrollment || "Enrollment", href: `${base}/enrollment` },
   ]
   if (isAdmin) {
+    // Campaigns is rendered at the admission index (`/admission/page.tsx`),
+    // so the tab points at `base`, not `${base}/campaigns` (which 404s).
     tabs.unshift({
       name: d?.campaigns || "Campaigns",
-      href: `${base}/campaigns`,
+      href: base,
     })
     tabs.push({ name: d?.settings || "Settings", href: `${base}/settings` })
   }

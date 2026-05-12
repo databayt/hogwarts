@@ -1,0 +1,176 @@
+---
+title: القبول
+description: إدارة القبول من جانب المسؤول — مراجعة الطلبات، تأكيد التسجيل، قائمة الجدارة، تسجيل المدفوعات، وتوزيع الفصول.
+---
+
+يمتد تدفّق القبول من جانب المسؤول من مراجعة الطلب وحتى تأكيد التسجيل. تأكيد التسجيل يُطلق معاملة واحدة بمدة 30 ثانية تُنشئ `Student` و`Guardians` و`FeeAssignments` و`UserInvoices` في خطوة ذرّية واحدة.
+
+## خط الأنابيب
+
+```
+Review application      → UNDER_REVIEW
+Score & rank            → Merit list
+Select applicant        → SELECTED (admissionOffered=true)
+Confirm enrollment      → ADMITTED
+                          → Student (ACTIVE)
+                          → User (role=STUDENT)
+                          → Guardians + StudentGuardian
+                          → StudentYearLevel + AcademicGrade
+                          → FeeAssignments + UserInvoices
+                          → StudentDocuments
+Place in section        → Classroom roster
+Edit in wizard          → Update details
+```
+
+## المسارات
+
+| التبويب       | المسار                                | الغرض                          |
+| ------------- | ------------------------------------- | ------------------------------ |
+| الحملات       | `/{lang}/admission`                   | إنشاء / إدارة حملات القبول     |
+| الطلبات       | `/{lang}/admission/applications`      | مراجعة الطلبات المقدّمة        |
+| قائمة الجدارة | `/{lang}/admission/merit`             | ترتيب الطلبات حسب الدرجات      |
+| التسجيل       | `/{lang}/admission/enrollment`        | تأكيد التسجيل للطلبات المختارة |
+| الإعدادات     | `/{lang}/admission/settings`          | تهيئة بوّابة القبول            |
+| التفاصيل      | `/{lang}/admission/applications/{id}` | عرض طلب مفرد                   |
+
+## تدفّق الحالات
+
+| الحالة                | المُحفِّز                      | ما الذي يحدث                                         |
+| --------------------- | ------------------------------ | ---------------------------------------------------- |
+| `DRAFT`               | إنشاء جلسة                     | بيانات النموذج قيد الجمع                             |
+| `SUBMITTED`           | المتقدّم يقدّم الطلب           | يُولَّد رقم الطلب ويُرسَل بريد إلكتروني              |
+| `UNDER_REVIEW`        | تحديث من المسؤول               | يُضبط `reviewedAt` و`reviewedBy`                     |
+| `SHORTLISTED`         | تحديث من المسؤول               | إخطار المتقدّم                                       |
+| `ENTRANCE_SCHEDULED`  | المسؤول يجدول                  | يُحدَّد تاريخ امتحان القبول                          |
+| `INTERVIEW_SCHEDULED` | المسؤول يجدول                  | يُحدَّد تاريخ المقابلة                               |
+| `SELECTED`            | المسؤول يختار                  | يُنشأ العرض (انتهاء صلاحية قابل للتهيئة)، رابط الدفع |
+| `WAITLISTED`          | المسؤول يضع على قائمة الانتظار | إخطار المتقدّم                                       |
+| `REJECTED`            | المسؤول يرفض                   | إخطار المتقدّم                                       |
+| `ADMITTED`            | المسؤول يؤكّد التسجيل          | إنشاء `Student` و`Guardians` و`Fees` و`Invoices`     |
+| `WITHDRAWN`           | المتقدّم أو المسؤول ينسحب      | يُغلق الطلب                                          |
+
+## معاملة التسجيل
+
+`confirmEnrollment()` يُشغّل `db.$transaction` واحدة بمدة 30 ثانية:
+
+1. ضبط حالة الطلب `ADMITTED` مع رقم تسجيل `ENR-{timestamp}-{random}`.
+2. إنشاء `User` (دور `STUDENT`) إذا كان المتقدّم زائراً؛ ترقية `USER` → `STUDENT` خلاف ذلك.
+3. إنشاء `Student` ببيانات الطلب مُعبَّأة مسبقاً؛ مطابقة `applyingForClass` → `YearLevel` (الاسم بالضبط → غير حسّاس لحالة الأحرف → رقم الصف → `levelOrder`)؛ إنشاء `StudentYearLevel` وضبط `academicGradeId`.
+4. تخصيص `FeeStructures` النشطة تلقائياً للسنة الأكاديمية للحملة → صفوف `FeeAssignment` (`PENDING`).
+5. إنشاء `Guardian` و`StudentGuardian` و`GuardianPhoneNumber` من بيانات الأب / الأم؛ نسخ وثائق الطلب إلى `StudentDocument`.
+6. توليد `UserInvoice` واحدة لكل `FeeAssignment` عبر `createInvoiceFromEnrollment()` (غير حرجة): الرقم `ENR-{unique}`، الحالة `UNPAID`، استحقاق 30 يوماً؛ `UserInvoiceItem` واحد لكل بنية رسوم.
+
+ما بعد المعاملة (best-effort): إخطار الطالب وأولياء الأمور (داخل التطبيق + بريد)، إرسال إشعارات `fee_due`، إعادة `studentId`. يُنشأ الطالب بـ `wizardStep: null` و`status: ACTIVE`.
+
+## نقل البيانات من Application إلى Student
+
+| Application                                       | Student                            | ملاحظات                          |
+| ------------------------------------------------- | ---------------------------------- | -------------------------------- |
+| firstName / middleName / lastName                 | نفسها                              | نسخ مباشر                        |
+| dateOfBirth, gender, nationality                  | نفسها                              | نسخ مباشر                        |
+| email                                             | email                              | نسخ مباشر                        |
+| phone / alternatePhone                            | mobileNumber / alternatePhone      | نسخ مباشر                        |
+| address, city, state, postalCode, country         | currentAddress, …                  | نسخ مباشر                        |
+| photoUrl                                          | profilePhotoUrl                    | الصورة الشخصية                   |
+| previousSchool / previousClass                    | previousSchoolName / previousGrade | نسخ مباشر                        |
+| previousMarks + previousPercentage + achievements | previousAcademicRecord             | سلسلة مدمجة                      |
+| fatherName / motherName                           | سجل Guardian                       | يُنشئ Guardian + StudentGuardian |
+| fatherPhone / guardianPhone                       | emergencyContactPhone              | يُستخدم أوّل رقم متاح            |
+| guardianRelation                                  | emergencyContactRelation           | يعود إلى "Parent" افتراضياً      |
+| documents (JSON)                                  | سجلات StudentDocument              | كل وثيقة تُنشئ صفّاً             |
+| applyingForClass                                  | academicGradeId                    | عبر YearLevel → AcademicGrade    |
+
+## إنشاء Guardian تلقائياً
+
+لكل والد (الأب، الأم):
+
+1. تقسيم الاسم إلى `firstName` + `lastName` (آخر فراغ).
+2. Upsert لـ `GuardianType` (`father`, `mother`).
+3. إنشاء `Guardian` (أو إيجاده بالبريد).
+4. إنشاء صف ربط `StudentGuardian` مع المهنة و`isPrimary`.
+5. إنشاء `GuardianPhoneNumber` إذا كان الهاتف متوفّراً.
+
+الأب هو الأساسي؛ إذا لم يوجد أب، تصبح الأم هي الأساسية.
+
+## توزيع الفصل
+
+بعد التسجيل، يُوزَّع الطالب على فصل:
+
+- استجابة التسجيل تشمل `suggestedSectionId` إذا كان هناك فصل واحد فقط بسعة كافية لصف الطالب.
+- يسرد الفصول التي بها سعة متاحة لذلك الصف.
+- `placeStudentInSection()` يُسند ويُسجِّل تلقائياً في فصول الصف عبر `enrollStudentInGradeClasses()`.
+
+## التحرير عبر Wizard
+
+يمكن تحرير الطلاب المُسجَّلين عبر معالج الطالب (جدول الطلاب → Actions → Edit). كل بيانات الطلب مُعبَّأة مسبقاً.
+
+`updateStudentWizardStep` يُحدّث `wizardStep` فقط للطلاب المسوَّدين (`wizardStep` غير فارغ) — يمنع التراجع العرضي للطلاب المُسجَّلين. الزر النهائي يقرأ "Save" وليس "Create".
+
+## قائمة الجدارة
+
+ترتيب الطلبات المُدرَجة / المُختارة / في قائمة الانتظار حسب أوزان قابلة للتهيئة (يجب أن تجمع إلى 100):
+
+- الدرجة الأكاديمية — 40%
+- امتحان القبول — 35%
+- المقابلة — 25%
+
+## تسجيل المدفوعات
+
+يسجّل المسؤولون مدفوعات النقد / التحويل البنكي لتعليم رسوم الطلب كمدفوعة. حالياً يضبط `Application.applicationFeePaid` فقط — يُتتبَّع التكامل الكامل مع نموذج `Payment` بشكل منفصل.
+
+## الإعدادات
+
+```typescript
+{
+  allowMultipleApplications: false,
+  requireDocuments: true,
+  applicationFee: 0,
+  offerExpiryDays: 14,           // 1-90
+  autoEmailNotifications: true,
+  enableOnlinePayment: false,
+  paymentMethods: ["stripe", "cash"],
+  bankDetails: { bankName, accountName, accountNumber, iban, swiftCode },
+  cashPaymentInstructions: "",
+  academicWeight: 40,            // merit weights (sum=100)
+  entranceWeight: 35,
+  interviewWeight: 25,
+}
+```
+
+## Server actions (مسؤول، auth + صلاحية)
+
+| الإجراء                                                                         | الصلاحية                        |
+| ------------------------------------------------------------------------------- | ------------------------------- |
+| `getApplications()`                                                             | viewApplications                |
+| `updateApplicationStatus()`                                                     | updateStatus                    |
+| `confirmEnrollment()`                                                           | confirmEnrollment               |
+| `placeStudentInSection()`                                                       | confirmEnrollment               |
+| `getAvailableSectionsForPlacement()`                                            | confirmEnrollment               |
+| `generateMeritList()`                                                           | manageMerit                     |
+| `recordPayment()`                                                               | managePayments                  |
+| `getCampaigns()` / `createCampaign()` / `updateCampaign()` / `deleteCampaign()` | viewCampaigns / manageCampaigns |
+| `getAdmissionSettings()` / `saveAdmissionSettings()`                            | manageSettings                  |
+| `fetchCampaignOptions()`                                                        | viewCampaigns                   |
+
+## أمان متعدّد المستأجرين
+
+كل الاستعلامات مُنطقَة بـ `schoolId`. يحلّ تدفّق التقديم المدرسة من النطاق الفرعي عبر `getSchoolBySubdomain()`؛ ويُتحقَّق من أن الجلسة تنتمي لتلك المدرسة.
+
+## ملفات أساسية
+
+| الغرض               | المسار                                                                                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| إجراءات لوحة التحكم | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
+| واجهة الطلبات       | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
+| التسجيل / الجدارة   | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
+| الإعدادات           | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
+| أداة الفاتورة       | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
+| Schema              | `prisma/models/admission.prisma`                                                                                                                         |
+| الاختبارات          | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
+
+## انظر أيضاً
+
+- [Application](/en/docs/application) — تدفّق جانب المتقدّم
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — نطقة `schoolId`
+- [Invoice](/en/docs/invoice) — التوليد التلقائي من التسجيل
+- [Fees](/en/docs/fees) — دورة حياة تخصيص الرسوم

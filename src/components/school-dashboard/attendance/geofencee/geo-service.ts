@@ -297,33 +297,50 @@ export async function processGeofenceEvents(
             const today = new Date()
             today.setHours(0, 0, 0, 0)
 
-            // Create/update attendance record via upsert
-            await db.attendance.upsert({
+            // Create attendance only if not already marked for today.
+            //
+            // We deliberately avoid `upsert` here because the unique compound
+            // index `(schoolId, studentId, classId, date, periodId)` includes
+            // a nullable `periodId`, and Postgres treats NULL ≠ NULL inside
+            // unique indexes. Calling `upsert` with `periodId: null` would
+            // therefore *always* fall through to the create branch on every
+            // hit, producing duplicate daily rows that double-count in every
+            // analytics aggregate downstream.
+            //
+            // The previous code worked around this by passing `periodId: ""`,
+            // but that doesn't match the rest of the codebase (which stores
+            // null for daily attendance), so the geofence-marked rows were
+            // invisible to section-based reports.
+            const existingDaily = await db.attendance.findFirst({
               where: {
-                schoolId_studentId_classId_date_periodId: {
-                  schoolId,
-                  studentId,
-                  classId: studentClass.classId,
-                  date: today,
-                  periodId: "", // Daily attendance (not period-specific)
-                },
-              },
-              create: {
                 schoolId,
                 studentId,
                 classId: studentClass.classId,
                 date: today,
-                status: "PRESENT",
-                method: "GEOFENCE",
-                checkInTime: now,
-                location: { lat: location.lat, lon: location.lon },
-                notes: `Auto-marked via geofence: ${result.geofenceName}`,
+                periodId: null,
               },
-              update: {
-                // Only update if not already manually marked
-                // Keep existing status if already marked
-              },
+              select: { id: true },
             })
+
+            if (!existingDaily) {
+              await db.attendance.create({
+                data: {
+                  schoolId,
+                  studentId,
+                  classId: studentClass.classId,
+                  date: today,
+                  periodId: null,
+                  status: "PRESENT",
+                  method: "GEOFENCE",
+                  checkInTime: now,
+                  location: { lat: location.lat, lon: location.lon },
+                  notes: `Auto-marked via geofence: ${result.geofenceName}`,
+                },
+              })
+            }
+            // If a record already exists, keep its status — manual marks
+            // (ABSENT, EXCUSED, etc.) always win over an automatic geofence
+            // PRESENT, matching the original "keep existing status" intent.
           }
         } catch (attendanceError) {
           // Log error but don't fail the geofence event

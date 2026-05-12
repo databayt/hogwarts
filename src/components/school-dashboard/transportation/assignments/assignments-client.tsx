@@ -373,7 +373,7 @@ export function AssignmentsClient({
                 type="button"
                 onClick={() => setOpen(false)}
               >
-                {dictionary.common?.cancel ?? "Cancel"}
+                {dictionary.common.cancel}
               </Button>
               <Button
                 type="submit"
@@ -381,7 +381,7 @@ export function AssignmentsClient({
                   pending || !form.studentId || !form.routeId || !form.stopId
                 }
               >
-                {dictionary.common?.save ?? "Save"}
+                {dictionary.common.save}
               </Button>
             </DialogFooter>
           </form>

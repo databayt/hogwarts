@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Metadata } from "next"
+import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
@@ -26,10 +27,24 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+// Excuses page widens beyond staff: GUARDIANs submit excuses, STUDENTs
+// view their own. Other roles (ACCOUNTANT, USER, undefined) are redirected.
+const ALLOWED_ROLES = [
+  "ADMIN",
+  "TEACHER",
+  "STAFF",
+  "DEVELOPER",
+  "GUARDIAN",
+  "STUDENT",
+]
+
 export default async function Page({ params }: Props) {
   const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
 
   const role = session?.user?.role ?? ""
+  if (!ALLOWED_ROLES.includes(role)) {
+    redirect(`/${lang}/attendance`)
+  }
 
   return <ExcusesContent locale={lang} subdomain={subdomain} role={role} />
 }

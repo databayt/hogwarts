@@ -1,205 +1,162 @@
 ---
-title: "Entry Points"
-description: "Four main entry points architecture - SaaS marketing, operator dashboard, school sites, and school platform"
+title: Entry Points
+description: Four distinct surfaces — SaaS marketing, operator dashboard, school sites, and school platform.
 ---
+
+The platform has four entry points, each serving a different audience with its own access controls. Understanding the surfaces is critical for routing, RBAC, and user-experience design.
 
 ## Overview
 
-The platform has **four distinct entry points**, each serving different audiences with specific access controls. Understanding these surfaces is critical for development, testing, and user experience design.
+| #   | Entry              | URL                                  | Audience                            | Auth              |
+| --- | ------------------ | ------------------------------------ | ----------------------------------- | ----------------- |
+| 1   | SaaS marketing     | `ed.databayt.org`                    | Visitors, school owners, principals | None for browsing |
+| 2   | Operator dashboard | `ed.databayt.org/en/dashboard`       | Platform operators                  | `DEVELOPER` only  |
+| 3   | School site        | `{school}.databayt.org`              | School visitors, applicants         | None              |
+| 4   | School platform    | `{school}.databayt.org/en/dashboard` | Authenticated school users          | Role-based        |
 
----
+## 1. SaaS marketing
 
-## Entry Point 1: SaaS Marketing Page
+Public landing for everyone — visitors, school owners, principals, teachers, students, parents, guests, investors, contributors.
 
-**URL**: `https://ed.databayt.org`
+| Component     | Location                                | Purpose                              |
+| ------------- | --------------------------------------- | ------------------------------------ |
+| `SiteHeader`  | `components/template/marketing-header/` | Nav with login                       |
+| `Hero`        | `components/marketing/hero/`            | "Get Started" CTA                    |
+| `UserButton`  | `components/auth/user-button.tsx`       | Login/avatar (`variant="marketing"`) |
+| `CommandMenu` | `components/template/marketing-header/` | Quick search                         |
 
-**Purpose**: Public landing page for all visitor types including school owners, principals, teachers, students, parents, guests, investors, and contributors.
+| CTA         | Destination   | Auth                         |
+| ----------- | ------------- | ---------------------------- |
+| Login       | `/login`      | No                           |
+| Get Started | `/onboarding` | Yes (redirect through login) |
+| Join        | `/join`       | No                           |
 
-### Route Structure
+Login redirect:
 
-### Key Components
-
-| Component     | Location                                | Purpose                            |
-| ------------- | --------------------------------------- | ---------------------------------- |
-| `SiteHeader`  | `components/template/marketing-header/` | Navigation with Login button       |
-| `Hero`        | `components/marketing/hero/`            | "Get Started" CTA                  |
-| `UserButton`  | `components/auth/user-button.tsx`       | Login/avatar (variant="marketing") |
-| `CommandMenu` | `components/template/marketing-header/` | Quick search                       |
-
-### Call-to-Actions
-
-| CTA           | Location     | Destination   | Auth Required? |
-| ------------- | ------------ | ------------- | -------------- |
-| "Login"       | Header icon  | `/login`      | No             |
-| "Get Started" | Hero section | `/onboarding` | Yes (redirect) |
-| "Join"        | Various      | `/join`       | No             |
-
-### Login Redirect Logic
-
-```typescript
+```ts
 // src/components/auth/login/action.ts
 if (existingUser.role === "DEVELOPER") {
   finalRedirectUrl = `/${locale}/dashboard`
 } else {
   finalRedirectUrl = `/${locale}` // Homepage
 }
+```
+
+## 2. Operator dashboard
+
+`DEVELOPER` only — platform-wide controls.
+
+```
 src/app/[lang]/(saas-dashboard)/
-├── layout.tsx                 # SaaS auth guard (DEVELOPER only)
-├── dashboard/page.tsx         # Operator dashboard home
-├── analytics/page.tsx         # Platform-wide analytics
-├── billing/page.tsx           # Subscription management
-├── domains/page.tsx           # Domain configuration
-├── tenants/page.tsx           # School/tenant management
-├── product/page.tsx           # Product management
-├── sales/page.tsx             # Sales management
-├── profile/page.tsx           # Operator profile
-├── kanban/page.tsx            # Kanban board
-├── observability/page.tsx     # Platform observability
-└── (catalog)/                 # Catalog management
+├── layout.tsx              # SaaS auth guard (DEVELOPER only)
+├── dashboard/page.tsx      # Operator home
+├── analytics/page.tsx
+├── billing/page.tsx
+├── domains/page.tsx
+├── tenants/page.tsx        # School / tenant management
+├── product/page.tsx
+├── sales/page.tsx
+├── profile/page.tsx
+├── kanban/page.tsx
+├── observability/page.tsx
+└── (catalog)/              # Catalog management
 ```
 
-### Access Control
+Access guard:
 
-```typescript
-// (saas-dashboard)/layout.tsx
+```ts
 const session = await auth()
-
-if (!session) {
-  redirect(`/${lang}/login?callbackUrl=/${lang}/dashboard`)
-}
-
-if (session.user?.role !== "DEVELOPER") {
-  redirect(`/${lang}/access-denied`)
-}
-src/app/[lang]/s/[subdomain]/(site)/
-├── page.tsx              # School homepage
-├── layout.tsx            # SchoolProvider wrapper
-├── about/page.tsx        # About the school
-├── academic/page.tsx     # Academic programs
-├── admissions/page.tsx   # Admission requirements
-├── apply/page.tsx        # Application form
-├── tour/page.tsx         # Virtual tour
-├── contact/page.tsx      # Contact information
-└── events/page.tsx       # Public events
+if (!session) redirect(`/${lang}/login?callbackUrl=/${lang}/dashboard`)
+if (session.user?.role !== "DEVELOPER") redirect(`/${lang}/access-denied`)
 ```
 
-### Subdomain Routing
+## 3. School site
 
-The edge proxy (`src/proxy.ts`) detects the subdomain and rewrites to tenant-scoped routes:
+Public school-branded site. The edge proxy detects the subdomain and rewrites:
 
-```typescript
-// Subdomain detection flow
+```
 hogwarts.databayt.org
-    ↓ (Middleware)
-Extract subdomain: "hogwarts"
-    ↓
-Rewrite to: /[lang]/s/hogwarts/(site)/*
-    ↓
-SchoolProvider loads school context
+  → middleware extracts "hogwarts"
+  → rewrite to /[lang]/s/hogwarts/(site)/*
+  → SchoolProvider loads school context
 ```
 
-**URL Patterns**:
-
-| Environment | URL Pattern                  | Internal Route              |
+| Environment | URL pattern                  | Internal route              |
 | ----------- | ---------------------------- | --------------------------- |
 | Production  | `school.databayt.org`        | `/[lang]/s/school/(site)/*` |
 | Preview     | `school---branch.vercel.app` | `/[lang]/s/school/(site)/*` |
 | Development | `school.localhost:3000`      | `/[lang]/s/school/(site)/*` |
 
-### Key Components
-
-| Component      | Location                            | Purpose                |
-| -------------- | ----------------------------------- | ---------------------- |
-| `SchoolHeader` | `components/school/site/header/`    | School-branded header  |
-| `SchoolHero`   | `components/school/site/hero/`      | School intro with CTA  |
-| `UserButton`   | `components/auth/user-button.tsx`   | Login (variant="site") |
-| `ApplyForm`    | `components/admission/application/` | Application submission |
-
-### Call-to-Actions
-
-| CTA              | Destination                | Auth Required? |
-| ---------------- | -------------------------- | -------------- |
-| "Apply Now"      | `/{subdomain}/application` | Yes (to save)  |
-| "Schedule Tour"  | `/{subdomain}/tour`        | No             |
-| "Contact Us"     | `/{subdomain}/contact`     | No             |
-| "Go to Platform" | `/{subdomain}/dashboard`   | Yes            |
-
-### Public vs Protected
-
-All `(site)` routes are **public** by default:
-
-```typescript
-// src/routes.ts - publicRoutes
-export const publicRoutes = [
-  "/",
-  "/about",
-  "/academic",
-  "/admissions",
-  "/tour",
-  "/contact",
-  "/events",
-  // ...
-]
-src/app/[lang]/s/[subdomain]/(school-dashboard)/
-├── layout.tsx                # PlatformLayout with sidebar
-├── dashboard/page.tsx        # Role-specific dashboard
-├── admission/                # Admission management
-├── attendance/               # ADMIN, TEACHER, STAFF
-├── billing/                  # Billing management
-├── cards/                    # Student/staff cards
-├── charts/                   # Data visualizations
-├── exams/                    # ADMIN, TEACHER
-├── finance/                  # All authenticated (role-specific views)
-├── lab/                      # Lab management
-├── library/                  # All authenticated
-├── messages/                 # Messaging system
-├── notifications/            # Notification center
-├── profile/                  # All authenticated
-├── sales/                    # Sales management
-├── school/                   # School configuration
-├── settings/                 # ADMIN, DEVELOPER
-├── stats/                    # Statistics dashboards
-├── stream/                   # Streaming/video content
-├── timetable/                # ADMIN, TEACHER
-├── unauthorized/             # Access denied page
-└── (listings)/               # Listings route group
-    ├── layout.tsx
-    ├── announcements/        # ADMIN, TEACHER, STAFF
-    ├── assignments/          # ADMIN, TEACHER
-    ├── classes/              # ADMIN, TEACHER
-    ├── classrooms/           # Classroom management
-    ├── events/               # All authenticated
-    ├── grades/               # ADMIN, TEACHER
-    ├── lessons/              # ADMIN, TEACHER
-    ├── parents/              # ADMIN, TEACHER, STAFF
-    ├── staff/                # Staff management
-    ├── students/             # ADMIN, TEACHER, STAFF
-    ├── subjects/             # ADMIN, TEACHER
-    └── teachers/             # ADMIN only
+```
+src/app/[lang]/s/[subdomain]/(site)/
+├── page.tsx              # School homepage
+├── layout.tsx            # SchoolProvider wrapper
+├── about/page.tsx
+├── academic/page.tsx
+├── admissions/page.tsx
+├── apply/page.tsx
+├── tour/page.tsx
+├── contact/page.tsx
+└── events/page.tsx
 ```
 
-### Role-Based Access Control
+| CTA            | Destination                | Auth          |
+| -------------- | -------------------------- | ------------- |
+| Apply Now      | `/{subdomain}/application` | Yes (to save) |
+| Schedule Tour  | `/{subdomain}/tour`        | No            |
+| Contact Us     | `/{subdomain}/contact`     | No            |
+| Go to Platform | `/{subdomain}/dashboard`   | Yes           |
 
-Access is controlled via `roleRoutes` matrix in `src/routes.ts`:
+All `(site)` routes are public (`publicRoutes` in `src/routes.ts`).
 
-```typescript
+## 4. School platform
+
+Authenticated school dashboard with role-based routing.
+
+```
+src/app/[lang]/s/[subdomain]/(school-dashboard)/
+├── layout.tsx              # PlatformLayout with sidebar
+├── dashboard/page.tsx      # Role-specific dashboard
+├── admission/
+├── attendance/             # ADMIN, TEACHER, STAFF
+├── billing/
+├── exams/                  # ADMIN, TEACHER
+├── finance/                # All authenticated (role-specific views)
+├── library/                # All authenticated
+├── messages/
+├── notifications/
+├── profile/
+├── settings/               # ADMIN, DEVELOPER
+├── timetable/              # ADMIN, TEACHER
+└── (listings)/
+    ├── announcements/      # ADMIN, TEACHER, STAFF
+    ├── assignments/        # ADMIN, TEACHER
+    ├── classes/            # ADMIN, TEACHER
+    ├── events/             # All authenticated
+    ├── grades/             # ADMIN, TEACHER
+    ├── lessons/            # ADMIN, TEACHER
+    ├── parents/            # ADMIN, TEACHER, STAFF
+    ├── students/           # ADMIN, TEACHER, STAFF
+    ├── subjects/           # ADMIN, TEACHER
+    └── teachers/           # ADMIN only
+```
+
+### `roleRoutes` matrix
+
+```ts
 export const roleRoutes: Record<string, Role[]> = {
-  // Admin routes
   "/admin": ["ADMIN", "DEVELOPER"],
   "/admin/*": ["ADMIN", "DEVELOPER"],
   "/settings/*": ["ADMIN", "DEVELOPER"],
 
-  // Academic management
   "/teachers": ["ADMIN", "DEVELOPER"],
   "/subjects/*": ["ADMIN", "TEACHER", "DEVELOPER"],
   "/grades/*": ["ADMIN", "TEACHER", "DEVELOPER"],
 
-  // Student management
   "/students/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
   "/parents/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
   "/attendance/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
 
-  // Finance (all authenticated, role-specific views in UI)
   "/finance/*": [
     "ADMIN",
     "TEACHER",
@@ -210,189 +167,143 @@ export const roleRoutes: Record<string, Role[]> = {
     "DEVELOPER",
   ],
 
-  // Student/Guardian self-service
   "/my-grades": ["STUDENT", "GUARDIAN", "DEVELOPER"],
   "/my-attendance": ["STUDENT", "GUARDIAN", "DEVELOPER"],
   "/my-fees": ["STUDENT", "GUARDIAN", "DEVELOPER"],
 }
 ```
 
-### Access Check Function
-
-````typescript
-// src/routes.ts
+```ts
 export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
-  // DEVELOPER has access to everything
   if (role === "DEVELOPER") return true
-
-  // Check exact match first
-  if (roleRoutes[pathname]) {
-    return roleRoutes[pathname].includes(role)
-  }
-
-  // Check wildcard patterns
+  if (roleRoutes[pathname]) return roleRoutes[pathname].includes(role)
   for (const [pattern, allowedRoles] of Object.entries(roleRoutes)) {
     if (pattern.endsWith("/*")) {
-      const basePattern = pattern.slice(0, -2)
-      if (pathname.startsWith(basePattern + "/")) {
-        return allowedRoles.includes(role)
-      }
+      const base = pattern.slice(0, -2)
+      if (pathname.startsWith(base + "/")) return allowedRoles.includes(role)
     }
   }
-
-  // Default: allow for routes not in matrix
-  return true
+  return true // default: allow routes not in matrix
 }
+```
 
-### Status
+### Module status
 
-| Module          | Status  | Notes                        |
-| --------------- | ------- | ---------------------------- |
-| Dashboard       | Working | Role-specific widgets        |
-| Students CRUD   | Working | Full DataTable + forms       |
-| Teachers CRUD   | Working | Full DataTable + forms       |
-| Parents CRUD    | Working | Guardian linking partial     |
-| Attendance      | Working | Daily/weekly views           |
-| Grades          | Partial | Needs grade calculation      |
-| Finance modules | Partial | Basic CRUD, needs Stripe     |
-| Timetable       | Partial | Display works, editor needed |
-| Announcements   | Working | CRUD with targeting          |
-| Events          | Working | Calendar integration         |
+| Module        | Status                                 |
+| ------------- | -------------------------------------- |
+| Dashboard     | Working — role-specific widgets        |
+| Students CRUD | Working — full DataTable + forms       |
+| Teachers CRUD | Working — full DataTable + forms       |
+| Parents CRUD  | Working — guardian linking partial     |
+| Attendance    | Working — daily/weekly views           |
+| Grades        | Partial — needs grade calculation      |
+| Finance       | Partial — basic CRUD, needs Stripe     |
+| Timetable     | Partial — display works, editor needed |
+| Announcements | Working — CRUD with targeting          |
+| Events        | Working — calendar integration         |
 
----
+## Cross-entry navigation
 
-## Cross-Entry Point Navigation
+| From               | Action      | Auth state   | Destination                    |
+| ------------------ | ----------- | ------------ | ------------------------------ |
+| SaaS marketing     | Get Started | Guest        | Login → onboarding             |
+| SaaS marketing     | Get Started | Has school   | School dashboard               |
+| SaaS marketing     | Get Started | No school    | Onboarding wizard              |
+| SaaS marketing     | Live Demo   | Any          | `demo.databayt.org` (new tab)  |
+| SaaS marketing     | Login       | Guest        | Login page                     |
+| SaaS marketing     | Login       | DEVELOPER    | Operator dashboard             |
+| School site        | Platform    | Guest        | Login → dashboard              |
+| School site        | Platform    | Correct user | Role-based dashboard           |
+| School site        | Platform    | Wrong school | Access denied                  |
+| School site        | Apply       | Any          | Application form               |
+| Operator dashboard | View School | DEVELOPER    | School dashboard (impersonate) |
 
-Users may navigate between entry points based on their role and context:
+### `UserButton` variants
 
-### Flow: School Site → School Platform ("Platform" Link)
-
-### Flow: SaaS Marketing → "Get Started"
-
-### Flow: SaaS Marketing → "Live Demo"
-
-### Navigation Scenarios Summary
-
-| From           | Action      | Auth State   | Destination                    |
-| -------------- | ----------- | ------------ | ------------------------------ |
-| SaaS Marketing | Get Started | Guest        | Login → Onboarding             |
-| SaaS Marketing | Get Started | Has school   | Redirect to school dashboard   |
-| SaaS Marketing | Get Started | No school    | Onboarding wizard              |
-| SaaS Marketing | Live Demo   | Any          | demo.databayt.org (new tab)    |
-| SaaS Marketing | Login       | Guest        | Login page                     |
-| SaaS Marketing | Login       | DEVELOPER    | Operator dashboard             |
-| School Site    | Platform    | Guest        | Login → Dashboard              |
-| School Site    | Platform    | Correct user | Role-based dashboard           |
-| School Site    | Platform    | Wrong school | Access denied                  |
-| School Site    | Apply       | Any          | Application form               |
-| Operator Dash  | View School | DEVELOPER    | School dashboard (impersonate) |
-
-### UserButton Variants
-
-The `UserButton` component adapts its menu based on entry point:
-
-| Variant     | Entry Point        | Menu Items                                 |
+| Variant     | Entry              | Menu items                                 |
 | ----------- | ------------------ | ------------------------------------------ |
-| `marketing` | SaaS Marketing     | Dashboard, Schools (operators), Settings   |
-| `saas`      | Operator Dashboard | Profile, Billing, Schools, Settings        |
-| `site`      | School Site        | Go to Platform, Profile                    |
-| `platform`  | School Platform    | Profile, My Account, School Settings, Help |
+| `marketing` | SaaS marketing     | Dashboard, Schools (operators), Settings   |
+| `saas`      | Operator dashboard | Profile, Billing, Schools, Settings        |
+| `site`      | School site        | Go to Platform, Profile                    |
+| `platform`  | School platform    | Profile, My Account, School Settings, Help |
 
----
+## Edge proxy
 
-## Technical Implementation
-
-### Edge Proxy Flow
-
-```typescript
-// src/proxy.ts - Simplified flow
+```ts
+// src/proxy.ts (simplified)
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host")
   const subdomain = extractSubdomain(hostname)
 
   if (subdomain && subdomain !== "ed") {
-    // School subdomain detected
-    // Rewrite: school.databayt.org/about → /en/s/school/about
     return NextResponse.rewrite(
       new URL(`/${locale}/s/${subdomain}${pathname}`, request.url)
     )
   }
 
-  // Main domain - check auth for protected routes
   if (isProtectedRoute(pathname)) {
     const session = await auth()
-    if (!session) {
-      return NextResponse.redirect(new URL("/login", request.url))
-    }
+    if (!session) return NextResponse.redirect(new URL("/login", request.url))
   }
 
   return NextResponse.next()
 }
-````
+```
 
-### Session Context
+## Session
 
-```typescript
-// Extended session includes tenant context
+```ts
 session.user = {
   id: string
   email: string
   role: UserRole
-  schoolId: string | null  // null for new users / DEVELOPER
+  schoolId: string | null   // null for new users / DEVELOPER
   isPlatformAdmin: boolean
 }
 ```
 
-### School Context Provider
+## SchoolProvider
 
-```typescript
+```tsx
 // src/components/school/school-provider.tsx
 export function SchoolProvider({ subdomain, children }) {
   const [school, setSchool] = useState(null)
-
   useEffect(() => {
-    async function loadSchool() {
-      const school = await getSchoolBySubdomain(subdomain)
-      setSchool(school)
-    }
-    loadSchool()
+    getSchoolBySubdomain(subdomain).then(setSchool)
   }, [subdomain])
-
   return (
-    <SchoolContext.Provider value={school}>
-      {children}
-    </SchoolContext.Provider>
+    <SchoolContext.Provider value={school}>{children}</SchoolContext.Provider>
   )
 }
 ```
 
----
+## E2E coverage
 
-## Testing Entry Points
-
-### E2E Test Coverage
-
-```typescript
+```ts
 // e2e/entry-points.spec.ts
-test.describe("Entry Points", () => {
-  test("SaaS marketing loads without auth", async ({ page }) => {
-    await page.goto("https://ed.databayt.org/en")
-    await expect(page.locator("h1")).toContainText("School Automation")
-  })
+test("SaaS marketing loads without auth", async ({ page }) => {
+  await page.goto("https://ed.databayt.org/en")
+  await expect(page.locator("h1")).toContainText("School Automation")
+})
 
-  test("Operator dashboard requires DEVELOPER", async ({ page }) => {
-    await page.goto("https://ed.databayt.org/en/o")
-    await expect(page).toHaveURL(/\/login/)
-  })
+test("Operator dashboard requires DEVELOPER", async ({ page }) => {
+  await page.goto("https://ed.databayt.org/en/dashboard")
+  await expect(page).toHaveURL(/\/login/)
+})
 
-  test("School site loads with subdomain", async ({ page }) => {
-    await page.goto("https://hogwarts.databayt.org/en")
-    await expect(page.locator("h1")).toContainText("Hogwarts")
-  })
+test("School site loads with subdomain", async ({ page }) => {
+  await page.goto("https://hogwarts.databayt.org/en")
+  await expect(page.locator("h1")).toContainText("Hogwarts")
+})
 
-  test("School platform requires auth", async ({ page }) => {
-    await page.goto("https://hogwarts.databayt.org/en/dashboard")
-    await expect(page).toHaveURL(/\/login/)
-  })
+test("School platform requires auth", async ({ page }) => {
+  await page.goto("https://hogwarts.databayt.org/en/dashboard")
+  await expect(page).toHaveURL(/\/login/)
 })
 ```
+
+## See also
+
+- [Authentication](/docs/authentication)
+- [Architecture](/docs/architecture)
+- [Multi-tenancy](/docs/multi-tenancy)

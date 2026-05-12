@@ -1,317 +1,176 @@
 ---
-title: "Admission"
-description: "Admin-facing admission management - application review, enrollment confirmation, merit list, payment recording, section placement, and configuration"
+title: Admission
+description: Admin-side admission management — application review, enrollment confirmation, merit list, payment recording, and section placement.
 ---
 
-## Pipeline Overview (Admin Side)
+The admin admission flow runs from application review through enrollment confirmation. Confirming enrollment fires a single 30-second transaction that creates the Student, Guardians, FeeAssignments, and UserInvoices in one atomic step.
+
+## Pipeline
 
 ```
-Admin                              System
-─────                              ──────
-Review application ──────────────── UNDER_REVIEW
-Score & rank ────────────────────── Merit list
-Select applicant ────────────────── SELECTED
-                                    (auto: admissionOffered=true)
-Confirm enrollment ──────────────── ADMITTED
-                                    → Student record (ACTIVE)
-                                    → User (role=STUDENT)
-                                    → Guardian records
-                                    → StudentYearLevel
-                                    → AcademicGrade
-                                    → FeeAssignments
-                                    → UserInvoice(s)
-                                    → StudentDocuments
-Place in section ────────────────── Classroom roster
-Edit in wizard ──────────────────── Update details
-                                    (all data pre-populated)
+Review application      → UNDER_REVIEW
+Score & rank            → Merit list
+Select applicant        → SELECTED (admissionOffered=true)
+Confirm enrollment      → ADMITTED
+                          → Student (ACTIVE)
+                          → User (role=STUDENT)
+                          → Guardians + StudentGuardian
+                          → StudentYearLevel + AcademicGrade
+                          → FeeAssignments + UserInvoices
+                          → StudentDocuments
+Place in section        → Classroom roster
+Edit in wizard          → Update details
 ```
 
-## Admin Review Flow
+## Routes
 
-### Step 1: Review Applications
+| Tab          | Route                                 | Purpose                              |
+| ------------ | ------------------------------------- | ------------------------------------ |
+| Campaigns    | `/{lang}/admission`                   | Create / manage admission campaigns  |
+| Applications | `/{lang}/admission/applications`      | Review submitted applications        |
+| Merit list   | `/{lang}/admission/merit`             | Rank applications by scores          |
+| Enrollment   | `/{lang}/admission/enrollment`        | Confirm enrollment for selected apps |
+| Settings     | `/{lang}/admission/settings`          | Configure admission portal           |
+| Detail       | `/{lang}/admission/applications/{id}` | Single application view              |
 
-The admin logs into the school dashboard and navigates to **Admission → Applications**.
+## Status flow
 
-The applications table shows all submissions with columns: Application #, Applicant, Campaign, Class, Status, Merit Rank, Submitted Date.
+| Status                | Trigger                      | What happens                                      |
+| --------------------- | ---------------------------- | ------------------------------------------------- |
+| `DRAFT`               | Session created              | Form data being collected                         |
+| `SUBMITTED`           | Applicant submits            | Application number generated, email sent          |
+| `UNDER_REVIEW`        | Admin updates                | `reviewedAt` + `reviewedBy` set                   |
+| `SHORTLISTED`         | Admin updates                | Applicant notified                                |
+| `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                            |
+| `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                                |
+| `SELECTED`            | Admin selects                | Offer created (configurable expiry), payment link |
+| `WAITLISTED`          | Admin waitlists              | Applicant notified                                |
+| `REJECTED`            | Admin rejects                | Applicant notified                                |
+| `ADMITTED`            | Admin confirms enrollment    | Student + Guardians + Fees + Invoices created     |
+| `WITHDRAWN`           | Applicant or admin withdraws | Application closed                                |
 
-**Actions per application:**
+## Enrollment transaction
 
-- **View Details** — full application view (opens detail page at `/{lang}/admission/applications/{id}`)
-- **Update Status** — UNDER_REVIEW → SHORTLISTED → SELECTED → WAITLISTED → REJECTED
-- **Send Email** — opens mailto link
+`confirmEnrollment()` runs a single 30-second `db.$transaction`:
 
-When status is updated to SELECTED, the system auto-sets `admissionOffered = true` with an offer expiry read from `AdmissionSettings.offerExpiryDays` (default 14 days).
+1. Set application status `ADMITTED` with enrollment number `ENR-{timestamp}-{random}`.
+2. Create `User` (role `STUDENT`) if applicant was a guest; promote `USER` → `STUDENT` otherwise.
+3. Create `Student` with application data pre-populated; match `applyingForClass` → `YearLevel` (exact name → case-insensitive → grade number → `levelOrder`); create `StudentYearLevel` and set `academicGradeId`.
+4. Auto-assign active `FeeStructures` for the campaign's academic year → `FeeAssignment` rows (`PENDING`).
+5. Create `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` from father / mother data; copy application documents to `StudentDocument`.
+6. Generate one `UserInvoice` per `FeeAssignment` via `createInvoiceFromEnrollment()` (non-fatal): number `ENR-{unique}`, status `UNPAID`, due 30 days; one `UserInvoiceItem` per fee structure.
 
-**Route:** `/{lang}/admission/applications`
+Post-transaction (best-effort): notify student + guardians (in-app + email), dispatch `fee_due` notifications, return `studentId`. The student is created with `wizardStep: null` and `status: ACTIVE`.
 
-### Step 2: Enrollment Confirmation
+## Application → Student data transfer
 
-The admin confirms enrollment for selected students. This triggers a single transaction (30-second timeout) that creates a fully integrated student record:
+| Application                                       | Student                            | Notes                              |
+| ------------------------------------------------- | ---------------------------------- | ---------------------------------- |
+| firstName / middleName / lastName                 | same                               | Direct copy                        |
+| dateOfBirth, gender, nationality                  | same                               | Direct copy                        |
+| email                                             | email                              | Direct copy                        |
+| phone / alternatePhone                            | mobileNumber / alternatePhone      | Direct copy                        |
+| address, city, state, postalCode, country         | currentAddress, …                  | Direct copy                        |
+| photoUrl                                          | profilePhotoUrl                    | Profile picture                    |
+| previousSchool / previousClass                    | previousSchoolName / previousGrade | Direct copy                        |
+| previousMarks + previousPercentage + achievements | previousAcademicRecord             | Combined string                    |
+| fatherName / motherName                           | Guardian record                    | Creates Guardian + StudentGuardian |
+| fatherPhone / guardianPhone                       | emergencyContactPhone              | First available used               |
+| guardianRelation                                  | emergencyContactRelation           | Falls back to "Parent"             |
+| documents (JSON)                                  | StudentDocument records            | Each document creates a row        |
+| applyingForClass                                  | academicGradeId                    | Via YearLevel → AcademicGrade      |
 
-1. Updates application status to `ADMITTED` with enrollment number (`ENR-{timestamp}-{random}`)
-2. Creates a `User` record if the applicant was a guest (with `role: STUDENT`, `schoolId`)
-3. Creates a `Student` record with **all** application data pre-populated (see Data Transfer below)
-4. Matches `applyingForClass` to the correct `YearLevel` (cascading: exact name → case-insensitive → grade number extraction → levelOrder fallback)
-5. Creates `StudentYearLevel` linking student to grade + school year
-6. Sets `academicGradeId` on the student from the matched `YearLevel` → `AcademicGrade` link
-7. Updates user role from `USER` to `STUDENT` and assigns `schoolId`
-8. Auto-assigns active `FeeStructures` for the campaign's academic year → creates `FeeAssignment` records (status: `PENDING`)
-9. Creates `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` records from father/mother data
-10. Copies application documents to `StudentDocument` records
-11. **Auto-generates `UserInvoice`(s)** from fee assignments (non-fatal — enrollment succeeds even if invoice generation fails):
-    - Creates one `UserInvoice` per `FeeAssignment` (not one combined invoice)
-    - Invoice number format: `ENR-{unique}` via `generateUniqueInvoiceNumber()`
-    - Status: `UNPAID`, due date: 30 days from enrollment
-    - School name/address as "from", student name/email as "to"
-    - Each invoice has one `UserInvoiceItem` per fee structure
-    - Visible in Finance → Invoices immediately after enrollment
+## Guardian auto-creation
 
-**After transaction (non-blocking, best-effort):**
+For each parent (father, mother):
 
-12. Sends enrollment confirmation notification to student (in-app + email)
-13. Dispatches `fee_due` notification to student for auto-assigned fees
-14. Notifies guardians about enrollment (in-app + email)
-15. Returns `studentId` for immediate navigation to the student profile
+1. Split name into `firstName` + `lastName` (last space).
+2. Upsert `GuardianType` (`father`, `mother`).
+3. Create `Guardian` (or find by email).
+4. Create `StudentGuardian` join row with occupation, `isPrimary`.
+5. Create `GuardianPhoneNumber` if phone provided.
 
-The student is created with `wizardStep: null` and `status: ACTIVE`, meaning they appear as a fully complete active student — not a draft.
+Father is primary; if no father, mother becomes primary.
 
-### Step 3: Section Placement
+## Section placement
 
-After enrollment, the admin can place the student in a specific section:
+After enrollment, place the student in a section:
 
-- The enrollment response includes a `suggestedSectionId` if exactly one section has capacity for the student's grade
-- Lists sections with available capacity for the student's grade
-- Assigns student to section
-- Auto-enrolls in grade classes via `enrollStudentInGradeClasses()`
+- Enrollment response includes `suggestedSectionId` if exactly one section has capacity for the student's grade.
+- Lists sections with available capacity for that grade.
+- `placeStudentInSection()` assigns + auto-enrols in grade classes via `enrollStudentInGradeClasses()`.
 
-### Step 4: Student Wizard (Edit Mode)
+## Wizard editing
 
-After enrollment, the admin can open the student record in the student wizard to review or edit any information. Since `wizardStep` is `null`, the student appears as "Active" in the students list (not "Draft").
+Enrolled students can be edited via the student wizard (Students table → Actions → Edit). All application data is pre-populated.
 
-The admin can navigate to the wizard from:
+`updateStudentWizardStep` only updates `wizardStep` for draft students (non-null `wizardStep`) — prevents accidental reversion of enrolled students. Final button reads "Save", not "Create".
 
-- Students table → Actions → Edit (opens wizard at the personal step)
-- Enrollment table → View Student (after enrollment confirmation)
+## Merit list
 
-All application data is pre-populated in the wizard forms since it was written to the Student record during enrollment. The wizard serves as an **editing interface** for enrollment-created students — the admin can update or add information that wasn't collected during the application (e.g., health records, detailed previous education, section assignment).
+Rank shortlisted / selected / waitlisted applications by configurable weights (must sum to 100):
 
-**Safety:** When editing an enrolled student, the `updateStudentWizardStep` action only updates `wizardStep` for draft students (where `wizardStep` is non-null). This prevents enrolled students from being accidentally reverted to draft status when navigating between wizard steps. The wizard final button shows "Save" (not "Create") for all students.
+- Academic score — 40%
+- Entrance exam — 35%
+- Interview — 25%
 
-### Step 5: Classroom & Finance Integration
+## Payment recording
 
-Once the student is enrolled and placed in a section:
+Admins record cash / bank transfer payments to mark application fee paid. Currently sets `Application.applicationFeePaid` only — full `Payment` model integration is tracked separately.
 
-- **Classroom**: Student appears in classroom roster, timetable, attendance
-- **Finance**: `FeeAssignment` records show in Finance → Fees. The admin can record payments, apply discounts, or scholarships
-- **Invoices**: Auto-generated `UserInvoice` records show in Finance → Invoices
-- **Profile**: Student has a profile page at `/profile/{userId}` accessible from the students table
-- **Attendance**: Student is available for attendance marking in their assigned classes
-
----
-
-## Admin Dashboard
-
-### Admission Tabs
-
-| Tab          | Route                            | Purpose                                  |
-| ------------ | -------------------------------- | ---------------------------------------- |
-| Campaigns    | `/{lang}/admission`              | Create/manage admission campaigns        |
-| Applications | `/{lang}/admission/applications` | Review submitted applications            |
-| Merit List   | `/{lang}/admission/merit`        | Rank applications by scores              |
-| Enrollment   | `/{lang}/admission/enrollment`   | Confirm enrollment for selected students |
-| Settings     | `/{lang}/admission/settings`     | Configure admission portal settings      |
-
-There is also a detail route at `/{lang}/admission/applications/{id}` for viewing a single application.
-
-### Merit List
-
-The admin can generate a merit list that ranks shortlisted/selected/waitlisted applications by configurable weights:
-
-- Academic score (default weight: 40%)
-- Entrance exam score (default weight: 35%)
-- Interview score (default weight: 25%)
-
-Weights are configurable in Admission Settings and must sum to 100.
-
-### Payment Recording
-
-Admins can manually record payments for cash/bank transfer methods, marking the application fee as paid.
-
-**Note:** Application fee payments currently update the `Application.applicationFeePaid` flag only. A future enhancement will bridge these into the `Payment` model for full accounting integration (requires making `Payment.feeAssignmentId` optional or creating a dedicated "application fee" FeeStructure).
-
-### Invoice Auto-Generation
-
-When enrollment is confirmed, the system auto-generates `UserInvoice` records from the student's fee assignments:
-
-1. Finds all `PENDING` fee assignments for the student's academic year
-2. Creates `UserInvoiceAddress` records for school (from) and student (to)
-3. Creates one `UserInvoice` per fee assignment with a `UserInvoiceItem`
-4. Invoices appear in **Finance → Invoices** immediately
-5. Invoice notes: `"Auto-generated from enrollment"`
-
-This is **non-fatal** — enrollment succeeds even if invoice generation fails. If it fails, the admin sees a warning message suggesting manual invoice creation from Finance → Invoices.
-
-The invoice uses the `createInvoiceFromEnrollment()` utility from `finance/invoice/actions.ts`.
-
----
-
-## Application → Student Data Transfer
-
-| Application Field         | Student Field            | Notes                                |
-| ------------------------- | ------------------------ | ------------------------------------ |
-| firstName                 | firstName                | Direct copy                          |
-| middleName                | middleName               | Direct copy                          |
-| lastName                  | lastName                 | Direct copy                          |
-| dateOfBirth               | dateOfBirth              | Direct copy                          |
-| gender                    | gender                   | Direct copy                          |
-| nationality               | nationality              | Direct copy                          |
-| email                     | email                    | Direct copy                          |
-| phone                     | mobileNumber             | Direct copy                          |
-| alternatePhone            | alternatePhone           | Direct copy                          |
-| address                   | currentAddress           | Direct copy                          |
-| city                      | city                     | Direct copy                          |
-| state                     | state                    | Direct copy                          |
-| postalCode                | postalCode               | Direct copy                          |
-| country                   | country                  | Direct copy                          |
-| category                  | category                 | Direct copy                          |
-| photoUrl                  | profilePhotoUrl          | Profile picture from application     |
-| previousSchool            | previousSchoolName       | Direct copy                          |
-| previousClass             | previousGrade            | Direct copy                          |
-| previousMarks             | previousAcademicRecord   | Combined: "Marks: X; Percentage: Y%" |
-| previousPercentage        | previousAcademicRecord   | Combined with marks and achievements |
-| achievements              | previousAcademicRecord   | Appended to academic record string   |
-| fatherName/motherName     | emergencyContactName     | First available used as emergency    |
-| fatherPhone/guardianPhone | emergencyContactPhone    | First available used as emergency    |
-| guardianRelation          | emergencyContactRelation | Falls back to "Parent"               |
-| fatherName                | Guardian record          | Creates Guardian + StudentGuardian   |
-| motherName                | Guardian record          | Creates Guardian + StudentGuardian   |
-| documents (JSON)          | StudentDocument records  | Each document creates a record       |
-| applyingForClass          | academicGradeId          | Via YearLevel → AcademicGrade lookup |
-
----
-
-## Guardian Auto-Creation
-
-For each parent in the application (father, mother):
-
-1. Name is split into `firstName` + `lastName` (split on last space)
-2. `GuardianType` is upserted (e.g., "father", "mother")
-3. `Guardian` is created (or found by email if provided)
-4. `StudentGuardian` join record links student to guardian with occupation, isPrimary
-5. `GuardianPhoneNumber` is created if phone is provided
-
-Father is marked as primary guardian. If no father, mother becomes primary.
-
----
-
-## Multi-Tenant Safety
-
-All queries are scoped by `schoolId`. The submit flow resolves school from subdomain:
-
-```typescript
-const schoolResult = await getSchoolBySubdomain(subdomain)
-const schoolId = schoolResult.data.id
-
-await db.application.create({
-  data: { ...formData, schoolId },
-})
-```
-
-The session is also verified to belong to the correct school before accepting submissions.
-
----
-
-## Configuration
-
-### Admission Settings
+## Settings
 
 ```typescript
 {
-  // General
-  allowMultipleApplications: false,   // Allow same email to apply multiple times
-  requireDocuments: true,             // Require document uploads
-  applicationFee: 0,                  // In campaign currency (0 = free)
-  offerExpiryDays: 14,               // Days before offer expires (1-90)
-
-  // Notifications
-  autoEmailNotifications: true,       // Send emails on status changes
-
-  // Payments
-  enableOnlinePayment: false,         // Enable Stripe payments
-  paymentMethods: ["stripe", "cash"], // Available methods
-  bankDetails: {                      // For bank transfer method
-    bankName: "",
-    accountName: "",
-    accountNumber: "",
-    iban: "",
-    swiftCode: ""
-  },
-  cashPaymentInstructions: "",        // Instructions for cash payments
-
-  // Merit Criteria (must sum to 100)
-  academicWeight: 40,                 // Academic score weight
-  entranceWeight: 35,                 // Entrance exam weight
-  interviewWeight: 25                 // Interview score weight
+  allowMultipleApplications: false,
+  requireDocuments: true,
+  applicationFee: 0,
+  offerExpiryDays: 14,           // 1-90
+  autoEmailNotifications: true,
+  enableOnlinePayment: false,
+  paymentMethods: ["stripe", "cash"],
+  bankDetails: { bankName, accountName, accountNumber, iban, swiftCode },
+  cashPaymentInstructions: "",
+  academicWeight: 40,            // merit weights (sum=100)
+  entranceWeight: 35,
+  interviewWeight: 25,
 }
 ```
 
----
+## Server actions (admin, auth + permission)
 
-## Status Reference
+| Action                                                                          | Permission                      |
+| ------------------------------------------------------------------------------- | ------------------------------- |
+| `getApplications()`                                                             | viewApplications                |
+| `updateApplicationStatus()`                                                     | updateStatus                    |
+| `confirmEnrollment()`                                                           | confirmEnrollment               |
+| `placeStudentInSection()`                                                       | confirmEnrollment               |
+| `getAvailableSectionsForPlacement()`                                            | confirmEnrollment               |
+| `generateMeritList()`                                                           | manageMerit                     |
+| `recordPayment()`                                                               | managePayments                  |
+| `getCampaigns()` / `createCampaign()` / `updateCampaign()` / `deleteCampaign()` | viewCampaigns / manageCampaigns |
+| `getAdmissionSettings()` / `saveAdmissionSettings()`                            | manageSettings                  |
+| `fetchCampaignOptions()`                                                        | viewCampaigns                   |
 
-| Status                | Trigger                      | What Happens                                                        |
-| --------------------- | ---------------------------- | ------------------------------------------------------------------- |
-| `DRAFT`               | Session created              | Form data being collected                                           |
-| `SUBMITTED`           | Applicant submits final step | Application number generated, email sent                            |
-| `UNDER_REVIEW`        | Admin changes status         | `reviewedAt` + `reviewedBy` set                                     |
-| `SHORTLISTED`         | Admin changes status         | Applicant notified                                                  |
-| `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                                              |
-| `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                                                  |
-| `SELECTED`            | Admin selects                | Offer created (configurable expiry via settings), payment link sent |
-| `WAITLISTED`          | Admin waitlists              | Applicant notified                                                  |
-| `REJECTED`            | Admin rejects                | Applicant notified                                                  |
-| `ADMITTED`            | Admin confirms enrollment    | Student + Guardian + Fees + Invoice(s) created                      |
-| `WITHDRAWN`           | Applicant or admin withdraws | Application closed                                                  |
+## Multi-tenant safety
 
----
+All queries scoped by `schoolId`. Submit flow resolves school from subdomain via `getSchoolBySubdomain()`; session is verified to belong to that school.
 
-## Server Actions Reference (Admin, Auth + Permission Required)
+## Key files
 
-| Action                               | Purpose                     | Permission        |
-| ------------------------------------ | --------------------------- | ----------------- |
-| `getApplications()`                  | List applications           | viewApplications  |
-| `updateApplicationStatus()`          | Change status               | updateStatus      |
-| `confirmEnrollment()`                | Admit + create student      | confirmEnrollment |
-| `placeStudentInSection()`            | Assign to section           | confirmEnrollment |
-| `getAvailableSectionsForPlacement()` | List sections with capacity | confirmEnrollment |
-| `generateMeritList()`                | Rank applications           | manageMerit       |
-| `recordPayment()`                    | Mark fee as paid            | managePayments    |
-| `getCampaigns()`                     | List campaigns              | viewCampaigns     |
-| `createCampaign()`                   | Create campaign             | manageCampaigns   |
-| `updateCampaign()`                   | Update campaign             | manageCampaigns   |
-| `deleteCampaign()`                   | Delete campaign             | manageCampaigns   |
-| `getAdmissionSettings()`             | Get settings                | manageSettings    |
-| `saveAdmissionSettings()`            | Update settings             | manageSettings    |
-| `fetchCampaignOptions()`             | Campaign dropdown options   | viewCampaigns     |
+| Purpose              | Path                                                                                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
+| Applications surface | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
+| Enrollment / merit   | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
+| Settings             | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
+| Invoice utility      | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
+| Schema               | `prisma/models/admission.prisma`                                                                                                                         |
+| Tests                | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
 
----
+## See also
 
-## Key Files
-
-| Purpose              | Path                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                     |
-| Applications table   | `src/components/school-dashboard/admission/applications-table.tsx`                         |
-| Applications columns | `src/components/school-dashboard/admission/applications-columns.tsx`                       |
-| Application detail   | `src/components/school-dashboard/admission/application-detail-content.tsx`                 |
-| Campaigns table      | `src/components/school-dashboard/admission/campaigns-table.tsx`                            |
-| Enrollment table     | `src/components/school-dashboard/admission/enrollment-table.tsx`                           |
-| Merit table          | `src/components/school-dashboard/admission/merit-table.tsx`                                |
-| Settings actions     | `src/components/school-dashboard/admission/settings/actions.ts`                            |
-| Settings validation  | `src/components/school-dashboard/admission/settings/validation.ts`                         |
-| Invoice utility      | `src/components/school-dashboard/finance/invoice/actions.ts`                               |
-| Prisma schema        | `prisma/models/admission.prisma`                                                           |
-| Admission types      | `src/components/school-marketing/admission/types.ts`                                       |
-| Actions tests        | `src/components/school-dashboard/admission/__tests__/actions.test.ts`                      |
-| Enrollment tests     | `src/components/school-dashboard/admission/__tests__/enrollment-pipeline.test.ts`          |
-| Invoice integration  | `src/components/school-dashboard/finance/invoice/__tests__/create-from-enrollment.test.ts` |
+- [Application](/docs/application) — applicant-side flow
+- [Multi-tenancy](/docs/multi-tenancy) — `schoolId` scoping
+- [Invoice](/docs/invoice) — auto-generation from enrollment
+- [Fees](/docs/fees) — fee assignment lifecycle

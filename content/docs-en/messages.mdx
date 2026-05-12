@@ -1,18 +1,18 @@
 ---
 title: Messages
-description: In-platform messaging — direct, group, class, department, and announcement conversations with file attachments, reactions, search, and WhatsApp dual-delivery.
+description: In-platform messaging — direct, group, class, department, and announcement conversations with attachments, reactions, search, and WhatsApp dual-delivery.
 ---
 
-The messages module powers in-platform school communication: 5 conversation types, file attachments, emoji reactions, read receipts, full-text search, and full RBAC across all 8 user roles. Messages are dual-delivered to WhatsApp when the school has an active session, with bidirectional bridging for incoming replies.
+The messages module powers in-platform communication: 5 conversation types, file attachments, emoji reactions, read receipts, full-text search, full RBAC across 8 roles. Messages dual-deliver to WhatsApp when the school has an active session, with bidirectional bridging for incoming replies.
 
 ## Routes
 
 All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
 
-| Route                      | Roles | Purpose                              |
-| -------------------------- | ----- | ------------------------------------ |
-| `/messages`                | all   | Sidebar + chat interface             |
-| `/messages?conversation=X` | all   | Deep link to a specific conversation |
+| Route                      | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| `/messages`                | Sidebar + chat interface             |
+| `/messages?conversation=X` | Deep link to a specific conversation |
 
 ## Conversation types
 
@@ -22,9 +22,9 @@ All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
 | `group`        | Multi-user group             | creator as owner            | `title`, `description`, `avatar`  |
 | `class`        | Class-bound (teacher-scoped) | teacher + enrolled students | `classId`                         |
 | `department`   | Department-wide channel      | department members          | `departmentId`                    |
-| `announcement` | Admin / DEVELOPER broadcast  | all school members          | `title`; read-only for non-admins |
+| `announcement` | Admin / DEVELOPER broadcast  | all school members          | `title`, read-only for non-admins |
 
-Direct conversations dedup via `directParticipant1Id` / `directParticipant2Id` — `getOrCreateDirectConversation()` checks both orderings before creating.
+Direct conversations dedup on `directParticipant1Id` / `directParticipant2Id` — `getOrCreateDirectConversation()` checks both orderings.
 
 System messages auto-generate for lifecycle events: `participant_joined`, `participant_left`, `participant_added`, `participant_removed`, `conversation_created`, `conversation_renamed`, `conversation_archived`, `message_pinned`, `message_unpinned`.
 
@@ -34,25 +34,25 @@ System messages auto-generate for lifecycle events: `participant_joined`, `parti
 
 | Role       | Direct |   Group    |  Class  | Department | Announcement |
 | ---------- | :----: | :--------: | :-----: | :--------: | :----------: |
-| DEVELOPER  |   ✓    |     ✓      |    ✓    |     ✓      |      ✓       |
-| ADMIN      |   ✓    |     ✓      |    ✓    |     ✓      |      ✓       |
-| TEACHER    |   ✓    |     ✓      | ✓ (own) |     ✓      |      —       |
-| ACCOUNTANT |   ✓    |     ✓      |    —    |     —      |      —       |
-| STAFF      |   ✓    |     ✓      |    —    |     —      |      —       |
-| STUDENT    |   ✓    | ✓ (create) |    —    |     —      |      —       |
-| GUARDIAN   |   ✓    |     —      |    —    |     —      |      —       |
+| DEVELOPER  |   Y    |     Y      |    Y    |     Y      |      Y       |
+| ADMIN      |   Y    |     Y      |    Y    |     Y      |      Y       |
+| TEACHER    |   Y    |     Y      | Y (own) |     Y      |      —       |
+| ACCOUNTANT |   Y    |     Y      |    —    |     —      |      —       |
+| STAFF      |   Y    |     Y      |    —    |     —      |      —       |
+| STUDENT    |   Y    | Y (create) |    —    |     —      |      —       |
+| GUARDIAN   |   Y    |     —      |    —    |     —      |      —       |
 
 Teachers can only access `class` conversations for their own classes (`Class.teacherId` + `ClassTeacher` bridge).
 
 ### Participant role within a conversation
 
-| Role      | Send | Edit own | Delete own |      Add      | Remove | Pin | Manage |
-| --------- | :--: | :------: | :--------: | :-----------: | :----: | :-: | :----: |
-| owner     |  ✓   |    ✓     |     ✓      |       ✓       |   ✓    |  ✓  |   ✓    |
-| admin     |  ✓   |    ✓     |     ✓      |       ✓       |   ✓    |  ✓  |   ✓    |
-| member    |  ✓   |    ✓     |     ✓      | (groups only) |   —    |  ✓  |   —    |
-| read_only |  —   |    —     |     —      |       —       |   —    |  —  |   —    |
-| guest     |  —   |    —     |     —      |       —       |   —    |  —  |   —    |
+| Role      | Send | Edit own | Delete own |  Add   | Remove | Pin | Manage |
+| --------- | :--: | :------: | :--------: | :----: | :----: | :-: | :----: |
+| owner     |  Y   |    Y     |     Y      |   Y    |   Y    |  Y  |   Y    |
+| admin     |  Y   |    Y     |     Y      |   Y    |   Y    |  Y  |   Y    |
+| member    |  Y   |    Y     |     Y      | groups |   —    |  Y  |   —    |
+| read_only |  —   |    —     |     —      |   —    |   —    |  —  |   —    |
+| guest     |  —   |    —     |     —      |   —    |   —    |  —  |   —    |
 
 ## Message lifecycle
 
@@ -68,63 +68,61 @@ Teachers can only access `class` conversations for their own classes (`Class.tea
 | ------------ | ------------------------------ |
 | `text`       | Plain text with link detection |
 | `image`      | Inline preview with lightbox   |
-| `file`       | File card with download link   |
+| `file`       | File card with download        |
 | `system`     | Centred, muted styling         |
 
-Messages soft-delete via `isDeleted: true` + `deletedAt`. The UI shows "This message was deleted." Only the sender (or owner / admin) can delete. Edits set `isEdited: true` + `editedAt`; the UI shows an "edited" indicator.
+Messages soft-delete via `isDeleted: true` + `deletedAt` ("This message was deleted."). Only sender (or owner / admin) can delete. Edits set `isEdited: true` + `editedAt`; UI shows "edited".
 
 ## File attachments
 
-Drag-and-drop uploads with previews, progress bars, S3 / Vercel Blob storage. Path: `messaging/{schoolId}/{conversationId}/{filename}`.
+Drag-and-drop with previews and progress bars. S3 / Vercel Blob storage. Path: `messaging/{schoolId}/{conversationId}/{filename}`.
 
 ## WhatsApp integration
 
-When the school has an active WhatsApp session, in-app messages auto-dispatch to WhatsApp via Evolution API. Bidirectional — incoming replies bridge back into conversations through a webhook.
+When the school has an active WhatsApp session, in-app messages auto-dispatch via Evolution API. Bidirectional — incoming replies bridge back via webhook.
 
-Phone resolution priority: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbers` → `StaffMember.staffPhoneNumbers`. Users without a domain record send in-app only.
-
-UI surfaces:
+Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbers` → `StaffMember.staffPhoneNumbers`. Users without a domain record send in-app only.
 
 | Element     | Location          | Purpose                                                     |
 | ----------- | ----------------- | ----------------------------------------------------------- |
 | W toggle    | Chat header       | Enable / disable WhatsApp per conversation                  |
-| W badge     | Conversation card | Marks WhatsApp-enabled conversations in the sidebar         |
+| W badge     | Conversation card | Marks WhatsApp-enabled conversations                        |
 | Status icon | Message bubble    | WhatsApp delivery status (sent / delivered / read / failed) |
 
-Rate limits: 1 message / second / school; 500 direct / day / school. Failed dispatches retry with exponential backoff (max 5 attempts) via `cron/process-whatsapp-notifications` (every 5 minutes).
+Rate limits: 1 msg / sec / school, 500 direct / day / school. Failed dispatches retry with exponential backoff (max 5 attempts) via `cron/process-whatsapp-notifications` (every 5 minutes).
 
 Key files: `whatsapp-bridge.ts`, `src/lib/whatsapp/evolution-client.ts`, `src/app/api/webhooks/whatsapp/route.ts`, `src/app/api/cron/process-whatsapp-notifications/route.ts`, `src/components/school-dashboard/whatsapp/`.
 
-Test accounts (seed `pnpm db:seed:single messaging-phones`): `admin@databayt.org` (00966557721603), `accountant@databayt.org` (00966504559207).
+Test accounts (`pnpm db:seed:single messaging-phones`): `admin@databayt.org` (00966557721603), `accountant@databayt.org` (00966504559207).
 
 ## Contacts sidebar
 
-WhatsApp-style contact list grouped by role. Click a contact → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getDisplayText()` when the locale differs from the school language.
+WhatsApp-style contact list grouped by role. Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getDisplayText()`.
 
 ## Unread badge
 
-`MessageMailIcon` in the platform header polls `/api/messages/unread-count` every 30 seconds and shows a count badge.
+`MessageMailIcon` in the platform header polls `/api/messages/unread-count` every 30 s and shows a count badge.
 
 ## Notifications
 
-Triggers and recipients:
-
-| Trigger               | Recipients                     | Priority |
-| --------------------- | ------------------------------ | -------- |
-| New message           | all participants except sender | normal   |
-| `@mention` in message | mentioned users                | high     |
-| Announcement          | all school members             | high     |
-| Conversation invite   | invitee                        | normal   |
+| Trigger             | Recipients                     | Priority |
+| ------------------- | ------------------------------ | -------- |
+| New message         | all participants except sender | normal   |
+| `@mention`          | mentioned users                | high     |
+| Announcement        | all school members             | high     |
+| Conversation invite | invitee                        | normal   |
 
 Dispatched via `notification-helpers.ts` (in-app + email + SMS).
 
 ## Search
 
-`fullTextSearchMessages({ conversationId, query, limit, offset })` runs PostgreSQL `tsvector`/`tsquery` ranked search within a conversation. `globalSearch({ query, conversationTypes, limit })` searches across every conversation the user has access to.
+`fullTextSearchMessages({ conversationId, query, limit, offset })` — PostgreSQL `tsvector` / `tsquery` ranked search within a conversation.
+
+`globalSearch({ query, conversationTypes, limit })` — across every conversation the user can access.
 
 ## Server actions and queries
 
-20+ actions across 8 categories. Full reference in `src/components/school-dashboard/messages/actions.ts`.
+20+ actions in `src/components/school-dashboard/messages/actions.ts`:
 
 | Category      | Actions                                                                                               |
 | ------------- | ----------------------------------------------------------------------------------------------------- |
@@ -140,7 +138,6 @@ Dispatched via `notification-helpers.ts` (in-app + email + SMS).
 Queries (`queries.ts`): `getConversationsList` (paginated, with unread counts), `getConversation`, `getOrCreateDirectConversation`, `getMessagesList`, `getMessagesWithCursor` (infinite scroll), `getUnreadMessageCount` (raw SQL), `getUnreadCountsPerConversation`, `fullTextSearchMessages`, `globalSearch`.
 
 ```typescript
-// minimal action surface
 sendMessage(input: {
   conversationId: string
   content: string
@@ -160,15 +157,15 @@ createConversation(input: {
 
 ## Schema
 
-10 Prisma models: `Conversation`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageReaction`, `MessageReadReceipt`, `TypingIndicator`, `MessageDraft`, `PinnedMessage`, `ConversationInvite`. Source of truth: `prisma/models/messages.prisma`.
+10 Prisma models: `Conversation`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageReaction`, `MessageReadReceipt`, `TypingIndicator`, `MessageDraft`, `PinnedMessage`, `ConversationInvite`. Source: `prisma/models/messages.prisma`.
 
-Key indexes:
+Indexes:
 
-- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[classId]`, `[departmentId]`, `[directParticipant1Id, directParticipant2Id]`.
-- `Message` — `[conversationId, createdAt desc]`, `[senderId]`, `[replyToId]`, `[conversationId, isSystem]`.
-- `ConversationParticipant` — unique on `[conversationId, userId]`.
+- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[classId]`, `[departmentId]`, `[directParticipant1Id, directParticipant2Id]`
+- `Message` — `[conversationId, createdAt desc]`, `[senderId]`, `[replyToId]`, `[conversationId, isSystem]`
+- `ConversationParticipant` — `@@unique([conversationId, userId])`
 
-Enums: `ConversationType` (direct / group / class / department / announcement), `MessageStatus` (sending / sent / delivered / read / failed), `ParticipantRole` (owner / admin / member / read_only / guest).
+Enums: `ConversationType` (5), `MessageStatus` (5), `ParticipantRole` (5).
 
 ## Seed
 
@@ -176,3 +173,8 @@ Enums: `ConversationType` (direct / group / class / department / announcement), 
 pnpm db:seed:single messages          # conversations, messages, reactions, receipts
 pnpm db:seed:single messaging-phones  # StaffMember + phone numbers for WhatsApp testing
 ```
+
+## See also
+
+- [Notifications](/docs/notifications) — message dispatch
+- [Multi-tenancy](/docs/multi-tenancy) — RBAC + scoping

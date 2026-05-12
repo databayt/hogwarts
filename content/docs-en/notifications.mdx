@@ -1,85 +1,46 @@
 ---
 title: Notifications
-description: Multi-channel notification delivery (in-app, email, push, SMS) with per-user preferences, RBAC, batch operations, and delivery tracking.
+description: Multi-channel delivery (in-app, email, push, SMS) with per-user preferences, RBAC, batch operations, and delivery tracking.
 ---
 
-The notifications module delivers messages across four channels (in-app, email, push, SMS) with per-user preferences, RBAC, batch operations, delivery tracking, and a polling fallback when Socket.IO is unavailable. Every domain dispatcher routes through `dispatchNotification()` so preference checking and expiration are uniform.
+The notifications module delivers across four channels with per-user preferences, RBAC, batch operations, delivery tracking, and a polling fallback when Socket.IO is unavailable. Every domain dispatcher routes through `dispatchNotification()` so preference checking and expiration are uniform.
 
 ## Routes
 
 | Route                        | Roles | Purpose                                   |
 | ---------------------------- | ----- | ----------------------------------------- |
 | `/notifications`             | all   | Notification center with list and filters |
-| `/notifications/preferences` | all   | Per-type per-channel preference toggles   |
+| `/notifications/preferences` | all   | Per-type per-channel toggle matrix        |
 
-## Notifications by role
+## Role × type matrix
 
-What each role receives. The full per-role tables below answer "what notifications will I get?"
+Cross-tab of which roles receive which notification groups. `Y` = role receives that group; `—` = not dispatched. STUDENT defaults `email: false` (in-app only unless opted in); STAFF defaults `email: false`; DEVELOPER can receive anything (in-app by default).
 
-### ADMIN
+| Notification group                      | DEVELOPER | ADMIN | TEACHER | ACCOUNTANT | STAFF | STUDENT | GUARDIAN |
+| --------------------------------------- | :-------: | :---: | :-----: | :--------: | :---: | :-----: | :------: |
+| `attendance_alert`                      |     Y     |   Y   |    Y    |     —      |   —   |    —    |    Y     |
+| `absence_intention(_decision)`          |     Y     |   —   |    Y    |     —      |   —   |    —    |    Y     |
+| `assignment_*`                          |     Y     |   —   |    —    |     —      |   —   |    Y    |    —     |
+| `grade_posted`, `report_ready`          |     Y     |   —   |    —    |     —      |   —   |    Y    |    Y     |
+| `fee_due` / `fee_paid` / `fee_overdue`  |     Y     |   —   |    —    |     Y      |   —   |    Y    |    Y     |
+| `class_rescheduled` / `class_cancelled` |     Y     |   —   |    Y    |     —      |   —   |    —    |    —     |
+| `account_created`                       |     Y     |   Y   |    —    |     —      |   —   |    Y    |    —     |
+| `system_alert`                          |     Y     |   Y   |    Y    |     Y      |   Y   |    Y    |    —     |
+| `announcement`, `event_reminder`        |     Y     |   Y   |    Y    |     Y      |   Y   |    —    |    Y     |
+| `message`, `message_mention`            |     Y     |   Y   |    Y    |     Y      |   Y   |    Y    |    Y     |
 
-| Notification                 | When                                      | Priority    | Channels      |
-| ---------------------------- | ----------------------------------------- | ----------- | ------------- |
-| `attendance_alert`           | Student exceeds absence threshold (cron)  | high        | in_app        |
-| `attendance_alert`           | Custom attendance policy triggered        | normal–high | in_app        |
-| `account_created`            | New member submits onboarding application | high        | in_app        |
-| `system_alert`               | Substitution declined / payroll approval  | high        | in_app        |
-| `announcement`               | Published by another admin / teacher      | normal      | in_app        |
-| `event_reminder`             | School event in next 24h (cron)           | normal      | in_app, email |
-| `message`, `message_mention` | New message / @mention                    | normal–high | in_app, email |
-
-### TEACHER
-
-| Notification                                                   | When                                                             | Priority | Channels       |
-| -------------------------------------------------------------- | ---------------------------------------------------------------- | -------- | -------------- |
-| `attendance_alert`                                             | Hasn't marked attendance (cron, hourly 8–16) / excuse / decision | normal   | in_app, email  |
-| `absence_intention`                                            | Student / guardian submits planned absence                       | normal   | in_app         |
-| `class_rescheduled` / `class_cancelled`                        | Timetable slot moved or removed                                  | high     | in_app         |
-| `system_alert`                                                 | Assigned / cancelled as substitute teacher; salary paid          | high     | in_app, email  |
-| `announcement`, `event_reminder`, `message`, `message_mention` | as above                                                         | normal   | in_app(+email) |
-
-### STUDENT
-
-> `email: false` by default — in-app only unless they opt in.
-
-| Notification                           | When                                              | Priority    | Channels      |
-| -------------------------------------- | ------------------------------------------------- | ----------- | ------------- |
-| `assignment_created`                   | Teacher creates new assignment                    | normal      | in_app, email |
-| `assignment_due`                       | Assignment due in 24h (cron)                      | high        | in_app, email |
-| `assignment_graded`                    | Assignment graded                                 | normal      | in_app        |
-| `grade_posted`                         | Grade or exam result posted                       | normal      | in_app        |
-| `report_ready`                         | Report card published                             | normal      | in_app        |
-| `fee_due` / `fee_paid` / `fee_overdue` | Fee lifecycle (overdue cron)                      | high–urgent | in_app, email |
-| `system_alert`                         | Exam scheduled / cancelled; placement; app status | normal–high | in_app, email |
-| `account_created`                      | Enrollment confirmed                              | high        | in_app, email |
-
-### GUARDIAN
-
-| Notification                                                   | When                                | Priority    | Channels       |
-| -------------------------------------------------------------- | ----------------------------------- | ----------- | -------------- |
-| `attendance_alert`                                             | Child marked absent                 | high        | in_app, sms    |
-| `attendance_alert`                                             | Excuse approved / rejected          | normal      | in_app, email  |
-| `absence_intention_decision`                                   | Planned absence approved / rejected | normal      | in_app, email  |
-| `grade_posted`, `report_ready`                                 | Child's grades / report card        | normal      | in_app         |
-| `fee_due` / `fee_paid` / `fee_overdue`                         | Fee lifecycle                       | high–urgent | in_app, email  |
-| `announcement`, `event_reminder`, `message`, `message_mention` | as above                            | normal      | in_app(+email) |
-
-### ACCOUNTANT, STAFF, DEVELOPER
-
-ACCOUNTANT and STAFF receive only `announcement`, `event_reminder`, `system_alert`, `message`, `message_mention`. STAFF defaults to `email: false`. DEVELOPER can receive anything; in-app by default.
+Priority varies by event: most are `normal`; `attendance_alert`, `assignment_due`, `fee_due`, `report_ready` are `high`; `fee_overdue` and critical `system_alert` are `urgent`. SMS is reserved for `attendance_alert` to GUARDIAN. Email follows per-role defaults below.
 
 ## Notification types (23)
 
-Grouped with default expiration. The categorised list is the canonical type reference.
-
-| Group      | Types                                                                                                                                   |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Messaging  | `message` (30d), `message_mention` (30d)                                                                                                |
-| Academics  | `assignment_created` (60d), `assignment_due` (7d), `assignment_graded` (60d), `grade_posted` (90d)                                      |
-| Attendance | `attendance_marked` (30d), `attendance_alert` (7d), `absence_intention` (14d), `absence_intention_decision` (14d)                       |
-| Finance    | `fee_due` (30d), `fee_overdue` (30d), `fee_paid` (90d)                                                                                  |
-| Events     | `announcement` (90d), `event_reminder` (7d), `class_cancelled` (7d), `class_rescheduled` (7d)                                           |
-| System     | `system_alert` (30d), `account_created` (90d), `password_reset` (1d), `login_alert` (7d), `document_shared` (60d), `report_ready` (30d) |
+| Group      | Types (with default expiration)                                                                                                               |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Messaging  | `message` (30 d), `message_mention` (30 d)                                                                                                    |
+| Academics  | `assignment_created` (60 d), `assignment_due` (7 d), `assignment_graded` (60 d), `grade_posted` (90 d)                                        |
+| Attendance | `attendance_marked` (30 d), `attendance_alert` (7 d), `absence_intention` (14 d), `absence_intention_decision` (14 d)                         |
+| Finance    | `fee_due` (30 d), `fee_overdue` (30 d), `fee_paid` (90 d)                                                                                     |
+| Events     | `announcement` (90 d), `event_reminder` (7 d), `class_cancelled` (7 d), `class_rescheduled` (7 d)                                             |
+| System     | `system_alert` (30 d), `account_created` (90 d), `password_reset` (1 d), `login_alert` (7 d), `document_shared` (60 d), `report_ready` (30 d) |
 
 | Priority | Use case                                       |
 | -------- | ---------------------------------------------- |
@@ -90,20 +51,20 @@ Grouped with default expiration. The categorised list is the canonical type refe
 
 ## Recipient map
 
-19 wired notification types across 14 domains. The full mapping is the source of truth for "who gets what" — read it from the canonical table in `src/components/school-dashboard/notifications/recipient-map.ts`. Highlights:
+Source: `src/components/school-dashboard/notifications/recipient-map.ts`. Highlights:
 
-- `attendance_alert` — five trigger points (mark absent, threshold cron, excuse submit / decide, teacher unmarked cron). Recipients vary: guardians, admins, teachers.
-- `grade_posted`, `report_ready` — students + guardians; triggered from grades or exams actions.
+- `attendance_alert` — multiple trigger points (mark absent, threshold cron, excuse submit / decide, teacher unmarked cron). Recipients vary.
+- `grade_posted`, `report_ready` — students + guardians.
 - `fee_due` / `fee_paid` / `fee_overdue` — students + guardians; cron drives overdue.
-- `system_alert` — catch-all for membership lifecycle, payroll, exam scheduling, substitutions, application status. Recipients depend on the trigger.
-- `account_created` — onboarding submissions go to admins; membership approvals and enrollments go to the user.
+- `system_alert` — catch-all for membership lifecycle, payroll, exam scheduling, substitutions, application status.
+- `account_created` — onboarding to admins; membership approvals + enrollments to the user.
 - `message`, `message_mention` — conversation participants and mentioned users.
 
-Four types are defined in the enum but **not yet dispatched**: `attendance_marked`, `password_reset`, `login_alert`, `document_shared`. Wire them in their respective actions when the use case lands.
+A handful of types are defined but **not yet dispatched**: `attendance_marked`, `password_reset`, `login_alert`, `document_shared`.
 
 ## Architecture
 
-`src/lib/dispatch-notification.ts` is the single entry point. Two functions:
+`src/lib/dispatch-notification.ts` is the single entry point.
 
 ```typescript
 // single user — used by domain dispatchers
@@ -129,21 +90,21 @@ await dispatchNotificationsToAudience({
 })
 ```
 
-`dispatchNotification()` checks `NotificationPreference`, picks channels, sets `expiresAt` from config, then writes the row. `dispatchNotificationsToAudience()` resolves users in scope, filters by preference, and uses `createMany({ skipDuplicates: true })`.
+`dispatchNotification()` checks `NotificationPreference`, picks channels, sets `expiresAt` from config, then writes the row. `dispatchNotificationsToAudience()` filters by preference and uses `createMany({ skipDuplicates: true })`.
 
-Domain dispatchers across 17 integration points all call `dispatchNotification()`. No domain code touches `db.notification.create` directly.
+Domain dispatchers all call `dispatchNotification()`. No domain code touches `db.notification.create` directly.
 
-Real-time delivery uses Socket.IO with rooms keyed by `user:${userId}`. The client singleton is `src/lib/websocket/socket-service.ts`. **The Socket.IO server is external to this repo** — without it, the client falls back to 30-second polling.
+Real-time delivery uses Socket.IO with rooms keyed by `user:${userId}`. The client singleton is `src/lib/websocket/socket-service.ts`. **The Socket.IO server is external to this repo** — without it, the client falls back to 30 s polling.
 
 ## RBAC
 
 | Action             | DEVELOPER |   ADMIN   | TEACHER (own classes) | ACCOUNTANT (fee types) | STAFF (limited) | STUDENT | GUARDIAN |
 | ------------------ | :-------: | :-------: | :-------------------: | :--------------------: | :-------------: | :-----: | :------: |
-| Read own           |     ✓     |     ✓     |           ✓           |           ✓            |        ✓        |    ✓    |    ✓     |
-| Mark as read       |     ✓     |     ✓     |           ✓           |           ✓            |        ✓        |    ✓    |    ✓     |
-| Create             |     ✓     | all types |     academic only     |       fee types        |   doc / event   |    —    |    —     |
-| Send batch         |     ✓     |     ✓     |      own classes      |           ✓            |        —        |    —    |    —     |
-| Update preferences |     ✓     |     ✓     |           ✓           |           ✓            |        ✓        |    ✓    |    ✓     |
+| Read own           |     Y     |     Y     |           Y           |           Y            |        Y        |    Y    |    Y     |
+| Mark as read       |     Y     |     Y     |           Y           |           Y            |        Y        |    Y    |    Y     |
+| Create             |     Y     | all types |     academic only     |       fee types        |   doc / event   |    —    |    —     |
+| Send batch         |     Y     |     Y     |      own classes      |           Y            |        —        |    —    |    —     |
+| Update preferences |     Y     |     Y     |           Y           |           Y            |        Y        |    Y    |    Y     |
 
 ## Channels
 
@@ -154,16 +115,7 @@ Real-time delivery uses Socket.IO with rooms keyed by `user:${userId}`. The clie
 | `push`   |   no    | Web Push   | Service worker exists; no VAPID keys                |
 | `sms`    |   no    | Twilio     | E.164 validation, +966 default; `SMS_ENABLED=false` |
 
-Default per-channel preferences by role:
-
-| Role       | in_app | email | push | sms |
-| ---------- | :----: | :---: | :--: | :-: |
-| ADMIN      |   ✓    |   ✓   |  —   |  —  |
-| TEACHER    |   ✓    |   ✓   |  —   |  —  |
-| STUDENT    |   ✓    |   —   |  —   |  —  |
-| GUARDIAN   |   ✓    |   ✓   |  —   |  —  |
-| ACCOUNTANT |   ✓    |   ✓   |  —   |  —  |
-| STAFF      |   ✓    |   —   |  —   |  —  |
+Default channels: every role gets `in_app`; STUDENT and STAFF default `email: false`; all other roles default `email: true`. `push` and `sms` are off by default for everyone (provider keys missing).
 
 Email delivery uses Resend, renders HTML + plain-text fallback, respects per-user quiet hours, batches via `cron/process-email-notifications`. Dev sends to `delivered@resend.dev`; production sends from `noreply@school.databayt.org`.
 
@@ -171,7 +123,7 @@ Email delivery uses Resend, renders HTML + plain-text fallback, respects per-use
 
 `NotificationPreference` is unique on `[userId, type, channel]`. Fields: `enabled`, `quietHoursStart`/`quietHoursEnd` (0–23), `digestEnabled`, `digestFrequency` (`daily` | `weekly`).
 
-The preferences page at `/notifications/preferences` renders a toggle matrix — 23 rows (types) × 4 columns (channels) plus quiet-hours and digest controls. Dispatch checks the user's preference for the matching `(type, channel)` row; missing preference falls back to role defaults.
+The preferences page renders one row per notification type × four channel columns plus quiet-hours and digest controls. Missing preference falls back to role defaults.
 
 ## Server actions and queries
 
@@ -187,11 +139,9 @@ Actions in `actions.ts`:
 | `updatePreferences()`           | all (own only)       | Update per-channel preference |
 | `subscribe()` / `unsubscribe()` | all                  | Entity subscriptions          |
 
-Queries in `queries.ts`: `getNotifications` (paginated), `getNotificationsCursor` (infinite scroll), `getUnreadCount`, `getNotificationStats`, `getRecentNotifications`, `getByType`, `getExpired`, `getPreferences`, `getSubscriptions`, `getPendingEmailQueue`.
+Queries (`queries.ts`): `getNotifications` (paginated), `getNotificationsCursor` (infinite scroll), `getUnreadCount`, `getNotificationStats`, `getRecentNotifications`, `getByType`, `getExpired`, `getPreferences`, `getSubscriptions`, `getPendingEmailQueue`.
 
 ## Schema
-
-`Notification` is the row. Indexes are tuned for the main queries: `[schoolId, userId, read, createdAt]` (default), `[schoolId, type]` (filter), `[schoolId, createdAt]` (analytics), per-channel sent flags for queue draining, and `[expiresAt]` for cleanup.
 
 ```prisma
 model Notification {
@@ -228,35 +178,28 @@ model Notification {
 
 Supporting models — `NotificationTemplate`, `NotificationBatch`, `NotificationSubscription`, `NotificationSummary` — are schema only (no rendering pipeline, no batch processor, no digest cron). Source: `prisma/models/notifications.prisma`.
 
-Enums: `NotificationType` (23 values), `NotificationPriority` (`low` | `normal` | `high` | `urgent`), `NotificationChannel` (`in_app` | `email` | `push` | `sms`).
+Enums: `NotificationType`, `NotificationPriority`, `NotificationChannel`.
 
 ## Cron jobs
 
-| Cron route                              | Schedule    | Type / purpose                           |
+| Cron route                              | Schedule    | Purpose                                  |
 | --------------------------------------- | ----------- | ---------------------------------------- |
-| `/api/cron/process-email-notifications` | hourly      | drain pending email queue                |
-| `/api/cron/cleanup-notifications`       | daily 2 AM  | delete read+expired, anything > 90 days  |
+| `/api/cron/process-email-notifications` | hourly      | Drain pending email queue                |
+| `/api/cron/cleanup-notifications`       | daily 2 AM  | Delete read+expired, anything > 90 days  |
 | `/api/cron/event-reminders`             | daily 8 AM  | `event_reminder` for events in next 24 h |
 | `/api/cron/assignment-reminders`        | daily 8 AM  | `assignment_due`                         |
 | `/api/cron/fee-overdue`                 | daily 9 AM  | `fee_overdue`                            |
 | `/api/cron/attendance-policies`         | daily 1 AM  | `attendance_alert` to admins             |
-| `/api/cron/teacher-reminders`           | hourly 8–16 | reminder to teachers to mark attendance  |
+| `/api/cron/teacher-reminders`           | hourly 8–16 | Reminder to teachers to mark attendance  |
 | `/api/cron/scheduled-reports`           | every 6 h   | `report_ready`                           |
-| `/api/cron/publish-announcements`       | midnight    | publish scheduled announcements          |
-| `/api/cron/expire-announcements`        | midnight    | expire old announcements                 |
+| `/api/cron/publish-announcements`       | midnight    | Publish scheduled announcements          |
+| `/api/cron/expire-announcements`        | midnight    | Expire old announcements                 |
 
 ## UI
 
-| File                             | Role                                                                 |
-| -------------------------------- | -------------------------------------------------------------------- |
-| `bell-icon.tsx`                  | Bell with animated badge, popover of recent items, connection state. |
-| `card.tsx`                       | Item: type icon, priority colour, time-ago, dismiss, deep link.      |
-| `list.tsx`                       | Tabbed: all / unread, date grouping (Today, Yesterday, This Week).   |
-| `center.tsx`                     | Full center with bulk select, filters by type / priority / status.   |
-| `notification-center-client.tsx` | Client wrapper merging SSR + Socket.IO updates.                      |
-| `preferences-form.tsx`           | Per-type per-channel toggle matrix.                                  |
+`bell-icon.tsx` (badge + recent popover), `card.tsx` (per-item rendering), `list.tsx` (tabbed all/unread, date grouping), `center.tsx` (bulk select + filters), `notification-center-client.tsx` (SSR + socket merge), and `preferences-form.tsx` (per-type per-channel toggle matrix).
 
-Three hooks expose the data, all dual-channel (Socket.IO when available, 30-second polling fallback), with optimistic updates:
+Hooks expose the data — dual-channel (Socket.IO when available, 30 s polling fallback), with optimistic updates:
 
 ```typescript
 const {
@@ -274,3 +217,9 @@ const {
 useNotificationBell() // count + 5 recent, no toast
 useNotificationCenter() // all recent + toasts
 ```
+
+## See also
+
+- [Messages](/docs/messages) — message + mention dispatch
+- [Fees](/docs/fees) — `fee_due` / `fee_paid` / `fee_overdue`
+- [Attendance](/docs/attendance) — `attendance_alert` triggers

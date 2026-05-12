@@ -1,362 +1,138 @@
 ---
-title: "Business Model"
-description: "SaaS subscription pricing and revenue model for Hogwarts school management platform."
+title: Business model
+description: SaaS subscription pricing, revenue streams, unit economics, and projections for Hogwarts.
 ---
 
-## Business Model
+Tiered SaaS subscription with per-student pricing. Designed to scale from a 50-student private school to a national network of public schools. Live in production at [ed.databayt.org](https://ed.databayt.org); piloted with [King Fahad Schools](https://kingfahad.databayt.org) — our first paying customer. For commercial process see [Sales](/docs/sales).
 
-Hogwarts operates on a tiered SaaS subscription model with per-student pricing, designed to scale from small schools to large government contracts.
+## Subscription tiers
 
----
+| Tier           | Price               | Best for                       | Limits                                                                                                         |
+| -------------- | ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| **FREE**       | $0                  | Small schools, evaluation      | 100 students, 1 GB storage, community support, core features                                                   |
+| **PRO**        | $1.50/student/month | Growing schools                | 10 GB storage, priority support, custom branding, API 1K req/hr, advanced analytics, parent push notifications |
+| **ENTERPRISE** | $1.00/student/month | Networks, government contracts | Unlimited storage and API, dedicated AM, 99.9% SLA, white-label, SSO (SAML/OAuth), custom integrations         |
 
-## Subscription Tiers
+All paid tiers include a **14-day free trial** with full feature access; no credit card required.
 
-<div className="space-y-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-semibold text-lg">FREE</h3>
-      <span className="text-2xl font-bold">$0</span>
-    </div>
-    <p className="text-sm text-muted-foreground mb-4">
-      For small schools getting started or evaluating the platform.
-    </p>
-    <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-4">
-      <li>Up to 100 students</li>
-      <li>1GB storage</li>
-      <li>Community support</li>
-      <li>Core features (attendance, grades, timetable)</li>
-      <li>Standard branding</li>
-    </ul>
-  </div>
-
-<div className="rounded-lg border border-blue-500 p-6">
-  <div className="mb-4 flex items-center justify-between">
-    <div>
-      <h3 className="text-lg font-semibold">PRO</h3>
-      <span className="text-xs text-blue-600">Most Popular</span>
-    </div>
-    <div className="text-right">
-      <span className="text-2xl font-bold">$1.50</span>
-      <span className="text-muted-foreground text-sm">/student/month</span>
-    </div>
-  </div>
-  <p className="text-muted-foreground mb-4 text-sm">
-    For growing schools that need custom branding and priority support.
-  </p>
-  <ul className="text-muted-foreground list-disc space-y-2 pl-4 text-sm">
-    <li>Unlimited students</li>
-    <li>10GB storage</li>
-    <li>Priority email support</li>
-    <li>Custom branding (logo, colors)</li>
-    <li>API access (1,000 requests/hour)</li>
-    <li>Advanced reports and analytics</li>
-    <li>Parent mobile notifications</li>
-  </ul>
-</div>
-
-  <div className="p-6 border rounded-lg border-purple-500">
-    <div className="flex items-center justify-between mb-4">
-      <div>
-        <h3 className="font-semibold text-lg">ENTERPRISE</h3>
-        <span className="text-xs text-purple-600">Best Value at Scale</span>
-      </div>
-      <div className="text-right">
-        <span className="text-2xl font-bold">$1.00</span>
-        <span className="text-sm text-muted-foreground">/student/month</span>
-      </div>
-    </div>
-    <p className="text-sm text-muted-foreground mb-4">
-      For school networks, government contracts, and large institutions.
-    </p>
-    <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-4">
-      <li>Unlimited students</li>
-      <li>Unlimited storage</li>
-      <li>Dedicated account manager</li>
-      <li>99.9% SLA guarantee</li>
-      <li>White-label option (custom domain)</li>
-      <li>Unlimited API access</li>
-      <li>SSO integration (SAML, OAuth)</li>
-      <li>Custom integrations</li>
-      <li>On-site training available</li>
-    </ul>
-  </div>
-</div>
-
----
-
-## Billing Options
-
-### Payment Structure
+## Billing options
 
 | Option     | Discount | Billing                             |
 | ---------- | -------- | ----------------------------------- |
-| Monthly    | -        | Per-student, metered monthly        |
+| Monthly    | —        | Per-student, metered monthly        |
 | Annual     | 15% off  | Prepaid yearly commitment           |
 | Multi-year | Custom   | Negotiated for government contracts |
 
-### Payment Methods
-
-- **Stripe Subscriptions** - Credit/debit cards, automatic billing
-- **Bank Transfer** - For government and large enterprise contracts
-- **Local Payment** - Regional payment gateways for MEA markets
-
-### Free Trial
-
-All paid tiers include a **14-day free trial** with full feature access. No credit card required to start.
-
----
-
-## Revenue Streams
-
-### Primary Revenue
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Per-Student Subscriptions</h4>
-    <p className="text-sm text-muted-foreground">
-      Core recurring revenue from monthly/annual subscriptions based on enrolled student count.
-    </p>
-    <p className="text-xs text-muted-foreground mt-2">~85% of revenue</p>
-  </div>
-
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Enterprise Contracts</h4>
-    <p className="text-sm text-muted-foreground">
-      Large multi-school and government contracts with custom pricing and SLAs.
-    </p>
-    <p className="text-xs text-muted-foreground mt-2">~10% of revenue</p>
-  </div>
-</div>
-
-### Secondary Revenue
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">API Overage</h4>
-    <p className="text-sm text-muted-foreground">
-      Usage-based billing for API requests exceeding tier limits.
-    </p>
-  </div>
+**Payment methods**: Stripe Subscriptions (primary), bank transfer (enterprise / government), regional gateways (bankak, tap, mobile money) for MEA.
+
+## Revenue streams
+
+| Stream                    | Share | Description                                         |
+| ------------------------- | ----- | --------------------------------------------------- |
+| Per-student subscriptions | ~85%  | Recurring revenue from monthly / annual plans       |
+| Enterprise contracts      | ~10%  | Multi-school + government deals with custom pricing |
+| API overage               | small | Usage-based billing above tier limits               |
+| White-label licensing     | small | Custom domain + complete rebranding fee             |
+| Professional services     | small | Implementation, migration, training                 |
+| Marketplace (future)      | —     | Commission on third-party integrations              |
 
-<div className="rounded-lg border p-6">
-  <h4 className="mb-2 font-semibold">White-Label Licensing</h4>
-  <p className="text-muted-foreground text-sm">
-    Premium fee for schools wanting custom domains and complete rebranding.
-  </p>
-</div>
+## Unit economics
+
+### 500-student school (PRO)
+
+| Metric                    | Value                                    |
+| ------------------------- | ---------------------------------------- |
+| Monthly revenue           | $750                                     |
+| Annual revenue            | $9,000 ($7,650 with 15% annual discount) |
+| Customer acquisition cost | ~$500                                    |
+| Payback period            | < 1 month                                |
+| Gross margin              | 80%+                                     |
+
+### 5,000-student network (ENTERPRISE)
+
+| Metric                    | Value                                  |
+| ------------------------- | -------------------------------------- |
+| Monthly revenue           | $5,000                                 |
+| Annual revenue            | $60,000 ($51,000 with annual discount) |
+| Customer acquisition cost | ~$3,000                                |
+| Payback period            | < 1 month                              |
+| Gross margin              | 85%+                                   |
+
+## Market opportunity (MEA)
+
+| Region             | 2024 size | Projected      | CAGR   |
+| ------------------ | --------- | -------------- | ------ |
+| MEA EdTech         | $14.4B    | $33.0B by 2030 | ~14.6% |
+| Middle East EdTech | $11.3B    | $27.0B by 2033 | ~9.1%  |
+| GCC EdTech         | $3.02B    | $4.47B by 2030 | ~6.74% |
+
+K-12 holds **44%** of the EdTech market — the largest revenue-generating sector. Total K-12 TAM in MEA exceeds **$6B by 2030**.
+
+### Country focus
+
+| Country      | Size     | CAGR   | Note                        |
+| ------------ | -------- | ------ | --------------------------- |
+| Sudan        | Emerging | —      | Arabic-first primary market |
+| Saudi Arabia | $2.32B   | 12.77% | Largest MENA market         |
+| Egypt        | $302M    | 14.0%  | 234 active EdTech companies |
+| South Africa | $929M    | 11.78% | 40% of Africa EdTech 50     |
+
+## Growth strategy
+
+| Phase                 | Plan                                                                 |
+| --------------------- | -------------------------------------------------------------------- |
+| 1. Freemium           | FREE tier for ≤100 students; convert as they grow                    |
+| 2. Land + expand      | Pilot one campus, demonstrate ROI, propose network-wide ENTERPRISE   |
+| 3. Government         | RFPs, custom compliance, multi-year volume contracts                 |
+| 4. Regional expansion | French / Spanish / Hindi / Mandarin locales; regional certifications |
+
+## Revenue projections
+
+| Year | Schools                | ARR   | NPS / churn              |
+| ---- | ---------------------- | ----- | ------------------------ |
+| 1    | 100                    | $240K | 98% CSAT, < 3%/mo churn  |
+| 3    | 2,500                  | $6M   | 85+ NPS, < 1.5%/mo churn |
+| 5    | 15,000 (50+ countries) | $36M  | IPO-ready metrics        |
+
+## Cost structure
+
+| Category      | Service                                                                       |
+| ------------- | ----------------------------------------------------------------------------- |
+| Hosting       | Vercel (serverless), Neon (PostgreSQL serverless)                             |
+| Storage / CDN | AWS S3 + CloudFront (`cdn.databayt.org`)                                      |
+| Email / SMS   | Resend, Twilio                                                                |
+| Payments      | Stripe (2.9% + $0.30/transaction), regional gateways                          |
+| Development   | Core team + community contributors via [shared economy](/docs/shared-economy) |
+| Compliance    | Annual security audit, certifications                                         |
+
+### Target margins
+
+- **Gross margin**: 80%+ (cloud-native efficiency)
+- **Operating margin**: 20%+ at scale
+- **LTV:CAC ratio**: 10:1+
+
+## Professional services
+
+| Service                    | Pricing          |
+| -------------------------- | ---------------- |
+| Platform setup             | $5,000–$15,000   |
+| Custom integrations        | $10,000–$50,000  |
+| Data migration             | $15,000–$100,000 |
+| Training (per day)         | $2,500–$7,500    |
+| Managed services (monthly) | $5,000–$25,000   |
+
+## Marketplace and partnerships
+
+A future integration marketplace (70/30 partner/platform split) and reseller network are on the roadmap; not active today.
 
-<div className="rounded-lg border p-6">
-  <h4 className="mb-2 font-semibold">Professional Services</h4>
-  <p className="text-muted-foreground text-sm">
-    Implementation consulting, data migration, and custom training programs.
-  </p>
-</div>
+## Equity and revenue sharing
 
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Marketplace (Future)</h4>
-    <p className="text-sm text-muted-foreground">
-      Commission on third-party integrations and add-ons sold through platform.
-    </p>
-  </div>
-</div>
+All employees receive equity (4-year vest, 1-year cliff). Open-source contributors earn through the [shared economy](/docs/shared-economy) framework.
 
----
+## See also
 
-## Market Opportunity
-
-### MEA EdTech Market
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-  <div className="p-4 border rounded-lg text-center">
-    <p className="text-sm text-muted-foreground">2024</p>
-    <p className="text-2xl font-bold">$14.4B</p>
-    <p className="text-xs text-muted-foreground">MEA Education Technology</p>
-  </div>
-
-  <div className="p-4 border rounded-lg text-center">
-    <p className="text-sm text-muted-foreground">2030</p>
-    <p className="text-2xl font-bold">$33.0B</p>
-    <p className="text-xs text-muted-foreground">14.6% CAGR</p>
-  </div>
-</div>
-
-### Target Markets
-
-| Market             | 2024 Size | Growth      | K-12 Share |
-| ------------------ | --------- | ----------- | ---------- |
-| Middle East EdTech | $11.3B    | 9.1% CAGR   | 44%        |
-| GCC EdTech         | $3.02B    | 6.74% CAGR  | 44%        |
-| Saudi Arabia       | $2.32B    | 12.77% CAGR | -          |
-| Egypt              | $302M     | 14.0% CAGR  | -          |
-| South Africa       | $929M     | 11.78% CAGR | -          |
-
-### Addressable Market
-
-With K-12 representing **44% of the EdTech market**, the total addressable market (TAM) for school management systems in MEA exceeds **$6B by 2030**.
-
----
-
-## Unit Economics
-
-### Example: 500-Student School (PRO Tier)
-
-| Metric                          | Value                                   |
-| ------------------------------- | --------------------------------------- |
-| Monthly Revenue                 | $750                                    |
-| Annual Revenue                  | $9,000 (or $7,650 with annual discount) |
-| Customer Acquisition Cost (CAC) | ~$500                                   |
-| Payback Period                  | &lt;1 month                             |
-| Gross Margin                    | 80%+                                    |
-
-### Example: 5,000-Student Network (ENTERPRISE)
-
-| Metric                          | Value                                     |
-| ------------------------------- | ----------------------------------------- |
-| Monthly Revenue                 | $5,000                                    |
-| Annual Revenue                  | $60,000 (or $51,000 with annual discount) |
-| Customer Acquisition Cost (CAC) | ~$3,000                                   |
-| Payback Period                  | &lt;1 month                               |
-| Gross Margin                    | 85%+                                      |
-
----
-
-## Growth Strategy
-
-### Phase 1: Freemium Acquisition
-
-Use FREE tier to acquire small schools and prove value.
-
-- Target: Schools with ≤100 students
-- Goal: Build user base and testimonials
-- Conversion path: Grow beyond 100 students → upgrade to PRO
-
-### Phase 2: Land and Expand
-
-Start with one school in a network, expand to entire organization.
-
-- Pilot program with single campus
-- Demonstrate ROI and user satisfaction
-- Propose network-wide ENTERPRISE contract
-
-### Phase 3: Government Contracts
-
-Secure ministry-level partnerships for public school networks.
-
-- Respond to government RFPs
-- Offer custom compliance and integration
-- Negotiate multi-year contracts with volume pricing
-
-### Phase 4: Regional Expansion
-
-Expand from Sudan/MENA to broader African and Asian markets.
-
-- Add language support (French, Spanish, Hindi, Mandarin)
-- Obtain regional compliance certifications
-- Partner with local education consultants
-
----
-
-## Revenue Projections
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
-  <div className="p-4 border rounded-lg">
-    <h4 className="text-lg font-bold mb-2">Year 1</h4>
-    <p className="text-2xl font-bold text-blue-600">$240K ARR</p>
-    <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-      <li>100 schools</li>
-      <li>98% CSAT</li>
-      <li>&lt;3% monthly churn</li>
-    </ul>
-  </div>
-
-<div className="rounded-lg border p-4">
-  <h4 className="mb-2 text-lg font-bold">Year 3</h4>
-  <p className="text-2xl font-bold text-blue-600">$6M ARR</p>
-  <ul className="text-muted-foreground mt-2 space-y-1 text-sm">
-    <li>2,500 schools</li>
-    <li>85+ NPS</li>
-    <li>&lt;1.5% monthly churn</li>
-  </ul>
-</div>
-
-  <div className="p-4 border rounded-lg">
-    <h4 className="text-lg font-bold mb-2">Year 5</h4>
-    <p className="text-2xl font-bold text-blue-600">$36M ARR</p>
-    <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-      <li>15,000 schools</li>
-      <li>50+ countries</li>
-      <li>IPO-ready metrics</li>
-    </ul>
-  </div>
-</div>
-
----
-
-## Cost Structure
-
-### Infrastructure Costs
-
-| Category      | Details                               |
-| ------------- | ------------------------------------- |
-| Cloud Hosting | Vercel (serverless), Neon PostgreSQL  |
-| Storage       | Cloudflare R2 (S3-compatible)         |
-| Email/SMS     | Resend, Twilio                        |
-| Payments      | Stripe (2.9% + $0.30 per transaction) |
-
-### Operational Costs
-
-| Category    | Details                                    |
-| ----------- | ------------------------------------------ |
-| Development | Core team + community contributors         |
-| Support     | Tiered support based on subscription level |
-| Sales       | Education conferences, digital marketing   |
-| Compliance  | Annual security audits, certifications     |
-
-### Target Margins
-
-- **Gross Margin:** 80%+ (cloud-native efficiency)
-- **Operating Margin:** 20%+ at scale
-- **Customer LTV:CAC Ratio:** 10:1+
-
----
-
-## Additional Revenue Streams
-
-### Professional Services
-
-| Service             | Pricing             |
-| ------------------- | ------------------- |
-| Platform setup      | $5,000-15,000       |
-| Custom integrations | $10,000-50,000      |
-| Data migration      | $15,000-100,000     |
-| Training sessions   | $2,500-7,500/day    |
-| Managed services    | $5,000-25,000/month |
-
-### Marketplace & Partnerships
-
-- **Integration marketplace**: 70/30 revenue split (partner/platform)
-- **Template store**: $5-50 per template, subscription bundles available
-- **Reseller network**: Margin-based partnership model
-
-### Equity & Stock Sharing
-
-All employees receive equity participation (4-year vesting, 1-year cliff). Open-source contributors earn equity through contributions with quarterly distribution events.
-
----
-
-## Equity & Stock Sharing
-
-All employees receive equity participation (4-year vesting, 1-year cliff). Open-source contributors earn equity through contributions with quarterly distribution events. Revenue allocation targets: 40% platform development, 35% team and operations, 15% marketing and sales, 10% community and open source.
-
----
-
-## Related Resources
-
-- [Sales Strategy](/docs/sales) - B2B school sales approach
-- [PRD](/docs/prd) - Complete product requirements
-- [Architecture](/docs/architecture) - Technical specifications
-- [Shared Economy](/docs/shared-economy) - Contribution valuation framework
-
----
-
-_SaaS business model for Hogwarts school management platform._
+- [Sales](/docs/sales) — B2B process and objection handling
+- [Pitch](/docs/pitch) — partner-facing narrative
+- [Shared economy](/docs/shared-economy) — contribution valuation framework
+- [PRD](/docs/prd) — product requirements
+- [Architecture](/docs/architecture) — technical design

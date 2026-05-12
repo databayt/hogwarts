@@ -391,13 +391,15 @@ model School {
   whatsappMessageTemplates WhatsAppMessageTemplate[]
 
   // Transportation relations
-  vehicles         Vehicle[]
-  drivers          Driver[]
-  routes           Route[]
-  routeStops       RouteStop[]
-  routeAssignments RouteAssignment[]
-  trips            Trip[]
-  tripBoardings    TripBoarding[]
+  vehicles               Vehicle[]
+  drivers                Driver[]
+  routes                 Route[]
+  routeStops             RouteStop[]
+  routeAssignments       RouteAssignment[]
+  trips                  Trip[]
+  tripBoardings          TripBoarding[]
+  transportationSettings TransportationSettings?
+  apiTokens              SchoolApiToken[]
 
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]

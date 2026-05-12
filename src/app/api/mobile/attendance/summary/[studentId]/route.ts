@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
+import { canAccessStudent } from "../../../lib/student-access"
 
 /**
  * GET /api/mobile/attendance/summary/:studentId — attendance summary
@@ -19,6 +20,13 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { studentId } = await params
+
+    // Relationship gate: only staff, the student themselves, or their
+    // guardian may read this student's summary.
+    const allowed = await canAccessStudent(auth, studentId)
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     const [total, present, absent, late, excused] = await Promise.all([
       db.attendance.count({

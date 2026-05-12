@@ -1,30 +1,34 @@
 ---
 title: Validation
-description: Canonical patterns for writing validation.ts Zod schemas in feature directories.
+description: Zod schemas — the single source of truth for input shapes.
 ---
 
-`validation.ts` is the single source of truth for input shapes. Every server action and form imports from here — schemas don't live anywhere else.
+`validation.ts` is the single source of truth for input shapes. Server actions and forms import from here — schemas don't live anywhere else.
 
 ## Categories
 
-| Category           | Shape                                                                           | Reference                                   |
-| ------------------ | ------------------------------------------------------------------------------- | ------------------------------------------- |
-| CRUD entity        | `createSchema` + `updateSchema` (`.partial().extend({ id })`) + `filterSchema`. | `library/validation.ts`                     |
-| Multi-step form    | One schema per step + a combined wizard schema. Cross-field `.refine()`.        | `onboarding/validation.ts` (per-step files) |
-| Search and filters | `nuqs` + Zod schemas for URL query state.                                       | `listings/students/list-params.ts`          |
-| Auth               | Login, register, reset, 2FA. Often i18n factories.                              | `auth/login/validation.ts`                  |
-| Settings           | Schema for the settings UI — partial updates of a config record.                | `school-dashboard/settings/validation.ts`   |
-| Domain             | Domain-specific shapes (timetable conflict, exam answer, etc.).                 | `timetable/validation.ts`                   |
+| Category           | Shape                                                                          | Reference                                 |
+| ------------------ | ------------------------------------------------------------------------------ | ----------------------------------------- |
+| CRUD entity        | `createSchema` + `updateSchema` (`.partial().extend({ id })`) + `filterSchema` | `library/validation.ts`                   |
+| Multi-step form    | One schema per step + combined wizard schema with `.refine()`                  | `onboarding/validation.ts`                |
+| Search and filters | `nuqs` + Zod for URL query state                                               | `listings/students/list-params.ts`        |
+| Auth               | Login, register, reset, 2FA — often i18n factories                             | `auth/login/validation.ts`                |
+| Settings           | Partial updates of a config record                                             | `school-dashboard/settings/validation.ts` |
+| Domain             | Domain-specific shapes (timetable conflict, exam answer)                       | `timetable/validation.ts`                 |
 
-## Seven rules
+## Rules
 
-1. **Schema + inferred type co-exported.** Always `export const xSchema` and `export type XInput = z.infer<typeof xSchema>`.
-2. **Named exports only.** No default exports.
-3. **Use shared primitives.** Email, phone, name, color, slug → import from `src/lib/validation/primitives.ts`. Don't reinvent the regex.
-4. **Compose with `.extend()`, `.partial()`, `.pick()`.** `updateSchema = createSchema.partial().extend({ id: z.string() })`.
-5. **`.refine()` for cross-field validation.** Date ranges, coupled fields, dependent fields.
-6. **i18n factory pattern when error messages are user-facing.** `createXxxSchema(dictionary)` returns a schema with translated messages.
-7. **Stay under ~300 lines.** Beyond that, split (`validation/student.ts`, `validation/teacher.ts`).
+| #   | Rule                                                                                     |
+| --- | ---------------------------------------------------------------------------------------- |
+| 1   | Co-export schema + inferred type — `xSchema` and `type XInput = z.infer<typeof xSchema>` |
+| 2   | Named exports only                                                                       |
+| 3   | Use shared primitives from `src/lib/validation/primitives.ts`                            |
+| 4   | Compose with `.extend()`, `.partial()`, `.pick()`                                        |
+| 5   | `.refine()` for cross-field validation                                                   |
+| 6   | i18n factory pattern when error messages are user-facing                                 |
+| 7   | Stay under ~300 lines — split by concept                                                 |
+
+## Canonical example
 
 ```typescript
 import { z } from "zod"
@@ -50,15 +54,11 @@ export const subjectFilterSchema = z.object({
 export type SubjectFilter = z.infer<typeof subjectFilterSchema>
 ```
 
-### i18n factory
+## i18n factory
 
-When error messages need translation, accept the dictionary slice and return the schema:
+For translated error messages, accept the dictionary slice and return the schema:
 
 ```typescript
-import { z } from "zod"
-
-import type { Dictionary } from "@/components/internationalization/types"
-
 export function createTitleSchema(d: Dictionary["onboarding"]["title"]) {
   return z.object({
     name: z.string().min(1, d.errors.required).max(100, d.errors.tooLong),
@@ -66,38 +66,6 @@ export function createTitleSchema(d: Dictionary["onboarding"]["title"]) {
 }
 export type TitleInput = z.infer<ReturnType<typeof createTitleSchema>>
 ```
-
-## Templates
-
-Each template lives in the codebase. Read the source.
-
-| Template          | File                                                               |
-| ----------------- | ------------------------------------------------------------------ |
-| CRUD entity       | `src/components/school-dashboard/library/validation.ts`            |
-| Multi-step wizard | `src/components/onboarding/validation.ts`                          |
-| Search filters    | `src/components/school-dashboard/listings/students/list-params.ts` |
-| Auth              | `src/components/auth/login/validation.ts`                          |
-
-## Anti-patterns
-
-- **Inline schemas in `actions.ts`** — 14 files do this. Move them to `validation.ts` and import.
-- **Inline schemas in `form.tsx`** — 15 files do this. Same fix.
-- **`z.any()` / `z.unknown()`** — 20 occurrences. Replace with the actual shape; use `z.record()` for arbitrary keys.
-- **Bare `.min(1)` without an error message** — 149 occurrences. Always provide a message (or use the i18n factory).
-- **Duplicate primitives** — 6 email regexes, 8 phone patterns. Lift to `src/lib/validation/primitives.ts`.
-- **Duplicate schemas across features** — `exams/qbank`, `exams/generate`, `grades/generate` had three near-identical 300-line files. Extract to `src/components/<shared>/validation.ts` and import.
-- **Bloated files** — `onboarding/validation.ts` (659), `letters/validation.ts` (546). Split by concept.
-
-## Inferred type naming
-
-Pick one suffix per project. The convention here is `<Name>Input` for create / update inputs, `<Name>Filter` for filter shapes. Don't mix `FormData`, `SchemaType`, `Schema`, and `Input` in the same codebase.
-
-## Relationship to siblings
-
-- `actions.ts` imports `<x>Schema` and validates with `safeParse`.
-- `form.tsx` imports `<x>Schema` and `<x>Input`; `useForm<XInput>({ resolver: zodResolver(xSchema) })`.
-- `types.ts` imports `<x>Input` if the type needs to be referenced from non-form code.
-- `queries.ts` rarely imports from `validation.ts` — it operates on `Prisma` types, not Zod inputs.
 
 ## Shared primitives
 
@@ -117,4 +85,31 @@ export const colorSchema = z
 export const nameSchema = z.string().min(1).max(100)
 ```
 
-Import these instead of redefining. New shared primitives go in this file.
+## Anti-patterns
+
+- Inline schemas in `actions.ts` (14 files) — move to `validation.ts`.
+- Inline schemas in `form.tsx` (15 files) — same fix.
+- `z.any()` / `z.unknown()` (20 occurrences) — replace with the actual shape.
+- Bare `.min(1)` without an error message (149 occurrences).
+- Duplicate primitives — 6 email regexes, 8 phone patterns. Lift to `primitives.ts`.
+- Duplicate schemas across features — extract to `src/components/<shared>/validation.ts`.
+- Bloated files — `onboarding/validation.ts` (659), `letters/validation.ts` (546). Split.
+
+## Naming
+
+- File: `validation.ts`.
+- Suffixes: `<Name>Input` for create/update, `<Name>Filter` for filter shapes. Don't mix `FormData`, `SchemaType`, `Schema`.
+
+## Sibling roles
+
+- `actions.ts` imports `<x>Schema` and validates with `safeParse`.
+- `form.tsx` imports `<x>Schema` + `<x>Input` for `useForm({ resolver: zodResolver })`.
+- `types.ts` imports `<x>Input` for non-form references.
+- `queries.ts` rarely imports — operates on Prisma types.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Actions](/docs/actions)
+- [Form](/docs/form)
+- [Types](/docs/types)

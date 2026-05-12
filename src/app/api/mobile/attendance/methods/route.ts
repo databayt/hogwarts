@@ -45,7 +45,9 @@ export async function PUT(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    if (auth.role !== "ADMIN" && auth.role !== "SUPER_ADMIN") {
+    // Authorization: manage_settings is ADMIN-only per the central matrix.
+    // "SUPER_ADMIN" is dead code → "DEVELOPER".
+    if (auth.role !== "ADMIN" && auth.role !== "DEVELOPER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

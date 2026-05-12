@@ -84,6 +84,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verify the student is enrolled in the class this QR was issued for.
+    // Without this check, a student in class A could scan class B's QR
+    // and have a fake PRESENT row attached to class B.
+    const enrolled = await db.studentClass.findFirst({
+      where: { studentId: student.id, classId: session.classId },
+      select: { id: true },
+    })
+    if (!enrolled) {
+      return NextResponse.json(
+        { error: "Student is not enrolled in this class" },
+        { status: 403 }
+      )
+    }
+
     // Check if student already scanned this session
     const scannedBy = session.scannedBy as string[]
     if (scannedBy.includes(student.id)) {
@@ -96,38 +110,51 @@ export async function POST(request: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Mark attendance and update QR session in a transaction
+    // Daily attendance is keyed with `periodId = null`. We don't `upsert`
+    // here because the unique compound index treats NULLs as distinct in
+    // Postgres — an upsert with `periodId: null` would always fall through
+    // to create and produce duplicate daily rows. Same fix as in
+    // geofencee/geo-service.ts.
+    const existing = await db.attendance.findFirst({
+      where: {
+        schoolId: auth.schoolId,
+        studentId: student.id,
+        classId: session.classId,
+        date: today,
+        periodId: null,
+      },
+      select: { id: true },
+    })
+
     await db.$transaction(async (tx) => {
-      // Upsert attendance record
-      await tx.attendance.upsert({
-        where: {
-          schoolId_studentId_classId_date_periodId: {
+      if (existing) {
+        await tx.attendance.update({
+          where: { id: existing.id },
+          data: {
+            status: "PRESENT",
+            method: "QR_CODE",
+            markedBy: auth.userId,
+            markedAt: new Date(),
+          },
+        })
+      } else {
+        await tx.attendance.create({
+          data: {
             schoolId: auth.schoolId,
             studentId: student.id,
             classId: session.classId,
             date: today,
-            periodId: "",
+            periodId: null,
+            status: "PRESENT",
+            method: "QR_CODE",
+            markedBy: auth.userId,
+            markedAt: new Date(),
           },
-        },
-        create: {
-          schoolId: auth.schoolId,
-          studentId: student.id,
-          classId: session.classId,
-          date: today,
-          status: "PRESENT",
-          method: "QR_CODE",
-          markedBy: auth.userId,
-          markedAt: new Date(),
-        },
-        update: {
-          status: "PRESENT",
-          method: "QR_CODE",
-          markedBy: auth.userId,
-          markedAt: new Date(),
-        },
-      })
+        })
+      }
 
-      // Update QR session scan count and scannedBy
+      // `increment: 1` ensures concurrent scans don't both read N and
+      // write N+1 (last-writer-wins undercount).
       await tx.qRCodeSession.update({
         where: { id: session.id },
         data: {

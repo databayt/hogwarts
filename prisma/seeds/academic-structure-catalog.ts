@@ -334,9 +334,7 @@ export async function seedAcademicStructureCatalog(
   // iteration set to this school's country so we don't try to look up levels
   // for subjects that aren't in fullSubjects.
   const allowedSubjectIds = new Set(fullSubjects.map((s) => s.id))
-  catalogSubjects = catalogSubjects.filter((cs) =>
-    allowedSubjectIds.has(cs.id)
-  )
+  catalogSubjects = catalogSubjects.filter((cs) => allowedSubjectIds.has(cs.id))
 
   const subjectLevelMap = new Map(
     fullSubjects.map((s) => [s.id, s.levels.map((l) => l.toLowerCase())])

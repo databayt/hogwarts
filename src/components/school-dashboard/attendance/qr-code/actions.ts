@@ -127,7 +127,16 @@ export async function generateAttendanceQR(
 
 /**
  * Process QR code scan for attendance
- * Includes HMAC signature verification and rate limiting
+ *
+ * Includes HMAC signature verification and rate limiting.
+ *
+ * Resolves the scanning user (`User.id`) to their `Student` record.
+ * `Attendance.studentId` is FK-constrained to `Student.id`, **not**
+ * `User.id` — storing `session.user.id` directly (as the previous
+ * version did) either throws an FK violation or, if the cuids happen
+ * to collide, silently corrupts another student's attendance ledger.
+ *
+ * Only callers with a Student record in this school may scan.
  */
 export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
   try {
@@ -138,11 +147,22 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
 
     const { code, scannedAt, deviceId, location } = data
     const schoolId = session.user.schoolId
-    const studentId = session.user.id // Assuming user is a student
 
     if (!schoolId) {
       throw new Error("School ID not found in session")
     }
+
+    // Resolve User.id → Student.id within this tenant.
+    const student = await db.student.findFirst({
+      where: { userId: session.user.id, schoolId },
+      select: { id: true },
+    })
+
+    if (!student) {
+      throw new Error("Only students can scan QR codes for attendance")
+    }
+
+    const studentId = student.id
 
     // Rate limit check
     const rateLimitId = deviceId || studentId
@@ -297,13 +317,33 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       },
     }
   } catch (error) {
-    // Log failed scan attempt
+    // Log failed scan attempt — but only if the caller is actually a Student.
+    // `AttendanceEvent.studentId` is FK to `Student.id`, so we cannot write
+    // the session `User.id` directly. If the failing scan came from a
+    // non-student (e.g. a teacher who pointed the kiosk camera at a QR by
+    // accident), we log to console and skip the DB write rather than
+    // corrupt the audit trail with a User PK in a Student column.
     const session = await auth()
     if (session?.user?.schoolId) {
+      const student = await db.student.findFirst({
+        where: { userId: session.user.id, schoolId: session.user.schoolId },
+        select: { id: true },
+      })
+      if (!student) {
+        console.warn(
+          "[processQRScan] Failed scan by non-student user; skipping AttendanceEvent log",
+          { userId: session.user.id }
+        )
+        return {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Failed to process scan",
+        }
+      }
       await db.attendanceEvent.create({
         data: {
           schoolId: session.user.schoolId,
-          studentId: session.user.id,
+          studentId: student.id,
           eventType: "SCAN_FAILURE",
           method: "QR_CODE",
           deviceId: data.deviceId,

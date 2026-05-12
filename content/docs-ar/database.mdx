@@ -1,156 +1,305 @@
 ---
-title: "قاعدة البيانات"
-description: "بنية قاعدة بيانات PostgreSQL متعددة المستأجرين مع Prisma ORM، وأمان على مستوى الصف، وعزل المستأجر القائم على النطاق"
+title: قاعدة البيانات
+description: PostgreSQL متعدّد المستأجرين مع Prisma — 302 نموذجاً، 149 enum، 73 ملف schema. عزل صارم عبر schoolId.
 ---
 
-قاعدة البيانات مهندسة كـ **نظام إدارة مدارس متعدد المستأجرين** يدعم مدارس متعددة في قاعدة بيانات واحدة مع عزل بيانات كامل. مبنية على PostgreSQL مع Prisma ORM، توفر أساساً قوياً للمؤسسات التعليمية مع الحفاظ على حدود أمان صارمة بين المستأجرين.
+تعمل Hogwarts على قاعدة بيانات PostgreSQL متعدّدة المستأجرين. كل المدارس تشترك في نفس الـschema، والبيانات تُعزَل عبر `schoolId` على كل صف خاص بالمستأجر. الـORM هو Prisma 6.19+ مع تنظيم schema متعدّد الملفات.
 
-## المبادئ الأساسية
+## المبادئ
 
-تصميم قاعدة البيانات لدينا مُوجَّه بمبادئ أساسية تضمن قابلية التوسع والأمان وسهولة الصيانة:
+- **عزل على مستوى الصف** — كل نموذج مستأجر يحمل `schoolId`.
+- **schema مشترك** — schema واحد، مدارس متعدّدة.
+- **هوية بالنطاق الفرعي** — المدارس فريدة بالنطاق الفرعي (مثل `kingfahad.databayt.org`)، نطاقات مخصّصة عبر CNAME.
+- **أمان نوع end-to-end** — Prisma → Zod → TypeScript بلا تسليمات يدوية.
+- **schema متعدّد الملفات** — 73 ملف `.prisma` منطقياً في `prisma/models/` للصيانة.
+- **تخزين بلغة واحدة** — المحتوى يُخزَّن بلغة واحدة مع حقل `lang`، والترجمة عند الطلب عبر Google Translate مع تخزين في `TranslationCache`.
 
-- **أمان على مستوى الصف** – كل نموذج يتضمن حقل `schoolId` يضمن عزل بيانات كامل بين المدارس
-- **بنية مخطط مشتركة** – جميع المدارس تستخدم نفس مخطط قاعدة البيانات، مما يحسن استخدام الموارد
-- **تعريف المستأجر القائم على النطاق** – المدارس تُعرَّف بشكل فريد بالنطاق الفرعي (مثل `hogwarts.hogwarts.app`)
-- **عمليات قاعدة بيانات آمنة النوع** – Prisma ORM يوفر أمان نوع من طرف إلى طرف
-- **تنظيم مخطط متعدد الملفات** – المخطط منظم في نطاقات منطقية لصيانة أفضل
+## التخطيط
 
-## تصميم قاعدة البيانات
+<img src="/database.png" alt="مخطط قاعدة البيانات" />
 
-تتبع قاعدة البيانات تصميماً علائقياً شاملاً يلتقط جميع جوانب إدارة المدرسة من البنية التحتية الأساسية إلى العمليات اليومية.
+302 نموذجاً عبر 73 ملف schema، مجمَّعة حسب المجال. نماذج الكتالوج تحذف `schoolId` عمداً — هي محتوى مرجعي على مستوى المنصة يُشارَك بين المدارس عبر [نمط الجسر](/en/docs/integration-flow).
 
-<img src="/database.png" alt="مخطط علاقات قاعدة البيانات" />
+| المجال                                            | النماذج | الملفات                                                                                                                                                                                                |
+| ------------------------------------------------- | ------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| الأساس (school، year، term، period، subscription) |      12 | `school.prisma`                                                                                                                                                                                        |
+| Auth والمستخدمون                                  |       7 | `auth.prisma`                                                                                                                                                                                          |
+| الأشخاص (طلاب، معلمون، أهل، كادر)                 |      32 | `students.prisma`, `staff.prisma`, `staff-member.prisma`, `profile.prisma`                                                                                                                             |
+| البنية الأكاديمية                                 |      13 | `academic-structure.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                               |
+| الكتالوج (عام)                                    |     22+ | `catalog.prisma`, `bridge.prisma`, `chapter.prisma`, `lesson.prisma`، إلخ                                                                                                                              |
+| الحضور                                            |     33+ | `attendance.prisma`, `attendance-enhanced.prisma`, `geo-attendance.prisma`                                                                                                                             |
+| الامتحانات والتقييم                               |     40+ | `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`، إلخ                                                                         |
+| المالية                                           |      36 | `finance-core.prisma`, `finance-fees.prisma`, `finance-invoices.prisma`, `finance-payroll.prisma`, `finance-banking.prisma`, `finance-budgets.prisma`, `finance-reports.prisma`, `subscription.prisma` |
+| المراسلة                                          |      11 | `messages.prisma`                                                                                                                                                                                      |
+| الإشعارات                                         |       7 | `notifications.prisma`                                                                                                                                                                                 |
+| WhatsApp                                          |       5 | `whatsapp.prisma`                                                                                                                                                                                      |
+| الإعلانات                                         |       5 | `announcement.prisma`                                                                                                                                                                                  |
+| القبول                                            |      12 | `admission.prisma`, `visit.prisma`, `membership.prisma`, `promotion.prisma`                                                                                                                            |
+| Stream / LMS                                      |       8 | `stream.prisma`                                                                                                                                                                                        |
+| الجدول                                            |       9 | `timetable.prisma`, `schedule.prisma`                                                                                                                                                                  |
+| النقل                                             |       7 | `transportation.prisma`                                                                                                                                                                                |
+| المكتبة                                           |       4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
+| الملفات / الوثائق                                 |      15 | `files.prisma`, `file-record.prisma`, `document.prisma`, `document-processing.prisma`, `image.prisma`, `video.prisma`                                                                                  |
+| تدقيق / أمن / متفرق                               |      10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation-cache.prisma`, `purge-tokens.prisma`                                                                                    |
 
-## استراتيجية عزل متعدد المستأجرين
+## عزل متعدّد المستأجرين
 
-### كيان المستأجر (نموذج المدرسة)
+### نموذج المدرسة
 
-```typescript
+```prisma
 model School {
-  id          String  @id @default(cuid())
-  name        String
-  domain      String  @unique // مثال: "hogwarts"
-  logoUrl     String?
-  address     String?
-  phoneNumber String?
-  email       String?
-  timezone    String  @default("UTC")
-
-  // الاشتراك/الفوترة
-  planType    String  @default("basic")
-  maxStudents Int     @default(100)
-  maxTeachers Int     @default(10)
-  isActive    Boolean @default(true)
+  id           String  @id @default(cuid())
+  name         String
+  domain       String  @unique          // مثلاً "kingfahad"
+  preferredLanguage String @default("ar")
+  logoUrl      String?
+  address      String?
+  phoneNumber  String?
+  email        String?
+  timezone     String  @default("Africa/Khartoum")
+  schoolType   String?                  // private, public, international, technical, special
+  schoolLevel  String?                  // primary, secondary, both
+  system       String?                  // clickview, national, british, ib
+  planType     String  @default("basic")
+  maxStudents  Int     @default(100)
+  maxTeachers  Int     @default(10)
+  isActive     Boolean @default(true)
 }
 ```
 
-### مثال عزل البيانات
+### قواعد الاستعلام
 
 ```typescript
-// صحيح - دائماً ضمّن schoolId
-const students = await prisma.student.findMany({
-  where: { schoolId: "school_123" },
-})
+// صحيح — اشمل دائماً schoolId
+await db.student.findMany({ where: { schoolId } })
 
-// خطأ - schoolId مفقود (خطر أمني)
-const students = await prisma.student.findMany()
+// خاطئ — يسرّب البيانات بين المستأجرين
+await db.student.findMany()
 ```
 
-## جداول المخطط
+كل نموذج Prisma خاص بالمستأجر يملك:
 
-كل نموذج يحتوي على بيانات عينة واقعية توضح العلاقات وهيكل البيانات.
+- حقل `schoolId String`.
+- علاقة `school School @relation(...)` مع `onDelete: Cascade`.
+- `@@unique([schoolId, ...])` كي تكون التصادمات بين المستأجرين مستحيلة.
+- `@@index([schoolId])` لأداء الاستعلام.
 
-### المدرسة (كيان المستأجر)
+### نماذج بدون `schoolId`
 
-| المعرف    | اسم المدرسة | النطاق      | الخطة   | الحد الأقصى للطلاب |
-| --------- | ----------- | ----------- | ------- | ------------------ |
-| `sch_001` | Hogwarts    | hogwarts    | premium | 1000               |
-| `sch_002` | Beauxbatons | beauxbatons | premium | 500                |
-| `sch_003` | Durmstrang  | durmstrang  | basic   | 300                |
+نحو 44 نموذجاً يحذف `schoolId` عمداً:
 
-### المعلم
+- **رموز Auth** (4): `Account`, `VerificationToken`, `PasswordResetToken`, `TwoFactorToken` — مرتبطة بالبريد، عابرة.
+- **عوام الكتالوج** (22+): `Subject`, `Chapter`, `Lesson`, `Book`, `Textbook`, `CurriculumStandard`، إلخ — محتوى مرجعي على مستوى المنصة، نماذج الجسر تُحدّد نطاق الاختيارات لكل مدرسة.
+- **مستويات الاشتراك** (1): تسعير على مستوى المنصة.
 
-| المعرف    | معرف المدرسة | الاسم الأول | اسم العائلة | البريد الإلكتروني    |
-| --------- | ------------ | ----------- | ----------- | -------------------- |
-| `tch_001` | `sch_001`    | Minerva     | McGonagall  | m.mcg@hogwarts.edu   |
-| `tch_002` | `sch_001`    | Severus     | Snape       | s.snape@hogwarts.edu |
+## بنية LMS مزدوجة
 
-### الطالب
+نظامان متوازيان للمحتوى:
 
-| المعرف    | معرف المدرسة | الاسم الأول | اسم العائلة | تاريخ الميلاد |
-| --------- | ------------ | ----------- | ----------- | ------------- |
-| `std_001` | `sch_001`    | Harry       | Potter      | 1980-07-31    |
-| `std_002` | `sch_001`    | Hermione    | Granger     | 1979-09-19    |
+| النظام      | النطاق                             | النماذج                                                                                   | المصدر                |
+| ----------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | --------------------- |
+| **Stream**  | بنطاق المدرسة (`schoolId`)         | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | مساقات تنشئها المدرسة |
+| **Catalog** | على مستوى المنصة (بدون `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | ClickView / منتقى     |
 
-## المصادقة وأدوار المستخدم
+نماذج `bridge.prisma` (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) تربط محتوى الكتالوج بالبنية الأكاديمية الخاصة بالمدرسة. المدارس تختار المواد التي تستخدمها وتطبّق تجاوزات بدون لمس الأصول المشتركة.
 
-يدعم النظام **8 أدوار مستخدم مميزة** مع مستويات وصول متفاوتة.
+## أدوار المستخدمين
 
-| الدور      | الوصف              | الوصول للمدرسة |
-| ---------- | ------------------ | -------------- |
-| DEVELOPER  | مدير المنصة        | جميع المدارس   |
-| ADMIN      | مدير المدرسة       | مدرسة واحدة    |
-| TEACHER    | طاقم التدريس       | مدرسة واحدة    |
-| STUDENT    | الطلاب المسجلون    | مدرسة واحدة    |
-| GUARDIAN   | أولياء أمور الطلاب | مدرسة واحدة    |
-| ACCOUNTANT | طاقم المالية       | مدرسة واحدة    |
-| STAFF      | طاقم المدرسة العام | مدرسة واحدة    |
-| USER       | الدور الافتراضي    | مدرسة واحدة    |
+ثمانية أدوار في `prisma/models/auth.prisma:UserRole`. راجع [تعدد المستأجرين](/ar/docs/multi-tenancy) لمصفوفة RBAC.
 
-## الأمان وحماية البيانات
+| الدور        | نطاق المدرسة | الاستخدام                                   |
+| ------------ | ------------ | ------------------------------------------- |
+| `DEVELOPER`  | كل المدارس   | إدارة المنصة، عمليات عابرة للمستأجرين       |
+| `ADMIN`      | واحدة        | إدارة المدرسة، الإشراف على المستخدمين       |
+| `TEACHER`    | واحدة        | إدارة الفصل، التقييم، الحضور                |
+| `STUDENT`    | واحدة        | درجاته، حضوره، واجباته                      |
+| `GUARDIAN`   | واحدة        | بيانات الطالب المرتبط، المدفوعات، الإشعارات |
+| `ACCOUNTANT` | واحدة        | فوترة، تقارير مالية (لا أكاديميات)          |
+| `STAFF`      | واحدة        | دعم تشغيلي                                  |
+| `USER`       | لا شيء       | افتراضي بعد التسجيل قبل الإعداد             |
 
-### تصفية المستأجر التلقائية
+## الاشتراك والفوترة
 
-كل استعلام قاعدة بيانات يجب أن يتضمن `schoolId`:
+```prisma
+model SubscriptionTier {
+  id           String   @id @default(cuid())
+  name         String   // basic, premium, enterprise
+  monthlyPrice Int      // cents
+  annualPrice  Int      // cents
+  maxStudents  Int
+  features     String[]
+  isActive     Boolean  @default(true)
 
-```typescript
-// إجراء خادم مع سياق المستأجر
-export async function getStudents() {
-  const schoolId = getSchoolId() // من سياق الوسيطة
+  subscriptions Subscription[]
+  discounts     Discount[]
+}
 
-  return await prisma.student.findMany({
-    where: { schoolId },
-  })
+model Discount {
+  id          String   @id @default(cuid())
+  schoolId    String
+  tierId      String
+  code        String   @unique
+  type        String   // percentage, fixed
+  value       Int
+  validFrom   DateTime
+  validUntil  DateTime
+  maxUses     Int?
+  currentUses Int      @default(0)
+
+  school           School           @relation(fields: [schoolId], references: [id])
+  subscriptionTier SubscriptionTier @relation(fields: [tierId], references: [id])
 }
 ```
 
-### قيود فريدة مع نطاق المدرسة
+إضافة إلى `BillingPaymentMethod`, `BillingHistory`, `UsageMetrics`, `CreditNote`, `BillingPreferences`, `AppliedDiscount` لدورة الفوترة الكاملة.
 
-جميع القيود الفريدة تتضمن `schoolId`:
+## القانوني والامتثال
 
-```typescript
-// المعلمين يمكن أن يكون لهم نفس البريد عبر مدارس مختلفة
-@@unique([schoolId, emailAddress])
+```prisma
+model LegalConsent {
+  id              String    @id @default(cuid())
+  schoolId        String
+  userId          String
+  documentType    String    // terms, privacy, data-processing
+  documentVersion String
+  consentType     String    // explicit, implicit, parental
+  ipAddress       String?
+  userAgent       String?
+  consentedAt     DateTime  @default(now())
+  revokedAt       DateTime?
 
-// الأقسام يمكن أن يكون لها نفس الأسماء عبر المدارس
-@@unique([schoolId, departmentName])
+  @@unique([schoolId, userId, documentType, documentVersion])
+}
+
+model LegalDocument {
+  id               String    @id @default(cuid())
+  schoolId         String
+  type             String    // terms, privacy, data-processing
+  version          String
+  content          String    @db.Text
+  effectiveFrom    DateTime
+  effectiveUntil   DateTime?
+  isActive         Boolean   @default(true)
+  requiresExplicit Boolean   @default(true)
+}
+
+model ComplianceLog {
+  id        String   @id @default(cuid())
+  schoolId  String
+  eventType String
+  eventData Json
+  userId    String?
+  timestamp DateTime @default(now())
+}
 ```
 
-## تحسين الأداء
+## تخزين بلغة واحدة
 
-### فهارس قاعدة البيانات الموصى بها
+المحتوى يُخزَّن بلغة واحدة مع حقل `lang`. الترجمة عند الطلب عبر Google Translate API، مع تخزين في `TranslationCache`.
+
+```prisma
+model Announcement {
+  title String?
+  body  String? @db.Text
+  lang  String  @default("ar")
+}
+
+model TranslationCache {
+  id             String   @id @default(cuid())
+  schoolId       String
+  sourceText     String   @db.Text
+  sourceLanguage String                       // "ar" أو "en"
+  targetLanguage String                       // "ar" أو "en"
+  translatedText String   @db.Text
+  provider       String   @default("google")
+  hitCount       Int      @default(0)
+  lastAccessedAt DateTime @default(now())
+
+  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([schoolId, sourceLanguage, targetLanguage])
+  @@index([lastAccessedAt])
+}
+```
+
+```typescript
+import { getDisplayText } from "@/lib/content-display"
+
+// مخزَّن بالعربية، يُعرَض بالإنجليزية → يترجم ويخزّن
+const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
+
+// نفس اللغة → يعود مباشرة بدون استدعاء API
+const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+```
+
+### نماذج تحمل `lang`
+
+`Announcement`, `AnnouncementTemplate`, `NotificationTemplate`, `Subject`, `Class`, `YearLevel`, `Department`, `AcademicLevel`, `AcademicGrade`, `AcademicStream`, `AttendanceBadge`, `AttendanceCompetition`, `Chapter`, `Lesson`, `Book`, `Textbook`, `Material`, `CurriculumStandard`, `GradingScheme`, `QuickAssessment`, `Video`, `StreamCourse`, `StreamCategory`. الافتراضي `lang = "ar"` لمحتوى المدرسة، و`lang = "en"` لـStream/LMS.
+
+راجع [التدويل](/en/docs/internationalization) و[الترجمة](/ar/docs/translation).
+
+## الأداء
+
+فهارس موصى بها:
 
 ```sql
--- فهارس حرجة لاستعلامات متعددة المستأجرين
-CREATE INDEX idx_students_school_id ON students(school_id);
-CREATE INDEX idx_teachers_school_id ON teachers(school_id);
-CREATE INDEX idx_classes_school_id ON classes(school_id);
+CREATE INDEX idx_students_school_id   ON students(school_id);
+CREATE INDEX idx_teachers_school_id   ON teachers(school_id);
+CREATE INDEX idx_classes_school_id    ON classes(school_id);
+CREATE INDEX idx_attendance_school_id ON attendance(school_id);
 ```
 
-## أوامر الترحيل
+إرشادات:
+
+- فلتر دائماً بـ `schoolId` أولاً في `WHERE`.
+- استخدم فهارس مركّبة لتركيبات الحقول المُستعلَم عنها كثيراً.
+- connection pooling عبر Neon serverless.
+- read replicas للتقارير والتحليلات.
+
+## النشر
+
+### البيئة
 
 ```bash
-# إنشاء عميل Prisma
-pnpm prisma generate
-
-# إنشاء وتطبيق الترحيلات
-pnpm prisma migrate dev --name init
-
-# النشر للإنتاج
-pnpm prisma migrate deploy
-
-# بذر البيانات النموذجية
-pnpm prisma db seed
+DATABASE_URL="postgresql://username:password@host:port/database"
+DEFAULT_SCHOOL_DOMAIN="demo"
+ALLOW_SCHOOL_SIGNUP="true"
+BASIC_MAX_STUDENTS=100
+PREMIUM_MAX_STUDENTS=500
+ENTERPRISE_MAX_STUDENTS=2000
 ```
 
-هذه البنية الشاملة لقاعدة البيانات توفر الأساس لبناء أنظمة إدارة تعليمية قابلة للتوسع وآمنة وغنية بالميزات.
+### الترحيلات
+
+```bash
+pnpm prisma generate                       # إعادة توليد client
+pnpm prisma migrate dev --name <name>      # إنشاء + تطبيق ترحيل
+pnpm prisma migrate deploy                 # نشر إنتاج
+pnpm db:seed:single <name>                 # seed وحدة — لا تستخدم pnpm db:seed
+```
+
+العمليات المدمّرة (`db execute`, `db push --accept-data-loss`, `migrate reset`, `DROP TABLE`, `TRUNCATE`) محظورة عبر hooks. استخدم بروتوكول **Branch-Before-Touch** على Neon للعمليات الخطرة.
+
+## مدرسة العرض
+
+مستأجر عرض واحد (`demo.databayt.org`) مع محاكاة سودانية كاملة لـK-12. راجع [Safe seeds](/ar/docs/safe-seeds).
+
+| الكيان          |  العدد | ملاحظات                          |
+| --------------- | -----: | -------------------------------- |
+| المستخدمون      |  3,105 | كل الأدوار، بريد `@databayt.org` |
+| المعلمون        |    100 | أسماء عربية، 6 أقسام             |
+| الطلاب          |    970 | KG1–الصف 12                      |
+| أولياء الأمور   | ~1,940 | اثنان لكل طالب                   |
+| الأقسام         |      6 | عربي أساسي + حقل lang            |
+| المواد          |     19 | عربي أساسي + حقل lang            |
+| المستويات       |     14 | KG1–12                           |
+| الفصول          |     28 | مختبرات، غرف، مرافق خاصة         |
+| الفصول الدراسية |    187 | تركيبات بمستوى المادة            |
+
+## انظر أيضاً
+
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — تدفق الطلب، RBAC، ضمانات العزل
+- [التدويل](/en/docs/internationalization) — عقد i18n
+- [الترجمة](/ar/docs/translation) — تغطية القاموس
+- [الكتالوج](/en/docs/catalog) — محتوى عام + نمط الجسر
+- [Seeds](/en/docs/seeds) — كتالوج الـseeds الكامل
+- [Safe seeds](/ar/docs/safe-seeds) — حسابات تطوير محمية

@@ -1,156 +1,97 @@
 ---
 title: Contributing
-description: Thanks for your interest in contributing to Hogwarts. We're happy to have you here.
+description: How to contribute to Hogwarts — repository conventions, your first PR, and the principles we work by.
 ---
 
-Please take a moment to review this document before submitting your first pull request. We also strongly recommend that you check for open issues and pull requests to see if someone else is working on something similar.
+Thanks for your interest. Read this once before opening a PR; check open issues to avoid duplicate work. Need help? [Discord](https://discord.gg/uPa4gGG62c).
 
-If you need any help, feel free to reach out to [Discord](https://discord.gg/uPa4gGG62c).
+## Setup
 
-## About this repository
-
-This repository is a featured-based native nextjs.
-
-- We use [pnpm](https://pnpm.io) for development.
-- We use [Turbopack](https://turbo.build/pack) as our build system.
-- We use [changesets](https://github.com/changesets/changesets) for managing releases.
+| Step                 | Doc                              |
+| -------------------- | -------------------------------- |
+| Fast path            | [Get started](/docs/get-started) |
+| Detailed walkthrough | [Localhost](/docs/localhost)     |
+| Tooling versions     | [Stack](/docs/stack)             |
 
 ## Structure
 
-This repository is structured as follows:
-
 <DirectoryStructure />
 
-## Development
+## Branches and commits
 
-For detailed setup instructions, please refer to:
+Branch names use a `feat/` prefix (not `feature/`) — see [GitHub workflow](/docs/github) for the full table and the canonical commit-format reference.
 
-- [Get Started](/docs/get-started) — Fast
-- [Localhost](/docs/localhost) — Detailed
+Quick form:
 
-## Commit Convention
+```
+feat(scope): short description
+fix(scope): short description
+docs(scope): short description
+```
 
-Before you create a Pull Request, please check whether your commits comply with
-the commit conventions used in this repository.
+## Database safety (CLAUDE.md rule #8)
 
-When you create a commit we kindly ask you to follow the convention
-`category(scope or module): message` in your commit message while using one of
-the following categories:
-
-- `feat / feature`: all changes that introduce completely new code or new
-  features
-- `fix`: changes that fix a bug (ideally you will additionally reference an
-  issue if present)
-- `refactor`: any code related change that is not a fix nor a feature
-- `docs`: changing existing or creating new documentation (i.e. README, docs for
-  usage of a lib or cli usage)
-- `build`: all changes regarding the build of the software, changes to
-  dependencies or the addition of new dependencies
-- `test`: all changes regarding tests (adding new tests or changing existing
-  ones)
-- `ci`: all changes regarding the configuration of continuous integration (i.e.
-  github actions, ci system)
-- `chore`: all changes to the repository that do not fit into any of the above
-  categories
-
-  e.g. `feat(components): add new prop to the avatar component`
-
-Use the folder name as scope:
-
-- `feat(marketing)`: SaaS marketing changes
-- `feat(operator)`: SaaS dashboard changes
-- `feat(site)`: School marketing changes
-- `feat(platform)`: School dashboard changes
-- `feat(auth)`: Authentication changes
-- `feat(onboarding)`: Onboarding flow changes
-- `feat(ui)`: shadcn/ui component changes
-- `feat(atom)`: Atomic component changes
-- `feat(template)`: Template/section changes
-- `fix(docs)`: Documentation fixes
-
-For more details, visit [conventionalcommits.org](https://www.conventionalcommits.org/).
-
-## Requests for new components
-
-If you have a request for a new component, please open a discussion on GitHub. We'll be happy to help you out.
+<Callout type="warning">
+**Always use `pnpm db:seed:single <name>`. Never run `pnpm db:seed`** — it is auto-blocked by a pre-tool hook because the full seed takes 45–120 minutes and re-runs every module sequentially. Use single-module seeding for everything except a manual full reset. See [seeds](/docs/seeds) and [safe seeds](/docs/safe-seeds).
+</Callout>
 
 ## Testing
-
-Tests are written using [Vitest](https://vitest.dev). You can run all the tests from the root of the repository.
 
 ```bash
 pnpm test
 ```
 
-Please ensure that the tests are passing when submitting a pull request. If you're adding new features, please include tests.
+PRs must pass tests. New features should include tests. End-to-end work uses the [Playwright](/docs/playwright) MCP browser-headed flow as primary; the CLI runner is a CI-only fallback.
 
-## Your First PR
+## Your first PR
 
-Follow these steps to make your first contribution in under 15 minutes.
-
-### 1) Fork, clone, and branch
+Aim for under 15 minutes from clone to PR.
 
 ```bash
 git checkout -b docs/first-pr
+pnpm install
+pnpm dev
 ```
 
-### 2) Pick a tiny task
-
-Fix a typo, improve a sentence, or add a missing command.
-
-### 3) Run the project
-
-```bash
-pnpm install && pnpm dev
-```
-
-If Prisma models changed: `pnpm prisma generate && pnpm prisma migrate dev --name init`
-
-### 4) Make the edit
-
-Keep edits small and clear. If UI changed, take a screenshot (LTR/RTL if relevant).
-
-### 5) Build and commit
+Pick a tiny task — fix a typo, clarify a sentence, add a missing command. Make the edit. If UI changed, screenshot LTR + RTL.
 
 ```bash
 pnpm build
 git add -A
-git commit -m "docs: clarify getting started step"
+git commit -m "docs: clarify get-started step"
 git push origin HEAD
 ```
 
-### 6) Open PR
+Open a PR with a short specific title and a short description of why this helps. Link related issues. Welcome aboard.
 
-Title: short and specific. Description: why this helps, add screenshot if UI, link any related issue.
+## New components
 
-We'll help you land it. Welcome aboard.
+Open a discussion on GitHub before building. We'll point you at existing patterns.
 
-## Community
+## Who can contribute
 
-We're building a shared economy for software developers — open source, paid work when available, and fair revenue sharing.
+Roles are fluid and opt-in:
 
-### Principles
+- **Maintainers** — keep repos healthy, review PRs.
+- **Contributors** — build features, fix bugs, improve docs.
+- **Coordinators** — triage issues, curate the roadmap.
+
+Hogwarts is open source; the broader compensation and revenue-sharing model lives in [Shared economy](/docs/shared-economy). The community standards live in the [Code of conduct](/docs/code-of-conduct).
+
+## Principles
 
 - No deadlines; consistent contributions.
-- Transparency: public backlog, priorities, and changelog.
-- Fairness: reward sustained impact, maintenance, and reliability.
-- Inclusion: Arabic and English, accessible UI, offline-tolerant mindset.
+- Transparency — public backlog, priorities, changelog.
+- Fairness — reward sustained impact, maintenance, reliability.
+- Inclusion — Arabic + English, accessible UI, offline-tolerant mindset.
+- Async-first — issues, PRs, and docs carry context.
+- Bias for shipping small steps.
 
-### How we collaborate
+## See also
 
-- Async-first: issues, PRs, and docs carry context.
-- Short discussions; bias for shipping small steps.
-- Document decisions in the relevant doc page or PR.
-
-### Roles (fluid and opt-in)
-
-- **Maintainers** keep repos healthy and review PRs.
-- **Contributors** build features, fix bugs, improve docs.
-- **Coordinators** triage issues and curate the roadmap.
-
-### Channels
-
-- **Discord** — [discord.gg/uPa4gGG62c](https://discord.gg/uPa4gGG62c). Channels: `#general` (discussions), `#help` (setup and dev support), `#announcements` (project updates).
-- **WhatsApp** — quick updates and coordination. The `.env` file is shared in the group; request access there.
-
-Be respectful. Search before asking. Share progress.
+- [GitHub workflow](/docs/github)
+- [Code of conduct](/docs/code-of-conduct)
+- [Shared economy](/docs/shared-economy)
+- [Get started](/docs/get-started)
+- [Architecture](/docs/architecture)
+- [Pattern](/docs/pattern)

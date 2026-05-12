@@ -5,12 +5,19 @@
  * Hall Pass Server Actions
  *
  * Server actions for managing digital hall passes.
+ *
+ * Authorization: every action requires classroom-staff roles
+ * (TEACHER/ADMIN/STAFF/DEVELOPER). Students/guardians cannot issue,
+ * return, cancel, or list passes via these actions — the previous
+ * implementation only checked `getTenantContext()` (which resolves
+ * the tenant from the host, not the user), so any logged-in user who
+ * could resolve a tenant was effectively unauthenticated.
  */
 "use server"
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { HallPassDestination } from "@prisma/client"
+import type { HallPassDestination, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -24,19 +31,42 @@ interface ActionResult {
   data?: unknown
 }
 
+const STAFF_ROLES: UserRole[] = ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"]
+
+/**
+ * Verify the caller is authenticated, scoped to a tenant, and holds
+ * a classroom-staff role. Returns either the resolved auth context
+ * (`ok: true`) or an `ActionResult` ready to be returned to the client
+ * (`ok: false`). Centralising the gate keeps every hall-pass action
+ * consistent with the central permission matrix.
+ */
+async function requireStaff(): Promise<
+  | { ok: true; userId: string; schoolId: string; role: UserRole }
+  | { ok: false; result: ActionResult }
+> {
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
+  const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
+
+  if (!userId || !role || !schoolId) {
+    return { ok: false, result: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  if (!STAFF_ROLES.includes(role)) {
+    return { ok: false, result: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  return { ok: true, userId, schoolId, role }
+}
+
 /**
  * Create a new hall pass
  */
 export async function createHallPass(
   input: CreateHallPassInput
 ): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-  const session = await auth()
-  const userId = session?.user?.id
-
-  if (!schoolId || !userId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId, userId } = guard
 
   try {
     const {
@@ -130,11 +160,9 @@ export async function createHallPass(
 export async function returnHallPass(
   input: ReturnHallPassInput
 ): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId } = guard
 
   try {
     const { passId, notes } = input
@@ -187,11 +215,9 @@ export async function returnHallPass(
  * Cancel a hall pass
  */
 export async function cancelHallPass(passId: string): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId } = guard
 
   try {
     const hallPass = await db.hallPass.findFirst({
@@ -222,13 +248,16 @@ export async function cancelHallPass(passId: string): Promise<ActionResult> {
 
 /**
  * Get all active hall passes for a school
+ *
+ * Side-effect: this read also expires stale ACTIVE passes via
+ * `updateMany`. That's only safe now because the action is gated to
+ * staff — a student loading a public-ish URL can no longer trigger
+ * the bulk state change.
  */
 export async function getActiveHallPasses(): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId } = guard
 
   try {
     const now = new Date()
@@ -299,11 +328,9 @@ export async function getStudentHallPassHistory(
   studentId: string,
   limit = 10
 ): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId } = guard
 
   try {
     const passes = await db.hallPass.findMany({
@@ -347,11 +374,9 @@ export async function getStudentHallPassHistory(
 export async function getHallPassStats(
   classId?: string
 ): Promise<ActionResult> {
-  const { schoolId } = await getTenantContext()
-
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.UNAUTHORIZED)
-  }
+  const guard = await requireStaff()
+  if (!guard.ok) return guard.result
+  const { schoolId } = guard
 
   try {
     const today = new Date()
@@ -382,13 +407,12 @@ export async function getHallPassStats(
     return {
       success: true,
       data: {
-        today: {
-          total,
-          active,
-          expired,
-          returned,
-          cancelled: total - active - expired - returned,
-        },
+        total,
+        active,
+        expired,
+        returned,
+        returnRate: total > 0 ? Math.round((returned / total) * 100) : 0,
+        expiredRate: total > 0 ? Math.round((expired / total) * 100) : 0,
         byDestination: byDestination.map((d) => ({
           destination: d.destination,
           count: d._count,

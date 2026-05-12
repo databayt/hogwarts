@@ -1,193 +1,85 @@
 ---
-title: "ISSUE.md"
-description: "Canonical template for writing concise, self-updating ISSUE.md files in feature directories"
+title: ISSUE.md
+description: Co-located issue tracker — one row per issue, max 40 lines.
 ---
 
-## Current Progress (Audit)
+`ISSUE.md` lives in feature directories alongside `README.md`. One row per issue, separate Active / Completed / Debt sections, ~40 lines max. Self-updating: move rows to Completed on fix, add rows on bug discovery.
 
-36 ISSUE.md files audited across `src/components/`:
+## Rules
 
-| Area                      | Status | Detail                                            |
-| ------------------------- | ------ | ------------------------------------------------- |
-| Existence in feature dirs | MIXED  | 36/68 feature directories have ISSUE.md           |
-| Average line count        | FAIL   | ~200-500 lines (target: ~40)                      |
-| Table format for issues   | FAIL   | Most use prose descriptions instead of table rows |
-| Priority labels           | FAIL   | Only 5/36 use consistent priority labeling        |
-| Completed section         | FAIL   | No files track completed issues separately        |
-| Debt section              | FAIL   | Tech debt mixed with feature issues in all files  |
-| Auto-update rules         | FAIL   | No ISSUE.md references self-update rules          |
+| #   | Rule                                                                              |
+| --- | --------------------------------------------------------------------------------- |
+| 1   | One row per issue — no prose, no bullet lists                                     |
+| 2   | Max 40 lines — archive completed issues aggressively                              |
+| 3   | Priority labels: P0 (blocking), P1 (next sprint), P2 (backlog), P3 (nice-to-have) |
+| 4   | Auto-update — move fixed rows to Completed with a date                            |
+| 5   | Separate Debt section for tech debt, perf, a11y, test gaps                        |
+| 6   | No duplicate tracking — link to GitHub Issues, don't copy descriptions            |
 
-## The 6 Rules
-
-### 1. One row per issue
-
-Every issue is a single table row. No prose descriptions, no bullet-point lists.
+## Canonical template
 
 ```markdown
-<!-- BAD: Prose description -->
+# <Feature> — Issues
 
-## Missing schoolId in bulk delete
-
-The bulk delete action in actions.ts doesn't include schoolId
-in the where clause. This means a teacher could accidentally
-delete records from another school...
-
-<!-- GOOD: Table row -->
-
-| 1 | P0 | Missing schoolId in bulk delete | Open | — |
-```
-
-### 2. Max 40 lines
-
-If it exceeds 40 lines, archive completed issues or split into separate tracking.
-
-```markdown
-<!-- BAD: 500-line ISSUE.md with full descriptions for each issue -->
-
-<!-- GOOD: ~40-line table with one row per issue -->
+## Active
 
 | ID  | P   | Title                           | Status      | Owner |
 | --- | --- | ------------------------------- | ----------- | ----- |
 | 1   | P0  | Missing schoolId in bulk delete | Open        | —     |
 | 2   | P1  | Form resets on validation error | In Progress | @dev  |
-```
-
-### 3. Priority labels
-
-Use consistent labels: P0 (blocking), P1 (next sprint), P2 (backlog), P3 (nice-to-have).
-
-```markdown
-<!-- BAD: Inconsistent priority -->
-
-- CRITICAL: Fix login bug
-- high: Add export feature
-- Low priority: Update docs
-
-<!-- GOOD: Consistent P0-P3 -->
-
-| 1 | P0 | Fix login bug | Open | — |
-| 2 | P1 | Add export feature | Open | — |
-| 3 | P3 | Update docs | Open | — |
-```
-
-### 4. Auto-update on change
-
-When fixing an issue, move the row to Completed with a date. When finding a new bug, add a row to Active.
-
-```markdown
-<!-- BAD: Issue fixed in code but ISSUE.md still shows it as Open -->
-
-<!-- GOOD: Moved to Completed after fix -->
+| 3   | P2  | Add bulk export                 | Open        | —     |
 
 ## Completed
 
 | ID  | P   | Title               | Resolved   |
 | --- | --- | ------------------- | ---------- |
 | 0   | P0  | SSE on table render | 2026-02-15 |
-```
-
-### 5. Debt section separate
-
-Technical debt (performance, accessibility, security, test gaps) is tracked separately from feature issues.
-
-```markdown
-<!-- BAD: Mixing debt with feature bugs -->
-
-| 1 | P0 | Login broken | Open |
-| 2 | P2 | No integration tests for actions.ts | Open |
-| 3 | P1 | Missing aria-labels on buttons | Open |
-
-<!-- GOOD: Separate sections -->
-
-## Active
-
-| 1 | P0 | Login broken | Open | — |
 
 ## Debt
 
-| Test | No integration tests for actions.ts | Medium |
-| A11y | Missing aria-labels on buttons | Low |
+| Area | Issue                               | Severity |
+| ---- | ----------------------------------- | -------- |
+| Test | No integration tests for actions.ts | Medium   |
+| A11y | Missing aria-labels on buttons      | Low      |
+| Perf | N+1 query in content.tsx            | High     |
 ```
 
-### 6. No duplicate tracking
+## Linking GitHub Issues
 
-If an issue is in GitHub Issues, link to it. Don't maintain two sources of truth.
+When the same issue exists in GitHub, link instead of duplicating:
 
-````markdown
-<!-- BAD: Full issue description duplicated from GitHub -->
-
-## Authentication Bug
-
-Same description as GitHub Issue #142...
-
-<!-- GOOD: Link to GitHub -->
-
+```markdown
 | 5 | P0 | Auth callback fails on redirect | Open | [#142](https://github.com/databayt/hogwarts/issues/142) |
-
-## Anti-Patterns
-
-### 1. Prose descriptions of issues
-
-Use table rows. The title column should be descriptive enough to understand the issue.
-
-```markdown
-<!-- BAD -->
-
-## Form Validation Bug
-
-When a user submits the form with invalid data, the form resets
-instead of showing validation errors. This happens because the
-React Hook Form state is being cleared...
-
-<!-- GOOD -->
-
-| 2 | P1 | Form resets on validation error instead of showing messages | In Progress | @dev |
-```
-````
-
-### 2. Mixing feature issues with tech debt
-
-Separate Active issues (bugs, features) from Debt (test gaps, a11y, performance).
-
-```markdown
-<!-- BAD: All in one table -->
-
-| 1 | P0 | Login broken |
-| 2 | P2 | Missing tests for actions.ts |
-| 3 | P1 | N+1 query in content.tsx |
-
-<!-- GOOD: Separate sections -->
-
-## Active
-
-| 1 | P0 | Login broken | Open | — |
-
-## Debt
-
-| Test | Missing tests for actions.ts | Medium |
-| Perf | N+1 query in content.tsx | High |
 ```
 
-### 3. ISSUE.md exceeding 40 lines
+## Priority labels
 
-Archive completed issues aggressively. Only keep the last 5 completed items.
+| Label | Meaning                    |
+| ----- | -------------------------- |
+| P0    | Blocking — fix immediately |
+| P1    | Next sprint                |
+| P2    | Backlog                    |
+| P3    | Nice-to-have               |
 
-### 4. Stale issues that were fixed but never marked completed
+## Anti-patterns
 
-The auto-update rule exists for this reason. After fixing a bug, move it to Completed immediately.
+- Prose descriptions — use a descriptive title in the table row.
+- Mixing feature issues with tech debt — separate Active and Debt sections.
+- ISSUE.md over 40 lines — archive completed items, keep the last 5.
+- Stale issues fixed in code but never marked completed.
+- Duplicating GitHub Issue content — link instead.
 
-### 5. Duplicating GitHub Issues content
+## What belongs where
 
-Link to the GitHub Issue instead. ISSUE.md is for local, co-located tracking of feature-specific issues.
+| Content                  | In                   | Not in           |
+| ------------------------ | -------------------- | ---------------- |
+| Bugs, feature requests   | `ISSUE.md` Active    | `README.md`      |
+| Resolved issues (last 5) | `ISSUE.md` Completed | `README.md`      |
+| Tech debt, perf, a11y    | `ISSUE.md` Debt      | Active section   |
+| Cross-feature bugs       | GitHub Issues        | local `ISSUE.md` |
+| Architecture decisions   | `README.md`          | `ISSUE.md`       |
 
-```markdown
-<!-- BAD: Full description copied from GitHub -->
+## See also
 
-## Authentication redirect fails on Safari
-
-[300 words duplicated from GitHub Issue #142]
-
-<!-- GOOD: One row with link -->
-
-| 5 | P0 | Auth redirect fails on Safari | Open | [#142](url) |
-```
+- [Pattern](/docs/pattern)
+- [README.md](/docs/readme)

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { canAccessStudent } from "../../lib/student-access"
 
 /**
  * GET /api/mobile/attendance/badges — list attendance badges
@@ -20,6 +21,16 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const studentId = searchParams.get("student_id") || undefined
+
+    // If a student is targeted, verify the caller is allowed to see that
+    // student's earned-status. The badge catalog itself stays open to
+    // every authenticated user in the tenant.
+    if (studentId) {
+      const allowed = await canAccessStudent(auth, studentId)
+      if (!allowed) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+    }
 
     const badges = await db.attendanceBadge.findMany({
       where: {

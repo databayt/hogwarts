@@ -1,202 +1,69 @@
 ---
-title: "البدء"
-description: "شكراً لاهتمامك بالمساهمة في هوجوورتس. نحن سعداء بوجودك هنا."
+title: ابدأ الآن
+description: استنسخ Hogwarts، ثبّت التبعيات، شغّل المخدّم، وأرسل أول مساهمة في أقل من 15 دقيقة.
 ---
 
-## الفكرة
+طريق سريع من الصفر إلى التشغيل. للتفاصيل الأعمق راجع [Localhost](/ar/docs/localhost).
 
-بناء منصة أتمتة مدرسية مثل هذه المنتجات الواقعية:
+## المتطلبات الأولية
 
-1. [OpenEduCat](https://openeducat.org/) - إدارة تعليم مفتوحة المصدر
-2. [Pioneers E-School](https://pioneerseschool.com/) - نظام مدرسي شامل
-3. [PowerSchool](https://www.powerschool.com/) - تقييم 2.8 مليار دولار، 45 مليون طالب
-4. [Infinite Campus](https://www.infinitecampus.com/) - 7.8 مليون طالب، 50 ولاية أمريكية
+- [Node.js](https://nodejs.org/) (LTS) و[pnpm](https://pnpm.io/installation): `npm install -g pnpm`
+- [Git](https://git-scm.com/downloads)
+- محرر شفرات — VS Code يُنصح به
 
-_شاهد المزيد من الشركات في [المنافسون](/ar/docs/competitors)._
-
-## إعداد بيئة التطوير المحلية
-
-**01. تثبيت VS Code**
-
-قم بالتحميل من [code.visualstudio.com](https://code.visualstudio.com/)
-
----
-
-**02. تثبيت Node.js**
-
-قم بالتحميل من [nodejs.org](https://nodejs.org/) (إصدار LTS)
-
----
-
-**03. تثبيت Git**
-
-قم بالتحميل من [git-scm.com](https://git-scm.com/downloads)
-
----
-
-**04. فتح VS Code**
-
-قم بتشغيل VS Code، ثم افتح الطرفية: View → Terminal
-
----
-
-**05. تثبيت pnpm**
-
-```text
-npm install -g pnpm
-```
-
----
-
-**06. استنساخ المستودع**
+## التشغيل المحلي
 
 ```bash
 git clone https://github.com/databayt/hogwarts.git
-```
-
----
-
-**07. فتح المشروع في VS Code**
-
-File → Open Folder → اختر مجلد `hogwarts`
-
----
-
-**08. فتح الطرفية في VS Code**
-
-View → Terminal أو `` Ctrl + ` ``
-
----
-
-**09. تثبيت التبعيات**
-
-```bash
+cd hogwarts
 pnpm install
-```
-
----
-
-**10. إنشاء ملف البيئة**
-
-أنشئ `.env` في المجلد الجذر والصق المحتوى من مجموعة واتساب
-
----
-
-**11. إنشاء عميل Prisma**
-
-```bash
 pnpm prisma generate
-```
-
----
-
-**12. إعداد قاعدة البيانات**
-
-```bash
 pnpm prisma migrate dev
-```
-
----
-
-**13. بدء خادم التطوير**
-
-```bash
 pnpm dev
 ```
 
----
+افتح [http://localhost:3000](http://localhost:3000). سجّل الدخول بـ `admin@databayt.org` / `1234`.
 
-**14. فتح المتصفح**
+ملف `.env` يُشارَك في مجموعة WhatsApp — اطلب صلاحية الوصول إن لم تكن لديك بعد.
 
-اذهب إلى http://localhost:3000
+## أول PR لك
 
-_للإعداد التفصيلي، انظر [إعداد بيئة التطوير المحلية](/ar/docs/localhost)._
+أضف اسمك إلى صفحة المدونة في ثلاث commits أو أقل.
 
-## أول مشكلة جيدة
+<Steps>
 
-أضف اسمك إلى صفحة المدونة كأول مساهمة لك.
-
-**01. إنشاء فرع جديد**
+<Step>إنشاء فرع وتعديل</Step>
 
 ```bash
-git checkout -b feat/your-name
+git checkout -b docs/your-name
 ```
 
----
-
-**02. فتح الملف**
-
-افتح `src/components/marketing/blog/content.tsx` في VS Code
-
----
-
-**03. إيجاد نص Blog**
-
-ابحث عن هذا الكود:
-
-```tsx
-<div>Blog</div>
-```
-
----
-
-**04. أضف اسمك أسفل Blog**
-
-غيّره إلى:
+افتح `src/components/marketing/blog/content.tsx` وأضف سطراً تحت عنوان `Blog`:
 
 ```tsx
 <div>
   Blog
-  <p>اسمك</p>
+  <p>Your Name</p>
 </div>
 ```
 
----
-
-**05. حفظ الملف**
-
-اضغط `Ctrl + S`
-
----
-
-**06. إضافة التغييرات للمرحلة**
+<Step>Commit ودفع</Step>
 
 ```bash
-git add .
+git add src/components/marketing/blog/content.tsx
+git commit -m "feat(marketing): add your-name to blog"
+git push origin HEAD
 ```
 
----
+<Step>افتح PR</Step>
 
-**07. تثبيت التغييرات**
+العنوان: قصير ومحدّد. الوصف: ما الذي تغيّر ولماذا. أرفق لقطة شاشة إن غُيِّرت الواجهة. أهلاً بك في الفريق.
 
-```bash
-git commit -m "feat: add اسمك to blog"
-```
-
----
-
-**08. الدفع إلى GitHub**
-
-```bash
-git push origin feat/your-name
-```
-
-**هذا كل شيء! مرحباً بك في هوجوورتس.**
+</Steps>
 
 ## الخطوات التالية
 
-تصفح [العرض التجريبي](https://demo.databayt.org/en/dashboard) لتقييم التقدم الحالي. افتح مشكلات للأخطاء التي تجدها، أو أنشئ مشكلات فرعية إذا كانت مشكلة مرتبطة موجودة بالفعل.
-
-**تسجيل الدخول:** `admin@databayt.org` / `1234`
-
-### استكشف التوثيق
-
-- [المنتج الأدنى القابل للتطبيق](/ar/docs/mvp) - الحد الأدنى من المنتج القابل للتطبيق
-- [دليل المساهمة](/ar/docs/contributing) - كيفية المساهمة
-- [الهندسة المعمارية](/ar/docs/architecture) - تصميم النظام
-- [الأنماط](/ar/docs/pattern) - أنماط الكود
-
-### انضم إلى المجتمع
-
-- تصفح المشكلات المفتوحة على [GitHub](https://github.com/databayt/hogwarts/issues)
-- انضم إلى خادم [Discord](https://discord.gg/uPa4gGG62c)
+- [MVP](/ar/docs/mvp) — ما تم شحنه
+- [البنية المعمارية](/ar/docs/architecture) — نمط المرآة، تعدد المستأجرين، server actions
+- [المساهمة](/ar/docs/contributing) — أعراف الـcommits والاختبارات والمجتمع
+- [Issues مفتوحة](https://github.com/databayt/hogwarts/issues) — اختر مهمة صغيرة

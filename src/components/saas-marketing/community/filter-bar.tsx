@@ -21,8 +21,10 @@ interface Props {
 }
 
 /**
- * Curriculum dropdown only. Grade is now driven by the under-hero TabsNav,
- * so this bar is intentionally narrow.
+ * Curriculum dropdown only. Grade is driven by the sibling TabsNav, and the
+ * "Curriculum" label was dropped — the trigger speaks for itself ("International
+ * US" / "National" / etc.) and lives in a `justify-between` row alongside the
+ * tabs at the page level.
  *
  * The `us-k12` row's `name` is overridden in the dropdown to read
  * "International US" (or its localized equivalent), matching the user-facing
@@ -43,27 +45,20 @@ export function CommunityFilterBar({ options, dictionary }: Props) {
     dictionary?.community?.curriculum?.internationalUS ?? "International US"
 
   return (
-    <div className="bg-background flex flex-wrap items-center gap-3 py-3">
-      <div className="flex items-center gap-2">
-        <label className="text-muted-foreground text-sm">
-          {labelCurriculum}
-        </label>
-        <Select
-          value={curriculum || "us-k12"}
-          onValueChange={(value) => setFilters({ curriculum: value })}
-        >
-          <SelectTrigger className="w-[220px]" aria-label={labelCurriculum}>
-            <SelectValue placeholder={placeholderCurriculum} />
-          </SelectTrigger>
-          <SelectContent>
-            {options.curricula.map((c) => (
-              <SelectItem key={c.id} value={c.code}>
-                {c.code === "us-k12" ? internationalUsLabel : c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <Select
+      value={curriculum || "us-k12"}
+      onValueChange={(value) => setFilters({ curriculum: value })}
+    >
+      <SelectTrigger className="w-[200px]" aria-label={labelCurriculum}>
+        <SelectValue placeholder={placeholderCurriculum} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.curricula.map((c) => (
+          <SelectItem key={c.id} value={c.code}>
+            {c.code === "us-k12" ? internationalUsLabel : c.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

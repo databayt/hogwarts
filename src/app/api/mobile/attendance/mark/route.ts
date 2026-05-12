@@ -16,10 +16,14 @@ export async function POST(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
+    // Authorization: matches central attendance permission matrix (mark action).
+    // "SUPER_ADMIN" is dead code — that role doesn't exist in UserRole; the
+    // platform admin is "DEVELOPER". STAFF is permitted to mark per the matrix.
     if (
       auth.role !== "TEACHER" &&
       auth.role !== "ADMIN" &&
-      auth.role !== "SUPER_ADMIN"
+      auth.role !== "STAFF" &&
+      auth.role !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
@@ -39,6 +43,33 @@ export async function POST(request: NextRequest) {
         { error: "student_id and status required" },
         { status: 400 }
       )
+    }
+
+    // Verify the referenced student belongs to this tenant. Without this,
+    // a teacher in school A could pass school B's studentId and pollute
+    // school A's attendance ledger with a foreign student reference.
+    const student = await db.student.findFirst({
+      where: { id: student_id, schoolId: auth.schoolId },
+      select: { id: true },
+    })
+    if (!student) {
+      return NextResponse.json(
+        { error: "student_id is not a member of this school" },
+        { status: 404 }
+      )
+    }
+
+    if (section_id) {
+      const section = await db.section.findFirst({
+        where: { id: section_id, schoolId: auth.schoolId },
+        select: { id: true },
+      })
+      if (!section) {
+        return NextResponse.json(
+          { error: "section_id is not a member of this school" },
+          { status: 404 }
+        )
+      }
     }
 
     const attendanceDate = date ? new Date(date) : new Date()

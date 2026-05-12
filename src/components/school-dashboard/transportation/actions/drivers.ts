@@ -174,3 +174,28 @@ export async function getDriver(id: string) {
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
+
+export async function restoreDriver(id: string) {
+  const ctx = await requireContext("manage_driver")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const current = await db.driver.findFirst({
+      where: { id, schoolId },
+      select: { id: true, deletedAt: true },
+    })
+    if (!current) return actionError(ACTION_ERRORS.DRIVER_NOT_FOUND)
+    if (!current.deletedAt) return { success: true as const, data: { id } }
+
+    await db.driver.update({
+      where: { id },
+      data: { deletedAt: null },
+    })
+
+    revalidatePath(transportationRevalidatePath("drivers"))
+    return { success: true as const, data: { id } }
+  } catch {
+    return actionError(ACTION_ERRORS.DRIVER_UPDATE_FAILED)
+  }
+}

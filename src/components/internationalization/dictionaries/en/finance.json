@@ -1820,7 +1820,8 @@
     "deleteInvoice": "Delete invoice",
     "failedToDelete": "Failed to delete invoice",
     "failedToDeleteFallback": "Failed to delete",
-    "createInvoice": "Create Invoice"
+    "createInvoice": "Create Invoice",
+    "reset": "Reset"
   },
   "invoiceFeatured": {
     "totalRevenue": "Total Revenue",

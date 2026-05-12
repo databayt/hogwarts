@@ -1,11 +1,9 @@
 ---
-title: "Concepts"
-description: "How 23 shared concepts unify images, banners, and colors across all curricula."
+title: Concepts
+description: 23 curriculum-agnostic concepts that unify subject thumbnails, banners, and colors across all curricula.
 ---
 
-## What is a Concept?
-
-A **concept** is a curriculum-agnostic identifier that maps every subject to shared visual assets (thumbnail, banner, color). Instead of storing images per-subject, the system stores them per-concept. This means Arabic in Sudan and World Languages in the US share the same `languages` concept and the same S3 images.
+A **concept** is a curriculum-agnostic identifier that maps every subject to shared visual assets. Arabic in Sudan and World Languages in the US share the same `languages` concept and the same S3 images.
 
 ```
 Subject (any curriculum)
@@ -15,632 +13,69 @@ Subject (any curriculum)
         └── cover:     catalog/concepts/math/cover
 ```
 
-## The 23 Concepts
-
-| #   | Concept            | S3 Path                  | Source Image           | Banner Source                   |
-| --- | ------------------ | ------------------------ | ---------------------- | ------------------------------- |
-| 1   | `arts`             | `g{n}-arts/`             | `arts.jpg`             | ClickView: the-arts             |
-| 2   | `biology`          | `g{n}-biology/`          | `biology.jpg`          | ClickView: biology              |
-| 3   | `career-tech`      | `g{n}-career-tech/`      | `career-tech.jpg`      | ClickView: career-education     |
-| 4   | `celebrations`     | `g{n}-celebrations/`     | `celebrations.jpg`     | ClickView: celebrations         |
-| 5   | `chemistry`        | `g{n}-chemistry/`        | `chemistry.jpg`        | ClickView: chemistry            |
-| 6   | `civics`           | `g{n}-civics/`           | `civics.jpg`           | ClickView: social-studies       |
-| 7   | `computer-science` | `g{n}-computer-science/` | `computer-science.jpg` | ClickView: computer-science     |
-| 8   | `earth-science`    | `g{n}-earth-science/`    | `earth-science.jpg`    | ClickView: earth-space-sciences |
-| 9   | `economics`        | `g{n}-economics/`        | `economics.jpg`        | ClickView: business-economics   |
-| 10  | `english`          | `g{n}-english/`          | `english.jpg`          | ClickView: english              |
-| 11  | `geography`        | `g{n}-geography/`        | `geography.jpg`        | ClickView: geography            |
-| 12  | `health`           | `g{n}-health/`           | `health.jpg`           | ClickView: health               |
-| 13  | `history`          | `g{n}-history/`          | `history.jpg`          | ClickView: history              |
-| 14  | `languages`        | `g{n}-languages/`        | `languages.jpg`        | ClickView: french               |
-| 15  | `life-skills`      | `g{n}-life-skills/`      | `life-skills.jpg`      | ClickView: life-skills          |
-| 16  | `math`             | `g{n}-math/`             | `math.jpg`             | ClickView: mathematics          |
-| 17  | `pe`               | `g{n}-pe/`               | `pe.jpg`               | ClickView: physical-education   |
-| 18  | `physics`          | `g{n}-physics/`          | `physics.jpg`          | ClickView: physics              |
-| 19  | `psychology`       | `g{n}-psychology/`       | `psychology.jpg`       | ClickView: psychology           |
-| 20  | `religion`         | `g{n}-religion/`         | `religion.jpg`         | ClickView: islamic-education    |
-| 21  | `science`          | `g{n}-science/`          | `science.jpg`          | ClickView: science              |
-| 22  | `sociology`        | `g{n}-sociology/`        | `sociology.jpg`        | ClickView: sociology            |
-| 23  | `teacher-pd`       | `g{n}-teacher-pd/`       | `teacher-pd.jpg`       | ClickView: teacher-development  |
-
-Source images live in `public/subjects/concepts/`. Seed `concept-images` processes them into 4 WebP variants (sm/md/lg/original) and uploads to S3 for all 12 grades.
-
-## Concept Gallery
-
-Each concept image with its file path, S3 key pattern, and every subject that uses it across all 10 curricula.
-
----
-
-### arts
-
-![arts](/subjects/concepts/arts.jpg)
-
-**File:** `public/subjects/concepts/arts.jpg`
-**S3:** `catalog/concepts/g{1-12}-arts/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `the-arts`
-
-| Curriculum | Subject           | Grades   |
-| ---------- | ----------------- | -------- |
-| US         | Arts              | g1-g12   |
-| SD         | التربية الفنية    | 4 grades |
-| SD         | الفنون والتصميم   | 2 grades |
-| GB         | Art and Design    | g1-g11   |
-| GB         | Music             | g1-g9    |
-| IB         | Arts              | g1-g11   |
-| IB         | Visual Arts       | 2 grades |
-| SA         | التربية الفنية    | g1-g9    |
-| EG         | التربية الفنية    | g1-g9    |
-| AE         | الفنون البصرية    | g1-g9    |
-| QA         | التربية الفنية    | g1-g9    |
-| KW         | التربية الفنية    | g1-g9    |
-| KW         | التربية الموسيقية | 5 grades |
-| JO         | التربية الفنية    | g1-g10   |
-
----
-
-### biology
-
-![biology](/subjects/concepts/biology.jpg)
-
-**File:** `public/subjects/concepts/biology.jpg`
-**S3:** `catalog/concepts/g{1-12}-biology/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `biology`
-
-| Curriculum | Subject                   | Grades   |
-| ---------- | ------------------------- | -------- |
-| US         | Life Science              | g1-g9    |
-| US         | Life Sciences             | g10-g12  |
-| SD         | الأحياء                   | 3 grades |
-| SD         | الإنتاج الزراعي والحيواني | g12      |
-| GB         | Biology                   | g10-g13  |
-| IB         | Biology                   | 2 grades |
-| SA         | الأحياء                   | 3 grades |
-| EG         | الأحياء                   | 3 grades |
-| AE         | الأحياء                   | 3 grades |
-| QA         | الأحياء                   | 3 grades |
-| KW         | الأحياء                   | 3 grades |
-| JO         | الأحياء                   | 2 grades |
-
----
-
-### career-tech
-
-![career-tech](/subjects/concepts/career-tech.jpg)
-
-**File:** `public/subjects/concepts/career-tech.jpg`
-**S3:** `catalog/concepts/g{1-12}-career-tech/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `career-education`
-
-| Curriculum | Subject                         | Grades   |
-| ---------- | ------------------------------- | -------- |
-| US         | Career and Technical Education  | g10-g12  |
-| US         | Careers and Technical Education | g7-g9    |
-| SD         | التربية التقنية                 | g9       |
-| GB         | Design and Technology           | g1-g9    |
-| IB         | Design                          | 5 grades |
-| AE         | التصميم والتكنولوجيا            | 5 grades |
-| JO         | التربية المهنية                 | 6 grades |
-
----
-
-### celebrations
-
-![celebrations](/subjects/concepts/celebrations.jpg)
-
-**File:** `public/subjects/concepts/celebrations.jpg`
-**S3:** `catalog/concepts/g{1-12}-celebrations/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `celebrations`
-
-| Curriculum | Subject                                    | Grades |
-| ---------- | ------------------------------------------ | ------ |
-| US         | Celebrations, Commemorations and Festivals | g1-g6  |
-
----
-
-### chemistry
-
-![chemistry](/subjects/concepts/chemistry.jpg)
-
-**File:** `public/subjects/concepts/chemistry.jpg`
-**S3:** `catalog/concepts/g{1-12}-chemistry/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `chemistry`
-
-| Curriculum | Subject          | Grades   |
-| ---------- | ---------------- | -------- |
-| US         | Chemical Science | g7-g9    |
-| US         | Chemistry        | g10-g12  |
-| SD         | الكيمياء         | 3 grades |
-| GB         | Chemistry        | g10-g13  |
-| IB         | Chemistry        | 2 grades |
-| SA         | الكيمياء         | 3 grades |
-| EG         | الكيمياء         | 3 grades |
-| AE         | الكيمياء         | 3 grades |
-| QA         | الكيمياء         | 3 grades |
-| KW         | الكيمياء         | 3 grades |
-| JO         | الكيمياء         | 2 grades |
-
----
-
-### civics
-
-![civics](/subjects/concepts/civics.jpg)
-
-**File:** `public/subjects/concepts/civics.jpg`
-**S3:** `catalog/concepts/g{1-12}-civics/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `social-studies`
-
-| Curriculum | Subject                     | Grades   |
-| ---------- | --------------------------- | -------- |
-| US         | Civics and Government       | g1-g12   |
-| SD         | العلوم العسكرية             | 3 grades |
-| GB         | Citizenship                 | 5 grades |
-| EG         | التربية الوطنية             | 6 grades |
-| AE         | التربية الأخلاقية           | g1-g12   |
-| KW         | الدستور                     | 3 grades |
-| JO         | التربية الاجتماعية والوطنية | g1-g10   |
-
----
-
-### computer-science
-
-![computer-science](/subjects/concepts/computer-science.jpg)
-
-**File:** `public/subjects/concepts/computer-science.jpg`
-**S3:** `catalog/concepts/g{1-12}-computer-science/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `computer-science`
-
-| Curriculum | Subject                           | Grades   |
-| ---------- | --------------------------------- | -------- |
-| US         | Computer Science and Technology   | g1-g12   |
-| SD         | علوم الحاسوب                      | 2 grades |
-| SD         | تكنولوجيا المعلومات والاتصالات    | 4 grades |
-| SD         | التقنية                           | 3 grades |
-| SD         | الحاسوب                           | g12      |
-| GB         | Computing                         | g1-g11   |
-| IB         | Computer Science                  | 2 grades |
-| SA         | المهارات الرقمية                  | 6 grades |
-| SA         | حاسب آلي                          | 3 grades |
-| EG         | الحاسب الآلي وتكنولوجيا المعلومات | g1-g9    |
-| AE         | الحوسبة وتقنية المعلومات          | g1-g10   |
-| QA         | الحاسب الآلي                      | g1-g9    |
-| KW         | الحاسوب                           | 8 grades |
-| JO         | الحاسوب                           | g1-g9    |
-
----
-
-### earth-science
-
-![earth-science](/subjects/concepts/earth-science.jpg)
-
-**File:** `public/subjects/concepts/earth-science.jpg`
-**S3:** `catalog/concepts/g{1-12}-earth-science/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `earth-space-sciences`
-
-| Curriculum | Subject                 | Grades   |
-| ---------- | ----------------------- | -------- |
-| US         | Earth and Space Science | g1-g12   |
-| SD         | الأرض بيئة الحياة       | g5       |
-| JO         | علوم الأرض والبيئة      | 2 grades |
-
----
-
-### economics
-
-![economics](/subjects/concepts/economics.jpg)
-
-**File:** `public/subjects/concepts/economics.jpg`
-**S3:** `catalog/concepts/g{1-12}-economics/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `business-economics`
-
-| Curriculum | Subject                | Grades   |
-| ---------- | ---------------------- | -------- |
-| US         | Economics              | g1-g9    |
-| US         | Business and Economics | g10-g12  |
-| SD         | العلوم التجارية        | 2 grades |
-| GB         | Economics              | 2 grades |
-| IB         | Economics              | 2 grades |
-| AE         | إدارة الأعمال          | 3 grades |
-| JO         | الثقافة المالية        | 6 grades |
-
----
-
-### english
-
-![english](/subjects/concepts/english.jpg)
-
-**File:** `public/subjects/concepts/english.jpg`
-**S3:** `catalog/concepts/g{1-12}-english/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `english`
-
-| Curriculum | Subject                 | Grades    |
-| ---------- | ----------------------- | --------- |
-| US         | English Language Arts   | g1-g12    |
-| SD         | اللغة الإنجليزية        | 11 grades |
-| GB         | English                 | g1-g11    |
-| IB         | Language and Literature | g1-g11    |
-| IB         | English A: Literature   | 2 grades  |
-| IB         | English B               | 2 grades  |
-| SA         | اللغة الإنجليزية        | g1-g12    |
-| EG         | اللغة الإنجليزية        | g1-g12    |
-| AE         | اللغة الإنجليزية        | g1-g12    |
-| QA         | اللغة الإنجليزية        | g1-g12    |
-| KW         | اللغة الإنجليزية        | g1-g12    |
-| JO         | اللغة الإنجليزية        | g1-g12    |
-
----
-
-### geography
-
-![geography](/subjects/concepts/geography.jpg)
-
-**File:** `public/subjects/concepts/geography.jpg`
-**S3:** `catalog/concepts/g{1-12}-geography/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `geography`
-
-| Curriculum | Subject   | Grades   |
-| ---------- | --------- | -------- |
-| US         | Geography | g1-g12   |
-| SD         | الجغرافيا | 9 grades |
-| GB         | Geography | g1-g11   |
-| IB         | Geography | 2 grades |
-| EG         | الجغرافيا | 3 grades |
-| QA         | الجغرافيا | 3 grades |
-| KW         | الجغرافيا | 3 grades |
-| JO         | الجغرافيا | 8 grades |
-
----
-
-### health
-
-![health](/subjects/concepts/health.jpg)
-
-**File:** `public/subjects/concepts/health.jpg`
-**S3:** `catalog/concepts/g{1-12}-health/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `health`
-
-| Curriculum | Subject          | Grades   |
-| ---------- | ---------------- | -------- |
-| US         | Health           | g1-g12   |
-| SD         | العلوم الأسرية   | 3 grades |
-| SD         | الاقتصاد المنزلي | g5       |
-
----
-
-### history
-
-![history](/subjects/concepts/history.jpg)
-
-**File:** `public/subjects/concepts/history.jpg`
-**S3:** `catalog/concepts/g{1-12}-history/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `history`
-
-| Curriculum | Subject                   | Grades   |
-| ---------- | ------------------------- | -------- |
-| US         | History                   | g1-g6    |
-| US         | U.S. History              | g7-g12   |
-| US         | World History             | g7-g12   |
-| SD         | التاريخ                   | 8 grades |
-| GB         | History                   | g1-g11   |
-| IB         | Individuals and Societies | g1-g11   |
-| IB         | History                   | 2 grades |
-| SA         | الدراسات الاجتماعية       | g1-g9    |
-| EG         | الدراسات الاجتماعية       | 6 grades |
-| EG         | التاريخ                   | 3 grades |
-| AE         | الدراسات الاجتماعية       | g1-g12   |
-| QA         | المواد الاجتماعية         | 6 grades |
-| QA         | التاريخ                   | 3 grades |
-| KW         | الاجتماعيات               | 6 grades |
-| KW         | التاريخ                   | 3 grades |
-| JO         | التاريخ                   | 8 grades |
-
----
-
-### languages
-
-![languages](/subjects/concepts/languages.jpg)
-
-**File:** `public/subjects/concepts/languages.jpg`
-**S3:** `catalog/concepts/g{1-12}-languages/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `french`
-
-| Curriculum | Subject                  | Grades    |
-| ---------- | ------------------------ | --------- |
-| US         | World Languages          | g1-g12    |
-| SD         | اللغة العربية            | 10 grades |
-| SD         | اللغة العربية الخاصة     | 2 grades  |
-| SD         | اللغة الفرنسية           | 3 grades  |
-| SD         | قواعد النحو              | 2 grades  |
-| SD         | المطالعة والأدب          | 3 grades  |
-| SD         | البلاغة والتعبير         | 3 grades  |
-| GB         | Modern Foreign Languages | 7 grades  |
-| IB         | Language Acquisition     | g1-g11    |
-| IB         | Arabic A: Literature     | 2 grades  |
-| IB         | Arabic B                 | 2 grades  |
-| IB         | French B                 | 2 grades  |
-| SA         | اللغة العربية            | g1-g12    |
-| EG         | اللغة العربية            | g1-g12    |
-| EG         | اللغة الفرنسية           | 6 grades  |
-| AE         | اللغة العربية            | g1-g12    |
-| QA         | اللغة العربية            | g1-g12    |
-| KW         | اللغة العربية            | g1-g12    |
-| KW         | اللغة الفرنسية           | 7 grades  |
-| JO         | اللغة العربية            | g1-g12    |
-
----
-
-### life-skills
-
-![life-skills](/subjects/concepts/life-skills.jpg)
-
-**File:** `public/subjects/concepts/life-skills.jpg`
-**S3:** `catalog/concepts/g{1-12}-life-skills/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `life-skills`
-
-| Curriculum | Subject                    | Grades   |
-| ---------- | -------------------------- | -------- |
-| US         | Life Skills                | g1-g12   |
-| SD         | ملبسنا                     | g5       |
-| SD         | المورد                     | g5       |
-| GB         | PSHE                       | g1-g11   |
-| SA         | المهارات الحياتية والأسرية | g1-g9    |
-| SA         | التفكير الناقد             | 3 grades |
-
----
-
-### math
-
-![math](/subjects/concepts/math.jpg)
-
-**File:** `public/subjects/concepts/math.jpg`
-**S3:** `catalog/concepts/g{1-12}-math/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `mathematics`
-
-| Curriculum | Subject                                      | Grades   |
-| ---------- | -------------------------------------------- | -------- |
-| US         | Math                                         | g1-g12   |
-| SD         | الرياضيات                                    | g1-g12   |
-| GB         | Mathematics                                  | g1-g11   |
-| IB         | Mathematics                                  | g1-g11   |
-| IB         | Mathematics: Analysis and Approaches         | 2 grades |
-| IB         | Mathematics: Applications and Interpretation | 2 grades |
-| SA         | الرياضيات                                    | g1-g12   |
-| EG         | الرياضيات                                    | g1-g12   |
-| AE         | الرياضيات                                    | g1-g12   |
-| QA         | الرياضيات                                    | g1-g12   |
-| KW         | الرياضيات                                    | g1-g12   |
-| JO         | الرياضيات                                    | g1-g12   |
-
----
-
-### pe
-
-![pe](/subjects/concepts/pe.jpg)
-
-**File:** `public/subjects/concepts/pe.jpg`
-**S3:** `catalog/concepts/g{1-12}-pe/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `physical-education`
-
-| Curriculum | Subject                          | Grades |
-| ---------- | -------------------------------- | ------ |
-| US         | Physical Education               | g1-g12 |
-| GB         | Physical Education               | g1-g11 |
-| IB         | Physical and Health Education    | g1-g11 |
-| SA         | التربية البدنية والدفاع عن النفس | g1-g12 |
-| EG         | التربية البدنية                  | g1-g9  |
-| AE         | التربية البدنية والصحية          | g1-g12 |
-| QA         | التربية البدنية                  | g1-g12 |
-| KW         | التربية البدنية                  | g1-g12 |
-| JO         | التربية البدنية                  | g1-g10 |
-
----
-
-### physics
-
-![physics](/subjects/concepts/physics.jpg)
-
-**File:** `public/subjects/concepts/physics.jpg`
-**S3:** `catalog/concepts/g{1-12}-physics/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `physics`
-
-| Curriculum | Subject  | Grades   |
-| ---------- | -------- | -------- |
-| US         | Physics  | g10-g12  |
-| SD         | الفيزياء | 2 grades |
-| GB         | Physics  | g10-g13  |
-| IB         | Physics  | 2 grades |
-| SA         | الفيزياء | 3 grades |
-| EG         | الفيزياء | 3 grades |
-| AE         | الفيزياء | 3 grades |
-| QA         | الفيزياء | 3 grades |
-| KW         | الفيزياء | 3 grades |
-| JO         | الفيزياء | 2 grades |
-
----
-
-### psychology
-
-![psychology](/subjects/concepts/psychology.jpg)
-
-**File:** `public/subjects/concepts/psychology.jpg`
-**S3:** `catalog/concepts/g{1-12}-psychology/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `psychology`
-
-| Curriculum | Subject    | Grades   |
-| ---------- | ---------- | -------- |
-| US         | Psychology | g10-g12  |
-| GB         | Psychology | 2 grades |
-| IB         | Psychology | 2 grades |
-| EG         | علم النفس  | 2 grades |
-
----
-
-### religion
-
-![religion](/subjects/concepts/religion.jpg)
-
-**File:** `public/subjects/concepts/religion.jpg`
-**S3:** `catalog/concepts/g{1-12}-religion/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `islamic-education`
-
-| Curriculum | Subject                   | Grades    |
-| ---------- | ------------------------- | --------- |
-| US         | Religion                  | g1-g6     |
-| US         | Religion and Ethics       | g7-g9     |
-| US         | Religion and Philosophy   | g10-g12   |
-| SD         | التربية الإسلامية         | 10 grades |
-| SD         | الدراسات الإسلامية        | 2 grades  |
-| SD         | القرآن الكريم             | g10       |
-| SD         | القرآن الكريم وعلومه      | g11       |
-| GB         | Religious Education       | g1-g11    |
-| SA         | التربية الإسلامية         | g1-g12    |
-| EG         | التربية الدينية الإسلامية | g1-g12    |
-| AE         | التربية الإسلامية         | g1-g12    |
-| QA         | التربية الإسلامية         | g1-g12    |
-| KW         | التربية الإسلامية         | g1-g12    |
-| JO         | التربية الإسلامية         | g1-g12    |
-
----
-
-### science
-
-![science](/subjects/concepts/science.jpg)
-
-**File:** `public/subjects/concepts/science.jpg`
-**S3:** `catalog/concepts/g{1-12}-science/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `science`
-
-| Curriculum | Subject                           | Grades   |
-| ---------- | --------------------------------- | -------- |
-| US         | Physical Science                  | g1-g9    |
-| US         | Science and Engineering Practices | g7-g12   |
-| SD         | العلوم الطبيعية                   | 3 grades |
-| SD         | العلوم                            | 2 grades |
-| SD         | العلوم الهندسية                   | 2 grades |
-| SD         | أساسيات العلوم الهندسية           | g10      |
-| GB         | Science                           | g1-g9    |
-| IB         | Sciences                          | g1-g11   |
-| SA         | العلوم                            | g1-g9    |
-| EG         | العلوم                            | g1-g9    |
-| AE         | العلوم                            | g1-g9    |
-| QA         | العلوم                            | g1-g9    |
-| KW         | العلوم                            | g1-g9    |
-| JO         | العلوم                            | g1-g10   |
-
----
-
-### sociology
-
-![sociology](/subjects/concepts/sociology.jpg)
-
-**File:** `public/subjects/concepts/sociology.jpg`
-**S3:** `catalog/concepts/g{1-12}-sociology/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `sociology`
-
-| Curriculum | Subject         | Grades   |
-| ---------- | --------------- | -------- |
-| US         | Sociology       | g10-g12  |
-| GB         | Sociology       | 2 grades |
-| EG         | الفلسفة والمنطق | 3 grades |
-
----
-
-### teacher-pd
-
-![teacher-pd](/subjects/concepts/teacher-pd.jpg)
-
-**File:** `public/subjects/concepts/teacher-pd.jpg`
-**S3:** `catalog/concepts/g{1-12}-teacher-pd/thumbnail-{sm,md,lg,original}.webp`
-**Banner:** ClickView `teacher-development`
-
-| Curriculum | Subject                          | Grades |
-| ---------- | -------------------------------- | ------ |
-| US         | Teacher Professional Development | g1-g12 |
-
----
-
-## Cross-Curriculum Map
-
-How each concept maps to actual subject names across curricula.
-
-| Concept            | US (K-12)                               | SD (Sudan)                                    | GB (British)             | SA (Saudi)         |
-| ------------------ | --------------------------------------- | --------------------------------------------- | ------------------------ | ------------------ |
-| `languages`        | World Languages                         | Arabic, Grammar, Literature, Rhetoric, French | Modern Foreign Languages | French             |
-| `english`          | English Language Arts                   | English                                       | English                  | English            |
-| `math`             | Math                                    | Math, Basic Math                              | Mathematics              | Mathematics        |
-| `science`          | Physical Science, Science & Engineering | Science, Engineering                          | Science                  | Science            |
-| `biology`          | Life Science                            | Biology, Agriculture                          | Biology                  | Biology            |
-| `chemistry`        | Chemical Science, Chemistry             | Chemistry                                     | Chemistry                | Chemistry          |
-| `physics`          | Physics                                 | Physics                                       | Physics                  | Physics            |
-| `history`          | History, U.S. History, World History    | History                                       | History                  | Social Studies     |
-| `geography`        | Geography                               | Geography                                     | Geography                | Geography          |
-| `religion`         | Religion                                | Islamic Studies, Quran                        | Religious Education      | Islamic Studies    |
-| `computer-science` | CS & Technology                         | Computer Science, ICT                         | Computing                | Computer Science   |
-| `arts`             | Arts                                    | Arts & Design                                 | Art and Design           | Art Education      |
-| `economics`        | Economics, Business & Econ              | Commercial Studies                            | Business Studies         | Business Studies   |
-| `civics`           | Civics & Government                     | Military Sciences                             | Citizenship              | Social Studies     |
-| `health`           | Health                                  | Family Sciences, Home Econ                    | PSHE                     | Health Education   |
-| `earth-science`    | Earth & Space Science                   | Earth & Environment                           | -                        | -                  |
-| `life-skills`      | Life Skills                             | Clothing, Resources                           | -                        | Life Skills        |
-| `career-tech`      | Career & Tech Ed                        | Technical Education                           | Design & Technology      | -                  |
-| `pe`               | Physical Education                      | -                                             | Physical Education       | Physical Education |
-| `psychology`       | Psychology                              | -                                             | Psychology               | -                  |
-| `sociology`        | Sociology                               | -                                             | Sociology                | -                  |
-| `celebrations`     | Celebrations & Festivals                | -                                             | -                        | -                  |
-| `teacher-pd`       | Teacher Professional Dev                | -                                             | -                        | -                  |
-
-## Content Volume by Concept
-
-| Concept            | US Subjects | US Chapters | US Lessons | SD Subjects | SD Chapters | SD Lessons | Total Subjects |
-| ------------------ | ----------- | ----------- | ---------- | ----------- | ----------- | ---------- | -------------- |
-| `languages`        | 12          | 12          | 84         | 23          | 198         | 663        | 147            |
-| `math`             | 12          | 60          | 318        | 12          | 95          | 294        | 125            |
-| `english`          | 12          | 48          | 300        | 11          | 113         | 459        | 124            |
-| `arts`             | 12          | 51          | 210        | 6           | 26          | 58         | 114            |
-| `religion`         | 12          | 21          | 102        | 14          | 113         | 318        | 112            |
-| `history`          | 18          | 87          | 417        | 8           | 40          | 215        | 111            |
-| `pe`               | 12          | 18          | 123        | 0           | 0           | 0          | 104            |
-| `science`          | 15          | 33          | 141        | 8           | 52          | 190        | 102            |
-| `computer-science` | 12          | 45          | 153        | 10          | 58          | 199        | 92             |
-| `geography`        | 12          | 45          | 267        | 9           | 40          | 145        | 54             |
-| `civics`           | 12          | 36          | 198        | 3           | 24          | 39         | 54             |
-| `biology`          | 12          | 51          | 297        | 4           | 23          | 92         | 42             |
-| `life-skills`      | 12          | 48          | 291        | 2           | 8           | 0          | 40             |
-| `career-tech`      | 6           | 24          | 93         | 1           | 6           | 0          | 34             |
-| `chemistry`        | 6           | 27          | 78         | 3           | 23          | 49         | 34             |
-| `economics`        | 12          | 15          | 87         | 2           | 9           | 68         | 30             |
-| `physics`          | 3           | 9           | 45         | 2           | 16          | 40         | 29             |
-| `health`           | 12          | 36          | 102        | 4           | 23          | 75         | 19             |
-| `earth-science`    | 12          | 42          | 315        | 1           | 5           | 0          | 18             |
-| `teacher-pd`       | 12          | 12          | 129        | 0           | 0           | 0          | 15             |
-| `psychology`       | 3           | 3           | 33         | 0           | 0           | 0          | 10             |
-| `sociology`        | 3           | 3           | 12         | 0           | 0           | 0          | 9              |
-| `celebrations`     | 6           | 24          | 198        | 0           | 0           | 0          | 7              |
-
-Total includes subjects from all 10 curricula (US, SD, GB, IB, SA, EG, AE, QA, KW, JO).
-
-## S3 Storage Pattern
-
-Each concept has grade-specific S3 paths with 4 size variants:
+## The 23 concepts
+
+| Concept            | S3 path                  | Banner source                  |
+| ------------------ | ------------------------ | ------------------------------ |
+| `arts`             | `g{n}-arts/`             | ClickView the-arts             |
+| `biology`          | `g{n}-biology/`          | ClickView biology              |
+| `career-tech`      | `g{n}-career-tech/`      | ClickView career-education     |
+| `celebrations`     | `g{n}-celebrations/`     | ClickView celebrations         |
+| `chemistry`        | `g{n}-chemistry/`        | ClickView chemistry            |
+| `civics`           | `g{n}-civics/`           | ClickView social-studies       |
+| `computer-science` | `g{n}-computer-science/` | ClickView computer-science     |
+| `earth-science`    | `g{n}-earth-science/`    | ClickView earth-space-sciences |
+| `economics`        | `g{n}-economics/`        | ClickView business-economics   |
+| `english`          | `g{n}-english/`          | ClickView english              |
+| `geography`        | `g{n}-geography/`        | ClickView geography            |
+| `health`           | `g{n}-health/`           | ClickView health               |
+| `history`          | `g{n}-history/`          | ClickView history              |
+| `languages`        | `g{n}-languages/`        | ClickView french               |
+| `life-skills`      | `g{n}-life-skills/`      | ClickView life-skills          |
+| `math`             | `g{n}-math/`             | ClickView mathematics          |
+| `pe`               | `g{n}-pe/`               | ClickView physical-education   |
+| `physics`          | `g{n}-physics/`          | ClickView physics              |
+| `psychology`       | `g{n}-psychology/`       | ClickView psychology           |
+| `religion`         | `g{n}-religion/`         | ClickView islamic-education    |
+| `science`          | `g{n}-science/`          | ClickView science              |
+| `sociology`        | `g{n}-sociology/`        | ClickView sociology            |
+| `teacher-pd`       | `g{n}-teacher-pd/`       | ClickView teacher-development  |
+
+Source images live in `public/subjects/concepts/{concept}.jpg`. The `concept-images` seed processes each into 4 WebP variants (sm/md/lg/original) and uploads to S3 for all 12 grades.
+
+## Cross-curriculum map
+
+The 10 curricula (US, SD, GB, IB, SA, EG, AE, QA, KW, JO) all map their subjects to one of the 23 concepts. Sample mappings:
+
+| Concept     | US                          | SD (Sudan)                          | GB                       | SA              |
+| ----------- | --------------------------- | ----------------------------------- | ------------------------ | --------------- |
+| `languages` | World Languages             | Arabic, Grammar, Literature, French | Modern Foreign Languages | Arabic          |
+| `english`   | English Language Arts       | English                             | English                  | English         |
+| `math`      | Math                        | Math                                | Mathematics              | Mathematics     |
+| `science`   | Physical Science, Practices | Science, Engineering                | Science                  | Science         |
+| `religion`  | Religion                    | Islamic Studies, Quran              | Religious Education      | Islamic Studies |
+| `civics`    | Civics and Government       | Military Sciences                   | Citizenship              | Social Studies  |
+
+For the full per-curriculum mapping (including Arabic subject names and grade ranges), see `prisma/seeds/world-curricula.ts` and `scripts/sudan-data/sudan-curriculum.json`.
+
+## S3 storage layout
+
+Each concept has grade-specific S3 paths with 4 size variants. All 12 grades share the same source image per concept; grade-specific paths support future grade-specific imagery.
 
 ```
-catalog/concepts/g1-math/thumbnail-sm.webp     (200px)
-catalog/concepts/g1-math/thumbnail-md.webp     (600px)
-catalog/concepts/g1-math/thumbnail-lg.webp     (1200px)
+catalog/concepts/g1-math/thumbnail-sm.webp        (200px)
+catalog/concepts/g1-math/thumbnail-md.webp        (600px)
+catalog/concepts/g1-math/thumbnail-lg.webp        (1200px)
 catalog/concepts/g1-math/thumbnail-original.webp
-catalog/concepts/g1-math/banner-sm.webp
-catalog/concepts/g1-math/banner-md.webp
-catalog/concepts/g1-math/banner-lg.webp
-catalog/concepts/g1-math/banner-original.webp
+catalog/concepts/g1-math/banner-{sm,md,lg,original}.webp
 catalog/concepts/math/cover
 ```
 
-All 12 grades share the same source image per concept. Grade-specific paths (`g1-math`, `g7-math`) support future grade-specific imagery.
+## Chapter rotation pools
 
-## Chapter Concept Rotation
+Chapters within a subject rotate through a pool of 5 related concepts for visual variety. A math subject with 5 chapters gets thumbnails from math, science, computer-science, physics, economics — cycled by `sequenceOrder % poolSize`.
 
-Chapters rotate through a pool of 5 related concepts for visual variety:
-
-| Subject Concept | Chapter Rotation Pool                                   |
+| Subject concept | Chapter rotation pool                                   |
 | --------------- | ------------------------------------------------------- |
 | `languages`     | languages, english, arts, history, geography            |
 | `math`          | math, science, computer-science, physics, economics     |
@@ -653,32 +88,26 @@ Chapters rotate through a pool of 5 related concepts for visual variety:
 | `physics`       | physics, math, science, computer-science, earth-science |
 | `geography`     | geography, earth-science, science, history, biology     |
 
-A math subject with 5 chapters gets thumbnails from math, science, computer-science, physics, economics (cycling by `sequenceOrder % poolSize`).
-
-## Image Resolution Flow
+## Image resolution
 
 ```
-Database                          S3 / CloudFront
-────────                          ────────────────
-Subject.thumbnailKey              catalog/concepts/g1-math/thumbnail
-  │                                 │
-  ├── getCatalogImageUrl(key, "sm") ├── thumbnail-sm.webp   → 200px
-  ├── getCatalogImageUrl(key, "md") ├── thumbnail-md.webp   → 600px
-  ├── getCatalogImageUrl(key, "lg") ├── thumbnail-lg.webp   → 1200px
-  └── getCatalogImageUrl(key, "original") └── thumbnail-original.webp
-                                    │
-                                    └── https://{CLOUDFRONT}/catalog/concepts/g1-math/thumbnail-md.webp
+Subject.thumbnailKey  →  catalog/concepts/g1-math/thumbnail
+                          ├── thumbnail-sm.webp        → 200px
+                          ├── thumbnail-md.webp        → 600px
+                          ├── thumbnail-lg.webp        → 1200px
+                          └── thumbnail-original.webp
+                          → https://{CLOUDFRONT}/catalog/concepts/g1-math/thumbnail-md.webp
 ```
 
-Key files:
+Helpers:
 
-- `src/lib/catalog-image-url.ts` -- client-safe URL construction
-- `src/lib/catalog-image.ts` -- Sharp processing + S3 upload
-- `src/components/ui/catalog-image.tsx` -- responsive srcSet component
+| File                                  | Purpose                       |
+| ------------------------------------- | ----------------------------- |
+| `src/lib/catalog-image-url.ts`        | Client-safe URL construction  |
+| `src/lib/catalog-image.ts`            | Sharp processing + S3 upload  |
+| `src/components/ui/catalog-image.tsx` | Responsive `srcSet` component |
 
-## Seed Pipeline
-
-Run in this order to populate images:
+## Seed pipeline
 
 ```bash
 pnpm db:seed:single concept-images   # 1. Process JPGs → S3 thumbnails (all 12 grades)
@@ -688,68 +117,34 @@ pnpm db:seed:single sd-catalog       # 4. SD subjects (sets concept + S3 keys)
 pnpm db:seed:single world-curricula  # 5. GB/IB/SA/EG/AE/QA/KW/JO subjects
 ```
 
-## Adding a New Curriculum
+## Adding a curriculum
 
 To add a new curriculum that reuses concept images:
 
-1. Define subjects with `concept` field pointing to one of the 23 concepts
-2. Set `thumbnail`, `banner`, `cover` using the pattern:
-   ```typescript
+1. Define subjects with `concept` field pointing to one of the 23 concepts.
+2. Set keys using the pattern:
+   ```ts
    thumbnail: `catalog/concepts/g${grade}-${concept}/thumbnail`
    banner: `catalog/concepts/g${grade}-${concept}/banner`
    cover: `catalog/concepts/${concept}/cover`
    ```
-3. Assign `color` from `CONCEPT_COLORS` or a custom hex
-4. The images are already on S3 -- no upload needed
+3. Assign `color` from `CONCEPT_COLORS` or a custom hex.
+4. Images are already on S3 — no upload required.
 
-## Local Curriculum Directory
+## Source files
 
-Source files live in `curriculum/` organized by country:
+| File                                       | Purpose                                  |
+| ------------------------------------------ | ---------------------------------------- |
+| `public/subjects/concepts/*.jpg`           | 23 source concept images                 |
+| `prisma/seeds/concept-images.ts`           | NAME_TO_CONCEPT map + S3 upload          |
+| `prisma/seeds/banner-copy.ts`              | ClickView banner migration               |
+| `prisma/seeds/us-catalog.ts`               | US subjects + rotation pools             |
+| `prisma/seeds/sd-catalog.ts`               | SD subjects from `sudan-curriculum.json` |
+| `prisma/seeds/world-curricula.ts`          | 8 curricula + `CONCEPT_COLORS`           |
+| `scripts/sudan-data/sudan-curriculum.json` | Sudan data with concept per subject      |
 
-```
-curriculum/
-├── us/           # US K-12 (thumbnails + banners, no textbooks)
-│   ├── g1/       # 18 subjects
-│   │   ├── math/
-│   │   │   ├── banner/elementary-math.jpg
-│   │   │   ├── thumbnail/          # ~20 concept images
-│   │   │   ├── cover/              # empty
-│   │   │   └── textbook/           # empty
-│   │   └── ...
-│   └── g12/
-├── sd/           # Sudan National (textbooks + exams + question banks)
-│   ├── curriculum.json
-│   ├── g1/       # 4 subjects
-│   │   ├── arabic/
-│   │   │   ├── banner.jpg
-│   │   │   ├── thumbnail.jpg
-│   │   │   ├── textbook.pdf
-│   │   │   ├── structure.json
-│   │   │   ├── exams.json
-│   │   │   ├── qbank.json
-│   │   │   └── chapters/
-│   │   │       └── unit-01/
-│   │   │           ├── exams.json
-│   │   │           ├── qbank.json
-│   │   │           └── lessons/
-│   │   └── ...
-│   └── g12/
-├── fr/           # France (scaffolded, banners only)
-└── in/           # India (scaffolded, banners only)
-```
+## See also
 
-## Key Files
-
-| File                                       | Purpose                                |
-| ------------------------------------------ | -------------------------------------- |
-| `public/subjects/concepts/*.jpg`           | 23 source concept images               |
-| `prisma/seeds/concept-images.ts`           | NAME_TO_CONCEPT map + S3 upload        |
-| `prisma/seeds/banner-copy.ts`              | ClickView banner migration             |
-| `prisma/seeds/us-catalog.ts`               | US subjects + chapter rotation pools   |
-| `prisma/seeds/sd-catalog.ts`               | SD subjects from sudan-curriculum.json |
-| `prisma/seeds/sync-sd-curriculum.ts`       | SD sync with concept + rotation        |
-| `prisma/seeds/world-curricula.ts`          | 8 curricula + CONCEPT_COLORS           |
-| `scripts/sudan-data/sudan-curriculum.json` | SD data with concept per subject       |
-| `src/lib/catalog-image-url.ts`             | CloudFront URL resolution              |
-| `src/lib/catalog-image.ts`                 | Sharp + S3 processing                  |
-| `src/components/ui/catalog-image.tsx`      | Responsive image component             |
+- [Catalog](/docs/catalog)
+- [ClickView overview](/docs/clickview)
+- [Sudan curriculum](/docs/sudan-curriculum)

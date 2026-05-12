@@ -1,129 +1,95 @@
 ---
-title: "Authentication"
-description: "Multi-tenant authentication for school management with OAuth and Credentials"
+title: Authentication
+description: Multi-tenant authentication built on Auth.js v5 — sessions, redirects, route protection, and tenant resolution.
 ---
 
-## Overview
+Authentication runs on Next.js App Router with Auth.js (NextAuth v5). Users authenticate via OAuth (Google, Facebook) or credentials, with optional 2FA, email verification, and password reset. Sessions are JWTs scoped via cookies on `.databayt.org` for cross-subdomain SSO.
 
-Our authentication system is built on Next.js App Router with Auth.js (NextAuth v5), designed for multi-tenant school management. It supports OAuth providers (Google, Facebook), email/password credentials, two-factor authentication, and cross-subdomain single sign-on.
+For provider-specific detail see [credentials](/docs/credentials), [oauth](/docs/oauth), and [flow diagrams](/docs/flow-diagrams).
 
-**Sub-docs for detail:**
+## Entry points
 
-- [Credentials Authentication](/docs/credentials) -- registration, login with 2FA, email verification, password reset, token system, brute force protection
-- [OAuth Authentication](/docs/oauth) -- provider config, account linking, callback handling, cross-subdomain SSO
-- [Flow Diagrams](/docs/flow-diagrams) -- visual diagrams for all auth flows
+| #   | Entry            | Trigger                         | Post-login redirect                                                                   |
+| --- | ---------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | Marketing header | Login icon on `ed.databayt.org` | DEVELOPER → `/dashboard`, school user → `{school}.databayt.org/dashboard`, USER → `/` |
+| 2   | Get Started      | Marketing CTA                   | `/login?callbackUrl=/onboarding` then 15-step wizard                                  |
+| 3   | School subdomain | `{school}.databayt.org/login`   | Same as #1, scoped to school                                                          |
+| 4   | Protected route  | Direct URL                      | `/login?callbackUrl={original_url}`, returns after auth                               |
 
-## Entry Points
+USER role redirects to `/{locale}` (homepage), not `/onboarding`. Onboarding is reachable only via explicit `callbackUrl`.
 
-There are four ways a user enters the authentication flow:
+## Redirect priority
 
-| #   | Entry Point          | Trigger                         | Post-Login Redirect                                                                |
-| --- | -------------------- | ------------------------------- | ---------------------------------------------------------------------------------- |
-| 1   | **Marketing Header** | Login icon on `ed.databayt.org` | DEVELOPER: `/dashboard`, school user: `{school}.databayt.org/dashboard`, USER: `/` |
-| 2   | **Get Started**      | Button on marketing page        | `/login?callbackUrl=/onboarding` then 15-step wizard                               |
-| 3   | **School Subdomain** | `{school}.databayt.org/login`   | Same as #1 but within school context                                               |
-| 4   | **Protected Route**  | Direct URL to protected page    | `/login?callbackUrl={original_url}`, returns after auth                            |
+Decision chain in `src/auth.ts` redirect callback and `src/components/auth/login/action.ts`:
 
-Users without a school (USER role) are redirected to `/{locale}` (homepage), not `/onboarding`. Onboarding is only reachable via explicit callbackUrl from the "Get Started" button.
+1. Callback URL — cookie / URL params / baseUrl params (preserved across OAuth via httpOnly cookie)
+2. Explicit relative path from `signIn({ redirectTo })`
+3. Subdomain detection — on a school subdomain → that school's dashboard
+4. Smart redirect — decode JWT, look up school, redirect to school dashboard
+5. Fallback — main domain dashboard
 
-## Redirect Logic
+## Session and JWT
 
-The redirect decision is a 5-step priority chain in `src/auth.ts` redirect callback and `src/components/auth/login/action.ts`:
-
-1. **Callback URL** -- from cookie, URL params, or baseUrl params (preserved across OAuth via httpOnly cookie)
-2. **Explicit relative path** -- from `signIn({ redirectTo })` (e.g., DEVELOPER gets `/en/dashboard`)
-3. **Subdomain detection** -- if on a school subdomain, go to that school's dashboard
-4. **Smart redirect** -- decode JWT, look up school domain, redirect to school dashboard
-5. **Fallback** -- main domain dashboard
-
-## Session & JWT Structure
-
-**JWT Token** (populated in `src/auth.ts` jwt callback):
-
-```typescript
+```ts
+// JWT (jwt callback)
 token = {
-  id: string              // User ID
-  role: UserRole           // User role
-  schoolId: string | null  // Multi-tenant key
-  provider: string         // OAuth provider
+  id: string
+  role: UserRole
+  schoolId: string | null
+  provider: string
   providerAccountId: string
-  sessionToken: string     // Cache-busting
-  updatedAt: number        // Forced refresh detection
-  hash: string             // Cache-busting hash
-  exp: number              // Expires at (+24h)
+  sessionToken: string
+  updatedAt: number
+  hash: string
+  exp: number
 }
-```
 
-**Session** (populated in session callback):
-
-```typescript
+// Session (session callback)
 session.user = {
   id: string
   email: string
-  role: UserRole           // From token, or preview role if active
-  schoolId: string | null  // Multi-tenant key
-  isPreviewMode: boolean   // True when preview role cookie is active
+  role: UserRole          // Effective role — preview if active
+  schoolId: string | null
+  isPreviewMode: boolean
 }
 ```
 
-## Tenant Context
+Session config: `strategy: "jwt"`, `maxAge: 24 * 60 * 60` (24h), `updateAge: 5 * 60` (5 min in production).
 
-```typescript
+## Tenant context
+
+```ts
 import { getTenantContext } from "@/lib/tenant-context"
 
 const { schoolId, requestId, role, isPlatformAdmin } = await getTenantContext()
-// Priority: impersonation cookie > x-subdomain header > session
+// Priority: impersonation cookie → x-subdomain header → session
 ```
 
-**3-tier caching** for subdomain-to-schoolId resolution: in-memory (1 min) -> Redis/Upstash (5 min) -> database (circuit breaker protected). Redis is optional; falls back to in-memory only.
+Two-tier subdomain → `schoolId` cache: Upstash Redis (5 min, shared) → in-memory Map (1 min, max 100 entries, per-instance fallback). Redis optional. Full detail in [multi-tenancy](/docs/multi-tenancy).
 
-## Multi-Tenant Prisma Adapter
+## Roles
 
-The standard Prisma adapter fails with our composite `@@unique([email, schoolId])` constraint. Our `MultiTenantPrismaAdapter` overrides key methods:
-
-| Method             | Standard Adapter                   | Multi-Tenant Adapter                              |
-| ------------------ | ---------------------------------- | ------------------------------------------------- |
-| `getUserByEmail`   | `findUnique({ where: { email } })` | `findFirst({ where: { email, schoolId: null } })` |
-| `createUser`       | No school context                  | Creates with `schoolId: null`                     |
-| `getUserByAccount` | Standard lookup                    | Handles composite constraints                     |
-
-OAuth users start with `schoolId: null` until they complete onboarding or join a school.
-
-## User Roles
-
-```typescript
+```ts
 enum UserRole {
-  DEVELOPER  // Level 8 - Platform admin (cross-school access)
-  ADMIN      // Level 7 - School administrator
-  TEACHER    // Level 6 - Teaching staff
-  ACCOUNTANT // Level 5 - Finance staff
-  STAFF      // Level 4 - General staff
-  GUARDIAN   // Level 3 - Parent/guardian
-  STUDENT    // Level 2 - Enrolled student
-  USER       // Level 1 - Default role
+  DEVELOPER   // 8 - platform admin (cross-school)
+  ADMIN       // 7 - school administrator
+  TEACHER     // 6 - teaching staff
+  ACCOUNTANT  // 5 - finance staff
+  STAFF       // 4 - general staff
+  GUARDIAN    // 3 - parent / guardian
+  STUDENT     // 2 - enrolled student
+  USER        // 1 - default
 }
 ```
 
-Hierarchy defined in `src/lib/school-access.ts`, must stay in sync with `roleRoutes` in `src/routes.ts`.
+Eight roles total. Hierarchy in `src/lib/school-access.ts`; must stay in sync with `roleRoutes` in `src/routes.ts`. See [authorization](/docs/authorization) for feature-level permission checks.
 
-## Route Protection
+## Route protection
 
-### Edge Middleware (`src/proxy.ts`)
+Edge middleware decodes JWT, checks `roleRoutes`, detects subdomain (custom domain → Redis lookup), sets `x-subdomain` header for downstream consumers.
 
-```
-Request -> Edge Middleware
-  |-- Decode JWT (lightweight, no DB call)
-  |-- Extract: role, schoolId
-  |-- Check roleRoutes matrix for route access
-  |-- Detect subdomain (custom domain -> Redis lookup)
-  |-- Set x-subdomain header for downstream
-  |-- PASS -> Next.js renders page
-      FAIL -> Redirect to /login or /unauthorized
-```
-
-### Server-Side
-
-```typescript
+```ts
+// Server component
 import { auth } from "@/auth"
 
 export default async function ProtectedPage() {
@@ -133,70 +99,47 @@ export default async function ProtectedPage() {
 }
 ```
 
-### Client-Side Hooks
-
-```typescript
+```tsx
 "use client"
 
+import { RoleGate } from "@/components/auth/role-gate"
 import { useCurrentRole } from "@/components/auth/use-current-role"
 import { useCurrentUser } from "@/components/auth/use-current-user"
-```
 
-### Role Gate
-
-```typescript
-import { RoleGate } from "@/components/auth/role-gate"
-
-<RoleGate allowedRole={UserRole.ADMIN}>
+;<RoleGate allowedRole={UserRole.ADMIN}>
   <AdminPanel />
 </RoleGate>
 ```
 
-## Cross-Subdomain SSO
+## Registration paths
 
-Production cookies use `.databayt.org` domain, enabling seamless authentication across all school subdomains. Key cookies: `authjs.session-token`, `authjs.csrf-token`, `authjs.pkce.code_verifier`, `authjs.state`, `authjs.nonce` -- all httpOnly, sameSite lax, secure.
+| Option            | Method                                                              | Status  |
+| ----------------- | ------------------------------------------------------------------- | ------- |
+| Self-registration | OAuth (Google/Facebook)                                             | Working |
+| Bulk creation     | Admin imports CSV with pre-assigned roles                           | Working |
+| Join codes        | 6-char codes (`ABCDEFGHJKMNPQRSTUVWXYZ2345679`) — 481M combinations | Working |
+| Invitations       | Email invite links with role                                        | Partial |
 
-## User Registration Options
+Self-enrollment toggle: `SchoolBranding.allowSelfEnrollment` — enabled gives instant join, disabled creates a pending `MembershipRequest`.
 
-| Option                | Method                                                                  | Status  |
-| --------------------- | ----------------------------------------------------------------------- | ------- |
-| **Self-Registration** | OAuth (Google/Facebook) -- no admin work                                | Working |
-| **Bulk Creation**     | Admin imports CSV with pre-assigned roles                               | Working |
-| **Join Codes**        | 6-char codes (`ABCDEFGHJKMNPQRSTUVWXYZ2345679`), self-enrollment toggle | Working |
-| **Invitations**       | Email-based invite links with pre-assigned roles                        | Partial |
+## Preview mode
 
-Join codes: 481M possible codes (28^6). Self-enrollment toggle via `SchoolBranding.allowSelfEnrollment` -- enabled: instant link, disabled: pending `MembershipRequest`. See `src/lib/join-code.ts` and `src/lib/school-access.ts`.
+Lets admins see the UI as another role without changing their actual role. Uses `preview-mode` and `preview-role` cookies; session callback overrides role and sets `isPreviewMode: true`.
 
-## Preview Mode
+| Hook               | Returns                                         |
+| ------------------ | ----------------------------------------------- |
+| `useEffectiveRole` | `UserRole` — preview if active, else actual     |
+| `useIsPreviewMode` | `boolean`                                       |
+| `useRoleInfo`      | `{ actual, preview, effective, isPreviewMode }` |
 
-Allows admins to see the UI as a different role without changing their actual role. Uses `preview-mode` and `preview-role` cookies. Session callback overrides role and sets `isPreviewMode: true`.
+## Impersonation
 
-| Hook               | Returns             | Purpose                                |
-| ------------------ | ------------------- | -------------------------------------- |
-| `useEffectiveRole` | `UserRole`          | Preview role if active, else actual    |
-| `useIsPreviewMode` | `boolean`           | Whether preview mode is active         |
-| `useRoleInfo`      | Full context object | Actual, preview, effective role + flag |
+DEVELOPERs can impersonate school contexts for debugging. Cookie `impersonate_schoolId` is `httpOnly`, `secure`, 1-hour `maxAge`. `IMPERSONATION_STARTED` and `IMPERSONATION_STOPPED` events are audit-logged. Impersonation takes priority over all other tenant resolution methods.
 
-## Core Files
+## See also
 
-| File                                     | Purpose                                              |
-| ---------------------------------------- | ---------------------------------------------------- |
-| `src/auth.ts`                            | NextAuth config, JWT callbacks, session management   |
-| `src/auth.config.ts`                     | OAuth provider configurations                        |
-| `src/lib/multi-tenant-prisma-adapter.ts` | Custom Prisma adapter for multi-tenant OAuth         |
-| `src/proxy.ts`                           | Route protection, subdomain detection                |
-| `src/routes.ts`                          | Public/protected route definitions                   |
-| `src/lib/tenant-context.ts`              | School context retrieval (3-tier caching)            |
-| `src/lib/school-access.ts`               | School ownership, access control, join codes         |
-| `src/lib/audit-log.ts`                   | Login attempt logging, brute force detection         |
-| `src/components/auth/mail.ts`            | Email service (Resend API, bilingual en/ar)          |
-| `src/components/auth/tokens.ts`          | Token generation (2FA, password reset, verification) |
-
-## Related Documentation
-
-- [Credentials Authentication](/docs/credentials) -- email/password flows, 2FA, brute force protection
-- [OAuth Authentication](/docs/oauth) -- Google/Facebook config, account linking, SSO
-- [Flow Diagrams](/docs/flow-diagrams) -- visual diagrams for all auth flows
-- [Onboarding](/docs/onboarding) -- school creation flow
-- [Architecture](/docs/architecture) -- system design
-- [Multi-Tenant Safety](/docs/multi-tenancy) -- data isolation
+- [Credentials](/docs/credentials)
+- [OAuth](/docs/oauth) — providers, multi-tenant adapter, cross-subdomain cookies
+- [Flow diagrams](/docs/flow-diagrams)
+- [Onboarding](/docs/onboarding)
+- [Multi-tenancy](/docs/multi-tenancy)

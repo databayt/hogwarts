@@ -1,250 +1,149 @@
 ---
-title: "الأنماط"
-description: "الأنماط تتخلل كل طبقة من تطوير البرمجيات - من كيفية تسمية متغير إلى كيفية هيكلة تطبيق كامل."
+title: الأنماط
+description: التسمية، أعراف الملفات، نمط المرآة، وأشكال الكود المستخدمة عبر codebase Hogwarts.
 ---
 
-## الأنماط سحرية، عندما تراها تعرفها
+الاتساق هو الأساس. كل ميزة تأخذ نفس الشكل، وكل ملف له دور قانوني. الكود الجديد الذي يطابق هذه الأنماط يصبح قابلاً للمراجعة في دقائق، والذي لا يطابقها يولّد احتكاكاً.
 
-**الاتساق** هو أساس الكود القابل للصيانة. في Databayt، نتبع أنماطاً راسخة تضمن بقاء قاعدة كودنا قابلة للتوسع وقابلة للقراءة وتعاونية. كل نمط يخدم غرضاً - من المكونات الذرية إلى إجراءات الخادم، من اصطلاحات التسمية إلى تنظيم الملفات.
-
-## اصطلاحات التسمية
+## التسمية
 
 ### الملفات والمجلدات
 
-- **المكونات**: kebab-case للملفات (`button.tsx`، `user-profile.tsx`)
-- **الصفحات**: kebab-case لشرائح المسار (`user-profile`، `sign-in`)
-- **الخطافات**: اصطلاح البادئة use (`use-leads.ts`، `use-upwork.ts`)
-- **الأنواع**: PascalCase للواجهات والأنواع (`UserData`، `ApiResponse`)
-- **الثوابت**: UPPER_SNAKE_CASE أو camelCase للكائنات
+- **المكونات والملفات** — kebab-case (`button.tsx`, `user-profile.tsx`).
+- **المسارات** — مقاطع kebab-case (`/user-profile`, `/sign-in`).
+- **Hooks** — بادئة `use-` (`use-leads.ts`).
+- **الأنواع** — معرّفات PascalCase (interfaces, type aliases, enums).
+- **الثوابت** — `UPPER_SNAKE_CASE` للقيم الأولية، `camelCase` للكائنات.
 
-### المتغيرات والدوال
+### المعرّفات في الكود
 
-- **المكونات**: PascalCase (`export function UserCard()`)
-- **الدوال**: camelCase (`export function formatCurrency()`)
-- **المتغيرات**: camelCase (`const userData = await fetchUser()`)
-- **الثوابت**: SCREAMING_SNAKE_CASE (`const API_BASE_URL = 'https://api.example.com'`)
+- **المكونات** — PascalCase (`export function UserCard()`).
+- **الدوال** — camelCase (`formatCurrency`).
+- **المتغيرات** — camelCase (`const userData = ...`).
+- **الثوابت** — `UPPER_SNAKE_CASE` (`const API_BASE_URL = "..."`).
+- **الأنواع والواجهات** — PascalCase (`interface UserData`, `type ApiResponse`).
 
-### قاعدة البيانات وAPI
+### قاعدة البيانات والـ API
 
-- **جداول قاعدة البيانات**: snake_case (`user_profiles`، `order_items`)
-- **مسارات API**: kebab-case (`/api/user-profile`، `/api/order-history`)
-- **متغيرات البيئة**: SCREAMING_SNAKE_CASE (`DATABASE_URL`، `NEXT_PUBLIC_API_KEY`)
+- **الجداول** — snake_case (`user_profiles`).
+- **مسارات API** — kebab-case (`/api/user-profile`).
+- **متغيرات البيئة** — `SCREAMING_SNAKE_CASE` (`DATABASE_URL`).
 
 ## أنماط الدوال
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">دوال السهم</h4>
-    <div className="text-sm text-muted-foreground mb-4">
-      مفضلة للأدوات ومعالجات الأحداث والدوال المضمنة.
-    </div>
-    <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-{`const formatPrice = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
-}`}
-    </pre>
-  </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">تعريفات الدوال</h4>
-    <div className="text-sm text-muted-foreground mb-4">
-      تُستخدم لمكونات React ومعالجات مسارات API والدوال المُصدَّرة.
-    </div>
-    <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-{`export function UserProfile({ userId }: Props) {
+استخدم function declarations للمكونات، route handlers، والدوال المُصدَّرة — تُرفَع وتُنتج stack traces أفضل. استخدم arrow functions لـ utility callbacks القصيرة.
+
+```typescript
+// utility — arrow مناسب
+const formatPrice = (amount: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount)
+
+// component — function declaration
+export function UserProfile({ userId }: Props) {
   const { user, loading } = useUser(userId)
-
-if (loading) return <Skeleton />
-return <div>{user.name}</div>
-}`}
-
-</pre>
-
-  </div>
-</div>
-
-## إجراءات الخادم وجلب البيانات
-
-### نمط إجراءات الخادم
-
-نستخدم إجراءات خادم Next.js لإرسال النماذج وتغييرات البيانات:
-
-```typescript
-"use server"
-
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-
-export async function createUser(formData: FormData) {
-  const userData = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-  }
-
-  try {
-    await db.user.create({ data: userData })
-    revalidatePath("/users")
-    redirect("/users")
-  } catch (error) {
-    throw new Error("Failed to create user")
-  }
+  if (loading) return <Skeleton />
+  return <Card>{user.name}</Card>
 }
 ```
 
-### تسلسل جلب البيانات
+## Server actions وجلب البيانات
 
-- **مكونات الخادم**: استعلامات قاعدة بيانات مباشرة للبيانات الأولية
-- **مكونات العميل**: React Query/SWR للبيانات التفاعلية
-- **إجراءات الخادم**: إرسال النماذج والتغييرات
-- **مسارات API**: التكاملات الخارجية والwebhooks
+- التعديلات في `actions.ts` مع `"use server"` في الأعلى.
+- القراءات في `queries.ts`. دوال خادم خالصة، لا حاجة لـ`"use server"` ما لم تُستدعَ من العميل.
+- كل server action يشغّل [التدفق المؤلَّف من 5 خطوات](/en/docs/actions): auth → tenant → permission → validate → execute + revalidate.
+- Server actions تُعيد `ActionResponse<T>` من `@/lib/action-response`.
+- مكونات الخادم تجلب عبر `queries.ts` وتمرّر البيانات لمكونات العميل كـ props.
 
-## بنية المكونات
+## هرم المكونات
 
-### هيكل التصميم الذري
+| المستوى | الاسم    | الوصف                       | مثال             |
+| ------- | -------- | --------------------------- | ---------------- |
+| 1       | UI       | Radix primitives            | `Dialog`, `Tabs` |
+| 2       | Atom     | تركيبات من 2+ primitives    | `LabeledInput`   |
+| 3       | Template | تخطيط صفحة كاملة            | `WizardLayout`   |
+| 4       | Block    | UI + منطق أعمال             | `StudentsTable`  |
+| 5       | Micro    | mini service / widget مستقل | `BellIcon`       |
 
-```
-components/
-├── atom/           # عناصر أساسية (Button، Input، Icon)
-├── molecule/       # تركيبات بسيطة (SearchBox، FormField)
-├── organism/       # مكونات معقدة (Header، UserTable)
-├── template/       # تخطيطات وهياكل الصفحة
-└── page/          # تركيبات الصفحة الكاملة
-```
+## نمط المرآة
 
-## بنية نمط المرآة
-
-نمط المرآة يضمن أن كل ميزة تتبع هيكلاً متسقاً ومتوقعاً. كل دليل ميزة يحتوي نفس أنواع الملفات.
-
-### هيكل الميزة
+كل URL ينتج مجلدين — أحدهما في `app/` (التوجيه، اللوايآت، page.tsx)، والآخر في `components/<feature>/` (كل ما عدا ذلك). راجع [وثيقة البنية المعمارية](/ar/docs/architecture) للخريطة الكاملة.
 
 ```
-components/<feature>/
-├── content.tsx      # تركيب UI الرئيسي (مكون عميل)
-├── actions.ts       # إجراءات الخادم (التغييرات، CRUD)
-├── validation.ts    # مخططات Zod للتحقق من البيانات
-├── types.ts         # أنواع TypeScript والواجهات
-├── form.tsx         # مكونات النماذج (عميل)
-├── table.tsx        # جدول البيانات (عميل)
-├── column.tsx       # تعريفات الأعمدة (عميل)
-├── use-<feature>.ts # خطافات React المخصصة
-├── config.ts        # التعدادات، الخيارات، الافتراضيات
-└── README.md        # توثيق الميزة
+src/app/[lang]/s/[subdomain]/(school-dashboard)/students/page.tsx
+  → يستورد من src/components/school-dashboard/listings/students/content.tsx
 ```
 
-### لماذا يعمل نمط المرآة
+## أنماط الملفات الموحّدة لكل ميزة
 
-- **قابلية التنبؤ**: كل ميزة تتبع نفس الهيكل
-- **قابلية الاكتشاف**: تعرف بالضبط أين تجد التحقق والإجراءات والأنواع
-- **قابلية التوسع**: الميزات الجديدة تتبع القالب المحدد
-- **التعاون**: أي مطور يمكنه القفز إلى أي ميزة فوراً
+| الملف                     | الغرض                                                         | الوثيقة                                 |
+| ------------------------- | ------------------------------------------------------------- | --------------------------------------- |
+| `page.tsx`                | نقطة دخول المسار. Auth + tenant + عرض `<XxxContent />`. رفيع. | [page](/en/docs/page)                   |
+| `content.tsx`             | خادم (جلب بيانات) أو عميل (تفاعل) — يكوّن الميزة.             | [content](/en/docs/content)             |
+| `client.tsx`              | حدود `"use client"` واحدة، يستقبل بيانات الخادم كـprops.      | [content](/en/docs/content)             |
+| `actions.ts`              | server actions — تعديلات فقط.                                 | [actions](/en/docs/actions)             |
+| `queries.ts`              | قراءات قاعدة بيانات على الخادم.                               | [queries](/en/docs/queries)             |
+| `authorization.ts`        | فحوص صلاحيات RBAC (`canCreate`, `canRead`, …).                | [authorization](/en/docs/authorization) |
+| `validation.ts`           | Zod schemas + أنواع `z.infer`.                                | [validation](/en/docs/validation)       |
+| `types.ts`                | أنواع المجال والـUI.                                          | [types](/en/docs/types)                 |
+| `config.ts`               | مصفوفات خيارات enum، تسميات، افتراضيات.                       | [config](/en/docs/config)               |
+| `form.tsx`                | عميل. يعرض المدخلات، يشغّل RHF + Zod، يرسل لـserver action.   | [form](/en/docs/form)                   |
+| `table.tsx`               | عميل. يلفّ atom DataTable بأعمدة الميزة.                      | [table](/en/docs/table)                 |
+| `columns.tsx`             | عميل. تعريفات أعمدة، يستخدم `useMemo` إن وُجدت hooks.         | [table](/en/docs/table)                 |
+| `card.tsx`                | بطاقات KPI / ملخّص.                                           | [card](/en/docs/card)                   |
+| `detail.tsx`              | تكوين صفحة التفاصيل.                                          | [detail](/en/docs/detail)               |
+| `views.tsx`               | مبدّلات عرض (grid / list / kanban).                           | [views](/en/docs/views)                 |
+| `list-params.ts`          | URL search-param cache (`nuqs`).                              | [list-params](/en/docs/list-params)     |
+| `util.ts`                 | helpers ميزة خالصة.                                           | [util](/en/docs/util)                   |
+| `hooks.ts` / `use-<x>.ts` | hooks الميزة.                                                 | [hooks](/en/docs/hooks)                 |
+| `README.md`               | سياق على مستوى الكتلة (قرارات، مناطق خطر).                    | [readme](/en/docs/readme)               |
+| `ISSUE.md`                | issues مفتوحة، سجل منجَز.                                     | [issue](/en/docs/issue)                 |
 
----
+المحتوى القانوني الكامل لكل ملف يعيش في الوثيقة المرتبطة — هذه الصفحة فهرس.
 
-## أنماط الملفات القياسية
+## قواعد متعدّد المستأجرين
 
-### نمط page.tsx
+- كل نموذج أعمال يحمل `schoolId`.
+- كل استعلام يُحدَّد بـ `schoolId`. غياب `schoolId` = تسريب بيانات.
+- `getTenantContext()` هو مصدر الحقيقة لـ `schoolId` الحالي.
+- اكتشاف النطاق الفرعي يحدث في الـmiddleware، وسياق المستأجر يحلّه.
 
-الصفحات تفوض إلى مكونات المحتوى، تعالج البيانات الوصفية وi18n:
+راجع [تعدد المستأجرين](/ar/docs/multi-tenancy) للبنية الكاملة.
 
-```typescript
-import BrandingContent from "@/components/onboarding/branding/content";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+## TypeScript
 
-export const metadata = {
-  title: "Branding",
-};
+- strict mode مُفعَّل. لا `any`، ولا `as any`.
+- `import type` للاستيرادات النوعية فقط.
+- اشتقاق الأنواع من Zod عبر `z.infer`. اشتقاق أنواع صفوف Prisma عبر `Prisma.XxxGetPayload`.
+- discriminated unions لآلات الحالة (`ActionResponse<T>`, حالة خطوات المعالج).
+- `enum` فقط حين تعبر القيم حدود runtime، وإلا فضّل string literal unions.
 
-interface PageProps {
-  params: Promise<{ lang: Locale }>
-}
+## التنسيق
 
-export default async function Branding({ params }: PageProps) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
-  return <BrandingContent dictionary={dictionary.school} />;
-}
-```
+- Tailwind 4 مع OKLCH tokens.
+- HTML دلالي — لا `text-*` / `font-*` مكتوبة في كود الميزات، اعتمد على المُصيِّر.
+- tokens واعية للسمة فقط — `text-foreground`, `bg-card`, `border-border`. لا hex.
+- خصائص منطقية للـRTL — `ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`. لا `ml-` ولا `pl-` ولا `left-` ولا `right-`.
 
-### نمط actions.ts
+## معالجة الأخطاء
 
-إجراءات الخادم مع سياق المستأجر والتحقق وإعادة التحقق:
+- server actions تُعيد `errorCode`، لا نصوصاً إنجليزية. القاموس يربطها على العميل.
+- لا ترمي خطأً للعميل أبداً. التقطه في الـaction وأعد استجابة منظَّمة.
+- حدود `error.tsx` تتولّى استثناءات شجرة المكونات.
+- `console.error` لتشخيصات الخادم، ولا تستخدم `console.log` في الكود المشحون.
 
-```typescript
-"use server"
+## الأداء
 
-import { revalidatePath } from "next/cache"
-import { z } from "zod"
+- مكونات الخادم افتراضياً، `"use client"` فقط عند الحاجة.
+- وازِ awaits المستقلة بـ `Promise.all`.
+- `revalidatePath` بعد التعديلات.
+- لفّ الحسابات الثقيلة في `useMemo`، ولفّ الـcallbacks المستقرة في `useCallback` عند القياس فقط.
+- بثّ حيث أمكن — حدود `Suspense` داخل مكونات الخادم.
 
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+## الاعتماد
 
-import { studentCreateSchema } from "./validation"
+عند إضافة كود جديد:
 
-export async function createStudent(
-  input: z.infer<typeof studentCreateSchema>
-) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
-
-  const parsed = studentCreateSchema.parse(input)
-
-  const row = await db.student.create({
-    data: {
-      schoolId,
-      firstName: parsed.firstName,
-      lastName: parsed.lastName,
-      gender: parsed.gender,
-    },
-  })
-
-  revalidatePath("/students")
-  return { success: true as const, id: row.id }
-}
-```
-
-## بنية تعدد المستأجرين
-
-للتطبيقات التي تخدم مؤسسات متعددة، عزل المستأجر ليس اختيارياً - إنه قانون مقدس.
-
-### القاعدة الذهبية
-
-```typescript
-// كل استعلام قاعدة بيانات يجب أن يتضمن نطاق المستأجر
-await db.student.findMany({
-  where: { schoolId, yearLevel: "10" }, // schoolId = عزل المستأجر
-})
-
-// لا تستعلم أبداً بدون نطاق المستأجر
-await db.student.findMany({
-  where: { yearLevel: "10" }, // خطير: يكسر العزل
-})
-```
-
-## أنماط TypeScript
-
-### استراتيجية تعريف الأنواع
-
-- **Props**: مضمنة للمكونات البسيطة، واجهات منفصلة للمعقدة
-- **أنواع API**: مُولَّدة من المخطط أو مواصفات OpenAPI
-- **أنواع الأداة**: استفد من أنواع الأداة المدمجة في TypeScript
-- **الوضع الصارم**: مُفعَّل دائماً مع `strict: true` في tsconfig
-
-## أنماط التنسيق
-
-### تنظيم Tailwind CSS
-
-- **أنماط المكونات**: ركّب الأدوات مع مساعد `cn()`
-- **مسافات متسقة**: استخدم مقياس مسافات Tailwind
-- **تصميم متجاوب**: أنماط متجاوبة للهاتف أولاً
-- **الوضع الداكن**: متغيرات CSS مع وضع Tailwind الداكن
-
----
-
-## تبني الأنماط
-
-هذه الأنماط هي **إرشادات حية** تتطور مع قاعدة كودنا. إنها موثقة في [دليل المساهمة](/ar/docs/contributing) ومُنفَّذة من خلال قواعد ESLint وتكوين Prettier وعمليات مراجعة الكود.
-
-عندما تشك، أعطِ الأولوية **للاتساق** على التفضيل الشخصي. أنماطنا تخدم المجتمع، تضمن أن أي مطور يمكنه القفز إلى أي جزء من قاعدة الكود وفهم الهيكل والاصطلاحات فوراً.
+1. اختر أقرب مجلد ميزة قائم وانسخ شكله.
+2. طابق التسمية ومجموعة الملفات تماماً.
+3. قاوم رغبة اختراع ملف جديد (`utils.ts`, `helpers.ts`)، استخدم الأسماء القانونية.
+4. إن لم يلائم شيءٌ فعلاً، اكتب ملاحظة في `README.md` كي يعرف من بعدك السبب.

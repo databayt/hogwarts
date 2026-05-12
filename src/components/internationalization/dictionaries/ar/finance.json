@@ -1820,7 +1820,8 @@
     "deleteInvoice": "حذف الفاتورة",
     "failedToDelete": "فشل حذف الفاتورة",
     "failedToDeleteFallback": "فشل في الحذف",
-    "createInvoice": "إنشاء فاتورة"
+    "createInvoice": "إنشاء فاتورة",
+    "reset": "إعادة تعيين"
   },
   "invoiceFeatured": {
     "totalRevenue": "إجمالي الإيرادات",

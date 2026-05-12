@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { PricingChatbotNudge } from "@/components/chatbot/pricing-nudge"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import PricingContent from "@/components/saas-marketing/pricing/content"
@@ -17,5 +18,10 @@ export default async function Pricing({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <PricingContent dictionary={dictionary} lang={lang} />
+  return (
+    <>
+      <PricingContent dictionary={dictionary} lang={lang} />
+      <PricingChatbotNudge />
+    </>
+  )
 }

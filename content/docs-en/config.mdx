@@ -1,32 +1,35 @@
 ---
 title: Config
-description: Canonical patterns for writing config.ts in feature directories.
+description: Pure data — option arrays, labels, defaults, and metadata for a feature.
 ---
 
-`config.ts` holds enum option arrays, labels, defaults, and metadata for the feature. It's pure data — no functions, no Prisma imports, no React.
+`config.ts` holds enum option arrays, labels, defaults, and metadata. Pure data — no functions, no Prisma imports, no React.
 
 ## Categories
 
-| Category              | Shape                                                          | Reference                              |
-| --------------------- | -------------------------------------------------------------- | -------------------------------------- |
-| Form step definitions | `STEPS`, `STEP_FIELDS`, `TOTAL_FIELDS` for multi-step forms.   | `listings/teachers/config.ts`          |
-| Constants with labels | Option arrays, status badges, color maps.                      | `saas-dashboard/tenants/config.ts`     |
-| Navigation maps       | Sidebar / header / footer items with RBAC roles.               | `template/platform-sidebar/config.ts`  |
-| Feature-rich domain   | Limits, rules, defaults for complex features.                  | `school-dashboard/dashboard/config.ts` |
-| Infrastructure        | Framework configs (Next, NextAuth, AI provider, billing tier). | `auth.config.ts`, `next.config.ts`     |
+| Category              | Shape                                              | Reference                              |
+| --------------------- | -------------------------------------------------- | -------------------------------------- |
+| Form step definitions | `STEPS`, `STEP_FIELDS`, `TOTAL_FIELDS` for wizards | `listings/teachers/config.ts`          |
+| Constants with labels | Option arrays, status badges, color maps           | `saas-dashboard/tenants/config.ts`     |
+| Navigation maps       | Sidebar / header / footer items with RBAC          | `template/platform-sidebar/config.ts`  |
+| Feature-rich domain   | Limits, rules, defaults                            | `school-dashboard/dashboard/config.ts` |
+| Infrastructure        | Framework configs (Next, NextAuth, AI)             | `auth.config.ts`, `next.config.ts`     |
 
-## Seven rules
+## Rules
 
-1. **`as const` for literal type inference.** Always.
-2. **Named exports only.** No default exports (NextAuth's `auth.config.ts` is the one exception, framework requirement).
-3. **No circular imports.** Configs don't import from each other; lift shared shapes to `src/lib/config/`.
-4. **No utility functions.** `formatFileSize()` belongs in `util.ts`, not `config.ts`.
-5. **No type definitions.** Types belong in `types.ts`. Configs use existing types (`Prisma.Role`, etc.).
-6. **No raw `process.env`.** Read environment via `@/env.mjs` so it's typed and validated.
-7. **Stay under ~300 lines.** Beyond that, split (`config/students.ts`, `config/teachers.ts`).
+| #   | Rule                                                                        |
+| --- | --------------------------------------------------------------------------- |
+| 1   | `as const` for literal type inference                                       |
+| 2   | Named exports only (NextAuth's `auth.config.ts` is the framework exception) |
+| 3   | No circular imports — lift shared shapes to `src/lib/config/`               |
+| 4   | No utility functions — `formatFileSize()` belongs in `util.ts`              |
+| 5   | No type definitions — types belong in `types.ts`                            |
+| 6   | No raw `process.env` — read via `@/env.mjs`                                 |
+| 7   | Stay under ~300 lines — split when bloated                                  |
+
+## Canonical example
 
 ```typescript
-// listings/students/config.ts
 import type { Prisma } from "@prisma/client"
 
 export const GENDER_OPTIONS = [
@@ -45,52 +48,37 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
 export const DEFAULT_FILTERS: Prisma.StudentWhereInput = { active: true }
 ```
 
-## Templates
-
-| Template              | File                                                          |
-| --------------------- | ------------------------------------------------------------- |
-| Form step definitions | `src/components/school-dashboard/listings/teachers/config.ts` |
-| Constants with labels | `src/components/saas-dashboard/tenants/config.ts`             |
-| Navigation map        | `src/components/template/platform-sidebar/config.ts`          |
-| Feature-rich domain   | `src/components/school-dashboard/dashboard/config.ts`         |
-
-## Anti-patterns
-
-- **`GENDER_OPTIONS` redefined** — 4 files (students, teachers, staff, apply/personal) with inconsistent values (`male` vs `MALE`) and languages. Lift to `src/lib/config/options.ts`.
-- **`PAGE_SIZE_OPTIONS` redefined** — 5+ files. Same fix.
-- **`MAX_FILE_SIZE` redefined** — 7+ files. Use `SIZE_LIMITS` from `file/config.ts`.
-- **`Role` type redefined** — import from `@prisma/client`.
-- **Utility functions in config** — `formatFileSize`, `formatBytes`, `getEmploymentStatusColor`. Move to `util.ts`.
-- **Types in config** — `PlatformNavItem`, `Role`. Move to `types.ts`.
-- **Raw `process.env` access** — `file/config.ts` reads `CLOUDFLARE_R2_ACCOUNT_ID` directly. Read via `@/env.mjs`.
-- **Empty config files** — `school-marketing/about/config.ts` was 0 bytes. Delete the file or fill it.
-- **Bloated files** — `dashboard/config.ts` (485), `file/config.ts` (461), `messaging/config.ts` (460). Split by concept.
-- **English-only labels** — for static UI text, the dictionary owns translation. Configs hold values; UI looks up labels via the dictionary using the value as the key.
-
 ## i18n
 
-Per the project's [translation rules](/docs/translation), labels in `config.ts` use the value as a key, and the UI looks up the translated label via the dictionary:
+Configs hold values; the dictionary owns translation. UI looks up the translated label using the value as a key:
 
 ```typescript
-// config.ts — values only, English label as fallback
-export const GENDER_OPTIONS = [
-  { value: "MALE", label: "Male" },
-  { value: "FEMALE", label: "Female" },
-] as const
-
-// in the component
 const genderLabel =
   dictionary.school.students.gender[option.value] ?? option.label
 ```
 
-## Relationship to siblings
+## Anti-patterns
 
-- `actions.ts`, `queries.ts`, `form.tsx`, `table.tsx` all import from `config.ts`.
-- `config.ts` doesn't import from any of them.
-- Cross-feature configs go to `src/lib/config/` (or a shared registry like `file/config.ts` for storage limits).
+- `GENDER_OPTIONS` redefined (4 files) with inconsistent values — lift to `src/lib/config/options.ts`.
+- `PAGE_SIZE_OPTIONS` redefined (5+ files) — same fix.
+- `MAX_FILE_SIZE` redefined (7+ files) — use `SIZE_LIMITS` from `file/config.ts`.
+- `Role` type redefined — import from `@prisma/client`.
+- Utility functions (`formatFileSize`) — move to `util.ts`.
+- Types in config (`PlatformNavItem`) — move to `types.ts`.
+- Raw `process.env` — read via `@/env.mjs`.
+- Empty config files — delete or fill.
+- Bloated files (`dashboard/config.ts` 485 lines) — split by concept.
+- English-only labels — UI looks up via dictionary.
 
 ## Naming
 
-- Filename: `config.ts`. Always.
-- Exported names: `UPPER_SNAKE_CASE` for primitives and constant arrays, `camelCase` for object literals.
-- One concept per export. Don't bundle `STATUS_OPTIONS` and `STATUS_COLORS` into a single object; export both.
+- File: `config.ts`.
+- Primitives: `UPPER_SNAKE_CASE`. Object literals: `camelCase`.
+- One concept per export.
+
+## See also
+
+- [Pattern](/docs/pattern)
+- [Types](/docs/types)
+- [Util](/docs/util)
+- [Validation](/docs/validation)

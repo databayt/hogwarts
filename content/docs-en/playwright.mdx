@@ -1,80 +1,55 @@
 ---
 title: Playwright
-description: E2E testing and AI-powered browser automation with Playwright + MCP.
+description: End-to-end testing with Playwright — multi-tenant, multi-environment, and Playwright MCP integration.
 ---
 
-End-to-end testing uses [Playwright](https://playwright.dev/). Multi-environment, multi-tenant aware, and integrated with the Playwright MCP for browser-driven AI flows.
+E2E testing uses [Playwright](https://playwright.dev/). Multi-environment, multi-tenant aware, and integrated with Playwright MCP for browser-driven AI flows.
 
 ## Quick start
 
 ```bash
-pnpm exec playwright install   # install browsers (one-time)
-pnpm test:e2e                  # run all e2e tests against local dev (port 3000)
-
-# against production
-TEST_ENV=production pnpm test:e2e --project=production-chromium
+pnpm exec playwright install                                    # One-time browser install
+pnpm test:e2e                                                   # All e2e tests, local dev
+TEST_ENV=production pnpm test:e2e --project=production-chromium # Against production
 ```
 
 ## Commands
 
-| Command                             | Use                                     |
-| ----------------------------------- | --------------------------------------- |
-| `pnpm test:e2e`                     | All e2e tests, default Chromium project |
-| `pnpm test:e2e:ui`                  | Interactive UI runner                   |
-| `pnpm test:e2e:debug`               | Debug with the Playwright inspector     |
-| `pnpm test:e2e:report`              | View the last HTML report               |
-| `pnpm test:e2e --project=chromium`  | Chromium only                           |
-| `pnpm test:e2e --project=firefox`   | Firefox only                            |
-| `pnpm test:e2e --headed`            | Show the browser window                 |
-| `pnpm test:e2e tests/login.spec.ts` | Single file                             |
+| Command                             | Use                                 |
+| ----------------------------------- | ----------------------------------- |
+| `pnpm test:e2e`                     | All tests, default Chromium project |
+| `pnpm test:e2e:ui`                  | Interactive UI runner               |
+| `pnpm test:e2e:debug`               | Debug with the Playwright inspector |
+| `pnpm test:e2e:report`              | View the last HTML report           |
+| `pnpm test:e2e --project=chromium`  | Chromium only                       |
+| `pnpm test:e2e --project=firefox`   | Firefox only                        |
+| `pnpm test:e2e --headed`            | Show the browser window             |
+| `pnpm test:e2e tests/login.spec.ts` | Single file                         |
 
 ## Test credentials
 
-All test accounts use password `1234`.
+All accounts use password `1234`. See [accounts](/docs/accounts) for full details.
 
-### Platform accounts
+| Email                     | Role       | Notes                         |
+| ------------------------- | ---------- | ----------------------------- |
+| `dev@databayt.org`        | DEVELOPER  | Platform admin, no `schoolId` |
+| `user@databayt.org`       | USER       | Fresh user — onboarding tests |
+| `admin@databayt.org`      | ADMIN      | Demo school                   |
+| `teacher@databayt.org`    | TEACHER    | Demo school                   |
+| `student@databayt.org`    | STUDENT    | Demo school                   |
+| `parent@databayt.org`     | GUARDIAN   | Demo school                   |
+| `accountant@databayt.org` | ACCOUNTANT | Demo school                   |
+| `staff@databayt.org`      | STAFF      | Demo school                   |
 
-These have no `schoolId`.
+Bulk: `teacher1@` … `teacher99@` (100), `student1@` … `student999@` (1,000), `parent1@` … `parent1999@` (2,000).
 
-| Email               | Role      | Purpose                               |
-| ------------------- | --------- | ------------------------------------- |
-| `dev@databayt.org`  | DEVELOPER | Platform admin, SaaS dashboard access |
-| `user@databayt.org` | USER      | Fresh user, onboarding flow           |
-
-### Demo school accounts
-
-Bound to the demo school. Cannot access other schools.
-
-| Email                     | Role       |
-| ------------------------- | ---------- |
-| `admin@databayt.org`      | ADMIN      |
-| `accountant@databayt.org` | ACCOUNTANT |
-| `staff@databayt.org`      | STAFF      |
-| `teacher@databayt.org`    | TEACHER    |
-| `student@databayt.org`    | STUDENT    |
-| `parent@databayt.org`     | GUARDIAN   |
-
-### Bulk accounts
-
-For load and performance tests.
-
-| Pattern                                | Count | Role     |
-| -------------------------------------- | ----: | -------- |
-| `teacher1@databayt.org` → `teacher99`  |   100 | TEACHER  |
-| `student1@databayt.org` → `student999` |  1000 | STUDENT  |
-| `parent1@databayt.org` → `parent1999`  |  2000 | GUARDIAN |
-
-If `user@databayt.org` gets mutated during a test run, reset it:
+If `user@databayt.org` mutates during a run, reset:
 
 ```bash
-pnpm db:reset-test-user
-# or
-pnpm db:seed:single users
+pnpm db:reset-test-user   # or: pnpm db:seed:single users
 ```
 
-## Multi-tenant testing
-
-### URL patterns
+## Multi-tenant URLs
 
 | Environment | Main domain                      | School subdomain                     |
 | ----------- | -------------------------------- | ------------------------------------ |
@@ -82,20 +57,20 @@ pnpm db:seed:single users
 | Production  | `https://ed.databayt.org/en/...` | `https://demo.databayt.org/en/...`   |
 | Preview     | `https://branch.vercel.app`      | `https://tenant---branch.vercel.app` |
 
-### Scenarios
+## Scenarios
 
 | Scenario            | Credential             | Domain                 | Expected                           |
 | ------------------- | ---------------------- | ---------------------- | ---------------------------------- |
-| SaaS Dashboard      | `dev@databayt.org`     | `localhost:3000`       | Access `/dashboard`, `/tenants`    |
-| School Dashboard    | `admin@databayt.org`   | `demo.localhost:3000`  | Access to school platform          |
-| Onboarding flow     | `user@databayt.org`    | `localhost:3000`       | "Get Started" → onboarding wizard  |
+| SaaS dashboard      | `dev@databayt.org`     | `localhost:3000`       | Access `/dashboard`, `/tenants`    |
+| School dashboard    | `admin@databayt.org`   | `demo.localhost:3000`  | Access school platform             |
+| Onboarding          | `user@databayt.org`    | `localhost:3000`       | Get Started → wizard               |
 | RBAC                | `teacher@databayt.org` | `demo.localhost:3000`  | Blocked from `/admin`, `/settings` |
 | Tenant isolation    | `admin@databayt.org`   | `other.localhost:3000` | Access denied (wrong school)       |
-| Cross-subdomain SSO | any logged-in user     | main → subdomain       | Session persists                   |
+| Cross-subdomain SSO | Any logged-in user     | Main → subdomain       | Session persists                   |
 
-### Example
+## Example test
 
-```typescript
+```ts
 import { expect, test } from "@playwright/test"
 
 test("admin can access school dashboard on subdomain", async ({ page }) => {
@@ -106,22 +81,30 @@ test("admin can access school dashboard on subdomain", async ({ page }) => {
   await page.waitForURL(/\/dashboard$/)
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible()
 })
+
+test("teacher cannot access /admin", async ({ page }) => {
+  await loginAs(page, "teacher@databayt.org")
+  await page.goto("/en/admin")
+  await expect(page).not.toHaveURL(/\/admin$/)
+})
 ```
+
+For shared auth state, save `storageState` once and reuse via `test.use({ storageState })`.
 
 ## Configuration
 
-The runner reads `playwright.config.ts`. Key levers:
+`playwright.config.ts` levers:
 
 - `TEST_ENV` — `local` (default) or `production`. Switches base URL and timeout.
-- Per-project base URL: `local` uses `http://localhost:3000`, `production` uses `https://ed.databayt.org`.
-- `webServer` boots `pnpm dev` for local runs. Skip it for production.
+- Per-project base URL: `local` → `http://localhost:3000`, `production` → `https://ed.databayt.org`.
+- `webServer` boots `pnpm dev` for local runs; skipped for production.
 - Headless GPU acceleration enabled by default — ~30% faster than non-GPU headless.
 
 ## Browser modes
 
-Default project is `chromium`; `firefox` is available for cross-engine spot checks. Pass `--headed` to watch the run.
+Default project is `chromium`; `firefox` available for cross-engine spot checks. `--headed` watches the run.
 
-For headless mode, the GPU-accelerated path uses Chromium with `--enable-gpu` and `--use-gl=angle`. Verify GPU acceleration with:
+GPU-accelerated headless uses Chromium with `--enable-gpu` and `--use-gl=angle`. Verify:
 
 ```ts
 import { chromium } from "@playwright/test"
@@ -133,35 +116,9 @@ await p.goto("chrome://gpu")
 console.log(await p.textContent("body"))
 ```
 
-## Writing tests
-
-```typescript
-import { expect, test } from "@playwright/test"
-
-test("login redirects to dashboard", async ({ page }) => {
-  await page.goto("/en/login")
-  await page.fill('[name="email"]', "admin@databayt.org")
-  await page.fill('[name="password"]', "1234")
-  await page.click('[type="submit"]')
-  await page.waitForURL(/\/dashboard$/)
-})
-```
-
-For RBAC tests, log in as the role under test and assert that protected routes redirect or 403:
-
-```typescript
-test("teacher cannot access /admin", async ({ page }) => {
-  await loginAs(page, "teacher@databayt.org")
-  await page.goto("/en/admin")
-  await expect(page).not.toHaveURL(/\/admin$/)
-})
-```
-
-For shared auth state, save storage state once and reuse it across tests via `test.use({ storageState })`.
-
 ## Playwright MCP
 
-Playwright MCP is the AI-assisted browser bridge. Configure once in your Claude Code (or other MCP-aware) client:
+AI-assisted browser bridge. Configure in your MCP-aware client:
 
 ```json
 {
@@ -174,14 +131,19 @@ Playwright MCP is the AI-assisted browser bridge. Configure once in your Claude 
 }
 ```
 
-The recommended local setup uses headless Chromium with GPU acceleration and a small persistent profile so cookies survive across calls. See `.claude/settings.json` and `playwright.config.ts` for the project's pinned config.
+Recommended local setup uses headless Chromium with GPU acceleration and a small persistent profile so cookies survive across calls. See `.claude/settings.json` and `playwright.config.ts` for the pinned config.
 
 ## Debugging
 
-- `pnpm test:e2e:debug` — opens the Playwright Inspector.
-- `npx playwright show-trace trace.zip` — replay a recorded trace.
-- Failed tests automatically capture screenshot and video to `test-results/`.
+- `pnpm test:e2e:debug` — Playwright Inspector
+- `npx playwright show-trace trace.zip` — replay recorded trace
+- Failed tests automatically capture screenshot + video to `test-results/`
 
 ## CI
 
 GitHub Actions runs `pnpm test:e2e` on PRs against the local server. Production smoke runs `pnpm test:e2e:prod:smoke` against `ed.databayt.org` after deploys.
+
+## See also
+
+- [Accounts](/docs/accounts)
+- [Authentication](/docs/authentication)

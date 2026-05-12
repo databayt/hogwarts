@@ -14,14 +14,67 @@ import { cn } from "@/lib/utils"
 /*  Category definitions                                               */
 /* ------------------------------------------------------------------ */
 
-export const SPOTLIGHT_CATEGORIES = [
+export type SpotlightCategoryId =
+  | "navigation"
+  | "actions"
+  | "settings"
+  | "theme"
+
+export interface SpotlightCategory {
+  id: SpotlightCategoryId
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  shortcut: string
+}
+
+/**
+ * Default English category labels — kept for back-compat. Prefer
+ * `buildSpotlightCategories(cm)` so labels follow the active dictionary.
+ */
+export const SPOTLIGHT_CATEGORIES: readonly SpotlightCategory[] = [
   { id: "navigation", icon: Compass, label: "Pages", shortcut: "⌘1" },
   { id: "actions", icon: Zap, label: "Actions", shortcut: "⌘2" },
   { id: "settings", icon: Settings, label: "Settings", shortcut: "⌘3" },
   { id: "theme", icon: Palette, label: "Theme", shortcut: "⌘4" },
 ] as const
 
-export type SpotlightCategoryId = (typeof SPOTLIGHT_CATEGORIES)[number]["id"]
+/**
+ * Build category labels from a `dictionary.commandMenu` slice. Falls back to
+ * the English defaults so the menu still renders if a dictionary key is
+ * missing during transition or in tests.
+ */
+export function buildSpotlightCategories(
+  cm?: Record<string, unknown>
+): SpotlightCategory[] {
+  const get = (key: string, fallback: string) =>
+    typeof cm?.[key] === "string" ? (cm[key] as string) : fallback
+  return [
+    {
+      id: "navigation",
+      icon: Compass,
+      label: get("categoryNavigation", get("navigation", "Pages")),
+      shortcut: "⌘1",
+    },
+    {
+      id: "actions",
+      icon: Zap,
+      label: get("categoryActions", get("actions", "Actions")),
+      shortcut: "⌘2",
+    },
+    {
+      id: "settings",
+      icon: Settings,
+      label: get("categorySettings", get("settings", "Settings")),
+      shortcut: "⌘3",
+    },
+    {
+      id: "theme",
+      icon: Palette,
+      label: get("categoryTheme", get("theme", "Theme")),
+      shortcut: "⌘4",
+    },
+  ]
+}
 
 /* ------------------------------------------------------------------ */
 /*  Glass effect                                                       */
@@ -153,10 +206,12 @@ function SpotlightCategories({
   activeCategory,
   onSelect,
   className,
+  categories = SPOTLIGHT_CATEGORIES,
 }: {
   activeCategory: SpotlightCategoryId | null
   onSelect: (id: SpotlightCategoryId) => void
   className?: string
+  categories?: readonly SpotlightCategory[]
 }) {
   return (
     <div
@@ -166,7 +221,7 @@ function SpotlightCategories({
         className
       )}
     >
-      {SPOTLIGHT_CATEGORIES.map((cat) => {
+      {categories.map((cat) => {
         const isActive = activeCategory === cat.id
         return (
           <button
@@ -204,18 +259,20 @@ function SpotlightCategoryIcons({
   onSelect,
   onHover,
   className,
+  categories = SPOTLIGHT_CATEGORIES,
 }: {
   activeCategory: SpotlightCategoryId | null
   onSelect: (id: SpotlightCategoryId) => void
   onHover?: (id: SpotlightCategoryId | null) => void
   className?: string
+  categories?: readonly SpotlightCategory[]
 }) {
   return (
     <div
       data-slot="spotlight-category-icons"
       className={cn("flex items-center gap-2", className)}
     >
-      {SPOTLIGHT_CATEGORIES.map((cat, i) => {
+      {categories.map((cat, i) => {
         const Icon = cat.icon
         const isActive = activeCategory === cat.id
         return (

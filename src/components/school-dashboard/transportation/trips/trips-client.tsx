@@ -319,10 +319,10 @@ export function TripsClient({ locale, trips, routes, dictionary }: Props) {
                 type="button"
                 onClick={() => setOpen(false)}
               >
-                {dictionary.common?.cancel ?? "Cancel"}
+                {dictionary.common.cancel}
               </Button>
               <Button type="submit" disabled={pending || !form.routeId}>
-                {dictionary.common?.save ?? "Save"}
+                {dictionary.common.save}
               </Button>
             </DialogFooter>
           </form>

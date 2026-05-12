@@ -1,12 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { listAssignments } from "../actions/assignments"
+import {
+  listAssignments,
+  listRouteStopsForAssignment,
+  listStudentsForAssignment,
+} from "../actions/assignments"
 import { listRoutes } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
 import { AssignmentsClient } from "./assignments-client"
@@ -18,10 +20,13 @@ interface Props {
 }
 
 export async function AssignmentsContent({ locale, dictionary }: Props) {
-  const [assignmentsResult, routesResult] = await Promise.all([
-    listAssignments(),
-    listRoutes(),
-  ])
+  const [assignmentsResult, routesResult, studentsResult, stopsResult] =
+    await Promise.all([
+      listAssignments(),
+      listRoutes(),
+      listStudentsForAssignment(),
+      listRouteStopsForAssignment(),
+    ])
 
   if (!assignmentsResult.success) {
     return (
@@ -32,23 +37,8 @@ export async function AssignmentsContent({ locale, dictionary }: Props) {
     )
   }
 
-  // Fetch students + stops grouped by route for the picker. Scoped by tenant.
-  const { schoolId } = await getTenantContext()
-  const [students, allStops] = schoolId
-    ? await Promise.all([
-        db.student.findMany({
-          where: { schoolId },
-          select: { id: true, firstName: true, lastName: true },
-          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-          take: 500,
-        }),
-        db.routeStop.findMany({
-          where: { schoolId },
-          select: { id: true, name: true, stopOrder: true, routeId: true },
-          orderBy: { stopOrder: "asc" },
-        }),
-      ])
-    : [[], []]
+  const students = studentsResult.success ? studentsResult.data : []
+  const allStops = stopsResult.success ? stopsResult.data : []
 
   const stopsByRoute = allStops.reduce<
     Record<string, { id: string; name: string; stopOrder: number }[]>

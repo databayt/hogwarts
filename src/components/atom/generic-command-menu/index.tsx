@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { kindIconMap } from "./kind-icon-map"
+import { getKindLabel, SpotlightResultRow } from "./result-renderer"
 import {
+  buildSpotlightCategories,
   GLASS,
-  SPOTLIGHT_CATEGORIES,
   SpotlightBar,
   SpotlightCategories,
   SpotlightCategoryIcons,
@@ -28,8 +30,14 @@ import {
   SpotlightList,
   type SpotlightCategoryId,
 } from "./spotlight-dialog"
-import type { SearchConfig, SearchContext, SearchItem } from "./types"
+import type {
+  SearchConfig,
+  SearchContext,
+  SearchItem,
+  SpotlightResult,
+} from "./types"
 import { useRecentItems } from "./use-recent-items"
+import { useSpotlightSearch } from "./use-spotlight-search"
 import { filterByQuery, filterByRole } from "./utils"
 
 interface GenericCommandMenuProps extends DialogProps {
@@ -59,13 +67,49 @@ export function GenericCommandMenu({
   // Ref to read showDropdown in callbacks without stale closures
   const showDropdownRef = React.useRef(false)
 
-  // Get translations
+  // Get translations — `commandMenu` carries placeholder, category labels,
+  // group names, and theme labels. Every label has a sensible English
+  // fallback so the menu still renders during dictionary hydration.
   const commandMenuDict = dictionary?.commandMenu as
     | Record<string, string>
     | undefined
-  const basePlaceholder = "Spotlight Search"
+  const basePlaceholder =
+    commandMenuDict?.placeholder || "Search students, teachers, classes…"
   const emptyMessage =
     config.emptyMessage || commandMenuDict?.noResults || "No results found."
+
+  // Dictionary-driven category buttons (Pages / Actions / Settings / Theme).
+  // Memoized so the array identity is stable across renders that don't
+  // touch the dictionary — important for the AnimatePresence siblings.
+  const categories = React.useMemo(
+    () => buildSpotlightCategories(commandMenuDict),
+    [commandMenuDict]
+  )
+
+  // Dynamic entity search (students, teachers, etc.) — only fires when the
+  // dialog is open, the query is ≥ 2 chars, and we have a tenant context.
+  // The hook handles its own debounce + transition + cancellation.
+  const dynamicLocale =
+    context?.locale === "ar" || context?.locale === "en"
+      ? context.locale
+      : undefined
+  const {
+    groups: dynamicGroups,
+    isPending: dynamicPending,
+    debouncedQuery,
+  } = useSpotlightSearch({
+    query,
+    schoolId: context?.schoolId,
+    locale: dynamicLocale,
+    enabled: open,
+  })
+
+  // Translated entity-kind labels (Student / طالب / …) for the kind chip.
+  const kindLabels =
+    (commandMenuDict?.kinds as Record<string, string> | undefined) ?? {}
+  const searchingHint = commandMenuDict?.searchingHint ?? "Searching…"
+  const tooShortHint = commandMenuDict?.tooShortHint ?? ""
+  const noResultsHint = commandMenuDict?.noResultsHint ?? ""
 
   // Whether dropdown should be visible (intent)
   const showDropdown = query.length > 0 || activeCategory !== null
@@ -204,11 +248,27 @@ export function GenericCommandMenu({
           id: item.id,
           title: item.title,
           href: item.href,
+          kind: item.kind,
         })
         runCommand(() => router.push(item.href as string))
       } else if (item.action) {
         runCommand(item.action)
       }
+    },
+    [addRecentItem, runCommand, router]
+  )
+
+  // Handle dynamic-result selection. The result row already prepends locale
+  // to `href`; persist to recents with the kind so the icon survives reload.
+  const handleDynamicResultSelect = React.useCallback(
+    (result: SpotlightResult) => {
+      addRecentItem({
+        id: `dyn-${result.kind}-${result.id}`,
+        title: result.label,
+        href: result.href,
+        kind: result.kind,
+      })
+      runCommand(() => router.push(result.href))
     },
     [addRecentItem, runCommand, router]
   )
@@ -298,7 +358,7 @@ export function GenericCommandMenu({
                 />
                 {(() => {
                   const hoveredCat = hoveredCategory
-                    ? SPOTLIGHT_CATEGORIES.find((c) => c.id === hoveredCategory)
+                    ? categories.find((c) => c.id === hoveredCategory)
                     : null
                   if (!hoveredCat || query) return null
                   return (
@@ -321,30 +381,62 @@ export function GenericCommandMenu({
                     <SpotlightCategories
                       activeCategory={activeCategory}
                       onSelect={handleCategorySelect}
+                      categories={categories}
                     />
                     <SpotlightList>
                       <SpotlightEmpty>{emptyMessage}</SpotlightEmpty>
 
-                      {/* Recent items */}
+                      {/* Recent items — entity recents keep their kind icon */}
                       {shouldShowGroup("navigation") &&
                         filteredRecent.length > 0 && (
                           <SpotlightGroup>
-                            {filteredRecent.map((item) => (
-                              <SpotlightItem
-                                key={item.id}
-                                value={item.title}
-                                onSelect={() => handleItemSelect(item)}
-                              >
-                                <div data-slot="icon-wrapper">
-                                  <Clock className="size-5" />
-                                </div>
-                                {item.title}
-                              </SpotlightItem>
-                            ))}
+                            {filteredRecent.map((item) => {
+                              const KindIcon = item.kind
+                                ? kindIconMap[item.kind]
+                                : Clock
+                              return (
+                                <SpotlightItem
+                                  key={item.id}
+                                  value={item.title}
+                                  onSelect={() => handleItemSelect(item)}
+                                >
+                                  <div data-slot="icon-wrapper">
+                                    <KindIcon className="size-5" />
+                                  </div>
+                                  <span dir="auto">{item.title}</span>
+                                </SpotlightItem>
+                              )
+                            })}
                           </SpotlightGroup>
                         )}
 
-                      {/* Navigation items */}
+                      {/* Dynamic entity results (students, teachers, …) —
+                          only when the user typed ≥2 chars. Pre-empt empty
+                          state with a "Searching…" hint while in flight. */}
+                      {shouldShowGroup("navigation") &&
+                        debouncedQuery.trim().length >= 2 &&
+                        dynamicPending &&
+                        dynamicGroups.length === 0 && (
+                          <div className="text-muted-foreground/60 px-5 py-3 text-xs">
+                            {searchingHint}
+                          </div>
+                        )}
+                      {shouldShowGroup("navigation") &&
+                        dynamicGroups.map((group) => (
+                          <SpotlightGroup key={`dyn-${group.kind}`}>
+                            {group.results.map((r) => (
+                              <SpotlightResultRow
+                                key={`${group.kind}-${r.id}`}
+                                result={r}
+                                kindLabel={getKindLabel(kindLabels, group.kind)}
+                                locale={context?.locale ?? "en"}
+                                onSelect={handleDynamicResultSelect}
+                              />
+                            ))}
+                          </SpotlightGroup>
+                        ))}
+
+                      {/* Static navigation links (sidebar pages) */}
                       {shouldShowGroup("navigation") &&
                         filteredNavigation.length > 0 && (
                           <SpotlightGroup>
@@ -413,6 +505,7 @@ export function GenericCommandMenu({
                   activeCategory={activeCategory}
                   onSelect={handleCategorySelect}
                   onHover={setHoveredCategory}
+                  categories={categories}
                 />
               )}
             </AnimatePresence>

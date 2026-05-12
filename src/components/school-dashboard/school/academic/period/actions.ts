@@ -19,7 +19,7 @@ import {
   type PeriodUpdateInput,
 } from "./validation"
 
-const ACADEMIC_PATH = "/school/academic"
+const ACADEMIC_PATH = "/school/configuration/academic"
 
 // Helper to convert time string to Date
 function timeStringToDate(timeStr: string): Date {

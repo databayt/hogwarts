@@ -1,13 +1,13 @@
 ---
 title: "Internationalization"
-description: "Complete guide to internationalization with Arabic (RTL) and English (LTR) support"
+description: "Architecture reference for i18n with Arabic (RTL) and English (LTR) — locales, routing, single-language storage, RTL CSS, client hooks."
 ---
 
 ## Overview
 
-This application provides full internationalization support with Arabic (RTL) as the default language alongside English (LTR). The system handles both **static UI translations** and **single-language user-generated content with on-demand translation**.
+This is the architecture reference for the i18n system. For adoption patterns (form labels, selects, validation, toasts, server-action errors) see [Translation](/docs/translation).
 
-> **Current Status**: The i18n infrastructure is solid (5,600+ dictionary keys, Google Translate API + DB caching, ValidationHelper/ToastHelper/ErrorHelper classes). The gap is adoption in the interaction layer (forms, selects, validation, toasts, server errors). See [Translation Progress](/docs/translation) for the full coverage tracker, per-URL status, and priority list.
+The application supports Arabic (RTL, default) and English (LTR). The system handles **static UI translations** via dictionary JSON and **single-language user-generated content with on-demand translation** via Google Translate + DB cache.
 
 ### Supported Languages
 
@@ -73,11 +73,11 @@ All user-generated content uses **single-language storage** with a `lang` field.
 
 ### Rules
 
-1. **Generic field names only** -- `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
-2. **`lang` field** -- Every content model has `lang String @default("ar")` indicating the stored language
-3. **On-demand translation** -- Use `getDisplayText()` from `@/lib/content-display` to translate at display time
-4. **TranslationCache** -- Translated strings are cached in the database to avoid repeated API calls
-5. **School's preferred language** -- `School.preferredLanguage` determines the default storage language
+1. **Generic field names only** — `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
+2. **`lang` field** — Every content model has `lang String @default("ar")` indicating the stored language
+3. **On-demand translation** — Use `getDisplayText()` from `@/lib/content-display` to translate at display time
+4. **TranslationCache** — Translated strings are cached in the database to avoid repeated API calls
+5. **School's preferred language** — `School.preferredLanguage` determines the default storage language
 
 ### Schema Pattern
 
@@ -103,32 +103,9 @@ const title = await getDisplayText(announcement.title, "ar", "en", schoolId)
 const title = await getDisplayText(announcement.title, "ar", "ar", schoolId)
 ```
 
-### Form Pattern
+### Migration from legacy bilingual fields
 
-Forms collect content in a single language. The `lang` field is set based on the school's preferred language or the current locale:
-
-```tsx
-"use client"
-
-import { useForm } from "react-hook-form"
-
-interface ContentFormData {
-  title: string
-  body: string
-}
-
-export function ContentForm({ lang }: { lang: string }) {
-  const form = useForm<ContentFormData>()
-
-  return (
-    <form>
-      <input type="hidden" name="lang" value={lang} />
-      <Input {...form.register("title")} placeholder="Title" />
-      <Textarea {...form.register("body")} placeholder="Content" />
-    </form>
-  )
-}
-```
+The migration off `titleEn`/`titleAr` patterns to single-language storage is complete. New code must use generic field names (`title`, `body`, `name`) plus a `lang` field. CLAUDE.md gotcha #12 enforces this. For the historical SQL and adoption tracker, see [Translation](/docs/translation).
 
 ### Infrastructure
 
@@ -180,23 +157,11 @@ export function isRTL(locale: Locale): boolean {
 }
 ```
 
----
+### Dictionary Loaders
 
-## Dictionary System
-
-### Loading Dictionaries
-
-Location: `src/components/internationalization/dictionaries.ts`
-
-The system uses **route-specific dictionary loaders** for optimized bundle sizes:
+Route-scoped dictionary loaders keep bundle size down. The full type and per-route helpers live in `src/components/internationalization/dictionaries.ts`:
 
 ```ts
-// Marketing pages - lightweight
-// Platform core - general + school + operator
-
-// Finance pages - includes finance module
-
-// Full dictionary - all translations (use sparingly)
 import {
   getDictionary,
   getFinanceDictionary,
@@ -205,45 +170,7 @@ import {
 } from "@/components/internationalization/dictionaries"
 ```
 
-### Translation Files Structure
-
-```
-src/components/internationalization/
-├── config.ts              # Locale config, types
-├── dictionaries.ts        # Dictionary loaders
-├── use-locale.ts          # Client hooks
-├── use-dictionary.ts      # Dictionary hook
-├── language-switcher.tsx  # UI component
-├── en.json                # General English
-├── ar.json                # General Arabic
-├── school-en.json         # School module (English)
-├── school-ar.json         # School module (Arabic)
-├── operator-en.json       # Operator module
-├── operator-ar.json
-└── dictionaries/
-    ├── en/
-    │   ├── finance.json
-    │   ├── library.json
-    │   └── ...
-    └── ar/
-        ├── finance.json
-        ├── library.json
-        └── ...
-```
-
-### Type-Safe Usage
-
-```tsx
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-
-interface Props {
-  dictionary: Dictionary["school"]
-}
-
-export function StudentList({ dictionary }: Props) {
-  return <h1>{dictionary.students.title}</h1>
-}
-```
+For form / select / validation / toast / server-action adoption patterns, see [Translation](/docs/translation).
 
 ---
 
@@ -271,10 +198,10 @@ Always use **logical CSS properties** instead of physical directions. These auto
 **Example:**
 
 ```tsx
-// ❌ Wrong - physical properties don't adapt
+// Wrong - physical properties don't adapt
 <div className="ml-4 pr-2 text-left border-l-2">
 
-// ✅ Correct - logical properties adapt to RTL/LTR
+// Correct - logical properties adapt to RTL/LTR
 <div className="ms-4 pe-2 text-start border-s-2">
 ```
 
@@ -326,7 +253,7 @@ Only use `rtl:` variants for cases that **cannot** be solved with logical proper
 
 ## Client-Side Hooks
 
-### useLocale Hook
+### useLocale
 
 ```tsx
 "use client"
@@ -345,7 +272,7 @@ export function MyComponent() {
 }
 ```
 
-### useDictionary Hook
+### useDictionary
 
 ```tsx
 "use client"
@@ -361,7 +288,7 @@ export function ClientComponent() {
 }
 ```
 
-### useSwitchLocaleHref Hook
+### useSwitchLocaleHref
 
 ```tsx
 "use client"
@@ -389,14 +316,12 @@ export function LanguageSwitcher() {
 ### Number Formatting
 
 ```tsx
-// Format with locale-aware separators
 const formatter = new Intl.NumberFormat(locale, {
   style: "decimal",
   maximumFractionDigits: 2,
 })
 formatter.format(1234567) // ar: "١٬٢٣٤٬٥٦٧" | en: "1,234,567"
 
-// Currency formatting
 const currencyFormatter = new Intl.NumberFormat(locale, {
   style: "currency",
   currency: locale === "ar" ? "SAR" : "USD",
@@ -414,7 +339,6 @@ const dateFormatter = new Intl.DateTimeFormat(locale, {
 })
 dateFormatter.format(new Date()) // ar: "١ ديسمبر ٢٠٢٥" | en: "December 1, 2025"
 
-// Relative time
 const relativeFormatter = new Intl.RelativeTimeFormat(locale, {
   numeric: "auto",
 })
@@ -448,80 +372,24 @@ arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 
 ### UI Guidelines
 
-1. **Use logical properties** - `ms-`, `me-`, `ps-`, `pe-` instead of `ml-`, `mr-`, etc.
-2. **Mirror directional icons** - Arrows and chevrons should flip in RTL
-3. **Test both languages** - Always verify layouts in ar and en
-4. **Numbers stay Western** - Unless explicitly localized for display
+1. **Use logical properties** — `ms-`, `me-`, `ps-`, `pe-` instead of `ml-`, `mr-`, etc.
+2. **Mirror directional icons** — Arrows and chevrons should flip in RTL
+3. **Test both languages** — Always verify layouts in ar and en
+4. **Numbers stay Western** — Unless explicitly localized for display
 
 ### Content Guidelines
 
-1. **Avoid string concatenation** - Use full-sentence translations
-2. **Generic field names only** - `title`, `body`, `name` (never `titleEn`/`titleAr`)
-3. **Single-language storage** - Store in one language with a `lang` field
-4. **On-demand translation** - Use `getDisplayText()` for display-time translation
+1. **Avoid string concatenation** — Use full-sentence translations
+2. **Generic field names only** — `title`, `body`, `name` (never `titleEn`/`titleAr`)
+3. **Single-language storage** — Store in one language with a `lang` field
+4. **On-demand translation** — Use `getDisplayText()` for display-time translation
 
 ### Typography
 
 - **Arabic font**: Rubik (system default)
-- **English font**: Inter
+- **English font**: GeistSans
 - **Line height**: 1.8 recommended for Arabic
-- **No font-size hardcoding** - Use semantic HTML (h1-h6, p, small)
-
-### Testing Checklist
-
-- [ ] All flows tested in ar/en
-- [ ] Logical properties used (no `ml-*`, `mr-*`, etc.)
-- [ ] Icons mirror correctly
-- [ ] Dates/numbers localized
-- [ ] Screen readers handle language
-- [ ] Keyboard navigation works
-- [ ] No text overflow
-
----
-
-## Migration Guide
-
-### Adding the `lang` Field to Legacy Models
-
-If a model stores content without a `lang` field, add one and detect the stored language:
-
-```sql
--- Add lang field with default
-ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "lang" TEXT DEFAULT 'ar';
-
--- Detect and update language for existing rows
-UPDATE "announcements"
-SET "lang" = 'ar'
-WHERE "title" ~ '[\u0600-\u06FF]';
-
-UPDATE "announcements"
-SET "lang" = 'en'
-WHERE "title" !~ '[\u0600-\u06FF]';
-```
-
-### Migrating from Dual Fields to Single-Language
-
-If any legacy code uses `titleEn`/`titleAr` patterns, migrate to the single-language storage model:
-
-```ts
-import { detectLanguage } from "@/lib/i18n-content"
-
-async function migrateToDualToSingle() {
-  const items = await db.announcement.findMany()
-
-  for (const item of items) {
-    // Keep the primary language content, detect which one it is
-    const title = item.titleAr || item.titleEn
-    const body = item.bodyAr || item.bodyEn
-    const lang = item.titleAr ? "ar" : "en"
-
-    await db.announcement.update({
-      where: { id: item.id },
-      data: { title, body, lang },
-    })
-  }
-}
-```
+- **No font-size hardcoding** — Use semantic HTML (h1-h6, p, small)
 
 ---
 
@@ -539,7 +407,8 @@ src/
     ar.json                # General Arabic translations
     school-*.json          # School module translations
     operator-*.json        # Operator module translations
-    dictionaries/          # Feature-specific translations
+    helpers/index.ts       # ValidationHelper, ToastHelper, ErrorHelper
+    dictionaries/
       en/
       ar/
   lib/
@@ -547,7 +416,6 @@ src/
     google-translate.ts    # Google Translate API client
     translate.ts           # Translation with caching
     auto-translate.ts      # Auto-translation utilities
-    i18n-content.ts        # Legacy i18n content utilities
   styles/
     globals.css            # Base styles with logical properties
 ```
@@ -558,10 +426,11 @@ src/
 
 ### Internal
 
-- `src/lib/content-display.ts` - `getDisplayText()` for on-demand translation
-- `src/lib/google-translate.ts` - Google Translate API client
-- `src/lib/translate.ts` - Translation with database caching
-- `src/components/internationalization/` - Full i18n implementation
+- [Translation](/docs/translation) — adoption patterns, coverage tracker
+- `src/lib/content-display.ts` — `getDisplayText()` for on-demand translation
+- `src/lib/google-translate.ts` — Google Translate API client
+- `src/lib/translate.ts` — Translation with database caching
+- `src/components/internationalization/` — Full i18n implementation
 
 ### External
 

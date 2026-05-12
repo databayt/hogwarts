@@ -29,10 +29,10 @@ type ExtendedSession = {
 
 interface Props {
   searchParams: Promise<SearchParams>
-  lang?: Locale
+  lang: Locale
 }
 
-export async function InvoiceContent({ searchParams, lang = "ar" }: Props) {
+export async function InvoiceContent({ searchParams, lang }: Props) {
   const dictionary = await getDictionary(lang)
   const fd = (dictionary as any)?.finance
   const il = fd?.invoiceList as Record<string, string> | undefined
@@ -76,7 +76,9 @@ export async function InvoiceContent({ searchParams, lang = "ar" }: Props) {
   let total = 0
 
   try {
-    const result = await getInvoicesWithFilters(sp)
+    // Pass `lang` so the action can translate `client_name` (stored in school's
+    // preferredLanguage) to the viewer's locale via Google Translate + cache.
+    const result = await getInvoicesWithFilters({ ...sp, lang })
     if (result.success) {
       data = result.data
       total = result.total ?? 0
@@ -87,7 +89,12 @@ export async function InvoiceContent({ searchParams, lang = "ar" }: Props) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <InvoiceTable initialData={data} total={total} perPage={sp.perPage} />
+      <InvoiceTable
+        initialData={data}
+        total={total}
+        perPage={sp.perPage}
+        lang={lang}
+      />
     </div>
   )
 }

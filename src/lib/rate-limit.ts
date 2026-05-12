@@ -94,6 +94,9 @@ export const RATE_LIMITS = {
   MESSAGE_FILE_UPLOAD: { windowMs: 10 * 60 * 1000, maxRequests: 10 }, // 10 files per 10 minutes
   MESSAGE_REACTION: { windowMs: 60 * 1000, maxRequests: 30 }, // 30 reactions per minute
   MESSAGE_TYPING: { windowMs: 10 * 1000, maxRequests: 3 }, // 3 typing indicators per 10 seconds
+
+  // Transportation geofence webhook (service-account ingestion)
+  GEOFENCE_WEBHOOK: { windowMs: 60 * 1000, maxRequests: 120 }, // 120 events per minute per IP
 } as const
 
 /**

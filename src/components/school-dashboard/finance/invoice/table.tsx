@@ -5,19 +5,23 @@
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import type { Column } from "@tanstack/react-table"
+import { Plus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   confirmDeleteDialog,
   DeleteToast,
   ErrorToast,
 } from "@/components/atom/toast"
+import { Toolbar, ToolbarGroup } from "@/components/atom/toolbar"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { createDraftInvoice } from "@/components/school-dashboard/finance/invoice/wizard/actions"
 import { DataTable } from "@/components/table/data-table"
-import { DataTableToolbar } from "@/components/table/data-table-toolbar"
+import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter"
+import { DataTableViewOptions } from "@/components/table/data-table-view-options"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteInvoice, getInvoicesWithFilters } from "./actions"
@@ -141,6 +145,16 @@ function InvoiceTableInner({
     }
   }, [router, lang])
 
+  // Resolve filterable columns once so the toolbar JSX stays declarative.
+  const invoiceNoCol = table.getColumn("invoice_no")
+  const clientCol = table.getColumn("client_name")
+  const statusCol = table.getColumn("status")
+  const isFiltered = table.getState().columnFilters.length > 0
+
+  const onReset = useCallback(() => {
+    table.resetColumnFilters()
+  }, [table])
+
   return (
     <DataTable
       table={table}
@@ -149,21 +163,87 @@ function InvoiceTableInner({
       isLoading={isLoading}
       onLoadMore={handleLoadMore}
     >
-      <DataTableToolbar table={table}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 rounded-full p-0"
-          onClick={handleCreate}
-          aria-label={il?.createInvoice || "Create Invoice"}
-          title={il?.createInvoice || "Create Invoice"}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </DataTableToolbar>
+      {/* Atom-based toolbar — start group holds filters, end group holds view + create */}
+      <Toolbar className="p-1">
+        <ToolbarGroup>
+          {invoiceNoCol && (
+            <TextFilterInput
+              column={invoiceNoCol}
+              placeholder={ic?.invoiceHash || "Invoice #"}
+            />
+          )}
+          {clientCol && (
+            <TextFilterInput
+              column={clientCol}
+              placeholder={ic?.client || "Client"}
+            />
+          )}
+          {statusCol && (
+            <DataTableFacetedFilter
+              column={statusCol}
+              title={ic?.status || "Status"}
+              options={
+                (
+                  statusCol.columnDef.meta as {
+                    options?: Array<{ label: string; value: string }>
+                  }
+                )?.options ?? []
+              }
+            />
+          )}
+          {isFiltered && (
+            <Button
+              aria-label={il?.reset || "Reset"}
+              variant="outline"
+              size="sm"
+              className="h-9 border-dashed"
+              onClick={onReset}
+            >
+              <X className="h-4 w-4" />
+              {il?.reset || "Reset"}
+            </Button>
+          )}
+        </ToolbarGroup>
+
+        <ToolbarGroup position="end">
+          <DataTableViewOptions table={table} />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            onClick={handleCreate}
+            aria-label={il?.createInvoice || "Create Invoice"}
+            title={il?.createInvoice || "Create Invoice"}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </ToolbarGroup>
+      </Toolbar>
     </DataTable>
   )
 }
 
 export const InvoiceTable = React.memo(InvoiceTableInner)
+
+// Local helper — keeps the text filter input markup in one place and at the
+// platform-standard h-9. Mirrors the `text` variant rendering in
+// `data-table-toolbar.tsx` without forcing this block back onto that component.
+interface TextFilterInputProps<TData> {
+  column: Column<TData, unknown>
+  placeholder: string
+}
+
+function TextFilterInput<TData>({
+  column,
+  placeholder,
+}: TextFilterInputProps<TData>) {
+  return (
+    <Input
+      placeholder={placeholder}
+      value={(column.getFilterValue() as string) ?? ""}
+      onChange={(event) => column.setFilterValue(event.target.value)}
+      className="h-9 w-40 lg:w-56"
+    />
+  )
+}

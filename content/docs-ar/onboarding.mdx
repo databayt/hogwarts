@@ -1,0 +1,152 @@
+---
+title: التهيئة (Onboarding)
+description: معالج متعدّد الخطوات لتسجيل المدرسة وتكوينها وإعدادها التجاري. 15 خطوة في 3 مجموعات، ~166 ملف.
+---
+
+يقود نظام التهيئة المدارس الجديدة عبر التسجيل والتكوين والإعداد التجاري. نمط مرآة، ~166 ملف، 15 خطوة فعّالة في 3 مجموعات، يقودها `WizardLayout`. وقت الإنجاز المعتاد: 10–30 دقيقة.
+
+## الخطوات
+
+### المجموعة 1 — المعلومات الأساسية
+
+| الخطوة     | المسار          | إلزامية | قاعدة البيانات                          |
+| ---------- | --------------- | ------- | --------------------------------------- |
+| عن المدرسة | `/about-school` | لا      | ترحيب ثابت                              |
+| العنوان    | `/title`        | نعم     | `School.name`                           |
+| الوصف      | `/description`  | نعم     | `schoolType`, `schoolLevel`, `planType` |
+| الموقع     | `/location`     | نعم     | `address`, `city`, `state`, `country`   |
+| ما يميّزك  | `/stand-out`    | لا      | ثابت                                    |
+
+### المجموعة 2 — إعداد المدرسة
+
+| الخطوة        | المسار          | إلزامية | قاعدة البيانات                             |
+| ------------- | --------------- | ------- | ------------------------------------------ |
+| السعة         | `/capacity`     | نعم     | `maxStudents`, `maxTeachers`, `maxClasses` |
+| العلامة       | `/branding`     | لا      | `primaryColor`, `borderRadius`, `shadow`   |
+| الاستيراد     | `/import`       | لا      | إدخال جماعي (CSV / Excel)                  |
+| إنهاء الإعداد | `/finish-setup` | لا      | مراجعة ثابتة                               |
+
+خطوة `schedule` معرَّفة في `OnboardingStep` بمجلد مكوّن خاص بها لكنها **ليست** ضمن التنقّل الفعّال. تعيش عند `order: 5.5` في `config.ts` تمهيداً لتفعيلها لاحقاً.
+
+### المجموعة 3 — التجاري والقانوني
+
+| الخطوة        | المسار        | إلزامية | قاعدة البيانات                                                |
+| ------------- | ------------- | ------- | ------------------------------------------------------------- |
+| الانضمام      | `/join`       | نعم     | `User`                                                        |
+| الإظهار       | `/visibility` | لا      | `School.isPublished`                                          |
+| السعر         | `/price`      | نعم     | `tuitionFee`, `registrationFee`, `applicationFee`, `currency` |
+| الخصم         | `/discount`   | لا      | نموذج `Discount`                                              |
+| القانوني      | `/legal`      | نعم     | `LegalConsent`                                                |
+| النطاق الفرعي | `/subdomain`  | لا      | `School.domain`                                               |
+
+بعد إنهاء كل الخطوات يصل المستخدم إلى `/congratulations` لإعادة توجيه ذكية (لوحة النطاق الفرعي للمدرسة أو النطاق الرئيسي بحسب حالة الجلسة).
+
+ترتيب الخطوات الفعّال هو `ONBOARDING_CONFIG` في `src/components/form/footer.tsx`. المرجع الموثوق للبيانات الوصفية (الوسوم، التحقق، المجموعة، الترتيب) هو `ONBOARDING_STEPS` في `src/components/onboarding/config.ts`.
+
+## مصافحة المصادقة
+
+تدفّق من أربع مراحل:
+
+1. **البدء** — مستخدم غير مصادَق يزور `/get-started` أو `/onboarding`. إجراء `start-onboarding` يحفظ النية في cookie ويعيد التوجيه إلى `/login`.
+2. **المصادقة** — تسجيل دخول قياسي. عنوان callback يعيد التوجيه إلى `/onboarding`.
+3. **التزويد** — `initializeSchoolSetup()` يستدعي `ensureUserSchool()` (`src/lib/school-access.ts`) — `db.$transaction` ذرّي ينشئ صف `School`، و`SchoolMember` (يربط المستخدم كـ ADMIN)، ويزرع `YearLevel`s افتراضية. عملية idempotent.
+4. **التحديث + إعادة التوجيه** — `_sessionRefreshRequired: true` يُطلق إعادة جلب `/api/auth/session` من العميل؛ `_redirect` يرسل إلى الخطوة التالية.
+
+الملكية مفروضة عبر `requireSchoolOwnership(id)` على تحميل كل خطوة. الوصول العابر للمستأجرين يرفع `TenantError`.
+
+## التكامل مع تعدّد المستأجرين
+
+- **توجيه النطاق الفرعي** — `/onboarding` وأبناؤه يعيشون على النطاق الرئيسي (`ed.databayt.org`)، لا على نطاق فرعي. تخصيص النطاق الفرعي يحدث في خطوة Subdomain.
+- **تحديد نطاق قاعدة البيانات** — كل قراءة تستخدم `requireSchoolOwnership(id)` أولاً، ثم استعلامات محدَّدة النطاق بـ `schoolId`.
+- **`schoolId` في الجلسة** — JWT يحمل `schoolId` بعد الخطوة 1؛ الخطوات اللاحقة تثق به بعد إعادة التحقق.
+
+## التحقق
+
+كل خطوة لها schema من Zod مرافقة لمكوّنها. تستخدم الـ schemas نمط مصنع i18n — نفس الـ schema تُنتج رسائل خطأ بالعربية أو الإنجليزية بحسب شريحة القاموس.
+
+```typescript
+import { createTitleSchema } from "@/components/onboarding/title/validation"
+
+const schema = createTitleSchema(dictionary)
+const result = schema.safeParse(input)
+```
+
+`validation.ts` الجذري يصدّر `validateStep(step, data, dictionary)` و`getRequiredFieldsForStep(step)` لتحقّق مشترك واعٍ بالخطوات.
+
+## التزويد التلقائي
+
+عندما يعمل `completeOnboarding()` عند خطوة legal، تُعلَّم المدرسة كنشطة وتنشئ سلسلة تزويد من 5 خطوات بنية تحتية أكاديمية. كل خطوة ملفوفة في `try/catch` لئلا يحجب فشل واحد البقية.
+
+المصدر: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`.
+
+| الخطوة                          | تنشئ                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `setupDefaultsForSchool()`      | YearLevels (8 / 6 / 14 بحسب مستوى المدرسة)، 6 Departments، 9 ScoreRanges |
+| `setupCatalogForSchool()`       | جسور Subject / chapter / lesson من الكتالوج العام                        |
+| `setupTermsForSchool()`         | فصول افتراضية للسنة الأكاديمية                                           |
+| `setupRolesForSchool()`         | قوالب صلاحيات للأدوار الـ 8                                              |
+| `setupNotificationsForSchool()` | تفضيلات إشعار افتراضية لدور ADMIN                                        |
+
+`setupCatalogForSchool` يحلّ المنهج عبر `inferCurriculum()`:
+
+| الأولوية | الاستراتيجية                       | مثال                               |
+| -------- | ---------------------------------- | ---------------------------------- |
+| 1        | نوع مدرسة international → `us-k12` | أي بلد + `international`           |
+| 2        | تطابق دقيق للبلد                   | `US` → `us-k12`, `SD` → `national` |
+| 3        | بلد غير مُربط → `us-k12`           | `JP`, `KE`, …                      |
+
+## مسارات API
+
+| المسار                            | الطريقة | الغرض                                                                           |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `/api/onboarding/create-school`   | POST    | إنشاء مدرسة ذرّي idempotent؛ يعالج سباق انتهاك unique لـ P2002                  |
+| `/api/onboarding/validate-access` | POST    | فحص وصول مسبق؛ تزويد تلقائي؛ يعيد redirect عند عدم التطابق                      |
+| `/api/onboarding/extract`         | POST    | استخراج وثائق بالذكاء الاصطناعي (10 ميجابايت كحد أقصى؛ JPEG / PNG / WebP / PDF) |
+
+## Server actions
+
+في `src/components/onboarding/actions.ts`:
+
+| الإجراء                              | الغرض                                                    |
+| ------------------------------------ | -------------------------------------------------------- |
+| `initializeSchoolSetup()`            | ينشئ أو يجلب مدرسة للمستخدم الحالي؛ يعيد `_redirect`     |
+| `getListing(id)`                     | جلب المدرسة مع التحقق من الملكية                         |
+| `updateListing(id, data)`            | تحديث حقول لخطوة                                         |
+| `getSchoolSetupStatus(schoolId)`     | نسبة الإنجاز (6 فحوص)                                    |
+| `reserveSubdomainForSchool(id, sub)` | حجز نطاق فرعي (يفوّض إلى `src/lib/subdomain-actions.ts`) |
+| `getCurrentUserSchool()`             | يعيد `schoolId` للمستخدم الحالي                          |
+| `getUserSchools()`                   | يسرد المدارس المملوكة أو المرتبطة بالمستخدم الحالي       |
+| `proceedToTitle(schoolId)`           | يتحقق من الملكية ويعيد التوجيه إلى خطوة about-school     |
+
+## الملفات المفتاحية
+
+| المسار                                           | الغرض                                      |
+| ------------------------------------------------ | ------------------------------------------ |
+| `src/app/[lang]/onboarding/[id]/[step]/page.tsx` | صفحة كل خطوة (15 مساراً)                   |
+| `src/components/onboarding/actions.ts`           | Server actions                             |
+| `src/components/onboarding/config.ts`            | تكوين الخطوات (مرجع موثوق)                 |
+| `src/components/onboarding/types.ts`             | `OnboardingStep`, `OnboardingSchoolData`   |
+| `src/components/onboarding/validation.ts`        | Zod schemas جذرية                          |
+| `src/components/onboarding/use-listing.tsx`      | سياق `ListingProvider`                     |
+| `src/components/onboarding/use-onboarding.ts`    | hook التنقّل + التحقق                      |
+| `src/components/onboarding/auth-helpers.ts`      | `getAuthContext`, `requireSchoolOwnership` |
+| `src/components/form/footer.tsx`                 | `FormFooter` + `ONBOARDING_CONFIG`         |
+| `src/lib/school-access.ts`                       | معاملة `ensureUserSchool()` الذرّية        |
+| `src/lib/catalog-setup.ts`                       | سلسلة التزويد                              |
+
+## استكشاف الأخطاء
+
+| العَرَض                               | السبب                                  | الحل                                                             |
+| ------------------------------------- | -------------------------------------- | ---------------------------------------------------------------- |
+| البناء يعلَق عند "Environments: .env" | أخطاء TypeScript في مكوّنات onboarding | شغّل `pnpm tsc --noEmit`                                         |
+| الجلسة تفتقد `schoolId`               | لم تُحدَّث الجلسة بعد المعاملة الذرّية | اجلب `/api/auth/session` بعد `_sessionRefreshRequired: true`     |
+| رفض وصول عابر للمستأجرين              | مستخدم يصل إلى مدرسة لا يملكها         | `requireSchoolOwnership(id)` يرمي `TenantError`                  |
+| النطاق الفرعي محجوز سلفاً             | مدرسة أخرى حجزته                       | الإجراء يعيد `errorCode: "DOMAIN_TAKEN"`                         |
+| بيانات النموذج لا تثبت                | غياب `revalidatePath()` بعد التعديل    | كل إجراءات التحديث تستدعي `revalidatePath("/onboarding")`        |
+| خاصية قاموس غير موجودة                | مفتاح ترجمة مفقود                      | استخدم optional chaining: `dictionary?.onboarding?.title?.label` |
+
+## انظر أيضاً
+
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — مصافحة المصادقة، سياق المستأجر
+- [الأنماط](/ar/docs/pattern) — نمط المرآة، أعراف الملفات
+- [المصادقة](/en/docs/authentication) — تدفّق تسجيل الدخول

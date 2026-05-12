@@ -1,45 +1,39 @@
 ---
 title: Content
-description: Canonical patterns for writing content.tsx in the mirror pattern.
+description: The composition layer the route's page.tsx delegates to.
 ---
 
-`content.tsx` is the file that the route's `page.tsx` delegates to. It owns data fetching (server) or hook orchestration (client) and composes children. Pages stay thin — auth + tenant + render `<XxxContent />`. Real logic lives in `content.tsx`.
+`content.tsx` owns data fetching (server) or hook orchestration (client) and composes children. Pages stay thin (auth + tenant + render); real logic lives here.
 
 ## Two flavours
 
-- **Server content (~111 files).** Async function. Fetches via `queries.ts` or `db`. No `"use client"`. Passes pre-computed data to client sub-components (`table.tsx`, `form.tsx`).
-- **Client content (~114 files).** `"use client"`. Uses hooks, state, browser APIs. Fetches via server actions from `actions.ts`.
+| Flavour        | When                                                        |
+| -------------- | ----------------------------------------------------------- |
+| Server content | Async function, fetches via `queries.ts`, no `"use client"` |
+| Client content | `"use client"`, hooks/state, fetches via server actions     |
 
 Decision tree:
 
-| Needs                       | Use                                               |
-| --------------------------- | ------------------------------------------------- |
-| Hooks, events, browser APIs | Client content                                    |
-| Data fetching + composition | Server content                                    |
-| Both                        | Server content that renders client sub-components |
+| Needs                       | Use                                            |
+| --------------------------- | ---------------------------------------------- |
+| Hooks, events, browser APIs | Client content                                 |
+| Data fetching + composition | Server content                                 |
+| Both                        | Server content rendering client sub-components |
 
-## Eight rules
+## Rules
 
-1. **`export default [async] function XxxContent()`.** Named function, default export. Name matches the feature.
-2. **`import type` for type-only imports.** No runtime cost.
-3. **Stay under ~150 lines.** Anything more should split into sub-components.
-4. **Typed dictionary props.** Use `Dictionary["school"]["grades"]`, never `any`. Type the slice.
-5. **All user-facing text comes from the dictionary.** No hardcoded English. No `isArabic ? "..." : "..."` ternaries.
-6. **Use `lang: Locale`, not `locale`.** Stay consistent with `[lang]` route segment.
-7. **Server content extracts queries to `queries.ts` and uses try/catch.** Don't inline Prisma in content.
-8. **Client content fetches via server actions from `actions.ts`.** Don't import `db` from a client component (TypeScript blocks it; the rule is about discipline before the error).
+| #   | Rule                                                                              |
+| --- | --------------------------------------------------------------------------------- |
+| 1   | `export default [async] function XxxContent()`                                    |
+| 2   | `import type` for type-only imports                                               |
+| 3   | Stay under ~150 lines — split sub-components beyond that                          |
+| 4   | Typed dictionary slice (`Dictionary["school"]["grades"]`), never `any`            |
+| 5   | All UI text from the dictionary — no hardcoded strings, no `isArabic ?` ternaries |
+| 6   | Use `lang: Locale`, not `locale`                                                  |
+| 7   | Server content: extract queries to `queries.ts`                                   |
+| 8   | Client content: fetch via server actions from `actions.ts`                        |
 
-## Templates
-
-| Template           | Reference                                           |
-| ------------------ | --------------------------------------------------- |
-| Server listing     | `school-dashboard/listings/students/content.tsx`    |
-| Server dashboard   | `school-dashboard/dashboard/content.tsx`            |
-| Client interactive | `school-dashboard/attendance/manual/content.tsx`    |
-| Server composition | `school-dashboard/profile/content.tsx`              |
-| Client wizard step | `school-marketing/application/personal/content.tsx` |
-
-### Server listing — minimal shape
+## Server listing — canonical shape
 
 ```tsx
 import type { Locale } from "@/components/internationalization/dictionaries"
@@ -65,52 +59,91 @@ export default async function StudentsContent({
 }
 ```
 
-### Client interactive — minimal shape
+## Templates
+
+| Template           | Reference                                           |
+| ------------------ | --------------------------------------------------- |
+| Server listing     | `school-dashboard/listings/students/content.tsx`    |
+| Server dashboard   | `school-dashboard/dashboard/content.tsx`            |
+| Client interactive | `school-dashboard/attendance/manual/content.tsx`    |
+| Server composition | `school-dashboard/profile/content.tsx`              |
+| Client wizard step | `school-marketing/application/personal/content.tsx` |
+
+## Anti-patterns
+
+- Monolith content — files over 300 lines should split into sub-components.
+- `dictionary: any` — type the slice.
+- Dictionary accepted but ignored.
+- Inline Prisma queries — belong in `queries.ts`.
+- Inline `isArabic` ternaries — use the dictionary slice.
+- `db` imports in `page.tsx` — pages stay thin.
+- Wrong `"use client"` — only present when client logic is needed.
+- Inline SVGs — extract to a separate file or icon registry.
+- Duplicate type definitions — share via `types.ts`.
+- Sequential `await` for permission checks — parallelise with `Promise.all`.
+- `console.log` left in.
+
+## Naming
+
+- File: `content.tsx`.
+- Function: `<Feature>Content` PascalCase, default export.
+
+## Client boundary
+
+When `content.tsx` needs interactivity (modals, view toggles, form state), keep `content.tsx` a pure server component and delegate to a sibling `client.tsx` that owns the `"use client"` directive. The server `content.tsx` fetches data and forwards it to `<XxxClient />`; the client component composes interactive leaves (`form.tsx`, `table.tsx`, `detail.tsx`). Use this split only when actually needed — a listing that just renders a server-fetched table doesn't need a client boundary.
 
 ```tsx
 "use client"
 
 import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/types"
 
-import { markAttendance } from "./actions"
+import { TeacherForm } from "./form"
+import { TeachersTable } from "./table"
+import type { TeacherListItem } from "./types"
 
-export default function AttendanceContent({
-  dictionary,
-}: {
-  dictionary: Dictionary["school"]["attendance"]
-}) {
-  const [pending, setPending] = useState(false)
-  // ...
-  return <div>{dictionary.title}</div>
+interface Props {
+  data: TeacherListItem[]
+  dictionary: Dictionary["school"]["teachers"]
+  lang: Locale
+}
+
+export function TeachersClient({ data, dictionary, lang }: Props) {
+  const [showForm, setShowForm] = useState(false)
+  return (
+    <>
+      <Button onClick={() => setShowForm(true)}>{dictionary.add}</Button>
+      <TeachersTable data={data} dictionary={dictionary} lang={lang} />
+      {showForm && (
+        <TeacherForm
+          dictionary={dictionary}
+          onClose={() => setShowForm(false)}
+        />
+      )}
+    </>
+  )
 }
 ```
 
-## Anti-patterns
+The matching server `content.tsx` stays trivial — fetch, then forward.
 
-- **Monolith content** — anything over 300 lines should split. The 893-line `exams/content.tsx`, the 739-line `attendance/analytics`, the 612-line `stream/courses` are the canonical bad examples.
-- **`dictionary: any`** — type the slice. 18+ files do this; fix when you touch them.
-- **Dictionary accepted but ignored** — 8+ files accept `dictionary` and reference zero keys. Either use it or don't accept it.
-- **Inline Prisma queries** — 50+ lines of query logic in `content.tsx` belongs in `queries.ts`.
-- **Inline `isArabic` ternaries** — use the dictionary slice.
-- **`db` imports in `page.tsx`** — pages stay thin. Move to `content.tsx` (server) or `queries.ts`.
-- **Wrong `"use client"`** — only present when client logic is needed.
-- **Inline SVGs** — extract icon paths to a separate file (or use the icon registry).
-- **Duplicate type definitions** — share types via `types.ts`. Don't redeclare `School` in two content files.
-- **Sequential `await` for permission checks** — parallelise with `Promise.all`.
-- **`console.log` left in** — never ship debug output.
+### Boundary roles
 
-## Relationship to siblings
+| File          | Role                                          |
+| ------------- | --------------------------------------------- |
+| `page.tsx`    | Auth + tenant + render `<XxxContent />`       |
+| `content.tsx` | Server, fetches data, renders `<XxxClient />` |
+| `client.tsx`  | Client, manages state, composes leaves        |
+| `form.tsx`    | Client leaf — RHF + Zod, calls server action  |
+| `table.tsx`   | Client leaf — DataTable wrapper               |
+| `actions.ts`  | Server actions called from leaves             |
+| `queries.ts`  | Server reads called from `content.tsx`        |
 
-- `page.tsx` — auth + tenant + `<XxxContent />`. Nothing else.
-- `queries.ts` — server-side database queries that `content.tsx` (server) consumes.
-- `actions.ts` — server actions that `content.tsx` (client) consumes.
-- `form.tsx` / `table.tsx` — client leaves rendered by content.
-- `types.ts` — shared types for the feature.
+## See also
 
-## Naming
-
-- Filename: `content.tsx`. Always.
-- Function: `<Feature>Content` in PascalCase.
-- Default export. Named exports for sub-components only.
+- [Pattern](/docs/pattern)
+- [Page](/docs/page)
+- [Queries](/docs/queries)
+- [Actions](/docs/actions)
