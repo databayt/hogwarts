@@ -89,6 +89,7 @@ import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
+import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -399,6 +400,7 @@ export async function createStudent(
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
+    revalidateSpotlight(schoolId)
 
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -534,6 +536,7 @@ export async function updateStudent(
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
+    revalidateSpotlight(schoolId)
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -660,6 +663,7 @@ export async function deleteStudent(input: {
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
+    revalidateSpotlight(schoolId)
 
     return { success: true, data: undefined }
   } catch (error) {

@@ -20,7 +20,7 @@ import {
   type YearLevelUpdateInput,
 } from "./validation"
 
-const ACADEMIC_PATH = "/school/academic"
+const ACADEMIC_PATH = "/school/configuration/academic"
 
 // ============================================================================
 // Mutations

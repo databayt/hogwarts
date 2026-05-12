@@ -12,17 +12,33 @@ import { Button } from "@/components/ui/button"
 import { CHATBOT_POSITIONS } from "./constant"
 import type { ChatButtonProps } from "./type"
 
+const DEFAULT_AVATAR = asset("/illustrations/robot.png")
+
 export function ChatButton({
   onClick,
   isOpen,
   position = "bottom-right",
   dictionary,
+  schoolLogoUrl,
+  schoolName,
 }: ChatButtonProps) {
   const [shouldInvert, setShouldInvert] = useState(false)
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const rafRef = useRef<number | null>(null)
 
+  // School-branded FAB when a logo is provided; otherwise fall back to the
+  // generic robot illustration. The dark-section invert hack is skipped for
+  // school logos because tenant logos are arbitrary and inverting a brand
+  // mark looks broken.
+  const usingSchoolLogo = Boolean(schoolLogoUrl)
+  const avatarSrc = schoolLogoUrl ?? DEFAULT_AVATAR
+  const avatarAlt = usingSchoolLogo
+    ? (schoolName ?? dictionary.openChat)
+    : "Chatbot"
+
   useEffect(() => {
+    if (usingSchoolLogo) return
+
     const checkSections = () => {
       const button = document.querySelector("[data-chat-button]")
       if (!button) return
@@ -47,26 +63,19 @@ export function ChatButton({
     }
 
     const debouncedCheck = () => {
-      // Cancel any pending timeout
       if (checkTimeoutRef.current) {
         clearTimeout(checkTimeoutRef.current)
       }
-
-      // Cancel any pending animation frame
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current)
       }
-
-      // Debounce with requestAnimationFrame for smoother updates
       checkTimeoutRef.current = setTimeout(() => {
         rafRef.current = requestAnimationFrame(checkSections)
       }, 100)
     }
 
-    // Check on mount
     checkSections()
 
-    // Check on scroll with debouncing
     window.addEventListener("scroll", debouncedCheck, { passive: true })
     window.addEventListener("resize", debouncedCheck)
 
@@ -80,7 +89,7 @@ export function ChatButton({
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [])
+  }, [usingSchoolLogo])
 
   return (
     <>
@@ -93,21 +102,29 @@ export function ChatButton({
             "z-[9999] hidden transition-all duration-700 ease-in-out md:block",
             "h-12 w-12 rounded-full p-2 md:h-14 md:w-14",
             "border-none bg-transparent shadow-none hover:bg-transparent",
-            "hover:scale-105"
+            "hover:scale-105",
+            // School logos render full-bleed inside a circle; robot stays as-is
+            usingSchoolLogo && "overflow-hidden"
           )}
           aria-label={dictionary.openChat}
           size="icon"
           variant="ghost"
         >
           <Image
-            src={asset("/illustrations/robot.png")}
-            alt="Chatbot"
+            src={avatarSrc}
+            alt={avatarAlt}
             width={56}
             height={56}
             className={cn(
-              "h-full w-full object-contain transition-all duration-500",
-              shouldInvert && "invert"
+              "h-full w-full transition-all duration-500",
+              usingSchoolLogo ? "rounded-full object-cover" : "object-contain",
+              !usingSchoolLogo && shouldInvert && "invert"
             )}
+            unoptimized={
+              // School logos may be external URLs that aren't in next.config
+              // image domains; skip optimization to avoid runtime 502s.
+              usingSchoolLogo
+            }
           />
         </Button>
       )}

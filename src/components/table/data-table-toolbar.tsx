@@ -89,7 +89,7 @@ function DataTableToolbarFilter<TData>({
               placeholder={columnMeta.placeholder ?? columnMeta.label}
               value={(column.getFilterValue() as string) ?? ""}
               onChange={(event) => column.setFilterValue(event.target.value)}
-              className="h-8 w-40 lg:w-56"
+              className="h-9 w-40 lg:w-56"
             />
           )
 
@@ -102,7 +102,7 @@ function DataTableToolbarFilter<TData>({
                 placeholder={columnMeta.placeholder ?? columnMeta.label}
                 value={(column.getFilterValue() as string) ?? ""}
                 onChange={(event) => column.setFilterValue(event.target.value)}
-                className={cn("h-8 w-[120px]", columnMeta.unit && "pe-8")}
+                className={cn("h-9 w-[120px]", columnMeta.unit && "pe-8")}
               />
               {columnMeta.unit && (
                 <span className="bg-accent text-muted-foreground absolute end-0 top-0 bottom-0 flex items-center rounded-e-md px-2 text-sm">

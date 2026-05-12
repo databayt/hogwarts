@@ -6,11 +6,10 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AcademicContent } from "@/components/school-dashboard/school/academic/content"
 
 export const metadata: Metadata = {
-  title: "Academic Setup - School Management",
+  title: "Configuration: Academic",
   description:
     "Configure academic years, terms, periods, year levels, and grading scale",
 }
@@ -19,9 +18,8 @@ interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-export default async function Page({ params }: Props) {
+export default async function AcademicConfigPage({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
   const session = await auth()
   const schoolId = session?.user?.schoolId
 
@@ -29,7 +27,6 @@ export default async function Page({ params }: Props) {
     return <div>Unauthorized</div>
   }
 
-  // Fetch initial data for all entities
   const [years, terms, periods, levels, grades] = await Promise.all([
     db.schoolYear.findMany({
       where: { schoolId },
@@ -60,7 +57,6 @@ export default async function Page({ params }: Props) {
     }),
   ])
 
-  // Get totals
   const [totalYears, totalTerms, totalPeriods, totalLevels, totalGrades] =
     await Promise.all([
       db.schoolYear.count({ where: { schoolId } }),
@@ -70,7 +66,6 @@ export default async function Page({ params }: Props) {
       db.scoreRange.count({ where: { schoolId } }),
     ])
 
-  // Transform data to match expected types
   const transformedYears = years.map((y) => ({
     ...y,
     startDate: y.startDate.toISOString(),
@@ -84,7 +79,7 @@ export default async function Page({ params }: Props) {
     yearId: t.yearId,
     yearName: t.schoolYear?.yearName || "",
     termNumber: t.termNumber,
-    termName: `Term ${t.termNumber}`, // Generate term name from number
+    termName: `Term ${t.termNumber}`,
     startDate: t.startDate.toISOString(),
     endDate: t.endDate.toISOString(),
     isActive: t.isActive,
@@ -108,8 +103,8 @@ export default async function Page({ params }: Props) {
 
   const transformedGrades = grades.map((g) => ({
     id: g.id,
-    minScore: Number(g.minScore), // Convert Decimal to number
-    maxScore: Number(g.maxScore), // Convert Decimal to number
+    minScore: Number(g.minScore),
+    maxScore: Number(g.maxScore),
     grade: g.grade,
     createdAt: g.createdAt.toISOString(),
   }))

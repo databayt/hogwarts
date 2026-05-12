@@ -41,9 +41,12 @@ export default async function CommunityHubPage({
   const { curriculum, grade } = communitySearchParams.parse(sp)
   const dictionary = await getDictionary(lang)
 
+  const activeCurriculum = curriculum || "us-k12"
+  const activeGrade = grade ?? 1
+
   const filters = {
-    curriculum: curriculum || "us-k12",
-    grade: grade ?? undefined,
+    curriculum: activeCurriculum,
+    grade: activeGrade,
     lang,
   }
 
@@ -56,7 +59,9 @@ export default async function CommunityHubPage({
   const description =
     dictionary?.community?.lead ??
     "Browse open subjects, textbooks, exams, and learning materials. No account required."
-  const hasFilters = Boolean(curriculum && curriculum !== "us-k12") || !!grade
+  // Treat any change away from the defaults (us-k12 / grade 1) as "filtered"
+  // for the empty-state reset link.
+  const hasFilters = activeCurriculum !== "us-k12" || activeGrade !== 1
 
   return (
     <div className="container mx-auto max-w-6xl px-4 pb-16 lg:px-0">
@@ -67,13 +72,17 @@ export default async function CommunityHubPage({
         headingClassName="max-w-2xl text-balance text-4xl font-semibold tracking-tight lg:leading-[1.1] xl:text-5xl xl:tracking-tight"
         descriptionClassName="max-w-2xl text-balance text-base font-light leading-7 sm:text-lg"
       />
-      <CommunityTabsNav
-        active={grade ?? null}
-        options={options}
-        currentCurriculum={curriculum || "us-k12"}
-        dictionary={dictionary}
-      />
-      <CommunityFilterBar options={options} dictionary={dictionary} />
+      <div className="border-border/50 dark:border-border flex items-center justify-between gap-4 border-b-[0.5px] py-3">
+        <div className="min-w-0 flex-1">
+          <CommunityTabsNav
+            active={activeGrade}
+            options={options}
+            currentCurriculum={activeCurriculum}
+            dictionary={dictionary}
+          />
+        </div>
+        <CommunityFilterBar options={options} dictionary={dictionary} />
+      </div>
       <div className="mt-6">
         {subjects.length === 0 ? (
           <CommunityEmptyState

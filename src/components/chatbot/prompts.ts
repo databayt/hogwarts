@@ -1,10 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import {
+  CATEGORIES,
+  FEATURES,
+} from "@/components/saas-marketing/features/constants"
+import { pricingData } from "@/components/saas-marketing/pricing/config"
+
+import type { ChatbotDictionary } from "./type"
+
 export interface SchoolChatbotData {
   name: string
   nameEn?: string | null
   domain: string
+  logoUrl?: string | null
   description?: string | null
   schoolType?: string | null
   schoolLevel?: string | null
@@ -73,7 +82,7 @@ export interface SchoolChatbotData {
   }[]
 }
 
-/** Context about which quick-ask buttons to show, derived from school data */
+/** Booleans the client uses to decide which CTA chips and quick-asks to show */
 export interface SchoolChatbotContext {
   admissionOpen: boolean
   hasScholarships: boolean
@@ -97,90 +106,128 @@ export function deriveSchoolContext(
   }
 }
 
-export function buildSaasMarketingPrompt(locale: string = "en"): string {
-  const lang =
-    locale === "ar"
-      ? "Arabic. Always respond in Arabic."
-      : "English. Always respond in English."
-
-  return `You are Databayt assistant, helping visitors learn about our school automation platform. Respond in ${lang} Give VERY SHORT, practical answers (2-3 sentences max).
-
-## About Databayt
-- **Platform**: Databayt - Open-source school management & automation
-- **Mission**: Automate school operations so educators focus on teaching
-- **Open Source**: 100% open-source, self-hostable, community-driven
-
-## Pricing
-- **Hobby** (Free): Up to 100 students, 10 teachers, core features
-- **Pro** ($20/month, $192/year): Up to 500 students, unlimited teachers, advanced reports, custom branding
-- **Ultra** ($200/month, $1,920/year): Unlimited students & teachers, custom integrations, 24/7 support
-
-## Features (14 categories, 48+ features)
-- **Students**: Enrollment, profiles, year levels, performance tracking, guardians
-- **Teachers**: Profiles, qualifications, workload, scheduling, departments
-- **Attendance**: Manual, QR code, barcode, geo-fencing, bulk upload, analytics, interventions
-- **Grades & Exams**: Gradebook, report cards, exam creation, AI generation, question bank, certificates
-- **Timetable**: Auto-scheduling, room allocation, teacher constraints, templates
-- **Subjects & Curriculum**: Subject management, catalog, chapters, lesson planning
-- **Finance**: Fee collection, invoicing, payment tracking, payroll, banking
-- **Admission**: Online applications, merit lists, enrollment pipeline, document upload
-- **Announcements**: School-wide, targeted, scheduling, archiving
-- **Events**: Calendar, categories, recurring, attendance tracking
-- **Classrooms**: Room management, capacity, equipment, scheduling
-- **Analytics**: Dashboards, reports, student analysis, attendance trends
-- **Communication**: Parent portal, messaging, notifications
-- **Settings**: Branding, roles & permissions, school configuration
-
-## Impact
-- 80% administrative time saved
-- 60% cost reduction vs manual processes
-- 25% enrollment boost through online admission
-
-## FAQs
-- **Is it free?** Yes, Hobby plan is free forever for up to 100 students
-- **Setup time?** Under 10 minutes with guided onboarding
-- **Support?** Community support (free), priority (Pro), 24/7 (Ultra)
-- **Open source?** Yes, MIT-style license, self-host or use our cloud
-- **Contributing?** Visit our GitHub repository to contribute
-
-## Contact
-- Email: contact@databayt.org
-- GitHub: github.com/databayt
-- Website: ed.databayt.org
-
-## Response Rules
-1. Keep answers under 50 words
-2. Use specific numbers (pricing, student limits)
-3. Mention open-source benefits when relevant
-4. Guide to sign-up or demo`
+/**
+ * Format the live `pricingData` (Hobby / Pro / Ultra) into a short bulleted
+ * block injected into the SaaS system prompt. Single source of truth — when
+ * marketing edits `pricing/config.ts`, the chatbot's prices update too.
+ */
+function formatPricing(locale: string): string {
+  const isAr = locale === "ar"
+  return pricingData
+    .map((plan) => {
+      const price =
+        plan.prices.monthly === 0
+          ? isAr
+            ? "مجاني"
+            : "Free"
+          : `$${plan.prices.monthly}${isAr ? "/شهر" : "/mo"}`
+      const benefits = plan.benefits.slice(0, 3).join(", ")
+      return `- ${plan.title} (${price}): ${benefits}`
+    })
+    .join("\n")
 }
+
+/**
+ * Format the live `FEATURES` constant (85 features) grouped by `CATEGORIES`
+ * (10 categories) into a compact block. Trims to ~6 features per category to
+ * keep the prompt within reasonable token budget.
+ */
+function formatFeatures(): string {
+  return CATEGORIES.map((cat) => {
+    const items = FEATURES.filter((f) => f.category === cat.id)
+      .slice(0, 6)
+      .map((f) => f.title)
+      .join(", ")
+    return `- ${cat.label}: ${items || "—"}`
+  }).join("\n")
+}
+
+export function buildSaasMarketingPrompt(
+  locale: string = "en",
+  dict: Pick<ChatbotDictionary, "saasPromptTemplate">
+): string {
+  return dict.saasPromptTemplate
+    .replace("{pricing}", formatPricing(locale))
+    .replace("{features}", formatFeatures())
+    .replace("{contactEmail}", "contact@databayt.org")
+}
+
+type SchoolPromptDict = Pick<
+  ChatbotDictionary,
+  | "schoolPromptIntroTemplate"
+  | "schoolPromptRules"
+  | "schoolHeaderAcademic"
+  | "schoolHeaderAdmissionOpen"
+  | "schoolHeaderAdmissionSoon"
+  | "schoolHeaderAdmissionClosed"
+  | "schoolHeaderFeesDetailed"
+  | "schoolHeaderFeesBasic"
+  | "schoolHeaderScholarships"
+  | "schoolHeaderEvents"
+  | "schoolHeaderAnnouncements"
+  | "schoolHeaderContact"
+  | "schoolHeaderCapacity"
+  | "schoolPhraseAbout"
+  | "schoolPhraseType"
+  | "schoolPhraseLevel"
+  | "schoolPhraseCurriculum"
+  | "schoolPhraseGrades"
+  | "schoolPhraseOpenUntil"
+  | "schoolPhraseSeatsAvailable"
+  | "schoolPhraseApplicationFee"
+  | "schoolPhraseApplyOnline"
+  | "schoolPhraseNextAdmission"
+  | "schoolPhraseAdmissionOpens"
+  | "schoolPhraseCheckBack"
+  | "schoolPhraseNoCampaigns"
+  | "schoolPhraseTotal"
+  | "schoolPhraseTuition"
+  | "schoolPhraseInstallment"
+  | "schoolPhraseInstallments"
+  | "schoolPhraseFullScholarship"
+  | "schoolPhrasePercentageCoverage"
+  | "schoolPhraseAmountOff"
+  | "schoolPhrasePayment"
+  | "schoolPhrasePhone"
+  | "schoolPhraseEmail"
+  | "schoolPhraseWebsite"
+  | "schoolPhraseAddress"
+  | "schoolPhraseStudents"
+  | "schoolPhraseTeachers"
+  | "schoolPhraseAt"
+>
 
 export function buildSchoolSitePrompt(
   school: SchoolChatbotData,
-  locale: string = "en"
+  locale: string = "en",
+  dict: SchoolPromptDict
 ): string {
   const sections: string[] = []
   const now = new Date()
-
-  const lang =
-    locale === "ar"
-      ? "Arabic. Always respond in Arabic."
-      : "English. Always respond in English."
+  const dateLocale = locale === "ar" ? "ar-SA" : "en-US"
 
   const schoolName =
     locale === "en" && school.nameEn ? school.nameEn : school.name
 
+  // Intro line — locale-aware welcome + role
+  const intro = dict.schoolPromptIntroTemplate.replace(
+    "{schoolName}",
+    schoolName
+  )
+
   // Identity
-  sections.push(`## School: ${schoolName}`)
+  sections.push(`## ${schoolName}`)
   if (school.description) {
-    sections.push(`**About**: ${school.description}`)
+    sections.push(`**${dict.schoolPhraseAbout}**: ${school.description}`)
   }
 
   const details: string[] = []
-  if (school.schoolType) details.push(`Type: ${school.schoolType}`)
-  if (school.schoolLevel) details.push(`Level: ${school.schoolLevel}`)
+  if (school.schoolType)
+    details.push(`${dict.schoolPhraseType}: ${school.schoolType}`)
+  if (school.schoolLevel)
+    details.push(`${dict.schoolPhraseLevel}: ${school.schoolLevel}`)
   if (school.timetableStructure)
-    details.push(`Curriculum: ${school.timetableStructure}`)
+    details.push(`${dict.schoolPhraseCurriculum}: ${school.timetableStructure}`)
   if (details.length > 0) {
     sections.push(details.join(" | "))
   }
@@ -190,10 +237,10 @@ export function buildSchoolSitePrompt(
     const levels = school.academicLevels
       .map((l) => {
         const grades = l.grades.map((g) => g.name).join(", ")
-        return `- **${l.name}** (${l.level}): Grades ${l.startGrade}-${l.endGrade}${grades ? ` — ${grades}` : ""}`
+        return `- **${l.name}** (${l.level}): ${dict.schoolPhraseGrades} ${l.startGrade}-${l.endGrade}${grades ? ` — ${grades}` : ""}`
       })
       .join("\n")
-    sections.push(`## Academic Structure\n${levels}`)
+    sections.push(`## ${dict.schoolHeaderAcademic}\n${levels}`)
   }
 
   // Admission — live status
@@ -203,18 +250,19 @@ export function buildSchoolSitePrompt(
   if (openCampaigns.length > 0) {
     const campaigns = openCampaigns
       .map((c) => {
-        const deadline = new Date(c.endDate).toLocaleDateString(
-          locale === "ar" ? "ar-SA" : "en-US",
-          { year: "numeric", month: "long", day: "numeric" }
-        )
+        const deadline = new Date(c.endDate).toLocaleDateString(dateLocale, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
         const fee = c.applicationFee
-          ? ` | Application fee: ${c.applicationFee} ${school.currency}`
+          ? ` | ${dict.schoolPhraseApplicationFee}: ${c.applicationFee} ${school.currency}`
           : ""
-        return `- **${c.name}** (${c.academicYear}): Open until ${deadline}, ${c.totalSeats} seats available${fee}`
+        return `- **${c.name}** (${c.academicYear}): ${dict.schoolPhraseOpenUntil} ${deadline}, ${c.totalSeats} ${dict.schoolPhraseSeatsAvailable}${fee}`
       })
       .join("\n")
     sections.push(
-      `## Admission — OPEN NOW\n${campaigns}\nVisitors can apply online at the school's Apply page.`
+      `## ${dict.schoolHeaderAdmissionOpen}\n${campaigns}\n${dict.schoolPhraseApplyOnline}`
     )
   } else {
     const upcoming = school.admissionCampaigns.filter(
@@ -222,16 +270,17 @@ export function buildSchoolSitePrompt(
     )
     if (upcoming.length > 0) {
       const next = upcoming[0]
-      const opens = new Date(next.startDate).toLocaleDateString(
-        locale === "ar" ? "ar-SA" : "en-US",
-        { year: "numeric", month: "long", day: "numeric" }
-      )
+      const opens = new Date(next.startDate).toLocaleDateString(dateLocale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
       sections.push(
-        `## Admission — COMING SOON\nNext admission period: **${next.name}** (${next.academicYear}) opens ${opens}.\nAdvise visitors to check back or contact the school.`
+        `## ${dict.schoolHeaderAdmissionSoon}\n${dict.schoolPhraseNextAdmission}: **${next.name}** (${next.academicYear}) ${dict.schoolPhraseAdmissionOpens} ${opens}.\n${dict.schoolPhraseCheckBack}`
       )
     } else {
       sections.push(
-        `## Admission\nNo admission campaigns are currently open. Suggest contacting the school for next intake dates.`
+        `## ${dict.schoolHeaderAdmissionClosed}\n${dict.schoolPhraseNoCampaigns}`
       )
     }
   }
@@ -239,24 +288,33 @@ export function buildSchoolSitePrompt(
   // Fee Structures
   if (school.feeStructures.length > 0) {
     const fees = school.feeStructures
-      .map(
-        (f) =>
-          `- **${f.name}** (${f.academicYear}): ${f.totalAmount} ${school.currency} total (tuition: ${f.tuitionFee} ${school.currency}, ${f.installments} installment${f.installments > 1 ? "s" : ""})`
-      )
+      .map((f) => {
+        const installmentLabel =
+          f.installments > 1
+            ? dict.schoolPhraseInstallments
+            : dict.schoolPhraseInstallment
+        return `- **${f.name}** (${f.academicYear}): ${f.totalAmount} ${school.currency} ${dict.schoolPhraseTotal} (${dict.schoolPhraseTuition}: ${f.tuitionFee} ${school.currency}, ${f.installments} ${installmentLabel})`
+      })
       .join("\n")
-    sections.push(`## Detailed Fees\n${fees}`)
+    sections.push(`## ${dict.schoolHeaderFeesDetailed}\n${fees}`)
   } else {
     // Fallback to basic school-level fees
     const fees: string[] = []
     if (school.tuitionFee)
-      fees.push(`- Tuition: ${school.tuitionFee} ${school.currency}`)
+      fees.push(
+        `- ${dict.schoolPhraseTuition}: ${school.tuitionFee} ${school.currency}`
+      )
     if (school.registrationFee)
-      fees.push(`- Registration: ${school.registrationFee} ${school.currency}`)
+      fees.push(
+        `- ${dict.schoolPhraseApplicationFee}: ${school.registrationFee} ${school.currency}`
+      )
     if (school.applicationFee)
-      fees.push(`- Application: ${school.applicationFee} ${school.currency}`)
+      fees.push(
+        `- ${dict.schoolPhraseApplicationFee}: ${school.applicationFee} ${school.currency}`
+      )
     if (fees.length > 0) {
       sections.push(
-        `## Fees\n${fees.join("\n")}\nPayment: ${school.paymentSchedule}`
+        `## ${dict.schoolHeaderFeesBasic}\n${fees.join("\n")}\n${dict.schoolPhrasePayment}: ${school.paymentSchedule}`
       )
     }
   }
@@ -268,14 +326,14 @@ export function buildSchoolSitePrompt(
       .map((s) => {
         const coverage =
           s.coverageType === "FULL"
-            ? "Full scholarship"
+            ? dict.schoolPhraseFullScholarship
             : s.coverageType === "PERCENTAGE"
-              ? `${s.coverageAmount}% coverage`
-              : `${s.coverageAmount} ${school.currency} off`
+              ? `${s.coverageAmount}${dict.schoolPhrasePercentageCoverage}`
+              : `${s.coverageAmount} ${school.currency} ${dict.schoolPhraseAmountOff}`
         return `- **${s.name}**: ${coverage}${s.description ? ` — ${s.description}` : ""}`
       })
       .join("\n")
-    sections.push(`## Scholarships & Financial Aid\n${schols}`)
+    sections.push(`## ${dict.schoolHeaderScholarships}\n${schols}`)
   }
 
   // Upcoming Events
@@ -285,15 +343,15 @@ export function buildSchoolSitePrompt(
   if (upcomingEvents.length > 0) {
     const events = upcomingEvents
       .map((e) => {
-        const date = new Date(e.eventDate).toLocaleDateString(
-          locale === "ar" ? "ar-SA" : "en-US",
-          { month: "long", day: "numeric" }
-        )
-        const loc = e.location ? ` at ${e.location}` : ""
+        const date = new Date(e.eventDate).toLocaleDateString(dateLocale, {
+          month: "long",
+          day: "numeric",
+        })
+        const loc = e.location ? ` ${dict.schoolPhraseAt} ${e.location}` : ""
         return `- **${e.title}** (${e.eventType}): ${date}, ${e.startTime}-${e.endTime}${loc}`
       })
       .join("\n")
-    sections.push(`## Upcoming Events\n${events}`)
+    sections.push(`## ${dict.schoolHeaderEvents}\n${events}`)
   }
 
   // Important Announcements
@@ -302,51 +360,37 @@ export function buildSchoolSitePrompt(
     .slice(0, 3)
   if (importantAnnouncements.length > 0) {
     const anns = importantAnnouncements
-      .map((a) => `- ${a.title || "Announcement"}`)
+      .map((a) => `- ${a.title || ""}`)
       .join("\n")
-    sections.push(`## Important Announcements\n${anns}`)
+    sections.push(`## ${dict.schoolHeaderAnnouncements}\n${anns}`)
   }
 
   // Contact
   const contact: string[] = []
-  if (school.phoneNumber) contact.push(`- Phone: ${school.phoneNumber}`)
-  if (school.email) contact.push(`- Email: ${school.email}`)
-  if (school.website) contact.push(`- Website: ${school.website}`)
+  if (school.phoneNumber)
+    contact.push(`- ${dict.schoolPhrasePhone}: ${school.phoneNumber}`)
+  if (school.email) contact.push(`- ${dict.schoolPhraseEmail}: ${school.email}`)
+  if (school.website)
+    contact.push(`- ${dict.schoolPhraseWebsite}: ${school.website}`)
   const location: string[] = []
   if (school.address) location.push(school.address)
   if (school.city) location.push(school.city)
   if (school.country) location.push(school.country)
-  if (location.length > 0) contact.push(`- Address: ${location.join(", ")}`)
+  if (location.length > 0)
+    contact.push(`- ${dict.schoolPhraseAddress}: ${location.join(", ")}`)
   if (contact.length > 0) {
-    sections.push(`## Contact\n${contact.join("\n")}`)
+    sections.push(`## ${dict.schoolHeaderContact}\n${contact.join("\n")}`)
   }
 
   // Capacity
   if (school.maxStudents || school.maxTeachers) {
     sections.push(
-      `## Capacity\nStudents: ${school.maxStudents} | Teachers: ${school.maxTeachers}`
+      `## ${dict.schoolHeaderCapacity}\n${dict.schoolPhraseStudents}: ${school.maxStudents} | ${dict.schoolPhraseTeachers}: ${school.maxTeachers}`
     )
   }
 
-  return `You are the helpful assistant for ${schoolName}. Respond in ${lang} You help prospective students and parents learn about this school. Be welcoming, accurate, and concise (2-3 sentences max).
-
-${sections.join("\n\n")}
-
-## Response Rules
-1. Keep answers under 60 words
-2. Use the school's actual data above — never invent facts
-3. For admission, give the current status (open/closed/coming soon) and direct to the Apply page when open
-4. Mention scholarships when discussing fees if available
-5. Mention upcoming events when relevant
-6. If you don't have specific information, say so honestly and suggest contacting the school directly
-7. When asked about programs or grades, reference the academic structure above`
+  return `${intro}\n\n${sections.join("\n\n")}\n\n${dict.schoolPromptRules}`
 }
 
-// Keep backward compatibility
-export const SYSTEM_PROMPTS = {
-  saasMarketing: buildSaasMarketingPrompt(),
-  schoolSite:
-    "You are a school assistant. Please provide the subdomain for personalized help.",
-} as const
-
-export type SystemPromptType = keyof typeof SYSTEM_PROMPTS
+// Backwards-compat surface — used only by older imports of `SystemPromptType`
+export type SystemPromptType = "saasMarketing" | "schoolSite"

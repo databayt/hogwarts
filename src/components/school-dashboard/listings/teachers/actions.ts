@@ -77,6 +77,7 @@ import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
 import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
+import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -237,6 +238,7 @@ export async function createTeacher(
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH)
+    revalidateSpotlight(schoolId)
 
     return { success: true, data: { id: result.id as string } }
   } catch (error) {

@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
 import { usePlatformData } from "@/hooks/use-platform-data"
@@ -44,7 +43,6 @@ export function CampaignsTable({
   perPage = 20,
 }: CampaignsTableProps) {
   const t = dictionary
-  const router = useRouter()
   const { openModal } = useModal()
 
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -133,13 +131,6 @@ export function CampaignsTable({
     setSearchInput(value)
   }, [])
 
-  const handleView = useCallback(
-    (id: string) => {
-      router.push(`/${lang}/admission/campaigns/${id}`)
-    },
-    [router]
-  )
-
   const getStatusBadge = (status: string) => {
     const label = t?.status?.[status as keyof typeof t.status] || status
     const variant =
@@ -225,7 +216,7 @@ export function CampaignsTable({
                   title={campaign.name}
                   description={campaign.academicYear}
                   subtitle={`${campaign.applicationsCount} ${t?.nav?.applications || "applications"}`}
-                  onClick={() => handleView(campaign.id)}
+                  onClick={() => handleEdit(campaign.id)}
                 />
               ))}
             </GridContainer>

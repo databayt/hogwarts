@@ -6,22 +6,38 @@ import { createGroq } from "@ai-sdk/groq"
 import { CoreMessage, generateText } from "ai"
 
 import { db } from "@/lib/db"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import {
   buildSaasMarketingPrompt,
   buildSchoolSitePrompt,
   deriveSchoolContext,
-  type SchoolChatbotContext,
   type SchoolChatbotData,
   type SystemPromptType,
 } from "./prompts"
+import type { ChatbotDictionary, SchoolChatbotDisplay } from "./type"
 
-export async function getSchoolChatbotContext(
+/**
+ * Returns the display + visibility context the chatbot client needs:
+ * personalised welcome (school name), branded avatar (logo), and the
+ * boolean flags that decide which CTA chips to surface.
+ *
+ * Returns `null` when the subdomain doesn't resolve to a school —
+ * the client falls back to the SaaS welcome.
+ */
+export async function getSchoolChatbotDisplay(
   subdomain: string
-): Promise<SchoolChatbotContext | null> {
+): Promise<SchoolChatbotDisplay | null> {
   const school = await fetchSchoolData(subdomain)
   if (!school) return null
-  return deriveSchoolContext(school)
+  const flags = deriveSchoolContext(school)
+  return {
+    ...flags,
+    schoolName: school.nameEn ?? school.name,
+    schoolNameAr: school.name,
+    logoUrl: school.logoUrl ?? null,
+  }
 }
 
 async function fetchSchoolData(
@@ -35,6 +51,7 @@ async function fetchSchoolData(
       name: true,
       nameEn: true,
       domain: true,
+      logoUrl: true,
       description: true,
       schoolType: true,
       schoolLevel: true,
@@ -165,6 +182,29 @@ async function fetchSchoolData(
   }
 }
 
+/**
+ * Server-side resolution of the system prompt for either mode. The dictionary
+ * is loaded here (not on the client) so we never ship the entire prompt text
+ * over the network — only the assistant's response.
+ */
+async function resolveSystemPrompt(
+  systemPromptType: SystemPromptType,
+  subdomain: string | undefined,
+  locale: string
+): Promise<string> {
+  const dictionary = await getDictionary(locale as Locale)
+  const chatbot = dictionary.chatbot as unknown as ChatbotDictionary
+
+  if (systemPromptType === "schoolSite" && subdomain) {
+    const schoolData = await fetchSchoolData(subdomain)
+    if (schoolData) {
+      return buildSchoolSitePrompt(schoolData, locale, chatbot)
+    }
+  }
+
+  return buildSaasMarketingPrompt(locale, chatbot)
+}
+
 export async function sendMessage(
   messages: CoreMessage[],
   systemPromptType: SystemPromptType = "saasMarketing",
@@ -182,18 +222,11 @@ export async function sendMessage(
       }
     }
 
-    let systemPrompt: string
-
-    if (systemPromptType === "schoolSite" && subdomain) {
-      const schoolData = await fetchSchoolData(subdomain)
-      if (schoolData) {
-        systemPrompt = buildSchoolSitePrompt(schoolData, locale)
-      } else {
-        systemPrompt = buildSaasMarketingPrompt(locale)
-      }
-    } else {
-      systemPrompt = buildSaasMarketingPrompt(locale)
-    }
+    const systemPrompt = await resolveSystemPrompt(
+      systemPromptType,
+      subdomain,
+      locale
+    )
 
     const groq = createGroq({ apiKey })
 

@@ -3,9 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Link from "next/link"
 
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -20,7 +21,7 @@ import {
   VolumeIcon,
   VolumeOffIcon,
 } from "./icons"
-import type { ChatWindowProps } from "./type"
+import type { ChatWindowProps, CtaChip } from "./type"
 
 export const ChatWindow = memo(function ChatWindow({
   isOpen,
@@ -125,6 +126,67 @@ export const ChatWindow = memo(function ChatWindow({
       },
     ]
   }, [promptType, dictionary, schoolContext])
+
+  // Personalised welcome — school name in school mode, generic SaaS line otherwise
+  const welcomeText = useMemo(() => {
+    if (promptType === "schoolSite" && schoolContext) {
+      const name =
+        locale === "ar" ? schoolContext.schoolNameAr : schoolContext.schoolName
+      return dictionary.welcomeSchoolTemplate.replace("{name}", name)
+    }
+    return dictionary.welcomeSaas
+  }, [promptType, schoolContext, locale, dictionary])
+
+  // Mode-aware CTA chips — derived from promptType + live school context.
+  // Paths use `/${locale}/...` only — never `/s/${subdomain}/...` (gotcha #11).
+  const ctaChips = useMemo<CtaChip[]>(() => {
+    if (promptType === "saasMarketing") {
+      return [
+        { label: dictionary.ctaTryFree, href: `/${locale}/onboarding` },
+        { label: dictionary.ctaSeePricing, href: `/${locale}/pricing` },
+        { label: dictionary.ctaViewFeatures, href: `/${locale}/features` },
+      ]
+    }
+    const chips: CtaChip[] = []
+    if (schoolContext?.admissionOpen) {
+      chips.push({
+        label: dictionary.ctaStartApplication,
+        href: `/${locale}/application`,
+      })
+    }
+    chips.push({
+      label: dictionary.ctaBookTour,
+      href: `/${locale}/tour`,
+    })
+    chips.push({
+      label: dictionary.ctaSendInquiry,
+      href: `/${locale}/inquiry`,
+    })
+    if (schoolContext?.hasScholarships) {
+      chips.push({
+        label: dictionary.ctaViewScholarships,
+        href: `/${locale}/admissions#scholarships`,
+      })
+    }
+    return chips.slice(0, 3)
+  }, [promptType, schoolContext, locale, dictionary])
+
+  // Index of the most recent assistant message — chips render only below it.
+  const lastAssistantIndex = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]?.role === "assistant") return i
+    }
+    return -1
+  }, [messages])
+
+  // School logo for inline message avatars (fallback to "AI" text when missing)
+  const assistantAvatarSrc = schoolContext?.logoUrl ?? null
+  const assistantAvatarAlt =
+    promptType === "schoolSite" && schoolContext
+      ? locale === "ar"
+        ? schoolContext.schoolNameAr
+        : schoolContext.schoolName
+      : "AI"
 
   // Initialize SpeechRecognition once, re-init on locale change
   useEffect(() => {
@@ -445,8 +507,11 @@ export const ChatWindow = memo(function ChatWindow({
             <div className="flex h-full flex-col">
               {isMobile ? (
                 <div className="flex flex-1 flex-col items-center justify-center">
-                  <p className="text-muted-foreground mb-6 text-center text-sm font-medium">
-                    <span>{dictionary.chooseQuestion}</span>
+                  <p className="mb-2 text-center text-sm font-medium">
+                    {welcomeText}
+                  </p>
+                  <p className="text-muted-foreground mb-6 text-center text-xs">
+                    {dictionary.chooseQuestion}
                   </p>
                   <div className="grid w-full max-w-sm grid-cols-2 gap-2 px-2">
                     {quickAskButtons.map((btn, i) => (
@@ -464,49 +529,80 @@ export const ChatWindow = memo(function ChatWindow({
                   </div>
                 </div>
               ) : (
-                <div className="flex-1" />
+                <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                  <p className="mb-1 text-sm font-medium">{welcomeText}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {dictionary.chooseQuestion}
+                  </p>
+                </div>
               )}
             </div>
           ) : (
             <div className="space-y-4 pb-2">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex gap-2",
-                    message.role === "user"
-                      ? isRTL
-                        ? "flex-row"
-                        : "flex-row-reverse"
-                      : ""
-                  )}
-                >
-                  {message.role === "assistant" && (
-                    <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      "max-w-[80%] rounded-lg px-3 py-2 break-words",
-                      message.role === "user"
-                        ? "bg-primary ms-auto text-white"
-                        : "bg-muted"
-                    )}
-                  >
-                    <p
+              {messages.map((message, index) => {
+                const isAssistant = message.role === "assistant"
+                const isLastAssistant =
+                  isAssistant && index === lastAssistantIndex
+                return (
+                  <div key={index} className="space-y-2">
+                    <div
                       className={cn(
-                        "text-sm whitespace-pre-wrap",
-                        message.role === "user" && "text-white"
+                        "flex gap-2",
+                        message.role === "user"
+                          ? isRTL
+                            ? "flex-row"
+                            : "flex-row-reverse"
+                          : ""
                       )}
                     >
-                      {message.content}
-                    </p>
+                      {isAssistant && (
+                        <Avatar className="h-7 w-7 shrink-0">
+                          {assistantAvatarSrc ? (
+                            <AvatarImage
+                              src={assistantAvatarSrc}
+                              alt={assistantAvatarAlt}
+                            />
+                          ) : null}
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                            AI
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={cn(
+                          "max-w-[80%] rounded-lg px-3 py-2 break-words",
+                          message.role === "user"
+                            ? "bg-primary ms-auto text-white"
+                            : "bg-muted"
+                        )}
+                      >
+                        <p
+                          className={cn(
+                            "text-sm whitespace-pre-wrap",
+                            message.role === "user" && "text-white"
+                          )}
+                        >
+                          {message.content}
+                        </p>
+                      </div>
+                    </div>
+                    {isLastAssistant && ctaChips.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 ps-9">
+                        {ctaChips.map((chip) => (
+                          <Link
+                            key={chip.href}
+                            href={chip.href}
+                            className="bg-primary/10 text-primary hover:bg-primary/20 rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                            onClick={onClose}
+                          >
+                            {chip.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

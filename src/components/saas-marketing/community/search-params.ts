@@ -13,8 +13,10 @@ import {
  * - `curriculum` defaults to `"us-k12"` (International US). The dropdown
  *   round-trips `Curriculum.code`, which matches the legacy string column
  *   on `Subject.curriculum` directly.
- * - `grade` is parsed as integer. Driven by the under-hero TabsNav (1..12).
- *   Absent / non-numeric → no grade filter (the "All" pill).
+ * - `grade` is parsed as integer and defaults to `1`. Driven by the under-hero
+ *   TabsNav (1..12). The "All" pill was dropped — landing on `/community`
+ *   should always highlight a real grade so the visitor sees a focused result
+ *   set instead of every subject across every grade.
  *
  * Server pages call `communitySearchParams.parse(searchParams)` to get a
  * typed snapshot. The client `<TabsNav>` and `<FilterBar>` write via
@@ -22,7 +24,7 @@ import {
  */
 export const communitySearchParams = createSearchParamsCache({
   curriculum: parseAsString.withDefault("us-k12"),
-  grade: parseAsInteger,
+  grade: parseAsInteger.withDefault(1),
 })
 
 export type CommunitySearchParams = ReturnType<

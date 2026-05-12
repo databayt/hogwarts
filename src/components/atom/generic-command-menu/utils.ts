@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { normalizeForMatch } from "./normalize"
 import type { RecentItem, Role, SearchItem } from "./types"
 
 const RECENT_ITEMS_KEY = "command-menu-recent"
@@ -80,7 +81,12 @@ export function clearRecentItems(): void {
 }
 
 /**
- * Filter items by search query
+ * Filter items by search query.
+ *
+ * Uses `normalizeForMatch` so the query "أحم" matches a title stored as
+ * "احمد" (alef variants), "علي" matches "على" (ya), "Café" matches "cafe"
+ * (Latin diacritics), etc. Both sides of the comparison are normalized so
+ * the user can type in either language regardless of how the data is stored.
  */
 export function filterByQuery(
   items: SearchItem[],
@@ -88,29 +94,26 @@ export function filterByQuery(
 ): SearchItem[] {
   if (!query) return items
 
-  const lowerQuery = query.toLowerCase()
+  const nq = normalizeForMatch(query)
+  if (!nq) return items
 
   return items.filter((item) => {
-    // Match title
-    if (item.title.toLowerCase().includes(lowerQuery)) return true
-
-    // Match description
-    if (item.description?.toLowerCase().includes(lowerQuery)) return true
-
-    // Match keywords
-    if (item.keywords?.some((k) => k.toLowerCase().includes(lowerQuery)))
-      return true
-
-    // Match breadcrumb
-    if (item.breadcrumb?.some((b) => b.toLowerCase().includes(lowerQuery)))
-      return true
-
-    return false
+    const haystack = [
+      item.title,
+      item.description ?? "",
+      ...(item.keywords ?? []),
+      ...(item.breadcrumb ?? []),
+    ]
+      .map(normalizeForMatch)
+      .join(" ")
+    return haystack.includes(nq)
   })
 }
 
 /**
- * Convert recent items to search items
+ * Convert recent items to search items, preserving the optional `kind` so
+ * dynamic-entity recents (e.g. a previously-clicked student row) keep
+ * their entity icon when re-rendered.
  */
 export function recentItemsToSearchItems(
   recentItems: RecentItem[]
@@ -120,5 +123,6 @@ export function recentItemsToSearchItems(
     title: item.title,
     type: "recent" as const,
     href: item.href,
+    kind: item.kind,
   }))
 }
