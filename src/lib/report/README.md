@@ -26,14 +26,15 @@ reportSchema (Zod) → reporter → hard-filters → captcha →
 
 ## Buckets (strict thresholds)
 
-| Score | Bucket | Action |
-|---|---|---|
-| `<30` | `silent-reject` | No issue created. UI returns success. |
-| `30-54` | `low-confidence` | Issue + `low-confidence` label. Agent skips. 14d auto-close. |
-| `55-74` | `needs-human` | Issue + `needs-human` label. Human review. |
-| `≥75` | `verified-report` | Issue + `verified-report` label. Agent auto-fixes. |
+| Score   | Bucket            | Action                                                       |
+| ------- | ----------------- | ------------------------------------------------------------ |
+| `<30`   | `silent-reject`   | No issue created. UI returns success.                        |
+| `30-54` | `low-confidence`  | Issue + `low-confidence` label. Agent skips. 14d auto-close. |
+| `55-74` | `needs-human`     | Issue + `needs-human` label. Human review.                   |
+| `≥75`   | `verified-report` | Issue + `verified-report` label. Agent auto-fixes.           |
 
 Overrides:
+
 - `destructive` classification → forced `needs-human`
 - 3 corroborations on same URL → upgrades existing issue to `verified-report`
 - AI failure → bucket capped at `needs-human`
@@ -41,34 +42,36 @@ Overrides:
 
 ## Files
 
-| File | What |
-|---|---|
-| `types.ts` | All shared types (`ReportInput`, `ReporterContext`, `ScoringResult`, …) |
-| `schema.ts` | Zod schema (`reportSchema`, `REPORT_CATEGORIES`) |
-| `labels.ts` | GitHub label specs (`REPORT_LABELS`, severity/language helpers) |
-| `hard-filters.ts` | HF1–HF10 silent-reject triggers |
-| `score.ts` | Pure scoring function `computeScore()` |
-| `triage.ts` | Claude Haiku 4.5 call with forced tool-use |
-| `dedup.ts` | Jaccard-similarity duplicate detection |
-| `corroboration.ts` | 3-reporter upgrade check |
-| `turnstile.ts` | Cloudflare captcha verification |
-| `github.ts` | GitHub REST helpers (createIssue, addLabels, search) |
-| `pipeline.ts` | Orchestrator — `runReportPipeline()` |
-| `adapters/adapter.ts` | `ReportAdapter` interface |
-| `index.ts` | Public surface |
+| File                  | What                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| `types.ts`            | All shared types (`ReportInput`, `ReporterContext`, `ScoringResult`, …) |
+| `schema.ts`           | Zod schema (`reportSchema`, `REPORT_CATEGORIES`)                        |
+| `labels.ts`           | GitHub label specs (`REPORT_LABELS`, severity/language helpers)         |
+| `hard-filters.ts`     | HF1–HF10 silent-reject triggers                                         |
+| `score.ts`            | Pure scoring function `computeScore()`                                  |
+| `triage.ts`           | Claude Haiku 4.5 call with forced tool-use                              |
+| `dedup.ts`            | Jaccard-similarity duplicate detection                                  |
+| `corroboration.ts`    | 3-reporter upgrade check                                                |
+| `turnstile.ts`        | Cloudflare captcha verification                                         |
+| `github.ts`           | GitHub REST helpers (createIssue, addLabels, search)                    |
+| `pipeline.ts`         | Orchestrator — `runReportPipeline()`                                    |
+| `adapters/adapter.ts` | `ReportAdapter` interface                                               |
+| `index.ts`            | Public surface                                                          |
 
 ## Usage from a server action
 
 ```ts
-"use server";
-import { runReportPipeline } from "@/lib/report";
-import { hogwartsAdapter } from "@/lib/report/adapter";
-import { headers } from "next/headers";
+"use server"
+
+import { headers } from "next/headers"
+
+import { runReportPipeline } from "@/lib/report"
+import { hogwartsAdapter } from "@/lib/report/adapter"
 
 export async function reportIssue(raw: unknown) {
-  const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0] ?? "0.0.0.0";
-  return await runReportPipeline(raw, hogwartsAdapter, { ip });
+  const h = await headers()
+  const ip = h.get("x-forwarded-for")?.split(",")[0] ?? "0.0.0.0"
+  return await runReportPipeline(raw, hogwartsAdapter, { ip })
 }
 ```
 

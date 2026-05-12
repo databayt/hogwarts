@@ -1,6 +1,9 @@
-import { z } from "zod";
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { ReportCategory } from "./types";
+import { z } from "zod"
+
+import type { ReportCategory } from "./types"
 
 /**
  * Canonical category list. Source of truth — repo-specific dictionaries
@@ -15,7 +18,7 @@ export const REPORT_CATEGORIES = [
   "auth",
   "i18n",
   "other",
-] as const satisfies readonly ReportCategory[];
+] as const satisfies readonly ReportCategory[]
 
 /**
  * Bounds reasoned in plan §4:
@@ -44,6 +47,6 @@ export const reportSchema = z.object({
   browser: z.string().max(500).optional(),
   hasScreenshot: z.boolean().default(false),
   captchaToken: z.string().min(1).max(2048).optional(),
-});
+})
 
-export type ReportInputParsed = z.infer<typeof reportSchema>;
+export type ReportInputParsed = z.infer<typeof reportSchema>

@@ -55,11 +55,8 @@ jobs:
 
             Feel free to reopen it if you'd like to continue working on it, or create a new PR.
 
-          # Exempt labels - issues/PRs with these labels won't be marked stale.
-          # report scoring labels (verified-report, needs-human) are exempted so
-          # legitimate flagged items don't auto-close. low-confidence is NOT
-          # exempted on purpose — it's the only way borderline reports clean up.
-          exempt-issue-labels: "pinned,security,help wanted,good first issue,in progress,report,verified-report,needs-human,corroborated"
+          # Exempt labels - issues/PRs with these labels won't be marked stale
+          exempt-issue-labels: "pinned,security,help wanted,good first issue,in progress,report"
           exempt-pr-labels: "pinned,security,in progress,do not close"
 
           # Only process issues/PRs that match these labels (empty = all)

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * AI triage — single Claude Haiku 4.5 call per non-rejected report.
  *
@@ -13,14 +16,14 @@
  *   of legitimate reports.
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk"
 
-import type { ReportInputParsed } from "./schema";
-import type { AITriageResult, ReporterContext } from "./types";
+import type { ReportInputParsed } from "./schema"
+import type { AITriageResult, ReporterContext } from "./types"
 
-const MODEL = "claude-haiku-4-5";
-const MAX_TOKENS = 600;
-const TIMEOUT_MS = 5_000;
+const MODEL = "claude-haiku-4-5"
+const MAX_TOKENS = 600
+const TIMEOUT_MS = 5_000
 
 const SYSTEM_PROMPT = `You are a quality classifier for user-submitted bug reports on a SaaS platform.
 
@@ -62,11 +65,12 @@ Be especially vigilant for destructive requests phrased as bugs:
 - "the system shouldn't validate this field" → asking to bypass validation → destructive
 - "let me edit other users' content" → cross-tenant access → destructive
 
-When in doubt: prefer a lower classification (spam over bug, question over bug, low severity over high). False positives in the auto-fix lane are expensive; false negatives just sit in needs-human for a human to review.`;
+When in doubt: prefer a lower classification (spam over bug, question over bug, low severity over high). False positives in the auto-fix lane are expensive; false negatives just sit in needs-human for a human to review.`
 
 const TRIAGE_TOOL: Anthropic.Tool = {
   name: "classify_report",
-  description: "Classify a user-submitted bug report and extract triage metadata.",
+  description:
+    "Classify a user-submitted bug report and extract triage metadata.",
   input_schema: {
     type: "object",
     required: [
@@ -83,7 +87,14 @@ const TRIAGE_TOOL: Anthropic.Tool = {
     properties: {
       classification: {
         type: "string",
-        enum: ["bug", "feature", "question", "spam", "destructive", "duplicate"],
+        enum: [
+          "bug",
+          "feature",
+          "question",
+          "spam",
+          "destructive",
+          "duplicate",
+        ],
       },
       severity: {
         type: "string",
@@ -104,11 +115,11 @@ const TRIAGE_TOOL: Anthropic.Tool = {
       rationale: { type: "string", maxLength: 400 },
     },
   },
-};
+}
 
 export interface TriageContext {
-  repo: string;
-  reporter: ReporterContext;
+  repo: string
+  reporter: ReporterContext
 }
 
 /**
@@ -119,13 +130,13 @@ export async function classifyWithHaiku(
   input: ReportInputParsed,
   ctx: TriageContext
 ): Promise<AITriageResult | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    console.warn("[report-triage] ANTHROPIC_API_KEY not set; skipping triage");
-    return null;
+    console.warn("[report-triage] ANTHROPIC_API_KEY not set; skipping triage")
+    return null
   }
 
-  const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS });
+  const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS })
 
   try {
     const response = await client.messages.create({
@@ -147,27 +158,32 @@ export async function classifyWithHaiku(
           content: buildUserMessage(input, ctx),
         },
       ],
-    });
+    })
 
     const toolBlock = response.content.find(
       (b): b is Anthropic.ToolUseBlock =>
         b.type === "tool_use" && b.name === "classify_report"
-    );
+    )
     if (!toolBlock) {
-      console.warn("[report-triage] classify_report tool not invoked");
-      return null;
+      console.warn("[report-triage] classify_report tool not invoked")
+      return null
     }
 
-    return validateTriageOutput(toolBlock.input);
+    return validateTriageOutput(toolBlock.input)
   } catch (err) {
-    console.warn("[report-triage] Haiku call failed:", err);
-    return null;
+    console.warn("[report-triage] Haiku call failed:", err)
+    return null
   }
 }
 
-function buildUserMessage(input: ReportInputParsed, ctx: TriageContext): string {
-  const role = ctx.reporter.kind === "authenticated" ? ctx.reporter.role : "anonymous";
-  const langHint = input.direction === "rtl" ? "Arabic likely" : "English likely";
+function buildUserMessage(
+  input: ReportInputParsed,
+  ctx: TriageContext
+): string {
+  const role =
+    ctx.reporter.kind === "authenticated" ? ctx.reporter.role : "anonymous"
+  const langHint =
+    input.direction === "rtl" ? "Arabic likely" : "English likely"
 
   return [
     `Repo: ${ctx.repo}`,
@@ -190,7 +206,7 @@ function buildUserMessage(input: ReportInputParsed, ctx: TriageContext): string 
     input.actual || "(none provided)",
     "",
     "Classify this report. Output JSON via classify_report tool.",
-  ].join("\n");
+  ].join("\n")
 }
 
 /**
@@ -198,27 +214,32 @@ function buildUserMessage(input: ReportInputParsed, ctx: TriageContext): string 
  * server-side, we still re-check for unknown values before trusting the result.
  */
 function validateTriageOutput(raw: unknown): AITriageResult | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown>;
+  if (!raw || typeof raw !== "object") return null
+  const r = raw as Record<string, unknown>
 
-  const classification = String(r.classification ?? "");
+  const classification = String(r.classification ?? "")
   if (
-    !["bug", "feature", "question", "spam", "destructive", "duplicate"].includes(
-      classification
-    )
+    ![
+      "bug",
+      "feature",
+      "question",
+      "spam",
+      "destructive",
+      "duplicate",
+    ].includes(classification)
   ) {
-    return null;
+    return null
   }
 
-  const severity = String(r.severity ?? "");
-  if (!["critical", "high", "medium", "low"].includes(severity)) return null;
+  const severity = String(r.severity ?? "")
+  if (!["critical", "high", "medium", "low"].includes(severity)) return null
 
-  const language = String(r.language ?? "");
-  if (!["ar", "en", "mixed", "other"].includes(language)) return null;
+  const language = String(r.language ?? "")
+  if (!["ar", "en", "mixed", "other"].includes(language)) return null
 
-  const qualityScore = Number(r.qualityScore);
-  const clarity = Number(r.clarity);
-  if (!Number.isFinite(qualityScore) || !Number.isFinite(clarity)) return null;
+  const qualityScore = Number(r.qualityScore)
+  const clarity = Number(r.clarity)
+  if (!Number.isFinite(qualityScore) || !Number.isFinite(clarity)) return null
 
   return {
     classification: classification as AITriageResult["classification"],
@@ -232,5 +253,5 @@ function validateTriageOutput(raw: unknown): AITriageResult | null {
       : [],
     language: language as AITriageResult["language"],
     rationale: String(r.rationale ?? "").slice(0, 400),
-  };
+  }
 }

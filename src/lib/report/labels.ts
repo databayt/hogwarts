@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * GitHub label taxonomy. Source of truth.
  *
@@ -7,9 +10,9 @@
  */
 
 export interface LabelSpec {
-  name: string;
-  color: string; // hex without leading #
-  description: string;
+  name: string
+  color: string // hex without leading #
+  description: string
 }
 
 export const REPORT_LABELS = {
@@ -73,25 +76,30 @@ export const REPORT_LABELS = {
     color: "0052cc",
     description: "Report written in English",
   },
-} as const satisfies Record<string, LabelSpec>;
+} as const satisfies Record<string, LabelSpec>
 
-export const ALL_REPORT_LABELS: readonly LabelSpec[] = Object.values(REPORT_LABELS);
+export const ALL_REPORT_LABELS: readonly LabelSpec[] =
+  Object.values(REPORT_LABELS)
 
-export function severityLabel(sev: "critical" | "high" | "medium" | "low"): string {
+export function severityLabel(
+  sev: "critical" | "high" | "medium" | "low"
+): string {
   switch (sev) {
     case "critical":
-      return REPORT_LABELS.severityCritical.name;
+      return REPORT_LABELS.severityCritical.name
     case "high":
-      return REPORT_LABELS.severityHigh.name;
+      return REPORT_LABELS.severityHigh.name
     case "medium":
-      return REPORT_LABELS.severityMedium.name;
+      return REPORT_LABELS.severityMedium.name
     case "low":
-      return REPORT_LABELS.severityLow.name;
+      return REPORT_LABELS.severityLow.name
   }
 }
 
-export function languageLabel(lang: "ar" | "en" | "mixed" | "other"): string | null {
-  if (lang === "ar") return REPORT_LABELS.langAr.name;
-  if (lang === "en") return REPORT_LABELS.langEn.name;
-  return null;
+export function languageLabel(
+  lang: "ar" | "en" | "mixed" | "other"
+): string | null {
+  if (lang === "ar") return REPORT_LABELS.langAr.name
+  if (lang === "en") return REPORT_LABELS.langEn.name
+  return null
 }

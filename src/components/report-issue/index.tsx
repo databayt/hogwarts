@@ -1,4 +1,7 @@
-"use client";
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+"use client"
 
 /**
  * Client-side wrapper. Hogwarts has SessionProvider mounted globally
@@ -8,24 +11,23 @@
  * External code keeps importing `@/components/report-issue` as before —
  * the public API (`<ReportIssue variant />`) is unchanged.
  */
+import * as React from "react"
+import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 
-import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
-import * as React from "react";
+import { reportIssue } from "@/lib/actions/report-issue"
 
-import { reportIssue } from "@/lib/actions/report-issue";
-
-import { ReportIssueDialog } from "./dialog";
+import { ReportIssueDialog } from "./dialog"
 
 export interface ReportIssueProps {
-  variant?: "text" | "icon";
+  variant?: "text" | "icon"
 }
 
 export function ReportIssue({ variant }: ReportIssueProps = {}) {
-  const { status } = useSession();
-  const pathname = usePathname();
-  const lang = pathname?.startsWith("/ar") ? "ar" : "en";
-  const hasSession = status === "authenticated";
+  const { status } = useSession()
+  const pathname = usePathname()
+  const lang = pathname?.startsWith("/ar") ? "ar" : "en"
+  const hasSession = status === "authenticated"
 
   return (
     <ReportIssueDialog
@@ -36,11 +38,11 @@ export function ReportIssue({ variant }: ReportIssueProps = {}) {
       turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
       signInHref="/login"
     />
-  );
+  )
 }
 
 export type {
   ReportIssueDialogProps,
   ReportIssueSubmitInput,
   ReportIssueSubmitResult,
-} from "./dialog";
+} from "./dialog"

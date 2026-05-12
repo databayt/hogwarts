@@ -1,9 +1,12 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Bilingual strings for the canonical Report Issue dialog.
  * Repos can override per-language by extending this map.
  */
 
-export type ReportLang = "en" | "ar";
+export type ReportLang = "en" | "ar"
 
 export const REPORT_CATEGORY_LABELS = {
   en: {
@@ -26,7 +29,7 @@ export const REPORT_CATEGORY_LABELS = {
     i18n: "ترجمة / لغة",
     other: "أخرى",
   },
-} as const;
+} as const
 
 export const REPORT_DICTIONARY = {
   en: {
@@ -34,7 +37,8 @@ export const REPORT_DICTIONARY = {
     triggerAriaLabel: "Report an issue",
     title: "Report an issue",
     categoryPlaceholder: "Category",
-    descriptionPlaceholder: "Describe the issue in detail (minimum 30 characters)…",
+    descriptionPlaceholder:
+      "Describe the issue in detail (minimum 30 characters)…",
     descriptionHint: "{count}/30+ chars",
     addDetails: "Add steps and expected behavior (optional)",
     reproPlaceholder: "Steps to reproduce: 1. … 2. … 3. …",
@@ -53,7 +57,8 @@ export const REPORT_DICTIONARY = {
     successWithId: "Submitted. Tracked as #{id}.",
     error: "Something went wrong. Try again.",
     cooldown: "Please wait a moment before submitting another report.",
-    severityCritical_hint: "Reports flagged critical are escalated immediately.",
+    severityCritical_hint:
+      "Reports flagged critical are escalated immediately.",
   },
   ar: {
     triggerText: "الإبلاغ عن مشكلة",
@@ -81,6 +86,6 @@ export const REPORT_DICTIONARY = {
     cooldown: "يرجى الانتظار لحظة قبل إرسال بلاغ آخر.",
     severityCritical_hint: "البلاغات الحرجة تُصعّد فوراً.",
   },
-} as const;
+} as const
 
-export type ReportDict = (typeof REPORT_DICTIONARY)[ReportLang];
+export type ReportDict = (typeof REPORT_DICTIONARY)[ReportLang]

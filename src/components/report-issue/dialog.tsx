@@ -1,4 +1,7 @@
-"use client";
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+"use client"
 
 /**
  * Canonical Report Issue dialog.
@@ -20,19 +23,22 @@
  * hogwarts ReportIssue, which uses the icon variant inside the configuration
  * wizard footer.
  */
+import * as React from "react"
+import { Bug } from "lucide-react"
 
-import { Bug } from "lucide-react";
-import * as React from "react";
-
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 
-import { REPORT_CATEGORY_LABELS, REPORT_DICTIONARY, type ReportLang } from "./dictionary";
+import {
+  REPORT_CATEGORY_LABELS,
+  REPORT_DICTIONARY,
+  type ReportLang,
+} from "./dictionary"
 
 const REPORT_CATEGORIES = [
   "visual",
@@ -43,51 +49,51 @@ const REPORT_CATEGORIES = [
   "auth",
   "i18n",
   "other",
-] as const;
+] as const
 
-const SEVERITIES = ["low", "medium", "high", "critical"] as const;
+const SEVERITIES = ["low", "medium", "high", "critical"] as const
 
-const MIN_DESCRIPTION = 30;
-const MAX_DESCRIPTION = 2000;
-const COOLDOWN_MS = 60_000;
+const MIN_DESCRIPTION = 30
+const MAX_DESCRIPTION = 2000
+const COOLDOWN_MS = 60_000
 
 export interface ReportIssueSubmitInput {
-  description: string;
-  pageUrl: string;
-  category: (typeof REPORT_CATEGORIES)[number];
-  reproSteps?: string;
-  expected?: string;
-  actual?: string;
-  severityHint?: (typeof SEVERITIES)[number];
-  viewport: string;
-  direction: "ltr" | "rtl";
-  browser: string;
-  hasScreenshot: false;
-  captchaToken?: string;
+  description: string
+  pageUrl: string
+  category: (typeof REPORT_CATEGORIES)[number]
+  reproSteps?: string
+  expected?: string
+  actual?: string
+  severityHint?: (typeof SEVERITIES)[number]
+  viewport: string
+  direction: "ltr" | "rtl"
+  browser: string
+  hasScreenshot: false
+  captchaToken?: string
 }
 
 export interface ReportIssueSubmitResult {
-  ok: boolean;
-  issueNumber?: number;
+  ok: boolean
+  issueNumber?: number
 }
 
 export interface ReportIssueDialogProps {
   /** "text" = underlined link, "icon" = bug icon button. Default "text". */
-  variant?: "text" | "icon";
+  variant?: "text" | "icon"
   /** Active language. Default detected from `<html lang>` attr or "en". */
-  lang?: ReportLang;
+  lang?: ReportLang
   /** True when the visitor is signed in. Controls captcha visibility. */
-  hasSession: boolean;
+  hasSession: boolean
   /** Server action invoked on submit. Should call runReportPipeline. */
-  onSubmit: (input: ReportIssueSubmitInput) => Promise<ReportIssueSubmitResult>;
+  onSubmit: (input: ReportIssueSubmitInput) => Promise<ReportIssueSubmitResult>
   /** Turnstile site key. When absent the captcha block is hidden. */
-  turnstileSiteKey?: string | undefined;
+  turnstileSiteKey?: string | undefined
   /** Sign-in link href used when prompting anonymous users. */
-  signInHref?: string;
+  signInHref?: string
 }
 
 const inputClass =
-  "border-input placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50";
+  "border-input placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 
 export function ReportIssueDialog({
   variant = "text",
@@ -97,32 +103,40 @@ export function ReportIssueDialog({
   turnstileSiteKey,
   signInHref = "/login",
 }: ReportIssueDialogProps): React.JSX.Element {
-  const effectiveLang = lang ?? detectLang();
-  const t = REPORT_DICTIONARY[effectiveLang];
-  const cats = REPORT_CATEGORY_LABELS[effectiveLang];
+  const effectiveLang = lang ?? detectLang()
+  const t = REPORT_DICTIONARY[effectiveLang]
+  const cats = REPORT_CATEGORY_LABELS[effectiveLang]
 
-  const [open, setOpen] = React.useState(false);
-  const [category, setCategory] = React.useState<(typeof REPORT_CATEGORIES)[number]>("other");
-  const [description, setDescription] = React.useState("");
-  const [showDetails, setShowDetails] = React.useState(false);
-  const [reproSteps, setReproSteps] = React.useState("");
-  const [expected, setExpected] = React.useState("");
-  const [actual, setActual] = React.useState("");
-  const [severity, setSeverity] = React.useState<(typeof SEVERITIES)[number] | "">("");
-  const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
-  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
-  const [issueNumber, setIssueNumber] = React.useState<number | undefined>(undefined);
-  const [lastSubmitAt, setLastSubmitAt] = React.useState<number | null>(null);
+  const [open, setOpen] = React.useState(false)
+  const [category, setCategory] =
+    React.useState<(typeof REPORT_CATEGORIES)[number]>("other")
+  const [description, setDescription] = React.useState("")
+  const [showDetails, setShowDetails] = React.useState(false)
+  const [reproSteps, setReproSteps] = React.useState("")
+  const [expected, setExpected] = React.useState("")
+  const [actual, setActual] = React.useState("")
+  const [severity, setSeverity] = React.useState<
+    (typeof SEVERITIES)[number] | ""
+  >("")
+  const [captchaToken, setCaptchaToken] = React.useState<string | null>(null)
+  const [status, setStatus] = React.useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle")
+  const [issueNumber, setIssueNumber] = React.useState<number | undefined>(
+    undefined
+  )
+  const [lastSubmitAt, setLastSubmitAt] = React.useState<number | null>(null)
 
-  const cooldownActive = lastSubmitAt !== null && Date.now() - lastSubmitAt < COOLDOWN_MS;
-  const needsCaptcha = !hasSession && Boolean(turnstileSiteKey);
-  const charCount = description.trim().length;
-  const minMet = charCount >= MIN_DESCRIPTION;
+  const cooldownActive =
+    lastSubmitAt !== null && Date.now() - lastSubmitAt < COOLDOWN_MS
+  const needsCaptcha = !hasSession && Boolean(turnstileSiteKey)
+  const charCount = description.trim().length
+  const minMet = charCount >= MIN_DESCRIPTION
 
   async function handleSubmit() {
-    if (!minMet || cooldownActive) return;
-    if (needsCaptcha && !captchaToken) return;
-    setStatus("loading");
+    if (!minMet || cooldownActive) return
+    if (needsCaptcha && !captchaToken) return
+    setStatus("loading")
 
     const payload: ReportIssueSubmitInput = {
       description,
@@ -137,44 +151,45 @@ export function ReportIssueDialog({
           ? `${window.innerWidth}x${window.innerHeight}`
           : "0x0",
       direction:
-        typeof document !== "undefined" && document.documentElement.dir === "rtl"
+        typeof document !== "undefined" &&
+        document.documentElement.dir === "rtl"
           ? "rtl"
           : "ltr",
       browser: typeof navigator !== "undefined" ? navigator.userAgent : "",
       hasScreenshot: false,
       captchaToken: captchaToken ?? undefined,
-    };
+    }
 
     try {
-      const res = await onSubmit(payload);
+      const res = await onSubmit(payload)
       if (res.ok) {
-        setStatus("success");
-        setIssueNumber(res.issueNumber);
-        setLastSubmitAt(Date.now());
-        setDescription("");
-        setReproSteps("");
-        setExpected("");
-        setActual("");
-        setCategory("other");
-        setSeverity("");
-        setCaptchaToken(null);
-        setShowDetails(false);
+        setStatus("success")
+        setIssueNumber(res.issueNumber)
+        setLastSubmitAt(Date.now())
+        setDescription("")
+        setReproSteps("")
+        setExpected("")
+        setActual("")
+        setCategory("other")
+        setSeverity("")
+        setCaptchaToken(null)
+        setShowDetails(false)
         setTimeout(() => {
-          setOpen(false);
-          setStatus("idle");
-          setIssueNumber(undefined);
-        }, 1500);
+          setOpen(false)
+          setStatus("idle")
+          setIssueNumber(undefined)
+        }, 1500)
       } else {
-        setStatus("error");
+        setStatus("error")
       }
     } catch {
-      setStatus("error");
+      setStatus("error")
     }
   }
 
   const successMessage = issueNumber
     ? t.successWithId.replace("{id}", String(issueNumber))
-    : t.success;
+    : t.success
 
   return (
     <>
@@ -188,10 +203,10 @@ export function ReportIssueDialog({
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          setOpen(v);
+          setOpen(v)
           if (!v) {
-            setStatus("idle");
-            setIssueNumber(undefined);
+            setStatus("idle")
+            setIssueNumber(undefined)
           }
         }}
       >
@@ -203,7 +218,9 @@ export function ReportIssueDialog({
           <select
             className={inputClass}
             value={category}
-            onChange={(e) => setCategory(e.target.value as (typeof REPORT_CATEGORIES)[number])}
+            onChange={(e) =>
+              setCategory(e.target.value as (typeof REPORT_CATEGORIES)[number])
+            }
             aria-label={t.categoryPlaceholder}
           >
             {REPORT_CATEGORIES.map((key) => (
@@ -221,7 +238,7 @@ export function ReportIssueDialog({
             minLength={MIN_DESCRIPTION}
             maxLength={MAX_DESCRIPTION}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t.descriptionHint.replace("{count}", String(charCount))}
           </p>
 
@@ -261,7 +278,9 @@ export function ReportIssueDialog({
                   className={inputClass}
                   value={severity}
                   onChange={(e) =>
-                    setSeverity(e.target.value as (typeof SEVERITIES)[number] | "")
+                    setSeverity(
+                      e.target.value as (typeof SEVERITIES)[number] | ""
+                    )
                   }
                   aria-label={t.severityLabel}
                 >
@@ -277,17 +296,17 @@ export function ReportIssueDialog({
 
           {needsCaptcha && (
             <TurnstileSlot
-              siteKey={turnstileSiteKey as string}
-              onSuccess={setCaptchaToken}
               hint={t.captchaHint}
               linkText={t.captchaLink}
               linkHref={signInHref}
             />
           )}
 
-          {status === "error" && <p className="text-destructive text-sm">{t.error}</p>}
+          {status === "error" && (
+            <p className="text-destructive text-sm">{t.error}</p>
+          )}
           {cooldownActive && status !== "success" && (
-            <p className="text-xs text-muted-foreground">{t.cooldown}</p>
+            <p className="text-muted-foreground text-xs">{t.cooldown}</p>
           )}
 
           {status === "success" ? (
@@ -308,7 +327,7 @@ export function ReportIssueDialog({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 // ─── internals ─────────────────────────────────────────────────────────────
@@ -319,10 +338,10 @@ function TriggerButton({
   ariaLabel,
   onClick,
 }: {
-  variant: "text" | "icon";
-  label: string;
-  ariaLabel: string;
-  onClick: () => void;
+  variant: "text" | "icon"
+  label: string
+  ariaLabel: string
+  onClick: () => void
 }) {
   if (variant === "icon") {
     return (
@@ -330,72 +349,57 @@ function TriggerButton({
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent"
+        className="hover:bg-accent inline-flex h-9 w-9 items-center justify-center rounded-md"
       >
         <Bug className="h-4 w-4" />
       </button>
-    );
+    )
   }
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline font-medium underline underline-offset-4 cursor-pointer"
+      className="inline cursor-pointer font-medium underline underline-offset-4"
     >
       {label}
     </button>
-  );
+  )
 }
 
 interface TurnstileSlotProps {
-  siteKey: string;
-  onSuccess: (token: string) => void;
-  hint: string;
-  linkText: string;
-  linkHref: string;
+  hint: string
+  linkText: string
+  linkHref: string
 }
 
 /**
- * Turnstile widget mounts inside this slot. The @marsidev/react-turnstile
- * package is lazy-imported so the marketing footer's bundle stays slim for
- * visitors who never open the dialog.
+ * Captcha slot placeholder.
+ *
+ * Phase 1a does NOT bundle @marsidev/react-turnstile — the full widget lands
+ * in the follow-up PR alongside TURNSTILE_SECRET_KEY env config. For now the
+ * slot only renders the "sign in for faster review" hint (which the wrapper
+ * controls via turnstileSiteKey being unset → needsCaptcha=false → this
+ * component is never rendered). Kept as a stub so the type stays stable.
  */
 function TurnstileSlot({
-  siteKey,
-  onSuccess,
   hint,
   linkText,
   linkHref,
 }: TurnstileSlotProps) {
-  const Turnstile = React.useMemo(
-    () =>
-      React.lazy(async () => {
-        const mod = await import("@marsidev/react-turnstile");
-        return { default: mod.Turnstile };
-      }),
-    []
-  );
   return (
     <div className="space-y-2">
-      <React.Suspense fallback={<div className="h-16" />}>
-        <Turnstile
-          siteKey={siteKey}
-          onSuccess={onSuccess}
-          options={{ size: "flexible", theme: "auto" }}
-        />
-      </React.Suspense>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         {hint}{" "}
         <a className="underline" href={linkHref}>
           {linkText}
         </a>
       </p>
     </div>
-  );
+  )
 }
 
 function detectLang(): ReportLang {
-  if (typeof document === "undefined") return "en";
-  const htmlLang = document.documentElement.lang?.toLowerCase();
-  return htmlLang?.startsWith("ar") ? "ar" : "en";
+  if (typeof document === "undefined") return "en"
+  const htmlLang = document.documentElement.lang?.toLowerCase()
+  return htmlLang?.startsWith("ar") ? "ar" : "en"
 }

@@ -1,3 +1,6 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
 /**
  * Hard filters — instant silent-reject triggers that run BEFORE scoring and AI.
  * Each filter is cheap (no network) and fires before the more expensive Haiku call.
@@ -18,17 +21,14 @@
  *   HF10 banned IP/user                          (permanent ban; checked in adapter)
  */
 
-import type { ReportInputParsed } from "./schema";
-import type {
-  RejectReason,
-  ReporterContext,
-} from "./types";
+import type { ReportInputParsed } from "./schema"
+import type { RejectReason, ReporterContext } from "./types"
 
 export interface HardFilterContext {
-  hostAllowlist: string[];
-  recentSelfSubmissions: string[]; // first-60-chars of descriptions in last 60s for this reporter
-  captchaValid: boolean | null; // null if not needed, true/false otherwise
-  isBanned: boolean;
+  hostAllowlist: string[]
+  recentSelfSubmissions: string[] // first-60-chars of descriptions in last 60s for this reporter
+  captchaValid: boolean | null // null if not needed, true/false otherwise
+  isBanned: boolean
 }
 
 /**
@@ -45,7 +45,7 @@ export function runHardFilters(
     return {
       code: "HF10_banned",
       detail: "Identifier is on the report ban list.",
-    };
+    }
   }
 
   // HF4 — suspended account
@@ -53,17 +53,17 @@ export function runHardFilters(
     return {
       code: "HF4_suspended",
       detail: "Reporter account is suspended.",
-    };
+    }
   }
 
-  const trimmed = input.description.trim();
+  const trimmed = input.description.trim()
 
   // HF1 — too short. (Zod also rejects but we re-check after trim.)
   if (trimmed.length < 30) {
     return {
       code: "HF1_too_short",
       detail: `Description is ${trimmed.length} chars; minimum is 30.`,
-    };
+    }
   }
 
   // HF2 — too long
@@ -71,7 +71,7 @@ export function runHardFilters(
     return {
       code: "HF2_too_long",
       detail: `Description is ${input.description.length} chars; maximum is 2000.`,
-    };
+    }
   }
 
   // HF3 — anonymous needs valid captcha. (When ctx.captchaValid is null, captcha
@@ -80,70 +80,73 @@ export function runHardFilters(
     return {
       code: "HF3_no_captcha",
       detail: "Anonymous reports require a valid Turnstile token.",
-    };
+    }
   }
 
   // HF5 — host allowlist
-  let host = "";
+  let host = ""
   try {
-    host = new URL(input.pageUrl).host.toLowerCase();
+    host = new URL(input.pageUrl).host.toLowerCase()
   } catch {
     return {
       code: "HF5_host_mismatch",
       detail: "Page URL did not parse.",
-    };
+    }
   }
   if (!hostMatches(host, ctx.hostAllowlist)) {
     return {
       code: "HF5_host_mismatch",
       detail: `Host "${host}" is not in the allowlist.`,
-    };
+    }
   }
 
   // HF6 — unique meaningful tokens < 5. Catches "asdf asdf asdf asdf".
-  const meaningfulTokens = uniqueMeaningfulTokens(trimmed);
+  const meaningfulTokens = uniqueMeaningfulTokens(trimmed)
   if (meaningfulTokens < 5) {
     return {
       code: "HF6_few_tokens",
       detail: `Only ${meaningfulTokens} unique meaningful tokens.`,
-    };
+    }
   }
 
   // HF7 — character-class ratio. Counts Arabic + Latin letters as letters.
-  const ratio = letterRatio(trimmed);
+  const ratio = letterRatio(trimmed)
   if (ratio.letters < 0.4 || ratio.nonAlpha > 0.7) {
     return {
       code: "HF7_gibberish",
       detail: `letters=${ratio.letters.toFixed(2)}, nonAlpha=${ratio.nonAlpha.toFixed(2)}`,
-    };
+    }
   }
 
   // HF9 — same reporter, similar description, in last 60 seconds. This is the
   // hogwarts #302/#303/#304 case where the user double/triple-clicks Submit.
-  const head = trimmed.slice(0, 60).toLowerCase();
+  const head = trimmed.slice(0, 60).toLowerCase()
   if (ctx.recentSelfSubmissions.some((prev) => prev.toLowerCase() === head)) {
     return {
       code: "HF9_self_duplicate",
       detail: "Same first-60-chars of description submitted within last 60s.",
-    };
+    }
   }
 
-  return null;
+  return null
 }
 
 /**
  * Match host against allowlist entries. Entries can be exact (`localhost`) or
  * wildcard (`*.databayt.org`).
  */
-export function hostMatches(host: string, allowlist: readonly string[]): boolean {
+export function hostMatches(
+  host: string,
+  allowlist: readonly string[]
+): boolean {
   return allowlist.some((entry) => {
-    const normalized = entry.toLowerCase();
+    const normalized = entry.toLowerCase()
     if (normalized.startsWith("*.")) {
-      const suffix = normalized.slice(1); // ".databayt.org"
-      return host === suffix.slice(1) || host.endsWith(suffix);
+      const suffix = normalized.slice(1) // ".databayt.org"
+      return host === suffix.slice(1) || host.endsWith(suffix)
     }
-    return host === normalized;
-  });
+    return host === normalized
+  })
 }
 
 /**
@@ -155,20 +158,23 @@ export function uniqueMeaningfulTokens(text: string): number {
     .toLowerCase()
     .replace(/[ً-ٰٟ]/g, "") // Arabic diacritics
     .split(/[\s\p{P}]+/u) // unicode whitespace + punctuation
-    .filter((t) => t.length >= 2);
-  return new Set(tokens).size;
+    .filter((t) => t.length >= 2)
+  return new Set(tokens).size
 }
 
 /**
  * Ratio of letters (any Unicode letter incl. Arabic) vs total non-space chars.
  */
-export function letterRatio(text: string): { letters: number; nonAlpha: number } {
-  const nonSpace = text.replace(/\s/g, "");
-  if (nonSpace.length === 0) return { letters: 0, nonAlpha: 1 };
-  const letters = nonSpace.match(/\p{L}/gu)?.length ?? 0;
-  const digits = nonSpace.match(/\p{N}/gu)?.length ?? 0;
+export function letterRatio(text: string): {
+  letters: number
+  nonAlpha: number
+} {
+  const nonSpace = text.replace(/\s/g, "")
+  if (nonSpace.length === 0) return { letters: 0, nonAlpha: 1 }
+  const letters = nonSpace.match(/\p{L}/gu)?.length ?? 0
+  const digits = nonSpace.match(/\p{N}/gu)?.length ?? 0
   return {
     letters: letters / nonSpace.length,
     nonAlpha: (nonSpace.length - letters - digits) / nonSpace.length,
-  };
+  }
 }
