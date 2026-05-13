@@ -1,0 +1,681 @@
+---
+title: Offline
+description: Production-grade offline engine for Hogwarts — no-compromise foundation (Dexie + OPFS + Web Worker sync + WebSocket invalidation + content hashes + code-split bundles), phased per-role delivery, week-by-week roadmap, pilot playbook.
+---
+
+Hogwarts targets schools where 2G/3G fallback, intermittent WiFi, and full outages are the norm — Sudan pilots, rural transit routes, exam halls in basements, applicants on prepaid mobile data. This page is the platform-wide strategy for delivering a **production-grade offline engine** with a no-compromise foundation, then layering per-role features in phases on top of that solid base.
+
+We do not ship half-measures. The foundation is built once and built right; per-role features layer on top in phases. For tenancy and sync constraints see [Multi-tenancy](/docs/multi-tenancy) and [Database](/docs/database). For prior-art epic shape this doc follows see [Document Intelligence](/docs/document-intelligence). For dictionary-key conventions see [Translation](/docs/translation).
+
+## Why this matters
+
+Today the platform handles network failure in scattered, feature-specific ways. The pain points compound during the moments that matter most.
+
+| Moment                                   | Today                                                        | Cost                                                    |
+| ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------- |
+| Teacher marking attendance offline       | Single-transaction POST; failure shows a toast and discards  | Day's attendance lost; manual paper re-entry            |
+| Student submitting exam on flaky 3G      | Auto-save survives; final `submitExamSession` does not       | Late-submit penalty applied to students with bad signal |
+| Driver in tunnel during route            | In-app boarding writes go straight to server; fails silently | Parents see no boarding event; trust erodes             |
+| Applicant uploading transcript on 2G     | S3 PUT, no chunking, no resume                               | Application abandoned at 90% upload                     |
+| Teacher swipe-grading 50 papers on phone | One server action per swipe; any failure halts queue         | Grading session restart; ~30 min lost                   |
+| Anyone reading timetable offline         | SW dynamic cache only if previously visited                  | Cold-cache page = blank screen + offline fallback       |
+
+The platform serves ~12 K students across 8 active schools today; the Sudan and KSA pilot targets push that to ~40 K within 12 months. Sudan's mobile carriers average 1.2 Mbps downlink with frequent dropouts; KSA boarding schools see exam-hall-WiFi saturation during high-stakes weeks. A solid offline engine is the unblock for both deployments.
+
+## What success looks like
+
+These are the headline metrics the team commits to at "Foundation gate passed" + "all per-role epics shipped".
+
+1. **Zero attendance loss** on disconnect — 100% of teacher attendance batches recorded within 60 s of reconnect.
+2. **Zero exam-submit loss** — 100% of `submitExamSession` calls eventually complete, even after browser restart.
+3. **Sub-1 s offline load** for timetable + announcements after initial visit (instant render from Dexie live query).
+4. **PWA install rate** ≥ 35% on mobile for active teachers within 4 weeks of rollout.
+5. **Sync success rate** ≥ 99.9% across all queued mutations (rolling 7-day window).
+6. **Storage usage** ≤ 25 MB per active user on average (Safari iOS quota headroom).
+7. **Bundle size delta** — foundation chunk ≤ 35 KB gzipped; per-epic chunks lazy-loaded.
+8. **Main thread budget** — sync flush never blocks the main thread > 16 ms (work moves to Web Worker).
+9. **First-byte cache invalidation** — server WebSocket push invalidates client cache within 200 ms of remote write.
+
+## Engineering principles (no compromise)
+
+These are non-negotiable. Each principle drives concrete choices in the architecture.
+
+1. **Sync never blocks the main thread.** All replay, encryption, compression, and conflict checking run in a dedicated Web Worker (`sync-worker.ts`). The main thread is reserved for UI.
+2. **Large blobs go to OPFS, not IDB.** Attachments, exam papers, recorded audio, photos all use the Origin Private File System. IDB stores only structured payloads and chunk metadata.
+3. **Every mutation is tamper-evident.** Every envelope carries a SHA-256 content hash. The server verifies on intake; the client verifies on replay.
+4. **Real-time cache invalidation.** WebSocket pushes invalidation events from server to all connected clients. No silent staleness; never wait for `refetchOnReconnect`.
+5. **Code-split per epic.** Foundation chunk ≤ 35 KB. Each per-role epic ships its own lazy-loaded chunk. New schools download only the foundation; per-feature code loads on first use.
+6. **Telemetry from day 1.** Every state transition (enqueue, flush, conflict, error, retry) emits a structured event to Sentry and to `OfflineSyncLog`. No retrofitting.
+7. **Feature flag gates new features, never the foundation.** `School.offlineMode` toggles features; the foundation library is always loaded for installed PWAs. Foundation cannot be partially adopted.
+8. **Performance budgets are CI gates.** size-limit, Lighthouse CI, custom Sentry budgets. CI fails on regression; we never "fix it in a follow-up".
+9. **Conflict resolution is always explicit to the user.** Silent overwrites are forbidden. Every server-rejected mutation surfaces a structured conflict UI with the data on both sides + a resolution choice.
+10. **The foundation library is versioned.** Schema migrations between versions are tested. We never break older PWAs in the wild without a documented upgrade path.
+11. **Conditions of use are observable.** `useNetworkStatus`, `useStorageEstimate`, `usePendingSyncCount` are public hooks. Any feature surface can show users what's happening.
+12. **Multi-tenant safety is architectural, not procedural.** IDB DB name namespaced by `schoolId`; SW reads tenant from session cookie at fetch time, never from a global; cross-tenant leak is impossible by construction.
+
+## Foundation architecture decisions
+
+Each compromise we considered, and why we rejected it.
+
+| Decision             | Half-measure                | No-compromise choice                                                                              |
+| -------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| IDB wrapper          | Raw `indexedDB` (~0 KB)     | `dexie@^4` (~21 KB) with `dexie-react-hooks` for live queries, schema versioning, transactions    |
+| Sync engine location | Main thread                 | `sync-worker.ts` Web Worker — replay, encryption, compression, integrity checks all off main      |
+| Blob storage         | IDB blob field              | OPFS for any payload > 100 KB; IDB stores only the OPFS file handle reference                     |
+| Cache invalidation   | `refetchOnReconnect`        | WebSocket `cache-invalidate` events from server; sub-200 ms invalidation                          |
+| Mutation integrity   | None                        | SHA-256 `contentHash` on every envelope; verified on intake and replay                            |
+| Payload compression  | None                        | MessagePack + LZ4 (via `@msgpack/msgpack` + WASM `lz4-wasm`) for payloads > 1 KB                  |
+| Sync intake topology | Single endpoint             | Per-domain shards: `/api/offline/sync/{attendance,exam,transport,messaging,application}` parallel |
+| Bundle strategy      | Single foundation chunk     | Foundation (≤ 35 KB) + per-epic lazy chunks via `dynamic()` boundaries                            |
+| State machine        | enum `status`               | XState-style finite state machine: `idle → pending → in_flight → synced ∣ conflicted ∣ failed`    |
+| Conflict resolution  | Server LWW                  | Server-authoritative + structured merge UI (`<ConflictResolver>`) for resolvable conflicts        |
+| Service worker role  | Cache + sync stub           | Message bus between tab and sync worker; runs replay when no tab is open (background sync)        |
+| Real-time delivery   | None / SSE polling          | Reuse existing `socket.io-client@4.8.1` for low-latency invalidation + push notifications         |
+| Tenant safety        | Session cookie at API layer | + IDB DB namespaced by schoolId; SW reads tenant per-request from session cookie                  |
+| Telemetry            | Bolted on later             | `OfflineSyncLog` + Sentry breadcrumbs + `<OfflineDevtools>` panel shipped with EPIC-0             |
+
+## Scope
+
+10 epics, ~42 stories, **231 story points**. EPIC-0 is the foundation that every other epic depends on and must pass the **Foundation Gate** (see below) before any per-role work starts.
+
+| Epic                              | Goal                                                                                                                           | Points |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -----: |
+| EPIC-0 — Foundation               | Dexie storage, OPFS blobs, Web Worker sync engine, SW message bus, WebSocket invalidation, content hashes, telemetry, devtools |     62 |
+| EPIC-1 — PWA installability       | App-shell pre-cache, install prompt, update flow, install-promo UI                                                             |     15 |
+| EPIC-2 — Smart read cache         | Timetable, announcements, profile, roster via Dexie live queries; WebSocket cache invalidation                                 |     24 |
+| EPIC-3 — Teacher offline          | Bulk attendance, QR scanning, mobile swipe-grading queue, structured conflict UI                                               |     32 |
+| EPIC-4 — Student offline          | Exam submit queue, proctor log persistence, paper pre-cache, lockdown integration                                              |     22 |
+| EPIC-5 — Driver offline           | Transportation trip boarding mirroring geofence pattern; route + roster OPFS pre-load                                          |     15 |
+| EPIC-6 — Applicant offline        | Resumable attachment upload via OPFS, Dexie-backed application draft, queued submit                                            |     18 |
+| EPIC-7 — Messaging outbound queue | Optimistic send, attachment queue, WhatsApp bridge offline policy, real-time receipt sync                                      |     16 |
+| EPIC-8 — Observability            | `OfflineSyncLog` analytics, Sentry breadcrumbs, DEVELOPER dashboard tile, per-school SLI dashboard                             |     14 |
+| EPIC-9 — Docs, i18n, admin config | This doc + AR mirror, ~30 dictionary keys, `School.offlineMode` flag, Playwright E2E suite                                     |     13 |
+
+## Architecture context
+
+The plan extends existing resilience scaffolding rather than replacing it. Two gold-standard implementations already live in the codebase — the exam auto-save hook and the geofence GPS tracker — and the foundation epic generalizes both into one reusable, production-grade library.
+
+| Component               | Location                                                                  | Current state                                                                |
+| ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Service worker          | `public/service-worker.js`                                                | Network-first cache for HTML/API; `syncOfflineForms()` at line 160 is a stub |
+| SW registration         | `src/components/providers/service-worker-provider.tsx`                    | Production-only `window.load` register                                       |
+| Offline fallback page   | `src/components/offline/content.tsx`                                      | Static; no last-sync indicator                                               |
+| Manifest                | `src/app/manifest.ts`                                                     | Installable; shortcuts for `/attendance` + `/attendance/qr-code`             |
+| `useOfflineQueue<T>`    | `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | In-memory only; lost on reload — to be retired                               |
+| `LocationQueue` (IDB)   | `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Full IndexedDB queue, batch flush — generalized into shared primitive        |
+| Exam auto-save          | `src/components/school-dashboard/exams/take/hooks/use-auto-save.ts`       | Debounce + localStorage + exp-backoff — generalized into shared primitive    |
+| Application draft       | `src/components/school-marketing/application/application-context.tsx:412` | Server session + per-campaign + per-user localStorage — migrated to Dexie    |
+| Onboarding draft        | `src/components/onboarding/util.ts:291`                                   | `DRAFT_STORAGE_KEY = "onboarding_draft_"` — migrated to Dexie                |
+| Network strategies      | `src/lib/performance-optimization.ts`                                     | slow-2g/2g/3g/4g/saveData/rtt — wired into `useNetworkStatus`                |
+| LRU server cache        | `src/lib/cache/exam-cache.ts`                                             | TTL cache for grade boundaries, school branding                              |
+| Circuit breaker         | `src/lib/circuit-breaker.ts`                                              | 5 failures → 30 s cooldown for DB                                            |
+| `@tanstack/react-query` | `package.json`                                                            | Installed `5.90.12` — wired up in EPIC-0                                     |
+| `socket.io-client`      | `package.json`                                                            | Installed `4.8.1` — used for WebSocket cache invalidation in EPIC-0          |
+| Mobile API              | `src/app/api/mobile/**`                                                   | 30+ JWT-auth endpoints (snake_case JSON)                                     |
+| Geofence boarding hook  | `src/app/api/transportation/geofence-boarding/route.ts`                   | Bearer-token webhook; idempotent; ack-and-ignore for no-match codes          |
+
+## Schema facts
+
+- Every business model has `schoolId` with `@@index([schoolId])`. Every offline write MUST preserve this.
+- `KioskLog.syncedToAttendance` already exists at `prisma/models/attendance.prisma:404` — currently set synchronously; will be reused as the deferred-sync flag.
+- New models required: `OfflineMutation` (durable server-side queue), `OfflineSyncLog` (idempotency cache, 30-day TTL), `CacheInvalidation` (broadcast topic log, 7-day TTL).
+- New `School.offlineMode` enum field: `disabled` / `limited` / `full`. Default `limited` for new schools, `full` for pilot rollouts.
+- Translation strings live in `src/components/internationalization/{school-en,school-ar}.json` under `dictionary.offline.*`.
+
+## Patterns
+
+Every epic follows the same conventions.
+
+- **Dexie tenant DB.** One Dexie database per origin named `hogwarts-${schoolId}` with versioned schema. Live queries via `useLiveQuery`. Migrations tested in CI.
+- **OPFS blobs.** Files > 100 KB go to OPFS. IDB stores `{ opfsPath, size, sha256, mimeType }` only.
+- **Sync worker.** `sync-worker.ts` runs Dexie queries, payload compression, content-hash verification, replay HTTP. Main thread posts messages to it; worker streams progress back.
+- **Discriminated mutation envelope.** `{ id, schoolId, userId, action, payload, idempotencyKey, contentHash, attempts, lastError, state, createdAt }` where `action` is a string literal resolved via `actionRegistry` at flush time.
+- **Idempotency keys.** cuid v2 generated client-side; persisted in payload; server checks `OfflineSyncLog` before re-applying.
+- **Per-domain sync shards.** `/api/offline/sync/{attendance|exam|transport|messaging|application}` for parallel processing. Each endpoint dispatches to its domain's action handlers.
+- **WebSocket invalidation.** Server broadcasts `cache-invalidate` messages on writes. Client matches against active Dexie tables and triggers live-query refresh.
+- **Thin react hooks.** Feature code uses `useOfflineMutation` / `useLiveQuery` / `useNetworkStatus` / `usePendingSyncCount` / `useStorageEstimate`. Never imports `dexie` or `@tanstack/*` directly.
+- **i18n-first.** Every offline string lives in `dictionary.offline.*`. No hardcoded English in JSX, toasts, or error returns.
+- **Code-split per epic.** Per-feature offline code lives in lazy chunks. `import("./feature/offline.ts")` boundaries.
+
+## Current state vs. target state
+
+| Capability                     | Today                                      | After foundation + role epics                                              |
+| ------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------- |
+| Bulk attendance offline        | ✗ lost                                     | ✓ queued in Dexie, replayed by sync worker, content-hash verified          |
+| Exam final submit offline      | ✗ user sees error toast                    | ✓ "submission queued" full-screen, completes on reconnect within 30 s      |
+| Mobile swipe grading           | ✗ per-swipe RPC                            | ✓ 25-swipe batch, one mutation, optimistic UI with rollback                |
+| Driver in-app boarding offline | ✗ silent failure                           | ✓ Dexie queue + manual flush badge + offline geofence cache                |
+| Applicant attachment on 2G     | ✗ restart from byte 0                      | ✓ tus-style resumable via OPFS, completed parts persisted                  |
+| Outbound messaging offline     | ✗ optimistic UI but no queue               | ✓ `queued/sending/sent/failed` bubble states + real-time delivery receipts |
+| Read timetable offline         | △ network-first cache, blank on cold cache | ✓ Dexie live query, instant render, WebSocket invalidation                 |
+| PWA install                    | △ installable manifest, no prompt UI       | ✓ install banner on 3rd visit + manual install in settings                 |
+| SW update flow                 | △ silent SW updates                        | ✓ toast prompts reload when new SW waiting; staged rollout                 |
+| Pending sync visibility        | ✗ none                                     | ✓ drawer in header showing queued mutations + retry/discard + conflict UI  |
+| Tenant safety                  | △ session cookie + middleware              | ✓ + Dexie namespaced; SW reads tenant from session cookie per request      |
+| Telemetry                      | ✗ none on offline events                   | ✓ `OfflineSyncLog` + Sentry breadcrumbs + DEVELOPER dashboard + devtools   |
+| Main-thread budget             | △ sync runs on main thread                 | ✓ Web Worker; main thread never blocked > 16 ms during sync                |
+| Cache invalidation             | △ refetchOnReconnect                       | ✓ WebSocket push; sub-200 ms invalidation                                  |
+| Conflict resolution            | ✗ silent overwrite or toast                | ✓ structured `<ConflictResolver>` UI with both sides + resolution choice   |
+| Code splitting                 | △ single bundle                            | ✓ foundation < 35 KB; per-epic chunks lazy-loaded                          |
+
+## Conflict resolution policy per action
+
+The default is server-authoritative with structured merge UI. Per-action overrides below.
+
+| Action                         | Strategy                          | UI on conflict                                                                           |
+| ------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| `attendance.bulkUpload`        | last-write-wins by `markedAt`     | Toast "Your save was older than `{colleague}`'s edit. Newer values kept." with diff link |
+| `attendance.qrScan`            | first-write-wins by `scannedAt`   | Toast "Student already marked present at `{time}`."                                      |
+| `exam.submit`                  | reject on `paperVersion` mismatch | Full-screen `<PaperVersionConflict>` with re-fetch option                                |
+| `exam.autoSave`                | last-write-wins by `savedAt`      | Silent (drafts always accept newer)                                                      |
+| `exam.proctorEvent`            | append-only                       | Silent (audit log; dedup server-side)                                                    |
+| `grading.batchApply`           | reject on `gradeVersion` mismatch | `<GradingConflict>` panel showing your changes vs current state, per-row keep/discard    |
+| `transportation.boardingEvent` | server-authoritative idempotent   | Silent (already `(schoolId, tripId, studentId)` upsert)                                  |
+| `application.submit`           | first-write-wins by `submittedAt` | Toast "Application already submitted on `{date}`."                                       |
+| `application.draftSave`        | last-write-wins by `savedAt`      | Silent                                                                                   |
+| `messaging.send`               | append-only                       | Silent (idempotency on `clientMessageId`)                                                |
+| `messaging.markRead`           | last-write-wins (max read state)  | Silent (monotonic increase)                                                              |
+| `notification.acknowledge`     | append-only idempotent            | Silent                                                                                   |
+
+## Browser compatibility matrix
+
+The strategy targets the browsers schools actually use. Capability detection at runtime in `useNetworkStatus` and `useOPFSSupport`.
+
+| Browser / OS               | Dexie |   OPFS    | Web Worker | SW  | Background Sync | beforeinstallprompt | Network Info | Notes                                              |
+| -------------------------- | :---: | :-------: | :--------: | :-: | :-------------: | :-----------------: | :----------: | -------------------------------------------------- |
+| Chrome Android 110+        |   ✓   |     ✓     |     ✓      |  ✓  |        ✓        |          ✓          |      ✓       | Full support; primary target                       |
+| Safari iOS 16+             |   ✓   | ✓ (16.4+) |     ✓      |  ✓  |        ✗        |   ✗ (Add to Home)   |      ✗       | OPFS in 16.4; SW restricted; fall back to `online` |
+| Samsung Internet 19+       |   ✓   |     ✓     |     ✓      |  ✓  |        ✓        |          ✓          |      ✓       | Full support                                       |
+| Chrome Desktop 110+        |   ✓   |     ✓     |     ✓      |  ✓  |        ✓        |          ✓          |      ✓       | Full support                                       |
+| Safari macOS 16+           |   ✓   | ✓ (16.4+) |     ✓      |  ✓  |        ✗        |          ✗          |      ✗       | Same as iOS Safari                                 |
+| Firefox 110+               |   ✓   | ✓ (111+)  |     ✓      |  ✓  |        ✗        |          ✗          |   partial    | OPFS in 111; treat as Safari for sync              |
+| Edge 110+                  |   ✓   |     ✓     |     ✓      |  ✓  |        ✓        |          ✓          |      ✓       | Chromium-based, full support                       |
+| In-app browsers (WhatsApp) |   ✓   |     ✗     |     ✓      |  △  |        ✗        |          ✗          |      ✗       | OPFS unavailable; fall back to IDB blob storage    |
+
+Where OPFS is missing, the storage layer falls back to IDB blob fields with a quota warning. Where Background Sync is missing, sync runs on `online` event + visibility change while the tab is open; on PWA reopen the worker drains immediately.
+
+## Storage budget per role
+
+`navigator.storage.estimate()` watchdog warns at 80% utilization. OPFS is included in the same origin quota; we partition deliberately.
+
+| Role      | IDB (Dexie) | OPFS | Total typical | Worst-case | Eviction policy                                                           |
+| --------- | ----------: | ---: | ------------: | ---------: | ------------------------------------------------------------------------- |
+| Teacher   |        3 MB | 2 MB |          5 MB |      15 MB | Roster LRU 7d; attendance queue never evicted unsent                      |
+| Student   |        2 MB | 3 MB |          5 MB |      12 MB | Exam paper PDF evicted on session end; auto-saves never evicted unsent    |
+| Driver    |        4 MB | 1 MB |          5 MB |      18 MB | Trip roster evicted on trip end; boarding queue never evicted unsent      |
+| Applicant |        2 MB | 8 MB |         10 MB |      25 MB | Attachment chunks in OPFS until upload complete; drafts kept until submit |
+| Guardian  |        1 MB | 0 MB |          1 MB |       4 MB | Read-only; cached announcements LRU 14d                                   |
+| Admin     |        3 MB | 1 MB |          4 MB |      12 MB | Same as Teacher                                                           |
+
+## Performance budgets
+
+These are the budgets CI enforces.
+
+| Metric                                 | Budget        | Measured how                                  |
+| -------------------------------------- | ------------- | --------------------------------------------- |
+| Foundation chunk gzipped               | ≤ 35 KB       | `size-limit` CI                               |
+| Each per-epic chunk gzipped            | ≤ 15 KB       | `size-limit` CI                               |
+| Time to interactive offline (cold IDB) | ≤ 1.5 s on 3G | Lighthouse CI                                 |
+| Dexie write p95                        | ≤ 50 ms       | Sentry transaction                            |
+| Dexie read p95                         | ≤ 20 ms       | Sentry transaction                            |
+| OPFS write p95 (per 1 MB chunk)        | ≤ 200 ms      | Sentry transaction                            |
+| Sync worker flush per mutation         | ≤ 300 ms      | `OfflineSyncLog.replayedAt - createdAt`       |
+| WebSocket invalidation latency         | ≤ 200 ms      | Server timestamp → client `live-query` update |
+| SW activation time                     | ≤ 800 ms      | `navigator.serviceWorker.ready` timing        |
+| Reconnect-to-drained-queue (10 items)  | ≤ 3 s         | Manual Playwright test + Sentry               |
+| Cache hit ratio for timetable          | ≥ 95%         | Custom telemetry                              |
+| Main-thread block during sync (p99)    | ≤ 16 ms       | Performance API long-task observer            |
+
+## Pre-foundation phase (Week 0): Spikes & Research
+
+Ten spike tasks ship before EPIC-0 starts. Each is timeboxed to 0.5-1 day and produces a Decision Record. All must merge before EPIC-0 starts — these answer questions the foundation depends on.
+
+| Spike  | Goal                                                                                   | Outcome                                          | Owner |
+| ------ | -------------------------------------------------------------------------------------- | ------------------------------------------------ | ----- |
+| S-0.1  | Benchmark Dexie vs `idb` for 1000-write batches, live-query latency, schema migrations | Dexie chosen; benchmark numbers in DR            | Dev A |
+| S-0.2  | OPFS quotas + write perf on Safari iOS 16.4, Chrome Android 110, Firefox 111           | Capability + fallback matrix                     | Dev B |
+| S-0.3  | Web Worker + Comlink RPC prototype for sync engine                                     | Working POC; main-thread budget validated        | Dev A |
+| S-0.4  | LZ4-wasm vs Snappy benchmark on typical payloads (attendance batch, exam answers)      | Compression chosen; compression ratio numbers    | Dev B |
+| S-0.5  | SHA-256 perf via SubtleCrypto vs WASM on 1 MB payloads                                 | Hashing chosen; per-byte cost                    | Dev A |
+| S-0.6  | WebSocket cache-invalidate topology — single channel vs per-school rooms               | Topology + scaling plan                          | Dev B |
+| S-0.7  | Service-worker → sync-worker message bus pattern                                       | Architecture diagram + reference code            | Dev A |
+| S-0.8  | XState vs hand-rolled state machine for mutation lifecycle                             | Decision + bundle-cost analysis                  | Dev B |
+| S-0.9  | Background Sync iOS PWA behavior — when does it actually fire                          | iOS fallback plan documented                     | Dev A |
+| S-0.10 | Baseline current connection patterns from Sentry / Vercel Analytics                    | "X% of sessions see ≥1 network failure" baseline | Dev B |
+
+## Stories per epic
+
+### EPIC-0 — Foundation: Production-Grade Offline Engine (62 pts)
+
+The foundation is built once, built right, and ships **before** any per-role work starts. Five sub-epics, all merged before the Foundation Gate (see below).
+
+**0.A — Storage layer (18 pts)**
+
+| Story | Title                                                                     | Pts | Type  |
+| ----- | ------------------------------------------------------------------------- | --: | ----- |
+| 0.A.1 | Add Dexie + `dexie-react-hooks`; tenant DB factory `hogwarts-${schoolId}` |   5 | INFRA |
+| 0.A.2 | Schema versioning + migration framework + CI migration tests              |   5 | INFRA |
+| 0.A.3 | OPFS abstraction (`putBlob`/`getBlob`/`deleteBlob`) with IDB fallback     |   5 | INFRA |
+| 0.A.4 | `OfflineMutation` + `OfflineSyncLog` + `CacheInvalidation` Prisma models  |   3 | DB    |
+
+**0.B — Sync worker (18 pts)**
+
+| Story | Title                                                                        | Pts | Type  |
+| ----- | ---------------------------------------------------------------------------- | --: | ----- |
+| 0.B.1 | `sync-worker.ts` Web Worker scaffold + Comlink RPC                           |   5 | INFRA |
+| 0.B.2 | `actionRegistry` discriminated-union envelope types + Zod schemas            |   3 | API   |
+| 0.B.3 | XState mutation lifecycle state machine `(idle → pending → in_flight → ...)` |   5 | API   |
+| 0.B.4 | LZ4 + MessagePack compression pipeline                                       |   3 | INFRA |
+| 0.B.5 | SHA-256 content hashing + replay verification                                |   2 | API   |
+
+**0.C — Network + conflict primitives (12 pts)**
+
+| Story | Title                                                                           | Pts | Type |
+| ----- | ------------------------------------------------------------------------------- | --: | ---- |
+| 0.C.1 | `useNetworkStatus` canonical hook (navigator.onLine + Network Info + heartbeat) |   3 | UI   |
+| 0.C.2 | `useMutationQueue<T>` / `useOfflineMutation` / `useLiveQuery` thin react hooks  |   5 | UI   |
+| 0.C.3 | `<ConflictResolver>` atom + structured merge UI primitive                       |   4 | UI   |
+
+**0.D — Service worker as coordinator (8 pts)**
+
+| Story | Title                                                                         | Pts | Type  |
+| ----- | ----------------------------------------------------------------------------- | --: | ----- |
+| 0.D.1 | Replace stub `syncOfflineForms()` at `public/service-worker.js:160`           |   3 | INFRA |
+| 0.D.2 | Per-domain sync shard endpoints `/api/offline/sync/{domain}`                  |   3 | API   |
+| 0.D.3 | WebSocket `cache-invalidate` server broadcast + client receiver via socket.io |   2 | API   |
+
+**0.E — Telemetry + devtools (6 pts)**
+
+| Story | Title                                                                      | Pts | Type  |
+| ----- | -------------------------------------------------------------------------- | --: | ----- |
+| 0.E.1 | Sentry breadcrumbs + `OfflineSyncLog` instrumentation on every transition  |   3 | INFRA |
+| 0.E.2 | `<OfflineDevtools>` floating panel (DEVELOPER-only) showing queue + caches |   3 | UI    |
+
+The foundation epic ships the production-grade offline engine that every per-role epic consumes. New files land under `src/lib/offline/{db,opfs,registry,types,state-machine,compression,integrity}.ts`, the `sync-worker.ts` worker, and `src/components/offline/{hooks,provider,devtools}/`. Blocks every other epic until Foundation Gate is passed.
+
+### EPIC-1 — PWA Installability + App-Shell Pre-Cache (15 pts)
+
+| Story | Title                                                            | Pts | Type  |
+| ----- | ---------------------------------------------------------------- | --: | ----- |
+| 1.1   | App-shell pre-cache list + build-time version stamping           |   5 | INFRA |
+| 1.2   | `<InstallPromptBanner>` atom + `beforeinstallprompt` capture     |   3 | UI    |
+| 1.3   | SW update flow + `<UpdateAvailableToast>` + staged rollout       |   3 | UI    |
+| 1.4   | Manifest shortcuts for `/exams`, `/messages`, `/timetable`       |   1 | INFRA |
+| 1.5   | Offline page polish (i18n + pending-mutation count + storage UI) |   3 | UI    |
+
+Promotes the existing installable manifest into a true PWA. Cache name uses `__BUILD_ID__` to invalidate on deploy. Install banner shown on third dashboard visit, dismissal persisted to Dexie. The update flow listens for `controllerchange` and prompts the user to reload when a new SW is waiting. Staged rollout enables SW updates to 10% → 50% → 100% of devices over 48 h.
+
+### EPIC-2 — Smart Read Cache (24 pts)
+
+| Story | Title                                                                        | Pts | Type  |
+| ----- | ---------------------------------------------------------------------------- | --: | ----- |
+| 2.1   | Dexie tables for cached reads + live-query bindings                          |   5 | API   |
+| 2.2   | Timetable cached read (`getTimetableForOffline`) with WebSocket invalidation |   5 | API   |
+| 2.3   | Announcements cached read + read-status sync on reconnect                    |   3 | API   |
+| 2.4   | Profile + class roster cached reads                                          |   3 | API   |
+| 2.5   | `<CachedDataBanner>` atom (shown when cache age > 5 min and offline)         |   3 | UI    |
+| 2.6   | Cache eviction on tenant switch                                              |   2 | INFRA |
+| 2.7   | Storage-quota watchdog + LRU eviction policy enforcement                     |   3 | INFRA |
+
+Read-mostly surfaces (timetable, announcements, profile, roster, dashboard) render instantly offline from Dexie live queries. Cache keys follow `[schoolId, resource, id]`. Network-aware `staleTime` derives from `performance-optimization.ts` thresholds — `5min` on 4G, `30min` on slow-2g. WebSocket pushes invalidate cached entries within 200 ms of remote writes.
+
+### EPIC-3 — Teacher Offline (Attendance + QR + Grading) (32 pts)
+
+| Story | Title                                                                                                 | Pts | Type |
+| ----- | ----------------------------------------------------------------------------------------------------- | --: | ---- |
+| 3.1   | Register `bulkUploadAttendance` as `"attendance.bulkUpload"` action handler                           |   5 | API  |
+| 3.2   | Attendance roster pre-cache (Dexie + OPFS for student photos) on class open                           |   5 | API  |
+| 3.3   | QR scan queue (reuses `KioskLog.syncedToAttendance`)                                                  |   5 | UI   |
+| 3.4   | Mobile swipe-grading batch (group 25 swipes into one mutation)                                        |   5 | UI   |
+| 3.5   | `<PendingMutationsDrawer>` with retry/discard controls + grouped by action                            |   5 | UI   |
+| 3.6   | Structured conflict UI for last-write-wins (409 `ATTENDANCE_NEWER_RECORD`) using `<ConflictResolver>` |   5 | UI   |
+| 3.7   | Optimistic UI in attendance table via `useOptimistic` (React 19) with rollback                        |   2 | UI   |
+
+Wraps `bulkUploadAttendance` at `src/components/school-dashboard/attendance/actions/bulk.ts:33` as a registered action. Roster pre-cache populates Dexie + OPFS (student photos) when a teacher opens a class. QR scan queue replaces single-try toast at `qr-scanner.tsx:209`. Mobile swipe-grading batches 25 swipes into one mutation.
+
+### EPIC-4 — Student Offline (Exam Submit + Proctor Log) (22 pts)
+
+| Story | Title                                                                   | Pts | Type  |
+| ----- | ----------------------------------------------------------------------- | --: | ----- |
+| 4.1   | Register `submitExamSession` as `"exam.submit"` action handler          |   5 | API   |
+| 4.2   | Migrate `use-auto-save` to foundation primitives (drop bespoke retry)   |   3 | API   |
+| 4.3   | Persist proctor `securityFlags` events offline                          |   3 | API   |
+| 4.4   | "Submission queued" full-screen on disconnect during submit             |   5 | UI    |
+| 4.5   | Exam-take pre-cache (questions + options + assets) in OPFS              |   3 | INFRA |
+| 4.6   | `paperVersion` conflict resolver (full-screen `<PaperVersionConflict>`) |   3 | UI    |
+
+Closes the critical gap: today auto-save survives connectivity loss but the final `submitExamSession` at `src/components/school-dashboard/exams/take/actions.ts:369` does not. Idempotency key = `sessionId`. Server rejects submit on `paperVersion` mismatch with structured conflict UI. Auto-save migration drops ~120 lines of bespoke retry/backoff.
+
+### EPIC-5 — Driver Offline (Trip Boarding) (15 pts)
+
+| Story | Title                                                            | Pts | Type  |
+| ----- | ---------------------------------------------------------------- | --: | ----- |
+| 5.1   | Register `recordBoardingFromGeofenceInternal` as action handler  |   3 | API   |
+| 5.2   | Driver trip-mode pre-cache (route + roster + photos in OPFS)     |   5 | API   |
+| 5.3   | `<TripQueueBadge>` with manual flush + retry UI                  |   4 | UI    |
+| 5.4   | Retire bespoke `LocationQueue`; migrate to foundation primitives |   3 | INFRA |
+
+Mirrors the gold-standard geofence pattern into the in-app driver experience. `recordBoardingFromGeofenceInternal` is already idempotent on `(schoolId, tripId, studentId)`. Pre-cache populates Dexie + OPFS at trip start. Story 5.4 retires the bespoke `LocationQueue` class at `geo-tracker.tsx:59`.
+
+### EPIC-6 — Applicant Offline (Resumable Attachments + Submit) (18 pts)
+
+| Story | Title                                                                                   | Pts | Type |
+| ----- | --------------------------------------------------------------------------------------- | --: | ---- |
+| 6.1   | tus-style resumable S3 multipart upload backed by OPFS chunk store                      |   8 | API  |
+| 6.2   | Application draft migrate from localStorage → Dexie (with `BroadcastChannel` cross-tab) |   5 | API  |
+| 6.3   | Queued final submit (`"application.submit"`)                                            |   3 | API  |
+| 6.4   | Network-aware upload progress UI (shows estimated time per `effectiveType`)             |   2 | UI   |
+
+Applicants on flaky 3G can resume a 5 MB transcript upload after dropping mid-transfer — chunks live in OPFS. New `/api/uploads/resumable/[uploadId]/[partNumber]` endpoint tracks completed parts. Application context at `application-context.tsx:412` upgrades from localStorage to Dexie for cross-tab consistency.
+
+### EPIC-7 — Messaging Outbound Queue (16 pts)
+
+| Story | Title                                                                                                    | Pts | Type |
+| ----- | -------------------------------------------------------------------------------------------------------- | --: | ---- |
+| 7.1   | `"messaging.send"` registered action with idempotency                                                    |   3 | API  |
+| 7.2   | Optimistic UI: chat bubble shows `queued/sending/sent/failed` via `useOptimistic`                        |   5 | UI   |
+| 7.3   | Attachment queue reusing EPIC-6 resumable OPFS upload                                                    |   3 | API  |
+| 7.4   | WhatsApp bridge offline policy (skip while offline; idempotent send on reconnect with `clientMessageId`) |   3 | API  |
+| 7.5   | Real-time delivery receipts via WebSocket                                                                |   2 | UI   |
+
+Closes the messaging gap. Bubble states map cleanly onto the XState mutation lifecycle from EPIC-0. WhatsApp bridge receives `clientMessageId` so duplicate-on-replay is prevented at the bridge layer.
+
+### EPIC-8 — Observability + Offline Analytics (14 pts)
+
+| Story | Title                                                                        | Pts | Type  |
+| ----- | ---------------------------------------------------------------------------- | --: | ----- |
+| 8.1   | `OfflineSyncLog` analytics queries + `getOfflineSyncStats(schoolId)`         |   3 | DB    |
+| 8.2   | Sentry breadcrumbs + custom transactions for queue state                     |   3 | INFRA |
+| 8.3   | DEVELOPER dashboard tile: mutations queued, sync success rate, p95 sync time |   5 | UI    |
+| 8.4   | Per-school SLI dashboard (sync success rate, cache hit rate, install rate)   |   3 | UI    |
+
+Answers "is offline helping users" with hard numbers. Per-school metrics surface in the SaaS dashboard. SLI dashboard exposed to ADMIN role so each school can self-monitor.
+
+### EPIC-9 — Docs, i18n, Admin Config (13 pts)
+
+| Story | Title                                                              | Pts | Type |
+| ----- | ------------------------------------------------------------------ | --: | ---- |
+| 9.1   | `content/docs-en/offline.mdx` + `content/docs-ar/offline.mdx`      |   3 | DEVX |
+| 9.2   | ~30 dictionary keys under `dictionary.offline.*` (en + ar)         |   5 | UI   |
+| 9.3   | `School.offlineMode` admin UI toggle                               |   3 | UI   |
+| 9.4   | Playwright offline E2E + unit suite (≥ 95% coverage on foundation) |   2 | DEVX |
+
+Self-contained delivery epic. Story 9.4 covers all four role flows via Playwright `context.setOffline(true)`. Dictionary keys: `online`, `offline`, `slowConnection`, `backOnline`, `syncing`, `pendingCount`, `pendingDrawerTitle`, `retry`, `discard`, `discardConfirm`, `lastSynced`, `cached`, `submissionQueued`, `submissionInFlight`, `conflictTitle`, `conflictBody`, `conflictResolveKeep`, `conflictResolveDiscard`, `conflictResolveMerge`, `installAvailable`, `installCta`, `updateAvailable`, `updateCta`, `offlinePageTitle`, `offlinePageBody`, `dataSaver`, `featureUnavailableOffline`, `storageNearFull`, `storageFullError`, `paperVersionConflict`, `gradingConflict`.
+
+## Migration strategy
+
+Moving from today's state to production-grade offline happens in three stages per feature. No big-bang switch.
+
+1. **Dual-write phase.** Feature still writes online directly AND enqueues for offline replay through the new foundation. Server-side `OfflineSyncLog` dedupes via idempotency key. Detect divergence in telemetry; alert on any.
+2. **Cutover.** Switch the feature to enqueue-first. Online flush is automatic and immediate. Feature flag `School.offlineMode='full'` enables the queue path; `limited` keeps online-only.
+3. **Cleanup.** Remove the bespoke retry / localStorage / in-memory queue specific to that feature. Delete dead code in `use-auto-save.ts`, `useOfflineQueue` (attendance/shared/hooks.ts:541), `LocationQueue` (geo-tracker.tsx:59).
+
+Order of feature cutover: Attendance → Exam submit → Driver boarding → Application attachments → Messaging. Each cutover lives behind the feature flag and ships independently.
+
+## Cross-cutting
+
+### Schema additions
+
+Apply via Neon branch-before-touch protocol (`mcp__Neon__create_branch` → migrate on branch → `mcp__Neon__compare_database_schema` → `mcp__Neon__complete_database_migration`).
+
+- `OfflineMutation` — durable server-side queue: `id`, `schoolId @@index`, `userId @@index`, `action`, `idempotencyKey @unique`, `contentHash`, `payload Json`, `status enum(PENDING|SUCCESS|FAILED|CONFLICT)`, `attempts`, `lastError`, `createdAt`, `syncedAt`.
+- `OfflineSyncLog` — idempotency cache: `idempotencyKey @id`, `schoolId @@index`, `userId`, `action`, `responseJson Json`, `replayedAt`. 30-day TTL job.
+- `CacheInvalidation` — broadcast topic log: `id`, `schoolId @@index`, `topic`, `keyHash`, `emittedAt`, `propagatedAt`. 7-day TTL job.
+- `School.offlineMode` — enum field `disabled` / `limited` / `full`. Default `limited`.
+- `KioskLog.syncedToAttendance` — already exists. Reuse, do not duplicate.
+
+### RBAC
+
+- Pending-sync drawer: visible to all authenticated roles. Each user sees only their own queued mutations.
+- Retry / discard: scoped to owner role per feature.
+- DEVELOPER dashboard tile: aggregate across schools.
+- Per-school SLI dashboard: ADMIN role.
+- Admin offline-mode toggle: ADMIN role only.
+- `<OfflineDevtools>` panel: DEVELOPER role only (gated by session check).
+
+### i18n
+
+30 new dictionary keys under `dictionary.offline.*`. Zero hardcoded strings in offline UI code. Arabic strings reviewed by a native speaker before pilot rollout.
+
+### Testing strategy
+
+| Test layer    | Coverage                                                                                              | Tool                      |
+| ------------- | ----------------------------------------------------------------------------------------------------- | ------------------------- |
+| Unit          | `useMutationQueue` timing, Dexie tenant namespacing, XState transitions, content-hash verification    | Vitest                    |
+| Integration   | `actionRegistry` dispatch, per-domain sync shards, conflict policies, WebSocket invalidation          | Vitest + msw              |
+| E2E           | Four role flows with `context.setOffline(true)` + reconnect; tab-close persistence; subdomain switch  | Playwright                |
+| Visual        | `<PendingMutationsDrawer>`, `<CachedDataBanner>`, `<ConflictResolver>`, `<OfflineDevtools>` in states | Storybook + Chromatic     |
+| Manual        | Real-device smoke on Safari iOS 16.4, Chrome Android 110, Samsung Internet 19                         | TestFlight-style internal |
+| Performance   | All performance budgets above + Lighthouse CI                                                         | size-limit + Sentry + LH  |
+| Accessibility | All offline UI traversable by keyboard + screen-reader announces "you are offline"                    | axe + manual VoiceOver/TB |
+| Migration     | Dexie schema migrations forward + backward compat                                                     | Dexie test harness        |
+
+### Telemetry & metrics
+
+Every state transition emits a structured event. Event names use the `offline.*` namespace.
+
+| Event                       | Payload                                                     | Sink                      |
+| --------------------------- | ----------------------------------------------------------- | ------------------------- |
+| `offline.mutation.enqueued` | `{ schoolId, userId, action, idempotencyKey, contentHash }` | Sentry + `OfflineSyncLog` |
+| `offline.mutation.flushed`  | `{ ..., durationMs, attempts, compressionRatio }`           | Sentry + `OfflineSyncLog` |
+| `offline.mutation.failed`   | `{ ..., error, willRetry }`                                 | Sentry + `OfflineSyncLog` |
+| `offline.mutation.conflict` | `{ ..., conflictType, resolution }`                         | Sentry + `OfflineSyncLog` |
+| `offline.network.changed`   | `{ from, to, effectiveType, saveData }`                     | Sentry                    |
+| `offline.cache.hit`         | `{ schoolId, queryKey, ageMs, source }`                     | Custom analytics          |
+| `offline.cache.miss`        | `{ schoolId, queryKey }`                                    | Custom analytics          |
+| `offline.cache.invalidated` | `{ schoolId, topic, keyHash, latencyMs }`                   | Custom analytics          |
+| `offline.install.prompted`  | `{ schoolId, userId, role }`                                | Custom analytics          |
+| `offline.install.accepted`  | `{ schoolId, userId, role }`                                | Custom analytics          |
+| `offline.install.dismissed` | `{ schoolId, userId, role, dismissCount }`                  | Custom analytics          |
+| `offline.sw.updated`        | `{ schoolId, fromVersion, toVersion, rolloutPercent }`      | Sentry                    |
+| `offline.storage.warning`   | `{ schoolId, usagePercent, quota }`                         | Sentry                    |
+| `offline.worker.long_task`  | `{ schoolId, taskMs, action }`                              | Sentry                    |
+
+### Rollout (feature flag)
+
+| `School.offlineMode` | SW registered | Read cache | Write queue | Install prompt |
+| -------------------- | :-----------: | :--------: | :---------: | :------------: |
+| `disabled`           |       ✗       |     ✗      |      ✗      |       ✗        |
+| `limited` (default)  |       ✓       |     ✓      |      ✗      |       ✗        |
+| `full`               |       ✓       |     ✓      |      ✓      |       ✓        |
+
+Pilot schools (Sudan, King Fahad) opt into `full`. SaaS marketing remains on default. ADMIN UI in school settings toggles between modes. DEVELOPER role can override any school's mode for testing.
+
+### Developer onboarding
+
+A new contributor adds offline support to their feature in five steps.
+
+1. Register a new action handler in `src/lib/offline/registry.ts` with a typed payload Zod schema and conflict-policy choice.
+2. Call `useOfflineMutation("yourFeature.actionName", payload)` from the client; for reads use `useLiveQuery(() => db.yourFeature.where(...).toArray())`.
+3. Add a Storybook entry for the conflict UI if conflicts are possible.
+4. Add a Playwright test in `playwright/tests/offline.spec.ts`.
+5. Add dictionary keys for any new offline strings under `dictionary.offline.<feature>.*`.
+
+A complete worked example lives at `src/components/school-dashboard/attendance/` after EPIC-3 ships.
+
+## Foundation gate
+
+EPIC-0 must pass all of the following before any per-role epic starts. Foundation work is not a partial deliverable.
+
+- [ ] Dexie tenant DB factory + schema versioning + migration tests merged
+- [ ] OPFS abstraction with IDB fallback merged + Safari iOS 16.4 manual test passed
+- [ ] `sync-worker.ts` runs all mutation replay; main-thread long-task observer reports zero blocks > 16 ms during sync
+- [ ] `actionRegistry` + XState mutation lifecycle merged with ≥ 95% unit test coverage
+- [ ] LZ4 + MessagePack compression measured at ≥ 3× ratio on typical payloads
+- [ ] SHA-256 content hashing verifies on every replay; tamper test fails closed
+- [ ] WebSocket cache-invalidate end-to-end latency ≤ 200 ms in staging
+- [ ] Service worker drains queue on Background Sync event (Chrome) and on tab reopen (iOS)
+- [ ] `<ConflictResolver>` atom shipped with Storybook coverage of every conflict policy
+- [ ] `OfflineSyncLog` writes from every transition; Sentry breadcrumbs visible in dashboard
+- [ ] `<OfflineDevtools>` panel renders for DEVELOPER role and shows live queue state
+- [ ] Foundation chunk size ≤ 35 KB gzipped (size-limit CI gate)
+- [ ] Tenant-leak Playwright test green (queue on `school-a` → switch to `school-b` → queue invisible)
+
+Foundation work continues until all boxes are checked. No per-role epic starts before then.
+
+## Risks and trade-offs
+
+1. **IndexedDB + OPFS quotas.** Safari iOS caps around 50 MB; Chrome Android allows up to 60% of disk. Mitigation: OPFS for blobs; payloads-only in IDB; `navigator.storage.estimate()` watchdog warns at 80%; evict cached reads before queued writes.
+2. **Cross-tenant leak on subdomain switch.** Mitigation: DB name namespaced by `schoolId`; SW reads `schoolId` from session cookie per-request; explicit Playwright test in Foundation Gate.
+3. **Stale exam questions vs. integrity.** Mitigation: exam-take pre-cache stores `paperVersion`; server rejects submit on mismatch with structured `<PaperVersionConflict>`.
+4. **WhatsApp bridge duplicates.** Mitigation: `clientMessageId` passed through to bridge as idempotency key.
+5. **Multi-subdomain SW scope.** Each `school-X.databayt.org` gets its own SW scope (correct).
+6. **iOS Safari Background Sync absence.** Mitigation: `online` event + visibility-change listener in tab; on PWA reopen, sync worker drains queue immediately.
+7. **OPFS unavailable on older Safari / in-app browsers.** Mitigation: storage layer detects capability at init; falls back to IDB blob fields with storage warning.
+8. **Cold-cache offline page.** Mitigation: aggressive shell pre-cache on install; offline page useful even on first visit (shows install CTA).
+9. **Background Sync throttling.** Mitigation: foreground flush is primary path; background sync is best-effort.
+10. **Time-skew on stored mutations.** Mitigation: server records `serverAcceptedAt` as authoritative; client `markedAt` retained as audit metadata only.
+11. **WebSocket connection limits per origin.** Mitigation: single socket per tab; SharedWorker-style coordination across tabs of same origin.
+12. **OS-level storage eviction.** Mitigation: PWA install promotes to "managed storage" with eviction guarantees; non-installed users see warning toast.
+
+## Detailed timeline (14 weeks, week-by-week)
+
+Two developers, aligned phases. Week numbers are calendar weeks starting at project kickoff.
+
+| Week | Phase              | Dev A focus                                              | Dev B focus                                                | Milestone                                              |
+| ---- | ------------------ | -------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| 0    | Spikes             | S-0.1, S-0.3, S-0.5, S-0.7, S-0.9                        | S-0.2, S-0.4, S-0.6, S-0.8, S-0.10                         | All Decision Records merged                            |
+| 1    | Foundation 0.A     | Dexie tenant DB + schema versioning                      | `OfflineMutation` + `OfflineSyncLog` + `CacheInvalidation` | Prisma models live on Neon                             |
+| 2    | Foundation 0.A+B   | OPFS abstraction + IDB fallback                          | `sync-worker.ts` scaffold + Comlink RPC                    | Dexie + OPFS verified on iOS 16.4                      |
+| 3    | Foundation 0.B+C   | XState mutation lifecycle + compression + content hashes | `useNetworkStatus` + `useOfflineMutation` + `useLiveQuery` | Main-thread budget validated                           |
+| 4    | Foundation 0.D+E   | SW message bus + per-domain sync shards                  | WebSocket invalidation + Sentry + `<OfflineDevtools>`      | **Foundation Gate** — all checkboxes green             |
+| 5    | PWA + read cache   | EPIC-1.1, 1.2, 1.4                                       | EPIC-2.1, 2.2, 2.6                                         | Install prompt visible in staging                      |
+| 6    | PWA + read cache   | EPIC-1.3, 1.5                                            | EPIC-2.3, 2.4, 2.5, 2.7                                    | EPIC-1 done; EPIC-2 done                               |
+| 7    | Teacher offline    | EPIC-3.1, 3.2, 3.7                                       | EPIC-4.1, 4.5                                              | Teacher attendance offline working in staging          |
+| 8    | Teacher offline    | EPIC-3.3, 3.4                                            | EPIC-4.2, 4.3                                              | Exam auto-save migrated to foundation                  |
+| 9    | Teacher + Student  | EPIC-3.5, 3.6                                            | EPIC-4.4, 4.6                                              | EPIC-3 done; EPIC-4 done                               |
+| 10   | Driver + Applicant | EPIC-5.1, 5.2                                            | EPIC-6.1, 6.2                                              | Driver in-app boarding offline + OPFS resumable upload |
+| 11   | Driver + Applicant | EPIC-5.3, 5.4                                            | EPIC-6.3, 6.4                                              | EPIC-5 done; EPIC-6 done                               |
+| 12   | Messaging          | EPIC-7.1, 7.2, 7.5                                       | EPIC-7.3, 7.4                                              | EPIC-7 done                                            |
+| 13   | Observability      | EPIC-8.1, 8.2                                            | EPIC-8.3, 8.4                                              | DEVELOPER dashboard + per-school SLI dashboard live    |
+| 14   | Docs + pilot       | EPIC-9.1, 9.2                                            | EPIC-9.3, 9.4 + pilot enablement                           | Pilot enabled at one Sudan school                      |
+
+Buffer: 1 week reserved for staging soak before pilot enablement.
+
+**P0** — EPIC-0, 1, 3, 4 (foundation + teacher daily + student high-stakes).
+**P1** — EPIC-2, 5, 6, 9 (read cache, driver, applicant, docs).
+**P2** — EPIC-7, 8 (messaging queue + analytics).
+
+## Pilot rollout playbook
+
+Enabling `School.offlineMode='full'` for a pilot school is a deliberate, observable change. Five steps.
+
+1. **Pre-flight (T-7 days).** Confirm school on latest release; smoke-test online flows; baseline current connection-failure rate from Sentry; brief admin on changes ("install prompts; pending sync drawer for offline marks").
+2. **Soft enable (T-0).** ADMIN toggles `offlineMode='full'` in school settings. Service worker registers on next visit. Read cache populates in background; no user-visible change yet beyond install banner.
+3. **Day 1 monitoring.** Watch `OfflineSyncLog` for first ~50 enqueued mutations; verify all flush successfully; check Sentry for unexpected errors; verify storage quota stays under 80% on sampled devices.
+4. **Day 7 review.** Compare sync success rate, install rate, average time-to-sync against headline metrics. If any below 95% target, root-cause and either patch or roll back to `limited`.
+5. **Day 30 retro.** Decide: keep on `full`, promote to default for similar schools, or refine. Document learnings.
+
+Rollback is instant: ADMIN sets `offlineMode='limited'`. Queue is preserved client-side and drains on next visit when re-enabled.
+
+## Smoke test checklist
+
+Manual checks before declaring a feature "offline-done". Run on Safari iOS 16.4, Chrome Android 110, Chrome Desktop 110 each.
+
+- [ ] Service worker registered (`chrome://serviceworker-internals` shows active)
+- [ ] Manifest installable (install icon visible or "Add to Home Screen" on iOS)
+- [ ] App-shell loads with `Network: Offline` after one prior online visit
+- [ ] Offline page renders with last-sync time + pending-mutation count + storage UI
+- [ ] Teacher bulk attendance: mark 20 students offline → reload → all visible as pending → reconnect → all flushed → no duplicates
+- [ ] Student exam: enter answers offline → submit offline → "submission queued" full-screen → reconnect → submitted
+- [ ] Driver boarding: scan 5 students in tunnel-simulated offline → reconnect → all 5 recorded
+- [ ] Applicant: upload 5 MB attachment, kill connection mid-upload → reconnect → upload resumes from completed parts in OPFS
+- [ ] Messaging: send 3 messages offline → bubble shows `queued` → reconnect → all show `sent`
+- [ ] Subdomain switch: queue items on `school-a` → navigate to `school-b` → queue invisible → return to `school-a` → queue intact
+- [ ] PWA install prompt: visit dashboard 3 times → banner appears → accept → launches as standalone
+- [ ] SW update: deploy new SW → toast appears → reload completes
+- [ ] All UI in Arabic when `?lang=ar` → strings render right-to-left
+- [ ] Pending drawer: retry button works; discard button works; both confirm before destructive
+- [ ] Storage near-full: fill IDB+OPFS to 80% → warning toast appears
+- [ ] `offlineMode='disabled'` → no SW registered (verify in DevTools Application tab)
+- [ ] WebSocket invalidation: write from device A → device B's live query refreshes within 1 s
+- [ ] Conflict UI: simulate version conflict → `<ConflictResolver>` shows both sides → user chooses keep/discard
+- [ ] Main-thread profiler shows no long tasks > 16 ms during sync flush of 50 items
+
+## Acceptance criteria — "Production-grade offline shipped"
+
+1. With `School.offlineMode='full'`, a teacher on `chrome://devtools network: Offline` marks attendance, refreshes, closes the tab, reopens — all marks pending; reconnect replays with zero duplicates and zero main-thread blocks.
+2. A student loses connectivity for 10+ minutes mid-exam, continues answering, hits submit, sees "submission queued"; reconnect completes within 30 seconds with zero data loss.
+3. SW `sync-forms` event fires on reconnect; drains the Dexie queue without the page being open.
+4. Browser close/reopen preserves the queue (Dexie, not in-memory).
+5. Subdomain switch `school-a` → `school-b` does NOT replay `school-a`'s queue against `school-b`.
+6. Playwright `tests/offline.spec.ts` green across all four role flows + tenant safety + conflict resolution.
+7. All offline UI strings render in `en` and `ar` from dictionary keys; zero hardcoded English in grep.
+8. `offlineMode='disabled'` disables SW registration entirely.
+9. Foundation chunk ≤ 35 KB gzipped (CI gate). Per-epic chunks ≤ 15 KB each.
+10. Sentry telemetry shows ≥ 99.9% sync success rate over rolling 7-day window across all `full`-mode schools.
+11. Main-thread long-task observer shows zero blocks > 16 ms during sync flush in p99 measurements.
+12. WebSocket cache invalidation latency p95 ≤ 200 ms in production.
+13. OPFS attachment resume works after killing the upload mid-flight on iOS 16.4.
+
+## Key files
+
+| Path                                                                      | Role                                                       |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `src/lib/offline/db.ts` (new)                                             | Dexie tenant DB factory + schema versioning                |
+| `src/lib/offline/opfs.ts` (new)                                           | OPFS abstraction (`putBlob`/`getBlob`/`deleteBlob`)        |
+| `src/lib/offline/registry.ts` (new)                                       | `actionRegistry` typed map                                 |
+| `src/lib/offline/types.ts` (new)                                          | Discriminated-union mutation envelope types                |
+| `src/lib/offline/state-machine.ts` (new)                                  | XState mutation lifecycle                                  |
+| `src/lib/offline/compression.ts` (new)                                    | LZ4 + MessagePack compression pipeline                     |
+| `src/lib/offline/integrity.ts` (new)                                      | SHA-256 content-hash verification                          |
+| `src/lib/offline/sync-worker.ts` (new)                                    | Web Worker sync engine                                     |
+| `src/components/offline/use-mutation-queue.ts` (new)                      | Canonical persistent queue hook                            |
+| `src/components/offline/use-network-status.ts` (new)                      | Composed network status hook                               |
+| `src/components/offline/use-offline-mutation.ts` (new)                    | react-query wrapper for mutations                          |
+| `src/components/offline/use-live-query.ts` (new)                          | Dexie live query wrapper                                   |
+| `src/components/offline/use-storage-estimate.ts` (new)                    | `navigator.storage.estimate()` reactive hook               |
+| `src/components/offline/provider.tsx` (new)                               | `<OfflineProvider>`                                        |
+| `src/components/offline/pending-mutations-drawer.tsx` (new)               | UI for in-flight queue                                     |
+| `src/components/offline/conflict-resolver.tsx` (new)                      | Structured merge UI primitive                              |
+| `src/components/offline/install-prompt-banner.tsx` (new)                  | `beforeinstallprompt` capture UI                           |
+| `src/components/offline/update-available-toast.tsx` (new)                 | SW update flow UI                                          |
+| `src/components/offline/cached-data-banner.tsx` (new)                     | "data is from cache" indicator                             |
+| `src/components/offline/devtools.tsx` (new)                               | `<OfflineDevtools>` panel (DEVELOPER only)                 |
+| `src/app/api/offline/sync/[domain]/route.ts` (new)                        | Per-domain sync shard endpoints                            |
+| `src/app/api/cache-invalidate/route.ts` (new)                             | WebSocket cache invalidation broadcast                     |
+| `src/app/api/uploads/resumable/[uploadId]/[partNumber]/route.ts` (new)    | tus-style chunked upload                                   |
+| `public/service-worker.js`                                                | Replace `syncOfflineForms()` stub at line 160              |
+| `prisma/models/offline-sync.prisma` (new)                                 | `OfflineMutation` + `OfflineSyncLog` + `CacheInvalidation` |
+| `src/components/school-dashboard/attendance/actions/bulk.ts:33`           | Register as `"attendance.bulkUpload"`                      |
+| `src/components/school-dashboard/exams/take/actions.ts:369`               | Register as `"exam.submit"`                                |
+| `src/components/school-dashboard/attendance/geofencee/geo-tracker.tsx:59` | Retire `LocationQueue`; use shared primitives              |
+| `src/components/school-dashboard/attendance/shared/hooks.ts:541`          | Replace in-memory `useOfflineQueue`                        |
+| `src/lib/performance-optimization.ts`                                     | Wire as `useNetworkStatus` dependency                      |
+| `src/app/manifest.ts`                                                     | Add `/exams`, `/messages`, `/timetable` shortcuts          |
+| `src/components/internationalization/{school-en,school-ar}.json`          | Add `dictionary.offline.*` keys                            |
+| `playwright/tests/offline.spec.ts` (new)                                  | E2E covering four role flows + tenant + conflicts          |
+
+## Glossary
+
+- **Action handler** — A server action registered in `actionRegistry` by string name (e.g. `"exam.submit"`). Same function called online or via offline replay.
+- **App shell** — The minimal HTML, CSS, and JS needed to render the offline-aware navigation chrome. Pre-cached at install time.
+- **Background Sync** — Browser API that fires a `sync` event when the device is online, even if no tab is open. Limited browser support.
+- **Comlink** — Library for ergonomic Web Worker RPC.
+- **Conflict resolution** — Policy applied when a queued mutation can no longer be cleanly applied. Default is server-authoritative with structured merge UI.
+- **Content hash** — SHA-256 of the mutation payload, stored on the envelope. Verified on intake and replay. Tamper-evident.
+- **Dexie** — Wrapper library over IndexedDB with rich query semantics, transactions, live queries, schema versioning.
+- **Idempotency key** — Client-generated cuid v2 attached to every mutation. Server uses `OfflineSyncLog` to dedupe.
+- **IDB** — IndexedDB, the browser-native indexed key-value store. Per-origin quota; persists across reloads.
+- **LZ4** — Fast compression algorithm; used here via WASM for payload compression > 1 KB.
+- **MessagePack** — Binary serialization format. More compact than JSON for the envelope encoding.
+- **Mutation envelope** — The typed wrapper around a queued write. Carries metadata for replay including idempotency key and content hash.
+- **Network Information API** — `navigator.connection.effectiveType` / `saveData` / `rtt`. Used to adapt UX to connection quality.
+- **OPFS** — Origin Private File System. Browser-native file system scoped to the origin; better than IDB for large blobs.
+- **PWA** — Progressive Web App. An installable, service-worker-backed web app with offline capability.
+- **Pre-cache** — Storing assets or data before the user needs them offline.
+- **Sync intake** — `POST /api/offline/sync/{domain}`, the per-domain endpoints that receive queued mutations and dispatch them to handlers.
+- **Sync worker** — `sync-worker.ts`, the Web Worker that handles all offline replay off the main thread.
+- **Tenant-namespaced** — Storage keyed by `schoolId` so data never leaks across schools.
+- **XState** — Library for finite-state-machine modeling. Used for the mutation lifecycle.
+
+## See also
+
+- [Multi-tenancy](/docs/multi-tenancy) — `schoolId` scoping rules every offline write must respect
+- [Database](/docs/database) — Prisma + Neon safety protocol for new tables
+- [Notifications](/docs/notifications) — read-side cache patterns share infrastructure
+- [Translation](/docs/translation) — dictionary key conventions for offline strings
+- [Document Intelligence](/docs/document-intelligence) — prior-art epic-doc template this doc follows
+- [Architecture](/docs/architecture) — mirror pattern and tenant context resolution
+- [MVP](/docs/mvp) — maturity badge conventions for tracking epic progress
+- [Roadmap](/docs/roadmap) — quarter-outlook for offline rollout
