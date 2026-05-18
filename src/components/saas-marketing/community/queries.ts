@@ -46,6 +46,7 @@ export async function getCommunityFilterOptions(): Promise<CommunityFilterOption
     select: {
       id: true,
       name: true,
+      slug: true,
       code: true,
       country: true,
       gradeRange: true,

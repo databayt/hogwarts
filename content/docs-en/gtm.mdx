@@ -1,0 +1,134 @@
+---
+title: Go-to-market
+description: Unified GTM strategy — three phases from one pilot to MENA scale, the funnel where sales/marketing/pilot meet, owner map, risks.
+---
+
+Hogwarts go-to-market is **one cohort, three phases**. Phase 1 lands ten free MENA pilots for feedback velocity. Phase 2 converts three of those to paid. Phase 3 scales paid acquisition. The motion is sequenced, not parallelized. This page is the one-page strategy; the doing happens in [Pilot](/docs/pilot), [Sales](/docs/sales), [Marketing](/docs/marketing), and [Leads](/docs/leads).
+
+## One-line strategy
+
+> Free 10-school MENA cohort → feedback → polish → trust → paid expansion.
+
+We do not try to do paid acquisition while we still have one pilot. We do not try to scale to 100 schools while we are still polishing the product with 10. Each phase has an explicit gate.
+
+## The funnel — where sales, marketing, pilot meet
+
+```
+        Marketing                          Sales                          Pilot
+        ─────────                          ─────                          ─────
+        Awareness  ─────────► Inbound interest ─────────► Discovery ──┐
+        Content                                              + Demo   │
+        SEO                                                  + Trial  │
+        Pilot CTA                                                     ▼
+                                                                  PILOT (6 mo)
+                                                                      │
+                                                                      ▼
+                                                          Conversion proposal
+                                                                      │
+                                                              ─► Paid (Year 1)
+                                                              ─► 12-mo extension
+                                                              ─► Lost
+```
+
+| Layer     | What it produces                               | Owner                         | Doc                                              |
+| --------- | ---------------------------------------------- | ----------------------------- | ------------------------------------------------ |
+| Marketing | Awareness, inbound interest                    | Samia + Abdout                | [Marketing](/docs/marketing)                     |
+| Sales     | Outbound, discovery, demo, trial, proposal     | Ali + Sedon + Abdout          | [Sales](/docs/sales), [Proposal](/docs/proposal) |
+| Pilot     | 6-month engaged customer, feedback, case study | Ali (sales), Abdout (product) | [Pilot](/docs/pilot)                             |
+| Lead ops  | Tracking and cadence                           | Ali + Captain agent           | [Leads](/docs/leads)                             |
+
+## Phase 1 — Land 10 free pilots (now → Q3 2026)
+
+The current phase. North-star metric: **active paying schools** (today 0). Operational milestones:
+
+| Milestone                                    | Date target | Owner                        | Source of truth                    |
+| -------------------------------------------- | ----------- | ---------------------------- | ---------------------------------- |
+| Pilot 1 (King Fahad) conversion conversation | 2026-06-15  | Sedon (relay), Abdout (talk) | `kun/.claude/memory/pipeline.json` |
+| 3 Sudan pilots signed                        | 2026-07-31  | Ali                          | `customers.json`                   |
+| 7 pilots signed across MENA                  | 2026-08-31  | Ali + Sedon                  | `customers.json`                   |
+| 10 pilots signed                             | 2026-09-30  | Ali + Sedon                  | `customers.json`                   |
+| First paid conversion (KF)                   | 2026-10-31  | Abdout                       | `revenue.json`                     |
+| 3 published case studies                     | 2026-11-30  | Samia                        | `/docs/case-study`                 |
+| ≥$99 MRR                                     | 2026-10-31  | Abdout                       | `revenue.json`                     |
+
+Phase 1 ends when: 10 pilots signed AND ≥1 paid conversion AND ≥3 case studies published.
+
+## Phase 2 — Convert and learn (Q4 2026 → Q2 2027)
+
+Phase 1 was breadth (land 10). Phase 2 is depth (convert 3, learn what makes a pilot say yes). Operational milestones:
+
+| Milestone                                          | Date target | Owner            |
+| -------------------------------------------------- | ----------- | ---------------- |
+| 3 pilots converted to paid (PRO 30% off)           | 2027-02-28  | Abdout           |
+| ≥$500 MRR                                          | 2027-02-28  | Abdout           |
+| 5 case studies published                           | 2027-03-31  | Samia            |
+| First paid acquisition test ($500 budget LinkedIn) | 2027-04-30  | Samia (with Ali) |
+| First non-pilot inbound conversion                 | 2027-05-31  | Ali              |
+| ≥$1K MRR                                           | 2027-06-30  | Abdout           |
+
+Phase 2 ends when: ≥3 paid conversions AND first non-pilot inbound paid customer AND first paid acquisition channel showing positive unit economics.
+
+## Phase 3 — Scale (Q3 2027 onward)
+
+Only after Phase 2 closes. Operational themes (not milestones, because the metrics drive the timeline):
+
+| Theme                                       | Trigger to start                                        |
+| ------------------------------------------- | ------------------------------------------------------- |
+| Paid LinkedIn / Google Arabic-keyword ads   | Phase 2 ad test profitable for 2 months                 |
+| First sales rep hire (Arabic native)        | ≥$5K MRR sustained for 3 months                         |
+| First government RFP response               | Government referral or open RFP that fits               |
+| Reseller / partner channel                  | 2+ existing pilots ask for white-label / reseller terms |
+| Regional expansion (French / Hindi locales) | MENA Year-2 retention ≥85%, 50+ paying schools          |
+
+## Phase gate logic
+
+We escalate to the next phase only when the gate is met. No exceptions. Skipping gates is the most common GTM failure mode — see [Principles](https://github.com/databayt/kun/blob/main/docs/PRINCIPLES.md#16-pick-a-beachhead-and-topple-it) (Geoffrey Moore — pick a bowling pin, topple it, then the next).
+
+| If you find yourself …                                  | The phase gate signal is                 |
+| ------------------------------------------------------- | ---------------------------------------- |
+| Doing paid ads with 2 pilots signed                     | Skipping Phase 1; stop                   |
+| Hiring a sales rep at $500 MRR                          | Skipping Phase 2; stop                   |
+| Pursuing government RFPs without any paid customer      | Vanity work; stop                        |
+| Building a partner / reseller channel before pilots ask | Future work today; stop                  |
+| 30 pilots signed but $0 MRR after 18 months             | Over-investing in breadth; stop, convert |
+
+## Owner map across phases
+
+| Role    | Phase 1 (now)                                  | Phase 2 (Q4 2026)                           | Phase 3 (Q3 2027+)                |
+| ------- | ---------------------------------------------- | ------------------------------------------- | --------------------------------- |
+| Abdout  | Product + first conversions                    | Paid economics, hiring prep                 | Strategy, government, fundraising |
+| Ali     | Sales execution (outbound + pilot management)  | Sales + first paid acquisition test         | Hire and lead first sales rep     |
+| Sedon   | Saudi outbound, payment ops                    | Saudi paid customers + MADA / STC Pay scale | Reseller channel in Saudi         |
+| Samia   | Arabic content, welcome packages, case studies | Paid content acquisition, video at scale    | Regional expansion content        |
+| Captain | Weekly review, decision discipline             | Same                                        | Same                              |
+
+## Risks
+
+| Risk                                                    | Likelihood | Impact   | Mitigation                                                      |
+| ------------------------------------------------------- | ---------- | -------- | --------------------------------------------------------------- |
+| Pilots churn before month 6                             | Medium     | High     | Weekly call anchor; engagement visible fast (see Pilot risks)   |
+| Feedback overload — too many issues to triage           | Medium     | Medium   | Captain weekly review caps in-sprint scope                      |
+| Single concentrated channel (e.g., Ali's Sudan network) | High       | Medium   | MENA-10 forces channel diversification across 6 countries       |
+| No pilot converts to paid                               | Medium     | High     | Conversion conversation starts month 3, not month 6             |
+| Skipping Phase 1 → Phase 3 under runway pressure        | High       | Critical | This document. Captain enforces phase gates.                    |
+| Free pilot economics consume Abdout's runway            | Medium     | High     | Pilot infrastructure cost ≤ $40 / pilot / month (Vercel + Neon) |
+| Competitor (Classera / Noon) signs MENA pilot at $0     | Low        | High     | Speed; we are MENA-built, they are not; we ship faster          |
+| Sudan / MENA conflict disrupts pilot                    | Medium     | Variable | Geographic diversification, cloud-hosted, no on-prem dependency |
+
+## What this document is not
+
+- Not a 100-school plan. That's Phase 3.
+- Not a paid-acquisition playbook. That's Phase 2 outcome.
+- Not a fundraising plan. That follows the metrics.
+- Not a moat document. The moat is open-source community + Arabic-first + MENA-rooted team — captured in [Shared Economy](/docs/shared-economy) and [Principles](https://github.com/databayt/kun/blob/main/docs/PRINCIPLES.md).
+
+## See also
+
+- [Pilot](/docs/pilot) — the cohort layer
+- [Marketing](/docs/marketing) — the awareness layer
+- [Sales](/docs/sales) — the outbound layer
+- [Leads](/docs/leads) — the operational layer
+- [Business model](/docs/business-model) — the economics that gate the phases
+- [Incubators](/docs/incubators) — the funding bridges
+- [Shared economy](/docs/shared-economy) — the moat
+- [Case study](/docs/case-study) — the proof

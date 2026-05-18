@@ -59,7 +59,11 @@ export interface CommunitySubjectCard {
 export interface CommunityFilterOptions {
   curricula: Array<{
     id: string
+    /** DB-stored name, used as the fallback when no dictionary translation exists. */
     name: string
+    /** Unique per row (e.g. "us-k12", "gb-national") — key for the i18n lookup. */
+    slug: string
+    /** Shared filter value (e.g. "national" matches many country curricula). */
     code: string
     country: string
     gradeRange: string | null

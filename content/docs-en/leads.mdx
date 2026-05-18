@@ -1,0 +1,157 @@
+---
+title: Leads
+description: Lead tracking — definition, sources, current pipeline, lifecycle, discovery script, follow-up cadence, owners.
+---
+
+A lead is a named school with a named contact in a target MENA country. Anything less is a prospect or a hope. This page is the operational layer beneath [Pilot](/docs/pilot) and [Sales](/docs/sales) — how a school enters the funnel, moves through stages, and either converts or exits. The single source of truth for the live pipeline is [`kun/.claude/memory/customers.json`](https://github.com/databayt/kun/blob/main/.claude/memory/customers.json).
+
+## Lead vs prospect vs cold
+
+| Status   | Definition                                                                | Example                                   |
+| -------- | ------------------------------------------------------------------------- | ----------------------------------------- |
+| Cold     | School name known, no contact named, no message sent                      | "There's a private school in Madani"      |
+| Prospect | School name + contact named, target country, no conversation yet          | "Mr. Ahmed at School X, sent LinkedIn DM" |
+| Lead     | First message sent and school has responded (positively or with question) | "Ahmed Baha replied — wants a demo"       |
+| Pilot    | Pilot agreement signed                                                    | King Fahad Schools today                  |
+| Paid     | Paid contract active                                                      | none today                                |
+
+Counting prospects as leads inflates the funnel and hides the real bottleneck. Be honest.
+
+## Lead sources
+
+| Source                        | Notes                                                          | Target ratio | Expected discovery conversion |
+| ----------------------------- | -------------------------------------------------------------- | ------------ | ----------------------------- |
+| Referrals from current pilots | Ahmed Baha referrals, peer-of-peer warm intros                 | 30%          | 60%                           |
+| LinkedIn outbound (Arabic)    | Sedon + Ali + Abdout for Saudi/Egypt/UAE/Jordan administrators | 25%          | 8%                            |
+| WhatsApp networks             | Sudan principals' WhatsApp groups (Ali + Sedon network)        | 20%          | 30%                           |
+| Incubator network             | MSAR alumni, Orange Corners cohort, 249Startups intros         | 10%          | 25%                           |
+| Conferences                   | GESS Dubai, Bett MEA, Africa Education Summit                  | 10%          | 20%                           |
+| Inbound (docs / GitHub)       | Engineers / admins finding hogwarts.databayt.org organically   | 5%           | 15%                           |
+
+If a single channel exceeds 50% of the funnel we are concentrated — diversify before the channel dries up.
+
+## Current pipeline
+
+| #   | School             | Country | Stage      | Source              | Owner | Last contact | Next action                           |
+| --- | ------------------ | ------- | ---------- | ------------------- | ----- | ------------ | ------------------------------------- |
+| 1   | King Fahad Schools | Sudan   | pilot      | Direct (Ali)        | Ali   | 2026-04-15   | Conversion conversation 2026-06-15    |
+| 2   | _open_             | Sudan   | recruiting | KF referral target  | Ali   | —            | Ask Ahmed Baha for 3 peer intros      |
+| 3   | _open_             | Sudan   | recruiting | KF referral target  | Ali   | —            | Ask Ahmed Baha for 3 peer intros      |
+| 4   | _open_             | Saudi   | recruiting | Sedon LinkedIn      | Sedon | —            | Research 5 Riyadh private schools     |
+| 5   | _open_             | Saudi   | recruiting | Sedon LinkedIn      | Sedon | —            | Research 5 Jeddah Islamic schools     |
+| 6–7 | _open_             | Egypt   | recruiting | LinkedIn / MSAR     | Ali   | —            | Cairo + Alex language-school list     |
+| 8   | _open_             | Jordan  | recruiting | Orange Corners      | Ali   | —            | Tap 249Startups Jordan network        |
+| 9   | _open_             | Morocco | recruiting | 249Startups network | Ali   | —            | Research 5 Casablanca private schools |
+| 10  | _open_             | UAE     | recruiting | LinkedIn directory  | Ali   | —            | Dubai international schools list      |
+
+Migrating to the multi-pilot schema in `customers.json` is the operational backbone. See [Pilot](/docs/pilot) for the MENA-10 cohort map.
+
+## Lifecycle
+
+```
+cold → prospect → warm (reply) → discovery → demo → trial → pilot → paid
+                                                          ↘
+                                                            extension (12 mo)
+```
+
+| Stage     | Defined by                                           | Exit gate                                  |
+| --------- | ---------------------------------------------------- | ------------------------------------------ |
+| cold      | Identified school, no contact attempt yet            | Find and verify primary contact            |
+| prospect  | Contact named, country in MENA-10                    | Send first message                         |
+| warm      | School has replied                                   | School agrees to discovery call            |
+| discovery | 30-min call held; pain captured in 3–5 sentences     | School agrees to a demo                    |
+| demo      | 30-min live product demo, role-specific views shown  | School agrees to 14-day trial              |
+| trial     | School poking around on demo subdomain               | School asks "what's next?" — propose       |
+| pilot     | Free Pilot Proposal signed                           | Subdomain provisioned + Day 0 deliverables |
+| paid      | Paid Conversion Proposal signed                      | First invoice paid                         |
+| lost      | School declined or went silent ≥21 days at any stage | Log reason in `lost_reason` field          |
+
+Movement is one-way except `pilot → extension` and `lost → re-engaged` (a school can come back, capture the reason).
+
+## Discovery call script
+
+Thirty minutes. Sixty percent listening. Goals: capture pain in their words, identify the decision maker, qualify out if not a fit.
+
+| #   | Question                                                                                     | What you're listening for                       |
+| --- | -------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 1   | Tell me how the school year started this month — what's working, what's hard?                | Open the conversation, hear pain in their words |
+| 2   | How are you handling enrollment / attendance / parent communication today?                   | Current toolset (Excel, WhatsApp, paper)        |
+| 3   | What's the biggest time-sink for you or your admin team each week?                           | Paperwork hours number — quantify the pain      |
+| 4   | Who else is part of the decision when you change school software?                            | Identify the real decision maker                |
+| 5   | If we could give the platform free for 6 months, what would we need to do to make this work? | Hidden objections, fit signals                  |
+| 6   | What does success look like for you in 6 months?                                             | Their definition of value — write it down       |
+| 7   | What's your honest concern about doing this?                                                 | Surface objections early                        |
+
+Close: "I'd like to show you the platform — 30 minutes next week. Tuesday or Thursday?" Get the demo on the calendar before the call ends.
+
+Anti-pattern: pitching during discovery. If you find yourself talking more than they are at minute 15, you have stopped doing discovery.
+
+## Follow-up cadence
+
+| Channel                 | Day 1                            | Day 3                     | Day 7                     | Day 14                    | Day 21                     |
+| ----------------------- | -------------------------------- | ------------------------- | ------------------------- | ------------------------- | -------------------------- |
+| LinkedIn DM first touch | Opener — 3 sentences, 1 question | (no message)              | Soft check-in — 1 line    | Last touch — propose call | Close loop, move to `lost` |
+| WhatsApp first touch    | Voice note or 2-line text        | (no message)              | Soft check-in             | Propose call              | Close loop                 |
+| Email first touch       | 4-paragraph email + 1 CTA        | (no message)              | Reply-bump on same thread | New thread with new angle | Close loop                 |
+| After discovery call    | Thank-you + 2 things you heard   | Demo invitation           | (no message)              | Confirm demo or close     | —                          |
+| After demo              | Thank-you + trial subdomain link | (no message)              | Trial check-in            | Propose pilot or close    | —                          |
+| After proposal sent     | Proposal email + summary         | "Any questions?" — 1 line | Decision-maker follow-up  | Last touch                | Close loop                 |
+
+Three to four touches max in any 21-day window. Quality outreach is finite. After Day 21 silence, stop — channel future effort to the next prospect. Re-engagement is allowed after 90 days with a new angle (a shipped feature, a case study, a referral).
+
+## Where leads are tracked
+
+| File                                    | Holds                                                               |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| `kun/.claude/memory/customers.json`     | All schools, all stages, primary contact, last_contact, next_action |
+| `kun/.claude/memory/pipeline.json`      | Active deals + weekly targets                                       |
+| `kun/.claude/memory/captain_journal.md` | Free-text journal: what we learned per conversation                 |
+
+Schema migration to `pilots[]` array (capacity 10) is part of the current refresh. See [Pilot](/docs/pilot) for the cohort layout.
+
+## Owners
+
+| Role                              | Owner           | Hours / week | Geography    |
+| --------------------------------- | --------------- | ------------ | ------------ |
+| Sales execution (all stages)      | Ali             | 5–8          | Sudan, MENA  |
+| Saudi-specific outreach + ops     | Sedon           | 2–3          | Saudi Arabia |
+| Arabic content + welcome packages | Samia           | 1–2          | All          |
+| Paid-conversion conversations     | Abdout          | 1–2          | All          |
+| Captain (review + allocation)     | Captain (agent) | 0.5          | All          |
+
+Ali is the primary sales contact. If a lead goes silent on Ali for 14 days, Abdout reviews before any escalation.
+
+## Weekly targets
+
+Aligned with [`kun/.claude/memory/pipeline.json`](https://github.com/databayt/kun/blob/main/.claude/memory/pipeline.json):
+
+| Metric             | Pre-refresh target | New target (MENA-10) |
+| ------------------ | ------------------ | -------------------- |
+| New warm prospects | 1                  | **3**                |
+| Outreach actions   | 5                  | **10**               |
+| Discovery calls    | 1                  | **2**                |
+| Proposals sent     | 0                  | **1 / month**        |
+| Pilots signed      | n/a                | **2 / month**        |
+
+Below target two weeks running → captain weekly review flags as risk to MENA-10 timeline.
+
+## Anti-patterns
+
+| Don't                                                 | Do instead                                                |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| Multi-touch in one day (DM + email + WhatsApp in 24h) | One channel per touch; rotate channels across the cadence |
+| Spam with same template across 10 schools             | One handwritten paragraph per school                      |
+| Lead with the pitch                                   | Lead with one question about their pain                   |
+| Promise features we haven't shipped                   | Show what's live; mark roadmap items as roadmap           |
+| Mark a prospect as "lead" because they liked a post   | Wait for a real reply or a meeting                        |
+| Re-engage `lost` schools inside 90 days               | Wait 90 days minimum, come back with a new angle          |
+| Hide a lost deal from `customers.json`                | Log it. Reasons compound into the strategy.               |
+
+## See also
+
+- [Pilot](/docs/pilot) — the MENA-10 cohort map and program
+- [Proposal](/docs/proposal) — what to send at the trial → pilot gate
+- [Sales](/docs/sales) — 5-stage process, channels, objection handling
+- [Marketing](/docs/marketing) — how leads come to us before outbound
+- [GTM](/docs/gtm) — the unified motion
+- Captain agent: `kun/.claude/agents/revenue.md`, `kun/.claude/agents/captain.md`

@@ -370,7 +370,19 @@
       "gradeAria": "الصف {n}"
     },
     "curriculum": {
-      "internationalUS": "الدولي الأمريكي"
+      "internationalUS": "الدولي الأمريكي",
+      "names": {
+        "us-k12": "الدولي الأمريكي",
+        "sd-national": "المنهج السوداني الوطني",
+        "gb-national": "المنهج البريطاني الوطني",
+        "ib-diploma": "البكالوريا الدولية",
+        "sa-national": "المنهج السعودي الوطني",
+        "eg-national": "المنهج المصري الوطني",
+        "ae-national": "المنهج الإماراتي الوطني",
+        "qa-national": "المنهج القطري الوطني",
+        "kw-national": "المنهج الكويتي الوطني",
+        "jo-national": "المنهج الأردني الوطني"
+      }
     },
     "types": {
       "textbooks": { "label": "الكتب المدرسية" },

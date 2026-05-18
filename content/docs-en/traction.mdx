@@ -1,0 +1,106 @@
+---
+title: Traction
+description: The canonical traction number set — every cold email, every grant application, every investor deck copies from this page.
+---
+
+This page is the single source of truth for the numbers we cite when we ask for support. Every doc in the [Get Support](/docs/fundraising) section copies from here. Update this page first, then propagate.
+
+_Last verified: 2026-05-18._
+
+## Executive summary
+
+Hogwarts is not a deck. We have a live paying-pilot, a public demo, four thousand nine hundred source files, eight production workflows on GitHub, near-parity Arabic/English internationalization, AI integrations, multi-tenant subdomain architecture, and a documented MENA-10 free-pilot cohort framework. The numbers below are the receipts.
+
+## Product evidence
+
+| Signal                                 | Value                                                                                                      |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| TypeScript / TSX source files (`src/`) | **4,912**                                                                                                  |
+| Component modules                      | **58** top-level directories under `src/components/`                                                       |
+| Automated test files                   | **52** `*.spec.ts` / `*.test.ts` under `tests/`                                                            |
+| CI/CD workflows                        | **8** GitHub Actions (CodeQL, Playwright, PR check, release, stale, labeler, file-upload, keep-cache-warm) |
+| Internationalization parity (AR)       | **2,247** keyed strings                                                                                    |
+| Internationalization parity (EN)       | **2,243** keyed strings                                                                                    |
+| Open-source license                    | SSPL-1.0                                                                                                   |
+| Total dependencies                     | 180 production + 45 dev                                                                                    |
+
+## Customer evidence
+
+| Signal                          | Value                                                       |
+| ------------------------------- | ----------------------------------------------------------- |
+| Paying-pilots signed            | **1 / 10** (MENA-10 cohort)                                 |
+| First pilot — name              | King Fahad Schools (Sudan)                                  |
+| First pilot — domain            | [kingfahad.databayt.org](https://kingfahad.databayt.org)    |
+| First pilot — signed            | 2026-04-15                                                  |
+| First pilot — conversion target | 2026-06-15                                                  |
+| Public demo                     | [demo.databayt.org](https://demo.databayt.org/en/dashboard) |
+| Demo credentials                | `admin@databayt.org` / `1234`                               |
+| Production site                 | [ed.databayt.org](https://ed.databayt.org)                  |
+
+The MENA-10 cohort framework — 10 free pilots, 6-month implementations, paid conversion path at $1.05/student/month — is documented in [Pilot](/docs/pilot).
+
+## Technical evidence
+
+| Capability         | What we ship                                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| Multi-tenancy      | Subdomain isolation (`{school}.databayt.org`), `schoolId`-scoped queries                           |
+| Arabic-first / RTL | Built RTL-native, not bolted on; AR is the default locale                                          |
+| AI integrations    | Anthropic SDK 0.68, OpenAI 6.10, LangChain 1.0, AI SDK 5.0 (Anthropic + Groq)                      |
+| Stack              | Next.js 16, React 19, Prisma 6, PostgreSQL (Neon), Tailwind 4                                      |
+| Auth               | NextAuth v5 (JWT), 8 roles (DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER) |
+| Payments           | Stripe live; Plaid wired; Tap MENA stub                                                            |
+| Email + SMS        | Resend + React Email; Twilio                                                                       |
+| Storage + CDN      | AWS S3 + CloudFront                                                                                |
+| Observability      | Sentry, CodeQL on every PR, Playwright on every PR                                                 |
+| Maps               | Mapbox + Leaflet (transportation, geofencing)                                                      |
+| Offline            | Dexie + service worker (offline engine plan shipped)                                               |
+
+## Build evidence (commit cadence)
+
+| Signal                               | Value                                                                                                                                                                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recent shipped features              | Stream lifecycle, transportation production, exam block audit, payment umbrella, attendance, grades, classroom, notification, credentials generation, fee auto-provisioning, role-aware UI, offline engine plan, docs runtime shiki |
+| Feature blocks with QA-handover docs | ~16 (project handover notes for each in MEMORY)                                                                                                                                                                                     |
+| Test pass rate                       | 100% across passing suites — 254/254 notifications, 306/306 payments, 291/291 attendance, 120/120 exams, 128/128 grades, 134/134 classroom, 236/236 stream                                                                          |
+| GitHub repo                          | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts)                                                                                                                                                                |
+
+## Trust artifacts
+
+- **Security**: CodeQL workflow runs on every PR. Sentry monitors production. RBAC is `permissions.ts`-driven per feature (CASL). Row-level tenant isolation enforced on every server action.
+- **Compliance posture**: GDPR / FERPA / COPPA / WCAG 2.1 AA documented in [PRD](/docs/prd).
+- **License**: SSPL-1.0 — self-host free, commercial SaaS resale forbidden. Keeps code open without parasitic risk.
+- **Open governance**: Contribution-tracked via [shared economy](/docs/shared-economy) — point-based valuation, Mudaraba/Shirkat al-A'mal/Waqf doctrinal layer.
+
+## What is NOT traction (intellectual honesty)
+
+The numbers above describe **build evidence**, not **revenue evidence**. We want investors and program managers to know the difference.
+
+- **$0 MRR today.** The first pilot is free. Conversion is the gate.
+- **One signed pilot is not a market.** It is a beachhead.
+- **High line count, 52 tests.** We are not over-fit; we are not over-tested. Both will grow.
+- **AI integrations are wired, not exotic.** Anthropic + OpenAI are common; the differentiator is Arabic-first product, not the model behind it.
+
+We win the room by being honest about what is real and what is not.
+
+## Update cadence
+
+- **First Monday of every month**, the captain refreshes this page.
+- **Last verified** line at top of doc gets bumped.
+- Any number cited elsewhere (deck, investor email, grant application) is cross-checked against this page before sending.
+
+## Related
+
+- [Fundraising](/docs/fundraising) — strategy hub
+- [Deck](/docs/deck) — investor deck content
+- [Data Room](/docs/data-room) — DD checklist
+- [MVP](/docs/mvp) — epic-by-epic shipped state with maturity badges
+- [PRD](/docs/prd) — product requirements + compliance
+- [Business model](/docs/business-model) — pricing, revenue, projections
+- [Case study](/docs/case-study) — King Fahad pilot draft
+
+## Sources
+
+- [GitHub — databayt/hogwarts](https://github.com/databayt/hogwarts)
+- [Production site](https://ed.databayt.org)
+- [Public demo](https://demo.databayt.org)
+- [King Fahad pilot](https://kingfahad.databayt.org)

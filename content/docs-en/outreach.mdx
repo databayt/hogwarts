@@ -1,0 +1,503 @@
+---
+title: Outreach Templates
+description: 19 copy-pasteable email and DM templates for investors, accelerators, incubators, grant officers, sponsors, CSR, NGOs, advisors, press, and follow-up cadence.
+---
+
+This doc is the **outreach template library**. Copy the template that matches your audience, fill the `{{variables}}`, send. Short by policy — long cold emails get deleted.
+
+_Last verified: 2026-05-18._
+
+## How to use this doc
+
+1. Pick the template that matches your audience (T1-T19 below).
+2. Replace every `{{variable}}` with a specific value (no placeholders shipped).
+3. Send via the correct channel (email, LinkedIn DM, WhatsApp).
+4. Log the outreach in the relevant doc's status table ([Investors](/docs/investors), [Accelerators](/docs/accelerators), etc.).
+5. Trigger follow-up at D+7 / D+14 / D+30 (T9-T12).
+
+## Variable glossary
+
+| Variable                         | Source                                                      |
+| -------------------------------- | ----------------------------------------------------------- |
+| `{{first_name}}`                 | The recipient's first name.                                 |
+| `{{firm}}` / `{{org}}`           | Their organization name.                                    |
+| `{{program}}`                    | Accelerator / grant / sponsor program name.                 |
+| `{{traction_line}}`              | One sentence from [Traction](/docs/traction).               |
+| `{{ask}}`                        | Specific ask — capital, intro, application, partnership.    |
+| `{{deck_link}}`                  | Deck PDF or [Deck](/docs/deck) URL.                         |
+| `{{data_room_link}}`             | Per-recipient gated data room link.                         |
+| `{{demo_url}}`                   | Either `demo.databayt.org` or live pilot URL.               |
+| `{{calendly}}`                   | Your scheduling link.                                       |
+| `{{deadline_ref}}`               | Reference to the program's deadline if applicable.          |
+| `{{alignment_angle}}`            | Which grant angle (A/B/C) matches the funder.               |
+| `{{impact_metric}}`              | One quantified outcome.                                     |
+| `{{open_source_angle}}`          | Why open-source matters for the program.                    |
+| `{{integration_angle}}`          | Why the corporate-sponsor integration makes sense.          |
+| `{{intro_giver}}`                | The mutual contact making a warm intro.                     |
+| `{{target_name}}`                | Person being introduced to.                                 |
+| `{{2_line_pitch}}`               | Your 2-line elevator pitch.                                 |
+| `{{why_now}}`                    | One paragraph on why now is the right moment to intro.      |
+| `{{thread_ref}}`                 | Subject line or 5-word reference to prior email.            |
+| `{{new_traction_signal}}`        | A new data point since your last email.                     |
+| `{{relevant_artifact}}`          | A link the recipient will care about (e.g., release notes). |
+| `{{checkpoint_date}}`            | Future date to revisit (D+30 / D+90).                       |
+| `{{milestone_to_check_back_on}}` | The milestone you'll have hit when you reply.               |
+| `{{1_line}}`                     | Your one-line pitch (LinkedIn DM).                          |
+| `{{conference}}`                 | Event you met at.                                           |
+| `{{what_we_discussed}}`          | 1-sentence summary of the in-person conversation.           |
+| `{{peer_school_count}}`          | Number of similar schools in the principal's network.       |
+| `{{publication}}`                | Journalist's outlet.                                        |
+| `{{angle}}`                      | The story angle you're pitching.                            |
+
+## Reusable boilerplate
+
+Save these in your sending app as saved snippets.
+
+**Traction line (use one)**:
+
+- "Hogwarts is an Arabic-first, open-source K-12 school OS — 1 paying pilot live ([kingfahad.databayt.org](https://kingfahad.databayt.org)), public demo at [demo.databayt.org](https://demo.databayt.org), 4,912 source files, AI integrations (Anthropic + OpenAI), AR/EN parity."
+- (Short variant) "Open-source, Arabic-first multi-tenant school SaaS; 1 paying pilot live; demo.databayt.org."
+
+**Signature**:
+
+```
+{{your_name}}, databayt
+hi@databayt.org · ed.databayt.org
+github.com/databayt/hogwarts
+```
+
+---
+
+## Cold outreach templates
+
+### T1 — Cold investor email (high-signal)
+
+**Audience**: VC partner, angel.
+**Channel**: Email.
+**Length**: 100-130 words.
+
+```
+Subject: Hogwarts — Arabic-first school OS, 1 paying pilot live
+
+Hi {{first_name}},
+
+{{firm}}'s portfolio in {{related_thesis}} caught my eye, especially {{recent_investment}} — we sit in adjacent territory.
+
+I'm building Hogwarts: open-source, Arabic-first, multi-tenant K-12 school OS for MENA. We have one paying-pilot signed (King Fahad Schools, Sudan — live at [kingfahad.databayt.org](https://kingfahad.databayt.org)), a public demo, 4,912 source files, AR/EN parity, and AI integrations (Anthropic, OpenAI) wired into exam authoring and admission review.
+
+We're raising $250K-$500K pre-seed bridge across SAFE + grants + accelerator stipend. {{ask}}
+
+Deck: {{deck_link}}. 30 min to chat? {{calendly}}
+
+Best,
+{{your_name}}
+```
+
+### T2 — Cold accelerator program-manager email
+
+**Audience**: YC, Techstars, Antler, Hub71, Sanabil 500 program manager.
+**Channel**: Email.
+**Length**: 100-120 words.
+
+```
+Subject: {{program}} application — Hogwarts, Arabic-first school OS
+
+Hi {{first_name}},
+
+I'm preparing our {{program}} application for {{deadline_ref}}.
+
+Hogwarts is an open-source, Arabic-first, multi-tenant school OS — one paying pilot in Sudan, AI integrations live, AR/EN parity. We fit the {{program_thesis_keyword}} thesis because {{specific_reason}}.
+
+Before the formal app, I wanted to introduce ourselves and ask: is there a specific angle on our pitch you'd want emphasized, given {{program}}'s recent batches?
+
+Demo: {{demo_url}}. Happy to send the deck or a 5-min loom walkthrough.
+
+Best,
+{{your_name}}
+```
+
+### T3 — Cold incubator regional email (AR-first variant)
+
+**Audience**: MSAR, Orange Corners, Flat6Labs, Misk, Falak.
+**Channel**: Email.
+**Length**: 100-120 words.
+
+```
+الموضوع: تقديم {{program_ar}} — هَوْغوارتس، نظام مدرسي عربي-أولًا
+
+السلام عليكم {{first_name_ar}}،
+
+أكتب لتقديم هَوْغوارتس — نظام تشغيل مدرسي عربي-أولًا، مفتوح المصدر، متعدد المستأجرين، مَنشور في مدارس الملك فهد (السودان) وعرض عام في [demo.databayt.org](https://demo.databayt.org).
+
+نَتقدَّم لـ {{program_ar}} للدورة القادمة. {{sudan_angle}}.
+
+قبل التقديم الرسمي، نُحب التواصُل واطلاع البرنامج على وضعنا. هل يُمكن لقاء قصير لمدة 20 دقيقة؟
+
+العرض المباشر: {{demo_url}}
+GitHub: github.com/databayt/hogwarts
+
+شكرًا،
+{{your_name}}
+databayt | hi@databayt.org
+```
+
+### T4 — Cold grant officer email
+
+**Audience**: UNESCO, World Bank, GIZ, USAID DIV, Gates, Mastercard, IsDB, UN agencies.
+**Channel**: Email.
+**Length**: 120-150 words.
+
+```
+Subject: Partner inquiry — {{grant_name}} alignment with Hogwarts (open-source Arabic-first school OS)
+
+Dear {{first_name}},
+
+I'm reaching out about potential alignment between Hogwarts and {{grant_name}}'s {{program_focus}} priorities.
+
+Hogwarts is an open-source ({{open_source_angle}}) school OS deployed in Sudan ({{impact_metric}}). Our positioning aligns with {{grant_name}}'s commitment to {{alignment_angle}}: {{specific_alignment_paragraph}}.
+
+We're not asking for funding today — we're asking for a 30-minute call to understand whether the partnership angle is right and what the application process would look like.
+
+Brief artifacts:
+- Demo + pilot: {{demo_url}}
+- 1-page overview: {{deck_link}}
+- Repository (open): github.com/databayt/hogwarts
+
+Available {{availability}}. Happy to come to your office if you're in {{their_city}}.
+
+Best,
+{{your_name}}
+{{org}} | {{email}}
+```
+
+### T5 — Sponsor / credit application narrative
+
+**Audience**: AWS Activate, Google, Microsoft, Vercel, Neon, Anthropic, OpenAI startup forms.
+**Channel**: Web form (paste into the application's "tell us about your startup" field).
+**Length**: 80-100 words.
+
+```
+Hogwarts is an open-source ({{open_source_angle}}), Arabic-first, multi-tenant K-12 school OS for MENA. Built with {{stack_alignment}}.
+
+Current state: 1 paying-pilot live ({{demo_url}}), 4,912 source files, AR/EN parity, AI integrations (Anthropic, OpenAI), 8 CI/CD workflows including security scanning.
+
+Why this {{program}} fits: {{specific_program_alignment}}. We'd use credits primarily for {{usage_tier}} — covering our production deployment of {{product_area}} for the next 12 months.
+
+Repository: github.com/databayt/hogwarts
+Production: ed.databayt.org
+```
+
+### T6 — Corporate sponsor / CSR / telco / bank email
+
+**Audience**: Pearson, Cambridge, ClickView, MTN, Zain, Aramco CSR, Bank of Khartoum CSR.
+**Channel**: Email.
+**Length**: 100-130 words.
+
+```
+Subject: Hogwarts × {{company}} — partnership inquiry (school deployments)
+
+Hi {{first_name}},
+
+I'm reaching out about a potential partnership between Hogwarts and {{company}}. We operate an open-source, Arabic-first school OS deployed at {{schools_count}} schools across MENA including {{recent_pilot}}.
+
+The partnership angle: {{integration_angle}}. For your CSR / education programs, this means {{benefit_to_them}} — and your parents/teachers see your brand inside the platform's communications.
+
+Would a 30-min intro call make sense? We can demo the platform live and walk through the partnership structure that's worked with {{other_partner_reference}}.
+
+Best,
+{{your_name}}
+{{org}} | {{email}}
+```
+
+### T7 — Warm-intro forwarding template
+
+**Audience**: A mutual contact forwarding to a target investor / program.
+**Channel**: Email (as the forwardable content).
+**Length**: 70-90 words.
+
+```
+Hi {{intro_giver}},
+
+Thanks for offering to introduce me to {{target_name}} at {{firm}}. Here's the forwardable for the intro:
+
+---
+
+Hi {{target_name}},
+
+{{intro_giver}} suggested we connect. I run Hogwarts, an open-source Arabic-first school OS — one paying pilot live in Sudan, AI integrations, AR/EN parity.
+
+We're raising a pre-seed bridge and {{firm}}'s focus on {{thesis}} maps closely. Quick 20-min intro call to see if there's fit?
+
+Demo: {{demo_url}} · Deck: {{deck_link}}
+
+Thanks,
+{{your_name}}
+```
+
+### T8 — Double-opt-in intro request
+
+**Audience**: Asking an advisor or pilot principal to intro you to a target.
+**Channel**: Email.
+**Length**: 80-100 words.
+
+```
+Subject: Intro request — {{target_name}} at {{firm}}
+
+Hi {{advisor_name}},
+
+I see {{target_name}} at {{firm}} is in your network. {{firm}} maps closely to Hogwarts's thesis ({{thesis}}) and {{why_now}}.
+
+Would you be willing to make an intro? Happy to send you a forwardable that doesn't put you on the spot — you can edit anything before sending, or just send "thumbs up" and I'll write the intro to you instead.
+
+If now isn't the right time, no worries at all — appreciate you considering it.
+
+Thanks,
+{{your_name}}
+```
+
+---
+
+## Follow-up cadence
+
+### T9 — Follow-up D+3 (light bump)
+
+**Length**: 40-60 words.
+
+```
+Hi {{first_name}},
+
+Light bump on {{thread_ref}} — wanted to make sure my note didn't get buried.
+
+No pressure; if now isn't the right moment, happy to pick this back up later.
+
+Best,
+{{your_name}}
+```
+
+### T10 — Follow-up D+7 (bump with new signal)
+
+**Length**: 50-70 words.
+
+```
+Hi {{first_name}},
+
+Wanted to follow up on {{thread_ref}}.
+
+Since I wrote: {{new_traction_signal}}. Wanted to flag in case it shifts the conversation.
+
+Open to a 20-min chat whenever works for you.
+
+Best,
+{{your_name}}
+```
+
+### T11 — Follow-up D+14 (value-add)
+
+**Length**: 60-80 words.
+
+```
+Hi {{first_name}},
+
+Following up on {{thread_ref}}.
+
+Thought you might find this relevant: {{relevant_artifact}} — covers {{topic}} which seemed adjacent to {{their_thesis_or_program}}.
+
+Whether or not Hogwarts is a fit for you, happy to share more context in the space.
+
+Best,
+{{your_name}}
+```
+
+### T12 — Follow-up D+30 (closing the loop)
+
+**Length**: 50-70 words.
+
+```
+Hi {{first_name}},
+
+Closing the loop on {{thread_ref}}. I haven't heard back, so I'll assume the timing isn't right — totally understand.
+
+Happy to reconnect in {{checkpoint_date}} or whenever you'd like.
+
+Wishing you the best with {{their_initiative}}.
+
+Best,
+{{your_name}}
+```
+
+---
+
+## Reply scripts
+
+### T13 — Reply to rejection (graceful, door open)
+
+**Length**: 50-70 words.
+
+```
+Hi {{first_name}},
+
+Thanks for the clarity and the time. Totally understand.
+
+If it'd be useful, I'd love to check back in {{checkpoint_date}} — by then we expect {{milestone_to_check_back_on}}, which might change the conversation.
+
+In the meantime, if you ever come across someone in your network who'd find Hogwarts relevant, happy to be intro'd.
+
+Thanks again,
+{{your_name}}
+```
+
+### T14 — Reply to "send the deck"
+
+**Length**: 30-50 words.
+
+```
+Hi {{first_name}},
+
+Deck attached / linked: {{deck_link}}
+
+For deeper diligence: data room at {{data_room_link}} (NDA-gated). Happy to set up a 30-min walkthrough at {{calendly}} or async in this thread.
+
+Best,
+{{your_name}}
+```
+
+### T15 — Reply to "not now"
+
+**Length**: 60-80 words.
+
+```
+Hi {{first_name}},
+
+Totally hear you on timing.
+
+We expect to hit {{milestone_to_check_back_on}} by {{checkpoint_date}}. If that's a more interesting moment to chat, I'll plan to reach back out then — no need for you to track it.
+
+If anything changes on your side in the meantime, you have my address.
+
+Best,
+{{your_name}}
+```
+
+---
+
+## Channel-specific variants
+
+### T16 — LinkedIn DM (shorter)
+
+**Length**: 30-50 words.
+
+```
+Hi {{first_name}} — building Hogwarts, an Arabic-first open-source school OS.
+
+{{1_line}}. Saw your work on {{their_thesis}} and would love to share what we're building — open to a quick chat?
+
+Demo: demo.databayt.org
+```
+
+### T17 — Conference / event 1-on-1 follow-up
+
+**Audience**: Met at GESS, BETT, Misk, LEAP, GITEX, ArabNet.
+**Length**: 60-80 words.
+
+```
+Subject: Great to meet at {{conference}}
+
+Hi {{first_name}},
+
+Great chatting at {{conference}} — appreciated the discussion about {{what_we_discussed}}.
+
+As promised, here's the link to {{specific_artifact}}: {{link}}
+
+For broader context: demo at {{demo_url}}, repo at github.com/databayt/hogwarts.
+
+Happy to set up a deeper call when convenient — {{calendly}}.
+
+Best,
+{{your_name}}
+```
+
+### T18 — Pilot-school referral request
+
+**Audience**: Existing pilot principal (e.g., King Fahad).
+**Length**: 60-80 words.
+
+```
+Hi {{first_name}},
+
+Quick ask — as we onboard the rest of our MENA-10 cohort, peer-school referrals would help us land the next 9 pilots.
+
+You mentioned {{peer_school_count}} similar schools in your network. Would you be open to introducing us to 2-3 principals? Happy to send a forwardable so you don't have to write anything from scratch.
+
+No pressure if the timing isn't right.
+
+Best,
+{{your_name}}
+```
+
+### T19 — Press / journalist cold
+
+**Audience**: Wamda, MENAbytes, TechCabal, EdTech reviewers, Forbes ME.
+**Length**: 80-100 words.
+
+```
+Subject: Story angle — {{angle}} (Hogwarts, Sudanese-founded open-source EdTech)
+
+Hi {{first_name}},
+
+I've followed your coverage of {{their_recent_piece}} — Hogwarts might be relevant for {{publication}}.
+
+Quick angle: {{angle_paragraph}}. Concrete artifacts:
+- Live pilot in Sudan: {{demo_url}}
+- Open-source code: github.com/databayt/hogwarts
+- 4,912 source files, AR/EN parity, AI integrations live
+
+Sudanese-founded team, post-conflict reconstruction context, no marketing budget — just product and pilots.
+
+Happy to set up a 20-min background call if useful. {{calendly}}.
+
+Best,
+{{your_name}}
+```
+
+---
+
+## Anti-patterns
+
+Things we never do in outreach:
+
+- **No hype words** — "revolutionary," "best-in-class," "world-class," "disruptive." Quantify or don't claim.
+- **No paragraphs longer than 4 lines** — cold emails get scanned, not read.
+- **No two CTAs in one email** — pick one ask: meeting, intro, application, reply.
+- **No "we'd love to connect"** — always offer something concrete (demo, deck, time slot).
+- **No false urgency** — "limited spots," "closing soon" reads as desperate.
+- **No copy-paste across recipients without changing variables** — recipients notice.
+- **No replies to "no" with more pitching** — accept "no" gracefully (T13).
+- **No following up more than 3 times** — silence after T12 is permission to stop.
+- **No name-dropping without permission** — never use an advisor's name unless they've green-lit it.
+- **No emojis in cold investor / grant emails** — fine in LinkedIn DMs to younger founders, never in formal outreach.
+
+## Sending discipline
+
+- **Send between 9-11 AM in recipient's timezone** when possible (most opens).
+- **Avoid Mondays + Fridays** — Monday is busy, Friday gets buried.
+- **One outreach batch per week** — Tuesday or Wednesday.
+- **Log every send** in the relevant doc's status column.
+- **Maintain a private response tracker** (Notion, sheet, or CRM) — separate from these public docs.
+
+## Related
+
+- [Fundraising](/docs/fundraising) — strategy hub
+- [Investors](/docs/investors) — T1, T7, T8, T14
+- [Accelerators](/docs/accelerators) — T2, T9-T12
+- [Incubators](/docs/incubators) — T3 (AR-first), T10, T11
+- [Grants](/docs/grants) — T4
+- [Sponsors](/docs/sponsors) — T5, T6
+- [Partners](/docs/partners) — T4, T6, T7, T8, T19
+- [Universities](/docs/universities) — T2, T6
+- [Competitions](/docs/competitions) — T2, T17
+- [Traction](/docs/traction) — fill `{{traction_line}}` from here
+- [Deck](/docs/deck) — fill `{{deck_link}}` from here
+
+## Sources
+
+- Internal tracking: maintain in Notion / Sheets per-recipient until we wire a proper CRM.

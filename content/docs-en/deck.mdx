@@ -1,0 +1,170 @@
+---
+title: Investor Deck
+description: The 10-slide investor deck content as MDX. Lives alongside the design source so prose changes ship before pixels.
+---
+
+This page is the **content** of the investor deck. The Figma source and PDF export live elsewhere (see [Sources](#sources)). When numbers change, this page updates first — the design follows.
+
+_Last verified: 2026-05-18._
+
+## How to use this doc
+
+- Slide 1 = title slide; slide 11 = appendix opener. The 10 content slides in between are what investors read.
+- All quantitative claims trace to [Traction](/docs/traction). Update Traction first.
+- Variables in `{{double_braces}}` are filled per investor before sending.
+- For grant officers, swap slides 7-11 with the impact narrative from [Grants](/docs/grants).
+
+## Slide 1 — Title
+
+**Hogwarts**
+Arabic-first, open-source school operating system.
+[ed.databayt.org](https://ed.databayt.org) · [demo.databayt.org](https://demo.databayt.org) · [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts)
+
+_Pitched to: {{firm}} · {{date}}._
+
+## Slide 2 — Problem
+
+Seventeen million children are out of school in Sudan. Schools that have reopened — and the broader MENA system serving 80M+ K-12 students — run on paper registers, Excel sheets, and WhatsApp groups.
+
+| Pain                                    | Industry baseline                 |
+| --------------------------------------- | --------------------------------- |
+| Admin time lost to paperwork            | 40+ hours/month per administrator |
+| Cost of fragmented tooling              | $15K–$50K/year per school         |
+| Data error rate from manual entry       | ~23%                              |
+| Parents dissatisfied with communication | ~65%                              |
+
+The problem is documented. The buyers are reachable. The disruption window is open.
+
+## Slide 3 — Solution
+
+A complete cloud-based school operating system. One platform for enrollment, attendance, exams, timetables, grading, finance, parent communication. Arabic-first. Multi-tenant. Open source.
+
+| Capability             | What schools get                                          |
+| ---------------------- | --------------------------------------------------------- |
+| Multi-tenant SaaS      | A new school onboards in minutes; isolation by `schoolId` |
+| Arabic-first / RTL     | Built RTL-native, not bolted on                           |
+| AI-assisted operations | Document review, exam wizard, bank-receipt extraction     |
+| Open source (SSPL-1.0) | Self-host free; managed SaaS for those who prefer not to  |
+
+## Slide 4 — Why now
+
+| Tailwind                                                                    | Why it matters                                                  |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Sudan reopened schools in Feb 2026 after a 3-year hiatus                    | Schools rebuild from zero infrastructure — no incumbent         |
+| Saudi Vision 2030 + NTDP ($430M+ deployed in 2026)                          | Government is buying tech infrastructure today                  |
+| MENA EdTech market $14.4B → $33B by 2030                                    | Demand outpaces supply of Arabic-first solutions                |
+| AI lowers product cost (admin auto-extraction, exam authoring, translation) | Engineering team of 2-3 ships features a 20-person team used to |
+| Open-source acceptance in MENA government tenders rising                    | Schools/ministries no longer reject OSS-licensed software       |
+
+## Slide 5 — Market
+
+| Layer     | Definition                                         | 2026 estimate         |
+| --------- | -------------------------------------------------- | --------------------- |
+| TAM       | Global K-12 SaaS                                   | ~$200B                |
+| SAM       | MENA K-12 administration software                  | $14.4B → $33B by 2030 |
+| SOM       | Arabic-first MENA K-12 admin SaaS (5-year capture) | $1.2B                 |
+| Beachhead | Sudan + KSA private K-12 (10K target schools)      | ~$120M ARR potential  |
+
+Full breakdown in [Business model](/docs/business-model).
+
+## Slide 6 — Product
+
+Live now:
+
+- **Demo**: [demo.databayt.org](https://demo.databayt.org) — `admin@databayt.org` / `1234`
+- **Pilot**: [kingfahad.databayt.org](https://kingfahad.databayt.org) — King Fahad Schools
+- **Production**: [ed.databayt.org](https://ed.databayt.org)
+
+Screenshots in the Figma deck cover: dashboard (role-aware), admission wizard, attendance + geofence, exam wizard, fee + invoice flow, parent portal, transportation. See [MVP](/docs/mvp) for the epic-by-epic shipped state.
+
+## Slide 7 — Traction
+
+| Signal               | Value                                                                |
+| -------------------- | -------------------------------------------------------------------- |
+| Paying-pilots signed | 1 / 10 (MENA-10 cohort)                                              |
+| Source files         | 4,912 TS/TSX                                                         |
+| Tests                | 52 automated suites                                                  |
+| CI workflows         | 8 GitHub Actions                                                     |
+| i18n parity          | AR 2,247 / EN 2,243 keyed strings                                    |
+| AI integrations      | Anthropic, OpenAI, LangChain, AI SDK                                 |
+| GitHub               | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
+
+What is NOT traction: $0 MRR today; first pilot is free; conversion is the gate. See [Traction](/docs/traction) for the full honest accounting.
+
+## Slide 8 — Business model
+
+Tiered SaaS. Free → Pro → Enterprise.
+
+| Tier       | Price                   | Target                             |
+| ---------- | ----------------------- | ---------------------------------- |
+| Free       | $0 (up to 100 students) | Smallest schools, NGOs, pilots     |
+| Pro        | $1.50/student/month     | Private K-12 (300-2,000 students)  |
+| Enterprise | $1.00/student/month     | School groups, ministries (2,000+) |
+| Services   | Project-based           | Migration, custom integration      |
+
+5-year revenue projection: Y1 $240K → Y3 $6M → Y5 $36M. See [Business model](/docs/business-model) for the full unit economics and assumptions.
+
+## Slide 9 — Competition
+
+Battle-card vs 9 named vendors in [Competitors](/docs/competitors). The short version:
+
+| Dimension       | Hogwarts edge                                                |
+| --------------- | ------------------------------------------------------------ |
+| Arabic-first    | Built RTL-native; competitors bolt Arabic on years later     |
+| Open source     | Schools inspect the code; no lock-in; community contributes  |
+| Price           | $1-1.50/student vs $4-12 industry norm                       |
+| AI integrations | Native (exam wizard, document intelligence); competitors lag |
+| Multi-tenant    | Onboarding in minutes; competitors charge for new "instance" |
+
+## Slide 10 — Team
+
+- Founders: databayt team — Sudanese-founded, distributed across Sudan/KSA/Egypt/Europe.
+- Advisors: TBD (see [Data Room](/docs/data-room) for current bench).
+- Contributor model: open-source via [shared economy](/docs/shared-economy) — point-based valuation, doctrinal Mudaraba/Shirkat al-A'mal/Waqf framework.
+- Hiring posture: $X of the ask goes to one senior product-engineering hire + one MENA sales lead in year one.
+
+## Slide 11 — Ask
+
+| Bucket                              | %   | 12-month deliverable                                           |
+| ----------------------------------- | --- | -------------------------------------------------------------- |
+| Engineering (1 senior hire)         | 35% | Payment-umbrella P0/P1 + offline engine + AI tutor MVP         |
+| MENA sales (1 lead + 1 SDR)         | 30% | MENA-10 conversion → 10 paying schools → MENA-25 cohort        |
+| Pilot subsidies (free for 6 months) | 15% | 10 free pilots fully serviced incl. onboarding visits          |
+| Compliance + entity setup           | 10% | KSA legal entity, Sudan registration, security audit, SSO/SAML |
+| Runway buffer                       | 10% | 2-month operational reserve                                    |
+
+**Asking $250K-$500K** (range across instrument types: grant, SAFE, convertible). 18-month runway to seed milestone (10 paying schools, $50K+ MRR, ready to raise priced seed).
+
+Instrument preference: **grant + SAFE-cap blended**. Toxic-term list in [Investors](/docs/investors).
+
+## Appendix slides (linked, not embedded)
+
+- Cap table (current + post-raise) — in [Investors](/docs/investors) + [Data Room](/docs/data-room).
+- Detailed financials (3-year P&L, hiring plan) — Data Room.
+- Architecture diagram — see [Architecture](/docs/architecture).
+- Security posture (CodeQL, Sentry, RBAC, multi-tenant isolation) — Data Room.
+- References (3 pilot principals, 2 contributors, 2 advisors) — Data Room.
+- Press / community mentions — TBD.
+
+## Variables to fill before sending
+
+| Variable        | Where to source                                                      |
+| --------------- | -------------------------------------------------------------------- |
+| `{{firm}}`      | Investor firm name (slide 1)                                         |
+| `{{date}}`      | Today's date (slide 1)                                               |
+| `{{ask}}`       | Adjusted for fund stage: $250K for angels/grants, $500K for seed VCs |
+| `{{milestone}}` | Adjusted for runway target: 10 schools / $50K MRR / priced seed      |
+
+## Related
+
+- [Fundraising](/docs/fundraising) — strategy hub
+- [Traction](/docs/traction) — number set
+- [Investors](/docs/investors) — VC/angel narrative
+- [Data Room](/docs/data-room) — DD checklist
+- [Outreach](/docs/outreach) — cold-email templates
+
+## Sources
+
+- Figma deck source: TODO — link after design pass.
+- PDF export: TODO — link after design pass.
+- Public deck mirror: TODO — link after publication.

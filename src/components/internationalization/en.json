@@ -370,7 +370,19 @@
       "gradeAria": "Grade {n}"
     },
     "curriculum": {
-      "internationalUS": "International US"
+      "internationalUS": "International US",
+      "names": {
+        "us-k12": "International US",
+        "sd-national": "Sudanese National",
+        "gb-national": "British National",
+        "ib-diploma": "International Baccalaureate",
+        "sa-national": "Saudi National",
+        "eg-national": "Egyptian National",
+        "ae-national": "Emirati National",
+        "qa-national": "Qatari National",
+        "kw-national": "Kuwaiti National",
+        "jo-national": "Jordanian National"
+      }
     },
     "types": {
       "textbooks": { "label": "Textbooks" },

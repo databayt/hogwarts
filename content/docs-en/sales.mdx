@@ -3,7 +3,7 @@ title: Sales
 description: B2B sales playbook for Hogwarts — target market, process, differentiators, objection handling.
 ---
 
-Hogwarts targets K-12 institutions in MEA — Arabic-first, expanding to English-speaking markets. Our first paying customer is [King Fahad Schools](https://kingfahad.databayt.org), running on the platform today. For pricing see [Business model](/docs/business-model). For partner narrative see [Pitch](/docs/pitch).
+Hogwarts targets K-12 institutions in MEA — Arabic-first, expanding to English-speaking markets. Our first pilot partner is [King Fahad Schools](https://kingfahad.databayt.org), running on the platform today as the founding member of the MENA-10 free pilot cohort. For the pilot program see [Pilot](/docs/pilot); for lead tracking see [Leads](/docs/leads); for proposal templates see [Proposal](/docs/proposal); for pricing see [Business model](/docs/business-model); for partner narrative see [Pitch](/docs/pitch).
 
 ## Target market
 
@@ -27,13 +27,30 @@ Geography: Sudan (primary, Arabic-first), Saudi Arabia (highest priority — lar
 
 ## Sales process
 
-| Stage        | Goal              | Activity                                                                    |
-| ------------ | ----------------- | --------------------------------------------------------------------------- |
-| 1. Discovery | Qualify           | Research school size, decision makers, current systems, budget              |
-| 2. Demo      | Show value        | 30-min live demo, role-specific views, Arabic/RTL, multi-tenant isolation   |
-| 3. Trial     | Prove value       | 14-day free trial, sample data import, dedicated onboarding                 |
-| 4. Pilot     | Validate at scale | 3-month pilot with select grades, measure metrics, document results         |
-| 5. Contract  | Close             | Per-student pricing, annual discount, multi-school terms, training schedule |
+| Stage        | Goal             | Activity                                                                                                            |
+| ------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1. Discovery | Qualify          | Research school size, decision makers, current systems, budget                                                      |
+| 2. Demo      | Show value       | 30-min live demo, role-specific views, Arabic/RTL, multi-tenant isolation                                           |
+| 3. Trial     | Prove value      | 14-day free trial, sample data import, dedicated onboarding                                                         |
+| 4. Pilot     | Engage and learn | 6-month free pilot under the [MENA-10 cohort](/docs/pilot); weekly feedback, ≥3 issues/month, case-study commitment |
+| 5. Contract  | Close            | Per-student pricing, 30% pilot discount, annual / multi-school terms, training                                      |
+
+In 2026 the default Stage 4 is the free MENA-10 pilot — see [Pilot](/docs/pilot). Paid pilots and 3-month government pilots remain available for ENTERPRISE and ministry deals.
+
+## Free MENA Pilot Cohort
+
+We are operating a single coordinated pilot motion in 2026 — **10 free pilots across MENA**, 6 months each, with weekly feedback. The cohort is the centre of gravity for sales; almost every Stage 4 conversion in 2026 lands here. Conversion to paid happens at month 6 with a 30%-off PRO offer.
+
+| Country      | Slots | Source channels                                 |
+| ------------ | ----- | ----------------------------------------------- |
+| Sudan        | 3     | Ahmed Baha referrals, WhatsApp principal groups |
+| Saudi Arabia | 2     | Sedon network, LinkedIn Arabic outreach         |
+| Egypt        | 2     | MSAR network, LinkedIn                          |
+| Jordan       | 1     | Orange Corners alumni                           |
+| Morocco      | 1     | 249Startups partner network                     |
+| UAE          | 1     | Dubai school directory, LinkedIn                |
+
+The MENA-10 plan is the source of truth: [Pilot](/docs/pilot). Pipeline state is tracked in [`kun/.claude/memory/customers.json`](https://github.com/databayt/kun/blob/main/.claude/memory/customers.json).
 
 ## Channels
 
@@ -105,8 +122,15 @@ Each school is fully isolated via `schoolId` scoping on every database query. We
 
 ## See also
 
+- [Pilot](/docs/pilot) — MENA-10 cohort and pilot operations
+- [Leads](/docs/leads) — discovery script and pipeline operations
+- [Proposal](/docs/proposal) — Free Pilot and Paid Conversion templates
+- [GTM](/docs/gtm) — three-phase go-to-market
+- [Marketing](/docs/marketing) — content, channels, positioning
+- [Case study](/docs/case-study) — King Fahad first draft + future slots
 - [Business model](/docs/business-model) — pricing, tiers, projections
 - [PRD](/docs/prd) — product requirements
 - [MVP](/docs/mvp) — current shipped state
 - [Architecture](/docs/architecture) — technical design
 - [Pitch](/docs/pitch) — partner-facing narrative
+- [Incubators](/docs/incubators) — MSAR + Orange Corners applications

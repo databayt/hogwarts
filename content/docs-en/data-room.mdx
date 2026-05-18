@@ -1,0 +1,150 @@
+---
+title: Data Room
+description: Due-diligence checklist and index. What we hand to an investor, grant officer, or accelerator program manager after they ask "send more."
+---
+
+This is the **index** of our data room. Contents are gated by NDA and shared per-recipient. The index itself stays public so anyone can see we have one.
+
+_Last verified: 2026-05-18._
+
+## What this doc is for
+
+After the first call, serious counterparties ask "can you send the deck and a few backup docs?" This page is the reply menu — every artifact we can hand them, plus its readiness state. We don't ship until the relevant rows are Ready.
+
+For the deck content, see [Deck](/docs/deck). For the numbers that fill it, see [Traction](/docs/traction).
+
+## Access controls
+
+- **Index** (this page): public.
+- **Contents**: gated. Two-tier sharing:
+  - **Tier 1** — non-sensitive (deck PDF, public demo creds, GitHub repo URL, references list): sent on request.
+  - **Tier 2** — sensitive (financial model, pilot contracts, cap table numbers, security audit details): NDA required, watermarked per-recipient.
+- **NDA template**: see TODO link below. Standard 1-year mutual NDA. Edit per-counterparty if needed.
+- **Watermarking**: every Tier-2 PDF embeds `{{recipient_name}}` + `{{sent_date}}` in the footer.
+
+## Contents inventory
+
+### A. Pitch artifacts
+
+| Artifact                | Status | Where                                                |
+| ----------------------- | ------ | ---------------------------------------------------- |
+| 1-page summary (EN)     | Draft  | Port from [Pitch](/docs/pitch) §investor pitch       |
+| 1-page summary (AR)     | Draft  | Port from `docs-ar/pitch.mdx`                        |
+| 10-slide deck (EN, PDF) | TODO   | Designed from [Deck](/docs/deck)                     |
+| 10-slide deck (AR, PDF) | TODO   | Translated mirror                                    |
+| Live demo               | Ready  | [demo.databayt.org](https://demo.databayt.org)       |
+| Demo credentials sheet  | Ready  | `admin@databayt.org / 1234` + role-specific accounts |
+
+### B. Product evidence
+
+| Artifact                  | Status | Where                                                                |
+| ------------------------- | ------ | -------------------------------------------------------------------- |
+| GitHub repo (read access) | Ready  | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts) |
+| MVP epic-by-epic state    | Ready  | [MVP](/docs/mvp)                                                     |
+| PRD (full requirements)   | Ready  | [PRD](/docs/prd)                                                     |
+| Architecture overview     | Ready  | [Architecture](/docs/architecture)                                   |
+| Multi-tenant model        | Ready  | [Multi-tenancy](/docs/multi-tenancy)                                 |
+| Stack list with versions  | Ready  | [Stack](/docs/stack)                                                 |
+| Public production site    | Ready  | [ed.databayt.org](https://ed.databayt.org)                           |
+
+### C. Customer evidence
+
+| Artifact                               | Status | Where                                              |
+| -------------------------------------- | ------ | -------------------------------------------------- |
+| King Fahad pilot agreement (redacted)  | Draft  | TODO — sanitize and convert to PDF                 |
+| King Fahad case study (EN)             | Draft  | [Case study](/docs/case-study)                     |
+| King Fahad case study (AR)             | TODO   | Mirror of EN                                       |
+| MENA-10 cohort framework               | Ready  | [Pilot](/docs/pilot)                               |
+| Pilot pipeline (named leads, redacted) | TODO   | Sanitize per-account before sharing                |
+| Reference principals (3)               | TODO   | Confirm with King Fahad, MENA-10 leads, demo users |
+| Testimonials (quotes from pilot users) | TODO   | Collect at month-3 of King Fahad pilot             |
+
+### D. Financials
+
+| Artifact                                   | Status | Where                                             |
+| ------------------------------------------ | ------ | ------------------------------------------------- |
+| 3-year P&L model                           | TODO   | Build from [Business model](/docs/business-model) |
+| Pricing tiers + unit economics             | Ready  | [Business model](/docs/business-model)            |
+| Revenue projection                         | Ready  | Y1 $240K → Y3 $6M → Y5 $36M                       |
+| Cost structure (engineering + sales + ops) | TODO   | Build from current run-rate                       |
+| Cash position (current)                    | TODO   | Confirm with finance lead                         |
+| Burn rate                                  | TODO   | Calculate from last 6 months                      |
+| Runway                                     | TODO   | Cash / burn                                       |
+
+### E. Legal + cap table
+
+| Artifact                         | Status | Where                                           |
+| -------------------------------- | ------ | ----------------------------------------------- |
+| Cap table (current)              | TODO   | Founder split + options pool + contributor pool |
+| Cap table (post-raise, modeled)  | TODO   | Per-instrument scenarios (grant, SAFE, priced)  |
+| Shared-economy contributor model | Ready  | [Shared economy](/docs/shared-economy)          |
+| Company formation docs           | TODO   | KSA entity setup + Sudan registration           |
+| License (SSPL-1.0)               | Ready  | LICENSE in repo                                 |
+| Code of conduct                  | Ready  | [Code of conduct](/docs/code-of-conduct)        |
+| Privacy policy                   | TODO   | Draft for ed.databayt.org                       |
+| Terms of service                 | TODO   | Draft for ed.databayt.org                       |
+| Data processing addendum (DPA)   | TODO   | Required for EU partners / GDPR-aware schools   |
+
+### F. Security + compliance
+
+| Artifact                                          | Status | Where                                              |
+| ------------------------------------------------- | ------ | -------------------------------------------------- |
+| RBAC permissions matrix                           | Ready  | `permissions.ts` per feature block                 |
+| Tenant-isolation enforcement                      | Ready  | Documented in [Multi-tenancy](/docs/multi-tenancy) |
+| CodeQL workflow                                   | Ready  | `.github/workflows/codeql.yml`                     |
+| Playwright on PR                                  | Ready  | `.github/workflows/playwright.yml`                 |
+| Sentry production monitoring                      | Ready  | Wired in production                                |
+| Compliance posture (GDPR/FERPA/COPPA/WCAG 2.1 AA) | Ready  | [PRD](/docs/prd)                                   |
+| Security audit (third-party)                      | TODO   | Defer until post-seed                              |
+| Penetration test report                           | TODO   | Defer until post-seed                              |
+| Backup + DR plan                                  | TODO   | Document existing Neon point-in-time recovery + S3 |
+
+### G. Team
+
+| Artifact                        | Status | Where                                         |
+| ------------------------------- | ------ | --------------------------------------------- |
+| Founder bios (1-paragraph each) | TODO   | Write fresh; mirror [Pitch](/docs/pitch)      |
+| Founder LinkedIn URLs           | TODO   | Confirm with each founder                     |
+| Advisor list                    | TODO   | Build advisor bench first                     |
+| Contributor leaderboard         | TODO   | Extract from contribution-tracking system     |
+| Hiring plan (12-month)          | TODO   | 1 senior engineer + 1 MENA sales lead + 1 SDR |
+| Org chart                       | TODO   | Roles + reporting lines                       |
+
+### H. Market + competition
+
+| Artifact                               | Status | Where                                  |
+| -------------------------------------- | ------ | -------------------------------------- |
+| Competitor matrix (vs 9 named vendors) | Ready  | [Competitors](/docs/competitors)       |
+| MENA EdTech market sizing              | Ready  | [Business model](/docs/business-model) |
+| GTM strategy                           | Ready  | [GTM](/docs/gtm)                       |
+| Marketing plan                         | Ready  | [Marketing](/docs/marketing)           |
+| Sales playbook                         | Ready  | [Sales](/docs/sales)                   |
+
+## Refresh cadence
+
+- **Monthly** (first Monday): captain reviews every TODO row and either upgrades to Ready or sets a target date.
+- **Before each fundraising sprint**: re-verify Tier-2 contents; bump dates; refresh deck PDF.
+- **Per-counterparty**: log who got which Tier in a private tracker (not this doc).
+
+## Status legend
+
+- **Ready** — exists, current, shareable.
+- **Draft** — exists but needs polish or sanitization before sending.
+- **TODO** — does not yet exist; create before claiming the data room is complete.
+
+Goal: **all "A — Pitch artifacts" rows Ready by 2026-06-15**; full data room Ready by **2026-07-31**.
+
+## Related
+
+- [Fundraising](/docs/fundraising) — strategy hub
+- [Investors](/docs/investors) — what investors look for in DD
+- [Deck](/docs/deck) — pitch artifact
+- [Traction](/docs/traction) — number set
+- [PRD](/docs/prd) — product requirements
+- [Architecture](/docs/architecture) — system overview
+
+## Sources
+
+- NDA template: TODO — draft a mutual 1-year NDA per legal review.
+- Watermarking tool: TODO — pick one (PDFtk, Adobe Acrobat, or a Vercel-hosted serverless function).
+- Sharing platform: TODO — decide between Notion, Docsend, or self-hosted (the repo can serve gated PDFs).

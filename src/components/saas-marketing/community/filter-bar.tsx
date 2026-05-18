@@ -26,10 +26,17 @@ interface Props {
  * US" / "National" / etc.) and lives in a `justify-between` row alongside the
  * tabs at the page level.
  *
- * The `us-k12` row's `name` is overridden in the dropdown to read
- * "International US" (or its localized equivalent), matching the user-facing
- * mental model. Underlying value stays `us-k12` so existing query code, URL
- * params, and the seeded `Subject.curriculum` column all still match.
+ * Each option's display label is looked up by `Curriculum.slug` against
+ * `dictionary.community.curriculum.names` so the dropdown reads entirely in
+ * the visitor's locale even though the DB stores names in mixed languages
+ * (English for `gb-national` / `us-k12` / `ib-diploma`, Arabic for the GCC
+ * national curricula). The DB `name` is the fallback when no slug-keyed
+ * translation exists. The underlying option `value` stays `Curriculum.code`
+ * so URL params and `Subject.curriculum` queries don't change.
+ *
+ * The trigger is rendered borderless (no input chrome) with a tight gap
+ * between the selected text and the chevron — it reads like a tab control
+ * sitting next to the grade pills, not a form field.
  */
 export function CommunityFilterBar({ options, dictionary }: Props) {
   const [{ curriculum }, setFilters] = useQueryStates(
@@ -41,21 +48,29 @@ export function CommunityFilterBar({ options, dictionary }: Props) {
   const labelCurriculum = filters?.curriculum ?? "Curriculum"
   const placeholderCurriculum =
     filters?.curriculumPlaceholder ?? "All curricula"
-  const internationalUsLabel =
-    dictionary?.community?.curriculum?.internationalUS ?? "International US"
+  // Slug → localized name. The JSON shape is the source of truth — adding a
+  // new curriculum just means adding the slug to both dictionaries; nothing
+  // in this file changes.
+  const curriculumNames =
+    (dictionary?.community?.curriculum?.names as
+      | Record<string, string>
+      | undefined) ?? {}
 
   return (
     <Select
       value={curriculum || "us-k12"}
       onValueChange={(value) => setFilters({ curriculum: value })}
     >
-      <SelectTrigger className="w-[200px]" aria-label={labelCurriculum}>
+      <SelectTrigger
+        aria-label={labelCurriculum}
+        className="hover:bg-accent/50 dark:hover:bg-accent/50 w-auto gap-1 border-0 bg-transparent px-2 shadow-none dark:bg-transparent"
+      >
         <SelectValue placeholder={placeholderCurriculum} />
       </SelectTrigger>
       <SelectContent>
         {options.curricula.map((c) => (
           <SelectItem key={c.id} value={c.code}>
-            {c.code === "us-k12" ? internationalUsLabel : c.name}
+            {curriculumNames[c.slug] ?? c.name}
           </SelectItem>
         ))}
       </SelectContent>

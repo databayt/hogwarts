@@ -3,7 +3,7 @@ title: Competitors
 description: Market landscape and competitor analysis — how Hogwarts compares to industry-leading school information systems.
 ---
 
-Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org), with a live pilot at [kingfahad.databayt.org](https://kingfahad.databayt.org) (King Fahad Schools). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets. Browse the vendors below for inspiration; the feature comparison sets a baseline for parity and where we differentiate.
+Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org), with a live pilot at [kingfahad.databayt.org](https://kingfahad.databayt.org) (King Fahad Schools — founding member of the [MENA-10 free pilot cohort](/docs/pilot)). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets. Browse the vendors below for inspiration; the feature comparison sets a baseline for parity and the [battle-card section](#why-mena-schools-choose-hogwarts) at the bottom is the prose for proposals and discovery calls.
 
 ## Industry leaders
 
@@ -156,9 +156,31 @@ The "Industry standard" column means at least 5 of the 9 vendors above ship the 
 - **MEA payment rails** — Stripe + bankak + tap + cash + bank transfer + mobile money.
 - **AI-assisted admission** — document classification, merit ranking, bank-receipt extraction.
 
+## Why MENA schools choose Hogwarts
+
+Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) discovery calls. Each row is one line a school admin should hear in 60 seconds, paired with the regional incumbent it counters.
+
+| Concern                                      | What incumbents offer                                                  | What Hogwarts offers                                                            |
+| -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Arabic UI quality                            | English UI translated, RTL bolted on (Classera, Noon, Blackboard MENA) | RTL is the default, every screen, every role; English is the translation        |
+| Cost for a small private school              | $5K–$50K / year all-in (Classera, regional incumbents)                 | Free for ≤100 students; $1.50 / student / month thereafter                      |
+| Data residency and audit                     | Closed binaries, opaque storage (most regional SaaS)                   | Open source, schools can self-host or audit; tenant data isolated by `schoolId` |
+| Speed of onboarding                          | Weeks of setup; vendor implementation team                             | Subdomain in 24 hours; Day-0 to Day-30 founder-led onboarding                   |
+| Roadmap influence                            | Closed roadmap, annual user-group conference                           | Weekly feedback call during pilot; co-design partner status at Year 1           |
+| Vendor lock-in                               | Proprietary data formats, exit fees                                    | Full CSV / JSON export any time, SSPL-1.0 license                               |
+| MENA payment rails                           | Stripe-only or none                                                    | Stripe + bankak (Sudan) + tap (Saudi) + cash + bank transfer + mobile money     |
+| Post-conflict / emerging-market deployment   | Designed for large districts with fast internet                        | Schools coming online — mobile-responsive, low-bandwidth tolerant               |
+| Time to first paying customer (from contact) | 6–12 months sales cycle                                                | 14-day trial → 6-month free pilot → 30%-off paid Year 1                         |
+
+For the active offer this battle-card is selling into — see [Pilot](/docs/pilot).
+
 ## See also
 
+- [Pilot](/docs/pilot) — MENA-10 free cohort (where the battle-card lands)
+- [Proposal](/docs/proposal) — uses these rows verbatim in the "Why us" section
+- [Leads](/docs/leads) — discovery-call references
 - [Sales](/docs/sales) — B2B process and objection handling
+- [Marketing](/docs/marketing) — positioning that frames the battle-card
 - [Concept](/docs/concept) — product vision
 - [MVP](/docs/mvp) — what is shipped today
 - [Pitch](/docs/pitch) — partner-facing narrative

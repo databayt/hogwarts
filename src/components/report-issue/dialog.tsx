@@ -381,11 +381,7 @@ interface TurnstileSlotProps {
  * controls via turnstileSiteKey being unset → needsCaptcha=false → this
  * component is never rendered). Kept as a stub so the type stays stable.
  */
-function TurnstileSlot({
-  hint,
-  linkText,
-  linkHref,
-}: TurnstileSlotProps) {
+function TurnstileSlot({ hint, linkText, linkHref }: TurnstileSlotProps) {
   return (
     <div className="space-y-2">
       <p className="text-muted-foreground text-xs">

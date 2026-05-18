@@ -1,0 +1,152 @@
+---
+title: Marketing
+description: Marketing strategy — positioning, audience segments, channels, content calendar, SEO targets, brand assets, metrics.
+---
+
+Marketing for Hogwarts is content-first, Arabic-first, and pilot-driven. We do not buy ads in 2026; we build evidence. Every piece of content either teaches a school admin something useful, demonstrates the product, or amplifies a pilot case study. For execution-level workflows the canonical agent is [`kun/.claude/agents/growth.md`](https://github.com/databayt/kun/blob/main/.claude/agents/growth.md). For where marketing meets sales see [GTM](/docs/gtm); for pilot recruitment hooks see [Pilot](/docs/pilot).
+
+## Positioning
+
+> Arabic-first, open-source school OS for MENA — built for schools coming online, not schools upgrading legacy systems.
+
+| Pillar                | What it means                                                           | Evidence                                                   |
+| --------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Arabic-first          | RTL-native, every screen, every role, every email                       | [Internationalization](/docs/internationalization) docs    |
+| Open-source           | SSPL, public roadmap, public failures, contributors as owners           | [Shared economy](/docs/shared-economy)                     |
+| MENA-built            | Sudan-pilot first, founding team rooted in the region                   | [King Fahad Schools pilot](https://kingfahad.databayt.org) |
+| Schools coming online | Built for post-conflict, emerging-market, Arabic-speaking K-12 contexts | [Incubators](/docs/incubators) Sudan context               |
+
+We are not the cheapest, not the biggest, not the most polished. We are the most aligned with how MENA private schools actually operate.
+
+## Audience segments
+
+| Segment                  | Who they are                           | Channel                          | What they care about                       |
+| ------------------------ | -------------------------------------- | -------------------------------- | ------------------------------------------ |
+| Private K-12 owners      | 1–3 schools, $50K–$500K annual revenue | LinkedIn (Arabic), WhatsApp      | Hours saved, parent satisfaction, cost     |
+| School administrators    | Day-to-day operators                   | LinkedIn (Arabic), peer referral | Paperwork, attendance, parent calls        |
+| Government procurement   | Ministry / district decision makers    | RFP + introductions              | Compliance, multi-school, custom contracts |
+| Edtech partners          | Content providers, training centres    | Direct outreach, conferences     | Integration, revenue share                 |
+| Open-source contributors | MENA developers, students, hobbyists   | GitHub, Twitter, Discord         | Stack, problems to solve, recognition      |
+| Parent associations      | Influential community voices           | Pilot school relationships       | Communication quality, transparency        |
+
+The first three are buying audiences. The last three are amplifier audiences — they create the trust signal that makes the first three respond.
+
+## Channels
+
+| Channel              | Hands-on          | Cadence      | Owner                      | Cost / month     |
+| -------------------- | ----------------- | ------------ | -------------------------- | ---------------- |
+| LinkedIn (Arabic)    | Founder + Samia   | Daily        | Samia + Abdout             | $0               |
+| LinkedIn (English)   | Founder + Ali     | 2–3 / week   | Ali + Abdout               | $0               |
+| WhatsApp networks    | Ali + Sedon       | Weekly       | Ali (Sudan), Sedon (Saudi) | $0               |
+| YouTube              | Samia + voiceover | 1 / 2 weeks  | Samia                      | $0               |
+| Twitter / X          | Abdout            | 2–3 / week   | Abdout                     | $0               |
+| GitHub README + docs | Engineering       | Continuous   | Whole team                 | $0               |
+| Conferences          | Ali + Abdout      | 2 / year     | Ali                        | $1K (travel)     |
+| Direct email         | Samia + Ali       | Per prospect | Ali                        | $0               |
+| Inbound (docs site)  | Engineering       | Continuous   | Whole team                 | $0 (Vercel free) |
+
+Total marketing burn 2026 ≤ **$200 / month** including incubator-grant marketing materials line (EUR 800 / 12 = ~$72 / mo, see [Incubators](/docs/incubators)).
+
+## Content calendar
+
+Weekly rhythm, owned by Samia under the [`growth`](https://github.com/databayt/kun/blob/main/.claude/agents/growth.md) agent. Each day has a default content type so production stays predictable.
+
+| Day       | Content type                            | Audience               | Channel            | Example                              |
+| --------- | --------------------------------------- | ---------------------- | ------------------ | ------------------------------------ |
+| Monday    | Product feature in Arabic               | Admins, owners         | LinkedIn AR, X     | "كيف تخفض ساعات الإدارة بـ 80٪"      |
+| Tuesday   | Technical post                          | Contributors, partners | LinkedIn EN, X, GH | "Multi-tenant routing in Next.js 16" |
+| Wednesday | Community / shared-economy              | All amplifiers         | LinkedIn EN, X     | "Our 9th contributor shipped …"      |
+| Thursday  | Pilot case study or admin story         | Owners, admins         | LinkedIn AR + EN   | "Inside King Fahad's first month"    |
+| Friday    | Developer relations / behind-the-scenes | Contributors, students | X, GitHub, Discord | "Friday demo — exam wizard"          |
+
+Each piece is tagged with a primary SEO target (see below) and reused: LinkedIn post → blog → X thread → docs example. One artifact, four surfaces.
+
+## SEO targets
+
+Keyword targeting is half Arabic, half English, weighted toward Arabic for MENA share. Top-of-funnel keywords are aspirational (`نظام إدارة مدرسة عربي`); bottom-of-funnel keywords are commercial (`Hogwarts school management pricing`).
+
+| Keyword (Arabic)             | Volume (est.) | Intent         | Status    |
+| ---------------------------- | ------------- | -------------- | --------- |
+| نظام إدارة مدرسة             | High          | Awareness      | Targeting |
+| برنامج إدارة مدارس عربي      | Medium        | Comparison     | Targeting |
+| نظام مدرسي مفتوح المصدر      | Low           | Differentiator | Owned     |
+| إدارة الحضور والغياب للمدارس | Medium        | Feature        | Targeting |
+| رسوم مدارس برنامج            | Low           | Commercial     | Targeting |
+
+| Keyword (English)               | Volume (est.) | Intent         | Status    |
+| ------------------------------- | ------------- | -------------- | --------- |
+| Arabic school management system | Medium        | Awareness      | Targeting |
+| Open source school SIS          | Low           | Differentiator | Owned     |
+| MENA school management software | Low           | Comparison     | Targeting |
+| Multi-tenant LMS Next.js        | Niche         | Contributor    | Owned     |
+| Hogwarts school management      | Low           | Branded        | Owned     |
+
+The docs site (you are reading it) is the SEO host. Every doc page is a permanent landing surface; each one targets one keyword cluster.
+
+## Brand assets
+
+| Asset             | Source                                         | Usage rule                                                      |
+| ----------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| Logo              | `public/brand/hogwarts-logo.svg`               | Black on white default; never below 24px height                 |
+| Wordmark          | `public/brand/hogwarts-wordmark.svg`           | RTL + LTR variants                                              |
+| Primary color     | `--primary` token (defined in Tailwind)        | Use semantic tokens, not hex                                    |
+| Screenshot pack   | `public/marketing/screenshots/` (TODO)         | Always show Arabic + English side by side when feature is shown |
+| Demo video        | `public/marketing/demo-2min.mp4` (TODO)        | 2-minute walkthrough, Arabic voiceover by Samia                 |
+| Pilot logos       | With written permission from each pilot school | Only on cohort grid + case-study page                           |
+| Tagline (Arabic)  | _TODO — Samia to confirm_                      | One-liner under wordmark                                        |
+| Tagline (English) | _TODO — Samia to confirm_                      | One-liner under wordmark                                        |
+
+Brand assets are tracked in the [databayt/marketing](https://github.com/databayt/marketing) repository (TODO when populated). For now the source of truth is `hogwarts/public/`.
+
+## Public surfaces
+
+| Surface                              | Purpose                                 | Owner       |
+| ------------------------------------ | --------------------------------------- | ----------- |
+| `hogwarts.databayt.org` landing      | First impression, signup CTA, pilot CTA | Engineering |
+| `hogwarts.databayt.org/pricing`      | Tier comparison (PRO / ENTERPRISE)      | Engineering |
+| `hogwarts.databayt.org/demo`         | Public demo school login                | Engineering |
+| `hogwarts.databayt.org/pilot`        | Free MENA-10 pilot application (TODO)   | Engineering |
+| `hogwarts.databayt.org/case-studies` | Pilot case studies (TODO)               | Engineering |
+| `hogwarts.databayt.org/docs/*`       | Documentation site (this surface)       | Engineering |
+| GitHub README + docs                 | Contributor-facing positioning          | Engineering |
+
+The marketing pages are themselves a product. If a school admin lands and cannot find pricing in 10 seconds, that is a marketing bug.
+
+## Metrics
+
+Tracked monthly, reviewed by the captain weekly:
+
+| Metric                                   | Source                              | Target (Q3 2026) |
+| ---------------------------------------- | ----------------------------------- | ---------------- |
+| Unique visitors to hogwarts.databayt.org | Vercel Analytics                    | 2,000 / month    |
+| /pricing page views                      | Vercel Analytics                    | 200 / month      |
+| /pilot CTA clicks                        | Vercel Analytics                    | 30 / month       |
+| LinkedIn impressions (org account)       | LinkedIn analytics                  | 50,000 / month   |
+| YouTube watch hours                      | YouTube Studio                      | 50 / month       |
+| GitHub stars                             | GitHub repo                         | +50 / month      |
+| Inbound pilot applications               | `kun/.claude/memory/customers.json` | 5 / month        |
+| Case-study downloads                     | Vercel Analytics                    | 50 / month       |
+
+Below target two months running → re-allocate content focus to the underperforming funnel stage.
+
+## Marketing ↔ Sales handoff
+
+| Stage at marketing  | Handoff signal                           | Sales picks up                         |
+| ------------------- | ---------------------------------------- | -------------------------------------- |
+| Visitor             | Clicks /pilot CTA                        | Ali receives email, replies within 24h |
+| Inbound application | Application form filled                  | Discovery call scheduled within 7 days |
+| Content reader      | DM Samia / Abdout asking a real question | Ali briefed, follow-up within 48h      |
+| Conference contact  | Business card / LinkedIn add             | Ali sends LinkedIn DM within 24h       |
+| Case-study reader   | Downloads PDF                            | Email follow-up after 7 days           |
+
+Anything the marketing surface produces is sales' job within 48 hours, or the inbound trust signal decays.
+
+## See also
+
+- [GTM](/docs/gtm) — sales + marketing + pilot unified
+- [Pilot](/docs/pilot) — the program marketing is recruiting for
+- [Leads](/docs/leads) — what happens after the click
+- [Sales](/docs/sales) — outbound complement
+- [Shared economy](/docs/shared-economy) — community amplifier model
+- [Case study](/docs/case-study) — proof artifact
+- Growth agent: `kun/.claude/agents/growth.md` (canonical execution)

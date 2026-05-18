@@ -1,20 +1,36 @@
 ---
 title: Pitch
-description: The narrative for partners and funders — what Hogwarts is, who it serves, and how to work with us.
+description: The single pitch surface — routed by audience. Investor pitch, partner pitch, grant pitch, sponsor pitch, all in one doc.
 ---
+
+This is the **audience-routed pitch**. Whatever you came here for — capital, partnership, grant, sponsorship — there's a section below for you.
+
+_Last verified: 2026-05-18._
+
+## Audience router
+
+| If you are…                                                          | Read first                                                                                                  |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| A VC, angel, or family-office investor                               | [Investor pitch](#investor-pitch) below + [Investors](/docs/investors)                                      |
+| An accelerator or incubator program manager                          | [Partner pitch](#partner-pitch) below + [Accelerators](/docs/accelerators) / [Incubators](/docs/incubators) |
+| A grant officer at a multilateral, foundation, or government program | [Grant pitch](#grant-pitch) below + [Grants](/docs/grants)                                                  |
+| A corporate sponsor (CSR, vendor credit, telco, bank)                | [Sponsor pitch](#sponsor-pitch) below + [Sponsors](/docs/sponsors) / [Partners](/docs/partners)             |
+| A school administrator considering a pilot                           | [Partner pitch](#partner-pitch) below + [Pilot](/docs/pilot)                                                |
+| A press journalist or analyst                                        | Skip to [Contact](#contact); we'll send a press kit on request                                              |
+
+## What Hogwarts is
 
 Hogwarts is an open-source school operating system. We automate the operational core of schools — admissions, classrooms, attendance, grading, fees, messaging — so educators spend less time on paperwork and more time on teaching.
 
-For pricing and tiers see [Business model](/docs/business-model). For the commercial process see [Sales](/docs/sales).
+- Live at [ed.databayt.org](https://ed.databayt.org)
+- Public demo at [demo.databayt.org](https://demo.databayt.org)
+- First paying-pilot live at [kingfahad.databayt.org](https://kingfahad.databayt.org) (King Fahad Schools, Sudan)
+- Open source under SSPL-1.0 — [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts)
+- Arabic-first / RTL-native, English parity (2,247 / 2,243 strings)
+- Multi-tenant subdomain isolation
+- 4,912 TypeScript / TSX source files, 52 automated tests, 8 GitHub Actions workflows
 
-## What we do
-
-| Capability                    | Outcome                                                     |
-| ----------------------------- | ----------------------------------------------------------- |
-| Multi-tenant SaaS             | One platform serves many schools, isolated by `schoolId`    |
-| Arabic-first UX with full RTL | Built for MEA, not bolted on                                |
-| AI-assisted operations        | Document review, merit ranking, bank-receipt extraction     |
-| Open source under SSPL-1.0    | Self-host free; managed SaaS for schools that prefer not to |
+For the canonical traction number set, see [Traction](/docs/traction).
 
 ## The problem we solve
 
@@ -26,6 +42,12 @@ For pricing and tiers see [Business model](/docs/business-model). For the commer
 | Parents dissatisfied with communication | ~65%                              |
 | Schools locked into proprietary vendors | Industry default                  |
 
+Specifically in MENA / Sudan:
+
+- 17M Sudanese children out of school as of 2026; schools reopened February 2026 after a 3-year hiatus.
+- Saudi Vision 2030 + NTDP deploying $430M+ across new initiatives, EdTech a named priority.
+- MENA EdTech market $14.4B → $33B by 2030; incumbent vendors are not Arabic-first.
+
 ## Our impact
 
 | Outcome                                | Target                   |
@@ -36,16 +58,37 @@ For pricing and tiers see [Business model](/docs/business-model). For the commer
 | Data error rate after rollout          | < 1%                     |
 | Teacher admin time                     | 11 hrs/week → 4 hrs/week |
 
-## Core capabilities
+## Investor pitch
 
-- **Academic** — student information, teacher and staff management, scheduling, attendance, grading, report cards.
-- **Financial** — fee management, double-entry bookkeeping, invoicing, payroll, banking.
-- **Communication** — parent portal, announcements, in-app messaging, WhatsApp Evolution API bridge.
-- **Analytics** — role-specific dashboards, attendance trends, early-warning interventions, financial reports.
+For VC, angel, and family-office investors.
 
-See [MVP](/docs/mvp) for the full epic-by-epic shipped state and [Roadmap](/docs/roadmap) for direction.
+**Stage**: pre-seed bridge. **Target raise**: $250K-$500K across instruments (grant + SAFE-cap + accelerator stipend blended). **Instrument preference**: SAFE (cap, post-money). **Valuation cap stance**: $4M-$6M post-money.
 
-## Why partners choose us
+**Why now**: live paying pilot, AR/EN parity, Sudan school reopening, Saudi Vision 2030 EdTech investment surge, AI-cost-reduction window.
+
+**Why this**: only Arabic-first, open-source, multi-tenant K-12 SaaS at this maturity in MENA. Competitor matrix in [Competitors](/docs/competitors).
+
+**Why us**: Sudanese-founded team distributed across Sudan/KSA/Egypt/Europe; 18 months of build evidence (14+ epics shipped); contributor model documented in [Shared Economy](/docs/shared-economy).
+
+**Use of funds** (12-month, $500K scenario):
+
+| Bucket                              | %   | $     |
+| ----------------------------------- | --- | ----- |
+| Engineering (1 senior hire)         | 35% | $175K |
+| MENA sales (1 lead + 1 SDR)         | 30% | $150K |
+| Pilot subsidies (free for 6 months) | 15% | $75K  |
+| Compliance + entity setup           | 10% | $50K  |
+| Runway buffer                       | 10% | $50K  |
+
+**Deal terms we offer / refuse**: full term-sheet stance in [Investors](/docs/investors). Short version: SAFE preferred, 1× non-participating liquidation preference, no full ratchet, no board control at seed, info rights + pro-rata standard.
+
+**Next step**: 30-minute discovery call → data room access on second ask → term sheet within 6-10 weeks. See [Process](/docs/investors#process).
+
+## Partner pitch
+
+For accelerator/incubator program managers, school partners, government agencies, NGOs, foundations.
+
+### Why partners choose us
 
 | Differentiator | What it means                                                                                   |
 | -------------- | ----------------------------------------------------------------------------------------------- |
@@ -54,34 +97,96 @@ See [MVP](/docs/mvp) for the full epic-by-epic shipped state and [Roadmap](/docs
 | Architecture   | Next.js 16, React 19, Prisma 6, multi-tenant isolation, audit trails                            |
 | Economics      | Free tier for 100 students; per-student pricing thereafter                                      |
 
-## Partnership pathways
+### Seven partnership pathways
 
-We offer seven ways to work with us. Each advances the same shared mission of educational excellence and sustainable infrastructure.
+| Pathway                   | Engagement                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| Endorsement               | Public support and advocacy from your organization                           |
+| [Free pilot](/docs/pilot) | 6-month free implementation in a school within your network — MENA-10 cohort |
+| Strategic collaboration   | Customization for region or sector requirements                              |
+| Training and capacity     | Programs for administrators, teachers, technical staff                       |
+| Open-source contribution  | Code, docs, translation, design from your community                          |
+| Co-development            | New features for special needs (e.g., vocational, rural)                     |
+| Funding                   | Platform development, regional deployment, specific initiatives              |
 
-| Pathway                  | Engagement                                                      |
-| ------------------------ | --------------------------------------------------------------- |
-| Endorsement              | Public support and advocacy from your organization              |
-| Pilot program            | Implementation in select schools within your network            |
-| Strategic collaboration  | Customization for region or sector requirements                 |
-| Training and capacity    | Programs for administrators, teachers, technical staff          |
-| Open-source contribution | Code, docs, translation, design from your community             |
-| Co-development           | New features for special needs (e.g., vocational, rural)        |
-| Funding                  | Platform development, regional deployment, specific initiatives |
+For specific program applications, see [Incubators](/docs/incubators), [Accelerators](/docs/accelerators), [Competitions](/docs/competitions).
+
+## Grant pitch
+
+For multilateral, foundation, government, NGO grant officers.
+
+We position under three angles. Choose the one that matches your mission.
+
+### Angle A — Post-conflict Sudan reconstruction
+
+17M Sudanese children out of school. Khartoum reopened schools February 2026 after a three-year hiatus. The UNESCO Transitional Education Plan 2025-27 is $580M with no scalable digital infrastructure. Hogwarts is the open-source school OS already deployed at [kingfahad.databayt.org](https://kingfahad.databayt.org), built by a Sudanese-founded team, Arabic-first, multi-tenant. We are not theoretical; we are operationally ready.
+
+**Best fits**: UNESCO TEP, GIZ, USAID DIV, Mastercard Foundation, Open Society, UK FCDO, OPEC Fund, Arab Fund for Economic and Social Development.
+
+### Angle B — Arabic-first digital public infrastructure
+
+MENA serves 80M+ K-12 students. Incumbent platforms are bolt-on Arabic translations of English software. Hogwarts is **built RTL-native from day one**, with 2,247 Arabic-keyed strings at parity with 2,243 English. We are the open-source baseline that any government or ministry can self-host without vendor lock-in. Vision 2030 + NTDP have both education and AI infrastructure as named priorities.
+
+**Best fits**: NTDP, RDIA SIGP, Monsha'at, KAUST, Wa'ed Ventures (Aramco), MCIT, SDAIA, Islamic Development Bank, Saudi Awqaf.
+
+### Angle C — Open-source education commons
+
+Education software is a public good held privately. Hogwarts is licensed under SSPL-1.0 — self-host free, commercial resale forbidden. The codebase is auditable; contributions are tracked via a documented contributor model (Mudaraba / Shirkat al-A'mal / Waqf-grounded). Every grant dollar that funds Hogwarts development funds an asset that the world can use.
+
+**Best fits**: Mozilla Open Source Awards, Sovereign Tech Fund, GitHub Accelerator, IDRC, Patrick J. McGovern Foundation, Open Source Pledge programs.
+
+### Impact metrics we report
+
+| Metric                             | Definition                                        |
+| ---------------------------------- | ------------------------------------------------- |
+| Students reached                   | Sum of enrolled students across deployed tenants  |
+| Schools onboarded                  | Tenant count with active production usage         |
+| Admin hours saved per month        | Estimated via attendance / grading automation     |
+| Localized strings released         | AR + EN translations live in the codebase         |
+| Active contributors                | Count from shared-economy point system            |
+| Co-developed features per partner  | Features shipped jointly with funder organization |
+| Lines of public-good code released | Cumulative LOC under SSPL-1.0                     |
+
+We can report quarterly. Reporting burden is honest-budgeted in [Grants](/docs/grants).
+
+## Sponsor pitch
+
+For corporate sponsors, CSR programs, vendor credit programs, telcos, banks.
+
+**What we offer in exchange for in-kind / cash support**:
+
+| What you give                    | What we deliver                                                          |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| Vendor credits (cloud, SaaS, AI) | Production deployment using your stack; case study; co-marketing rights  |
+| CSR cash grant                   | Schools deployed with co-branded parent communications; impact reporting |
+| SMS / data bundles               | Parent-notification platform reaching X students; brand mention          |
+| Payment integration              | Distribution via school-fee rails; co-product page                       |
+| Distribution (telco / NGO)       | Bundled rollout to N schools; joint announcement                         |
+
+**What we will NOT trade**:
+
+- Closing-source any portion of the codebase.
+- Exclusive payment processing (we keep multi-provider).
+- Co-branding under sponsor name (we keep Hogwarts branding).
+- 3+ year platform lock-in.
+
+For full credit / sponsor inventory + apply order, see [Sponsors](/docs/sponsors). For non-credit corporate partnerships (CSR + ministry + NGO), see [Partners](/docs/partners).
 
 ## Why open source
 
 Student data is sensitive and curriculum changes constantly — schools deserve auditable, extensible code, and contributors deserve transparent attribution. SSPL-1.0 keeps the code free for self-hosters and protects against parasitic SaaS resale.
 
-For the full open-source rationale see [Hogwarts overview](/docs/hogwarts).
+The contributor economic model — Mudaraba / Shirkat al-A'mal / Waqf-grounded — is documented in [Shared Economy](/docs/shared-economy). It is also a feature funders care about: every grant or capital dollar flows partly to contributors via a transparent point system.
 
 ## Next steps
 
 1. **Demo** — 30-minute walkthrough of the live platform.
-2. **Pilot** — 14-day trial or 3-month classroom pilot.
-3. **Partnership** — discuss collaboration model that fits your mission.
-4. **Co-design** — shape the roadmap to your community's needs.
-
-We work with government agencies, NGOs, foundations, development organizations, community initiatives, and international institutions. If you share the values, there's a pathway.
+2. **Free pilot** — join the [MENA-10 cohort](/docs/pilot): 6 months free, weekly feedback call, case-study partnership at month 6.
+3. **Trial** — 14-day evaluation on the demo subdomain before pilot commitment.
+4. **Partnership** — discuss collaboration model that fits your mission (seven pathways above).
+5. **Investment** — see [Investors](/docs/investors) for stage, ticket, terms.
+6. **Grant / sponsorship** — see [Grants](/docs/grants), [Sponsors](/docs/sponsors), [Partners](/docs/partners).
+7. **Outreach templates** — for follow-up cadence and reply scripts, see [Outreach](/docs/outreach).
 
 ## Contact
 
@@ -93,3 +198,21 @@ We work with government agencies, NGOs, foundations, development organizations, 
 | GitHub     | [github.com/databayt/hogwarts](https://github.com/databayt/hogwarts)   |
 | Production | [ed.databayt.org](https://ed.databayt.org)                             |
 | LinkedIn   | [linkedin.com/company/databayt](https://linkedin.com/company/databayt) |
+
+## Related
+
+- [Fundraising](/docs/fundraising) — strategy hub
+- [Traction](/docs/traction) — number set
+- [Deck](/docs/deck) — investor deck content
+- [Investors](/docs/investors) — capital
+- [Accelerators](/docs/accelerators) — global programs
+- [Incubators](/docs/incubators) — regional programs
+- [Grants](/docs/grants) — non-dilutive
+- [Sponsors](/docs/sponsors) — vendor credits
+- [Partners](/docs/partners) — strategic partnerships
+- [Competitions](/docs/competitions) — hackathons + competitions
+- [Universities](/docs/universities) — academic partnerships
+- [Outreach](/docs/outreach) — templates
+- [Business model](/docs/business-model) — pricing and revenue
+- [Pilot](/docs/pilot) — MENA-10 cohort
+- [Shared Economy](/docs/shared-economy) — contributor model

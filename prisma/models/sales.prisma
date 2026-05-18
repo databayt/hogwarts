@@ -135,3 +135,80 @@ model LeadActivity {
   @@index([createdById])
   @@map("lead_activities")
 }
+
+// ============================================================================
+// PROSPECTS - Cold pipeline (pre-reply). Promotes to Lead on first response.
+// ============================================================================
+//
+// schoolId is a sentinel ("platform") here -- prospects are not yet tenant-bound.
+// On reply, `promoteToLead(prospectId)` creates a Lead row and links via
+// promotedLeadId. This keeps the noisy 1000-row cold layer out of the warm
+// Lead pipeline that the operator sales console drives.
+
+model Prospect {
+  id       String @id @default(cuid())
+  schoolId String @default("platform") // sentinel; not a FK to School
+
+  // Identity
+  name          String
+  country       String
+  city          String?
+  address       String?
+  phone         String?
+  email         String?
+  emailConfidence Int? // 0-100, from enrichment
+  website       String?
+
+  // People
+  principalName    String?
+  decisionMakerRole String? // owner | principal | adminDirector
+
+  // Social
+  instagramHandle String?
+  facebookHandle  String?
+  linkedinUrl     String?
+
+  // Profile
+  language             String? // ar | en | fr | bilingual
+  curriculum           String?
+  studentCountEstimate Int?
+  countSource          String? // wikipedia | website | estimate
+  tierGuess            String? // FREE | PRO | ENTERPRISE
+
+  // Google Maps
+  gmapsPlaceId     String? @unique
+  gmapsRating      Float?
+  gmapsRatingCount Int?
+  latitude         Float?
+  longitude        Float?
+
+  // Scoring + lifecycle
+  enrichmentScore Int? // 0-100 (see scoring formula in sales plan)
+  tierLikelihood  Int?
+  pitchHook       String? @db.Text
+  source          String // gmaps | moe_saudi | daleel | wikipedia | conference | website | manual
+  sourceQuery     String?
+  status          String  @default("new") // new | enriched | queued | contacted | replied | promoted | dead
+  tags            String[] @default([])
+  notes           String?  @db.Text
+
+  // Promotion
+  promotedLeadId String? @unique
+
+  // Outreach tracking
+  lastTouchAt        DateTime?
+  lastTouchNumber    Int? // 1..5 in the email cadence
+  linkedinTouchedAt  DateTime?
+  whatsappTouchedAt  DateTime?
+
+  // Metadata
+  scrapedAt   DateTime  @default(now())
+  enrichedAt  DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([country, status])
+  @@index([enrichmentScore])
+  @@index([status])
+  @@index([source])
+  @@map("prospects")
+}
