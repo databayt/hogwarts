@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { DollarSign, Edit2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -20,8 +21,9 @@ interface Props {
   id: string
 }
 
-export default function PriceContent({ dictionary, id }: Props) {
+export default function PriceContent({ dictionary, lang, id }: Props) {
   const schoolId = id
+  const router = useRouter()
   const { enableNext, setCustomNavigation } = useHostValidation()
   const dict = ((dictionary?.school as Record<string, unknown> | undefined)
     ?.onboarding ?? {}) as Record<string, string>
@@ -78,9 +80,9 @@ export default function PriceContent({ dictionary, id }: Props) {
     }
   }, [price, isFocused])
 
-  // Persist on Next — only when the value is valid + different from what's
-  // stored. The navigation proceeds regardless; failures surface as an
-  // inline error but don't block (user can edit later in admin pricing).
+  // Persist on Next — save the value, then advance to the discount step. On
+  // save failure surface an inline error and stay on the current step so the
+  // user can correct it (or retry).
   useEffect(() => {
     const onNext = () => {
       const parsed = schema.safeParse({ tuitionFee: price })
@@ -89,7 +91,7 @@ export default function PriceContent({ dictionary, id }: Props) {
           (parsed.error.issues[0].message || v?.get("invalidFormat")) ??
             "Invalid value"
         )
-        return false
+        return
       }
       setErrorText("")
       startTransition(async () => {
@@ -100,18 +102,21 @@ export default function PriceContent({ dictionary, id }: Props) {
               dict.saveError ??
               "Could not save tuition"
           )
+          return
         }
+        router.push(`/${lang}/onboarding/${schoolId}/discount`)
       })
-      return true
     }
     setCustomNavigation({ onNext, nextDisabled: isPending })
     return () => setCustomNavigation(undefined)
   }, [
     schoolId,
+    lang,
     price,
     schema,
     isPending,
     setCustomNavigation,
+    router,
     v,
     e,
     dict.saveError,
@@ -144,8 +149,8 @@ export default function PriceContent({ dictionary, id }: Props) {
           {errorText}
         </div>
       )}
-      <div className="mb-6 flex items-start justify-center">
-        <div className="relative flex items-center">
+      <div className="mb-6 flex w-full max-w-full items-start justify-center px-2">
+        <div className="relative flex max-w-full items-center">
           <input
             ref={inputRef}
             type="text"
@@ -176,7 +181,7 @@ export default function PriceContent({ dictionary, id }: Props) {
                 )
               }
             }}
-            className="text-foreground w-auto min-w-0 border-none bg-transparent text-center text-6xl font-extrabold outline-none"
+            className="text-foreground w-auto max-w-full min-w-0 border-none bg-transparent text-center text-4xl font-extrabold outline-none sm:text-5xl md:text-6xl"
             style={{
               width: `${displayValue.length * 0.8}em`,
               caretColor: "var(--foreground)",
@@ -184,7 +189,7 @@ export default function PriceContent({ dictionary, id }: Props) {
           />
           {!isFocused && (
             <div
-              className="bg-muted hover:bg-accent -ms-3 mb-4 flex h-8 w-8 cursor-pointer items-center justify-center self-end rounded-full transition-colors"
+              className="bg-muted hover:bg-accent -ms-3 mb-4 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center self-end rounded-full transition-colors"
               onClick={() => inputRef.current?.focus()}
             >
               <Edit2 size={16} />

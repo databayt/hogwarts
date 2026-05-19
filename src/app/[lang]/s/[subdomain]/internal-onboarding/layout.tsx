@@ -4,6 +4,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { OnboardingProvider } from "@/components/internal-onboarding/use-onboarding"
 import type { Locale } from "@/components/internationalization/config"
@@ -20,10 +21,11 @@ export async function generateMetadata({
 }: {
   params: Promise<{ subdomain: string; lang: string }>
 }): Promise<Metadata> {
-  const { subdomain } = await params
+  const { subdomain, lang } = await params
   const result = await getSchoolBySubdomain(subdomain)
+  const name = getSchoolDisplayName(result.data, lang)
   return {
-    title: result.data ? `Join ${result.data.name}` : "Join School",
+    title: name ? `Join ${name}` : "Join School",
   }
 }
 

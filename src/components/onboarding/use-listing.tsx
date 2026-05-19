@@ -46,7 +46,7 @@ export interface Listing {
   maxClasses?: number
   isActive?: boolean
   // School fields
-  schoolLevel?: "primary" | "secondary" | "both"
+  schoolLevel?: "primary" | "middle" | "secondary" | "both"
   schoolType?: "private" | "public" | "international" | "technical" | "special"
   // Pricing fields
   tuitionFee?: number

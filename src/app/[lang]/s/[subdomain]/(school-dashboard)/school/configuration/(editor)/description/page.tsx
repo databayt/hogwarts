@@ -39,8 +39,11 @@ export default async function DescriptionPage({ params }: Props) {
             | "technical"
             | "special") || undefined,
         schoolLevel:
-          (school?.schoolLevel as "primary" | "secondary" | "both") ||
-          undefined,
+          (school?.schoolLevel as
+            | "primary"
+            | "middle"
+            | "secondary"
+            | "both") || undefined,
       }}
       dictionary={dictionary}
     />

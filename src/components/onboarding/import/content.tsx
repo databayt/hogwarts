@@ -130,7 +130,7 @@ export default function ImportContent({ dictionary }: Props) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-20">
         {/* Left side */}
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-3xl font-bold">{dict.importData}</h1>
@@ -195,7 +195,7 @@ function DropZone({
   const hasResult = state.result || state.error
 
   return (
-    <div className="w-[400px]">
+    <div className="w-full max-w-[400px]">
       <div
         className={`min-h-[140px] rounded-lg border-2 border-dashed transition-colors ${
           state.error

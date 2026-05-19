@@ -5,7 +5,13 @@
 import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, GraduationCap, Layers, School } from "lucide-react"
+import {
+  ArrowLeft,
+  BookOpen,
+  GraduationCap,
+  Layers,
+  School,
+} from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useForm } from "react-hook-form"
 
@@ -149,6 +155,12 @@ export function DescriptionForm({
       title: dict.primaryLevel,
       subtitle: dict.primaryGrades,
       icon: School,
+    },
+    {
+      id: "middle" as const,
+      title: dict.middleLevel,
+      subtitle: dict.middleGrades,
+      icon: BookOpen,
     },
     {
       id: "secondary" as const,

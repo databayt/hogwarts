@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
+import { getSchoolDisplayName } from "@/lib/school-name"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -39,12 +40,14 @@ export async function generateMetadata({
     return { title: applyLabel }
   }
 
+  const schoolName = getSchoolDisplayName(result.data, lang)
+
   return {
-    title: `${applyLabel} - ${result.data.name}`,
+    title: `${applyLabel} - ${schoolName}`,
     description:
       lang === "ar"
-        ? `قدم للقبول في ${result.data.name}. ابدأ طلبك اليوم.`
-        : `Apply for admission to ${result.data.name}. Start your application today.`,
+        ? `قدم للقبول في ${schoolName}. ابدأ طلبك اليوم.`
+        : `Apply for admission to ${schoolName}. Start your application today.`,
   }
 }
 

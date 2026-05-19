@@ -15,7 +15,7 @@ export function createDescriptionSchema(v?: ValidationHelper) {
       { message: required }
     ),
     schoolLevel: z
-      .enum(["primary", "secondary", "both"], { message: required })
+      .enum(["primary", "middle", "secondary", "both"], { message: required })
       .optional(),
     description: z.string().max(500, maxDesc).optional(),
   })

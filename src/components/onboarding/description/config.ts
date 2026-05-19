@@ -10,9 +10,14 @@ export const SCHOOL_LEVELS: SchoolLevel[] = [
     description: "Elementary education (typically ages 6-11)",
   },
   {
+    id: "middle",
+    title: "Middle School",
+    description: "Intermediate education (typically ages 12-14)",
+  },
+  {
     id: "secondary",
     title: "Secondary School",
-    description: "Middle and high school education (typically ages 12-18)",
+    description: "High school education (typically ages 15-18)",
   },
   {
     id: "both",

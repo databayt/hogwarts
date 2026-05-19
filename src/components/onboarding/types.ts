@@ -27,7 +27,7 @@ export type OnboardingStep =
 
 export type OnboardingStepGroup = "basic" | "setup" | "business"
 
-export type SchoolType = "primary" | "secondary" | "both"
+export type SchoolType = "primary" | "middle" | "secondary" | "both"
 export type SchoolCategory =
   | "private"
   | "public"

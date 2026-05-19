@@ -232,7 +232,9 @@ export function FormFooter({
 
     if (currentStepIndex > 0) {
       const prevStep = config.steps[currentStepIndex - 1]
-      onStepChange?.(prevStep)
+      // Don't fire onStepChange on back: it triggers a fire-and-forget DB
+      // write that delays the click handler and would decrement
+      // school.onboardingStep, which should track the furthest step reached.
       router.push(`/${locale}${basePath}/${entityId}/${prevStep}`)
     }
   }

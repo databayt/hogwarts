@@ -72,7 +72,12 @@ const tags: Tag[] = [
 
 // Per-tag images (add more as they become available)
 const tagImages: Record<string, string> = {
-  admission: asset("/illustrations/admission.png"),
+  admission: asset("/features/admission.png"),
+  lms: asset("/features/lms.png"),
+  accounting: asset("/features/accounting.png"),
+  "digital-library": asset("/features/library.png"),
+  events: asset("/features/events.png"),
+  transportation: asset("/features/transport.png"),
 }
 
 const categoryCards = [

@@ -39,7 +39,12 @@ import type {
 } from "./types"
 
 // Base validation schemas
-export const schoolTypeSchema = z.enum(["primary", "secondary", "both"])
+export const schoolTypeSchema = z.enum([
+  "primary",
+  "middle",
+  "secondary",
+  "both",
+])
 export const schoolCategorySchema = z.enum([
   "private",
   "public",

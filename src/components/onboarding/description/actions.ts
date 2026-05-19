@@ -78,6 +78,7 @@ export async function getSchoolDescription(
         | null,
       schoolLevel: school.schoolLevel as
         | "primary"
+        | "middle"
         | "secondary"
         | "both"
         | null,

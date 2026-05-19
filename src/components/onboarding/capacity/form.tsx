@@ -18,6 +18,8 @@ function getGradeCount(schoolLevel: string): number {
   switch (schoolLevel) {
     case "primary":
       return 6
+    case "middle":
+      return 3
     case "secondary":
       return 6
     case "both":
@@ -34,8 +36,10 @@ function getSchoolLevelLabel(
   switch (schoolLevel) {
     case "primary":
       return dict.primarySchool || "Primary School (Grades 1-6)"
+    case "middle":
+      return dict.middleSchool || "Middle School (Grades 7-9)"
     case "secondary":
-      return dict.secondarySchool || "Secondary School (Grades 7-12)"
+      return dict.secondarySchool || "Secondary School (Grades 10-12)"
     case "both":
       return dict.fullSchool || "Full School (Grades 1-12)"
     default:
@@ -133,20 +137,27 @@ export function CapacityForm({
     [schoolLevel, dict]
   )
 
+  const setFieldValue = useCallback(
+    (field: keyof CapacityFormData, raw: number, min: number, max: number) => {
+      const clamped = Math.min(max, Math.max(min, raw))
+      form.setValue(field, clamped)
+      debouncedSave(form.getValues())
+    },
+    [form, debouncedSave]
+  )
+
   const CounterRow = ({
     label,
     field,
     step,
     minValue,
     maxValue,
-    padDigits,
   }: {
     label: string
     field: keyof CapacityFormData
     step: number
     minValue: number
     maxValue: number
-    padDigits: number
   }) => {
     const value = form.watch(field)
 
@@ -169,9 +180,24 @@ export function CapacityForm({
           >
             <Icons.minus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
           </Button>
-          <span className="w-16 text-center font-mono text-lg font-medium sm:text-base">
-            {value.toString().padStart(padDigits, "0")}
-          </span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={minValue}
+            max={maxValue}
+            value={value}
+            onChange={(e) => {
+              const next = parseInt(e.target.value, 10)
+              if (Number.isFinite(next)) {
+                setFieldValue(field, next, minValue, maxValue)
+              } else if (e.target.value === "") {
+                form.setValue(field, minValue)
+              }
+            }}
+            onBlur={() => setFieldValue(field, value, minValue, maxValue)}
+            disabled={isPending}
+            className="focus:ring-primary w-16 [appearance:textfield] rounded-md border-none bg-transparent text-center font-mono text-lg font-medium outline-none focus:ring-2 sm:text-base [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
           <Button
             type="button"
             variant="outline"
@@ -206,7 +232,6 @@ export function CapacityForm({
             step={1}
             minValue={1}
             maxValue={500}
-            padDigits={4}
           />
           <CounterRow
             label={dict.sectionsPerGrade || "Sections per Grade"}
@@ -214,15 +239,13 @@ export function CapacityForm({
             step={1}
             minValue={1}
             maxValue={10}
-            padDigits={2}
           />
           <CounterRow
             label={dict.studentsPerSection || "Students per Section"}
             field="studentsPerSection"
-            step={5}
-            minValue={10}
+            step={1}
+            minValue={1}
             maxValue={60}
-            padDigits={4}
           />
         </div>
 

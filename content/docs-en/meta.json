@@ -85,18 +85,21 @@
     "playwright",
     "prettier",
     "rebound",
-    "business-model",
-    "shared-economy",
+    "---Sales & GTM---",
     "sales",
     "gtm",
     "marketing",
     "pilot",
     "leads",
     "proposal",
+    "outreach",
     "case-study",
     "competitors",
-    "fundraising",
+    "business-model",
+    "shared-economy",
     "traction",
+    "---Fundraising & Ecosystem---",
+    "fundraising",
     "deck",
     "data-room",
     "investors",
@@ -106,7 +109,6 @@
     "sponsors",
     "partners",
     "competitions",
-    "universities",
-    "outreach"
+    "universities"
   ]
 }

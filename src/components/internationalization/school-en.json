@@ -606,6 +606,7 @@
         },
         "levels": {
           "primary": "Primary",
+          "middle": "Middle",
           "secondary": "Secondary",
           "both": "Both (K-12)"
         },
@@ -7312,11 +7313,14 @@
       "technicalSchool": "Technical",
       "specialSchool": "Special Education",
       "primaryLevel": "Primary",
+      "middleLevel": "Middle",
       "secondaryLevel": "Secondary",
       "bothLevels": "Both",
       "primaryGrades": "Grades 1-6",
-      "secondaryGrades": "Grades 7-12",
+      "middleGrades": "Grades 7-9",
+      "secondaryGrades": "Grades 10-12",
       "bothGrades": "Grades 1-12",
+      "middleSchool": "Middle School (Grades 7-9)",
       "selectGradeLevels": "Select your grade levels",
       "selectGradeLevelsDescription": "Choose the academic levels your school serves.",
       "schoolLocationDescription": "Your school's address will be visible to parents and staff members.",

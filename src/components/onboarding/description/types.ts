@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 export interface SchoolLevel {
-  id: "primary" | "secondary" | "both"
+  id: "primary" | "middle" | "secondary" | "both"
   title: string
   description: string
   icon?: string

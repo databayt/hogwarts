@@ -606,6 +606,7 @@
         },
         "levels": {
           "primary": "ابتدائي",
+          "middle": "متوسط",
           "secondary": "ثانوي",
           "both": "كلاهما (K-12)"
         },
@@ -7320,11 +7321,14 @@
       "technicalSchool": "تقني",
       "specialSchool": "تربية خاصة",
       "primaryLevel": "ابتدائي",
+      "middleLevel": "متوسط",
       "secondaryLevel": "ثانوي",
       "bothLevels": "كلاهما",
       "primaryGrades": "الصفوف 1-6",
-      "secondaryGrades": "الصفوف 7-12",
+      "middleGrades": "الصفوف 7-9",
+      "secondaryGrades": "الصفوف 10-12",
       "bothGrades": "الصفوف 1-12",
+      "middleSchool": "المرحلة المتوسطة (الصفوف 7-9)",
       "selectGradeLevels": "اختر المراحل الدراسية",
       "selectGradeLevelsDescription": "اختر المستويات الأكاديمية التي تخدمها مدرستك.",
       "schoolLocationDescription": "سيكون عنوان مدرستك مرئياً لأولياء الأمور وأعضاء هيئة التدريس.",
