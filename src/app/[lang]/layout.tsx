@@ -68,14 +68,20 @@ export default async function LocaleLayout({
 }) {
   const { lang } = await params
 
-  // Wrap auth() in try-catch to prevent layout failures during SSR
-  // This can happen if cookies() or other Next.js context isn't available
+  // Skip auth() during `next build` page-data collection. Each call to
+  // auth() hits the DB; multiplied across every statically-collected route
+  // it has tipped the build past Vercel's 45-min hobby ceiling. At runtime
+  // (production phase or dev), call normally — pages render with a real
+  // session. The try-catch still guards SSR contexts where cookies()/
+  // headers() aren't available.
   let session = null
-  try {
-    session = await auth()
-  } catch (error) {
-    console.error("[LAYOUT] auth() failed:", error)
-    // Continue with null session - page may still work for public routes
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    try {
+      session = await auth()
+    } catch (error) {
+      console.error("[LAYOUT] auth() failed:", error)
+      // Continue with null session - page may still work for public routes
+    }
   }
 
   const config = localeConfig[lang as Locale]
