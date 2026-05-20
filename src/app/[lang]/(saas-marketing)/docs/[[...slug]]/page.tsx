@@ -18,21 +18,16 @@ import { DocsTableOfContents } from "@/components/docs/toc"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-// Docs render on-demand with ISR caching instead of being pre-rendered at
-// build time. The root `[lang]/layout.tsx` calls `auth()`, so pre-rendering
-// every doc would issue 150+ DB-backed auth lookups during `next build` and
-// breach Vercel's 45-min build ceiling. With ISR each doc renders on first
-// request and is cached for an hour. Code blocks still use runtime shiki
-// via fumadocs-ui's DynamicCodeBlock. See `source.config.ts` and
-// `src/mdx-components.tsx`.
+// Force-dynamic to bypass Next.js page-data collection entirely. With ~155
+// MDX files across two locales plus an async `generateMetadata`, leaving
+// the route in "auto" mode triggered the same dynamic-import storm
+// documented in `community/page.tsx` — Vercel's 1-worker page-data step
+// was hanging past the 45-min build ceiling. `force-dynamic` skips the
+// data-collection pass; metadata + body render per-request at runtime.
+// Code blocks still use runtime shiki via fumadocs-ui's DynamicCodeBlock.
+// See `source.config.ts` and `src/mdx-components.tsx`.
 export const runtime = "nodejs"
-export const revalidate = 3600
-export const dynamic = "auto"
-export const dynamicParams = true
-
-export function generateStaticParams() {
-  return []
-}
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[]; lang: string }>
