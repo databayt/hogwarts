@@ -3,6 +3,9 @@
 
 import { ReportIssue } from "@/components/report-issue"
 
+// Tour standalone pages depend on subdomain + tenant lookup - always dynamic
+export const dynamic = "force-dynamic"
+
 interface TourStandaloneLayoutProps {
   children: React.ReactNode
 }

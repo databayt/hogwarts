@@ -3,6 +3,9 @@
 
 import { ReportIssue } from "@/components/report-issue"
 
+// Auth pages use cookies/headers - always dynamic
+export const dynamic = "force-dynamic"
+
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative mx-auto flex h-screen max-w-md items-center justify-center px-6">

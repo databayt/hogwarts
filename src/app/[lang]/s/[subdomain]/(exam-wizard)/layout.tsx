@@ -6,6 +6,9 @@ import { auth } from "@/auth"
 
 import { ReportIssue } from "@/components/report-issue"
 
+// Exam wizard requires auth + role check - always dynamic
+export const dynamic = "force-dynamic"
+
 interface ExamWizardLayoutProps {
   children: React.ReactNode
   params: Promise<{ lang: string }>

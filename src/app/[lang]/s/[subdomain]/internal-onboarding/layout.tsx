@@ -11,6 +11,9 @@ import type { Locale } from "@/components/internationalization/config"
 import { ReportIssue } from "@/components/report-issue"
 import ErrorBoundary from "@/components/school-marketing/application/error-boundary"
 
+// Internal onboarding does per-tenant subdomain + DB lookup - always dynamic
+export const dynamic = "force-dynamic"
+
 interface LayoutProps {
   children: React.ReactNode
   params: Promise<{ lang: Locale; subdomain: string }>

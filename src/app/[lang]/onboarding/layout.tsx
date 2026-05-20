@@ -6,6 +6,9 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
 
+// Onboarding wizard uses session + dictionary lookup - always dynamic
+export const dynamic = "force-dynamic"
+
 interface OnboardingLayoutProps {
   children: React.ReactNode
   params: Promise<{ lang: string }>

@@ -6,6 +6,9 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
 
+// Application flow uses cookies + dictionary lookup - always dynamic
+export const dynamic = "force-dynamic"
+
 interface ApplicationLayoutProps {
   children: React.ReactNode
   params: Promise<{ lang: string }>

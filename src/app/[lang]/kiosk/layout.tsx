@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: "Student check-in and check-out kiosk",
 }
 
+// Kiosk reads schoolId + live attendance data - always dynamic
+export const dynamic = "force-dynamic"
+
 interface KioskLayoutProps {
   children: ReactNode
   params: Promise<{ lang: string }>

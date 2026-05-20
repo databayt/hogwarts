@@ -15,6 +15,9 @@ import SiteHeader from "@/components/template/site-header/content"
 
 // import { SiteFooter } from "@/components/school-marketing-footer";
 
+// Tenant marketing pages depend on subdomain + DB lookup - always dynamic
+export const dynamic = "force-dynamic"
+
 interface SiteLayoutProps {
   children: React.ReactNode
   params: Promise<{ subdomain: string; lang: string }>
