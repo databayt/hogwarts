@@ -18,22 +18,20 @@ import { DocsTableOfContents } from "@/components/docs/toc"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-// Code blocks use runtime shiki via fumadocs-ui's DynamicCodeBlock — the
-// Next.js build no longer runs shiki, so docs deploy safely within Vercel
-// Hobby's 8 GB heap. See `source.config.ts` and `src/mdx-components.tsx`.
+// Docs render on-demand with ISR caching instead of being pre-rendered at
+// build time. The root `[lang]/layout.tsx` calls `auth()`, so pre-rendering
+// every doc would issue 150+ DB-backed auth lookups during `next build` and
+// breach Vercel's 45-min build ceiling. With ISR each doc renders on first
+// request and is cached for an hour. Code blocks still use runtime shiki
+// via fumadocs-ui's DynamicCodeBlock. See `source.config.ts` and
+// `src/mdx-components.tsx`.
 export const runtime = "nodejs"
-export const revalidate = false
-export const dynamic = "force-static"
-export const dynamicParams = false
+export const revalidate = 3600
+export const dynamic = "auto"
+export const dynamicParams = true
 
 export function generateStaticParams() {
-  const enParams = docsSource
-    .generateParams()
-    .map((p) => ({ ...p, lang: "en" }))
-  const arParams = docsArabicSource
-    .generateParams()
-    .map((p) => ({ ...p, lang: "ar" }))
-  return [...enParams, ...arParams]
+  return []
 }
 
 export async function generateMetadata(props: {
