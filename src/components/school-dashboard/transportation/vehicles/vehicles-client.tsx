@@ -14,6 +14,16 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -50,6 +60,7 @@ import {
   updateVehicle,
 } from "../actions/vehicles"
 import { TransportationEmptyState } from "../empty-state"
+import { resolveTransportationError } from "../error-map"
 
 type VehicleType = "BUS" | "VAN" | "CAR" | "MINIBUS"
 type VehicleStatus = "ACTIVE" | "INACTIVE" | "MAINTENANCE" | "RETIRED"
@@ -89,6 +100,7 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const columns = useMemo<ColumnDef<Vehicle>[]>(
     () => [
@@ -129,7 +141,7 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDelete(row.original.id)}
+              onClick={() => setDeleteId(row.original.id)}
               type="button"
             >
               {dictionary.common.delete}
@@ -193,20 +205,32 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
         setOpen(false)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm(t.vehicles.deleteConfirm)) return
+  function confirmDelete() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
     startTransition(async () => {
       const result = await deleteVehicle(id)
       if (result.success) {
         toast.success(t.toasts.vehicleDeleted)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
@@ -406,6 +430,26 @@ export function VehiclesClient({ vehicles, dictionary }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary.common.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.vehicles.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dictionary.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {dictionary.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

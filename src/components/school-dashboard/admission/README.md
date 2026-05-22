@@ -15,14 +15,16 @@ This is a cross-block feature. The dashboard side (this block) handles admin rev
 
 ### Routes
 
-| Route                                                                  | Page               | Status |
-| ---------------------------------------------------------------------- | ------------------ | ------ |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission`                   | Campaigns list     | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications`      | Applications list  | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications/[id]` | Application detail | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/merit`             | Merit list         | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/enrollment`        | Enrollment list    | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/settings`          | Admission settings | Ready  |
+| Route                                                                  | Page               | Status                                       |
+| ---------------------------------------------------------------------- | ------------------ | -------------------------------------------- |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission`                   | Campaigns list     | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications`      | Applications list  | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications/[id]` | Application detail | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/merit`             | Merit list         | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/enrollment`        | Enrollment list    | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/settings`          | Admission settings | Partial — exposes ~12 of ~30 settings fields |
+
+> Pages all render, but: **Merit** ranks by an uncomputed score (P0-3); **Enrollment** has no reachable section-placement UI (P1-7). See `ISSUE.md`.
 
 ### File Structure
 
@@ -78,12 +80,15 @@ src/components/school-dashboard/admission/
 
 ### Status
 
-**Completion:** 100% | **Blockers:** None
+**Completion:** ~70% | **Status:** 🔴 NOT production-ready (audited 2026-05-21)
+
+Core CRUD/review/enrollment work, but 3 flagship flows are broken: offer acceptance (empty accessToken + login wall), merit ranking (ranks by a never-computed score), and the AI document pipeline (built but never executes — no cron, UI unrendered). See `ISSUE.md` for the full P0/P1/P2 tracker and remediation order.
 
 ### Integration Points
 
 - `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking
-- `src/components/school-marketing/application/` -- multi-step student application wizard (6 form steps + payment + success)
+- `src/components/school-marketing/application/` -- multi-step student application wizard (5 active steps: attachments → personal → location → academic → fees; + payment, offer, success)
+- `ai/` subsystem -- Claude document classification/extraction/completeness/merit-scoring + bank-receipt OCR. **Built but disconnected** (no `document-processing` cron, `document-card.tsx` unrendered) — see ISSUE.md P1-1
 - `src/lib/enrollment-sync.ts` -- auto-enroll placed students into grade classes
 - `src/lib/dispatch-notification.ts` -- notification dispatch on status changes
 - `prisma/models/admission.prisma` -- 9 models: AdmissionCampaign, Application, Communication, AdmissionInquiry, AdmissionTimeSlot, TourBooking, ApplicationSession, AdmissionSettings, AdmissionOTP

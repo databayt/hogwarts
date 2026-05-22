@@ -17,6 +17,7 @@
 
 ### P1
 
+- [ ] Ledger posting not wired -- `postExpensePayment` has zero callers (see umbrella ISSUE.md P0)
 - [ ] Approval routing rules (by amount threshold, by category)
 - [ ] Email notification on approval state change
 - [ ] Bulk categorisation / reassign category

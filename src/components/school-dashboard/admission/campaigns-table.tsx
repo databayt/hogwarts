@@ -96,7 +96,9 @@ export function CampaignsTable({
         DeleteToast(t?.campaigns?.campaignDeleted || "Campaign deleted")
         refresh()
       } else {
-        ErrorToast(result.error ?? "Error")
+        ErrorToast(
+          t?.campaigns?.campaignDeleteFailed || result.error || "Error"
+        )
       }
     },
     [t, refresh]

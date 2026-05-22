@@ -1,0 +1,107 @@
+---
+title: Payroll
+description: Pay-period runs that generate per-teacher salary slips with an approve → disburse workflow. The core works, but tax is a flat-15% stub, there is no payslip PDF, and disbursement does not post to the ledger.
+---
+
+Payroll turns each teacher's active [salary structure](/docs/finance-salary) into salary slips for a pay period, totals the run, routes it through approval, and on payment marks every slip PAID with notifications. Disbursement is a single status flip — there is no bank file and no journal entry.
+
+## Pipeline
+
+```
+1. Create payroll run (DRAFT)                          — createPayrollRun
+2. Generate slips → PROCESSING → PENDING_APPROVAL      — generateSalarySlips
+     gross = base + allowances · tax = gross × 0.15 · net = gross − tax − deductions
+3. Approve (→ APPROVED) or Reject (→ DRAFT)            — approvePayroll / rejectPayroll
+4. Process payments → all slips PAID, run PAID, notify  — processPayments
+```
+
+## Status
+
+| Feature                                     | Status                                           |
+| ------------------------------------------- | ------------------------------------------------ |
+| Payroll run CRUD + listing                  | Production                                       |
+| Salary slip generation                      | Production (math is stubbed — see below)         |
+| Approval / rejection workflow               | Production (one-way: APPROVED triggers disburse) |
+| Disbursement (mark PAID) + notifications    | Production                                       |
+| Progressive tax / social security           | Stubbed — flat 15%; `config.ts` brackets unused  |
+| `daysWorked` / `daysPresent` from timesheet | Stubbed — hardcoded to 22                        |
+| Create-run UI form                          | Stubbed — "coming soon" placeholder page         |
+| Payslip PDF                                 | Planned                                          |
+| Bank transfer batch file (ACH/SWIFT)        | Planned                                          |
+| Journal entry posting                       | Planned — relation exists, never written         |
+
+## Routes
+
+| Route                               | Page       | Status                |
+| ----------------------------------- | ---------- | --------------------- |
+| `/{lang}/finance/payroll`           | Overview   | Ready                 |
+| `/{lang}/finance/payroll/runs`      | Runs list  | Ready                 |
+| `/{lang}/finance/payroll/runs/new`  | Create run | Stubbed (placeholder) |
+| `/{lang}/finance/payroll/runs/[id]` | Run detail | Ready                 |
+
+## Server actions
+
+All use `auth()` + `getTenantContext()` for `schoolId`. RBAC is enforced in `content.tsx` via `checkCurrentUserPermission()` (not inside the actions). None wrap their writes in `db.$transaction`.
+
+| Action                                    | Purpose                                          |
+| ----------------------------------------- | ------------------------------------------------ |
+| `getPayrollRuns`                          | List runs (optional status filter)               |
+| `getPayrollRun`                           | One run + slips + teacher                        |
+| `createPayrollRun`                        | Create DRAFT run                                 |
+| `generateSalarySlips`                     | Build slips, compute totals, notify admins       |
+| `approvePayroll`                          | PENDING_APPROVAL → APPROVED + notify             |
+| `rejectPayroll`                           | PENDING_APPROVAL → DRAFT + notify                |
+| `processPayments`                         | APPROVED → PAID, slips PAID, notify each teacher |
+| `getTeacherSalarySlips` / `getSalarySlip` | Read slips for a teacher / one slip              |
+| `getPayrollSummary`                       | Counts + total paid                              |
+| `deletePayrollRun`                        | Delete (DRAFT only)                              |
+
+## Statuses
+
+| Enum            | Values                                                         |
+| --------------- | -------------------------------------------------------------- |
+| `PayrollStatus` | DRAFT, PROCESSING, PENDING_APPROVAL, APPROVED, PAID, CANCELLED |
+| `SlipStatus`    | GENERATED, REVIEWED, PAID, CANCELLED                           |
+
+Note: `config.ts` defines a divergent status set (PENDING/COMPLETED/FAILED) that does not match the Prisma enum — prefer the Prisma values above.
+
+## Ledger / accounting
+
+**Does not post to the ledger today.** `postSalaryPayment` exists in `finance/lib/accounting/actions.ts` but has zero callers, and `PayrollRun.journalEntryId` is reserved in the schema but never set. So disbursing payroll moves the run to PAID without any debit/credit entries. See the [double-entry model](/docs/finance#double-entry-model).
+
+## Schema
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`PayrollRun`** — `runNumber`, `payPeriodStart/End`, `payDate`, `status`, `totalGross/Deductions/Net`, `processedBy`, `approvedBy`, `journalEntryId` (reserved).
+- **`SalarySlip`** — `slipNumber`, `baseSalary`, `allowances` (Json), `grossSalary`, `taxAmount`, `otherDeductions` (Json), `totalDeductions`, `netSalary`, `daysWorked/Present/Absent`, `hoursWorked`, `status`.
+
+No `lang` field; allowance/deduction names embedded as JSON are also untagged.
+
+## Stubs
+
+- `payroll/actions.ts:286` — `const taxAmount = grossSalary * 0.15 // Simplified 15% tax rate` (the same flat rate is in `salary/actions.ts`).
+- `payroll/actions.ts:257-258` — `daysWorked` / `daysPresent` hardcoded to 22 (timesheet integration not wired).
+- `payroll/runs/new/page.tsx` — create-run form is a "coming soon" placeholder; `createPayrollRun` is callable programmatically only.
+- `config.ts` ships a real `TAX_BRACKETS` array + social-security rates that the action ignores.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component                | Path                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| Server actions           | `src/components/school-dashboard/finance/payroll/actions.ts`                         |
+| Config (unused brackets) | `src/components/school-dashboard/finance/payroll/config.ts`                          |
+| Content                  | `src/components/school-dashboard/finance/payroll/content.tsx`                        |
+| Run detail page          | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/payroll/runs/[id]/page.tsx` |
+| Schema                   | `prisma/models/finance-payroll.prisma`                                               |
+
+## See also
+
+- [Finance](/docs/finance) — the block overview + status matrix
+- [Salary](/docs/finance-salary) — the structures payroll reads
+- [Timesheet](/docs/finance-timesheet) — intended (not yet wired) source of days/hours
+- [Accounts](/docs/finance-accounts) — where salary payments should post

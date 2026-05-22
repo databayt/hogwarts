@@ -165,6 +165,10 @@ export async function getDriver(id: string) {
     const driver = await db.driver.findFirst({
       where: { id, schoolId, deletedAt: null },
       include: {
+        routes: {
+          where: { deletedAt: null },
+          select: { id: true, name: true, code: true },
+        },
         staffMember: { select: { id: true, firstName: true, lastName: true } },
       },
     })

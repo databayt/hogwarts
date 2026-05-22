@@ -1,19 +1,19 @@
 ---
 title: Application
-description: Public applicant flow — campaign selection, 6-step wizard, session management, payment, status tracking, tour booking, and inquiry capture.
+description: Public applicant flow — login, campaign selection, 5-step wizard, session management, payment, status tracking, tour booking, and inquiry capture.
 ---
 
-The applicant-facing portal runs at `school.databayt.org`. After choosing a campaign, the applicant enters a 6-step wizard with auto-save (every 30 s + localStorage), submits, optionally pays, and tracks status via OTP or login.
+The applicant-facing portal runs at `school.databayt.org`. Applying requires a login (the wizard is auth-gated); status tracking stays account-less via OTP. After choosing a campaign, the applicant enters a 5-step wizard with auto-save (every 30 s + localStorage), submits on the Fees step, optionally pays, and tracks status via OTP or login.
 
 ## Steps
 
 ```
 1. Visit /admissions
-2. Choose campaign / start application
-3. Overview — 3 phases
-4. Wizard — 6 steps
-5. Submit
-6. Payment (if required)
+2. Log in (auth-gated) → choose campaign / start application
+3. Overview — drafts + new application
+4. Wizard — 5 steps (3 phases)
+5. Submit (on the Fees step)
+6. Payment (if required) → Offer (post-decision)
 7. Success page
 ```
 
@@ -24,36 +24,35 @@ Single shared `FormFooter` with three progress bars (one per phase). 30 s auto-s
 | #   | Step        | Required fields                                                                      | Route                                  |
 | --- | ----------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
 | 1   | Attachments | All optional (photo, degree, transcript, ID, resume, other) — triggers AI extraction | `/{lang}/application/{id}/attachments` |
-| 2   | Personal    | name, dateOfBirth, gender, nationality                                               | `/{lang}/application/{id}/personal`    |
-| 3   | Contact     | email, phone (international format)                                                  | `/{lang}/application/{id}/contact`     |
-| 4   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                 | `/{lang}/application/{id}/location`    |
-| 5   | Guardian    | fatherName, motherName (tabbed)                                                      | `/{lang}/application/{id}/guardian`    |
-| 6   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                             | `/{lang}/application/{id}/academic`    |
+| 2   | Personal    | Student name, dateOfBirth, gender, nationality + guardian (Father/Mother) in tabs    | `/{lang}/application/{id}/personal`    |
+| 3   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                 | `/{lang}/application/{id}/location`    |
+| 4   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                             | `/{lang}/application/{id}/academic`    |
+| 5   | Fees        | Fee preview by grade + accepted payment methods — submits the application            | `/{lang}/application/{id}/fees`        |
 
-The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`. Academic is the final step — the button reads "Submit Application".
+The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`, and folds the former **Guardian** step into Student / Father / Mother tabs. The former standalone **Contact** step was removed — `email` is back-filled at submit from the session / logged-in user. **Fees** is the final step: it previews the fee for the chosen grade, then its button submits the application (routing to payment if a fee is due).
 
 ### Phase grouping
 
-| Phase | Label              | Steps                 |
-| ----- | ------------------ | --------------------- |
-| 1     | Basic Information  | Attachments, Personal |
-| 2     | Details            | Contact, Location     |
-| 3     | Family & Education | Guardian, Academic    |
+| Phase | Label             | Steps                 |
+| ----- | ----------------- | --------------------- |
+| 1     | Basic Information | Attachments, Personal |
+| 2     | Address           | Location              |
+| 3     | Academic          | Academic, Fees        |
 
 ## Submit flow
 
 ```typescript
 // Server-side
 1. Resolve school from subdomain
-2. Validate via createFullApplicationSchema (Zod)
+2. Validate via applicationFormDataSchema (Zod)
 3. Verify session belongs to this school
 4. Check campaign OPEN and not expired
-5. Check duplicate email + campaign
+5. Check duplicate email + campaign (unless allowMultipleApplications)
 6. Generate application number `APP-{year}-{random6}`
 7. Generate access token (32 chars, 6-month expiry)
 8. Create Application (status: SUBMITTED)
 9. Mark session as converted
-10. Send confirmation email (Resend)
+10. Notify admins + send applicant confirmation email (Resend)
 11. requiresPayment = campaign.applicationFee > 0
 ```
 
@@ -78,6 +77,10 @@ Stripe webhook (`/api/webhooks/stripe`) sets `applicationFeePaid = true` and dis
 - Next steps timeline (email → review → interview → decision)
 - Links to school explore + tour booking
 
+## Offer (post-decision)
+
+Once an admission decision is made, `/{lang}/application/{id}/offer` lets the applicant accept or decline and pay the registration fee to secure the seat. It is reached via an emailed offer-token link.
+
 ## Application status banner
 
 Server-rendered banner on the school site for logged-in applicants. Dismissible per application via localStorage.
@@ -97,7 +100,7 @@ Banner includes a 4-dot timeline: Submitted → Review → Decision → Enrolled
 
 ## Sessions
 
-Storage key `hogwarts_apply_session_{campaignId}`. Session token is server-generated `nanoid(32)`, 7-day expiry. Auto-save every 30 s when dirty. Browser warns on unsaved navigation.
+Storage key `hogwarts_apply_session_{campaignId}_{userId}` (scoped per user to prevent cross-account draft leakage). Session token is server-generated `nanoid(32)`, 7-day expiry. Auto-save every 30 s when dirty. Browser warns on unsaved navigation.
 
 Three resume paths: localStorage (auto), email link `/{lang}/application/continue?token=xxx`, authenticated user drafts on the landing page. The first save triggers a "resume application" email.
 
@@ -132,7 +135,9 @@ Lead capture at `/{lang}/inquiry` for families not ready to apply. Required: par
 
 Status flow: `NEW → CONTACTED → QUALIFIED → CONVERTED → CLOSED`.
 
-## Server actions (public, no auth)
+## Server actions
+
+The wizard itself is **auth-gated** (login required to apply). Status tracking, tour booking, and inquiry capture remain **public** (no account needed).
 
 | Action                       | Parameters                                                  |
 | ---------------------------- | ----------------------------------------------------------- |

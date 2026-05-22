@@ -14,6 +14,16 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -45,6 +55,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createRoute, deleteRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
+import { resolveTransportationError } from "../error-map"
 import type { DriverRow, RouteRow } from "../shared/types"
 
 type RouteDirection = "PICKUP" | "DROPOFF" | "ROUND_TRIP"
@@ -62,6 +73,7 @@ interface FormState {
   monthlyFee: string
   vehicleId: string
   driverId: string
+  geofenceId: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -76,6 +88,7 @@ const EMPTY_FORM: FormState = {
   monthlyFee: "",
   vehicleId: "",
   driverId: "",
+  geofenceId: "__none__",
 }
 
 interface Props {
@@ -83,6 +96,7 @@ interface Props {
   routes: RouteRow[]
   vehicles: Vehicle[]
   drivers: DriverRow[]
+  geofences: { id: string; name: string }[]
   dictionary: Dictionary
 }
 
@@ -91,6 +105,7 @@ export function RoutesClient({
   routes,
   vehicles,
   drivers,
+  geofences,
   dictionary,
 }: Props) {
   const t = dictionary.transportation
@@ -98,6 +113,7 @@ export function RoutesClient({
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const columns = useMemo<ColumnDef<RouteRow>[]>(
     () => [
@@ -160,7 +176,7 @@ export function RoutesClient({
               variant="ghost"
               size="sm"
               type="button"
-              onClick={() => handleDelete(row.original.id)}
+              onClick={() => setDeleteId(row.original.id)}
             >
               {dictionary.common.delete}
             </Button>
@@ -193,6 +209,10 @@ export function RoutesClient({
         monthlyFee: form.monthlyFee ? Number(form.monthlyFee) : undefined,
         vehicleId: form.vehicleId || undefined,
         driverId: form.driverId || undefined,
+        geofenceId:
+          form.geofenceId && form.geofenceId !== "__none__"
+            ? form.geofenceId
+            : undefined,
       })
 
       if (result.success) {
@@ -201,20 +221,32 @@ export function RoutesClient({
         setForm(EMPTY_FORM)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm(t.routes.deleteConfirm)) return
+  function confirmDelete() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
     startTransition(async () => {
       const result = await deleteRoute(id)
       if (result.success) {
         toast.success(t.toasts.routeDeleted)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
@@ -454,6 +486,30 @@ export function RoutesClient({
                   </Select>
                 </div>
               </div>
+
+              {geofences.length > 0 && (
+                <div className="grid gap-1.5">
+                  <Label>{t.routes.fields.geofence}</Label>
+                  <Select
+                    value={form.geofenceId}
+                    onValueChange={(v) => setForm({ ...form, geofenceId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">
+                        {t.routes.fields.geofenceNone}
+                      </SelectItem>
+                      {geofences.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
@@ -471,6 +527,26 @@ export function RoutesClient({
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary.common.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.routes.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dictionary.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {dictionary.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

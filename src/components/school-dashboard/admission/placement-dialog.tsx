@@ -92,7 +92,7 @@ export function PlacementDialog({
         setSelectedSectionId("")
         onSuccess?.()
       } else {
-        ErrorToast(result.error || t?.placeFailed || "Failed to place student")
+        ErrorToast(t?.placeFailed || result.error || "Failed to place student")
       }
     })
   }

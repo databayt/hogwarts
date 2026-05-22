@@ -43,7 +43,7 @@ describe("Messaging Authorization", () => {
       })
     })
 
-    it("defaults role to USER if not provided", () => {
+    it("returns null when role is not provided", () => {
       const session = {
         user: {
           id: "user-123",
@@ -51,9 +51,8 @@ describe("Messaging Authorization", () => {
         },
       }
 
-      const context = getAuthContext(session as any)
-
-      expect(context?.role).toBe("USER")
+      // getAuthContext requires id + schoolId + role; a missing role yields null
+      expect(getAuthContext(session as any)).toBeNull()
     })
   })
 
@@ -194,8 +193,15 @@ describe("Messaging Authorization", () => {
             role,
           }
 
+          // create_conversation permission is keyed off the target type,
+          // so the conversation context must carry its type.
           expect(() =>
-            assertMessagingPermission(context, "create_conversation", undefined)
+            assertMessagingPermission(context, "create_conversation", {
+              id: "new-conv",
+              type: "direct",
+              createdById: "user-123",
+              participantIds: [],
+            })
           ).not.toThrow()
         })
       })

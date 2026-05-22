@@ -1,0 +1,72 @@
+---
+title: Dashboard
+description: Role-scoped financial overview — KPI cards, charts, smart alerts, quick actions, and a recent-transactions feed. KPI totals are real DB aggregations, but the trend sparklines are Math.random() mock data.
+---
+
+The finance dashboard aggregates the block into a role-scoped overview: admins and accountants see full KPIs and charts; teachers, students, and guardians see scoped slices (own salary, fee status). It is the landing page at `/finance/dashboard`.
+
+## Flow
+
+```
+Load (role-scoped)  →  KPI cards (real totals)  +  trend charts (mock)
+  +  smart alerts  +  quick actions  +  recent transactions
+```
+
+## Status
+
+| Feature                              | Status                                            |
+| ------------------------------------ | ------------------------------------------------- |
+| Role-scoped KPI cards                | Production (real DB aggregations)                 |
+| Revenue / expense / cash-flow charts | Production (totals real)                          |
+| Recent transactions feed             | Production                                        |
+| Bank-accounts summary                | Production                                        |
+| Budget overview                      | Production                                        |
+| Currency + locale formatting         | Production (`School.currency`, `date-fns` locale) |
+| Trend sparklines                     | **Stubbed — `Math.random()` mock data**           |
+| Real-time refresh (WebSocket)        | Planned (currently full-page SSR)                 |
+| Mobile layout optimization           | Planned                                           |
+
+## Routes
+
+| Route                       | Page                | Status |
+| --------------------------- | ------------------- | ------ |
+| `/{lang}/finance/dashboard` | Financial dashboard | Ready  |
+
+## Server actions
+
+| Action                   | Purpose                                              |
+| ------------------------ | ---------------------------------------------------- |
+| `getDashboardStats`      | KPI totals + trend series (totals real, trends mock) |
+| `getFinancialAlerts`     | Smart alerts (overdue, low balance, etc.)            |
+| `getQuickActionsForRole` | Role-appropriate action buttons                      |
+| `getRecentTransactions`  | Recent transactions feed                             |
+
+## Ledger / accounting
+
+Not a money-mover — the dashboard reads and aggregates across the invoice, fees, expenses, payroll, banking, budget, and wallet models for display only.
+
+## Schema
+
+No model of its own; composes reads across the other finance models.
+
+## Stubs
+
+- `dashboard/actions.ts:278-288` — `generateTrend()` fabricates the revenue/expense/profit/collection sparklines with `Math.random()`. The comment says "mock data for now - should calculate from historical data." KPI **totals** are real; only the trend lines are fake.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component      | Path                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| Server actions | `src/components/school-dashboard/finance/dashboard/actions.ts`                                               |
+| Composition    | `src/components/school-dashboard/finance/dashboard/content.tsx`                                              |
+| Charts         | `src/components/school-dashboard/finance/dashboard/revenue-chart.tsx` (+ `expense-chart`, `cash-flow-chart`) |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Reports](/docs/finance-reports) — formal statements behind the KPIs
+- [Banking](/docs/finance-banking) — bank-balance source

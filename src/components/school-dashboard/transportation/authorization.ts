@@ -17,10 +17,8 @@ export type TransportationAction =
   | "manage_trip"
   | "record_boarding"
   | "read_school"
-  | "read_class"
   | "read_own"
   | "view_fees"
-  | "export"
 
 export interface AuthContext {
   userId: string
@@ -50,10 +48,8 @@ const PERMISSION_MATRIX: Record<TransportationAction, UserRole[]> = {
   manage_trip: ["DEVELOPER", "ADMIN", "STAFF"],
   record_boarding: ["DEVELOPER", "ADMIN", "STAFF", "TEACHER"],
   read_school: ["DEVELOPER", "ADMIN", "STAFF"],
-  read_class: ["DEVELOPER", "ADMIN", "TEACHER"],
   read_own: ["DEVELOPER", "ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"],
   view_fees: ["DEVELOPER", "ADMIN", "ACCOUNTANT"],
-  export: ["DEVELOPER", "ADMIN", "STAFF"],
 }
 
 // ============================================================================

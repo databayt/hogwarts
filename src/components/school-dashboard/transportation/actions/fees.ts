@@ -64,7 +64,6 @@ export async function previewTransportFees(): Promise<
     })
 
     const byStudent = new Map<string, StudentTransportFee>()
-    let studentsWithoutFee = 0
 
     for (const a of activeAssignments) {
       if (!a.student || !a.route) continue
@@ -95,16 +94,14 @@ export async function previewTransportFees(): Promise<
           ],
         })
       }
-
-      if (fee === null || fee === undefined) {
-        studentsWithoutFee += 1
-      }
     }
 
     const fees = Array.from(byStudent.values()).sort((a, b) =>
       a.lastName.localeCompare(b.lastName)
     )
     const totalMonthlyRevenue = fees.reduce((sum, f) => sum + f.monthlyTotal, 0)
+    // Distinct students who owe nothing this month (no fee-bearing route).
+    const studentsWithoutFee = fees.filter((f) => f.monthlyTotal === 0).length
 
     return {
       success: true as const,

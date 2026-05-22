@@ -2,7 +2,7 @@
 
 ### Overview
 
-Payroll run processing with progressive tax calculation, benefits/deductions, payslip generation, and approval workflow. Calculates income tax, Social Security, Medicare, and employer contributions.
+Payroll run processing, payslip generation, and an approval → disbursement workflow. **Tax is a hardcoded flat 15%** (`actions.ts:286`); progressive brackets and social-security rates live in `config.ts` but are unused. No payslip PDF yet.
 
 ### Capabilities by Role
 
@@ -38,6 +38,6 @@ payroll/
 
 - Reads salary structures from `finance/salary/`
 - Reads approved timesheets from `finance/timesheet/`
-- Creates journal entries (DR: Salary Expense, CR: Cash/Tax Payable) via `finance/lib/accounting/`
+- Ledger posting (`postSalaryPayment`) exists in `finance/lib/accounting/` but is **not yet wired** -- disbursement marks slips PAID without journal entries (umbrella `ISSUE.md` P0)
 - Disbursement tracked via `finance/banking/`
 - See [finance master README](../README.md) for architecture details

@@ -34,6 +34,10 @@ model Application {
   campaignId        String
   applicationNumber String @unique
 
+  // Language the applicant-entered content was captured in (single-language
+  // storage — see .claude/rules/translation.md). Drives on-demand translation.
+  lang String @default("ar")
+
   // User coupling (mirrors onboarding's user.schoolId pattern)
   userId String?
   user   User?   @relation("UserApplications", fields: [userId], references: [id], onDelete: SetNull)
@@ -353,7 +357,8 @@ model ApplicationSession {
 
   // Partial application data
   formData    Json
-  currentStep Int  @default(1)
+  currentStep Int    @default(1)
+  lang        String @default("ar")
 
   // Contact for resume link
   email String

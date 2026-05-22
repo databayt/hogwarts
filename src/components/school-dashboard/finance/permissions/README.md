@@ -24,7 +24,7 @@ permissions/
 
 ### Status
 
-**Completion:** 80% | **Blockers:** No dedicated route page; permission templates (pre-defined sets) not implemented; no time-based / expiring permissions
+**Completion:** 75% | **Blockers:** No dedicated route page (reached via finance settings / admin panel); no audit log of permission changes; permission templates and time-based / expiring grants not implemented
 
 ### Integration Points
 

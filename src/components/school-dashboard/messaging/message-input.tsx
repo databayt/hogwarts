@@ -29,6 +29,7 @@ import { type UploadedFileResult } from "@/components/file"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { sendMessage } from "./actions"
+import { resolveMessagingError } from "./errors"
 import type { MessageAttachmentDTO, MessageDTO } from "./types"
 import { uploadMessageAttachment } from "./upload-actions"
 
@@ -143,8 +144,7 @@ export function MessageInput({
         onMessageFailed?.(nonce)
         toast({
           title: m?.notifications?.error || "Error",
-          description:
-            result.error || m?.errors?.send_failed || "Failed to send",
+          description: resolveMessagingError(result.error, m),
         })
       }
     } catch {
@@ -346,8 +346,7 @@ export function MessageInput({
         onMessageFailed?.(nonce)
         toast({
           title: m?.notifications?.error || "Error",
-          description:
-            msgResult.error || m?.errors?.send_failed || "Failed to send",
+          description: resolveMessagingError(msgResult.error, m),
         })
         URL.revokeObjectURL(localUrl)
       }
@@ -454,10 +453,7 @@ export function MessageInput({
             onMessageFailed?.(nonce)
             toast({
               title: m?.notifications?.error || "Error",
-              description:
-                msgResult.error ||
-                m?.errors?.send_failed ||
-                "Failed to send voice message",
+              description: resolveMessagingError(msgResult.error, m),
             })
           }
         } catch {

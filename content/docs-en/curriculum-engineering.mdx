@@ -8,20 +8,21 @@ The catalog hierarchy is three global tables. All are scope-free (no `schoolId`)
 ## Schema
 
 ```
-CatalogSubject (337 rows)
+Subject (337 rows)            → table catalog_subjects
   ├── id, slug (unique), name, lang
   ├── country, curriculum          ← multi-curriculum routing
+  ├── curriculumId (FK)            ← optional FK into Curriculum
   ├── concept                      ← cross-curriculum image key
-  ├── thumbnailKey                 ← S3/CDN path (unified image system)
+  ├── thumbnail (@map thumbnailKey)← S3/CDN path (unified image system)
   ├── grades[], levels[]
   ├── department, color, status
   ├── totalChapters, totalLessons  ← denormalized counts
-  └── CatalogChapter (1,156 rows)
+  └── Chapter (1,156 rows)         → table catalog_chapters
         ├── id, slug, name, lang
         ├── subjectId (FK)
         ├── sequenceOrder, grades[], levels[]
         ├── totalLessons, totalContent
-        └── CatalogLesson (5,042 rows)
+        └── Lesson (5,042 rows)    → table catalog_lessons
               ├── id, slug, name, lang
               ├── chapterId (FK)
               └── sequenceOrder, grades[], levels[]
@@ -30,11 +31,12 @@ CatalogSubject (337 rows)
 Key fields for multi-curriculum routing:
 
 ```prisma
-model CatalogSubject {
+model Subject {                                    // table catalog_subjects
   country      String        @default("SD")        // ISO 3166-1 alpha-2
   curriculum   String        @default("national")  // us-k12, national, british, ib
+  curriculumId String?                             // optional FK → Curriculum
   concept      String?                             // shared image key
-  thumbnailKey String?                             // S3 key for WebP variants (unified)
+  thumbnail    String?       @map("thumbnailKey")  // S3 key for WebP variants (unified)
   grades       Int[]         @default([])          // [5] = grade 5 only
   levels       SchoolLevel[]                       // [ELEMENTARY]
   slug         String        @unique               // sd-g5-math, us-g5-math
@@ -50,7 +52,7 @@ model CatalogSubject {
 ```
 School.country = "SD"
   → inferCurriculum("SD") → "national"
-  → findCatalogSubjects("SD", "national")
+  → findSubjects("SD", "national")
        Step 1  exact   (country + curriculum + schoolType)
        Step 2  broad   (country + curriculum)            ← SD hits here (97 subjects)
        Step 3  worldwide (country = "*")
@@ -59,15 +61,15 @@ School.country = "SD"
        primary    → grades 1-6  (ELEMENTARY)
        secondary  → grades 7-12 (MIDDLE + HIGH)
        both       → grades 1-12
-  → create SchoolSubjectSelection bridge rows
+  → create SubjectSelection bridge rows
   → create YearLevel, Department, Stream, ScoreRange defaults
 ```
 
 ### Subject display
 
 ```
-SchoolSubjectSelection.findMany({ schoolId })
-  → join CatalogSubject (thumbnailKey, concept)
+SubjectSelection.findMany({ schoolId })
+  → join Subject (thumbnailKey, concept)
   → getCatalogImageUrl(thumbnailKey, "sm")
        1. thumbnailKey  → CDN: catalog/concepts/math/thumbnail-sm.webp
        2. concept       → static SUBJECT_IMAGE_MAP["math"] fallback
@@ -75,14 +77,20 @@ SchoolSubjectSelection.findMany({ schoolId })
 
 ## Seed architecture
 
-Two independent seeds, both idempotent (upsert).
+Seeds are idempotent (upsert). These two produce the bulk of the catalog content:
 
-| Seed                   | Source                  | Subjects | Chapters | Lessons | Slug                | Country | Curriculum | Lang |
-| ---------------------- | ----------------------- | -------: | -------: | ------: | ------------------- | ------- | ---------- | ---- |
-| `clickview-catalog.ts` | `master-inventory.json` |      240 |      750 |   3,993 | `us-g{N}-{subject}` | US      | `us-k12`   | en   |
-| `sudan-catalog.ts`     | `sudan-curriculum.json` |       97 |      406 |   1,049 | `sd-g{N}-{subject}` | SD      | `national` | ar   |
+| Seed                    | Source                  | Subjects | Chapters | Lessons | Slug                | Country | Curriculum | Lang |
+| ----------------------- | ----------------------- | -------: | -------: | ------: | ------------------- | ------- | ---------- | ---- |
+| `us-catalog.ts`         | `master-inventory.json` |      240 |      750 |   3,993 | `us-g{N}-{subject}` | US      | `us-k12`   | en   |
+| `sync-sd-curriculum.ts` | `curriculum/sd/`        |       97 |      406 |   1,049 | `sd-g{N}-{subject}` | SD      | `national` | ar   |
 
-A third seed `concept-images.ts` runs after both:
+Plus `sd-catalog.ts` (a smaller Sudan base set from `sudan-curriculum.json`, ~32 subjects) and
+`world-curricula.ts` (grade-specific subjects across eight curricula — GB, IB, SA, EG, AE, QA,
+KW, JO). The default `catalog` seed runs `us-catalog` + `sd-catalog`; the full Sudan sync
+(`sync-sd-curriculum`) and the eight world curricula (`world-curricula`) are separate, explicit
+runs.
+
+A `concept-images.ts` seed runs after the catalog seeds:
 
 1. Reads `public/subjects/concepts/*.jpg` (24 images).
 2. Sharp → 4 WebP variants → S3 upload.
@@ -103,12 +111,12 @@ Adding Egypt (~30 subjects × 12 grades = ~360):
 
 | Changes                           | Stays the same                                        |
 | --------------------------------- | ----------------------------------------------------- |
-| +360 `CatalogSubject` rows        | Schema                                                |
+| +360 `Subject` rows               | Schema                                                |
 | +~1,500 chapters, +~5,000 lessons | No migration                                          |
 | +0-5 new concept images           | Existing 24 cover most                                |
 | New seed `egypt-catalog.ts`       | `catalog-setup.ts` already supports `EG → "national"` |
 
-At 10 curricula × ~300 subjects each (~3,000 total), PostgreSQL handles it trivially. `findCatalogSubjects` is one indexed `findMany`; UI lists go via the `SchoolSubjectSelection` bridge; denormalized counts avoid N+1.
+At 10 curricula × ~300 subjects each (~3,000 total), PostgreSQL handles it trivially. `findSubjects` is one indexed `findMany`; UI lists go via the `SubjectSelection` bridge; denormalized counts avoid N+1.
 
 ## Improvement areas
 
@@ -172,7 +180,7 @@ All curricula use the same pattern: `{cc}-g{N}-{subject}`. Unified March 2026; t
 
 ### Image layer unification (complete)
 
-Both curricula now share the unified image system: `thumbnailKey` → concept static fallback. The legacy `imageKey` field has been dropped from `CatalogSubject`. The 240 US per-subject keys collapsed into 23 shared concept keys, matching the SD topology. See [/docs/concept](/docs/concept) for the canonical concept system.
+Both curricula now share the unified image system: `thumbnailKey` → concept static fallback. The legacy `imageKey` field has been dropped from `Subject`. The 240 US per-subject keys collapsed into 23 shared concept keys, matching the SD topology. See [/docs/concept](/docs/concept) for the canonical concept system.
 
 ### TOC extraction quality
 
@@ -217,10 +225,12 @@ Expected: 822s → ~5s.
 prisma/
   models/catalog.prisma              # Subject, Chapter, Lesson schema
   seeds/
-    clickview-catalog.ts             # US K-12 (240 subjects)
-    sudan-catalog.ts                 # Sudan (97 subjects)
+    us-catalog.ts                    # US K-12 (240 subjects)
+    sd-catalog.ts                    # Sudan base set (~32 subjects)
+    sync-sd-curriculum.ts            # Full Sudan from curriculum/sd/ (97 subjects)
+    world-curricula.ts               # GB, IB, SA, EG, AE, QA, KW, JO
     concept-images.ts                # Shared image upload + backfill
-    catalog.ts                       # Orchestrator
+    catalog.ts                       # Orchestrator (us-catalog + sd-catalog)
     single.ts                        # CLI registry
 
 scripts/
@@ -231,7 +241,7 @@ scripts/
   assemble-sudan-curriculum.ts       # TOC files → master JSON
 
 src/lib/
-  catalog-setup.ts                   # findCatalogSubjects(), inferCurriculum()
+  catalog-setup.ts                   # findSubjects(), inferCurriculum()
   catalog-image.ts                   # Sharp pipeline
   catalog-image-url.ts               # URL resolution chain
 

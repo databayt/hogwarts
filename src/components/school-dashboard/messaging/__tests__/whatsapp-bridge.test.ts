@@ -413,12 +413,17 @@ describe("dispatchMessageToWhatsApp", () => {
     )
 
     expect(mockSendText).not.toHaveBeenCalled()
-    expect(db.message.update).toHaveBeenCalledWith({
-      where: { id: MESSAGE_ID },
-      data: {
-        whatsappStatus: "pending",
-        whatsappPhone: "+966501234567",
-      },
+    // Two participants = group dispatch. Per the 2026-04-22 fix, group recipients
+    // log per-recipient pending WhatsAppMessage rows instead of clobbering the
+    // Message scalar columns (which would last-writer-wins across recipients).
+    expect(db.message.update).not.toHaveBeenCalled()
+    expect(db.whatsAppMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        recipientPhone: "+966501234567",
+        status: "pending",
+        triggerType: "messaging",
+        triggerId: MESSAGE_ID,
+      }),
     })
   })
 })

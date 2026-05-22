@@ -1,0 +1,74 @@
+---
+title: Budget
+description: Budget creation, allocation, and variance tracking. Category CRUD, allocation, and variance math work; variance-alert notifications and the budget-vs-actual report UI are pending, and the validation factory isn't wired to consumers.
+---
+
+Budget defines spending envelopes, allocates them across categories, and tracks spent-vs-allocated variance. [Expenses](/docs/finance-expenses) draw down allocations on approval; the resulting variance feeds [reports](/docs/finance-reports).
+
+## Flow
+
+```
+Create budget  →  allocate to categories  →  track spent vs allocated (variance)
+  →  (planned) alert when a threshold is crossed
+```
+
+## Status
+
+| Feature                                    | Status                                                        |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| Category CRUD (`schoolId`-scoped)          | Production                                                    |
+| Allocation + spent tracking                | Production                                                    |
+| Variance calculation (allocated vs spent)  | Production                                                    |
+| Validation factory `createBudgetSchema(v)` | Exported, but consumers still import the legacy static schema |
+| Variance-alert notifications               | Planned (threshold → dispatch, not wired)                     |
+| Budget-vs-actual report page               | Planned (data exists, no UI)                                  |
+| Approval workflow                          | Planned                                                       |
+| Multi-period budgets (quarterly/annual)    | Planned                                                       |
+
+## Routes
+
+| Route                         | Page                     | Status |
+| ----------------------------- | ------------------------ | ------ |
+| `/{lang}/finance/budget`      | Overview                 | Ready  |
+| `/{lang}/finance/budget/all`  | All budgets list         | Ready  |
+| `/{lang}/finance/budget/new`  | Create budget            | Ready  |
+| `/{lang}/finance/budget/[id]` | Budget detail & variance | Ready  |
+
+## Server actions
+
+| Action                          | Purpose                       |
+| ------------------------------- | ----------------------------- |
+| `createBudget` / `updateBudget` | Budget create / edit          |
+| `createBudgetAllocation`        | Allocate budget to a category |
+| `getBudgets`                    | List budgets + allocations    |
+
+## Ledger / accounting
+
+Not a ledger money-mover. Budget tracks planned vs actual spend; the "actual" side is decremented by expense approvals, not by journal postings.
+
+## Schema
+
+`prisma/models/finance-budgets.prisma`: `Budget`, `BudgetAllocation` — `schoolId`-scoped. Budget/category names have no `lang` field.
+
+## Stubs
+
+- `validation.ts:29` — hardcoded date-range message; the exported `createBudgetSchema(v)` factory is not yet adopted by `form.tsx` / `actions.ts` (legacy static `budgetSchema` still imported).
+
+## Tests
+
+None.
+
+## Key files
+
+| Component      | Path                                                           |
+| -------------- | -------------------------------------------------------------- |
+| Server actions | `src/components/school-dashboard/finance/budget/actions.ts`    |
+| Validation     | `src/components/school-dashboard/finance/budget/validation.ts` |
+| Content        | `src/components/school-dashboard/finance/budget/content.tsx`   |
+| Schema         | `prisma/models/finance-budgets.prisma`                         |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Expenses](/docs/finance-expenses) — draws down allocations
+- [Reports](/docs/finance-reports) — consumes variance data

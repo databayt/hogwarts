@@ -1,0 +1,79 @@
+---
+title: Reports
+description: Financial statements — balance sheet, P&L, and trial balance — generated off the general ledger. Generators and date ranges work, but exports are unstyled, there's no email delivery, multi-currency conversion is broken, and the ledger only holds fee-payment data today.
+---
+
+Reports generates standard financial statements from the [ledger](/docs/finance-accounts). A caveat compounds here: because only fee payments post to the ledger (5 of 6 posting functions are unwired), statements understate everything except fee revenue until posting is completed.
+
+## Flow
+
+```
+Pick a report + date range  →  generate from journal entries + account balances
+  →  view  →  export (wired to the table, but unstyled / unbranded)
+```
+
+## Status
+
+| Feature                          | Status                                          |
+| -------------------------------- | ----------------------------------------------- |
+| Balance sheet                    | Production                                      |
+| Profit & loss (income statement) | Production                                      |
+| Trial balance                    | Production                                      |
+| General-ledger drill-down        | Production                                      |
+| Custom date range                | Production                                      |
+| Exports (PDF / XLSX / CSV)       | Wired to the DataTable but unstyled / unbranded |
+| Report email delivery            | Planned                                         |
+| Scheduled report export (cron)   | Planned                                         |
+| Custom report builder UI         | Planned                                         |
+| Multi-currency conversion        | Broken for multi-currency schools               |
+| Cash-flow statement (as a route) | Planned (generator referenced, no route)        |
+
+## Routes
+
+| Route                                   | Page                   | Status |
+| --------------------------------------- | ---------------------- | ------ |
+| `/{lang}/finance/reports`               | Overview               | Ready  |
+| `/{lang}/finance/reports/all`           | All reports list       | Ready  |
+| `/{lang}/finance/reports/profit-loss`   | Income statement (P&L) | Ready  |
+| `/{lang}/finance/reports/balance-sheet` | Balance sheet          | Ready  |
+| `/{lang}/finance/reports/trial-balance` | Trial balance          | Ready  |
+
+## Server actions
+
+| Action                    | Purpose                                   |
+| ------------------------- | ----------------------------------------- |
+| `generateBalanceSheet`    | Assets = liabilities + equity, as-of date |
+| `generateIncomeStatement` | Revenue − expenses over a period          |
+| `generateTrialBalance`    | All accounts with debit/credit totals     |
+| `getAvailableReports`     | List report types + saved reports         |
+
+## Ledger / accounting
+
+Reports **consume** the ledger (journal entries + account balances). They post nothing themselves. Their accuracy is bounded by what posts to the ledger — today, fee payments and manual journal entries only.
+
+## Schema
+
+`prisma/models/finance-reports.prisma`: `FinancialReport` — `schoolId`-scoped, stores generated report metadata/snapshots.
+
+## Stubs
+
+- `reports/validation.ts:36,47` — hardcoded date-range messages.
+- Multi-currency conversion path is known-broken (see Status).
+
+## Tests
+
+None. Notable missing invariants: balance sheet (assets = liabilities + equity), trial balance (total debit = total credit), P&L period aggregation.
+
+## Key files
+
+| Component      | Path                                                          |
+| -------------- | ------------------------------------------------------------- |
+| Server actions | `src/components/school-dashboard/finance/reports/actions.ts`  |
+| Content        | `src/components/school-dashboard/finance/reports/content.tsx` |
+| Schema         | `prisma/models/finance-reports.prisma`                        |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Accounts](/docs/finance-accounts) — the ledger reports read from
+- [Budget](/docs/finance-budget) — variance data source

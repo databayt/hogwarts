@@ -146,7 +146,7 @@ export function CampaignForm({
         closeModal()
         onSuccess?.()
       } else {
-        ErrorToast(result.error ?? "An error occurred")
+        ErrorToast(t?.campaignSaveFailed || result.error || "An error occurred")
       }
     })
   }

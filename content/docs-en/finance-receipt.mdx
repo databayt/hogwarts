@@ -1,0 +1,79 @@
+---
+title: Receipt
+description: Expense-receipt capture with AI extraction (merchant, date, amount, line items) and Schematic.io plan gating. Distinct from the fees payment-receipt PDF. Upload, extraction, and retry work; an edit-extracted-data UI and receipt-to-expense linking are pending.
+---
+
+Receipt is an **expense-receipt capture** tool: upload a photo or PDF of a receipt and an AI pipeline extracts the merchant, date, amount, and line items for expense tracking. It is not the payment-receipt generator — the receipt issued for a fee payment is rendered by [`fees/receipt-pdf.tsx`](/docs/fees) (a working `@react-pdf/renderer` document).
+
+## Flow
+
+```
+Upload image / PDF  →  AI extraction (pending → processing → processed | error)
+  →  retry on failure  →  (manual) attach to an expense record
+```
+
+Plan gating runs through Schematic.io (`receipt/manage-plan` route); entitlements come from `receipt/schematic/`.
+
+## Status
+
+| Feature                                | Status                                        |
+| -------------------------------------- | --------------------------------------------- |
+| Upload (image / PDF)                   | Production                                    |
+| AI extraction pipeline                 | Production                                    |
+| Status state machine + retry           | Production                                    |
+| Schematic.io plan / entitlement gating | Ready                                         |
+| "Edit extracted data" UI               | Planned (user must delete + retry on misread) |
+| Receipt-to-expense linking             | Planned (currently manual)                    |
+| OCR fallback for low-quality images    | Planned                                       |
+| Duplicate detection / batch upload     | Planned                                       |
+
+## Routes
+
+| Route                                 | Page                      | Status |
+| ------------------------------------- | ------------------------- | ------ |
+| `/{lang}/finance/receipt`             | Receipt list              | Ready  |
+| `/{lang}/finance/receipt/[id]`        | Receipt detail            | Ready  |
+| `/{lang}/finance/receipt/manage-plan` | Schematic plan management | Ready  |
+
+## Server actions
+
+| Action                           | Purpose                          |
+| -------------------------------- | -------------------------------- |
+| `uploadReceipt`                  | Upload + kick off AI extraction  |
+| `getReceipts` / `getReceiptById` | List / read receipts             |
+| `retryReceiptExtraction`         | Re-run extraction after an error |
+| `deleteReceipt`                  | Delete (cleans up storage + DB)  |
+
+## Ledger / accounting
+
+Not a money-mover — receipts are evidence attached to expenses; they do not post journal entries.
+
+## Schema
+
+`prisma/models/finance-invoices.prisma`: `Receipt`, `ExpenseReceipt` — `schoolId`-scoped. No `lang` field (extracted merchant text is stored as-captured).
+
+## Stubs
+
+- `receipt/schematic/client.ts:7` — `process.env.SCHEMATIC_API_KEY || "placeholder-api-key"` build-time fallback.
+- `receipt/upload-form.tsx:72` — `// This is a TODO for Phase 4 completion`.
+- `validation.ts:44,51` — hardcoded validation messages.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component                     | Path                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| Server actions                | `src/components/school-dashboard/finance/receipt/actions.ts`                 |
+| AI extraction                 | `src/components/school-dashboard/finance/receipt/ai/extract-receipt-data.ts` |
+| Schematic                     | `src/components/school-dashboard/finance/receipt/schematic/`                 |
+| Upload form                   | `src/components/school-dashboard/finance/receipt/upload-form.tsx`            |
+| Payment receipt PDF (in fees) | `src/components/school-dashboard/finance/fees/receipt-pdf.tsx`               |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Expenses](/docs/finance-expenses) — receipts attach to expense records
+- [Fees](/docs/fees) — the working payment-receipt PDF

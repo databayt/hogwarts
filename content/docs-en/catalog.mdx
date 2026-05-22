@@ -12,15 +12,52 @@ The catalog is the single source of truth for curriculum content. All schools re
 | Per-school clone   | 220k subjects, 800k chapters, 4M lessons                       | None                                    |
 | **Shared catalog** | **~240 subjects, ~800 chapters, ~4k lessons** + bridge records | Every contribution enriches all schools |
 
-Onboarding a school takes seconds — `setupCatalogForSchool()` reads `country` + `curriculum` and creates `SchoolSubjectSelection` bridge rows.
+Onboarding a school takes seconds — `setupCatalogForSchool()` reads `country` + `curriculum` and creates `SubjectSelection` bridge rows.
 
 ## Three layers
 
-| Layer                 | Models                                                                                                                     | Scope                                      |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Global catalog        | `CatalogSubject`, `CatalogChapter`, `CatalogLesson`                                                                        | No `schoolId`                              |
-| Content (contributed) | `LessonVideo`, `LessonAttachment`, `CatalogExam`, `CatalogQuestion`, `CatalogMaterial`, `CatalogAssignment`, `CatalogBook` | Optional `schoolId` for source attribution |
-| School bridge         | `SchoolSubjectSelection`, `SchoolBookSelection`, `SchoolContentOverride`                                                   | Carries `schoolId`                         |
+| Layer                 | Models                                                                         | Scope                                      |
+| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| Global catalog        | `Subject`, `Chapter`, `Lesson`                                                 | No `schoolId`                              |
+| Content (contributed) | `Video`, `Attachment`, `Exam`, `Question`, `Material`, `Assignment`, `Book`    | Optional `schoolId` for source attribution |
+| School bridge         | `SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference` | Carries `schoolId`                         |
+
+## Models and tables
+
+Catalog models use **bare names** mapped to `catalog_*` tables; bridge models map to `school_*`. The Prisma client accessor is the camelCase of the model name (`db.subject`, `db.subjectSelection`).
+
+| Layer   | Prisma model           | Table (`@@map`)                        | Client accessor              |
+| ------- | ---------------------- | -------------------------------------- | ---------------------------- |
+| Catalog | `Subject`              | `catalog_subjects`                     | `db.subject`                 |
+| Catalog | `Chapter`              | `catalog_chapters`                     | `db.chapter`                 |
+| Catalog | `Lesson`               | `catalog_lessons`                      | `db.lesson`                  |
+| Catalog | `Video` / `Attachment` | `lesson_videos` / `lesson_attachments` | `db.video` / `db.attachment` |
+| Catalog | `Question`             | `catalog_questions`                    | `db.question`                |
+| Catalog | `ExamQuestion`         | `catalog_exam_questions`               | `db.examQuestion`            |
+| Catalog | `Exam`                 | `catalog_exams`                        | `db.exam`                    |
+| Catalog | `Material`             | `catalog_materials`                    | `db.material`                |
+| Catalog | `Assignment`           | `catalog_assignments`                  | `db.assignment`              |
+| Catalog | `Book`                 | `catalog_books`                        | `db.book`                    |
+| Catalog | `Curriculum`           | `catalog_curricula`                    | `db.curriculum`              |
+| Catalog | `Proposal`             | `catalog_proposals`                    | `db.proposal`                |
+| Catalog | `Document`             | `catalog_documents`                    | `db.document`                |
+| Bridge  | `SubjectSelection`     | `school_subject_selections`            | `db.subjectSelection`        |
+| Bridge  | `ContentOverride`      | `school_content_overrides`             | `db.contentOverride`         |
+| Bridge  | `InstructorPreference` | `school_instructor_preferences`        | `db.instructorPreference`    |
+| Bridge  | `BookSelection`        | `school_book_selections`               | `db.bookSelection`           |
+| LMS     | `Enrollment`           | `enrollments`                          | `db.enrollment`              |
+| LMS     | `LessonProgress`       | `lesson_progress`                      | `db.lessonProgress`          |
+| LMS     | `SubjectCertificate`   | `subject_certificates`                 | `db.subjectCertificate`      |
+
+**Name collisions** — a catalog model and its school-scoped counterpart are _different_ models. When you read `Exam`, check the table to know which one:
+
+| Catalog (global)                          | School-scoped (per-tenant)              |
+| ----------------------------------------- | --------------------------------------- |
+| `Exam` → `catalog_exams`                  | `SchoolExam` → `exams`                  |
+| `Book` → `catalog_books`                  | `SchoolBook` → `books`                  |
+| `Assignment` → `catalog_assignments`      | `SchoolAssignment` → `assignments`      |
+| `Question` → `catalog_questions`          | `QuestionBank` → `question_bank`        |
+| `ExamTemplate` → `catalog_exam_templates` | `SchoolExamTemplate` → `exam_templates` |
 
 ## School configuration
 
@@ -30,9 +67,11 @@ Onboarding a school takes seconds — `setupCatalogForSchool()` reads `country` 
 | `curriculum`  | `String?` | `us-k12`, `national`, `british`, `ib` |
 | `schoolLevel` | `String?` | `elementary`, `middle`, `high`, `k12` |
 
+`Subject.curriculumId` is an optional FK into `Curriculum` (`catalog_curricula`) alongside the `country` / `curriculum` string fields — the `curriculum` seed backfills it.
+
 ## Auto-assignment
 
-`setupCatalogForSchool(schoolId, opts)` creates bridge rows via 4-step progressive fallback:
+`setupCatalogForSchool(schoolId, opts)` creates bridge rows via 4-step progressive fallback (the internal query is `findSubjects()`):
 
 | Step | Filter                                 |
 | ---- | -------------------------------------- |
@@ -50,6 +89,8 @@ await setupCatalogForSchool(schoolId, { country: "US", curriculum: "us-k12" })
 await setupCatalogForSchool(schoolId, { country: "AE", curriculum: "ib" })
 await setupCatalogForSchool(schoolId, { country: "GB", curriculum: "british" })
 ```
+
+> The subject _selection_ works for any curriculum, but the academic _structure_ it builds (level/grade names, streams) is currently hardcoded to the Sudanese model — see [Known gaps & roadmap](#known-gaps--roadmap).
 
 ## Content review flow
 
@@ -69,31 +110,31 @@ SaaS admin reviews
 **Operational** — drives timetabling, library, exams:
 
 ```
-CatalogSubject → SchoolSubjectSelection → Subject → Class → Timetable
-CatalogSubject → CatalogBook → SchoolBookSelection → Book (library)
-CatalogSubject → CatalogExam → School Exam
-CatalogSubject → CatalogQuestion → QuestionBank
+Subject → SubjectSelection → Class → Timetable
+Subject → Book → BookSelection → SchoolBook (library)
+Subject → Exam → SchoolExam
+Subject → Question → QuestionBank
 ```
 
 **LMS** — drives e-learning + certificates:
 
 ```
-CatalogSubject → Enrollment → LessonProgress → SubjectCertificate
-CatalogLesson → LessonVideo (multi-teacher)
-CatalogLesson → LessonAttachment / CatalogQuestion
+Subject → Enrollment → LessonProgress → SubjectCertificate
+Lesson → Video (multi-teacher)
+Lesson → Attachment / Question
 ```
 
-The `syncStudentClassToEnrollment()` helper bridges classroom enrollment to LMS access via `Class.Subject.catalogSubjectId`. It's non-blocking, idempotent, and skips gracefully when the catalog FK is missing.
+The `syncStudentClassToEnrollment()` helper (`src/lib/enrollment-sync.ts`) bridges classroom enrollment to LMS access via `Class.subjectId` → `Subject`. It's non-blocking, idempotent, and skips gracefully when the catalog FK is missing.
 
 ## Content models
 
-### `CatalogMaterial`
+### `Material`
 
-Books, syllabi, worksheets at any catalog level.
+Books, syllabi, worksheets at any catalog level (table `catalog_materials`).
 
 | Field                                                            | Type                | Notes                                                     |
 | ---------------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
-| `catalogSubjectId` / `catalogChapterId` / `catalogLessonId`      | `String?`           | One of these is set                                       |
+| `catalogSubjectId` / `catalogChapterId` / `catalogLessonId`      | `String?`           | One of these is set (FKs into the catalog hierarchy)      |
 | `title`                                                          | `String`            |                                                           |
 | `lang`                                                           | `String`            | Default `"ar"`                                            |
 | `type`                                                           | `MaterialType`      | `TEXTBOOK`, `SYLLABUS`, `WORKSHEET`, `PRESENTATION`, etc. |
@@ -105,9 +146,9 @@ Books, syllabi, worksheets at any catalog level.
 | `visibility`                                                     | `ContentVisibility` | `PRIVATE`, `SCHOOL`, `PUBLIC`, `PAID`                     |
 | `usageCount` / `averageRating` / `ratingCount` / `downloadCount` | `Int` / `Float`     | Engagement                                                |
 
-### `CatalogAssignment`
+### `Assignment`
 
-Reusable homework/project templates. Same shape as `CatalogMaterial` plus:
+Reusable homework/project templates (table `catalog_assignments`). Same shape as `Material` plus:
 
 | Field                     | Type       | Notes                                                 |
 | ------------------------- | ---------- | ----------------------------------------------------- |
@@ -116,9 +157,9 @@ Reusable homework/project templates. Same shape as `CatalogMaterial` plus:
 | `estimatedTime`           | `Int?`     | Minutes                                               |
 | `assignmentType`          | `String?`  | `homework`, `project`, `lab`, `essay`, `presentation` |
 
-### `CatalogExamQuestion`
+### `ExamQuestion`
 
-Junction table linking `CatalogExam` ↔ `CatalogQuestion` with ordering. Replaces the legacy `CatalogExam.questions` JSON field.
+Junction table linking `Exam` ↔ `Question` with ordering (table `catalog_exam_questions`). Replaces the legacy `Exam.questions` JSON field.
 
 | Field                                | Notes                                |
 | ------------------------------------ | ------------------------------------ |
@@ -128,27 +169,27 @@ Junction table linking `CatalogExam` ↔ `CatalogQuestion` with ordering. Replac
 
 Indexes: `@@unique([catalogExamId, order])`, `@@unique([catalogExamId, catalogQuestionId])`.
 
-### `LessonVideo`, `LessonAttachment`
+### `Video`, `Attachment`
 
-Full schemas in `prisma/models/lesson-content.prisma`. Key fields on `LessonVideo`: `videoUrl`, `provider` (`youtube`/`vimeo`/`self-hosted`), `visibility`, `price`, `approvalStatus`, plus engagement (`viewCount`, `likeCount`, `averageRating`, `isFeatured`).
+Full schemas in `prisma/models/video.prisma` (`lesson_videos`, `lesson_attachments`). Key fields on `Video`: `videoUrl`, `provider` (`youtube`/`vimeo`/`self-hosted`), `visibility`, `price`, `approvalStatus`, plus engagement (`viewCount`, `likeCount`, `averageRating`, `isFeatured`). Paid videos are gated through `VideoPurchase`.
 
 ## ClickView extensions
 
-| Model            | Added fields                                      |
-| ---------------- | ------------------------------------------------- |
-| `CatalogSubject` | `clickviewId`, `clickviewUrl`                     |
-| `CatalogLesson`  | `clickviewCoverId`, `videoCount`, `resourceCount` |
-| `School`         | `curriculum` (inferred from country + schoolType) |
+| Model     | Added fields                                      |
+| --------- | ------------------------------------------------- |
+| `Subject` | `clickviewId`, `clickviewUrl`                     |
+| `Lesson`  | `clickviewCoverId`, `videoCount`, `resourceCount` |
+| `School`  | `curriculum` (inferred from country + schoolType) |
 
-Optional catalog FKs on school-scoped models bridge actions to catalog hierarchy:
+Optional catalog FKs on school-scoped models bridge actions to the catalog hierarchy:
 
 ```prisma
-// QuestionBank, Exam — link to catalog hierarchy
+// QuestionBank, SchoolExam — link to catalog hierarchy
 catalogSubjectId  String?
 catalogChapterId  String?
 catalogLessonId   String?
 
-// Assignment — link to catalog lesson
+// SchoolAssignment — link to catalog lesson
 catalogLessonId   String?
 ```
 
@@ -158,18 +199,18 @@ catalogLessonId   String?
 ContentStatus      DRAFT, REVIEW, PUBLISHED, ARCHIVED, DEPRECATED
 SchoolLevel        ELEMENTARY, MIDDLE, HIGH
 StreamType         GENERAL, SCIENCE, ARTS, COMMERCE, TECHNICAL, RELIGIOUS
-VideoVisibility    PRIVATE, SCHOOL, PUBLIC
 ApprovalStatus     PENDING, APPROVED, REJECTED
 ContentVisibility  PRIVATE, SCHOOL, PUBLIC, PAID
 MaterialType       TEXTBOOK, SYLLABUS, REFERENCE, STUDY_GUIDE, PROJECT, WORKSHEET,
                    PRESENTATION, LESSON_NOTES, VIDEO_GUIDE, LAB_MANUAL, OTHER
-ProposalType       SUBJECT, CHAPTER, LESSON
-ProposalStatus     DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED
-EnrollmentStatus   PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
-GradingSystem      PERCENTAGE, GPA_4, GPA_5, LETTER, CGPA, CCE, CBSE, ICSE
-QuestionType       MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK
+QuestionType       MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK,
+                   MATCHING, ORDERING, MULTI_SELECT
+QuestionSource     MANUAL, AI, IMPORTED
 DifficultyLevel    EASY, MEDIUM, HARD
 BloomLevel         REMEMBER, UNDERSTAND, APPLY, ANALYZE, EVALUATE, CREATE
+ProposalType       SUBJECT, CHAPTER, LESSON, VIDEO
+ProposalStatus     DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED
+EnrollmentStatus   PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
 ```
 
 ## Image pipeline
@@ -188,17 +229,17 @@ Server-side via Sharp, served from CloudFront CDN. Pure client/server split.
 | `src/lib/catalog-image.ts`     | Server only | `processAndUploadCatalogImage`, `deleteCatalogImage` |
 | `src/lib/catalog-image-url.ts` | Client-safe | `getCatalogImageUrl`, `getCatalogImageSrcSet`        |
 
-URL resolution priority (unified system — `thumbnail`, `banner`, `cover`, `pdf` keys):
+`Subject` carries four S3 key fields — `thumbnail` (`@map("thumbnailKey")`), `banner` (`@map("bannerUrl")`), `cover` (textbook cover), `pdf` (textbook PDF). URL resolution priority:
 
-1. CloudFront CDN URL from `thumbnailKey` → `{CDN}/{thumbnailKey}-{size}.webp`
+1. CloudFront CDN URL from `thumbnail` → `{CDN}/{thumbnailKey}-{size}.webp`
 2. Concept-based static fallback (shared concept thumbnails per [/docs/concept](/docs/concept))
 3. `null` — UI falls back to color background
 
 ## Lesson progress and certificates
 
-`LessonProgress` tracks per-lesson state: `watchedSeconds` (resume), `isCompleted`, `watchCount`, `lessonVideoId`. Linked to both `Enrollment` and `CatalogLesson`.
+`LessonProgress` tracks per-lesson state: `watchedSeconds` (resume), `isCompleted`, `watchCount`, `lessonVideoId`. Linked to both `Enrollment` and `Lesson`.
 
-When `markCatalogLessonComplete` is called:
+When `markLessonComplete` (`src/components/stream/dashboard/lesson/catalog-actions.ts`) is called:
 
 1. Upsert `LessonProgress` with `isCompleted: true`
 2. Query all published lessons in the subject
@@ -210,10 +251,10 @@ When `markCatalogLessonComplete` is called:
 
 ```ts
 // All subjects for a school + grade
-await db.schoolSubjectSelection.findMany({
+await db.subjectSelection.findMany({
   where: { schoolId, gradeId, isActive: true },
   include: {
-    catalogSubject: {
+    subject: {
       include: {
         chapters: {
           where: { status: "PUBLISHED" },
@@ -225,7 +266,7 @@ await db.schoolSubjectSelection.findMany({
 })
 
 // Lesson with ranked videos
-await db.catalogLesson.findUnique({
+await db.lesson.findUnique({
   where: { id: lessonId },
   include: {
     videos: {
@@ -243,7 +284,7 @@ await db.catalogLesson.findUnique({
 })
 
 // Catalog questions for a chapter test
-await db.catalogQuestion.findMany({
+await db.question.findMany({
   where: {
     catalogChapterId: chapterId,
     approvalStatus: "APPROVED",
@@ -256,75 +297,127 @@ await db.catalogQuestion.findMany({
 
 ## Seed pipeline
 
-Catalog ships with ClickView US K-12 as default. Sudan curriculum lives in a separate seed — see [Sudan curriculum](/docs/sudan-curriculum).
+The default `catalog` seed loads US K-12 plus a Sudan base set. The full Sudan curriculum and eight more world curricula ship as **separate** seeds — they are not in the default path.
+
+| Seed (`pnpm db:seed:single …`)                                                    | Contents                                                                       |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `catalog`                                                                         | `seedUsCatalog` (US K-12, ~240 subjects) + `seedSudanCatalog` (Sudan base set) |
+| `sync-sd-curriculum`                                                              | Full Sudan national curriculum from `curriculum/sd/` (97 subjects)             |
+| `world-curricula`                                                                 | 8 curricula — GB, IB, SA, EG, AE, QA, KW, JO — grade-specific subjects         |
+| `curriculum`                                                                      | `Curriculum` records (SD-national, US-k12) + backfill `Subject.curriculumId`   |
+| `concept-images` / `clickview-images`                                             | Shared concept thumbnails → Sharp → S3/CloudFront                              |
+| `catalog-books` / `catalog-content` / `catalog-videos` / `catalog-exam-templates` | Books, materials, videos, exam templates                                       |
+| `academic-catalog`                                                                | Academic structure + bridge rows for the demo school                           |
 
 ```bash
-pnpm db:seed:single catalog            # ~220 grade-specific subjects
-pnpm db:seed:single clickview-images   # Thumbnails → S3/CDN
-pnpm db:seed:single academic-catalog   # Bridge tables for demo school
+pnpm db:seed:single catalog            # US K-12 + Sudan base set
+pnpm db:seed:single world-curricula    # GB, IB, SA, EG, AE, QA, KW, JO
+pnpm db:seed:single sync-sd-curriculum # Full Sudan curriculum
+pnpm db:seed:single concept-images     # Thumbnails → S3/CDN
 ```
 
-ClickView seeds expand 62 level-based entries into ~220 grade-specific subjects (e.g. Elementary "Math" → "Math Grade 1" through "Math Grade 6", sharing chapters and lessons). Per-tier counts: 18 subjects (Elementary), 21 (Middle), 23 (High) — see ClickView docs.
+For exact subject/chapter/lesson counts and the seed architecture, see [Curriculum engineering](/docs/curriculum-engineering) and [Sudan curriculum](/docs/sudan-curriculum).
 
 ## File structure
 
 ```
 prisma/
   models/
-    catalog.prisma              # CatalogSubject, CatalogChapter, CatalogLesson, CatalogExam
-    catalog-question.prisma     # CatalogQuestion, CatalogExamQuestion, templates, blueprints
-    catalog-material.prisma     # CatalogMaterial
-    catalog-assignment.prisma   # CatalogAssignment
-    catalog-proposal.prisma     # CatalogProposal
-    lesson-content.prisma       # LessonVideo, LessonAttachment
-    enrollment.prisma           # Enrollment, LessonProgress, SubjectCertificate
-    academic-structure.prisma   # AcademicLevel, AcademicGrade, AcademicStream
-    catalog-bridge.prisma       # SchoolSubjectSelection, SchoolContentOverride
-    grading-scheme.prisma
+    catalog.prisma            # Subject (root) + shared enums
+    chapter.prisma            # Chapter
+    lesson.prisma             # Lesson
+    video.prisma              # Video, VideoPurchase, Attachment
+    question.prisma           # Question, ExamQuestion
+    exam.prisma               # Exam, ExamTemplate, ExamBlueprint, PaperTemplate
+    quiz.prisma               # Quiz, QuizQuestion
+    material.prisma           # Material
+    assignment.prisma         # Assignment
+    book.prisma               # Book
+    textbook.prisma           # Textbook
+    document.prisma           # Document (unified file registry: PDF/PPTX/DOCX/audio)
+    proposal.prisma           # Proposal
+    curriculum.prisma         # Curriculum
+    bridge.prisma             # SubjectSelection, ContentOverride, InstructorPreference, BookSelection
+    enrollment.prisma         # Enrollment, LessonProgress, SubjectCertificate
+    academic-structure.prisma # AcademicLevel, AcademicGrade, AcademicStream
   seeds/
-    catalog.ts                  # ~220 grade-specific subjects from master-inventory.json
-    clickview-images.ts         # Upload thumbnails to S3/CDN
-    catalog-images.ts           # Upload catalog thumbnails
+    catalog.ts                # Orchestrator → us-catalog + sd-catalog
+    us-catalog.ts             # US K-12 subjects
+    sd-catalog.ts             # Sudan Grade-1 pilot
+    sync-sd-curriculum.ts     # Full Sudan curriculum from curriculum/sd/
+    world-curricula.ts        # GB, IB, SA, EG, AE, QA, KW, JO
+    curriculum.ts             # Curriculum records + curriculumId backfill
+    concept-images.ts         # Shared concept thumbnails → S3
+    clickview-images.ts       # ClickView thumbnails
+    catalog-books.ts, catalog-content.ts, catalog-videos.ts, catalog-exam-templates.ts
     academic-structure-catalog.ts
-    topic-constants.ts          # ClickView K-12 source data
-
-scripts/clickview-data/
-  master-inventory.json         # 62 level-based entries → ~220 grade-specific subjects
+    single.ts                 # Seed CLI registry
 
 src/
-  app/[lang]/(saas-dashboard)/(catalog)/
-    catalog/page.tsx
-    catalog/[subjectId]/page.tsx
-    analytics/page.tsx
-    approvals/page.tsx
-    assignments/page.tsx
-    books/page.tsx
-    materials/page.tsx
-    proposals/page.tsx
-    questions/page.tsx
-  components/saas-dashboard/catalog/
-    content.tsx, detail.tsx, actions.ts, validation.ts, columns.tsx, table.tsx,
-    image-actions.ts, image-upload.tsx,
-    {analytics,approvals,assignments,books,materials,proposals,questions,videos}/
+  app/[lang]/(saas-dashboard)/(catalog)/      # Platform catalog admin (DEVELOPER)
+    catalog/{page,[subjectId]}, analytics, approvals, assignments,
+    books, materials, proposals, questions
+  components/saas-dashboard/catalog/          # Catalog CRUD UI (detail.tsx, actions.ts, …)
   app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/
-    catalog/page.tsx
-    (browse)/{page,elementary,middle,high}.tsx
-    [slug]/{page,chapters,materials}.tsx
-    contribute/page.tsx
-    contributions/page.tsx
+    catalog/, contribute/, contributions/     # School subject adoption + browse
   components/school-dashboard/listings/subjects/
-    content.tsx, catalog-subjects-grid.tsx, catalog-detail.tsx, subject-card.tsx,
-    topic-card.tsx, hero.tsx,
-    catalog/{content,actions,subject-picker}.tsx,
-    contribution-actions.ts, propose.tsx, contribute-form.tsx, overrides.tsx,
-    customization.tsx
-  components/stream/data/catalog/   # Catalog adapter layer
+    catalog/{content,actions,subject-picker}.tsx, contribution-actions.ts, …
+  components/stream/data/catalog/             # LMS read/query adapter layer
   components/ui/catalog-image.tsx
-  lib/{catalog-image,catalog-image-url,catalog-setup}.ts
+  lib/{catalog-setup,catalog-image,catalog-image-url}.ts
 ```
+
+## Known gaps & roadmap
+
+The catalog's _content_ layer is multi-curriculum, but the _provisioning_ layer
+(`src/lib/catalog-setup.ts`, ~1,716 lines) still bakes in Sudanese assumptions. Status as of
+this writing:
+
+### P0 — Blockers
+
+- **Academic structure is hardcoded to the Sudanese model.** `LEVEL_CONFIG` (6+3+3),
+  `GRADE_NAMES` (Arabic), `HIGH_SCHOOL_STREAMS` (Science/Arts), and `SCIENCE/ARTS_ONLY_PATTERNS`
+  (`catalog-setup.ts` lines 10–122) are applied to **every** school. A US/UK/IB school gets
+  Arabic Sudanese grade names and forced Science/Arts streams on grades 10–12. Fix: split
+  `catalog-setup.ts` into a shared engine + per-curriculum `CurriculumConfig`
+  (`src/lib/catalog/curricula/{sd,us,gb,ib}.ts`). Do **not** split the `catalog_subjects` table.
+- **British / IB are not provisionable end-to-end.** `inferCurriculum` maps `GB → british` and
+  international → `ib`, but the `world-curricula` seed is **not** in the default `catalog` seed,
+  so `findSubjects` may fall through to the US baseline until it is run explicitly.
+
+### P1
+
+- **Partial-failure recovery is incomplete.** Provisioning runs fire-and-forget via Next.js
+  `after()` (`onboarding/legal/actions.ts`). Only `ensureSubjectSelections` self-heals — and only
+  for subject selections, not levels/grades/timetable/sections/fees.
+- **Unwired exports.** `setupLibraryForSchool` (library books are never provisioned at
+  onboarding), `teardownCatalogForSchool` (referenced only by tests), and `publishSchool`
+  (no caller) — wire them in or remove them.
+- **`findSubjects` has no visibility guard** (filters on `status: PUBLISHED` only) —
+  defense-in-depth gap.
+- **Single-responsibility drift.** `catalog-setup.ts` also owns timetable generation, section
+  auto-provisioning, and `getRankedVideos` / `recordVideoView` (stream-domain) — split these out.
+
+### P2
+
+- Duplicated weekly-period logic (`getDefaultWeeklyPeriods` vs `src/lib/timetable-reference.ts`).
+- `gpa` in `SCORE_RANGE_DEFAULTS` is stripped before insert (no `gpa` column on `ScoreRange`).
+- `legalData` is collected during onboarding but discarded (legal-step TODO).
+- Academic-structure rows are inserted in a sequential `tx.create` loop — batch with `createMany`.
+- TOC extraction quality and denormalized count-update performance — tracked in
+  [Curriculum engineering → Improvement areas](/docs/curriculum-engineering).
+
+### Direction
+
+- Drive level/grade names from `School.preferredLanguage` / `Curriculum.lang`; gate Science/Arts
+  streams to `national` only.
+- Make provisioning a resumable, idempotent pipeline with per-step status persisted on `School`;
+  generalize `ensureSubjectSelections` → `ensureProvisioned`.
 
 ## See also
 
+- [Curriculum engineering](/docs/curriculum-engineering)
 - [Concepts](/docs/concept)
 - [ClickView overview](/docs/clickview)
 - [Sudan curriculum](/docs/sudan-curriculum)
+- [Library](/docs/library)

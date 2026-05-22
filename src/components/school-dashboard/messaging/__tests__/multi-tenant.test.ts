@@ -8,7 +8,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   getConversation,
-  getConversations,
+  getConversationsList,
   getMessage,
   isConversationParticipant,
 } from "../queries"
@@ -18,12 +18,14 @@ vi.mock("@/lib/db", () => ({
     conversation: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     message: {
       findFirst: vi.fn(),
     },
     conversationParticipant: {
       findFirst: vi.fn(),
+      count: vi.fn(),
     },
   },
 }))
@@ -89,11 +91,12 @@ describe("Messaging Multi-Tenant Isolation", () => {
     })
   })
 
-  describe("getConversations", () => {
+  describe("getConversationsList", () => {
     it("only returns conversations for the specified school", async () => {
       vi.mocked(db.conversation.findMany).mockResolvedValue([])
+      vi.mocked(db.conversation.count).mockResolvedValue(0)
 
-      await getConversations(schoolA, userId, {})
+      await getConversationsList(schoolA, userId, {})
 
       expect(db.conversation.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -106,8 +109,9 @@ describe("Messaging Multi-Tenant Isolation", () => {
 
     it("filters by participant membership", async () => {
       vi.mocked(db.conversation.findMany).mockResolvedValue([])
+      vi.mocked(db.conversation.count).mockResolvedValue(0)
 
-      await getConversations(schoolA, userId, {})
+      await getConversationsList(schoolA, userId, {})
 
       expect(db.conversation.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -152,22 +156,31 @@ describe("Messaging Multi-Tenant Isolation", () => {
 
   describe("isConversationParticipant", () => {
     it("checks participant membership correctly", async () => {
-      vi.mocked(db.conversationParticipant.findFirst).mockResolvedValue({
-        id: "participant-1",
-        conversationId: "conv-1",
-        userId,
-        role: "member",
-      } as any)
+      vi.mocked(db.conversationParticipant.count).mockResolvedValue(1)
 
-      const result = await isConversationParticipant("conv-1", userId)
+      const result = await isConversationParticipant(schoolA, "conv-1", userId)
 
       expect(result).toBe(true)
+      // Membership check must be scoped by schoolId through the conversation
+      expect(db.conversationParticipant.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            conversationId: "conv-1",
+            userId,
+            conversation: { schoolId: schoolA },
+          }),
+        })
+      )
     })
 
     it("returns false when user is not a participant", async () => {
-      vi.mocked(db.conversationParticipant.findFirst).mockResolvedValue(null)
+      vi.mocked(db.conversationParticipant.count).mockResolvedValue(0)
 
-      const result = await isConversationParticipant("conv-1", "other-user")
+      const result = await isConversationParticipant(
+        schoolA,
+        "conv-1",
+        "other-user"
+      )
 
       expect(result).toBe(false)
     })

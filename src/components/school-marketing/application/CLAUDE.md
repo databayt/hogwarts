@@ -2,7 +2,7 @@
 
 ## Context
 
-Public multi-step application form for prospective students (8 steps: personal, contact, location, academic, guardian, attachments, payment, success). Session-based auto-save. No login required to start.
+Public multi-step application form for prospective students (5 steps: attachments, personal, location, academic, fees — guardian folded into personal tabs, contact removed). Session-based auto-save. Login required (auth-gated `(auth)/layout.tsx`); the OTP status tracker is account-less.
 
 ## Before You Start
 
@@ -14,11 +14,11 @@ Public multi-step application form for prospective students (8 steps: personal, 
 ## Key Decisions
 
 - `ApplicationContext` (React context) manages all form state across steps -- injected at layout level
-- Unauthenticated users can apply -- session saved server-side via `saveApplicationSession` action
+- Login required to apply (auth-gated `(auth)/layout.tsx`); drafts are scoped per user (`hogwarts_apply_session_{campaignId}_{userId}`). Sessions still saved server-side via `saveApplicationSession` for cross-device resume
 - Each step subdirectory follows: `form.tsx`, `config.ts`, `types.ts`, `validation.ts`, optional `actions.ts`
 - This is the only application flow (old `admission/steps/` was removed)
 - Payment supports card, cash, and bank transfer -- payment step is optional based on campaign config
-- Submission action in `submit-action.ts` validates all steps before creating `AdmissionApplication`
+- Submission happens on the **Fees** step (final): it assembles the `documents[]` array from attachment URLs, then `submit-action.ts` validates required fields before creating the `Application` record
 
 ## Danger Zones
 

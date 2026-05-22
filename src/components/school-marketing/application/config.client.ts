@@ -129,9 +129,9 @@ export const STEP_METADATA: Record<
         : "Student and guardian personal details",
   },
   contact: {
-    label: (isRTL) => (isRTL ? "الدفع" : "Payment"),
+    label: (isRTL) => (isRTL ? "معلومات الاتصال" : "Contact Information"),
     description: (isRTL) =>
-      isRTL ? "الرسوم الدراسية وطريقة الدفع" : "School fees and payment method",
+      isRTL ? "البريد الإلكتروني ورقم الهاتف" : "Email and phone number",
   },
   location: {
     label: (isRTL) => (isRTL ? "العنوان" : "Address"),

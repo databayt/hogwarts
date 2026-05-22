@@ -14,6 +14,7 @@
     "stack",
     "database",
     "multi-tenancy",
+    "catalog",
     "offline",
     "authentication",
     "onboarding",

@@ -9,7 +9,6 @@ export {
   getCampaignById,
   saveApplicationSession,
   resumeApplicationSession,
-  getDraftApplications,
   getDraftApplicationsByUser,
   submitApplication,
 } from "./application"
@@ -19,7 +18,6 @@ export {
   requestStatusOTP,
   verifyStatusOTP,
   getApplicationStatus,
-  getApplicationByNumber,
 } from "./status"
 
 // Tour Booking Actions

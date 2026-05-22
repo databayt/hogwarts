@@ -2,7 +2,7 @@
 
 ## Context
 
-School-side admission pipeline: campaigns, applications, merit lists, enrollment (90% complete, no blockers). Tabbed DataTable UI with RBAC-protected server actions.
+School-side admission pipeline: campaigns, applications, merit lists, enrollment. Tabbed DataTable UI with RBAC-protected server actions. **Status: ~70%, NOT production-ready** despite prior "100%" claims — the 2026-05-21 audit found 3 live P0 breaks (offer flow dead, merit ranks by a never-computed score, AI pipeline never runs). Read `ISSUE.md` before assuming anything works. The feature spans 3 sides sharing one Prisma model: this dashboard block + `../../school-marketing/admission/` (public portal) + `../../school-marketing/application/` (wizard, ~68 files).
 
 ## Before You Start
 
@@ -20,10 +20,13 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 
 ## Danger Zones
 
-- Enrollment `$transaction` in `actions.ts` -- 12 interdependent creates; partial failure corrupts data
-- Bulk placement -- modifies many records at once; no progress indicator for large batches (P2)
-- `authorization.ts` -- RBAC gate; incorrect changes expose data across roles
+- Enrollment `$transaction` in `actions.ts` -- ~470 lines, many interdependent creates; partial failure corrupts data. Currently has **zero executing test coverage** (test file fails to load — Resend top-level init)
+- `authorization.ts` -- RBAC gate; incorrect changes expose data across roles. Note ACCOUNTANT mismatch (server grants `viewApplications`/`recordPayment`, `permissions.ts` gives no UI)
 - Shared Prisma model with school-marketing side -- schema changes affect both blocks
+- **Merit is broken (P0-3)**: `meritScore` is never computed — the engine in `ai/merit-engine.ts` is unwired (zero callers); `generateMeritList` only assigns `meritRank` ordered by null scores. Don't trust the Merit tab
+- **Offer flow is broken (P0-1/P0-2)**: `application/offer/content.tsx` passes an empty accessToken to every mutation, and the route sits under `(auth)` (login wall). Admit→accept→pay is dead end-to-end
+- **AI subsystem is disconnected (P1-1)**: no `document-processing` cron, `ai/document-card.tsx` is never rendered, budget tracking is a no-op. Built ≠ running
+- **Error display (P1-5)**: clients show raw error CODES (`OFFER_EXPIRED`…) because `result.error` holds the code and `resolveActionError()` is never called. Route through it when touching any toast
 
 ## Related Blocks
 

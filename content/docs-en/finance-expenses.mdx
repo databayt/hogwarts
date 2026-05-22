@@ -1,0 +1,77 @@
+---
+title: Expenses
+description: Expense submission, approval workflow, categories, and budget integration. CRUD, approval, and budget deduction work; expense payments don't post to the ledger, approval-chain emails aren't wired, and a legacy content file is pending removal.
+---
+
+Expenses lets staff submit costs, routes them through approval, deducts approved amounts from [budget](/docs/finance-budget) allocations, and processes reimbursement. Categories are managed alongside.
+
+## Flow
+
+```
+Submit expense (DRAFT)  →  approve / reject  →  on approval, deduct from budget allocation
+  →  process payment (reimbursement)
+```
+
+## Status
+
+| Feature                                           | Status                                         |
+| ------------------------------------------------- | ---------------------------------------------- |
+| Expense CRUD (`schoolId`-scoped)                  | Production                                     |
+| Category management                               | Production                                     |
+| Approval state machine                            | Production                                     |
+| Budget deduction on approval                      | Production                                     |
+| Email notification on approval change             | Planned                                        |
+| Approval routing rules (by amount/category)       | Planned                                        |
+| Bulk CSV import                                   | Planned                                        |
+| OCR receipt scanning / expense-to-receipt linking | Planned (see [Receipt](/docs/finance-receipt)) |
+
+## Routes
+
+| Route                                 | Page                | Status |
+| ------------------------------------- | ------------------- | ------ |
+| `/{lang}/finance/expenses`            | Overview            | Ready  |
+| `/{lang}/finance/expenses/all`        | All expenses list   | Ready  |
+| `/{lang}/finance/expenses/new`        | Submit expense      | Ready  |
+| `/{lang}/finance/expenses/[id]`       | Expense detail      | Ready  |
+| `/{lang}/finance/expenses/categories` | Category management | Ready  |
+
+## Server actions
+
+| Action                            | Purpose                                        |
+| --------------------------------- | ---------------------------------------------- |
+| `createExpense` / `updateExpense` | Expense create / edit                          |
+| `approveExpense`                  | Approve/reject; deducts from budget allocation |
+| `createExpenseCategory`           | Add an expense category                        |
+| `getExpenses`                     | List expenses (tenant-scoped)                  |
+
+## Ledger / accounting
+
+**Does not post to the ledger.** `postExpensePayment` exists in the engine but has zero callers, so approving/paying an expense does not create journal entries (the README's `lib/accounting/` claim is aspirational). Approval does, however, decrement the linked budget allocation.
+
+## Schema
+
+`prisma/models/finance-budgets.prisma`: `Expense`, `ExpenseCategory` — `schoolId`-scoped. **`ExpenseCategory` stores user-facing category names with no `lang` field**, so categories render in their stored language only.
+
+## Stubs
+
+- `expenses/content-old.tsx` — legacy file pending removal.
+- `validation.ts` factory not yet wired to consumers.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component      | Path                                                           |
+| -------------- | -------------------------------------------------------------- |
+| Server actions | `src/components/school-dashboard/finance/expenses/actions.ts`  |
+| Config         | `src/components/school-dashboard/finance/expenses/config.ts`   |
+| Content        | `src/components/school-dashboard/finance/expenses/content.tsx` |
+| Schema         | `prisma/models/finance-budgets.prisma`                         |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Budget](/docs/finance-budget) — allocations expenses draw down
+- [Receipt](/docs/finance-receipt) — receipt capture for expense evidence

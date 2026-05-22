@@ -31,16 +31,16 @@ Admin control center for individual schools (30+ sub-features, 85% complete). Ev
 
 ## Sub-Features
 
-| Feature    | Dir           | Status | Has README/ISSUE     |
-| ---------- | ------------- | ------ | -------------------- |
-| admission  | `admission/`  | 90%    | Yes/Yes              |
-| attendance | `attendance/` | Ready  | Yes/Yes              |
-| dashboard  | `dashboard/`  | Ready  | Yes                  |
-| exams      | `exams/`      | Ready  | Yes                  |
-| finance    | `finance/`    | Ready  | Yes (per sub-module) |
-| listings   | `listings/`   | Ready  | No                   |
-| timetable  | `timetable/`  | Ready  | Yes/No               |
-| settings   | `settings/`   | Ready  | No                   |
+| Feature    | Dir           | Status  | Has README/ISSUE     |
+| ---------- | ------------- | ------- | -------------------- |
+| admission  | `admission/`  | ~70% 🔴 | Yes/Yes (3 live P0s) |
+| attendance | `attendance/` | Ready   | Yes/Yes              |
+| dashboard  | `dashboard/`  | Ready   | Yes                  |
+| exams      | `exams/`      | Ready   | Yes                  |
+| finance    | `finance/`    | Ready   | Yes (per sub-module) |
+| listings   | `listings/`   | Ready   | No                   |
+| timetable  | `timetable/`  | Ready   | Yes/No               |
+| settings   | `settings/`   | Ready   | No                   |
 
 ## Related Blocks
 

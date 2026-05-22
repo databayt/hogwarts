@@ -8,26 +8,30 @@ The Finance Block is a feature-based financial management system for multi-tenan
 
 ### Honest Status Matrix
 
-| Sub-module  | Code | i18n | Tests | Docs | Readiness |
-| ----------- | ---- | ---- | ----- | ---- | --------- |
-| accounts    | OK   | WARN | MISS  | OK   | 75% ready |
-| banking     | OK   | WARN | PART  | OK   | 80% ready |
-| budget      | OK   | OK   | MISS  | OK   | 85% ready |
-| dashboard   | OK   | OK   | MISS  | OK   | 90% ready |
-| expenses    | OK   | WARN | MISS  | OK   | 80% ready |
-| fees        | OK   | OK   | MISS  | OK   | 85% ready |
-| invoice     | OK   | OK   | OK    | OK   | 90% ready |
-| payroll     | OK   | OK   | MISS  | OK   | 80% ready |
-| permissions | OK   | WARN | MISS  | OK   | 75% ready |
-| receipt     | OK   | OK   | MISS  | OK   | 85% ready |
-| reports     | OK   | WARN | MISS  | OK   | 75% ready |
-| salary      | OK   | OK   | MISS  | OK   | 85% ready |
-| timesheet   | OK   | WARN | MISS  | OK   | 75% ready |
-| wallet      | OK   | WARN | MISS  | OK   | 75% ready |
+This matrix is the authoritative readiness view; it is kept identical to the banner in `ISSUE.md` and the matrix at `/docs/finance`. The **Ledger** column is the key honesty signal -- only fee payments reach the general ledger today.
 
-Legend: **OK** = complete · **PART** = partial · **WARN** = gaps catalogued · **MISS** = not started.
+| Sub-module  | Readiness | Ledger wired                       | i18n | Tests  | Docs |
+| ----------- | --------- | ---------------------------------- | ---- | ------ | ---- |
+| invoice     | 90%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
+| fees        | 85%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 13  | ✅   |
+| budget      | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
+| receipt     | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
+| banking     | 80%       | ➖ n/a                             | ⚠️   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (trends are mock)           | ✅   | ❌     | ✅   |
+| expenses    | 80%       | ❌ `postExpensePayment` orphaned   | ⚠️   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home (fee payments only) | ⚠️   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (fee-only data)    | ⚠️   | ❌     | ✅   |
+| salary      | 75%       | ➖ n/a                             | ✅   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
+| wallet      | 75%       | ❌ `postWalletTopup` orphaned      | ⚠️   | ❌     | ✅   |
+| payroll     | 65%       | ❌ `postSalaryPayment` orphaned    | ✅   | ❌     | ✅   |
 
-Each sub-module has its own `ISSUE.md` with MVP checklist, known issues (P1/P2/P3), and test gaps. Root `ISSUE.md` rolls up priorities across the block.
+Legend -- **Ledger**: 🟢 posts · 🟡 posts but not transactional · ❌ posting fn exists but zero callers · 🔗 consumes ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
+
+> **i18n caveat:** the i18n column tracks UI/validation strings only. Separately, **no finance Prisma model has a `lang` field**, so DB-stored finance text (`Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description) can't use the platform's `getDisplayText` convention. Tracked in `ISSUE.md` P1.
+
+Each sub-module has its own `ISSUE.md` with MVP checklist, known issues (P1/P2/P3), and test gaps. Root `ISSUE.md` is the verified gap register across the block.
 
 ### Capabilities by Role
 
@@ -93,12 +97,12 @@ src/components/school-dashboard/finance/
 
 ### Status
 
-**Overall completion:** ~82% weighted average · **Blockers:** test coverage (only invoice has tests), validation-helper migration pending for 11 sub-modules.
+**Overall completion:** ~79% (average of the matrix readiness column) · **Top blockers:** 5 of 6 ledger posting functions orphaned (P0), test coverage (11 of 14 sub-modules have none), validation-helper migration pending for 11 sub-modules. See `ISSUE.md` for the verified gap register.
 
 ### Design Principles
 
 1. **Feature-based architecture**: Each sub-module is self-contained with `types.ts`, `validation.ts`, `config.ts`, `actions.ts`, `content.tsx`, `ISSUE.md`
-2. **Double-entry bookkeeping**: All financial transactions create balanced journal entries via `lib/accounting/`
+2. **Double-entry bookkeeping**: A balanced-journal-entry engine lives at `lib/accounting/` (`posting-rules.ts` maps domain events to debit/credit lines). Today only **fee payments** are wired to it (`postFeePayment`); the posting functions for salary, expense, invoice, fee-assignment, and wallet exist but have no callers yet (see `ISSUE.md` P0). Do not assume a money event hits the ledger without checking
 3. **Multi-tenant**: Row-level isolation using `schoolId` in every query
 4. **Hybrid permissions**: Role-based defaults + granular `FinancePermission` model (12 modules x 7 actions)
 5. **Mirror pattern**: Routes at `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/<module>/` import from `src/components/school-dashboard/finance/<module>/content.tsx`
@@ -107,7 +111,7 @@ src/components/school-dashboard/finance/
 
 ### Integration Points
 
-- **Prisma schema**: `prisma/models/finance.prisma`
+- **Prisma schema**: `prisma/models/finance-*.prisma` (finance-core, finance-fees, finance-payroll, finance-banking, finance-budgets, finance-invoices, finance-reports)
 - **Shared permissions**: `finance/lib/permissions.ts`
 - **Accounting engine**: `finance/lib/accounting/`
 - **Tenant context**: `src/lib/tenant-context.ts`
@@ -118,6 +122,7 @@ src/components/school-dashboard/finance/
 ### Where to Start
 
 - New contributor → read this README, then the `ISSUE.md` of the sub-module you'll touch
+- Public docs → the user-facing mirror is `/docs/finance` (hub) + a page per sub-block (`/docs/finance-payroll`, `/docs/finance-accounts`, …, plus `/docs/fees`, `/docs/invoice`). Keep the `/docs/finance` status matrix in sync with the one above
 - Adding a feature → confirm it's catalogued in the relevant `ISSUE.md` before coding
 - Fixing a bug → update the sub-module `ISSUE.md` once shipped
 - Money math change → read `lib/accounting/` first; double-entry invariants must hold

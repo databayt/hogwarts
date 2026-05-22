@@ -2,7 +2,7 @@
 
 ### Overview
 
-Salary structure definitions for all staff including base salary, allowances, benefits, deductions, and pay scales. Supports salary history tracking, revision workflows, and total compensation calculations. Feeds into the payroll sub-block for processing.
+Salary structure definitions for all staff -- base salary, allowances, deductions, and pay scales -- plus a calculator and increment workflow. Feeds the payroll sub-block for processing. No salary history yet: creating a new structure deactivates the prior one.
 
 ### Capabilities by Role
 
@@ -42,5 +42,5 @@ salary/
 
 - Active structures consumed by `finance/payroll/` for processing
 - Salary costs deduct from `finance/budget/` salary allocation
-- Journal entries via `finance/lib/accounting/`
+- Salary itself writes **no** journal entries; the ledger entry would come from payroll disbursement, whose `postSalaryPayment` is not yet wired (umbrella `ISSUE.md` P0)
 - See [finance master README](../README.md) for architecture details

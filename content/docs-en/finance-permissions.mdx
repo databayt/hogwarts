@@ -1,0 +1,76 @@
+---
+title: Permissions
+description: Admin UI for the granular FinancePermission model — grant/revoke 7 actions across 12 finance modules, bulk operations, and copy between users. No dedicated route, no audit log, and no expiring grants yet.
+---
+
+Permissions is the control panel for finance access. It manages the hybrid permission model: role defaults plus per-user `FinancePermission` rows, checked by `checkCurrentUserPermission()` before every mutation in every finance sub-block.
+
+## Flow
+
+```
+Pick a view (by user | by module)  →  grant / revoke per module × action
+  →  bulk grant / revoke across users  →  copy a permission set from user A to user B
+```
+
+## Status
+
+| Feature                                          | Status                                           |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `FinancePermission` model (sub-feature granular) | Production                                       |
+| Grant / revoke / copy flows                      | Production                                       |
+| Bulk grant / revoke                              | Production                                       |
+| Tenant isolation + ADMIN-only gating             | Production                                       |
+| Audit log of permission changes                  | Planned (no record of who/when — compliance gap) |
+| Role-based permission templates                  | Planned                                          |
+| Time-bound / expiring grants                     | Planned                                          |
+
+## Routes
+
+No dedicated route — the UI is reached through finance settings / the admin panel, not a standalone `/finance/permissions` page.
+
+## Server actions
+
+All ADMIN-gated and tenant-scoped.
+
+| Action                                           | Purpose                                      |
+| ------------------------------------------------ | -------------------------------------------- |
+| `grantPermission` / `revokePermission`           | Single grant / revoke                        |
+| `bulkGrantPermissions` / `bulkRevokePermissions` | Apply to many users at once                  |
+| `copyPermissions`                                | Copy a user's permission set to another user |
+| `getPermissionsByModule`                         | Permissions in the "by module" view          |
+| `getAllUsersWithPermissions`                     | Permissions in the "by user" view            |
+
+## Concepts
+
+The permission space is **12 finance modules × 7 actions**. `finance/lib/permissions.ts` exposes `checkCurrentUserPermission()`, which every sub-block's server actions call before mutating — this is the single enforcement point for finance RBAC.
+
+## Ledger / accounting
+
+Not a money-mover.
+
+## Schema
+
+`prisma/models/finance-reports.prisma`: `FinancePermission` — `schoolId`-scoped, one row per (user, module, action) grant. No `lang` field needed (module/action keys are enums, not free text).
+
+## Stubs
+
+- No audit log (P1 compliance gap).
+- `validation` not yet routed through `ValidationHelper`.
+
+## Tests
+
+None. Highest-value gaps: grant/revoke state, copy edge cases (cycles, self-reference), and verifying enforcement inside each sub-module action.
+
+## Key files
+
+| Component       | Path                                                              |
+| --------------- | ----------------------------------------------------------------- |
+| Server actions  | `src/components/school-dashboard/finance/permissions/actions.ts`  |
+| Permission UI   | `src/components/school-dashboard/finance/permissions/content.tsx` |
+| Enforcement lib | `src/components/school-dashboard/finance/lib/permissions.ts`      |
+| Schema          | `prisma/models/finance-reports.prisma`                            |
+
+## See also
+
+- [Finance](/docs/finance) — block overview + RBAC summary
+- [Accounts](/docs/finance-accounts) — a module whose actions this gates

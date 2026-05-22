@@ -32,7 +32,7 @@ budget/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** AI-powered forecast not yet connected to real historical data; revision history UI not built
+**Completion:** 85% | **Blockers:** AI-powered forecast not yet connected to real historical data; revision history UI not built
 
 ### Integration Points
 

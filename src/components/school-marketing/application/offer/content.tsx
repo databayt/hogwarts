@@ -52,6 +52,7 @@ interface OfferContentProps {
   locale: string
   dictionary: Dictionary
   cancelled?: boolean
+  accessToken: string
 }
 
 export default function OfferContent({
@@ -59,6 +60,7 @@ export default function OfferContent({
   locale,
   dictionary,
   cancelled,
+  accessToken,
 }: OfferContentProps) {
   const router = useRouter()
   const t = (dictionary as any)?.school?.admission?.offer as
@@ -107,7 +109,7 @@ export default function OfferContent({
   const handleAccept = async () => {
     setLoading("accept")
     setError(null)
-    const result = await acceptOffer(application.id, "")
+    const result = await acceptOffer(application.id, accessToken)
     setLoading(null)
     if (result.success) {
       setAccepted(true)
@@ -119,7 +121,7 @@ export default function OfferContent({
   const handleDecline = async () => {
     setLoading("decline")
     setError(null)
-    const result = await declineOffer(application.id, "")
+    const result = await declineOffer(application.id, accessToken)
     setLoading(null)
     if (result.success) {
       setDeclined(true)
@@ -136,7 +138,7 @@ export default function OfferContent({
       if (method === "stripe") {
         const result = await createRegistrationFeeCheckout(
           application.id,
-          "",
+          accessToken,
           locale
         )
         if (result.success && result.data?.checkoutUrl) {
@@ -147,7 +149,10 @@ export default function OfferContent({
           result.error || t?.failedCheckout || "Failed to create checkout"
         )
       } else if (method === "cash") {
-        const result = await recordRegistrationCashIntent(application.id, "")
+        const result = await recordRegistrationCashIntent(
+          application.id,
+          accessToken
+        )
         if (result.success && result.data) {
           setPaymentResult({
             method: "cash",
@@ -163,7 +168,7 @@ export default function OfferContent({
       } else if (method === "bank_transfer") {
         const result = await recordRegistrationBankTransferIntent(
           application.id,
-          ""
+          accessToken
         )
         if (result.success && result.data) {
           setPaymentResult({

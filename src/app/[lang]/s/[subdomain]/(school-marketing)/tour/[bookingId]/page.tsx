@@ -176,34 +176,10 @@ export default async function BookingPage({ params }: BookingPageProps) {
               </div>
             </div>
 
-            {/* Contact Details */}
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="font-medium">
-                {isRTL ? "معلومات الاتصال" : "Contact Information"}
-              </h3>
-              <div className="grid gap-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {isRTL ? "الاسم" : "Name"}
-                  </span>
-                  <span>{booking.parentName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {isRTL ? "البريد" : "Email"}
-                  </span>
-                  <span>{booking.email}</span>
-                </div>
-                {booking.studentName && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {isRTL ? "اسم الطالب" : "Student"}
-                    </span>
-                    <span>{booking.studentName}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Contact details are intentionally NOT shown here. This page is
+                public and reachable by guessing a booking number, so rendering
+                the booker's name/email/student would leak PII (2026-05-21 audit,
+                P1-2). The booking number + slot details are enough to confirm. */}
 
             {/* Actions */}
             {(booking.status === "CONFIRMED" ||

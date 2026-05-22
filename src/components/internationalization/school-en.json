@@ -8664,6 +8664,8 @@
         "campaignCreated": "Campaign created successfully",
         "campaignUpdated": "Campaign updated successfully",
         "campaignDeleted": "Campaign deleted",
+        "campaignSaveFailed": "Failed to save campaign",
+        "campaignDeleteFailed": "Failed to delete campaign",
         "enterDetails": "Enter the details for the admission campaign",
         "deleteCampaign": "Delete Campaign",
         "deleteConfirm": "Are you sure? This action cannot be undone.",
@@ -9174,7 +9176,12 @@
             "id": "ID",
             "resume": "Resume",
             "other": "Other",
-            "uploaded": "Uploaded"
+            "uploaded": "Uploaded",
+            "tooLarge": "File too large (10MB max)",
+            "invalidType": "Unsupported file type",
+            "invalidFile": "Invalid file",
+            "remove": "Remove attachment",
+            "pdf": "PDF"
           },
           "options": {
             "gender": {
@@ -9254,7 +9261,8 @@
           "incompleteGuardian": "Please complete the Guardian Information step",
           "incompleteAcademic": "Please complete the Academic Information step",
           "failedToSaveSession": "Failed to save session",
-          "failedToSubmit": "Failed to submit"
+          "failedToSubmit": "Failed to submit",
+          "rateLimited": "Too many attempts. Please wait a moment and try again."
         },
         "submit": "Submit"
       },

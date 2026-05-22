@@ -55,6 +55,15 @@ vi.mock("@/lib/db", () => ({
     messageReadReceipt: {
       upsert: vi.fn(),
     },
+    messageAttachment: {
+      createMany: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn().mockResolvedValue({ username: "tester" }),
+    },
+    whatsAppSession: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
     $transaction: vi.fn((callback) =>
       callback({
         conversation: {
@@ -155,7 +164,7 @@ describe("Messaging Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not authenticated")
+      expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
     it("returns existing conversation for direct type if exists", async () => {
@@ -188,6 +197,7 @@ describe("Messaging Actions", () => {
         conversationId: "conv-1",
         senderId: mockUserId,
         content: "Hello",
+        createdAt: new Date(),
       }
 
       vi.mocked(getConversation).mockResolvedValue({
@@ -222,7 +232,8 @@ describe("Messaging Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Conversation not found")
+      // sendMessage maps a missing conversation to the generic send-failed code
+      expect(result.error).toBe("MESSAGE_SEND_FAILED")
     })
   })
 
@@ -255,7 +266,8 @@ describe("Messaging Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Message not found")
+      // deleteMessage maps a missing message to the generic send-failed code
+      expect(result.error).toBe("MESSAGE_SEND_FAILED")
     })
   })
 
@@ -334,7 +346,7 @@ describe("Messaging Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Message not found")
+      expect(result.error).toBe("MESSAGE_NOT_FOUND")
     })
 
     it("returns error when user not participant of source conversation", async () => {
@@ -349,7 +361,7 @@ describe("Messaging Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not a participant of this conversation")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("skips target conversations where user is not participant", async () => {
@@ -606,7 +618,10 @@ describe("Messaging Actions", () => {
       }
       expect(db.starredMessage.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: mockUserId },
+          where: {
+            userId: mockUserId,
+            message: { conversation: { schoolId: mockSchoolId } },
+          },
           orderBy: { createdAt: "desc" },
           select: { id: true, messageId: true },
         })
@@ -655,6 +670,7 @@ describe("Messaging Actions", () => {
           where: {
             userId: mockUserId,
             conversationId: "conv-1",
+            message: { conversation: { schoolId: mockSchoolId } },
           },
         })
       )

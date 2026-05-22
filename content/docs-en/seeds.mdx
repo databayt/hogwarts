@@ -61,9 +61,9 @@ pnpm db:seed:single --list
 | Conversations       |     ~50 | 300+ messages                           |
 | Notifications       |    ~500 | Mixed                                   |
 | Admission           |     ~50 | Campaigns + applications                |
-| Catalog Subjects    |      62 | Platform-wide                           |
-| Catalog Chapters    |     201 |                                         |
-| Catalog Lessons     |     986 | ClickView-sourced                       |
+| Catalog Subjects    |    ~240 | US K-12 grade-specific, + Sudan base    |
+| Catalog Chapters    |    ~750 | Platform-wide (no schoolId)             |
+| Catalog Lessons     |  ~3,993 | ClickView-sourced                       |
 | Audit Logs          |    ~500 |                                         |
 | Health Records      |    ~110 | Health, disciplinary, achievements      |
 | Student Documents   |     200 | Birth certs, passports, medical         |
@@ -76,7 +76,7 @@ For the named-account table, bulk-account counts, simulation flows, and access m
 
 | Phase | Module                 | What it creates                                                                                                                      |
 | ----: | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-|     0 | Global Catalog         | Catalog Subjects (62), Chapters (201), Lessons (986), images (S3/CloudFront)                                                         |
+|     0 | Global Catalog         | `seedCatalog()` — US K-12: Subjects (~240), Chapters (~750), Lessons (~3,993) + Sudan base, images (S3/CloudFront)                   |
 |     1 | Core Foundation        | School (`demo.databayt.org`), branding                                                                                               |
 |     2 | User Accounts          | All 3,105 users                                                                                                                      |
 |     3 | Academic Structure     | School Year (2025–2026), Terms, Periods (8 + 2 breaks), Departments (6), Year Levels (14)                                            |

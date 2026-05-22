@@ -22,23 +22,23 @@ Manages school bank accounts, tracks transactions, and provides a reconciliation
 
 ```
 banking/
-├── content-enhanced.tsx      # Enhanced banking dashboard
-├── reconciliation-panel.tsx  # Bank reconciliation UI
-└── types/
-    ├── index.ts              # Type barrel export
-    ├── bank.types.ts         # Bank account & transaction types
-    ├── actions.types.ts      # Server action param/return types
-    ├── component.types.ts    # Component prop types
-    └── utils.types.ts        # Utility types
+├── actions/                  # bank / transaction / transfer server actions
+├── dashboard/                # banking dashboard view
+├── my-banks/                 # linked-accounts list (+ Plaid sync stub)
+├── payment-transfer/         # Dwolla transfer form + actions
+├── transaction-history/      # transaction log
+├── shared/                   # plaid-link, bank cards, charts
+├── lib/                      # plaid.ts, permissions.ts, validations
+├── reconciliation-panel.tsx  # Bank reconciliation UI (stubbed)
+└── types/                    # type definitions
 ```
 
 ### Status
 
-**Completion:** 65% | **Blockers:** No dedicated `actions.ts` -- server actions likely embedded in enhanced content or pending extraction; bank API integration (Plaid/Dwolla) not implemented
+**Completion:** 80% | **Blockers:** Reconciliation panel stubbed; Plaid sync not implemented (needs sandbox creds); Dwolla webhook handler missing
 
 ### Integration Points
 
-- Journal entries via `finance/lib/accounting/`
-- Reconciles against payroll disbursements, expense payments, fee deposits
+- Reconciles against payroll disbursements, expense payments, fee deposits -- does **not** itself post to the ledger
 - Cash flow data feeds into `finance/dashboard/`
 - See [finance master README](../README.md) for architecture details

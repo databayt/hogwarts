@@ -9,24 +9,24 @@ Every school progresses through 8 layers to reach a working timetable. Each laye
 
 | Layer | Name                    | What it creates                                                                   | Depends on |
 | ----- | ----------------------- | --------------------------------------------------------------------------------- | ---------- |
-| 1     | Global catalog          | `CatalogSubject` (~220 grade-specific) → chapters → lessons → books               | —          |
+| 1     | Global catalog          | `Subject` (~240 grade-specific) → chapters → lessons → books                      | —          |
 | 2     | School onboarding       | School profile + provisioning trigger                                             | 1          |
 | 3     | Academic structure      | `AcademicLevel`, `AcademicGrade`, `AcademicStream`                                | 2          |
-| 4     | Subject selection       | `SchoolSubjectSelection` bridge rows                                              | 1, 3       |
+| 4     | Subject selection       | `SubjectSelection` bridge rows                                                    | 1, 3       |
 | 5a    | Teacher assignment      | `Class.teacherId`, `ClassTeacher`, `TeacherSubjectExpertise`, `TeacherDepartment` | 4          |
 | 5b    | Student enrollment      | `Student`, `StudentYearLevel`, `StudentClass`, `StudentBatch`                     | 3, 4       |
 | 6     | Classroom configuration | `ClassroomType`, `Classroom`, `Section`, `Class`                                  | 3–5        |
 | 7     | Timetable               | `Timetable` slots                                                                 | All above  |
-| 8     | Exams + reports         | `Exam`, `Result`, report cards, certificates, promotion                           | 5, 7       |
+| 8     | Exams + reports         | `SchoolExam`, `Result`, report cards, certificates, promotion                     | 5, 7       |
 
 ## Layer 1 — Global catalog
 
 The shared backbone. All curriculum content lives here once; schools reference it via bridge tables.
 
 ```
-CatalogSubject (~220 grade-specific US K-12 + future curricula)
-  └─ CatalogChapter (topic groups per grade-subject)
-       └─ CatalogLesson
+Subject (~240 grade-specific US K-12 + more curricula)
+  └─ Chapter (topic groups per grade-subject)
+       └─ Lesson
 ```
 
 Subjects are grade-specific, not level-based. `"Math Grade 1"` (slug `us-g1-math`), `"Math Grade 2"` (`us-g2-math`), etc., replacing `"Elementary Math"` with `levels: [ELEMENTARY]`.
@@ -148,7 +148,7 @@ Curriculum inferred from `country + schoolType` if not set: international → `u
 
 - Browse the full catalog and add subjects from other systems.
 - Hide subjects per grade by toggling `isActive`.
-- Hide chapters or lessons via `SchoolContentOverride`.
+- Hide chapters or lessons via `ContentOverride`.
 - Rename via `customName` on the selection record.
 - Set `weeklyPeriods` for timetable planning.
 
@@ -179,7 +179,7 @@ Schools can request new subjects: school CRUD request → SaaS review → approv
 
 ## Layer 5b — Student enrollment
 
-6-step admission wizard: Personal, Contact, Guardian, Academic, Documents, Review.
+5-step admission wizard: Attachments, Personal, Location, Academic, Fees (guardian folded into Personal tabs; contact removed — email back-filled at submit). Submission happens on the Fees step.
 
 Academic step fields:
 
@@ -237,7 +237,7 @@ Both call `placeStudentInSection(applicationId, sectionId)`, which validates `ma
 Class
   ├─ name: "Math - Grade 7 A"
   ├─ gradeId     → AcademicGrade
-  ├─ subjectId   → CatalogSubject
+  ├─ subjectId   → Subject
   ├─ teacherId   → Teacher
   ├─ classroomId → Classroom
   ├─ termId      → Term
@@ -312,7 +312,7 @@ const [
 ] = await Promise.all([
   db.academicLevel.count({ where: { schoolId } }),
   db.academicGrade.count({ where: { schoolId } }),
-  db.schoolSubjectSelection.count({ where: { schoolId, isActive: true } }),
+  db.subjectSelection.count({ where: { schoolId, isActive: true } }),
   db.teacher.count({ where: { schoolId } }),
   db.classroom.count({ where: { schoolId } }),
   db.period.count({ where: { schoolId } }),

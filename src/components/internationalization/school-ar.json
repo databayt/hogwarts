@@ -8672,6 +8672,8 @@
         "campaignCreated": "تم إنشاء الحملة بنجاح",
         "campaignUpdated": "تم تحديث الحملة بنجاح",
         "campaignDeleted": "تم حذف الحملة",
+        "campaignSaveFailed": "فشل حفظ الحملة",
+        "campaignDeleteFailed": "فشل حذف الحملة",
         "enterDetails": "أدخل تفاصيل حملة القبول",
         "deleteCampaign": "حذف الحملة",
         "deleteConfirm": "هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.",
@@ -9182,7 +9184,12 @@
             "id": "الهوية",
             "resume": "السيرة الذاتية",
             "other": "أخرى",
-            "uploaded": "تم الرفع"
+            "uploaded": "تم الرفع",
+            "tooLarge": "الملف كبير جدًا (10 ميجابايت كحد أقصى)",
+            "invalidType": "نوع ملف غير مدعوم",
+            "invalidFile": "ملف غير صالح",
+            "remove": "إزالة المرفق",
+            "pdf": "PDF"
           },
           "options": {
             "gender": {
@@ -9262,7 +9269,8 @@
           "incompleteGuardian": "يرجى إكمال خطوة معلومات ولي الأمر",
           "incompleteAcademic": "يرجى إكمال خطوة المعلومات الأكاديمية",
           "failedToSaveSession": "فشل في حفظ الجلسة",
-          "failedToSubmit": "فشل في تقديم الطلب"
+          "failedToSubmit": "فشل في تقديم الطلب",
+          "rateLimited": "محاولات كثيرة. يرجى الانتظار قليلاً والمحاولة مرة أخرى."
         },
         "submit": "تقديم"
       },

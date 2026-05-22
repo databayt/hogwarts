@@ -24,6 +24,16 @@ import { CSS } from "@dnd-kit/utilities"
 import type { RouteStop } from "@prisma/client"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -39,6 +49,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { addRouteStop, deleteStop, reorderStops } from "../actions/stops"
 import { TransportationEmptyState } from "../empty-state"
+import { resolveTransportationError } from "../error-map"
 
 interface FormState {
   name: string
@@ -66,6 +77,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   // Local optimistic order — survives until the server returns
   const [stops, setStops] = useState<RouteStop[]>(() =>
     [...initialStops].sort((a, b) => a.stopOrder - b.stopOrder)
@@ -90,7 +102,12 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         toast.success(t.toasts.stopReordered)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
         // Roll back optimistic state on failure
         setStops([...initialStops].sort((a, b) => a.stopOrder - b.stopOrder))
       }
@@ -126,20 +143,32 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         setForm(EMPTY_FORM)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm(t.stops.deleteConfirm)) return
+  function confirmDelete() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
     startTransition(async () => {
       const result = await deleteStop(id)
       if (result.success) {
         toast.success(t.toasts.stopDeleted)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
@@ -178,7 +207,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
                     pending={pending}
                     deleteLabel={dictionary.common.delete}
                     dragHandleLabel={t.common.dragHandle}
-                    onDelete={() => handleDelete(s.id)}
+                    onDelete={() => setDeleteId(s.id)}
                   />
                 ))}
               </ol>
@@ -259,6 +288,26 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary.common.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.stops.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dictionary.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {dictionary.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   flexRender,
@@ -12,6 +13,16 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -42,6 +53,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { assignStudentToRoute, endAssignment } from "../actions/assignments"
 import { TransportationEmptyState } from "../empty-state"
+import { resolveTransportationError } from "../error-map"
 import type { RouteAssignmentRow, RouteRow } from "../shared/types"
 
 type Direction = "PICKUP" | "DROPOFF" | "ROUND_TRIP"
@@ -92,6 +104,7 @@ export function AssignmentsClient({
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const stopsForRoute = form.routeId ? (stopsByRoute[form.routeId] ?? []) : []
 
   const columns = useMemo<ColumnDef<RouteAssignmentRow>[]>(
@@ -99,10 +112,16 @@ export function AssignmentsClient({
       {
         id: "student",
         header: t.assignments.fields.student,
-        cell: ({ row }) =>
-          row.original.student
-            ? `${row.original.student.firstName} ${row.original.student.lastName}`
-            : "—",
+        cell: ({ row }) => (
+          <Link
+            className="hover:underline"
+            href={`/${locale}/transportation/assignments/${row.original.id}`}
+          >
+            {row.original.student
+              ? `${row.original.student.firstName} ${row.original.student.lastName}`
+              : "—"}
+          </Link>
+        ),
       },
       {
         id: "route",
@@ -153,7 +172,7 @@ export function AssignmentsClient({
                 variant="ghost"
                 size="sm"
                 type="button"
-                onClick={() => handleEnd(row.original.id)}
+                onClick={() => setDeleteId(row.original.id)}
               >
                 {t.assignments.deleteConfirm}
               </Button>
@@ -192,20 +211,32 @@ export function AssignmentsClient({
         setForm(EMPTY_FORM)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
 
-  function handleEnd(id: string) {
-    if (!window.confirm(t.assignments.deleteConfirm)) return
+  function confirmDelete() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
     startTransition(async () => {
       const result = await endAssignment({ id })
       if (result.success) {
         toast.success(t.toasts.assignmentEnded)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
@@ -387,6 +418,26 @@ export function AssignmentsClient({
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary.common.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.assignments.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dictionary.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {dictionary.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

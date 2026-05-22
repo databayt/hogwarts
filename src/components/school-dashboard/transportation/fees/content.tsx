@@ -15,6 +15,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { previewTransportFees } from "../actions/fees"
 import { TransportationEmptyState } from "../empty-state"
+import { FeesExportButton } from "./export-button"
 
 interface Props {
   locale: Locale
@@ -43,9 +44,12 @@ export async function TransportationFeesContent({ locale, dictionary }: Props) {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <header>
-        <h2 className="text-2xl font-semibold">{t.fees.title}</h2>
-        <p className="text-muted-foreground text-sm">{t.fees.subtitle}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold">{t.fees.title}</h2>
+          <p className="text-muted-foreground text-sm">{t.fees.subtitle}</p>
+        </div>
+        <FeesExportButton fees={fees} dictionary={dictionary} />
       </header>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

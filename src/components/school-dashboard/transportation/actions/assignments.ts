@@ -196,6 +196,28 @@ export async function listAssignments(filters?: {
   }
 }
 
+export async function getAssignment(id: string) {
+  const ctx = await requireContext("read_school")
+  if (!ctx.ok) return ctx.response
+  const { schoolId } = ctx
+
+  try {
+    const assignment = await db.routeAssignment.findFirst({
+      where: { id, schoolId, deletedAt: null },
+      include: {
+        student: { select: { id: true, firstName: true, lastName: true } },
+        route: { select: { id: true, name: true, code: true } },
+        stop: { select: { id: true, name: true, stopOrder: true } },
+      },
+    })
+    if (!assignment)
+      return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_NOT_FOUND)
+    return { success: true as const, data: assignment }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}
+
 /**
  * Get the active assignment for a student. Used by guardian/student views
  * to surface "your bus" without exposing other students' data.

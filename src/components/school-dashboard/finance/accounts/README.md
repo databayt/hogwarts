@@ -2,7 +2,7 @@
 
 ### Overview
 
-Core double-entry bookkeeping system providing the chart of accounts, journal entries, general ledger, and trial balance. Serves as the accounting foundation that all other finance sub-blocks post transactions to.
+Core double-entry bookkeeping system providing the chart of accounts, journal entries, general ledger, and trial balance. Serves as the accounting foundation that all other finance sub-blocks are _intended_ to post transactions to -- today only fee payments post automatically (see umbrella `ISSUE.md` P0).
 
 ### Capabilities by Role
 
@@ -34,11 +34,11 @@ accounts/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** Period closing workflow not yet implemented; financial statement generation lives in reports sub-block
+**Completion:** 75% | **Blockers:** Period closing workflow not yet implemented; financial statement generation lives in reports sub-block
 
 ### Integration Points
 
-- Posts journal entries via `finance/lib/accounting/`
+- Journal entries + general ledger live here; the reusable posting engine is `finance/lib/accounting/` (only fee payments post through it automatically today -- see umbrella `ISSUE.md` P0)
 - Account codes referenced by all other finance sub-blocks
 - Trial balance feeds into `finance/reports/`
 - See [finance master README](../README.md) for architecture details

@@ -1,0 +1,421 @@
+---
+title: الفهرس (Catalog)
+description: العمود الفقري المشترك — مجموعة واحدة من المواد والفصول والدروس تشير إليها كل المدارس عبر جداول الجسر (bridge).
+---
+
+الفهرس هو المصدر الموحّد لمحتوى المنهج. كل المدارس تشير إلى نفس المواد عبر جداول الجسر؛ والمحتوى الذي يساهم به المعلّمون (فيديوهات، كتب، اختبارات) يمرّ بمراجعة فريق SaaS ثم يُثري الفهرس للجميع.
+
+## لماذا فهرس مشترك
+
+| الأسلوب        | بيانات 1,000 مدرسة × ~240 مادة                  | المشاركة                   |
+| -------------- | ----------------------------------------------- | -------------------------- |
+| نسخة لكل مدرسة | 220k مادة، 800k فصل، 4M درس                     | لا شيء                     |
+| **فهرس مشترك** | **~240 مادة، ~800 فصل، ~4k درس** + سجلّات الجسر | كل مساهمة تُثري كل المدارس |
+
+إعداد مدرسة جديدة يستغرق ثوانٍ — `setupCatalogForSchool()` يقرأ `country` + `curriculum` وينشئ صفوف الجسر `SubjectSelection`.
+
+## الطبقات الثلاث
+
+| الطبقة                 | النماذج                                                                        | النطاق                         |
+| ---------------------- | ------------------------------------------------------------------------------ | ------------------------------ |
+| الفهرس العام           | `Subject`، `Chapter`، `Lesson`                                                 | بلا `schoolId`                 |
+| المحتوى (المُساهَم به) | `Video`، `Attachment`، `Exam`، `Question`، `Material`، `Assignment`، `Book`    | `schoolId` اختياري لنسب المصدر |
+| جسر المدرسة            | `SubjectSelection`، `BookSelection`، `ContentOverride`، `InstructorPreference` | يحمل `schoolId`                |
+
+## النماذج والجداول
+
+نماذج الفهرس تستخدم **أسماء مجرّدة** مربوطة بجداول `catalog_*`؛ ونماذج الجسر مربوطة بجداول `school_*`. مُوصِّل عميل Prisma هو صيغة camelCase من اسم النموذج (`db.subject`، `db.subjectSelection`).
+
+| الطبقة  | نموذج Prisma           | الجدول (`@@map`)                       | مُوصِّل العميل               |
+| ------- | ---------------------- | -------------------------------------- | ---------------------------- |
+| Catalog | `Subject`              | `catalog_subjects`                     | `db.subject`                 |
+| Catalog | `Chapter`              | `catalog_chapters`                     | `db.chapter`                 |
+| Catalog | `Lesson`               | `catalog_lessons`                      | `db.lesson`                  |
+| Catalog | `Video` / `Attachment` | `lesson_videos` / `lesson_attachments` | `db.video` / `db.attachment` |
+| Catalog | `Question`             | `catalog_questions`                    | `db.question`                |
+| Catalog | `ExamQuestion`         | `catalog_exam_questions`               | `db.examQuestion`            |
+| Catalog | `Exam`                 | `catalog_exams`                        | `db.exam`                    |
+| Catalog | `Material`             | `catalog_materials`                    | `db.material`                |
+| Catalog | `Assignment`           | `catalog_assignments`                  | `db.assignment`              |
+| Catalog | `Book`                 | `catalog_books`                        | `db.book`                    |
+| Catalog | `Curriculum`           | `catalog_curricula`                    | `db.curriculum`              |
+| Catalog | `Proposal`             | `catalog_proposals`                    | `db.proposal`                |
+| Catalog | `Document`             | `catalog_documents`                    | `db.document`                |
+| Bridge  | `SubjectSelection`     | `school_subject_selections`            | `db.subjectSelection`        |
+| Bridge  | `ContentOverride`      | `school_content_overrides`             | `db.contentOverride`         |
+| Bridge  | `InstructorPreference` | `school_instructor_preferences`        | `db.instructorPreference`    |
+| Bridge  | `BookSelection`        | `school_book_selections`               | `db.bookSelection`           |
+| LMS     | `Enrollment`           | `enrollments`                          | `db.enrollment`              |
+| LMS     | `LessonProgress`       | `lesson_progress`                      | `db.lessonProgress`          |
+| LMS     | `SubjectCertificate`   | `subject_certificates`                 | `db.subjectCertificate`      |
+
+**تضارب الأسماء** — نموذج الفهرس ونظيره المخصّص للمدرسة هما نموذجان _مختلفان_. عند رؤية `Exam` راجع الجدول لتعرف أيّهما المقصود:
+
+| الفهرس (عام)                              | مخصّص للمدرسة (لكل مستأجر)              |
+| ----------------------------------------- | --------------------------------------- |
+| `Exam` → `catalog_exams`                  | `SchoolExam` → `exams`                  |
+| `Book` → `catalog_books`                  | `SchoolBook` → `books`                  |
+| `Assignment` → `catalog_assignments`      | `SchoolAssignment` → `assignments`      |
+| `Question` → `catalog_questions`          | `QuestionBank` → `question_bank`        |
+| `ExamTemplate` → `catalog_exam_templates` | `SchoolExamTemplate` → `exam_templates` |
+
+## إعدادات المدرسة
+
+| الحقل         | النوع     | أمثلة                                 |
+| ------------- | --------- | ------------------------------------- |
+| `country`     | `String?` | `US`، `SD`، `GB`، `AE`                |
+| `curriculum`  | `String?` | `us-k12`، `national`، `british`، `ib` |
+| `schoolLevel` | `String?` | `elementary`، `middle`، `high`، `k12` |
+
+`Subject.curriculumId` مفتاح أجنبي اختياري إلى `Curriculum` (`catalog_curricula`) إلى جانب حقلَي السلسلة `country` / `curriculum` — وبذرة `curriculum` تملؤه لاحقاً.
+
+## التعيين التلقائي
+
+`setupCatalogForSchool(schoolId, opts)` ينشئ صفوف الجسر عبر تراجع تدريجي من 4 خطوات (الاستعلام الداخلي هو `findSubjects()`):
+
+| الخطوة | المُرشِّح                           |
+| ------ | ----------------------------------- |
+| 1      | `country + curriculum + schoolType` |
+| 2      | `country + curriculum`              |
+| 3      | `country="*" + curriculum` (عالمي)  |
+| 4      | `US + us-k12` (تراجع أساسي)         |
+
+المواد المخصّصة لصف بعينه تُنتج ربطاً 1:1 — "Math Grade 3" يُربَط مباشرةً بالصف الثالث في المدرسة.
+
+```ts
+import { setupCatalogForSchool } from "@/lib/catalog-setup"
+
+await setupCatalogForSchool(schoolId, { country: "US", curriculum: "us-k12" })
+await setupCatalogForSchool(schoolId, { country: "AE", curriculum: "ib" })
+await setupCatalogForSchool(schoolId, { country: "GB", curriculum: "british" })
+```
+
+> اختيار المواد يعمل لأي منهج، لكن البنية الأكاديمية التي يبنيها (أسماء المراحل/الصفوف والمسارات) ما زالت مُثبَّتة على النموذج السوداني — راجع [الثغرات المعروفة وخارطة الطريق](#الثغرات-المعروفة-وخارطة-الطريق).
+
+## مسار مراجعة المحتوى
+
+```
+المعلّم/المدرسة ينشئ محتوى
+  → approvalStatus: PENDING، visibility: PRIVATE
+مسؤول SaaS يراجع
+  → APPROVED → مُفهرَس، الرؤية يحدّدها المُنشئ
+       PRIVATE  — مدرسة المُنشئ فقط
+       SCHOOL   — المدارس التي تستخدم تلك المادة (مجاناً)
+       PUBLIC   — أي شخص (مجاناً أو مدفوعاً)
+  → REJECTED → تُرسَل ملاحظات للمُنشئ
+```
+
+## تدفّقات البيانات
+
+**التشغيلي** — يقود الجداول الزمنية والمكتبة والاختبارات:
+
+```
+Subject → SubjectSelection → Class → Timetable
+Subject → Book → BookSelection → SchoolBook (المكتبة)
+Subject → Exam → SchoolExam
+Subject → Question → QuestionBank
+```
+
+**LMS** — يقود التعلّم الإلكتروني والشهادات:
+
+```
+Subject → Enrollment → LessonProgress → SubjectCertificate
+Lesson → Video (متعدّد المعلّمين)
+Lesson → Attachment / Question
+```
+
+المساعد `syncStudentClassToEnrollment()` (`src/lib/enrollment-sync.ts`) يجسر التحاق الصف الدراسي إلى وصول LMS عبر `Class.subjectId` → `Subject`. وهو غير حاجب، وقابل لإعادة التنفيذ بأمان (idempotent)، ويتخطّى بسلاسة عند غياب المفتاح الأجنبي للفهرس.
+
+## نماذج المحتوى
+
+### `Material`
+
+كتب ومناهج وأوراق عمل على أي مستوى من الفهرس (الجدول `catalog_materials`).
+
+| الحقل                                                            | النوع               | ملاحظات                                                  |
+| ---------------------------------------------------------------- | ------------------- | -------------------------------------------------------- |
+| `catalogSubjectId` / `catalogChapterId` / `catalogLessonId`      | `String?`           | أحدها مضبوط (مفاتيح أجنبية إلى هرم الفهرس)               |
+| `title`                                                          | `String`            |                                                          |
+| `lang`                                                           | `String`            | افتراضي `"ar"`                                           |
+| `type`                                                           | `MaterialType`      | `TEXTBOOK`، `SYLLABUS`، `WORKSHEET`، `PRESENTATION`، إلخ |
+| `fileUrl` / `fileKey` / `fileSize` / `mimeType` / `pageCount`    | متنوّع              | مُخزَّن على S3                                           |
+| `externalUrl`                                                    | `String?`           | للموارد غير المرفوعة                                     |
+| `tags`                                                           | `String[]`          | قابلة للبحث                                              |
+| `contributedBy` / `contributedSchoolId`                          | `String?`           | النسب                                                    |
+| `approvalStatus`                                                 | `ApprovalStatus`    | `PENDING`، `APPROVED`، `REJECTED`                        |
+| `visibility`                                                     | `ContentVisibility` | `PRIVATE`، `SCHOOL`، `PUBLIC`، `PAID`                    |
+| `usageCount` / `averageRating` / `ratingCount` / `downloadCount` | `Int` / `Float`     | التفاعل                                                  |
+
+### `Assignment`
+
+قوالب واجبات/مشاريع قابلة لإعادة الاستخدام (الجدول `catalog_assignments`). نفس بنية `Material` بالإضافة إلى:
+
+| الحقل                     | النوع      | ملاحظات                                               |
+| ------------------------- | ---------- | ----------------------------------------------------- |
+| `instructions` / `rubric` | `String?`  | نصّ طويل                                              |
+| `totalPoints`             | `Decimal?` |                                                       |
+| `estimatedTime`           | `Int?`     | بالدقائق                                              |
+| `assignmentType`          | `String?`  | `homework`، `project`، `lab`، `essay`، `presentation` |
+
+### `ExamQuestion`
+
+جدول وصل (junction) يربط `Exam` ↔ `Question` مع الترتيب (الجدول `catalog_exam_questions`). يحلّ محلّ حقل JSON القديم `Exam.questions`.
+
+| الحقل                                | ملاحظات                            |
+| ------------------------------------ | ---------------------------------- |
+| `catalogExamId`، `catalogQuestionId` | مفاتيح أجنبية (حذف متتالٍ)         |
+| `order`                              | ترتيب السؤال داخل الاختبار         |
+| `points`                             | `Decimal` — تجاوز درجات لكل اختبار |
+
+الفهارس: `@@unique([catalogExamId, order])`، `@@unique([catalogExamId, catalogQuestionId])`.
+
+### `Video`، `Attachment`
+
+المخطّطات الكاملة في `prisma/models/video.prisma` (`lesson_videos`، `lesson_attachments`). أهم حقول `Video`: `videoUrl`، `provider` (`youtube`/`vimeo`/`self-hosted`)، `visibility`، `price`، `approvalStatus`، إضافةً إلى التفاعل (`viewCount`، `likeCount`، `averageRating`، `isFeatured`). الفيديوهات المدفوعة تُدار عبر `VideoPurchase`.
+
+## امتدادات ClickView
+
+| النموذج   | الحقول المُضافة                                   |
+| --------- | ------------------------------------------------- |
+| `Subject` | `clickviewId`، `clickviewUrl`                     |
+| `Lesson`  | `clickviewCoverId`، `videoCount`، `resourceCount` |
+| `School`  | `curriculum` (مُستنتَج من country + schoolType)   |
+
+مفاتيح أجنبية اختيارية للفهرس على النماذج المخصّصة للمدرسة تجسر الإجراءات إلى هرم الفهرس:
+
+```prisma
+// QuestionBank، SchoolExam — ربط بهرم الفهرس
+catalogSubjectId  String?
+catalogChapterId  String?
+catalogLessonId   String?
+
+// SchoolAssignment — ربط بدرس الفهرس
+catalogLessonId   String?
+```
+
+## التعدادات (Enums)
+
+```
+ContentStatus      DRAFT, REVIEW, PUBLISHED, ARCHIVED, DEPRECATED
+SchoolLevel        ELEMENTARY, MIDDLE, HIGH
+StreamType         GENERAL, SCIENCE, ARTS, COMMERCE, TECHNICAL, RELIGIOUS
+ApprovalStatus     PENDING, APPROVED, REJECTED
+ContentVisibility  PRIVATE, SCHOOL, PUBLIC, PAID
+MaterialType       TEXTBOOK, SYLLABUS, REFERENCE, STUDY_GUIDE, PROJECT, WORKSHEET,
+                   PRESENTATION, LESSON_NOTES, VIDEO_GUIDE, LAB_MANUAL, OTHER
+QuestionType       MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY, FILL_BLANK,
+                   MATCHING, ORDERING, MULTI_SELECT
+QuestionSource     MANUAL, AI, IMPORTED
+DifficultyLevel    EASY, MEDIUM, HARD
+BloomLevel         REMEMBER, UNDERSTAND, APPLY, ANALYZE, EVALUATE, CREATE
+ProposalType       SUBJECT, CHAPTER, LESSON, VIDEO
+ProposalStatus     DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED
+EnrollmentStatus   PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
+```
+
+## خطّ معالجة الصور
+
+معالجة من جهة الخادم عبر Sharp، وتُقدَّم من شبكة CloudFront CDN. فصل نقيّ بين العميل والخادم.
+
+| النسخة           | العرض  | الجودة  | الاستخدام      |
+| ---------------- | ------ | ------- | -------------- |
+| `-sm.webp`       | 200px  | 95      | مصغّرات الشبكة |
+| `-md.webp`       | 600px  | 97      | صور البطاقات   |
+| `-lg.webp`       | 1200px | 100     | بانرات البطل   |
+| `-original.webp` | كامل   | بلا فقد | الدقّة الكاملة |
+
+| الملف                          | البيئة     | الغرض                                                |
+| ------------------------------ | ---------- | ---------------------------------------------------- |
+| `src/lib/catalog-image.ts`     | خادم فقط   | `processAndUploadCatalogImage`، `deleteCatalogImage` |
+| `src/lib/catalog-image-url.ts` | آمن للعميل | `getCatalogImageUrl`، `getCatalogImageSrcSet`        |
+
+يحمل `Subject` أربعة حقول مفاتيح S3 — `thumbnail` (`@map("thumbnailKey")`)، `banner` (`@map("bannerUrl")`)، `cover` (غلاف الكتاب)، `pdf` (ملف الكتاب). أولوية حلّ الرابط:
+
+1. رابط CloudFront CDN من `thumbnail` → `{CDN}/{thumbnailKey}-{size}.webp`
+2. تراجع ثابت قائم على المفهوم (مصغّرات المفاهيم المشتركة حسب [/en/docs/concept](/en/docs/concept))
+3. `null` — تتراجع الواجهة إلى خلفية لونية
+
+## تقدّم الدروس والشهادات
+
+`LessonProgress` يتتبّع حالة كل درس: `watchedSeconds` (الاستئناف)، `isCompleted`، `watchCount`، `lessonVideoId`. مرتبط بكلٍّ من `Enrollment` و`Lesson`.
+
+عند استدعاء `markLessonComplete` (`src/components/stream/dashboard/lesson/catalog-actions.ts`):
+
+1. تحديث/إدراج (upsert) `LessonProgress` بـ`isCompleted: true`
+2. استعلام كل الدروس المنشورة في المادة
+3. إن اكتملت كلّها → ضبط `Enrollment.status = COMPLETED`
+4. توليد `SubjectCertificate` برقم فريد
+5. إرسال بريد الإكمال بشكل غير متزامن
+
+## أنماط الاستعلام
+
+```ts
+// كل مواد مدرسة لصف معيّن
+await db.subjectSelection.findMany({
+  where: { schoolId, gradeId, isActive: true },
+  include: {
+    subject: {
+      include: {
+        chapters: {
+          where: { status: "PUBLISHED" },
+          orderBy: { sequenceOrder: "asc" },
+        },
+      },
+    },
+  },
+})
+
+// درس مع فيديوهات مرتّبة
+await db.lesson.findUnique({
+  where: { id: lessonId },
+  include: {
+    videos: {
+      where: {
+        approvalStatus: "APPROVED",
+        OR: [{ visibility: "PUBLIC" }, { schoolId }, { isFeatured: true }],
+      },
+      orderBy: [
+        { isFeatured: "desc" },
+        { viewCount: "desc" },
+        { averageRating: "desc" },
+      ],
+    },
+  },
+})
+
+// أسئلة الفهرس لاختبار فصل
+await db.question.findMany({
+  where: {
+    catalogChapterId: chapterId,
+    approvalStatus: "APPROVED",
+    visibility: "PUBLIC",
+    status: "PUBLISHED",
+  },
+  orderBy: [{ qualityScore: "desc" }, { usageCount: "desc" }],
+})
+```
+
+## خطّ التعبئة (Seed)
+
+بذرة `catalog` الافتراضية تحمّل US K-12 إضافةً إلى مجموعة سودانية أساسية. المنهج السوداني الكامل وثمانية مناهج عالمية أخرى تُشحَن كبذور **منفصلة** — وليست ضمن المسار الافتراضي.
+
+| البذرة (`pnpm db:seed:single …`)                                                  | المحتوى                                                                           |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `catalog`                                                                         | `seedUsCatalog` (US K-12، ~240 مادة) + `seedSudanCatalog` (مجموعة سودانية أساسية) |
+| `sync-sd-curriculum`                                                              | المنهج السوداني الوطني الكامل من `curriculum/sd/` (97 مادة)                       |
+| `world-curricula`                                                                 | 8 مناهج — GB، IB، SA، EG، AE، QA، KW، JO — مواد مخصّصة لكل صف                     |
+| `curriculum`                                                                      | سجلّات `Curriculum` (SD-national، US-k12) + ملء `Subject.curriculumId`            |
+| `concept-images` / `clickview-images`                                             | مصغّرات المفاهيم المشتركة → Sharp → S3/CloudFront                                 |
+| `catalog-books` / `catalog-content` / `catalog-videos` / `catalog-exam-templates` | كتب، مواد، فيديوهات، قوالب اختبارات                                               |
+| `academic-catalog`                                                                | البنية الأكاديمية + صفوف الجسر للمدرسة التجريبية                                  |
+
+```bash
+pnpm db:seed:single catalog            # US K-12 + مجموعة سودانية أساسية
+pnpm db:seed:single world-curricula    # GB, IB, SA, EG, AE, QA, KW, JO
+pnpm db:seed:single sync-sd-curriculum # المنهج السوداني الكامل
+pnpm db:seed:single concept-images     # المصغّرات → S3/CDN
+```
+
+للأعداد الدقيقة للمواد/الفصول/الدروس ولمعمارية البذور، راجع [Curriculum engineering](/en/docs/curriculum-engineering) و[Sudan curriculum](/en/docs/sudan-curriculum).
+
+## هيكل الملفات
+
+```
+prisma/
+  models/
+    catalog.prisma            # Subject (الجذر) + التعدادات المشتركة
+    chapter.prisma            # Chapter
+    lesson.prisma             # Lesson
+    video.prisma              # Video, VideoPurchase, Attachment
+    question.prisma           # Question, ExamQuestion
+    exam.prisma               # Exam, ExamTemplate, ExamBlueprint, PaperTemplate
+    quiz.prisma               # Quiz, QuizQuestion
+    material.prisma           # Material
+    assignment.prisma         # Assignment
+    book.prisma               # Book
+    textbook.prisma           # Textbook
+    document.prisma           # Document (سجلّ ملفات موحّد: PDF/PPTX/DOCX/صوت)
+    proposal.prisma           # Proposal
+    curriculum.prisma         # Curriculum
+    bridge.prisma             # SubjectSelection, ContentOverride, InstructorPreference, BookSelection
+    enrollment.prisma         # Enrollment, LessonProgress, SubjectCertificate
+    academic-structure.prisma # AcademicLevel, AcademicGrade, AcademicStream
+  seeds/
+    catalog.ts                # المنسّق → us-catalog + sd-catalog
+    us-catalog.ts             # مواد US K-12
+    sd-catalog.ts             # مجموعة سودانية أساسية
+    sync-sd-curriculum.ts     # المنهج السوداني الكامل من curriculum/sd/
+    world-curricula.ts        # GB, IB, SA, EG, AE, QA, KW, JO
+    curriculum.ts             # سجلّات Curriculum + ملء curriculumId
+    concept-images.ts         # مصغّرات المفاهيم المشتركة → S3
+    clickview-images.ts       # مصغّرات ClickView
+    catalog-books.ts, catalog-content.ts, catalog-videos.ts, catalog-exam-templates.ts
+    academic-structure-catalog.ts
+    single.ts                 # سجلّ أوامر البذور
+
+src/
+  app/[lang]/(saas-dashboard)/(catalog)/      # إدارة الفهرس للمنصّة (DEVELOPER)
+    catalog/{page,[subjectId]}, analytics, approvals, assignments,
+    books, materials, proposals, questions
+  components/saas-dashboard/catalog/          # واجهة CRUD للفهرس (detail.tsx, actions.ts، …)
+  app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/
+    catalog/, contribute/, contributions/     # تبنّي المواد + التصفّح للمدرسة
+  components/school-dashboard/listings/subjects/
+    catalog/{content,actions,subject-picker}.tsx, contribution-actions.ts، …
+  components/stream/data/catalog/             # طبقة محوّل القراءة/الاستعلام لـLMS
+  components/ui/catalog-image.tsx
+  lib/{catalog-setup,catalog-image,catalog-image-url}.ts
+```
+
+## الثغرات المعروفة وخارطة الطريق
+
+طبقة _المحتوى_ في الفهرس متعدّدة المناهج، لكن طبقة _التهيئة_ (`src/lib/catalog-setup.ts`، ~1,716 سطراً)
+ما زالت تُضمِّن افتراضات سودانية. الحالة وقت كتابة هذا:
+
+### P0 — معوّقات حرجة
+
+- **البنية الأكاديمية مُثبَّتة على النموذج السوداني.** `LEVEL_CONFIG` (6+3+3)، و`GRADE_NAMES`
+  (بالعربية)، و`HIGH_SCHOOL_STREAMS` (علمي/أدبي)، و`SCIENCE/ARTS_ONLY_PATTERNS`
+  (`catalog-setup.ts` الأسطر 10–122) تُطبَّق على **كل** مدرسة. مدرسة أمريكية/بريطانية/IB تحصل على
+  أسماء صفوف عربية سودانية ومسارات علمي/أدبي مفروضة على الصفوف 10–12. الحلّ: تقسيم
+  `catalog-setup.ts` إلى محرّك مشترك + إعدادات `CurriculumConfig` لكل منهج
+  (`src/lib/catalog/curricula/{sd,us,gb,ib}.ts`). **لا** تقسّم جدول `catalog_subjects`.
+- **British / IB غير قابلين للتهيئة من الطرف للطرف.** `inferCurriculum` يربط `GB → british`
+  و`international → ib`، لكن بذرة `world-curricula` **ليست** ضمن بذرة `catalog` الافتراضية، فقد
+  يتراجع `findSubjects` إلى الأساس الأمريكي حتى تُشغَّل صراحةً.
+
+### P1
+
+- **التعافي من الفشل الجزئي ناقص.** التهيئة تعمل بأسلوب fire-and-forget عبر `after()` في Next.js
+  (`onboarding/legal/actions.ts`). فقط `ensureSubjectSelections` يُصلِح نفسه ذاتياً — ولاختيارات
+  المواد فقط، لا للمراحل/الصفوف/الجدول الزمني/الأقسام/الرسوم.
+- **دوال مُصدَّرة غير موصولة.** `setupLibraryForSchool` (كتب المكتبة لا تُهيَّأ عند الإعداد)،
+  و`teardownCatalogForSchool` (تشير إليها الاختبارات فقط)، و`publishSchool` (بلا مستدعٍ) — صِلها
+  أو احذفها.
+- **`findSubjects` بلا حارس رؤية** (يُرشِّح على `status: PUBLISHED` فقط) — ثغرة دفاع في العمق.
+- **انحراف عن مبدأ المسؤولية الواحدة.** `catalog-setup.ts` يملك أيضاً توليد الجدول الزمني، وتهيئة
+  الأقسام تلقائياً، و`getRankedVideos` / `recordVideoView` (من نطاق stream) — افصلها.
+
+### P2
+
+- منطق مكرّر للحصص الأسبوعية (`getDefaultWeeklyPeriods` مقابل `src/lib/timetable-reference.ts`).
+- `gpa` في `SCORE_RANGE_DEFAULTS` يُجرَّد قبل الإدراج (لا عمود `gpa` في `ScoreRange`).
+- `legalData` يُجمَع أثناء الإعداد لكن يُهمَل (TODO في خطوة legal).
+- صفوف البنية الأكاديمية تُدرَج في حلقة `tx.create` متتابعة — اجمعها بـ`createMany`.
+- جودة استخراج جدول المحتويات وأداء تحديث الأعداد المُجمَّعة — مُتابَعة في
+  [Curriculum engineering → Improvement areas](/en/docs/curriculum-engineering).
+
+### الاتجاه المستقبلي
+
+- اشتقاق أسماء المراحل/الصفوف من `School.preferredLanguage` / `Curriculum.lang`؛ وحصر مسارات
+  العلمي/الأدبي على `national` فقط.
+- جعل التهيئة خطّ معالجة قابلاً للاستئناف وإعادة التنفيذ مع حفظ حالة كل خطوة على `School`؛ وتعميم
+  `ensureSubjectSelections` → `ensureProvisioned`.
+
+## اطّلع أيضاً
+
+- [Curriculum engineering](/en/docs/curriculum-engineering)
+- [Concepts](/en/docs/concept)
+- [ClickView overview](/en/docs/clickview)
+- [Sudan curriculum](/en/docs/sudan-curriculum)
+- [Library](/en/docs/library)

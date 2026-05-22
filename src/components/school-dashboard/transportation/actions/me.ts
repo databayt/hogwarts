@@ -2,12 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { auth } from "@/auth"
-import type { UserRole } from "@prisma/client"
-
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+
+import { requireContext } from "./helpers"
 
 export interface MyTransportationAssignment {
   id: string
@@ -51,13 +49,11 @@ export interface MyTransportationChild {
  * Always schoolId-scoped via getTenantContext().
  */
 export async function getMyTransportationView() {
-  const session = await auth()
-  const userId = session?.user?.id
-  const role = session?.user?.role as UserRole | undefined
-  if (!userId || !role) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+  // read_own gates STUDENT/GUARDIAN (+ STAFF/TEACHER/DEVELOPER/ADMIN) through
+  // the central permission matrix; the role branch below narrows behavior.
+  const ctx = await requireContext("read_own")
+  if (!ctx.ok) return ctx.response
+  const { schoolId, userId, role } = ctx
 
   // Resolve target studentIds based on role
   let studentIds: string[] = []

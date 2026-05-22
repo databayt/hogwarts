@@ -434,43 +434,7 @@ export async function getApplicationStatus(
   }
 }
 
-/**
- * Get application status by application number (requires OTP verification first)
- */
-export async function getApplicationByNumber(
-  subdomain: string,
-  applicationNumber: string
-): Promise<ActionResult<{ hasApplication: boolean; email?: string }>> {
-  try {
-    const schoolResult = await getSchoolBySubdomain(subdomain)
-    if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" }
-    }
-
-    const schoolId = schoolResult.data.id
-
-    const application = await db.application.findFirst({
-      where: {
-        schoolId,
-        applicationNumber,
-      },
-      select: {
-        email: true,
-      },
-    })
-
-    if (!application) {
-      return { success: true, data: { hasApplication: false } }
-    }
-
-    // Mask email for privacy
-    const [localPart, domain] = application.email.split("@")
-    const maskedLocal = localPart.substring(0, 2) + "***"
-    const maskedEmail = `${maskedLocal}@${domain}`
-
-    return { success: true, data: { hasApplication: true, email: maskedEmail } }
-  } catch (error) {
-    console.error("Error checking application:", error)
-    return { success: false, error: "Failed to check application" }
-  }
-}
+// NOTE: getApplicationByNumber was removed (2026-05-21 audit, P1-3). It was an
+// unauthenticated lookup that returned {hasApplication, maskedEmail} for any
+// (subdomain, applicationNumber) — an enumeration + partial-email oracle with no
+// callers. Status lookups must go through requestStatusOTP → verifyStatusOTP.

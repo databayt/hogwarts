@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo, useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   flexRender,
@@ -13,6 +14,16 @@ import {
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -44,6 +55,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { createDriver, deleteDriver, updateDriver } from "../actions/drivers"
 import { TransportationEmptyState } from "../empty-state"
+import { resolveTransportationError } from "../error-map"
 import type { DriverRow } from "../shared/types"
 
 type DriverStatus = "ACTIVE" | "ON_LEAVE" | "INACTIVE"
@@ -88,13 +100,21 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const columns = useMemo<ColumnDef<DriverRow>[]>(
     () => [
       {
         id: "name",
         header: t.drivers.fields.firstName,
-        cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
+        cell: ({ row }) => (
+          <Link
+            className="hover:underline"
+            href={`/${locale}/transportation/drivers/${row.original.id}`}
+          >
+            {row.original.firstName} {row.original.lastName}
+          </Link>
+        ),
       },
       { accessorKey: "phone", header: t.drivers.fields.phone },
       {
@@ -149,7 +169,7 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
               variant="ghost"
               size="sm"
               type="button"
-              onClick={() => handleDelete(row.original.id)}
+              onClick={() => setDeleteId(row.original.id)}
             >
               {dictionary.common.delete}
             </Button>
@@ -210,20 +230,32 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
         setOpen(false)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm(t.drivers.deleteConfirm)) return
+  function confirmDelete() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
     startTransition(async () => {
       const result = await deleteDriver(id)
       if (result.success) {
         toast.success(t.toasts.driverDeleted)
         router.refresh()
       } else {
-        toast.error(t.errors.internalError)
+        toast.error(
+          resolveTransportationError(
+            t,
+            "error" in result ? result.error : undefined
+          )
+        )
       }
     })
   }
@@ -420,6 +452,26 @@ export function DriversClient({ drivers, dictionary, locale }: Props) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteId !== null}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary.common.delete}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.drivers.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dictionary.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {dictionary.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

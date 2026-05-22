@@ -15,11 +15,13 @@ export default async function ApplicationAuthLayout({
   children,
   params,
 }: AuthLayoutProps) {
-  const { lang, subdomain } = await params
+  const { lang } = await params
   const session = await auth()
 
   if (!session?.user) {
-    redirect(`/${lang}/login?callbackUrl=/${lang}/s/${subdomain}/application`)
+    // Clean client-facing path — middleware rewrites it to the internal
+    // /s/[subdomain]/ route. Using the internal path here would double-rewrite.
+    redirect(`/${lang}/login?callbackUrl=/${lang}/application`)
   }
 
   return <>{children}</>

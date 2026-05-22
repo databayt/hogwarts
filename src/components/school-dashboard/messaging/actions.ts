@@ -338,18 +338,15 @@ export async function createConversation(
   } catch (error) {
     console.error("[createConversation] Error:", error)
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.CONVERSATION_CREATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -406,10 +403,7 @@ export async function updateConversation(
         participant?.role
       )
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Permission denied",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Update conversation
@@ -437,18 +431,15 @@ export async function updateConversation(
   } catch (error) {
     console.error("[updateConversation] Error:", error)
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -523,13 +514,10 @@ export async function archiveConversation(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[archiveConversation] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to archive conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.CONVERSATION_ARCHIVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -600,10 +588,7 @@ export async function sendMessage(
         participant?.role
       )
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Permission denied",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Merge clientNonce into metadata for optimistic reconciliation
@@ -754,15 +739,15 @@ export async function sendMessage(
   } catch (error) {
     console.error("[sendMessage] Error:", error)
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
     }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to send message",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_SEND_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -832,10 +817,10 @@ export async function sendMessageFromForm(
     }
   } catch (error) {
     console.error("[sendMessageFromForm] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to send message",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_SEND_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -916,10 +901,10 @@ export async function editMessage(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[editMessage] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to edit message",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_EDIT_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1000,11 +985,10 @@ export async function deleteMessage(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteMessage] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete message",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1057,13 +1041,10 @@ export async function markMessageAsRead(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[markMessageAsRead] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to mark message as read",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1154,13 +1135,10 @@ export async function markConversationAsRead(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[markConversationAsRead] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to mark conversation as read",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1257,11 +1235,10 @@ export async function addParticipant(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[addParticipant] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to add participant",
-    }
+    return actionError(
+      ACTION_ERRORS.PARTICIPANT_ADD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1336,11 +1313,10 @@ export async function removeParticipant(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[removeParticipant] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to remove participant",
-    }
+    return actionError(
+      ACTION_ERRORS.PARTICIPANT_REMOVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1409,10 +1385,10 @@ export async function addReaction(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[addReaction] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to add reaction",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_REACTION_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1470,11 +1446,10 @@ export async function removeReaction(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[removeReaction] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to remove reaction",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_REACTION_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1544,10 +1519,10 @@ export async function loadMoreMessages(input: {
     return { success: true, data: serialized }
   } catch (error) {
     console.error("[loadMoreMessages] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load messages",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1597,11 +1572,10 @@ export async function pinConversation(input: {
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[pinConversation] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update pin status",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1649,11 +1623,10 @@ export async function muteConversation(input: {
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[muteConversation] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to mute conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1701,13 +1674,10 @@ export async function unmuteConversation(input: {
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[unmuteConversation] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to unmute conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1765,11 +1735,10 @@ export async function leaveConversation(input: {
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[leaveConversation] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to leave conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.CONVERSATION_LEAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1824,10 +1793,7 @@ export async function searchMessaging(input: {
     // Validate query
     const query = input.query?.trim()
     if (!query || query.length < 2) {
-      return {
-        success: false,
-        error: "Search query must be at least 2 characters",
-      }
+      return actionError(ACTION_ERRORS.SEARCH_QUERY_TOO_SHORT)
     }
 
     // Import search function
@@ -1864,10 +1830,10 @@ export async function searchMessaging(input: {
     }
   } catch (error) {
     console.error("[searchMessaging] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Search failed",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1906,10 +1872,7 @@ export async function searchConversationMessages(input: {
     // Validate query
     const query = input.query?.trim()
     if (!query || query.length < 2) {
-      return {
-        success: false,
-        error: "Search query must be at least 2 characters",
-      }
+      return actionError(ACTION_ERRORS.SEARCH_QUERY_TOO_SHORT)
     }
 
     // Verify user is participant
@@ -1951,10 +1914,10 @@ export async function searchConversationMessages(input: {
     }
   } catch (error) {
     console.error("[searchConversationMessages] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Search failed",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -1990,11 +1953,10 @@ export async function fetchSearchSuggestions(input: {
     return { success: true, data: suggestions }
   } catch (error) {
     console.error("[fetchSearchSuggestions] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to get suggestions",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2053,11 +2015,10 @@ export async function fetchConversationData(input: {
     }
   } catch (error) {
     console.error("[fetchConversationData] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch conversation",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2136,7 +2097,7 @@ export async function pollNewMessages(input: {
     return { success: true, data: { items: [] } }
   } catch (error) {
     console.error("[pollNewMessages] Error:", error)
-    return { success: false, error: "Failed to poll messages" }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -2172,7 +2133,7 @@ export async function pollConversationUpdates(): Promise<
     }
   } catch (error) {
     console.error("[pollConversationUpdates] Error:", error)
-    return { success: false, error: "Failed to poll conversations" }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -2203,10 +2164,7 @@ export async function toggleConversationWhatsApp(input: {
       authContext.userId
     )
     if (!participant || !["owner", "admin"].includes(participant.role)) {
-      return {
-        success: false,
-        error: "Only owner or admin can toggle WhatsApp",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // If enabling, check school has active WhatsApp session
@@ -2216,11 +2174,7 @@ export async function toggleConversationWhatsApp(input: {
         select: { status: true },
       })
       if (!waSession || waSession.status !== "connected") {
-        return {
-          success: false,
-          error:
-            "WhatsApp is not connected. Connect via the WhatsApp dashboard first.",
-        }
+        return actionError(ACTION_ERRORS.WHATSAPP_NOT_CONNECTED)
       }
 
       // Populate phone numbers for participants
@@ -2238,11 +2192,10 @@ export async function toggleConversationWhatsApp(input: {
     return { success: true, data: { enabled: input.enabled } }
   } catch (error) {
     console.error("[toggleConversationWhatsApp] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to toggle WhatsApp",
-    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2279,7 +2232,7 @@ export async function forwardMessage(
       !originalMessage ||
       originalMessage.conversation.schoolId !== schoolId
     ) {
-      return { success: false, error: "Message not found" }
+      return actionError(ACTION_ERRORS.MESSAGE_NOT_FOUND)
     }
 
     // Verify user is participant of the source conversation
@@ -2289,7 +2242,7 @@ export async function forwardMessage(
       authContext.userId
     )
     if (!isSourceParticipant) {
-      return { success: false, error: "Not a participant of this conversation" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const messageIds: string[] = []
@@ -2344,11 +2297,10 @@ export async function forwardMessage(
     return { success: true, data: { messageIds } }
   } catch (error) {
     console.error("[forwardMessage] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to forward message",
-    }
+    return actionError(
+      ACTION_ERRORS.MESSAGE_SEND_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2379,7 +2331,7 @@ export async function starMessage(
       authContext.userId
     )
     if (!isParticipant) {
-      return { success: false, error: "Not a participant of this conversation" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const starred = await db.starredMessage.upsert({
@@ -2400,10 +2352,10 @@ export async function starMessage(
     return { success: true, data: { id: starred.id } }
   } catch (error) {
     console.error("[starMessage] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to star message",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2445,11 +2397,10 @@ export async function unstarMessage(
     return { success: true, data: { success: true } }
   } catch (error) {
     console.error("[unstarMessage] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to unstar message",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -2506,12 +2457,9 @@ export async function getStarredMessages(input: {
     }
   } catch (error) {
     console.error("[getStarredMessages] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get starred messages",
-    }
+    return actionError(
+      ACTION_ERRORS.LOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

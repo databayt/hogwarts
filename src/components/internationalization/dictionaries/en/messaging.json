@@ -220,6 +220,9 @@
     "select_one_user": "Please select at least one user",
     "enter_group_name": "Please enter a group name",
     "react_failed": "Failed to add reaction",
+    "not_authenticated": "You must be signed in",
+    "search_query_too_short": "Search query must be at least 2 characters",
+    "whatsapp_not_connected": "WhatsApp is not connected for this school",
     "no_school_context": "No school context found",
     "conversation_start_failed": "Failed to start conversation",
     "microphone_access": "Could not access microphone"

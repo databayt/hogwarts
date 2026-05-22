@@ -79,12 +79,13 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 - [ ] Wire Export button in `all.tsx` to `exportInvoiceToCSV()` from `util.ts`
 
+### P1: Ledger Posting Not Wired
+
+- [ ] Invoice payments don't post to the ledger -- `postInvoicePayment` exists in `finance/lib/accounting/` but has zero callers (umbrella ISSUE.md P0)
+
 ### P2: Stubs to Complete
 
 - [ ] Implement `bulk-generate.tsx` -- generate invoices from `FeeAssignment` records for a class/year
-- [ ] Complete or remove `content-enhanced.tsx` (currently stubbed placeholder)
-- [ ] Complete or remove `onboarding/actions.ts` (currently empty `export {}`)
-- [ ] Complete or remove `settings/actions.ts` (currently empty `export {}`)
 
 ### P2: i18n Migration
 

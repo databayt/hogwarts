@@ -5,14 +5,18 @@ description: In-platform messaging — direct, group, class, department, and ann
 
 The messages module powers in-platform communication: 5 conversation types, file attachments, emoji reactions, read receipts, full-text search, full RBAC across 8 roles. Messages dual-deliver to WhatsApp when the school has an active session, with bidirectional bridging for incoming replies.
 
+> **Source directory is `messaging/`, not `messages/`.** All component code lives in `src/components/school-dashboard/messaging/` (~13k LOC, 80 files). The route, however, is `/messages`.
+
 ## Routes
 
-All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
+The messaging UI lives in its own full-screen route group, `(school-messaging)`, with **no** dashboard header/sidebar/footer.
 
 | Route                      | Purpose                              |
 | -------------------------- | ------------------------------------ |
 | `/messages`                | Sidebar + chat interface             |
 | `/messages?conversation=X` | Deep link to a specific conversation |
+
+File-system path: `src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page.tsx`.
 
 ## Conversation types
 
@@ -24,11 +28,15 @@ All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/messages/`:
 | `department`   | Department-wide channel      | department members          | `departmentId`                    |
 | `announcement` | Admin / DEVELOPER broadcast  | all school members          | `title`, read-only for non-admins |
 
-Direct conversations dedup on `directParticipant1Id` / `directParticipant2Id` — `getOrCreateDirectConversation()` checks both orderings.
+> **Creatable today: only `direct` and `group`.** The create dialog (`new-conversation-dialog.tsx`) exposes just those two tabs. `class`, `department`, and `announcement` exist in the `ConversationType` enum and the RBAC matrix below, but have **no creation entry point yet** — treat them as schema-level scaffolding, not shipped features.
+
+Direct conversations dedup on `directParticipant1Id` / `directParticipant2Id` — `getOrCreateDirectConversation()` checks both orderings. (Dedup is enforced in application logic only; there is no DB unique constraint, so concurrent creates can still race a duplicate.)
 
 System messages auto-generate for lifecycle events: `participant_joined`, `participant_left`, `participant_added`, `participant_removed`, `conversation_created`, `conversation_renamed`, `conversation_archived`, `message_pinned`, `message_unpinned`.
 
 ## RBAC
+
+> The matrices below reflect the **authorization layer + config intent**. Only `direct` and `group` have a creation UI today (see note above), so the `class` / `department` / `announcement` columns describe permission scaffolding, not reachable flows.
 
 ### Platform role × conversation type
 
@@ -77,6 +85,12 @@ Messages soft-delete via `isDeleted: true` + `deletedAt` ("This message was dele
 
 Drag-and-drop with previews and progress bars. S3 / Vercel Blob storage. Path: `messaging/{schoolId}/{conversationId}/{filename}`.
 
+## Real-time delivery
+
+Live updates use **Socket.IO** via a standalone server in `socket-server/` — 15 events (`message:new/updated/deleted/read/reaction`, `conversation:updated/new`, `conversation:participant_added/removed`, `typing:start/stop`). Presence is Redis-backed (green dots on cards, last-seen in header). Server→client pushes go through `POST /api/emit` and `/api/emit-to-users`, protected by an `x-emit-secret` header.
+
+> **Ops status:** the Socket.IO server is **not yet deployed** — tracked in [#262](https://github.com/databayt/hogwarts/issues/262) (migration to Oracle Cloud). Until it ships, the client falls back to **polling**: 15 s for the conversation list and 10 s for the active conversation (`messaging-client.tsx`). Realtime works end-to-end once the server is live and `NEXT_PUBLIC_SOCKET_URL` / `SOCKET_SECRET` / `EMIT_SECRET` are set on Vercel (currently `NEXT_PUBLIC_SOCKET_URL` still points at `localhost`).
+
 ## WhatsApp integration
 
 When the school has an active WhatsApp session, in-app messages auto-dispatch via Evolution API. Bidirectional — incoming replies bridge back via webhook.
@@ -91,28 +105,29 @@ Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbe
 
 Rate limits: 1 msg / sec / school, 500 direct / day / school. Failed dispatches retry with exponential backoff (max 5 attempts) via `cron/process-whatsapp-notifications` (every 5 minutes).
 
+> **Ops + scope caveats:** the retry cron **refuses to run in production until `CRON_SECRET` is set** (currently unset), and the webhook fails closed until `WHATSAPP_WEBHOOK_SECRET` is set. Group WhatsApp dispatch is also limited — the scalar `whatsapp*` status columns on `Message` only mirror state for **1:1** conversations; group failures are logged per-recipient in `WhatsAppMessage` but are **not** retried. A `MessageWhatsappDelivery` join table is required before enabling group WhatsApp at scale (see `ISSUE.md` P0).
+
 Key files: `whatsapp-bridge.ts`, `src/lib/whatsapp/evolution-client.ts`, `src/app/api/webhooks/whatsapp/route.ts`, `src/app/api/cron/process-whatsapp-notifications/route.ts`, `src/components/school-dashboard/whatsapp/`.
 
 Test accounts (`pnpm db:seed:single messaging-phones`): `admin@databayt.org` (00966557721603), `accountant@databayt.org` (00966504559207).
 
 ## Contacts sidebar
 
-WhatsApp-style contact list grouped by role. Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getDisplayText()`.
+WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getDisplayText()`. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
 
 ## Unread badge
 
-`MessageMailIcon` in the platform header polls `/api/messages/unread-count` every 30 s and shows a count badge.
+`MessageMailIcon` in the platform header fetches `/api/messages/unread-count` on mount and on tab focus, and increments live via the Socket.IO `message:new` event.
 
 ## Notifications
 
-| Trigger             | Recipients                     | Priority |
-| ------------------- | ------------------------------ | -------- |
-| New message         | all participants except sender | normal   |
-| `@mention`          | mentioned users                | high     |
-| Announcement        | all school members             | high     |
-| Conversation invite | invitee                        | normal   |
+| Trigger           | Recipients                     | Priority |
+| ----------------- | ------------------------------ | -------- |
+| New message       | all participants except sender | normal   |
+| `@mention`        | mentioned users                | high     |
+| Participant added | the added user                 | normal   |
 
-Dispatched via `notification-helpers.ts` (in-app + email + SMS).
+Dispatched via `notification-helpers.ts` (in-app + email; mentions and participant-added text branch on the school's `preferredLanguage`). Notifications can also fan out to WhatsApp when the school has it enabled.
 
 ## Search
 
@@ -122,20 +137,22 @@ Dispatched via `notification-helpers.ts` (in-app + email + SMS).
 
 ## Server actions and queries
 
-20+ actions in `src/components/school-dashboard/messages/actions.ts`:
+**29 server actions** in `src/components/school-dashboard/messaging/actions.ts`:
 
-| Category      | Actions                                                                                               |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| Conversations | `createConversation`, `archiveConversation`, `leaveConversation`, `pinConversation`, `mute`, `unmute` |
-| Messages      | `sendMessage`, `sendMessageFromForm`, `editMessage`, `deleteMessage`                                  |
-| Participants  | `addParticipant`, `removeParticipant`                                                                 |
-| Reactions     | `addReaction`, `removeReaction`                                                                       |
-| Pins          | `pinMessage`, `unpinMessage`                                                                          |
-| Read receipts | `markMessageAsRead`, `markConversationAsRead`                                                         |
-| Drafts        | `saveDraft`, `deleteDraft`                                                                            |
-| Invites       | `createConversationInvite`, `respondToInvite`                                                         |
+| Category      | Actions                                                                                                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Conversations | `createConversation`, `updateConversation`, `archiveConversation`, `leaveConversation`, `pinConversation`, `muteConversation`, `unmuteConversation`, `toggleConversationWhatsApp` |
+| Messages      | `sendMessage`, `sendMessageFromForm`, `editMessage`, `deleteMessage`, `forwardMessage`, `loadMoreMessages`                                                                        |
+| Reactions     | `addReaction`, `removeReaction`                                                                                                                                                   |
+| Read receipts | `markMessageAsRead`, `markConversationAsRead`                                                                                                                                     |
+| Participants  | `addParticipant`, `removeParticipant`                                                                                                                                             |
+| Stars         | `starMessage`, `unstarMessage`, `getStarredMessages`                                                                                                                              |
+| Search        | `searchMessaging`, `searchConversationMessages`, `fetchSearchSuggestions`                                                                                                         |
+| Fetch / poll  | `fetchConversationData`, `pollNewMessages`, `pollConversationUpdates`                                                                                                             |
 
-Queries (`queries.ts`): `getConversationsList` (paginated, with unread counts), `getConversation`, `getOrCreateDirectConversation`, `getMessagesList`, `getMessagesWithCursor` (infinite scroll), `getUnreadMessageCount` (raw SQL), `getUnreadCountsPerConversation`, `fullTextSearchMessages`, `globalSearch`.
+> **Modeled but not implemented as actions:** message pinning (`PinnedMessage` model + `getPinnedMessages` query exist, but no write action), drafts (`MessageDraft` model exists, no action), and invites (`ConversationInvite` model exists, no action). These are schema-level only.
+
+Queries (`queries.ts`) — 28 read functions + 5 builders: `getConversationsList` (paginated, with unread counts), `getConversation`, `getOrCreateDirectConversation`, `getMessagesList`, `getMessagesWithCursor` (infinite scroll), `getUnreadMessageCount` (raw SQL), `getUnreadCountsPerConversation`, `fullTextSearchMessages`, `globalSearch`, `getSearchSuggestions`.
 
 ```typescript
 sendMessage(input: {
@@ -157,13 +174,16 @@ createConversation(input: {
 
 ## Schema
 
-10 Prisma models: `Conversation`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageReaction`, `MessageReadReceipt`, `TypingIndicator`, `MessageDraft`, `PinnedMessage`, `ConversationInvite`. Source: `prisma/models/messages.prisma`.
+11 Prisma models in `prisma/models/messages.prisma`: `Conversation`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageReaction`, `MessageReadReceipt`, `TypingIndicator`, `MessageDraft`, `PinnedMessage`, `ConversationInvite`, `StarredMessage`. WhatsApp models (`WhatsAppSession`, `WhatsAppMessage`, `WhatsAppGroup`, …) live separately in `prisma/models/whatsapp.prisma`.
+
+`Message` carries no `lang` field — message bodies are user-to-user content, translated on demand at render time (via `getDisplayText()` for contact names), not stored bilingually.
 
 Indexes:
 
-- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[classId]`, `[departmentId]`, `[directParticipant1Id, directParticipant2Id]`
-- `Message` — `[conversationId, createdAt desc]`, `[senderId]`, `[replyToId]`, `[conversationId, isSystem]`
-- `ConversationParticipant` — `@@unique([conversationId, userId])`
+- `Conversation` — `[schoolId, type, lastMessageAt desc]`, `[schoolId, classId]`, `[schoolId, departmentId]`, `[directParticipant1Id, directParticipant2Id, type]`
+- `Message` — `[conversationId, createdAt desc]`, `[senderId, createdAt]`, `[replyToId]`, `[conversationId, isSystem]`, `[whatsappMessageId]`, `[forwardedFromId]`
+- `ConversationParticipant` — `@@unique([conversationId, userId])`, `[userId, isActive]`, `[conversationId, role]`
+- `TypingIndicator` — `[schoolId]`, `[conversationId, expiresAt]`
 
 Enums: `ConversationType` (5), `MessageStatus` (5), `ParticipantRole` (5).
 

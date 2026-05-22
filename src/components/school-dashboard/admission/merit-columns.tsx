@@ -82,8 +82,8 @@ function MeritActionsCell({
         router.refresh()
       } else {
         ErrorToast(
-          result.error ||
-            t?.applicationDetail?.statusUpdateFailed ||
+          t?.applicationDetail?.statusUpdateFailed ||
+            result.error ||
             "Failed to update status"
         )
       }

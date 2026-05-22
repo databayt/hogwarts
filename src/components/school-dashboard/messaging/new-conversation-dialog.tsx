@@ -27,6 +27,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createConversation } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
+import { resolveMessagingError } from "./errors"
 import type { ConversationType } from "./types"
 
 type UserResult = {
@@ -164,7 +165,7 @@ export function NewConversationDialog({
         } else {
           toast({
             title: m?.notifications?.error || "Error",
-            description: result.error,
+            description: resolveMessagingError(result.error, m),
           })
         }
       } catch (error) {

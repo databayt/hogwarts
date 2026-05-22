@@ -116,7 +116,7 @@ function EnrollmentActionsCell({
         SuccessToast(t?.enrollment?.paymentRecorded || "Payment recorded")
       } else {
         ErrorToast(
-          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
         )
       }
     })
@@ -135,7 +135,7 @@ function EnrollmentActionsCell({
         }
       } else {
         ErrorToast(
-          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
         )
       }
     })

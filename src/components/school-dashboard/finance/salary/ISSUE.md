@@ -1,6 +1,6 @@
 # Salary -- Readiness & Open Work
 
-> 85% ready · Salary structures, allowances, deductions, bands
+> 75% ready · Salary structures, allowances, deductions, bands
 
 ## MVP Checklist
 

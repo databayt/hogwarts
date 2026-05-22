@@ -70,11 +70,11 @@ fees/
 
 ### Status
 
-**Completion:** 100% | **Blockers:** None — payment gateway (Stripe) integrated, family billing with sibling auto-discount implemented
+**Completion:** 85% | **Blockers:** Fee-payment ledger posting is fire-and-forget (not rolled back on failure); installment-plan UI pending; fine-type/scholarship text not `lang`-tagged
 
 ### Integration Points
 
-- Creates journal entries (DR: Fees Receivable, CR: Fee Revenue) via `finance/lib/accounting/`
+- Posts journal entries via `finance/lib/accounting/` on payment (`postFeePayment` -- the only wired poster in the block). Posting is fire-and-forget and not rolled back on failure (umbrella `ISSUE.md` P0)
 - Generates invoices and receipts via sibling sub-blocks
 - Wallet payments supported
 - See [finance master README](../README.md) for architecture details

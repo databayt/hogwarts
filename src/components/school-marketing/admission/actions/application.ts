@@ -262,6 +262,20 @@ export async function saveApplicationSession(
 
       return { success: true, data: { sessionToken } }
     } else {
+      // Rate limit new-session creation — each new token writes a row AND
+      // sends a resume email, so it is a spam / email-bomb vector. Mirrors the
+      // DB-count-in-window pattern used for OTP requests in status.ts.
+      const recentSessions = await db.applicationSession.count({
+        where: {
+          schoolId,
+          ...(userId ? { userId } : { email: validated.email }),
+          createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) }, // last hour
+        },
+      })
+      if (recentSessions >= 5) {
+        return { success: false, error: "RATE_LIMITED" }
+      }
+
       // Create new session
       const newToken = nanoid(32)
 
@@ -304,76 +318,10 @@ export async function saveApplicationSession(
   }
 }
 
-/**
- * Get draft applications by email (for showing saved drafts)
- */
-export async function getDraftApplications(
-  subdomain: string,
-  email: string
-): Promise<
-  ActionResult<
-    Array<{
-      sessionToken: string
-      campaignId: string | null
-      campaignName: string | null
-      currentStep: number
-      totalSteps: number
-      studentName: string | null
-      updatedAt: Date
-      expiresAt: Date
-    }>
-  >
-> {
-  try {
-    const schoolResult = await getSchoolBySubdomain(subdomain)
-    if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" }
-    }
-
-    const schoolId = schoolResult.data.id
-    const now = new Date()
-
-    // Get all non-expired, non-converted sessions for this email
-    const sessions = await db.applicationSession.findMany({
-      where: {
-        schoolId,
-        email,
-        expiresAt: { gt: now },
-        convertedToApplicationId: null,
-      },
-      include: {
-        campaign: {
-          select: { id: true, name: true },
-        },
-      },
-      orderBy: { updatedAt: "desc" },
-    })
-
-    const drafts = sessions.map((session) => {
-      const formData = session.formData as Record<string, unknown>
-      const firstName = (formData?.firstName as string) || null
-      const lastName = (formData?.lastName as string) || null
-      const studentName =
-        firstName && lastName ? `${firstName} ${lastName}` : firstName || null
-
-      return {
-        sessionToken: session.sessionToken,
-        campaignId: session.campaign?.id || null,
-        campaignName: session.campaign?.name || null,
-        currentStep: session.currentStep,
-        totalSteps: 6, // Standard application has 6 steps
-        studentName,
-        updatedAt: session.updatedAt,
-        expiresAt: session.expiresAt,
-      }
-    })
-
-    return { success: true, data: drafts }
-  } catch (error) {
-    console.error("Error fetching draft applications:", error)
-    return { success: false, error: "Failed to fetch draft applications" }
-  }
-}
+// NOTE: getDraftApplications(subdomain, email) was removed (2026-05-21 audit,
+// P1-3). It returned full draft formData scoped only by schoolId+email with no
+// auth — an email-enumeration leak — and was superseded by
+// getDraftApplicationsByUser now that the wizard is auth-gated. Use that instead.
 
 /**
  * Get draft applications by authenticated user ID
@@ -545,7 +493,8 @@ function generateApplicationNumber(): string {
 export async function submitApplication(
   subdomain: string,
   sessionToken: string,
-  data: ApplicationFormData
+  data: ApplicationFormData,
+  lang: string = "ar"
 ): Promise<ActionResult<SubmitApplicationResult>> {
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
@@ -601,6 +550,10 @@ export async function submitApplication(
     }
     const resolvedNationality = validated.nationality || validated.country || ""
 
+    // Normalize the applicant's UI locale into a stored content language so
+    // dashboard-side getDisplayText() can translate free-text correctly.
+    const contentLang = lang === "en" ? "en" : "ar"
+
     if (!campaign) {
       return {
         success: false,
@@ -625,6 +578,20 @@ export async function submitApplication(
             "An application with this email already exists for this campaign",
         }
       }
+    }
+
+    // Rate limit submissions per user / email + school to prevent abuse and
+    // accidental double-submits. Mirrors the OTP DB-count pattern in status.ts.
+    const recentSubmissions = await db.application.count({
+      where: {
+        schoolId,
+        ...(userId ? { userId } : { email: resolvedEmail }),
+        status: { not: "DRAFT" },
+        createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) }, // last hour
+      },
+    })
+    if (recentSubmissions >= 5) {
+      return { success: false, error: "RATE_LIMITED" }
     }
 
     // Generate unique application number
@@ -658,6 +625,7 @@ export async function submitApplication(
         campaignId: validated.campaignId,
         applicationNumber,
         userId,
+        lang: contentLang,
         // Personal
         firstName: validated.firstName,
         middleName: validated.middleName || null,

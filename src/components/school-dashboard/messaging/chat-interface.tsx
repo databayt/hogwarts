@@ -30,6 +30,7 @@ import {
   toggleConversationWhatsApp,
 } from "./actions"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
+import { resolveMessagingError } from "./errors"
 import { useUserPresence } from "./hooks/use-presence"
 import { MessageInput } from "./message-input"
 import { MessageList, MessageListSkeleton } from "./message-list"
@@ -164,7 +165,7 @@ export function ChatInterface({
         setWhatsappEnabled(!newValue)
         toast({
           title: m?.notifications?.error || "Error",
-          description: result.error,
+          description: resolveMessagingError(result.error, m),
         })
       }
     } catch {

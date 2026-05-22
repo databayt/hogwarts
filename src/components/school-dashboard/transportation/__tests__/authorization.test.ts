@@ -30,10 +30,8 @@ describe("Transportation authorization", () => {
         "manage_assignment",
         "manage_settings",
         "read_school",
-        "read_class",
         "read_own",
         "view_fees",
-        "export",
       ]
       for (const action of actions) {
         expect(
@@ -85,8 +83,8 @@ describe("Transportation authorization", () => {
       { role: "STAFF", action: "manage_route", expected: false },
       { role: "STAFF", action: "manage_driver", expected: false },
       { role: "STAFF", action: "read_school", expected: true },
-      // TEACHER can read class assignments
-      { role: "TEACHER", action: "read_class", expected: true },
+      // TEACHER can record boarding but not manage
+      { role: "TEACHER", action: "record_boarding", expected: true },
       { role: "TEACHER", action: "manage_assignment", expected: false },
       { role: "TEACHER", action: "manage_vehicle", expected: false },
       // STUDENT and GUARDIAN can read_own only

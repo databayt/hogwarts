@@ -27,6 +27,7 @@ import { ChatInterface } from "./chat-interface"
 import { ContactsPanel } from "./contacts/contacts-panel"
 import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
+import { resolveMessagingError } from "./errors"
 import { IosChatList } from "./mobile"
 import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
@@ -492,7 +493,7 @@ export function MessagingClient({
     })
 
     if (!result.success) {
-      throw new Error(result.error)
+      throw new Error(resolveMessagingError(result.error, m))
     }
 
     return result.data.message as MessageDTO
@@ -501,28 +502,28 @@ export function MessagingClient({
   const handleEditMessage = async (messageId: string, content: string) => {
     const result = await editMessage({ messageId, content })
     if (!result.success) {
-      throw new Error(result.error)
+      throw new Error(resolveMessagingError(result.error, m))
     }
   }
 
   const handleDeleteMessage = async (messageId: string) => {
     const result = await deleteMessage({ messageId })
     if (!result.success) {
-      throw new Error(result.error)
+      throw new Error(resolveMessagingError(result.error, m))
     }
   }
 
   const handleReactToMessage = async (messageId: string, emoji: string) => {
     const result = await addReaction({ messageId, emoji })
     if (!result.success) {
-      throw new Error(result.error)
+      throw new Error(resolveMessagingError(result.error, m))
     }
   }
 
   const handleRemoveReaction = async (reactionId: string) => {
     const result = await removeReaction({ reactionId })
     if (!result.success) {
-      throw new Error(result.error)
+      throw new Error(resolveMessagingError(result.error, m))
     }
   }
 
@@ -583,10 +584,10 @@ export function MessagingClient({
       } else {
         toast({
           title: m?.notifications?.error || "Error",
-          description:
-            ("error" in result && result.error) ||
-            m?.errors?.conversation_start_failed ||
-            "Failed to start conversation",
+          description: resolveMessagingError(
+            "error" in result ? result.error : undefined,
+            m
+          ),
         })
       }
     } catch {

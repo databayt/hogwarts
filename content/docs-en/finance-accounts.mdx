@@ -1,0 +1,105 @@
+---
+title: Accounts
+description: The double-entry foundation — chart of accounts CRUD, manual journal entries with debit=credit enforcement, and a read-only general ledger. Home of the accounting engine that every other finance module is meant to post into.
+---
+
+Accounts manages the chart of accounts and the journal entries that all finance modules should post into. Today only [fees](/docs/fees) actually posts; this module's own UI is account CRUD, manual journal entry, and ledger viewing.
+
+## Flow
+
+```
+Maintain chart of accounts (ASSET / LIABILITY / EQUITY / REVENUE / EXPENSE)
+  → record a manual journal entry (DRAFT, balanced debit = credit)
+  → post it (writes postedAt, entry becomes immutable)
+  → entries roll into the general ledger + account balances → Reports
+```
+
+## Status
+
+| Feature                                          | Status                              |
+| ------------------------------------------------ | ----------------------------------- |
+| Chart of accounts CRUD (+ in-use delete guard)   | Production                          |
+| Journal entry creation (balanced, auto-numbered) | Ready (action only)                 |
+| Post journal entry                               | Ready                               |
+| General ledger / balances views                  | Ready (read-only)                   |
+| Account creation UI form                         | Stubbed — "coming soon" placeholder |
+| Journal entry creation UI form                   | Stubbed — "coming soon" placeholder |
+| Period close / fiscal-year lock                  | Planned                             |
+| Audit trail on chart edits                       | Planned                             |
+| Multi-currency journals                          | Planned                             |
+
+## Routes
+
+| Route                                  | Page              | Status                |
+| -------------------------------------- | ----------------- | --------------------- |
+| `/{lang}/finance/accounts`             | Overview          | Ready                 |
+| `/{lang}/finance/accounts/chart`       | Chart of accounts | Ready                 |
+| `/{lang}/finance/accounts/chart/new`   | Create account    | Stubbed (placeholder) |
+| `/{lang}/finance/accounts/journal`     | Journal list      | Ready                 |
+| `/{lang}/finance/accounts/journal/new` | Create entry      | Stubbed (placeholder) |
+| `/{lang}/finance/accounts/ledger`      | General ledger    | Ready                 |
+
+## Server actions
+
+RBAC is enforced in `content.tsx`. Note these actions resolve the tenant from `session.user.schoolId` directly rather than `getTenantContext()` (an inconsistency with payroll/salary/fees — flagged for cleanup). Journal + ledger lines are created via nested Prisma `create` (atomic per call) without a wrapping `db.$transaction`.
+
+| Action               | Purpose                                                    |
+| -------------------- | ---------------------------------------------------------- |
+| `createAccount`      | Add account; derives `normalBalance`; duplicate-code guard |
+| `updateAccount`      | Update an account                                          |
+| `deleteAccount`      | Soft-delete (blocked if the account is used in the ledger) |
+| `createJournalEntry` | Manual entry + nested ledger lines, auto JE number         |
+| `postJournalEntry`   | Mark an entry posted (module-local, not the engine's)      |
+| `getChartOfAccounts` | List accounts (filter by type / active)                    |
+| `getJournalEntries`  | List entries + ledger lines                                |
+
+## Concepts
+
+| Concept        | Values                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `AccountType`  | ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE                                                  |
+| Normal balance | DEBIT (asset, expense) · CREDIT (liability, equity, revenue)                                |
+| Standard codes | CASH 1000, SALARY_PAYABLE 2100, TAX_PAYABLE 2200, TUITION_REVENUE 4000, SALARY_EXPENSE 5000 |
+| Source modules | FEES, PAYROLL, EXPENSES, INVOICE, WALLET, BANKING, MANUAL                                   |
+
+## Accounting engine
+
+The reusable double-entry engine lives at `finance/lib/accounting/` — `posting-rules.ts` (domain event → balanced lines), `actions.ts` (the six `post*` functions), `seed-accounts.ts`, `utils.ts` (`toCents`/`fromCents`/`validateDoubleEntry`), `types.ts`.
+
+Two things to know:
+
+1. **Only `postFeePayment` is wired.** The other five posting functions have zero callers, so the ledger reflects only fee payments and manual journal entries (see [the block overview](/docs/finance#double-entry-model)).
+2. **This module has its own `createJournalEntry` / `postJournalEntry`** for manual GL entry; they do not share code with the engine's posting path. The engine's equivalents (`postJournalEntryAction`, `getChartOfAccounts`, etc.) are currently unused.
+
+## Schema
+
+`prisma/models/finance-core.prisma`:
+
+- **`ChartOfAccount`** — `code`, `name`, `type`, `subtype`, `parentId` (hierarchy), `normalBalance`, `isActive`, `description`.
+- **`FiscalYear`** — `name`, `startDate`, `endDate`, `isCurrent`, `isClosed`.
+- **`JournalEntry`** — `entryNumber`, `entryDate`, `description`, `sourceModule`, `sourceRecordId`, `isPosted`, `postedAt`, `isReversed`, `reversalEntryId`, `createdBy`. Immutable once posted.
+- **`LedgerEntry`** — `debit`, `credit`, `description`.
+- **`AccountBalance`** — `balance`, `asOfDate`.
+
+No `lang` field — `ChartOfAccount.name`/`.description` and `JournalEntry`/`LedgerEntry.description` store untagged single-language text.
+
+## Tests
+
+The module itself has no tests. The engine has one file, `finance/lib/accounting/__tests__/utils.test.ts` (10 tests) covering math helpers (`validateDoubleEntry`, `toCents`/`fromCents`, `formatCurrency`). There is **no test asserting debit = credit on an actual posting-rule run**, and no per-school trial-balance test.
+
+## Key files
+
+| Component      | Path                                                                               |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Server actions | `src/components/school-dashboard/finance/accounts/actions.ts`                      |
+| Posting rules  | `src/components/school-dashboard/finance/lib/accounting/posting-rules.ts`          |
+| Engine actions | `src/components/school-dashboard/finance/lib/accounting/actions.ts`                |
+| Engine utils   | `src/components/school-dashboard/finance/lib/accounting/utils.ts`                  |
+| Ledger page    | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/accounts/ledger/page.tsx` |
+| Schema         | `prisma/models/finance-core.prisma`                                                |
+
+## See also
+
+- [Finance](/docs/finance) — the double-entry model + status matrix
+- [Reports](/docs/finance-reports) — balance sheet / P&L / trial balance off this ledger
+- [Payroll](/docs/finance-payroll) · [Expenses](/docs/finance-expenses) — money-movers that should (but don't yet) post here

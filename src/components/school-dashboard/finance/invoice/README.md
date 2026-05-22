@@ -35,7 +35,6 @@ invoice/
 ├── actions.ts                  # Server actions (getTenantContext + RBAC + $transaction)
 ├── config.ts                   # Step definitions, currency options
 ├── content.tsx                 # Server component (main list page)
-├── content-enhanced.tsx        # Enhanced RBAC-aware dashboard
 ├── types.ts                    # TypeScript interfaces (Invoice, Address, Item)
 ├── validation.ts               # Zod schemas (InvoiceSchemaZod + i18n factory)
 ├── list-params.ts              # URL search param config (nuqs)
@@ -159,15 +158,15 @@ Logo and signature are configurable and stored in DB but never appear in any out
 
 ### Cross-Block Integration
 
-| Consumer             | Location                                       | What It Reads                            |
-| -------------------- | ---------------------------------------------- | ---------------------------------------- |
-| Admission enrollment | `admission/actions.ts` → `confirmEnrollment()` | Calls `createInvoiceFromEnrollment()`    |
-| Student dashboard    | `dashboard/student.tsx`                        | `InvoiceHistorySection` ("Fee Payments") |
-| Guardian dashboard   | `dashboard/parent.tsx`                         | `InvoiceHistorySection` ("Fee Payments") |
-| Accountant dashboard | `dashboard/accountant.tsx`                     | Invoice count/payment rate metrics       |
-| Finance hub          | `finance/content.tsx`                          | `db.userInvoice.count()` for stats       |
-| BillingSDK           | `billingsdk/invoice-history.tsx`               | Shared `InvoiceHistory` table component  |
-| Accounting engine    | `finance/lib/accounting/`                      | Journal entries (DR: AR, CR: Revenue)    |
+| Consumer             | Location                                       | What It Reads                                                                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Admission enrollment | `admission/actions.ts` → `confirmEnrollment()` | Calls `createInvoiceFromEnrollment()`                                                        |
+| Student dashboard    | `dashboard/student.tsx`                        | `InvoiceHistorySection` ("Fee Payments")                                                     |
+| Guardian dashboard   | `dashboard/parent.tsx`                         | `InvoiceHistorySection` ("Fee Payments")                                                     |
+| Accountant dashboard | `dashboard/accountant.tsx`                     | Invoice count/payment rate metrics                                                           |
+| Finance hub          | `finance/content.tsx`                          | `db.userInvoice.count()` for stats                                                           |
+| BillingSDK           | `billingsdk/invoice-history.tsx`               | Shared `InvoiceHistory` table component                                                      |
+| Accounting engine    | `finance/lib/accounting/`                      | `postInvoicePayment` exists but **unwired** -- no journal entries yet (umbrella ISSUE.md P0) |
 
 ### Fee-to-Invoice Flow
 
@@ -186,8 +185,5 @@ No FK between FeeAssignment and UserInvoice -- connection is runtime only.
 
 ### Stubs
 
-- `bulk-generate.tsx` -- "Bulk invoice generation is currently unavailable"
-- `content-enhanced.tsx` -- "Enhanced invoice content is currently unavailable"
-- `all.tsx` Export button -- no click handler
-- `onboarding/actions.ts` -- empty `export {}`
-- `settings/actions.ts` -- empty `export {}`
+- `bulk-generate.tsx` -- "Bulk invoice generation is currently unavailable" (blocked on deleted `actions-enhanced.ts`)
+- `all.tsx` Export button -- not wired to `exportInvoiceToCSV()`

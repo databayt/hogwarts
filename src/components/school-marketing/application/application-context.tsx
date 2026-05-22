@@ -161,6 +161,9 @@ interface ApplySessionContextType {
   // Navigation
   setCurrentStep: (step: ApplyStep) => void
 
+  // Clear the locally cached draft (after a successful submit)
+  clearLocalDraft: () => void
+
   // Error handling
   clearError: () => void
 }
@@ -468,6 +471,24 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     setSession((prev) => ({ ...prev, error: null }))
   }, [])
 
+  // Clear the locally cached draft for the current campaign + user. Called
+  // after a successful submit so the just-submitted draft can't be restored
+  // from localStorage. Mirrors the per-user key built by buildStorageKey —
+  // the old cleanup removed only the legacy unnamespaced key and left the
+  // real per-user draft behind.
+  const clearLocalDraft = useCallback(() => {
+    try {
+      const campaignId = session.campaignId
+      if (campaignId) {
+        localStorage.removeItem(buildStorageKey(campaignId, userId))
+        // Also clear the legacy unnamespaced key from the old leaky format.
+        localStorage.removeItem(`${STORAGE_KEY}_${campaignId}`)
+      }
+    } catch {
+      // localStorage may not be available
+    }
+  }, [session.campaignId, userId])
+
   // Auto-save effect
   useEffect(() => {
     if (session.isDirty && !session.isSaving) {
@@ -527,6 +548,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       markDirty,
       setCurrentStep,
       clearError,
+      clearLocalDraft,
     }),
     [
       subdomain,
@@ -541,6 +563,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
       markDirty,
       setCurrentStep,
       clearError,
+      clearLocalDraft,
     ]
   )
 

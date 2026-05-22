@@ -44,7 +44,8 @@ export default function ApplicationSuccessModal({
 
   const dict = useMemo(() => {
     const d = dictionary as Record<string, unknown> | undefined
-    const admission = d?.admission as Record<string, unknown> | undefined
+    const school = d?.school as Record<string, unknown> | undefined
+    const admission = school?.admission as Record<string, unknown> | undefined
     const apply = admission?.apply as Record<string, unknown> | undefined
     return (apply?.successModal as Record<string, string>) ?? {}
   }, [dictionary])
@@ -114,7 +115,7 @@ export default function ApplicationSuccessModal({
               <button
                 onClick={handleCopy}
                 className="text-muted-foreground hover:text-foreground -m-2 p-2 transition-colors"
-                aria-label="Copy application details"
+                aria-label={dict.copyDetails || "Copy details to clipboard"}
               >
                 <Copy className="h-3.5 w-3.5" />
               </button>

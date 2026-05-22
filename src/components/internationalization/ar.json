@@ -1963,7 +1963,11 @@
       "Stats": "الإحصائيات",
       "Staff": "الموظفون",
       "WhatsApp": "واتساب",
-      "Messages": "الرسائل"
+      "Messages": "الرسائل",
+      "Transportation": "النقل",
+      "Transport fees": "رسوم النقل",
+      "My transportation": "نقلي",
+      "Trips": "الرحلات"
     },
     "breadcrumb": {
       "dashboard": "لوحة التحكم",

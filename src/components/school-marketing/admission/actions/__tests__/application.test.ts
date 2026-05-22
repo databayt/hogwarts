@@ -10,7 +10,6 @@ import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import {
   getActiveCampaigns,
   getCampaignById,
-  getDraftApplications,
   getDraftApplicationsByUser,
   resumeApplicationSession,
   saveApplicationSession,
@@ -514,72 +513,6 @@ describe("Application Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Failed to resume application")
-    })
-  })
-
-  // =========================================================================
-  // getDraftApplications
-  // =========================================================================
-
-  describe("getDraftApplications", () => {
-    it("returns non-expired non-converted sessions", async () => {
-      vi.mocked(db.applicationSession.findMany).mockResolvedValue([
-        {
-          sessionToken: "tok-1",
-          currentStep: 2,
-          formData: { firstName: "Ahmed", lastName: "Mohamed" },
-          updatedAt: now,
-          expiresAt: futureDate,
-          campaign: { id: "c-1", name: "Fall 2026" },
-        },
-      ] as any)
-
-      const result = await getDraftApplications(SUBDOMAIN, "test@example.com")
-
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
-      expect(result.data![0]).toMatchObject({
-        sessionToken: "tok-1",
-        campaignName: "Fall 2026",
-        studentName: "Ahmed Mohamed",
-        totalSteps: 6,
-      })
-    })
-
-    it("maps student name from firstName only", async () => {
-      vi.mocked(db.applicationSession.findMany).mockResolvedValue([
-        {
-          sessionToken: "tok-2",
-          currentStep: 1,
-          formData: { firstName: "Sara" },
-          updatedAt: now,
-          expiresAt: futureDate,
-          campaign: null,
-        },
-      ] as any)
-
-      const result = await getDraftApplications(SUBDOMAIN, "test@example.com")
-
-      expect(result.data![0].studentName).toBe("Sara")
-      expect(result.data![0].campaignId).toBeNull()
-    })
-
-    it("returns empty array when no drafts", async () => {
-      vi.mocked(db.applicationSession.findMany).mockResolvedValue([])
-
-      const result = await getDraftApplications(SUBDOMAIN, "test@example.com")
-
-      expect(result.success).toBe(true)
-      expect(result.data).toEqual([])
-    })
-
-    it("returns error when school not found", async () => {
-      mockSchoolNotFound()
-
-      const result = await getDraftApplications(SUBDOMAIN, "test@example.com")
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("School not found")
     })
   })
 

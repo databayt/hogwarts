@@ -392,9 +392,14 @@ export async function getBookingDetails(
         availableSpots: booking.slot.maxCapacity - booking.slot.currentBookings,
         maxCapacity: booking.slot.maxCapacity,
       },
-      parentName: booking.parentName,
-      email: booking.email,
-      studentName: booking.studentName ?? undefined,
+      // PII (name/email/student) is intentionally NOT exposed on this public,
+      // unauthenticated lookup-by-booking-number endpoint (2026-05-21 audit,
+      // P1-2). Booking numbers are guessable, so returning contact details here
+      // would be an enumeration/PII leak. createTourBooking still returns the
+      // booker's own details for the immediate post-booking confirmation.
+      parentName: "",
+      email: "",
+      studentName: undefined,
       numberOfAttendees: booking.numberOfAttendees,
     }
 

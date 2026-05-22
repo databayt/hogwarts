@@ -1,6 +1,6 @@
 # Payroll -- Readiness & Open Work
 
-> 80% ready · Payroll runs, salary slips, approval, disbursement
+> 65% ready · Payroll runs, salary slips, approval, disbursement
 
 ## MVP Checklist
 
@@ -19,9 +19,10 @@
 
 ### P1
 
+- [ ] Ledger posting not wired -- `postSalaryPayment` has zero callers, so disbursement posts nothing (umbrella ISSUE.md P0)
 - [ ] No payslip PDF -- staff has no document to download
 - [ ] Disbursement is single-step "PAID"; no actual bank file export
-- [ ] Withholding tax brackets hard-coded to 0 -- country-specific rules missing
+- [ ] Withholding tax is a hardcoded flat 15% (`actions.ts:286`); `config.ts` ships unused progressive brackets
 
 ### P2
 

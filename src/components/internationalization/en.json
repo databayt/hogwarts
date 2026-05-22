@@ -1959,7 +1959,11 @@
       "Stats": "Stats",
       "Staff": "Staff",
       "WhatsApp": "WhatsApp",
-      "Messages": "Messages"
+      "Messages": "Messages",
+      "Transportation": "Transportation",
+      "Transport fees": "Transport fees",
+      "My transportation": "My transportation",
+      "Trips": "Trips"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",

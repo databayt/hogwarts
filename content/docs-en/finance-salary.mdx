@@ -1,0 +1,107 @@
+---
+title: Salary
+description: Per-teacher salary structures with allowances and deductions, a salary calculator, and an increment workflow. CRUD and the calculator work, but tax is a flat-15% stub, structures keep no history, and the create form is a placeholder.
+---
+
+Salary defines each teacher's base pay, taxable/non-taxable allowances, and deductions. These active structures are what [payroll](/docs/finance-payroll) reads when it generates slips. Creating a new structure auto-deactivates the prior one — no history is retained.
+
+## Pipeline
+
+```
+1. Create structure (deactivates the teacher's prior active one)  — createSalaryStructure
+2. Attach allowances / deductions                                 — addAllowance / addDeduction
+3. (optional) Calculate: gross, taxable income, tax (flat 15%), net — calculateSalary
+4. (optional) Apply increment (fixed or %) → new active structure  — applySalaryIncrement
+```
+
+## Status
+
+| Feature                                  | Status                                      |
+| ---------------------------------------- | ------------------------------------------- |
+| Salary structure CRUD + list (DataTable) | Production                                  |
+| Allowance / deduction CRUD               | Production                                  |
+| Salary calculator                        | Ready (tax is a flat 15%)                   |
+| Salary increment (fixed / percentage)    | Ready                                       |
+| CSV export of structures                 | Production (client-side, `canExport`-gated) |
+| On-demand translation of names on list   | Production (`getDisplayText` at read-time)  |
+| Create-structure UI form                 | Stubbed — "coming soon" placeholder         |
+| Salary history                           | Planned (overwritten on update)             |
+| Formula allowances (e.g. 20% of basic)   | Planned                                     |
+| Country-specific tax                     | Planned                                     |
+| Journal posting                          | Planned (none today)                        |
+
+## Routes
+
+| Route                                    | Page             | Status                |
+| ---------------------------------------- | ---------------- | --------------------- |
+| `/{lang}/finance/salary`                 | Overview         | Ready                 |
+| `/{lang}/finance/salary/structures`      | Structures list  | Ready                 |
+| `/{lang}/finance/salary/structures/new`  | Create structure | Stubbed (placeholder) |
+| `/{lang}/finance/salary/structures/[id]` | Edit structure   | Ready                 |
+
+## Server actions
+
+All use `auth()` + `getTenantContext()`. RBAC is enforced in `content.tsx`. None wrap writes in `db.$transaction`.
+
+| Action                                                 | Purpose                                                  |
+| ------------------------------------------------------ | -------------------------------------------------------- |
+| `getSalaryStructures` / `getSalaryStructure`           | List / read one (+ allowances, deductions, recent slips) |
+| `createSalaryStructure`                                | Deactivate prior active, create new active               |
+| `updateSalaryStructure` / `deactivateSalaryStructure`  | Update / retire a structure                              |
+| `addAllowance` / `updateAllowance` / `deleteAllowance` | Allowance CRUD                                           |
+| `addDeduction` / `updateDeduction` / `deleteDeduction` | Deduction CRUD                                           |
+| `calculateSalary`                                      | Compute gross / taxable / tax (15%) / net                |
+| `applySalaryIncrement`                                 | Deactivate + create an incremented successor             |
+| `getSalarySummary`                                     | Counts + average base salary                             |
+
+## Concepts
+
+| Concept         | Values                               |
+| --------------- | ------------------------------------ |
+| `PayFrequency`  | MONTHLY, BI_WEEKLY, WEEKLY, DAILY    |
+| `DeductionType` | TAX, INSURANCE, LOAN, PENSION, OTHER |
+| Increment types | FIXED_AMOUNT, PERCENTAGE             |
+| Allowance flags | `isTaxable`, `isRecurring`           |
+
+## Ledger / accounting
+
+**Does not post to the ledger.** The README's "journal entries via `lib/accounting/`" claim is aspirational — this module never imports the engine. Salary money reaches the ledger only if/when payroll disbursement is wired to `postSalaryPayment`.
+
+## Schema
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`SalaryStructure`** — `teacherId`, `effectiveFrom/To`, `baseSalary`, `currency`, `payFrequency`, `isActive`, `notes`.
+- **`SalaryAllowance`** — `name`, `amount`, `isTaxable`, `isRecurring`, `description`.
+- **`SalaryDeduction`** — `name`, `amount`, `type`, `isRecurring`, `description`.
+
+No `lang` field. The structures list page bridges this at read-time with `getDisplayText`, but the underlying allowance/deduction names are stored untagged.
+
+## Output formats
+
+CSV export of salary structures is wired client-side (`salary/table.tsx`), gated by the `canExport` permission. No PDF.
+
+## Stubs
+
+- `salary/actions.ts:555` — flat 15% tax in the calculator.
+- `salary/table.tsx:167` — `// TODO: Implement bulk delete action`.
+- `salary/structures/new/page.tsx` — create form is a placeholder.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component       | Path                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Server actions  | `src/components/school-dashboard/finance/salary/actions.ts`                          |
+| Table + export  | `src/components/school-dashboard/finance/salary/table.tsx`                           |
+| Structures page | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/salary/structures/page.tsx` |
+| Schema          | `prisma/models/finance-payroll.prisma`                                               |
+
+## See also
+
+- [Finance](/docs/finance) — block overview + status matrix
+- [Payroll](/docs/finance-payroll) — consumes active salary structures
+- [Timesheet](/docs/finance-timesheet) — staff time tracking

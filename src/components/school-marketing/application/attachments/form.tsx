@@ -63,6 +63,11 @@ function DocumentCard({
   schoolId,
   uploadedLabel,
   onUploaded,
+  tooLargeLabel = "File too large (10MB max)",
+  invalidTypeLabel = "Unsupported file type",
+  invalidFileLabel = "Invalid file",
+  removeLabel = "Remove attachment",
+  pdfLabel = "PDF",
 }: {
   name: string
   label: string
@@ -71,6 +76,11 @@ function DocumentCard({
   schoolId?: string
   uploadedLabel?: string
   onUploaded?: (fileUrl: string) => void
+  tooLargeLabel?: string
+  invalidTypeLabel?: string
+  invalidFileLabel?: string
+  removeLabel?: string
+  pdfLabel?: string
 }) {
   const form = useFormContext()
   const currentValue = form.watch(name)
@@ -113,11 +123,11 @@ function DocumentCard({
     onDropRejected: (rejections) => {
       const code = rejections[0]?.errors[0]?.code
       if (code === "file-too-large") {
-        setRejectionError("10MB max")
+        setRejectionError(tooLargeLabel)
       } else if (code === "file-invalid-type") {
-        setRejectionError("PDF, DOC, XLS, TXT")
+        setRejectionError(invalidTypeLabel)
       } else {
-        setRejectionError("Invalid file")
+        setRejectionError(invalidFileLabel)
       }
     },
     accept: getAcceptedTypes(),
@@ -175,7 +185,7 @@ function DocumentCard({
             type="button"
             onClick={handleClear}
             className="absolute end-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-            aria-label="Remove attachment"
+            aria-label={removeLabel}
           >
             <X className="h-3 w-3" />
           </button>
@@ -209,7 +219,7 @@ function DocumentCard({
             >
               <div className="flex flex-1 flex-col items-center justify-center gap-1">
                 <CheckCircle className="h-8 w-8 text-green-500" />
-                <p className="text-muted-foreground text-xs">PDF</p>
+                <p className="text-muted-foreground text-xs">{pdfLabel}</p>
               </div>
             </object>
           ) : (
@@ -372,6 +382,11 @@ export const AttachmentsForm = forwardRef<
             icon={icon}
             schoolId={schoolId}
             uploadedLabel={dict.uploaded}
+            tooLargeLabel={dict.tooLarge}
+            invalidTypeLabel={dict.invalidType}
+            invalidFileLabel={dict.invalidFile}
+            removeLabel={dict.remove}
+            pdfLabel={dict.pdf}
             onUploaded={(fileUrl) => handleDocumentUploaded(key, fileUrl)}
           />
         ))}

@@ -1,6 +1,8 @@
 # Dashboard -- Readiness & Open Work
 
-> 90% ready · KPI cards, revenue/expense charts, cash flow, transactions list
+> 80% ready · KPI cards, revenue/expense charts, cash flow, transactions list
+>
+> Note: trend sparklines are `Math.random()` mock data (`dashboard/actions.ts:278-288`); KPI totals are real. See umbrella `ISSUE.md` P1.
 
 ## MVP Checklist
 

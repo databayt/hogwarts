@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Banknote, CreditCard, Smartphone, Wallet } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 import type { FeePreview } from "@/lib/fee-preview"
 import { formatCurrency } from "@/lib/payment/currency"
@@ -62,11 +63,12 @@ export default function FeesContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const { locale, isRTL } = useLocale()
+  const { data: authSession } = useSession()
   const subdomain = params.subdomain as string
   const id = params.id as string
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
-  const { session, saveSession } = useApplySession()
+  const { session, saveSession, clearLocalDraft } = useApplySession()
   const sessionRef = useRef(session)
   sessionRef.current = session
 
@@ -173,19 +175,18 @@ export default function FeesContent({ dictionary }: Props) {
       const result = await submitApplicationAction(
         subdomain,
         tokenToUse,
-        formData
+        formData,
+        locale
       )
       if (!result.success || !result.data) {
-        throw new Error(result.error || errorDict.failedToSubmit)
+        const msg =
+          result.error === "RATE_LIMITED"
+            ? errorDict.rateLimited || errorDict.failedToSubmit
+            : result.error || errorDict.failedToSubmit
+        throw new Error(msg)
       }
 
-      try {
-        localStorage.removeItem(
-          `hogwarts_apply_session_${sessionRef.current.campaignId}`
-        )
-      } catch {
-        // localStorage may not be available
-      }
+      clearLocalDraft()
 
       if (result.data.requiresPayment) {
         router.push(
@@ -202,7 +203,7 @@ export default function FeesContent({ dictionary }: Props) {
       )
       setIsSubmitting(false)
     }
-  }, [subdomain, id, errorDict, locale, router, saveSession])
+  }, [subdomain, id, errorDict, locale, router, saveSession, clearLocalDraft])
 
   useEffect(() => {
     if (!isSubmitting) {
@@ -214,7 +215,8 @@ export default function FeesContent({ dictionary }: Props) {
     }
   }, [isSubmitting, enableNext, disableNext, setCustomNavigation, onNext])
 
-  const applicantEmail = session.formData.contact?.email
+  const applicantEmail =
+    authSession?.user?.email ?? session.formData.contact?.email
 
   const paymentMethods = useMemo<PaymentMethod[]>(
     () => [

@@ -59,7 +59,8 @@ const applicationFormDataSchema = z
 export async function submitApplicationAction(
   subdomain: string,
   sessionToken: string,
-  formData: Partial<ApplicationFormData>
+  formData: Partial<ApplicationFormData>,
+  lang: string = "ar"
 ): Promise<ActionResponse<SubmitActionResult>> {
   try {
     // Validate subdomain and sessionToken
@@ -92,7 +93,8 @@ export async function submitApplicationAction(
     const result = await submitApplication(
       inputResult.data.subdomain,
       inputResult.data.sessionToken,
-      validatedData
+      validatedData,
+      lang
     )
 
     if (result.success && result.data) {

@@ -39,33 +39,35 @@ function pickDict(lang: string | null | undefined): TransportationDict {
 function renderEvent(
   notifications: NotificationsDict,
   kind: TripEventKind,
-  reason: string | undefined
+  reason: string | undefined,
+  routeName: string
 ): { title: string; body: string } {
+  const fill = (s: string) => s.replace("{route}", routeName)
   switch (kind) {
     case "trip_started":
       return {
         title: notifications.tripStarted.title,
-        body: notifications.tripStarted.body,
+        body: fill(notifications.tripStarted.body),
       }
     case "trip_finished":
       return {
         title: notifications.tripFinished.title,
-        body: notifications.tripFinished.body,
+        body: fill(notifications.tripFinished.body),
       }
     case "trip_cancelled":
       return {
         title: notifications.tripCancelled.title,
         body: reason
-          ? notifications.tripCancelled.bodyWithReason.replace(
+          ? fill(notifications.tripCancelled.bodyWithReason).replace(
               "{reason}",
               reason
             )
-          : notifications.tripCancelled.body,
+          : fill(notifications.tripCancelled.body),
       }
     case "boarding_missed":
       return {
         title: notifications.boardingMissed.title,
-        body: notifications.boardingMissed.body,
+        body: fill(notifications.boardingMissed.body),
       }
   }
 }
@@ -83,14 +85,28 @@ export async function notifyGuardiansOfTripEvent(
 
   try {
     // Resolve school language for localized title/body
-    const school = await db.school
-      .findUnique({
-        where: { id: schoolId },
-        select: { preferredLanguage: true },
-      })
-      .catch(() => null)
+    const [school, route] = await Promise.all([
+      db.school
+        .findUnique({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+        .catch(() => null),
+      db.route
+        .findFirst({
+          where: { id: routeId, schoolId },
+          select: { name: true },
+        })
+        .catch(() => null),
+    ])
     const dict = pickDict(school?.preferredLanguage)
-    const { title, body } = renderEvent(dict.notifications, kind, reason)
+    const routeName = route?.name ?? ""
+    const { title, body } = renderEvent(
+      dict.notifications,
+      kind,
+      reason,
+      routeName
+    )
 
     const studentSet =
       studentIds && studentIds.length > 0

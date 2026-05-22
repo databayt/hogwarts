@@ -12,9 +12,9 @@ Public-facing school website on subdomain (e.g., `demo.databayt.org`). Includes 
 
 ## Key Decisions
 
-- Single application flow via `application/` (context-based, 6 form steps + payment + success)
+- Single application flow via `application/` (context-based, 5 form steps incl. fees + payment + success)
 - Campaign-based admission: applications tied to `AdmissionCampaign` records with date windows
-- Session-based drafts via `saveApplicationSession` / `resumeApplicationSession` -- no login required
+- Session-based drafts via `saveApplicationSession` / `resumeApplicationSession`; the apply wizard is auth-gated (login required), while OTP status tracking stays account-less
 - OTP status tracking: applicants check status via email OTP (no account needed)
 - All actions use `getTenantContext()` for schoolId resolution from subdomain
 - Homepage sections are composed in `content.tsx` -- order matters for visual flow

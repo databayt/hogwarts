@@ -2,7 +2,7 @@
 
 ### Overview
 
-Time tracking for hourly-paid staff, substitute teachers, and part-time employees. Provides clock in/out, manual time entry, overtime calculation, approval workflow, and payroll integration.
+Time tracking via pay periods and per-day entries (hours, overtime, leave) with a submit → approve workflow, intended to feed payroll. No clock-in UI or automatic overtime detection yet; entries are added manually.
 
 ### Capabilities by Role
 
@@ -32,11 +32,11 @@ timesheet/
 
 ### Status
 
-**Completion:** 60% | **Blockers:** No table/columns/form components (UI is in content.tsx); GPS/QR clock-in not implemented; calendar view not built; overtime calculation engine not verified
+**Completion:** 75% | **Blockers:** Manual-entry form is a placeholder; GPS/QR clock-in not implemented; no overtime detection; not yet consumed by payroll (payroll hardcodes days worked)
 
 ### Integration Points
 
-- Approved timesheets automatically included in `finance/payroll/` runs
+- Approved timesheets are **intended** to feed `finance/payroll/` runs, but that link is not wired yet -- payroll currently hardcodes days worked
 - Hourly rates from `finance/salary/` structures
 - Labor costs tracked against `finance/budget/`
 - See [finance master README](../README.md) for architecture details

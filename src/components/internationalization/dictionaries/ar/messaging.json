@@ -220,6 +220,9 @@
     "select_one_user": "الرجاء اختيار مستخدم واحد على الأقل",
     "enter_group_name": "الرجاء إدخال اسم المجموعة",
     "react_failed": "فشل إضافة التفاعل",
+    "not_authenticated": "يجب تسجيل الدخول",
+    "search_query_too_short": "يجب أن يحتوي البحث على حرفين على الأقل",
+    "whatsapp_not_connected": "واتساب غير متصل لهذه المدرسة",
     "no_school_context": "لم يتم العثور على سياق المدرسة",
     "conversation_start_failed": "فشل بدء المحادثة",
     "microphone_access": "تعذر الوصول إلى الميكروفون"

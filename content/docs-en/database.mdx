@@ -89,7 +89,7 @@ Every tenant-scoped Prisma model has:
 About 44 models intentionally omit `schoolId`:
 
 - **Auth tokens** (4): `Account`, `VerificationToken`, `PasswordResetToken`, `TwoFactorToken` — email-scoped, ephemeral.
-- **Catalog globals** (22+): `Subject`, `Chapter`, `Lesson`, `Book`, `Textbook`, `CurriculumStandard`, etc. — platform-wide reference content; bridge models scope per-school selections.
+- **Catalog globals** (22+): `Subject`, `Chapter`, `Lesson`, `Book`, `Textbook`, `Curriculum`, etc. — platform-wide reference content; bridge models scope per-school selections. (`CurriculumStandard` is school-scoped, not a catalog global.)
 - **Subscription tiers** (1): platform-wide pricing.
 
 ## Dual LMS architecture

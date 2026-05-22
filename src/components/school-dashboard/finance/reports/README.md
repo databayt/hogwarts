@@ -33,11 +33,11 @@ reports/
 
 ### Status
 
-**Completion:** 60% | **Blockers:** Cash flow statement not yet implemented as a route; custom report builder UI not built; scheduled report generation (cron) not wired; export to PDF/Excel not implemented
+**Completion:** 75% | **Blockers:** Cash flow statement not yet implemented as a route; custom report builder UI not built; scheduled report generation (cron) not wired; exports wired to the table but unstyled; multi-currency conversion broken
 
 ### Integration Points
 
-- Reads from journal entries and account balances in `finance/accounts/`
+- Reads from journal entries and account balances in `finance/accounts/` (today the ledger holds fee-payment + manual data only -- other modules don't post yet, so statements understate non-fee activity; umbrella `ISSUE.md` P0)
 - Budget variance data from `finance/budget/`
 - Revenue data from `finance/fees/` and `finance/invoice/`
 - See [finance master README](../README.md) for architecture details

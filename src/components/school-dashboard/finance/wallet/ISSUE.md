@@ -18,6 +18,7 @@
 
 ### P1
 
+- [ ] Ledger posting not wired -- `postWalletTopup` has zero callers, top-ups don't post (umbrella ISSUE.md P0)
 - [ ] No refund flow -- overpaid topups must be reversed manually via journal entry
 - [ ] No low-balance threshold alerts (parent / student unaware until transaction fails)
 - [ ] Wallet-to-bank sweep (move excess wallet funds back to linked bank) not implemented

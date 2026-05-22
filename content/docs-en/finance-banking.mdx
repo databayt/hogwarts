@@ -1,0 +1,82 @@
+---
+title: Banking
+description: School bank accounts, transfers, transaction history, and statement reconciliation backed by Plaid (account linking) and Dwolla (transfers). Listing and transfers work; the reconciliation panel and Plaid sync are stubbed, and the Dwolla webhook handler is missing.
+---
+
+Banking manages a school's bank accounts, links them via Plaid, moves money via Dwolla, and is meant to reconcile book entries against bank statements. The reconciliation UI is currently a placeholder.
+
+## Flow
+
+```
+Link a bank (Plaid Link)  →  list accounts + balances  →  initiate transfer (Dwolla)
+  →  view transaction history  →  reconcile against statements (stubbed)
+```
+
+## Status
+
+| Feature                               | Status                                                           |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| Bank account listing (per tenant)     | Production                                                       |
+| Payment-transfer flow + Dwolla SDK    | Production                                                       |
+| Plaid Link integration                | Scaffolded (needs live sandbox creds)                            |
+| Transaction history                   | Ready                                                            |
+| Plaid sync action                     | Stubbed — "Bank sync is not yet implemented"                     |
+| Reconciliation panel                  | Stubbed — placeholder (blocked on deleted `actions-enhanced.ts`) |
+| Dwolla webhook handler                | Missing (status updates don't reach the dashboard)               |
+| Bank statement import (CSV / PDF OCR) | Planned                                                          |
+
+## Routes
+
+| Route                                         | Page               | Status |
+| --------------------------------------------- | ------------------ | ------ |
+| `/{lang}/finance/banking`                     | Overview           | Ready  |
+| `/{lang}/finance/banking/my-banks`            | Bank account list  | Ready  |
+| `/{lang}/finance/banking/transaction-history` | Transaction log    | Ready  |
+| `/{lang}/finance/banking/payment-transfer`    | Initiate transfers | Ready  |
+
+## Server actions
+
+Split across `banking/actions/` (`bank.actions.ts`, `transaction.actions.ts`, `transfer.actions.ts`) plus `my-banks/actions.ts` and `payment-transfer/actions.ts`. All `schoolId`-scoped; RBAC via `banking/lib/permissions.ts`.
+
+| Action                                                         | Purpose                                   |
+| -------------------------------------------------------------- | ----------------------------------------- |
+| `createBankAccount` / `getAccount` / `getAccounts`             | Bank account CRUD + reads                 |
+| `removeBank`                                                   | Unlink a bank                             |
+| `createTransfer` / `getTransferHistory` / `getRecentTransfers` | Dwolla transfers + history                |
+| `getTransactionsByBankId` / `getTransactionsByUserId`          | Transaction reads                         |
+| `getBankInfo` / `prefetchAccounts`                             | Plaid account info + prefetch             |
+| `syncBankData` / `syncTransactions`                            | Sync from provider (Plaid sync is a stub) |
+
+## Ledger / accounting
+
+Not a ledger money-mover. Banking tracks external bank rails and is _intended_ to reconcile against payroll disbursements, expense payments, and fee deposits — but the reconciliation panel is stubbed, and banking does not itself post journal entries (the README's `lib/accounting/` claim is aspirational).
+
+## Schema
+
+`prisma/models/finance-banking.prisma`: `BankAccount`, `Transaction`, `Transfer`, `PlaidItem`, `DwollaCustomer`, `BankReconciliation` — all `schoolId`-scoped. No `lang` field.
+
+## Stubs
+
+- `banking/reconciliation-panel.tsx` — renders "Enhanced reconciliation panel is currently unavailable"; TODO to regenerate from the current Prisma schema.
+- `banking/my-banks/actions.ts:162` — `// TODO: Implement Plaid sync logic`, returns "Bank sync is not yet implemented".
+- `banking/payment-transfer/validation.ts:22` — hardcoded validation message.
+
+## Tests
+
+`banking/__tests__/banking-tenant.test.ts` — 5 tests, tenant-isolation only. No Plaid callback, transfer-retry, or balance-aggregation tests.
+
+## Key files
+
+| Component             | Path                                                                       |
+| --------------------- | -------------------------------------------------------------------------- |
+| Bank actions          | `src/components/school-dashboard/finance/banking/actions/`                 |
+| Plaid lib             | `src/components/school-dashboard/finance/banking/lib/plaid.ts`             |
+| Plaid Link UI         | `src/components/school-dashboard/finance/banking/shared/plaid-link.tsx`    |
+| Reconciliation (stub) | `src/components/school-dashboard/finance/banking/reconciliation-panel.tsx` |
+| Schema                | `prisma/models/finance-banking.prisma`                                     |
+
+## See also
+
+- [Finance](/docs/finance) — block overview + payment gateways
+- [Accounts](/docs/finance-accounts) — the ledger banking reconciles against
+- [Dashboard](/docs/finance-dashboard) — surfaces bank-account balances

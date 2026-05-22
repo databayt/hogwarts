@@ -1,0 +1,76 @@
+---
+title: Wallet
+description: Cashless stored-value wallets for students and staff — top-ups, balances, and spending. Wallet CRUD and top-ups work, but top-ups don't post to the ledger, there is no surfaced refund workflow, and PIN/QR payments are not built.
+---
+
+Wallet gives each user a stored-value balance for cashless school transactions — top up, hold a balance, and (eventually) pay fees from it. The UI lives in `content.tsx`; there are no dedicated table/columns/form components yet.
+
+## Flow
+
+```
+Create wallet  →  top up (payment method)  →  hold balance  →  spend (e.g. pay fees)
+```
+
+## Status
+
+| Feature                       | Status                                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| Wallet CRUD per user          | Production                                                                                      |
+| Top-up flow                   | Production                                                                                      |
+| Balance accrual from payments | Production                                                                                      |
+| Refund                        | `refundWallet` action exists, but no surfaced workflow — overpaid top-ups are reversed manually |
+| Payment-gateway integration   | Planned                                                                                         |
+| PIN verification              | Planned                                                                                         |
+| QR-code payments              | Planned                                                                                         |
+| Low-balance alerts            | Planned                                                                                         |
+| Wallet-to-bank sweep          | Planned                                                                                         |
+
+## Routes
+
+| Route                                 | Page                | Status |
+| ------------------------------------- | ------------------- | ------ |
+| `/{lang}/finance/wallet`              | Overview            | Ready  |
+| `/{lang}/finance/wallet/all`          | All wallets list    | Ready  |
+| `/{lang}/finance/wallet/new`          | Create wallet       | Ready  |
+| `/{lang}/finance/wallet/[id]`         | Wallet detail       | Ready  |
+| `/{lang}/finance/wallet/transactions` | Transaction history | Ready  |
+
+## Server actions
+
+| Action         | Purpose                                  |
+| -------------- | ---------------------------------------- |
+| `createWallet` | Create a wallet for a user               |
+| `getWallets`   | List wallets (tenant-scoped)             |
+| `topupWallet`  | Add funds to a wallet                    |
+| `refundWallet` | Reverse funds (no surfaced workflow yet) |
+
+## Ledger / accounting
+
+**Does not post to the ledger.** `postWalletTopup` exists in the engine but has zero callers, so top-ups do not create the `DR Cash / CR Unearned Revenue` entries the README describes. Reversing an overpaid top-up requires a manual journal entry in [Accounts](/docs/finance-accounts).
+
+## Schema
+
+`prisma/models/finance-budgets.prisma`: `Wallet`, `WalletTransaction` — both `schoolId`-scoped. No `lang` field.
+
+## Stubs
+
+- No `table.tsx` / `columns.tsx` / `form.tsx` — all UI is inline in `content.tsx`.
+- `validation.ts` factory not yet wired to consumers.
+
+## Tests
+
+None.
+
+## Key files
+
+| Component      | Path                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Server actions | `src/components/school-dashboard/finance/wallet/actions.ts`  |
+| Content (UI)   | `src/components/school-dashboard/finance/wallet/content.tsx` |
+| Schema         | `prisma/models/finance-budgets.prisma`                       |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Fees](/docs/fees) — wallet balance can settle fees
+- [Banking](/docs/finance-banking) — intended wallet-to-bank sweep target

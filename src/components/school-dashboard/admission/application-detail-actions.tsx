@@ -70,8 +70,8 @@ export default function ApplicationDetailActions({
         router.refresh()
       } else {
         ErrorToast(
-          result.error ||
-            t?.applicationDetail?.statusUpdateFailed ||
+          t?.applicationDetail?.statusUpdateFailed ||
+            result.error ||
             "Failed to update status"
         )
       }
@@ -92,7 +92,7 @@ export default function ApplicationDetailActions({
         router.refresh()
       } else {
         ErrorToast(
-          result.error || t?.applicationDetail?.statusUpdateFailed || "Failed"
+          t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
         )
       }
     })

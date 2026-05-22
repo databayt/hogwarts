@@ -1,0 +1,156 @@
+---
+title: Finance
+description: Multi-tenant school finance — a double-entry accounting engine with 14 sub-modules (fees, invoice, payroll, banking, …), per-school currency, and pluggable payment gateways.
+---
+
+The finance block is the largest feature in the platform (~45k LOC, 14 sub-modules) and the financial backbone of every school: it bills families, collects payments, pays staff, tracks spend, and keeps a double-entry ledger. This page is the authoritative status map — each sub-module has its own page linked below.
+
+## What the finance block is
+
+Fourteen sub-modules grouped around a shared double-entry accounting engine. Money flows in (fees, invoices, wallet top-ups), money flows out (payroll, expenses), and every school keeps its own chart of accounts, currency, and permissions. Every query is tenant-isolated by `schoolId`.
+
+| Group            | Modules                                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| Revenue & value  | [Fees](/docs/fees), [Invoice](/docs/invoice), [Wallet](/docs/finance-wallet)                           |
+| People & pay     | [Salary](/docs/finance-salary), [Payroll](/docs/finance-payroll), [Timesheet](/docs/finance-timesheet) |
+| Spend & planning | [Expenses](/docs/finance-expenses), [Budget](/docs/finance-budget), [Receipt](/docs/finance-receipt)   |
+| Ledger & banking | [Accounts](/docs/finance-accounts), [Banking](/docs/finance-banking), [Reports](/docs/finance-reports) |
+| Platform         | [Dashboard](/docs/finance-dashboard), [Permissions](/docs/finance-permissions)                         |
+
+## Double-entry model
+
+The engine lives at `finance/lib/accounting/`. `posting-rules.ts` translates a domain event into balanced journal lines; `actions.ts` writes them.
+
+```
+Domain event (payment recorded, salary approved, …)
+  → posting rule maps it to debit + credit lines (debits == credits)
+  → JournalEntry + LedgerEntry rows written, scoped by schoolId
+  → rolls up into Reports (trial balance, P&L, balance sheet)
+```
+
+**Honest status — only fee payments post to the ledger today.** The engine defines six domain posting functions (`postFeePayment`, `postFeeAssignment`, `postSalaryPayment`, `postExpensePayment`, `postInvoicePayment`, `postWalletTopup`), but only `postFeePayment` has callers (the fees action plus the Stripe and Tap webhooks). The other five have **zero callers** — so salary, expense, invoice, fee-assignment, and wallet movements do not yet reach the general ledger, even though several module READMEs imply they do. This is tracked as a P0 in the engineering [`ISSUE.md`](https://github.com/databayt/hogwarts/blob/main/src/components/school-dashboard/finance/ISSUE.md).
+
+## Status matrix
+
+Authoritative readiness. Mirrors `finance/README.md` and `finance/ISSUE.md`. **Ledger** is the honesty signal: 🟢 posts · 🟡 posts but not transactional · ❌ posting fn exists but unused · 🔗 consumes the ledger · ➖ not a money-mover.
+
+| Module                                   | Readiness | Ledger                          | Tests  |
+| ---------------------------------------- | --------- | ------------------------------- | ------ |
+| [Invoice](/docs/invoice)                 | 90%       | ❌ `postInvoicePayment` unused  | 🟢 131 |
+| [Fees](/docs/fees)                       | 85%       | 🟡 fee payments only            | 🟡 13  |
+| [Budget](/docs/finance-budget)           | 85%       | ➖                              | ❌     |
+| [Receipt](/docs/finance-receipt)         | 85%       | ➖                              | ❌     |
+| [Banking](/docs/finance-banking)         | 80%       | ➖                              | 🟡 5   |
+| [Dashboard](/docs/finance-dashboard)     | 80%       | ➖ (trends are mock)            | ❌     |
+| [Expenses](/docs/finance-expenses)       | 80%       | ❌ `postExpensePayment` unused  | ❌     |
+| [Accounts](/docs/finance-accounts)       | 75%       | 🟢 engine home (fee data only)  | 🟡 10  |
+| [Permissions](/docs/finance-permissions) | 75%       | ➖                              | ❌     |
+| [Reports](/docs/finance-reports)         | 75%       | 🔗 reads ledger (fee-only data) | ❌     |
+| [Salary](/docs/finance-salary)           | 75%       | ➖                              | ❌     |
+| [Timesheet](/docs/finance-timesheet)     | 75%       | ➖                              | ❌     |
+| [Wallet](/docs/finance-wallet)           | 75%       | ❌ `postWalletTopup` unused     | ❌     |
+| [Payroll](/docs/finance-payroll)         | 65%       | ❌ `postSalaryPayment` unused   | ❌     |
+
+**Overall ≈ 79%** (average of the readiness column).
+
+## Sub-modules
+
+- **[Fees](/docs/fees)** — fee structures, assignment, online (Stripe/Tap) + offline payments, installments, overdue cron, fines, scholarships.
+- **[Invoice](/docs/invoice)** — invoice lifecycle, creation wizard, email, analytics. The most complete sub-module.
+- **[Wallet](/docs/finance-wallet)** — cashless stored-value wallets, top-ups, balances.
+- **[Salary](/docs/finance-salary)** — per-teacher salary structures, allowances, deductions, increments.
+- **[Payroll](/docs/finance-payroll)** — pay-period runs, salary slips, approve → disburse workflow.
+- **[Timesheet](/docs/finance-timesheet)** — staff time periods and entries; intended to feed payroll.
+- **[Expenses](/docs/finance-expenses)** — expense submission, approval workflow, categories, budget integration.
+- **[Budget](/docs/finance-budget)** — budget planning, allocation, variance tracking.
+- **[Receipt](/docs/finance-receipt)** — expense-receipt upload with AI extraction (distinct from the fees payment receipt PDF).
+- **[Accounts](/docs/finance-accounts)** — chart of accounts, manual journal entries, general ledger; home of the accounting engine.
+- **[Banking](/docs/finance-banking)** — bank accounts, transfers, reconciliation (Plaid / Dwolla).
+- **[Reports](/docs/finance-reports)** — balance sheet, P&L, trial balance off the ledger.
+- **[Dashboard](/docs/finance-dashboard)** — role-scoped KPI cards, charts, alerts, quick actions.
+- **[Permissions](/docs/finance-permissions)** — granular `FinancePermission` management (12 modules × 7 actions).
+
+## Cross-cutting concerns
+
+### Multi-tenant isolation
+
+Every finance query is scoped by `schoolId` via `getTenantContext()`. A missing `schoolId` here is worse than elsewhere — it corrupts a shared ledger across schools. This is the strictest tenant boundary in the platform.
+
+### Currency per school
+
+`School.currency` (ISO 4217) drives all money formatting; never hardcode `$` or `SDG`. `finance/lib/format.ts` exposes two formatters and the amount-storage convention is mixed, so know which your data uses:
+
+- `formatMoney(value)` — value is in **whole units** (used by dashboard aggregations)
+- `formatCurrency(value)` — value is in **cents / 100** (used elsewhere)
+
+### Payment gateways
+
+Resolved per school by country/timezone in `src/lib/payment/gateway-config.ts`; each gateway implements the `PaymentProvider` interface in `src/lib/payment/`.
+
+| Gateway       | Status                                       | Markets                                  |
+| ------------- | -------------------------------------------- | ---------------------------------------- |
+| Stripe        | Live                                         | Global (Visa, MC, Apple Pay, Google Pay) |
+| Tap           | Implemented; activates with `TAP_SECRET_KEY` | Gulf (mada, KNET, STC Pay, Apple Pay)    |
+| Cash          | Functional (returns instructions)            | All                                      |
+| Bank transfer | Functional (returns bank details)            | All                                      |
+| Mobile money  | Functional (returns instructions)            | Sudan (Bankak, mBOK)                     |
+| Bankak        | Stub — awaiting Bank of Khartoum API         | Sudan                                    |
+
+The interface today declares only `supportsCurrency`, `isConfigured`, and `createCheckout` — there is **no `verifyWebhook` or `createRefund`**. Webhooks are handled per-gateway under `src/app/api/webhooks/`; the only refund path is Stripe course-enrollment refunds.
+
+### Accounting engine
+
+See [Double-entry model](#double-entry-model) above and the [Accounts](/docs/finance-accounts) page. Posting rules are append-only — add new rules rather than editing existing ones, or historical balance sheets shift.
+
+### i18n and the `lang` gap
+
+UI strings flow through the dictionary system, and notifications dispatch via the school's `preferredLanguage`. But **no finance Prisma model has a `lang` field**, so DB-stored, user-facing finance text — `Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description — can't use the platform's `getDisplayText` convention and renders in its stored language only. This is the block's biggest i18n debt.
+
+## RBAC
+
+Role defaults, refined by the granular `FinancePermission` model and enforced by `checkCurrentUserPermission()` before every mutation.
+
+| Role               | Access                                                       |
+| ------------------ | ------------------------------------------------------------ |
+| Admin              | All 14 sub-modules, permission management, accounting config |
+| Accountant         | Full finance incl. journal entries, payroll, reports         |
+| Developer          | Platform-wide across all schools                             |
+| Teacher / Staff    | Own salary + payslips, submit expenses, clock in/out         |
+| Student / Guardian | View + pay fees, wallet balance, download receipts           |
+
+## Schema
+
+Finance models span several files under `prisma/models/`: `finance-core` (chart of accounts, journal, ledger, fiscal year), `finance-fees` (structures, assignments, payments, fines, scholarships), `finance-payroll` (salary, payroll runs, slips, timesheets), `finance-banking` (accounts, transfers, Plaid/Dwolla), `finance-budgets` (wallets, budgets, expenses), `finance-invoices`, and `finance-reports`. All models carry `schoolId`; none carry `lang` (see above).
+
+## Known gaps & roadmap
+
+- Wire (or honestly retire) the 5 orphaned posting functions; make `postFeePayment` transactional.
+- Replace the dashboard `Math.random()` trend charts with real aggregation.
+- Payroll tax is a hardcoded flat 15% — needs real brackets (its `config.ts` already ships unused ones).
+- Wire the invoice PDF (the fees receipt PDF already works); add payslip PDF.
+- Add `lang` to user-facing finance models; route through `getDisplayText`.
+- Add `createRefund` / `verifyWebhook` to the payment interface; finish Bankak.
+- Test coverage: 11 of 14 sub-modules have none.
+
+The verified, file:line-cited register lives in [`finance/ISSUE.md`](https://github.com/databayt/hogwarts/blob/main/src/components/school-dashboard/finance/ISSUE.md), with phased payment work tracked in GitHub #263 (payment umbrella) and #264 (fee auto-provisioning).
+
+## Key files
+
+| Concern            | Path                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| Accounting engine  | `src/components/school-dashboard/finance/lib/accounting/`    |
+| Money/date format  | `src/components/school-dashboard/finance/lib/format.ts`      |
+| Finance RBAC       | `src/components/school-dashboard/finance/lib/permissions.ts` |
+| Payment providers  | `src/lib/payment/providers/`                                 |
+| Gateway selection  | `src/lib/payment/gateway-config.ts`                          |
+| Fee ↔ invoice sync | `src/lib/fee-invoice-sync.ts`                                |
+| Schema             | `prisma/models/finance-*.prisma`                             |
+| Tenant context     | `src/lib/tenant-context.ts`                                  |
+
+## See also
+
+- [Fees](/docs/fees) — the revenue entry point
+- [Invoice](/docs/invoice) — billing lifecycle
+- [Multi-tenancy](/docs/multi-tenancy) — how `schoolId` isolation works
+- [Internationalization](/docs/internationalization) — the dictionary + `lang` model
+- [Database](/docs/database) — Prisma schema conventions

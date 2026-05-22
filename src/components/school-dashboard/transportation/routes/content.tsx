@@ -5,7 +5,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { listDrivers } from "../actions/drivers"
-import { listRoutes } from "../actions/routes"
+import { listAvailableGeofences, listRoutes } from "../actions/routes"
 import { listVehicles } from "../actions/vehicles"
 import { TransportationEmptyState } from "../empty-state"
 import { RoutesClient } from "./routes-client"
@@ -17,11 +17,13 @@ interface Props {
 }
 
 export async function RoutesContent({ locale, dictionary }: Props) {
-  const [routesResult, vehiclesResult, driversResult] = await Promise.all([
-    listRoutes(),
-    listVehicles(),
-    listDrivers(),
-  ])
+  const [routesResult, vehiclesResult, driversResult, geofencesResult] =
+    await Promise.all([
+      listRoutes(),
+      listVehicles(),
+      listDrivers(),
+      listAvailableGeofences(),
+    ])
 
   if (!routesResult.success) {
     return (
@@ -38,6 +40,7 @@ export async function RoutesContent({ locale, dictionary }: Props) {
       routes={routesResult.data}
       vehicles={vehiclesResult.success ? vehiclesResult.data : []}
       drivers={driversResult.success ? driversResult.data : []}
+      geofences={geofencesResult.success ? geofencesResult.data : []}
       dictionary={dictionary}
     />
   )

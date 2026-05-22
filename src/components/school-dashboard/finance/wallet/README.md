@@ -34,11 +34,11 @@ wallet/
 
 ### Status
 
-**Completion:** 65% | **Blockers:** No table/columns/form components (UI is in content.tsx); payment gateway integration not implemented; PIN verification not built; QR code payments not implemented
+**Completion:** 75% | **Blockers:** No table/columns/form components (UI is in content.tsx); payment gateway integration not implemented; PIN verification not built; QR code payments not implemented
 
 ### Integration Points
 
 - Students can pay fees from wallet balance
-- Top-ups create journal entries (DR: Cash, CR: Unearned Revenue) via `finance/lib/accounting/`
+- Ledger posting (`postWalletTopup`) exists in `finance/lib/accounting/` but is **not yet wired** -- top-ups don't post (umbrella `ISSUE.md` P0)
 - Transaction history feeds into `finance/reports/`
 - See [finance master README](../README.md) for architecture details

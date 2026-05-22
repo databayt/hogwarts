@@ -10,12 +10,35 @@
 // bcrypt the full plaintext, store hash + prefix in school_api_tokens.
 // Plaintext is returned ONCE to the issuer.
 
+import { randomBytes } from "crypto"
 import bcrypt from "bcryptjs"
 
 import { db } from "@/lib/db"
 
 const PREFIX_MIN_LEN = 4
 const PREFIX_LEN = 8
+
+export interface GeneratedApiToken {
+  /** Full `<prefix>.<secret>` — returned ONCE; never recoverable after. */
+  plaintext: string
+  /** First 8 chars, persisted for fast indexed lookup. */
+  tokenPrefix: string
+  /** bcrypt hash of the full plaintext, persisted in `tokenHash`. */
+  tokenHash: string
+}
+
+/**
+ * Generate a fresh service-account API token. Persist only `tokenPrefix` +
+ * `tokenHash`; show `plaintext` to the issuer once (it cannot be recovered).
+ */
+export async function generateApiToken(): Promise<GeneratedApiToken> {
+  const rawPrefix = randomBytes(4).toString("hex") // 8 hex chars
+  const secret = randomBytes(24).toString("hex") // 48 hex chars
+  const plaintext = `${rawPrefix}.${secret}`
+  const tokenPrefix = plaintext.slice(0, PREFIX_LEN) // === rawPrefix
+  const tokenHash = await bcrypt.hash(plaintext, 10)
+  return { plaintext, tokenPrefix, tokenHash }
+}
 
 export interface VerifiedApiToken {
   id: string

@@ -1,0 +1,95 @@
+---
+title: Timesheet
+description: Staff time tracking via pay periods and per-day entries (hours, overtime, leave) with an open → closed → approved workflow. Period and entry CRUD work; there is no clock-in UI, no overtime detection, and the manual-entry form is a placeholder.
+---
+
+Timesheet manages pay periods and the time entries within them. Approved timesheets are _intended_ to feed [payroll](/docs/finance-payroll)'s day/hour counts — but that link is not wired today, so payroll hardcodes 22 days regardless.
+
+## Flow
+
+```
+1. Create period (OPEN)                              — createTimesheet
+2. Add entries (hours / overtime / leave per day)    — addTimesheetEntry  (db.$transaction)
+3. Submit period (→ CLOSED)                          — submitTimesheet
+4. Approve / reject                                  — approveTimesheet
+```
+
+## Status
+
+| Feature                               | Status                                |
+| ------------------------------------- | ------------------------------------- |
+| Timesheet period CRUD + list          | Production                            |
+| Time entry creation (transactional)   | Production                            |
+| Submit period                         | Production                            |
+| Approve / reject period               | Production                            |
+| Manual entry UI form                  | Stubbed — "coming soon" placeholder   |
+| Overtime detection (>8h/day flag)     | Planned                               |
+| Mobile / GPS / QR clock-in            | Planned                               |
+| Export to payroll input               | Planned                               |
+| Payroll consumption of approved hours | Not wired (payroll hardcodes 22 days) |
+
+## Routes
+
+| Route                                   | Page         | Status                |
+| --------------------------------------- | ------------ | --------------------- |
+| `/{lang}/finance/timesheet`             | Overview     | Ready                 |
+| `/{lang}/finance/timesheet/periods`     | Periods list | Ready                 |
+| `/{lang}/finance/timesheet/entries`     | Entries list | Ready                 |
+| `/{lang}/finance/timesheet/entries/new` | Manual entry | Stubbed (placeholder) |
+
+## Server actions
+
+RBAC is enforced in `content.tsx`. These actions resolve the tenant from `session.user.schoolId` directly rather than `getTenantContext()` (an inconsistency with payroll/salary — flagged for cleanup). `addTimesheetEntry` wraps its write in `db.$transaction`.
+
+| Action              | Purpose                                         |
+| ------------------- | ----------------------------------------------- |
+| `createTimesheet`   | Create period (OPEN)                            |
+| `addTimesheetEntry` | Create entry + reload period in one transaction |
+| `submitTimesheet`   | Period → CLOSED                                 |
+| `approveTimesheet`  | Set approve/reject status + `closedBy`          |
+| `getTimesheets`     | List periods + entries                          |
+
+## Concepts
+
+| Concept        | Values                                                                       |
+| -------------- | ---------------------------------------------------------------------------- |
+| `PeriodStatus` | OPEN, CLOSED, LOCKED                                                         |
+| `EntryStatus`  | DRAFT, SUBMITTED, APPROVED, REJECTED                                         |
+| Config rules   | `PERIOD_DURATION_DAYS` 14, `ROUNDING_INTERVAL` 0.25, `REQUIRE_APPROVAL` true |
+
+## Ledger / accounting
+
+No journal posting — timesheet is upstream of payroll and has no money event of its own.
+
+## Schema
+
+`prisma/models/finance-payroll.prisma`:
+
+- **`TimesheetPeriod`** — `name`, `startDate`, `endDate`, `status`, `closedBy/At`; `@@unique([schoolId, name])`.
+- **`TimesheetEntry`** — `periodId`, `teacherId`, `entryDate`, `hoursWorked`, `overtimeHours`, `leaveHours`, `leaveType`, `notes`, `status`; `@@unique([schoolId, periodId, teacherId, entryDate])`.
+
+No `lang` field (the free-text fields here are short operational labels).
+
+## Stubs
+
+- `timesheet/entries/new/page.tsx` — manual-entry form is a placeholder.
+- `validation.ts:25` — hardcoded Zod message (not yet routed through `ValidationHelper`).
+
+## Tests
+
+None.
+
+## Key files
+
+| Component      | Path                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------ |
+| Server actions | `src/components/school-dashboard/finance/timesheet/actions.ts`                       |
+| Config         | `src/components/school-dashboard/finance/timesheet/config.ts`                        |
+| Entries page   | `src/app/[lang]/s/[subdomain]/(school-dashboard)/finance/timesheet/entries/page.tsx` |
+| Schema         | `prisma/models/finance-payroll.prisma`                                               |
+
+## See also
+
+- [Finance](/docs/finance) — block overview
+- [Payroll](/docs/finance-payroll) — the intended consumer of approved hours
+- [Salary](/docs/finance-salary) — pay definitions

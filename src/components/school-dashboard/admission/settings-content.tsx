@@ -134,7 +134,7 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         SuccessToast(t?.settingsSaved || "Settings saved successfully")
       } else {
         ErrorToast(
-          result.error || t?.settingsFailed || "Failed to save settings"
+          t?.settingsFailed || result.error || "Failed to save settings"
         )
       }
     })

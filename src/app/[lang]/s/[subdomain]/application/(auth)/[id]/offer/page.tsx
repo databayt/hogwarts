@@ -52,6 +52,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
       locale={lang}
       dictionary={dictionary}
       cancelled={cancelled === "true"}
+      accessToken={accessToken}
     />
   )
 }

@@ -7,15 +7,18 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 ## Before You Start
 
 1. Read `README.md` here for routes, file structure, and integration points
-2. The 9 Prisma models live in `prisma/models/transportation.prisma`:
+2. Read `ISSUE.md` here for the gap/blocker/improvement tracker — the block is functionally
+   production-ready but carries a known polish/hardening backlog (sidebar RBAC mismatch, error-code
+   toast flattening, missing geofence picker, dead permissions, thin business-logic tests)
+3. The 9 Prisma models live in `prisma/models/transportation.prisma`:
    - 7 core: Vehicle, Driver, Route, RouteStop, RouteAssignment, Trip, TripBoarding
    - 2 added in production-readiness sweep: TransportationSettings, SchoolApiToken
-3. Migration SQL files in `prisma/migrations/`:
+4. Migration SQL files in `prisma/migrations/`:
    - `20260428083207_add_transportation` — MVP (5 tables)
    - `20260428090000_add_transportation_trips` — Trip + TripBoarding
    - `20260429070000_link_route_to_geofence` — Route.geofenceId FK
    - `20260508000000_add_transportation_settings_and_api_tokens` — Phase 4
-4. Plans:
+5. Plans:
    - Original feature plan: `/Users/abdout/.claude/plans/invoke-feature-workflow-to-toasty-crystal.md`
    - Production-readiness sweep: `/Users/abdout/.claude/plans/read-transportation-feature-to-elegant-walrus.md`
 
@@ -27,7 +30,7 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **`startTrip` auto-populates TripBoardings** with status=PENDING for every active assignment on the route. Drivers/staff then mark BOARDED/ALIGHTED/MISSED per stop via `recordBoarding`.
 - **Stop reorder uses two-phase update** (negative offset → final order) to avoid hitting the `@@unique([schoolId, routeId, stopOrder])` constraint mid-transaction. See `actions/stops.ts:reorderStops`.
 - **Trip lifecycle is state-machine guarded**: `startTrip` requires SCHEDULED, `finishTrip` requires IN_PROGRESS, `cancelTrip` requires SCHEDULED|IN_PROGRESS, `recordBoarding` requires IN_PROGRESS. Returns `TRIP_INVALID_STATE` on violation.
-- **Geofence integration is opt-in**: `Route.geofenceId` is nullable. When set, `recordBoardingFromGeofence(studentId, geofenceId, eventType)` bridges existing `GeoFence`/`GeoAttendanceEvent` ENTER/EXIT events into TripBoarding rows. Available via UI form (route schema includes `geofenceId`) and via `/api/transportation/geofence-boarding` webhook for service accounts.
+- **Geofence integration is opt-in**: `Route.geofenceId` is nullable. When set, `recordBoardingFromGeofence(studentId, geofenceId, eventType)` bridges existing `GeoFence`/`GeoAttendanceEvent` ENTER/EXIT events into TripBoarding rows. The data layer is wired (`routeSchema` accepts `geofenceId`; `create/updateRoute` persist it) and the `/api/transportation/geofence-boarding` webhook works — **but the route form has no geofence picker yet**, so `geofenceId` is currently only settable via seed/SQL/webhook, not the admin UI (ISSUE.md P2-2).
 - **Service-account webhook**: `POST /api/transportation/geofence-boarding` accepts a Bearer token from `school_api_tokens` (bcrypt-hashed; plaintext shape is `<8-char-prefix>.<32-hex-secret>`). Token's `schoolId` IS the tenant — never read from request body. Rate limit: 120/min/IP.
 - **Trip-event notifications honor school's preferredLanguage** — guardian notifications render in `en` or `ar` based on `school.preferredLanguage`. Per-event opt-out flags in `TransportationSettings`.
 - **Settings model is one-row-per-school** (`@@unique([schoolId])`); `getSettings()` returns defaults if no row exists. `updateSettings()` upserts.
@@ -40,6 +43,10 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **Active assignment uniqueness:** `@@unique([schoolId, studentId, routeId, effectiveFrom])` — allows historical re-assignments on the same route, but `assignStudentToRoute` adds an extra check that rejects new active assignments while one already exists.
 - **API token plaintext is ephemeral** — only returned ONCE at issuance (seed prints it to console). Lost token = revoke + re-mint. Never log the full plaintext, only `tokenPrefix` for forensics.
 - **Geofence webhook schoolId injection** — the API route MUST take schoolId from the resolved token, NOT from the request body. The current code does this correctly; preserve in any refactor.
+- **Two sidebar configs — only one is live.** The rendered sidebar is `template/platform-sidebar/config.ts` (`platformNav`), with correct per-role transportation entries + `bus` icon (`platform-sidebar/icons.tsx`) and titles in the `platform.sidebar` dict (en + ar). `school-dashboard/config.ts` is **dead/legacy** (imported nowhere) — don't edit it expecting nav changes.
+- **Error toasts go through `error-map.ts`** — clients call `resolveTransportationError(t, "error" in result ? result.error : undefined)` to turn a server code into a translated message. When you add a new surfaced error code, add a `case` to `resolveTransportationError` (otherwise it falls back to `errors.internalError`).
+- **RBAC matrix has no dead entries** — `read_class` and `export` were removed (2026-05-22); every `PERMISSION_MATRIX` action has a caller. Fee CSV export is client-side and gated by the `view_fees` page (no separate permission).
+- **Unused i18n form factories** — `createVehicleSchema`/`createDriverSchema`/… are exported but dead: no client uses them (forms are plain `useState`) and tests exercise the raw `vehicleSchema` etc. Don't trust them as proof of inline client validation. P2-4 (wire react-hook-form, or delete the factories) is deferred — see ISSUE.md.
 
 ## Related Blocks
 

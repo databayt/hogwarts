@@ -73,7 +73,9 @@
       "vehicle": "Vehicle",
       "driver": "Driver",
       "stops": "Stops",
-      "notes": "Notes"
+      "notes": "Notes",
+      "geofence": "Geofence link",
+      "geofenceNone": "No geofence"
     },
     "directions": {
       "PICKUP": "Pickup (morning)",
@@ -248,7 +250,26 @@
     "notifyOnCancel": "Notify guardians on trip cancel",
     "saveButton": "Save settings",
     "savedToast": "Settings saved",
-    "saveFailedToast": "Could not save settings"
+    "saveFailedToast": "Could not save settings",
+    "tokens": {
+      "title": "Service API tokens",
+      "subtitle": "Bearer tokens for the geofence-boarding webhook",
+      "create": "Generate token",
+      "name": "Label",
+      "namePlaceholder": "e.g. Bus GPS collector",
+      "created": "Token created",
+      "showOnceWarning": "Copy this token now — you won't be able to see it again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "revoke": "Revoke",
+      "revokeConfirm": "Revoke this token? Any integration using it will stop working.",
+      "lastUsed": "Last used",
+      "never": "Never",
+      "prefix": "Prefix",
+      "empty": "No API tokens yet",
+      "scope": "Scope: geofence boarding",
+      "close": "Close"
+    }
   },
   "validation": {
     "plateRequired": "Plate number is required",
@@ -288,6 +309,7 @@
     "routeNameTaken": "A route with this name already exists",
     "stopOrderConflict": "Another stop already uses this order",
     "assignmentOverlap": "Student already has an active assignment on this route",
+    "hasDependencies": "Can't delete — this record is still in use",
     "notFound": "Record not found",
     "forbidden": "You don't have permission to perform this action",
     "validationFailed": "Please fix the errors and try again",
@@ -296,20 +318,20 @@
   "notifications": {
     "tripStarted": {
       "title": "Bus departed",
-      "body": "Your child's bus has started its route."
+      "body": "Your child's bus on {route} has started its route."
     },
     "tripFinished": {
       "title": "Bus arrived",
-      "body": "Your child's bus has completed its route."
+      "body": "Your child's bus on {route} has completed its route."
     },
     "tripCancelled": {
       "title": "Bus trip cancelled",
-      "body": "Your child's bus trip has been cancelled.",
-      "bodyWithReason": "Your child's bus trip was cancelled: {reason}"
+      "body": "Your child's bus trip on {route} has been cancelled.",
+      "bodyWithReason": "Your child's bus trip on {route} was cancelled: {reason}"
     },
     "boardingMissed": {
       "title": "Missed boarding",
-      "body": "Your child did not board the bus on this trip."
+      "body": "Your child did not board the bus on {route}."
     }
   },
   "common": {

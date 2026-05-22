@@ -34,11 +34,11 @@ expenses/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** `content-old.tsx` legacy file needs removal; OCR receipt scanning not implemented; email notifications for approval chain not wired
+**Completion:** 80% | **Blockers:** `content-old.tsx` legacy file needs removal; OCR receipt scanning not implemented; email notifications for approval chain not wired
 
 ### Integration Points
 
 - Deducts from budget allocations on approval
-- Creates journal entries via `finance/lib/accounting/`
+- Ledger posting (`postExpensePayment`) exists in `finance/lib/accounting/` but is **not yet wired** -- approvals decrement budget, not the ledger (umbrella `ISSUE.md` P0)
 - Reimbursements can be added to payroll
 - See [finance master README](../README.md) for architecture details
