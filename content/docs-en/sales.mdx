@@ -33,31 +33,50 @@ Do these first — they unblock every conversation downstream.
 - [ ] Lock the Arabic + English taglines → [Marketing](/docs/marketing#brand-assets)
 - [ ] Produce the pilot welcome-package video → [Onboarding videos](/docs/onboarding-videos)
 
-### 1. Build the pipeline (prospecting)
+### 1. Work your warm network first
+
+The fastest path to a pilot is someone who already trusts you. Before any cold prospecting, mine the relationships the team already has.
+
+- [ ] Each team member lists every school, principal, or decision-maker they personally know → [Leads](/docs/leads#lead-sources)
+- [ ] Enter each one in the [sales console](/sales) with the tier convention below — source Referral, `network` + `tier-a/b/c` tags → [Leads](/docs/leads#lead-sources)
+- [ ] Complete missing fields per lead: full name, role, phone, WhatsApp, language preference (AR/EN), best channel, who can give a warm intro
+- [ ] Research each school in the notes: curriculum, ~student count, operating mode (in-Sudan / displaced), loudest pain point, existing tools (Excel, WhatsApp groups, SMS)
+- [ ] Reach out to Tier A contacts first using [T20 first-touch WhatsApp](/docs/outreach#t20-school-first-touch-whatsapp-sudan-tier-a-arabic-primary) and log every touch in the console → [Outreach](/docs/outreach)
+
+**Tier convention** — tag every network lead with exactly one tier so the [sales console](/sales) Network filter splits cleanly:
+
+| Tier | Meaning                                | Source    | Priority | Tags                                   |
+| ---- | -------------------------------------- | --------- | -------- | -------------------------------------- |
+| A    | Warm — you have the direct relay today | Referral  | Urgent   | `network`, `tier-a`, `<country>`       |
+| B    | Warm but needs intro / more research   | Referral  | High     | `network`, `tier-b`, `<country>`       |
+| C    | Cold — research before any outreach    | Cold Call | Medium   | `tier-c`, `<country>` _(no `network`)_ |
+
+The current short list (11 schools, 2026-05-24) is seeded under `schoolId=platform` via `pnpm db:seed:single sales-network`. Re-run anytime — it skips rows that already exist by school name. Add new contacts directly in the console going forward.
+
+### 2. Build the pipeline (prospecting)
 
 - [ ] Assemble a named-school prospect list across the MENA-10 footprint → [Leads](/docs/leads#lead-sources)
 - [ ] Qualify each with the 7-question discovery script → [Leads](/docs/leads#discovery-call-script)
 
-### 2. Outreach (cold + warm)
+### 3. Outreach (cold + warm)
 
 - [ ] Run 5-touch outreach via email, WhatsApp, and LinkedIn → [Outreach](/docs/outreach)
 - [ ] Hold the Day 1 / 3 / 7 / 14 / 21 follow-up cadence → [Leads](/docs/leads#follow-up-cadence)
-- [ ] Ask the network for warm intros (Ahmed Baha, Sedon, MSAR) → [Leads](/docs/leads#lead-sources)
 
-### 3. Proposal & demo
+### 4. Proposal & demo
 
 - [ ] Run a 30-minute live demo (Arabic / RTL, role-specific views) → [Demo](/docs/demo)
 - [ ] Write the free-pilot proposal → [Proposal](/docs/proposal)
 - [ ] Send it and run the 21-day proposal follow-up → [Proposal](/docs/proposal)
 
-### 4. Pilot onboarding (Day 0 → 180)
+### 5. Pilot onboarding (Day 0 → 180)
 
 - [ ] Day 0 — provision the subdomain and load the curriculum seed → [Pilot](/docs/pilot#what-pilot-schools-get-on-day-1)
 - [ ] Day 1 — onboarding call plus the Arabic welcome package → [Pilot](/docs/pilot#what-pilot-schools-get-on-day-1)
 - [ ] Day 7 / 14 / 30 / 60 — health checks, feature triage, NPS, mid-pilot review → [Pilot](/docs/pilot#what-pilot-schools-get-on-day-1)
 - [ ] Day 90 — draft the case study → [Case study](/docs/case-study)
 
-### 5. Conversion to paid
+### 6. Conversion to paid
 
 - [ ] Day 180 — send the conversion proposal (30% off PRO) → [Pilot](/docs/pilot#conversion-to-paid)
 - [ ] Apply phase-gate logic before scaling spend → [GTM](/docs/gtm)

@@ -8,9 +8,11 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { asset } from "@/lib/asset-url"
+import { cn } from "@/lib/utils"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { Button } from "@/components/ui/button"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import {
@@ -67,6 +69,7 @@ export function OperatorSalesTable({
     loadMore: dictionary?.loadMore || "Load More",
     loading: dictionary?.loading || "Loading...",
     deleteConfirm: dictionary?.deleteConfirm || "Delete {name}?",
+    network: dictionary?.network || "Network",
   }
 
   // View mode (table/grid)
@@ -74,6 +77,10 @@ export function OperatorSalesTable({
 
   // Search state (debounced)
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
+
+  // "Network" quick-filter: the team's warm private network is tracked as
+  // leads with source=REFERRAL + a `network` tag (see sales.mdx workstream 1).
+  const [networkOnly, setNetworkOnly] = useState(false)
 
   // Data management with optimistic updates
   const {
@@ -84,13 +91,16 @@ export function OperatorSalesTable({
     loadMore,
     refresh,
     optimisticRemove,
-  } = usePlatformData<LeadRow, { search?: string }>({
+  } = usePlatformData<
+    LeadRow,
+    { search?: string; source?: string; tags?: string[] }
+  >({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
       const result = await getOperatorLeads(
-        { search: params.search },
+        { search: params.search, source: params.source, tags: params.tags },
         params.page,
         params.perPage
       )
@@ -115,7 +125,13 @@ export function OperatorSalesTable({
         total: result.data.total,
       }
     },
-    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
+    filters:
+      debouncedSearch || networkOnly
+        ? {
+            ...(debouncedSearch ? { search: debouncedSearch } : {}),
+            ...(networkOnly ? { source: "REFERRAL", tags: ["network"] } : {}),
+          }
+        : undefined,
   })
 
   // Generate columns on the client side
@@ -225,6 +241,18 @@ export function OperatorSalesTable({
         onCreate={() => openModal()}
         entityName="leads"
         translations={toolbarTranslations}
+        additionalActions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-pressed={networkOnly}
+            onClick={() => setNetworkOnly((v) => !v)}
+            className={cn("h-9", networkOnly && "border-primary text-primary")}
+          >
+            {t.network}
+          </Button>
+        }
       />
 
       {view === "table" ? (
