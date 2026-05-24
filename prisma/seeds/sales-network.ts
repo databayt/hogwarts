@@ -169,6 +169,22 @@ function tierFields(tier: Tier, country: string) {
 }
 
 export async function seedSalesNetwork(prisma: PrismaClient): Promise<void> {
+  // Lead.schoolId has a FK to School. The operator console writes all platform
+  // leads under id="platform", so that sentinel row must exist before we
+  // insert. Upsert it idempotently; nothing else in the codebase relies on
+  // its other fields.
+  await prisma.school.upsert({
+    where: { id: PLATFORM_SCHOOL_ID },
+    update: {},
+    create: {
+      id: PLATFORM_SCHOOL_ID,
+      name: "Platform Operator",
+      domain: PLATFORM_SCHOOL_ID,
+      isActive: true,
+      // School defaults cover timezone, preferredLanguage, planType, limits.
+    },
+  })
+
   let created = 0
   let skipped = 0
 
