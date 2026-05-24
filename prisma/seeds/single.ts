@@ -383,7 +383,7 @@ const SEEDS: Record<string, SeedEntry> = {
   },
   "sales-network": {
     description:
-      "Sales warm-network short list (11 schools, tiers A/B/C) under schoolId='platform'",
+      "Sales warm-network short list (11 schools + 1 intro source, tiers A/B/C) under schoolId='platform'",
     global: true,
     run: async (prisma) => {
       await seedSalesNetwork(prisma)

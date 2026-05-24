@@ -42,22 +42,37 @@ interface NetworkSchoolSeed {
   title?: string
   /** Notes — missing info markers, alt contacts, context. */
   notes: string
-  /** School / organization name (used as the idempotency key). */
-  company: string
+  /**
+   * School / organization name. Omit only for intro-source contacts who
+   * aren't tied to a specific target school (idempotency then falls back
+   * to `contactName`).
+   */
+  company?: string
   /** ISO country code. */
   country: string
   tier: Tier
+  /** Defaults to SCHOOL. Use PARTNERSHIP for intro-source / network connectors. */
+  leadType?: LeadType
 }
 
 // ============================================================================
 // SHORT LIST (2026-05-24)
 // ============================================================================
-// 11 schools captured from the team notebook. School names are Arabic primary
-// per the single-language storage rule; transliterations live in `notes` for
-// English-speaking team members.
+// 11 schools + 1 intro-source contact captured from the team notebook. School
+// names are Arabic primary per the single-language storage rule; transliterations
+// live in `notes` for English-speaking team members.
 // ============================================================================
 
 const SCHOOLS: NetworkSchoolSeed[] = [
+  {
+    contactName: "أحمد بها",
+    title: "صلة شبكة / مصدر تقديمات",
+    country: "SD",
+    tier: "A",
+    leadType: LeadType.PARTNERSHIP,
+    notes:
+      "Ahmed Baha — the team's originally-named warm contact (sales.mdx workstream 1). Network connector / intro source, not a school decision-maker himself. Next step: list which schools he can warm-intro us to. Missing: phone, current location, schools he's connected to.",
+  },
   {
     contactName: "حسن عبدوت",
     title: "تواصل عبر العائلة",
@@ -190,8 +205,15 @@ export async function seedSalesNetwork(prisma: PrismaClient): Promise<void> {
 
   for (const s of SCHOOLS) {
     // Idempotency: company name is the logical key inside the platform pool.
+    // For intro-source contacts with no company, dedup by contact name instead.
     const existing = await prisma.lead.findFirst({
-      where: { schoolId: PLATFORM_SCHOOL_ID, company: s.company },
+      where: s.company
+        ? { schoolId: PLATFORM_SCHOOL_ID, company: s.company }
+        : {
+            schoolId: PLATFORM_SCHOOL_ID,
+            company: null,
+            name: s.contactName,
+          },
       select: { id: true },
     })
     if (existing) {
@@ -207,7 +229,7 @@ export async function seedSalesNetwork(prisma: PrismaClient): Promise<void> {
         title: s.title,
         company: s.company,
         country: s.country,
-        leadType: LeadType.SCHOOL,
+        leadType: s.leadType ?? LeadType.SCHOOL,
         status: LeadStatus.NEW,
         source: fields.source,
         priority: fields.priority,
