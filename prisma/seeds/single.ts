@@ -62,6 +62,7 @@ import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
 import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
+import { seedSalesNetwork } from "./sales-network"
 import { seedSchoolWithBranding } from "./school"
 import { seedSudanCatalog } from "./sd-catalog"
 import { seedComboniTeachers } from "./seed-comboni-teachers"
@@ -378,6 +379,14 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedUsCatalog(prisma)
+    },
+  },
+  "sales-network": {
+    description:
+      "Sales warm-network short list (11 schools, tiers A/B/C) under schoolId='platform'",
+    global: true,
+    run: async (prisma) => {
+      await seedSalesNetwork(prisma)
     },
   },
   "clickview-images": {

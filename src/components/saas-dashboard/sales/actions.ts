@@ -285,6 +285,7 @@ export async function getOperatorLeads(
     if (filters?.source) where.source = filters.source
     if (filters?.priority) where.priority = filters.priority
     if (filters?.leadType) where.leadType = filters.leadType
+    if (filters?.tags?.length) where.tags = { hasSome: filters.tags }
     if (filters?.verified !== undefined) where.verified = filters.verified
 
     // Get total count
