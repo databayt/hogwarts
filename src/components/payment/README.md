@@ -1,3 +1,16 @@
+---
+epic: 01
+sprint: Q3-2026
+title: Payment (multi-gateway block)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 70
+tracker: https://github.com/databayt/hogwarts/issues/313
+docs: https://ed.databayt.org/en/docs/fees
+last_audited: 2026-05-25
+---
+
 ## Payment — Reusable multi-gateway payment block
 
 ### Overview
@@ -34,4 +47,13 @@ payment/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** Only Stripe and cash gateways are likely wired to real providers; Tap, bank transfer, and mobile money may be stub implementations in `@/lib/payment/provider`.
+**Completion:** 70% | **Blockers:** Only Stripe and cash gateways are likely wired to real providers; Tap, bank transfer, and mobile money may be stub implementations in `@/lib/payment/provider`. As of 2026-05-25 the `bankak` provider has shipped (see `b26f3759`).
+
+### Agents & Skills
+
+- `agent:revenue` — payments, gateway selection, refund flows
+- `agent:prisma` — `PaymentTransaction` schema + multi-tenant scoping
+- `agent:guardian` — OWASP audit (webhook validation, idempotency)
+- `skill:/security` — security sweep
+- `skill:/guard` — auth + validation sweep
+- `skill:/check` — quality gate before ship
