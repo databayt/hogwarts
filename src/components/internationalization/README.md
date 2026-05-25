@@ -1,3 +1,16 @@
+---
+epic: 08
+sprint: Q3-2026
+title: Internationalization
+file_type: readme
+owner: Samia
+maturity: In Progress
+completion: 60
+tracker: https://github.com/databayt/hogwarts/issues/326
+docs: https://ed.databayt.org/en/docs/translation
+last_audited: 2026-05-25
+---
+
 ## Internationalization — Feature-Based i18n System
 
 ### Overview
@@ -61,3 +74,10 @@ All core infrastructure is production-ready. Feature dictionaries are added incr
 - **Server Components**: `const dict = await getDictionary(lang)` then pass to children
 - **Client Components**: Receive dictionary sections as props
 - **Locale Switching**: `useSwitchLocaleHref()` hook for language toggle links
+
+### Agents & Skills
+
+- `agent:internationalization` — Arabic/English, RTL/LTR
+- `agent:comment` — hardcoded-string detection + lift to dictionary
+- `skill:/translate` — full coverage translation sweep
+- `skill:/lang` — RTL/LTR + translation check

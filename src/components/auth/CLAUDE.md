@@ -1,3 +1,16 @@
+---
+epic: 07
+sprint: Q3-2026
+title: Auth (role-aware UI source)
+file_type: claude
+owner: Abdout
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/325
+docs: https://ed.databayt.org/en/docs/auth
+last_audited: 2026-05-25
+---
+
 # Auth Block
 
 ## Context

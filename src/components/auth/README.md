@@ -1,3 +1,16 @@
+---
+epic: 07
+sprint: Q3-2026
+title: Auth (role-aware UI source)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/325
+docs: https://ed.databayt.org/en/docs/auth
+last_audited: 2026-05-25
+---
+
 ## Auth -- Multi-tenant authentication with OAuth, credentials, and role-based access
 
 ### Overview
@@ -110,3 +123,11 @@ Core authentication (OAuth, credentials, 2FA, email verification, password reset
 - `src/lib/tenant-context.ts` -- Centralized school context retrieval used by all server actions
 - `src/lib/school-access.ts` -- School creation and ownership verification during onboarding
 - `src/middleware.ts` -- Subdomain detection and auth cookie validation on every request
+
+### Agents & Skills
+
+- `agent:guardian` — RBAC + permissions audit
+- `agent:authjs` — Auth.js v5 + session
+- `agent:semantic` — accessible role-aware UI
+- `skill:/guard` — auth + validation + tenant scope
+- `skill:/security` — OWASP sweep

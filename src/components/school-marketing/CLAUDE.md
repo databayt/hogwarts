@@ -1,3 +1,16 @@
+---
+epic: 14
+sprint: Q3-2026
+title: School Marketing
+file_type: claude
+owner: Samia
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/327
+docs: https://databayt.org
+last_audited: 2026-05-25
+---
+
 # School Marketing Block
 
 ## Context

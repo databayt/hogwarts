@@ -1,3 +1,16 @@
+---
+epic: 05
+sprint: Q3-2026
+title: Timetable (LMS scheduling)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 80
+tracker: https://github.com/databayt/hogwarts/issues/323
+docs: https://ed.databayt.org/en/docs/clickview
+last_audited: 2026-05-25
+---
+
 ## Timetable -- Weekly Schedule Management
 
 ### Overview
@@ -132,3 +145,11 @@ Student → Section (Grade 1-A) → Timetable slots per period/day
 - **Classrooms**: Homeroom for regular subjects, common rooms (lab, gym) for specialized subjects
 - **Attendance**: Attendance module uses sections for roster (Section.students) instead of StudentClass
 - **Academic Settings**: Term selector depends on academic year/term configuration
+
+### Agents & Skills
+
+- `agent:nextjs` — App Router + streaming
+- `agent:react` — lesson + chapter UI
+- `agent:performance` — CDN asset migration + Core Web Vitals
+- `skill:/performance` — perf audit
+- `skill:/skeleton` — loading-state sweep

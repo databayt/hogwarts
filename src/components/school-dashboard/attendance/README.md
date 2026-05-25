@@ -1,3 +1,16 @@
+---
+epic: 04
+sprint: Q3-2026
+title: Attendance
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/322
+docs: https://ed.databayt.org/en/docs/attendance
+last_audited: 2026-05-25
+---
+
 ## Attendance -- Daily Attendance Tracking
 
 ### Overview
@@ -137,3 +150,11 @@ Components, server actions (48+), validation schemas, and tests are implemented.
 - **Students**: Attendance records link to student profiles via `studentId`
 - **Classes**: Class roster loaded for attendance marking via `classId`
 - **Notifications**: Planned integration for absence alerts to parents (not yet implemented)
+
+### Agents & Skills
+
+- `agent:react` — attendance + timetable surfaces
+- `agent:nextjs` — section-centric routing
+- `agent:prisma` — section migration validation
+- `skill:/wire` — UI layer sweep
+- `skill:/check` — quality gate
