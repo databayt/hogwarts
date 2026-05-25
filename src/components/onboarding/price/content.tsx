@@ -181,11 +181,8 @@ export default function PriceContent({ dictionary, lang, id }: Props) {
                 )
               }
             }}
-            className="text-foreground w-auto max-w-full min-w-0 border-none bg-transparent text-center text-4xl font-extrabold outline-none sm:text-5xl md:text-6xl"
-            style={{
-              width: `${displayValue.length * 0.8}em`,
-              caretColor: "var(--foreground)",
-            }}
+            className="text-foreground field-sizing-content max-w-full min-w-0 border-none bg-transparent text-center text-4xl font-extrabold outline-none sm:text-5xl md:text-6xl"
+            style={{ caretColor: "var(--foreground)" }}
           />
           {!isFocused && (
             <div
