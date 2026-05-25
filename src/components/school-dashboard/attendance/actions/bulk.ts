@@ -128,26 +128,38 @@ export async function bulkUploadAttendance(
     }
   }
 
+  // Phase 1b: Prefetch existing rows so the txn issues O(N+1) queries
+  // instead of O(2N). Same family of N+1 fixes as markAttendance /
+  // quickMarkAllPresent that landed in March; bulk upload slipped through.
+  // Safe to batch because (schoolId, studentId, classId, date, periodId)
+  // is unique — see prisma/models/attendance.prisma:94.
+  const uploadDate = new Date(parsed.date)
+  const existingRows = await db.attendance.findMany({
+    where: {
+      schoolId,
+      classId: parsed.classId,
+      date: uploadDate,
+      periodId: null,
+      deletedAt: null,
+      studentId: { in: studentIds },
+    },
+    select: { id: true, studentId: true },
+  })
+  const existingByStudent = new Map(
+    existingRows.map((row) => [row.studentId, row.id])
+  )
+
   // Phase 2: Execute all operations in a single transaction
   try {
     await db.$transaction(async (tx) => {
-      for (const record of parsed.records) {
-        // Check if attendance record already exists for this date
-        const existing = await tx.attendance.findFirst({
-          where: {
-            schoolId,
-            studentId: record.studentId,
-            classId: parsed.classId,
-            date: new Date(parsed.date),
-            periodId: null,
-            deletedAt: null,
-          },
-        })
+      const toCreate: Prisma.AttendanceCreateManyInput[] = []
 
-        if (existing) {
-          // Update existing record
+      for (const record of parsed.records) {
+        const existingId = existingByStudent.get(record.studentId)
+
+        if (existingId) {
           await tx.attendance.update({
-            where: { id: existing.id },
+            where: { id: existingId },
             data: {
               status: record.status,
               checkInTime: record.checkInTime
@@ -162,27 +174,28 @@ export async function bulkUploadAttendance(
             },
           })
         } else {
-          // Create new record
-          await tx.attendance.create({
-            data: {
-              schoolId,
-              studentId: record.studentId,
-              classId: parsed.classId,
-              date: new Date(parsed.date),
-              status: record.status,
-              method: parsed.method,
-              markedBy: session.user.id,
-              markedAt: new Date(),
-              checkInTime: record.checkInTime
-                ? new Date(record.checkInTime)
-                : null,
-              checkOutTime: record.checkOutTime
-                ? new Date(record.checkOutTime)
-                : null,
-              notes: record.notes,
-            },
+          toCreate.push({
+            schoolId,
+            studentId: record.studentId,
+            classId: parsed.classId,
+            date: uploadDate,
+            status: record.status,
+            method: parsed.method,
+            markedBy: session.user.id,
+            markedAt: new Date(),
+            checkInTime: record.checkInTime
+              ? new Date(record.checkInTime)
+              : null,
+            checkOutTime: record.checkOutTime
+              ? new Date(record.checkOutTime)
+              : null,
+            notes: record.notes,
           })
         }
+      }
+
+      if (toCreate.length > 0) {
+        await tx.attendance.createMany({ data: toCreate })
       }
     })
 
