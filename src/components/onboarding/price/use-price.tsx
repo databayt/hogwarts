@@ -7,19 +7,26 @@ import { useForm } from "react-hook-form"
 
 import { STEP_NAVIGATION } from "../config.client"
 import { useHostNavigation, useListing } from "../use-listing"
-import { SchoolPriceFormData, schoolPriceSchema } from "./validation"
+import {
+  SchoolPriceFormData,
+  schoolPriceSchema,
+  type Currency,
+} from "./validation"
 
 export function usePrice() {
   const { listing, updateListingData, isLoading, error } = useListing()
   const { goToNextStep, goToPreviousStep } = useHostNavigation("price")
 
+  // Default to whatever the location step already derived (e.g. SDG for
+  // Sudan, SAR for KSA — see onboarding/location/actions.ts). Pilot #305:
+  // the form forced USD, so MENA schools had to override before saving.
   const form = useForm<SchoolPriceFormData>({
     resolver: zodResolver(schoolPriceSchema),
     defaultValues: {
       tuitionFee: 5000,
       registrationFee: 0,
       applicationFee: 0,
-      currency: "USD" as const,
+      currency: (listing?.currency ?? "USD") as Currency,
       paymentSchedule: "semester" as const,
     },
     mode: "onChange",

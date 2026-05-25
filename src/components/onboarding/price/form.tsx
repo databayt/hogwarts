@@ -10,10 +10,32 @@ import { FormField } from "../form-field"
 import { StepNavigation } from "../step-navigation"
 import { StepWrapper } from "../step-wrapper"
 import { usePrice } from "./use-price"
+import { CURRENCY_ENUM, type Currency } from "./validation"
+
+// Display symbol per currency for the fee input prefix. Keys mirror
+// CURRENCY_ENUM so adding a currency in validation triggers a TS error here
+// — any new entry must ship with its symbol.
+const CURRENCY_SYMBOL: Record<Currency, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  CAD: "$",
+  AUD: "$",
+  SAR: "ر.س",
+  AED: "د.إ",
+  EGP: "ج.م",
+  SDG: "ج.س",
+  JOD: "د.أ",
+  KWD: "د.ك",
+  QAR: "ر.ق",
+  BHD: "د.ب",
+  OMR: "ر.ع",
+}
 
 export function PriceForm() {
   const { dictionary } = useDictionary()
   const { form, onSubmit, onBack, isLoading, error, isFormValid } = usePrice()
+  const currencySymbol = CURRENCY_SYMBOL[form.watch("currency")] ?? "$"
 
   return (
     <StepWrapper>
@@ -32,7 +54,7 @@ export function PriceForm() {
           >
             <div className="relative">
               <span className="text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 transform">
-                $
+                {currencySymbol}
               </span>
               <input
                 type="number"
@@ -58,7 +80,7 @@ export function PriceForm() {
           >
             <div className="relative">
               <span className="text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 transform">
-                $
+                {currencySymbol}
               </span>
               <input
                 type="number"
@@ -84,7 +106,7 @@ export function PriceForm() {
           >
             <div className="relative">
               <span className="text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 transform">
-                $
+                {currencySymbol}
               </span>
               <input
                 type="number"
@@ -108,16 +130,13 @@ export function PriceForm() {
             error={form.formState.errors.currency?.message}
           >
             <RadioGroup
-              defaultValue={form.getValues("currency")}
+              value={form.watch("currency")}
               onValueChange={(value: string) =>
-                form.setValue(
-                  "currency",
-                  value as "USD" | "EUR" | "GBP" | "CAD" | "AUD"
-                )
+                form.setValue("currency", value as Currency)
               }
-              className="grid grid-cols-2 gap-4 sm:grid-cols-3"
+              className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
             >
-              {["USD", "EUR", "GBP", "CAD", "AUD"].map((currency) => (
+              {CURRENCY_ENUM.map((currency) => (
                 <div key={currency} className="flex items-center gap-2">
                   <RadioGroupItem
                     value={currency}
