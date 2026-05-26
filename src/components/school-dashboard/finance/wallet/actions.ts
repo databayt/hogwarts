@@ -108,6 +108,30 @@ export async function topupWallet(formData: FormData) {
       return { wallet, transaction }
     })
 
+    // Post to double-entry ledger so cash + unearned-revenue accounts move.
+    // Mirrors fees/actions.ts postFeePayment wiring; fire-and-forget by design
+    // (per umbrella finance/ISSUE.md the rollback story is shared P0 work,
+    // tracked separately from wiring the orphan posters).
+    try {
+      const { postWalletTopup } = await import("../lib/accounting/actions")
+      const postResult = await postWalletTopup(session.user.schoolId, {
+        transactionId: result.transaction.id,
+        amount: validated.amount,
+        topupDate: result.transaction.createdAt,
+      })
+      if (!postResult.success) {
+        console.error(
+          "[topupWallet] postWalletTopup failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[topupWallet] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
     revalidatePath("/finance/wallet")
     return { success: true, data: result }
   } catch (error) {
