@@ -98,9 +98,22 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm prisma generate
+        env:
+          # prisma.config.ts reads env.DATABASE_URL eagerly via env.mjs; the
+          # build job already passes the same placeholder for the same
+          # reason. Without this, `prisma generate` errors out before any
+          # test runs and every PR's test shard reports red regardless of
+          # what changed.
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          SKIP_ENV_VALIDATION: true
 
       - name: Run Tests with Coverage
         run: pnpm test --run --coverage
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-build' }}
+          AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
+          SKIP_ENV_VALIDATION: true
 
   build:
     name: Build Verification
