@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+# package.json `postinstall` runs `prisma generate`, which reads
+# env.DATABASE_URL via env.mjs. Set placeholders at the workflow level
+# so pnpm install does not crash before any test runs.
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+  AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-ci' }}
+  AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
+  SKIP_ENV_VALIDATION: true
+
 jobs:
   test:
     timeout-minutes: 60
