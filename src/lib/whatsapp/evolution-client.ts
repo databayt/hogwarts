@@ -66,7 +66,51 @@ class EvolutionAPIError extends Error {
   }
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+// Retry policy lives here (not in a shared lib) because Evolution's failure
+// modes are specific: the self-hosted container can restart, the upstream
+// WhatsApp socket can flake, and 502/504 from the reverse proxy are common.
+// Generic fetch retries elsewhere in the app would over-trigger.
+const DEFAULT_MAX_ATTEMPTS = 3
+const DEFAULT_BASE_DELAY_MS = 200
+const DEFAULT_TIMEOUT_MS = 15_000
+const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504])
+
+export interface RetryOptions {
+  maxAttempts?: number
+  baseDelayMs?: number
+  timeoutMs?: number
+  /** Override the delay function for tests; receives attempt index (0-based). */
+  delay?: (ms: number) => Promise<void>
+}
+
+function defaultDelay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function backoffWithJitter(attempt: number, baseDelayMs: number): number {
+  // 200ms, 400ms, 800ms with ±25% jitter so two failing schools don't
+  // synchronize their retries and stampede a recovering Evolution API.
+  const exponential = baseDelayMs * Math.pow(2, attempt)
+  const jitter = exponential * 0.25 * (Math.random() * 2 - 1)
+  return Math.max(0, Math.round(exponential + jitter))
+}
+
+function isRetryableError(err: unknown): boolean {
+  if (err instanceof EvolutionAPIError) {
+    return RETRYABLE_STATUS_CODES.has(err.status)
+  }
+  // Native fetch surfaces network failures + AbortError as TypeError /
+  // DOMException. Treat both as transient.
+  if (err instanceof TypeError) return true
+  if (err instanceof DOMException && err.name === "AbortError") return true
+  return false
+}
+
+async function request<T>(
+  path: string,
+  options?: RequestInit,
+  retryOpts: RetryOptions = {}
+): Promise<T> {
   if (!EVOLUTION_API_URL) {
     throw new EvolutionAPIError(
       500,
@@ -74,25 +118,65 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     )
   }
 
-  const url = `${EVOLUTION_API_URL}${path}`
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      apikey: EVOLUTION_API_KEY,
-      ...options?.headers,
-    },
-  })
+  const maxAttempts = retryOpts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS
+  const baseDelayMs = retryOpts.baseDelayMs ?? DEFAULT_BASE_DELAY_MS
+  const timeoutMs = retryOpts.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  const delay = retryOpts.delay ?? defaultDelay
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "Unknown error")
-    throw new EvolutionAPIError(
-      res.status,
-      `Evolution API ${res.status}: ${body}`
-    )
+  const url = `${EVOLUTION_API_URL}${path}`
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const controller = new AbortController()
+    const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs)
+
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          apikey: EVOLUTION_API_KEY,
+          ...options?.headers,
+        },
+      })
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "Unknown error")
+        throw new EvolutionAPIError(
+          res.status,
+          `Evolution API ${res.status}: ${body}`
+        )
+      }
+
+      return (await res.json()) as T
+    } catch (err) {
+      lastError = err
+      const isLastAttempt = attempt === maxAttempts - 1
+      if (isLastAttempt || !isRetryableError(err)) {
+        throw err
+      }
+      const waitMs = backoffWithJitter(attempt, baseDelayMs)
+      console.warn(
+        `[evolution-client] ${path} attempt ${attempt + 1}/${maxAttempts} failed, retrying in ${waitMs}ms`,
+        err
+      )
+      await delay(waitMs)
+    } finally {
+      clearTimeout(timeoutHandle)
+    }
   }
 
-  return res.json() as Promise<T>
+  // Unreachable — the loop either returns or throws — but TS needs it.
+  throw lastError
+}
+
+// Exported for unit tests; the public client API does not change.
+export const __testing = {
+  isRetryableError,
+  backoffWithJitter,
+  RETRYABLE_STATUS_CODES,
+  EvolutionAPIError,
 }
 
 // =============================================================================
