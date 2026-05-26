@@ -17,6 +17,10 @@ program
   .option("--auto-translate", "Auto-translate missing keys (placeholder)")
   .option("--fix", "Add missing keys with placeholder text")
   .option("--verify", "Only verify, don't modify files")
+  .option(
+    "--check",
+    "CI mode: exit 1 if any missing keys found (no output diffs to stderr)"
+  )
   .parse()
 
 const options = program.opts()
@@ -235,6 +239,23 @@ async function syncDictionaries() {
     if (missingKeys.length === 0) {
       console.log(chalk.green("\n✅ All dictionaries are in sync!\n"))
       return
+    }
+
+    // --check mode is for CI: any drift is a hard failure. No --fix, no
+    // placeholders, just a non-zero exit and a one-line summary so the CI
+    // log highlights the failure without scrolling.
+    if (options.check) {
+      console.log(
+        chalk.red(
+          `\n❌ Dictionaries are out of sync: ${arMissing.length} missing in AR, ${enMissing.length} missing in EN\n`
+        )
+      )
+      console.log(
+        chalk.yellow(
+          "Run `npx tsx scripts/dev-i18n-sync.ts --fix` to add placeholders, or translate the keys above directly.\n"
+        )
+      )
+      process.exit(1)
     }
 
     // Fix missing keys
