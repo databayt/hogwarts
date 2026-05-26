@@ -12,6 +12,17 @@ concurrency:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  # package.json `postinstall` runs `prisma generate`, which reads
+  # env.DATABASE_URL via env.mjs. Without these, EVERY job's
+  # `pnpm install --frozen-lockfile` step fails with
+  # `PrismaConfigEnvError: Missing required environment variable: DATABASE_URL`
+  # before any real work runs. Set at workflow level so all 4 jobs
+  # (typecheck, lint, test, build) inherit the placeholders.
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+  DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+  AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-build' }}
+  AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
+  SKIP_ENV_VALIDATION: true
 
 jobs:
   typecheck:
@@ -100,7 +111,10 @@ jobs:
         run: pnpm prisma generate
 
       - name: Run Tests with Coverage
-        run: pnpm test --run --coverage
+        # `pnpm test ...` swallows `--run`/`--coverage` as pnpm options.
+        # Use the `--` separator so they reach vitest, which is what the
+        # package.json `test` script invokes.
+        run: pnpm test -- --run --coverage
 
   build:
     name: Build Verification
