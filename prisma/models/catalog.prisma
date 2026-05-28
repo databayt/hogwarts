@@ -217,6 +217,7 @@ model Subject {
   schoolExamTemplates    SchoolExamTemplate[]
   schoolQuestionBanks    QuestionBank[]
   schoolResults          Result[]
+  liveClassSessions      LiveClassSession[]
   schoolReportGrades     ReportCardGrade[]
   schoolTeacherExpertise TeacherSubjectExpertise[]
   schoolQuickAssessments QuickAssessment[]

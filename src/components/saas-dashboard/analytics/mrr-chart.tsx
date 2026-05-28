@@ -69,7 +69,7 @@ export function MRRChart({ data, lang }: MRRChartProps) {
               className="text-xs"
               tick={{ fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(value) =>
-                formatCurrency(value, lang, {
+                formatCurrency(value, lang, "USD", {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 })
@@ -87,7 +87,7 @@ export function MRRChart({ data, lang }: MRRChartProps) {
                             {data.month}
                           </span>
                           <span className="font-bold">
-                            {formatCurrency(data.mrr, lang, {
+                            {formatCurrency(data.mrr, lang, "USD", {
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 0,
                             })}

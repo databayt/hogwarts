@@ -24,8 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-import { generateReportCards } from "./actions"
+import { generateReportCards } from "@/components/school-dashboard/grades/actions/report-cards"
 
 interface GenerateButtonProps {
   termId: string
@@ -47,8 +46,15 @@ export function GenerateButton({ termId, classes }: GenerateButtonProps) {
     })
 
     if (result.success && result.data) {
+      // Rich pipeline returns {created, updated, skipped}. To match the
+      // old "generated" UX, treat created + updated as the count of
+      // cards now in good shape (skipped = no grades to aggregate).
+      const generated = result.data.created + result.data.updated
       toast.success(
-        `Generated ${result.data.generated} report card${result.data.generated !== 1 ? "s" : ""}`
+        `Generated ${generated} report card${generated !== 1 ? "s" : ""}` +
+          (result.data.skipped > 0
+            ? ` (${result.data.skipped} skipped — no grades to aggregate)`
+            : "")
       )
       setOpen(false)
       router.refresh()

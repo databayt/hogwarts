@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
+import { canAccessStudent } from "../lib/student-access"
 
 /**
  * GET /api/mobile/report-cards — list report cards for a student
@@ -24,14 +25,22 @@ export async function GET(request: NextRequest) {
     const perPage = parseInt(searchParams.get("per_page") || "20")
     const skip = (page - 1) * perPage
 
-    // Determine target student
-    let studentId = searchParams.get("student_id") || undefined
+    // Determine target student. When `student_id` is provided explicitly,
+    // gate access — without this any authed user in the school could
+    // enumerate other students' report cards.
+    const explicitStudentId = searchParams.get("student_id") || undefined
+    let studentId = explicitStudentId
     if (!studentId) {
       const student = await db.student.findFirst({
         where: { userId: auth.userId, schoolId: auth.schoolId },
         select: { id: true },
       })
       studentId = student?.id
+    } else {
+      const allowed = await canAccessStudent(auth, explicitStudentId!)
+      if (!allowed) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
     }
 
     if (!studentId) {
@@ -84,7 +93,12 @@ export async function GET(request: NextRequest) {
       days_late: rc.daysLate,
       teacher_comments: rc.teacherComments,
       principal_comments: rc.principalComments,
+      // `pdf_url` kept for one release for older app builds. New
+      // clients should use `download_url` (Phase 2b signed-URL gate).
       pdf_url: rc.pdfUrl,
+      download_url: rc.pdfUrl
+        ? `/api/parent/report-cards/${rc.id}/download`
+        : null,
       published_at: rc.publishedAt?.toISOString() || null,
       created_at: rc.createdAt.toISOString(),
     }))

@@ -64,7 +64,13 @@ export const notificationTypeSchema = z.enum([
   "report_ready",
   "absence_intention",
   "absence_intention_decision",
+  "absence_unreported_followup",
   "setup_guide",
+  "live_class_scheduled",
+  "live_class_starting_soon",
+  "live_class_started",
+  "live_class_cancelled",
+  "live_class_recording_ready",
 ])
 
 export const notificationPrioritySchema = z.enum([

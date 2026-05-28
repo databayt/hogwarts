@@ -53,7 +53,8 @@ export async function generateUserStripe(
       const stripeSession = await stripe.checkout.sessions.create({
         success_url: pricingUrl,
         cancel_url: pricingUrl,
-        payment_method_types: ["card"],
+        // Omit payment_method_types so Stripe enables wallets (Apple Pay,
+        // Google Pay, Link) when the platform account has them configured.
         mode: "subscription",
         billing_address_collection: "auto",
         customer_email: user.email,

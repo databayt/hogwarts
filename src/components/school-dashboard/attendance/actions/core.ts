@@ -75,8 +75,8 @@ async function triggerAbsenceNotification(
       return
     }
 
-    // Get class and school info
-    const [classInfo, schoolInfo] = await Promise.all([
+    // Get class, school info, and compliance config (extra channels = ADEK 2h SLA)
+    const [classInfo, schoolInfo, complianceConfig] = await Promise.all([
       db.class.findFirst({
         where: { id: classId, schoolId },
         select: { name: true },
@@ -85,7 +85,18 @@ async function triggerAbsenceNotification(
         where: { id: schoolId },
         select: { name: true, preferredLanguage: true },
       }),
+      db.schoolComplianceConfig.findFirst({
+        where: { schoolId, enabled: true },
+        select: { parentContactSlaMinutes: true },
+      }),
     ])
+
+    // When compliance is enabled, the email + WhatsApp crons must drain the
+    // notification row so we have multi-channel attempt evidence for the ADEK
+    // 2h SLA. For non-compliance schools we keep the in-app + (SMS) status quo.
+    const extraChannels: ("email" | "whatsapp")[] = complianceConfig
+      ? ["email", "whatsapp"]
+      : []
 
     const studentName = `${student.firstName} ${student.lastName}`
     const className = classInfo?.name || "Unknown class"
@@ -122,12 +133,13 @@ async function triggerAbsenceNotification(
       const primaryPhone = guardian.phoneNumbers?.[0]?.phoneNumber
       const hasSMS = smsAvailable && !!primaryPhone
 
-      // Create in-app notification (and email via notification system)
+      // Create in-app notification (+ email/whatsapp for compliance tenants)
       await dispatchNotification({
         schoolId,
         userId: guardian.userId,
         type: "attendance_alert",
         priority: "high",
+        channels: ["in_app", ...extraChannels],
         title: `تنبيه غياب: ${studentName}`,
         body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
         metadata: {

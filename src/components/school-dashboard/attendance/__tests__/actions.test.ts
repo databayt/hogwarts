@@ -19,6 +19,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     attendance: {
       create: vi.fn(),
+      createMany: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
@@ -32,6 +33,19 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
     },
     student: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    schoolComplianceConfig: {
+      findFirst: vi.fn(),
+    },
+    class: {
+      findFirst: vi.fn(),
+    },
+    school: {
+      findFirst: vi.fn(),
+    },
+    teacher: {
       findFirst: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -91,8 +105,8 @@ describe("Attendance Actions", () => {
   describe("markAttendance", () => {
     it("creates new attendance with schoolId when no existing record", async () => {
       vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
-      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
-      vi.mocked(db.attendance.create).mockResolvedValue({} as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
+      vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 })
 
       const result = await markAttendance({
         classId: "c1",
@@ -101,22 +115,23 @@ describe("Attendance Actions", () => {
       })
 
       expect(result.success).toBe(true)
-      expect(db.attendance.create).toHaveBeenCalledWith(
+      expect(db.attendance.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            schoolId: mockSchoolId,
-            status: "PRESENT",
-          }),
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              schoolId: mockSchoolId,
+              status: "PRESENT",
+            }),
+          ]),
         })
       )
     })
 
     it("updates existing attendance with schoolId-scoped updateMany", async () => {
       vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
-      vi.mocked(db.attendance.findFirst).mockResolvedValue({
-        id: "existing-att",
-        schoolId: mockSchoolId,
-      } as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        { id: "existing-att", studentId: "a" },
+      ] as any)
       vi.mocked(db.attendance.updateMany).mockResolvedValue({ count: 1 })
 
       const result = await markAttendance({
@@ -128,7 +143,7 @@ describe("Attendance Actions", () => {
       expect(result.success).toBe(true)
       expect(db.attendance.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "existing-att", schoolId: mockSchoolId },
+          where: { id: { in: ["existing-att"] }, schoolId: mockSchoolId },
           data: expect.objectContaining({ status: "LATE" }),
         })
       )
@@ -197,6 +212,13 @@ describe("Attendance Actions", () => {
   })
 
   describe("restoreAttendance - defense-in-depth", () => {
+    beforeEach(() => {
+      // restoreAttendance requires ADMIN role (isAdminRole gate)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "ADMIN" },
+      } as any)
+    })
+
     it("restores with schoolId-scoped updateMany", async () => {
       vi.mocked(db.attendance.findFirst).mockResolvedValue({
         id: "att-002",

@@ -1,0 +1,107 @@
+---
+title: الامتثال التنظيمي
+description: إطار عام للإرسال إلى الجهات التنظيمية — المزوّد الأول هو ADEK eSIS (أبوظبي)، مع رفع يومي للحضور، مهلة تواصل مع ولي الأمر خلال ساعتين، وبيانات اعتماد مشتركة مع قاطع دائرة.
+---
+
+تتيح كتلة الامتثال للمدارس إرسال البيانات إلى جهة تنظيمية حكومية على
+جدول منتظم وإثبات الوفاء بمهل خاصة بالجهة. ADEK eSIS (هيئة التعليم
+والمعرفة في أبوظبي) هو المزوّد الأول؛ الإطار عام بحيث يمكن إضافة جهات
+مستقبلية (هيئة التعليم السعودية، وزارة التعليم القطرية، وزارة التعليم
+السودانية) عن طريق إضافة قيمة واحدة لـ enum `ComplianceProvider` ومجلد
+شقيق تحت `src/lib/compliance/providers/<authority>/`.
+
+> **متتبّع الإصدار:** [databayt/hogwarts#1](https://github.com/databayt/hogwarts/issues/1) — متتبّع رئيسي موحّد للحضور والامتثال. راجع كذلك [Aldar Epic 01](https://kun.databayt.org/en/docs/aldar#01--adek-attendance-submission).
+
+## الحالة
+
+| القدرة                        | الحالة               | ملاحظات                                                     |
+| ----------------------------- | -------------------- | ----------------------------------------------------------- |
+| إرسال CSV يومي                | Production (DRY_RUN) | محوّل عام، فئات غياب ADEK 2025/26                           |
+| كرون مهلة ساعتين              | Production           | `/api/cron/absence-followup`، كل 30 دقيقة، حساب UTC         |
+| واجهة إعدادات لكل مدرسة       | Production           | `/{lang}/compliance` (ADMIN/STAFF/DEVELOPER)                |
+| مجموعات اعتماد عبر المستأجرين | Production           | DEVELOPER فقط، `/{lang}/(saas-dashboard)/compliance`        |
+| قاطع الدائرة                  | Production           | 3 فشل خلال ساعة → إيقاف؛ بعد ساعة → HALF_OPEN               |
+| التشفير (AES-256-GCM)         | Production           | `COMPLIANCE_ENCRYPTION_KEY` env، يدعم تدوير الإصدارات       |
+| تكامل سجل التدقيق             | Production           | سلاسل إجراء بمساحة `compliance.*`                           |
+| موصّل ADEK piggyback          | موصول                | بانتظار بيانات اعتماد مجموعة الدار                          |
+| موصّل ADEK API الرسمي         | Stub                 | بانتظار وصول مطوّرين من ADEK                                |
+| RPA worker (Playwright)       | هيكل                 | `tools/adek-rpa-worker/`، بانتظار محدّدات بوابة eSIS        |
+| مستقبل webhook ADEK           | موصول                | `/api/webhooks/adek` (HMAC + ProcessedWebhookEvent للتكرار) |
+
+## حدود المستأجرين
+
+- جدول إعدادات لكل مدرسة: `SchoolComplianceConfig` (صفّ واحد لكل
+  مدرسة × مزوّد، التفعيل اختياري ومعطّل افتراضياً).
+- يتطلب endpoint عامل/التقاط `SchoolApiToken` بنطاق
+  `compliance.rpa_claim` — `schoolId` للرمز هو المستأجر؛ لا يُعتمد
+  على schoolId من جسم الطلب.
+- لوحة SaaS مخصّصة لـ DEVELOPER على `/{lang}/(saas-dashboard)/compliance`
+  لمجموعات بيانات الاعتماد عبر المستأجرين. تُحرس الصفحة على مستوى layout.
+- كل إدخالات تدقيق `compliance.*` تسجّل `schoolId` (أو `null` لإجراءات
+  DEVELOPER عبر المستأجرين مثل إنشاء مجموعة اعتماد).
+
+## ظهور الشريط الجانبي
+
+- يظهر إدخال `/compliance` للوحة المدرسة في الشريط الجانبي للأدوار
+  `ADMIN | STAFF | DEVELOPER`.
+- الصفحة نفسها تفرض **بوابة الدولة**: تُعاد توجيه المدارس حيث
+  `school.country !== "AE"` إلى `/dashboard` ما لم يكن المستخدم
+  `DEVELOPER`.
+
+## أوضاع الموصّل
+
+| الوضع          | السلوك                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DRY_RUN`      | إنشاء CSV ← حفظه داخلياً (`csvArtifactContent`) ← تمييز `SUBMITTED`. يرفعه المسجّل يدوياً إلى eSIS. **الوضع الافتراضي للبيلوت في ياسمينا BA.**                                  |
+| `PIGGYBACK`    | فكّ تشفير بيانات اعتماد المجموعة، الرفع عبر حساب eSIS الجماعي. يوقف قاطع الدائرة الفشل المتسلسل عبر كل مدارس المجموعة.                                                          |
+| `OFFICIAL_API` | عقد مزوّد موثّق. حالياً يُرجع `OFFICIAL_API_NOT_AVAILABLE`.                                                                                                                     |
+| `RPA`          | يترك الصفّ في `QUEUED` للعامل الخارجي على Fly.io. يلتقطه عبر `POST /api/compliance/worker/claim`، يشغّل جلسة Playwright على eSIS، ويُقرّ عبر `POST /api/compliance/worker/ack`. |
+| `DISABLED`     | يُتخطّى في الكرون.                                                                                                                                                              |
+
+## جداول الكرون (`vercel.json`)
+
+- `/api/cron/esis-submit` — `0 10 * * *` (10:00 UTC = 14:00 بتوقيت الخليج،
+  متطلب ADEK). يُدخل صفّ `ComplianceSubmission` لكل مدرسة مؤهّلة مرّ
+  وقت إرسالها المضبوط؛ يوزّع عبر `after()` للأوضاع غير RPA.
+- `/api/cron/absence-followup` — `*/30 * * * *`. لكل مدرسة بامتثال مفعّل،
+  يبحث عن صفوف ABSENT أقدم من `parentContactSlaMinutes`، يرسل
+  `absence_unreported_followup` لأولياء الأمور على `in_app + email + whatsapp`،
+  ويكتب صفّ `AttendanceIntervention` من نوع `PARENT_EMAIL` كسجل امتثال.
+
+## مساحة التدقيق
+
+تسجّل كل أحداث الامتثال في `AuditLog` مع `action` بادئتها `compliance.*`:
+
+- `compliance.config.enabled` / `disabled` / `mode_changed`
+- `compliance.credential.created` / `rotated` / `revoked`
+- `compliance.submission.queued` / `submitted` / `accepted` / `rejected` / `failed` / `claimed`
+- `compliance.parent_contact.queued` / `delivered` / `failed`
+- `compliance.circuit_breaker.opened` / `closed` / `half_open`
+
+`AuditLog.userId` قابل لـ null حتى تسجّل أحداث كرون / عامل / webhook بـ
+`userId: null` بدلاً من انتهاك FK.
+
+## النموذج البياني
+
+النماذج في `prisma/models/compliance.prisma`:
+
+- `ComplianceProvider` enum (`ADEK_ESIS`، `CUSTOM`)
+- `ConnectorMode` enum (`DRY_RUN`، `PIGGYBACK`، `OFFICIAL_API`، `RPA`، `DISABLED`)
+- `ComplianceSubmissionStatus` + `CircuitBreakerState` enums
+- `SchoolComplianceConfig`، `SharedComplianceCredentialGroup`،
+  `SchoolComplianceCredential`، `ComplianceSubmission` (مفتاح التكرار:
+  `[schoolId, provider, submissionDate, attemptNumber]`)
+
+## متغيرات البيئة
+
+- `COMPLIANCE_ENCRYPTION_KEY` — 32 بايت hex (`openssl rand -hex 32`).
+  مطلوب في production؛ يرمي مساعد التشفير عند تحميل الوحدة إذا غاب.
+- `ADEK_WEBHOOK_SECRET` — مفتاح HMAC لمستقبل الإيصال غير المتزامن
+  (`/api/webhooks/adek`).
+- `CRON_SECRET` — مشترك مع كل كرونات Vercel الأخرى.
+
+## انظر أيضاً
+
+- [الحضور](/ar/docs/attendance) — مصدر البيانات ومحفّزات الإشعارات
+- [الإشعارات](/ar/docs/notifications) — التوزيع متعدد القنوات
+- [تعدد المستأجرين](/ar/docs/multi-tenancy) — فرض حدود المستأجرين

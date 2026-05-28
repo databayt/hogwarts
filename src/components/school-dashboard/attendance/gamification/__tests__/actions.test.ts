@@ -194,7 +194,7 @@ describe("Gamification Actions - schoolId scoping", () => {
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 

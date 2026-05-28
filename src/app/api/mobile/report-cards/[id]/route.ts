@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { canAccessStudent } from "../../lib/student-access"
 
 /**
  * GET /api/mobile/report-cards/:id — report card detail with grades by subject
@@ -73,6 +74,14 @@ export async function GET(
       )
     }
 
+    // Relationship gate: STUDENT must own this report card; GUARDIAN must
+    // be linked to the student. Without this any authed user in the school
+    // could read other students' report cards by id.
+    const allowed = await canAccessStudent(auth, reportCard.studentId)
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     return NextResponse.json({
       id: reportCard.id,
       student: {
@@ -93,7 +102,13 @@ export async function GET(
       days_late: reportCard.daysLate,
       teacher_comments: reportCard.teacherComments,
       principal_comments: reportCard.principalComments,
+      // `pdf_url` is kept for one release for older app builds. New
+      // clients should use `download_url` (Phase 2b signed-URL gate).
+      // Will be removed once mobile confirms uptake.
       pdf_url: reportCard.pdfUrl,
+      download_url: reportCard.pdfUrl
+        ? `/api/parent/report-cards/${reportCard.id}/download`
+        : null,
       is_published: reportCard.isPublished,
       published_at: reportCard.publishedAt?.toISOString() || null,
       created_at: reportCard.createdAt.toISOString(),

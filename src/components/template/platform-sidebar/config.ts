@@ -186,6 +186,13 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["STUDENT", "GUARDIAN"],
   },
   {
+    key: "parentPortal",
+    title: "Parent portal",
+    href: "/parent",
+    icon: "user",
+    roles: ["GUARDIAN", "DEVELOPER"],
+  },
+  {
     key: "transportationTrips",
     title: "Trips",
     href: "/transportation/trips",
@@ -198,6 +205,21 @@ export const platformNav: PlatformNavItem[] = [
     href: "/stream",
     icon: "video",
     roles: ALL_ROLES,
+  },
+  {
+    key: "liveClasses",
+    title: "LiveClasses",
+    href: "/live-classes",
+    icon: "video",
+    roles: [
+      "DEVELOPER",
+      "ADMIN",
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ],
   },
   {
     key: "messages",
@@ -220,6 +242,16 @@ export const platformNav: PlatformNavItem[] = [
     href: "/whatsapp",
     icon: "whatsapp",
     roles: ["ADMIN", "DEVELOPER"],
+  },
+  {
+    // Visible to ADMIN/STAFF/DEVELOPER. The page itself enforces the
+    // `country === "AE"` regulator gate; this entry stays in the sidebar so
+    // operator + ops teams can find it. Page redirects non-UAE schools to /dashboard.
+    key: "compliance",
+    title: "Compliance",
+    href: "/compliance",
+    icon: "shield",
+    roles: ["ADMIN", "STAFF", "DEVELOPER"],
   },
 
   // Core – always visible, not toggleable

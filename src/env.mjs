@@ -15,6 +15,20 @@ export const env = createEnv({
     EMAIL_FROM: z.string().min(1).optional(),
     STRIPE_API_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // Payment gateways — Tap (UAE/Gulf), Bankak (Sudan). Optional so dev
+    // works without them; webhooks fail closed when the secret is unset
+    // (P1.2). Aldar production MUST set TAP_SECRET_KEY + TAP_WEBHOOK_SECRET.
+    TAP_SECRET_KEY: z.string().min(1).optional(),
+    TAP_WEBHOOK_SECRET: z.string().min(1).optional(),
+    BANKAK_MERCHANT_ID: z.string().min(1).optional(),
+    BANKAK_SECRET_KEY: z.string().min(1).optional(),
+    BANKAK_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // Cron auth — every src/app/api/cron/* route checks this against the
+    // Authorization header. Vercel cron sets `Bearer <CRON_SECRET>` for us.
+    CRON_SECRET: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -150,6 +164,12 @@ export const env = createEnv({
     NEXT_PUBLIC_DEMO_URL: process.env.NEXT_PUBLIC_DEMO_URL,
     STRIPE_API_KEY: process.env.STRIPE_API_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    TAP_SECRET_KEY: process.env.TAP_SECRET_KEY,
+    TAP_WEBHOOK_SECRET: process.env.TAP_WEBHOOK_SECRET,
+    BANKAK_MERCHANT_ID: process.env.BANKAK_MERCHANT_ID,
+    BANKAK_SECRET_KEY: process.env.BANKAK_SECRET_KEY,
+    BANKAK_WEBHOOK_SECRET: process.env.BANKAK_WEBHOOK_SECRET,
+    CRON_SECRET: process.env.CRON_SECRET,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:
