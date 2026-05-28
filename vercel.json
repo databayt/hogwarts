@@ -15,15 +15,15 @@
     },
     {
       "path": "/api/cron/process-report-card-pdfs",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/process-transcript-pdfs",
-      "schedule": "*/5 * * * *"
+      "schedule": "15 4 * * *"
     },
     {
       "path": "/api/cron/process-push-notifications",
-      "schedule": "*/5 * * * *"
+      "schedule": "30 4 * * *"
     },
     {
       "path": "/api/cron/term-end-report-cards",
@@ -67,11 +67,11 @@
     },
     {
       "path": "/api/cron/absence-followup",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/live-class-reminders",
-      "schedule": "*/5 * * * *"
+      "schedule": "45 4 * * *"
     },
     {
       "path": "/api/cron/expire-live-recordings",
