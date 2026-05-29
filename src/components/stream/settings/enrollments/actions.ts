@@ -52,6 +52,10 @@ export async function getSchoolEnrollments(): Promise<EnrollmentRecord[]> {
       },
     },
     orderBy: { createdAt: "desc" },
+    // Safety cap to bound the payload (whole-table read + per-row progress
+    // join). A future iteration should paginate the admin DataTable server-side
+    // and replace the progress include with a _count projection.
+    take: 500,
   })
 
   return enrollments.map((e) => ({

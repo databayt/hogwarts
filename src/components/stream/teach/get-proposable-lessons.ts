@@ -57,6 +57,10 @@ export async function getProposableLessons(): Promise<ProposableLesson[]> {
       { chapter: { sequenceOrder: "asc" } },
       { sequenceOrder: "asc" },
     ],
+    // Safety cap: this enumerates the entire global catalog for the propose
+    // dialog. Bound the payload; a future iteration should add server-side
+    // search + cursor pagination for catalogs that exceed this.
+    take: 500,
   })
 
   return lessons.map((l) => ({

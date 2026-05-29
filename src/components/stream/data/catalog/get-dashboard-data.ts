@@ -1,7 +1,9 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+// Render-time read (the dashboard page calls it up to 3×) — wrapped in React
+// cache() to dedupe per request. Server-only; not a "use server" action.
+import { cache } from "react"
+
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 
@@ -11,119 +13,17 @@ import { db } from "@/lib/db"
  *
  * Migration: Replaces getUserDashboardData which queries StreamEnrollment/StreamCourse.
  */
-export async function getCatalogDashboardData(
-  userId: string,
-  schoolId: string
-) {
-  // Fetch active enrollments in catalog subjects
-  const enrollments = await db.enrollment.findMany({
-    where: {
-      userId,
-      isActive: true,
-      OR: [{ schoolId }, { schoolId: null }],
-    },
-    include: {
-      subject: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          thumbnail: true,
-          color: true,
-          totalChapters: true,
-          totalLessons: true,
-          department: true,
-        },
+export const getCatalogDashboardData = cache(
+  async function getCatalogDashboardData(userId: string, schoolId: string) {
+    // Fetch active enrollments in catalog subjects
+    const enrollments = await db.enrollment.findMany({
+      where: {
+        userId,
+        isActive: true,
+        OR: [{ schoolId }, { schoolId: null }],
       },
-    },
-    orderBy: { createdAt: "desc" },
-  })
-
-  // Get lesson progress for enrolled subjects
-  const enrolledSubjectIds = enrollments.map((e) => e.catalogSubjectId)
-
-  const lessonProgress =
-    enrolledSubjectIds.length > 0
-      ? await db.lessonProgress.findMany({
-          where: {
-            userId,
-            isCompleted: true,
-            lesson: {
-              chapter: {
-                subjectId: { in: enrolledSubjectIds },
-              },
-            },
-          },
-          select: {
-            catalogLessonId: true,
-            lesson: {
-              select: {
-                chapter: {
-                  select: {
-                    subjectId: true,
-                  },
-                },
-              },
-            },
-          },
-        })
-      : []
-
-  // Calculate progress per subject
-  const progressBySubject = new Map<string, number>()
-  for (const progress of lessonProgress) {
-    const subjectId = progress.lesson?.chapter?.subjectId
-    if (subjectId) {
-      progressBySubject.set(
-        subjectId,
-        (progressBySubject.get(subjectId) || 0) + 1
-      )
-    }
-  }
-
-  const enrolledCourses = enrollments.map((enrollment) => {
-    const subject = enrollment.subject
-    const completedLessons =
-      progressBySubject.get(enrollment.catalogSubjectId) || 0
-    const totalLessons = subject.totalLessons || 1
-    const progressPercent = Math.round((completedLessons / totalLessons) * 100)
-
-    return {
-      id: subject.id,
-      title: subject.name,
-      slug: subject.slug,
-      description: subject.description,
-      imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
-      enrollmentId: enrollment.id,
-      enrolledAt: enrollment.createdAt,
-      progressPercent,
-      completedLessons,
-      totalLessons,
-      chapters: [] as Array<{ lessons: Array<{ id: string }> }>,
-    }
-  })
-
-  // Fetch school's subject selections to scope available courses
-  const selections = await db.subjectSelection.findMany({
-    where: { schoolId, isActive: true },
-    select: { catalogSubjectId: true },
-  })
-  const selectedIds = selections.map((s) => s.catalogSubjectId)
-  const enrolledSet = new Set(enrolledSubjectIds)
-  const availableIds = selectedIds.filter((id) => !enrolledSet.has(id))
-
-  // Fetch available catalog subjects not yet enrolled (scoped to school's curriculum)
-  const availableSubjects =
-    availableIds.length === 0
-      ? []
-      : await db.subject.findMany({
-          where: {
-            id: { in: availableIds },
-            status: "PUBLISHED",
-          },
-          orderBy: { sortOrder: "asc" },
-          take: 6,
+      include: {
+        subject: {
           select: {
             id: true,
             name: true,
@@ -134,34 +34,137 @@ export async function getCatalogDashboardData(
             totalChapters: true,
             totalLessons: true,
             department: true,
-            usageCount: true,
           },
-        })
-
-  const availableCourses = availableSubjects.map((subject) => ({
-    id: subject.id,
-    title: subject.name,
-    slug: subject.slug,
-    description: subject.description,
-    imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
-    price: null as number | null,
-    chapters: Array.from({ length: subject.totalChapters }, () => ({
-      lessons: Array.from(
-        {
-          length: Math.ceil(
-            subject.totalLessons / Math.max(subject.totalChapters, 1)
-          ),
         },
-        () => ({ id: "" })
-      ),
-    })),
-    _count: {
-      enrollments: subject.usageCount,
-    },
-  }))
+      },
+      orderBy: { createdAt: "desc" },
+    })
 
-  return {
-    enrolledCourses,
-    availableCourses,
+    // Get lesson progress for enrolled subjects
+    const enrolledSubjectIds = enrollments.map((e) => e.catalogSubjectId)
+
+    const lessonProgress =
+      enrolledSubjectIds.length > 0
+        ? await db.lessonProgress.findMany({
+            where: {
+              userId,
+              isCompleted: true,
+              lesson: {
+                chapter: {
+                  subjectId: { in: enrolledSubjectIds },
+                },
+              },
+            },
+            select: {
+              catalogLessonId: true,
+              lesson: {
+                select: {
+                  chapter: {
+                    select: {
+                      subjectId: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+        : []
+
+    // Calculate progress per subject
+    const progressBySubject = new Map<string, number>()
+    for (const progress of lessonProgress) {
+      const subjectId = progress.lesson?.chapter?.subjectId
+      if (subjectId) {
+        progressBySubject.set(
+          subjectId,
+          (progressBySubject.get(subjectId) || 0) + 1
+        )
+      }
+    }
+
+    const enrolledCourses = enrollments.map((enrollment) => {
+      const subject = enrollment.subject
+      const completedLessons =
+        progressBySubject.get(enrollment.catalogSubjectId) || 0
+      const totalLessons = subject.totalLessons || 1
+      const progressPercent = Math.round(
+        (completedLessons / totalLessons) * 100
+      )
+
+      return {
+        id: subject.id,
+        title: subject.name,
+        slug: subject.slug,
+        description: subject.description,
+        imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
+        enrollmentId: enrollment.id,
+        enrolledAt: enrollment.createdAt,
+        progressPercent,
+        completedLessons,
+        totalLessons,
+        chapters: [] as Array<{ lessons: Array<{ id: string }> }>,
+      }
+    })
+
+    // Fetch school's subject selections to scope available courses
+    const selections = await db.subjectSelection.findMany({
+      where: { schoolId, isActive: true },
+      select: { catalogSubjectId: true },
+    })
+    const selectedIds = selections.map((s) => s.catalogSubjectId)
+    const enrolledSet = new Set(enrolledSubjectIds)
+    const availableIds = selectedIds.filter((id) => !enrolledSet.has(id))
+
+    // Fetch available catalog subjects not yet enrolled (scoped to school's curriculum)
+    const availableSubjects =
+      availableIds.length === 0
+        ? []
+        : await db.subject.findMany({
+            where: {
+              id: { in: availableIds },
+              status: "PUBLISHED",
+            },
+            orderBy: { sortOrder: "asc" },
+            take: 6,
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              thumbnail: true,
+              color: true,
+              totalChapters: true,
+              totalLessons: true,
+              department: true,
+              usageCount: true,
+            },
+          })
+
+    const availableCourses = availableSubjects.map((subject) => ({
+      id: subject.id,
+      title: subject.name,
+      slug: subject.slug,
+      description: subject.description,
+      imageUrl: getCatalogImageUrl(subject.thumbnail, "original"),
+      price: null as number | null,
+      chapters: Array.from({ length: subject.totalChapters }, () => ({
+        lessons: Array.from(
+          {
+            length: Math.ceil(
+              subject.totalLessons / Math.max(subject.totalChapters, 1)
+            ),
+          },
+          () => ({ id: "" })
+        ),
+      })),
+      _count: {
+        enrollments: subject.usageCount,
+      },
+    }))
+
+    return {
+      enrolledCourses,
+      availableCourses,
+    }
   }
-}
+)

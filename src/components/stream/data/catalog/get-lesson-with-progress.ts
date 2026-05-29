@@ -1,7 +1,9 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+// NOTE: render-time read (the lesson page calls it in both generateMetadata
+// and the body) — wrapped in React cache() to dedupe within a request. NOT a
+// "use server" action; it is imported only by server components.
+import { cache } from "react"
 import { auth } from "@/auth"
 
 import { asset } from "@/lib/asset-url"
@@ -96,7 +98,7 @@ export interface LessonWithProgress {
  * Fetches catalog lesson with progress data and video sources.
  * Migration: Replaces get-lesson-with-progress.ts which queries StreamLesson.
  */
-export async function getLessonWithProgress(
+export const getLessonWithProgress = cache(async function getLessonWithProgress(
   lessonId: string
 ): Promise<LessonWithProgress | null> {
   const session = await auth()
@@ -169,173 +171,168 @@ export async function getLessonWithProgress(
       }
     }
 
-    // Get lesson progress
-    const progress = await db.lessonProgress.findUnique({
-      where: {
-        userId_catalogLessonId: {
-          userId: session.user.id,
+    // ── Wave 1: independent reads in parallel ──────────────────────────────
+    // (progress, attachments, videos, all-lessons) have no inter-dependency,
+    // so collapse ~4 serial Neon round-trips into one.
+    const [progress, attachments, videos, allLessons] = await Promise.all([
+      // Lesson progress
+      db.lessonProgress.findUnique({
+        where: {
+          userId_catalogLessonId: {
+            userId: session.user.id,
+            catalogLessonId: lessonId,
+          },
+        },
+        select: {
+          isCompleted: true,
+          watchedSeconds: true,
+          totalSeconds: true,
+        },
+      }),
+      // Attachments
+      db.attachment.findMany({
+        where: { catalogLessonId: lessonId },
+        select: { id: true, name: true, url: true },
+      }),
+      // ALL approved videos for this lesson (multi-instructor support).
+      // Excludes videos hidden by the school via ContentOverride.
+      // PAID videos surface across all schools — payment gate happens per-user.
+      db.video.findMany({
+        where: {
           catalogLessonId: lessonId,
-        },
-      },
-      select: {
-        isCompleted: true,
-        watchedSeconds: true,
-        totalSeconds: true,
-      },
-    })
-
-    // Get attachments
-    const attachments = await db.attachment.findMany({
-      where: { catalogLessonId: lessonId },
-      select: {
-        id: true,
-        name: true,
-        url: true,
-      },
-    })
-
-    // Get ALL approved videos for this lesson (multi-instructor support)
-    // Excludes videos hidden by the school via ContentOverride.
-    // PAID videos surface across all schools — payment gate happens per-user.
-    const videos = await db.video.findMany({
-      where: {
-        catalogLessonId: lessonId,
-        approvalStatus: "APPROVED",
-        ...(schoolId
-          ? {
-              OR: [
-                { schoolId },
-                { visibility: "PUBLIC" },
-                { visibility: "PAID" },
-              ],
-              NOT: {
-                overrides: { some: { schoolId, isHidden: true } },
-              },
-            }
-          : { OR: [{ visibility: "PUBLIC" }, { visibility: "PAID" }] }),
-      },
-      orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
-      select: {
-        id: true,
-        videoUrl: true,
-        thumbnailUrl: true,
-        durationSeconds: true,
-        isFeatured: true,
-        schoolId: true,
-        visibility: true,
-        price: true,
-        currency: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-            image: true,
-            role: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    })
-
-    // Batch-check purchases so PAID videos resolve unlock state in one query.
-    const paidVideoIds = videos
-      .filter((v) => v.visibility === "PAID")
-      .map((v) => v.id)
-    const purchasedIds = new Set<string>()
-    if (paidVideoIds.length > 0) {
-      const purchases = await db.videoPurchase.findMany({
-        where: {
-          userId: session.user.id,
-          videoId: { in: paidVideoIds },
-          status: "SUCCESS",
-        },
-        select: { videoId: true },
-      })
-      for (const p of purchases) purchasedIds.add(p.videoId)
-    }
-
-    // Resolve instructor preference: re-sort videos to prioritize preferred source
-    if (schoolId && videos.length > 1) {
-      const preference = await db.instructorPreference.findUnique({
-        where: {
-          schoolId_catalogSubjectId: {
-            schoolId,
-            catalogSubjectId: lesson.chapter.subject.id,
-          },
-        },
-      })
-
-      if (preference) {
-        videos.sort((a, b) => {
-          const aMatch = preference.preferredSchoolId
-            ? a.schoolId === preference.preferredSchoolId
-            : preference.preferredUserId
-              ? a.user.id === preference.preferredUserId
-              : a.isFeatured && !a.schoolId // null preference = platform default
-          const bMatch = preference.preferredSchoolId
-            ? b.schoolId === preference.preferredSchoolId
-            : preference.preferredUserId
-              ? b.user.id === preference.preferredUserId
-              : b.isFeatured && !b.schoolId
-
-          if (aMatch && !bMatch) return -1
-          if (!aMatch && bMatch) return 1
-          return 0 // Keep original ranking for non-preferred
-        })
-      }
-    }
-
-    // Use the first (highest-ranked or preferred) video as default
-    const video = videos[0] ?? null
-
-    // Get all lessons in the subject for navigation
-    // Excludes hidden chapters and lessons via ContentOverride
-    const allLessons = await db.lesson.findMany({
-      where: {
-        chapter: {
-          subjectId: lesson.chapter.subject.id,
+          approvalStatus: "APPROVED",
           ...(schoolId
             ? {
+                OR: [
+                  { schoolId },
+                  { visibility: "PUBLIC" },
+                  { visibility: "PAID" },
+                ],
                 NOT: {
                   overrides: { some: { schoolId, isHidden: true } },
                 },
               }
+            : { OR: [{ visibility: "PUBLIC" }, { visibility: "PAID" }] }),
+        },
+        orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
+        select: {
+          id: true,
+          videoUrl: true,
+          thumbnailUrl: true,
+          durationSeconds: true,
+          isFeatured: true,
+          schoolId: true,
+          visibility: true,
+          price: true,
+          currency: true,
+          user: {
+            select: { id: true, username: true, image: true, role: true },
+          },
+          school: { select: { id: true, name: true } },
+        },
+      }),
+      // All lessons in the subject for navigation (hidden chapters/lessons
+      // excluded via ContentOverride).
+      db.lesson.findMany({
+        where: {
+          chapter: {
+            subjectId: lesson.chapter.subject.id,
+            ...(schoolId
+              ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
+              : {}),
+          },
+          status: "PUBLISHED",
+          ...(schoolId
+            ? { NOT: { overrides: { some: { schoolId, isHidden: true } } } }
             : {}),
         },
-        status: "PUBLISHED",
-        ...(schoolId
-          ? {
-              NOT: {
-                overrides: { some: { schoolId, isHidden: true } },
-              },
-            }
-          : {}),
-      },
-      select: {
-        id: true,
-        name: true,
-        sequenceOrder: true,
-        thumbnail: true,
-        color: true,
-        durationMinutes: true,
-        chapter: {
-          select: {
-            sequenceOrder: true,
-            name: true,
-            color: true,
+        select: {
+          id: true,
+          name: true,
+          sequenceOrder: true,
+          thumbnail: true,
+          color: true,
+          durationMinutes: true,
+          chapter: {
+            select: { sequenceOrder: true, name: true, color: true },
           },
         },
-      },
-      orderBy: [
-        { chapter: { sequenceOrder: "asc" } },
-        { sequenceOrder: "asc" },
-      ],
-    })
+        orderBy: [
+          { chapter: { sequenceOrder: "asc" } },
+          { sequenceOrder: "asc" },
+        ],
+      }),
+    ])
+
+    // ── Wave 2: reads that depend on Wave 1 results, also parallelized ──────
+    const paidVideoIds = videos
+      .filter((v) => v.visibility === "PAID")
+      .map((v) => v.id)
+    const siblingIds = allLessons
+      .filter((l) => l.id !== lessonId)
+      .map((l) => l.id)
+
+    const [purchaseRows, preference, siblingProgress] = await Promise.all([
+      // Batch-check purchases so PAID videos resolve unlock state in one query.
+      paidVideoIds.length > 0
+        ? db.videoPurchase.findMany({
+            where: {
+              userId: session.user.id,
+              videoId: { in: paidVideoIds },
+              status: "SUCCESS",
+            },
+            select: { videoId: true },
+          })
+        : Promise.resolve([] as { videoId: string }[]),
+      // Instructor preference (only relevant when multiple videos exist).
+      schoolId && videos.length > 1
+        ? db.instructorPreference.findUnique({
+            where: {
+              schoolId_catalogSubjectId: {
+                schoolId,
+                catalogSubjectId: lesson.chapter.subject.id,
+              },
+            },
+          })
+        : Promise.resolve(null),
+      // Progress for sibling lessons.
+      siblingIds.length > 0
+        ? db.lessonProgress.findMany({
+            where: {
+              userId: session.user.id,
+              catalogLessonId: { in: siblingIds },
+            },
+            select: { catalogLessonId: true, watchedSeconds: true },
+          })
+        : Promise.resolve(
+            [] as { catalogLessonId: string; watchedSeconds: number }[]
+          ),
+    ])
+
+    const purchasedIds = new Set<string>(purchaseRows.map((p) => p.videoId))
+
+    // Resolve instructor preference: re-sort videos to prioritize preferred source
+    if (preference) {
+      videos.sort((a, b) => {
+        const aMatch = preference.preferredSchoolId
+          ? a.schoolId === preference.preferredSchoolId
+          : preference.preferredUserId
+            ? a.user.id === preference.preferredUserId
+            : a.isFeatured && !a.schoolId // null preference = platform default
+        const bMatch = preference.preferredSchoolId
+          ? b.schoolId === preference.preferredSchoolId
+          : preference.preferredUserId
+            ? b.user.id === preference.preferredUserId
+            : b.isFeatured && !b.schoolId
+
+        if (aMatch && !bMatch) return -1
+        if (!aMatch && bMatch) return 1
+        return 0 // Keep original ranking for non-preferred
+      })
+    }
+
+    // Use the first (highest-ranked or preferred) video as default
+    const video = videos[0] ?? null
 
     const currentIndex = allLessons.findIndex((l) => l.id === lessonId)
     const previousLesson =
@@ -343,20 +340,6 @@ export async function getLessonWithProgress(
     const nextLesson =
       currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
 
-    // Batch-fetch progress for sibling lessons
-    const siblingIds = allLessons
-      .filter((l) => l.id !== lessonId)
-      .map((l) => l.id)
-    const siblingProgress = await db.lessonProgress.findMany({
-      where: {
-        userId: session.user.id,
-        catalogLessonId: { in: siblingIds },
-      },
-      select: {
-        catalogLessonId: true,
-        watchedSeconds: true,
-      },
-    })
     const progressMap = new Map(
       siblingProgress.map((p) => [p.catalogLessonId, p.watchedSeconds])
     )
@@ -496,4 +479,4 @@ export async function getLessonWithProgress(
     })
     throw error
   }
-}
+})
