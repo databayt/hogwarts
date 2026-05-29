@@ -1,0 +1,154 @@
+---
+title: Live Classes
+description: LiveKit-based video conferencing for scheduled and ad-hoc live classes — self-hosted SFU in UAE region, TURN-over-443-TCP fallback, AWS S3 recordings with PDPL-configurable retention.
+---
+
+The live-classes block delivers built-in video conferencing for teachers, students, and parents. Built for the **Aldar UAE pilot** ([Epic 03](https://kun.databayt.org/en/docs/aldar)) with a self-hosted LiveKit SFU on G42 Cloud, TURN-over-443-TCP fallback for restrictive networks, and AWS S3 `me-central-1` recordings retained per-school for PDPL compliance.
+
+> **Status**: Phase 1 application code complete · **151/151 Vitest unit tests** + **103 Playwright spec rows** green · awaiting SFU provisioning + Meeting-3 in-school network test before production cutover · tracker [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3).
+
+## Routes
+
+The block ships two route groups — the dashboard surface for browsing and scheduling, and a separate bare-layout `(live-room)` group so the SFU UI can own the full viewport.
+
+| Route                           | Layout           | Allowed roles                                             |
+| ------------------------------- | ---------------- | --------------------------------------------------------- |
+| `/live-classes`                 | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF, ACCOUNTANT |
+| `/live-classes/[id]`            | school-dashboard | same                                                      |
+| `/live-classes/[id]/recordings` | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             |
+| `/live-classes/schedule`        | school-dashboard | DEV, ADMIN, TEACHER                                       |
+| `/live-classes/network-test`    | school-dashboard | DEV, ADMIN                                                |
+| `/live-classes/[id]/room`       | **(live-room)**  | session participants only — full-screen, no chrome        |
+
+File-system paths:
+
+- Dashboard: `src/app/[lang]/s/[subdomain]/(school-dashboard)/live-classes/`
+- Room: `src/app/[lang]/s/[subdomain]/(live-room)/live-classes/[id]/room/`
+
+## Lifecycle
+
+```
+scheduled ─teacher hits Start─▶ live ─teacher hits End or grace─▶ ended
+   │                              │
+   ├─teacher cancels─▶ cancelled  └─crash/timeout─▶ failed
+```
+
+State transitions are guarded server-side in `actions/sessions.ts` and return `LIVE_CLASS_INVALID_STATE` on violation. The LiveKit webhook (`/api/webhooks/livekit`) is the authoritative writer for `live` (on `room_started`) and `ended` (on `room_finished`) so the SFU's view of the world wins over the app's.
+
+## Roles inside a room
+
+| Role          | LiveKit grants                               | Notes                                                                 |
+| ------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| `HOST`        | publish + subscribe + roomAdmin + roomRecord | Teacher running the class. Can start/end the room, kick participants. |
+| `CO_HOST`     | publish + subscribe                          | Co-teacher / TA / classroom observer with publish rights.             |
+| `PARTICIPANT` | publish + subscribe                          | Student — can ask questions with mic + camera.                        |
+| `OBSERVER`    | subscribe only                               | Parent — view-only, no audio/video upload.                            |
+
+Role is resolved per-join in `actions/tokens.ts:joinLiveClass` by checking the caller against the session's `sectionId`:
+
+- TEACHER whose `userId` matches `session.teacherId` → `HOST`; other teachers → `CO_HOST`
+- ADMIN → `CO_HOST` for any session in the school
+- STUDENT whose `sectionId` matches → `PARTICIPANT`
+- GUARDIAN of a student whose `sectionId` matches → `OBSERVER`
+- DEVELOPER → `HOST` for any session (platform bypass)
+
+Anyone else gets `LIVE_CLASS_PARTICIPANT_DENIED`. The eligibility check runs on every token issuance, so revoked enrollments take effect at next refresh (≤ 5 minutes).
+
+## Data model
+
+Four Prisma models in `prisma/models/live-class.prisma`, all `schoolId`-scoped with `@@index([schoolId, …])` and soft-delete via `deletedAt`.
+
+| Model                  | Purpose                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `LiveClassSession`     | A scheduled or ad-hoc class. Optional `timetableId` / `sectionId` / `subjectId` anchors. |
+| `LiveClassParticipant` | One row per invited user (`HOST` / `CO_HOST` / `PARTICIPANT` / `OBSERVER`).              |
+| `LiveClassRecording`   | Composite Egress recording metadata + S3 location.                                       |
+| `LiveClassEvent`       | Webhook audit log + idempotency (unique on `eventId`).                                   |
+
+Plus 4 columns on `School` for per-school configuration:
+
+```prisma
+liveClassRecordingRetentionDays  Int     @default(90)   // PDPL-configurable
+liveClassMaxConcurrentPerSchool  Int     @default(50)
+liveClassMaxDurationMinutes      Int     @default(120)
+liveClassRecordingDefault        Boolean @default(true)
+```
+
+## Tenant safety
+
+Every read and write filters by `schoolId` from `getTenantContext()` — never from client input. The room name itself embeds the tenant: `sch-{schoolId}-lc-{sessionId}`. This means the LiveKit SFU's room namespace can't collide across schools, and the webhook handler recovers `schoolId` from the room name alone via `parseRoomName()` so a misrouted event can never write to the wrong tenant.
+
+The `getLiveClass` read path tries `read_school_dashboard`, `join_as_participant`, and `join_as_observer` permissions in sequence — every successful path resolves `schoolId` from the session, so an unauthenticated id-only lookup is impossible. Cross-tenant fetches return `UNAUTHORIZED`.
+
+## Recording pipeline
+
+Composite room recordings flow through LiveKit Egress to AWS S3 `me-central-1`:
+
+```
+room_started      → LiveClassSession.status = live
+egress_started    → LiveClassRecording { status: processing, s3Bucket, s3Region, s3Key: "" }
+egress_ended      → status = ready, s3Key, fileSizeBytes, durationSeconds, expiresAt = now + retentionDays
+room_finished     → LiveClassSession.status = ended
+[retention cron]  → status = expired, S3 object deleted, deletedAt set
+```
+
+`s3Bucket` and `s3Region` are populated from `getLiveKitConfig()` on `egress_started` so the playback URL signer (`@aws-sdk/s3-request-presigner`, 5-minute TTL) can run as soon as `egress_ended` arrives. Per-school retention defaults to 90 days; the `/api/cron/expire-live-recordings` job runs daily at 02:30 and deletes both the S3 object and the row (soft-delete via `deletedAt`).
+
+## Notifications
+
+Five new `NotificationType` values are wired through the 5-point notification sync (config, validation, email-service typeLabels × 2 languages, dictionaries × 2 languages):
+
+| Type                         | When                                    | Priority |
+| ---------------------------- | --------------------------------------- | -------- |
+| `live_class_scheduled`       | A class is created                      | normal   |
+| `live_class_starting_soon`   | 10 minutes before scheduledStart (cron) | high     |
+| `live_class_started`         | SFU emits `room_started` (webhook)      | high     |
+| `live_class_cancelled`       | Teacher cancels                         | normal   |
+| `live_class_recording_ready` | SFU emits `egress_ended` (webhook)      | normal   |
+
+All dispatches are best-effort (`void` calls from actions and webhook handler) — notification failures never roll back the underlying state transition. The reminder cron at `/api/cron/live-class-reminders` runs every 5 minutes and uses `LiveClassEvent` for idempotency so a class doesn't get reminded twice.
+
+## Network resilience
+
+UAE VoIP throttling is the deepest risk in the Aldar deal. The block ships two mitigations:
+
+1. **TURN-over-443-TCP** — coturn co-located with the SFU on TCP port 443 (looks like HTTPS to a restrictive firewall). LiveKit's client auto-falls-back when UDP fails.
+2. **Network test page** at `/live-classes/network-test` (DEV / ADMIN only) — runs a calibration connection against the SFU using `livekit-client`, captures setup time, connection quality, and TCP fallback usage into `LiveClassParticipant.{avgRttMs, hadTcpFallback, lastIceState}` so we have a forensic trail.
+
+The **Meeting-3 in-school network test** is the single biggest pre-signature gate. Run it from inside an Aldar school WiFi as `admin@kingfahad.databayt.org`; block on TURN/443 failure.
+
+## Configuration
+
+Required environment variables:
+
+```bash
+LIVEKIT_HOST=https://livekit.databayt.org           # SFU HTTPS API
+LIVEKIT_WS_URL=wss://livekit.databayt.org           # SFU WebSocket
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+LIVEKIT_RECORDING_BUCKET=hogwarts-live-recordings-me-central-1
+LIVEKIT_RECORDING_REGION=me-central-1
+LIVEKIT_S3_ACCESS_KEY=...                            # SFU-side egress writes
+LIVEKIT_S3_SECRET=...
+AWS_ACCESS_KEY_ID=...                                # App-side playback signing
+AWS_SECRET_ACCESS_KEY=...                            # (separate from SFU creds)
+```
+
+The SFU credentials (`LIVEKIT_S3_*`) only need `s3:PutObject` on the `schools/*` prefix. The app credentials (`AWS_*`) only need `s3:GetObject` for signed playback URLs. Keep them split so a compromised SFU can't read existing recordings.
+
+## Decisions
+
+- **SFU hosting**: self-hosted on G42 Cloud in UAE region from day one. Aldar stated preference; PDPL posture; one network path validated by Meeting-3. LiveKit Cloud (Bahrain) is the documented DR fallback.
+- **Recording storage**: AWS S3 `me-central-1` (PDPL via region, not premises). Escape hatch to MinIO on-prem is a per-school config swap — the schema already carries `s3Bucket`/`s3Region` on every `LiveClassRecording` row.
+- **Token TTL**: 5 minutes with client-side refresh ~60s before expiry. Re-runs eligibility on every refresh so revoked access takes effect immediately.
+- **Room naming**: `sch-{schoolId}-lc-{sessionId}` is the single source of truth. Validated by [`room-naming.test.ts`](https://github.com/databayt/hogwarts/blob/main/src/lib/livekit/__tests__/room-naming.test.ts).
+- **Stream LMS vs Live Classes**: distinct blocks. `stream/` is VOD/LMS (catalog enrollments, Stripe-gated courses); `live-classes/` is real-time conferencing. The `Stream*` Prisma prefix is deprecated and unrelated.
+
+## Related
+
+- [Architecture](/docs/architecture) — mirror pattern, multi-tenant defaults
+- [Notifications](/docs/notifications) — `live_class_*` types live there
+- [Authorization](/docs/authorization) — RBAC contract (`FeaturePermissionsModule`)
+- [Timetable](/docs/timetable) — `LiveClassSession.timetableId?` joins here for "Start live class" buttons (Phase 2)
+- [Aldar Epic 03](https://kun.databayt.org/en/docs/aldar) — upstream deal context
+- [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3) — canonical Epic 03 tracker
