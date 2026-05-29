@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
 
 type ApiResponse = {
@@ -54,6 +55,18 @@ export async function uploadVideo(
 
   if (!schoolId) {
     return { status: "error", message: "School context required" }
+  }
+
+  const rl = await checkUserRateLimit(
+    session.user.id,
+    RATE_LIMITS.STREAM_UPLOAD,
+    "stream-upload"
+  )
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Too many uploads. Please try again shortly.",
+    }
   }
 
   const title = data.title?.trim()

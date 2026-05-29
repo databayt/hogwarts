@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { checkUserRateLimit } from "@/lib/rate-limit"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import { sendCompletionEmail } from "@/components/stream/shared/email-service"
 
@@ -304,6 +305,19 @@ export async function updateLessonProgress(data: {
 
   if (!session?.user) {
     return { status: "error", message: "Authentication required" }
+  }
+
+  // This fires on a playback timer (every few seconds). Throttle per
+  // (user, lesson) to ~1 write / 5s so a tampered client can't hammer the DB.
+  // Silently skip (return success) when throttled — the next allowed write
+  // captures the latest position, so no progress is lost.
+  const rl = await checkUserRateLimit(
+    session.user.id,
+    { windowMs: 5000, maxRequests: 1 },
+    `stream-progress:${data.lessonId}`
+  )
+  if (!rl.allowed) {
+    return { status: "success", message: "Progress throttled" }
   }
 
   try {
