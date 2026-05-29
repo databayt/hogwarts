@@ -91,7 +91,7 @@ describe("Kiosk Actions - schoolId scoping", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Student not found")
+      expect(result.error).toBe("STUDENT_NOT_FOUND")
     })
 
     it("returns error when missing school context", async () => {
@@ -110,7 +110,7 @@ describe("Kiosk Actions - schoolId scoping", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school context")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 })

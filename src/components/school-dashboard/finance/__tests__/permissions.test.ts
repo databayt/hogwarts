@@ -75,27 +75,24 @@ describe("finance/permissions — getFinanceRootTabs", () => {
 // ---------------------------------------------------------------------------
 
 describe("finance/permissions — getFeesTabs", () => {
-  it.each(ALL_ROLES)(
-    "%s gets the right Fees tabs based on role",
-    (role) => {
-      const tabs = getFeesTabs(role, "en")
-      const isWriter = FINANCE_WRITE.includes(role)
-      const isViewer = FEES_VIEW.includes(role)
+  it.each(ALL_ROLES)("%s gets the right Fees tabs based on role", (role) => {
+    const tabs = getFeesTabs(role, "en")
+    const isWriter = FINANCE_WRITE.includes(role)
+    const isViewer = FEES_VIEW.includes(role)
 
-      if (isWriter) {
-        // 7 admin tabs: overview/structures/assignments/payments/scholarships/fines/reports
-        expect(tabs.length).toBe(7)
-        expect(tabs[0].href).toBe("/en/finance/fees")
-      } else if (isViewer) {
-        // Student/Guardian/Staff/Teacher get a single "My Fees" tab
-        expect(tabs.length).toBe(1)
-        expect(tabs[0].href).toBe("/en/finance/fees/my")
-      } else {
-        // USER + (no-one else currently) get []
-        expect(tabs).toEqual([])
-      }
+    if (isWriter) {
+      // 7 admin tabs: overview/structures/assignments/payments/scholarships/fines/reports
+      expect(tabs.length).toBe(7)
+      expect(tabs[0].href).toBe("/en/finance/fees")
+    } else if (isViewer) {
+      // Student/Guardian/Staff/Teacher get a single "My Fees" tab
+      expect(tabs.length).toBe(1)
+      expect(tabs[0].href).toBe("/en/finance/fees/my")
+    } else {
+      // USER + (no-one else currently) get []
+      expect(tabs).toEqual([])
     }
-  )
+  })
 
   it("returns [] for null/undefined (logged-out)", () => {
     expect(getFeesTabs(null, "en")).toEqual([])
@@ -118,14 +115,19 @@ describe("finance/permissions — buildFinanceSubTabs", () => {
   it("returns [] for non-finance-writer roles", () => {
     for (const role of ALL_ROLES) {
       if (FINANCE_WRITE.includes(role)) continue
-      expect(
-        buildFinanceSubTabs(role, "en", "wallet", SAMPLE_CONFIG)
-      ).toEqual([])
+      expect(buildFinanceSubTabs(role, "en", "wallet", SAMPLE_CONFIG)).toEqual(
+        []
+      )
     }
   })
 
   it("builds module-specific tabs for finance writers", () => {
-    const tabs = buildFinanceSubTabs("ACCOUNTANT", "en", "wallet", SAMPLE_CONFIG)
+    const tabs = buildFinanceSubTabs(
+      "ACCOUNTANT",
+      "en",
+      "wallet",
+      SAMPLE_CONFIG
+    )
     expect(tabs).toEqual([
       { name: "Overview", href: "/en/finance/wallet" },
       { name: "Structures", href: "/en/finance/wallet/structures" },

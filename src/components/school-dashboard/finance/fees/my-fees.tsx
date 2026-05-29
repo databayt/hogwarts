@@ -75,6 +75,7 @@ interface MyFeesProps {
   studentName: string
   assignments: AssignmentData[]
   lang: Locale
+  currency?: string
   dictionary?: MyFeesDictionary
 }
 
@@ -90,6 +91,7 @@ export function MyFees({
   studentName,
   assignments,
   lang,
+  currency = "USD",
   dictionary,
 }: MyFeesProps) {
   const d = dictionary
@@ -119,7 +121,7 @@ export function MyFees({
                   {d?.totalFees || "Total Fees"}
                 </p>
                 <p className="text-2xl font-bold tabular-nums">
-                  {formatCurrency(totalFees, lang)}
+                  {formatCurrency(totalFees, lang, currency)}
                 </p>
               </div>
               <CreditCard className="text-muted-foreground h-8 w-8" />
@@ -134,7 +136,7 @@ export function MyFees({
                   {d?.paid || "Paid"}
                 </p>
                 <p className="text-2xl font-bold text-green-600 tabular-nums">
-                  {formatCurrency(totalPaid, lang)}
+                  {formatCurrency(totalPaid, lang, currency)}
                 </p>
               </div>
               <CircleCheck className="h-8 w-8 text-green-600" />
@@ -149,7 +151,7 @@ export function MyFees({
                   {d?.pending || "Pending"}
                 </p>
                 <p className="text-2xl font-bold text-yellow-600 tabular-nums">
-                  {formatCurrency(totalPending, lang)}
+                  {formatCurrency(totalPending, lang, currency)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -164,7 +166,7 @@ export function MyFees({
                   {d?.overdue || "Overdue"}
                 </p>
                 <p className="text-2xl font-bold text-red-600 tabular-nums">
-                  {formatCurrency(totalOverdue, lang)}
+                  {formatCurrency(totalOverdue, lang, currency)}
                 </p>
               </div>
               <TriangleAlert className="h-8 w-8 text-red-600" />
@@ -189,10 +191,15 @@ export function MyFees({
             <Progress value={progressPercent} className="h-3" />
             <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
               <span>
-                {formatCurrency(totalPaid, lang)} {d?.paidLabel || "paid"}
+                {formatCurrency(totalPaid, lang, currency)}{" "}
+                {d?.paidLabel || "paid"}
               </span>
               <span>
-                {formatCurrency(Math.max(totalFees - totalPaid, 0), lang)}{" "}
+                {formatCurrency(
+                  Math.max(totalFees - totalPaid, 0),
+                  lang,
+                  currency
+                )}{" "}
                 {d?.remainingLabel || "remaining"}
               </span>
             </div>
@@ -213,7 +220,10 @@ export function MyFees({
                 {(
                   d?.overdueMessage ||
                   "You have overdue fees totaling {amount}. Please contact the administration."
-                ).replace("{amount}", formatCurrency(totalOverdue, lang))}
+                ).replace(
+                  "{amount}",
+                  formatCurrency(totalOverdue, lang, currency)
+                )}
               </p>
             </div>
           </CardContent>
@@ -252,15 +262,16 @@ export function MyFees({
                     </TableCell>
                     <TableCell>{a.academicYear}</TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(a.finalAmount, lang)}
+                      {formatCurrency(a.finalAmount, lang, currency)}
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(a.paidAmount, lang)}
+                      {formatCurrency(a.paidAmount, lang, currency)}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatCurrency(
                         Math.max(a.finalAmount - a.paidAmount, 0),
-                        lang
+                        lang,
+                        currency
                       )}
                     </TableCell>
                     <TableCell>
@@ -347,7 +358,7 @@ export function MyFees({
                         )}
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">
-                        {formatCurrency(p.amount, lang)}
+                        {formatCurrency(p.amount, lang, currency)}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
@@ -359,7 +370,7 @@ export function MyFees({
                           receiptData={{
                             paymentNumber: p.paymentNumber,
                             receiptNumber: p.receiptNumber,
-                            amount: formatCurrency(p.amount, lang),
+                            amount: formatCurrency(p.amount, lang, currency),
                             paymentDate: new Date(
                               p.paymentDate
                             ).toLocaleDateString(

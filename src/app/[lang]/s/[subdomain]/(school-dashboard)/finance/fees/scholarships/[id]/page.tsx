@@ -33,14 +33,22 @@ export default async function ScholarshipDetailPage({
 
   if (!schoolId) notFound()
 
-  const scholarship = await db.scholarship.findFirst({
-    where: { id, schoolId },
-    include: {
-      _count: { select: { applications: true, feeAssignments: true } },
-    },
-  })
+  const [scholarship, schoolForCurrency] = await Promise.all([
+    db.scholarship.findFirst({
+      where: { id, schoolId },
+      include: {
+        _count: { select: { applications: true, feeAssignments: true } },
+      },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
 
   if (!scholarship) notFound()
+
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   const isEdit = edit === "true"
 
@@ -142,7 +150,11 @@ export default async function ScholarshipDetailPage({
             <p className="mt-1 text-2xl font-bold tabular-nums">
               {scholarship.coverageType === "PERCENTAGE"
                 ? `${Number(scholarship.coverageAmount)}%`
-                : formatCurrency(Number(scholarship.coverageAmount), lang)}
+                : formatCurrency(
+                    Number(scholarship.coverageAmount),
+                    lang,
+                    currency
+                  )}
             </p>
           </CardContent>
         </Card>
@@ -248,7 +260,11 @@ export default async function ScholarshipDetailPage({
               </span>
               <span className="tabular-nums">
                 {scholarship.maxFamilyIncome
-                  ? formatCurrency(Number(scholarship.maxFamilyIncome), lang)
+                  ? formatCurrency(
+                      Number(scholarship.maxFamilyIncome),
+                      lang,
+                      currency
+                    )
                   : "—"}
               </span>
             </div>

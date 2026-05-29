@@ -17,7 +17,7 @@ import {
   SOCKET_EVENTS,
 } from "../config"
 
-// All 24 NotificationType enum values from Prisma schema
+// All NotificationType enum values from Prisma schema
 // Source: prisma/models/notifications.prisma > enum NotificationType
 const ALL_NOTIFICATION_TYPES = [
   "message",
@@ -44,6 +44,12 @@ const ALL_NOTIFICATION_TYPES = [
   "document_shared",
   "report_ready",
   "setup_guide",
+  "absence_unreported_followup",
+  "live_class_scheduled",
+  "live_class_starting_soon",
+  "live_class_started",
+  "live_class_cancelled",
+  "live_class_recording_ready",
 ] as const
 
 // All 4 NotificationPriority enum values

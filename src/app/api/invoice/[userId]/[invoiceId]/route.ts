@@ -2,37 +2,27 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Invoice PDF Generation API - Stub Endpoint
+ * Deprecated invoice PDF endpoint — orphaned since the MongoDB → Prisma
+ * migration. The current PDF surface lives at
+ * `/api/payment/[paymentId]/receipt` (Payment receipt) — see P1.5.
  *
- * Currently returns { ok: true } as a placeholder.
+ * Full UserInvoice PDF (with school logo + signature) is scoped for P2.4.
  *
- * HISTORICAL NOTE:
- * Previously generated PDF invoices using jsPDF.
- * Migration to Prisma broke the MongoDB connection.
- * Legacy code preserved in comments for reference.
- *
- * INTENDED FUNCTIONALITY:
- * - Generate PDF from invoice data
- * - Include company logo and signature
- * - Return as inline PDF (viewable in browser)
- *
- * PDF STRUCTURE (from legacy):
- * - Header: Logo + "INVOICE" title
- * - Company details (from user)
- * - Bill To (client details)
- * - Items table with quantity/price/total
- * - Subtotal, discount, tax calculation
- * - Digital signature
- * - Notes section
- *
- * TODO: Implement with Prisma + jsPDF or
- * use a PDF service like Puppeteer/React-PDF
+ * Returns 410 Gone so callers fail loudly instead of silently consuming
+ * the placeholder JSON.
  */
-
 import { NextResponse } from "next/server"
 
-export async function GET() {
-  return NextResponse.json({ ok: true })
+export function GET() {
+  return NextResponse.json(
+    {
+      success: false,
+      errorCode: "ENDPOINT_DEPRECATED",
+      message:
+        "This endpoint is deprecated. Use /api/payment/[paymentId]/receipt for payment receipts. UserInvoice PDF is scheduled for P2.4.",
+    },
+    { status: 410 }
+  )
 }
 // import { NextRequest, NextResponse } from "next/server";
 // import { connectDB } from "@/lib/connectDB";

@@ -314,7 +314,7 @@ export async function getConversationAuditHistory(
   Array<{
     id: string
     action: string
-    userId: string
+    userId: string | null
     reason: string | null
     createdAt: Date
   }>

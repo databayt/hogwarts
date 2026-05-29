@@ -13,10 +13,10 @@
  *    - Intl.NumberFormat handles this automatically
  *    - No manual conversion needed
  *
- * 2. CURRENCY MAPPING:
- *    - 'en' → USD (United States Dollar)
- *    - 'ar' → SAR (Saudi Riyal)
- *    - Defined in localeConfig
+ * 2. CURRENCY IS REQUIRED:
+ *    - Caller MUST pass an ISO 4217 currency code (e.g. "USD", "AED", "SAR")
+ *    - The locale only controls digit shapes and grouping, NOT the currency
+ *    - Reads `School.currency` at the caller; do not derive currency from locale
  *
  * 3. DATE FORMAT DIFFERENCES:
  *    - English: MM/DD/YYYY (US format)
@@ -35,34 +35,48 @@
  *   because Intl.NumberFormat doesn't handle file size units.
  */
 
-import { Locale, localeConfig } from "@/components/internationalization/config"
+import { Locale } from "@/components/internationalization/config"
+
+import { formatCurrency as formatCurrencyCore } from "./payment/currency"
 
 /**
- * Formats a number as currency based on the locale
+ * Formats a number as currency in the caller-supplied currency code.
+ *
+ * `currency` is REQUIRED — the locale controls digit shape and grouping only.
+ * Derive `currency` from `School.currency` (server) or thread it via props.
+ *
+ * Delegates to {@link formatCurrencyCore} from `lib/payment/currency` which
+ * handles 3-decimal currencies (KWD/BHD/OMR) and 0-decimal currencies (JPY).
+ *
  * @param value - The numeric value to format
- * @param locale - The locale to use for formatting
+ * @param locale - The locale to use for formatting ("en" | "ar")
+ * @param currency - ISO 4217 currency code (e.g. "USD", "AED", "SAR")
  * @param options - Optional Intl.NumberFormatOptions to override defaults
- * @returns Formatted currency string (e.g., "$1,234.56" or "١٬٢٣٤٫٥٦ ر.س")
+ * @returns Formatted currency string
  * @example
- * formatCurrency(1234.56, 'en') // "$1,234.56"
- * formatCurrency(1234.56, 'ar') // "١٬٢٣٤٫٥٦ ر.س"
+ * formatCurrency(1234.56, 'en', 'USD') // "$1,234.56"
+ * formatCurrency(1234.56, 'ar', 'AED') // "١٬٢٣٤٫٥٦ د.إ.‏"
+ * formatCurrency(1234.567, 'en', 'KWD') // "KWD 1,234.567"
  */
 export function formatCurrency(
   value: number | null | undefined,
   locale: Locale,
+  currency: string,
   options?: Intl.NumberFormatOptions
 ): string {
   if (value === null || value === undefined) {
-    return formatCurrency(0, locale, options)
+    return formatCurrency(0, locale, currency, options)
   }
 
-  const currency = localeConfig[locale].currency
+  if (options) {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      ...options,
+    }).format(value)
+  }
 
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    ...options,
-  }).format(value)
+  return formatCurrencyCore(value, currency, locale)
 }
 
 /**

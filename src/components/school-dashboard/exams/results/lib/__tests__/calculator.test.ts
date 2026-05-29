@@ -221,9 +221,7 @@ describe("calculateHighestMarks", () => {
 describe("calculateLowestMarks", () => {
   it("returns 0 for an all-absent class", () => {
     expect(
-      calculateLowestMarks([
-        buildResult({ marksObtained: 10, isAbsent: true }),
-      ])
+      calculateLowestMarks([buildResult({ marksObtained: 10, isAbsent: true })])
     ).toBe(0)
   })
 
@@ -254,9 +252,9 @@ describe("calculateGradeDistribution", () => {
   })
 
   it("skips rows with null grade", () => {
-    expect(
-      calculateGradeDistribution([buildResult({ grade: null })])
-    ).toEqual({})
+    expect(calculateGradeDistribution([buildResult({ grade: null })])).toEqual(
+      {}
+    )
   })
 })
 

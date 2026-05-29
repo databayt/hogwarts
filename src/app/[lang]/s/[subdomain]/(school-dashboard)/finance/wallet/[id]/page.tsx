@@ -84,7 +84,7 @@ export default async function WalletDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {wallet.currency} {formatCurrency(Number(wallet.balance), lang)}
+              {formatCurrency(Number(wallet.balance), lang, wallet.currency)}
             </p>
           </CardContent>
         </Card>
@@ -155,11 +155,15 @@ export default async function WalletDetailPage({ params }: Props) {
                   <div className="flex items-center gap-4 text-sm">
                     <span>
                       {c?.amount || "Amount"}:{" "}
-                      {formatCurrency(Number(tx.amount), lang)}
+                      {formatCurrency(Number(tx.amount), lang, wallet.currency)}
                     </span>
                     <span>
                       {c?.balance || "Balance"}:{" "}
-                      {formatCurrency(Number(tx.balanceAfter), lang)}
+                      {formatCurrency(
+                        Number(tx.balanceAfter),
+                        lang,
+                        wallet.currency
+                      )}
                     </span>
                     <Badge
                       variant={tx.type === "CREDIT" ? "default" : "destructive"}

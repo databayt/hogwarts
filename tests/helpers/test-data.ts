@@ -188,6 +188,7 @@ export const SCHOOL_DASHBOARD_ROUTES = {
   timetable: "/timetable",
   grades: "/grades",
   messages: "/messages",
+  parents: "/parents",
 } as const
 
 // =============================================================================

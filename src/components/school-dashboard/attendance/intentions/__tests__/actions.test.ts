@@ -78,8 +78,8 @@ describe("Intentions Actions - schoolId scoping", () => {
 
       const result = await submitAbsenceIntention({
         studentId: mockStudentId,
-        dateFrom: new Date("2026-03-10"),
-        dateTo: new Date("2026-03-12"),
+        dateFrom: new Date("2027-03-10"),
+        dateTo: new Date("2027-03-12"),
         reason: "MEDICAL",
         description: "Doctor appointment",
       })

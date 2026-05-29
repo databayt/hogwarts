@@ -53,7 +53,7 @@ export function MRRByPlan({ data, lang }: MRRByPlanProps) {
         <div className="mb-4 flex items-center justify-between">
           <span className="text-muted-foreground text-sm">Total MRR</span>
           <span className="text-2xl font-bold">
-            {formatCurrency(total, lang, {
+            {formatCurrency(total, lang, "USD", {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             })}
@@ -71,7 +71,7 @@ export function MRRByPlan({ data, lang }: MRRByPlanProps) {
               className="text-xs"
               tick={{ fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(value) =>
-                formatCurrency(value, lang, {
+                formatCurrency(value, lang, "USD", {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 })
@@ -88,7 +88,7 @@ export function MRRByPlan({ data, lang }: MRRByPlanProps) {
                         <span className="font-semibold">{data.name}</span>
                         <div className="flex flex-col">
                           <span className="text-sm font-bold">
-                            {formatCurrency(data.value, lang, {
+                            {formatCurrency(data.value, lang, "USD", {
                               minimumFractionDigits: 0,
                               maximumFractionDigits: 0,
                             })}

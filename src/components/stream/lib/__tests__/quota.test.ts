@@ -28,10 +28,7 @@ vi.mock("@/lib/db", () => ({
 const SCHOOL_ID = "school-1"
 const GB = BigInt(1024) * BigInt(1024) * BigInt(1024)
 
-function stubSchool(opts: {
-  used?: bigint | null
-  quota?: bigint | null
-}) {
+function stubSchool(opts: { used?: bigint | null; quota?: bigint | null }) {
   vi.mocked(db.school.findUnique).mockResolvedValue({
     videoStorageUsedBytes: opts.used ?? null,
     videoStorageQuotaBytes: opts.quota ?? null,

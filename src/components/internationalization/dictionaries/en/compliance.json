@@ -1,0 +1,86 @@
+{
+  "title": "Compliance",
+  "subtitle": "Regulator submission and audit trail",
+  "providers": {
+    "ADEK_ESIS": "ADEK eSIS (Abu Dhabi)",
+    "CUSTOM": "Custom endpoint"
+  },
+  "modes": {
+    "DRY_RUN": "Dry-run (CSV only, manual upload)",
+    "PIGGYBACK": "Piggyback (shared group credentials)",
+    "OFFICIAL_API": "Official API",
+    "RPA": "Browser automation (RPA worker)",
+    "DISABLED": "Disabled"
+  },
+  "modeDescriptions": {
+    "DRY_RUN": "Generate the daily CSV artifact only. A school registrar uploads it manually. No regulator credentials are required.",
+    "PIGGYBACK": "Submit via a credential group shared across multiple schools (e.g., Aldar group account).",
+    "OFFICIAL_API": "Submit via the documented vendor API. Requires per-school credentials and ADEK developer access.",
+    "RPA": "Submit by browser automation. An external worker claims the queued submission and uploads it through the eSIS web portal.",
+    "DISABLED": "The connector is paused. No submissions will run."
+  },
+  "status": {
+    "PENDING": "Pending",
+    "QUEUED": "Queued",
+    "IN_FLIGHT": "In flight",
+    "SUBMITTED": "Submitted",
+    "ACCEPTED": "Accepted",
+    "REJECTED": "Rejected",
+    "FAILED": "Failed",
+    "CANCELLED": "Cancelled"
+  },
+  "circuitBreaker": {
+    "CLOSED": "Operational",
+    "OPEN": "Halted",
+    "HALF_OPEN": "Recovering"
+  },
+  "settings": {
+    "enabledLabel": "Enable compliance connector",
+    "enabledHelp": "When off, no submissions will be generated for this school.",
+    "providerLabel": "Regulator",
+    "modeLabel": "Submission mode",
+    "submissionTimeLabel": "Daily submission time (UTC)",
+    "submissionTimeHelp": "ADEK requires submissions by 14:00 GST = 10:00 UTC.",
+    "slaLabel": "Parent contact SLA (minutes)",
+    "slaHelp": "ADEK rule: guardians must be contacted within 120 minutes of an unreported absence.",
+    "saveButton": "Save settings",
+    "saveSuccess": "Compliance settings updated",
+    "saveError": "Failed to save settings",
+    "notifyAdminLabel": "Notify admins on failure",
+    "notifyAdminHelp": "Send an in-app and email alert to school admins when a submission fails."
+  },
+  "failureAlert": {
+    "title": "Compliance submission failed",
+    "body": "A regulator submission failed. Open the compliance dashboard for details."
+  },
+  "submissions": {
+    "title": "Submissions",
+    "empty": "No submissions yet",
+    "dateColumn": "Date",
+    "attemptColumn": "Attempt",
+    "modeColumn": "Mode",
+    "statusColumn": "Status",
+    "studentsColumn": "Students",
+    "receiptColumn": "Receipt",
+    "actionsColumn": "Actions",
+    "downloadCsv": "Download CSV",
+    "retry": "Retry submission",
+    "viewDetails": "View details"
+  },
+  "categories": {
+    "AUTHORIZED": "Authorized",
+    "UNAUTHORIZED": "Unauthorized",
+    "CAUSE_FOR_CONCERN": "Cause for concern (>5%)",
+    "LATE": "Late arrival"
+  },
+  "errors": {
+    "NOT_AUTHENTICATED": "You are not signed in.",
+    "MISSING_SCHOOL_CONTEXT": "School context is missing.",
+    "FORBIDDEN": "You do not have permission to manage compliance settings.",
+    "VALIDATION_FAILED": "Some fields are invalid.",
+    "CONFIG_NOT_FOUND": "Compliance configuration not found.",
+    "PROVIDER_NOT_SUPPORTED": "This regulator is not yet supported.",
+    "CIRCUIT_BREAKER_OPEN": "Submissions are paused due to repeated failures.",
+    "ENCRYPTION_KEY_MISSING": "Server encryption key is not configured."
+  }
+}

@@ -35,9 +35,16 @@ export default async function BalanceSheetPage({ params }: Props) {
     )
   }
 
-  const fiscalYear = await db.fiscalYear.findFirst({
-    where: { schoolId, isCurrent: true },
-  })
+  const [fiscalYear, schoolForCurrency] = await Promise.all([
+    db.fiscalYear.findFirst({
+      where: { schoolId, isCurrent: true },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   if (!fiscalYear) {
     return (
@@ -145,7 +152,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     <td className="py-2 font-mono">{a.accountCode}</td>
                     <td className="py-2">{a.accountName}</td>
                     <td className="py-2 text-end">
-                      {formatCurrency(a.balance, lang)}
+                      {formatCurrency(a.balance, lang, currency)}
                     </td>
                   </tr>
                 ))}
@@ -154,7 +161,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     {d?.totalAssets || "Total Assets"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalAssets, lang)}
+                    {formatCurrency(data.totalAssets, lang, currency)}
                   </td>
                 </tr>
               </tbody>
@@ -190,7 +197,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     <td className="py-2 font-mono">{l.accountCode}</td>
                     <td className="py-2">{l.accountName}</td>
                     <td className="py-2 text-end">
-                      {formatCurrency(l.balance, lang)}
+                      {formatCurrency(l.balance, lang, currency)}
                     </td>
                   </tr>
                 ))}
@@ -199,7 +206,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     {d?.totalLiabilities || "Total Liabilities"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalLiabilities, lang)}
+                    {formatCurrency(data.totalLiabilities, lang, currency)}
                   </td>
                 </tr>
               </tbody>
@@ -235,7 +242,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     <td className="py-2 font-mono">{e.accountCode}</td>
                     <td className="py-2">{e.accountName}</td>
                     <td className="py-2 text-end">
-                      {formatCurrency(e.balance, lang)}
+                      {formatCurrency(e.balance, lang, currency)}
                     </td>
                   </tr>
                 ))}
@@ -244,7 +251,7 @@ export default async function BalanceSheetPage({ params }: Props) {
                     {d?.totalEquity || "Total Equity"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalEquity, lang)}
+                    {formatCurrency(data.totalEquity, lang, currency)}
                   </td>
                 </tr>
               </tbody>
@@ -263,7 +270,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalAssets, lang)}
+              {formatCurrency(data.totalAssets, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -275,7 +282,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalLiabilities, lang)}
+              {formatCurrency(data.totalLiabilities, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -287,7 +294,7 @@ export default async function BalanceSheetPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalEquity, lang)}
+              {formatCurrency(data.totalEquity, lang, currency)}
             </p>
           </CardContent>
         </Card>

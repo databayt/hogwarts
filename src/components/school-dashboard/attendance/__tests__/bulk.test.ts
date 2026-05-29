@@ -41,14 +41,11 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
-vi.mock(
-  "@/components/school-dashboard/attendance/authorization",
-  () => ({
-    canMarkAttendance: vi.fn(() => true),
-    canViewSchoolAnalytics: vi.fn(() => true),
-    isStaffRole: vi.fn(() => true),
-  })
-)
+vi.mock("@/components/school-dashboard/attendance/authorization", () => ({
+  canMarkAttendance: vi.fn(() => true),
+  canViewSchoolAnalytics: vi.fn(() => true),
+  isStaffRole: vi.fn(() => true),
+}))
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -145,7 +142,14 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   })
 
   it("routes every record to createMany (one call, all rows) when no prior attendance exists", async () => {
-    let capturedTx: { attendance: { update: ReturnType<typeof vi.fn>; createMany: ReturnType<typeof vi.fn> } } | undefined
+    let capturedTx:
+      | {
+          attendance: {
+            update: ReturnType<typeof vi.fn>
+            createMany: ReturnType<typeof vi.fn>
+          }
+        }
+      | undefined
     vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
       capturedTx = {
         attendance: {
@@ -179,7 +183,14 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       { id: "att-3", studentId: "stu-3" },
     ] as never)
 
-    let capturedTx: { attendance: { update: ReturnType<typeof vi.fn>; createMany: ReturnType<typeof vi.fn> } } | undefined
+    let capturedTx:
+      | {
+          attendance: {
+            update: ReturnType<typeof vi.fn>
+            createMany: ReturnType<typeof vi.fn>
+          }
+        }
+      | undefined
     vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
       capturedTx = {
         attendance: {
@@ -199,7 +210,9 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
     expect(capturedTx?.attendance.update).toHaveBeenCalledTimes(3)
     expect(capturedTx?.attendance.createMany).not.toHaveBeenCalled()
     // First update should target the matching existing row, not some other id.
-    expect(capturedTx!.attendance.update.mock.calls[0][0].where.id).toBe("att-1")
+    expect(capturedTx!.attendance.update.mock.calls[0][0].where.id).toBe(
+      "att-1"
+    )
   })
 
   it("splits mixed input: updates known rows, batches new rows into a single createMany", async () => {
@@ -207,7 +220,14 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       { id: "att-1", studentId: "stu-1" },
     ] as never)
 
-    let capturedTx: { attendance: { update: ReturnType<typeof vi.fn>; createMany: ReturnType<typeof vi.fn> } } | undefined
+    let capturedTx:
+      | {
+          attendance: {
+            update: ReturnType<typeof vi.fn>
+            createMany: ReturnType<typeof vi.fn>
+          }
+        }
+      | undefined
     vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
       capturedTx = {
         attendance: {
@@ -234,7 +254,9 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   })
 
   it("preserves the existing rollback contract when the transaction throws", async () => {
-    vi.mocked(db.$transaction).mockRejectedValue(new Error("constraint violation"))
+    vi.mocked(db.$transaction).mockRejectedValue(
+      new Error("constraint violation")
+    )
 
     const { bulkUploadAttendance } = await import("../actions/bulk")
     const result = await bulkUploadAttendance(bulkInput(["stu-1"]))

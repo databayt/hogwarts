@@ -72,6 +72,12 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     )
   }
 
+  const schoolForCurrency = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { currency: true },
+  })
+  const currency = schoolForCurrency?.currency ?? "USD"
+
   let feeStructuresCount = 0
   let activeAssignmentsCount = 0
   let paymentsCount = 0
@@ -234,7 +240,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalFeesCollected, lang)}
+              {formatCurrency(totalFeesCollected, lang, currency)}
             </div>
             <p className="text-muted-foreground text-xs">
               {fp.completedPayments || "Completed payments"}
@@ -251,7 +257,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(pendingPayments, lang)}
+              {formatCurrency(pendingPayments, lang, currency)}
             </div>
             <p className="text-muted-foreground text-xs">
               {activeAssignmentsCount} {fp.assignments || "assignments"}
@@ -268,7 +274,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(overduePayments, lang)}
+              {formatCurrency(overduePayments, lang, currency)}
             </div>
             <p className="text-muted-foreground text-xs">
               {c.requiresAction || fp.requiresAction || "Requires action"}

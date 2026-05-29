@@ -39,7 +39,8 @@ export const getFeeStructureColumns = (
     onToggleActive?: (id: string) => void
     onToggleLocked?: (id: string, current: boolean) => void
     onDelete?: (id: string) => void
-  }
+  },
+  currency: string = "USD"
 ): ColumnDef<FeeStructureRow>[] => {
   const isAr = lang === "ar"
 
@@ -138,7 +139,11 @@ export const getFeeStructureColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
+          {formatCurrency(
+            getValue<number>(),
+            (lang || "en") as Locale,
+            currency
+          )}
         </span>
       ),
       meta: { label: t.totalAmount, variant: "text" },

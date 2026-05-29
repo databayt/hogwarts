@@ -51,17 +51,25 @@ export default async function ExpenseDetailPage({ params }: Props) {
     )
   }
 
-  const expense = await db.expense.findFirst({
-    where: { id, schoolId },
-    include: {
-      category: { select: { name: true } },
-      receipts: true,
-    },
-  })
+  const [expense, schoolForCurrency] = await Promise.all([
+    db.expense.findFirst({
+      where: { id, schoolId },
+      include: {
+        category: { select: { name: true } },
+        receipts: true,
+      },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
 
   if (!expense) {
     notFound()
   }
+
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   return (
     <div className="space-y-6">
@@ -95,7 +103,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(Number(expense.amount), lang)}
+              {formatCurrency(Number(expense.amount), lang, currency)}
             </p>
           </CardContent>
         </Card>

@@ -32,6 +32,9 @@ model Timetable {
   // Substitution records where this slot is the original
   substitutionRecords SubstitutionRecord[] @relation("OriginalSlot")
 
+  // Live-class sessions launched from this timetable slot
+  liveClassSessions LiveClassSession[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
