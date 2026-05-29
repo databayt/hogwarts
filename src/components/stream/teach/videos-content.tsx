@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Fragment, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
 import {
   AlertCircle,
   CheckCircle2,
@@ -48,9 +47,24 @@ const statusVariant: Record<
 
 type StatusFilter = "all" | "APPROVED" | "PENDING" | "REJECTED"
 
-export function TeachVideosContent({ videos }: Props) {
+export function TeachVideosContent({ dictionary, lang, videos }: Props) {
   const [filter, setFilter] = useState<StatusFilter>("all")
   const router = useRouter()
+  // The settings page passes the `stream` subtree as `dictionary`.
+  const d = (dictionary as Record<string, any>)?.teachVideos ?? {}
+
+  const statusLabel: Record<string, string> = {
+    APPROVED: d.statusApproved ?? "Approved",
+    PENDING: d.statusPending ?? "Pending",
+    REJECTED: d.statusRejected ?? "Rejected",
+  }
+
+  const dateFmt = (date: Date | string) =>
+    new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(date))
 
   const filteredVideos = useMemo(
     () =>
@@ -78,15 +92,18 @@ export function TeachVideosContent({ videos }: Props) {
   if (videos.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">My Videos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {d.title ?? "My Videos"}
+        </h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Film className="text-muted-foreground mb-4 size-12" />
             <p className="text-muted-foreground text-sm">
-              You haven&apos;t uploaded any videos yet.
+              {d.emptyNone ?? "You haven't uploaded any videos yet."}
             </p>
             <p className="text-muted-foreground mt-1 text-xs">
-              Use the &quot;Propose a Video&quot; button from your dashboard.
+              {d.emptyHint ??
+                'Use the "Propose a Video" button from your dashboard.'}
             </p>
           </CardContent>
         </Card>
@@ -97,8 +114,12 @@ export function TeachVideosContent({ videos }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">My Videos</h1>
-        <Badge variant="outline">{videos.length} videos</Badge>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {d.title ?? "My Videos"}
+        </h1>
+        <Badge variant="outline">
+          {videos.length} {d.videosUnit ?? "videos"}
+        </Badge>
       </div>
 
       {/* Summary stats */}
@@ -108,7 +129,9 @@ export function TeachVideosContent({ videos }: Props) {
             <Film className="text-muted-foreground size-5" />
             <div>
               <p className="text-xl font-bold">{counts.all}</p>
-              <p className="text-muted-foreground text-xs">Total</p>
+              <p className="text-muted-foreground text-xs">
+                {d.statTotal ?? "Total"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -117,7 +140,9 @@ export function TeachVideosContent({ videos }: Props) {
             <CheckCircle2 className="size-5 text-green-600" />
             <div>
               <p className="text-xl font-bold">{counts.APPROVED}</p>
-              <p className="text-muted-foreground text-xs">Approved</p>
+              <p className="text-muted-foreground text-xs">
+                {d.statApproved ?? "Approved"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -126,7 +151,9 @@ export function TeachVideosContent({ videos }: Props) {
             <Clock className="size-5 text-yellow-600" />
             <div>
               <p className="text-xl font-bold">{counts.PENDING}</p>
-              <p className="text-muted-foreground text-xs">Pending</p>
+              <p className="text-muted-foreground text-xs">
+                {d.statPending ?? "Pending"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -135,7 +162,9 @@ export function TeachVideosContent({ videos }: Props) {
             <Eye className="text-muted-foreground size-5" />
             <div>
               <p className="text-xl font-bold">{totalViews.toLocaleString()}</p>
-              <p className="text-muted-foreground text-xs">Total Views</p>
+              <p className="text-muted-foreground text-xs">
+                {d.statTotalViews ?? "Total Views"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -144,13 +173,17 @@ export function TeachVideosContent({ videos }: Props) {
       {/* Filter tabs */}
       <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
         <TabsList>
-          <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-          <TabsTrigger value="APPROVED">
-            Approved ({counts.APPROVED})
+          <TabsTrigger value="all">
+            {d.tabAll ?? "All"} ({counts.all})
           </TabsTrigger>
-          <TabsTrigger value="PENDING">Pending ({counts.PENDING})</TabsTrigger>
+          <TabsTrigger value="APPROVED">
+            {d.tabApproved ?? "Approved"} ({counts.APPROVED})
+          </TabsTrigger>
+          <TabsTrigger value="PENDING">
+            {d.tabPending ?? "Pending"} ({counts.PENDING})
+          </TabsTrigger>
           <TabsTrigger value="REJECTED">
-            Rejected ({counts.REJECTED})
+            {d.tabRejected ?? "Rejected"} ({counts.REJECTED})
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -160,14 +193,16 @@ export function TeachVideosContent({ videos }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Lesson</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Visibility</TableHead>
-                <TableHead>Pricing</TableHead>
-                <TableHead className="text-end">Views</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>{d.colTitle ?? "Title"}</TableHead>
+                <TableHead>{d.colSubject ?? "Subject"}</TableHead>
+                <TableHead>{d.colLesson ?? "Lesson"}</TableHead>
+                <TableHead>{d.colStatus ?? "Status"}</TableHead>
+                <TableHead>{d.colVisibility ?? "Visibility"}</TableHead>
+                <TableHead>{d.colPricing ?? "Pricing"}</TableHead>
+                <TableHead className="text-end">
+                  {d.colViews ?? "Views"}
+                </TableHead>
+                <TableHead>{d.colDate ?? "Date"}</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -189,7 +224,7 @@ export function TeachVideosContent({ videos }: Props) {
                               variant="outline"
                               className="px-1.5 py-0 text-[10px]"
                             >
-                              Featured
+                              {d.featured ?? "Featured"}
                             </Badge>
                           )}
                           {video.title}
@@ -207,7 +242,8 @@ export function TeachVideosContent({ videos }: Props) {
                             statusVariant[video.approvalStatus] ?? "outline"
                           }
                         >
-                          {video.approvalStatus}
+                          {statusLabel[video.approvalStatus] ??
+                            video.approvalStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -216,7 +252,7 @@ export function TeachVideosContent({ videos }: Props) {
                       <TableCell className="text-sm">
                         {isPaid && video.price != null
                           ? `${video.price.toFixed(2)} ${video.currency ?? ""}`
-                          : "Free"}
+                          : (d.free ?? "Free")}
                       </TableCell>
                       <TableCell className="text-end">
                         <span className="flex items-center justify-end gap-1">
@@ -225,7 +261,7 @@ export function TeachVideosContent({ videos }: Props) {
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {format(new Date(video.createdAt), "MMM d, yyyy")}
+                        {dateFmt(video.createdAt)}
                       </TableCell>
                       <TableCell>
                         <VideoSettingsDialog
@@ -260,7 +296,8 @@ export function TeachVideosContent({ videos }: Props) {
                             <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
                             <span>
                               <span className="font-medium">
-                                Rejection reason:{" "}
+                                {d.rejectionReasonLabel ?? "Reviewer feedback"}
+                                :{" "}
                               </span>
                               {video.rejectionReason}
                             </span>
@@ -277,8 +314,7 @@ export function TeachVideosContent({ videos }: Props) {
                     colSpan={9}
                     className="text-muted-foreground py-8 text-center text-sm"
                   >
-                    No {filter !== "all" ? filter.toLowerCase() : ""} videos
-                    found.
+                    {d.noVideosFound ?? "No videos found."}
                   </TableCell>
                 </TableRow>
               )}
@@ -289,9 +325,8 @@ export function TeachVideosContent({ videos }: Props) {
 
       {/* Ownership reminder */}
       <p className="text-muted-foreground text-center text-xs">
-        You retain full ownership of all your videos. Use the{" "}
-        <Settings className="inline size-3" /> button to manage visibility or
-        delete.
+        {d.ownershipNote ??
+          "You retain full ownership of all your videos. Use the settings button to manage visibility or delete."}
       </p>
     </div>
   )

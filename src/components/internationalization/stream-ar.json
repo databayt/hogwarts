@@ -496,7 +496,34 @@
       }
     },
     "teachVideos": {
-      "rejectionReasonLabel": "ملاحظات المراجع"
+      "rejectionReasonLabel": "ملاحظات المراجع",
+      "title": "فيديوهاتي",
+      "videosUnit": "فيديو",
+      "emptyNone": "لم تقم برفع أي فيديوهات بعد.",
+      "emptyHint": "استخدم زر «اقتراح فيديو» من لوحة التحكم.",
+      "statTotal": "الإجمالي",
+      "statApproved": "معتمد",
+      "statPending": "قيد المراجعة",
+      "statTotalViews": "إجمالي المشاهدات",
+      "tabAll": "الكل",
+      "tabApproved": "معتمد",
+      "tabPending": "قيد المراجعة",
+      "tabRejected": "مرفوض",
+      "colTitle": "العنوان",
+      "colSubject": "المادة",
+      "colLesson": "الدرس",
+      "colStatus": "الحالة",
+      "colVisibility": "الظهور",
+      "colPricing": "التسعير",
+      "colViews": "المشاهدات",
+      "colDate": "التاريخ",
+      "featured": "مميز",
+      "free": "مجاني",
+      "statusApproved": "معتمد",
+      "statusPending": "قيد المراجعة",
+      "statusRejected": "مرفوض",
+      "noVideosFound": "لا توجد فيديوهات.",
+      "ownershipNote": "تحتفظ بالملكية الكاملة لجميع فيديوهاتك. استخدم زر الإعدادات لإدارة الظهور أو الحذف."
     }
   }
 }
