@@ -110,6 +110,26 @@ describe("POST /api/webhooks/adek", () => {
     expect(db.complianceSubmission.update).not.toHaveBeenCalled()
   })
 
+  it("fails closed (503) when the dedupe insert errors non-P2002 (WH-1)", async () => {
+    // A transient DB failure on the idempotency insert must NOT fall through
+    // and apply the event — otherwise ADEK's retry of the same eventId would
+    // re-apply it (replay). Return 5xx so the regulator retries cleanly.
+    vi.mocked(db.processedWebhookEvent.create).mockRejectedValue({
+      code: "P1001", // connection error, not a unique-constraint hit
+    })
+
+    const res = await POST(
+      signedRequest({
+        eventId: "e-transient",
+        type: "submission.accepted",
+        submissionRef: "sub-1",
+      })
+    )
+
+    expect(res.status).toBe(503)
+    expect(db.complianceSubmission.update).not.toHaveBeenCalled()
+  })
+
   it("acks unknown submissionRef (idempotent ack-anyway)", async () => {
     vi.mocked(db.complianceSubmission.findUnique).mockResolvedValue(null)
 

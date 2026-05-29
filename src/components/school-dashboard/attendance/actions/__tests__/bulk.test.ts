@@ -154,6 +154,8 @@ describe("Bulk Attendance Operations", () => {
         schoolId: mockSchoolId,
         name: "Class 10A",
       })
+      // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
+      vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockImplementationOnce(async (callback) => {
         await callback(db)
       })
@@ -183,6 +185,8 @@ describe("Bulk Attendance Operations", () => {
         schoolId: mockSchoolId,
         name: "Class 10A",
       })
+      // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
+      vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockRejectedValueOnce(
         new Error("Database error")
       )
