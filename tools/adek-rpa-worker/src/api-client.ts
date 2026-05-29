@@ -58,7 +58,9 @@ export class ApiClient {
           authorization: `Bearer ${this.config.apiToken}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify(body),
+        // workerId comes from this worker's own config (same as claim) so the
+        // server can enforce lease-ownership on the ack.
+        body: JSON.stringify({ ...body, workerId: this.config.workerId }),
       }
     )
     if (!response.ok) {

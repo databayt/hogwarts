@@ -29,6 +29,13 @@ export const env = createEnv({
     // Authorization header. Vercel cron sets `Bearer <CRON_SECRET>` for us.
     CRON_SECRET: z.string().min(1).optional(),
 
+    // ADEK / regulator compliance (Epic 01). encryption.ts reads
+    // COMPLIANCE_ENCRYPTION_KEY directly (AES-256-GCM, 32-byte hex); the ADEK
+    // webhook verifies ADEK_WEBHOOK_SECRET. Optional so dev works without them;
+    // both fail closed in production (webhook refuses, decrypt throws).
+    COMPLIANCE_ENCRYPTION_KEY: z.string().min(1).optional(),
+    ADEK_WEBHOOK_SECRET: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -170,6 +177,8 @@ export const env = createEnv({
     BANKAK_SECRET_KEY: process.env.BANKAK_SECRET_KEY,
     BANKAK_WEBHOOK_SECRET: process.env.BANKAK_WEBHOOK_SECRET,
     CRON_SECRET: process.env.CRON_SECRET,
+    COMPLIANCE_ENCRYPTION_KEY: process.env.COMPLIANCE_ENCRYPTION_KEY,
+    ADEK_WEBHOOK_SECRET: process.env.ADEK_WEBHOOK_SECRET,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:

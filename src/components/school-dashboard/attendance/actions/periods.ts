@@ -696,14 +696,42 @@ export async function getStudentDayAttendance(input: {
       return { success: false, error: "Authentication required" }
     }
 
-    // Get student
+    // Get student (+ access data: own user account + linked guardians)
     const student = await db.student.findFirst({
       where: { id: input.studentId, schoolId },
-      select: { id: true, firstName: true, lastName: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        userId: true,
+        studentGuardians: {
+          select: { guardian: { select: { userId: true } } },
+        },
+      },
     })
 
     if (!student) {
       return { success: false, error: "Student not found" }
+    }
+
+    // Access control: staff (any school role), the student themselves, or a
+    // linked guardian. Without this, any authenticated user could read another
+    // student's day attendance within the same tenant (intra-tenant IDOR).
+    const role = session.user.role
+    const isStaff =
+      role === "DEVELOPER" ||
+      role === "ADMIN" ||
+      role === "TEACHER" ||
+      role === "STAFF"
+    const isSelf = student.userId === session.user.id
+    const isGuardian = student.studentGuardians.some(
+      (sg) => sg.guardian.userId === session.user.id
+    )
+    if (!isStaff && !isSelf && !isGuardian) {
+      return {
+        success: false,
+        error: "You are not authorized to view this student's attendance",
+      }
     }
 
     // Get all attendance records for the student on this day

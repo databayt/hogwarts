@@ -105,7 +105,14 @@ export async function POST(request: Request) {
       // Already processed — ack
       return new Response(null, { status: 200 })
     }
-    console.error("[webhooks/adek] dedupe insert failed (continuing):", error)
+    // Any other error means the idempotency record was NOT written. Fail
+    // closed (5xx) so ADEK retries into a clean state — falling through would
+    // apply an unrecorded event and re-apply it on the next retry (replay).
+    console.error(
+      "[webhooks/adek] dedupe insert failed — failing closed:",
+      error
+    )
+    return new Response("Idempotency store unavailable", { status: 503 })
   }
 
   const submission = await db.complianceSubmission.findUnique({

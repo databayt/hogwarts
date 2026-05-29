@@ -16,6 +16,7 @@ const REQUIRED_SCOPE = API_TOKEN_SCOPES.COMPLIANCE_RPA_CLAIM
 
 const ackSchema = z.object({
   submissionId: z.string().min(1),
+  workerId: z.string().min(1), // must match the claim's claimedByWorkerId
   status: z.enum(["SUBMITTED", "ACCEPTED", "REJECTED", "FAILED"]),
   receiptId: z.string().nullable().optional(),
   errorCode: z.string().nullable().optional(),
@@ -60,15 +61,35 @@ export async function POST(request: Request) {
   if (submission.schoolId !== verified.token.schoolId) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 })
   }
-  if (submission.status === ComplianceSubmissionStatus.ACCEPTED) {
-    // Already terminally accepted — ignore double-ack
+  // Terminal statuses are immutable — idempotent ack on a double-delivery.
+  if (
+    submission.status === ComplianceSubmissionStatus.ACCEPTED ||
+    submission.status === ComplianceSubmissionStatus.REJECTED
+  ) {
     return NextResponse.json({ ok: true, already: true })
+  }
+  // Lease-ownership: only the worker holding the claim may ack it. A foreign
+  // worker (or a row re-claimed after lease expiry) must not overwrite.
+  if (submission.claimedByWorkerId !== data.workerId) {
+    return NextResponse.json({ error: "CLAIM_MISMATCH" }, { status: 409 })
   }
 
   const status = data.status as ComplianceSubmissionStatus
   const now = new Date()
-  await db.complianceSubmission.update({
-    where: { id: data.submissionId },
+  // Guarded write: re-assert ownership + non-terminal status atomically so a
+  // concurrent ack/reclaim between our read and write no-ops (count === 0).
+  const result = await db.complianceSubmission.updateMany({
+    where: {
+      id: data.submissionId,
+      schoolId: verified.token.schoolId,
+      claimedByWorkerId: data.workerId,
+      status: {
+        notIn: [
+          ComplianceSubmissionStatus.ACCEPTED,
+          ComplianceSubmissionStatus.REJECTED,
+        ],
+      },
+    },
     data: {
       status,
       receiptId: data.receiptId ?? null,
@@ -81,6 +102,10 @@ export async function POST(request: Request) {
       claimExpiresAt: null,
     },
   })
+  if (result.count === 0) {
+    // Raced against another ack/reclaim — treat as already handled.
+    return NextResponse.json({ ok: true, already: true })
+  }
 
   const auditAction =
     status === "ACCEPTED" || status === "SUBMITTED"

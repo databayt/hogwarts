@@ -48,12 +48,10 @@ export {
   getRecentAttendance,
 } from "./actions/analytics"
 
-// QR code sessions
-export {
-  generateQRSession,
-  processQRScan,
-  getActiveQRSessions,
-} from "./actions/qr"
+// QR code sessions — the hardened implementations (auth + HMAC signature +
+// rate limiting) live in ./qr-code/actions.ts and the UI imports them directly.
+// The legacy ./actions/qr twin was removed: its processQRScan trusted a
+// client-supplied studentId with no auth/role check (mark-any-student-present).
 
 // Student identifiers
 export {

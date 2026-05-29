@@ -242,6 +242,13 @@ export async function processSubmission(
         categorized: result.categorized,
       },
     })
+
+    // Circuit breaker (PIGGYBACK only) — a successful submission closes a
+    // HALF_OPEN breaker (the post-cooldown trial succeeded) and clears the
+    // rolling failure count so sporadic failures don't eventually trip it.
+    if (submission.mode === ConnectorMode.PIGGYBACK) {
+      await recordCircuitBreakerSuccess(submission.schoolId)
+    }
   } else if (
     result.status === ComplianceSubmissionStatus.FAILED ||
     result.status === ComplianceSubmissionStatus.REJECTED
@@ -305,8 +312,35 @@ async function tripCircuitBreakerIfNeeded(schoolId: string): Promise<void> {
   const group = await db.sharedComplianceCredentialGroup.findUnique({
     where: { id: config.sharedGroupId },
   })
-  if (!group || group.circuitBreakerState !== "CLOSED") return
+  if (!group) return
+  // Already halted — nothing to do until maybeRecloseCircuitBreakers() runs.
+  if (group.circuitBreakerState === "OPEN") return
 
+  // HALF_OPEN is a single-shot trial: one failure re-opens immediately
+  // (classic half-open semantics), rather than counting toward the threshold.
+  // Without this branch the breaker stayed HALF_OPEN forever after the first
+  // cooldown — letting traffic through with no protection.
+  if (group.circuitBreakerState === "HALF_OPEN") {
+    await db.sharedComplianceCredentialGroup.update({
+      where: { id: group.id },
+      data: {
+        circuitBreakerState: "OPEN",
+        circuitOpenedAt: new Date(),
+        recentFailures: CIRCUIT_BREAKER_THRESHOLD,
+      },
+    })
+    await logAudit({
+      action: ComplianceAudit.CIRCUIT_BREAKER_OPENED,
+      entityType: "SharedComplianceCredentialGroup",
+      entityId: group.id,
+      userId: null,
+      schoolId: null,
+      metadata: { reason: "half_open_trial_failed" },
+    })
+    return
+  }
+
+  // CLOSED: accumulate failures, trip at the threshold.
   const next = group.recentFailures + 1
   const shouldOpen = next >= CIRCUIT_BREAKER_THRESHOLD
 
@@ -330,6 +364,51 @@ async function tripCircuitBreakerIfNeeded(schoolId: string): Promise<void> {
       metadata: { recentFailures: next },
     })
   }
+}
+
+/**
+ * A successful PIGGYBACK submission. If the shared group is HALF_OPEN (a
+ * post-cooldown trial), the success closes the breaker and resumes normal
+ * operation. A success while CLOSED clears any accumulated failures so a
+ * sporadic, non-consecutive failure pattern doesn't eventually trip it.
+ */
+async function recordCircuitBreakerSuccess(schoolId: string): Promise<void> {
+  const config = await db.schoolComplianceConfig.findFirst({
+    where: { schoolId, provider: ComplianceProvider.ADEK_ESIS },
+    select: { sharedGroupId: true },
+  })
+  if (!config?.sharedGroupId) return
+
+  const closed = await db.sharedComplianceCredentialGroup.updateMany({
+    where: { id: config.sharedGroupId, circuitBreakerState: "HALF_OPEN" },
+    data: {
+      circuitBreakerState: "CLOSED",
+      recentFailures: 0,
+      circuitOpenedAt: null,
+    },
+  })
+
+  if (closed.count > 0) {
+    await logAudit({
+      action: ComplianceAudit.CIRCUIT_BREAKER_CLOSED,
+      entityType: "SharedComplianceCredentialGroup",
+      entityId: config.sharedGroupId,
+      userId: null,
+      schoolId: null,
+      metadata: { reason: "half_open_trial_succeeded" },
+    })
+    return
+  }
+
+  // Already CLOSED — just clear a non-zero rolling failure count on success.
+  await db.sharedComplianceCredentialGroup.updateMany({
+    where: {
+      id: config.sharedGroupId,
+      circuitBreakerState: "CLOSED",
+      recentFailures: { gt: 0 },
+    },
+    data: { recentFailures: 0 },
+  })
 }
 
 /** Background-reset the breaker after the cooldown window. */
