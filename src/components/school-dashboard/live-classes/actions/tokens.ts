@@ -178,7 +178,10 @@ export async function joinLiveClass(
 
 /**
  * Refresh a join token mid-session (e.g. near expiry). Re-runs the
- * eligibility check so revoked access takes effect immediately.
+ * eligibility check, so revoked access takes effect at the next refresh
+ * boundary — i.e. revocation latency = token TTL (≤5 min), NOT instant.
+ * LiveKit JWTs are stateless; an already-issued token cannot be invalidated
+ * server-side before it expires (no removeParticipant is wired to revocation).
  */
 export async function refreshLiveClassToken(sessionId: string) {
   return joinLiveClass(sessionId)

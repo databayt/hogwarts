@@ -7,15 +7,16 @@
 
 import { NextResponse } from "next/server"
 
+import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/live-classes/actions/notifications"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+export const maxDuration = 60
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization")
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorizedCron(req, "live-class-reminders")) {
     return new NextResponse("unauthorized", { status: 401 })
   }
 

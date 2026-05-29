@@ -116,6 +116,9 @@ describe("Live-classes — multi-tenant isolation", () => {
 
   it("listRecordings scopes findMany by schoolId + sessionId", async () => {
     mockAdmin(SCHOOL_A)
+    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+      sectionId: "sec-1",
+    } as never)
     vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
     await listRecordings("lcs-1")
     expect(db.liveClassRecording.findMany).toHaveBeenCalledWith(

@@ -11,15 +11,29 @@ import {
   getRecordingPlaybackUrl,
 } from "@/lib/livekit/recording-urls"
 
-import { liveClassRevalidatePath, requireContext } from "./helpers"
+import {
+  canAccessSession,
+  liveClassRevalidatePath,
+  requireContext,
+} from "./helpers"
 
 /**
- * List recordings for a session (tenant-scoped). Soft-deleted hidden.
+ * List recordings for a session. Tenant-scoped AND enrollment-scoped:
+ * a STUDENT/GUARDIAN may only list recordings for a session whose section
+ * they (or their ward) belong to. Soft-deleted hidden.
  */
 export async function listRecordings(sessionId: string) {
   const ctx = await requireContext("view_recordings")
   if (!ctx.ok) return ctx.response
   try {
+    const session = await db.liveClassSession.findFirst({
+      where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
+      select: { sectionId: true },
+    })
+    if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    if (!(await canAccessSession(ctx, session.sectionId))) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
     const recordings = await db.liveClassRecording.findMany({
       where: {
         schoolId: ctx.schoolId,
@@ -54,9 +68,14 @@ export async function getRecordingUrl(recordingId: string) {
         s3Key: true,
         s3Region: true,
         mimeType: true,
+        session: { select: { sectionId: true } },
       },
     })
     if (!recording) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
+    }
+    // Enrollment gate: staff school-wide; STUDENT/GUARDIAN only their section.
+    if (!(await canAccessSession(ctx, recording.session?.sectionId ?? null))) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
     const url = await getRecordingPlaybackUrl(recording, 300)

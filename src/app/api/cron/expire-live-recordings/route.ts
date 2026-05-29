@@ -7,15 +7,16 @@
 
 import { NextResponse } from "next/server"
 
+import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { deleteRecordingObject } from "@/lib/livekit/recording-urls"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+export const maxDuration = 300 // Vercel Pro: up to 500 S3 deletes serially
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization")
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorizedCron(req, "expire-live-recordings")) {
     return new NextResponse("unauthorized", { status: 401 })
   }
 

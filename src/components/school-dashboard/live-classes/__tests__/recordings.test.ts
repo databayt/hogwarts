@@ -20,6 +20,15 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       update: vi.fn(),
     },
+    liveClassSession: {
+      findFirst: vi.fn(),
+    },
+    student: {
+      findFirst: vi.fn(),
+    },
+    guardian: {
+      findFirst: vi.fn(),
+    },
   },
 }))
 
@@ -65,6 +74,9 @@ beforeEach(() => {
 describe("listRecordings", () => {
   it("admin lists recordings — scoped to schoolId + sessionId + not soft-deleted", async () => {
     mockAdmin()
+    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+      sectionId: "sec-1",
+    } as never)
     vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
     await listRecordings("lcs-1")
     expect(db.liveClassRecording.findMany).toHaveBeenCalledWith(
@@ -78,11 +90,28 @@ describe("listRecordings", () => {
     )
   })
 
-  it("student can also list (view_recordings allows STUDENT)", async () => {
+  it("enrolled student can list (section matches)", async () => {
     mockStudent()
+    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+      sectionId: "sec-1",
+    } as never)
+    vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
     vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
     const result = await listRecordings("lcs-1")
     expect("success" in result && result.success).toBe(true)
+  })
+
+  it("student NOT enrolled in the section is DENIED (P0 cross-section leak)", async () => {
+    mockStudent()
+    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+      sectionId: "other-section",
+    } as never)
+    vi.mocked(db.student.findFirst).mockResolvedValue(null as never) // not enrolled
+    const result = await listRecordings("lcs-1")
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result) expect(result.error).toBe("UNAUTHORIZED")
+    // Must short-circuit before reading any recordings.
+    expect(db.liveClassRecording.findMany).not.toHaveBeenCalled()
   })
 })
 
@@ -94,6 +123,7 @@ describe("getRecordingUrl", () => {
       s3Key: "k",
       s3Region: "me-central-1",
       mimeType: "video/mp4",
+      session: { sectionId: "sec-1" },
     } as never)
     const result = await getRecordingUrl("rec-1")
     expect("success" in result && result.success).toBe(true)
@@ -116,6 +146,22 @@ describe("getRecordingUrl", () => {
     mockAdmin()
     vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue(null as never)
     const result = await getRecordingUrl("missing")
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_RECORDING_NOT_FOUND")
+  })
+
+  it("student NOT enrolled in the recording's section is DENIED (P0)", async () => {
+    mockStudent()
+    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue({
+      s3Bucket: "b",
+      s3Key: "k",
+      s3Region: "me-central-1",
+      mimeType: "video/mp4",
+      session: { sectionId: "other-section" },
+    } as never)
+    vi.mocked(db.student.findFirst).mockResolvedValue(null as never) // not enrolled
+    const result = await getRecordingUrl("rec-1")
     expect("success" in result && result.success).toBe(false)
     if ("error" in result)
       expect(result.error).toBe("LIVE_CLASS_RECORDING_NOT_FOUND")

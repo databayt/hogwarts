@@ -77,14 +77,16 @@ export async function handleWebhookEvent(
   })
   if (!session) return false
 
-  // Idempotency: skip if we've seen this event id before.
-  if (event.id) {
-    const existing = await db.liveClassEvent.findUnique({
-      where: { eventId: event.id },
-      select: { id: true },
-    })
-    if (existing) return false
-  }
+  // Idempotency: every event must carry an id we can dedupe on. Without one,
+  // replay protection is impossible (Postgres allows multiple NULLs in a UNIQUE
+  // column), so we'd re-fire non-idempotent notifications on every redelivery.
+  // Drop id-less events (non-spec per the SDK type) rather than reprocess them.
+  if (!event.id) return false
+  const existing = await db.liveClassEvent.findUnique({
+    where: { eventId: event.id },
+    select: { id: true },
+  })
+  if (existing) return false
 
   await db.liveClassEvent.create({
     data: {
@@ -93,7 +95,7 @@ export async function handleWebhookEvent(
       eventType: event.event ?? "unknown",
       actorUserId: event.participant?.identity ?? null,
       payload: truncatePayload(event) as unknown as Prisma.InputJsonValue,
-      eventId: event.id ?? null,
+      eventId: event.id,
     },
   })
 
@@ -216,19 +218,23 @@ export async function handleWebhookEvent(
                 )
               )
             : null
+        // Only mark "ready" when egress actually produced an object key —
+        // otherwise getRecordingUrl would sign a URL against an empty s3Key.
+        // No file → keep prior status (processing) + record metadata only.
+        const hasFile = filename.length > 0
         await db.liveClassRecording.updateMany({
           where: { egressId },
           data: {
-            status: "ready",
+            ...(hasFile ? { status: "ready", s3Key: filename, expiresAt } : {}),
             completedAt: new Date(),
-            s3Key: filename || undefined,
             fileSizeBytes: size ? BigInt(size) : null,
             durationSeconds: duration,
-            expiresAt,
           },
         })
-        // Notify host + enrolled students/guardians that the recording is viewable.
-        void notifyClassRecordingReady(schoolId, sessionId)
+        // Only announce a playable recording when one actually exists.
+        if (hasFile) {
+          void notifyClassRecordingReady(schoolId, sessionId)
+        }
       }
       break
     }

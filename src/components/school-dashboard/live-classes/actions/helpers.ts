@@ -5,11 +5,54 @@ import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   checkLiveClassPermission,
   type LiveClassAction,
 } from "@/components/school-dashboard/live-classes/authorization"
+
+const SESSION_STAFF_ROLES: UserRole[] = [
+  "DEVELOPER",
+  "ADMIN",
+  "STAFF",
+  "TEACHER",
+]
+
+/**
+ * Enrollment-level access to a live-class session (and its recordings),
+ * on top of the role-level `view_recordings` permission. Staff may view
+ * school-wide; a STUDENT/GUARDIAN may only access a session whose section
+ * they (or their ward) are enrolled in. Mirrors resolveParticipantRole in
+ * actions/tokens.ts. Without this, any student could pull another section's
+ * recording within the same school.
+ */
+export async function canAccessSession(
+  ctx: { userId: string; role: UserRole; schoolId: string },
+  sectionId: string | null
+): Promise<boolean> {
+  if (SESSION_STAFF_ROLES.includes(ctx.role)) return true
+  if (!sectionId) return false
+  if (ctx.role === "STUDENT") {
+    const student = await db.student.findFirst({
+      where: { schoolId: ctx.schoolId, userId: ctx.userId, sectionId },
+      select: { id: true },
+    })
+    return Boolean(student)
+  }
+  if (ctx.role === "GUARDIAN") {
+    const guardian = await db.guardian.findFirst({
+      where: {
+        schoolId: ctx.schoolId,
+        userId: ctx.userId,
+        studentGuardians: { some: { student: { sectionId } } },
+      },
+      select: { id: true },
+    })
+    return Boolean(guardian)
+  }
+  return false
+}
 
 export type RequireContextResult =
   | {

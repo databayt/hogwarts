@@ -28,8 +28,12 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
   schools and the webhook handler recovers `schoolId` from the room name
   alone via `parseRoomName()` (`src/lib/livekit/room-naming.ts`).
 - **Token TTL is 5 minutes** with client-side refresh ~60s before expiry
-  (see `room/room-client.tsx`). Refresh re-runs the eligibility check so
-  revoked access takes effect immediately.
+  (see `room/room-client.tsx`). Refresh re-runs the eligibility check, so
+  revoked access takes effect at the **next refresh boundary** — revocation
+  latency = TTL (≤5 min), NOT instant. LiveKit JWTs are stateless; there is
+  no server-side invalidation of an already-issued token (no `removeParticipant`
+  is wired to access-revoke). `tokenIssuedAt` is reserved for future instant
+  revocation but is not yet read.
 - **Role → LiveKit grants** mapping is in `src/lib/livekit/token.ts`:
   HOST = full + roomAdmin, CO_HOST = publish + subscribe, PARTICIPANT
   = publish + subscribe, OBSERVER = subscribe only.

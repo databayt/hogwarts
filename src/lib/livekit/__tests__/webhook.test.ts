@@ -254,7 +254,7 @@ describe("handleWebhookEvent — egress / recording", () => {
     )
   })
 
-  it("egress_ended with no fileResults → still flips to ready (just no s3Key update)", async () => {
+  it("egress_ended with no fileResults → does NOT flip to ready (would sign an empty s3Key)", async () => {
     const ok = await handleWebhookEvent(
       evt({
         event: "egress_ended",
@@ -263,7 +263,15 @@ describe("handleWebhookEvent — egress / recording", () => {
     )
     expect(ok).toBe(true)
     const call = vi.mocked(db.liveClassRecording.updateMany).mock.calls[0]?.[0]
-    expect((call as { data: { status: string } }).data.status).toBe("ready")
+    const data = (call as { data: Record<string, unknown> }).data
+    // No file → status/s3Key/expiresAt are NOT written (left processing);
+    // only metadata is recorded. Prevents a "ready" row with an empty key.
+    expect(data.status).toBeUndefined()
+    expect(data.s3Key).toBeUndefined()
+    expect(data.expiresAt).toBeUndefined()
+    expect(data.completedAt).toEqual(expect.any(Date))
+    // And no "recording is ready" notification fires.
+    expect(notifyClassRecordingReady).not.toHaveBeenCalled()
   })
 })
 

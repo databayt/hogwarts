@@ -36,6 +36,20 @@ export const env = createEnv({
     COMPLIANCE_ENCRYPTION_KEY: z.string().min(1).optional(),
     ADEK_WEBHOOK_SECRET: z.string().min(1).optional(),
 
+    // LiveKit video conferencing (Epic 03). Optional so dev/build works without
+    // a provisioned SFU; the UAE-region SFU + S3 egress creds land at deploy.
+    // API_KEY/SECRET sign join JWTs + verify webhooks; WS_URL is handed to the
+    // client via the join ticket. S3_* are the SFU's egress-write creds (the
+    // app reads recordings with AWS_ACCESS_KEY_ID/SECRET — keep them separate).
+    LIVEKIT_HOST: z.string().min(1).optional(),
+    LIVEKIT_WS_URL: z.string().min(1).optional(),
+    LIVEKIT_API_KEY: z.string().min(1).optional(),
+    LIVEKIT_API_SECRET: z.string().min(1).optional(),
+    LIVEKIT_RECORDING_BUCKET: z.string().min(1).optional(),
+    LIVEKIT_RECORDING_REGION: z.string().min(1).optional(),
+    LIVEKIT_S3_ACCESS_KEY: z.string().min(1).optional(),
+    LIVEKIT_S3_SECRET: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -179,6 +193,14 @@ export const env = createEnv({
     CRON_SECRET: process.env.CRON_SECRET,
     COMPLIANCE_ENCRYPTION_KEY: process.env.COMPLIANCE_ENCRYPTION_KEY,
     ADEK_WEBHOOK_SECRET: process.env.ADEK_WEBHOOK_SECRET,
+    LIVEKIT_HOST: process.env.LIVEKIT_HOST,
+    LIVEKIT_WS_URL: process.env.LIVEKIT_WS_URL,
+    LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY,
+    LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET,
+    LIVEKIT_RECORDING_BUCKET: process.env.LIVEKIT_RECORDING_BUCKET,
+    LIVEKIT_RECORDING_REGION: process.env.LIVEKIT_RECORDING_REGION,
+    LIVEKIT_S3_ACCESS_KEY: process.env.LIVEKIT_S3_ACCESS_KEY,
+    LIVEKIT_S3_SECRET: process.env.LIVEKIT_S3_SECRET,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:
