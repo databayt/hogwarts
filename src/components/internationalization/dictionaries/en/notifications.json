@@ -15,8 +15,7 @@
       "inApp": "In-app",
       "email": "Email",
       "push": "Push",
-      "sms": "SMS",
-      "whatsapp": "WhatsApp"
+      "sms": "SMS"
     },
     "channelSettings": "Channel Settings",
     "deliveryMethods": "Delivery Methods",
@@ -115,13 +114,7 @@
     "report_ready": "Report ready",
     "absence_intention": "Absence intention submitted",
     "absence_intention_decision": "Absence intention reviewed",
-    "absence_unreported_followup": "Unreported absence — guardian follow-up",
-    "setup_guide": "Setup guide",
-    "live_class_scheduled": "Live class scheduled",
-    "live_class_starting_soon": "Live class starting soon",
-    "live_class_started": "Live class is now live",
-    "live_class_cancelled": "Live class cancelled",
-    "live_class_recording_ready": "Recording ready"
+    "setup_guide": "Setup guide"
   },
   "priorities": {
     "low": "Low priority",

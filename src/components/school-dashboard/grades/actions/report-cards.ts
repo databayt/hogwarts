@@ -9,8 +9,6 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { sendBatchGradeNotifications } from "./notifications"
-
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -389,23 +387,6 @@ export async function publishReportCards(input: {
     })
 
     revalidatePath("/grades/reports")
-    // Parent surface — both legacy /s/[subdomain] internal path and the
-    // client-facing /parent/children/[id]/report-cards path. We don't
-    // know the specific child IDs here, so we invalidate the listing
-    // (which is the common entry point).
-    revalidatePath("/parent")
-
-    // Fire-and-forget notification dispatch. If it errors (template
-    // missing, transient DB hiccup) the publish itself still succeeds —
-    // notifications are explicitly best-effort. Errors are logged inside
-    // sendBatchGradeNotifications.
-    if (result.count > 0) {
-      void sendBatchGradeNotifications({
-        type: "report_ready",
-        termId: input.termId,
-        gradeId: input.gradeId,
-      })
-    }
 
     return { success: true, data: { published: result.count } }
   } catch (error) {

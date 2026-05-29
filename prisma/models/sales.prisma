@@ -150,17 +150,17 @@ model Prospect {
   schoolId String @default("platform") // sentinel; not a FK to School
 
   // Identity
-  name            String
-  country         String
-  city            String?
-  address         String?
-  phone           String?
-  email           String?
+  name          String
+  country       String
+  city          String?
+  address       String?
+  phone         String?
+  email         String?
   emailConfidence Int? // 0-100, from enrichment
-  website         String?
+  website       String?
 
   // People
-  principalName     String?
+  principalName    String?
   decisionMakerRole String? // owner | principal | adminDirector
 
   // Social
@@ -185,10 +185,10 @@ model Prospect {
   // Scoring + lifecycle
   enrichmentScore Int? // 0-100 (see scoring formula in sales plan)
   tierLikelihood  Int?
-  pitchHook       String?  @db.Text
+  pitchHook       String? @db.Text
   source          String // gmaps | moe_saudi | daleel | wikipedia | conference | website | manual
   sourceQuery     String?
-  status          String   @default("new") // new | enriched | queued | contacted | replied | promoted | dead
+  status          String  @default("new") // new | enriched | queued | contacted | replied | promoted | dead
   tags            String[] @default([])
   notes           String?  @db.Text
 
@@ -196,15 +196,15 @@ model Prospect {
   promotedLeadId String? @unique
 
   // Outreach tracking
-  lastTouchAt       DateTime?
-  lastTouchNumber   Int? // 1..5 in the email cadence
-  linkedinTouchedAt DateTime?
-  whatsappTouchedAt DateTime?
+  lastTouchAt        DateTime?
+  lastTouchNumber    Int? // 1..5 in the email cadence
+  linkedinTouchedAt  DateTime?
+  whatsappTouchedAt  DateTime?
 
   // Metadata
-  scrapedAt  DateTime  @default(now())
-  enrichedAt DateTime?
-  updatedAt  DateTime  @updatedAt
+  scrapedAt   DateTime  @default(now())
+  enrichedAt  DateTime?
+  updatedAt   DateTime  @updatedAt
 
   @@index([country, status])
   @@index([enrichmentScore])

@@ -85,10 +85,10 @@ export default function ViewInvoiceModalContent({
                 <td className="py-2">{item.item_name}</td>
                 <td className="py-2 text-end">{item.quantity}</td>
                 <td className="py-2 text-end">
-                  {formatCurrency(item.price, lang, invoice.currency || "USD")}
+                  {formatCurrency(item.price, lang)}
                 </td>
                 <td className="py-2 text-end">
-                  {formatCurrency(itemTotal, lang, invoice.currency || "USD")}
+                  {formatCurrency(itemTotal, lang)}
                 </td>
               </tr>
             )
@@ -101,14 +101,7 @@ export default function ViewInvoiceModalContent({
           {invoice.discount != null && Number(invoice.discount) > 0 && (
             <div className="flex justify-between py-1 text-sm">
               <span>{iv?.discount || "Discount"}</span>
-              <span>
-                -
-                {formatCurrency(
-                  Number(invoice.discount),
-                  lang,
-                  invoice.currency || "USD"
-                )}
-              </span>
+              <span>-{formatCurrency(Number(invoice.discount), lang)}</span>
             </div>
           )}
           {invoice.tax_percentage != null &&
@@ -122,8 +115,7 @@ export default function ViewInvoiceModalContent({
                     (Number(invoice.sub_total) *
                       Number(invoice.tax_percentage)) /
                       100,
-                    lang,
-                    invoice.currency || "USD"
+                    lang
                   )}
                 </span>
               </div>
@@ -131,11 +123,7 @@ export default function ViewInvoiceModalContent({
           <div className="flex justify-between border-t py-2">
             <span className="font-medium">{iv?.total || "Total"}</span>
             <span className="font-bold">
-              {formatCurrency(
-                Number(invoice.total),
-                lang,
-                invoice.currency || "USD"
-              )}
+              {formatCurrency(Number(invoice.total), lang)}
             </span>
           </div>
         </div>

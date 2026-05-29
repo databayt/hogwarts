@@ -10,7 +10,6 @@ import { db } from "@/lib/db"
 import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 import {
   createLeadSchema,
-  leadActivitySchema,
   leadFilterSchema,
   updateLeadSchema,
 } from "@/components/sales/validation"
@@ -89,8 +88,6 @@ export async function createOperatorLead(
         verified: validated.verified ?? false,
         notes: validated.notes || null,
         tags: validated.tags || [],
-        lastContactedAt: validated.lastContactedAt ?? null,
-        nextFollowUpAt: validated.nextFollowUpAt ?? null,
       },
     })
 
@@ -179,15 +176,6 @@ export async function updateOperatorLead(
           notes: validated.notes || null,
         }),
         ...(validated.tags && { tags: validated.tags }),
-        ...(validated.country !== undefined && {
-          country: validated.country || null,
-        }),
-        ...(validated.lastContactedAt !== undefined && {
-          lastContactedAt: validated.lastContactedAt,
-        }),
-        ...(validated.nextFollowUpAt !== undefined && {
-          nextFollowUpAt: validated.nextFollowUpAt,
-        }),
       },
     })
 
@@ -263,14 +251,11 @@ export async function getOperatorLeads(
       phone: string | null
       company: string | null
       title: string | null
-      country: string | null
-      tags: string[]
       status: LeadStatus
       source: LeadSource
       priority: LeadPriority
       score: number
       verified: boolean
-      nextFollowUpAt: Date | null
       createdAt: Date
       updatedAt: Date
     }>
@@ -300,21 +285,8 @@ export async function getOperatorLeads(
     if (filters?.source) where.source = filters.source
     if (filters?.priority) where.priority = filters.priority
     if (filters?.leadType) where.leadType = filters.leadType
-    if (filters?.country) where.country = filters.country
+    if (filters?.tags?.length) where.tags = { hasSome: filters.tags }
     if (filters?.verified !== undefined) where.verified = filters.verified
-
-    // Combine tier (derived from `tags`) with any explicit tag filter so we
-    // don't shadow one with the other.
-    const tagFilters: string[] = []
-    if (filters?.tags?.length) tagFilters.push(...filters.tags)
-    if (filters?.tier) tagFilters.push(`tier-${filters.tier.toLowerCase()}`)
-    if (tagFilters.length) where.tags = { hasSome: tagFilters }
-
-    if (filters?.dueBefore) {
-      // Overdue = "due strictly before this moment AND not null". We treat
-      // `null` follow-ups as "no commitment yet" — they don't match the filter.
-      where.nextFollowUpAt = { lte: filters.dueBefore, not: null }
-    }
 
     // Get total count
     const total = await db.lead.count({ where })
@@ -329,14 +301,11 @@ export async function getOperatorLeads(
         phone: true,
         company: true,
         title: true,
-        country: true,
-        tags: true,
         status: true,
         source: true,
         priority: true,
         score: true,
         verified: true,
-        nextFollowUpAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -364,39 +333,33 @@ export async function getOperatorLeads(
   }
 }
 
-export type OperatorLeadDetail = {
-  id: string
-  name: string
-  email: string | null
-  phone: string | null
-  alternatePhone: string | null
-  company: string | null
-  title: string | null
-  website: string | null
-  linkedinUrl: string | null
-  leadType: LeadType
-  industry: string | null
-  location: string | null
-  country: string | null
-  status: LeadStatus
-  source: LeadSource
-  priority: LeadPriority
-  score: number
-  verified: boolean
-  notes: string | null
-  tags: string[]
-  lastContactedAt: Date | null
-  nextFollowUpAt: Date | null
-  createdAt: Date
-  updatedAt: Date
-}
-
 /**
  * Get a single school-dashboard-level lead by ID
  */
-export async function getOperatorLeadById(
-  id: string
-): Promise<ActionResponse<OperatorLeadDetail | null>> {
+export async function getOperatorLeadById(id: string): Promise<
+  ActionResponse<{
+    id: string
+    name: string
+    email: string | null
+    phone: string | null
+    company: string | null
+    title: string | null
+    website: string | null
+    linkedinUrl: string | null
+    leadType: LeadType
+    industry: string | null
+    location: string | null
+    status: LeadStatus
+    source: LeadSource
+    priority: LeadPriority
+    score: number
+    verified: boolean
+    notes: string | null
+    tags: string[]
+    createdAt: Date
+    updatedAt: Date
+  } | null>
+> {
   try {
     await requireOperator()
 
@@ -415,7 +378,6 @@ export async function getOperatorLeadById(
         name: lead.name,
         email: lead.email,
         phone: lead.phone,
-        alternatePhone: lead.alternatePhone,
         company: lead.company,
         title: lead.title,
         website: lead.website,
@@ -423,7 +385,6 @@ export async function getOperatorLeadById(
         leadType: lead.leadType,
         industry: lead.industry,
         location: lead.location,
-        country: lead.country,
         status: lead.status,
         source: lead.source,
         priority: lead.priority,
@@ -431,8 +392,6 @@ export async function getOperatorLeadById(
         verified: lead.verified,
         notes: lead.notes,
         tags: lead.tags,
-        lastContactedAt: lead.lastContactedAt,
-        nextFollowUpAt: lead.nextFollowUpAt,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
       },
@@ -442,153 +401,6 @@ export async function getOperatorLeadById(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch lead",
-    }
-  }
-}
-
-// ============================================================================
-// Activity Tracking (platform pipeline)
-// ============================================================================
-
-export type OperatorLeadActivity = {
-  id: string
-  leadId: string
-  type: string
-  description: string
-  createdAt: Date
-  createdBy: {
-    id: string
-    username: string | null
-    email: string | null
-  } | null
-}
-
-/**
- * Log an activity (touch) on a platform lead. Mirrors `addLeadActivity` on the
- * school side but writes under `schoolId="platform"` and uses operator auth.
- */
-export async function logOperatorActivity(
-  leadId: string,
-  input: { type: string; description: string; nextFollowUpAt?: Date | null }
-): Promise<ActionResponse<{ id: string }>> {
-  try {
-    const { userId } = await requireOperator()
-    const validated = leadActivitySchema.parse({
-      leadId,
-      type: input.type,
-      description: input.description,
-    })
-
-    const lead = await db.lead.findFirst({
-      where: { id: leadId, schoolId: PLATFORM_SCHOOL_ID },
-      select: { id: true },
-    })
-    if (!lead) {
-      return { success: false, error: "Lead not found" }
-    }
-
-    const activity = await db.leadActivity.create({
-      data: {
-        schoolId: PLATFORM_SCHOOL_ID,
-        leadId,
-        type: validated.type,
-        description: validated.description,
-        createdById: userId,
-      },
-    })
-
-    // Bump `lastContactedAt` for contact-type activities so the cadence stays
-    // honest; also accept a `nextFollowUpAt` bump from the same submission.
-    const leadUpdates: Record<string, Date | null> = {}
-    if (["email_sent", "call", "meeting"].includes(validated.type)) {
-      leadUpdates.lastContactedAt = new Date()
-    }
-    if (input.nextFollowUpAt !== undefined) {
-      leadUpdates.nextFollowUpAt = input.nextFollowUpAt
-    }
-    if (Object.keys(leadUpdates).length) {
-      await db.lead.update({ where: { id: leadId }, data: leadUpdates })
-    }
-
-    revalidatePath(`${SALES_PATH}/${leadId}`)
-    revalidatePath(SALES_PATH)
-
-    return { success: true, data: { id: activity.id } }
-  } catch (error) {
-    console.error("[logOperatorActivity] Error:", error)
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      }
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to log activity",
-    }
-  }
-}
-
-/**
- * Fetch activities for a platform lead, newest first.
- */
-export async function getOperatorLeadActivities(
-  leadId: string
-): Promise<ActionResponse<OperatorLeadActivity[]>> {
-  try {
-    await requireOperator()
-
-    // Confirm the lead is platform-scoped before joining activities so we
-    // can't accidentally surface activity from a real school under this route.
-    const lead = await db.lead.findFirst({
-      where: { id: leadId, schoolId: PLATFORM_SCHOOL_ID },
-      select: { id: true },
-    })
-    if (!lead) {
-      return { success: true, data: [] }
-    }
-
-    const activities = await db.leadActivity.findMany({
-      where: { leadId, schoolId: PLATFORM_SCHOOL_ID },
-      orderBy: { createdAt: "desc" },
-      // Using top-level `select` (instead of `include` + nested `select`) so
-      // tsc reliably narrows the result; with `include` we observed it
-      // falling back to the bare scalar type. User has no top-level `name`
-      // field in this schema — use `username` + `email`.
-      select: {
-        id: true,
-        leadId: true,
-        type: true,
-        description: true,
-        createdAt: true,
-        createdBy: { select: { id: true, username: true, email: true } },
-      },
-      take: 100,
-    })
-
-    return {
-      success: true,
-      data: activities.map((a) => ({
-        id: a.id,
-        leadId: a.leadId,
-        type: a.type,
-        description: a.description,
-        createdAt: a.createdAt,
-        createdBy: a.createdBy
-          ? {
-              id: a.createdBy.id,
-              username: a.createdBy.username,
-              email: a.createdBy.email,
-            }
-          : null,
-      })),
-    }
-  } catch (error) {
-    console.error("[getOperatorLeadActivities] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch activities",
     }
   }
 }

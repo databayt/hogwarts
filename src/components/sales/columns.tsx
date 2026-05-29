@@ -2,9 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
-import { Building2, CalendarClock, Mail, Star } from "lucide-react"
+import { Building2, Mail, Phone, Star } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -38,44 +37,16 @@ export type LeadRow = {
   phone?: string | null
   company?: string | null
   title?: string | null
-  country?: string | null
-  tags?: string[]
   status: LeadStatusKey
   source: string
   priority: LeadPriorityKey
   score: number
   verified: boolean
-  nextFollowUpAt?: string | null
   createdAt: string
 }
 
-type LeadDeleteAction = (
-  id: string
-) => Promise<
-  { success: true; data?: unknown } | { success: false; error: string }
->
-
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
-  /**
-   * Override delete action. Defaults to the school-scoped `deleteLead` so the
-   * school sales table keeps working with no caller change. The operator sales
-   * console passes `deleteOperatorLead` so platform leads (schoolId="platform")
-   * are deleted with the right tenant scope — calling the school action there
-   * throws "Missing school context" because DEVELOPER has no schoolId.
-   */
-  deleteAction?: LeadDeleteAction
-  /**
-   * Route the "View" action menu item to a custom path (e.g. `/sales/${id}` on
-   * the operator side). When absent we fall back to the school-table behavior.
-   */
-  viewHref?: (id: string) => string
-  /**
-   * When set, "Edit" navigates to a route instead of opening a modal. Operator
-   * console passes `(id) => /${lang}/sales/${id}`; school-side leaves it
-   * undefined to keep its modal flow.
-   */
-  editHref?: (id: string) => string
 }
 
 // Score badge color based on value
@@ -89,63 +60,40 @@ function getScoreColor(score: number): string {
   return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
 }
 
-// Derive A/B/C tier from tags written by prisma/seeds/sales-network.ts.
-function deriveTier(tags?: string[] | null): "A" | "B" | "C" | null {
-  if (!tags) return null
-  const found = tags.find((t) => /^tier-[abc]$/i.test(t))
-  if (!found) return null
-  return found.split("-")[1].toUpperCase() as "A" | "B" | "C"
-}
-
-function tierBadgeClass(tier: "A" | "B" | "C"): string {
-  switch (tier) {
-    case "A":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300"
-    case "B":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-    case "C":
-      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-  }
-}
-
 export const getLeadColumns = (
   dictionary?: Dictionary["sales"],
   lang?: Locale,
   options?: ColumnOptions
 ): ColumnDef<LeadRow>[] => {
   const isRTL = lang === "ar"
-  const localeTag = isRTL ? "ar-SA" : "en-US"
 
   const t = {
-    name: dictionary?.table?.name ?? "Name",
-    email: dictionary?.table?.email ?? "Email",
-    company: dictionary?.table?.company ?? "Company",
-    status: dictionary?.table?.status ?? "Status",
-    priority: dictionary?.table?.priority ?? "Priority",
-    score: dictionary?.table?.score ?? "Score",
-    source: dictionary?.table?.source ?? "Source",
-    created: dictionary?.table?.created ?? "Created",
-    tier: dictionary?.table?.tier ?? "Tier",
-    country: dictionary?.table?.country ?? "Country",
-    nextFollowUp: dictionary?.table?.nextFollowUp ?? "Follow-up",
-    actions: dictionary?.actions ?? "Actions",
-    view: dictionary?.view ?? "View",
-    edit: dictionary?.edit ?? "Edit",
-    delete: dictionary?.delete ?? "Delete",
+    name: dictionary?.table?.name || "Name",
+    email: dictionary?.table?.email || "Email",
+    company: dictionary?.table?.company || "Company",
+    status: dictionary?.table?.status || "Status",
+    priority: dictionary?.table?.priority || "Priority",
+    score: dictionary?.table?.score || "Score",
+    source: dictionary?.table?.source || "Source",
+    created: dictionary?.table?.created || "Created",
+    actions: dictionary?.actions || "Actions",
+    view: dictionary?.view || "View",
+    edit: dictionary?.edit || "Edit",
+    delete: dictionary?.delete || "Delete",
     // Status translations
-    NEW: dictionary?.status?.NEW ?? "New",
-    CONTACTED: dictionary?.status?.CONTACTED ?? "Contacted",
-    QUALIFIED: dictionary?.status?.QUALIFIED ?? "Qualified",
-    PROPOSAL: dictionary?.status?.PROPOSAL ?? "Proposal",
-    NEGOTIATION: dictionary?.status?.NEGOTIATION ?? "Negotiation",
-    CLOSED_WON: dictionary?.status?.CLOSED_WON ?? "Closed Won",
-    CLOSED_LOST: dictionary?.status?.CLOSED_LOST ?? "Closed Lost",
-    ARCHIVED: dictionary?.status?.ARCHIVED ?? "Archived",
+    NEW: dictionary?.status?.NEW || "New",
+    CONTACTED: dictionary?.status?.CONTACTED || "Contacted",
+    QUALIFIED: dictionary?.status?.QUALIFIED || "Qualified",
+    PROPOSAL: dictionary?.status?.PROPOSAL || "Proposal",
+    NEGOTIATION: dictionary?.status?.NEGOTIATION || "Negotiation",
+    CLOSED_WON: dictionary?.status?.CLOSED_WON || "Closed Won",
+    CLOSED_LOST: dictionary?.status?.CLOSED_LOST || "Closed Lost",
+    ARCHIVED: dictionary?.status?.ARCHIVED || "Archived",
     // Priority translations
-    LOW: dictionary?.priority?.LOW ?? "Low",
-    MEDIUM: dictionary?.priority?.MEDIUM ?? "Medium",
-    HIGH: dictionary?.priority?.HIGH ?? "High",
-    URGENT: dictionary?.priority?.URGENT ?? "Urgent",
+    LOW: dictionary?.priority?.LOW || "Low",
+    MEDIUM: dictionary?.priority?.MEDIUM || "Medium",
+    HIGH: dictionary?.priority?.HIGH || "High",
+    URGENT: dictionary?.priority?.URGENT || "Urgent",
   }
 
   return [
@@ -208,49 +156,6 @@ export const getLeadColumns = (
         )
       },
       meta: { label: t.email, variant: "text" },
-    },
-    {
-      accessorKey: "country",
-      id: "country",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.country} />
-      ),
-      cell: ({ row }) => {
-        const country = row.original.country
-        if (!country) return <span className="text-muted-foreground">-</span>
-        const label =
-          dictionary?.country?.[
-            country as keyof NonNullable<typeof dictionary.country>
-          ] ?? country
-        return (
-          <Badge variant="outline" className="text-xs">
-            {label}
-          </Badge>
-        )
-      },
-      meta: { label: t.country, variant: "text" },
-    },
-    {
-      id: "tier",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.tier} />
-      ),
-      cell: ({ row }) => {
-        const tier = deriveTier(row.original.tags)
-        if (!tier)
-          return (
-            <span className="text-muted-foreground">
-              {dictionary?.tier?.none ?? "—"}
-            </span>
-          )
-        return (
-          <Badge className={cn("text-xs", tierBadgeClass(tier))}>
-            {dictionary?.tier?.[tier] ?? tier}
-          </Badge>
-        )
-      },
-      enableSorting: false,
-      meta: { label: t.tier, variant: "text" },
     },
     {
       accessorKey: "status",
@@ -323,31 +228,6 @@ export const getLeadColumns = (
       meta: { label: t.score, variant: "text" },
     },
     {
-      id: "nextFollowUpAt",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.nextFollowUp} />
-      ),
-      cell: ({ row }) => {
-        const raw = row.original.nextFollowUpAt
-        if (!raw) return <span className="text-muted-foreground">-</span>
-        const date = new Date(raw)
-        const overdue = date.getTime() < Date.now()
-        return (
-          <div
-            className={cn(
-              "flex items-center gap-1.5 text-xs tabular-nums",
-              overdue ? "text-destructive font-medium" : "text-muted-foreground"
-            )}
-          >
-            <CalendarClock className="h-3.5 w-3.5" />
-            {date.toLocaleDateString(localeTag)}
-          </div>
-        )
-      },
-      enableSorting: false,
-      meta: { label: t.nextFollowUp, variant: "text" },
-    },
-    {
       accessorKey: "createdAt",
       id: "createdAt",
       header: ({ column }) => (
@@ -355,7 +235,9 @@ export const getLeadColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(localeTag)}
+          {new Date(getValue<string>()).toLocaleDateString(
+            isRTL ? "ar-SA" : "en-US"
+          )}
         </span>
       ),
       meta: { label: t.created, variant: "text" },
@@ -365,55 +247,37 @@ export const getLeadColumns = (
       header: () => <span className="sr-only">{t.actions}</span>,
       cell: ({ row }) => {
         const lead = row.original
-        // Hooks inside cell are fine because TanStack renders `cell` as a React
-        // component. Keeping useModal/useRouter co-located with the menu so a
-        // single `getLeadColumns(...)` call wires both school + operator tables.
         const { openModal } = useModal()
-        const router = useRouter()
-        const deleter = options?.deleteAction ?? deleteLead
 
         const onView = () => {
-          if (options?.viewHref) {
-            router.push(options.viewHref(lead.id))
-            return
-          }
-          // Fall-through: preserve the school-table behavior that lives in the
-          // tenant subdomain — full reload keeps the search string but isn't
-          // needed once detail routes exist on every side.
-          if (typeof window !== "undefined") {
-            const qs = window.location.search || ""
-            window.location.href = `/sales/${lead.id}${qs}`
-          }
+          // Navigate to lead detail page
+          const qs =
+            typeof window !== "undefined" ? window.location.search || "" : ""
+          window.location.href = `/sales/${lead.id}${qs}`
         }
 
-        const onEdit = () => {
-          if (options?.editHref) {
-            router.push(options.editHref(lead.id))
-          } else {
-            openModal(lead.id)
-          }
-        }
+        const onEdit = () => openModal(lead.id)
 
         const onDelete = async () => {
           try {
             const deleteMsg = (
-              dictionary?.deleteConfirm ?? "Delete {name}?"
+              dictionary?.deleteConfirm || "Delete {name}?"
             ).replace("{name}", lead.name)
             const ok = await confirmDeleteDialog(deleteMsg)
             if (!ok) return
 
-            const result = await deleter(lead.id)
+            const result = await deleteLead(lead.id)
             if (result.success) {
               DeleteToast()
               options?.onDeleteSuccess?.(lead.id)
             } else {
-              ErrorToast(dictionary?.deleteFailed ?? "Failed to delete lead")
+              ErrorToast(dictionary?.deleteFailed || "Failed to delete lead")
             }
           } catch (e) {
             ErrorToast(
               e instanceof Error
                 ? e.message
-                : (dictionary?.deleteFailedGeneric ?? "Failed to delete")
+                : dictionary?.deleteFailedGeneric || "Failed to delete"
             )
           }
         }

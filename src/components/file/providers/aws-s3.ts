@@ -8,13 +8,11 @@
 
 import {
   DeleteObjectCommand,
-  GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
-import { getSignedUrl as awsGetSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 import { toCloudFrontUrl } from "@/lib/cloudfront-url"
 
@@ -173,37 +171,6 @@ export class AWSS3Provider extends BaseStorageProvider {
       console.error("[AWSS3Provider] GetMetadata error:", error)
       return null
     }
-  }
-
-  /**
-   * Issue a presigned GET URL with a TTL (default 15 minutes).
-   *
-   * Works for both private and public objects — for public files the
-   * signature params are redundant but harmless. The signed URL is what
-   * we hand out to parents instead of the raw `pdfUrl` so the link
-   * expires and isn't enumerable from email forwards / screenshots.
-   *
-   * Accepts either an S3 URL, a CloudFront URL, or a bare key.
-   */
-  async getSignedUrl(
-    urlOrPath: string,
-    expiresIn: number = 900
-  ): Promise<string> {
-    const client = getS3Client()
-    const bucket = getBucketName()
-    const key = this.extractKeyFromUrl(urlOrPath)
-
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    })
-
-    // The presigner is typed against a generic AWS SDK client that
-    // doesn't unify cleanly with our S3Client + GetObjectCommand pair
-    // across minor SDK versions. Cast through unknown is the workaround
-    // the AWS examples themselves use; runtime contract is unchanged.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return awsGetSignedUrl(client as any, command as any, { expiresIn })
   }
 
   private extractKeyFromUrl(urlOrPath: string): string {

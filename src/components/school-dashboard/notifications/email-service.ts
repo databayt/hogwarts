@@ -96,11 +96,6 @@ function generateNotificationEmailHtml(
       absence_intention: "نية الغياب",
       absence_intention_decision: "مراجعة نية الغياب",
       setup_guide: "دليل الإعداد",
-      live_class_scheduled: "تم جدولة فصل مباشر",
-      live_class_starting_soon: "فصل مباشر يبدأ قريباً",
-      live_class_started: "الفصل المباشر يبث الآن",
-      live_class_cancelled: "تم إلغاء الفصل المباشر",
-      live_class_recording_ready: "تسجيل الفصل جاهز",
     },
     en: {
       message: "New Message",
@@ -127,11 +122,6 @@ function generateNotificationEmailHtml(
       absence_intention: "Absence Intention",
       absence_intention_decision: "Absence Decision",
       setup_guide: "Setup Guide",
-      live_class_scheduled: "Live Class Scheduled",
-      live_class_starting_soon: "Live Class Starting Soon",
-      live_class_started: "Live Class Live",
-      live_class_cancelled: "Live Class Cancelled",
-      live_class_recording_ready: "Recording Ready",
     },
   }
   const typeLabel =

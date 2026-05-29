@@ -49,8 +49,7 @@ const COVERAGE_TYPE_COLORS: Record<string, string> = {
 export const getScholarshipColumns = (
   lang?: string,
   col?: Record<string, string>,
-  callbacks?: { onDelete?: (row: ScholarshipRow) => void },
-  currency: string = "USD"
+  callbacks?: { onDelete?: (row: ScholarshipRow) => void }
 ): ColumnDef<ScholarshipRow>[] => {
   return [
     {
@@ -113,11 +112,7 @@ export const getScholarshipColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          {formatCurrency(
-            getValue<number>(),
-            (lang || "en") as Locale,
-            currency
-          )}
+          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
         </span>
       ),
       meta: {

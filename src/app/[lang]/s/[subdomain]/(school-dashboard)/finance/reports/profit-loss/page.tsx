@@ -35,16 +35,9 @@ export default async function ProfitLossPage({ params }: Props) {
     )
   }
 
-  const [fiscalYear, schoolForCurrency] = await Promise.all([
-    db.fiscalYear.findFirst({
-      where: { schoolId, isCurrent: true },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const fiscalYear = await db.fiscalYear.findFirst({
+    where: { schoolId, isCurrent: true },
+  })
 
   if (!fiscalYear) {
     return (
@@ -146,7 +139,7 @@ export default async function ProfitLossPage({ params }: Props) {
                     <td className="py-2 font-mono">{r.accountCode}</td>
                     <td className="py-2">{r.accountName}</td>
                     <td className="py-2 text-end">
-                      {formatCurrency(r.balance, lang, currency)}
+                      {formatCurrency(r.balance, lang)}
                     </td>
                   </tr>
                 ))}
@@ -155,7 +148,7 @@ export default async function ProfitLossPage({ params }: Props) {
                     {d?.totalRevenue || "Total Revenue"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalRevenue, lang, currency)}
+                    {formatCurrency(data.totalRevenue, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -191,7 +184,7 @@ export default async function ProfitLossPage({ params }: Props) {
                     <td className="py-2 font-mono">{e.accountCode}</td>
                     <td className="py-2">{e.accountName}</td>
                     <td className="py-2 text-end">
-                      {formatCurrency(e.balance, lang, currency)}
+                      {formatCurrency(e.balance, lang)}
                     </td>
                   </tr>
                 ))}
@@ -200,7 +193,7 @@ export default async function ProfitLossPage({ params }: Props) {
                     {d?.totalExpenses || "Total Expenses"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalExpenses, lang, currency)}
+                    {formatCurrency(data.totalExpenses, lang)}
                   </td>
                 </tr>
               </tbody>
@@ -220,13 +213,13 @@ export default async function ProfitLossPage({ params }: Props) {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-2xl font-bold">
-                {formatCurrency(data.netIncome, lang, currency)}
+                {formatCurrency(data.netIncome, lang)}
               </p>
               <p className="text-muted-foreground text-sm">
                 {d?.revenue || "Revenue"}{" "}
-                {formatCurrency(data.totalRevenue, lang, currency)} &minus;{" "}
+                {formatCurrency(data.totalRevenue, lang)} &minus;{" "}
                 {d?.expenses || "Expenses"}{" "}
-                {formatCurrency(data.totalExpenses, lang, currency)}
+                {formatCurrency(data.totalExpenses, lang)}
               </p>
             </div>
             <Badge variant={isProfit ? "default" : "destructive"}>

@@ -6,8 +6,6 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
-import { resolveAvailableMethods } from "@/lib/payment/provider"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -29,11 +27,11 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { interpolate } from "@/components/internationalization/helpers"
-import { FeePaymentMethods } from "@/components/school-dashboard/finance/fees/fee-payment-methods"
 import {
   buildInstallments,
   InstallmentTimeline,
 } from "@/components/school-dashboard/finance/fees/installment-timeline"
+import { PayOnlineButton } from "@/components/school-dashboard/finance/fees/pay-online-button"
 
 export const metadata = { title: "Assignment Details" }
 
@@ -80,53 +78,35 @@ export default async function AssignmentDetailPage({ params }: Props) {
 
   if (!schoolId) notFound()
 
-  const [assignment, school] = await Promise.all([
-    db.feeAssignment.findFirst({
-      where: { id, schoolId },
-      include: {
-        student: { select: { firstName: true, lastName: true } },
-        feeStructure: {
-          select: {
-            name: true,
-            totalAmount: true,
-            installments: true,
-            paymentSchedule: true,
-          },
+  const assignment = await db.feeAssignment.findFirst({
+    where: { id, schoolId },
+    include: {
+      student: { select: { firstName: true, lastName: true } },
+      feeStructure: {
+        select: {
+          name: true,
+          totalAmount: true,
+          installments: true,
+          paymentSchedule: true,
         },
-        payments: {
-          orderBy: { paymentDate: "desc" },
-          select: {
-            id: true,
-            paymentNumber: true,
-            amount: true,
-            paymentDate: true,
-            paymentMethod: true,
-            receiptNumber: true,
-            status: true,
-          },
-        },
-        scholarship: { select: { name: true } },
       },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true, country: true, timezone: true },
-    }),
-  ])
+      payments: {
+        orderBy: { paymentDate: "desc" },
+        select: {
+          id: true,
+          paymentNumber: true,
+          amount: true,
+          paymentDate: true,
+          paymentMethod: true,
+          receiptNumber: true,
+          status: true,
+        },
+      },
+      scholarship: { select: { name: true } },
+    },
+  })
 
   if (!assignment) notFound()
-
-  const currency =
-    school?.currency ??
-    resolveDefaultCurrency(school?.country, school?.timezone)
-  // Online methods the school's region supports (Tap-first for AE, Stripe
-  // elsewhere). Filtered by configured + currency-compatible so we never
-  // render a gateway whose API key is missing.
-  const methods = resolveAvailableMethods(
-    school?.country,
-    school?.timezone,
-    currency
-  )
 
   const studentName = [
     assignment.student?.firstName,
@@ -156,6 +136,11 @@ export default async function AssignmentDetailPage({ params }: Props) {
               {d?.fees?.assignment?.back || "Back"}
             </Link>
           </Button>
+          <PayOnlineButton
+            feeAssignmentId={id}
+            lang={lang}
+            remaining={remaining}
+          />
           <Button asChild>
             <Link
               href={`/${lang}/finance/fees/payments/new?assignmentId=${id}`}
@@ -187,12 +172,12 @@ export default async function AssignmentDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(finalAmount, lang, currency)}
+              {formatCurrency(finalAmount, lang)}
             </p>
             {totalDiscount > 0 && (
               <p className="text-muted-foreground text-sm">
                 {d?.fees?.discount || "Discount"}:{" "}
-                {formatCurrency(totalDiscount, lang, currency)}
+                {formatCurrency(totalDiscount, lang)}
               </p>
             )}
             {assignment.scholarship && (
@@ -209,7 +194,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(totalPaid, lang, currency)}
+              {formatCurrency(totalPaid, lang)}
             </p>
           </CardContent>
         </Card>
@@ -221,7 +206,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(remaining, lang, currency)}
+              {formatCurrency(remaining, lang)}
             </p>
             <Badge variant={statusVariant(assignment.status)} className="mt-1">
               {(d?.fees?.myFees?.statusLabels as Record<string, string>)?.[
@@ -231,27 +216,6 @@ export default async function AssignmentDetailPage({ params }: Props) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Parent-side gateway picker. Hidden when remaining is zero or no
-          online gateway is configured for the school's region. */}
-      <FeePaymentMethods
-        feeAssignmentId={id}
-        lang={lang}
-        remaining={remaining}
-        methods={methods}
-        dictionary={
-          (
-            d as unknown as {
-              gateways?: {
-                title?: string
-                chooseMethod?: string
-                paymentFailed?: string
-                redirecting?: string
-              }
-            }
-          )?.gateways
-        }
-      />
 
       {/* Installment Timeline */}
       {(() => {
@@ -330,7 +294,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      {formatCurrency(Number(payment.amount), lang, currency)}
+                      {formatCurrency(Number(payment.amount), lang)}
                     </TableCell>
                     <TableCell>{payment.paymentMethod}</TableCell>
                     <TableCell>{payment.receiptNumber || "-"}</TableCell>

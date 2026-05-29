@@ -112,10 +112,9 @@ describe("Tap Provider (stub)", () => {
     else delete process.env.TAP_SECRET_KEY
   })
 
-  it("createCheckout returns a config-missing failure when TAP_SECRET_KEY is unset", async () => {
-    // Tap is now a real integration (no longer a stub); without the secret
-    // configured (the test env case) it returns a structured error instead
-    // of attempting a network call. Updated 2026-05-28 (P1.2 fail-closed).
+  it("createCheckout returns a stub failure (Phase 1 — not yet integrated)", async () => {
+    // This test pins the stub behavior. When Tap is wired up, this test
+    // should be replaced with real-API-integration coverage.
     const result = await tapProvider.createCheckout({
       amount: 100,
       currency: "SAR",
@@ -129,9 +128,7 @@ describe("Tap Provider (stub)", () => {
 
     expect(result.success).toBe(false)
     expect(result.gateway).toBe("tap")
-    expect(result.error).toMatch(
-      /not configured|TAP_SECRET_KEY|coming soon|integration/i
-    )
+    expect(result.error).toMatch(/coming soon|not.*available|integration/i)
   })
 
   it("guards: createPaymentCheckout('tap', ...) propagates the stub failure", async () => {

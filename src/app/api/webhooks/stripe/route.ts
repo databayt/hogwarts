@@ -318,9 +318,7 @@ export async function POST(req: Request) {
           const feeAssignmentId = session.metadata.feeAssignmentId
           const schoolId = session.metadata.schoolId
 
-          // Get the assignment with existing payments to calculate remaining.
-          // Include school.currency so the new Payment row carries a snapshot
-          // of the school's currency at charge time (P1.1).
+          // Get the assignment with existing payments to calculate remaining
           const assignment = await db.feeAssignment.findFirst({
             where: {
               id: feeAssignmentId,
@@ -334,7 +332,6 @@ export async function POST(req: Request) {
               student: {
                 select: { userId: true, firstName: true, lastName: true },
               },
-              school: { select: { currency: true } },
             },
           })
 
@@ -349,14 +346,7 @@ export async function POST(req: Request) {
             const paymentAmount = finalAmount - totalPaid
 
             if (paymentAmount > 0) {
-              // Create payment record. P1.1: snapshot currency from
-              // assignment (set at create time from School.currency).
-              // P1.3: gatewayMethod left null here — Stripe Checkout doesn't
-              // surface the wallet (Apple Pay/Google Pay) on session.completed;
-              // the underlying PaymentIntent would, but we'd need to attach a
-              // payment_intent.succeeded handler to read it.
-              const paymentCurrency =
-                assignment.currency ?? assignment.school?.currency ?? "USD"
+              // Create payment record
               const payment = await db.payment.create({
                 data: {
                   schoolId: assignment.schoolId,
@@ -365,7 +355,6 @@ export async function POST(req: Request) {
                   paymentNumber:
                     `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
                   amount: paymentAmount,
-                  currency: paymentCurrency,
                   paymentMethod: "CREDIT_CARD",
                   paymentDate: new Date(),
                   status: "SUCCESS",
@@ -868,210 +857,6 @@ export async function POST(req: Request) {
         console.error(
           "[Webhook] Failed to deactivate enrollment on dispute:",
           error
-        )
-      }
-    }
-  }
-
-  // ============================================
-  // SUBSCRIPTION: Updated (plan change, renewal, status change)
-  // P3.1 — was documented as handled but never implemented; the dedupe
-  // primitive already runs above, so this branch just syncs the row.
-  // ============================================
-  if ((event as { type: string })?.type === "customer.subscription.updated") {
-    const sub = (
-      event as {
-        data: {
-          object: {
-            id: string
-            status: string
-            current_period_end?: number
-            cancel_at_period_end?: boolean
-            items?: { data?: Array<{ price?: { id?: string } }> }
-            metadata?: { schoolId?: string; userId?: string }
-          }
-        }
-      }
-    ).data.object
-    try {
-      await db.user.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          stripePriceId: sub.items?.data?.[0]?.price?.id,
-          stripeCurrentPeriodEnd: sub.current_period_end
-            ? new Date(sub.current_period_end * 1000)
-            : undefined,
-        },
-      })
-      console.log(
-        `[Webhook] customer.subscription.updated: ${sub.id} status=${sub.status}`
-      )
-    } catch (err) {
-      console.error("[Webhook] subscription.updated sync failed:", err)
-    }
-  }
-
-  // ============================================
-  // SUBSCRIPTION: Deleted (cancellation took effect)
-  // P3.1 — flip the user's stripeCurrentPeriodEnd so JWT-side gating sees
-  // them as a free-plan user. Notification dispatch is intentionally
-  // skipped; Stripe already emails the customer on cancellation.
-  // ============================================
-  if ((event as { type: string })?.type === "customer.subscription.deleted") {
-    const sub = (event as { data: { object: { id: string } } }).data.object
-    try {
-      await db.user.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          stripeCurrentPeriodEnd: new Date(0), // hard-expire — JWT will treat as free
-        },
-      })
-      console.log(`[Webhook] customer.subscription.deleted: ${sub.id}`)
-    } catch (err) {
-      console.error("[Webhook] subscription.deleted sync failed:", err)
-    }
-  }
-
-  // ============================================
-  // INVOICE: Payment failed — notify school admin so they can retry
-  // before the subscription enters dunning. P3.1.
-  // ============================================
-  if ((event as { type: string })?.type === "invoice.payment_failed") {
-    const invoice = (
-      event as {
-        data: {
-          object: {
-            id: string
-            customer?: string
-            subscription?: string
-            amount_due?: number
-            currency?: string
-            hosted_invoice_url?: string
-          }
-        }
-      }
-    ).data.object
-    console.warn(
-      `[Webhook] invoice.payment_failed: invoice=${invoice.id} subscription=${invoice.subscription ?? "none"}`
-    )
-    // TODO(P3.1-followup): dispatch notification to school admin. Today we
-    // log + ack so the dedupe row gets written and Stripe stops retrying.
-  }
-
-  // ============================================
-  // PAYMENT_INTENT: Succeeded — when a Checkout Session uses
-  // automatic_payment_methods (the P0.3 default), the wallet identity
-  // (Apple Pay / Google Pay / Link) is reported here, not on
-  // checkout.session.completed. We enrich Payment.gatewayMethod
-  // retroactively so the receipt + reconciliation report show the right
-  // wallet badge. P3.1.
-  // ============================================
-  if ((event as { type: string })?.type === "payment_intent.succeeded") {
-    const pi = (
-      event as {
-        data: {
-          object: {
-            id: string
-            payment_method_types?: string[]
-            charges?: {
-              data?: Array<{
-                payment_method_details?: {
-                  card?: { wallet?: { type?: string }; brand?: string }
-                  type?: string
-                }
-              }>
-            }
-            metadata?: { schoolId?: string; feeAssignmentId?: string }
-          }
-        }
-      }
-    ).data.object
-    // Resolve the wallet/method: prefer wallet.type (apple_pay/google_pay/link),
-    // fall back to card.brand (visa/mastercard/mada), then the generic
-    // payment_method_details.type (card/ideal/etc.).
-    const charge = pi.charges?.data?.[0]
-    const wallet = charge?.payment_method_details?.card?.wallet?.type
-    const brand = charge?.payment_method_details?.card?.brand
-    const fallback = charge?.payment_method_details?.type
-    const gatewayMethod = (wallet ?? brand ?? fallback ?? "")
-      .toString()
-      .toUpperCase()
-    if (gatewayMethod) {
-      try {
-        await db.payment.updateMany({
-          where: { transactionId: pi.id, gatewayMethod: null },
-          data: { gatewayMethod },
-        })
-        console.log(
-          `[Webhook] payment_intent.succeeded: enriched gatewayMethod=${gatewayMethod} for ${pi.id}`
-        )
-      } catch (err) {
-        console.error("[Webhook] payment_intent.succeeded enrich failed:", err)
-      }
-    }
-  }
-
-  // ============================================
-  // PAYMENT_INTENT: Payment failed — surface to the parent with a retry
-  // link so they don't think the payment vanished. P3.1.
-  // ============================================
-  if ((event as { type: string })?.type === "payment_intent.payment_failed") {
-    const pi = (
-      event as {
-        data: {
-          object: {
-            id: string
-            last_payment_error?: { message?: string; code?: string }
-            metadata?: {
-              schoolId?: string
-              feeAssignmentId?: string
-              studentId?: string
-              type?: string
-            }
-          }
-        }
-      }
-    ).data.object
-    const meta = pi.metadata
-    const errMsg =
-      pi.last_payment_error?.message ?? pi.last_payment_error?.code ?? "unknown"
-    console.warn(
-      `[Webhook] payment_intent.payment_failed: ${pi.id} type=${meta?.type ?? "none"} reason=${errMsg}`
-    )
-    if (
-      meta?.schoolId &&
-      meta?.feeAssignmentId &&
-      meta?.studentId &&
-      meta?.type === "fee_payment"
-    ) {
-      try {
-        const student = await db.student.findFirst({
-          where: { id: meta.studentId, schoolId: meta.schoolId },
-          select: { userId: true },
-        })
-        if (student?.userId) {
-          const { dispatchNotification } =
-            await import("@/lib/dispatch-notification")
-          await dispatchNotification({
-            schoolId: meta.schoolId,
-            userId: student.userId,
-            type: "fee_due",
-            title: "Payment Failed",
-            body: `Your card payment didn't go through (${errMsg}). Please try again or use another payment method.`,
-            lang: "ar",
-            priority: "high",
-            channels: ["in_app", "email"],
-            metadata: {
-              feeAssignmentId: meta.feeAssignmentId,
-              paymentIntentId: pi.id,
-              url: `/finance/fees/assignments/${meta.feeAssignmentId}`,
-            },
-          })
-        }
-      } catch (notifErr) {
-        console.error(
-          "[Webhook] payment_intent.payment_failed notification failed:",
-          notifErr
         )
       }
     }

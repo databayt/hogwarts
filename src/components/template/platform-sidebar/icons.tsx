@@ -81,5 +81,4 @@ export const Icons = {
   building: Building2,
   whatsapp: MessageCircle,
   bus: Bus,
-  shield: Shield,
 }

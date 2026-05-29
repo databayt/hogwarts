@@ -57,7 +57,6 @@ import { seedInvoices } from "./invoices"
 import { seedLibrary } from "./library"
 import { seedMessaging } from "./messages"
 import { seedMessagingPhones } from "./messaging-phones"
-import { seedNotificationTemplates } from "./notification-templates"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
@@ -712,14 +711,6 @@ const SEEDS: Record<string, SeedEntry> = {
       const students = await resolveStudents(prisma, schoolId)
       const { adminUsers } = await resolveUsers(prisma, schoolId)
       await seedNotifications(prisma, schoolId, teachers, students, adminUsers)
-    },
-  },
-  "notification-templates": {
-    description:
-      "Locale-aware notification templates (EN+AR × 9 parent-relevant types × 3 channels = 54 global rows)",
-    global: true,
-    run: async (prisma) => {
-      await seedNotificationTemplates(prisma)
     },
   },
 

@@ -31,7 +31,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
     },
     guardian: { findFirst: vi.fn() },
-    studentGuardian: { findFirst: vi.fn(), findMany: vi.fn() },
+    studentGuardian: { findFirst: vi.fn() },
   },
 }))
 
@@ -388,114 +388,6 @@ describe("getResults", () => {
     const r = await getResults({})
     expect(r.success).toBe(false)
     if (!r.success) expect(r.error).toBe("NOT_AUTHENTICATED")
-  })
-
-  // GUARDIAN must only see their own children's grades. Before this hotfix,
-  // /grades returned every grade in the school to any GUARDIAN — a multi-tenant
-  // leak inside the same tenant. These tests pin the new behavior.
-  describe("auto-scopes results for GUARDIAN role", () => {
-    function asGuardian() {
-      vi.mocked(auth).mockResolvedValue({
-        user: { id: USER, role: "GUARDIAN", schoolId: SCHOOL },
-      } as any)
-      vi.mocked(getTenantContext).mockResolvedValue({
-        schoolId: SCHOOL,
-        requestId: "rid",
-        role: "GUARDIAN" as any,
-        isPlatformAdmin: false,
-      } as any)
-    }
-
-    it("restricts the query to the guardian's children", async () => {
-      asGuardian()
-      vi.mocked(db.guardian.findFirst).mockResolvedValue({
-        id: "guardian-1",
-      } as any)
-      vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
-        { studentId: "child-a" },
-        { studentId: "child-b" },
-      ] as any)
-      vi.mocked(db.result.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.result.count).mockResolvedValue(0 as any)
-
-      const r = await getResults({})
-      expect(r.success).toBe(true)
-
-      const where = vi.mocked(db.result.findMany).mock.calls[0]?.[0]?.where
-      expect(where).toMatchObject({
-        schoolId: SCHOOL,
-        studentId: { in: ["child-a", "child-b"] },
-      })
-    })
-
-    it("returns an empty list without hitting the DB when guardian has no children", async () => {
-      asGuardian()
-      vi.mocked(db.guardian.findFirst).mockResolvedValue({
-        id: "guardian-2",
-      } as any)
-      vi.mocked(db.studentGuardian.findMany).mockResolvedValue([] as any)
-
-      const r = await getResults({})
-      expect(r.success).toBe(true)
-      if (r.success) {
-        expect(r.data.rows).toEqual([])
-        expect(r.data.total).toBe(0)
-      }
-      // Critical: do not run an unscoped query.
-      expect(db.result.findMany).not.toHaveBeenCalled()
-    })
-
-    it("returns empty when the user is not actually a guardian in this school", async () => {
-      asGuardian()
-      vi.mocked(db.guardian.findFirst).mockResolvedValue(null as any)
-
-      const r = await getResults({})
-      expect(r.success).toBe(true)
-      if (r.success) expect(r.data.rows).toEqual([])
-      expect(db.result.findMany).not.toHaveBeenCalled()
-    })
-  })
-
-  // STUDENT must only see their own grades. Same shape as GUARDIAN but keyed
-  // off Student.userId = auth.userId instead of the guardian link.
-  describe("auto-scopes results for STUDENT role", () => {
-    function asStudent() {
-      vi.mocked(auth).mockResolvedValue({
-        user: { id: USER, role: "STUDENT", schoolId: SCHOOL },
-      } as any)
-      vi.mocked(getTenantContext).mockResolvedValue({
-        schoolId: SCHOOL,
-        requestId: "rid",
-        role: "STUDENT" as any,
-        isPlatformAdmin: false,
-      } as any)
-    }
-
-    it("restricts the query to the student's own record", async () => {
-      asStudent()
-      vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as any)
-      vi.mocked(db.result.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.result.count).mockResolvedValue(0 as any)
-
-      const r = await getResults({})
-      expect(r.success).toBe(true)
-
-      const where = vi.mocked(db.result.findMany).mock.calls[0]?.[0]?.where
-      expect(where).toMatchObject({
-        schoolId: SCHOOL,
-        studentId: { in: ["stu-1"] },
-      })
-    })
-
-    it("returns empty when no Student record exists for this user", async () => {
-      asStudent()
-      vi.mocked(db.student.findFirst).mockResolvedValue(null as any)
-
-      const r = await getResults({})
-      expect(r.success).toBe(true)
-      if (r.success) expect(r.data.rows).toEqual([])
-      expect(db.result.findMany).not.toHaveBeenCalled()
-    })
   })
 })
 

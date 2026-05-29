@@ -25,11 +25,11 @@ The Hogwarts platform spans three repositories. This doc is the canonical refere
 └──────────────┘  └──────────────┘
 ```
 
-| Repo                                                              | Role                                                                                    | Stack                            |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------- |
-| [`databayt/hogwarts`](https://github.com/databayt/hogwarts)       | **Source of truth** — web app, API contract, Prisma schema, multi-tenant rules, billing | Next.js 16 · Prisma · TypeScript |
-| [`databayt/android-app`](https://github.com/databayt/android-app) | **Lead mobile reference** — feature patterns are set here first                         | Kotlin · Jetpack Compose         |
-| [`databayt/ios-app`](https://github.com/databayt/ios-app)         | **Mirrors android-app** — re-implements android features in SwiftUI                     | Swift 6 · SwiftUI                |
+| Repo | Role | Stack |
+|---|---|---|
+| [`databayt/hogwarts`](https://github.com/databayt/hogwarts) | **Source of truth** — web app, API contract, Prisma schema, multi-tenant rules, billing | Next.js 16 · Prisma · TypeScript |
+| [`databayt/android-app`](https://github.com/databayt/android-app) | **Lead mobile reference** — feature patterns are set here first | Kotlin · Jetpack Compose |
+| [`databayt/ios-app`](https://github.com/databayt/ios-app) | **Mirrors android-app** — re-implements android features in SwiftUI | Swift 6 · SwiftUI |
 
 ## The rules
 
@@ -55,12 +55,12 @@ The Hogwarts platform spans three repositories. This doc is the canonical refere
 
 ## When you're contributing
 
-| You're working on                 | Open PRs in                        | Reference                                                                     |
-| --------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------- |
-| New API endpoint or schema change | `hogwarts`                         | This repo's CLAUDE.md                                                         |
-| New Android feature               | `android-app`                      | Android Kotlin/Compose conventions                                            |
-| Port an Android feature to iOS    | `ios-app`                          | Both `android-app/feature/<name>/` AND `hogwarts/src/app/api/mobile/<name>/*` |
-| Bug in shared API contract        | `hogwarts` first, then mobile apps | API contract change is the hogwarts PR                                        |
+| You're working on | Open PRs in | Reference |
+|---|---|---|
+| New API endpoint or schema change | `hogwarts` | This repo's CLAUDE.md |
+| New Android feature | `android-app` | Android Kotlin/Compose conventions |
+| Port an Android feature to iOS | `ios-app` | Both `android-app/feature/<name>/` AND `hogwarts/src/app/api/mobile/<name>/*` |
+| Bug in shared API contract | `hogwarts` first, then mobile apps | API contract change is the hogwarts PR |
 
 ## Why this hierarchy
 

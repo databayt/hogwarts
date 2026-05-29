@@ -39,8 +39,6 @@ export async function OperatorSalesContent({
     phone: lead.phone,
     company: lead.company,
     title: lead.title,
-    country: lead.country,
-    tags: lead.tags,
     status: lead.status as
       | "NEW"
       | "CONTACTED"
@@ -54,9 +52,6 @@ export async function OperatorSalesContent({
     priority: lead.priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
     score: lead.score,
     verified: lead.verified,
-    nextFollowUpAt: lead.nextFollowUpAt
-      ? lead.nextFollowUpAt.toISOString()
-      : null,
     createdAt: lead.createdAt.toISOString(),
   }))
 

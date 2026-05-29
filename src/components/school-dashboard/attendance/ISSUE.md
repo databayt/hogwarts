@@ -1,9 +1,8 @@
 # Attendance -- Production Readiness Tracker
 
-**Master tracker:** [databayt/hogwarts#1](https://github.com/databayt/hogwarts/issues/1) -- consolidates attendance + compliance ship work (formerly #354 + #322; child stories #283 + #287 stay open)
 **Status:** IN PROGRESS
-**Completion:** 88%
-**Last Updated:** 2026-05-28
+**Completion:** 85%
+**Last Updated:** 2026-03-21
 
 ---
 
@@ -68,14 +67,6 @@
 - [x] Gamification actions tests
 - [x] Intentions actions tests
 - [x] Bulk upload tests
-- [x] Helpers / identifiers / master / periods / policy / records / analytics / compliance / dashboard / excuses / qr action tests (2026-05-28 — full block sweep)
-- [x] Hall-pass / letters / interventions-tiers / ai / geofencee actions tests
-- [x] Permissions (UI gating), attendance-stats, atom (stat-card, action-card) tests
-- [x] Compliance sub-block tests (actions, queries, authorization, validation, error-map)
-- [x] `src/lib/compliance` tests (encryption AES-256-GCM round-trip + key rotation, mapper categorization, csv-schema, audit-actions, registry)
-- [x] API route tests: `/api/cron/{esis-submit,absence-followup,attendance-policies}`, `/api/webhooks/adek` (HMAC verify), `/api/compliance/worker/claim` (token-gated RPA, tenant scope)
-- [x] Mobile API tests: `/api/mobile/attendance/mark` (role gates + cross-tenant rejection)
-- [x] Playwright E2E specs (`tests/e2e/attendance/`): overview RBAC, admin marks manual, compliance settings RBAC, student records, feature-pages smoke
 
 ---
 
@@ -83,7 +74,7 @@
 
 ### P0 -- Critical
 
-_(none open)_
+1. **No route pages exist** -- Components are built but `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/` directory does not exist. No page.tsx files wired. This is the only blocker to ship.
 
 ### P1 -- High
 
@@ -92,27 +83,11 @@ _(none open)_
 
 ### P2 -- Medium
 
-1. **PDF compliance reports** -- Automated report generation not built
-2. **Bulk upload error handling** -- Transaction rollback on validation failure missing
-3. **Rate limiting** -- No rate limiting for failed barcode/QR scans
-4. **Audit logging** -- No audit log for attendance modifications (compliance
-   submissions DO write to `AuditLog` via `compliance.*` action strings)
-
-### Recently Fixed (2026-05-27 -- ADEK compliance epic)
-
-1. **Parent notifications** -- `triggerAbsenceNotification` (actions/core.ts)
-   now also queues `email` + `whatsapp` channels for schools where
-   `SchoolComplianceConfig.enabled = true`. Existing crons drain the rows.
-   Non-compliance schools keep the legacy `in_app + SMS` path.
-2. **2-hour parent-contact SLA** -- New cron at
-   `src/app/api/cron/absence-followup/route.ts` (every 30 min, UTC arithmetic)
-   detects unreported absences and writes an `AttendanceIntervention` row of
-   type `PARENT_EMAIL` with `parentNotified=true`, `contactMethod`,
-   `contactResult` -- the regulatory audit-evidence path ADEK requires.
-3. **ADEK eSIS submission framework** -- See sibling
-   [`compliance/`](../compliance/README.md) block. Daily CSV cron at 10:00 UTC
-   (= 14:00 GST), 4 connector modes (DRY_RUN / PIGGYBACK / OFFICIAL_API / RPA),
-   generic schema (`ComplianceProvider` enum so future regulators plug in).
+1. **Parent notifications** -- Email/SMS alerts for absences not implemented
+2. **PDF compliance reports** -- Automated report generation not built
+3. **Bulk upload error handling** -- Transaction rollback on validation failure missing
+4. **Rate limiting** -- No rate limiting for failed barcode/QR scans
+5. **Audit logging** -- No audit log for attendance modifications
 
 ### Recently Fixed (2026-03-21)
 
@@ -125,15 +100,14 @@ _(none open)_
 
 ## Enhancements (Post-MVP)
 
+- Parent notification system (email/SMS)
 - Biometric attendance (fingerprint/face recognition)
 - Automated PDF compliance reports
 - Attendance policy enforcement rules
 - Real-time WebSocket updates
 - Soft delete support for attendance records
 - HMAC signature on QR code payloads
-- ADEK Phase 5 -- Official API connector (awaits ADEK developer access)
-- ADEK Phase 4 -- RPA worker live selectors (awaits Aldar piggyback access)
 
 ---
 
-**Last Review:** 2026-05-28 (full Vitest sweep — 632/632 green across 53 files; new attendance/compliance/cron/webhook/mobile/worker coverage)
+**Last Review:** 2026-03-21

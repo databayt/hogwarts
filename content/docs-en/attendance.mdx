@@ -5,8 +5,6 @@ description: Multi-method attendance — manual, QR, barcode, bulk upload, geofe
 
 The attendance module tracks student attendance across multiple capture methods, with role-based access, parent notifications, US DoE risk levels, intervention tracking, and CSV / Excel / PDF export. Teachers see only their assigned classes; students and guardians see only their own records.
 
-> **Ship tracker:** [databayt/hogwarts#1](https://github.com/databayt/hogwarts/issues/1) — consolidated attendance + compliance master tracker. See also [Aldar Epic 01](https://kun.databayt.org/en/docs/aldar#01--adek-attendance-submission).
-
 ## Status
 
 | Feature                                                                                     | Status     | Notes                                                |
@@ -21,8 +19,6 @@ The attendance module tracks student attendance across multiple capture methods,
 | Geofence / Master gate / Policy engine / Compliance reports                                 | Wired      | Functional, surface still maturing                   |
 | Settings                                                                                    | UI only    | Save not connected                                   |
 | AI predictions / Gamification / Hall pass / Kiosk / Absence intentions / Compliance letters | Component  | No route page                                        |
-| ADEK eSIS daily submission                                                                  | Production | Generic connector at `/compliance`, DRY_RUN default  |
-| 2-hour guardian SLA cron                                                                    | Production | `/api/cron/absence-followup`, every 30 min, UTC      |
 
 ## Routes
 
@@ -170,78 +166,8 @@ Supporting models: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`
 pnpm db:seed:single attendance
 ```
 
-## Regulator compliance (ADEK eSIS — UAE)
-
-UAE schools (`School.country === "AE"`) can opt into a daily-CSV upload to the
-ADEK eSIS portal at `esis.adek.gov.ae` plus the ADEK-mandated 2-hour parent
-contact for unreported absences. The framework is generic — a new regulator
-(SEC KSA, MoE Qatar, MoE Sudan) only adds a value to the
-`ComplianceProvider` enum and a sibling directory under
-`src/lib/compliance/providers/<authority>/`.
-
-| Piece                | Path                                              | Purpose                                            |
-| -------------------- | ------------------------------------------------- | -------------------------------------------------- |
-| Settings UI          | `/{lang}/compliance`                              | Toggle, mode, SLA, daily-time, submissions list    |
-| Cross-tenant admin   | `/{lang}/(saas-dashboard)/compliance` (DEVELOPER) | Shared credential groups for Aldar-style piggyback |
-| Daily cron           | `/api/cron/esis-submit` (`0 10 * * *`)            | Enqueues + fans out per school                     |
-| Followup cron        | `/api/cron/absence-followup` (`*/30 * * * *`)     | 2h SLA evidence trail                              |
-| Webhook              | `/api/webhooks/adek`                              | Async `ACCEPTED`/`REJECTED` receipts               |
-| Worker (out of repo) | `tools/adek-rpa-worker/` (Fly.io)                 | Playwright fallback when no API                    |
-
-Connector modes — set per school × provider:
-
-| Mode           | What it does                                                                                                            |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `DRY_RUN`      | Generate CSV, persist for audit, registrar uploads to eSIS manually                                                     |
-| `PIGGYBACK`    | Submit via shared-group eSIS credentials (Aldar pattern, 1 cred row × N schools, circuit breaker on cascading failures) |
-| `OFFICIAL_API` | Documented vendor API (awaiting ADEK developer access)                                                                  |
-| `RPA`          | External Playwright worker claims `QUEUED` rows and uploads via the eSIS web portal                                     |
-| `DISABLED`     | Skip in cron                                                                                                            |
-
-### 2-hour parent-contact SLA
-
-When `SchoolComplianceConfig.enabled = true`,
-`triggerAbsenceNotification` dispatches on `in_app + email + whatsapp`
-channels (instead of `in_app` only) so the email + WhatsApp crons drain the
-notification row. Every 30 minutes, the `absence-followup` cron looks for
-ABSENT rows that are:
-
-- `markedAt < now() - parentContactSlaMinutes` (default 120, computed in UTC)
-- have no `AttendanceExcuse`
-- have no approved `AbsenceIntention` covering today
-- have no `AttendanceIntervention` of type `PARENT_PHONE_CALL` / `PARENT_EMAIL`
-  in the past 24h
-
-It dispatches a `absence_unreported_followup` notification to each guardian,
-then writes an `AttendanceIntervention` row (`PARENT_EMAIL`, parentNotified=true,
-contactMethod=`in_app+email+whatsapp`). That row is the regulator-facing
-audit evidence — `getParentContactSlaReport()` queries it to produce
-"contacted within SLA" counts for ADEK audits.
-
-### Schema (compliance side)
-
-Five new entities in `prisma/models/compliance.prisma` — none of them
-ADEK-specific:
-
-- `ComplianceProvider` enum (currently `ADEK_ESIS`, `CUSTOM`)
-- `ConnectorMode` enum
-- `ComplianceSubmissionStatus` enum + `CircuitBreakerState` enum
-- `SchoolComplianceConfig` — one row per school × provider (opt-in)
-- `SharedComplianceCredentialGroup` — group-shared creds (Aldar pattern)
-- `SchoolComplianceCredential` — per-school creds (OFFICIAL_API mode)
-- `ComplianceSubmission` — one row per attempt, indexed by `(schoolId,
-provider, submissionDate, attemptNumber)`. Retries chain via `supersededBy`.
-  The CSV is persisted inline in `csvArtifactContent` and downloaded via
-  `/api/compliance/artifact/[submissionId]` (signed S3 URL planned).
-
-`AuditLog.userId` was loosened to nullable in the same epic so cron / worker /
-webhook system events can be recorded — calls pass `userId: null`.
-
-A new `NotificationType.absence_unreported_followup` covers the 2h SLA path.
-
 ## See also
 
 - [Multi-tenancy](/docs/multi-tenancy) — RBAC + tenant scoping
 - [Notifications](/docs/notifications) — absence dispatch
 - [Timetable](/docs/timetable) — period auto-detection
-- [Compliance](/docs/compliance) — regulator-submission framework (ADEK + future authorities)

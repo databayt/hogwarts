@@ -81,7 +81,7 @@ export function getInvoiceColumns(
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">
-          {formatCurrency(getValue<number>() / 100, lang, "USD")}
+          {formatCurrency(getValue<number>() / 100, lang)}
         </span>
       ),
       meta: { label: c?.amount || "Amount", variant: "number" },

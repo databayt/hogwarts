@@ -138,18 +138,6 @@ const attendanceDictionaries = {
     ),
 } as const
 
-// Compliance module dictionaries (regulator submission, e.g., ADEK eSIS)
-const complianceDictionaries = {
-  en: () =>
-    import("./dictionaries/en/compliance.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/compliance.json").then(
-      (module) => module.default
-    ),
-} as const
-
 // Messaging module dictionaries (chat, conversations)
 const messagingDictionaries = {
   en: () =>
@@ -174,18 +162,6 @@ const transportationDictionaries = {
     ),
   ar: () =>
     import("./dictionaries/ar/transportation.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Live-classes module dictionaries (LiveKit video conferencing)
-const liveClassesDictionaries = {
-  en: () =>
-    import("./dictionaries/en/live-classes.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/live-classes.json").then(
       (module) => module.default
     ),
 } as const
@@ -475,37 +451,6 @@ export const getAttendanceDictionary = async (locale: Locale) => {
 }
 
 /**
- * Compliance pages - school-dashboard core + compliance
- * Used for: regulator submission (ADEK eSIS), settings, audit trail
- */
-export const getComplianceDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages, compliance] = await Promise.all(
-      [
-        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-        messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-        complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, compliance }
-  } catch (error) {
-    console.warn(`Failed to load compliance dictionary for locale: ${locale}`)
-    const [general, school, operator, messages, compliance] = await Promise.all(
-      [
-        generalDictionaries["en"](),
-        schoolDictionaries["en"](),
-        operatorDictionaries["en"](),
-        messagesDictionaries["en"](),
-        complianceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, compliance }
-  }
-}
-
-/**
  * Messaging pages - school-dashboard core + messaging
  * Used for: chat, conversations, direct messages
  */
@@ -591,8 +536,6 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
-      compliance,
-      liveClasses,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -616,8 +559,6 @@ export const getDictionary = async (locale: Locale) => {
       whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
       transportationDictionaries[locale]?.() ??
         transportationDictionaries["en"](),
-      complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
-      liveClassesDictionaries[locale]?.() ?? liveClassesDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -642,8 +583,6 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
-      compliance,
-      liveClasses,
     }
   } catch (error) {
     console.warn(
@@ -670,8 +609,6 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
-      compliance,
-      liveClasses,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -693,8 +630,6 @@ export const getDictionary = async (locale: Locale) => {
       messagingDictionaries["en"](),
       whatsappDictionaries["en"](),
       transportationDictionaries["en"](),
-      complianceDictionaries["en"](),
-      liveClassesDictionaries["en"](),
     ])
     return {
       ...general,
@@ -717,8 +652,6 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
-      compliance,
-      liveClasses,
     }
   }
 }

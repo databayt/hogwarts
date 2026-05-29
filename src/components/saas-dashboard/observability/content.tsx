@@ -86,7 +86,7 @@ export async function ObservabilityContent({
     rows = logs.map((log) => ({
       id: log.id,
       createdAt: log.createdAt.toISOString(),
-      userEmail: log.performer?.email ?? "",
+      userEmail: log.performer.email ?? "",
       schoolName: log.school?.name ?? null,
       action: log.action,
       reason: log.reason,

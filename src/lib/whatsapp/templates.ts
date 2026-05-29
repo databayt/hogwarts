@@ -37,10 +37,6 @@ export const DEFAULT_TEMPLATES = {
     ar: "تنبيه: الطالب/ة {{studentName}} وصل/ت متأخر/ة اليوم {{date}} في {{schoolName}}.",
     en: "Alert: {{studentName}} arrived late today ({{date}}) at {{schoolName}}.",
   },
-  absence_unreported_followup: {
-    ar: "تذكير عاجل من {{schoolName}}: لم يتم تبرير غياب {{studentName}} اليوم {{date}}. يرجى التواصل مع المدرسة في أقرب وقت ممكن لتأكيد حالته/ها.",
-    en: "Urgent reminder from {{schoolName}}: {{studentName}}'s absence today ({{date}}) has not been excused. Please contact the school as soon as possible to confirm.",
-  },
 
   // Fees
   fee_due: {

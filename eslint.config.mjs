@@ -1,6 +1,6 @@
+import eslintConfigPrettier from "eslint-config-prettier"
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals"
 import nextTypeScript from "eslint-config-next/typescript"
-import eslintConfigPrettier from "eslint-config-prettier"
 
 // Native flat config from eslint-config-next (Next 16). Replaces the previous
 // FlatCompat wrapper, which crashed under ESLint 9 (`Converting circular

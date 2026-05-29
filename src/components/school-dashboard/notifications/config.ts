@@ -19,7 +19,6 @@ import {
   Shield,
   TriangleAlert,
   UserCheck,
-  Video,
 } from "lucide-react"
 
 // Notification type configurations
@@ -123,33 +122,9 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     icon: Calendar,
     requiresAction: false,
   },
-  absence_unreported_followup: {
-    icon: TriangleAlert,
-    requiresAction: true,
-  },
   setup_guide: {
     icon: ListChecks,
     requiresAction: true,
-  },
-  live_class_scheduled: {
-    icon: Video,
-    requiresAction: false,
-  },
-  live_class_starting_soon: {
-    icon: Video,
-    requiresAction: true,
-  },
-  live_class_started: {
-    icon: Video,
-    requiresAction: true,
-  },
-  live_class_cancelled: {
-    icon: TriangleAlert,
-    requiresAction: false,
-  },
-  live_class_recording_ready: {
-    icon: Video,
-    requiresAction: false,
   },
 }
 
@@ -289,13 +264,7 @@ export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
     report_ready: 30,
     absence_intention: 14,
     absence_intention_decision: 14,
-    absence_unreported_followup: 7,
     setup_guide: 30,
-    live_class_scheduled: 14,
-    live_class_starting_soon: 1,
-    live_class_started: 1,
-    live_class_cancelled: 14,
-    live_class_recording_ready: 90,
   }
 
 // Pagination and limits

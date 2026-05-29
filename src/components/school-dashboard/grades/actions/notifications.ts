@@ -6,7 +6,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { dispatchTemplated } from "@/lib/dispatch-notification"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -33,11 +33,13 @@ async function getStudentGuardianUserIds(
     .filter((id): id is string => !!id)
 }
 
-// Channels we attempt for parent-facing notifications. The dispatcher will
-// per-channel filter against `NotificationPreference` and `NotificationTemplate`
-// availability, so a channel missing a template or disabled by the user is
-// silently skipped without failing the rest.
-const PARENT_CHANNELS = ["in_app", "email", "whatsapp"] as const
+async function getStudentUserId(studentId: string): Promise<string | null> {
+  const student = await db.student.findUnique({
+    where: { id: studentId },
+    select: { userId: true },
+  })
+  return student?.userId ?? null
+}
 
 // ============================================================================
 // GRADE POSTED NOTIFICATION
@@ -66,45 +68,39 @@ export async function sendGradeNotification(input: {
     if (!result) return { success: false, error: "Result not found" }
 
     const studentName = `${result.student.firstName} ${result.student.lastName}`
-    const subject = result.class?.subject?.name ?? ""
-    // Render whatever the school configured: "A", "85%", "85/100", etc.
-    const grade = result.grade || `${result.score}/${result.maxScore}` || ""
+    const name = result.class?.subject?.name || "a subject"
 
     const recipients: string[] = []
+
+    // Add student
     if (result.student.userId) recipients.push(result.student.userId)
+
+    // Add guardians
     const guardianIds = await getStudentGuardianUserIds(
       result.studentId,
       schoolId
     )
     recipients.push(...guardianIds)
 
-    const metadata = {
-      studentName,
-      subject,
-      grade,
-      resultId: input.resultId,
-      studentId: result.studentId,
-      // Deep-link target so the mobile app can navigate on tap and the
-      // web in-app bell can render a "View" CTA. Web absolute path is
-      // also derivable from this for the email channel.
-      deep_link: `hogwarts://parent/children/${result.studentId}/grades`,
-    }
-
-    const dispatches = await Promise.all(
+    const notifications = await Promise.all(
       recipients.map((userId) =>
-        dispatchTemplated({
+        dispatchNotification({
           schoolId,
           userId,
-          type: input.type,
-          metadata,
-          channels: [...PARENT_CHANNELS],
+          title: `Grade Posted: ${name}`,
+          body: `${studentName} received ${result.grade || `${result.score}/${result.maxScore}`} in ${name}`,
+          type: "grade_posted",
+          metadata: {
+            resultId: input.resultId,
+            studentId: result.studentId,
+          },
         })
       )
     )
 
     return {
       success: true,
-      data: { count: dispatches.filter(Boolean).length },
+      data: { count: notifications.filter(Boolean).length },
     }
   } catch (error) {
     return {
@@ -120,13 +116,9 @@ export async function sendGradeNotification(input: {
 // ============================================================================
 
 export async function sendBatchGradeNotifications(input: {
+  termId: string
   type: "report_ready" | "grade_posted"
-  /** Term scope — used by the rich grades/actions publishReportCards path. */
-  termId?: string
-  /** Grade-level filter inside the term scope. */
   gradeId?: string
-  /** ID scope — used by reports/actions publish-button which has explicit IDs. */
-  reportCardIds?: string[]
 }): Promise<ActionResponse<{ count: number }>> {
   try {
     const session = await auth()
@@ -134,32 +126,19 @@ export async function sendBatchGradeNotifications(input: {
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "Missing school context" }
 
-    if (!input.termId && !input.reportCardIds) {
-      return {
-        success: false,
-        error: "Either termId or reportCardIds is required",
-      }
-    }
-
-    // Fetch published report cards under whichever scope was supplied.
+    // Fetch published report cards for this term
     const where: Record<string, unknown> = {
       schoolId,
+      termId: input.termId,
       isPublished: true,
     }
-    if (input.reportCardIds && input.reportCardIds.length > 0) {
-      where.id = { in: input.reportCardIds }
-    } else if (input.termId) {
-      where.termId = input.termId
-      if (input.gradeId) {
-        where.student = { academicGradeId: input.gradeId }
-      }
+    if (input.gradeId) {
+      where.student = { academicGradeId: input.gradeId }
     }
 
     const reportCards = await db.reportCard.findMany({
       where,
       select: {
-        id: true,
-        termId: true,
         studentId: true,
         student: {
           select: {
@@ -169,7 +148,6 @@ export async function sendBatchGradeNotifications(input: {
             lastName: true,
           },
         },
-        term: { select: { termNumber: true } },
       },
     })
 
@@ -177,15 +155,19 @@ export async function sendBatchGradeNotifications(input: {
       return { success: true, data: { count: 0 } }
     }
 
-    // Track the batch so admins can audit / retry later. We don't write
-    // the rendered title/body here because the actual per-recipient text
-    // is locale-resolved inside dispatchTemplated.
+    const titleText =
+      input.type === "report_ready" ? "Report Card Ready" : "Grade Update"
+    const bodyFn =
+      input.type === "report_ready"
+        ? (name: string) => `${name}'s report card is now available for viewing`
+        : (name: string) => `A grade update is available for ${name}`
+
+    // Create notification batch
     const batch = await db.notificationBatch.create({
       data: {
         schoolId,
         type: input.type,
-        title:
-          input.type === "report_ready" ? "Report card ready" : "Grade update",
+        title: titleText,
         body: `Batch notification for ${reportCards.length} students`,
         status: "processing",
         totalCount: 0,
@@ -197,8 +179,8 @@ export async function sendBatchGradeNotifications(input: {
 
     for (const rc of reportCards) {
       const studentName = `${rc.student.firstName} ${rc.student.lastName}`
-      const termName = rc.term ? `Term ${rc.term.termNumber}` : ""
       const recipients: string[] = []
+
       if (rc.student.userId) recipients.push(rc.student.userId)
       const guardianIds = await getStudentGuardianUserIds(
         rc.studentId,
@@ -206,30 +188,24 @@ export async function sendBatchGradeNotifications(input: {
       )
       recipients.push(...guardianIds)
 
-      const metadata = {
-        studentName,
-        termName,
-        reportCardId: rc.id,
-        studentId: rc.studentId,
-        termId: rc.termId,
-        batchId: batch.id,
-        // Deep-link target. Mobile parent app routes on this scheme;
-        // web in-app bell derives the in-tab href from the same string.
-        deep_link: `hogwarts://parent/children/${rc.studentId}/report-cards/${rc.id}`,
-      }
-
       for (const userId of recipients) {
-        const id = await dispatchTemplated({
+        const id = await dispatchNotification({
           schoolId,
           userId,
+          title: titleText,
+          body: bodyFn(studentName),
           type: input.type,
-          metadata,
-          channels: [...PARENT_CHANNELS],
+          metadata: {
+            batchId: batch.id,
+            studentId: rc.studentId,
+            termId: input.termId,
+          },
         })
         if (id) count++
       }
     }
 
+    // Update batch count
     await db.notificationBatch.update({
       where: { id: batch.id },
       data: { totalCount: count, status: "completed" },

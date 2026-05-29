@@ -19,7 +19,6 @@ import {
 import {
   calculateGrade,
   formatResultRow,
-  getChildrenIdsForGuardian,
   getResultDetail,
   getResultsList,
 } from "@/components/school-dashboard/listings/grades/queries"
@@ -511,32 +510,11 @@ export async function getResults(
     // Parse and validate input
     const sp = getResultsSchema.parse(input ?? {})
 
-    // GUARDIAN auto-scope: restrict the list to this user's children.
-    // STUDENT auto-scope: restrict to the user's own student record.
-    // Without this, a guardian who hits /grades sees every grade in the school.
-    let studentIds: string[] | undefined
-    if (authContext.role === "GUARDIAN") {
-      studentIds = await getChildrenIdsForGuardian(authContext.userId, schoolId)
-      if (studentIds.length === 0) {
-        return { success: true, data: { rows: [], total: 0 } }
-      }
-    } else if (authContext.role === "STUDENT") {
-      const student = await db.student.findFirst({
-        where: { userId: authContext.userId, schoolId },
-        select: { id: true },
-      })
-      studentIds = student ? [student.id] : []
-      if (studentIds.length === 0) {
-        return { success: true, data: { rows: [], total: 0 } }
-      }
-    }
-
     // Use centralized query builder
     const { rows, count } = await getResultsList(schoolId, {
       page: sp.page,
       perPage: sp.perPage,
       studentId: sp.studentId || undefined,
-      studentIds,
       assignmentId: sp.assignmentId || undefined,
       classId: sp.classId || undefined,
       grade: sp.grade || undefined,
@@ -604,31 +582,11 @@ export async function getResultsCSV(
 
     const sp = getResultsSchema.parse(input ?? {})
 
-    // Defense-in-depth: if the export-permission matrix ever opens up to
-    // GUARDIAN/STUDENT, the data layer still scopes them to their own rows.
-    let studentIds: string[] | undefined
-    if (authContext.role === "GUARDIAN") {
-      studentIds = await getChildrenIdsForGuardian(authContext.userId, schoolId)
-      if (studentIds.length === 0) {
-        return { success: true, data: "" }
-      }
-    } else if (authContext.role === "STUDENT") {
-      const student = await db.student.findFirst({
-        where: { userId: authContext.userId, schoolId },
-        select: { id: true },
-      })
-      studentIds = student ? [student.id] : []
-      if (studentIds.length === 0) {
-        return { success: true, data: "" }
-      }
-    }
-
     // Fetch all results (no pagination for export)
     const { rows } = await getResultsList(schoolId, {
       page: 1,
       perPage: 10000, // Large number to get all results
       studentId: sp.studentId || undefined,
-      studentIds,
       assignmentId: sp.assignmentId || undefined,
       classId: sp.classId || undefined,
       grade: sp.grade || undefined,

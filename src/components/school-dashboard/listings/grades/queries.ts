@@ -12,7 +12,6 @@
  * - Pagination and sorting utilities
  */
 
-import { cache } from "react"
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
@@ -23,7 +22,6 @@ import { db } from "@/lib/db"
 
 export type ResultListFilters = {
   studentId?: string
-  studentIds?: string[] // Restrict to a set of student IDs (e.g. guardian's children)
   classId?: string
   assignmentId?: string
   examId?: string
@@ -188,10 +186,6 @@ export function buildResultWhere(
   // ID filters
   if (filters.studentId) {
     where.studentId = filters.studentId
-  } else if (filters.studentIds) {
-    // GUARDIAN auto-scoping: restrict to a set of children. Empty array → no rows
-    // (Prisma treats `in: []` as match-nothing, which is the safe default).
-    where.studentId = { in: filters.studentIds }
   }
 
   if (filters.classId) {
@@ -820,32 +814,6 @@ export function calculateGrade(
   if (percentage >= 50) return "D"
   return "F"
 }
-
-/**
- * Resolve the student IDs a guardian is linked to within a school.
- *
- * Wrapped in React.cache so multiple components on the same request
- * (filters, table, count badge) share one Prisma round-trip.
- *
- * Returns an empty array when the user is not a guardian in this school
- * or has no linked children — callers should pass that array into
- * `buildResultWhere({ studentIds })` to produce a match-nothing query.
- */
-export const getChildrenIdsForGuardian = cache(
-  async (userId: string, schoolId: string): Promise<string[]> => {
-    const guardian = await db.guardian.findFirst({
-      where: { userId, schoolId },
-      select: { id: true },
-    })
-    if (!guardian) return []
-
-    const links = await db.studentGuardian.findMany({
-      where: { schoolId, guardianId: guardian.id },
-      select: { studentId: true },
-    })
-    return links.map((l) => l.studentId)
-  }
-)
 
 /**
  * Format result for display in table row

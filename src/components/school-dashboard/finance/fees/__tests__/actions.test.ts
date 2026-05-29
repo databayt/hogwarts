@@ -21,8 +21,6 @@ vi.mock("@/lib/db", () => ({
     },
     payment: {
       create: vi.fn(),
-      findFirst: vi.fn(),
-      update: vi.fn(),
     },
     userInvoice: {
       findFirst: vi.fn(),
@@ -34,11 +32,6 @@ vi.mock("@/lib/db", () => ({
     studentGuardian: {
       findMany: vi.fn(),
     },
-    // P2.1 — markPaymentCleared wraps the status transition + assignment
-    // status flip in $transaction to keep the two writes atomic. Mock just
-    // resolves the array so the action under test doesn't blow up at the
-    // txn boundary.
-    $transaction: vi.fn().mockImplementation(async (ops) => ops),
   },
 }))
 
@@ -77,13 +70,9 @@ vi.mock("../queries", async () => ({
   getScholarshipList: vi.fn(),
 }))
 
-// Provider: stub at module level. P0.4 added `resolveAvailableMethods` to
-// the import surface so we need to keep the mock in lockstep — without it
-// `createFeePaymentCheckout` throws "is not a function" before hitting
-// `createPaymentCheckout`.
+// Provider: stub at module level
 vi.mock("@/lib/payment/provider", () => ({
   createPaymentCheckout: vi.fn(),
-  resolveAvailableMethods: vi.fn().mockReturnValue(["stripe"]),
 }))
 
 // ---------------------------------------------------------------------------
@@ -395,126 +384,5 @@ describe("createFeePaymentCheckout", () => {
       "stripe",
       expect.objectContaining({ amount: 750 })
     )
-  })
-})
-
-// ---------------------------------------------------------------------------
-// P2.1 — markPaymentCleared (offline bank-transfer / ATM-deposit reconciliation)
-// ---------------------------------------------------------------------------
-
-describe("markPaymentCleared", () => {
-  beforeEach(async () => {
-    vi.clearAllMocks()
-    vi.resetModules()
-    await setupAuthAndTenant()
-  })
-
-  it("is idempotent — repeated clear on an already-SUCCESS row is a no-op", async () => {
-    const PAYMENT_ID = "pay-1"
-    vi.mocked(db.payment.findFirst).mockResolvedValue({
-      id: PAYMENT_ID,
-      status: "SUCCESS",
-      amount: 500,
-      paymentMethod: "BANK_TRANSFER",
-      paymentDate: new Date(),
-      studentId: STUDENT_ID,
-      feeAssignmentId: FEE_ASSIGNMENT_ID,
-      feeAssignment: {
-        finalAmount: 1000,
-        payments: [{ amount: 500 }],
-      },
-    } as never)
-
-    const { markPaymentCleared } = await import("../actions")
-    const result = await markPaymentCleared(PAYMENT_ID)
-
-    expect(result.success).toBe(true)
-    expect(result.data).toBe(PAYMENT_ID)
-    // The action returns early before any writes — guards against
-    // double-posting to the ledger when an admin clicks twice.
-    expect(db.payment.update).not.toHaveBeenCalled()
-    expect(db.feeAssignment.update).not.toHaveBeenCalled()
-  })
-
-  it("returns PAYMENT_FAILED when the payment is in an unexpected state", async () => {
-    // Only PENDING_VERIFICATION → SUCCESS is a legal transition. A FAILED
-    // or CANCELLED payment can't be "cleared" — admin must record a new
-    // entry.
-    vi.mocked(db.payment.findFirst).mockResolvedValue({
-      id: "pay-failed",
-      status: "FAILED",
-      amount: 500,
-      paymentMethod: "BANK_TRANSFER",
-      paymentDate: new Date(),
-      studentId: STUDENT_ID,
-      feeAssignmentId: FEE_ASSIGNMENT_ID,
-      feeAssignment: { finalAmount: 1000, payments: [] },
-    } as never)
-
-    const { markPaymentCleared } = await import("../actions")
-    const result = await markPaymentCleared("pay-failed")
-
-    expect(result.success).toBe(false)
-    expect(result.error).toBe("PAYMENT_FAILED")
-    expect(db.payment.update).not.toHaveBeenCalled()
-  })
-
-  it("transitions PENDING_VERIFICATION → SUCCESS and flips the assignment status", async () => {
-    const PAYMENT_ID = "pay-pending"
-    vi.mocked(db.payment.findFirst).mockResolvedValue({
-      id: PAYMENT_ID,
-      status: "PENDING_VERIFICATION",
-      amount: 1000,
-      paymentMethod: "BANK_TRANSFER",
-      paymentDate: new Date(),
-      studentId: STUDENT_ID,
-      feeAssignmentId: FEE_ASSIGNMENT_ID,
-      feeAssignment: {
-        // Final 1000, no prior SUCCESS payments → clearing 1000 should
-        // flip the assignment to PAID.
-        finalAmount: 1000,
-        payments: [],
-      },
-    } as never)
-    vi.mocked(db.student.findFirst).mockResolvedValue({
-      userId: USER_ID,
-    } as never)
-    vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
-
-    const { markPaymentCleared } = await import("../actions")
-    const result = await markPaymentCleared(PAYMENT_ID)
-
-    expect(result.success).toBe(true)
-    // Two writes: the Payment row and the FeeAssignment row — bundled in
-    // $transaction so trial balance never sees a SUCCESS payment whose
-    // parent is still PENDING.
-    expect(db.payment.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: PAYMENT_ID },
-        data: expect.objectContaining({
-          status: "SUCCESS",
-          verifiedBy: expect.any(String),
-          verifiedAt: expect.any(Date),
-        }),
-      })
-    )
-    expect(db.feeAssignment.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: FEE_ASSIGNMENT_ID },
-        data: { status: "PAID" },
-      })
-    )
-  })
-
-  it("returns NOT_FOUND when the payment doesn't exist (or belongs to a different tenant)", async () => {
-    // Scoped lookup means cross-tenant probes hit this branch — the same
-    // shape as an admin clicking a stale link.
-    vi.mocked(db.payment.findFirst).mockResolvedValue(null)
-
-    const { markPaymentCleared } = await import("../actions")
-    const result = await markPaymentCleared("does-not-exist")
-
-    expect(result.success).toBe(false)
-    expect(result.error).toBe("NOT_FOUND")
   })
 })

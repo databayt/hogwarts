@@ -74,10 +74,7 @@ export const stripeProvider: PaymentProvider = {
 
     const session = await stripe.checkout.sessions.create({
       mode,
-      // Omit `payment_method_types` so Stripe enables every method the
-      // connected account supports (cards, Apple Pay, Google Pay, Link, etc.)
-      // based on Dashboard settings + buyer device. Hardcoding ["card"]
-      // disables wallet buttons even when the account is wallet-enabled.
+      payment_method_types: ["card"],
       ...(params.customerEmail ? { customer_email: params.customerEmail } : {}),
       line_items: lineItems,
       metadata: {

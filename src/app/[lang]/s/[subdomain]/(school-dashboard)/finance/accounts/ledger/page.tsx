@@ -31,24 +31,17 @@ export default async function GeneralLedgerPage({ params }: Props) {
     )
   }
 
-  const [ledgerEntries, schoolForCurrency] = await Promise.all([
-    db.ledgerEntry.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      include: {
-        account: { select: { code: true, name: true, type: true } },
-        journalEntry: {
-          select: { entryNumber: true, entryDate: true, isPosted: true },
-        },
+  const ledgerEntries = await db.ledgerEntry.findMany({
+    where: { schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: {
+      account: { select: { code: true, name: true, type: true } },
+      journalEntry: {
+        select: { entryNumber: true, entryDate: true, isPosted: true },
       },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+    },
+  })
 
   return (
     <div className="space-y-4">
@@ -114,12 +107,12 @@ export default async function GeneralLedgerPage({ params }: Props) {
                       </td>
                       <td className="py-2 pe-4 text-end">
                         {Number(entry.debit) > 0
-                          ? formatCurrency(Number(entry.debit), lang, currency)
+                          ? formatCurrency(Number(entry.debit), lang)
                           : "\u2014"}
                       </td>
                       <td className="py-2 pe-4 text-end">
                         {Number(entry.credit) > 0
-                          ? formatCurrency(Number(entry.credit), lang, currency)
+                          ? formatCurrency(Number(entry.credit), lang)
                           : "\u2014"}
                       </td>
                       <td className="py-2">

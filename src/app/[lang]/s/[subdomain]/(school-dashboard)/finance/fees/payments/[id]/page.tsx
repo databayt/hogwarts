@@ -52,31 +52,23 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   if (!schoolId) notFound()
 
-  const [payment, schoolForCurrency] = await Promise.all([
-    db.payment.findFirst({
-      where: { id, schoolId },
-      include: {
-        student: { select: { firstName: true, lastName: true } },
-        feeAssignment: {
-          select: {
-            id: true,
-            academicYear: true,
-            finalAmount: true,
-            status: true,
-            feeStructure: { select: { name: true } },
-          },
+  const payment = await db.payment.findFirst({
+    where: { id, schoolId },
+    include: {
+      student: { select: { firstName: true, lastName: true } },
+      feeAssignment: {
+        select: {
+          id: true,
+          academicYear: true,
+          finalAmount: true,
+          status: true,
+          feeStructure: { select: { name: true } },
         },
       },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
+    },
+  })
 
   if (!payment) notFound()
-
-  const currency = schoolForCurrency?.currency ?? "USD"
 
   const studentName = [payment.student?.firstName, payment.student?.lastName]
     .filter(Boolean)
@@ -93,11 +85,10 @@ export default async function PaymentDetailPage({ params }: Props) {
         </div>
         <div className="flex gap-2">
           <PaymentDetailActions
-            paymentId={payment.id}
             receiptData={{
               paymentNumber: payment.paymentNumber,
               receiptNumber: payment.receiptNumber,
-              amount: formatCurrency(Number(payment.amount), lang, currency),
+              amount: formatCurrency(Number(payment.amount), lang),
               paymentDate: payment.paymentDate
                 ? formatDate(payment.paymentDate, lang)
                 : "-",
@@ -145,7 +136,7 @@ export default async function PaymentDetailPage({ params }: Props) {
                 {d?.amount ?? "Amount"}
               </span>
               <span className="text-xl font-bold">
-                {formatCurrency(Number(payment.amount), lang, currency)}
+                {formatCurrency(Number(payment.amount), lang)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -253,8 +244,7 @@ export default async function PaymentDetailPage({ params }: Props) {
                   <span className="font-medium">
                     {formatCurrency(
                       Number(payment.feeAssignment.finalAmount),
-                      lang,
-                      currency
+                      lang
                     )}
                   </span>
                 </div>

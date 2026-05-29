@@ -49,21 +49,14 @@ export default async function ExpensesListPage({ params }: Props) {
     )
   }
 
-  const [expenses, schoolForCurrency] = await Promise.all([
-    db.expense.findMany({
-      where: { schoolId },
-      orderBy: { expenseDate: "desc" },
-      take: 20,
-      include: {
-        category: { select: { name: true } },
-      },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const expenses = await db.expense.findMany({
+    where: { schoolId },
+    orderBy: { expenseDate: "desc" },
+    take: 20,
+    include: {
+      category: { select: { name: true } },
+    },
+  })
 
   return (
     <div className="space-y-4">
@@ -101,7 +94,7 @@ export default async function ExpensesListPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="font-medium">
-                      {formatCurrency(Number(expense.amount), lang, currency)}
+                      {formatCurrency(Number(expense.amount), lang)}
                     </p>
                     <Badge variant={statusVariant(expense.status)}>
                       {expense.status}

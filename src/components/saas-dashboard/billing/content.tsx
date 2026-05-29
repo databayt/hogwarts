@@ -158,7 +158,7 @@ export async function BillingContent({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats.totalRevenue, lang, "USD")}
+              {formatCurrency(stats.totalRevenue, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {t.billing.fromPaidInvoices.replace(

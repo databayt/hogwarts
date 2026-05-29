@@ -14,22 +14,6 @@
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/cron/process-report-card-pdfs",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/process-transcript-pdfs",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/process-push-notifications",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/term-end-report-cards",
-      "schedule": "0 3 * * *"
-    },
-    {
       "path": "/api/cron/process-whatsapp-notifications",
       "schedule": "0 0 * * *"
     },
@@ -60,22 +44,6 @@
     {
       "path": "/api/cron/scheduled-reports",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/esis-submit",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/absence-followup",
-      "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/live-class-reminders",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/expire-live-recordings",
-      "schedule": "30 2 * * *"
     }
   ]
 }

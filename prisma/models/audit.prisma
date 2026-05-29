@@ -3,7 +3,7 @@
 // For school-scoped actions, schoolId should always be provided
 model AuditLog {
   id        String  @id @default(cuid())
-  userId    String? // Optional — null = system actor (cron, worker, webhook)
+  userId    String
   schoolId  String? // Optional for school-dashboard-level actions (DEVELOPER role)
   action    String
   reason    String?
@@ -25,7 +25,7 @@ model AuditLog {
 
   // Relationships
   school    School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  performer User?   @relation("AuditPerformer", fields: [userId], references: [id], onDelete: SetNull)
+  performer User    @relation("AuditPerformer", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([schoolId, userId])

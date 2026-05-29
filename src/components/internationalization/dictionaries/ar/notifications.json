@@ -15,8 +15,7 @@
       "inApp": "داخل التطبيق",
       "email": "البريد الإلكتروني",
       "push": "إشعار فوري",
-      "sms": "رسالة نصية",
-      "whatsapp": "واتساب"
+      "sms": "رسالة نصية"
     },
     "channelSettings": "إعدادات القنوات",
     "deliveryMethods": "طرق التوصيل",
@@ -115,13 +114,7 @@
     "report_ready": "التقرير جاهز",
     "absence_intention": "تم تقديم نية الغياب",
     "absence_intention_decision": "تمت مراجعة نية الغياب",
-    "absence_unreported_followup": "غياب غير مُبلَّغ — متابعة ولي الأمر",
-    "setup_guide": "دليل الإعداد",
-    "live_class_scheduled": "تم جدولة فصل مباشر",
-    "live_class_starting_soon": "فصل مباشر يبدأ قريباً",
-    "live_class_started": "الفصل المباشر يبث الآن",
-    "live_class_cancelled": "تم إلغاء الفصل المباشر",
-    "live_class_recording_ready": "تسجيل الفصل جاهز"
+    "setup_guide": "دليل الإعداد"
   },
   "priorities": {
     "low": "أولوية منخفضة",

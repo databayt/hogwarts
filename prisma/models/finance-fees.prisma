@@ -20,12 +20,6 @@ enum PaymentMethod {
   NET_BANKING
   WALLET
   OTHER
-  // P1.4 — Aldar UAE pitch additions (ALTER TYPE ADD VALUE on Neon br-small-tooth-adscsfmb)
-  APPLE_PAY
-  GOOGLE_PAY
-  MADA
-  KNET
-  ATM_DEPOSIT
 }
 
 enum PaymentStatus {
@@ -34,10 +28,6 @@ enum PaymentStatus {
   FAILED
   CANCELLED
   REFUNDED
-  // P2.1 — Aldar UAE manual bank-transfer / ATM-deposit flow. Admin enters
-  // a reference + deposit slip, status lands here. Ledger posting is gated
-  // until `markPaymentCleared` transitions to SUCCESS on reconcile.
-  PENDING_VERIFICATION
 }
 
 enum RefundStatus {
@@ -104,11 +94,6 @@ model FeeStructure {
   installments    Int     @default(1)
   paymentSchedule Json? // Array of {dueDate, amount, description}
 
-  // P1.1 — Snapshot of the school's currency at create time so receipts stay
-  // correct after a school later changes School.currency. Nullable for
-  // backfill compat; new rows MUST write currency from School.currency.
-  currency String?
-
   // Policies
   lateFeeAmount  Decimal?     @db.Decimal(10, 2)
   lateFeeType    LateFeeType? @default(FIXED)
@@ -145,8 +130,6 @@ model FeeAssignment {
   // Custom amounts (if different from structure)
   customAmount Decimal? @db.Decimal(10, 2)
   finalAmount  Decimal  @db.Decimal(10, 2)
-  // P1.1 — Snapshot currency from School at create time (see FeeStructure).
-  currency     String?
 
   // Discounts and Scholarships
   discounts     Json? // Array of {type, amount, reason}
@@ -181,25 +164,12 @@ model Payment {
   amount        Decimal       @db.Decimal(10, 2)
   paymentDate   DateTime      @default(now())
   paymentMethod PaymentMethod
-  // P1.1 — Snapshot currency for receipt fidelity (see FeeStructure).
-  currency      String?
-  // P1.3 — Gateway-reported method (Tap source.payment_method: MADA,
-  // APPLE_PAY, KNET, etc.) — preserved separately from PaymentMethod so we
-  // don't lose Tap provenance even when paymentMethod is OTHER.
-  gatewayMethod String?
 
   // Transaction Details
   transactionId String?
   bankName      String?
   chequeNumber  String?
   cardLastFour  String?
-
-  // P2.1 — Offline bank-transfer + ATM-deposit capture for Aldar's manual
-  // reconciliation flow. `verifiedAt`/`verifiedBy` (already on the model)
-  // flip from null → set when the admin marks the payment as cleared.
-  depositSlipUrl     String?
-  depositBankBranch  String?
-  depositorIban      String?
 
   // Receipt
   receiptNumber String  @unique

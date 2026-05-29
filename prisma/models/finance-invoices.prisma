@@ -121,8 +121,6 @@ model Receipt {
   fileName   String
   fileUrl    String
   amount     Int
-  // P1.1 — Snapshot currency for receipt fidelity (see FeeStructure).
-  currency   String?
   status     String    @default("pending") // pending, approved, rejected
   notes      String?   @db.Text
   reviewedAt DateTime?

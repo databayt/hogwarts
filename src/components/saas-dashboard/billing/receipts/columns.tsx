@@ -70,7 +70,7 @@ export function getReceiptColumns(lang: Locale): ColumnDef<ReceiptRow>[] {
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">
-          {formatCurrency(getValue<number>() / 100, lang, "USD")}
+          {formatCurrency(getValue<number>() / 100, lang)}
         </span>
       ),
       meta: { label: "Amount", variant: "number" },

@@ -5,24 +5,20 @@ description: حضور متعدّد الطرق — يدوي، QR، باركود،
 
 تتبّع وحدة الحضور حضور الطلاب عبر طرق التقاط متعدّدة، مع وصول مبني على الأدوار، إشعارات للأهل، مستويات خطر وفق US DoE، تتبّع للتدخّلات، وتصدير CSV / Excel / PDF. المعلمون يرون فصولهم المسندة فقط؛ الطلاب وأولياء الأمور يرون سجلاتهم فقط.
 
-> **متتبّع الإصدار:** [databayt/hogwarts#1](https://github.com/databayt/hogwarts/issues/1) — متتبّع رئيسي موحّد للحضور والامتثال. راجع كذلك [Aldar Epic 01](https://kun.databayt.org/en/docs/aldar#01--adek-attendance-submission).
-
 ## الحالة
 
-| الميزة                                                                         | الحالة     | ملاحظات                                             |
-| ------------------------------------------------------------------------------ | ---------- | --------------------------------------------------- |
-| يدوي / حصة / QR / باركود / رفع جماعي                                           | Production | طرق التقاط متعدّدة (راجع جدول طرق الالتقاط)         |
-| إشعارات الأهل + تقديم الأعذار                                                  | Production | داخل التطبيق + SMS + بريد؛ يراجعها الكادر           |
-| الإنذار المبكّر                                                                | Production | مستويات خطر US DoE، تتبّع التدخّلات                 |
-| تصدير التقارير                                                                 | Production | CSV، Excel (5 أوراق)، PDF (بهوية المدرسة)           |
-| الحذف الناعم + الاستعادة                                                       | Production | `deletedAt`                                         |
-| العذر التلقائي                                                                 | Production | `AbsenceIntention` معتمَد → EXCUSED                 |
-| أسماء حسّاسة للّغة                                                             | Production | `getDisplayText()` يترجم عند الطلب                  |
-| Geofence / Master gate / محرّك السياسات / تقارير الامتثال                      | موصول      | يعمل، الواجهة لا تزال تنضج                          |
-| الإعدادات                                                                      | UI فقط     | الحفظ غير موصول                                     |
-| توقّعات AI / Gamification / Hall pass / Kiosk / نوايا الغياب / خطابات الامتثال | مكوّن      | لا صفحة route                                       |
-| إرسال يومي لـ ADEK eSIS                                                        | Production | موصّل عام في `/compliance`، الوضع الافتراضي DRY_RUN |
-| كرون تواصل ولي الأمر خلال ساعتين                                               | Production | `/api/cron/absence-followup`، كل 30 دقيقة، UTC      |
+| الميزة                                                                         | الحالة     | ملاحظات                                     |
+| ------------------------------------------------------------------------------ | ---------- | ------------------------------------------- |
+| يدوي / حصة / QR / باركود / رفع جماعي                                           | Production | طرق التقاط متعدّدة (راجع جدول طرق الالتقاط) |
+| إشعارات الأهل + تقديم الأعذار                                                  | Production | داخل التطبيق + SMS + بريد؛ يراجعها الكادر   |
+| الإنذار المبكّر                                                                | Production | مستويات خطر US DoE، تتبّع التدخّلات         |
+| تصدير التقارير                                                                 | Production | CSV، Excel (5 أوراق)، PDF (بهوية المدرسة)   |
+| الحذف الناعم + الاستعادة                                                       | Production | `deletedAt`                                 |
+| العذر التلقائي                                                                 | Production | `AbsenceIntention` معتمَد → EXCUSED         |
+| أسماء حسّاسة للّغة                                                             | Production | `getDisplayText()` يترجم عند الطلب          |
+| Geofence / Master gate / محرّك السياسات / تقارير الامتثال                      | موصول      | يعمل، الواجهة لا تزال تنضج                  |
+| الإعدادات                                                                      | UI فقط     | الحفظ غير موصول                             |
+| توقّعات AI / Gamification / Hall pass / Kiosk / نوايا الغياب / خطابات الامتثال | مكوّن      | لا صفحة route                               |
 
 ## المسارات
 
@@ -170,77 +166,8 @@ model Attendance {
 pnpm db:seed:single attendance
 ```
 
-## الامتثال للجهات التنظيمية (ADEK eSIS — الإمارات)
-
-يمكن لمدارس الإمارات (`School.country === "AE"`) تفعيل رفع يومي لملف CSV
-إلى بوابة ADEK eSIS على `esis.adek.gov.ae` بالإضافة إلى التواصل مع ولي
-الأمر خلال ساعتين من الغياب غير المُبلَّغ (متطلب ADEK). الإطار العام —
-إضافة جهة تنظيمية جديدة (هيئة التعليم السعودية، وزارة التعليم القطرية،
-وزارة التعليم السودانية) تتطلب فقط إضافة قيمة إلى enum
-`ComplianceProvider` ودليل تحت `src/lib/compliance/providers/<authority>/`.
-
-| القطعة                 | المسار                                            | الغرض                                                     |
-| ---------------------- | ------------------------------------------------- | --------------------------------------------------------- |
-| واجهة الإعدادات        | `/{lang}/compliance`                              | تفعيل، الوضع، المهلة، وقت الإرسال اليومي، قائمة الإرسالات |
-| إدارة عبر المستأجرين   | `/{lang}/(saas-dashboard)/compliance` (DEVELOPER) | مجموعات بيانات الاعتماد المشتركة لنمط Aldar               |
-| كرون يومي              | `/api/cron/esis-submit` (`0 10 * * *`)            | إدخال طوابير + توزيع على المدارس                          |
-| كرون متابعة            | `/api/cron/absence-followup` (`*/30 * * * *`)     | سجل امتثال ساعتين                                         |
-| Webhook                | `/api/webhooks/adek`                              | استلام `ACCEPTED`/`REJECTED` غير متزامن                   |
-| Worker (خارج المستودع) | `tools/adek-rpa-worker/` (Fly.io)                 | Playwright عند عدم توفر API                               |
-
-أوضاع الموصّل — قابلة للضبط لكل مدرسة × مزوّد:
-
-| الوضع          | الوظيفة                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| `DRY_RUN`      | إنشاء CSV، حفظه للتدقيق، يرفعه المسجّل يدوياً إلى eSIS                                                         |
-| `PIGGYBACK`    | الإرسال عبر بيانات اعتماد مجموعة مشتركة (نمط الدار، صف اعتماد واحد × N مدارس، قاطع دائرة عند التدفقات الفاشلة) |
-| `OFFICIAL_API` | واجهة برمجية موثّقة من المزوّد (بانتظار وصول مطوّرين من ADEK)                                                  |
-| `RPA`          | يلتقط عامل Playwright خارجي الصفوف `QUEUED` ويرفع عبر بوابة eSIS                                               |
-| `DISABLED`     | تخطّي في الكرون                                                                                                |
-
-### مهلة التواصل مع ولي الأمر — ساعتين
-
-عند تفعيل `SchoolComplianceConfig.enabled = true`، فإن
-`triggerAbsenceNotification` يُرسل عبر قنوات `in_app + email + whatsapp`
-(بدلاً من `in_app` فقط) لكي تستهلك كرونات البريد و WhatsApp الصف. كل
-30 دقيقة، يبحث كرون `absence-followup` عن صفوف ABSENT التي:
-
-- `markedAt < now() - parentContactSlaMinutes` (افتراضي 120، محسوب بـ UTC)
-- لا يوجد لها `AttendanceExcuse`
-- لا يوجد لها `AbsenceIntention` معتمَد يغطّي اليوم
-- لا يوجد لها `AttendanceIntervention` من نوع `PARENT_PHONE_CALL` /
-  `PARENT_EMAIL` خلال آخر 24 ساعة
-
-يُرسل إشعار `absence_unreported_followup` لكل ولي أمر، ثم يكتب صفّ
-`AttendanceIntervention` (`PARENT_EMAIL`, parentNotified=true,
-contactMethod=`in_app+email+whatsapp`). هذا الصفّ هو سجل التدقيق الموجّه
-للجهة التنظيمية — يستعلم `getParentContactSlaReport()` عنه لتقديم
-عدّ "تواصل ضمن المهلة" لتدقيقات ADEK.
-
-### النموذج البياني (جانب الامتثال)
-
-خمسة كيانات جديدة في `prisma/models/compliance.prisma` — ليس أيٌّ منها
-خاصّاً بـ ADEK:
-
-- `ComplianceProvider` enum (حالياً `ADEK_ESIS`، `CUSTOM`)
-- `ConnectorMode` enum
-- `ComplianceSubmissionStatus` enum + `CircuitBreakerState` enum
-- `SchoolComplianceConfig` — صفّ واحد لكل مدرسة × مزوّد (تفعيل اختياري)
-- `SharedComplianceCredentialGroup` — بيانات اعتماد مشتركة لمجموعة (نمط الدار)
-- `SchoolComplianceCredential` — بيانات اعتماد لكل مدرسة (وضع OFFICIAL_API)
-- `ComplianceSubmission` — صفّ لكل محاولة، مفهرس بـ `(schoolId, provider,
-submissionDate, attemptNumber)`. تتسلسل المحاولات عبر `supersededBy`.
-  يُحفظ CSV داخل `csvArtifactContent` ويُنزَّل عبر
-  `/api/compliance/artifact/[submissionId]` (S3 URL موقّع قيد التخطيط).
-
-تمّ توسيع `AuditLog.userId` ليقبل null في نفس الإصدار لكي يُسجَّل كرون /
-عامل / webhook كأحداث نظام — تمرير `userId: null` في المكالمات.
-
-أُضيف نوع `NotificationType.absence_unreported_followup` لمسار المهلة.
-
 ## انظر أيضاً
 
 - [تعدد المستأجرين](/ar/docs/multi-tenancy) — RBAC + نطاق المستأجر
 - [الإشعارات](/en/docs/notifications) — إرسال الغياب
 - [الجدول](/en/docs/timetable) — اكتشاف الحصة تلقائياً
-- [الامتثال](/ar/docs/compliance) — إطار الإرسال للجهات التنظيمية (ADEK + جهات مستقبلية)

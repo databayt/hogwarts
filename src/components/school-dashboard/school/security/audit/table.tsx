@@ -30,7 +30,7 @@ type AuditLogWithPerformer = AuditLog & {
     username: string | null
     email: string | null
     role: string
-  } | null
+  }
 }
 
 interface Props {
@@ -86,12 +86,10 @@ export function AuditTable({ logs, total, lang }: Props) {
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">
-                          {log.performer
-                            ? log.performer.username || log.performer.email
-                            : "System"}
+                          {log.performer.username || log.performer.email}
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          {log.performer?.role ?? "—"}
+                          {log.performer.role}
                         </p>
                       </div>
                     </TableCell>
@@ -144,10 +142,8 @@ export function AuditTable({ logs, total, lang }: Props) {
                 <div>
                   <p className="text-muted-foreground">User</p>
                   <p className="font-medium">
-                    {selectedLog.performer
-                      ? selectedLog.performer.username ||
-                        selectedLog.performer.email
-                      : "System"}
+                    {selectedLog.performer.username ||
+                      selectedLog.performer.email}
                   </p>
                 </div>
                 <div>

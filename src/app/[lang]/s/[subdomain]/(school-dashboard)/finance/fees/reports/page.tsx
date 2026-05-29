@@ -41,40 +41,34 @@ export default async function FeeReportsPage({ params }: Props) {
 
   if (!schoolId) notFound()
 
-  const [stats, recentPayments, topStructures, schoolForCurrency] =
-    await Promise.all([
-      getFeeStats(schoolId),
-      db.payment.findMany({
-        where: { schoolId, status: "SUCCESS" },
-        orderBy: { paymentDate: "desc" },
-        take: 10,
-        select: {
-          id: true,
-          paymentNumber: true,
-          amount: true,
-          paymentDate: true,
-          paymentMethod: true,
-          student: { select: { firstName: true, lastName: true } },
-        },
-      }),
-      db.feeStructure.findMany({
-        where: { schoolId, isActive: true },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          name: true,
-          totalAmount: true,
-          academicYear: true,
-          _count: { select: { feeAssignments: true } },
-        },
-      }),
-      db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      }),
-    ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const [stats, recentPayments, topStructures] = await Promise.all([
+    getFeeStats(schoolId),
+    db.payment.findMany({
+      where: { schoolId, status: "SUCCESS" },
+      orderBy: { paymentDate: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        paymentNumber: true,
+        amount: true,
+        paymentDate: true,
+        paymentMethod: true,
+        student: { select: { firstName: true, lastName: true } },
+      },
+    }),
+    db.feeStructure.findMany({
+      where: { schoolId, isActive: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        name: true,
+        totalAmount: true,
+        academicYear: true,
+        _count: { select: { feeAssignments: true } },
+      },
+    }),
+  ])
 
   const totalExpected =
     Object.values(stats.assignmentsByStatus).reduce(
@@ -109,7 +103,7 @@ export default async function FeeReportsPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">
-              {formatCurrency(stats.totalCollected, lang, currency)}
+              {formatCurrency(stats.totalCollected, lang)}
             </p>
           </CardContent>
         </Card>
@@ -121,7 +115,7 @@ export default async function FeeReportsPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold tabular-nums">
-              {formatCurrency(stats.totalPending, lang, currency)}
+              {formatCurrency(stats.totalPending, lang)}
             </p>
           </CardContent>
         </Card>
@@ -192,7 +186,7 @@ export default async function FeeReportsPage({ params }: Props) {
                       {data.count}
                     </p>
                     <p className="text-muted-foreground text-sm tabular-nums">
-                      {formatCurrency(data.amount, lang, currency)}
+                      {formatCurrency(data.amount, lang)}
                     </p>
                   </div>
                 )
@@ -227,7 +221,7 @@ export default async function FeeReportsPage({ params }: Props) {
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell>{s.academicYear}</TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(Number(s.totalAmount), lang, currency)}
+                      {formatCurrency(Number(s.totalAmount), lang)}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {s._count.feeAssignments}
@@ -266,7 +260,7 @@ export default async function FeeReportsPage({ params }: Props) {
                         .join(" ")}
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(Number(p.amount), lang, currency)}
+                      {formatCurrency(Number(p.amount), lang)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">

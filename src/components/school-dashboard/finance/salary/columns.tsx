@@ -124,11 +124,7 @@ export const getSalaryStructureColumns = (
         const salary = row.original
         return (
           <span className="text-end font-medium tabular-nums">
-            {formatCurrency(
-              salary.baseSalary,
-              (lang || "en") as Locale,
-              salary.currency
-            )}
+            {formatCurrency(salary.baseSalary, (lang || "en") as Locale)}
           </span>
         )
       },

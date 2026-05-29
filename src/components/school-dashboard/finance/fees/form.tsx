@@ -28,14 +28,9 @@ import { createFeeStructure, updateFeeStructure } from "./actions"
 interface Props {
   lang: Locale
   initialData?: Record<string, unknown>
-  currency?: string
 }
 
-export default function FeeStructureForm({
-  lang,
-  initialData,
-  currency = "USD",
-}: Props) {
+export default function FeeStructureForm({ lang, initialData }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { dictionary } = useDictionary()
@@ -375,7 +370,7 @@ export default function FeeStructureForm({
               {ff?.totalAmount || "Total Amount"}
             </p>
             <p className="text-2xl font-bold">
-              {formatCurrency(totalAmount, lang, currency)}
+              {formatCurrency(totalAmount, lang)}
             </p>
           </div>
           <div className="flex gap-2">

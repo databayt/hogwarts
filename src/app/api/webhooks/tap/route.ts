@@ -16,14 +16,13 @@
  * Idempotency: ProcessedWebhookEvent dedupe via `(provider, providerEventId)`
  * — a P2002 conflict short-circuits with 200 OK. Mirrors the Stripe handler.
  *
- * Signature verification: we compute HMAC-SHA256 over the raw body and
- * compare it to the `tap_signature` header (case-insensitive). When the
- * secret is unset we FAIL CLOSED (P1.2): every Aldar/production deploy
- * must set `TAP_WEBHOOK_SECRET` or webhooks 400 — silent fallback would
- * let a forged charge write Payment rows + post to the ledger.
+ * Signature verification: when `TAP_WEBHOOK_SECRET` is set we compute an
+ * HMAC-SHA256 over the raw body and compare to the `tap_signature` header
+ * (case-insensitive). When the secret is unset we accept (dev/sandbox
+ * convenience) but log a warning so the misconfig is loud.
  */
 import crypto from "node:crypto"
-import { Prisma, type PaymentMethod } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
@@ -33,57 +32,12 @@ interface TapChargePayload {
   amount?: number
   currency?: string
   reference?: { transaction?: string }
-  // Tap's `source` object identifies the underlying wallet/instrument:
-  //   `source.id` = "src_card" | "src_apple_pay" | "src_mada" | "src_knet" | ...
-  //   `source.payment_method` = "APPLE_PAY" | "MADA" | "KNET" | "CARD" | ...
-  // We persist the raw value as Payment.gatewayMethod for audit and map it to
-  // the PaymentMethod enum for the operational view (P1.3 + P1.4).
-  source?: {
-    id?: string
-    payment_method?: string
-    brand?: string
-  }
   metadata?: Record<string, string | undefined> & {
     context?: string
     feeAssignmentId?: string
     studentId?: string
     schoolId?: string
     type?: string
-  }
-}
-
-/**
- * Map Tap's `source.payment_method` (or `source.id`) to a value of the
- * PaymentMethod enum. Unknown values fall back to OTHER but the raw Tap
- * value is still persisted in Payment.gatewayMethod for audit.
- */
-function mapTapSourceToPaymentMethod(
-  source: TapChargePayload["source"]
-): PaymentMethod {
-  const raw = (source?.payment_method ?? source?.id ?? "")
-    .toString()
-    .toUpperCase()
-    .replace(/^SRC_/, "")
-  switch (raw) {
-    case "APPLE_PAY":
-    case "APPLEPAY":
-      return "APPLE_PAY"
-    case "GOOGLE_PAY":
-    case "GOOGLEPAY":
-      return "GOOGLE_PAY"
-    case "MADA":
-      return "MADA"
-    case "KNET":
-      return "KNET"
-    case "CARD":
-    case "VISA":
-    case "MASTERCARD":
-    case "AMEX":
-      return "CREDIT_CARD"
-    case "BANK_TRANSFER":
-      return "BANK_TRANSFER"
-    default:
-      return "OTHER"
   }
 }
 
@@ -142,38 +96,6 @@ export async function POST(req: Request) {
     )
   }
 
-  // P3.2 — Surface failed/declined Tap charges to the parent with a retry
-  // link instead of silently swallowing them. Previously only logged; this
-  // left parents staring at a vanished checkout with no signal.
-  const failedStatuses = new Set([
-    "FAILED",
-    "DECLINED",
-    "CANCELLED",
-    "ABANDONED",
-    "TIMEDOUT",
-  ])
-  if (
-    failedStatuses.has(charge.status) &&
-    charge.metadata?.context === "school_fee" &&
-    charge.metadata.feeAssignmentId &&
-    schoolId
-  ) {
-    try {
-      await notifyTapFailedFeePayment({
-        chargeId: charge.id,
-        status: charge.status,
-        feeAssignmentId: charge.metadata.feeAssignmentId,
-        schoolId,
-      })
-    } catch (notifErr) {
-      console.error(
-        `[Tap webhook] Failed to notify guardian on charge ${charge.id} status=${charge.status}:`,
-        notifErr
-      )
-    }
-    return new Response(null, { status: 200 })
-  }
-
   if (charge.status !== "CAPTURED") {
     console.log(
       `[Tap webhook] Charge ${charge.id} status=${charge.status} — no side-effect`
@@ -206,7 +128,6 @@ export async function POST(req: Request) {
       feeAssignmentId,
       schoolId,
       amount: typeof charge.amount === "number" ? charge.amount : 0,
-      source: charge.source,
     })
   } catch (handlerErr) {
     // Acknowledge the webhook even on handler failure — Tap will not retry
@@ -226,9 +147,8 @@ async function recordTapFeePayment(args: {
   feeAssignmentId: string
   schoolId: string
   amount: number
-  source?: TapChargePayload["source"]
 }): Promise<void> {
-  const { chargeId, feeAssignmentId, schoolId, amount, source } = args
+  const { chargeId, feeAssignmentId, schoolId, amount } = args
 
   const assignment = await db.feeAssignment.findFirst({
     where: { id: feeAssignmentId, schoolId },
@@ -240,7 +160,6 @@ async function recordTapFeePayment(args: {
       student: {
         select: { userId: true, firstName: true, lastName: true },
       },
-      school: { select: { currency: true } },
     },
   })
 
@@ -268,17 +187,6 @@ async function recordTapFeePayment(args: {
     return
   }
 
-  // P1.1: snapshot currency for receipt fidelity.
-  // P1.3: persist Tap's raw source.payment_method as gatewayMethod for audit.
-  // P1.4: map Tap source to operational PaymentMethod enum (APPLE_PAY,
-  // MADA, KNET, ...) so the admin payment list shows the right wallet badge
-  // instead of OTHER.
-  const paymentCurrency =
-    assignment.currency ?? assignment.school?.currency ?? "USD"
-  const mappedMethod = mapTapSourceToPaymentMethod(source)
-  const gatewayMethod =
-    source?.payment_method ?? source?.id ?? source?.brand ?? null
-
   const payment = await db.payment.create({
     data: {
       schoolId: assignment.schoolId,
@@ -287,9 +195,7 @@ async function recordTapFeePayment(args: {
       paymentNumber:
         `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
       amount: paymentAmount,
-      currency: paymentCurrency,
-      paymentMethod: mappedMethod,
-      gatewayMethod,
+      paymentMethod: "OTHER",
       paymentDate: new Date(),
       status: "SUCCESS",
       receiptNumber:
@@ -331,7 +237,7 @@ async function recordTapFeePayment(args: {
         paymentId: payment.id,
         studentId: assignment.studentId,
         amount: paymentAmount,
-        paymentMethod: mappedMethod,
+        paymentMethod: "OTHER",
         paymentDate: payment.paymentDate,
       },
       "system:tap-webhook"
@@ -378,77 +284,6 @@ async function recordTapFeePayment(args: {
 }
 
 /**
- * P3.2 — Dispatch a "payment failed" notification when Tap reports
- * FAILED/DECLINED/CANCELLED/ABANDONED/TIMEDOUT on a school_fee charge.
- *
- * No Payment row is written — failed charges aren't accounting events and
- * would pollute the reconciliation report. We rely on Tap's dashboard for
- * the audit trail and on the notification's deep link for parent retry.
- */
-async function notifyTapFailedFeePayment(args: {
-  chargeId: string
-  status: string
-  feeAssignmentId: string
-  schoolId: string
-}): Promise<void> {
-  const { chargeId, status, feeAssignmentId, schoolId } = args
-
-  const assignment = await db.feeAssignment.findFirst({
-    where: { id: feeAssignmentId, schoolId },
-    select: {
-      student: {
-        select: {
-          userId: true,
-          studentGuardians: {
-            select: { guardian: { select: { userId: true } } },
-          },
-        },
-      },
-    },
-  })
-  if (!assignment) {
-    console.error(
-      `[Tap webhook] FeeAssignment ${feeAssignmentId} not found for failed charge ${chargeId}`
-    )
-    return
-  }
-
-  const { dispatchNotification } = await import("@/lib/dispatch-notification")
-  const recipients = new Set<string>()
-  if (assignment.student?.userId) recipients.add(assignment.student.userId)
-  for (const sg of assignment.student?.studentGuardians ?? []) {
-    if (sg.guardian?.userId) recipients.add(sg.guardian.userId)
-  }
-
-  const friendlyStatus = status.replace(/_/g, " ").toLowerCase()
-  await Promise.all(
-    Array.from(recipients).map((userId) =>
-      dispatchNotification({
-        schoolId,
-        userId,
-        type: "fee_due",
-        title: "Payment Failed",
-        body: `Your Tap payment didn't complete (${friendlyStatus}). Please try again or use another payment method.`,
-        lang: "ar",
-        priority: "high",
-        channels: ["in_app", "email"],
-        metadata: {
-          feeAssignmentId,
-          chargeId,
-          status,
-          gateway: "tap",
-          url: `/finance/fees/assignments/${feeAssignmentId}`,
-        },
-      })
-    )
-  )
-
-  console.log(
-    `[Tap webhook] Notified ${recipients.size} recipient(s) of failed charge ${chargeId} (status: ${status})`
-  )
-}
-
-/**
  * Verify the `tap_signature` header against an HMAC-SHA256 of the raw body.
  *
  * Tap's official signing format combines header values with the body in a
@@ -458,20 +293,17 @@ async function notifyTapFailedFeePayment(args: {
  * extend this function with the headers Tap requires (typically `x_post_*`
  * fields concatenated alphabetically before HMACing).
  *
- * Returns true only when:
- *   - `TAP_WEBHOOK_SECRET` is set, AND
+ * Returns true when:
+ *   - secret is unset (dev/sandbox), or
  *   - signature matches the computed HMAC.
- *
- * P1.2 — fail-closed when secret is missing. Earlier dev/sandbox lenience
- * shipped to prod by accident, leaving Aldar's webhook unauthenticated.
  */
 function verifySignature(body: string, signature: string | null): boolean {
   const secret = process.env.TAP_WEBHOOK_SECRET
   if (!secret) {
-    console.error(
-      "[Tap webhook] TAP_WEBHOOK_SECRET not set — rejecting (set the env var to enable Tap webhooks)"
+    console.warn(
+      "[Tap webhook] TAP_WEBHOOK_SECRET not set — accepting without verification"
     )
-    return false
+    return true
   }
   if (!signature) {
     return false

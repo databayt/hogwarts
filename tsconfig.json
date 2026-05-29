@@ -44,7 +44,6 @@
     "src/test/**",
     "src/components/school-dashboard/file/**",
     "src/components/school-marketing/application/**",
-    "socket-server/**",
-    "tools/**"
+    "socket-server/**"
   ]
 }

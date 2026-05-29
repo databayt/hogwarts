@@ -32,21 +32,14 @@ export default async function PayrollRunsPage({ params }: Props) {
     )
   }
 
-  const [runs, schoolForCurrency] = await Promise.all([
-    db.payrollRun.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      include: {
-        _count: { select: { salarySlips: true } },
-      },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const runs = await db.payrollRun.findMany({
+    where: { schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    include: {
+      _count: { select: { salarySlips: true } },
+    },
+  })
 
   const statusConfig: Record<
     string,
@@ -91,7 +84,7 @@ export default async function PayrollRunsPage({ params }: Props) {
                   <div className="flex items-center gap-3">
                     <div className="text-end">
                       <p className="font-medium">
-                        {formatCurrency(Number(run.totalNet), lang, currency)}
+                        {formatCurrency(Number(run.totalNet), lang)}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {run._count.salarySlips} slips

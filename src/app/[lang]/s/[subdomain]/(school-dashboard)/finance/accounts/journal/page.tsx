@@ -32,22 +32,15 @@ export default async function JournalEntriesPage({ params }: Props) {
     )
   }
 
-  const [entries, schoolForCurrency] = await Promise.all([
-    db.journalEntry.findMany({
-      where: { schoolId },
-      orderBy: { entryDate: "desc" },
-      take: 50,
-      include: {
-        ledgerEntries: { select: { debit: true, credit: true } },
-        fiscalYear: { select: { name: true } },
-      },
-    }),
-    db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    }),
-  ])
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const entries = await db.journalEntry.findMany({
+    where: { schoolId },
+    orderBy: { entryDate: "desc" },
+    take: 50,
+    include: {
+      ledgerEntries: { select: { debit: true, credit: true } },
+      fiscalYear: { select: { name: true } },
+    },
+  })
 
   return (
     <div className="space-y-4">
@@ -90,7 +83,7 @@ export default async function JournalEntriesPage({ params }: Props) {
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="font-medium">
-                      {formatCurrency(totalDebits, lang, currency)}
+                      {formatCurrency(totalDebits, lang)}
                     </p>
                     <Badge variant={entry.isPosted ? "default" : "secondary"}>
                       {entry.isPosted ? "Posted" : "Draft"}

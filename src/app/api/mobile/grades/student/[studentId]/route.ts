@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../../../lib/authenticate"
-import { canAccessStudent } from "../../../lib/student-access"
 
 /**
  * GET /api/mobile/grades/student/:studentId — student grades/results
@@ -20,15 +19,6 @@ export async function GET(
     if (isAuthError(auth)) return auth
 
     const { studentId } = await params
-
-    // Relationship gate: STUDENT must own this id; GUARDIAN must be linked
-    // via StudentGuardian. Otherwise any authed user in the school could
-    // enumerate other students' grades by id.
-    const allowed = await canAccessStudent(auth, studentId)
-    if (!allowed) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
     const perPage = parseInt(searchParams.get("per_page") || "50")

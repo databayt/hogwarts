@@ -26,12 +26,6 @@ enum NotificationType {
   document_shared // Document shared with user
   report_ready // Report generated
   setup_guide // Post-onboarding setup step guide
-  absence_unreported_followup // ADEK 2h SLA: guardian contact for unreported absence
-  live_class_scheduled // A live class was scheduled
-  live_class_starting_soon // Live class starting in <15 min (cron)
-  live_class_started // Live class is now live (webhook)
-  live_class_cancelled // Live class was cancelled
-  live_class_recording_ready // Recording is processed and viewable
 }
 
 // Notification priority levels
@@ -183,10 +177,8 @@ model NotificationTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Unique per (type, channel, lang) per school. The `lang` is part of the
-  // key so EN+AR rows can coexist for the same (school, type, channel) —
-  // dispatchNotification looks up by recipient.user.preferredLanguage.
-  @@unique([schoolId, type, channel, lang])
+  // Unique per type+channel per school (or school-dashboard-wide if schoolId is null)
+  @@unique([schoolId, type, channel])
   @@index([schoolId, type])
   @@index([type, channel, active])
   @@map("notification_templates")

@@ -25,7 +25,6 @@ interface InstallmentTimelineProps {
   totalAmount: number
   totalPaid: number
   lang: Locale
-  currency?: string
   dictionary?: Dictionary
 }
 
@@ -55,7 +54,6 @@ export function InstallmentTimeline({
   totalAmount,
   totalPaid,
   lang,
-  currency = "USD",
   dictionary,
 }: InstallmentTimelineProps) {
   if (installments.length <= 1) return null
@@ -85,11 +83,10 @@ export function InstallmentTimeline({
         <div className="space-y-2">
           <div className="text-muted-foreground flex justify-between text-sm">
             <span>
-              {formatCurrency(totalPaid, lang, currency)} {t?.paid || "paid"}
+              {formatCurrency(totalPaid, lang)} {t?.paid || "paid"}
             </span>
             <span>
-              {formatCurrency(totalAmount, lang, currency)}{" "}
-              {t?.total || "total"}
+              {formatCurrency(totalAmount, lang)} {t?.total || "total"}
             </span>
           </div>
           <Progress value={progressPercent} className="h-2" />
@@ -138,7 +135,7 @@ export function InstallmentTimeline({
                       )}
                     </p>
                     <span className="font-medium tabular-nums">
-                      {formatCurrency(inst.amount, lang, currency)}
+                      {formatCurrency(inst.amount, lang)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -149,7 +146,7 @@ export function InstallmentTimeline({
                     {inst.status === "PARTIAL" && inst.paidAmount > 0 && (
                       <span className="text-muted-foreground text-sm tabular-nums">
                         {t?.paidAmount || "Paid:"}{" "}
-                        {formatCurrency(inst.paidAmount, lang, currency)}
+                        {formatCurrency(inst.paidAmount, lang)}
                       </span>
                     )}
                     <Badge
