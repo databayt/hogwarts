@@ -1,13 +1,70 @@
 # Stream (LMS) Module - Issues & Roadmap
 
-**Last Updated:** 2026-04-11
-**Version:** 3.0.0
-**Status:** ✅ ALL ISSUES RESOLVED - 100% Production-Ready
-**Ship Issue:** [#241](https://github.com/databayt/hogwarts/issues/241)
+**Last Updated:** 2026-05-29
+**Status:** Production-hardening pass complete for P0/P1 + critical tests + perf + P2 video hardening. Some P2/schema/i18n items deferred (see "Production-Readiness Pass" below).
+
+> Earlier revisions of this file claimed "100% production-ready". A multi-agent
+> audit (2026-05-29) did not support that: it found two reproducible P0s (a
+> cosmetic PAID-video paywall and an untested payment→unlock webhook branch)
+> plus a P1 cluster. Those are now fixed and regression-tested. This file now
+> tracks the real remaining state.
 
 ---
 
-## Issue Summary
+## Production-Readiness Pass — 2026-05-29
+
+**Fixed + tested this pass (committed on `fix/stream-production-ready`):**
+
+- **P0 — paywall bypass:** `data/catalog/get-lesson-with-progress.ts` emitted an
+  unsigned, directly-playable URL for every PAID video. Now: unowned PAID →
+  `videoUrl: null`; purchased → signed URL; free → unsigned. (9 regression tests)
+- **P0 — untested money path:** the Stripe webhook `video_purchase` branch (the
+  only point that flips `VideoPurchase`→SUCCESS) had no test and its model was
+  absent from the webhook db mock. Now covered (4 tests).
+- **P1 — webhook money-loss:** `video_purchase` + `catalog_enrollment` branches
+  ack-then-failed with 200 (money taken, access never granted). Now release the
+  dedupe row + return 5xx so Stripe retries.
+- **P1 — cross-tenant write:** `settings/enrollments/actions.ts` `bulkEnrollStudents`
+  now validates school membership + Zod (drops foreign userIds). (+3 tests)
+- **P1 — rate limiting:** wired the `STREAM_*` Upstash buckets onto
+  `purchaseVideo`/`enrollInSubject`/`uploadVideo`; throttled `updateLessonProgress`.
+- **P1 — lesson-player i18n:** fixed the `.stream.stream` double-nesting so ~45
+  player strings render Arabic instead of English fallbacks.
+- **P1 — progress save:** repaired the periodic-save interval (was torn down
+  ~4×/sec by a `currentTime` dep) + immediate flush on pause/tab-hide.
+- **Perf:** parallelized the lesson hot path (~8 serial → ~3 + React `cache()`);
+  killed the parent-dashboard N+1; `cache()` on hot catalog fetchers; pagination
+  caps on two unbounded list queries.
+- **P2 hardening:** server-side video-URL validation, PUBLISHED-lesson check, and
+  wired the storage-quota service on upload/delete.
+- **Cleanup:** deleted ~1,800 lines of dead legacy code (`queries.ts`,
+  legacy `dashboard/lesson/actions.ts`, `explore.tsx`, `search.tsx`, legacy
+  enrollment `button.tsx`, `/api/stream/courses/[courseId]`) and 3 stale
+  "Marshal LMS" docs.
+
+**Deferred (documented, not yet applied):**
+
+- **Schema (needs coordinated apply — DB shared by concurrent sessions):**
+  `Video.price`/`VideoPurchase.amount` Float→`Decimal` (ripples into every
+  price/amount read + client serialization — must convert with `Number()` and
+  re-test before flipping the column); composite indexes
+  `@@index([userId, isCompleted, updatedAt])` on `LessonProgress` and
+  `@@index([schoolId, isActive])` on `Enrollment`.
+- **i18n (consumption layer):** ~86 server-action returns still use hardcoded
+  English `message` strings rendered verbatim in toasts; the teacher
+  `teach/videos-content.tsx` dashboard + `search-bar.tsx` are still hardcoded
+  English. Convert to error/message codes + `ErrorHelper` per
+  `.claude/rules/translation.md`.
+- **`setInstructorPreference`** foreign-ID validation (lives in the catalog
+  block; an active catalog worktree owns that file).
+- **Legacy `enrollInCourseAction`** is now dead (its only caller `button.tsx`
+  was deleted) but left in `courses/enrollment/actions.ts` because the live
+  `verifyPaymentAndActivateEnrollment` shares the file. Extract the live fn and
+  delete the rest when the legacy payment-success path is migrated.
+
+---
+
+## Historical Issue Summary (P0–P3, pre-2026-05)
 
 | Priority       | Open  | Closed | Total  |
 | -------------- | ----- | ------ | ------ |
@@ -18,6 +75,7 @@
 | **Total**      | **5** | **20** | **25** |
 
 > Note: P3 issues are "NOT PLANNED" future features (reviews, forums, quizzes, etc.)
+> The closed counts below predate the 2026-05-29 audit and describe the original feature build-out, not the audit findings above.
 
 ---
 
