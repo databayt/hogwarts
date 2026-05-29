@@ -12,7 +12,10 @@ import { getTenantContext } from "@/lib/tenant-context"
 
 export interface AvailableVideo {
   id: string
-  videoUrl: string
+  // null when the video is PAID and the current user has not purchased it —
+  // the server NEVER emits a playable URL for unowned paid content. Client
+  // gating (lock UI) is cosmetic; this null is the real paywall.
+  videoUrl: string | null
   thumbnailUrl: string | null
   durationSeconds: number | null
   isFeatured: boolean
@@ -358,10 +361,19 @@ export async function getLessonWithProgress(
       siblingProgress.map((p) => [p.catalogLessonId, p.watchedSeconds])
     )
 
-    // Transform video URL
-    const transformedVideoUrl = video?.videoUrl
-      ? getVideoUrl(video.videoUrl, { isFree: true })
-      : null
+    // Transform the default video URL — gate PAID content on purchase.
+    // Owned (or free) → signed (paid) / unsigned (free) playable URL.
+    // Unowned PAID → null so the player has no source to play.
+    const defaultRequiresPayment = video?.visibility === "PAID"
+    const defaultOwned = video
+      ? defaultRequiresPayment
+        ? purchasedIds.has(video.id)
+        : true
+      : false
+    const transformedVideoUrl =
+      video?.videoUrl && defaultOwned
+        ? getVideoUrl(video.videoUrl, { isFree: !defaultRequiresPayment })
+        : null
 
     // Map available videos with source labels
     const availableVideos: AvailableVideo[] = videos.map((v) => {
@@ -370,10 +382,17 @@ export async function getLessonWithProgress(
       else if (schoolId && v.schoolId === schoolId) source = "own-school"
 
       const requiresPayment = v.visibility === "PAID"
+      // Owned = free video, or paid video the user has a SUCCESS purchase for.
+      const owned = requiresPayment ? purchasedIds.has(v.id) : true
 
       return {
         id: v.id,
-        videoUrl: getVideoUrl(v.videoUrl, { isFree: true }),
+        // Paid + unpurchased → null (no playable URL leaves the server).
+        // Paid + purchased → short-lived SIGNED CloudFront URL.
+        // Free → unsigned CloudFront URL.
+        videoUrl: owned
+          ? getVideoUrl(v.videoUrl, { isFree: !requiresPayment })
+          : null,
         thumbnailUrl: v.thumbnailUrl,
         durationSeconds: v.durationSeconds,
         isFeatured: v.isFeatured,
@@ -397,7 +416,7 @@ export async function getLessonWithProgress(
         price: v.price,
         currency: v.currency,
         requiresPayment,
-        hasPurchased: requiresPayment ? purchasedIds.has(v.id) : true,
+        hasPurchased: owned,
       }
     })
 

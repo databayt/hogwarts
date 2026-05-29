@@ -23,7 +23,14 @@ vi.mock("@/lib/db", () => ({
     subscription: { upsert: vi.fn() },
     enrollment: { update: vi.fn() },
     streamEnrollment: { update: vi.fn(), deleteMany: vi.fn() },
+    videoPurchase: { upsert: vi.fn() },
     invoice: { upsert: vi.fn() },
+    // Dedupe ledger written before branch processing (idempotency).
+    processedWebhookEvent: {
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }))
 
@@ -261,6 +268,98 @@ describe("Stripe Webhook - POST handler", () => {
           updatedAt: expect.any(Date),
         },
       })
+    })
+  })
+
+  // =========================================================================
+  // Video purchase payment — the ONLY point that unlocks paid lesson videos
+  // =========================================================================
+
+  describe("video purchase payment", () => {
+    it("flips VideoPurchase to SUCCESS on paid checkout", async () => {
+      const event = makeCheckoutEvent(
+        {
+          type: "video_purchase",
+          videoId: "vid-1",
+          userId: "user-1",
+          schoolId: "school-1",
+        },
+        { id: "cs_vid_1", amount_total: 1999, currency: "usd" }
+      )
+      vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue(event as any)
+      vi.mocked(db.videoPurchase.upsert).mockResolvedValue({} as any)
+
+      const response = await POST(makeRequest())
+
+      expect(response.status).toBe(200)
+      expect(db.videoPurchase.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_videoId: { userId: "user-1", videoId: "vid-1" },
+        },
+        update: {
+          status: "SUCCESS",
+          stripeSessionId: "cs_vid_1",
+        },
+        create: {
+          userId: "user-1",
+          videoId: "vid-1",
+          schoolId: "school-1",
+          amount: 19.99, // amount_total cents / 100
+          currency: "USD", // uppercased
+          stripeSessionId: "cs_vid_1",
+          status: "SUCCESS",
+        },
+      })
+    })
+
+    it("does NOT unlock when payment_status is not paid", async () => {
+      const event = makeCheckoutEvent(
+        { type: "video_purchase", videoId: "vid-1", userId: "user-1" },
+        { payment_status: "unpaid" }
+      )
+      vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue(event as any)
+
+      const response = await POST(makeRequest())
+
+      expect(response.status).toBe(200)
+      expect(db.videoPurchase.upsert).not.toHaveBeenCalled()
+    })
+
+    it("does not run the branch when videoId or userId metadata is missing", async () => {
+      const event = makeCheckoutEvent({
+        type: "video_purchase",
+        videoId: "vid-1",
+        // userId intentionally omitted
+      })
+      vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue(event as any)
+
+      const response = await POST(makeRequest())
+
+      expect(response.status).toBe(200)
+      expect(db.videoPurchase.upsert).not.toHaveBeenCalled()
+    })
+
+    it("retries (non-2xx) and leaves no dedupe row when the upsert fails", async () => {
+      const event = makeCheckoutEvent(
+        {
+          type: "video_purchase",
+          videoId: "vid-1",
+          userId: "user-1",
+          schoolId: "school-1",
+        },
+        { id: "cs_vid_2", amount_total: 1999, currency: "usd" }
+      )
+      vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue(event as any)
+      vi.mocked(db.videoPurchase.upsert).mockRejectedValue(
+        new Error("DB write failed")
+      )
+
+      const response = await POST(makeRequest())
+
+      // Money path must NOT swallow failure with 200 — Stripe needs to retry.
+      expect(response.status).toBeGreaterThanOrEqual(500)
+      // The dedupe row must be removed so the retry is reprocessed, not skipped.
+      expect(db.processedWebhookEvent.delete).toHaveBeenCalled()
     })
   })
 

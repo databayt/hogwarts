@@ -114,6 +114,36 @@ export async function POST(req: Request) {
     )
   }
 
+  // Money-mutating branches (video purchase, catalog enrollment) must NOT
+  // swallow a DB failure with 200 — that takes the customer's money but never
+  // grants access, with no retry. Instead, release the dedupe row (so Stripe's
+  // replay is reprocessed rather than short-circuited at the top) and return
+  // 5xx so Stripe actually retries. The underlying writes are idempotent
+  // (upsert on a unique key / update by id), so reprocessing is safe.
+  async function releaseDedupeAndFail(
+    context: string,
+    error: unknown
+  ): Promise<Response> {
+    console.error(
+      `[Webhook] ${context} failed — releasing dedupe for retry:`,
+      error
+    )
+    try {
+      await db.processedWebhookEvent.delete({
+        where: {
+          provider_providerEventId: {
+            provider: "stripe",
+            providerEventId: eventEnvelope.id,
+          },
+        },
+      })
+    } catch (delErr) {
+      // P2025 (row absent) is fine — the dedupe insert may have no-op'd above.
+      console.error("[Webhook] Failed to release dedupe row:", delErr)
+    }
+    return new Response(`Webhook handler error: ${context}`, { status: 500 })
+  }
+
   if ((event as { type: string })?.type === "checkout.session.completed") {
     const eventData = event as {
       data: {
@@ -521,7 +551,7 @@ export async function POST(req: Request) {
             `[Webhook] Video purchase recorded: ${session.metadata.videoId} for user ${session.metadata.userId}`
           )
         } catch (error) {
-          console.error("[Webhook] Failed to record video purchase:", error)
+          return releaseDedupeAndFail("video purchase", error)
         }
       }
 
@@ -555,10 +585,7 @@ export async function POST(req: Request) {
             `[Webhook] Catalog enrollment activated: ${session.metadata.enrollmentId}`
           )
         } catch (error) {
-          console.error(
-            "[Webhook] Failed to activate catalog enrollment:",
-            error
-          )
+          return releaseDedupeAndFail("catalog enrollment", error)
         }
       }
 
