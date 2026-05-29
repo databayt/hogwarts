@@ -43,3 +43,10 @@ screenshots/
 # Claude plans
 .claude/plans/
 .claude/error.log
+
+# Local data directories (multi-GB, not needed in build)
+curriculum/
+scripts/clickview-data/
+.git/
+.next/
+node_modules/
