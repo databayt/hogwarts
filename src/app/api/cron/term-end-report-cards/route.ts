@@ -7,6 +7,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
+export const maxDuration = 300 // Vercel Pro: bulk report-card publication
 
 /**
  * Cron — auto-generate report-card metadata for terms that ended yesterday.

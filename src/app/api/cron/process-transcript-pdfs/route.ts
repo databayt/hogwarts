@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { renderAndUploadTranscriptPdf } from "@/components/file/generate/render-transcript-pdf"
 
 export const dynamic = "force-dynamic"
+export const maxDuration = 300 // Vercel Pro: @react-pdf renders are CPU/mem heavy
 
 /**
  * Cron — render Transcript PDFs whose `pdfUrl` is null.

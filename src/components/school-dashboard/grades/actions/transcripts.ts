@@ -4,10 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
+import type { NextRequest } from "next/server"
 import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { checkRateLimitAsync, RATE_LIMITS } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
@@ -176,6 +179,19 @@ export async function generateTranscript(input: {
 
 export async function verifyTranscript(input: { verificationCode: string }) {
   try {
+    // Public, unauthenticated endpoint that returns student PII (name, GPA,
+    // credits) for a valid code. Rate-limit per IP so verification codes can't
+    // be brute-force enumerated. Generic failure on limit (don't reveal why).
+    const h = await headers()
+    const rl = await checkRateLimitAsync(
+      { headers: h } as unknown as NextRequest,
+      RATE_LIMITS.PUBLIC,
+      "verify-transcript"
+    )
+    if (!rl.allowed) {
+      return { valid: false, error: "Verification failed" }
+    }
+
     const transcript = await db.transcript.findUnique({
       where: { verificationCode: input.verificationCode },
       select: {

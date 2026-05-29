@@ -65,12 +65,15 @@ export async function setPreferredPaymentMethod(
     const owns = await userOwnsStudent(session.user.id, schoolId, studentId)
     if (!owns) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
-    await db.student.update({
-      where: { id: studentId },
+    // Tenant-scoped write: enforce schoolId at the query level (not just the
+    // ownership pre-check) so isolation holds even if the check ever drifts.
+    const updated = await db.student.updateMany({
+      where: { id: studentId, schoolId },
       data: {
         preferredPaymentMethod: method as AllowedMethod | null,
       },
     })
+    if (updated.count === 0) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     revalidatePath("/my-fees")
     return { success: true }

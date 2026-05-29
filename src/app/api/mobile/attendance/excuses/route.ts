@@ -2,11 +2,24 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { NextRequest, NextResponse } from "next/server"
-import type { ExcuseReason, ExcuseStatus } from "@prisma/client"
+import type { ExcuseReason, ExcuseStatus, Prisma } from "@prisma/client"
+import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { excuseReasonSchema } from "@/components/school-dashboard/attendance/shared/validation"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
+import { canAccessStudent } from "../../lib/student-access"
+
+const STAFF_ROLES = ["DEVELOPER", "ADMIN", "TEACHER", "STAFF"]
+
+// snake_case body the iOS client sends; bounded + enum-validated.
+const mobileExcuseSchema = z.object({
+  attendance_id: z.string().min(1),
+  reason: excuseReasonSchema,
+  description: z.string().max(2000).optional(),
+  attachments: z.array(z.string().url()).max(5).optional().default([]),
+})
 
 /**
  * GET  /api/mobile/attendance/excuses — list excuses
@@ -24,10 +37,34 @@ export async function GET(request: NextRequest) {
     const perPage = parseInt(searchParams.get("per_page") || "50")
     const skip = (page - 1) * perPage
 
+    // Access scoping: staff see all school excuses; a STUDENT/GUARDIAN may only
+    // see excuses for students they own / are linked to. Without this, any
+    // authenticated caller could list every student's excuse (with names).
+    const isStaff = STAFF_ROLES.includes(auth.role)
+    let attendanceFilter: Prisma.AttendanceWhereInput
+    if (studentId) {
+      if (!(await canAccessStudent(auth, studentId))) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      attendanceFilter = { studentId }
+    } else if (isStaff) {
+      attendanceFilter = {}
+    } else if (auth.role === "STUDENT") {
+      attendanceFilter = { student: { userId: auth.userId } }
+    } else if (auth.role === "GUARDIAN") {
+      attendanceFilter = {
+        student: {
+          studentGuardians: { some: { guardian: { userId: auth.userId } } },
+        },
+      }
+    } else {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const where = {
       schoolId: auth.schoolId,
       ...(status ? { status: status as ExcuseStatus } : {}),
-      ...(studentId ? { attendance: { studentId } } : {}),
+      attendance: attendanceFilter,
     }
 
     const [excuses, total] = await Promise.all([
@@ -96,20 +133,19 @@ export async function POST(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    const body = await request.json()
-    const { attendance_id, reason, description, attachments } = body
-
-    if (!attendance_id || !reason) {
+    const parsed = mobileExcuseSchema.safeParse(await request.json())
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "attendance_id and reason required" },
+        { error: "Invalid request", issues: parsed.error.issues },
         { status: 400 }
       )
     }
+    const { attendance_id, reason, description, attachments } = parsed.data
 
-    // Verify the attendance record belongs to this school
+    // Verify the attendance record belongs to this school (+ get its student)
     const attendance = await db.attendance.findFirst({
       where: { id: attendance_id, schoolId: auth.schoolId, deletedAt: null },
-      select: { id: true },
+      select: { id: true, studentId: true },
     })
 
     if (!attendance) {
@@ -117,6 +153,12 @@ export async function POST(request: NextRequest) {
         { error: "Attendance record not found" },
         { status: 404 }
       )
+    }
+
+    // Authorization: only staff, the student, or a linked guardian may submit
+    // an excuse for this student — NOT any authenticated user in the school.
+    if (!(await canAccessStudent(auth, attendance.studentId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     // Check no existing excuse for this attendance

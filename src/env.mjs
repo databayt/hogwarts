@@ -50,6 +50,12 @@ export const env = createEnv({
     LIVEKIT_S3_ACCESS_KEY: z.string().min(1).optional(),
     LIVEKIT_S3_SECRET: z.string().min(1).optional(),
 
+    // Firebase Cloud Messaging (Epic 04 parent push). Optional so the push
+    // cron no-ops gracefully when unset; set all three to enable push.
+    FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+    FIREBASE_CLIENT_EMAIL: z.string().min(1).optional(),
+    FIREBASE_PRIVATE_KEY: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -201,6 +207,9 @@ export const env = createEnv({
     LIVEKIT_RECORDING_REGION: process.env.LIVEKIT_RECORDING_REGION,
     LIVEKIT_S3_ACCESS_KEY: process.env.LIVEKIT_S3_ACCESS_KEY,
     LIVEKIT_S3_SECRET: process.env.LIVEKIT_S3_SECRET,
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:

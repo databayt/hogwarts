@@ -3,8 +3,11 @@
 
 import { NextResponse } from "next/server"
 
+import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { renderAndUploadReportCardPdf } from "@/components/file/generate/render-report-card-pdf"
+
+export const maxDuration = 300 // Vercel Pro: @react-pdf renders are CPU/mem heavy
 
 /**
  * Cron — process published ReportCards that don't yet have a PDF.
@@ -27,8 +30,7 @@ import { renderAndUploadReportCardPdf } from "@/components/file/generate/render-
 const BATCH_SIZE = 20
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorizedCron(request, "process-report-card-pdfs")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
