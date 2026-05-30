@@ -50,11 +50,15 @@
   re-test before flipping the column); composite indexes
   `@@index([userId, isCompleted, updatedAt])` on `LessonProgress` and
   `@@index([schoolId, isActive])` on `Enrollment`.
-- **i18n (consumption layer):** ~86 server-action returns still use hardcoded
-  English `message` strings rendered verbatim in toasts; the teacher
-  `teach/videos-content.tsx` dashboard + `search-bar.tsx` are still hardcoded
-  English. Convert to error/message codes + `ErrorHelper` per
-  `.claude/rules/translation.md`.
+- **i18n (consumption layer) — partially done:** the lesson player (~45 strings,
+  Phase 1) and the teacher `teach/videos-content.tsx` dashboard (2026-05-29) are
+  now translated. **Still deferred:** ~86 server-action returns use hardcoded
+  English `message` strings rendered verbatim in toasts (convert to error/message
+  codes + `ErrorHelper` per `.claude/rules/translation.md` — a stream-isolated but
+  large all-or-nothing sweep across 8 action files + every toast site, best done
+  as its own PR); and `search-bar.tsx` (needs `search`/`explore` subtrees added to
+  the ROOT dictionary, not the stream subtree — high collision risk while the
+  i18n worktree is active; it degrades to English fallbacks today, not broken).
 - **`setInstructorPreference`** foreign-ID validation (lives in the catalog
   block; an active catalog worktree owns that file).
 - **Legacy `enrollInCourseAction`** is now dead (its only caller `button.tsx`
