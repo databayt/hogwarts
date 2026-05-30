@@ -20,6 +20,7 @@ model Video {
   // Self-hosted storage
   storageProvider String?
   storageKey      String? @db.Text
+  fileSize        Int? // bytes — drives the per-school storage quota service
 
   // Visibility and pricing
   visibility ContentVisibility @default(PRIVATE)
