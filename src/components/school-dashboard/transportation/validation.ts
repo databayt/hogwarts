@@ -3,8 +3,6 @@
 
 import { z } from "zod"
 
-import type { ValidationHelper } from "@/components/internationalization/helpers"
-
 // ============================================================================
 // Enums (mirror Prisma enums)
 // ============================================================================
@@ -39,159 +37,14 @@ export type DriverStatus = z.infer<typeof driverStatusEnum>
 const timeHHmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/
 const idSchema = z.string().min(1)
 
-// ============================================================================
-// Schema factories (i18n-aware via ValidationHelper)
-// ============================================================================
-
-export function createVehicleSchema(v: ValidationHelper) {
-  return z.object({
-    plateNumber: z.string().min(1, v.required()).max(32, v.maxLength(32)),
-    make: z.string().max(64, v.maxLength(64)).optional(),
-    model: z.string().max(64, v.maxLength(64)).optional(),
-    year: z
-      .number()
-      .int()
-      .min(1980, v.min(1980))
-      .max(new Date().getFullYear() + 1)
-      .optional(),
-    capacity: z.number().int().min(1, v.positive()).max(120, v.max(120)),
-    vehicleType: vehicleTypeEnum.default("BUS"),
-    status: vehicleStatusEnum.default("ACTIVE"),
-    registrationExpiry: z.string().datetime().optional(),
-    insuranceExpiry: z.string().datetime().optional(),
-    lastInspection: z.string().datetime().optional(),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-  })
-}
-export type VehicleInput = z.infer<ReturnType<typeof createVehicleSchema>>
-
-export function createDriverSchema(v: ValidationHelper) {
-  return z.object({
-    firstName: z.string().min(1, v.required()).max(64, v.maxLength(64)),
-    lastName: z.string().min(1, v.required()).max(64, v.maxLength(64)),
-    phone: z.string().min(6, v.minLength(6)).max(32, v.maxLength(32)),
-    email: z.string().email(v.email()).optional().or(z.literal("")),
-    address: z.string().max(255, v.maxLength(255)).optional(),
-    licenseNumber: z.string().min(1, v.required()).max(64, v.maxLength(64)),
-    licenseClass: z.string().max(16, v.maxLength(16)).optional(),
-    licenseExpiry: z.string().datetime(),
-    status: driverStatusEnum.default("ACTIVE"),
-    dateOfBirth: z.string().datetime().optional(),
-    emergencyContactName: z.string().max(128, v.maxLength(128)).optional(),
-    emergencyContactPhone: z.string().max(32, v.maxLength(32)).optional(),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-    staffMemberId: idSchema.optional(),
-    userId: idSchema.optional(),
-  })
-}
-export type DriverInput = z.infer<ReturnType<typeof createDriverSchema>>
-
-export function createRouteSchema(v: ValidationHelper) {
-  return z.object({
-    name: z.string().min(1, v.required()).max(128, v.maxLength(128)),
-    code: z.string().max(32, v.maxLength(32)).optional(),
-    direction: routeDirectionEnum.default("ROUND_TRIP"),
-    status: routeStatusEnum.default("ACTIVE"),
-    originName: z.string().min(1, v.required()).max(255, v.maxLength(255)),
-    destinationName: z.string().min(1, v.required()).max(255, v.maxLength(255)),
-    departureTime: z.string().regex(timeHHmmRegex),
-    returnTime: z.string().regex(timeHHmmRegex).optional(),
-    distanceKm: z.number().nonnegative(v.positive()).optional(),
-    monthlyFee: z.number().nonnegative(v.positive()).optional(),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-    vehicleId: idSchema.optional(),
-    driverId: idSchema.optional(),
-    geofenceId: idSchema.nullable().optional(),
-  })
-}
-export type RouteInput = z.infer<ReturnType<typeof createRouteSchema>>
-
-export function createRouteStopSchema(v: ValidationHelper) {
-  return z.object({
-    routeId: idSchema,
-    name: z.string().min(1, v.required()).max(128, v.maxLength(128)),
-    address: z.string().max(255, v.maxLength(255)).optional(),
-    latitude: z.number().min(-90).max(90).optional(),
-    longitude: z.number().min(-180).max(180).optional(),
-    stopOrder: z.number().int().min(1, v.positive()),
-    pickupTime: z.string().regex(timeHHmmRegex).optional(),
-    dropoffTime: z.string().regex(timeHHmmRegex).optional(),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-  })
-}
-export type RouteStopInput = z.infer<ReturnType<typeof createRouteStopSchema>>
-
-export function createReorderStopsSchema(_v: ValidationHelper) {
-  return z.object({
-    routeId: idSchema,
-    stopIds: z.array(idSchema).min(1),
-  })
-}
-export type ReorderStopsInput = z.infer<
-  ReturnType<typeof createReorderStopsSchema>
->
-
-export function createRouteAssignmentSchema(v: ValidationHelper) {
-  return z
-    .object({
-      studentId: idSchema,
-      routeId: idSchema,
-      stopId: idSchema,
-      direction: routeDirectionEnum.default("ROUND_TRIP"),
-      effectiveFrom: z.string().datetime(),
-      effectiveTo: z.string().datetime().optional(),
-      status: assignmentStatusEnum.default("ACTIVE"),
-      notes: z.string().max(2000, v.maxLength(2000)).optional(),
-    })
-    .refine(
-      (input) =>
-        !input.effectiveTo ||
-        new Date(input.effectiveTo) > new Date(input.effectiveFrom),
-      { path: ["effectiveTo"], message: "DATE_RANGE_INVALID" }
-    )
-}
-export type RouteAssignmentInput = z.infer<
-  ReturnType<typeof createRouteAssignmentSchema>
->
-
-// ============================================================================
-// Update wrappers (id + partial fields)
-// ============================================================================
-
 export const idOnlySchema = z.object({ id: idSchema })
 export type IdOnly = z.infer<typeof idOnlySchema>
 
-export function createVehicleUpdateSchema(v: ValidationHelper) {
-  return createVehicleSchema(v).partial().extend({ id: idSchema })
-}
-
-export function createDriverUpdateSchema(v: ValidationHelper) {
-  return createDriverSchema(v).partial().extend({ id: idSchema })
-}
-
-export function createRouteUpdateSchema(v: ValidationHelper) {
-  return createRouteSchema(v).partial().extend({ id: idSchema })
-}
-
-export function createRouteStopUpdateSchema(v: ValidationHelper) {
-  return createRouteStopSchema(v).partial().extend({ id: idSchema })
-}
-
-export function createRouteAssignmentUpdateSchema(v: ValidationHelper) {
-  return z.object({
-    id: idSchema,
-    stopId: idSchema.optional(),
-    direction: routeDirectionEnum.optional(),
-    effectiveTo: z.string().datetime().optional(),
-    status: assignmentStatusEnum.optional(),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-  })
-}
-
 // ============================================================================
-// Server-side raw schemas (no i18n — error codes only)
-// Server actions parse with these; clients use the factory schemas above
-// for inline validation with translated messages.
+// Server-side raw schemas — the single source of truth for validation.
+// Server actions parse with these and return error codes; clients submit plain
+// inputs and surface translated messages via error-map.ts
+// (resolveTransportationError). Validation is server-only by design.
 // ============================================================================
 
 export const vehicleSchema = z.object({
@@ -382,76 +235,8 @@ export type TripCancelInput = z.infer<typeof tripCancelSchema>
 export type BoardingUpsertInput = z.infer<typeof boardingUpsertSchema>
 
 // ============================================================================
-// Trip + TripBoarding factory schemas (i18n-aware)
-// ============================================================================
-
-export function createTripSchema(v: ValidationHelper) {
-  return z.object({
-    routeId: idSchema,
-    vehicleId: idSchema.optional(),
-    driverId: idSchema.optional(),
-    direction: routeDirectionEnum.default("ROUND_TRIP"),
-    scheduledDate: z.string().datetime(),
-    scheduledTime: z.string().regex(timeHHmmRegex),
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-  })
-}
-export type TripInput = z.infer<ReturnType<typeof createTripSchema>>
-
-export function createTripStartSchema(_v: ValidationHelper) {
-  return z.object({ id: idSchema })
-}
-
-export function createTripFinishSchema(v: ValidationHelper) {
-  return z.object({
-    id: idSchema,
-    notes: z.string().max(2000, v.maxLength(2000)).optional(),
-  })
-}
-
-export function createTripCancelSchema(v: ValidationHelper) {
-  return z.object({
-    id: idSchema,
-    reason: z.string().max(500, v.maxLength(500)).optional(),
-  })
-}
-
-export function createBoardingUpsertSchema(v: ValidationHelper) {
-  return z.object({
-    tripId: idSchema,
-    studentId: idSchema,
-    stopId: idSchema,
-    status: boardingStatusEnum,
-    notes: z.string().max(500, v.maxLength(500)).optional(),
-  })
-}
-
-// ============================================================================
 // Settings (Phase 4.1)
 // ============================================================================
-
-export function createTransportationSettingsSchema(v: ValidationHelper) {
-  return z.object({
-    defaultPickupBufferMinutes: z
-      .number()
-      .int()
-      .min(0, v.positive())
-      .max(240, v.max(240)),
-    defaultMonthlyFee: z
-      .number()
-      .nonnegative(v.positive())
-      .max(1_000_000, v.max(1_000_000))
-      .nullable()
-      .optional(),
-    notifyGuardiansOnTripStart: z.boolean(),
-    notifyGuardiansOnTripFinish: z.boolean(),
-    notifyGuardiansOnTripCancel: z.boolean(),
-    lateThresholdMinutes: z.number().int().min(0).max(240),
-  })
-}
-export type TransportationSettingsInput = z.infer<
-  ReturnType<typeof createTransportationSettingsSchema>
->
 
 export const transportationSettingsSchema = z.object({
   defaultPickupBufferMinutes: z.number().int().min(0).max(240),
@@ -461,3 +246,6 @@ export const transportationSettingsSchema = z.object({
   notifyGuardiansOnTripCancel: z.boolean(),
   lateThresholdMinutes: z.number().int().min(0).max(240),
 })
+export type TransportationSettingsInput = z.infer<
+  typeof transportationSettingsSchema
+>
