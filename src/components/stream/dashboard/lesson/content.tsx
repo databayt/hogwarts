@@ -128,7 +128,7 @@ export function StreamLessonContent({
             lesson.chapter.course.slug
           )
           if (result.status === "error") {
-            toast.error(result.message)
+            toast.error(d?.failedToUpdateProgress || result.message)
             return
           }
           setIsCompleted(false)
@@ -139,7 +139,7 @@ export function StreamLessonContent({
             lesson.chapter.course.slug
           )
           if (result.status === "error") {
-            toast.error(result.message)
+            toast.error(d?.failedToUpdateProgress || result.message)
             return
           }
           setIsCompleted(true)
@@ -174,7 +174,7 @@ export function StreamLessonContent({
           lesson.chapter.course.slug
         )
         if (result.status === "error") {
-          toast.error(result.message)
+          toast.error(d?.failedToComplete || result.message)
           return
         }
         setIsCompleted(true)
