@@ -71,6 +71,20 @@ export async function updateVideoVisibility(
     return { status: "error", message: result.error }
   }
 
+  const video = result.video!
+
+  // A PAID video must not be silently un-paywalled through the generic
+  // visibility toggle: other users may already have purchased it and there is
+  // no refund/migration path here. Removing the paywall has to be a deliberate
+  // action via the video's price/paywall settings, not this control.
+  if (video.visibility === "PAID") {
+    return {
+      status: "error",
+      message:
+        "Paid videos can't be switched here. Remove the paywall in the video's price settings first.",
+    }
+  }
+
   try {
     await db.video.update({
       where: { id: videoId },
