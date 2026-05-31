@@ -275,17 +275,13 @@ export async function getDashboardStats(
   const budgetUsed = budgetCategories.reduce((sum, cat) => sum + cat.spent, 0)
   const budgetRemaining = budgetTotal - budgetUsed
 
-  // Generate trends (mock data for now - should calculate from historical data)
-  const generateTrend = (base: number, variance = 0.1) =>
-    Array.from(
-      { length: 12 },
-      () => base * (1 + (Math.random() - 0.5) * variance)
-    )
-
-  const revenuesTrend = generateTrend(collectedRevenue / 12)
-  const expensesTrend = generateTrend(totalExpenses / 12)
-  const profitTrend = revenuesTrend.map((rev, i) => rev - expensesTrend[i])
-  const collectionTrend = generateTrend(collectionRate, 0.05)
+  // Trend sparklines require real historical monthly aggregates which are not
+  // computed yet. Return empty series rather than fabricating a random walk that
+  // looks like a real revenue/profit/collection trend. (Real trends are a follow-up.)
+  const revenuesTrend: number[] = []
+  const expensesTrend: number[] = []
+  const profitTrend: number[] = []
+  const collectionTrend: number[] = []
 
   return {
     // Revenue Metrics

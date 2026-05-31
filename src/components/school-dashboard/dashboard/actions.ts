@@ -1420,7 +1420,9 @@ export async function getAcademicPerformanceTrends() {
         ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
           allResults.length
         : 0
-    const previousAvg = currentAvg - (Math.random() * 10 - 5)
+    // No real previous-period average is computed yet, so report no change instead
+    // of fabricating a random trend (period-over-period comparison is a follow-up).
+    const previousAvg = currentAvg
     const improvement = currentAvg - previousAvg
 
     return {
@@ -1987,55 +1989,12 @@ export async function getRecentTransactions(limit: number = 10) {
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, limit)
 
-    // If we have real data, return it
-    if (allTransactions.length > 0) {
-      return allTransactions
-    }
-
-    // Fallback to mock data if no real transactions exist
-    return getMockTransactions(limit)
+    // Return real transactions (empty array when there are none — never fabricate)
+    return allTransactions
   } catch (error) {
     console.error("[getRecentTransactions] Error fetching real data:", error)
-    // Fallback to mock data on error
-    return getMockTransactions(limit)
+    return []
   }
-}
-
-function getMockTransactions(limit: number) {
-  const mockTransactions = [
-    {
-      id: "txn_001",
-      type: "fee_payment" as const,
-      studentName: "John Smith",
-      amount: 5000,
-      status: "completed" as const,
-      date: new Date(),
-      method: "online" as const,
-      reference: "PAY-2024-001",
-    },
-    {
-      id: "txn_002",
-      type: "fee_payment" as const,
-      studentName: "Sarah Johnson",
-      amount: 5000,
-      status: "pending" as const,
-      date: subMonths(new Date(), 1),
-      method: "bank_transfer" as const,
-      reference: "PAY-2024-002",
-    },
-    {
-      id: "txn_003",
-      type: "expense" as const,
-      description: "Office Supplies",
-      amount: -1200,
-      status: "completed" as const,
-      date: new Date(),
-      category: "supplies",
-      vendor: "ABC Supplies Ltd",
-    },
-  ]
-
-  return mockTransactions.slice(0, limit)
 }
 
 export async function getFeeDefaulters(limit: number = 10) {
@@ -2108,41 +2067,13 @@ export async function getFeeDefaulters(limit: number = 10) {
       })
     }
 
-    // Fallback: Query students without fee data (mock scenario)
-    return getMockDefaulters(schoolId, limit)
+    // No overdue assignments — return empty. Never fabricate overdue balances
+    // over real student names (was getMockDefaulters with Math.random amounts).
+    return []
   } catch (error) {
     console.error("[getFeeDefaulters] Error fetching real data:", error)
-    // Fallback to mock data on error
-    return getMockDefaulters(schoolId, limit)
+    return []
   }
-}
-
-async function getMockDefaulters(schoolId: string, limit: number) {
-  const students = await db.student.findMany({
-    where: { schoolId },
-    take: limit,
-    select: {
-      id: true,
-      studentId: true,
-      firstName: true,
-      lastName: true,
-      studentYearLevels: {
-        select: { yearLevel: { select: { levelName: true } } },
-        take: 1,
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  })
-
-  return students.slice(0, 5).map((student) => ({
-    id: student.id,
-    studentId: student.studentId,
-    name: `${student.firstName} ${student.lastName}`,
-    class: student.studentYearLevels?.[0]?.yearLevel?.levelName || "N/A",
-    outstandingAmount: Math.floor(Math.random() * 10000) + 5000,
-    monthsOverdue: Math.floor(Math.random() * 3) + 1,
-    lastPaymentDate: subMonths(new Date(), Math.floor(Math.random() * 6) + 1),
-  }))
 }
 
 export async function getFinancialSummary() {
@@ -4824,10 +4755,11 @@ async function getTeacherChartData(
       ? Math.round((gradedSubmissions / totalSubmissions) * 100)
       : 100
 
-  // Class names for distribution (simplified - just show class list)
-  const classPerformance = teacherClasses.slice(0, 5).map((c, i) => ({
+  // Class list. Per-class average scores are not computed yet, so report 0 rather
+  // than fabricating a random value (real class scoring is a follow-up).
+  const classPerformance = teacherClasses.slice(0, 5).map((c) => ({
     name: c.name,
-    value: 75 + Math.floor(Math.random() * 15), // Placeholder until we have proper class scores
+    value: 0,
   }))
 
   return {
