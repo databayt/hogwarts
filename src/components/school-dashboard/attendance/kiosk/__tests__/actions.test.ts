@@ -111,7 +111,10 @@ describe("Kiosk Actions - schoolId scoping", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("MISSING_SCHOOL")
+      // requireKioskOperator collapses every failure mode (no user / no role /
+      // no schoolId / wrong role) into a single UNAUTHORIZED code so it never
+      // leaks which gate failed.
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("rejects a non-staff role (kiosk auth gate)", async () => {
