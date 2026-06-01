@@ -63,7 +63,11 @@ async function getAccountIdByCode(
   const account = await db.chartOfAccount.findFirst({
     where: {
       schoolId,
-      accountCode,
+      // The ChartOfAccount column is `code` (@@unique([schoolId, code])); the
+      // param is named accountCode. Querying a non-existent `accountCode`
+      // column returned null for every account, so every posting threw
+      // "Required accounts not found" and the ledger silently never wrote.
+      code: accountCode,
     },
   })
 

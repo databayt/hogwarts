@@ -45,6 +45,25 @@ export const stripeProvider: PaymentProvider = {
     const mode = resolveMode(params.context)
     const unitAmount = toSmallestUnit(params.amount, params.currency)
 
+    // Guard against zero/negative charges. When lineItems are supplied the
+    // adapter uses their unit_amount verbatim (it does NOT fall back to
+    // `amount`), so a caller that forgets to convert can otherwise create a $0
+    // Checkout Session. Compute the real total and reject non-positive amounts.
+    const chargeTotal = params.lineItems?.length
+      ? params.lineItems.reduce(
+          (sum, item) => sum + item.unitAmount * item.quantity,
+          0
+        )
+      : unitAmount
+    if (chargeTotal <= 0) {
+      return {
+        success: false,
+        gateway: "stripe",
+        referenceNumber: params.referenceNumber,
+        error: "Checkout amount must be greater than zero",
+      }
+    }
+
     const lineItems = params.lineItems?.map((item) => ({
       price_data: {
         currency: params.currency.toLowerCase(),

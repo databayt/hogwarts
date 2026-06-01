@@ -1676,6 +1676,7 @@ export async function createFeePaymentCheckout(
     const baseUrl = buildTenantBaseUrl(school?.domain)
 
     const { createPaymentCheckout } = await import("@/lib/payment/provider")
+    const { toSmallestUnit } = await import("@/lib/payment/currency")
     const result = await createPaymentCheckout("stripe", {
       amount: remaining,
       currency,
@@ -1690,7 +1691,11 @@ export async function createFeePaymentCheckout(
           name: assignment.feeStructure?.name || "School Fee",
           description: `${[assignment.student?.firstName, assignment.student?.lastName].filter(Boolean).join(" ")} — ${assignment.academicYear}`,
           quantity: 1,
-          unitAmount: 0, // Will be overridden by amount
+          // Stripe needs the charge in the smallest currency unit. The adapter
+          // uses this verbatim when lineItems are present (it does NOT fall back
+          // to `amount`), so a hardcoded 0 here would create a $0 checkout while
+          // the webhook still marks the fee PAID. Convert the remaining balance.
+          unitAmount: toSmallestUnit(remaining, currency),
         },
       ],
       metadata: {

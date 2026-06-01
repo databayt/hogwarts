@@ -1,9 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import type { Mock } from "vitest"
 
 import { createPaymentCheckout, getProvider } from "../provider"
+import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 import { tapProvider } from "../providers/tap"
 
 // ---------------------------------------------------------------------------
@@ -15,6 +17,10 @@ vi.mock("@/components/saas-marketing/pricing/lib/stripe", () => ({
     checkout: { sessions: { create: vi.fn() } },
   },
 }))
+
+const stripeCreate = (stripe as unknown as {
+  checkout: { sessions: { create: Mock } }
+}).checkout.sessions.create
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -79,71 +85,166 @@ describe("Payment Provider Factory", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Tap stub
+// Stripe provider — amount handling (regression for the $0 school-fee bug)
 // ---------------------------------------------------------------------------
 
-describe("Tap Provider (stub)", () => {
-  it("declares all Gulf currencies as supported", () => {
-    expect(tapProvider.supportsCurrency("SAR")).toBe(true)
-    expect(tapProvider.supportsCurrency("AED")).toBe(true)
-    expect(tapProvider.supportsCurrency("KWD")).toBe(true)
-    expect(tapProvider.supportsCurrency("QAR")).toBe(true)
-    expect(tapProvider.supportsCurrency("BHD")).toBe(true)
-    expect(tapProvider.supportsCurrency("OMR")).toBe(true)
+describe("Stripe Provider — amount handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    stripeCreate.mockResolvedValue({ id: "cs_test_1", url: "https://pay/x" })
   })
 
-  it("normalizes lowercase currency codes", () => {
-    expect(tapProvider.supportsCurrency("sar")).toBe(true)
-    expect(tapProvider.supportsCurrency("usd")).toBe(true)
+  const base = {
+    currency: "USD",
+    context: "school_fee" as const,
+    schoolId: "s1",
+    referenceId: "ref-1",
+    referenceNumber: "FEE-1",
+    successUrl: "http://x/success",
+    cancelUrl: "http://x/cancel",
+  }
+
+  it("rejects a checkout whose lineItems total is zero (would charge $0)", async () => {
+    const result = await createPaymentCheckout("stripe", {
+      ...base,
+      amount: 250,
+      lineItems: [{ name: "School Fee", quantity: 1, unitAmount: 0 }],
+    } as never)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toMatch(/greater than zero/i)
+    expect(stripeCreate).not.toHaveBeenCalled()
   })
 
-  it("rejects unsupported currencies", () => {
+  it("rejects when the top-level amount is zero and no lineItems are given", async () => {
+    const result = await createPaymentCheckout("stripe", {
+      ...base,
+      amount: 0,
+    } as never)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toMatch(/greater than zero/i)
+    expect(stripeCreate).not.toHaveBeenCalled()
+  })
+
+  it("passes the converted smallest-unit amount when lineItems are correct", async () => {
+    const result = await createPaymentCheckout("stripe", {
+      ...base,
+      amount: 250,
+      // 250.50 USD => 25050 cents
+      lineItems: [{ name: "School Fee", quantity: 1, unitAmount: 25050 }],
+    } as never)
+
+    expect(result.success).toBe(true)
+    expect(stripeCreate).toHaveBeenCalledTimes(1)
+    const arg = stripeCreate.mock.calls[0][0] as {
+      line_items: Array<{ price_data: { unit_amount: number } }>
+    }
+    expect(arg.line_items[0].price_data.unit_amount).toBe(25050)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Tap provider — real fetch-based integration (no longer a stub)
+// ---------------------------------------------------------------------------
+
+describe("Tap Provider", () => {
+  const originalKey = process.env.TAP_SECRET_KEY
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    if (originalKey) process.env.TAP_SECRET_KEY = originalKey
+    else delete process.env.TAP_SECRET_KEY
+  })
+
+  const params = {
+    amount: 100,
+    currency: "SAR",
+    context: "school_fee" as const,
+    schoolId: "s1",
+    referenceId: "ref-1",
+    referenceNumber: "TAP-TEST-1",
+    successUrl: "http://x/success",
+    cancelUrl: "http://x/cancel",
+  }
+
+  it("declares Gulf currencies supported and rejects others (case-insensitive)", () => {
+    for (const c of ["SAR", "AED", "KWD", "QAR", "BHD", "OMR", "usd"]) {
+      expect(tapProvider.supportsCurrency(c)).toBe(true)
+    }
     expect(tapProvider.supportsCurrency("SDG")).toBe(false)
     expect(tapProvider.supportsCurrency("INR")).toBe(false)
   })
 
   it("isConfigured() reflects TAP_SECRET_KEY presence", () => {
-    const original = process.env.TAP_SECRET_KEY
     delete process.env.TAP_SECRET_KEY
     expect(tapProvider.isConfigured()).toBe(false)
     process.env.TAP_SECRET_KEY = "tk_test_x"
     expect(tapProvider.isConfigured()).toBe(true)
-    if (original) process.env.TAP_SECRET_KEY = original
-    else delete process.env.TAP_SECRET_KEY
   })
 
-  it("createCheckout returns a stub failure (Phase 1 — not yet integrated)", async () => {
-    // This test pins the stub behavior. When Tap is wired up, this test
-    // should be replaced with real-API-integration coverage.
-    const result = await tapProvider.createCheckout({
-      amount: 100,
-      currency: "SAR",
-      context: "school_fee",
-      schoolId: "s1",
-      referenceId: "ref-1",
-      referenceNumber: "TAP-TEST-1",
-      successUrl: "http://x/success",
-      cancelUrl: "http://x/cancel",
-    } as never)
+  it("returns an error when TAP_SECRET_KEY is missing (no network call)", async () => {
+    delete process.env.TAP_SECRET_KEY
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await tapProvider.createCheckout(params as never)
 
     expect(result.success).toBe(false)
     expect(result.gateway).toBe("tap")
-    expect(result.error).toMatch(/coming soon|not.*available|integration/i)
+    expect(result.error).toMatch(/not configured|TAP_SECRET_KEY/i)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("guards: createPaymentCheckout('tap', ...) propagates the stub failure", async () => {
-    const result = await createPaymentCheckout("tap", {
-      amount: 100,
-      currency: "SAR",
-      context: "school_fee",
-      schoolId: "s1",
-      referenceId: "ref-1",
-      referenceNumber: "TAP-TEST-2",
-      successUrl: "http://x/success",
-      cancelUrl: "http://x/cancel",
-    } as never)
+  it("POSTs a charge and returns the transaction.url on success", async () => {
+    process.env.TAP_SECRET_KEY = "tk_test_x"
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: "chg_1",
+        transaction: { url: "https://tap/checkout/chg_1" },
+      }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await tapProvider.createCheckout(params as never)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toMatch(/api\.tap\.company/)
+    expect((init as { headers: Record<string, string> }).headers.Authorization).toMatch(
+      /Bearer tk_test_x/
+    )
+    expect(result.success).toBe(true)
+    expect(result.checkoutUrl).toBe("https://tap/checkout/chg_1")
+    expect(result.sessionId).toBe("chg_1")
+  })
+
+  it("maps an HTTP error response to a failure result", async () => {
+    process.env.TAP_SECRET_KEY = "tk_test_x"
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ errors: [{ description: "invalid currency" }] }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await tapProvider.createCheckout(params as never)
 
     expect(result.success).toBe(false)
     expect(result.gateway).toBe("tap")
+    expect(result.error).toMatch(/invalid currency|HTTP 400/i)
+  })
+
+  it("maps a network throw to a failure result", async () => {
+    process.env.TAP_SECRET_KEY = "tk_test_x"
+    const fetchMock = vi.fn().mockRejectedValue(new Error("ECONNRESET"))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await tapProvider.createCheckout(params as never)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toMatch(/network|ECONNRESET/i)
   })
 })

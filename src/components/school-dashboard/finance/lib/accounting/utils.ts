@@ -69,6 +69,24 @@ export async function createJournalEntry(
       }
     }
 
+    // Idempotency guard. A webhook replay (Stripe/Tap retry) or a retried
+    // server action can call this twice for the same source record. Each
+    // domain event must post exactly once, so short-circuit if an entry
+    // already exists for this (schoolId, sourceModule, sourceRecordId).
+    if (input.sourceRecordId) {
+      const existing = await db.journalEntry.findFirst({
+        where: {
+          schoolId,
+          sourceModule: input.sourceModule,
+          sourceRecordId: input.sourceRecordId,
+        },
+        select: { id: true },
+      })
+      if (existing) {
+        return { success: true, journalEntryId: existing.id }
+      }
+    }
+
     // Get or create fiscal year
     let fiscalYearId = input.fiscalYearId
     if (!fiscalYearId) {

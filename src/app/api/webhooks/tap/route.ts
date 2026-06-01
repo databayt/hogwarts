@@ -300,8 +300,18 @@ async function recordTapFeePayment(args: {
 function verifySignature(body: string, signature: string | null): boolean {
   const secret = process.env.TAP_WEBHOOK_SECRET
   if (!secret) {
+    // Fail CLOSED in production. The Tap charge body (schoolId, feeAssignmentId,
+    // amount, status=CAPTURED) is fully attacker-controllable, so an unsigned
+    // accept lets anyone POST a forged capture and mark fees PAID without money.
+    // Only the dev/sandbox convenience path may accept-without-verification.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[Tap webhook] TAP_WEBHOOK_SECRET not set in production — rejecting unsigned webhook"
+      )
+      return false
+    }
     console.warn(
-      "[Tap webhook] TAP_WEBHOOK_SECRET not set — accepting without verification"
+      "[Tap webhook] TAP_WEBHOOK_SECRET not set — accepting without verification (non-production only)"
     )
     return true
   }
