@@ -135,6 +135,16 @@ import {
   updateUsageMetricsSchema,
 } from "./validation"
 
+// Roles allowed to MUTATE platform billing (change/cancel plan, manage payment
+// methods, edit billing preferences). Read-only billing views are open to any
+// authenticated tenant user; mutations are admin/finance only. Without this
+// gate any TEACHER/STUDENT resolvable to the school could cancel the plan.
+const BILLING_MANAGER_ROLES = ["ADMIN", "ACCOUNTANT", "DEVELOPER"]
+
+function canManageBilling(role?: string | null): boolean {
+  return typeof role === "string" && BILLING_MANAGER_ROLES.includes(role)
+}
+
 // ========== SUBSCRIPTION ACTIONS ==========
 
 /**
@@ -198,6 +208,9 @@ export async function updateSubscription(
     if (!session?.user || !schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const validated = subscriptionUpdateSchema.parse(input)
 
@@ -234,12 +247,25 @@ export async function updateSubscription(
       return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
+    // Stripe expects the subscription ITEM id (si_...) here, not the price id.
+    // We only persist stripePriceId, so retrieve the live subscription to get
+    // the current item id before swapping its price.
+    const existingStripeSub = (await stripe.subscriptions.retrieve(
+      currentSubscription.stripeSubscriptionId
+    )) as unknown as {
+      items: { data: Array<{ id: string }> }
+    }
+    const subscriptionItemId = existingStripeSub.items?.data?.[0]?.id
+    if (!subscriptionItemId) {
+      return actionError(ACTION_ERRORS.UNKNOWN)
+    }
+
     const updatedStripeSubscription = await stripe.subscriptions.update(
       currentSubscription.stripeSubscriptionId,
       {
         items: [
           {
-            id: currentSubscription.stripePriceId,
+            id: subscriptionItemId,
             price: stripePriceId,
           },
         ],
@@ -247,15 +273,28 @@ export async function updateSubscription(
       }
     )
 
+    // current_period_end lives on the item under the pinned API version; fall
+    // back to the legacy top-level field and keep the existing value if neither
+    // is a finite timestamp (rather than writing an Invalid Date).
+    const updatedSub = updatedStripeSubscription as unknown as {
+      items: { data: Array<{ current_period_end?: number }> }
+      current_period_end?: number
+    }
+    const periodEndSeconds =
+      updatedSub.items?.data?.[0]?.current_period_end ??
+      updatedSub.current_period_end
+    const nextPeriodEnd =
+      typeof periodEndSeconds === "number" && Number.isFinite(periodEndSeconds)
+        ? new Date(periodEndSeconds * 1000)
+        : currentSubscription.currentPeriodEnd
+
     // Update in database
     const updatedSubscription = await db.subscription.update({
       where: { id: currentSubscription.id },
       data: {
         tierId: validated.tierId,
         stripePriceId,
-        currentPeriodEnd: new Date(
-          (updatedStripeSubscription as any).current_period_end * 1000
-        ),
+        currentPeriodEnd: nextPeriodEnd,
       },
       include: { subscriptionTier: true },
     })
@@ -293,6 +332,9 @@ export async function cancelSubscription(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+    if (!canManageBilling(session.user.role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -397,6 +439,9 @@ export async function addPaymentMethod(
     if (!session?.user || !schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const validated = addPaymentMethodSchema.parse(input)
 
@@ -454,6 +499,9 @@ export async function setDefaultPaymentMethod(
     if (!session?.user || !schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Verify ownership
     const paymentMethod = await db.billingPaymentMethod.findFirst({
@@ -495,6 +543,9 @@ export async function removePaymentMethod(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+    if (!canManageBilling(session.user.role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -1014,6 +1065,9 @@ export async function updateBillingPreferences(
     if (!session?.user || !schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const validated = updateBillingPreferencesSchema.parse(input)
 
@@ -1042,6 +1096,11 @@ export async function openCustomerPortal(userStripeId: string) {
     const session = await auth()
 
     if (!session?.user || !session?.user.email) {
+      throw new Error("Unauthorized")
+    }
+    // The Stripe Billing Portal lets the customer cancel/downgrade, so gate it
+    // to billing managers (admin/finance), not any authenticated tenant user.
+    if (!canManageBilling(session.user.role)) {
       throw new Error("Unauthorized")
     }
 

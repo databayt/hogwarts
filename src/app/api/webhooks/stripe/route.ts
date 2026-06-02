@@ -50,6 +50,56 @@ import { db } from "@/lib/db"
 import { getTierIdFromStripePrice } from "@/components/saas-marketing/pricing/lib/get-tier-id"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
+// Lightweight shape for the bits of a Stripe Subscription we read.
+interface StripeSubscriptionLike {
+  id: string
+  customer: string | { id: string }
+  items: {
+    data: Array<{
+      id: string
+      price: { id: string }
+      current_period_end?: number
+    }>
+  }
+  current_period_end?: number
+  cancel_at_period_end?: boolean
+  status: string
+}
+
+/**
+ * Resolve the subscription period-end as a valid Date.
+ *
+ * Under the pinned API version (clover, 2025-03+) `current_period_end` lives on
+ * the subscription ITEM, not the subscription object. Older code read the
+ * top-level field, which is now undefined → `new Date(undefined * 1000)` =
+ * Invalid Date written to the DB. Prefer the item field, fall back to the
+ * legacy top-level, and only return a Date when the timestamp is finite.
+ */
+function resolvePeriodEnd(sub: StripeSubscriptionLike): Date | null {
+  const seconds =
+    sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end
+  if (typeof seconds !== "number" || !Number.isFinite(seconds)) return null
+  return new Date(seconds * 1000)
+}
+
+/**
+ * Map a Stripe price id to a tier id without throwing inside the webhook.
+ * getTierIdFromStripePrice throws when no tier maps to the price — letting that
+ * propagate would 500 the webhook and make Stripe retry a legitimately-paid
+ * checkout forever. Log and return null instead.
+ */
+async function safeTierId(priceId: string): Promise<string | null> {
+  try {
+    return await getTierIdFromStripePrice(priceId)
+  } catch (err) {
+    console.error(
+      `[Webhook] No tier mapping for price ${priceId} (continuing):`,
+      err
+    )
+    return null
+  }
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return new Response("Stripe is not configured", { status: 500 })
@@ -595,18 +645,13 @@ export async function POST(req: Request) {
       return new Response(null, { status: 200 })
     }
 
-    // Retrieve the subscription details from Stripe (cast to lightweight shape to avoid type deps)
+    // Retrieve the subscription details from Stripe.
     const subscriptionRes = await stripe.subscriptions.retrieve(
       session.subscription as string
     )
-    const subscription = subscriptionRes as unknown as {
-      id: string
-      customer: string | { id: string }
-      items: { data: Array<{ price: { id: string } }> }
-      current_period_end: number
-      cancel_at_period_end?: boolean
-      status: string
-    }
+    const subscription = subscriptionRes as unknown as StripeSubscriptionLike
+    const priceId = subscription.items.data[0].price.id
+    const periodEnd = resolvePeriodEnd(subscription)
 
     // Update the user stripe info in our database.
     const updatedUser = await db.user.update({
@@ -616,36 +661,44 @@ export async function POST(req: Request) {
       data: {
         stripeSubscriptionId: subscription.id,
         stripeCustomerId: subscription.customer as string,
-        stripePriceId: subscription.items.data[0].price.id,
-        stripeCurrentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ),
+        stripePriceId: priceId,
+        ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
       },
     })
 
-    // Also upsert school-level subscription if user belongs to a school
+    // Also upsert school-level subscription if user belongs to a school.
+    // currentPeriodEnd + tierId are required columns, so only upsert when both
+    // resolve; a missing tier mapping or period must not 500 the webhook (which
+    // would make Stripe retry a legitimately-paid checkout forever).
     if (updatedUser.schoolId) {
-      await db.subscription.upsert({
-        where: { stripeSubscriptionId: subscription.id },
-        update: {
-          stripePriceId: subscription.items.data[0].price.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-          status: subscription.status,
-        },
-        create: {
-          schoolId: updatedUser.schoolId,
-          stripeSubscriptionId: subscription.id,
-          stripeCustomerId: subscription.customer as string,
-          stripePriceId: subscription.items.data[0].price.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-          status: subscription.status,
-          tierId: await getTierIdFromStripePrice(
-            subscription.items.data[0].price.id
-          ),
-        },
-      })
+      const tierId = await safeTierId(priceId)
+      if (periodEnd && tierId) {
+        await db.subscription.upsert({
+          where: { stripeSubscriptionId: subscription.id },
+          update: {
+            stripePriceId: priceId,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+            status: subscription.status,
+            tierId,
+          },
+          create: {
+            schoolId: updatedUser.schoolId,
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer as string,
+            stripePriceId: priceId,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+            status: subscription.status,
+            tierId,
+          },
+        })
+      } else {
+        console.error(
+          "[Webhook] Skipping subscription upsert — unresolved periodEnd/tierId",
+          { subscriptionId: subscription.id, periodEnd, tierId }
+        )
+      }
     }
   }
 
@@ -674,18 +727,13 @@ export async function POST(req: Request) {
     // If the billing reason is not subscription_create, it means the customer has updated their subscription.
     // If it is subscription_create, we don't need to update the subscription id and it will handle by the checkout.session.completed event.
     if (session.billing_reason != "subscription_create") {
-      // Retrieve the subscription details from Stripe (cast to lightweight shape)
+      // Retrieve the subscription details from Stripe.
       const subscriptionRes = await stripe.subscriptions.retrieve(
         session.subscription as string
       )
-      const subscription = subscriptionRes as unknown as {
-        id: string
-        customer: string | { id: string }
-        items: { data: Array<{ price: { id: string } }> }
-        current_period_end: number
-        cancel_at_period_end?: boolean
-        status: string
-      }
+      const subscription = subscriptionRes as unknown as StripeSubscriptionLike
+      const priceId = subscription.items.data[0].price.id
+      const periodEnd = resolvePeriodEnd(subscription)
 
       // Find the user by subscription id (not unique) and update by id
       const existingUser = await db.user.findFirst({
@@ -698,37 +746,42 @@ export async function POST(req: Request) {
         await db.user.update({
           where: { id: existingUser.id },
           data: {
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(
-              subscription.current_period_end * 1000
-            ),
+            stripePriceId: priceId,
+            ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
           },
         })
       }
 
       // Upsert school-level subscription and record invoice
       if (user?.schoolId) {
-        await db.subscription.upsert({
-          where: { stripeSubscriptionId: subscription.id },
-          update: {
-            stripePriceId: subscription.items.data[0].price.id,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-            status: subscription.status,
-          },
-          create: {
-            schoolId: user.schoolId,
-            stripeSubscriptionId: subscription.id,
-            stripeCustomerId: subscription.customer as string,
-            stripePriceId: subscription.items.data[0].price.id,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-            status: subscription.status,
-            tierId: await getTierIdFromStripePrice(
-              subscription.items.data[0].price.id
-            ),
-          },
-        })
+        const tierId = await safeTierId(priceId)
+        if (periodEnd && tierId) {
+          await db.subscription.upsert({
+            where: { stripeSubscriptionId: subscription.id },
+            update: {
+              stripePriceId: priceId,
+              currentPeriodEnd: periodEnd,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+              status: subscription.status,
+              tierId,
+            },
+            create: {
+              schoolId: user.schoolId,
+              stripeSubscriptionId: subscription.id,
+              stripeCustomerId: subscription.customer as string,
+              stripePriceId: priceId,
+              currentPeriodEnd: periodEnd,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+              status: subscription.status,
+              tierId,
+            },
+          })
+        } else {
+          console.error(
+            "[Webhook] Skipping subscription upsert (invoice path) — unresolved periodEnd/tierId",
+            { subscriptionId: subscription.id, periodEnd, tierId }
+          )
+        }
 
         if (session.id) {
           await db.invoice.upsert({
@@ -901,6 +954,85 @@ export async function POST(req: Request) {
         )
       } catch (error) {
         console.error("[Webhook] Failed to clean up expired enrollment:", error)
+      }
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: out-of-band update (plan change, renewal, portal edit)
+  // ============================================
+  // Previously unhandled — a school that downgraded or whose renewal changed in
+  // the Stripe Billing Portal never synced back, so the app kept showing the
+  // old plan/period. event.data.object IS the Subscription here.
+  if ((event as { type: string })?.type === "customer.subscription.updated") {
+    const sub = (event as { data: { object: StripeSubscriptionLike } }).data
+      .object
+    const priceId = sub.items?.data?.[0]?.price?.id
+    const periodEnd = resolvePeriodEnd(sub)
+    try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          status: sub.status,
+          cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
+        },
+      })
+      // Mirror onto User so JWT-based entitlement reflects the change.
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
+        },
+      })
+      console.log(`[Webhook] Subscription updated: ${sub.id} (${sub.status})`)
+    } catch (error) {
+      console.error("[Webhook] Failed to sync subscription update:", error)
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: cancellation / deletion → downgrade entitlement
+  // ============================================
+  if ((event as { type: string })?.type === "customer.subscription.deleted") {
+    const sub = (event as { data: { object: { id: string } } }).data.object
+    try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: { status: "canceled", cancelAtPeriodEnd: true },
+      })
+      // Null the period-end so getUserSubscriptionPlan().isPaid flips to false
+      // (it requires stripeCurrentPeriodEnd in the future).
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: { stripeCurrentPeriodEnd: null },
+      })
+      console.log(`[Webhook] Subscription canceled: ${sub.id}`)
+    } catch (error) {
+      console.error("[Webhook] Failed to process subscription deletion:", error)
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: failed renewal → past_due (dunning)
+  // ============================================
+  if ((event as { type: string })?.type === "invoice.payment_failed") {
+    const invoice = (
+      event as { data: { object: { subscription?: string } } }
+    ).data.object
+    if (invoice.subscription) {
+      try {
+        await db.subscription.updateMany({
+          where: { stripeSubscriptionId: invoice.subscription },
+          data: { status: "past_due" },
+        })
+        console.log(
+          `[Webhook] Invoice payment failed → past_due: ${invoice.subscription}`
+        )
+      } catch (error) {
+        console.error("[Webhook] Failed to mark subscription past_due:", error)
       }
     }
   }

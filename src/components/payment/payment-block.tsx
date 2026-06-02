@@ -44,8 +44,6 @@ export function PaymentBlock({
   methods,
   referenceId,
   locale,
-  successUrl,
-  cancelUrl,
   customerEmail,
   contextLabel,
   onSuccess,
@@ -61,14 +59,13 @@ export function PaymentBlock({
     setError(null)
 
     try {
+      // amount/currency/successUrl/cancelUrl are resolved server-side from the
+      // referenced entity — the action ignores any client-supplied values.
       const result = await initiatePayment({
         gateway,
-        amount,
-        currency,
         context,
         referenceId,
-        successUrl,
-        cancelUrl,
+        locale: isRTL ? "ar" : "en",
         customerEmail,
       })
 

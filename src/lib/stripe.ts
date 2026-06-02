@@ -5,8 +5,15 @@ import Stripe from "stripe"
 
 import { env } from "@/env.mjs"
 
+// Pin the Stripe API version explicitly so the response shape is deterministic
+// across SDK bumps (see saas-marketing/pricing/lib/stripe.ts for the note on
+// where `current_period_end` lives under this version).
+const STRIPE_API_VERSION = "2025-11-17.clover" as const
+
 // Create Stripe instance only if API key is available
-export const stripe = env.STRIPE_API_KEY ? new Stripe(env.STRIPE_API_KEY) : null
+export const stripe = env.STRIPE_API_KEY
+  ? new Stripe(env.STRIPE_API_KEY, { apiVersion: STRIPE_API_VERSION })
+  : null
 
 /**
  * Check if Stripe is configured and available
