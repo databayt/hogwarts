@@ -220,10 +220,7 @@ export async function markAttendance(
 
     const session = await auth()
     if (!session?.user?.role || !canMarkAttendance(session.user.role as any)) {
-      return {
-        success: false,
-        error: "Unauthorized: insufficient role to mark attendance",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     const parsed = markAttendanceSchema.parse(input)
 

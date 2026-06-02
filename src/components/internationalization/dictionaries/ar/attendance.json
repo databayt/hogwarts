@@ -2,6 +2,10 @@
   "title": "الحضور",
   "subtitle": "تتبع حضور الطلاب وإدارة السجلات",
   "description": "مراقبة وإدارة حضور الطلاب في جميع الفصول",
+  "accessDenied": {
+    "title": "تم رفض الوصول",
+    "description": "ليس لديك إذن للوصول إلى هذه الصفحة."
+  },
   "status": {
     "PRESENT": "حاضر",
     "ABSENT": "غائب",
@@ -140,7 +144,29 @@
     "threshold": "حد الغياب",
     "alerts": "التنبيهات",
     "viewDetails": "عرض التفاصيل",
-    "createIntervention": "إنشاء تدخل"
+    "createIntervention": "إنشاء تدخل",
+    "riskLevels": {
+      "satisfactory": {
+        "label": "مرضي",
+        "description": "حضور على المسار الصحيح",
+        "threshold": "≥95%"
+      },
+      "atRisk": {
+        "label": "معرض للخطر",
+        "description": "يحتاج تدخل مبكر",
+        "threshold": "90-94.9%"
+      },
+      "moderatelyChronic": {
+        "label": "غياب متوسط مزمن",
+        "description": "يتطلب اهتمام فوري",
+        "threshold": "80-89.9%"
+      },
+      "severelyChronic": {
+        "label": "غياب شديد مزمن",
+        "description": "يتطلب تدخل عاجل",
+        "threshold": "<80%"
+      }
+    }
   },
   "reports": {
     "title": "تقارير الحضور",

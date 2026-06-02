@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   getClassesForSelection,
   getSectionsForSelection,
@@ -43,8 +44,10 @@ import {
   type AttendanceRiskLevel,
 } from "@/components/school-dashboard/attendance/actions"
 
-// Risk level configuration
-const RISK_LEVELS = {
+// Risk level color configuration. The i18n text (label/description/threshold)
+// is merged in from the dictionary inside the component (see RISK_LEVELS there);
+// the Arabic values below act as fallbacks when a key is missing.
+const RISK_COLORS = {
   SATISFACTORY: {
     label: "مرضي",
     color: "bg-green-500",
@@ -139,6 +142,38 @@ export function EarlyWarningContent({
   const [isPending, startTransition] = useTransition()
 
   const isArabic = locale === "ar"
+
+  const { dictionary } = useDictionary()
+  const dictRiskLevels = (
+    dictionary as unknown as {
+      attendance?: {
+        earlyWarning?: {
+          riskLevels?: Record<
+            string,
+            { label?: string; description?: string; threshold?: string }
+          >
+        }
+      }
+    }
+  )?.attendance?.earlyWarning?.riskLevels
+
+  // Merge localized text over the color-only constants so labels/descriptions
+  // follow the active locale instead of being hardcoded Arabic.
+  const RISK_LEVELS = {
+    SATISFACTORY: {
+      ...RISK_COLORS.SATISFACTORY,
+      ...dictRiskLevels?.satisfactory,
+    },
+    AT_RISK: { ...RISK_COLORS.AT_RISK, ...dictRiskLevels?.atRisk },
+    MODERATELY_CHRONIC: {
+      ...RISK_COLORS.MODERATELY_CHRONIC,
+      ...dictRiskLevels?.moderatelyChronic,
+    },
+    SEVERELY_CHRONIC: {
+      ...RISK_COLORS.SEVERELY_CHRONIC,
+      ...dictRiskLevels?.severelyChronic,
+    },
+  }
 
   // Fetch classes and sections for filter
   useEffect(() => {

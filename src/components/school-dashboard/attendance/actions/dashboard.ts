@@ -5,6 +5,7 @@
 import { auth } from "@/auth"
 import type { Prisma } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -70,12 +71,12 @@ export async function getStudentsByRiskLevel(input?: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     const session = await auth()
     if (!session?.user?.role || !isStaffRole(session.user.role as any)) {
-      return { success: false, error: "Unauthorized" }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Default to current school year (last 90 days if not specified)
