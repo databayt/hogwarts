@@ -23,6 +23,7 @@
  */
 import crypto from "node:crypto"
 import { Prisma } from "@prisma/client"
+import type { PaymentMethod } from "@prisma/client"
 
 import { db } from "@/lib/db"
 
@@ -31,6 +32,10 @@ interface TapChargePayload {
   status: string
   amount?: number
   currency?: string
+  // Tap reports the actual rail it used (MADA / APPLE_PAY / KNET / VISA / ...).
+  // We preserve it as Payment.gatewayMethod so the finance reports keep Tap
+  // provenance even though paymentMethod maps to a coarse enum.
+  source?: { id?: string; payment_method?: string }
   reference?: { transaction?: string }
   metadata?: Record<string, string | undefined> & {
     context?: string
@@ -38,6 +43,26 @@ interface TapChargePayload {
     studentId?: string
     schoolId?: string
     type?: string
+  }
+}
+
+// Map Tap's source.payment_method to our PaymentMethod enum. Anything we don't
+// recognise falls back to CREDIT_CARD (Tap charges are card/wallet rails, not
+// "OTHER" — using OTHER misclassified all Gulf card revenue in reports).
+function mapTapMethod(raw?: string): PaymentMethod {
+  switch ((raw ?? "").toUpperCase()) {
+    case "MADA":
+      return "MADA"
+    case "KNET":
+      return "KNET"
+    case "APPLE_PAY":
+    case "APPLEPAY":
+      return "APPLE_PAY"
+    case "GOOGLE_PAY":
+    case "GOOGLEPAY":
+      return "GOOGLE_PAY"
+    default:
+      return "CREDIT_CARD"
   }
 }
 
@@ -128,6 +153,9 @@ export async function POST(req: Request) {
       feeAssignmentId,
       schoolId,
       amount: typeof charge.amount === "number" ? charge.amount : 0,
+      currency:
+        typeof charge.currency === "string" ? charge.currency : undefined,
+      gatewayMethod: charge.source?.payment_method,
     })
   } catch (handlerErr) {
     // Acknowledge the webhook even on handler failure — Tap will not retry
@@ -147,8 +175,11 @@ async function recordTapFeePayment(args: {
   feeAssignmentId: string
   schoolId: string
   amount: number
+  currency?: string
+  gatewayMethod?: string
 }): Promise<void> {
-  const { chargeId, feeAssignmentId, schoolId, amount } = args
+  const { chargeId, feeAssignmentId, schoolId, amount, currency, gatewayMethod } =
+    args
 
   const assignment = await db.feeAssignment.findFirst({
     where: { id: feeAssignmentId, schoolId },
@@ -195,7 +226,11 @@ async function recordTapFeePayment(args: {
       paymentNumber:
         `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
       amount: paymentAmount,
-      paymentMethod: "OTHER",
+      // P1.1/P1.3 — snapshot currency + preserve the Tap rail. paymentMethod
+      // maps to a coarse enum; gatewayMethod keeps MADA/Apple Pay/KNET fidelity.
+      currency: assignment.currency ?? currency ?? null,
+      paymentMethod: mapTapMethod(gatewayMethod),
+      gatewayMethod: gatewayMethod ?? null,
       paymentDate: new Date(),
       status: "SUCCESS",
       receiptNumber:
@@ -237,7 +272,7 @@ async function recordTapFeePayment(args: {
         paymentId: payment.id,
         studentId: assignment.studentId,
         amount: paymentAmount,
-        paymentMethod: "OTHER",
+        paymentMethod: payment.paymentMethod,
         paymentDate: payment.paymentDate,
       },
       "system:tap-webhook"

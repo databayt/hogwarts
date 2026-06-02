@@ -969,7 +969,21 @@ export async function recordPayment(
       }
     }
 
-    const newTotalPaid = totalPaid + amount
+    // P2.1 — offline methods (bank transfer / cheque / ATM deposit) land in
+    // PENDING_VERIFICATION and skip ledger posting / invoice sync / status flip
+    // until an admin runs markPaymentCleared. CASH is immediate (admin counted
+    // the bills) and CREDIT_CARD/online clear here too.
+    const offlineMethods = new Set(["BANK_TRANSFER", "CHEQUE", "ATM_DEPOSIT"])
+    const requiresVerification = offlineMethods.has(
+      formData.paymentMethod as string
+    )
+    const paymentStatus = requiresVerification
+      ? "PENDING_VERIFICATION"
+      : "SUCCESS"
+
+    // Pending-verification rows don't count toward paid until cleared, so the
+    // assignment status must not move on them.
+    const newTotalPaid = requiresVerification ? totalPaid : totalPaid + amount
 
     // Determine new status
     let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" =
@@ -980,7 +994,9 @@ export async function recordPayment(
       newStatus = "PARTIAL"
     }
 
-    // Create payment record
+    // P1.1 — snapshot currency so receipts stay correct if the school later
+    // changes School.currency. P2.1 — capture offline reference fields for the
+    // reconciliation report + receipt.
     const payment = await db.payment.create({
       data: {
         schoolId: ctx.schoolId,
@@ -989,69 +1005,79 @@ export async function recordPayment(
         paymentNumber:
           `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
         amount,
+        currency: feeAssignment.currency ?? null,
         paymentMethod: formData.paymentMethod as any,
         paymentDate: new Date(formData.paymentDate as string),
-        status: "SUCCESS",
+        status: paymentStatus,
         receiptNumber:
           `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
         transactionId: formData.transactionId as string | undefined,
+        bankName: formData.bankName as string | undefined,
+        chequeNumber: formData.chequeNumber as string | undefined,
+        depositSlipUrl: formData.depositSlipUrl as string | undefined,
+        depositBankBranch: formData.depositBankBranch as string | undefined,
+        depositorIban: formData.depositorIban as string | undefined,
         remarks: formData.remarks as string | undefined,
       },
     })
 
-    // Update fee assignment status
-    await db.feeAssignment.update({
-      where: { id: feeAssignmentId },
-      data: { status: newStatus },
-    })
-
-    // Post to double-entry ledger so cash + revenue accounts move (issue
-    // #263 P1). Mirrors the call in webhooks/stripe/route.ts; both code
-    // paths must post or trial balance diverges by the cash-only amounts.
-    // Non-fatal: log but don't roll back the payment if posting fails.
-    try {
-      const { postFeePayment } = await import("../lib/accounting/actions")
-      const postResult = await postFeePayment(ctx.schoolId, {
-        paymentId: payment.id,
-        studentId: feeAssignment.studentId,
-        amount,
-        paymentMethod: formData.paymentMethod as string,
-        paymentDate: payment.paymentDate,
+    // Pending-verification entries don't move the assignment status, post to
+    // the ledger, or sync the invoice — markPaymentCleared does all three when
+    // an admin confirms the offline transfer. Cleared payments do it now.
+    if (!requiresVerification) {
+      await db.feeAssignment.update({
+        where: { id: feeAssignmentId },
+        data: { status: newStatus },
       })
-      if (!postResult.success) {
+
+      // Post to double-entry ledger so cash + revenue accounts move (issue
+      // #263 P1). Mirrors the call in webhooks/stripe/route.ts; both code
+      // paths must post or trial balance diverges by the cash-only amounts.
+      // Non-fatal: log but don't roll back the payment if posting fails.
+      try {
+        const { postFeePayment } = await import("../lib/accounting/actions")
+        const postResult = await postFeePayment(ctx.schoolId, {
+          paymentId: payment.id,
+          studentId: feeAssignment.studentId,
+          amount,
+          paymentMethod: formData.paymentMethod as string,
+          paymentDate: payment.paymentDate,
+        })
+        if (!postResult.success) {
+          console.error(
+            "[recordPayment] postFeePayment failed:",
+            postResult.errors
+          )
+        }
+      } catch (postingErr) {
         console.error(
-          "[recordPayment] postFeePayment failed:",
-          postResult.errors
+          "[recordPayment] Ledger posting threw (continuing):",
+          postingErr
         )
       }
-    } catch (postingErr) {
-      console.error(
-        "[recordPayment] Ledger posting threw (continuing):",
-        postingErr
-      )
-    }
 
-    // Sync linked invoice status — reflect partial payments properly
-    try {
-      const linkedInvoice = await db.userInvoice.findFirst({
-        where: { feeAssignmentId, schoolId: ctx.schoolId },
-      })
-      if (linkedInvoice) {
-        const invoiceStatus = newStatus === "PAID" ? "PAID" : "UNPAID"
-        await db.userInvoice.update({
-          where: { id: linkedInvoice.id },
-          data: {
-            status: invoiceStatus as any,
-            total: finalAmount,
-            // Store paid amount in notes for tracking until schema supports amountPaid
-            notes: linkedInvoice.notes
-              ? `${linkedInvoice.notes}\nPayment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`
-              : `Payment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`,
-          },
+      // Sync linked invoice status — reflect partial payments properly
+      try {
+        const linkedInvoice = await db.userInvoice.findFirst({
+          where: { feeAssignmentId, schoolId: ctx.schoolId },
         })
+        if (linkedInvoice) {
+          const invoiceStatus = newStatus === "PAID" ? "PAID" : "UNPAID"
+          await db.userInvoice.update({
+            where: { id: linkedInvoice.id },
+            data: {
+              status: invoiceStatus as any,
+              total: finalAmount,
+              // Store paid amount in notes for tracking until schema supports amountPaid
+              notes: linkedInvoice.notes
+                ? `${linkedInvoice.notes}\nPayment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`
+                : `Payment: ${amount} on ${new Date().toISOString().split("T")[0]} (Total paid: ${newTotalPaid})`,
+            },
+          })
+        }
+      } catch (invoiceSyncErr) {
+        console.warn("[recordPayment] Invoice sync failed:", invoiceSyncErr)
       }
-    } catch (invoiceSyncErr) {
-      console.warn("[recordPayment] Invoice sync failed:", invoiceSyncErr)
     }
 
     const schoolPref2 = await db.school.findFirst({
@@ -1065,20 +1091,29 @@ export async function recordPayment(
       | undefined
     const amountStr2 = amount.toLocaleString()
     const remainingStr = (finalAmount - newTotalPaid).toLocaleString()
-    const studentBodyKey =
-      newStatus === "PAID"
+    // Pending-verification deposits get a distinct "recorded, awaiting review"
+    // message — they have NOT cleared yet, so "Payment Received" would mislead.
+    const notifTitle = requiresVerification
+      ? n2?.depositPendingTitle || "Deposit Recorded — Pending Verification"
+      : n2?.paymentReceivedTitle || "Payment Received"
+    const studentBodyKey = requiresVerification
+      ? "paymentPendingStudent"
+      : newStatus === "PAID"
         ? "paymentRecordedStudentFull"
         : "paymentRecordedStudentPartial"
-    const guardianBodyKey =
-      newStatus === "PAID"
+    const guardianBodyKey = requiresVerification
+      ? "paymentPendingGuardian"
+      : newStatus === "PAID"
         ? "paymentRecordedGuardianFull"
         : "paymentRecordedGuardianPartial"
-    const studentBodyFallback =
-      newStatus === "PAID"
+    const studentBodyFallback = requiresVerification
+      ? "Your payment of {amount} was recorded and is pending verification."
+      : newStatus === "PAID"
         ? "Payment of {amount} recorded. Fee fully paid."
         : "Payment of {amount} recorded. Remaining: {remaining}"
-    const guardianBodyFallback =
-      newStatus === "PAID"
+    const guardianBodyFallback = requiresVerification
+      ? "A payment of {amount} for the student was recorded and is pending verification."
+      : newStatus === "PAID"
         ? "Payment of {amount} recorded for student. Fee fully paid."
         : "Payment of {amount} recorded for student. Remaining: {remaining}"
 
@@ -1091,7 +1126,7 @@ export async function recordPayment(
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_paid",
-        title: n2?.paymentReceivedTitle || "Payment Received",
+        title: notifTitle,
         body: interp(n2?.[studentBodyKey] || studentBodyFallback, {
           amount: amountStr2,
           remaining: remainingStr,
@@ -1122,7 +1157,7 @@ export async function recordPayment(
           schoolId: ctx.schoolId,
           userId: link.guardian.userId,
           type: "fee_paid",
-          title: n2?.paymentReceivedTitle || "Payment Received",
+          title: notifTitle,
           body: interp(n2?.[guardianBodyKey] || guardianBodyFallback, {
             amount: amountStr2,
             remaining: remainingStr,
@@ -1148,6 +1183,213 @@ export async function recordPayment(
     return { success: true, data: payment.id }
   } catch (error) {
     console.error("Error recording payment:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+/**
+ * Mark a PENDING_VERIFICATION payment as cleared (P2.1).
+ *
+ * The Aldar manual flow: a guardian pays by bank transfer / cheque / ATM
+ * deposit, the admin records it (lands PENDING_VERIFICATION), then verifies it
+ * against the bank statement. Transitions the Payment to SUCCESS, stamps
+ * `verifiedAt` + `verifiedBy`, recomputes `FeeAssignment.status` from the new
+ * SUCCESS payment total, posts to the double-entry ledger, syncs the linked
+ * UserInvoice, and notifies the guardian + student.
+ *
+ * Requires the `fees:approve` permission — the same gate that protects fee
+ * waivers and refunds. Idempotent on already-SUCCESS payments.
+ */
+export async function markPaymentCleared(
+  paymentId: string
+): Promise<ActionResult<string>> {
+  try {
+    const ctx = await requireFeePermission("approve")
+    if (isAuthError(ctx)) return ctx
+
+    const payment = await db.payment.findFirst({
+      where: { id: paymentId, schoolId: ctx.schoolId },
+      include: {
+        feeAssignment: {
+          include: {
+            payments: {
+              where: { status: "SUCCESS" },
+              select: { amount: true },
+            },
+          },
+        },
+      },
+    })
+
+    if (!payment) return actionError(ACTION_ERRORS.NOT_FOUND)
+    if (payment.status === "SUCCESS") {
+      // Idempotent — repeated clear from a stale UI tab is a no-op.
+      return { success: true, data: payment.id }
+    }
+    if (payment.status !== "PENDING_VERIFICATION") {
+      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+    }
+
+    // Flip the payment + recompute assignment status from the new SUCCESS
+    // sum. Wrap in a transaction so we never end up with a SUCCESS payment
+    // whose parent assignment status is stale.
+    const paymentAmount = Number(payment.amount)
+    const existingSuccessTotal = payment.feeAssignment.payments.reduce(
+      (sum, p) => sum + Number(p.amount),
+      0
+    )
+    const newTotalPaid = existingSuccessTotal + paymentAmount
+    const finalAmount = Number(payment.feeAssignment.finalAmount)
+    let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" =
+      "PENDING"
+    if (newTotalPaid >= finalAmount) newStatus = "PAID"
+    else if (newTotalPaid > 0) newStatus = "PARTIAL"
+
+    await db.$transaction([
+      db.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: "SUCCESS",
+          verifiedAt: new Date(),
+          verifiedBy: ctx.userId,
+        },
+      }),
+      db.feeAssignment.update({
+        where: { id: payment.feeAssignmentId },
+        data: { status: newStatus },
+      }),
+    ])
+
+    // Post to ledger — same call as recordPayment / Stripe webhook so the
+    // trial balance reflects this payment once it's cleared.
+    try {
+      const { postFeePayment } = await import("../lib/accounting/actions")
+      const postResult = await postFeePayment(ctx.schoolId, {
+        paymentId: payment.id,
+        studentId: payment.studentId,
+        amount: paymentAmount,
+        paymentMethod: payment.paymentMethod,
+        paymentDate: payment.paymentDate,
+      })
+      if (!postResult.success) {
+        console.error(
+          "[markPaymentCleared] postFeePayment failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[markPaymentCleared] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
+    // Sync linked invoice — same logic as the cleared-payment branch in
+    // recordPayment so the parent's invoice status flips on reconcile.
+    try {
+      const linkedInvoice = await db.userInvoice.findFirst({
+        where: {
+          feeAssignmentId: payment.feeAssignmentId,
+          schoolId: ctx.schoolId,
+        },
+      })
+      if (linkedInvoice) {
+        await db.userInvoice.update({
+          where: { id: linkedInvoice.id },
+          data: { status: newStatus === "PAID" ? "PAID" : "UNPAID" },
+        })
+      }
+    } catch (invoiceSyncErr) {
+      console.warn(
+        "[markPaymentCleared] Invoice sync failed (non-fatal):",
+        invoiceSyncErr
+      )
+    }
+
+    // Notify the guardian + student that the payment cleared. Dictionary
+    // keys mirror recordPayment so both surfaces use the same i18n.
+    try {
+      const schoolPref = await db.school.findFirst({
+        where: { id: ctx.schoolId },
+        select: { preferredLanguage: true },
+      })
+      const lang = (schoolPref?.preferredLanguage ?? "ar") as Locale
+      const dict = await getDictionary(lang)
+      const n = (dict as any)?.finance?.notifications as
+        | Record<string, string>
+        | undefined
+      const amountStr = paymentAmount.toLocaleString()
+      const title = n?.paymentClearedTitle || "Payment Cleared"
+      const studentBody = interp(
+        n?.paymentClearedStudent ||
+          "Your payment of {amount} has been verified and applied.",
+        { amount: amountStr }
+      )
+      const guardianBody = interp(
+        n?.paymentClearedGuardian ||
+          "The student's payment of {amount} has been verified.",
+        { amount: amountStr }
+      )
+
+      const student = await db.student.findFirst({
+        where: { id: payment.studentId, schoolId: ctx.schoolId },
+        select: { userId: true },
+      })
+      if (student?.userId) {
+        await dispatchNotification({
+          schoolId: ctx.schoolId,
+          userId: student.userId,
+          type: "fee_paid",
+          title,
+          body: studentBody,
+          lang,
+          priority: "normal",
+          channels: ["in_app"],
+          metadata: {
+            paymentId: payment.id,
+            feeAssignmentId: payment.feeAssignmentId,
+            url: `/finance/fees/payments/${payment.id}`,
+          },
+          actorId: ctx.userId,
+        })
+      }
+
+      const guardianLinks = await db.studentGuardian.findMany({
+        where: { studentId: payment.studentId, schoolId: ctx.schoolId },
+        select: { guardian: { select: { userId: true } } },
+      })
+      for (const link of guardianLinks) {
+        if (link.guardian?.userId) {
+          await dispatchNotification({
+            schoolId: ctx.schoolId,
+            userId: link.guardian.userId,
+            type: "fee_paid",
+            title,
+            body: guardianBody,
+            lang,
+            priority: "normal",
+            channels: ["in_app", "email"],
+            metadata: {
+              paymentId: payment.id,
+              feeAssignmentId: payment.feeAssignmentId,
+              url: `/finance/fees/payments/${payment.id}`,
+            },
+            actorId: ctx.userId,
+          })
+        }
+      }
+    } catch (notifErr) {
+      console.error(
+        "[markPaymentCleared] Notification dispatch failed:",
+        notifErr
+      )
+    }
+
+    revalidatePath("/finance/fees")
+    revalidatePath(`/finance/fees/payments/${paymentId}`)
+    return { success: true, data: payment.id }
+  } catch (error) {
+    console.error("Error clearing payment:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
