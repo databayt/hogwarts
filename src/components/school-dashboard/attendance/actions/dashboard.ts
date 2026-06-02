@@ -1218,9 +1218,10 @@ export async function getParentAttendanceSummary(): Promise<
       return { success: false, error: "Authentication required" }
     }
 
-    // Find guardian record for the logged-in user
-    const guardian = await db.guardian.findUnique({
-      where: { userId: session.user.id },
+    // Find guardian record for the logged-in user (scoped to the tenant to
+    // prevent reading a guardian record that belongs to another school).
+    const guardian = await db.guardian.findFirst({
+      where: { userId: session.user.id, schoolId },
     })
 
     if (!guardian) {

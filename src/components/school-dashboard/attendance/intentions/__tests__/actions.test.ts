@@ -7,7 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { reviewAbsenceIntention, submitAbsenceIntention } from "../actions"
+import {
+  getStudentIntentions,
+  reviewAbsenceIntention,
+  submitAbsenceIntention,
+} from "../actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({
@@ -18,6 +22,7 @@ vi.mock("@/lib/db", () => ({
     absenceIntention: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
@@ -125,6 +130,155 @@ describe("Intentions Actions - schoolId scoping", () => {
           }),
         })
       )
+    })
+  })
+
+  describe("getStudentIntentions - access control", () => {
+    it("denies an unauthenticated caller", async () => {
+      vi.mocked(auth).mockResolvedValue(null as any)
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(false)
+      expect(db.absenceIntention.findMany).not.toHaveBeenCalled()
+    })
+
+    it("denies a STUDENT viewing another student's intentions", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        subdomain: "test-school",
+        role: "STUDENT",
+        locale: "en",
+      } as any)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "STUDENT" },
+      } as any)
+      // Target student is owned by a different user and has no matching guardian
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        userId: "other-user-999",
+        studentGuardians: [{ guardian: { userId: "guardian-aaa" } }],
+      } as any)
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBe("UNAUTHORIZED")
+      }
+      expect(db.absenceIntention.findMany).not.toHaveBeenCalled()
+    })
+
+    it("denies a GUARDIAN not linked to the student", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        subdomain: "test-school",
+        role: "GUARDIAN",
+        locale: "en",
+      } as any)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "GUARDIAN" },
+      } as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        userId: "other-user-999",
+        studentGuardians: [{ guardian: { userId: "guardian-aaa" } }],
+      } as any)
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBe("UNAUTHORIZED")
+      }
+      expect(db.absenceIntention.findMany).not.toHaveBeenCalled()
+    })
+
+    it("allows the student to view their own intentions", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        subdomain: "test-school",
+        role: "STUDENT",
+        locale: "en",
+      } as any)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "STUDENT" },
+      } as any)
+      // Student record owned by the caller
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        userId: mockUserId,
+        studentGuardians: [],
+      } as any)
+      vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(true)
+      expect(db.absenceIntention.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: mockSchoolId,
+            studentId: mockStudentId,
+          }),
+        })
+      )
+    })
+
+    it("allows a linked GUARDIAN to view the student's intentions", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        subdomain: "test-school",
+        role: "GUARDIAN",
+        locale: "en",
+      } as any)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "GUARDIAN" },
+      } as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        userId: "other-user-999",
+        studentGuardians: [{ guardian: { userId: mockUserId } }],
+      } as any)
+      vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(true)
+      expect(db.absenceIntention.findMany).toHaveBeenCalled()
+    })
+
+    it("allows a staff role (TEACHER) without an ownership lookup", async () => {
+      // beforeEach already sets role TEACHER
+      vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(true)
+      // Staff bypass the per-student ownership query entirely
+      expect(db.student.findFirst).not.toHaveBeenCalled()
+      expect(db.absenceIntention.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: mockSchoolId,
+            studentId: mockStudentId,
+          }),
+        })
+      )
+    })
+
+    it("allows a staff role (ADMIN) to view any student's intentions", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: mockSchoolId,
+        subdomain: "test-school",
+        role: "ADMIN",
+        locale: "en",
+      } as any)
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "ADMIN" },
+      } as any)
+      vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
+
+      const result = await getStudentIntentions(mockStudentId)
+
+      expect(result.success).toBe(true)
+      expect(db.student.findFirst).not.toHaveBeenCalled()
     })
   })
 })

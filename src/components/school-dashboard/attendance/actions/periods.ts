@@ -761,7 +761,7 @@ export async function getStudentDayAttendance(input: {
       ),
     ]
     const markers = await db.user.findMany({
-      where: { id: { in: markerIds } },
+      where: { id: { in: markerIds }, schoolId },
       select: { id: true, username: true, email: true },
     })
     const markerMap = new Map(

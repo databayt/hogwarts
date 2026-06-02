@@ -4,6 +4,7 @@
 import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -30,9 +31,19 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
+    geoFence: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
     geofenceEvent: {
       create: vi.fn(),
       createMany: vi.fn(),
+      findMany: vi.fn(),
+    },
+    geoAttendanceEvent: {
       findMany: vi.fn(),
     },
     studentLocation: {
@@ -40,6 +51,9 @@ vi.mock("@/lib/db", () => ({
       createMany: vi.fn(),
       findMany: vi.fn(),
       upsert: vi.fn(),
+    },
+    locationTrace: {
+      create: vi.fn(),
     },
     student: {
       findFirst: vi.fn(),
@@ -50,6 +64,11 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("../geo-service", () => ({
+  getCurrentGeofences: vi.fn().mockResolvedValue([]),
+  checkGeofences: vi.fn().mockResolvedValue([]),
+  processGeofenceEvents: vi.fn().mockResolvedValue([]),
+}))
 
 const SCHOOL = "school-1"
 
@@ -97,6 +116,49 @@ describe("geofence actions", () => {
       })
 
       expect(result.success).toBe(false)
+    })
+
+    it("denies a non-STUDENT staff role (TEACHER)", async () => {
+      mockAuth("TEACHER")
+
+      const result = await submitLocation({
+        lat: 24.4,
+        lon: 54.5,
+        accuracy: 10,
+      } as any)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe(ACTION_ERRORS.UNAUTHORIZED)
+      // Role gate must short-circuit before any DB write.
+      expect(db.locationTrace.create).not.toHaveBeenCalled()
+    })
+
+    it("denies a GUARDIAN role", async () => {
+      mockAuth("GUARDIAN")
+
+      const result = await submitLocation({
+        lat: 24.4,
+        lon: 54.5,
+        accuracy: 10,
+      } as any)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe(ACTION_ERRORS.UNAUTHORIZED)
+    })
+
+    it("allows a STUDENT with a resolved Student record", async () => {
+      mockAuth("STUDENT")
+      vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as any)
+      vi.mocked(db.locationTrace.create).mockResolvedValue({} as any)
+
+      const result = await submitLocation({
+        lat: 24.4,
+        lon: 54.5,
+        accuracy: 10,
+      } as any)
+
+      expect(result.success).toBe(true)
+      expect(db.locationTrace.create).toHaveBeenCalledTimes(1)
     })
   })
 

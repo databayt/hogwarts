@@ -11,10 +11,13 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+import type { UserRole } from "@prisma/client"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 
+import { isStaffRole } from "../authorization"
 import {
   letterTemplates,
   type DeliveryMethod,
@@ -37,8 +40,13 @@ export async function generateLetter(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
 
   if (!schoolId || !userId) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
+
+  if (!role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -390,8 +398,13 @@ export async function bulkGenerateLetters(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
   if (!schoolId) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
+
+  if (!role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -437,8 +450,13 @@ export async function previewLetter(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
   if (!schoolId) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
+
+  if (!role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 

@@ -220,9 +220,10 @@ describe("attendance dashboard actions", () => {
       expect(result.success).toBe(false)
     })
 
-    it("scopes studentGuardian lookup by current schoolId (cross-tenant defense)", async () => {
+    it("scopes the guardian lookup by current schoolId (cross-tenant defense)", async () => {
       mockAuth("GUARDIAN")
-      vi.mocked(db.guardian.findUnique).mockResolvedValue({
+      // Source resolves the guardian via findFirst scoped to the tenant.
+      vi.mocked(db.guardian.findFirst).mockResolvedValue({
         id: "g1",
         userId: USER,
       } as any)
@@ -230,12 +231,55 @@ describe("attendance dashboard actions", () => {
 
       await getParentAttendanceSummary()
 
-      // The CRITICAL test: studentGuardian.findMany MUST include schoolId
-      // (this was the P0 cross-tenant leak)
+      // The CRITICAL fix: the guardian record must be resolved with schoolId
+      // in the where clause, not just by userId (P0 cross-tenant leak).
+      const guardianCalls = vi.mocked(db.guardian.findFirst).mock.calls
+      expect(guardianCalls.length).toBeGreaterThan(0)
+      expect(guardianCalls[0][0]?.where).toMatchObject({
+        userId: USER,
+        schoolId: SCHOOL,
+      })
+    })
+
+    it("scopes studentGuardian lookup by current schoolId (cross-tenant defense)", async () => {
+      mockAuth("GUARDIAN")
+      vi.mocked(db.guardian.findFirst).mockResolvedValue({
+        id: "g1",
+        userId: USER,
+      } as any)
+      vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
+
+      await getParentAttendanceSummary()
+
+      // studentGuardian.findMany MUST include schoolId (P0 cross-tenant leak)
       const calls = vi.mocked(db.studentGuardian.findMany).mock.calls
-      if (calls.length > 0) {
-        expect(calls[0][0]?.where).toMatchObject({ schoolId: SCHOOL })
-      }
+      expect(calls.length).toBeGreaterThan(0)
+      expect(calls[0][0]?.where).toMatchObject({ schoolId: SCHOOL })
+    })
+
+    it("fails when no guardian record exists for this tenant", async () => {
+      // A guardian belonging to another school resolves to null here because
+      // the lookup is now schoolId-scoped -> the caller is denied.
+      mockAuth("GUARDIAN")
+      vi.mocked(db.guardian.findFirst).mockResolvedValue(null)
+
+      const result = await getParentAttendanceSummary()
+
+      expect(result.success).toBe(false)
+    })
+
+    it("succeeds for an authorized in-tenant GUARDIAN", async () => {
+      mockAuth("GUARDIAN")
+      vi.mocked(db.guardian.findFirst).mockResolvedValue({
+        id: "g1",
+        userId: USER,
+      } as any)
+      vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
+
+      const result = await getParentAttendanceSummary()
+
+      expect(result.success).toBe(true)
+      expect((result as any).data?.children).toEqual([])
     })
   })
 })

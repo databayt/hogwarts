@@ -29,6 +29,9 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    attendanceIntervention: {
+      create: vi.fn(),
+    },
     notification: {
       create: vi.fn(),
     },

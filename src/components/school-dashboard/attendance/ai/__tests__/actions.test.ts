@@ -150,12 +150,42 @@ describe("attendance AI actions", () => {
     it("denies STUDENT role", async () => {
       mockAuth("STUDENT")
 
-      const result = await createInterventionFromRecommendation({
-        studentId: "s1",
-        type: "PARENT_PHONE_CALL",
-      })
+      const result = await createInterventionFromRecommendation(
+        "s1",
+        "Call the parent to discuss attendance"
+      )
 
       expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+  })
+
+  describe("staff role gating", () => {
+    it("runRiskPredictions denies STUDENT role", async () => {
+      mockAuth("STUDENT")
+      const result = await runRiskPredictions({})
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+
+    it("getAtRiskStudents denies STUDENT role (no school-wide PII leak)", async () => {
+      mockAuth("STUDENT")
+      const result = await getAtRiskStudents()
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+
+    it("getAtRiskStudents passes the gate for ADMIN (not UNAUTHORIZED)", async () => {
+      mockAuth("ADMIN")
+      const result = await getAtRiskStudents()
+      expect(result.error).not.toBe("UNAUTHORIZED")
+    })
+
+    it("batchTranslateMessages denies STUDENT role", async () => {
+      mockAuth("STUDENT")
+      const result = await batchTranslateMessages(["Hello"], "ar")
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 })

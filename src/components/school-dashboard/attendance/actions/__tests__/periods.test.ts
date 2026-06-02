@@ -37,8 +37,9 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
     },
     class: { findFirst: vi.fn(), findUnique: vi.fn() },
-    student: { findMany: vi.fn() },
+    student: { findMany: vi.fn(), findFirst: vi.fn() },
     studentClass: { findMany: vi.fn() },
+    user: { findMany: vi.fn() },
   },
 }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
@@ -161,6 +162,64 @@ describe("period attendance actions", () => {
       })
 
       expect(result.success).toBe(false)
+    })
+
+    it("denies a STUDENT viewing another student's attendance", async () => {
+      // A non-staff user who is neither the student nor a linked guardian
+      // must be rejected (intra-tenant IDOR defense).
+      mockAuth("STUDENT")
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "s1",
+        firstName: "Other",
+        lastName: "Pupil",
+        userId: "different-user",
+        studentGuardians: [],
+      } as any)
+
+      const result = await getStudentDayAttendance({
+        studentId: "s1",
+        date: "2026-06-01",
+      })
+
+      expect(result.success).toBe(false)
+    })
+
+    it("allows staff (TEACHER) and scopes the marker lookup by schoolId", async () => {
+      mockAuth("TEACHER")
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "s1",
+        firstName: "Real",
+        lastName: "Pupil",
+        userId: "student-user",
+        studentGuardians: [],
+      } as any)
+      // One attendance row with a marker so the user lookup is exercised.
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        {
+          periodId: "p1",
+          periodName: "Period 1",
+          status: "PRESENT",
+          checkInTime: null,
+          notes: null,
+          markedAt: new Date(),
+          markedBy: "marker-1",
+          class: { name: "Math", subject: { name: "Math" } },
+        },
+      ] as any)
+      vi.mocked(db.user.findMany).mockResolvedValue([
+        { id: "marker-1", username: "teacher1", email: null },
+      ] as any)
+
+      const result = await getStudentDayAttendance({
+        studentId: "s1",
+        date: "2026-06-01",
+      })
+
+      expect(result.success).toBe(true)
+      // Defense-in-depth: the marker (user) lookup must carry schoolId.
+      const userCalls = vi.mocked(db.user.findMany).mock.calls
+      expect(userCalls.length).toBeGreaterThan(0)
+      expect(userCalls[0][0]?.where).toMatchObject({ schoolId: SCHOOL })
     })
   })
 })

@@ -10,11 +10,16 @@
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { InterventionStatus, InterventionType } from "@prisma/client"
+import type {
+  InterventionStatus,
+  InterventionType,
+  UserRole,
+} from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { isStaffRole } from "../../authorization"
 import {
   getRecommendedActions,
   getTierFromAbsenceRate,
@@ -186,8 +191,9 @@ export async function createTieredIntervention(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId || !userId) {
+  if (!schoolId || !userId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -257,8 +263,9 @@ export async function updateInterventionStatus(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId || !userId) {
+  if (!schoolId || !userId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
