@@ -1213,9 +1213,9 @@ export async function seedJournalEntries(
       const entryNumber = generateJournalEntryNumber(i + 1, year)
 
       try {
-        // Check if exists
+        // Check if exists (entryNumber is unique per-school now)
         const existing = await prisma.journalEntry.findUnique({
-          where: { entryNumber },
+          where: { schoolId_entryNumber: { schoolId, entryNumber } },
         })
 
         if (!existing) {
