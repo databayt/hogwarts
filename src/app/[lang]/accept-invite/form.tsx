@@ -10,17 +10,20 @@ import {
   acceptInvitation,
   declineInvitation,
 } from "@/components/school-dashboard/school/membership/actions"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface AcceptInviteFormProps {
   token: string
   schoolDomain: string
   lang: string
+  dictionary: Dictionary["acceptInvite"]
 }
 
 export function AcceptInviteForm({
   token,
   schoolDomain,
   lang,
+  dictionary,
 }: AcceptInviteFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<"accept" | "decline" | null>(null)
@@ -34,10 +37,10 @@ export function AcceptInviteForm({
       if (result.success && result.data?.domain) {
         window.location.href = `https://${result.data.domain}.databayt.org/${lang}/dashboard`
       } else if (!result.success) {
-        setError(result.error || "Failed to accept invitation")
+        setError(result.error || dictionary.acceptError)
       }
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError(dictionary.genericError)
     } finally {
       setLoading(null)
     }
@@ -51,10 +54,10 @@ export function AcceptInviteForm({
       if (result.success) {
         router.push(`/${lang}`)
       } else {
-        setError(result.error || "Failed to decline invitation")
+        setError(result.error || dictionary.declineError)
       }
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError(dictionary.genericError)
     } finally {
       setLoading(null)
     }
@@ -68,14 +71,14 @@ export function AcceptInviteForm({
         disabled={loading !== null}
         className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center rounded-md text-sm font-medium disabled:opacity-50"
       >
-        {loading === "accept" ? "Accepting..." : "Accept Invitation"}
+        {loading === "accept" ? dictionary.accepting : dictionary.accept}
       </button>
       <button
         onClick={handleDecline}
         disabled={loading !== null}
         className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-full items-center justify-center rounded-md border text-sm font-medium disabled:opacity-50"
       >
-        {loading === "decline" ? "Declining..." : "Decline"}
+        {loading === "decline" ? dictionary.declining : dictionary.decline}
       </button>
     </div>
   )

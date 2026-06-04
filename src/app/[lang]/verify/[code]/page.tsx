@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface VerifyPageProps {
   params: Promise<{
@@ -22,8 +23,10 @@ interface VerifyPageProps {
 }
 
 export default async function VerifyPage({ params }: VerifyPageProps) {
-  const { lang, code } = await params
+  const { lang } = await params
   const isRtl = lang === "ar"
+  const dictionary = await getDictionary(lang)
+  const t = dictionary.verify
 
   return (
     <main
@@ -32,16 +35,8 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
     >
       <Card className="mx-auto max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">
-            {isRtl
-              ? "التحقق غير متوفر مؤقتاً"
-              : "Verification Temporarily Unavailable"}
-          </CardTitle>
-          <CardDescription>
-            {isRtl
-              ? "يتم صيانة نظام التحقق. يرجى المحاولة لاحقاً."
-              : "Verification system is under maintenance. Please try again later."}
-          </CardDescription>
+          <CardTitle className="text-xl">{t.unavailableTitle}</CardTitle>
+          <CardDescription>{t.unavailableDescription}</CardDescription>
         </CardHeader>
       </Card>
     </main>

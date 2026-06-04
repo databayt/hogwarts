@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface PublicCertificatePageProps {
   params: Promise<{
@@ -24,8 +25,10 @@ interface PublicCertificatePageProps {
 export default async function PublicCertificatePage({
   params,
 }: PublicCertificatePageProps) {
-  const { lang, shareToken } = await params
+  const { lang } = await params
   const isRtl = lang === "ar"
+  const dictionary = await getDictionary(lang)
+  const t = dictionary.certificate
 
   return (
     <main
@@ -34,16 +37,8 @@ export default async function PublicCertificatePage({
     >
       <Card className="mx-auto max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">
-            {isRtl
-              ? "الشهادة غير متوفرة مؤقتاً"
-              : "Certificate Temporarily Unavailable"}
-          </CardTitle>
-          <CardDescription>
-            {isRtl
-              ? "يتم صيانة نظام الشهادات. يرجى المحاولة لاحقاً."
-              : "Certificate system is under maintenance. Please try again later."}
-          </CardDescription>
+          <CardTitle className="text-xl">{t.unavailableTitle}</CardTitle>
+          <CardDescription>{t.unavailableDescription}</CardDescription>
         </CardHeader>
       </Card>
     </main>

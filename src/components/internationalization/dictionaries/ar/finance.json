@@ -2562,6 +2562,14 @@
     "assignToStudents": "تعيين إلى {count} طالب",
     "assignFee": "تعيين الرسوم"
   },
+  "managePlan": {
+    "title": "إدارة الاشتراك",
+    "description": "عرض خطة اشتراكك وإدارتها",
+    "loadErrorTitle": "تعذّر تحميل بوابة الاشتراك",
+    "loadErrorDescription": "يرجى المحاولة لاحقًا أو التواصل مع الدعم.",
+    "configErrorTitle": "خطأ في الإعدادات",
+    "configErrorDescription": "لم يتم تكوين بوابة الاشتراك."
+  },
   "notifications": {
     "feeDueTitle": "رسوم دراسية جديدة",
     "feeDueStudentBody": "تم تعيين رسوم بقيمة {amount} لحسابك",

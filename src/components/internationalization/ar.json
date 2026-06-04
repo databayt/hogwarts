@@ -1,4 +1,45 @@
 {
+  "accessDenied": {
+    "title": "تم رفض الوصول",
+    "description": "ليس لديك صلاحية للوصول إلى هذه الصفحة. قد يكون السبب:",
+    "reason1": "أنت لست عضواً في هذه المدرسة",
+    "reason2": "حسابك لا يملك الصلاحية المطلوبة",
+    "reason3": "المدرسة لم تمنحك صلاحية الوصول بعد",
+    "backHome": "العودة للرئيسية"
+  },
+  "acceptInvite": {
+    "invalidLinkTitle": "رابط غير صالح",
+    "invalidLinkDescription": "رابط الدعوة هذا لا يحتوي على رمز. يرجى التحقق من الرابط في بريدك الإلكتروني.",
+    "notFoundTitle": "الدعوة غير موجودة",
+    "notFoundDescription": "رابط الدعوة هذا غير صالح أو تم استخدامه بالفعل.",
+    "alreadyAcceptedTitle": "تم قبول الدعوة بالفعل",
+    "alreadyDeclinedTitle": "تم رفض الدعوة بالفعل",
+    "alreadyAcceptedDescription": "تم قبول هذه الدعوة بالفعل.",
+    "alreadyDeclinedDescription": "تم رفض هذه الدعوة بالفعل.",
+    "goToSchool": "الذهاب إلى {school}",
+    "expiredTitle": "انتهت صلاحية الدعوة",
+    "expiredDescription": "انتهت صلاحية هذه الدعوة. يرجى التواصل مع مدير المدرسة لطلب دعوة جديدة.",
+    "invitedTitle": "تمت دعوتك للانضمام إلى {school}",
+    "roleLabel": "الدور:",
+    "signInPrompt": "يرجى تسجيل الدخول لقبول هذه الدعوة.",
+    "signInToAccept": "سجّل الدخول للقبول",
+    "signedInAs": "مسجّل الدخول باسم {email}",
+    "accept": "قبول الدعوة",
+    "decline": "رفض",
+    "accepting": "جاري القبول...",
+    "declining": "جاري الرفض...",
+    "acceptError": "فشل قبول الدعوة",
+    "declineError": "فشل رفض الدعوة",
+    "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "certificate": {
+    "unavailableTitle": "الشهادة غير متوفرة مؤقتاً",
+    "unavailableDescription": "يتم صيانة نظام الشهادات. يرجى المحاولة لاحقاً."
+  },
+  "verify": {
+    "unavailableTitle": "التحقق غير متوفر مؤقتاً",
+    "unavailableDescription": "يتم صيانة نظام التحقق. يرجى المحاولة لاحقاً."
+  },
   "metadata": {
     "title": "هجورتس - نظام إدارة المدارس",
     "description": "منصة شاملة لإدارة المؤسسات التعليمية"

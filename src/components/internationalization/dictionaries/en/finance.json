@@ -2562,6 +2562,14 @@
     "assignToStudents": "Assign to {count} Students",
     "assignFee": "Assign Fee"
   },
+  "managePlan": {
+    "title": "Manage Subscription",
+    "description": "View and manage your subscription plan",
+    "loadErrorTitle": "Unable to load subscription portal",
+    "loadErrorDescription": "Please try again later or contact support.",
+    "configErrorTitle": "Configuration Error",
+    "configErrorDescription": "Subscription portal is not configured."
+  },
   "notifications": {
     "feeDueTitle": "New Fee Assignment",
     "feeDueStudentBody": "A fee of {amount} has been assigned to your account",
