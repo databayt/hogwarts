@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,9 +21,14 @@ import { generateTranscript, getTranscripts } from "../actions/transcripts"
 
 interface TranscriptsTableProps {
   initialData: any[]
+  dictionary: Dictionary
 }
 
-export function TranscriptsTable({ initialData }: TranscriptsTableProps) {
+export function TranscriptsTable({
+  initialData,
+  dictionary,
+}: TranscriptsTableProps) {
+  const dict = dictionary.results.transcripts
   const [data, setData] = useState(initialData)
   const [search, setSearch] = useState("")
   const [studentId, setStudentId] = useState("")
@@ -51,42 +57,42 @@ export function TranscriptsTable({ initialData }: TranscriptsTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Input
-          placeholder="Search by student name..."
+          placeholder={dict.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="w-64"
         />
         <Button variant="outline" onClick={handleSearch} disabled={isPending}>
-          Search
+          {dict.search}
         </Button>
         <div className="ms-auto flex items-center gap-2">
           <Input
-            placeholder="Student ID (for generation)"
+            placeholder={dict.studentIdPlaceholder}
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
             className="w-64"
           />
           <Button onClick={handleGenerate} disabled={!studentId || isPending}>
-            {isPending ? "Generating..." : "Generate Transcript"}
+            {isPending ? dict.generating : dict.generate}
           </Button>
         </div>
       </div>
 
       <div className="text-muted-foreground text-sm">
-        {data.length} transcripts
+        {data.length} {dict.count}
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Number</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>GPA</TableHead>
-              <TableHead>Credits</TableHead>
-              <TableHead>PDF</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>{dict.columns.number}</TableHead>
+              <TableHead>{dict.columns.student}</TableHead>
+              <TableHead>{dict.columns.gpa}</TableHead>
+              <TableHead>{dict.columns.credits}</TableHead>
+              <TableHead>{dict.columns.pdf}</TableHead>
+              <TableHead>{dict.columns.date}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,8 +102,7 @@ export function TranscriptsTable({ initialData }: TranscriptsTableProps) {
                   colSpan={6}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No transcripts found. Enter a student ID and click "Generate
-                  Transcript".
+                  {dict.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -128,10 +133,10 @@ export function TranscriptsTable({ initialData }: TranscriptsTableProps) {
                         rel="noopener noreferrer"
                         className="text-primary underline"
                       >
-                        Download
+                        {dict.download}
                       </a>
                     ) : (
-                      <Badge variant="secondary">Pending</Badge>
+                      <Badge variant="secondary">{dict.pending}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">

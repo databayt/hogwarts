@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,6 +37,7 @@ interface PromotionDashboardProps {
   batches: any[]
   years: Array<{ id: string; yearName: string }>
   grades: Array<{ id: string; name: string; gradeNumber: number }>
+  dictionary: Dictionary
 }
 
 const STATUS_COLORS: Record<
@@ -66,7 +68,9 @@ export function PromotionDashboard({
   batches: initialBatches,
   years,
   grades,
+  dictionary,
 }: PromotionDashboardProps) {
+  const t = dictionary.results.promotion
   const [batches, setBatches] = useState(initialBatches)
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null)
   const [candidates, setCandidates] = useState<any[]>([])
@@ -101,7 +105,7 @@ export function PromotionDashboard({
   }
 
   const handleOverride = (candidateId: string, decision: string) => {
-    const reason = window.prompt("Override reason:")
+    const reason = window.prompt(t.prompts.overrideReason)
     if (!reason) return
     startTransition(async () => {
       await overridePromotionDecision({
@@ -129,12 +133,7 @@ export function PromotionDashboard({
 
   const handleExecute = () => {
     if (!selectedBatchId) return
-    if (
-      !window.confirm(
-        "Execute all approved promotions? This action cannot be undone."
-      )
-    )
-      return
+    if (!window.confirm(t.prompts.confirmExecute)) return
     startTransition(async () => {
       await executePromotions(selectedBatchId)
       const refreshed = await getPromotionBatches()
@@ -147,13 +146,13 @@ export function PromotionDashboard({
       {/* New evaluation */}
       <Card>
         <CardHeader>
-          <CardTitle>Year-End Evaluation</CardTitle>
+          <CardTitle>{t.evaluation.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
             <Select value={yearId} onValueChange={setYearId}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="School Year" />
+                <SelectValue placeholder={t.evaluation.schoolYearPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {years.map((y) => (
@@ -165,7 +164,7 @@ export function PromotionDashboard({
             </Select>
             <Select value={gradeId} onValueChange={setGradeId}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select Grade" />
+                <SelectValue placeholder={t.evaluation.selectGradePlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {grades.map((g) => (
@@ -179,7 +178,7 @@ export function PromotionDashboard({
               onClick={handleEvaluate}
               disabled={!yearId || !gradeId || isPending}
             >
-              {isPending ? "Evaluating..." : "Evaluate Students"}
+              {isPending ? t.evaluation.evaluating : t.evaluation.evaluate}
             </Button>
           </div>
         </CardContent>
@@ -188,20 +187,20 @@ export function PromotionDashboard({
       {/* Batches list */}
       <Card>
         <CardHeader>
-          <CardTitle>Promotion Batches</CardTitle>
+          <CardTitle>{t.batches.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Year</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Promoted</TableHead>
-                <TableHead>Retained</TableHead>
-                <TableHead>Review</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t.batches.columns.year}</TableHead>
+                <TableHead>{t.batches.columns.grade}</TableHead>
+                <TableHead>{t.batches.columns.status}</TableHead>
+                <TableHead>{t.batches.columns.total}</TableHead>
+                <TableHead>{t.batches.columns.promoted}</TableHead>
+                <TableHead>{t.batches.columns.retained}</TableHead>
+                <TableHead>{t.batches.columns.review}</TableHead>
+                <TableHead>{t.batches.columns.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -211,8 +210,7 @@ export function PromotionDashboard({
                     colSpan={8}
                     className="text-muted-foreground py-8 text-center"
                   >
-                    No promotion batches yet. Select a year and grade to
-                    evaluate.
+                    {t.batches.empty}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -240,7 +238,7 @@ export function PromotionDashboard({
                         size="sm"
                         onClick={() => handleViewCandidates(b.id)}
                       >
-                        View
+                        {t.batches.view}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -256,11 +254,13 @@ export function PromotionDashboard({
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Candidates ({candidates.length})</CardTitle>
+              <CardTitle>
+                {t.candidates.title} ({candidates.length})
+              </CardTitle>
               <div className="flex gap-2">
                 {selectedBatch?.status === "READY_FOR_REVIEW" && (
                   <Button onClick={handleApprove} disabled={isPending}>
-                    Approve Batch
+                    {t.candidates.approveBatch}
                   </Button>
                 )}
                 {selectedBatch?.status === "APPROVED" && (
@@ -269,7 +269,7 @@ export function PromotionDashboard({
                     disabled={isPending}
                     variant="destructive"
                   >
-                    Execute Promotions
+                    {t.candidates.executePromotions}
                   </Button>
                 )}
               </div>
@@ -279,14 +279,14 @@ export function PromotionDashboard({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>GPA</TableHead>
-                  <TableHead>%</TableHead>
-                  <TableHead>Failed</TableHead>
-                  <TableHead>Attendance</TableHead>
-                  <TableHead>Auto</TableHead>
-                  <TableHead>Final</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t.candidates.columns.student}</TableHead>
+                  <TableHead>{t.candidates.columns.gpa}</TableHead>
+                  <TableHead>{t.candidates.columns.percentage}</TableHead>
+                  <TableHead>{t.candidates.columns.failed}</TableHead>
+                  <TableHead>{t.candidates.columns.attendance}</TableHead>
+                  <TableHead>{t.candidates.columns.auto}</TableHead>
+                  <TableHead>{t.candidates.columns.final}</TableHead>
+                  <TableHead>{t.candidates.columns.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -344,21 +344,29 @@ export function PromotionDashboard({
                             onValueChange={(val) => handleOverride(c.id, val)}
                           >
                             <SelectTrigger className="h-8 w-28">
-                              <SelectValue placeholder="Override" />
+                              <SelectValue
+                                placeholder={t.candidates.override.placeholder}
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="PROMOTE">Promote</SelectItem>
-                              <SelectItem value="RETAIN">Retain</SelectItem>
-                              <SelectItem value="CONDITIONAL">
-                                Conditional
+                              <SelectItem value="PROMOTE">
+                                {t.candidates.override.promote}
                               </SelectItem>
-                              <SelectItem value="GRADUATE">Graduate</SelectItem>
+                              <SelectItem value="RETAIN">
+                                {t.candidates.override.retain}
+                              </SelectItem>
+                              <SelectItem value="CONDITIONAL">
+                                {t.candidates.override.conditional}
+                              </SelectItem>
+                              <SelectItem value="GRADUATE">
+                                {t.candidates.override.graduate}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         )}
                       {c.isExecuted && (
                         <span className="text-muted-foreground text-xs">
-                          Executed
+                          {t.candidates.executed}
                         </span>
                       )}
                     </TableCell>

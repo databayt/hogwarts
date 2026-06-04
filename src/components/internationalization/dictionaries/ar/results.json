@@ -193,5 +193,106 @@
   "generation": "الإنشاء",
   "totalReports": "إجمالي التقارير",
   "estimatedSize": "الحجم التقديري",
-  "generateAll": "إنشاء جميع ملفات PDF"
+  "generateAll": "إنشاء جميع ملفات PDF",
+
+  "promotion": {
+    "evaluation": {
+      "title": "تقييم نهاية العام",
+      "schoolYearPlaceholder": "السنة الدراسية",
+      "selectGradePlaceholder": "اختر الصف",
+      "evaluate": "تقييم الطلاب",
+      "evaluating": "جارٍ التقييم..."
+    },
+    "batches": {
+      "title": "دفعات الترقية",
+      "columns": {
+        "year": "السنة",
+        "grade": "الصف",
+        "status": "الحالة",
+        "total": "الإجمالي",
+        "promoted": "المُرقَّون",
+        "retained": "المُعادون",
+        "review": "المراجعة",
+        "actions": "الإجراءات"
+      },
+      "empty": "لا توجد دفعات ترقية بعد. اختر سنة وصفاً للتقييم.",
+      "view": "عرض"
+    },
+    "candidates": {
+      "title": "المرشحون",
+      "approveBatch": "اعتماد الدفعة",
+      "executePromotions": "تنفيذ الترقيات",
+      "columns": {
+        "student": "الطالب",
+        "gpa": "المعدل التراكمي",
+        "percentage": "النسبة",
+        "failed": "الرسوب",
+        "attendance": "الحضور",
+        "auto": "تلقائي",
+        "final": "نهائي",
+        "actions": "الإجراءات"
+      },
+      "override": {
+        "placeholder": "تجاوز",
+        "promote": "ترقية",
+        "retain": "إعادة",
+        "conditional": "مشروط",
+        "graduate": "تخرج"
+      },
+      "executed": "تم التنفيذ"
+    },
+    "prompts": {
+      "overrideReason": "سبب التجاوز:",
+      "confirmExecute": "تنفيذ جميع الترقيات المعتمدة؟ لا يمكن التراجع عن هذا الإجراء."
+    }
+  },
+
+  "reportCards": {
+    "filters": {
+      "selectTerm": "اختر الفصل الدراسي",
+      "term": "الفصل",
+      "allGrades": "جميع الصفوف"
+    },
+    "actions": {
+      "generate": "إنشاء بطاقات التقارير",
+      "generating": "جارٍ الإنشاء...",
+      "publish": "نشر"
+    },
+    "count": "بطاقة تقرير",
+    "columns": {
+      "rank": "الترتيب",
+      "student": "الطالب",
+      "gpa": "المعدل التراكمي",
+      "grade": "التقدير",
+      "subjects": "المواد",
+      "attendance": "الحضور",
+      "status": "الحالة"
+    },
+    "empty": "لا توجد بطاقات تقارير. اختر فصلاً دراسياً ثم انقر على \"إنشاء بطاقات التقارير\".",
+    "subjectsCount": "مادة",
+    "status": {
+      "published": "منشور",
+      "draft": "مسودة"
+    }
+  },
+
+  "transcripts": {
+    "searchPlaceholder": "البحث باسم الطالب...",
+    "search": "بحث",
+    "studentIdPlaceholder": "رقم الطالب (للإنشاء)",
+    "generate": "إنشاء كشف الدرجات",
+    "generating": "جارٍ الإنشاء...",
+    "count": "كشف درجات",
+    "columns": {
+      "number": "الرقم",
+      "student": "الطالب",
+      "gpa": "المعدل التراكمي",
+      "credits": "الساعات المعتمدة",
+      "pdf": "PDF",
+      "date": "التاريخ"
+    },
+    "empty": "لا توجد كشوف درجات. أدخل رقم الطالب ثم انقر على \"إنشاء كشف الدرجات\".",
+    "download": "تحميل",
+    "pending": "قيد الانتظار"
+  }
 }

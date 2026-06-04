@@ -193,5 +193,106 @@
   "generation": "Generation",
   "totalReports": "Total Reports",
   "estimatedSize": "Est. Size",
-  "generateAll": "Generate All PDFs"
+  "generateAll": "Generate All PDFs",
+
+  "promotion": {
+    "evaluation": {
+      "title": "Year-End Evaluation",
+      "schoolYearPlaceholder": "School Year",
+      "selectGradePlaceholder": "Select Grade",
+      "evaluate": "Evaluate Students",
+      "evaluating": "Evaluating..."
+    },
+    "batches": {
+      "title": "Promotion Batches",
+      "columns": {
+        "year": "Year",
+        "grade": "Grade",
+        "status": "Status",
+        "total": "Total",
+        "promoted": "Promoted",
+        "retained": "Retained",
+        "review": "Review",
+        "actions": "Actions"
+      },
+      "empty": "No promotion batches yet. Select a year and grade to evaluate.",
+      "view": "View"
+    },
+    "candidates": {
+      "title": "Candidates",
+      "approveBatch": "Approve Batch",
+      "executePromotions": "Execute Promotions",
+      "columns": {
+        "student": "Student",
+        "gpa": "GPA",
+        "percentage": "%",
+        "failed": "Failed",
+        "attendance": "Attendance",
+        "auto": "Auto",
+        "final": "Final",
+        "actions": "Actions"
+      },
+      "override": {
+        "placeholder": "Override",
+        "promote": "Promote",
+        "retain": "Retain",
+        "conditional": "Conditional",
+        "graduate": "Graduate"
+      },
+      "executed": "Executed"
+    },
+    "prompts": {
+      "overrideReason": "Override reason:",
+      "confirmExecute": "Execute all approved promotions? This action cannot be undone."
+    }
+  },
+
+  "reportCards": {
+    "filters": {
+      "selectTerm": "Select term",
+      "term": "Term",
+      "allGrades": "All grades"
+    },
+    "actions": {
+      "generate": "Generate Report Cards",
+      "generating": "Generating...",
+      "publish": "Publish"
+    },
+    "count": "report cards",
+    "columns": {
+      "rank": "Rank",
+      "student": "Student",
+      "gpa": "GPA",
+      "grade": "Grade",
+      "subjects": "Subjects",
+      "attendance": "Attendance",
+      "status": "Status"
+    },
+    "empty": "No report cards found. Select a term and click \"Generate Report Cards\".",
+    "subjectsCount": "subjects",
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    }
+  },
+
+  "transcripts": {
+    "searchPlaceholder": "Search by student name...",
+    "search": "Search",
+    "studentIdPlaceholder": "Student ID (for generation)",
+    "generate": "Generate Transcript",
+    "generating": "Generating...",
+    "count": "transcripts",
+    "columns": {
+      "number": "Number",
+      "student": "Student",
+      "gpa": "GPA",
+      "credits": "Credits",
+      "pdf": "PDF",
+      "date": "Date"
+    },
+    "empty": "No transcripts found. Enter a student ID and click \"Generate Transcript\".",
+    "download": "Download",
+    "pending": "Pending"
+  }
 }
