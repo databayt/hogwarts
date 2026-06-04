@@ -6,11 +6,13 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { isInvitationExpired } from "@/lib/invitation-utils"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { AcceptInviteForm } from "./form"
 
 interface AcceptInvitePageProps {
-  params: Promise<{ lang: string }>
+  params: Promise<{ lang: Locale }>
   searchParams: Promise<{ token?: string }>
 }
 
@@ -20,15 +22,14 @@ export default async function AcceptInvitePage({
 }: AcceptInvitePageProps) {
   const { lang } = await params
   const { token } = await searchParams
+  const dictionary = await getDictionary(lang)
+  const t = dictionary.acceptInvite
 
   if (!token) {
     return (
       <InviteCard>
-        <h2 className="text-xl font-semibold">Invalid Link</h2>
-        <p className="text-muted-foreground">
-          This invitation link is missing a token. Please check the link from
-          your email.
-        </p>
+        <h2 className="text-xl font-semibold">{t.invalidLinkTitle}</h2>
+        <p className="text-muted-foreground">{t.invalidLinkDescription}</p>
       </InviteCard>
     )
   }
@@ -43,31 +44,30 @@ export default async function AcceptInvitePage({
   if (!request) {
     return (
       <InviteCard>
-        <h2 className="text-xl font-semibold">Invitation Not Found</h2>
-        <p className="text-muted-foreground">
-          This invitation link is invalid or has already been used.
-        </p>
+        <h2 className="text-xl font-semibold">{t.notFoundTitle}</h2>
+        <p className="text-muted-foreground">{t.notFoundDescription}</p>
       </InviteCard>
     )
   }
 
   if (request.status !== "PENDING") {
+    const isApproved = request.status === "APPROVED"
     return (
       <InviteCard>
         <h2 className="text-xl font-semibold">
-          Invitation Already{" "}
-          {request.status === "APPROVED" ? "Accepted" : "Declined"}
+          {isApproved ? t.alreadyAcceptedTitle : t.alreadyDeclinedTitle}
         </h2>
         <p className="text-muted-foreground">
-          This invitation has already been{" "}
-          {request.status === "APPROVED" ? "accepted" : "declined"}.
+          {isApproved
+            ? t.alreadyAcceptedDescription
+            : t.alreadyDeclinedDescription}
         </p>
-        {request.status === "APPROVED" && request.school.domain && (
+        {isApproved && request.school.domain && (
           <Link
             href={`https://${request.school.domain}.databayt.org`}
             className="mt-4 inline-block underline"
           >
-            Go to {request.school.name}
+            {t.goToSchool.replace("{school}", request.school.name)}
           </Link>
         )}
       </InviteCard>
@@ -77,11 +77,8 @@ export default async function AcceptInvitePage({
   if (isInvitationExpired(request.expiresAt)) {
     return (
       <InviteCard>
-        <h2 className="text-xl font-semibold">Invitation Expired</h2>
-        <p className="text-muted-foreground">
-          This invitation has expired. Please contact the school administrator
-          to request a new one.
-        </p>
+        <h2 className="text-xl font-semibold">{t.expiredTitle}</h2>
+        <p className="text-muted-foreground">{t.expiredDescription}</p>
       </InviteCard>
     )
   }
@@ -95,19 +92,18 @@ export default async function AcceptInvitePage({
     return (
       <InviteCard>
         <h2 className="text-xl font-semibold">
-          You have been invited to join {request.school.name}
+          {t.invitedTitle.replace("{school}", request.school.name)}
         </h2>
         <p className="text-muted-foreground">
-          Role: <span className="font-medium">{request.requestedRole}</span>
+          {t.roleLabel}{" "}
+          <span className="font-medium">{request.requestedRole}</span>
         </p>
-        <p className="text-muted-foreground mt-2">
-          Please sign in to accept this invitation.
-        </p>
+        <p className="text-muted-foreground mt-2">{t.signInPrompt}</p>
         <Link
           href={`/${lang}/login?callbackUrl=${callbackUrl}`}
           className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 inline-flex h-10 items-center justify-center rounded-md px-6 text-sm font-medium"
         >
-          Sign in to accept
+          {t.signInToAccept}
         </Link>
       </InviteCard>
     )
@@ -116,18 +112,20 @@ export default async function AcceptInvitePage({
   return (
     <InviteCard>
       <h2 className="text-xl font-semibold">
-        You have been invited to join {request.school.name}
+        {t.invitedTitle.replace("{school}", request.school.name)}
       </h2>
       <p className="text-muted-foreground">
-        Role: <span className="font-medium">{request.requestedRole}</span>
+        {t.roleLabel}{" "}
+        <span className="font-medium">{request.requestedRole}</span>
       </p>
       <p className="text-muted-foreground mt-1 text-sm">
-        Signed in as {session.user.email}
+        {t.signedInAs.replace("{email}", session.user.email ?? "")}
       </p>
       <AcceptInviteForm
         token={token}
         schoolDomain={request.school.domain || ""}
         lang={lang}
+        dictionary={t}
       />
     </InviteCard>
   )

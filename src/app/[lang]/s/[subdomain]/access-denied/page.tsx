@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -20,26 +21,9 @@ interface Props {
 
 export default async function SchoolAccessDeniedPage({ params }: Props) {
   const { lang } = await params
-  const isArabic = lang === "ar"
-
-  const content = {
-    title: isArabic ? "تم رفض الوصول" : "Access Denied",
-    description: isArabic
-      ? "ليس لديك صلاحية للوصول إلى هذه الصفحة. قد يكون السبب:"
-      : "You don't have permission to access this page. This could be because:",
-    reasons: isArabic
-      ? [
-          "أنت لست عضواً في هذه المدرسة",
-          "حسابك لا يملك الصلاحية المطلوبة",
-          "المدرسة لم تمنحك صلاحية الوصول بعد",
-        ]
-      : [
-          "You're not a member of this school",
-          "Your account doesn't have the required role",
-          "The school hasn't granted you access yet",
-        ],
-    backHome: isArabic ? "العودة للرئيسية" : "Go Back Home",
-  }
+  const dictionary = await getDictionary(lang)
+  const t = dictionary.accessDenied
+  const reasons = [t.reason1, t.reason2, t.reason3]
 
   return (
     <div className="flex min-h-svh items-center justify-center p-4">
@@ -48,18 +32,18 @@ export default async function SchoolAccessDeniedPage({ params }: Props) {
           <div className="bg-destructive/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
             <ShieldX className="text-destructive size-8" />
           </div>
-          <CardTitle className="text-destructive">{content.title}</CardTitle>
-          <CardDescription>{content.description}</CardDescription>
+          <CardTitle className="text-destructive">{t.title}</CardTitle>
+          <CardDescription>{t.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
-            {content.reasons.map((reason: string, index: number) => (
+            {reasons.map((reason, index) => (
               <li key={index}>{reason}</li>
             ))}
           </ul>
           <div className="flex flex-col gap-2 pt-4">
             <Button asChild>
-              <Link href={`/${lang}`}>{content.backHome}</Link>
+              <Link href={`/${lang}`}>{t.backHome}</Link>
             </Button>
           </div>
         </CardContent>

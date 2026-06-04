@@ -1,4 +1,45 @@
 {
+  "accessDenied": {
+    "title": "Access Denied",
+    "description": "You don't have permission to access this page. This could be because:",
+    "reason1": "You're not a member of this school",
+    "reason2": "Your account doesn't have the required role",
+    "reason3": "The school hasn't granted you access yet",
+    "backHome": "Go Back Home"
+  },
+  "acceptInvite": {
+    "invalidLinkTitle": "Invalid Link",
+    "invalidLinkDescription": "This invitation link is missing a token. Please check the link from your email.",
+    "notFoundTitle": "Invitation Not Found",
+    "notFoundDescription": "This invitation link is invalid or has already been used.",
+    "alreadyAcceptedTitle": "Invitation Already Accepted",
+    "alreadyDeclinedTitle": "Invitation Already Declined",
+    "alreadyAcceptedDescription": "This invitation has already been accepted.",
+    "alreadyDeclinedDescription": "This invitation has already been declined.",
+    "goToSchool": "Go to {school}",
+    "expiredTitle": "Invitation Expired",
+    "expiredDescription": "This invitation has expired. Please contact the school administrator to request a new one.",
+    "invitedTitle": "You have been invited to join {school}",
+    "roleLabel": "Role:",
+    "signInPrompt": "Please sign in to accept this invitation.",
+    "signInToAccept": "Sign in to accept",
+    "signedInAs": "Signed in as {email}",
+    "accept": "Accept Invitation",
+    "decline": "Decline",
+    "accepting": "Accepting...",
+    "declining": "Declining...",
+    "acceptError": "Failed to accept invitation",
+    "declineError": "Failed to decline invitation",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "certificate": {
+    "unavailableTitle": "Certificate Temporarily Unavailable",
+    "unavailableDescription": "Certificate system is under maintenance. Please try again later."
+  },
+  "verify": {
+    "unavailableTitle": "Verification Temporarily Unavailable",
+    "unavailableDescription": "Verification system is under maintenance. Please try again later."
+  },
   "metadata": {
     "title": "Hogwarts - School Management System",
     "description": "Comprehensive school management platform for educational institutions"
