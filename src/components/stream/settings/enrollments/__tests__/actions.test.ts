@@ -26,6 +26,9 @@ vi.mock("@/lib/db", () => ({
     subject: {
       findUnique: vi.fn(),
     },
+    user: {
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -34,6 +37,7 @@ const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockEnrollFindMany = db.enrollment.findMany as ReturnType<typeof vi.fn>
 const mockEnrollCreate = db.enrollment.createMany as ReturnType<typeof vi.fn>
 const mockSubjectFind = db.subject.findUnique as ReturnType<typeof vi.fn>
+const mockUserFindMany = db.user.findMany as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -41,6 +45,12 @@ beforeEach(() => {
   mockEnrollFindMany.mockResolvedValue([])
   mockEnrollCreate.mockResolvedValue({ count: 0 })
   mockSubjectFind.mockResolvedValue({ id: "subj-1", name: "Math" })
+  // Default: every requested userId belongs to the current school (the
+  // membership filter is a pass-through). Tests that exercise the
+  // cross-tenant guard override this to return a subset.
+  mockUserFindMany.mockImplementation(async (args: any) =>
+    (args.where.id.in as string[]).map((id) => ({ id }))
+  )
 })
 
 describe("getSchoolEnrollments — auth/tenant", () => {
@@ -222,5 +232,62 @@ describe("bulkEnrollStudents — flow", () => {
     const result = await bulkEnrollStudents(input)
     expect(result.success).toBe(true)
     expect(result.enrolled).toBe(3)
+  })
+})
+
+describe("bulkEnrollStudents — tenant safety", () => {
+  beforeEach(() => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-1", role: "ADMIN" } })
+  })
+
+  it("drops userIds that do not belong to the current school (cross-tenant guard)", async () => {
+    // Caller asks to enroll three ids, but only u-1 is a member of school-1.
+    // u-2 (foreign school) and u-9 (nonexistent) must be filtered out.
+    mockUserFindMany.mockResolvedValueOnce([{ id: "u-1" }])
+
+    const result = await bulkEnrollStudents({
+      catalogSubjectId: "subj-1",
+      userIds: ["u-1", "u-2", "u-9"],
+    })
+
+    // user.findMany must be scoped by the current school.
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ schoolId: "school-1" }),
+      })
+    )
+    // Only the validated member is enrolled.
+    expect(result.enrolled).toBe(1)
+    expect(mockEnrollCreate).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ userId: "u-1" })],
+    })
+    // The foreign ids never reach createMany.
+    const created = (mockEnrollCreate.mock.calls[0][0] as { data: any[] }).data
+    expect(created.map((r) => r.userId)).not.toContain("u-2")
+    expect(created.map((r) => r.userId)).not.toContain("u-9")
+  })
+
+  it("fails cleanly when none of the userIds belong to the school", async () => {
+    mockUserFindMany.mockResolvedValueOnce([])
+
+    const result = await bulkEnrollStudents({
+      catalogSubjectId: "subj-1",
+      userIds: ["foreign-1", "foreign-2"],
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.enrolled).toBe(0)
+    expect(mockEnrollCreate).not.toHaveBeenCalled()
+  })
+
+  it("rejects an empty userIds array via Zod", async () => {
+    const result = await bulkEnrollStudents({
+      catalogSubjectId: "subj-1",
+      userIds: [],
+    })
+
+    expect(result.success).toBe(false)
+    expect(mockUserFindMany).not.toHaveBeenCalled()
+    expect(mockEnrollCreate).not.toHaveBeenCalled()
   })
 })

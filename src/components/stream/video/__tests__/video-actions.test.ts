@@ -6,6 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkSchoolVideoQuota,
+  incrementSchoolVideoUsage,
+} from "@/components/stream/lib/quota"
 
 import { uploadVideo } from "../video-actions"
 
@@ -17,10 +21,15 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
+vi.mock("@/components/stream/lib/quota", () => ({
+  checkSchoolVideoQuota: vi.fn(),
+  incrementSchoolVideoUsage: vi.fn(),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     lesson: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     video: {
       create: vi.fn(),
@@ -30,7 +39,7 @@ vi.mock("@/lib/db", () => ({
 
 const mockAuth = auth as unknown as ReturnType<typeof vi.fn>
 const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
-const mockLessonFind = db.lesson.findUnique as ReturnType<typeof vi.fn>
+const mockLessonFind = db.lesson.findFirst as ReturnType<typeof vi.fn>
 const mockVideoCreate = db.video.create as ReturnType<typeof vi.fn>
 
 const baseInput = {
@@ -49,6 +58,50 @@ beforeEach(() => {
     chapter: { subject: { slug: "math" } },
   })
   mockVideoCreate.mockResolvedValue({ id: "video-1" })
+  vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
+    allowed: true,
+  } as any)
+  vi.mocked(incrementSchoolVideoUsage).mockResolvedValue(BigInt(0))
+})
+
+describe("uploadVideo — URL validation & quota (P2 hardening)", () => {
+  beforeEach(() =>
+    mockAuth.mockResolvedValue({ user: { id: "u-1", role: "TEACHER" } })
+  )
+
+  it("rejects a videoUrl that is not a recognizable video URL", async () => {
+    const r = await uploadVideo({
+      ...baseInput,
+      videoUrl: "https://example.com/not-a-video",
+    })
+    expect(r.status).toBe("error")
+    expect(mockVideoCreate).not.toHaveBeenCalled()
+  })
+
+  it("does not touch quota for external URLs (no fileSize)", async () => {
+    await uploadVideo(baseInput)
+    expect(checkSchoolVideoQuota).not.toHaveBeenCalled()
+    expect(incrementSchoolVideoUsage).not.toHaveBeenCalled()
+  })
+
+  it("checks quota and rejects when storage is exceeded (self-hosted bytes)", async () => {
+    vi.mocked(checkSchoolVideoQuota).mockResolvedValueOnce({
+      allowed: false,
+    } as any)
+    const r = await uploadVideo({ ...baseInput, fileSize: 5_000_000 })
+    expect(checkSchoolVideoQuota).toHaveBeenCalledWith("school-1", 5_000_000)
+    expect(r.status).toBe("error")
+    expect(mockVideoCreate).not.toHaveBeenCalled()
+  })
+
+  it("increments usage after a successful self-hosted upload", async () => {
+    await uploadVideo({ ...baseInput, fileSize: 5_000_000 })
+    expect(mockVideoCreate).toHaveBeenCalled()
+    expect(incrementSchoolVideoUsage).toHaveBeenCalledWith(
+      "school-1",
+      5_000_000
+    )
+  })
 })
 
 describe("uploadVideo — auth & permissions", () => {

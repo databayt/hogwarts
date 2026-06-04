@@ -40,6 +40,14 @@ export function useVideoProgress({
 }: UseVideoProgressOptions) {
   const lastSaveTimeRef = useRef<number>(0)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Mirror currentTime into a ref so the periodic-save interval can read the
+  // latest position WITHOUT currentTime being in its deps (which would tear
+  // down and recreate the interval several times per second — the reason
+  // mid-playback saves never fired).
+  const currentTimeRef = useRef<number>(currentTime)
+  useEffect(() => {
+    currentTimeRef.current = currentTime
+  }, [currentTime])
 
   // Save progress to localStorage
   const saveToLocal = useCallback(
@@ -116,38 +124,68 @@ export function useVideoProgress({
     [saveToLocal, syncToServer]
   )
 
-  // Throttled save during playback (every PROGRESS_SAVE_INTERVAL)
+  // Immediate (non-debounced) save — used when the user is leaving the player
+  // (pause, tab hidden) so the final position reliably reaches the server
+  // instead of being dropped by the 2s debounce when the tab closes.
+  const flushProgress = useCallback(
+    (position: number) => {
+      saveToLocal(position)
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+        saveTimeoutRef.current = null
+      }
+      if (onSaveProgress && duration > 0 && position > 0) {
+        onSaveProgress(Math.floor(position), Math.floor(duration))
+      }
+      lastSaveTimeRef.current = Date.now()
+    },
+    [saveToLocal, onSaveProgress, duration]
+  )
+
+  // Keep the latest saveProgress in a ref so the interval below never needs it
+  // (or currentTime) in its deps — the interval should run uninterrupted for
+  // the whole playing session.
+  const saveProgressRef = useRef(saveProgress)
+  useEffect(() => {
+    saveProgressRef.current = saveProgress
+  }, [saveProgress])
+
+  // Periodic save during playback (every PROGRESS_SAVE_INTERVAL). Deps are only
+  // [isPlaying, duration] so the timer is created ONCE per play session and
+  // reads the live position from the ref.
   useEffect(() => {
     if (!isPlaying || duration <= 0) return
 
     const interval = setInterval(() => {
-      if (currentTime > 0) {
-        saveProgress(currentTime)
+      const t = currentTimeRef.current
+      if (t > 0) {
+        saveProgressRef.current(t)
       }
     }, PROGRESS_SAVE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [isPlaying, currentTime, duration, saveProgress])
+  }, [isPlaying, duration])
 
-  // Save on pause
+  // Save on pause (immediate flush to server)
   const onPause = useCallback(() => {
-    if (currentTime > 0) {
-      saveProgress(currentTime)
+    if (currentTimeRef.current > 0) {
+      flushProgress(currentTimeRef.current)
     }
-  }, [currentTime, saveProgress])
+  }, [flushProgress])
 
-  // Save on visibility change (tab hidden)
+  // Save on visibility change (tab hidden) — immediate flush, since a debounced
+  // save would not fire if the tab is being closed.
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && currentTime > 0) {
-        saveProgress(currentTime)
+      if (document.hidden && currentTimeRef.current > 0) {
+        flushProgress(currentTimeRef.current)
       }
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange)
-  }, [currentTime, saveProgress])
+  }, [flushProgress])
 
   // Save on beforeunload
   useEffect(() => {

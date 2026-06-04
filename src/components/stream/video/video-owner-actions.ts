@@ -26,6 +26,8 @@ async function assertOwnership(videoId: string) {
     select: {
       id: true,
       userId: true,
+      schoolId: true,
+      fileSize: true,
       videoUrl: true,
       storageKey: true,
       visibility: true,
@@ -69,6 +71,20 @@ export async function updateVideoVisibility(
     return { status: "error", message: result.error }
   }
 
+  const video = result.video!
+
+  // A PAID video must not be silently un-paywalled through the generic
+  // visibility toggle: other users may already have purchased it and there is
+  // no refund/migration path here. Removing the paywall has to be a deliberate
+  // action via the video's price/paywall settings, not this control.
+  if (video.visibility === "PAID") {
+    return {
+      status: "error",
+      message:
+        "Paid videos can't be switched here. Remove the paywall in the video's price settings first.",
+    }
+  }
+
   try {
     await db.video.update({
       where: { id: videoId },
@@ -101,6 +117,18 @@ export async function deleteOwnVideo(videoId: string): Promise<ActionResponse> {
   try {
     // Delete the DB record (cascades to progress via Video relation)
     await db.video.delete({ where: { id: videoId } })
+
+    // Release the school's storage quota for self-hosted bytes.
+    if (video.schoolId && video.fileSize && video.fileSize > 0) {
+      try {
+        const { decrementSchoolVideoUsage } =
+          await import("@/components/stream/lib/quota")
+        await decrementSchoolVideoUsage(video.schoolId, video.fileSize)
+      } catch (err) {
+        // Non-critical — quota counter can be reconciled later.
+        console.error("Failed to decrement video storage usage:", err)
+      }
+    }
 
     // Invalidate CDN cache if self-hosted
     if (video.storageKey) {

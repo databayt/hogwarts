@@ -9,6 +9,7 @@ import Stripe from "stripe"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n } from "@/components/internationalization/config"
@@ -46,6 +47,19 @@ export async function purchaseVideo(
 
   if (!session?.user?.id) {
     return { status: "error", message: "Authentication required" }
+  }
+
+  // Rate limit: each checkout creates a Stripe customer/session — cap abuse.
+  const rl = await checkUserRateLimit(
+    session.user.id,
+    RATE_LIMITS.STREAM_ENROLLMENT,
+    "stream-purchase"
+  )
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Too many attempts. Please try again shortly.",
+    }
   }
 
   if (!stripe) {

@@ -496,7 +496,34 @@
       }
     },
     "teachVideos": {
-      "rejectionReasonLabel": "Reviewer feedback"
+      "rejectionReasonLabel": "Reviewer feedback",
+      "title": "My Videos",
+      "videosUnit": "videos",
+      "emptyNone": "You haven't uploaded any videos yet.",
+      "emptyHint": "Use the \"Propose a Video\" button from your dashboard.",
+      "statTotal": "Total",
+      "statApproved": "Approved",
+      "statPending": "Pending",
+      "statTotalViews": "Total Views",
+      "tabAll": "All",
+      "tabApproved": "Approved",
+      "tabPending": "Pending",
+      "tabRejected": "Rejected",
+      "colTitle": "Title",
+      "colSubject": "Subject",
+      "colLesson": "Lesson",
+      "colStatus": "Status",
+      "colVisibility": "Visibility",
+      "colPricing": "Pricing",
+      "colViews": "Views",
+      "colDate": "Date",
+      "featured": "Featured",
+      "free": "Free",
+      "statusApproved": "Approved",
+      "statusPending": "Pending",
+      "statusRejected": "Rejected",
+      "noVideosFound": "No videos found.",
+      "ownershipNote": "You retain full ownership of all your videos. Use the settings button to manage visibility or delete."
     }
   }
 }

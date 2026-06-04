@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 
@@ -14,6 +15,15 @@ export async function adminGetLesson(
   lessonId: string,
   schoolId: string | null
 ) {
+  // Admin-only accessor: returns UNSIGNED video URLs plus unapproved/PAID
+  // videos, so it must never be reachable by students/teachers or anonymous
+  // callers. notFound() (404) avoids leaking whether the lesson exists.
+  const session = await auth()
+  const role = session?.user?.role
+  if (role !== "ADMIN" && role !== "DEVELOPER") {
+    notFound()
+  }
+
   const lesson = await db.lesson.findFirst({
     where: {
       id: lessonId,

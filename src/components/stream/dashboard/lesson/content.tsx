@@ -16,6 +16,7 @@ import {
   Circle,
   FileDown,
   Loader2,
+  Lock,
   Play,
   Plus,
   User,
@@ -80,7 +81,10 @@ export function StreamLessonContent({
   quizQuestions,
 }: StreamLessonContentProps) {
   const router = useRouter()
-  const d = (dictionary as Record<string, any>)?.stream?.lesson
+  // The page passes the `stream` subtree (dictionary.stream) as `dictionary`,
+  // so descend a single level here — NOT `?.stream?.lesson` (that double-nest
+  // bug left ~45 player strings rendering English fallbacks on every tenant).
+  const d = (dictionary as Record<string, any>)?.lesson
   const [showHero, setShowHero] = useState(true)
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
@@ -124,7 +128,7 @@ export function StreamLessonContent({
             lesson.chapter.course.slug
           )
           if (result.status === "error") {
-            toast.error(result.message)
+            toast.error(d?.failedToUpdateProgress || result.message)
             return
           }
           setIsCompleted(false)
@@ -135,7 +139,7 @@ export function StreamLessonContent({
             lesson.chapter.course.slug
           )
           if (result.status === "error") {
-            toast.error(result.message)
+            toast.error(d?.failedToUpdateProgress || result.message)
             return
           }
           setIsCompleted(true)
@@ -170,7 +174,7 @@ export function StreamLessonContent({
           lesson.chapter.course.slug
         )
         if (result.status === "error") {
-          toast.error(result.message)
+          toast.error(d?.failedToComplete || result.message)
           return
         }
         setIsCompleted(true)
@@ -704,50 +708,63 @@ export function StreamLessonContent({
             {d?.instructors || "Instructors"}
           </h2>
           <div className="flex flex-wrap gap-3">
-            {lesson.availableVideos.map((video) => (
-              <button
-                key={video.id}
-                onClick={() => {
-                  setActiveVideoId(video.id)
-                  setShowHero(false)
-                }}
-                className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
-                  activeVideoId === video.id
-                    ? "border-primary bg-primary/5"
-                    : "bg-muted/50 hover:bg-muted"
-                }`}
-              >
-                <Avatar className="size-10">
-                  <AvatarImage src={video.instructor.image ?? undefined} />
-                  <AvatarFallback>
-                    {video.instructor.name?.charAt(0) ?? (
-                      <User className="size-5" />
-                    )}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-start">
-                  <p className="text-sm font-medium">
-                    {video.instructor.name ?? "Instructor"}
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <Badge
-                      variant={
-                        video.source === "own-school"
-                          ? "default"
-                          : video.source === "featured"
-                            ? "secondary"
-                            : "outline"
-                      }
-                      className="px-1.5 py-0 text-[10px]"
-                    >
-                      {video.source === "other-school" && video.school.name
-                        ? video.school.name
-                        : SOURCE_LABELS[video.source]}
-                    </Badge>
+            {lesson.availableVideos.map((video) => {
+              const locked = video.requiresPayment && !video.hasPurchased
+              return (
+                <button
+                  key={video.id}
+                  disabled={locked}
+                  aria-disabled={locked}
+                  onClick={() => {
+                    // Locked (paid + unpurchased) videos have no playable URL —
+                    // switching would blank the player. Unlock via the
+                    // InstructorSwitcher above instead.
+                    if (locked) return
+                    setActiveVideoId(video.id)
+                    setShowHero(false)
+                  }}
+                  className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                    activeVideoId === video.id
+                      ? "border-primary bg-primary/5"
+                      : "bg-muted/50 hover:bg-muted"
+                  } ${locked ? "cursor-not-allowed opacity-60" : ""}`}
+                >
+                  <Avatar className="size-10">
+                    <AvatarImage src={video.instructor.image ?? undefined} />
+                    <AvatarFallback>
+                      {locked ? (
+                        <Lock className="size-4" />
+                      ) : (
+                        (video.instructor.name?.charAt(0) ?? (
+                          <User className="size-5" />
+                        ))
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-start">
+                    <p className="text-sm font-medium">
+                      {video.instructor.name ?? "Instructor"}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant={
+                          video.source === "own-school"
+                            ? "default"
+                            : video.source === "featured"
+                              ? "secondary"
+                              : "outline"
+                        }
+                        className="px-1.5 py-0 text-[10px]"
+                      >
+                        {video.source === "other-school" && video.school.name
+                          ? video.school.name
+                          : SOURCE_LABELS[video.source]}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
