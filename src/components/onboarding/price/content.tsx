@@ -142,6 +142,16 @@ export default function PriceContent({ dictionary, lang, id }: Props) {
 
   const displayValue = `${currencySymbol}${price}`
 
+  // The inline style.width below grows linearly with content length, so the
+  // font has to shrink for long values or the input overflows narrow phones
+  // (e.g. "$500000" at text-6xl ≈ 336px exceeds a 320px viewport).
+  const fontSizeClass =
+    displayValue.length <= 5
+      ? "text-4xl sm:text-5xl md:text-6xl"
+      : displayValue.length <= 7
+        ? "text-3xl sm:text-4xl md:text-5xl"
+        : "text-2xl sm:text-3xl md:text-4xl"
+
   return (
     <div className="flex flex-col items-center space-y-6">
       {errorText && (
@@ -181,7 +191,7 @@ export default function PriceContent({ dictionary, lang, id }: Props) {
                 )
               }
             }}
-            className="text-foreground w-auto max-w-full min-w-0 border-none bg-transparent text-center text-4xl font-extrabold outline-none sm:text-5xl md:text-6xl"
+            className={`text-foreground w-auto max-w-full min-w-0 border-none bg-transparent text-center font-extrabold outline-none ${fontSizeClass}`}
             style={{
               width: `${displayValue.length * 0.8}em`,
               caretColor: "var(--foreground)",
