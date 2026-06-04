@@ -63,9 +63,11 @@ vi.mock("@/lib/db", () => ({
     },
     feeStructure: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     feeAssignment: {
       upsert: vi.fn(),
+      create: vi.fn(),
       findMany: vi.fn(),
     },
     guardianType: {
@@ -261,7 +263,10 @@ function setupEnrollmentMocks(overrides?: {
       ...fs,
     }))
   )
+  vi.mocked(db.feeStructure.count).mockResolvedValue(0)
   vi.mocked(db.feeAssignment.upsert).mockResolvedValue({} as any)
+  vi.mocked(db.feeAssignment.create).mockResolvedValue({ id: "fa-new" } as any)
+  vi.mocked(db.class.findMany).mockResolvedValue([] as any)
 
   // Post-transaction fee query
   vi.mocked(db.feeAssignment.findMany).mockResolvedValue(

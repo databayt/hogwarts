@@ -6,6 +6,10 @@ import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
+import {
+  DownloadInvoiceButton,
+  SendInvoiceButton,
+} from "../download-invoice"
 
 interface InvoiceViewProps {
   invoice: any | null
@@ -37,7 +41,24 @@ export default function ViewInvoiceModalContent({
           <h1 className="mb-1 text-xl font-bold">{iv?.invoice || "Invoice"}</h1>
           <p className="text-muted-foreground text-xs">#{invoice.invoice_no}</p>
         </div>
-        <Badge>{invoice.status}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge>{invoice.status}</Badge>
+          <DownloadInvoiceButton
+            invoice={invoice}
+            lang={lang}
+            label={iv?.downloadPdf || "Download PDF"}
+          />
+          {invoice.id && (
+            <SendInvoiceButton
+              invoiceId={invoice.id}
+              invoiceNo={invoice.invoice_no}
+              label={iv?.send || "Send"}
+              subjectPrefix={iv?.invoice || "Invoice"}
+              sentLabel={iv?.invoiceSent || "Invoice sent"}
+              errorLabel={iv?.sendFailed || "Failed to send invoice"}
+            />
+          )}
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-6">

@@ -270,15 +270,19 @@ export async function POST(req: Request) {
               },
             })
             if (app?.userId && app.schoolId) {
-              const { dispatchNotification } =
+              const { dispatchNotification, resolveSchoolLang } =
                 await import("@/lib/dispatch-notification")
+              const lang = await resolveSchoolLang(app.schoolId)
+              const isAr = lang === "ar"
               await dispatchNotification({
                 schoolId: app.schoolId,
                 userId: app.userId,
                 type: "fee_paid",
-                title: "تم استلام الدفع",
-                body: `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`,
-                lang: "ar",
+                title: isAr ? "تم استلام الدفع" : "Payment Received",
+                body: isAr
+                  ? `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`
+                  : `Application fee payment for ${app.applicationNumber} confirmed.`,
+                lang,
                 priority: "normal",
                 channels: ["in_app", "email"],
                 metadata: {
@@ -356,15 +360,21 @@ export async function POST(req: Request) {
               },
             })
             if (app?.userId && app.schoolId) {
-              const { dispatchNotification } =
+              const { dispatchNotification, resolveSchoolLang } =
                 await import("@/lib/dispatch-notification")
+              const lang = await resolveSchoolLang(app.schoolId)
+              const isAr = lang === "ar"
               await dispatchNotification({
                 schoolId: app.schoolId,
                 userId: app.userId,
                 type: "fee_paid",
-                title: "تم استلام رسوم التسجيل",
-                body: `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`,
-                lang: "ar",
+                title: isAr
+                  ? "تم استلام رسوم التسجيل"
+                  : "Registration Fee Received",
+                body: isAr
+                  ? `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`
+                  : `Registration fee for application ${app.applicationNumber} confirmed.`,
+                lang,
                 priority: "normal",
                 channels: ["in_app", "email"],
                 metadata: {
@@ -520,15 +530,19 @@ export async function POST(req: Request) {
               // Notify student (non-fatal)
               try {
                 if (assignment.student?.userId) {
-                  const { dispatchNotification } =
+                  const { dispatchNotification, resolveSchoolLang } =
                     await import("@/lib/dispatch-notification")
+                  const lang = await resolveSchoolLang(assignment.schoolId)
+                  const isAr = lang === "ar"
                   await dispatchNotification({
                     schoolId: assignment.schoolId,
                     userId: assignment.student.userId,
                     type: "fee_paid",
-                    title: "تم استلام الدفعة",
-                    body: `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`,
-                    lang: "ar",
+                    title: isAr ? "تم استلام الدفعة" : "Payment Received",
+                    body: isAr
+                      ? `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`
+                      : `Online payment confirmed. ${newStatus === "PAID" ? "The fee is fully paid." : ""}`,
+                    lang,
                     priority: "normal",
                     channels: ["in_app", "email", "whatsapp"],
                     metadata: {

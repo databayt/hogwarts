@@ -564,8 +564,18 @@ class CsvImportService {
             // notification storm on a 500-row import).
             const { ensureStudentFeeAssignments } =
               await import("@/lib/fee-auto-assign")
+            let gradelessCount = 0
+            let feeFailCount = 0
             for (const s of createdStudents) {
-              if (!s.academicGradeId) continue
+              // Students whose CSV had no recognizable grade/section can't be
+              // matched to a fee structure. Track + surface them so the admin
+              // knows these rows have NO fees until a grade is set (then the
+              // student-wizard / grade-edit path back-fills via the same
+              // helper — see updateStudent + completeStudentWizard).
+              if (!s.academicGradeId) {
+                gradelessCount++
+                continue
+              }
               try {
                 await ensureStudentFeeAssignments({
                   schoolId,
@@ -574,12 +584,26 @@ class CsvImportService {
                   notify: false,
                 })
               } catch (feeErr) {
+                feeFailCount++
                 logger.error(
                   `Bulk import fee auto-assign failed for student ${s.id}`,
                   feeErr instanceof Error ? feeErr : new Error("Unknown error"),
                   { action: "bulk_fee_assign_error", schoolId }
                 )
               }
+            }
+            // Surface silent gaps so "imported: N" never implies "all billed".
+            if (gradelessCount > 0) {
+              result.warnings?.push({
+                row: 0,
+                warning: `${gradelessCount} student(s) imported without a recognized grade — no fees were assigned. Set their grade from the student list to assign fees.`,
+              })
+            }
+            if (feeFailCount > 0) {
+              result.warnings?.push({
+                row: 0,
+                warning: `Fee assignment failed for ${feeFailCount} student(s). You can re-sync fees from the Finance → Fees page.`,
+              })
             }
           }
         } catch (codeError) {

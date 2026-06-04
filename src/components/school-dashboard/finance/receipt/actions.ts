@@ -103,8 +103,9 @@ export async function uploadReceipt(
       schoolId,
     })
 
-    // 6. Trigger AI extraction asynchronously (don't await)
-    void extractReceiptData(receipt.id, fileUrl)
+    // 6. Trigger AI extraction asynchronously (don't await). schoolId is
+    // threaded through so every receipt write stays tenant-scoped.
+    void extractReceiptData(receipt.id, fileUrl, schoolId)
 
     // 7. Revalidate receipts list page
     revalidatePath(`/s/[subdomain]/(platform)/receipts`)
@@ -309,9 +310,11 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
       schoolId,
     })
 
-    // 6. Delete database record
-    await db.expenseReceipt.delete({
-      where: { id },
+    // 6. Delete database record. deleteMany keeps the schoolId in the WHERE
+    // (defense-in-depth: the ownership check above already gates this, but the
+    // delete itself must never be reachable for another tenant's id).
+    await db.expenseReceipt.deleteMany({
+      where: { id, schoolId },
     })
 
     logger.info("Receipt database record deleted", {
@@ -371,8 +374,8 @@ export async function retryReceiptExtraction(
       return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
     }
 
-    // 4. Trigger extraction retry
-    await retryExtraction(id)
+    // 4. Trigger extraction retry (schoolId-scoped end-to-end)
+    await retryExtraction(id, schoolId)
 
     // 5. Revalidate
     revalidatePath(`/s/[subdomain]/(platform)/receipts`)

@@ -194,6 +194,7 @@ model School {
   // Fees relations
   feeStructures           FeeStructure[]
   feeAssignments          FeeAssignment[]
+  pricingRules            PricingRule[]
   payments                Payment[]
   refunds                 Refund[]
   scholarships            Scholarship[]

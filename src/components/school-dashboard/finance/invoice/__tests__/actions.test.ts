@@ -33,31 +33,20 @@ vi.mock("@/lib/db", () => {
     aggregate: vi.fn(),
     upsert: vi.fn(),
   })
-  return {
-    db: {
-      userInvoice: createMock(),
-      userInvoiceAddress: createMock(),
-      userInvoiceItem: createMock(),
-      userInvoiceSettings: createMock(),
-      userInvoiceSignature: createMock(),
-      user: createMock(),
-      school: createMock(),
-      $transaction: vi.fn((cb: (tx: any) => any) =>
-        cb({
-          userInvoice: {
-            findFirst: vi.fn(),
-            create: vi.fn(),
-          },
-          userInvoiceAddress: {
-            create: vi.fn(),
-          },
-          userInvoiceItem: {
-            deleteMany: vi.fn(),
-          },
-        })
-      ),
-    },
+  const db: any = {
+    userInvoice: createMock(),
+    userInvoiceAddress: createMock(),
+    userInvoiceItem: createMock(),
+    userInvoiceSettings: createMock(),
+    userInvoiceSignature: createMock(),
+    user: createMock(),
+    school: createMock(),
   }
+  // Default: run the callback with the full mocked db as the tx client, so
+  // per-test `vi.mocked(db.<model>.<method>)` setups apply inside the
+  // transaction. Individual tests may override with their own mockImplementation.
+  db.$transaction = vi.fn((cb: (tx: any) => any) => cb(db))
+  return { db }
 })
 
 vi.mock("@/lib/tenant-context", () => ({
@@ -185,6 +174,10 @@ const mockInvoice = {
 describe("invoice/actions.ts", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // clearAllMocks wipes call history but NOT implementations set via
+    // mockImplementation in earlier tests, so re-establish the default
+    // $transaction (run callback with the full mocked db as tx client).
+    vi.mocked(db.$transaction).mockImplementation((cb: any) => cb(db))
     mockAuthSuccess()
   })
 
@@ -197,14 +190,14 @@ describe("invoice/actions.ts", () => {
       mockAuthFailure()
       const result = await actions.createInvoice(validInvoiceData)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not authenticated")
+      expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
     it("returns error when no school context", async () => {
       mockNoSchool()
       const result = await actions.createInvoice(validInvoiceData)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school context")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
 
     it("returns error when permission denied", async () => {
@@ -214,7 +207,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.createInvoice(validInvoiceData)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("creates invoice successfully via transaction", async () => {
@@ -255,7 +248,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.createInvoice(validInvoiceData)
       expect(result.success).toBe(false)
-      expect(result.error).toContain("already exists")
+      expect(result.error).toBe("INVOICE_DUPLICATE_NUMBER")
     })
   })
 
@@ -456,7 +449,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.getInvoiceById("nonexistent")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
     it("scopes query by userId and schoolId (tenant isolation)", async () => {
@@ -511,7 +504,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.updateInvoice("nonexistent", updateData)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
     it("returns error when permission denied", async () => {
@@ -521,7 +514,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.updateInvoice("inv-1", updateData)
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -547,7 +540,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.deleteInvoice({ id: "nonexistent" })
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
     it("returns error when permission denied", async () => {
@@ -557,7 +550,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.deleteInvoice({ id: "inv-1" })
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -581,7 +574,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.sendInvoiceEmail("nope", "Subject")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
     it("returns error when client has no email", async () => {
@@ -593,7 +586,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.sendInvoiceEmail("inv-1", "Subject")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Client email not found")
+      expect(result.error).toBe("NOT_FOUND")
     })
 
     it("returns error when Resend fails", async () => {
@@ -609,7 +602,7 @@ describe("invoice/actions.ts", () => {
 
       const result = await actions.sendInvoiceEmail("inv-1", "Subject")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Rate limited")
+      expect(result.error).toBe("EMAIL_SEND_FAILED")
     })
   })
 

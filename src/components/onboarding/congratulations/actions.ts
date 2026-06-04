@@ -95,6 +95,21 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       )
     }
 
+    // Seed the double-entry chart of accounts (+ fiscal year) so fee/payment
+    // ledger posts have accounts to write to. Without this every postFeePayment
+    // silently fails ("Required accounts not found"). Idempotent. Non-blocking.
+    try {
+      const { initializeAccountingSystem } = await import(
+        "@/components/school-dashboard/finance/lib/accounting/seed-accounts"
+      )
+      await initializeAccountingSystem(schoolId)
+    } catch (acctError) {
+      console.error(
+        `[publishSchool] Accounting init failed for school ${schoolId}:`,
+        acctError
+      )
+    }
+
     // Auto-provision per-grade fee structures from School.tuitionFee + currency.
     // Runs after catalog setup so AcademicGrade rows exist. Non-blocking.
     try {

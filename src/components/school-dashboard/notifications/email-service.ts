@@ -6,8 +6,18 @@ import { Resend } from "resend"
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
 
-// Initialize Resend client
-const resend = new Resend(env.RESEND_API_KEY)
+// Lazy-init to avoid crashing on import if RESEND_API_KEY is not set
+// (e.g. in test collection, where importing this module must not throw).
+let _resend: Resend | null = null
+function getResend(): Resend {
+  if (!_resend) {
+    if (!env.RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not configured")
+    }
+    _resend = new Resend(env.RESEND_API_KEY)
+  }
+  return _resend
+}
 
 // ============================================================================
 // Types
@@ -299,7 +309,7 @@ export async function sendNotificationEmail(
     const html = generateNotificationEmailHtml(params)
     const text = generateNotificationEmailText(params)
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from,
       to: recipient,
       subject: params.title,
@@ -360,6 +370,36 @@ export async function sendNotificationEmail(
       error: error instanceof Error ? error.message : "Unknown error",
     })
 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send email",
+    }
+  }
+}
+
+/**
+ * Send a raw, pre-rendered transactional email (custom subject + HTML), bypassing
+ * the notification-template pipeline. For dedicated emails like the admission
+ * offer letter that carry their own HTML. Honours the dev test-recipient guard.
+ */
+export async function sendRawEmail(params: {
+  to: string
+  subject: string
+  html: string
+}): Promise<{ success: boolean; error?: string }> {
+  const from = env.EMAIL_FROM ?? "School Portal <noreply@school.databayt.org>"
+  const recipient =
+    process.env.NODE_ENV === "development" ? "delivered@resend.dev" : params.to
+  try {
+    const { error } = await getResend().emails.send({
+      from,
+      to: recipient,
+      subject: params.subject,
+      html: params.html,
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to send email",

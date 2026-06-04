@@ -31,13 +31,19 @@ export async function dispatchNotification(params: {
   metadata?: Record<string, unknown>
 }): Promise<string | null> {
   try {
-    // Check user preference
-    const shouldSend = await shouldSendNotification(
-      params.userId,
-      params.type,
-      "in_app"
-    )
-    if (!shouldSend) return null
+    // Keep only the channels the user has NOT disabled for this type. Crucially
+    // this is per-channel: a user who turned OFF in-app but kept email/WhatsApp
+    // must still receive those — the old code gated the WHOLE notification on
+    // the in_app preference, silently dropping every channel. If the user
+    // disabled every requested channel, there is nothing to send.
+    const requestedChannels = params.channels ?? ["in_app"]
+    const enabledChannels: NotificationChannel[] = []
+    for (const ch of requestedChannels) {
+      if (await shouldSendNotification(params.userId, params.type, ch)) {
+        enabledChannels.push(ch)
+      }
+    }
+    if (enabledChannels.length === 0) return null
 
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + NOTIFICATION_EXPIRATION_DAYS)
@@ -52,7 +58,7 @@ export async function dispatchNotification(params: {
         lang: params.lang ?? "ar",
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
-        channels: params.channels ?? ["in_app"],
+        channels: enabledChannels,
         metadata:
           (params.metadata as unknown as Prisma.InputJsonValue) ?? undefined,
         expiresAt,
@@ -64,6 +70,22 @@ export async function dispatchNotification(params: {
     console.error("[dispatchNotification] Error:", error)
     return null
   }
+}
+
+/**
+ * Resolve a school's notification language ("ar" | "en") from its
+ * preferredLanguage. For system-level senders (webhooks, crons) that must not
+ * hardcode a language — a notification's text + `lang` should follow the
+ * school's preference, not a fixed default.
+ */
+export async function resolveSchoolLang(
+  schoolId: string
+): Promise<"ar" | "en"> {
+  const school = await db.school.findFirst({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  return school?.preferredLanguage === "en" ? "en" : "ar"
 }
 
 /**

@@ -52,7 +52,9 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   if (!schoolId) notFound()
 
-  const [payment, schoolForCurrency] = await Promise.all([
+  // School name + currency drive the receipt header and money formatting —
+  // never hardcode "School" or a default currency on a financial document.
+  const [payment, school] = await Promise.all([
     db.payment.findFirst({
       where: { id, schoolId },
       include: {
@@ -70,13 +72,13 @@ export default async function PaymentDetailPage({ params }: Props) {
     }),
     db.school.findUnique({
       where: { id: schoolId },
-      select: { currency: true },
+      select: { name: true, currency: true },
     }),
   ])
 
   if (!payment) notFound()
 
-  const currency = schoolForCurrency?.currency ?? "USD"
+  const currency = school?.currency ?? "USD"
 
   const studentName = [payment.student?.firstName, payment.student?.lastName]
     .filter(Boolean)
@@ -105,6 +107,7 @@ export default async function PaymentDetailPage({ params }: Props) {
               status: payment.status,
               transactionId: payment.transactionId || undefined,
               studentName,
+              schoolName: school?.name,
               feeStructureName:
                 payment.feeAssignment?.feeStructure?.name || "-",
               academicYear: payment.feeAssignment?.academicYear || "-",
