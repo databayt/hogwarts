@@ -221,6 +221,8 @@ model Subject {
   schoolTeacherExpertise TeacherSubjectExpertise[]
   schoolQuickAssessments QuickAssessment[]
   schoolQuizCategories   QuizCategory[]
+  liveClassSessions      LiveClassSession[]
+  liveClassDefaultLinks  LiveClassDefaultLink[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -114,7 +114,12 @@
     "report_ready": "التقرير جاهز",
     "absence_intention": "تم تقديم نية الغياب",
     "absence_intention_decision": "تمت مراجعة نية الغياب",
-    "setup_guide": "دليل الإعداد"
+    "setup_guide": "دليل الإعداد",
+    "live_class_scheduled": "تم جدولة فصل مباشر",
+    "live_class_starting_soon": "فصل مباشر يبدأ قريباً",
+    "live_class_started": "الفصل المباشر يبث الآن",
+    "live_class_cancelled": "تم إلغاء الفصل المباشر",
+    "live_class_recording_ready": "تسجيل الفصل جاهز"
   },
   "priorities": {
     "low": "أولوية منخفضة",

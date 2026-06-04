@@ -74,6 +74,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, SUBSTITUTION_STATUS } from "./constants"
+import { attachLiveClasses } from "./live-class-join"
 // ============================================================================
 // AI-POWERED TIMETABLE GENERATION
 // ============================================================================
@@ -2927,6 +2928,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     weekOffset: number
     teacherId?: string
     classId?: string | { in: string[] }
+    sectionId?: string
+    OR?: Array<{ classId?: { in: string[] }; sectionId?: string }>
   } = {
     schoolId,
     termId: term.id,
@@ -2943,7 +2946,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   } else if (role === "STUDENT") {
     const student = await db.student.findFirst({
       where: { userId, schoolId },
-      select: { id: true },
+      select: { id: true, sectionId: true },
     })
     if (student) {
       const enrollments = await db.studentClass.findMany({
@@ -2951,7 +2954,16 @@ export async function getTodaySchedule(input?: { date?: Date }) {
         select: { classId: true },
       })
       const classIds = enrollments.map((e) => e.classId)
-      if (classIds.length > 0) where.classId = { in: classIds }
+      // Match legacy class-based slots OR the student's section-based slots,
+      // so the today schedule (and live-class Join button) works for both.
+      const ors: Array<{ classId?: { in: string[] }; sectionId?: string }> = []
+      if (classIds.length > 0) ors.push({ classId: { in: classIds } })
+      if (student.sectionId) ors.push({ sectionId: student.sectionId })
+      if (ors.length === 1) {
+        Object.assign(where, ors[0])
+      } else if (ors.length > 1) {
+        where.OR = ors
+      }
     }
   }
 
@@ -2961,6 +2973,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       class: {
         select: { name: true, subject: { select: { name: true } } },
       },
+      subject: { select: { id: true, name: true } },
+      section: { select: { id: true, name: true } },
       teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
       period: {
@@ -2975,8 +2989,12 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject: slot.class?.subject?.name || slot.class?.name || "",
-    className: slot.class?.name || "",
+    sectionId: slot.sectionId ?? null,
+    subjectId: slot.subjectId ?? null,
+    subject:
+      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
+    sectionName: slot.section?.name || slot.class?.name || "",
+    className: slot.class?.name || slot.section?.name || "",
     teacher: slot.teacher
       ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
       : "",
@@ -2996,7 +3014,10 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       periodName: period.name,
       startTime: period.startTime,
       endTime: period.endTime,
+      sectionId: null as string | null,
+      subjectId: null as string | null,
       subject: isBreak ? period.name : "",
+      sectionName: "",
       className: "",
       teacher: "",
       room: "",
@@ -3004,8 +3025,16 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     }
   })
 
+  // Attach live-class Join info (section + subject anchored, today only).
+  const scheduleWithLive = await attachLiveClasses(
+    schoolId,
+    term.id,
+    targetDate,
+    fullSchedule
+  )
+
   return {
-    schedule: fullSchedule,
+    schedule: scheduleWithLive,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,

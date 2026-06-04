@@ -34,6 +34,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
+import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -107,6 +108,14 @@ export default function TeacherView({
   // Filters
   const [classroomFilter, setClassroomFilter] = useState<string>("all")
   const [subjectFilter, setSubjectFilter] = useState<string>("all")
+
+  // Tick every minute so the Current/Next card + live Join button track the
+  // clock (a class entering its live window appears without a manual refresh).
+  const [, setNowTick] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setNowTick((t) => t + 1), 60_000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Load data
   useEffect(() => {
@@ -337,6 +346,20 @@ export default function TeacherView({
                 </p>
               </div>
             </div>
+            {/* Start/Join live class — shows in the live window when a link exists */}
+            {currentClassInfo.item.liveClass &&
+              isLiveJoinable(
+                currentClassInfo.type as "current" | "next",
+                currentClassInfo.item.startTime
+              ) && (
+                <div className="mt-3 flex justify-end">
+                  <LiveJoinButton
+                    liveClass={currentClassInfo.item.liveClass}
+                    lang={lang}
+                    label={tv?.joinLive ?? "Join live class"}
+                  />
+                </div>
+              )}
           </CardContent>
         </Card>
       )}
