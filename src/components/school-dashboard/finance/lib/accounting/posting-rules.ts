@@ -9,6 +9,7 @@
 
 import type { JournalEntryInput, JournalEntryLine } from "./types"
 import { SourceModule } from "./types"
+import { toCents } from "./utils"
 
 /**
  * Standard account codes for chart of accounts
@@ -59,12 +60,13 @@ async function getAccountIdByCode(
   accountCode: string,
   db: any
 ): Promise<string | null> {
-  // NOTE: the Prisma field is `code` (ChartOfAccount.code, @@unique([schoolId, code])).
-  // Passing `accountCode` here threw a Prisma validation error that was swallowed as
-  // "Required accounts not found", so NO ledger entry was ever written. See finance-core.prisma.
   const account = await db.chartOfAccount.findFirst({
     where: {
       schoolId,
+      // The ChartOfAccount column is `code` (@@unique([schoolId, code])); the
+      // param is named accountCode. Querying a non-existent `accountCode`
+      // column returned null for every account, so every posting threw
+      // "Required accounts not found" and the ledger silently never wrote.
       code: accountCode,
     },
   })
@@ -113,10 +115,7 @@ export async function createFeePaymentEntry(
     throw new Error("Required accounts not found in chart of accounts")
   }
 
-  // Store whole currency units. LedgerEntry.debit/credit and AccountBalance.balance
-  // are Decimal(12,2) and the reports/format layer reads them without dividing, so the
-  // ledger must hold the same units as Payment.amount (whole units), NOT cents.
-  const amount = paymentData.amount
+  const amount = toCents(paymentData.amount)
 
   const lines: JournalEntryLine[] = [
     {
@@ -181,7 +180,7 @@ export async function createFeeAssignmentEntry(
     throw new Error("Required accounts not found")
   }
 
-  const amount = assignmentData.amount
+  const amount = toCents(assignmentData.amount)
 
   const lines: JournalEntryLine[] = [
     {
@@ -266,10 +265,10 @@ export async function createSalaryPaymentEntry(
     throw new Error("Required accounts not found")
   }
 
-  const grossAmount = paymentData.grossSalary
-  const taxAmount = paymentData.taxAmount
-  const ssAmount = paymentData.socialSecurityAmount
-  const netAmount = paymentData.netSalary
+  const grossAmount = toCents(paymentData.grossSalary)
+  const taxAmount = toCents(paymentData.taxAmount)
+  const ssAmount = toCents(paymentData.socialSecurityAmount)
+  const netAmount = toCents(paymentData.netSalary)
 
   const lines: JournalEntryLine[] = [
     {
@@ -368,7 +367,7 @@ export async function createExpensePaymentEntry(
     throw new Error("Required accounts not found")
   }
 
-  const amount = expenseData.amount
+  const amount = toCents(expenseData.amount)
 
   const lines: JournalEntryLine[] = [
     {
@@ -432,7 +431,7 @@ export async function createInvoicePaymentEntry(
     throw new Error("Required accounts not found")
   }
 
-  const amount = invoiceData.amount
+  const amount = toCents(invoiceData.amount)
 
   const lines: JournalEntryLine[] = [
     {
@@ -495,7 +494,7 @@ export async function createWalletTopupEntry(
     throw new Error("Required accounts not found")
   }
 
-  const amount = topupData.amount
+  const amount = toCents(topupData.amount)
 
   const lines: JournalEntryLine[] = [
     {

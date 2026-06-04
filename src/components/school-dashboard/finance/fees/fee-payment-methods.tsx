@@ -61,11 +61,9 @@ export function FeePaymentMethods({
     setLoading(gateway)
     setError(null)
     startTransition(async () => {
-      const result = await createFeePaymentCheckout(
-        feeAssignmentId,
-        lang,
-        gateway
-      )
+      // The gateway is resolved server-side from school config / currency;
+      // the picker drives loading state + intent only.
+      const result = await createFeePaymentCheckout(feeAssignmentId, lang)
       if (result.success && result.data?.checkoutUrl) {
         window.location.href = result.data.checkoutUrl
         return

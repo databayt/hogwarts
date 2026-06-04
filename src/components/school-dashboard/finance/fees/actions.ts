@@ -16,12 +16,6 @@ import { Prisma } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
-import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
-import {
-  createPaymentCheckout,
-  resolveAvailableMethods,
-} from "@/lib/payment/provider"
-import type { PaymentGateway } from "@/lib/payment/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -906,8 +900,7 @@ export async function recordPayment(
     const feeAssignmentId = formData.feeAssignmentId as string
     const amount = parseFloat(formData.amount as string)
 
-    // Get fee assignment with fee structure for discount policy + currency
-    // snapshot for the Payment row (P1.1).
+    // Get fee assignment with fee structure for discount policy
     const feeAssignment = await db.feeAssignment.findFirst({
       where: { id: feeAssignmentId, schoolId: ctx.schoolId },
       include: {
@@ -918,7 +911,6 @@ export async function recordPayment(
             paymentSchedule: true,
           },
         },
-        school: { select: { currency: true } },
       },
     })
 
@@ -977,10 +969,10 @@ export async function recordPayment(
       }
     }
 
-    // P2.1 — offline methods land in PENDING_VERIFICATION and skip ledger
-    // posting / invoice sync / status flip until an admin runs
-    // `markPaymentCleared`. CASH is immediate (admin counted the bills) so
-    // it still clears to SUCCESS in this flow.
+    // P2.1 — offline methods (bank transfer / cheque / ATM deposit) land in
+    // PENDING_VERIFICATION and skip ledger posting / invoice sync / status flip
+    // until an admin runs markPaymentCleared. CASH is immediate (admin counted
+    // the bills) and CREDIT_CARD/online clear here too.
     const offlineMethods = new Set(["BANK_TRANSFER", "CHEQUE", "ATM_DEPOSIT"])
     const requiresVerification = offlineMethods.has(
       formData.paymentMethod as string
@@ -989,11 +981,11 @@ export async function recordPayment(
       ? "PENDING_VERIFICATION"
       : "SUCCESS"
 
-    // Determine new fee-assignment status from the sum of SUCCESS payments
-    // only. PENDING_VERIFICATION rows don't count yet, so this code
-    // intentionally treats them as zero — the assignment status flips when
-    // markPaymentCleared transitions them to SUCCESS.
+    // Pending-verification rows don't count toward paid until cleared, so the
+    // assignment status must not move on them.
     const newTotalPaid = requiresVerification ? totalPaid : totalPaid + amount
+
+    // Determine new status
     let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" =
       "PENDING"
     if (newTotalPaid >= finalAmount) {
@@ -1002,12 +994,9 @@ export async function recordPayment(
       newStatus = "PARTIAL"
     }
 
-    // Create payment record. P1.1: snapshot currency from FeeAssignment (or
-    // fall back to School) so receipts stay correct after future currency
-    // changes. P2.1: capture offline reference fields (deposit slip URL,
-    // bank branch, depositor IBAN) for the reconciliation report.
-    const paymentCurrency =
-      feeAssignment.currency ?? feeAssignment.school?.currency ?? "USD"
+    // P1.1 — snapshot currency so receipts stay correct if the school later
+    // changes School.currency. P2.1 — capture offline reference fields for the
+    // reconciliation report + receipt.
     const payment = await db.payment.create({
       data: {
         schoolId: ctx.schoolId,
@@ -1016,7 +1005,7 @@ export async function recordPayment(
         paymentNumber:
           `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
         amount,
-        currency: paymentCurrency,
+        currency: feeAssignment.currency ?? null,
         paymentMethod: formData.paymentMethod as any,
         paymentDate: new Date(formData.paymentDate as string),
         status: paymentStatus,
@@ -1032,22 +1021,15 @@ export async function recordPayment(
       },
     })
 
-    // Only flip the fee-assignment status when the new payment cleared
-    // immediately. Pending-verification entries don't move the needle until
-    // markPaymentCleared runs.
+    // Pending-verification entries don't move the assignment status, post to
+    // the ledger, or sync the invoice — markPaymentCleared does all three when
+    // an admin confirms the offline transfer. Cleared payments do it now.
     if (!requiresVerification) {
       await db.feeAssignment.update({
         where: { id: feeAssignmentId },
         data: { status: newStatus },
       })
-    }
 
-    // P2.1 — Pending-verification payments DON'T post to the ledger and
-    // DON'T sync the linked invoice. Those side effects fire from
-    // markPaymentCleared once the admin confirms the offline transfer.
-    // This block is the cleared-payment fast path; offline payments fall
-    // through to the pending-verification notification below.
-    if (!requiresVerification) {
       // Post to double-entry ledger so cash + revenue accounts move (issue
       // #263 P1). Mirrors the call in webhooks/stripe/route.ts; both code
       // paths must post or trial balance diverges by the cash-only amounts.
@@ -1109,26 +1091,28 @@ export async function recordPayment(
       | undefined
     const amountStr2 = amount.toLocaleString()
     const remainingStr = (finalAmount - newTotalPaid).toLocaleString()
-    // P2.1 — distinct notification when the payment is still pending
-    // verification, so admins know to clear it and parents know we received
-    // their reference but haven't confirmed receipt of funds yet.
+    // Pending-verification deposits get a distinct "recorded, awaiting review"
+    // message — they have NOT cleared yet, so "Payment Received" would mislead.
+    const notifTitle = requiresVerification
+      ? n2?.depositPendingTitle || "Deposit Recorded — Pending Verification"
+      : n2?.paymentReceivedTitle || "Payment Received"
     const studentBodyKey = requiresVerification
-      ? "paymentPendingVerificationStudent"
+      ? "paymentPendingStudent"
       : newStatus === "PAID"
         ? "paymentRecordedStudentFull"
         : "paymentRecordedStudentPartial"
     const guardianBodyKey = requiresVerification
-      ? "paymentPendingVerificationGuardian"
+      ? "paymentPendingGuardian"
       : newStatus === "PAID"
         ? "paymentRecordedGuardianFull"
         : "paymentRecordedGuardianPartial"
     const studentBodyFallback = requiresVerification
-      ? "Payment of {amount} recorded — pending verification. The admin will confirm receipt shortly."
+      ? "Your payment of {amount} was recorded and is pending verification."
       : newStatus === "PAID"
         ? "Payment of {amount} recorded. Fee fully paid."
         : "Payment of {amount} recorded. Remaining: {remaining}"
     const guardianBodyFallback = requiresVerification
-      ? "Payment of {amount} recorded for student — pending verification."
+      ? "A payment of {amount} for the student was recorded and is pending verification."
       : newStatus === "PAID"
         ? "Payment of {amount} recorded for student. Fee fully paid."
         : "Payment of {amount} recorded for student. Remaining: {remaining}"
@@ -1142,7 +1126,7 @@ export async function recordPayment(
         schoolId: ctx.schoolId,
         userId: student.userId,
         type: "fee_paid",
-        title: n2?.paymentReceivedTitle || "Payment Received",
+        title: notifTitle,
         body: interp(n2?.[studentBodyKey] || studentBodyFallback, {
           amount: amountStr2,
           remaining: remainingStr,
@@ -1173,7 +1157,7 @@ export async function recordPayment(
           schoolId: ctx.schoolId,
           userId: link.guardian.userId,
           type: "fee_paid",
-          title: n2?.paymentReceivedTitle || "Payment Received",
+          title: notifTitle,
           body: interp(n2?.[guardianBodyKey] || guardianBodyFallback, {
             amount: amountStr2,
             remaining: remainingStr,
@@ -1206,14 +1190,15 @@ export async function recordPayment(
 /**
  * Mark a PENDING_VERIFICATION payment as cleared (P2.1).
  *
- * Used after an admin reconciles an offline bank transfer or ATM deposit
- * against the bank statement. Transitions the Payment to SUCCESS,
- * stamps `verifiedAt` + `verifiedBy`, recomputes `FeeAssignment.status`
- * from the new SUCCESS payment total, posts to the double-entry ledger,
- * syncs the linked UserInvoice, and notifies the guardian.
+ * The Aldar manual flow: a guardian pays by bank transfer / cheque / ATM
+ * deposit, the admin records it (lands PENDING_VERIFICATION), then verifies it
+ * against the bank statement. Transitions the Payment to SUCCESS, stamps
+ * `verifiedAt` + `verifiedBy`, recomputes `FeeAssignment.status` from the new
+ * SUCCESS payment total, posts to the double-entry ledger, syncs the linked
+ * UserInvoice, and notifies the guardian + student.
  *
- * Requires the `fees:approve` permission — the same gate that protects
- * fee waivers and refunds. Idempotent on already-SUCCESS payments.
+ * Requires the `fees:approve` permission — the same gate that protects fee
+ * waivers and refunds. Idempotent on already-SUCCESS payments.
  */
 export async function markPaymentCleared(
   paymentId: string
@@ -1854,15 +1839,11 @@ export async function deleteFine(id: string): Promise<ActionResult> {
 // ============================================
 
 /**
- * Create a payment checkout session for a fee assignment via the chosen
- * gateway. When `gateway` is omitted, the first available method for the
- * school's country/currency is selected (typically `tap` for AE/Gulf,
- * `stripe` elsewhere) — preserves the legacy single-button behavior.
+ * Create a Stripe checkout session for fee payment
  */
 export async function createFeePaymentCheckout(
   feeAssignmentId: string,
-  lang: string,
-  gateway?: PaymentGateway
+  lang: string
 ): Promise<ActionResult<{ checkoutUrl: string }>> {
   try {
     // Auth + tenant gate (same shape as requireFeePermission, but we need the
@@ -1925,45 +1906,20 @@ export async function createFeePaymentCheckout(
       return actionError(ACTION_ERRORS.FEE_FULLY_PAID)
     }
 
-    // Load school for currency + country + subdomain. `domain` is the
-    // per-school subdomain (e.g. "kingfahad" for kingfahad.databayt.org) that
-    // drives the tenant-aware redirect — without it Stripe sends the user
-    // back to the SaaS apex, breaking the school dashboard URL contract.
-    // `country` + `timezone` resolve the preferred gateway list for the
-    // school's region (AE → tap-first, SD → bankak, etc.).
+    // Load school for currency + subdomain. `domain` is the per-school
+    // subdomain (e.g. "kingfahad" for kingfahad.databayt.org) that drives the
+    // tenant-aware redirect — without it Stripe sends the user back to the
+    // SaaS apex, breaking the school dashboard URL contract.
     const school = await db.school.findFirst({
       where: { id: schoolId },
-      select: {
-        currency: true,
-        name: true,
-        domain: true,
-        country: true,
-        timezone: true,
-      },
+      select: { currency: true, name: true, domain: true },
     })
-    const currency =
-      school?.currency ||
-      resolveDefaultCurrency(school?.country, school?.timezone)
+    const currency = school?.currency || "SAR"
     const baseUrl = buildTenantBaseUrl(school?.domain)
 
-    // Pick the gateway: caller's explicit choice → first available for the
-    // school's region → "stripe" as last-resort fallback. resolveAvailableMethods
-    // filters by configured + currency-compatible so we never pick a gateway
-    // that will fail at createCheckout time.
-    let selectedGateway: PaymentGateway = gateway ?? "stripe"
-    if (!gateway) {
-      const available = resolveAvailableMethods(
-        school?.country,
-        school?.timezone,
-        currency
-      )
-      const onlineMethod = available.find(
-        (m) => m === "stripe" || m === "tap" || m === "bankak"
-      )
-      if (onlineMethod) selectedGateway = onlineMethod
-    }
-
-    const result = await createPaymentCheckout(selectedGateway, {
+    const { createPaymentCheckout } = await import("@/lib/payment/provider")
+    const { toSmallestUnit } = await import("@/lib/payment/currency")
+    const result = await createPaymentCheckout("stripe", {
       amount: remaining,
       currency,
       context: "school_fee",
@@ -1977,7 +1933,11 @@ export async function createFeePaymentCheckout(
           name: assignment.feeStructure?.name || "School Fee",
           description: `${[assignment.student?.firstName, assignment.student?.lastName].filter(Boolean).join(" ")} — ${assignment.academicYear}`,
           quantity: 1,
-          unitAmount: 0, // Will be overridden by amount
+          // Stripe needs the charge in the smallest currency unit. The adapter
+          // uses this verbatim when lineItems are present (it does NOT fall back
+          // to `amount`), so a hardcoded 0 here would create a $0 checkout while
+          // the webhook still marks the fee PAID. Convert the remaining balance.
+          unitAmount: toSmallestUnit(remaining, currency),
         },
       ],
       metadata: {
