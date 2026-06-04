@@ -2,110 +2,80 @@
 
 > Tracker: [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3) · Aldar Epic 03 anchor.
 
-## P0 — Pre-signature gates (Aldar)
+## Status
 
-- [ ] **Provision G42 Cloud SFU** in UAE region. Single binary
-      `livekit-server`. UDP 50000-60000, TCP 7881, TCP 443.
-- [ ] **TURN-over-443-TCP** via coturn co-located with SFU. TLS cert
-      from Let's Encrypt or Aldar-provisioned.
-- [ ] **AWS S3 `me-central-1` bucket** + IAM role for SFU egress writes
-      (`s3:PutObject` on `schools/*` prefix only).
-- [ ] **Webhook URL registration** in LiveKit config →
-      `https://ed.databayt.org/api/webhooks/livekit`.
-- [ ] **Set env vars** in Vercel + dev: `LIVEKIT_HOST`,
-      `LIVEKIT_WS_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`,
-      `LIVEKIT_RECORDING_BUCKET`, `LIVEKIT_RECORDING_REGION`,
-      `LIVEKIT_S3_ACCESS_KEY`, `LIVEKIT_S3_SECRET` (separate from
-      app-side `AWS_*` creds).
-- [ ] **Meeting-3 network test** from inside Aldar school WiFi.
-      `/live-classes/network-test` is the surface — run as
-      `admin@kingfahad.databayt.org`. **Block on TURN/443 failure.**
-- [ ] **Docs**: `content/docs-en/live-classes.mdx` + Arabic mirror
-      not yet written.
+**Two providers on one model:**
 
-## P1 — Phase 2 (Scheduling + reminders)
+- **`external`** (paste a Google Meet / Zoom / Teams link) — **production-active
+  now** on any tier incl. Vercel Hobby. No infra. This is the default path.
+- **`livekit`** (built-in SFU room + recordings) — **code-complete, dev-ready**,
+  gated on `LIVEKIT_*` env presence via `isLiveKitConfigured()`. Lights up in
+  production once the SFU is provisioned + Vercel Pro is in place — **no code change**.
 
-- [ ] **"Start live class" button on Timetable slot detail page**
-      (`src/components/school-dashboard/timetable/<slot-detail>.tsx`).
-      Gated by `canStartLiveClass(role) && teacherId ===
-session.user.id`. Calls `createLiveClass({ timetableId })` then
-      `router.push` to `/live-classes/${id}/room`.
-- [ ] **Auto-start egress** on `room_started` if
-      `LiveClassSession.recordingEnabled`. Currently the webhook
-      handler upserts the recording row only after the SFU sends
-      `egress_started` — but nothing in our app triggers egress, so
-      Phase 1 has no automatic recording start. Either (a) call
-      `startCompositeEgress()` from the webhook on `room_started`, or
-      (b) configure LiveKit auto-egress on the SFU side.
-- [ ] **Per-section / per-grade recording opt-out** — currently only
-      a per-class boolean.
+The Aldar P0 items below gate **only the `livekit` provider**; the feature is
+usable today without any of them.
 
-## P2 — Phase 4 (Settings + ops)
+## P0 — LiveKit-provider infra (Aldar pre-signature gates)
 
-- [ ] **Settings UI** for `liveClassRecordingRetentionDays`,
-      `liveClassMaxDurationMinutes`, `liveClassRecordingDefault`,
-      `liveClassMaxConcurrentPerSchool`. Should live under
-      `/settings/school` and only be writable by ADMIN/DEV.
-- [ ] **Capacity dashboard** in SaaS dashboard
-      (`/observability/live-classes`) — concurrent rooms per school,
-      egress queue depth, TCP fallback rate. Wave-2 ops visibility.
-- [ ] **Kick participant UI** in `room/room-client.tsx` for HOST.
-      Server action exists (`removeParticipant`) but isn't wired.
+> None of these block the `external` provider or the timetable Join button.
 
-## P3 — Hardening
+- [ ] **Provision G42 Cloud SFU** in UAE region (`livekit-server`; UDP 50000-60000, TCP 7881, TCP 443).
+- [ ] **TURN-over-443-TCP** via coturn co-located with the SFU.
+- [ ] **AWS S3 `me-central-1` bucket** + IAM for SFU egress writes.
+- [ ] **Webhook URL registration** in LiveKit → `https://ed.databayt.org/api/webhooks/livekit`.
+- [ ] **Set `LIVEKIT_*` env vars** (host, ws, key, secret, recording bucket/region, S3 creds — separate from app `AWS_*`).
+- [ ] **Meeting-3 network test** from inside Aldar school WiFi (`/live-classes/network-test`). **Block on TURN/443 failure.**
+- [ ] **Add the 5-min `live-class-reminders` cron to `vercel.json`** — intentionally omitted (sub-daily → needs **Vercel Pro**). Until then, reminders surface via the auto-appearing timetable Join button (60s client tick).
 
-- [x] **Multi-tenant integration test** with two demo schools — verify
-      a teacher in school A cannot join, list, or playback any session
-      from school B. (`__tests__/multi-tenant.test.ts`, 5 tests +
-      cross-tenant case in `eligibility.test.ts`)
-- [x] **Webhook integration test** with simulated LiveKit payloads —
-      room lifecycle, egress lifecycle, idempotency on duplicate
-      `eventId`, malformed roomName drop, cross-tenant drop, audit row.
-      (`src/lib/livekit/__tests__/webhook.test.ts`, 12 tests)
-- [x] **State-machine test** — `scheduled → live → ended` happy path + every invalid transition (`__tests__/sessions.test.ts`,
-      26 tests across create/cancel/start/end/list/get; idempotent
-      start, kick-on-end, SFU-failure handling)
-- [x] **Token grant test** — HOST has `roomAdmin/roomCreate/roomRecord`,
-      OBSERVER is subscribe-only, TTL claim honored, metadata claims
-      shape. (`src/lib/livekit/__tests__/token.test.ts`, 9 tests)
-- [x] **Eligibility resolution test** — HOST vs CO_HOST vs PARTICIPANT
-      vs OBSERVER resolution per role + section/guardian membership.
-      (`__tests__/eligibility.test.ts`, 17 tests)
-- [x] **Playwright RBAC + smoke specs** — `tests/e2e/live-classes/`
-      with `feature-pages-load.spec.ts` (5 tests) and `rbac.spec.ts`
-      (11 tests) covering ADMIN/TEACHER/STUDENT/GUARDIAN/STAFF/ACCOUNTANT
-      allowed-vs-blocked routes + ar RTL rendering. 103 test rows
-      across browser projects.
-- [ ] **3-node SFU + LB** for Wave-2 capacity (~5K concurrent →
-      ~15K). Sticky room routing.
-- [ ] **MinIO on-prem fallback** for recordings if Aldar procurement
-      requires it. Storage abstraction already supports per-school
-      `s3Bucket`/`s3Region` columns.
-- [x] **Type the `Dictionary` namespace** to include `liveClasses` so
-      we can drop the `as unknown as { liveClasses?: ... }` casts in
-      content components. (Dropped from all 8 call sites; type already
-      inferred from JSON imports.)
+## P1 — Remaining product work
+
+- [ ] **Default-link management surface** — today a recurring `LiveClassDefaultLink`
+      is created via the schedule form's "reuse this link" checkbox. A dedicated
+      list/edit UI (per subject+section) would let teachers manage links without
+      scheduling a session.
+- [ ] **Auto-start egress** on `room_started` if `recordingEnabled` (livekit only) —
+      webhook upserts the recording row on `egress_started`, but nothing triggers
+      egress yet. Either call `startCompositeEgress()` from the webhook or configure
+      LiveKit auto-egress SFU-side.
+- [ ] **Per-section / per-grade recording opt-out** (currently a per-session boolean).
+- [ ] **Authenticated browser E2E walkthrough** — schedule (external) → timetable
+      Join → dedicated page, as teacher + student. Blocked during this pass by the
+      demo-tenant login not establishing a session (existing-system/data, not feature
+      code). Note: the worktree `.env` points at **production** Neon, so run it on a
+      Neon branch or accept prod test rows.
+
+## P2 — Settings + ops
+
+- [ ] **Settings UI** for `liveClassRecordingRetentionDays`, `liveClassMaxDurationMinutes`,
+      `liveClassRecordingDefault`, `liveClassMaxConcurrentPerSchool` (ADMIN/DEV only).
+- [ ] **Capacity dashboard** (concurrent rooms, egress queue, TCP-fallback rate) — livekit ops.
+- [ ] **Kick-participant UI** in `room/room-client.tsx` for HOST (`removeParticipant` exists, not wired).
+
+## P3 — Hardening (LiveKit scale)
+
+- [ ] **3-node SFU + LB** for Wave-2 capacity (~5K → ~15K concurrent); sticky room routing.
+- [ ] **MinIO on-prem fallback** for recordings (schema already carries per-row `s3Bucket`/`s3Region`).
 
 ## Done
 
-- [x] Prisma schema + Neon promotion (2026-05-28)
-- [x] LiveKit lib (client, token, rooms, egress, recording-urls,
-      webhook, room-naming)
-- [x] Block scaffold (authorization, permissions, validation, types,
-      content, empty-state, error-map, actions/\* split)
-- [x] Routes (overview, detail, schedule, recordings, network-test +
-      bare-layout room route group)
-- [x] Webhook + 2 cron routes + `vercel.json` cron entries
-- [x] Sidebar + dictionaries + RBAC + 5-point notification type sync
-- [x] 12 `LIVE_CLASS_*` action error codes
-- [x] **151 unit tests** across 11 files (authorization 26 · validation
-      11 · sessions 26 · eligibility 17 · recordings 7 · multi-tenant 5
-      · permissions 13 · error-map 17 · room-naming 8 · token 9 ·
-      webhook 12) + **103 Playwright test rows** across 2 specs ×
-      5 browser projects.
-- [x] Block docs (CLAUDE.md, README.md, this ISSUE.md)
-- [x] Tenant-leak fix in `getLiveClass` fallback
-- [x] s3Bucket / s3Region populated on egress_started (was empty
-      string, blocked playback)
-- [x] notifyClassStarted + notifyClassRecordingReady wired into
-      webhook handler
+- [x] **Dual-provider extension** — `LiveClassProvider` enum, `meetingUrl`/`meetingProvider`,
+      nullable `roomName`, `LiveClassDefaultLink` (set-once-&-reuse per subject+section+term).
+      Applied additively to prod Neon (`prisma/migrations/20260604000000_add_live_class_dual_provider`).
+- [x] **External provider** create/start/end — skips the SFU, stores the meeting URL;
+      per-session override → stable default link. Room route redirects external → URL.
+- [x] **Provider gating** — `isLiveKitConfigured()` on the schedule form (built-in-video
+      option) + room route; external path always on.
+- [x] **Timetable "Join live class" button** (the deferred Phase 2) — `getTodaySchedule()`
+      attaches a Join target per slot (`attachLiveClasses` in `timetable/live-class-join.ts`);
+      `LiveJoinButton` renders on the Current/Next card in student + teacher views inside
+      the live window (`isLiveJoinable`); STUDENT branch now also matches section-based slots.
+- [x] **Public docs** — `content/docs-{en,ar}/live-classes.mdx` (dual-provider).
+- [x] LiveKit lib + block scaffold + routes + webhook + 2 cron routes.
+- [x] Sidebar + dictionaries (en+ar) + RBAC + 6-point notification type sync
+      (incl. `dictionaries.ts` `liveClasses` registration) + 12 `LIVE_CLASS_*` codes.
+- [x] **181 unit tests** across 13 files — live-classes block + `src/lib/livekit` (154)
+      plus the net-new dual-provider coverage: `attachLiveClasses` resolver (8),
+      `isLiveJoinable` + `LiveJoinButton` (10), dual-provider validation (+8),
+      external-join guard (+1), external create/start/end (+3). + 103 Playwright rows.
+- [x] Multi-tenant, webhook, state-machine, token-grant, eligibility integration tests.
+- [x] Tenant-leak fix in `getLiveClass` fallback; `Dictionary.liveClasses` typed (casts dropped).

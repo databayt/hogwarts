@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   cancelSchema,
+  liveClassDefaultLinkSchema,
   liveClassScheduleSchema,
   liveClassSettingsSchema,
 } from "../validation"
@@ -96,6 +97,83 @@ describe("liveClassSettingsSchema", () => {
         liveClassMaxDurationMinutes: 300,
         liveClassRecordingDefault: true,
       }).success
+    ).toBe(false)
+  })
+})
+
+describe("liveClassScheduleSchema — dual provider", () => {
+  it("defaults provider to livekit and saveAsDefault to false", () => {
+    const result = liveClassScheduleSchema.safeParse(baseInput)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.provider).toBe("livekit")
+      expect(result.data.saveAsDefault).toBe(false)
+    }
+  })
+
+  it("accepts an external session with a valid meeting URL", () => {
+    const result = liveClassScheduleSchema.safeParse({
+      ...baseInput,
+      provider: "external",
+      meetingUrl: "https://meet.google.com/abc-defg-hij",
+      meetingProvider: "Google Meet",
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects an external session with no meeting URL", () => {
+    const result = liveClassScheduleSchema.safeParse({
+      ...baseInput,
+      provider: "external",
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects a non-URL meeting link", () => {
+    const result = liveClassScheduleSchema.safeParse({
+      ...baseInput,
+      provider: "external",
+      meetingUrl: "not-a-url",
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it("does not require a meeting URL for the livekit provider", () => {
+    const result = liveClassScheduleSchema.safeParse({
+      ...baseInput,
+      provider: "livekit",
+    })
+    expect(result.success).toBe(true)
+  })
+})
+
+describe("liveClassDefaultLinkSchema", () => {
+  const base = {
+    subjectId: "sub-1",
+    sectionId: "sec-1",
+    termId: "term-1",
+    meetingUrl: "https://meet.google.com/recurring",
+  }
+
+  it("accepts a valid default link (provider defaults to external)", () => {
+    const result = liveClassDefaultLinkSchema.safeParse(base)
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.provider).toBe("external")
+  })
+
+  it("rejects a missing meeting URL", () => {
+    const withoutUrl = {
+      subjectId: base.subjectId,
+      sectionId: base.sectionId,
+      termId: base.termId,
+    }
+    expect(liveClassDefaultLinkSchema.safeParse(withoutUrl).success).toBe(false)
+  })
+
+  it("rejects a non-URL meeting link", () => {
+    expect(
+      liveClassDefaultLinkSchema.safeParse({ ...base, meetingUrl: "nope" })
+        .success
     ).toBe(false)
   })
 })

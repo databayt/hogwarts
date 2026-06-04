@@ -1,11 +1,32 @@
 ---
 title: Live Classes
-description: LiveKit-based video conferencing for scheduled and ad-hoc live classes — self-hosted SFU in UAE region, TURN-over-443-TCP fallback, AWS S3 recordings with PDPL-configurable retention.
+description: Video conferencing for live classes via a pasted meeting link (Google Meet / Zoom / Teams) or a built-in LiveKit SFU. Students and teachers join from a button on their timetable.
 ---
 
-The live-classes block delivers built-in video conferencing for teachers, students, and parents. Built for the **Aldar UAE pilot** ([Epic 03](https://kun.databayt.org/en/docs/aldar)) with a self-hosted LiveKit SFU on G42 Cloud, TURN-over-443-TCP fallback for restrictive networks, and AWS S3 `me-central-1` recordings retained per-school for PDPL compliance.
+The live-classes block lets teachers hold live classes and students join them with **one button on their timetable**. It runs on **two interchangeable providers**:
 
-> **Status**: Phase 1 application code complete · **151/151 Vitest unit tests** + **103 Playwright spec rows** green · awaiting SFU provisioning + Meeting-3 in-school network test before production cutover · tracker [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3).
+- **External link** — the teacher pastes a Google Meet / Zoom / Teams link (set once per subject and reused, or per session). Works on **every deployment tier today**, no infrastructure required. This is the default.
+- **Built-in video (LiveKit)** — a self-hosted SFU on G42 Cloud with TURN-over-443-TCP fallback and AWS S3 `me-central-1` recordings (PDPL retention). Built for the **Aldar UAE pilot** ([Epic 03](https://kun.databayt.org/en/docs/aldar)). It is **dev-ready and production-gated** on `LIVEKIT_*` env presence — it activates automatically once the SFU is provisioned, with no code change.
+
+The two providers share one data model, one set of routes, one RBAC matrix, and the same timetable Join button — the provider is just a discriminator on the session.
+
+> **Status**: External provider **production-active**; LiveKit provider **code-complete, dev-ready** (awaiting SFU provisioning + Meeting-3 network test). **181 Vitest unit tests** + **103 Playwright spec rows** green · tracker [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3).
+
+## Providers
+
+|                 | `external`                                                                                       | `livekit`                                           |
+| --------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Meeting surface | Pasted URL (Meet / Zoom / Teams), opens in a new tab                                             | In-app full-screen SFU room                         |
+| Infra required  | **None** — works on Vercel Hobby now                                                             | SFU + coturn + S3, plus `LIVEKIT_*` env             |
+| Recordings      | Provider-native (external to us)                                                                 | AWS S3, signed playback, per-school retention       |
+| Link source     | Per-session override → stable `LiveClassDefaultLink` (set-once-&-reuse per subject+section+term) | Auto-generated room `sch-{schoolId}-lc-{sessionId}` |
+| Gating          | Always available                                                                                 | Hidden/disabled unless `isLiveKitConfigured()`      |
+
+Provider is chosen on the schedule form (the built-in-video option only appears when LiveKit is configured). The in-app room route redirects an `external` session straight to its meeting URL.
+
+## Timetable Join button
+
+`getTodaySchedule()` attaches a Join target to each schedule slot — a session scheduled today for that section+subject, else the stable default link. The button (`LiveJoinButton`) renders on the **Current/Next class card** in the student and teacher timetable views, appearing automatically inside the live window (from ~10 minutes before start until the period ends, recomputed on a 60-second tick). External → opens the meeting URL; LiveKit → links to the in-app room. This is the surface most students and teachers actually use to join.
 
 ## Routes
 
@@ -56,14 +77,15 @@ Anyone else gets `LIVE_CLASS_PARTICIPANT_DENIED`. The eligibility check runs on 
 
 ## Data model
 
-Four Prisma models in `prisma/models/live-class.prisma`, all `schoolId`-scoped with `@@index([schoolId, …])` and soft-delete via `deletedAt`.
+Five Prisma models in `prisma/models/live-class.prisma`, all `schoolId`-scoped with `@@index([schoolId, …])` and soft-delete via `deletedAt`.
 
-| Model                  | Purpose                                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------------------- |
-| `LiveClassSession`     | A scheduled or ad-hoc class. Optional `timetableId` / `sectionId` / `subjectId` anchors. |
-| `LiveClassParticipant` | One row per invited user (`HOST` / `CO_HOST` / `PARTICIPANT` / `OBSERVER`).              |
-| `LiveClassRecording`   | Composite Egress recording metadata + S3 location.                                       |
-| `LiveClassEvent`       | Webhook audit log + idempotency (unique on `eventId`).                                   |
+| Model                  | Purpose                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LiveClassSession`     | A scheduled or ad-hoc class. `provider` (`livekit` / `external`), nullable `roomName`, `meetingUrl` / `meetingProvider` for external. Optional `timetableId` / `sectionId` / `subjectId` anchors. |
+| `LiveClassParticipant` | One row per invited user (`HOST` / `CO_HOST` / `PARTICIPANT` / `OBSERVER`).                                                                                                                       |
+| `LiveClassRecording`   | Composite Egress recording metadata + S3 location (livekit only).                                                                                                                                 |
+| `LiveClassEvent`       | Webhook audit log + idempotency (unique on `eventId`).                                                                                                                                            |
+| `LiveClassDefaultLink` | Stable recurring meeting link, unique per `[schoolId, subjectId, sectionId, termId]` — the "set once & reuse" link the timetable Join button falls back to.                                       |
 
 Plus 4 columns on `School` for per-school configuration:
 

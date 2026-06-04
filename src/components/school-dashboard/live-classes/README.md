@@ -56,22 +56,32 @@ src/components/school-dashboard/live-classes/
 │   ├── tokens.ts              — joinLiveClass / refreshLiveClassToken
 │   ├── notifications.ts       — lang-aware dispatch (internal helper)
 │   └── recordings.ts          — list / signed URL / delete
-├── detail/detail-content.tsx
-├── schedule/schedule-form.tsx
-├── room/room-client.tsx       — LiveKitRoom + VideoConference
+├── detail/detail-content.tsx  — provider-aware Join (external URL vs in-app room)
+├── schedule/schedule-form.tsx — provider selector + meeting-link + reuse-default
+├── room/room-client.tsx       — LiveKitRoom + VideoConference (livekit only)
 ├── recordings/
 │   ├── recordings-content.tsx
 │   └── recording-player.tsx
 ├── network-test/network-test-client.tsx
 └── __tests__/
     ├── authorization.test.ts  (26)
-    ├── validation.test.ts     (11)
-    ├── sessions.test.ts       (26)  — server actions + state machine
-    ├── eligibility.test.ts    (17)  — joinLiveClass role resolution
+    ├── validation.test.ts     (19)  — incl. dual-provider + default-link schema
+    ├── sessions.test.ts       (29)  — server actions + state machine + external
+    ├── eligibility.test.ts    (18)  — join role resolution + external guard
     ├── recordings.test.ts     (7)   — list / signed URL / delete
     ├── multi-tenant.test.ts   (5)   — cross-tenant isolation
     ├── permissions.test.ts    (13)  — FeaturePermissionsModule
     └── error-map.test.ts      (17)  — server code → translated string
+```
+
+Timetable integration (lives in the timetable block):
+
+```
+src/components/school-dashboard/timetable/
+├── live-class-join.ts                       — attachLiveClasses (Join resolver)
+├── views/live-join-button.tsx               — LiveJoinButton + isLiveJoinable
+├── __tests__/live-class-join.test.ts        (8)
+└── views/__tests__/live-join-button.test.tsx (10)
 ```
 
 Lib (shared, lives outside the block):
@@ -101,31 +111,31 @@ rbac.spec.ts                   — 11 RBAC matrix tests per browser
 
 ## Status Matrix
 
-| Capability                             | Status                                        |
-| -------------------------------------- | --------------------------------------------- |
-| Prisma models + migration              | ✅ live                                       |
-| LiveKit lib wrappers                   | ✅                                            |
-| Server actions (create/start/end/join) | ✅                                            |
-| Overview + detail + schedule UI        | ✅                                            |
-| Full-screen room UI (LiveKit prebuilt) | ✅                                            |
-| Recordings list + signed playback      | ✅                                            |
-| Webhook handler (room + egress events) | ✅                                            |
-| Reminder + retention crons             | ✅                                            |
-| RBAC (`/live-classes/*`)               | ✅                                            |
-| Sidebar + dictionaries (en+ar)         | ✅                                            |
-| Notification type sync (5 sync points) | ✅                                            |
-| Network test page                      | ✅ (env-gated)                                |
-| **External provider (paste-a-link)**   | ✅ works on Hobby now                         |
-| **Stable default link + per-session override** | ✅ `LiveClassDefaultLink`              |
-| **Timetable "Join live class" button** | ✅ Current/Next card (student + teacher)      |
-| Provider gating (`isLiveKitConfigured`)| ✅ schedule form + room redirect              |
-| Unit tests (Vitest)                    | ✅ 154/154 (+3 external-provider)             |
-| E2E tests (Playwright)                 | ✅ 103 specs ready (CLI run needs dev server) |
-| SFU provisioning (G42 + coturn)        | ⏸️ infra (livekit provider only)              |
-| AWS S3 me-central-1 bucket + IAM       | ⏸️ infra (recordings only)                    |
-| Sub-daily reminder cron in vercel.json | ⏸️ deferred until Vercel Pro                  |
-| Aldar Meeting-3 network test           | ⏸️ pre-signature gate (livekit only)          |
-| Settings UI for retention / max-dur    | ⏸️ Phase 4                                    |
+| Capability                                     | Status                                        |
+| ---------------------------------------------- | --------------------------------------------- |
+| Prisma models + migration                      | ✅ live                                       |
+| LiveKit lib wrappers                           | ✅                                            |
+| Server actions (create/start/end/join)         | ✅                                            |
+| Overview + detail + schedule UI                | ✅                                            |
+| Full-screen room UI (LiveKit prebuilt)         | ✅                                            |
+| Recordings list + signed playback              | ✅                                            |
+| Webhook handler (room + egress events)         | ✅                                            |
+| Reminder + retention crons                     | ✅                                            |
+| RBAC (`/live-classes/*`)                       | ✅                                            |
+| Sidebar + dictionaries (en+ar)                 | ✅                                            |
+| Notification type sync (6 sync points)         | ✅                                            |
+| Network test page                              | ✅ (env-gated)                                |
+| **External provider (paste-a-link)**           | ✅ works on Hobby now                         |
+| **Stable default link + per-session override** | ✅ `LiveClassDefaultLink`                     |
+| **Timetable "Join live class" button**         | ✅ Current/Next card (student + teacher)      |
+| Provider gating (`isLiveKitConfigured`)        | ✅ schedule form + room redirect              |
+| Unit tests (Vitest)                            | ✅ 181/181 (+27 dual-provider + Join button)  |
+| E2E tests (Playwright)                         | ✅ 103 specs ready (CLI run needs dev server) |
+| SFU provisioning (G42 + coturn)                | ⏸️ infra (livekit provider only)              |
+| AWS S3 me-central-1 bucket + IAM               | ⏸️ infra (recordings only)                    |
+| Sub-daily reminder cron in vercel.json         | ⏸️ deferred until Vercel Pro                  |
+| Aldar Meeting-3 network test                   | ⏸️ pre-signature gate (livekit only)          |
+| Settings UI for retention / max-dur            | ⏸️ Phase 4                                    |
 
 ## Integration Points
 

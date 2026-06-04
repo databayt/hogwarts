@@ -222,6 +222,26 @@ describe("joinLiveClass eligibility", () => {
       expect(result.error).toBe("LIVE_CLASS_PARTICIPANT_DENIED")
   })
 
+  it("external-provider session → PROVIDER_UNAVAILABLE (in-app room is LiveKit-only)", async () => {
+    // External sessions are joined via their meeting URL in the UI, never the
+    // token path — even for the host. roomName is null for external sessions.
+    mockUser(TEACHER_USER_ID, "TEACHER")
+    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      provider: "external",
+      roomName: null,
+      sectionId: SECTION_ID,
+      maxParticipants: 50,
+      status: "live",
+      lang: "ar",
+      teacher: { userId: TEACHER_USER_ID },
+    } as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_PROVIDER_UNAVAILABLE")
+  })
+
   it("unauthenticated → NOT_AUTHENTICATED, no DB call", async () => {
     vi.mocked(auth).mockResolvedValue(null as never)
     const result = await joinLiveClass(SESSION_ID)
