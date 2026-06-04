@@ -114,7 +114,12 @@
     "report_ready": "Report ready",
     "absence_intention": "Absence intention submitted",
     "absence_intention_decision": "Absence intention reviewed",
-    "setup_guide": "Setup guide"
+    "setup_guide": "Setup guide",
+    "live_class_scheduled": "Live class scheduled",
+    "live_class_starting_soon": "Live class starting soon",
+    "live_class_started": "Live class is now live",
+    "live_class_cancelled": "Live class cancelled",
+    "live_class_recording_ready": "Recording ready"
   },
   "priorities": {
     "low": "Low priority",

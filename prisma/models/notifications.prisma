@@ -26,6 +26,11 @@ enum NotificationType {
   document_shared // Document shared with user
   report_ready // Report generated
   setup_guide // Post-onboarding setup step guide
+  live_class_scheduled // A live class was created
+  live_class_starting_soon // 10 minutes before scheduledStart (cron)
+  live_class_started // SFU/host started the room
+  live_class_cancelled // Teacher cancelled a live class
+  live_class_recording_ready // Recording finished processing
 }
 
 // Notification priority levels

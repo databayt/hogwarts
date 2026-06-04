@@ -200,6 +200,21 @@ export const platformNav: PlatformNavItem[] = [
     roles: ALL_ROLES,
   },
   {
+    key: "liveClasses",
+    title: "LiveClasses",
+    href: "/live-classes",
+    icon: "video",
+    roles: [
+      "DEVELOPER",
+      "ADMIN",
+      "TEACHER",
+      "STUDENT",
+      "GUARDIAN",
+      "STAFF",
+      "ACCOUNTANT",
+    ],
+  },
+  {
     key: "messages",
     title: "Messages",
     href: "/messages",

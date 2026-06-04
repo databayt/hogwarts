@@ -23,6 +23,15 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     SOCKET_SECRET: z.string().min(1).optional(),
 
+    // Cron authorization header. Vercel cron sets `Bearer <CRON_SECRET>` for us.
+    // Used by the live-class reminder + recording-expiry jobs (and other crons).
+    CRON_SECRET: z.string().min(1).optional(),
+
+    // Live Classes — LiveKit SFU (read via raw process.env in src/lib/livekit/client.ts):
+    //   LIVEKIT_HOST, LIVEKIT_WS_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET,
+    //   LIVEKIT_RECORDING_BUCKET, LIVEKIT_RECORDING_REGION, LIVEKIT_S3_ACCESS_KEY,
+    //   LIVEKIT_S3_SECRET. Absent => external-link provider only (LiveKit gated off).
+
     // File Upload & Storage (AWS S3 + CloudFront)
     AWS_ACCESS_KEY_ID: z
       .string()
@@ -105,6 +114,7 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     SOCKET_SECRET: process.env.SOCKET_SECRET,
+    CRON_SECRET: process.env.CRON_SECRET,
 
     // File Upload & Storage (AWS S3 + CloudFront)
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,

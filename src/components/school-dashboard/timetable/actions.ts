@@ -2927,6 +2927,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     weekOffset: number
     teacherId?: string
     classId?: string | { in: string[] }
+    sectionId?: string
+    OR?: Array<{ classId?: { in: string[] }; sectionId?: string }>
   } = {
     schoolId,
     termId: term.id,
@@ -2943,7 +2945,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   } else if (role === "STUDENT") {
     const student = await db.student.findFirst({
       where: { userId, schoolId },
-      select: { id: true },
+      select: { id: true, sectionId: true },
     })
     if (student) {
       const enrollments = await db.studentClass.findMany({
@@ -2951,7 +2953,16 @@ export async function getTodaySchedule(input?: { date?: Date }) {
         select: { classId: true },
       })
       const classIds = enrollments.map((e) => e.classId)
-      if (classIds.length > 0) where.classId = { in: classIds }
+      // Match legacy class-based slots OR the student's section-based slots,
+      // so the today schedule (and live-class Join button) works for both.
+      const ors: Array<{ classId?: { in: string[] }; sectionId?: string }> = []
+      if (classIds.length > 0) ors.push({ classId: { in: classIds } })
+      if (student.sectionId) ors.push({ sectionId: student.sectionId })
+      if (ors.length === 1) {
+        Object.assign(where, ors[0])
+      } else if (ors.length > 1) {
+        where.OR = ors
+      }
     }
   }
 
@@ -2961,6 +2972,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       class: {
         select: { name: true, subject: { select: { name: true } } },
       },
+      subject: { select: { id: true, name: true } },
+      section: { select: { id: true, name: true } },
       teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
       period: {
@@ -2975,8 +2988,12 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject: slot.class?.subject?.name || slot.class?.name || "",
-    className: slot.class?.name || "",
+    sectionId: slot.sectionId ?? null,
+    subjectId: slot.subjectId ?? null,
+    subject:
+      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
+    sectionName: slot.section?.name || slot.class?.name || "",
+    className: slot.class?.name || slot.section?.name || "",
     teacher: slot.teacher
       ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
       : "",
@@ -2996,7 +3013,10 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       periodName: period.name,
       startTime: period.startTime,
       endTime: period.endTime,
+      sectionId: null as string | null,
+      subjectId: null as string | null,
       subject: isBreak ? period.name : "",
+      sectionName: "",
       className: "",
       teacher: "",
       room: "",
@@ -3004,12 +3024,137 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     }
   })
 
+  // Attach live-class Join info (section + subject anchored, today only).
+  const scheduleWithLive = await attachLiveClasses(
+    schoolId,
+    term.id,
+    targetDate,
+    fullSchedule
+  )
+
   return {
-    schedule: fullSchedule,
+    schedule: scheduleWithLive,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,
   }
+}
+
+/**
+ * Live-class Join info attached to a today-schedule entry. `sessionId` is
+ * present only for an actual scheduled session (LiveKit room or external);
+ * a recurring `LiveClassDefaultLink` resolves with `sessionId: null`.
+ */
+export type LiveClassJoinInfo = {
+  sessionId: string | null
+  provider: "livekit" | "external"
+  meetingUrl: string | null
+  status: string | null
+}
+
+/**
+ * Resolve a Join target for each schedule entry: prefer a session scheduled
+ * today for the (section, subject), else the stable default link. Time-gating
+ * (only showing the button in the live window) is the view's responsibility.
+ */
+async function attachLiveClasses<
+  T extends { sectionId?: string | null; subjectId?: string | null },
+>(
+  schoolId: string,
+  termId: string,
+  date: Date,
+  entries: T[]
+): Promise<(T & { liveClass: LiveClassJoinInfo | null })[]> {
+  const sectionIds = [
+    ...new Set(entries.map((e) => e.sectionId).filter(Boolean)),
+  ] as string[]
+  const subjectIds = [
+    ...new Set(entries.map((e) => e.subjectId).filter(Boolean)),
+  ] as string[]
+  if (sectionIds.length === 0 || subjectIds.length === 0) {
+    return entries.map((e) => ({ ...e, liveClass: null }))
+  }
+
+  const dayStart = new Date(date)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(date)
+  dayEnd.setHours(23, 59, 59, 999)
+
+  const [sessions, defaults] = await Promise.all([
+    db.liveClassSession.findMany({
+      where: {
+        schoolId,
+        sectionId: { in: sectionIds },
+        subjectId: { in: subjectIds },
+        status: { in: ["scheduled", "live"] },
+        scheduledStart: { gte: dayStart, lte: dayEnd },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        provider: true,
+        meetingUrl: true,
+        status: true,
+        sectionId: true,
+        subjectId: true,
+      },
+      orderBy: { scheduledStart: "asc" },
+    }),
+    db.liveClassDefaultLink.findMany({
+      where: {
+        schoolId,
+        termId,
+        sectionId: { in: sectionIds },
+        subjectId: { in: subjectIds },
+      },
+      select: {
+        sectionId: true,
+        subjectId: true,
+        provider: true,
+        meetingUrl: true,
+      },
+    }),
+  ])
+
+  const keyOf = (sec: string, sub: string) => `${sec}:${sub}`
+  const sessionMap = new Map<string, (typeof sessions)[number]>()
+  for (const s of sessions) {
+    if (!s.sectionId || !s.subjectId) continue
+    const k = keyOf(s.sectionId, s.subjectId)
+    if (!sessionMap.has(k)) sessionMap.set(k, s) // earliest today wins
+  }
+  const defaultMap = new Map<string, (typeof defaults)[number]>()
+  for (const d of defaults) defaultMap.set(keyOf(d.sectionId, d.subjectId), d)
+
+  return entries.map((e) => {
+    if (!e.sectionId || !e.subjectId) return { ...e, liveClass: null }
+    const k = keyOf(e.sectionId, e.subjectId)
+    const sess = sessionMap.get(k)
+    if (sess) {
+      return {
+        ...e,
+        liveClass: {
+          sessionId: sess.id,
+          provider: sess.provider,
+          meetingUrl: sess.meetingUrl,
+          status: sess.status,
+        },
+      }
+    }
+    const def = defaultMap.get(k)
+    if (def) {
+      return {
+        ...e,
+        liveClass: {
+          sessionId: null,
+          provider: def.provider,
+          meetingUrl: def.meetingUrl,
+          status: null,
+        },
+      }
+    }
+    return { ...e, liveClass: null }
+  })
 }
 
 // ============================================================================
