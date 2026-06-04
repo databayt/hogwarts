@@ -7222,7 +7222,7 @@
       "importDescription": "Upload your student and teacher records in any format. You can do it or fine-tune it later.",
       "seeExpectedFields": "See expected fields",
       "expectedFields": "Expected fields",
-      "importing": "importing...",
+      "importingStatus": "Importing...",
       "importedSuccessfullyCount": "imported successfully",
       "skippedAlreadyExist": "skipped (already exist)",
       "failed": "failed",

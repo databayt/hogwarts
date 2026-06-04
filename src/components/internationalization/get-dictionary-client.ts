@@ -48,6 +48,8 @@ export const getDictionaryClient = async (
     sales,
     attendance,
     messaging,
+    whatsapp,
+    transportation,
   ] = await Promise.all([
     locale === "ar"
       ? import("./dictionaries/ar/library.json").then((m) => m.default)
@@ -91,6 +93,12 @@ export const getDictionaryClient = async (
     locale === "ar"
       ? import("./dictionaries/ar/messaging.json").then((m) => m.default)
       : import("./dictionaries/en/messaging.json").then((m) => m.default),
+    locale === "ar"
+      ? import("./dictionaries/ar/whatsapp.json").then((m) => m.default)
+      : import("./dictionaries/en/whatsapp.json").then((m) => m.default),
+    locale === "ar"
+      ? import("./dictionaries/ar/transportation.json").then((m) => m.default)
+      : import("./dictionaries/en/transportation.json").then((m) => m.default),
   ])
 
   // Merge the dictionaries - matching server-side getDictionary() pattern
