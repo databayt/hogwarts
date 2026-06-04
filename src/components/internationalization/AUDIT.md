@@ -33,9 +33,15 @@ A new dictionary namespace must be registered in 3 places: the JSON pair, the sp
 | Models with a `lang` field | 30 |
 | Feature areas already routing dynamic content through `getDisplayText` | 18 |
 
-## Tier 1 — Fully-hardcoded routes (STATIC-GAP) — must internationalize
+## Status after this sweep
 
-These routes render UI text that does **not** switch language at all.
+- ✅ **All 22 Tier-1 routes fixed** — every route now wires the dictionary (en+ar, verified tsc-clean, key parity green, adversarially reviewed). ~250 new keys across `parentPortal` (new namespace), `results`, `finance`, `school.configuration`, `school.exams.wizard.examWizard`, `template-wizard/labels.ts`, and top-level `en/ar.json`.
+- ✅ **Tier 2 transportation fixed** — route/stop names, origin/destination, addresses now translate on demand via `getDisplayText` across the routes list, route detail (+stops), assignments, trips, and the guardian/student `me` view.
+- ⏳ **Tier 2 remainder + Tier 3** — documented below as a tracked backlog (quiz/curriculum/grading-scheme/whatsapp dynamic content, and the ~375-string deep long-tail). Not addressed in this pass.
+
+## Tier 1 — Fully-hardcoded routes (STATIC-GAP) — ✅ FIXED
+
+These routes rendered UI text that did **not** switch language at all. All now wired to the dictionary.
 
 | # | Route | Content component | Fix namespace | Notes |
 |---|---|---|---|---|
@@ -65,11 +71,13 @@ Models carry a `lang` field but their render paths do not route user text throug
 
 | Surface | Status | Action |
 |---|---|---|
-| **transportation** (Route/RouteStop/Vehicle/Driver names — 8 `lang` fields) | **0 usages** — confirmed gap, highest value | wrap names in `getDisplayText` in the server data-loaders feeding the (client) transportation pages |
-| quiz / quick-assessments / question / qbank | no usages found | audit quiz/question render paths |
-| curriculum / curriculum-standards / academic-structure / grading-scheme | no usages found | audit standard/scheme name rendering |
-| textbook / material / document / chapter / video (standalone detail/list) | partial (catalog/stream covered) | audit non-catalog render paths |
-| whatsapp templates | no usages found | template body display |
+| **transportation** (Route/RouteStop names, origin/destination, addresses) | ✅ **FIXED** — `shared/translate-display.ts` wired into routes/detail/assignments/trips/me server components | done |
+| quiz / quick-assessments / question / qbank | ⏳ backlog — no usages found | audit quiz/question render paths |
+| curriculum / curriculum-standards / academic-structure / grading-scheme | ⏳ backlog — no usages found | audit standard/scheme name rendering |
+| textbook / material / document / chapter / video (standalone detail/list) | ⏳ backlog — partial (catalog/stream covered) | audit non-catalog render paths |
+| whatsapp templates | ⏳ backlog — no usages found | template body display |
+
+Transportation residual: the assignment **stop-dropdown** names (`listRouteStopsForAssignment` uses a narrow `select` without `lang`/`schoolId`) are not yet translated — minor, would need an action `select` change.
 
 Already covered (correct): `listings`, `admission`, `attendance`, `exams`, `finance`, `notifications`, `parent-portal`, `profile`, `school`, `messaging`, `dashboard`, `library/catalog`, `saas-dashboard/catalog`, `stream/data`, `template/site-header` (18 areas, ~80 call sites).
 
