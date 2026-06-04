@@ -16,6 +16,7 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import {
   getClassOptions,
@@ -32,6 +33,8 @@ interface ExamFormProps {
 
 export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
   ({ generatedExamId, initialData, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.examWizard?.exam
     const [isPending, startTransition] = useTransition()
     const [classOptions, setClassOptions] = useState<
       { label: string; value: string }[]
@@ -104,13 +107,16 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
               const data = form.getValues()
               const result = await updateExamDetails(generatedExamId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || t?.saveError || "Failed to save")
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : t?.saveError || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -123,22 +129,22 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
         <form className="space-y-6">
           <InputField
             name="title"
-            label="Exam Title"
-            placeholder="e.g. Midterm Mathematics Exam"
+            label={t?.examTitle ?? "Exam Title"}
+            placeholder={t?.titlePlaceholder ?? "e.g. Midterm Mathematics Exam"}
             required
             disabled={isPending}
           />
           <div className="grid gap-6 sm:grid-cols-2">
             <SelectField
               name="classId"
-              label="Class"
+              label={t?.class ?? "Class"}
               options={classOptions}
               required
               disabled={isPending}
             />
             <SelectField
               name="subjectId"
-              label="Subject"
+              label={t?.subject ?? "Subject"}
               options={subjectOptions}
               required
               disabled={isPending}
@@ -147,13 +153,13 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
           <div className="grid gap-6 sm:grid-cols-2">
             <DateField
               name="examDate"
-              label="Exam Date"
+              label={t?.examDate ?? "Exam Date"}
               required
               disabled={isPending}
             />
             <InputField
               name="startTime"
-              label="Start Time"
+              label={t?.startTime ?? "Start Time"}
               type="time"
               disabled={isPending}
             />
@@ -161,7 +167,7 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
           <div className="grid gap-6 sm:grid-cols-3">
             <InputField
               name="duration"
-              label="Duration (min)"
+              label={t?.duration ?? "Duration (min)"}
               type="number"
               placeholder="60"
               required
@@ -169,7 +175,7 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
             />
             <InputField
               name="totalMarks"
-              label="Total Marks"
+              label={t?.totalMarks ?? "Total Marks"}
               type="number"
               placeholder="100"
               required
@@ -177,7 +183,7 @@ export const ExamForm = forwardRef<WizardFormRef, ExamFormProps>(
             />
             <InputField
               name="passingMarks"
-              label="Passing Marks"
+              label={t?.passingMarks ?? "Passing Marks"}
               type="number"
               placeholder="40"
               required

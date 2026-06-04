@@ -1,5 +1,56 @@
 {
   "school": {
+    "configuration": {
+      "academic": {
+        "title": "Academic Setup",
+        "description": "Manage academic years, terms, periods, year levels, and grading scale",
+        "years": "Academic Years",
+        "yearsDescription": "Create and manage school years",
+        "terms": "Terms",
+        "termsDescription": "Define terms within the academic year",
+        "periods": "Periods",
+        "periodsDescription": "Configure daily class periods",
+        "levels": "Year Levels",
+        "levelsDescription": "Define grades and year levels",
+        "grading": "Grading Scale",
+        "gradingDescription": "Configure grading and score ranges"
+      },
+      "hero": {
+        "title": "Hero Background Image",
+        "description": "This image appears as the background of your school's homepage hero section.",
+        "imageAlt": "Hero background",
+        "updateError": "Failed to update hero image"
+      },
+      "legal": {
+        "title": "Legal & Compliance",
+        "description": "Review your school's compliance status and ensure all legal requirements are met.",
+        "licensing": {
+          "title": "Licensing & Registration",
+          "description": "Ensure your school has valid operating licenses and meets local education authority requirements."
+        },
+        "safety": {
+          "title": "Safety Compliance",
+          "description": "CCTV surveillance, emergency alarm systems, and transportation safety standards."
+        },
+        "policies": {
+          "title": "Terms & Policies",
+          "description": "Terms of service, privacy policy, and fee structure documentation for parents and students."
+        }
+      },
+      "nameFormat": {
+        "title": "Name Format",
+        "description": "Choose how names are entered across forms",
+        "splitLabel": "Split Name",
+        "splitDescription": "Two fields: First Name + Last Name",
+        "fullLabel": "Full Name",
+        "fullDescription": "Single field for the complete name",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "fullName": "Full Name",
+        "updateSuccess": "Name format updated",
+        "updateError": "Failed to update"
+      }
+    },
     "dashboard": {
       "title": "Overview",
       "welcome": "Welcome to Hogwarts",
@@ -6042,6 +6093,43 @@
             "selectClass": "Select a class",
             "selectSubject": "Select a subject",
             "examType": "Exam Type"
+          },
+          "exam": {
+            "examTitle": "Exam Title",
+            "titlePlaceholder": "e.g. Midterm Mathematics Exam",
+            "class": "Class",
+            "subject": "Subject",
+            "examDate": "Exam Date",
+            "startTime": "Start Time",
+            "duration": "Duration (min)",
+            "totalMarks": "Total Marks",
+            "passingMarks": "Passing Marks",
+            "saveError": "Failed to save"
+          },
+          "questions": {
+            "types": {
+              "MULTIPLE_CHOICE": "MCQ",
+              "TRUE_FALSE": "T/F",
+              "SHORT_ANSWER": "Short",
+              "ESSAY": "Essay",
+              "FILL_BLANK": "Fill",
+              "MATCHING": "Match",
+              "ORDERING": "Order",
+              "MULTI_SELECT": "Multi"
+            },
+            "empty": "No questions available. Add questions to the Question Bank first.",
+            "selectedCount": "{selected} of {total} selected",
+            "points": "pts",
+            "selectAtLeastOne": "Select at least one question",
+            "saveError": "Failed to save"
+          },
+          "template": {
+            "empty": "No templates available. Create an exam template first.",
+            "questionCount": "{count} Q",
+            "durationMinutes": "{count} min",
+            "marksCount": "{count} marks",
+            "selectTemplate": "Select a template",
+            "saveError": "Failed to save"
           }
         },
         "certWizard": {

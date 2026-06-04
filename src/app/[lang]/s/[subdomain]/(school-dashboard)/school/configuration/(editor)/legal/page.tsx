@@ -4,27 +4,40 @@
 import { CheckCircle2, Gavel, ShieldCheck } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export const metadata = { title: "Configuration: Legal" }
 
-export default function LegalPage() {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export default async function LegalPage({ params }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  const t = dictionary?.school?.configuration?.legal
+
   const items = [
     {
       icon: ShieldCheck,
-      title: "Licensing & Registration",
+      title: t?.licensing?.title ?? "Licensing & Registration",
       description:
+        t?.licensing?.description ??
         "Ensure your school has valid operating licenses and meets local education authority requirements.",
     },
     {
       icon: CheckCircle2,
-      title: "Safety Compliance",
+      title: t?.safety?.title ?? "Safety Compliance",
       description:
+        t?.safety?.description ??
         "CCTV surveillance, emergency alarm systems, and transportation safety standards.",
     },
     {
       icon: Gavel,
-      title: "Terms & Policies",
+      title: t?.policies?.title ?? "Terms & Policies",
       description:
+        t?.policies?.description ??
         "Terms of service, privacy policy, and fee structure documentation for parents and students.",
     },
   ]
@@ -32,10 +45,10 @@ export default function LegalPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="font-semibold">Legal & Compliance</h3>
+        <h3 className="font-semibold">{t?.title ?? "Legal & Compliance"}</h3>
         <p className="text-muted-foreground text-sm">
-          Review your school&apos;s compliance status and ensure all legal
-          requirements are met.
+          {t?.description ??
+            "Review your school's compliance status and ensure all legal requirements are met."}
         </p>
       </div>
 

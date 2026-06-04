@@ -8,15 +8,22 @@ import type { NameFormat } from "@/lib/name-utils"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateSchoolNameFormat } from "./actions"
 
 interface Props {
   schoolId: string
   initialNameFormat: NameFormat
+  dictionary: Dictionary
 }
 
-export function ConfigNameFormatForm({ schoolId, initialNameFormat }: Props) {
+export function ConfigNameFormatForm({
+  schoolId,
+  initialNameFormat,
+  dictionary,
+}: Props) {
+  const t = dictionary?.school?.configuration?.nameFormat
   const [nameFormat, setNameFormat] = useState<NameFormat>(initialNameFormat)
   const [isPending, startTransition] = useTransition()
 
@@ -28,9 +35,9 @@ export function ConfigNameFormatForm({ schoolId, initialNameFormat }: Props) {
         nameFormat: newFormat,
       })
       if (result.success) {
-        SuccessToast("Name format updated")
+        SuccessToast(t?.updateSuccess ?? "Name format updated")
       } else {
-        ErrorToast(result.error || "Failed to update")
+        ErrorToast(result.error || t?.updateError || "Failed to update")
         setNameFormat(initialNameFormat)
       }
     })
@@ -39,9 +46,9 @@ export function ConfigNameFormatForm({ schoolId, initialNameFormat }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Name Format</h3>
+        <h3 className="text-lg font-medium">{t?.title ?? "Name Format"}</h3>
         <p className="text-muted-foreground text-sm">
-          Choose how names are entered across forms
+          {t?.description ?? "Choose how names are entered across forms"}
         </p>
       </div>
       <RadioGroup
@@ -54,17 +61,17 @@ export function ConfigNameFormatForm({ schoolId, initialNameFormat }: Props) {
           <RadioGroupItem value="split" id="split" className="mt-0.5" />
           <div className="flex-1 space-y-1">
             <Label htmlFor="split" className="cursor-pointer font-medium">
-              Split Name
+              {t?.splitLabel ?? "Split Name"}
             </Label>
             <p className="text-muted-foreground text-sm">
-              Two fields: First Name + Last Name
+              {t?.splitDescription ?? "Two fields: First Name + Last Name"}
             </p>
             <div className="bg-muted mt-2 flex gap-2 rounded-md p-3">
               <div className="bg-background flex-1 rounded border px-3 py-1.5 text-sm opacity-60">
-                First Name
+                {t?.firstName ?? "First Name"}
               </div>
               <div className="bg-background flex-1 rounded border px-3 py-1.5 text-sm opacity-60">
-                Last Name
+                {t?.lastName ?? "Last Name"}
               </div>
             </div>
           </div>
@@ -73,14 +80,14 @@ export function ConfigNameFormatForm({ schoolId, initialNameFormat }: Props) {
           <RadioGroupItem value="full" id="full" className="mt-0.5" />
           <div className="flex-1 space-y-1">
             <Label htmlFor="full" className="cursor-pointer font-medium">
-              Full Name
+              {t?.fullLabel ?? "Full Name"}
             </Label>
             <p className="text-muted-foreground text-sm">
-              Single field for the complete name
+              {t?.fullDescription ?? "Single field for the complete name"}
             </p>
             <div className="bg-muted mt-2 rounded-md p-3">
               <div className="bg-background rounded border px-3 py-1.5 text-sm opacity-60">
-                Full Name
+                {t?.fullName ?? "Full Name"}
               </div>
             </div>
           </div>

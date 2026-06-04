@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAvailableQuestions, updateSelectedQuestions } from "./actions"
 
@@ -41,6 +42,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   HARD: "bg-red-100 text-red-800",
 }
 
+// English fallbacks - dictionary applied at render time via useDictionary
 const TYPE_LABELS: Record<string, string> = {
   MULTIPLE_CHOICE: "MCQ",
   TRUE_FALSE: "T/F",
@@ -54,6 +56,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
   ({ generatedExamId, subjectId, initialQuestionIds, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const t = dictionary?.school?.exams?.wizard?.examWizard?.questions
+    const typeLabels = t?.types
     const [isPending, startTransition] = useTransition()
     const [questions, setQuestions] = useState<QuestionOption[]>([])
     const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
@@ -97,7 +102,7 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
       saveAndNext: () =>
         new Promise<void>((resolve, reject) => {
           if (selectedIds.size === 0) {
-            ErrorToast("Select at least one question")
+            ErrorToast(t?.selectAtLeastOne ?? "Select at least one question")
             reject(new Error("No questions selected"))
             return
           }
@@ -108,13 +113,16 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
                 Array.from(selectedIds)
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || t?.saveError || "Failed to save")
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : t?.saveError || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -137,7 +145,8 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
         <div className="flex flex-col items-center justify-center py-12">
           <FileQuestion className="text-muted-foreground mb-4 h-10 w-10" />
           <p className="text-muted-foreground text-sm">
-            No questions available. Add questions to the Question Bank first.
+            {t?.empty ??
+              "No questions available. Add questions to the Question Bank first."}
           </p>
         </div>
       )
@@ -147,7 +156,11 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
       <div className="space-y-4">
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <span>
-            {selectedIds.size} of {questions.length} selected
+            {t?.selectedCount
+              ? t.selectedCount
+                  .replace("{selected}", String(selectedIds.size))
+                  .replace("{total}", String(questions.length))
+              : `${selectedIds.size} of ${questions.length} selected`}
           </span>
         </div>
         <div className="space-y-2">
@@ -170,7 +183,11 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
                 <p className="line-clamp-2 text-sm">{q.questionText}</p>
                 <div className="mt-1 flex gap-2">
                   <Badge variant="outline" className="text-xs">
-                    {TYPE_LABELS[q.questionType] || q.questionType}
+                    {typeLabels?.[
+                      q.questionType as keyof typeof typeLabels
+                    ] ||
+                      TYPE_LABELS[q.questionType] ||
+                      q.questionType}
                   </Badge>
                   <Badge
                     className={`text-xs ${DIFFICULTY_COLORS[q.difficulty] || ""}`}
@@ -179,7 +196,7 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
                     {q.difficulty}
                   </Badge>
                   <span className="text-muted-foreground text-xs">
-                    {q.points} pts
+                    {q.points} {t?.points ?? "pts"}
                   </span>
                 </div>
               </div>

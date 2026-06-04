@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAvailableTemplates, selectTemplate } from "./actions"
 
@@ -37,6 +38,8 @@ interface TemplateFormProps {
 
 export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
   ({ generatedExamId, initialTemplateId, onValidChange }, ref) => {
+    const { dictionary } = useDictionary()
+    const td = dictionary?.school?.exams?.wizard?.examWizard?.template
     const [isPending, startTransition] = useTransition()
     const [templates, setTemplates] = useState<TemplateOption[]>([])
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
@@ -72,7 +75,7 @@ export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
       saveAndNext: () =>
         new Promise<void>((resolve, reject) => {
           if (!selectedId) {
-            ErrorToast("Select a template")
+            ErrorToast(td?.selectTemplate ?? "Select a template")
             reject(new Error("No template selected"))
             return
           }
@@ -80,13 +83,16 @@ export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
             try {
               const result = await selectTemplate(generatedExamId, selectedId)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || td?.saveError || "Failed to save")
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : td?.saveError || "Failed to save"
               ErrorToast(msg)
               reject(err)
             }
@@ -109,7 +115,8 @@ export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
         <div className="flex flex-col items-center justify-center py-12">
           <FileText className="text-muted-foreground mb-4 h-10 w-10" />
           <p className="text-muted-foreground text-sm">
-            No templates available. Create an exam template first.
+            {td?.empty ??
+              "No templates available. Create an exam template first."}
           </p>
         </div>
       )
@@ -141,13 +148,24 @@ export const TemplateForm = forwardRef<WizardFormRef, TemplateFormProps>(
               <div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
                 <span className="flex items-center gap-1">
                   <Hash className="h-3.5 w-3.5" />
-                  {t.questionCount} Q
+                  {td?.questionCount
+                    ? td.questionCount.replace(
+                        "{count}",
+                        String(t.questionCount)
+                      )
+                    : `${t.questionCount} Q`}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />
-                  {t.duration} min
+                  {td?.durationMinutes
+                    ? td.durationMinutes.replace("{count}", String(t.duration))
+                    : `${t.duration} min`}
                 </span>
-                <span>{t.totalMarks} marks</span>
+                <span>
+                  {td?.marksCount
+                    ? td.marksCount.replace("{count}", String(t.totalMarks))
+                    : `${t.totalMarks} marks`}
+                </span>
               </div>
             </CardContent>
           </Card>
