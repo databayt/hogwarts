@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server"
 
 import { processPendingEmailNotifications } from "@/components/school-dashboard/notifications/email-service"
+import { verifyCronSecret } from "@/lib/cron-auth"
 
 /**
  * Cron job to process pending notification emails
@@ -12,9 +13,8 @@ import { processPendingEmailNotifications } from "@/components/school-dashboard/
  * Configure in vercel.json crons array
  */
 export async function GET(request: Request) {
-  // Verify cron secret for security
-  const authHeader = request.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify cron secret for security (fail-closed when CRON_SECRET is unset)
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

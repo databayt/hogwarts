@@ -294,14 +294,25 @@ async function recordTapFeePayment(args: {
  * fields concatenated alphabetically before HMACing).
  *
  * Returns true when:
- *   - secret is unset (dev/sandbox), or
+ *   - secret is unset AND not in production (dev/sandbox only), or
  *   - signature matches the computed HMAC.
+ *
+ * Fails CLOSED in production when the secret is unset — otherwise an attacker
+ * who can reach this endpoint could forge a CAPTURED charge, mark fee
+ * assignments PAID and post to the ledger (the schoolId is read from the
+ * unsigned body). Mirrors the WhatsApp webhook's fail-closed behavior.
  */
 function verifySignature(body: string, signature: string | null): boolean {
   const secret = process.env.TAP_WEBHOOK_SECRET
   if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[Tap webhook] TAP_WEBHOOK_SECRET unset in production — refusing webhook"
+      )
+      return false
+    }
     console.warn(
-      "[Tap webhook] TAP_WEBHOOK_SECRET not set — accepting without verification"
+      "[Tap webhook] TAP_WEBHOOK_SECRET not set — accepting without verification (non-production only)"
     )
     return true
   }
