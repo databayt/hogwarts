@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import type {
   ActionResponse,
@@ -26,8 +27,9 @@ import {
 // ============================================================================
 
 async function getSchoolId(): Promise<string | null> {
-  const session = await auth()
-  return session?.user?.schoolId ?? null
+  // Honour impersonation + subdomain header before falling back to the session.
+  const { schoolId } = await getTenantContext()
+  return schoolId
 }
 
 async function getUserId(): Promise<string | null> {
