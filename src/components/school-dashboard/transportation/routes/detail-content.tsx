@@ -12,6 +12,7 @@ import { getName } from "@/components/translation/person"
 
 import { getRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
+import { translateRoute, translateStops } from "../shared/translate-display"
 import { StopEditor } from "./stop-editor"
 
 interface Props {
@@ -44,8 +45,11 @@ export async function RouteDetailContent({
     )
   }
 
-  const route = result.data
   const { schoolId } = await getTenantContext()
+  const route = {
+    ...(await translateRoute(result.data, locale)),
+    stops: await translateStops(result.data.stops, locale),
+  }
   const driverName = route.driver
     ? await getName(route.driver, locale, schoolId!)
     : "—"

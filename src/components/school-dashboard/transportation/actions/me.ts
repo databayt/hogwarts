@@ -3,6 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { Locale } from "@/components/internationalization/config"
+import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
@@ -48,7 +50,7 @@ export interface MyTransportationChild {
  *
  * Always schoolId-scoped via getTenantContext().
  */
-export async function getMyTransportationView() {
+export async function getMyTransportationView(displayLang?: Locale) {
   // read_own gates STUDENT/GUARDIAN (+ STAFF/TEACHER/DEVELOPER/ADMIN) through
   // the central permission matrix; the role branch below narrows behavior.
   const ctx = await requireContext("read_own")
@@ -105,6 +107,7 @@ export async function getMyTransportationView() {
               select: {
                 name: true,
                 code: true,
+                lang: true,
                 vehicle: { select: { id: true, plateNumber: true } },
                 driver: {
                   select: {
@@ -116,7 +119,7 @@ export async function getMyTransportationView() {
                 },
               },
             },
-            stop: { select: { name: true, stopOrder: true } },
+            stop: { select: { name: true, stopOrder: true, lang: true } },
           },
         },
         tripBoardings: {
@@ -138,22 +141,41 @@ export async function getMyTransportationView() {
       },
     })
 
-    const data: MyTransportationChild[] = students.map((s) => ({
+    const data: MyTransportationChild[] = await Promise.all(
+      students.map(async (s) => ({
       studentId: s.id,
       firstName: s.firstName,
       lastName: s.lastName,
-      assignments: s.routeAssignments.map((a) => ({
-        id: a.id,
-        routeId: a.routeId,
-        routeName: a.route.name,
-        routeCode: a.route.code,
-        stopName: a.stop.name,
-        stopOrder: a.stop.stopOrder,
-        direction: a.direction,
-        status: a.status,
-        vehicle: a.route.vehicle ?? null,
-        driver: a.route.driver ?? null,
-      })),
+      assignments: await Promise.all(
+        s.routeAssignments.map(async (a) => ({
+          id: a.id,
+          routeId: a.routeId,
+          // Route/stop names are stored in one language; translate on demand
+          // into the viewer's locale so guardians/students see them localized.
+          routeName: displayLang
+            ? await getDisplayText(
+                a.route.name,
+                (a.route.lang as Locale) || "ar",
+                displayLang,
+                schoolId
+              )
+            : a.route.name,
+          routeCode: a.route.code,
+          stopName: displayLang
+            ? await getDisplayText(
+                a.stop.name,
+                (a.stop.lang as Locale) || "ar",
+                displayLang,
+                schoolId
+              )
+            : a.stop.name,
+          stopOrder: a.stop.stopOrder,
+          direction: a.direction,
+          status: a.status,
+          vehicle: a.route.vehicle ?? null,
+          driver: a.route.driver ?? null,
+        }))
+      ),
       recentTrips: s.tripBoardings.map((b) => ({
         tripId: b.trip.id,
         scheduledDate: b.trip.scheduledDate,
@@ -162,6 +184,7 @@ export async function getMyTransportationView() {
         boardingStatus: b.status,
       })),
     }))
+    )
 
     return { success: true as const, data }
   } catch {

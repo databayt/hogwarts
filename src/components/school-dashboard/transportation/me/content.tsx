@@ -30,7 +30,7 @@ export async function MyTransportationContent({
   isGuardian,
 }: Props) {
   const t = dictionary.transportation
-  const result = await getMyTransportationView()
+  const result = await getMyTransportationView(locale)
 
   if (!result.success || result.data.length === 0) {
     return (

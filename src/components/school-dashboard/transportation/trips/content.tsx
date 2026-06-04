@@ -7,6 +7,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { listRoutes } from "../actions/routes"
 import { listTrips } from "../actions/trips"
 import { TransportationEmptyState } from "../empty-state"
+import { translateRoutes } from "../shared/translate-display"
 import { TripsClient } from "./trips-client"
 
 interface Props {
@@ -34,7 +35,11 @@ export async function TripsContent({ locale, dictionary }: Props) {
     <TripsClient
       locale={locale}
       trips={tripsResult.data}
-      routes={routesResult.success ? routesResult.data : []}
+      routes={
+        routesResult.success
+          ? await translateRoutes(routesResult.data, locale)
+          : []
+      }
       dictionary={dictionary}
     />
   )
