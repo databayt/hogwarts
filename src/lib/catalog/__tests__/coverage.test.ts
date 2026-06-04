@@ -5,10 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 
-import {
-  getCurriculumCoverage,
-  listCurriculaWithCoverage,
-} from "../coverage"
+import { getCurriculumCoverage, listCurriculaWithCoverage } from "../coverage"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -55,7 +52,9 @@ describe("getCurriculumCoverage", () => {
   })
 
   it("returns an empty coverage report when the curriculum has zero subjects", async () => {
-    vi.mocked(db.curriculum.findUnique).mockResolvedValue(SA_CURRICULUM as never)
+    vi.mocked(db.curriculum.findUnique).mockResolvedValue(
+      SA_CURRICULUM as never
+    )
     vi.mocked(db.subject.findMany).mockResolvedValue([] as never)
 
     const out = await getCurriculumCoverage(SA_CURRICULUM.id)
@@ -71,7 +70,9 @@ describe("getCurriculumCoverage", () => {
   })
 
   it("aggregates grade + department distributions across subjects", async () => {
-    vi.mocked(db.curriculum.findUnique).mockResolvedValue(SD_CURRICULUM as never)
+    vi.mocked(db.curriculum.findUnique).mockResolvedValue(
+      SD_CURRICULUM as never
+    )
     vi.mocked(db.subject.findMany).mockResolvedValue([
       {
         id: "s1",
@@ -113,7 +114,9 @@ describe("getCurriculumCoverage", () => {
   })
 
   it("uses the joined chapter count when the denormalized total is stale (no chapters but rows exist)", async () => {
-    vi.mocked(db.curriculum.findUnique).mockResolvedValue(SD_CURRICULUM as never)
+    vi.mocked(db.curriculum.findUnique).mockResolvedValue(
+      SD_CURRICULUM as never
+    )
     vi.mocked(db.subject.findMany).mockResolvedValue([
       {
         id: "s1",
@@ -133,10 +136,24 @@ describe("getCurriculumCoverage", () => {
   })
 
   it("scopes the chapter lookup to the curriculum's subject ids only", async () => {
-    vi.mocked(db.curriculum.findUnique).mockResolvedValue(SD_CURRICULUM as never)
+    vi.mocked(db.curriculum.findUnique).mockResolvedValue(
+      SD_CURRICULUM as never
+    )
     vi.mocked(db.subject.findMany).mockResolvedValue([
-      { id: "s1", grades: [1], department: "x", totalChapters: 1, totalLessons: 2 },
-      { id: "s2", grades: [2], department: "x", totalChapters: 1, totalLessons: 2 },
+      {
+        id: "s1",
+        grades: [1],
+        department: "x",
+        totalChapters: 1,
+        totalLessons: 2,
+      },
+      {
+        id: "s2",
+        grades: [2],
+        department: "x",
+        totalChapters: 1,
+        totalLessons: 2,
+      },
     ] as never)
     vi.mocked(db.chapter.findMany).mockResolvedValue([] as never)
 
@@ -184,7 +201,9 @@ describe("listCurriculaWithCoverage", () => {
   })
 
   it("returns a row with zero subjects when the curriculum exists but has no Subject rows yet", async () => {
-    vi.mocked(db.curriculum.findMany).mockResolvedValue([SA_CURRICULUM] as never)
+    vi.mocked(db.curriculum.findMany).mockResolvedValue([
+      SA_CURRICULUM,
+    ] as never)
     vi.mocked(db.subject.findMany).mockResolvedValue([] as never)
 
     const out = await listCurriculaWithCoverage()
@@ -200,7 +219,9 @@ describe("listCurriculaWithCoverage", () => {
   })
 
   it("ignores subjects with no curriculumId (orphan rows from pre-Phase-4 data)", async () => {
-    vi.mocked(db.curriculum.findMany).mockResolvedValue([SD_CURRICULUM] as never)
+    vi.mocked(db.curriculum.findMany).mockResolvedValue([
+      SD_CURRICULUM,
+    ] as never)
     vi.mocked(db.subject.findMany).mockResolvedValue([
       { curriculumId: "cur-sd", grades: [1] },
       { curriculumId: null, grades: [2] }, // legacy row not yet backfilled
