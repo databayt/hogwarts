@@ -191,11 +191,8 @@ export default function PriceContent({ dictionary, lang, id }: Props) {
                 )
               }
             }}
-            className={`text-foreground w-auto max-w-full min-w-0 border-none bg-transparent text-center font-extrabold outline-none ${fontSizeClass}`}
-            style={{
-              width: `${displayValue.length * 0.8}em`,
-              caretColor: "var(--foreground)",
-            }}
+            className={`text-foreground field-sizing-content max-w-full min-w-0 border-none bg-transparent text-center font-extrabold outline-none ${fontSizeClass}`}
+            style={{ caretColor: "var(--foreground)" }}
           />
           {!isFocused && (
             <div
