@@ -16,18 +16,24 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { QuestionTypeConfig } from "../../types"
+import {
+  commonLabels,
+  QUESTION_TYPE_LABELS,
+  questionTypesLabels,
+} from "../labels"
 import { updateTemplateQuestionTypes } from "./actions"
 
 const QUESTION_TYPES = [
-  { value: "MULTIPLE_CHOICE", label: "Multiple Choice" },
-  { value: "TRUE_FALSE", label: "True / False" },
-  { value: "SHORT_ANSWER", label: "Short Answer" },
-  { value: "ESSAY", label: "Essay" },
-  { value: "FILL_BLANK", label: "Fill in the Blank" },
-  { value: "MATCHING", label: "Matching" },
-  { value: "ORDERING", label: "Ordering" },
+  "MULTIPLE_CHOICE",
+  "TRUE_FALSE",
+  "SHORT_ANSWER",
+  "ESSAY",
+  "FILL_BLANK",
+  "MATCHING",
+  "ORDERING",
 ] as const
 
 const DEFAULT_DIFFICULTY = { EASY: 2, MEDIUM: 2, HARD: 1 }
@@ -44,6 +50,8 @@ export const QuestionTypesForm = forwardRef<
   QuestionTypesFormProps
 >(({ templateId, initialData, onValidChange }, ref) => {
   const [isPending, startTransition] = useTransition()
+  const { locale } = useLocale()
+  const lang = locale === "ar" ? "ar" : "en"
   const [questionTypes, setQuestionTypes] = useState<QuestionTypeConfig[]>(
     () => initialData ?? []
   )
@@ -84,7 +92,7 @@ export const QuestionTypesForm = forwardRef<
         startTransition(async () => {
           try {
             if (questionTypes.length === 0) {
-              ErrorToast("Select at least one question type")
+              ErrorToast(questionTypesLabels.selectAtLeastOne[lang])
               reject(new Error("Validation failed"))
               return
             }
@@ -92,13 +100,16 @@ export const QuestionTypesForm = forwardRef<
               questionTypes,
             })
             if (!result.success) {
-              ErrorToast(result.error || "Failed to save")
+              ErrorToast(result.error || commonLabels.failedToSave[lang])
               reject(new Error(result.error))
               return
             }
             resolve()
           } catch (err) {
-            const msg = err instanceof Error ? err.message : "Failed to save"
+            const msg =
+              err instanceof Error
+                ? err.message
+                : commonLabels.failedToSave[lang]
             ErrorToast(msg)
             reject(err)
           }
@@ -108,29 +119,30 @@ export const QuestionTypesForm = forwardRef<
 
   return (
     <div className="space-y-4">
-      {QUESTION_TYPES.map((qt) => {
-        const selected = questionTypes.find((s) => s.type === qt.value)
+      {QUESTION_TYPES.map((qtValue) => {
+        const selected = questionTypes.find((s) => s.type === qtValue)
         const isChecked = !!selected
+        const qtLabel = QUESTION_TYPE_LABELS[qtValue]?.[lang] || qtValue
 
         return (
           <div
-            key={qt.value}
+            key={qtValue}
             className="flex items-center justify-between rounded-lg border p-4"
           >
             <div className="flex items-center gap-3">
               <Checkbox
-                id={qt.value}
+                id={qtValue}
                 checked={isChecked}
                 onCheckedChange={(checked) =>
-                  handleToggle(qt.value, checked === true)
+                  handleToggle(qtValue, checked === true)
                 }
                 disabled={isPending}
               />
               <label
-                htmlFor={qt.value}
+                htmlFor={qtValue}
                 className="cursor-pointer text-sm font-medium"
               >
-                {qt.label}
+                {qtLabel}
               </label>
             </div>
 
@@ -141,7 +153,7 @@ export const QuestionTypesForm = forwardRef<
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={() => handleCountChange(qt.value, -1)}
+                  onClick={() => handleCountChange(qtValue, -1)}
                   disabled={isPending || selected.count <= 1}
                 >
                   <Minus className="h-4 w-4" />
@@ -154,7 +166,7 @@ export const QuestionTypesForm = forwardRef<
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={() => handleCountChange(qt.value, 1)}
+                  onClick={() => handleCountChange(qtValue, 1)}
                   disabled={isPending}
                 >
                   <Plus className="h-4 w-4" />

@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { commonLabels } from "../labels"
 import { updateTemplateSubject } from "./actions"
 import { subjectSchema, type SubjectFormData } from "./validation"
 
@@ -30,6 +32,8 @@ interface SubjectFormProps {
 export const SubjectForm = forwardRef<WizardFormRef, SubjectFormProps>(
   ({ templateId, initialData, onValidChange, subjectOptions }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const { locale } = useLocale()
+    const lang = locale === "ar" ? "ar" : "en"
 
     const form = useForm<SubjectFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,13 +62,16 @@ export const SubjectForm = forwardRef<WizardFormRef, SubjectFormProps>(
               const data = form.getValues()
               const result = await updateTemplateSubject(templateId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || commonLabels.failedToSave[lang])
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : commonLabels.failedToSave[lang]
               ErrorToast(msg)
               reject(err)
             }

@@ -10,7 +10,9 @@ import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { NumberField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import { commonLabels, durationMarksLabels } from "../labels"
 import { updateTemplateDurationMarks } from "./actions"
 import { durationMarksSchema, type DurationMarksFormData } from "./validation"
 
@@ -25,6 +27,8 @@ export const DurationMarksForm = forwardRef<
   DurationMarksFormProps
 >(({ templateId, initialData, onValidChange }, ref) => {
   const [isPending, startTransition] = useTransition()
+  const { locale } = useLocale()
+  const lang = locale === "ar" ? "ar" : "en"
 
   const form = useForm<DurationMarksFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,13 +64,16 @@ export const DurationMarksForm = forwardRef<
             const data = form.getValues()
             const result = await updateTemplateDurationMarks(templateId, data)
             if (!result.success) {
-              ErrorToast(result.error || "Failed to save")
+              ErrorToast(result.error || commonLabels.failedToSave[lang])
               reject(new Error(result.error))
               return
             }
             resolve()
           } catch (err) {
-            const msg = err instanceof Error ? err.message : "Failed to save"
+            const msg =
+              err instanceof Error
+                ? err.message
+                : commonLabels.failedToSave[lang]
             ErrorToast(msg)
             reject(err)
           }
@@ -79,7 +86,7 @@ export const DurationMarksForm = forwardRef<
       <form className="space-y-6">
         <NumberField
           name="duration"
-          label="Duration (minutes)"
+          label={durationMarksLabels.duration[lang]}
           min={5}
           max={480}
           required
@@ -87,7 +94,7 @@ export const DurationMarksForm = forwardRef<
         />
         <NumberField
           name="totalMarks"
-          label="Total Marks"
+          label={durationMarksLabels.totalMarks[lang]}
           min={1}
           max={1000}
           required

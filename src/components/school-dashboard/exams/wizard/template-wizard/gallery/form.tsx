@@ -15,6 +15,7 @@ import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { regionPresetToComposition } from "../../../templates/composition/region-mapping"
 import {
@@ -26,6 +27,7 @@ import {
 import type { RegionPreset } from "../../../templates/presets"
 import { FullPaperMockup, GalleryCard } from "../../atoms"
 import { DEFAULT_DECORATIONS, type DecorationConfig } from "../../types"
+import { commonLabels, galleryLabels } from "../labels"
 import { updateTemplatePreset } from "./actions"
 
 const PRESETS: RegionPreset[] = [
@@ -54,6 +56,8 @@ export const GalleryForm = forwardRef<WizardFormRef, GalleryFormProps>(
       initialPresetId
     )
     const [isPending, startTransition] = useTransition()
+    const { locale } = useLocale()
+    const lang = locale === "ar" ? "ar" : "en"
 
     // Gallery is always valid
     React.useEffect(() => {
@@ -162,13 +166,16 @@ export const GalleryForm = forwardRef<WizardFormRef, GalleryFormProps>(
                 blockConfig
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || commonLabels.failedToSave[lang])
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : commonLabels.failedToSave[lang]
               ErrorToast(msg)
               reject(err)
             }
@@ -192,14 +199,14 @@ export const GalleryForm = forwardRef<WizardFormRef, GalleryFormProps>(
               </div>
             </div>
             <div className="border-t px-3 py-2 text-center">
-              <p className="text-sm font-medium">Blank</p>
+              <p className="text-sm font-medium">{galleryLabels.blank[lang]}</p>
               <p className="text-muted-foreground text-xs">
-                Start from scratch
+                {galleryLabels.startFromScratch[lang]}
               </p>
             </div>
             {selectedPresetId === null && (
               <Badge className="absolute end-2 top-2 text-[10px]">
-                Selected
+                {galleryLabels.selected[lang]}
               </Badge>
             )}
           </GalleryCard>
@@ -222,14 +229,14 @@ export const GalleryForm = forwardRef<WizardFormRef, GalleryFormProps>(
                 />
               </div>
               <div className="border-t px-3 py-2 text-center">
-                <p className="text-sm font-medium">{card.name.en}</p>
+                <p className="text-sm font-medium">{card.name[lang]}</p>
                 <p className="text-muted-foreground line-clamp-2 text-xs">
-                  {card.description.en}
+                  {card.description[lang]}
                 </p>
               </div>
               {selectedPresetId === card.id && (
                 <Badge className="absolute end-2 top-2 text-[10px]">
-                  Selected
+                  {galleryLabels.selected[lang]}
                 </Badge>
               )}
             </GalleryCard>
@@ -239,7 +246,9 @@ export const GalleryForm = forwardRef<WizardFormRef, GalleryFormProps>(
         {/* School templates */}
         {schoolTemplates.length > 0 && (
           <>
-            <h3 className="text-sm font-medium">School Templates</h3>
+            <h3 className="text-sm font-medium">
+              {galleryLabels.schoolTemplates[lang]}
+            </h3>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {schoolTemplates.map((t) => (
                 <GalleryCard
