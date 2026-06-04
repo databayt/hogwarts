@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AcademicContent } from "@/components/school-dashboard/school/academic/content"
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ interface Props {
 
 export default async function AcademicConfigPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const session = await auth()
   const schoolId = session?.user?.schoolId
 
@@ -112,6 +114,7 @@ export default async function AcademicConfigPage({ params }: Props) {
   return (
     <AcademicContent
       lang={lang}
+      dictionary={dictionary}
       initialYears={transformedYears}
       totalYears={totalYears}
       initialTerms={transformedTerms}

@@ -1,5 +1,56 @@
 {
   "school": {
+    "configuration": {
+      "academic": {
+        "title": "الإعداد الأكاديمي",
+        "description": "إدارة السنوات الدراسية والفصول والحصص والمراحل ونظام الدرجات",
+        "years": "السنوات الدراسية",
+        "yearsDescription": "إنشاء وإدارة السنوات الدراسية",
+        "terms": "الفصول الدراسية",
+        "termsDescription": "تحديد فصول السنة الدراسية",
+        "periods": "الحصص",
+        "periodsDescription": "إعداد جدول الحصص اليومية",
+        "levels": "المراحل الدراسية",
+        "levelsDescription": "تعريف المراحل والصفوف الدراسية",
+        "grading": "نظام الدرجات",
+        "gradingDescription": "إعداد نظام التقييم والدرجات"
+      },
+      "hero": {
+        "title": "صورة خلفية الواجهة",
+        "description": "تظهر هذه الصورة كخلفية لقسم الواجهة في الصفحة الرئيسية لمدرستك.",
+        "imageAlt": "خلفية الواجهة",
+        "updateError": "فشل تحديث صورة الواجهة"
+      },
+      "legal": {
+        "title": "الشؤون القانونية والامتثال",
+        "description": "راجع حالة امتثال مدرستك وتأكد من استيفاء جميع المتطلبات القانونية.",
+        "licensing": {
+          "title": "الترخيص والتسجيل",
+          "description": "تأكد من امتلاك مدرستك تراخيص تشغيل سارية واستيفائها لمتطلبات هيئة التعليم المحلية."
+        },
+        "safety": {
+          "title": "امتثال السلامة",
+          "description": "كاميرات المراقبة، وأنظمة إنذار الطوارئ، ومعايير سلامة النقل."
+        },
+        "policies": {
+          "title": "الشروط والسياسات",
+          "description": "شروط الخدمة وسياسة الخصوصية ووثائق هيكل الرسوم لأولياء الأمور والطلاب."
+        }
+      },
+      "nameFormat": {
+        "title": "تنسيق الاسم",
+        "description": "اختر كيفية إدخال الأسماء في النماذج",
+        "splitLabel": "اسم مقسم",
+        "splitDescription": "حقلان: الاسم الأول + اسم العائلة",
+        "fullLabel": "الاسم الكامل",
+        "fullDescription": "حقل واحد للاسم الكامل",
+        "firstName": "الاسم الأول",
+        "lastName": "اسم العائلة",
+        "fullName": "الاسم الكامل",
+        "updateSuccess": "تم تحديث تنسيق الاسم",
+        "updateError": "فشل التحديث"
+      }
+    },
     "dashboard": {
       "title": "نظرة عامة",
       "welcome": "مرحباً بك في هجورتس",
@@ -6144,6 +6195,43 @@
             "selectClass": "اختر الفصل",
             "selectSubject": "اختر المادة",
             "examType": "نوع الامتحان"
+          },
+          "exam": {
+            "examTitle": "عنوان الامتحان",
+            "titlePlaceholder": "مثال: امتحان منتصف الفصل في الرياضيات",
+            "class": "الفصل",
+            "subject": "المادة",
+            "examDate": "تاريخ الامتحان",
+            "startTime": "وقت البدء",
+            "duration": "المدة (دقيقة)",
+            "totalMarks": "الدرجة الكلية",
+            "passingMarks": "درجة النجاح",
+            "saveError": "فشل الحفظ"
+          },
+          "questions": {
+            "types": {
+              "MULTIPLE_CHOICE": "اختيار من متعدد",
+              "TRUE_FALSE": "صح/خطأ",
+              "SHORT_ANSWER": "إجابة قصيرة",
+              "ESSAY": "مقالي",
+              "FILL_BLANK": "ملء الفراغ",
+              "MATCHING": "توصيل",
+              "ORDERING": "ترتيب",
+              "MULTI_SELECT": "متعدد"
+            },
+            "empty": "لا توجد أسئلة متاحة. أضف أسئلة إلى بنك الأسئلة أولاً.",
+            "selectedCount": "{selected} من {total} محدد",
+            "points": "نقطة",
+            "selectAtLeastOne": "اختر سؤالاً واحداً على الأقل",
+            "saveError": "فشل الحفظ"
+          },
+          "template": {
+            "empty": "لا توجد قوالب متاحة. أنشئ قالب امتحان أولاً.",
+            "questionCount": "{count} سؤال",
+            "durationMinutes": "{count} دقيقة",
+            "marksCount": "{count} درجة",
+            "selectTemplate": "اختر قالباً",
+            "saveError": "فشل الحفظ"
           }
         },
         "certWizard": {

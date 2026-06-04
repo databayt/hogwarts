@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ModalProvider } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { ScoreRangeTable } from "./grading/table"
 import type { ScoreRangeRow } from "./grading/types"
@@ -32,6 +33,7 @@ import type { SchoolYearRow } from "./year/types"
 
 interface AcademicContentProps {
   lang: Locale
+  dictionary: Dictionary
   initialYears?: SchoolYearRow[]
   totalYears?: number
   initialTerms?: TermRow[]
@@ -62,6 +64,7 @@ function TableSkeleton() {
 
 export function AcademicContent({
   lang,
+  dictionary,
   initialYears = [],
   totalYears = 0,
   initialTerms = [],
@@ -73,33 +76,27 @@ export function AcademicContent({
   initialGrades = [],
   totalGrades = 0,
 }: AcademicContentProps) {
-  const isArabic = lang === "ar"
+  const c = dictionary?.school?.configuration?.academic
 
   const t = {
-    academicSetup: isArabic ? "الإعداد الأكاديمي" : "Academic Setup",
-    academicSetupDescription: isArabic
-      ? "إدارة السنوات الدراسية والفصول والحصص والمراحل ونظام الدرجات"
-      : "Manage academic years, terms, periods, year levels, and grading scale",
-    years: isArabic ? "السنوات الدراسية" : "Academic Years",
-    yearsDescription: isArabic
-      ? "إنشاء وإدارة السنوات الدراسية"
-      : "Create and manage school years",
-    terms: isArabic ? "الفصول الدراسية" : "Terms",
-    termsDescription: isArabic
-      ? "تحديد فصول السنة الدراسية"
-      : "Define terms within the academic year",
-    periods: isArabic ? "الحصص" : "Periods",
-    periodsDescription: isArabic
-      ? "إعداد جدول الحصص اليومية"
-      : "Configure daily class periods",
-    levels: isArabic ? "المراحل الدراسية" : "Year Levels",
-    levelsDescription: isArabic
-      ? "تعريف المراحل والصفوف الدراسية"
-      : "Define grades and year levels",
-    grading: isArabic ? "نظام الدرجات" : "Grading Scale",
-    gradingDescription: isArabic
-      ? "إعداد نظام التقييم والدرجات"
-      : "Configure grading and score ranges",
+    academicSetup: c?.title ?? "Academic Setup",
+    academicSetupDescription:
+      c?.description ??
+      "Manage academic years, terms, periods, year levels, and grading scale",
+    years: c?.years ?? "Academic Years",
+    yearsDescription: c?.yearsDescription ?? "Create and manage school years",
+    terms: c?.terms ?? "Terms",
+    termsDescription:
+      c?.termsDescription ?? "Define terms within the academic year",
+    periods: c?.periods ?? "Periods",
+    periodsDescription:
+      c?.periodsDescription ?? "Configure daily class periods",
+    levels: c?.levels ?? "Year Levels",
+    levelsDescription:
+      c?.levelsDescription ?? "Define grades and year levels",
+    grading: c?.grading ?? "Grading Scale",
+    gradingDescription:
+      c?.gradingDescription ?? "Configure grading and score ranges",
   }
 
   return (

@@ -14,6 +14,7 @@ import {
   type UploadedFileResult,
 } from "@/components/file/upload/file-uploader"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { updateHeroImage } from "./actions"
 import { useAutoSave } from "./use-auto-save"
@@ -24,9 +25,16 @@ interface Props {
     heroImageUrl: string
   }
   lang: Locale
+  dictionary: Dictionary
 }
 
-export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
+export function ConfigHeroForm({
+  schoolId,
+  initialData,
+  lang,
+  dictionary,
+}: Props) {
+  const t = dictionary?.school?.configuration?.hero
   const [, startTransition] = useTransition()
   const [error, setError] = useState("")
   const [isDirty, setIsDirty] = useState(false)
@@ -54,7 +62,7 @@ export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
       if (result.success) {
         setIsDirty(false)
       } else {
-        setError(result.error || "Failed to update hero image")
+        setError(result.error || t?.updateError || "Failed to update hero image")
       }
     })
   }
@@ -64,10 +72,10 @@ export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Hero Background Image</Label>
+        <Label>{t?.title ?? "Hero Background Image"}</Label>
         <p className="text-muted-foreground text-xs">
-          This image appears as the background of your school&apos;s homepage
-          hero section.
+          {t?.description ??
+            "This image appears as the background of your school's homepage hero section."}
         </p>
         <div className="h-[240px]">
           {!heroImage ? (
@@ -88,7 +96,7 @@ export function ConfigHeroForm({ schoolId, initialData, lang }: Props) {
             <div className="relative h-full overflow-hidden rounded-lg border">
               <Image
                 src={heroImage}
-                alt="Hero background"
+                alt={t?.imageAlt ?? "Hero background"}
                 fill
                 className="object-cover"
               />

@@ -4,6 +4,7 @@
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ConfigHeroForm } from "@/components/school-dashboard/school/configuration/config-hero-form"
 
 export const metadata = { title: "Configuration: Hero Image" }
@@ -14,6 +15,7 @@ interface Props {
 
 export default async function HeroPage({ params }: Props) {
   const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
   const branding = schoolId
@@ -32,6 +34,7 @@ export default async function HeroPage({ params }: Props) {
         heroImageUrl: branding?.heroImageUrl || "",
       }}
       lang={lang}
+      dictionary={dictionary}
     />
   )
 }
