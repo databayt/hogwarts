@@ -166,6 +166,18 @@ const transportationDictionaries = {
     ),
 } as const
 
+// Parent portal module dictionaries (announcements, events)
+const parentPortalDictionaries = {
+  en: () =>
+    import("./dictionaries/en/parentPortal.json").then(
+      (module) => module.default
+    ),
+  ar: () =>
+    import("./dictionaries/ar/parentPortal.json").then(
+      (module) => module.default
+    ),
+} as const
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -536,6 +548,7 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
+      parentPortal,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -559,6 +572,8 @@ export const getDictionary = async (locale: Locale) => {
       whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
       transportationDictionaries[locale]?.() ??
         transportationDictionaries["en"](),
+      parentPortalDictionaries[locale]?.() ??
+        parentPortalDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -583,6 +598,7 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
+      parentPortal,
     }
   } catch (error) {
     console.warn(
@@ -609,6 +625,7 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
+      parentPortal,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -630,6 +647,7 @@ export const getDictionary = async (locale: Locale) => {
       messagingDictionaries["en"](),
       whatsappDictionaries["en"](),
       transportationDictionaries["en"](),
+      parentPortalDictionaries["en"](),
     ])
     return {
       ...general,
@@ -652,6 +670,7 @@ export const getDictionary = async (locale: Locale) => {
       messaging,
       whatsapp,
       transportation,
+      parentPortal,
     }
   }
 }

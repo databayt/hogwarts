@@ -1,0 +1,52 @@
+{
+  "announcements": {
+    "metaTitle": "Announcements | Parent Portal",
+    "metaDescription": "View school and class announcements for your children",
+    "title": "Announcements",
+    "description": "Stay updated with school and class announcements",
+    "loading": "Loading announcements...",
+    "filters": "Filters",
+    "selectStudent": "Select student",
+    "allStudents": "All Students",
+    "selectScope": "Select scope",
+    "scopeAll": "All Types",
+    "scopeSchool": "School-wide",
+    "scopeClass": "Class",
+    "scopeRole": "Parents",
+    "empty": "No announcements found.",
+    "by": "by",
+    "relevantFor": "Relevant for:"
+  },
+  "events": {
+    "metaTitle": "Events | Parent Portal",
+    "metaDescription": "View upcoming school events and manage registrations",
+    "title": "Events",
+    "description": "View upcoming school events and manage registrations",
+    "loading": "Loading events...",
+    "filters": "Filters",
+    "eventType": "Event type",
+    "allTypes": "All Types",
+    "typeLabels": {
+      "ACADEMIC": "Academic",
+      "SPORTS": "Sports",
+      "CULTURAL": "Cultural",
+      "PARENT_MEETING": "Parent Meeting",
+      "CELEBRATION": "Celebration",
+      "WORKSHOP": "Workshop",
+      "OTHER": "Other"
+    },
+    "tabUpcoming": "Upcoming",
+    "tabPast": "Past",
+    "emptyUpcoming": "No upcoming events found.",
+    "emptyPast": "No past events found.",
+    "registered": "Registered",
+    "waitlisted": "Waitlisted",
+    "spots": "spots",
+    "full": "Full",
+    "registering": "Registering...",
+    "joinWaitlist": "Join Waitlist",
+    "register": "Register",
+    "cancelling": "Cancelling...",
+    "cancelRegistration": "Cancel Registration"
+  }
+}

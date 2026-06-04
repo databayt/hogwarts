@@ -1,0 +1,52 @@
+{
+  "announcements": {
+    "metaTitle": "الإعلانات | بوابة ولي الأمر",
+    "metaDescription": "اطّلع على إعلانات المدرسة والصفوف الخاصة بأبنائك",
+    "title": "الإعلانات",
+    "description": "ابقَ على اطّلاع بإعلانات المدرسة والصفوف",
+    "loading": "جارٍ تحميل الإعلانات...",
+    "filters": "عوامل التصفية",
+    "selectStudent": "اختر الطالب",
+    "allStudents": "جميع الطلاب",
+    "selectScope": "اختر النطاق",
+    "scopeAll": "جميع الأنواع",
+    "scopeSchool": "على مستوى المدرسة",
+    "scopeClass": "الصف",
+    "scopeRole": "أولياء الأمور",
+    "empty": "لا توجد إعلانات.",
+    "by": "بواسطة",
+    "relevantFor": "يخص:"
+  },
+  "events": {
+    "metaTitle": "الفعاليات | بوابة ولي الأمر",
+    "metaDescription": "اطّلع على الفعاليات المدرسية القادمة وأدِر التسجيلات",
+    "title": "الفعاليات",
+    "description": "اطّلع على الفعاليات المدرسية القادمة وأدِر التسجيلات",
+    "loading": "جارٍ تحميل الفعاليات...",
+    "filters": "عوامل التصفية",
+    "eventType": "نوع الفعالية",
+    "allTypes": "جميع الأنواع",
+    "typeLabels": {
+      "ACADEMIC": "أكاديمية",
+      "SPORTS": "رياضية",
+      "CULTURAL": "ثقافية",
+      "PARENT_MEETING": "اجتماع أولياء الأمور",
+      "CELEBRATION": "احتفال",
+      "WORKSHOP": "ورشة عمل",
+      "OTHER": "أخرى"
+    },
+    "tabUpcoming": "القادمة",
+    "tabPast": "السابقة",
+    "emptyUpcoming": "لا توجد فعاليات قادمة.",
+    "emptyPast": "لا توجد فعاليات سابقة.",
+    "registered": "مسجَّل",
+    "waitlisted": "في قائمة الانتظار",
+    "spots": "مقعد",
+    "full": "مكتمل",
+    "registering": "جارٍ التسجيل...",
+    "joinWaitlist": "الانضمام لقائمة الانتظار",
+    "register": "تسجيل",
+    "cancelling": "جارٍ الإلغاء...",
+    "cancelRegistration": "إلغاء التسجيل"
+  }
+}
