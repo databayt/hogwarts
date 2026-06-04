@@ -3,13 +3,18 @@
 
 import { auth } from "@/auth"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { getPromotionBatches } from "../actions/promotion"
 import { PromotionDashboard } from "./dashboard"
 
-export async function PromotionContent() {
+export async function PromotionContent({
+  dictionary,
+}: {
+  dictionary: Dictionary
+}) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
@@ -29,5 +34,12 @@ export async function PromotionContent() {
     }),
   ])
 
-  return <PromotionDashboard batches={batches} years={years} grades={grades} />
+  return (
+    <PromotionDashboard
+      batches={batches}
+      years={years}
+      grades={grades}
+      dictionary={dictionary}
+    />
+  )
 }

@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +35,7 @@ interface ReportCardsTableProps {
   terms: Array<{ id: string; termNumber: number }>
   grades: Array<{ id: string; name: string; gradeNumber: number }>
   defaultTermId?: string
+  dictionary: Dictionary
 }
 
 export function ReportCardsTable({
@@ -42,7 +44,9 @@ export function ReportCardsTable({
   terms,
   grades,
   defaultTermId,
+  dictionary,
 }: ReportCardsTableProps) {
+  const dict = dictionary.results.reportCards
   const [data, setData] = useState(initialData)
   const [count, setCount] = useState(total)
   const [termId, setTermId] = useState(defaultTermId || "")
@@ -117,12 +121,12 @@ export function ReportCardsTable({
       <div className="flex items-center gap-3">
         <Select value={termId} onValueChange={handleTermChange}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select term" />
+            <SelectValue placeholder={dict.filters.selectTerm} />
           </SelectTrigger>
           <SelectContent>
             {terms.map((t) => (
               <SelectItem key={t.id} value={t.id}>
-                Term {t.termNumber}
+                {dict.filters.term} {t.termNumber}
               </SelectItem>
             ))}
           </SelectContent>
@@ -130,10 +134,10 @@ export function ReportCardsTable({
 
         <Select value={gradeId || "all"} onValueChange={handleGradeChange}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="All grades" />
+            <SelectValue placeholder={dict.filters.allGrades} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All grades</SelectItem>
+            <SelectItem value="all">{dict.filters.allGrades}</SelectItem>
             {grades.map((g) => (
               <SelectItem key={g.id} value={g.id}>
                 {g.name}
@@ -148,29 +152,31 @@ export function ReportCardsTable({
             disabled={!termId || isPending}
             variant="outline"
           >
-            {isPending ? "Generating..." : "Generate Report Cards"}
+            {isPending ? dict.actions.generating : dict.actions.generate}
           </Button>
           {unpublishedCount > 0 && (
             <Button onClick={handlePublish} disabled={isPending}>
-              Publish ({unpublishedCount})
+              {dict.actions.publish} ({unpublishedCount})
             </Button>
           )}
         </div>
       </div>
 
-      <div className="text-muted-foreground text-sm">{count} report cards</div>
+      <div className="text-muted-foreground text-sm">
+        {count} {dict.count}
+      </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Rank</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>GPA</TableHead>
-              <TableHead>Grade</TableHead>
-              <TableHead>Subjects</TableHead>
-              <TableHead>Attendance</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{dict.columns.rank}</TableHead>
+              <TableHead>{dict.columns.student}</TableHead>
+              <TableHead>{dict.columns.gpa}</TableHead>
+              <TableHead>{dict.columns.grade}</TableHead>
+              <TableHead>{dict.columns.subjects}</TableHead>
+              <TableHead>{dict.columns.attendance}</TableHead>
+              <TableHead>{dict.columns.status}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,8 +186,7 @@ export function ReportCardsTable({
                   colSpan={7}
                   className="text-muted-foreground py-8 text-center"
                 >
-                  No report cards found. Select a term and click &quot;Generate
-                  Report Cards&quot;.
+                  {dict.empty}
                 </TableCell>
               </TableRow>
             ) : (
@@ -211,7 +216,9 @@ export function ReportCardsTable({
                   <TableCell>
                     <Badge variant="outline">{rc.overallGrade || "-"}</Badge>
                   </TableCell>
-                  <TableCell>{rc.grades?.length || 0} subjects</TableCell>
+                  <TableCell>
+                    {rc.grades?.length || 0} {dict.subjectsCount}
+                  </TableCell>
                   <TableCell className="text-sm">
                     {rc.daysPresent != null && (
                       <span>
@@ -222,7 +229,7 @@ export function ReportCardsTable({
                   </TableCell>
                   <TableCell>
                     <Badge variant={rc.isPublished ? "default" : "secondary"}>
-                      {rc.isPublished ? "Published" : "Draft"}
+                      {rc.isPublished ? dict.status.published : dict.status.draft}
                     </Badge>
                   </TableCell>
                 </TableRow>

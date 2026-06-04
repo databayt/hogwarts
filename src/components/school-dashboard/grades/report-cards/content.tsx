@@ -3,12 +3,17 @@
 
 import { auth } from "@/auth"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { ReportCardsTable } from "./table"
 
-export async function ReportCardsContent() {
+export async function ReportCardsContent({
+  dictionary,
+}: {
+  dictionary: Dictionary
+}) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
   if (!schoolId) return null
@@ -64,6 +69,7 @@ export async function ReportCardsContent() {
       terms={terms}
       grades={grades}
       defaultTermId={latestTerm?.id}
+      dictionary={dictionary}
     />
   )
 }
