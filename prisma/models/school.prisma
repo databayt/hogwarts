@@ -49,6 +49,12 @@ model School {
   videoStorageUsedBytes  BigInt? @default(0)
   videoStorageQuotaBytes BigInt? // null = unlimited
 
+  // Live-class (LiveKit) — per-school capacity + PDPL retention
+  liveClassRecordingRetentionDays Int     @default(90)
+  liveClassMaxConcurrentPerSchool Int     @default(50)
+  liveClassMaxDurationMinutes     Int     @default(120)
+  liveClassRecordingDefault       Boolean @default(true)
+
   // Join code for users to self-enroll (6-char alphanumeric, regeneratable)
   joinCode String? @unique
 
@@ -241,6 +247,11 @@ model School {
   attendanceCompetitions  AttendanceCompetition[]
   classCompetitionEntries ClassCompetitionEntry[]
 
+  // Compliance (regulator submission, e.g., ADEK eSIS)
+  complianceConfigs     SchoolComplianceConfig[]
+  complianceCredentials SchoolComplianceCredential[]
+  complianceSubmissions ComplianceSubmission[]
+
   // Quiz relations
   quizGames         QuizGame[]
   quizGameQuestions QuizGameQuestion[]
@@ -400,6 +411,10 @@ model School {
   tripBoardings          TripBoarding[]
   transportationSettings TransportationSettings?
   apiTokens              SchoolApiToken[]
+
+  // Live-class relations
+  liveClassSessions   LiveClassSession[]
+  liveClassRecordings LiveClassRecording[]
 
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]

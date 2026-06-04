@@ -10,6 +10,7 @@ import {
   Clock,
   Loader2,
   Mail,
+  MessageCircle,
   MessageSquare,
   Smartphone,
 } from "lucide-react"
@@ -58,6 +59,10 @@ const preferencesFormSchema = z.object({
       email: z.boolean(),
       push: z.boolean(),
       sms: z.boolean(),
+      // WhatsApp opt-out via web (Phase 3 / Aldar epic 4). The schema
+      // already had a `whatsapp` NotificationChannel; before this the
+      // form silently hid it even though the dispatcher + cron use it.
+      whatsapp: z.boolean(),
     })
   ),
   quietHoursEnabled: z.boolean(),
@@ -88,6 +93,7 @@ const CHANNEL_ICONS = {
   email: Mail,
   push: Smartphone,
   sms: MessageSquare,
+  whatsapp: MessageCircle,
 } as const
 
 export function NotificationPreferencesForm({
@@ -115,6 +121,7 @@ export function NotificationPreferencesForm({
         email: prefMap.get(`${type}:email`)?.enabled ?? false,
         push: prefMap.get(`${type}:push`)?.enabled ?? false,
         sms: prefMap.get(`${type}:sms`)?.enabled ?? false,
+        whatsapp: prefMap.get(`${type}:whatsapp`)?.enabled ?? false,
       })),
       quietHoursEnabled: initialPreferences.some(
         (p) => p.quietHoursStart !== null
@@ -165,6 +172,7 @@ export function NotificationPreferencesForm({
           { channel: "email", enabled: pref.email },
           { channel: "push", enabled: pref.push },
           { channel: "sms", enabled: pref.sms },
+          { channel: "whatsapp", enabled: pref.whatsapp },
         ]
 
         return channels.map((ch) => ({
@@ -423,37 +431,39 @@ export function NotificationPreferencesForm({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          {(["inApp", "email", "push", "sms"] as const).map(
-                            (channel) => {
-                              const ChannelIcon = CHANNEL_ICONS[channel]
-                              return (
-                                <FormField
-                                  key={channel}
-                                  control={form.control}
-                                  name={`preferences.${index}.${channel}`}
-                                  render={({ field }) => (
-                                    <FormItem className="flex items-center gap-2 space-y-0">
-                                      <FormControl>
-                                        <Switch
-                                          checked={field.value}
-                                          onCheckedChange={field.onChange}
-                                        />
-                                      </FormControl>
-                                      <FormLabel className="flex cursor-pointer items-center gap-1 text-xs font-normal">
-                                        <ChannelIcon className="h-3.5 w-3.5" />
-                                        {
-                                          dictionary.preferences.channels[
-                                            channel
-                                          ]
-                                        }
-                                      </FormLabel>
-                                    </FormItem>
-                                  )}
-                                />
-                              )
-                            }
-                          )}
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                          {(
+                            [
+                              "inApp",
+                              "email",
+                              "push",
+                              "sms",
+                              "whatsapp",
+                            ] as const
+                          ).map((channel) => {
+                            const ChannelIcon = CHANNEL_ICONS[channel]
+                            return (
+                              <FormField
+                                key={channel}
+                                control={form.control}
+                                name={`preferences.${index}.${channel}`}
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center gap-2 space-y-0">
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="flex cursor-pointer items-center gap-1 text-xs font-normal">
+                                      <ChannelIcon className="h-3.5 w-3.5" />
+                                      {dictionary.preferences.channels[channel]}
+                                    </FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            )
+                          })}
                         </div>
                       </div>
                     </div>

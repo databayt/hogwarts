@@ -64,11 +64,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
 
   it("returns 400 when entity_type is not in the whitelist", async () => {
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "secret_table",
-      entity_id: "x",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "secret_table",
+        entity_id: "x",
+        target_lang: "en",
+      })
+    )
     expect(res.status).toBe(400)
     const json = (await res.json()) as { error: string }
     expect(json.error).toContain("Invalid")
@@ -91,11 +93,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
   it("returns 404 when the announcement is not in this school (tenant guard)", async () => {
     vi.mocked(db.announcement.findFirst).mockResolvedValue(null)
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "en",
+      })
+    )
     expect(res.status).toBe(404)
     // Verify the lookup was scoped by schoolId from the auth context (no
     // way to fetch an entity from a different tenant via this endpoint).
@@ -112,11 +116,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
       lang: "en",
     } as never)
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "en",
+      })
+    )
     const json = (await res.json()) as {
       translated_text: string
       cached: boolean
@@ -146,11 +152,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
     )
 
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "en",
+      })
+    )
     const json = (await res.json()) as {
       translated_text: string
       cached: boolean
@@ -173,11 +181,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
     vi.mocked(translation.translateWithCache).mockResolvedValue("Hello")
 
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "en",
+      })
+    )
     const json = (await res.json()) as { cached: boolean }
     expect(res.status).toBe(200)
     expect(json.cached).toBe(false)
@@ -196,11 +206,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
     )
 
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "assignment",
-      entity_id: "asg-1",
-      target_lang: "ar",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "assignment",
+        entity_id: "asg-1",
+        target_lang: "ar",
+      })
+    )
     const json = (await res.json()) as {
       translated_text: string
       source_lang: string
@@ -221,11 +233,13 @@ describe("POST /api/mobile/translate (issue #276)", () => {
       lang: "en",
     } as never)
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "ar",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "ar",
+      })
+    )
     const json = (await res.json()) as {
       translated_text: string
       cached: boolean
@@ -238,14 +252,18 @@ describe("POST /api/mobile/translate (issue #276)", () => {
   it("returns 401 when auth fails (delegates to authenticate)", async () => {
     const auth = await import("../lib/authenticate")
     vi.mocked(auth.authenticate).mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }) as never
+      new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      }) as never
     )
     const { POST } = await import("../translate/route")
-    const res = await POST(buildRequest({
-      entity_type: "announcement",
-      entity_id: "ann-1",
-      target_lang: "en",
-    }))
+    const res = await POST(
+      buildRequest({
+        entity_type: "announcement",
+        entity_id: "ann-1",
+        target_lang: "en",
+      })
+    )
     expect(res.status).toBe(401)
   })
 })

@@ -7,6 +7,7 @@ import { SearchParams } from "nuqs/server"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { ReportsContent } from "@/components/school-dashboard/attendance/reports/content"
 
 export async function generateMetadata({
@@ -40,14 +41,7 @@ export default async function Page({ params, searchParams }: Props) {
   // Staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
   if (!staffRoles.includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          You do not have permission to access attendance reports.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return (

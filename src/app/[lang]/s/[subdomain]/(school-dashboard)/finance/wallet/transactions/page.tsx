@@ -29,14 +29,21 @@ export default async function WalletTransactionsPage({ params }: Props) {
     )
   }
 
-  const transactions = await db.walletTransaction.findMany({
-    where: { schoolId },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      wallet: { select: { walletType: true, ownerId: true } },
-    },
-  })
+  const [transactions, schoolForCurrency] = await Promise.all([
+    db.walletTransaction.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        wallet: { select: { walletType: true, ownerId: true, currency: true } },
+      },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
+  const defaultCurrency = schoolForCurrency?.currency ?? "USD"
 
   return (
     <div className="space-y-4">
@@ -65,10 +72,19 @@ export default async function WalletTransactionsPage({ params }: Props) {
                 <div className="flex items-center gap-3">
                   <div className="text-end">
                     <p className="font-medium">
-                      {formatCurrency(Number(tx.amount), lang)}
+                      {formatCurrency(
+                        Number(tx.amount),
+                        lang,
+                        tx.wallet.currency || defaultCurrency
+                      )}
                     </p>
                     <p className="text-muted-foreground text-sm">
-                      Balance: {formatCurrency(Number(tx.balanceAfter), lang)}
+                      Balance:{" "}
+                      {formatCurrency(
+                        Number(tx.balanceAfter),
+                        lang,
+                        tx.wallet.currency || defaultCurrency
+                      )}
                     </p>
                   </div>
                   <Badge

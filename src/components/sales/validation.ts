@@ -180,6 +180,14 @@ export const leadFilterSchema = z
     hasPhone: z.boolean().optional(),
     assignedToId: z.string().optional(),
     verified: z.boolean().optional(),
+    // Country (ISO-2): the platform pipeline is multi-country (SD, EG, SA, AE…).
+    country: z.string().length(2).optional(),
+    // Tier is a derived facet over `tags`. We accept "A" | "B" | "C" and translate
+    // to `tags.hasSome(["tier-a"])` inside the action.
+    tier: z.enum(["A", "B", "C"]).optional(),
+    // Follow-up window: dueBefore lets the UI render "due today / this week /
+    // overdue" by setting the upper bound on `nextFollowUpAt`.
+    dueBefore: z.coerce.date().optional(),
   })
   .refine(
     // Score range validation: ensure min <= max (helps dashboard filter logic)

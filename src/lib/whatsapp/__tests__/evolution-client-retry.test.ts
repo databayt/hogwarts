@@ -169,9 +169,9 @@ describe("evolution-client — request() retry behavior via sendText", () => {
     stubFetchSequence([errResponse(401, "missing apikey")])
 
     const { sendText } = await import("../evolution-client")
-    await expect(
-      sendText("instance-1", "1234567890", "hi")
-    ).rejects.toThrow(/Evolution API 401/)
+    await expect(sendText("instance-1", "1234567890", "hi")).rejects.toThrow(
+      /Evolution API 401/
+    )
 
     expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1)
   })

@@ -9,12 +9,42 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { KioskAction, KioskMethod } from "./validation"
+
+/**
+ * Kiosk operations run inside a staff/admin-supervised session (the kiosk page
+ * is ADMIN/DEVELOPER-gated). These actions previously checked only
+ * getTenantContext() — which resolves the tenant from the host, not the user —
+ * so any tenant-resolvable caller could enumerate student PII and write
+ * attendance. Gate every action on an authenticated classroom-staff role.
+ */
+const KIOSK_OPERATOR_ROLES: UserRole[] = [
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STAFF",
+]
+
+async function requireKioskOperator(): Promise<
+  | { ok: true; userId: string; schoolId: string; role: UserRole }
+  | { ok: false; result: ReturnType<typeof actionError> }
+> {
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
+  const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
+  if (!userId || !role || !schoolId || !KIOSK_OPERATOR_ROLES.includes(role)) {
+    return { ok: false, result: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  return { ok: true, userId, schoolId, role }
+}
 
 interface LookupStudentInput {
   identifierValue: string
@@ -43,11 +73,10 @@ export async function lookupStudent(
   input: LookupStudentInput
 ): Promise<LookupStudentResult> {
   try {
+    const guard = await requireKioskOperator()
+    if (!guard.ok) return guard.result
+    const { schoolId } = guard
     const { identifierValue, method } = input
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
 
     let student = null
 
@@ -177,6 +206,9 @@ export async function processKioskCheck(
   input: ProcessKioskCheckInput
 ): Promise<ProcessKioskCheckResult> {
   try {
+    const guard = await requireKioskOperator()
+    if (!guard.ok) return guard.result
+    const { schoolId } = guard
     const {
       kioskId,
       studentId,
@@ -186,10 +218,6 @@ export async function processKioskCheck(
       reasonNote,
       photoUrl,
     } = input
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
 
     const now = new Date()
 
@@ -345,11 +373,10 @@ export async function registerKiosk(
   input: RegisterKioskInput
 ): Promise<RegisterKioskResult> {
   try {
+    const guard = await requireKioskOperator()
+    if (!guard.ok) return guard.result
+    const { schoolId } = guard
     const { kioskId, kioskName, location } = input
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
 
     // Check if kiosk already registered (use unique constraint)
     const existingSession = await db.kioskSession.findUnique({

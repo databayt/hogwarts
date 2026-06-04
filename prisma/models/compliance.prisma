@@ -1,0 +1,151 @@
+// Compliance / Regulator Submission Models
+// Generic connector framework — ADEK (Abu Dhabi) is the first provider.
+// Future regulators (SEC KSA, MOE Qatar, ...) add one ComplianceProvider value
+// and a sibling directory under src/lib/compliance/providers/.
+
+enum ComplianceProvider {
+  ADEK_ESIS // Abu Dhabi Department of Education and Knowledge
+  CUSTOM // School-defined endpoint
+}
+
+enum ConnectorMode {
+  DRY_RUN // Generate artifact only; do not submit (manual upload by registrar)
+  PIGGYBACK // Submit via group-shared credentials
+  OFFICIAL_API // Submit via documented vendor API
+  RPA // Submit via browser automation (claimed by external worker)
+  DISABLED // Connector exists but is paused
+}
+
+enum ComplianceSubmissionStatus {
+  PENDING // Row created, awaiting processing
+  QUEUED // Eligible for connector / worker
+  IN_FLIGHT // Connector is executing
+  SUBMITTED // Connector finished; awaiting regulator ack (if applicable)
+  ACCEPTED // Regulator confirmed receipt
+  REJECTED // Regulator returned error
+  FAILED // Internal failure (will retry)
+  CANCELLED // Manually cancelled by admin
+}
+
+enum CircuitBreakerState {
+  CLOSED // Normal operation
+  OPEN // Halted after failure threshold
+  HALF_OPEN // Trial submission after cooldown
+}
+
+// Per-school × provider config (opt-in, default off)
+model SchoolComplianceConfig {
+  id                      String                      @id @default(cuid())
+  schoolId                String
+  provider                ComplianceProvider
+  enabled                 Boolean                     @default(false)
+  mode                    ConnectorMode               @default(DRY_RUN)
+  submissionTimeUtc       String                      @default("10:00") // HH:MM in UTC (10:00 UTC = 14:00 GST)
+  parentContactSlaMinutes Int                         @default(120) // ADEK 2h
+  notifyAdminOnFailure    Boolean                     @default(true)
+  sharedGroupId           String? // FK to SharedComplianceCredentialGroup for piggyback mode
+  providerConfig          Json? // Provider-specific knobs (e.g., school code in eSIS)
+  lastSubmissionAt        DateTime?
+  lastSubmissionStatus    ComplianceSubmissionStatus?
+
+  school      School                           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sharedGroup SharedComplianceCredentialGroup? @relation(fields: [sharedGroupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, provider])
+  @@index([provider, enabled])
+  @@map("school_compliance_configs")
+}
+
+// Group-level credentials (Aldar piggyback shape — 1 cred row, N schools)
+model SharedComplianceCredentialGroup {
+  id              String             @id @default(cuid())
+  name            String // "Aldar Education Group"
+  provider        ComplianceProvider
+  encryptedSecret String             @db.Text // AES-256-GCM(json, env.COMPLIANCE_ENCRYPTION_KEY)
+  keyVersion      Int                @default(1)
+
+  // Circuit breaker — halts all schools sharing this cred if regulator rate-limits/bans
+  circuitBreakerState CircuitBreakerState @default(CLOSED)
+  recentFailures      Int                 @default(0)
+  circuitOpenedAt     DateTime?
+  rotatedAt           DateTime?
+  lastUsedAt          DateTime?
+
+  schoolConfigs SchoolComplianceConfig[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([provider])
+  @@map("shared_compliance_credential_groups")
+}
+
+// Per-school credential row (only used when mode=OFFICIAL_API with school's own creds)
+model SchoolComplianceCredential {
+  id              String             @id @default(cuid())
+  schoolId        String
+  provider        ComplianceProvider
+  encryptedSecret String             @db.Text // AES-256-GCM
+  keyVersion      Int                @default(1)
+  secretMetadata  Json? // {kind: "api_key" | "oauth_client", ...}
+  rotatedAt       DateTime?
+  lastUsedAt      DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, provider])
+  @@map("school_compliance_credentials")
+}
+
+// One row per submission attempt — preserves audit history of retries across modes
+model ComplianceSubmission {
+  id             String                     @id @default(cuid())
+  schoolId       String
+  provider       ComplianceProvider
+  submissionDate DateTime                   @db.Date
+  attemptNumber  Int                        @default(1)
+  mode           ConnectorMode // Mode used for THIS attempt
+  status         ComplianceSubmissionStatus @default(PENDING)
+
+  payloadStudentCount Int   @default(0)
+  payloadAbsentCount  Int   @default(0)
+  payloadCategorized  Json? // {authorized: N, unauthorized: M, causeForConcern: K, late: L}
+
+  csvArtifactUrl     String? // Signed object-store URL (preferred, when S3 is wired)
+  csvArtifactContent String? @db.Text // Inline CSV (used until object storage is configured)
+  csvArtifactSha256  String?
+
+  receiptId    String? // Regulator-provided reference (eSIS receipt #)
+  errorCode    String?
+  errorMessage String? @db.Text
+
+  // Worker leasing (RPA mode)
+  claimedByWorkerId String?
+  claimedAt         DateTime?
+  claimExpiresAt    DateTime?
+
+  // Retry chain
+  supersededById String?
+  supersededBy   ComplianceSubmission?  @relation("SupersedeChain", fields: [supersededById], references: [id])
+  supersedes     ComplianceSubmission[] @relation("SupersedeChain")
+
+  submittedAt    DateTime?
+  acknowledgedAt DateTime?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, provider, submissionDate, attemptNumber])
+  @@index([provider, status])
+  @@index([status, claimExpiresAt]) // worker poll
+  @@index([schoolId, submissionDate])
+  @@map("compliance_submissions")
+}

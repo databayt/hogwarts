@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AIContent } from "@/components/school-dashboard/attendance/ai/content"
 
 export const metadata = { title: "Dashboard: AI Attendance" }
@@ -20,14 +21,7 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
 
   if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          You do not have permission to access AI attendance features.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return <AIContent locale={lang} />

@@ -48,7 +48,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(mrrData.currentMRR, lang, {
+                {formatCurrency(mrrData.currentMRR, lang, "USD", {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 })}
@@ -86,7 +86,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(mrrData.lastMonthMRR, lang, {
+                {formatCurrency(mrrData.lastMonthMRR, lang, "USD", {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 })}
@@ -126,6 +126,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                     ? mrrData.currentMRR / mrrData.totalSchools
                     : 0,
                   lang,
+                  "USD",
                   { minimumFractionDigits: 0, maximumFractionDigits: 0 }
                 )}
               </div>
@@ -174,7 +175,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xl font-bold">
-                          {formatCurrency(trend.revenue, lang, {
+                          {formatCurrency(trend.revenue, lang, "USD", {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0,
                           })}
@@ -214,7 +215,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                   {t?.annualRunRate || "Annual Run Rate (ARR)"}
                 </p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(mrrData.currentMRR * 12, lang, {
+                  {formatCurrency(mrrData.currentMRR * 12, lang, "USD", {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                   })}
@@ -228,6 +229,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                   {formatCurrency(
                     mrrData.currentMRR * (1 + mrrData.growth / 100),
                     lang,
+                    "USD",
                     { minimumFractionDigits: 0, maximumFractionDigits: 0 }
                   )}
                 </p>
@@ -242,6 +244,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                       Math.pow(1 + mrrData.growth / 100, 12) *
                       12,
                     lang,
+                    "USD",
                     { minimumFractionDigits: 0, maximumFractionDigits: 0 }
                   )}
                 </p>

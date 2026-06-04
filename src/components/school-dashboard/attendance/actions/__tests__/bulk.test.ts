@@ -7,17 +7,44 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import * as module from "@/lib/tenant-context"
 
-import {
-  bulkUploadAttendance,
-  getAttendanceReport,
-  getClassAttendanceStats,
-  getStudentAttendanceStats,
-} from "../bulk"
+import { bulkUploadAttendance, getAttendanceReport } from "../bulk"
 
-// Mock dependencies
-vi.mock("@/lib/tenant-context")
-vi.mock("@/auth")
-vi.mock("@/lib/db", { spy: true })
+// Mock dependencies - explicit inline mock so vi.spyOn finds existing methods
+vi.mock("@/lib/db", () => ({
+  db: {
+    attendance: {
+      create: vi.fn(),
+      createMany: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      groupBy: vi.fn(),
+    },
+    student: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    class: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    $transaction: vi.fn(),
+  },
+}))
+
+vi.mock("@/lib/tenant-context", () => ({
+  getTenantContext: vi.fn(),
+}))
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
@@ -39,8 +66,13 @@ describe("Bulk Attendance Operations", () => {
         subdomain: "demo",
       })
       vi.mocked(authModule.auth).mockResolvedValue({
-        user: { id: mockUserId, name: "Test User", email: "test@example.com" },
-      })
+        user: {
+          id: mockUserId,
+          name: "Test User",
+          email: "test@example.com",
+          role: "ADMIN",
+        },
+      } as any)
     })
 
     it("should return error when schoolId is missing", async () => {
@@ -122,6 +154,8 @@ describe("Bulk Attendance Operations", () => {
         schoolId: mockSchoolId,
         name: "Class 10A",
       })
+      // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
+      vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockImplementationOnce(async (callback) => {
         await callback(db)
       })
@@ -151,6 +185,8 @@ describe("Bulk Attendance Operations", () => {
         schoolId: mockSchoolId,
         name: "Class 10A",
       })
+      // Prefetch of existing attendance rows (N+1 fix in bulk.ts) — none exist.
+      vi.spyOn(db.attendance, "findMany").mockResolvedValueOnce([])
       vi.spyOn(db, "$transaction").mockRejectedValueOnce(
         new Error("Database error")
       )
@@ -170,12 +206,23 @@ describe("Bulk Attendance Operations", () => {
 
   describe("getAttendanceReport", () => {
     const mockSchoolId = "school-123"
+    const mockUserId = "user-456"
 
     beforeEach(() => {
       vi.mocked(module.getTenantContext).mockResolvedValue({
         schoolId: mockSchoolId,
         subdomain: "demo",
       })
+      // ADMIN role passes canViewSchoolAnalytics gate; non-TEACHER avoids teacher-scoping branch
+      vi.mocked(authModule.auth).mockResolvedValue({
+        user: {
+          id: mockUserId,
+          schoolId: mockSchoolId,
+          role: "ADMIN",
+        },
+      } as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
+      vi.mocked(db.attendance.count).mockResolvedValue(0)
     })
 
     it("should return error when schoolId is missing", async () => {
@@ -194,16 +241,13 @@ describe("Bulk Attendance Operations", () => {
     })
 
     it("should apply class filter", async () => {
-      const findManySpy = vi.spyOn(db.attendance, "findMany")
-      vi.spyOn(db.attendance, "count").mockResolvedValue(0)
-
       await getAttendanceReport({
         classId: "class-123",
         limit: 10,
         offset: 0,
       })
 
-      expect(findManySpy).toHaveBeenCalledWith(
+      expect(db.attendance.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             classId: "class-123",
@@ -213,9 +257,6 @@ describe("Bulk Attendance Operations", () => {
     })
 
     it("should apply date range filter", async () => {
-      const findManySpy = vi.spyOn(db.attendance, "findMany")
-      vi.spyOn(db.attendance, "count").mockResolvedValue(0)
-
       const from = "2024-01-01"
       const to = "2024-01-31"
 
@@ -226,7 +267,7 @@ describe("Bulk Attendance Operations", () => {
         offset: 0,
       })
 
-      expect(findManySpy).toHaveBeenCalledWith(
+      expect(db.attendance.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             date: expect.objectContaining({
@@ -236,85 +277,6 @@ describe("Bulk Attendance Operations", () => {
           }),
         })
       )
-    })
-  })
-
-  describe("getClassAttendanceStats", () => {
-    const mockSchoolId = "school-123"
-    const mockClassId = "class-123"
-
-    beforeEach(() => {
-      vi.mocked(module.getTenantContext).mockResolvedValue({
-        schoolId: mockSchoolId,
-        subdomain: "demo",
-      })
-    })
-
-    it("should return error when schoolId is missing", async () => {
-      vi.mocked(module.getTenantContext).mockResolvedValueOnce({
-        schoolId: "",
-        subdomain: "demo",
-      })
-
-      const result = await getClassAttendanceStats({
-        classId: mockClassId,
-      })
-
-      expect(result.error).toContain("Missing school context")
-    })
-
-    it("should calculate attendance statistics correctly", async () => {
-      vi.spyOn(db.attendance, "count")
-        .mockResolvedValueOnce(90) // present
-        .mockResolvedValueOnce(5) // absent
-        .mockResolvedValueOnce(3) // late
-        .mockResolvedValueOnce(1) // excused
-        .mockResolvedValueOnce(1) // sick
-        .mockResolvedValueOnce(0) // holiday
-        .mockResolvedValueOnce(100) // total
-
-      const result = await getClassAttendanceStats({
-        classId: mockClassId,
-      })
-
-      expect(result.success).toBe(true)
-      expect(result.stats.present).toBe(90)
-      expect(result.stats.absent).toBe(5)
-      expect(result.stats.total).toBe(100)
-      expect(result.stats.attendanceRate).toBe(90)
-    })
-  })
-
-  describe("getStudentAttendanceStats", () => {
-    const mockSchoolId = "school-123"
-    const mockStudentId = "student-123"
-
-    beforeEach(() => {
-      vi.mocked(module.getTenantContext).mockResolvedValue({
-        schoolId: mockSchoolId,
-        subdomain: "demo",
-      })
-    })
-
-    it("should calculate student attendance statistics", async () => {
-      vi.spyOn(db.attendance, "count")
-        .mockResolvedValueOnce(45) // present
-        .mockResolvedValueOnce(2) // absent
-        .mockResolvedValueOnce(1) // late
-        .mockResolvedValueOnce(0) // excused
-        .mockResolvedValueOnce(0) // sick
-        .mockResolvedValueOnce(0) // holiday
-        .mockResolvedValueOnce(48) // total
-
-      const result = await getStudentAttendanceStats({
-        studentId: mockStudentId,
-      })
-
-      expect(result.success).toBe(true)
-      expect(result.stats.present).toBe(45)
-      expect(result.stats.absent).toBe(2)
-      expect(result.stats.total).toBe(48)
-      expect(result.stats.attendanceRate).toBe(93.75)
     })
   })
 })

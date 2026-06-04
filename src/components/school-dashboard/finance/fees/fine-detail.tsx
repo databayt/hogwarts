@@ -54,6 +54,7 @@ interface FineDetailProps {
     createdAt: string
   }
   lang: Locale
+  currency?: string
 }
 
 const FINE_TYPE_COLORS: Record<string, string> = {
@@ -64,7 +65,7 @@ const FINE_TYPE_COLORS: Record<string, string> = {
   OTHER: "bg-gray-500/10 text-gray-500",
 }
 
-export function FineDetail({ fine, lang }: FineDetailProps) {
+export function FineDetail({ fine, lang, currency = "USD" }: FineDetailProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [waiveDialogOpen, setWaiveDialogOpen] = useState(false)
@@ -384,7 +385,7 @@ export function FineDetail({ fine, lang }: FineDetailProps) {
                   {ff?.amount || "Amount"}
                 </span>
                 <span className="font-medium tabular-nums">
-                  {formatCurrency(fine.amount, lang)}
+                  {formatCurrency(fine.amount, lang, currency)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -446,7 +447,7 @@ export function FineDetail({ fine, lang }: FineDetailProps) {
                     {ff?.paidAmount || "Paid Amount"}
                   </span>
                   <span className="font-medium tabular-nums">
-                    {formatCurrency(fine.paidAmount ?? 0, lang)}
+                    {formatCurrency(fine.paidAmount ?? 0, lang, currency)}
                   </span>
                 </div>
                 {fine.paidDate && (

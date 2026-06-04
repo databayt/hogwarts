@@ -50,7 +50,12 @@ type ActionResult<T = unknown> = {
 /**
  * Submit student location from device
  * Validates location, checks geofences, processes events, triggers auto-attendance
- * CRITICAL: Rate-limited to 20 requests per 10 seconds per student
+ *
+ * NOTE: There is NO in-process request-rate throttle here. Per-student/per-IP
+ * rate limiting for this high-frequency geo-ingestion endpoint must be enforced
+ * at the edge/gateway (e.g. middleware or API gateway) when the real-time
+ * pipeline is deployed. An in-memory throttle would be unreliable across the
+ * serverless/multi-instance runtime, so it is deliberately not implemented here.
  *
  * @param data Location data from GPS
  * @returns Success status and processed event IDs
@@ -67,6 +72,13 @@ export async function submitLocation(
 
     const schoolId = session.user.schoolId
     const userId = session.user.id
+
+    // 1b. Defense-in-depth: only STUDENT role may submit a device location.
+    // The Student-record resolution below is the primary gate, but assert the
+    // role explicitly so staff/parent callers are rejected with UNAUTHORIZED.
+    if (session.user.role && session.user.role !== "STUDENT") {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // 2. Verify user is a student
     const student = await db.student.findFirst({

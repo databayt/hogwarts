@@ -5,7 +5,6 @@
 import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
@@ -13,17 +12,16 @@ import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
-import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
-  confirmDeleteDialog,
-  DeleteToast,
-  ErrorToast,
-} from "@/components/atom/toast"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getLeadColumns, type LeadRow } from "@/components/sales/columns"
-import { PRIORITY_COLORS, STATUS_COLORS } from "@/components/sales/constants"
 import {
   GridCard,
   GridContainer,
@@ -34,7 +32,9 @@ import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteOperatorLead, getOperatorLeads } from "./actions"
-import { OperatorLeadForm } from "./form"
+
+type DueFilter = "all" | "today" | "week" | "overdue"
+type TierFilter = "all" | "A" | "B" | "C"
 
 interface OperatorSalesTableProps {
   initialData: LeadRow[]
@@ -42,6 +42,33 @@ interface OperatorSalesTableProps {
   perPage: number
   dictionary?: Dictionary["sales"]
   lang: Locale
+}
+
+// Map a UI "due bucket" to an upper-bound timestamp that getOperatorLeads
+// compares against `nextFollowUpAt`. Returning `undefined` clears the filter.
+function dueBeforeFor(due: DueFilter): Date | undefined {
+  switch (due) {
+    case "today": {
+      const end = new Date()
+      end.setHours(23, 59, 59, 999)
+      return end
+    }
+    case "week": {
+      const end = new Date()
+      const day = end.getDay()
+      // Sunday-week: bump to next Saturday end-of-day so a Monday plan still
+      // shows Friday's calls.
+      const remaining = 6 - day
+      end.setDate(end.getDate() + remaining)
+      end.setHours(23, 59, 59, 999)
+      return end
+    }
+    case "overdue":
+      return new Date()
+    case "all":
+    default:
+      return undefined
+  }
 }
 
 export function OperatorSalesTable({
@@ -52,24 +79,28 @@ export function OperatorSalesTable({
   lang,
 }: OperatorSalesTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
 
-  // Translations
   const t = {
-    search: dictionary?.search || "Search leads...",
-    create: dictionary?.create || "Create",
-    export: dictionary?.export || "Export",
-    reset: dictionary?.reset || "Reset",
-    deleteSuccess:
-      dictionary?.messages?.deleteSuccess || "Lead deleted successfully",
-    deleteError: dictionary?.messages?.deleteError || "Failed to delete lead",
-    noLeads: dictionary?.noLeads || "No leads",
+    search: dictionary?.search ?? "Search leads...",
+    create: dictionary?.create ?? "Create",
+    export: dictionary?.export ?? "Export",
+    reset: dictionary?.reset ?? "Reset",
+    noLeads: dictionary?.noLeads ?? "No leads",
     noLeadsDescription:
-      dictionary?.noLeadsDescription || "Create a new lead to get started",
-    loadMore: dictionary?.loadMore || "Load More",
-    loading: dictionary?.loading || "Loading...",
-    deleteConfirm: dictionary?.deleteConfirm || "Delete {name}?",
-    network: dictionary?.network || "Network",
+      dictionary?.noLeadsDescription ?? "Create a new lead to get started",
+    loadMore: dictionary?.loadMore ?? "Load More",
+    loading: dictionary?.loading ?? "Loading...",
+    network: dictionary?.network ?? "Network",
+    tier: dictionary?.filters?.tier ?? "Tier",
+    tierAll: dictionary?.filters?.tierAll ?? "All tiers",
+    tierA: dictionary?.filters?.tierA ?? "Tier A — warm",
+    tierB: dictionary?.filters?.tierB ?? "Tier B — needs intro",
+    tierC: dictionary?.filters?.tierC ?? "Tier C — cold",
+    due: dictionary?.filters?.due ?? "Due",
+    dueAll: dictionary?.filters?.dueAll ?? "Any time",
+    dueToday: dictionary?.filters?.dueToday ?? "Due today",
+    dueWeek: dictionary?.filters?.dueWeek ?? "Due this week",
+    dueOverdue: dictionary?.filters?.dueOverdue ?? "Overdue",
   }
 
   // View mode (table/grid)
@@ -78,29 +109,49 @@ export function OperatorSalesTable({
   // Search state (debounced)
   const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
-  // "Network" quick-filter: the team's warm private network is tracked as
-  // leads with source=REFERRAL + a `network` tag (see sales.mdx workstream 1).
+  // "Network" quick-filter: warm private network = source REFERRAL + the
+  // `network` tag (sales.mdx workstream 1).
   const [networkOnly, setNetworkOnly] = useState(false)
+  const [tier, setTier] = useState<TierFilter>("all")
+  const [due, setDue] = useState<DueFilter>("all")
+
+  type Filters = {
+    search?: string
+    source?: string
+    tags?: string[]
+    tier?: "A" | "B" | "C"
+    dueBefore?: Date
+  }
+  const filters: Filters = {
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(networkOnly ? { source: "REFERRAL", tags: ["network"] } : {}),
+    ...(tier !== "all" ? { tier } : {}),
+    ...(dueBeforeFor(due) ? { dueBefore: dueBeforeFor(due) } : {}),
+  }
+  const hasActiveFilters =
+    !!debouncedSearch || networkOnly || tier !== "all" || due !== "all"
 
   // Data management with optimistic updates
-  const {
-    data,
-    total: dataTotal,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<
+  const { data, isLoading, hasMore, loadMore, refresh } = usePlatformData<
     LeadRow,
-    { search?: string; source?: string; tags?: string[] }
+    Filters
   >({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
       const result = await getOperatorLeads(
-        { search: params.search, source: params.source, tags: params.tags },
+        {
+          search: params.search,
+          source: params.source as
+            | "REFERRAL"
+            | "COLD_CALL"
+            | "MANUAL"
+            | undefined,
+          tags: params.tags,
+          tier: params.tier,
+          dueBefore: params.dueBefore,
+        },
         params.page,
         params.perPage
       )
@@ -115,29 +166,36 @@ export function OperatorSalesTable({
           phone: lead.phone,
           company: lead.company,
           title: lead.title,
+          country: lead.country,
+          tags: lead.tags,
           status: lead.status as LeadRow["status"],
           source: lead.source,
           priority: lead.priority as LeadRow["priority"],
           score: lead.score,
           verified: lead.verified,
+          nextFollowUpAt: lead.nextFollowUpAt
+            ? lead.nextFollowUpAt.toISOString()
+            : null,
           createdAt: lead.createdAt.toISOString(),
         })),
         total: result.data.total,
       }
     },
-    filters:
-      debouncedSearch || networkOnly
-        ? {
-            ...(debouncedSearch ? { search: debouncedSearch } : {}),
-            ...(networkOnly ? { source: "REFERRAL", tags: ["network"] } : {}),
-          }
-        : undefined,
+    filters: hasActiveFilters ? filters : undefined,
   })
 
-  // Generate columns on the client side
+  // Columns — wire operator-side delete action + route-based view/edit so the
+  // row dropdown stays inside the platform tenant (no "Missing school context"
+  // crash when DEVELOPER hits row Delete).
   const columns = useMemo(
-    () => getLeadColumns(dictionary, lang),
-    [dictionary, lang]
+    () =>
+      getLeadColumns(dictionary, lang, {
+        deleteAction: deleteOperatorLead,
+        viewHref: (id) => `/${lang}/sales/${id}`,
+        editHref: (id) => `/${lang}/sales/${id}`,
+        onDeleteSuccess: () => refresh(),
+      }),
+    [dictionary, lang, refresh]
   )
 
   // Table instance
@@ -154,7 +212,6 @@ export function OperatorSalesTable({
     },
   })
 
-  // Handle search
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
@@ -162,64 +219,9 @@ export function OperatorSalesTable({
     [setSearchValue]
   )
 
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(
-    async (lead: LeadRow) => {
-      try {
-        const deleteMsg = t.deleteConfirm.replace("{name}", lead.name)
-        const ok = await confirmDeleteDialog(deleteMsg)
-        if (!ok) return
-
-        // Optimistic remove
-        optimisticRemove(lead.id)
-
-        const result = await deleteOperatorLead(lead.id)
-        if (result.success) {
-          toast.success(t.deleteSuccess)
-        } else {
-          // Revert on error
-          refresh()
-          toast.error(result.error || t.deleteError)
-        }
-      } catch (e) {
-        refresh()
-        toast.error(e instanceof Error ? e.message : t.deleteError)
-      }
-    },
-    [optimisticRemove, refresh, t.deleteConfirm, t.deleteSuccess, t.deleteError]
-  )
-
-  // Handle edit
-  const handleEdit = useCallback(
-    (id: string) => {
-      openModal(id)
-    },
-    [openModal]
-  )
-
-  // Get status badge
-  const getStatusBadge = (status: LeadRow["status"]) => {
-    return {
-      label: dictionary?.status?.[status] || status,
-      variant: STATUS_COLORS[status] as
-        | "default"
-        | "secondary"
-        | "destructive"
-        | "outline",
-    }
-  }
-
-  // Get priority badge
-  const getPriorityBadge = (priority: LeadRow["priority"]) => {
-    return {
-      label: dictionary?.priority?.[priority] || priority,
-      variant: PRIORITY_COLORS[priority] as
-        | "default"
-        | "secondary"
-        | "destructive"
-        | "outline",
-    }
-  }
+  const goCreate = useCallback(() => {
+    router.push(`/${lang}/sales/create`)
+  }, [router, lang])
 
   // Toolbar translations
   const toolbarTranslations = {
@@ -238,20 +240,52 @@ export function OperatorSalesTable({
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.search}
-        onCreate={() => openModal()}
+        onCreate={goCreate}
         entityName="leads"
         translations={toolbarTranslations}
         additionalActions={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-pressed={networkOnly}
-            onClick={() => setNetworkOnly((v) => !v)}
-            className={cn("h-9", networkOnly && "border-primary text-primary")}
-          >
-            {t.network}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-pressed={networkOnly}
+              onClick={() => setNetworkOnly((v) => !v)}
+              className={cn(
+                "h-9",
+                networkOnly && "border-primary text-primary"
+              )}
+            >
+              {t.network}
+            </Button>
+
+            <Select
+              value={tier}
+              onValueChange={(v) => setTier(v as TierFilter)}
+            >
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue placeholder={t.tier} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t.tierAll}</SelectItem>
+                <SelectItem value="A">{t.tierA}</SelectItem>
+                <SelectItem value="B">{t.tierB}</SelectItem>
+                <SelectItem value="C">{t.tierC}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={due} onValueChange={(v) => setDue(v as DueFilter)}>
+              <SelectTrigger className="h-9 w-[150px]">
+                <SelectValue placeholder={t.due} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t.dueAll}</SelectItem>
+                <SelectItem value="today">{t.dueToday}</SelectItem>
+                <SelectItem value="week">{t.dueWeek}</SelectItem>
+                <SelectItem value="overdue">{t.dueOverdue}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         }
       />
 
@@ -294,7 +328,7 @@ export function OperatorSalesTable({
                     title={lead.name}
                     description={lead.company || lead.email || undefined}
                     subtitle={lead.status}
-                    onClick={() => handleEdit(lead.id)}
+                    onClick={() => router.push(`/${lang}/sales/${lead.id}`)}
                   />
                 )
               })}
@@ -317,12 +351,6 @@ export function OperatorSalesTable({
           )}
         </>
       )}
-
-      <Modal
-        content={
-          <OperatorLeadForm dictionary={dictionary} onSuccess={refresh} />
-        }
-      />
     </>
   )
 }

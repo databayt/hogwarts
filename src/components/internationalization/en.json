@@ -1963,7 +1963,9 @@
       "Transportation": "Transportation",
       "Transport fees": "Transport fees",
       "My transportation": "My transportation",
-      "Trips": "Trips"
+      "Trips": "Trips",
+      "Compliance": "Compliance",
+      "LiveClasses": "Live classes"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",

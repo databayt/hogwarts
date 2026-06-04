@@ -1,7 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
 
 import {
   buildPagination,
@@ -10,6 +12,7 @@ import {
   calculateGrade,
   formatResultRow,
   formatStudentName,
+  getChildrenIdsForGuardian,
 } from "../queries"
 
 vi.mock("@/lib/db", () => ({
@@ -22,6 +25,8 @@ vi.mock("@/lib/db", () => ({
       aggregate: vi.fn(),
     },
     gradeBoundary: { findMany: vi.fn() },
+    guardian: { findFirst: vi.fn() },
+    studentGuardian: { findMany: vi.fn() },
   },
 }))
 
@@ -72,6 +77,27 @@ describe("buildResultWhere", () => {
     expect(serialized).toContain("lastName")
     expect(serialized).toContain("assignment")
     expect(serialized).toContain("exam")
+  })
+
+  it("scopes by studentIds when no single studentId is supplied", () => {
+    const where = buildResultWhere("s1", {
+      studentIds: ["stu1", "stu2", "stu3"],
+    })
+    expect(where.studentId).toEqual({ in: ["stu1", "stu2", "stu3"] })
+  })
+
+  it("empty studentIds produces a match-nothing filter (Prisma `in: []`)", () => {
+    const where = buildResultWhere("s1", { studentIds: [] })
+    expect(where.studentId).toEqual({ in: [] })
+  })
+
+  it("prefers an explicit single studentId over the studentIds set", () => {
+    const where = buildResultWhere("s1", {
+      studentId: "stu-priority",
+      studentIds: ["other-1", "other-2"],
+    })
+    // The single-id filter wins; the set is ignored.
+    expect(where.studentId).toBe("stu-priority")
   })
 })
 
@@ -169,6 +195,61 @@ describe("formatStudentName", () => {
 
   it("returns 'Unknown' when student is null", () => {
     expect(formatStudentName({ student: null })).toBe("Unknown")
+  })
+})
+
+describe("getChildrenIdsForGuardian", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("returns linked child IDs when the user is a guardian in this school", async () => {
+    vi.mocked(db.guardian.findFirst).mockResolvedValue({
+      id: "guardian-1",
+    } as any)
+    vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
+      { studentId: "child-a" },
+      { studentId: "child-b" },
+    ] as any)
+
+    const ids = await getChildrenIdsForGuardian("user-1", "school-1")
+    expect(ids).toEqual(["child-a", "child-b"])
+    expect(db.guardian.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", schoolId: "school-1" },
+      select: { id: true },
+    })
+    expect(db.studentGuardian.findMany).toHaveBeenCalledWith({
+      where: { schoolId: "school-1", guardianId: "guardian-1" },
+      select: { studentId: true },
+    })
+  })
+
+  it("returns [] when the user has no guardian record in this school", async () => {
+    vi.mocked(db.guardian.findFirst).mockResolvedValue(null as any)
+
+    const ids = await getChildrenIdsForGuardian("user-not-guardian", "school-1")
+    expect(ids).toEqual([])
+    // Do not even attempt the second query.
+    expect(db.studentGuardian.findMany).not.toHaveBeenCalled()
+  })
+
+  it("returns [] when the guardian exists but has no linked children", async () => {
+    vi.mocked(db.guardian.findFirst).mockResolvedValue({
+      id: "guardian-2",
+    } as any)
+    vi.mocked(db.studentGuardian.findMany).mockResolvedValue([] as any)
+
+    const ids = await getChildrenIdsForGuardian("user-2", "school-1")
+    expect(ids).toEqual([])
+  })
+
+  it("guardian lookup is school-scoped (prevents cross-tenant leak)", async () => {
+    vi.mocked(db.guardian.findFirst).mockResolvedValue(null as any)
+    await getChildrenIdsForGuardian("user-1", "other-school")
+    expect(db.guardian.findFirst).toHaveBeenCalledWith({
+      where: { userId: "user-1", schoolId: "other-school" },
+      select: { id: true },
+    })
   })
 })
 

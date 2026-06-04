@@ -11,12 +11,14 @@
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { Prisma } from "@prisma/client"
+import type { Prisma, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import { isStaffRole } from "../authorization"
 
 import {
   filterIntentionsSchema,
@@ -364,6 +366,37 @@ export async function getStudentIntentions(studentId: string): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    const session = await auth()
+    if (!session?.user?.id) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    // Access control: staff (any school role), the student themselves, or a
+    // linked guardian. Without this, any authenticated caller could read
+    // another student's absence-intention reasons/notes within the same
+    // tenant (intra-tenant IDOR). Mirrors getStudentDayAttendance.
+    const role = session.user.role as UserRole | undefined
+    const isStaff = role ? isStaffRole(role) : false
+    if (!isStaff) {
+      const student = await db.student.findFirst({
+        where: { id: studentId, schoolId },
+        select: {
+          userId: true,
+          studentGuardians: {
+            select: { guardian: { select: { userId: true } } },
+          },
+        },
+      })
+
+      const isSelf = student?.userId === session.user.id
+      const isGuardian = !!student?.studentGuardians.some(
+        (sg) => sg.guardian.userId === session.user.id
+      )
+      if (!isSelf && !isGuardian) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     const intentions = await db.absenceIntention.findMany({

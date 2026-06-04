@@ -1,0 +1,25 @@
+{
+  "name": "adek-rpa-worker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Playwright-based RPA worker that uploads daily attendance CSV to ADEK eSIS on behalf of hogwarts tenants. Polls /api/compliance/worker/claim, runs a browser session against esis.adek.gov.ae, posts back via /api/compliance/worker/ack.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "tsx": "^4.19.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

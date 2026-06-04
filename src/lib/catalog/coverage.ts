@@ -144,7 +144,9 @@ export async function getCurriculumCoverage(
  * One query each for curricula + subjects so the cost is O(2) regardless
  * of how many curricula are seeded.
  */
-export async function listCurriculaWithCoverage(): Promise<CurriculumSummary[]> {
+export async function listCurriculaWithCoverage(): Promise<
+  CurriculumSummary[]
+> {
   const curricula = await db.curriculum.findMany({
     select: { id: true, name: true, slug: true, country: true },
     orderBy: { name: "asc" },

@@ -37,7 +37,8 @@ export type FeeAssignmentRow = {
 
 export const getFeeAssignmentColumns = (
   lang?: string,
-  col?: Record<string, string>
+  col?: Record<string, string>,
+  currency: string = "USD"
 ): ColumnDef<FeeAssignmentRow>[] => {
   return [
     {
@@ -96,7 +97,11 @@ export const getFeeAssignmentColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
+          {formatCurrency(
+            getValue<number>(),
+            (lang || "en") as Locale,
+            currency
+          )}
         </span>
       ),
       meta: { label: col?.finalAmount || "Final Amount", variant: "text" },
@@ -115,7 +120,7 @@ export const getFeeAssignmentColumns = (
         if (val === 0) return <span className="text-muted-foreground">-</span>
         return (
           <span className="text-green-600 tabular-nums">
-            -{formatCurrency(val, (lang || "en") as Locale)}
+            -{formatCurrency(val, (lang || "en") as Locale, currency)}
           </span>
         )
       },
@@ -129,7 +134,11 @@ export const getFeeAssignmentColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="tabular-nums">
-          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
+          {formatCurrency(
+            getValue<number>(),
+            (lang || "en") as Locale,
+            currency
+          )}
         </span>
       ),
       meta: { label: col?.paid || "Paid", variant: "text" },

@@ -6,6 +6,7 @@ import { Upload } from "lucide-react"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { BulkUploadContent } from "@/components/school-dashboard/attendance/bulk-upload/content"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 
@@ -23,16 +24,7 @@ export default async function Page({ params }: Props) {
   // Check permissions - staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
   if (!staffRoles.includes(session?.user?.role ?? "")) {
-    const d = dictionary?.school?.attendance?.bulkUpload?.accessDenied
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>{d?.title || "Access Denied"}</h2>
-        <p className="muted">
-          {d?.description ||
-            "You do not have permission to bulk upload attendance records."}
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   const d = dictionary?.school?.attendance?.bulkUpload

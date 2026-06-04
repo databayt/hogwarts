@@ -39,8 +39,16 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
   CASH: "bg-green-500/10 text-green-500",
   CHEQUE: "bg-gray-500/10 text-gray-500",
   BANK_TRANSFER: "bg-purple-500/10 text-purple-500",
+  // P2.2 — ATM-deposit shares the offline-purple bucket with bank transfer.
+  ATM_DEPOSIT: "bg-purple-500/10 text-purple-500",
   CREDIT_CARD: "bg-blue-500/10 text-blue-500",
   DEBIT_CARD: "bg-blue-500/10 text-blue-500",
+  // P3.4 — wallet + Gulf rails get their own colour buckets so reconciliation
+  // glances can spot the mix at a glance.
+  APPLE_PAY: "bg-black/10 text-black dark:bg-white/10 dark:text-white",
+  GOOGLE_PAY: "bg-sky-500/10 text-sky-500",
+  MADA: "bg-emerald-600/10 text-emerald-600",
+  KNET: "bg-amber-600/10 text-amber-600",
   UPI: "bg-orange-500/10 text-orange-500",
   NET_BANKING: "bg-purple-500/10 text-purple-500",
   WALLET: "bg-orange-500/10 text-orange-500",
@@ -49,7 +57,8 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
 
 export const getPaymentColumns = (
   lang?: string,
-  col?: Record<string, string>
+  col?: Record<string, string>,
+  currency: string = "USD"
 ): ColumnDef<PaymentRow>[] => {
   return [
     {
@@ -103,7 +112,11 @@ export const getPaymentColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
+          {formatCurrency(
+            getValue<number>(),
+            (lang || "en") as Locale,
+            currency
+          )}
         </span>
       ),
       meta: { label: col?.amount || "Amount", variant: "text" },
