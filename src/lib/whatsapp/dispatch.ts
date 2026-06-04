@@ -59,6 +59,17 @@ async function resolveUserPhone(userId: string): Promise<string | null> {
     return staffMember.staffPhoneNumbers[0].phoneNumber
   }
 
+  // Check the student's own contact (students receive their own fee /
+  // attendance reminders — previously skipped, so a student-targeted WhatsApp
+  // reminder always resolved to null and silently failed). The User model has
+  // no phone field, so Student mobile/alternate is the last resort.
+  const student = await db.student.findFirst({
+    where: { userId },
+    select: { mobileNumber: true, alternatePhone: true },
+  })
+  if (student?.mobileNumber) return student.mobileNumber
+  if (student?.alternatePhone) return student.alternatePhone
+
   return null
 }
 

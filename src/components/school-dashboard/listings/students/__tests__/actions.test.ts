@@ -5,12 +5,14 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   createStudent,
   deleteStudent,
   getStudents,
+  registerStudent,
   updateStudent,
 } from "../actions"
 
@@ -34,11 +36,33 @@ vi.mock("@/lib/db", () => ({
     user: {
       findFirst: vi.fn(),
     },
+    // Used by getStudents to resolve the school's preferred storage language.
+    school: {
+      findUnique: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
+    },
+    // Used by generateStudentUsername (mocked below) — kept here as a safety
+    // net in case the real generator is ever exercised.
+    schoolYear: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    academicGrade: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    section: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     yearLevel: {
       findFirst: vi.fn(),
     },
+    // autoEnrollStudentInClasses() reads db.class.findMany then upserts
+    // studentClass rows; returning [] makes it a no-op for these unit tests.
+    class: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     studentClass: {
       count: vi.fn().mockResolvedValue(0),
+      upsert: vi.fn().mockResolvedValue({}),
     },
     attendance: {
       count: vi.fn().mockResolvedValue(0),
@@ -48,6 +72,9 @@ vi.mock("@/lib/db", () => ({
     },
     feeAssignment: {
       count: vi.fn().mockResolvedValue(0),
+    },
+    feeStructure: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
     assignmentSubmission: {
       count: vi.fn().mockResolvedValue(0),
@@ -63,8 +90,35 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
+// Isolate the unit under test from the per-school code generator — it reads
+// schoolYear / academicGrade / student which are out of scope for these tests.
+vi.mock("@/lib/student-username", () => ({
+  generateStudentUsername: vi.fn().mockResolvedValue("25010001"),
+  STUDENT_USERNAME_PREFIX_LENGTH: 4,
+}))
+
+// Spy on the founder-contract fee provisioning helper. The convergence tests
+// below assert this is invoked with { schoolId, studentId, academicGradeId }.
+vi.mock("@/lib/fee-auto-assign", () => ({
+  ensureStudentFeeAssignments: vi.fn().mockResolvedValue({
+    created: 0,
+    existing: 0,
+    skipped: 0,
+    assignmentIds: [],
+  }),
+}))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  // revalidateSpotlight() (called by create/update/delete) delegates to this.
+  revalidateTag: vi.fn(),
+}))
+
+// getStudents reads the NEXT_LOCALE cookie for display-language resolution.
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue({
+    get: vi.fn().mockReturnValue({ value: "en" }),
+  }),
 }))
 
 describe("Student Actions", () => {
@@ -217,6 +271,161 @@ describe("Student Actions", () => {
         expect.objectContaining({
           where: expect.objectContaining({
             schoolId: mockSchoolId,
+          }),
+        })
+      )
+    })
+  })
+
+  // ==========================================================================
+  // Founder-contract convergence: every student-create / grade-update path
+  // that knows the student's grade MUST end with ensureStudentFeeAssignments.
+  // These are the regression guards for the fee-provisioning fix — the
+  // registration form previously created students with zero fees.
+  // ==========================================================================
+  describe("founder-contract: fee auto-assignment convergence", () => {
+    const mockAcademicGradeId = "grade-7"
+
+    it("registerStudent provisions fees with { schoolId, studentId, academicGradeId }", async () => {
+      const mockStudent = { id: "student-reg-1", schoolId: mockSchoolId }
+      // registerStudent generates a GR number from the latest student, then
+      // creates the student row.
+      vi.mocked(db.student.findFirst).mockResolvedValue(null)
+      vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
+
+      const result = await registerStudent({
+        firstName: "Reg",
+        lastName: "Student",
+        dateOfBirth: "2012-03-01",
+        gender: "male",
+        academicGradeId: mockAcademicGradeId,
+      })
+
+      expect(result.success).toBe(true)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledTimes(1)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
+        schoolId: mockSchoolId,
+        studentId: mockStudent.id,
+        academicGradeId: mockAcademicGradeId,
+      })
+    })
+
+    it("registerStudent does NOT provision fees when no academicGradeId is set", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue(null)
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-reg-2",
+        schoolId: mockSchoolId,
+      } as any)
+
+      const result = await registerStudent({
+        firstName: "NoGrade",
+        lastName: "Student",
+        dateOfBirth: "2012-03-01",
+        gender: "female",
+      })
+
+      expect(result.success).toBe(true)
+      expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
+    })
+
+    it("createStudent provisions fees when academicGradeId is supplied", async () => {
+      const mockStudent = { id: "student-create-1", schoolId: mockSchoolId }
+      vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
+
+      const result = await createStudent({
+        firstName: "John",
+        lastName: "Doe",
+        gender: "male",
+        dateOfBirth: "2010-05-15",
+        academicGradeId: mockAcademicGradeId,
+      })
+
+      expect(result.success).toBe(true)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledTimes(1)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
+        schoolId: mockSchoolId,
+        studentId: mockStudent.id,
+        academicGradeId: mockAcademicGradeId,
+      })
+    })
+
+    it("createStudent does NOT provision fees without an academicGradeId", async () => {
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-create-2",
+        schoolId: mockSchoolId,
+      } as any)
+
+      const result = await createStudent({
+        firstName: "John",
+        lastName: "Doe",
+        gender: "male",
+        dateOfBirth: "2010-05-15",
+      })
+
+      expect(result.success).toBe(true)
+      expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
+    })
+
+    it("createStudent persists email + mobileNumber in the create payload", async () => {
+      vi.mocked(db.student.create).mockResolvedValue({
+        id: "student-create-3",
+        schoolId: mockSchoolId,
+      } as any)
+
+      const result = await createStudent({
+        firstName: "John",
+        lastName: "Doe",
+        gender: "male",
+        dateOfBirth: "2010-05-15",
+        email: "john.doe@example.com",
+        mobileNumber: "+966500000000",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.student.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: mockSchoolId,
+            email: "john.doe@example.com",
+            mobileNumber: "+966500000000",
+          }),
+        })
+      )
+    })
+
+    it("updateStudent provisions fees when academicGradeId changes", async () => {
+      vi.mocked(db.student.updateMany).mockResolvedValue({ count: 1 })
+
+      const result = await updateStudent({
+        id: "student-1",
+        academicGradeId: mockAcademicGradeId,
+      })
+
+      expect(result.success).toBe(true)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledTimes(1)
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
+        schoolId: mockSchoolId,
+        studentId: "student-1",
+        academicGradeId: mockAcademicGradeId,
+      })
+    })
+
+    it("updateStudent persists email + mobileNumber when provided", async () => {
+      vi.mocked(db.student.updateMany).mockResolvedValue({ count: 1 })
+
+      const result = await updateStudent({
+        id: "student-1",
+        email: "updated@example.com",
+        mobileNumber: "+966511111111",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.student.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "student-1", schoolId: mockSchoolId },
+          data: expect.objectContaining({
+            email: "updated@example.com",
+            mobileNumber: "+966511111111",
           }),
         })
       )

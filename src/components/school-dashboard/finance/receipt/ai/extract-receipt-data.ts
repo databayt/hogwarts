@@ -21,14 +21,34 @@ import { extractedReceiptDataSchema } from "../validation"
  * Extract structured data from receipt image/PDF using Claude 3.5 Sonnet
  * @param receiptId - Database ID of the receipt record
  * @param fileUrl - Public URL of the uploaded receipt file
+ * @param schoolId - Owning school, used to scope EVERY write/read so a caller
+ *   can never read or mutate another tenant's receipt (multi-tenant isolation).
  */
-export async function extractReceiptData(receiptId: string, fileUrl: string) {
+export async function extractReceiptData(
+  receiptId: string,
+  fileUrl: string,
+  schoolId: string
+) {
   try {
-    // Update status to processing
-    await db.expenseReceipt.update({
-      where: { id: receiptId },
+    // Claim the receipt + flip to processing, scoped by schoolId. updateMany
+    // (not update) lets us use the compound where; a count of 0 means the
+    // receipt does not belong to this school (or does not exist), so we abort
+    // BEFORE spending an AI call on someone else's data.
+    const claimed = await db.expenseReceipt.updateMany({
+      where: { id: receiptId, schoolId },
       data: { status: "processing" },
     })
+    if (claimed.count === 0) {
+      logger.warn("Receipt extraction skipped: not found for school", {
+        action: "extract_receipt_data_not_found",
+        receiptId,
+        schoolId,
+      })
+      return {
+        success: false,
+        error: "Receipt not found",
+      }
+    }
 
     logger.info("Starting receipt data extraction", {
       action: "extract_receipt_data",
@@ -74,9 +94,9 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
       itemCount: result.object.items.length,
     })
 
-    // Update database with extracted data
-    await db.expenseReceipt.update({
-      where: { id: receiptId },
+    // Update database with extracted data (schoolId-scoped).
+    await db.expenseReceipt.updateMany({
+      where: { id: receiptId, schoolId },
       data: {
         merchantName: result.object.merchantName,
         merchantAddress: result.object.merchantAddress,
@@ -110,9 +130,9 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
       }
     )
 
-    // Mark receipt as error
-    await db.expenseReceipt.update({
-      where: { id: receiptId },
+    // Mark receipt as error (schoolId-scoped).
+    await db.expenseReceipt.updateMany({
+      where: { id: receiptId, schoolId },
       data: {
         status: "error",
       },
@@ -128,11 +148,13 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
 /**
  * Retry extraction for failed receipts
  * @param receiptId - Database ID of the receipt record
+ * @param schoolId - Owning school, used to scope the lookup so a caller can
+ *   never retry another tenant's receipt (multi-tenant isolation).
  */
-export async function retryExtraction(receiptId: string) {
+export async function retryExtraction(receiptId: string, schoolId: string) {
   try {
-    const receipt = await db.expenseReceipt.findUnique({
-      where: { id: receiptId },
+    const receipt = await db.expenseReceipt.findFirst({
+      where: { id: receiptId, schoolId },
       select: { id: true, fileUrl: true, status: true },
     })
 
@@ -144,7 +166,7 @@ export async function retryExtraction(receiptId: string) {
       throw new Error("Can only retry failed or pending receipts")
     }
 
-    return await extractReceiptData(receipt.id, receipt.fileUrl)
+    return await extractReceiptData(receipt.id, receipt.fileUrl, schoolId)
   } catch (error) {
     logger.error(
       "Receipt extraction retry failed",

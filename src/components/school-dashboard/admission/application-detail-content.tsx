@@ -537,6 +537,63 @@ export default async function ApplicationDetailContent({
               }
             />
             <InfoRow
+              label={t?.applicationDetail?.offerAccepted || "Offer Accepted"}
+              value={
+                application.offerAccepted
+                  ? t?.applicationDetail?.yes || "Yes"
+                  : t?.applicationDetail?.no || "No"
+              }
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.offerAcceptedAt || "Offer Accepted At"
+              }
+              value={formatDate(application.offerAcceptedAt, lang)}
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.registrationFeePaid ||
+                "Registration Fee Paid"
+              }
+              value={
+                application.registrationFeePaid
+                  ? t?.applicationDetail?.yes || "Yes"
+                  : t?.applicationDetail?.no || "No"
+              }
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.registrationFeeAmount ||
+                "Registration Fee Amount"
+              }
+              value={
+                application.registrationFeeAmount != null
+                  ? String(application.registrationFeeAmount)
+                  : null
+              }
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.registrationFeeMethod ||
+                "Registration Fee Method"
+              }
+              value={application.registrationFeeMethod}
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.registrationFeeReference ||
+                "Registration Fee Reference"
+              }
+              value={application.registrationFeeReference}
+            />
+            <InfoRow
+              label={
+                t?.applicationDetail?.registrationFeeDate ||
+                "Registration Fee Date"
+              }
+              value={formatDate(application.registrationFeeDate, lang)}
+            />
+            <InfoRow
               label={t?.applicationDetail?.paymentId || "Payment ID"}
               value={application.paymentId}
             />

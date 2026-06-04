@@ -32,6 +32,7 @@ import {
   getMeritList,
 } from "../queries"
 import { campaignSchemaWithValidation } from "../validation"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -76,9 +77,13 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     admissionSettings: {
       findUnique: vi.fn().mockResolvedValue(null),
+    },
+    academicGrade: {
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     yearLevel: {
       findFirst: vi.fn(),
@@ -91,6 +96,7 @@ vi.mock("@/lib/db", () => ({
     },
     feeStructure: {
       findMany: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
     feeAssignment: {
       upsert: vi.fn(),
@@ -134,6 +140,35 @@ vi.mock("@/lib/dispatch-notification", () => ({
 
 vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
   createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
+}))
+
+// confirmEnrollment delegates fee assignment + invoice fan-out to the canonical
+// helper. Mock it as a spy so we assert confirmEnrollment calls it with the
+// right args inside the transaction; the helper has its own dedicated tests.
+vi.mock("@/lib/fee-auto-assign", () => ({
+  ensureStudentFeeAssignments: vi.fn().mockResolvedValue({
+    created: 0,
+    existing: 0,
+    skipped: 0,
+    assignmentIds: [],
+  }),
+}))
+
+// Student code generation hits db internally; mock to a deterministic value so
+// the enrollment transaction is not coupled to its query shape.
+vi.mock("@/lib/student-username", () => ({
+  generateStudentUsername: vi.fn().mockResolvedValue("26050001"),
+}))
+
+// Guardian linking is dynamically imported inside the enrollment transaction;
+// mock the module so it does not require deep db.guardian* models.
+vi.mock("@/lib/guardian-utils", () => ({
+  createOrLinkGuardian: vi.fn().mockResolvedValue({ id: "guardian-1" }),
+  fromFullName: vi.fn((entry: any) => ({
+    firstName: entry.fullName,
+    lastName: "",
+    ...entry,
+  })),
 }))
 
 vi.mock("../queries", () => ({
@@ -298,7 +333,7 @@ describe("Admission Actions", () => {
       const result = await getCampaigns({})
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to fetch campaigns")
+      expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
     })
   })
 
@@ -339,7 +374,7 @@ describe("Admission Actions", () => {
       const result = await getCampaign({ id: "nonexistent" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Campaign not found")
+      expect(result.error).toBe("ADMISSION_NOT_FOUND")
     })
   })
 
@@ -376,7 +411,7 @@ describe("Admission Actions", () => {
       const result = await createCampaign({ ...validCampaignData, name: "AB" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Name must be at least 3 characters")
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
 
     it("returns P2002 unique constraint error as friendly message", async () => {
@@ -387,7 +422,7 @@ describe("Admission Actions", () => {
       const result = await createCampaign(validCampaignData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A campaign with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
 
     it("returns generic error for unexpected exceptions", async () => {
@@ -398,7 +433,7 @@ describe("Admission Actions", () => {
       const result = await createCampaign(validCampaignData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to create campaign")
+      expect(result.error).toBe("CREATE_FAILED")
     })
   })
 
@@ -436,7 +471,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("End date must be after start date")
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
 
     it("handles P2002 unique constraint on update", async () => {
@@ -450,7 +485,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A campaign with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
   })
 
@@ -483,9 +518,7 @@ describe("Admission Actions", () => {
       const result = await deleteCampaign({ id: "c-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Cannot delete campaign with existing applications"
-      )
+      expect(result.error).toBe("CAMPAIGN_HAS_APPLICATIONS")
       expect(db.admissionCampaign.delete).not.toHaveBeenCalled()
     })
 
@@ -495,7 +528,7 @@ describe("Admission Actions", () => {
       const result = await deleteCampaign({ id: "nonexistent" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Campaign not found")
+      expect(result.error).toBe("ADMISSION_NOT_FOUND")
       expect(db.admissionCampaign.delete).not.toHaveBeenCalled()
     })
   })
@@ -582,7 +615,38 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to update status")
+      expect(result.error).toBe("UPDATE_FAILED")
+    })
+
+    it("rejects an illegal transition out of a terminal status (REJECTED → SELECTED)", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "REJECTED",
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await updateApplicationStatus({
+        id: "a-1",
+        status: "SELECTED",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("APPLICATION_STATUS_INVALID")
+      // The dangerous re-offer write must never happen.
+      expect(db.application.update).not.toHaveBeenCalled()
+    })
+
+    it("allows a same-status no-op without erroring", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "SHORTLISTED",
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await updateApplicationStatus({
+        id: "a-1",
+        status: "SHORTLISTED",
+      })
+
+      expect(result.success).toBe(true)
     })
   })
 
@@ -659,15 +723,15 @@ describe("Admission Actions", () => {
       // Each application gets a merit rank (1-indexed)
       expect(db.application.update).toHaveBeenCalledTimes(3)
       expect(db.application.update).toHaveBeenNthCalledWith(1, {
-        where: { id: "a-1" },
+        where: { id: "a-1", schoolId: SCHOOL_ID },
         data: { meritRank: 1 },
       })
       expect(db.application.update).toHaveBeenNthCalledWith(2, {
-        where: { id: "a-2" },
+        where: { id: "a-2", schoolId: SCHOOL_ID },
         data: { meritRank: 2 },
       })
       expect(db.application.update).toHaveBeenNthCalledWith(3, {
-        where: { id: "a-3" },
+        where: { id: "a-3", schoolId: SCHOOL_ID },
         data: { meritRank: 3 },
       })
     })
@@ -840,7 +904,7 @@ describe("Admission Actions", () => {
       const result = await confirmEnrollment({ id: "nonexistent" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Application not found")
+      expect(result.error).toBe("ADMISSION_NOT_FOUND")
     })
 
     it("reuses existing student record instead of creating a new one", async () => {
@@ -881,7 +945,7 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(false)
       // The throw inside $transaction propagates to the outer catch
-      expect(result.error).toBe("Failed to confirm enrollment")
+      expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
     })
 
     it("creates StudentYearLevel when matching YearLevel and SchoolYear exist", async () => {
@@ -932,12 +996,16 @@ describe("Admission Actions", () => {
       })
     })
 
-    it("auto-assigns fee structures upon enrollment", async () => {
+    it("auto-assigns fee structures upon enrollment via the canonical helper", async () => {
       vi.mocked(db.application.findUnique).mockResolvedValue(
         mockApplication as any
       )
       vi.mocked(db.application.update).mockResolvedValue({} as any)
-      vi.mocked(db.student.findUnique).mockResolvedValue(null)
+      // First findUnique = cross-school existence check (null → create student);
+      // second findUnique = academicGradeId lookup feeding the fee helper.
+      vi.mocked(db.student.findUnique)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValue({ academicGradeId: "grade-5" } as any)
       vi.mocked(db.student.create).mockResolvedValue({
         id: "student-new",
         schoolId: SCHOOL_ID,
@@ -947,26 +1015,22 @@ describe("Admission Actions", () => {
         role: "USER",
       } as any)
       vi.mocked(db.user.update).mockResolvedValue({} as any)
-      vi.mocked(db.feeStructure.findMany).mockResolvedValue([
-        { id: "fs-1", totalAmount: 5000, academicYear: "2026-2027" },
-        { id: "fs-2", totalAmount: 1000, academicYear: "2026-2027" },
-      ] as any)
-      vi.mocked(db.feeAssignment.upsert).mockResolvedValue({} as any)
 
       const result = await confirmEnrollment({ id: "a-1" })
 
       expect(result.success).toBe(true)
-      expect(db.feeAssignment.upsert).toHaveBeenCalledTimes(2)
-      expect(db.feeAssignment.upsert).toHaveBeenCalledWith(
+      // confirmEnrollment delegates to the single source-of-truth helper,
+      // passing the transaction client + the campaign academic year, with
+      // notifications deferred to post-commit (notify: false).
+      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith(
         expect.objectContaining({
-          create: expect.objectContaining({
-            schoolId: SCHOOL_ID,
-            studentId: "student-new",
-            feeStructureId: "fs-1",
-            finalAmount: 5000,
-            status: "PENDING",
-          }),
-        })
+          schoolId: SCHOOL_ID,
+          studentId: "student-new",
+          academicGradeId: "grade-5",
+          academicYear: mockApplication.campaign.academicYear,
+          notify: false,
+        }),
+        expect.anything() // the tx client
       )
     })
 
@@ -1045,7 +1109,7 @@ describe("Admission Actions", () => {
       const result = await recordPayment({ id: "a-1", paymentId: "pay-1" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to record payment")
+      expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
     })
   })
 
@@ -1147,9 +1211,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Only admitted students can be placed in sections"
-      )
+      expect(result.error).toBe("PLACEMENT_INVALID_STATUS")
     })
 
     it("rejects placement when no user account linked", async () => {
@@ -1166,7 +1228,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("No user account linked to this application")
+      expect(result.error).toBe("PLACEMENT_NO_USER")
     })
 
     it("rejects placement when student record not found", async () => {
@@ -1184,9 +1246,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe(
-        "Student record not found. Ensure enrollment is confirmed first."
-      )
+      expect(result.error).toBe("ENROLLMENT_FAILED")
     })
 
     it("rejects placement when section is at full capacity", async () => {
@@ -1214,7 +1274,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Section "5A" is at full capacity (30/30)')
+      expect(result.error).toBe("SECTION_AT_CAPACITY")
     })
 
     it("rejects placement when student already in this section", async () => {
@@ -1242,7 +1302,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Jane Doe is already in "5A"')
+      expect(result.error).toBe("STUDENT_ALREADY_IN_SECTION")
     })
 
     it("returns error when application not found", async () => {
@@ -1254,7 +1314,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Application not found")
+      expect(result.error).toBe("ADMISSION_NOT_FOUND")
     })
 
     it("returns error when section not found", async () => {
@@ -1276,7 +1336,7 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Section not found")
+      expect(result.error).toBe("NOT_FOUND")
     })
   })
 
@@ -1308,7 +1368,7 @@ describe("Admission Actions", () => {
       const result = await fetchCampaignOptions()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to fetch campaign options")
+      expect(result.error).toBe("ADMISSION_UPDATE_FAILED")
     })
   })
 })

@@ -16,7 +16,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
-import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { generateStudentUsername } from "@/lib/student-username"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
@@ -452,6 +452,57 @@ const VALID_STATUSES = [
   "WITHDRAWN",
 ]
 
+/**
+ * Allowed status transitions for `updateApplicationStatus`. Keys are the
+ * CURRENT status; values are the statuses it may move to. The terminal states
+ * (REJECTED, WITHDRAWN, ADMITTED) have NO outgoing edges — this is what stops a
+ * rejected/withdrawn applicant being flipped back to SELECTED to silently
+ * re-issue an offer. ADMITTED is reachable ONLY via `confirmEnrollment`, never
+ * this action, so it never appears as a target here.
+ */
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  DRAFT: ["SUBMITTED", "WITHDRAWN"],
+  SUBMITTED: [
+    "UNDER_REVIEW",
+    "SHORTLISTED",
+    "WAITLISTED",
+    "REJECTED",
+    "WITHDRAWN",
+    "ENTRANCE_SCHEDULED",
+    "INTERVIEW_SCHEDULED",
+  ],
+  UNDER_REVIEW: [
+    "SHORTLISTED",
+    "WAITLISTED",
+    "SELECTED",
+    "REJECTED",
+    "WITHDRAWN",
+    "ENTRANCE_SCHEDULED",
+    "INTERVIEW_SCHEDULED",
+  ],
+  ENTRANCE_SCHEDULED: [
+    "INTERVIEW_SCHEDULED",
+    "SHORTLISTED",
+    "WAITLISTED",
+    "SELECTED",
+    "REJECTED",
+    "WITHDRAWN",
+  ],
+  INTERVIEW_SCHEDULED: [
+    "SHORTLISTED",
+    "WAITLISTED",
+    "SELECTED",
+    "REJECTED",
+    "WITHDRAWN",
+  ],
+  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
+  WAITLISTED: ["SELECTED", "SHORTLISTED", "REJECTED", "WITHDRAWN"],
+  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
+  REJECTED: [],
+  WITHDRAWN: [],
+  ADMITTED: [],
+}
+
 export async function updateApplicationStatus(params: {
   id: string
   status: string
@@ -478,6 +529,18 @@ export async function updateApplicationStatus(params: {
     })
     if (!current) {
       return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
+    }
+
+    // Enforce the status state machine. Same-status is a permitted no-op; any
+    // other move must be in the allowed-transitions map for the current status.
+    // Blocks illegal jumps (e.g. REJECTED/WITHDRAWN → SELECTED re-issuing an
+    // offer) that the previous "any valid status → any valid status" check let
+    // through.
+    if (params.status !== current.status) {
+      const allowed = ALLOWED_TRANSITIONS[current.status] ?? []
+      if (!allowed.includes(params.status)) {
+        return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
+      }
     }
 
     const data: Record<string, unknown> = {
@@ -524,12 +587,22 @@ export async function updateApplicationStatus(params: {
         lastName: true,
         campaignId: true,
         accessToken: true,
+        email: true,
+        applicationNumber: true,
+        fatherName: true,
+        motherName: true,
+        offerExpiryDate: true,
       },
     })
     if (application?.userId) {
       const school = await db.school.findFirst({
         where: { id: schoolId },
-        select: { preferredLanguage: true },
+        select: {
+          preferredLanguage: true,
+          name: true,
+          nameEn: true,
+          domain: true,
+        },
       })
       const notifLang = school?.preferredLanguage ?? "ar"
       const statusMsgMap: Record<string, { ar: string; en: string }> = {
@@ -567,6 +640,50 @@ export async function updateApplicationStatus(params: {
       }).catch((err) =>
         console.error("[updateApplicationStatus] Notification error:", err)
       )
+
+      // Dedicated offer email with the registration link on SELECTED, so the
+      // guardian actually receives it (the in-app notification's metadata.url
+      // may never be opened). Non-blocking — failure must not fail the action.
+      if (
+        params.status === "SELECTED" &&
+        application.email &&
+        application.accessToken
+      ) {
+        try {
+          const [{ buildOfferEmail }, { sendRawEmail }] = await Promise.all([
+            import("@/lib/email-templates/admission"),
+            import(
+              "@/components/school-dashboard/notifications/email-service"
+            ),
+          ])
+          const isProd = process.env.NODE_ENV === "production"
+          const baseUrl = isProd
+            ? `https://${school?.domain ?? ""}.databayt.org`
+            : `http://${school?.domain ?? ""}.localhost:3000`
+          const offerUrl = `${baseUrl}/${notifLang}/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
+          const parentName =
+            application.fatherName ||
+            application.motherName ||
+            `${application.firstName} ${application.lastName}`
+          const { subject, html } = buildOfferEmail({
+            school: {
+              name: school?.name,
+              nameEn: school?.nameEn,
+              preferredLanguage: school?.preferredLanguage,
+            },
+            parentName,
+            studentName: `${application.firstName} ${application.lastName}`,
+            applicationNumber: application.applicationNumber,
+            offerUrl,
+            expiryDate: application.offerExpiryDate
+              ? application.offerExpiryDate.toISOString().slice(0, 10)
+              : undefined,
+          })
+          await sendRawEmail({ to: application.email, subject, html })
+        } catch (err) {
+          console.error("[updateApplicationStatus] Offer email failed:", err)
+        }
+      }
     }
 
     revalidatePath("/admission")
@@ -1103,66 +1220,27 @@ export async function confirmEnrollment(params: {
             )
           }
 
-          // 6. Auto-assign fees if matching FeeStructure exists
-          // Only assign school-wide (classId=null) or grade-matching fee structures
-          //
-          // NOTE: This duplicates the matching logic in
-          // `src/lib/fee-auto-assign.ts ensureStudentFeeAssignments` because
-          // we are inside an outer `tx` and that helper opens its own
-          // transaction. If we ever extend the helper to accept an optional
-          // `tx` client, this block can be replaced with a single call. See
-          // /docs/fees#auto-provisioning. Behavior must stay equivalent —
-          // any matching-rule change here must also land in the helper.
+          // 6. Auto-assign fees + generate invoices via the canonical helper.
+          // This is the SINGLE source of truth for student→FeeStructure
+          // matching (school-wide, class-linked, and auto-generated per-grade
+          // structures) shared by every student-creation path. Passing `tx`
+          // runs the assignment + invoice fan-out inside this enrollment
+          // transaction; `notify: false` defers the fee_due notification to
+          // the post-commit dispatch below.
           try {
             const studentGrade = await tx.student.findUnique({
               where: { id: student.id },
               select: { academicGradeId: true },
             })
-
-            const gradeClassIds: string[] = []
-            if (studentGrade?.academicGradeId) {
-              const matchingClasses = await tx.class.findMany({
-                where: { schoolId, gradeId: studentGrade.academicGradeId },
-                select: { id: true },
-              })
-              gradeClassIds.push(...matchingClasses.map((c) => c.id))
-            }
-
-            const feeStructures = await tx.feeStructure.findMany({
-              where: {
+            await ensureStudentFeeAssignments(
+              {
                 schoolId,
+                studentId: student.id,
+                academicGradeId: studentGrade?.academicGradeId ?? null,
                 academicYear: application.campaign.academicYear,
-                isActive: true,
-                OR: [
-                  { classId: null }, // School-wide fee structures
-                  ...(gradeClassIds.length > 0
-                    ? [{ classId: { in: gradeClassIds } }]
-                    : []),
-                ],
+                notify: false,
               },
-            })
-
-            await Promise.all(
-              feeStructures.map((fs) =>
-                tx.feeAssignment.upsert({
-                  where: {
-                    studentId_feeStructureId_academicYear: {
-                      studentId: student.id,
-                      feeStructureId: fs.id,
-                      academicYear: application.campaign.academicYear,
-                    },
-                  },
-                  create: {
-                    schoolId,
-                    studentId: student.id,
-                    feeStructureId: fs.id,
-                    academicYear: application.campaign.academicYear,
-                    finalAmount: fs.totalAmount,
-                    status: "PENDING",
-                  },
-                  update: {}, // Don't overwrite existing
-                })
-              )
+              tx
             )
           } catch (feeError) {
             console.warn(
@@ -1267,30 +1345,9 @@ export async function confirmEnrollment(params: {
             console.warn("[confirmEnrollment] Document copy failed:", docError)
           }
 
-          // 6b. Auto-generate invoice(s) per fee assignment.
-          // ensureInvoicesForAssignment respects FeeStructure.installments + paymentSchedule,
-          // producing one invoice per installment when applicable.
-          try {
-            const feeAssignments = await tx.feeAssignment.findMany({
-              where: {
-                schoolId,
-                studentId: student.id,
-                academicYear: application.campaign.academicYear,
-                status: "PENDING",
-              },
-              select: { id: true },
-            })
-
-            for (const fa of feeAssignments) {
-              await ensureInvoicesForAssignment(schoolId, fa.id, tx)
-            }
-          } catch (invoiceError) {
-            console.warn(
-              "[confirmEnrollment] Invoice auto-generation failed:",
-              invoiceError
-            )
-            warnings.push({ code: "INVOICE_GENERATION_FAILED" })
-          }
+          // (Invoice generation is handled by ensureStudentFeeAssignments in
+          // step 6 — it fans out one invoice per installment for each newly
+          // created assignment, inside this same transaction.)
 
           enrolledStudentId = student.id
         }

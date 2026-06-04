@@ -125,7 +125,7 @@ describe("wizard/actions.ts", () => {
       mockNoSchool()
       const result = await createDraftInvoice()
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school context")
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
 
     it("returns error when not authenticated", async () => {
@@ -137,7 +137,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await createDraftInvoice()
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not authenticated")
+      expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
     it("handles transaction errors gracefully", async () => {
@@ -179,7 +179,7 @@ describe("wizard/actions.ts", () => {
       const result = await getInvoiceForWizard("nonexistent")
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe("Invoice not found")
+        expect(result.error).toBe("INVOICE_NOT_FOUND")
       }
     })
 
@@ -235,7 +235,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await completeInvoiceWizard("inv-1")
       expect(result.success).toBe(false)
-      expect(result.error).toContain("At least one line item")
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
 
     it("fails when invoice_no is empty", async () => {
@@ -247,7 +247,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await completeInvoiceWizard("inv-1")
       expect(result.success).toBe(false)
-      expect(result.error).toContain("Invoice number is required")
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
 
     it("returns error when invoice not found", async () => {
@@ -255,7 +255,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await completeInvoiceWizard("nonexistent")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
   })
 
@@ -328,7 +328,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await deleteDraftInvoice("nonexistent")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Draft invoice not found")
+      expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
     it("returns error when not authenticated", async () => {
@@ -340,7 +340,7 @@ describe("wizard/actions.ts", () => {
 
       const result = await deleteDraftInvoice("draft-1")
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not authenticated")
+      expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
     it("only deletes invoices still in draft (wizardStep not null)", async () => {

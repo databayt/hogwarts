@@ -544,7 +544,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
         ),
         lang: schoolLang,
         priority: "high",
-        channels: ["in_app", "email"],
+        channels: ["in_app", "email", "whatsapp"],
         metadata: {
           feeAssignmentId: feeAssignment.id,
           amount: parseFloat(formData.finalAmount as string),
@@ -577,7 +577,7 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
             ),
             lang: schoolLang,
             priority: "high",
-            channels: ["in_app", "email"],
+            channels: ["in_app", "email", "whatsapp"],
             metadata: {
               feeAssignmentId: feeAssignment.id,
               amount: parseFloat(formData.finalAmount as string),
@@ -713,7 +713,7 @@ export async function bulkAssignFees(
           ),
           lang: schoolLang,
           priority: "high",
-          channels: ["in_app", "email"],
+          channels: ["in_app", "email", "whatsapp"],
           metadata: {
             amount,
             url: "/finance/fees",
@@ -737,7 +737,7 @@ export async function bulkAssignFees(
               ),
               lang: schoolLang,
               priority: "high",
-              channels: ["in_app", "email"],
+              channels: ["in_app", "email", "whatsapp"],
               metadata: {
                 amount,
                 studentName,

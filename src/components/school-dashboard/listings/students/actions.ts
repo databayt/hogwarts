@@ -364,6 +364,10 @@ export async function createStudent(
         firstName: parsed.firstName,
         middleName: parsed.middleName ?? null,
         lastName: parsed.lastName,
+        // Persist contact fields so fee-due / reminder channels have a target
+        // (previously dropped at create — see fee-overdue cron recipient logic).
+        email: parsed.email || null,
+        mobileNumber: parsed.mobileNumber || null,
         ...(parsed.dateOfBirth
           ? { dateOfBirth: new Date(parsed.dateOfBirth) }
           : {}),
@@ -501,6 +505,10 @@ export async function updateStudent(
     }
     if (typeof rest.profilePhotoUrl !== "undefined")
       data.profilePhotoUrl = rest.profilePhotoUrl || null
+    // Contact fields are editable for fine-tuning reminder channels.
+    if (typeof rest.email !== "undefined") data.email = rest.email || null
+    if (typeof rest.mobileNumber !== "undefined")
+      data.mobileNumber = rest.mobileNumber || null
     if (typeof rest.academicGradeId !== "undefined") {
       data.academicGradeId = rest.academicGradeId || null
     }
@@ -2101,20 +2109,19 @@ export async function registerStudent(
       })
 
       if (!classData) {
-        return {
-          success: false,
-          error: "Selected class not found",
-        }
+        return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
       }
 
       const maxCapacity = classData.maxCapacity || 50 // Default to 50 if not set
       const currentEnrollment = classData._count.studentClasses
 
       if (currentEnrollment >= maxCapacity) {
-        return {
-          success: false,
-          error: `Cannot enroll in "${classData.name}": Class is at full capacity (${currentEnrollment}/${maxCapacity} students)`,
-        }
+        // Detail string is for logs/debugging; the client maps the CODE to a
+        // localized message (never surface raw English to the user).
+        return actionError(
+          ACTION_ERRORS.CLASS_AT_CAPACITY,
+          `${classData.name}: ${currentEnrollment}/${maxCapacity}`
+        )
       }
 
       const studentClassModel = getModelOrThrow("studentClass")
@@ -2140,6 +2147,25 @@ export async function registerStudent(
           isActive: true,
         },
       })
+    }
+
+    // Founder contract: the registration form path must provision fees +
+    // invoices like every other student-creation entrypoint (createStudent,
+    // wizard, enroll, CSV import). Idempotent; existing admin discounts /
+    // scholarships are preserved (helper only inserts missing assignments).
+    if (validatedInput.academicGradeId) {
+      try {
+        await ensureStudentFeeAssignments({
+          schoolId,
+          studentId: student.id,
+          academicGradeId: validatedInput.academicGradeId,
+        })
+      } catch (err) {
+        console.error(
+          "[registerStudent] ensureStudentFeeAssignments failed:",
+          err
+        )
+      }
     }
 
     // Revalidate cache

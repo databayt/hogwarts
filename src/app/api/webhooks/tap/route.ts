@@ -252,15 +252,19 @@ async function recordTapFeePayment(args: {
   // Notify the student (non-fatal)
   try {
     if (assignment.student?.userId) {
-      const { dispatchNotification } =
+      const { dispatchNotification, resolveSchoolLang } =
         await import("@/lib/dispatch-notification")
+      const lang = await resolveSchoolLang(assignment.schoolId)
+      const isAr = lang === "ar"
       await dispatchNotification({
         schoolId: assignment.schoolId,
         userId: assignment.student.userId,
         type: "fee_paid",
-        title: "تم استلام الدفعة",
-        body: `تم تأكيد الدفع عبر Tap بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`,
-        lang: "ar",
+        title: isAr ? "تم استلام الدفعة" : "Payment Received",
+        body: isAr
+          ? `تم تأكيد الدفع عبر Tap بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`
+          : `Payment via Tap confirmed. ${newStatus === "PAID" ? "The fee is fully paid." : ""}`,
+        lang,
         priority: "normal",
         channels: ["in_app", "email", "whatsapp"],
         metadata: {

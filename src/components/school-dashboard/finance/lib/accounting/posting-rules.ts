@@ -7,9 +7,14 @@
  * Defines how each finance module's transactions map to journal entries
  */
 
+import type { Prisma, PrismaClient } from "@prisma/client"
+
 import type { JournalEntryInput, JournalEntryLine } from "./types"
 import { SourceModule } from "./types"
 import { toCents } from "./utils"
+
+/** Either the base Prisma client or an interactive-transaction client. */
+type AccountingDbClient = PrismaClient | Prisma.TransactionClient
 
 /**
  * Standard account codes for chart of accounts
@@ -53,18 +58,25 @@ export const StandardAccountCodes = {
 } as const
 
 /**
- * Get account by code or create mapping
+ * Resolve a ChartOfAccount row id by its account code, scoped to the school.
+ *
+ * NOTE: the Prisma field is `code` (with `@@unique([schoolId, code])`), NOT
+ * `accountCode`. The previous `where: { schoolId, accountCode }` queried a
+ * non-existent column — and because the client was typed `any`, tsc never
+ * caught it, so EVERY ledger post silently failed (`null` → "Required accounts
+ * not found"). Typing the client surfaces this class of bug going forward.
  */
 async function getAccountIdByCode(
   schoolId: string,
   accountCode: string,
-  db: any
+  db: AccountingDbClient
 ): Promise<string | null> {
   const account = await db.chartOfAccount.findFirst({
     where: {
       schoolId,
-      accountCode,
+      code: accountCode,
     },
+    select: { id: true },
   })
 
   return account?.id || null
@@ -88,24 +100,46 @@ export async function createFeePaymentEntry(
     paymentDate: Date
     feeType?: string
   },
-  db: any
+  db: AccountingDbClient
 ): Promise<JournalEntryInput> {
   // Get account IDs
-  const cashAccountId = await getAccountIdByCode(
+  let cashAccountId = await getAccountIdByCode(
     schoolId,
     StandardAccountCodes.CASH,
     db
   )
-  const receivableAccountId = await getAccountIdByCode(
+  let receivableAccountId = await getAccountIdByCode(
     schoolId,
     StandardAccountCodes.STUDENT_FEES_RECEIVABLE,
     db
   )
-  const revenueAccountId = await getAccountIdByCode(
+  let revenueAccountId = await getAccountIdByCode(
     schoolId,
     StandardAccountCodes.STUDENT_FEES_REVENUE,
     db
   )
+
+  // Lazy backfill: schools onboarded before chart-of-accounts seeding was wired
+  // have no accounts. Seed once on the first ledger post, then re-resolve.
+  if (!cashAccountId || !receivableAccountId || !revenueAccountId) {
+    const { initializeAccountingSystem } = await import("./seed-accounts")
+    await initializeAccountingSystem(schoolId)
+    cashAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.CASH,
+      db
+    )
+    receivableAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.STUDENT_FEES_RECEIVABLE,
+      db
+    )
+    revenueAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.STUDENT_FEES_REVENUE,
+      db
+    )
+  }
 
   if (!cashAccountId || !receivableAccountId || !revenueAccountId) {
     throw new Error("Required accounts not found in chart of accounts")

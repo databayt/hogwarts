@@ -70,6 +70,16 @@ export default async function PaymentDetailPage({ params }: Props) {
 
   if (!payment) notFound()
 
+  // School name + currency drive the receipt header and money formatting —
+  // never hardcode "School" or a default currency on a financial document.
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { name: true, currency: true },
+  })
+  const currencyOpts = school?.currency
+    ? { currency: school.currency }
+    : undefined
+
   const studentName = [payment.student?.firstName, payment.student?.lastName]
     .filter(Boolean)
     .join(" ")
@@ -88,7 +98,7 @@ export default async function PaymentDetailPage({ params }: Props) {
             receiptData={{
               paymentNumber: payment.paymentNumber,
               receiptNumber: payment.receiptNumber,
-              amount: formatCurrency(Number(payment.amount), lang),
+              amount: formatCurrency(Number(payment.amount), lang, currencyOpts),
               paymentDate: payment.paymentDate
                 ? formatDate(payment.paymentDate, lang)
                 : "-",
@@ -96,6 +106,7 @@ export default async function PaymentDetailPage({ params }: Props) {
               status: payment.status,
               transactionId: payment.transactionId || undefined,
               studentName,
+              schoolName: school?.name,
               feeStructureName:
                 payment.feeAssignment?.feeStructure?.name || "-",
               academicYear: payment.feeAssignment?.academicYear || "-",
@@ -136,7 +147,7 @@ export default async function PaymentDetailPage({ params }: Props) {
                 {d?.amount ?? "Amount"}
               </span>
               <span className="text-xl font-bold">
-                {formatCurrency(Number(payment.amount), lang)}
+                {formatCurrency(Number(payment.amount), lang, currencyOpts)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -244,7 +255,8 @@ export default async function PaymentDetailPage({ params }: Props) {
                   <span className="font-medium">
                     {formatCurrency(
                       Number(payment.feeAssignment.finalAmount),
-                      lang
+                      lang,
+                      currencyOpts
                     )}
                   </span>
                 </div>
