@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -63,9 +64,12 @@ interface Student {
 
 export function ParentAnnouncementsContent({
   lang = "ar",
+  dictionary,
 }: {
   lang?: "ar" | "en"
+  dictionary: Dictionary
 }) {
+  const t = dictionary.parentPortal.announcements
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudent, setSelectedStudent] = useState<string>("all")
@@ -118,11 +122,17 @@ export function ParentAnnouncementsContent({
   const getScopeBadge = (scope: string) => {
     switch (scope) {
       case "school":
-        return <Badge className="bg-blue-100 text-blue-800">School-wide</Badge>
+        return (
+          <Badge className="bg-blue-100 text-blue-800">{t.scopeSchool}</Badge>
+        )
       case "class":
-        return <Badge className="bg-green-100 text-green-800">Class</Badge>
+        return (
+          <Badge className="bg-green-100 text-green-800">{t.scopeClass}</Badge>
+        )
       case "role":
-        return <Badge className="bg-purple-100 text-purple-800">Parents</Badge>
+        return (
+          <Badge className="bg-purple-100 text-purple-800">{t.scopeRole}</Badge>
+        )
       default:
         return <Badge variant="outline">{scope}</Badge>
     }
@@ -164,7 +174,7 @@ export function ParentAnnouncementsContent({
     return (
       <div className="py-8">
         <div className="flex items-center justify-center py-12">
-          <p className="muted">Loading announcements...</p>
+          <p className="muted">{t.loading}</p>
         </div>
       </div>
     )
@@ -172,10 +182,7 @@ export function ParentAnnouncementsContent({
 
   return (
     <div className="py-8">
-      <PageHeadingSetter
-        title="Announcements"
-        description="Stay updated with school and class announcements"
-      />
+      <PageHeadingSetter title={t.title} description={t.description} />
 
       <div className="space-y-6">
         {/* Filters */}
@@ -183,7 +190,7 @@ export function ParentAnnouncementsContent({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ListFilter className="h-5 w-5" />
-              Filters
+              {t.filters}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex gap-4">
@@ -193,10 +200,10 @@ export function ParentAnnouncementsContent({
                 onValueChange={setSelectedStudent}
               >
                 <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select student" />
+                  <SelectValue placeholder={t.selectStudent} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
+                  <SelectItem value="all">{t.allStudents}</SelectItem>
                   {students.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name}
@@ -208,13 +215,13 @@ export function ParentAnnouncementsContent({
 
             <Select value={selectedScope} onValueChange={setSelectedScope}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Select scope" />
+                <SelectValue placeholder={t.selectScope} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="school">School-wide</SelectItem>
-                <SelectItem value="class">Class</SelectItem>
-                <SelectItem value="role">Parents</SelectItem>
+                <SelectItem value="all">{t.scopeAll}</SelectItem>
+                <SelectItem value="school">{t.scopeSchool}</SelectItem>
+                <SelectItem value="class">{t.scopeClass}</SelectItem>
+                <SelectItem value="role">{t.scopeRole}</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -225,7 +232,7 @@ export function ParentAnnouncementsContent({
           <Card>
             <CardContent className="py-12 text-center">
               <Bell className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-              <p className="text-muted-foreground">No announcements found.</p>
+              <p className="text-muted-foreground">{t.empty}</p>
             </CardContent>
           </Card>
         ) : (
@@ -259,7 +266,7 @@ export function ParentAnnouncementsContent({
                                         {announcement.class.subject} -{" "}
                                         {announcement.class.name}
                                         <span className="text-muted-foreground ms-2">
-                                          by {announcement.class.teacher}
+                                          {t.by} {announcement.class.teacher}
                                         </span>
                                       </p>
                                     )}
@@ -291,7 +298,7 @@ export function ParentAnnouncementsContent({
                               {students.length > 1 && (
                                 <div className="mt-4 border-t pt-4">
                                   <p className="muted">
-                                    Relevant for:{" "}
+                                    {t.relevantFor}{" "}
                                     {students
                                       .filter((s) =>
                                         announcement.relevantStudents.includes(

@@ -190,6 +190,18 @@ const liveClassesDictionaries = {
     ),
 } as const
 
+// Parent portal module dictionaries (announcements, events)
+const parentPortalDictionaries = {
+  en: () =>
+    import("./dictionaries/en/parentPortal.json").then(
+      (module) => module.default
+    ),
+  ar: () =>
+    import("./dictionaries/ar/parentPortal.json").then(
+      (module) => module.default
+    ),
+} as const
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -593,6 +605,7 @@ export const getDictionary = async (locale: Locale) => {
       transportation,
       compliance,
       liveClasses,
+      parentPortal,
     ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
@@ -618,6 +631,8 @@ export const getDictionary = async (locale: Locale) => {
         transportationDictionaries["en"](),
       complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
       liveClassesDictionaries[locale]?.() ?? liveClassesDictionaries["en"](),
+      parentPortalDictionaries[locale]?.() ??
+        parentPortalDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
@@ -644,6 +659,7 @@ export const getDictionary = async (locale: Locale) => {
       transportation,
       compliance,
       liveClasses,
+      parentPortal,
     }
   } catch (error) {
     console.warn(
@@ -672,6 +688,7 @@ export const getDictionary = async (locale: Locale) => {
       transportation,
       compliance,
       liveClasses,
+      parentPortal,
     ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
@@ -695,6 +712,7 @@ export const getDictionary = async (locale: Locale) => {
       transportationDictionaries["en"](),
       complianceDictionaries["en"](),
       liveClassesDictionaries["en"](),
+      parentPortalDictionaries["en"](),
     ])
     return {
       ...general,
@@ -719,6 +737,7 @@ export const getDictionary = async (locale: Locale) => {
       transportation,
       compliance,
       liveClasses,
+      parentPortal,
     }
   }
 }

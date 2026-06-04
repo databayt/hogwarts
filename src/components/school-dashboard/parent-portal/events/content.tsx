@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { format } from "date-fns"
 import { Calendar, CalendarDays, ListFilter, MapPin, Users } from "lucide-react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -50,15 +51,15 @@ interface ParentEvent {
   createdAt: string
 }
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  ACADEMIC: "Academic",
-  SPORTS: "Sports",
-  CULTURAL: "Cultural",
-  PARENT_MEETING: "Parent Meeting",
-  CELEBRATION: "Celebration",
-  WORKSHOP: "Workshop",
-  OTHER: "Other",
-}
+const EVENT_TYPES = [
+  "ACADEMIC",
+  "SPORTS",
+  "CULTURAL",
+  "PARENT_MEETING",
+  "CELEBRATION",
+  "WORKSHOP",
+  "OTHER",
+] as const
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   ACADEMIC: "bg-blue-100 text-blue-800",
@@ -70,7 +71,16 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   OTHER: "bg-gray-100 text-gray-800",
 }
 
-export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
+export function ParentEventsContent({
+  lang = "ar",
+  dictionary,
+}: {
+  lang?: "ar" | "en"
+  dictionary: Dictionary
+}) {
+  const t = dictionary.parentPortal.events
+  const getEventTypeLabel = (type: string) =>
+    t.typeLabels[type as keyof typeof t.typeLabels] || type
   const [events, setEvents] = useState<ParentEvent[]>([])
   const [selectedType, setSelectedType] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
@@ -155,7 +165,7 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
     return (
       <div className="py-8">
         <div className="flex items-center justify-center py-12">
-          <p className="muted">Loading events...</p>
+          <p className="muted">{t.loading}</p>
         </div>
       </div>
     )
@@ -190,7 +200,7 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
                     EVENT_TYPE_COLORS.OTHER
                   }
                 >
-                  {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
+                  {getEventTypeLabel(event.eventType)}
                 </Badge>
                 <span>{format(eventDate, "EEEE, MMMM d, yyyy")}</span>
                 <span>
@@ -202,12 +212,12 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
               <div className="flex items-center gap-2">
                 {isRegistered && (
                   <Badge className="bg-green-100 text-green-800">
-                    Registered
+                    {t.registered}
                   </Badge>
                 )}
                 {isWaitlisted && (
                   <Badge className="bg-yellow-100 text-yellow-800">
-                    Waitlisted
+                    {t.waitlisted}
                   </Badge>
                 )}
               </div>
@@ -237,8 +247,8 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
             {event.maxAttendees && (
               <span className="text-muted-foreground flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                {event.currentAttendees}/{event.maxAttendees} spots
-                {isFull && " (Full)"}
+                {event.currentAttendees}/{event.maxAttendees} {t.spots}
+                {isFull && ` (${t.full})`}
               </span>
             )}
           </div>
@@ -252,10 +262,10 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
                   disabled={registering === event.id}
                 >
                   {registering === event.id
-                    ? "Registering..."
+                    ? t.registering
                     : isFull
-                      ? "Join Waitlist"
-                      : "Register"}
+                      ? t.joinWaitlist
+                      : t.register}
                 </Button>
               )}
               {(isRegistered || isWaitlisted) &&
@@ -267,8 +277,8 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
                     disabled={registering === event.id}
                   >
                     {registering === event.id
-                      ? "Cancelling..."
-                      : "Cancel Registration"}
+                      ? t.cancelling
+                      : t.cancelRegistration}
                   </Button>
                 )}
             </div>
@@ -280,10 +290,7 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
 
   return (
     <div className="py-8">
-      <PageHeadingSetter
-        title="Events"
-        description="View upcoming school events and manage registrations"
-      />
+      <PageHeadingSetter title={t.title} description={t.description} />
 
       <div className="space-y-6">
         {/* Filters */}
@@ -291,19 +298,19 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ListFilter className="h-5 w-5" />
-              Filters
+              {t.filters}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Event type" />
+                <SelectValue placeholder={t.eventType} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
+                <SelectItem value="all">{t.allTypes}</SelectItem>
+                {EVENT_TYPES.map((value) => (
                   <SelectItem key={value} value={value}>
-                    {label}
+                    {getEventTypeLabel(value)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -315,9 +322,11 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
         <Tabs defaultValue="upcoming" className="space-y-4">
           <TabsList>
             <TabsTrigger value="upcoming">
-              Upcoming ({filteredUpcoming.length})
+              {t.tabUpcoming} ({filteredUpcoming.length})
             </TabsTrigger>
-            <TabsTrigger value="past">Past ({filteredPast.length})</TabsTrigger>
+            <TabsTrigger value="past">
+              {t.tabPast} ({filteredPast.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="space-y-4">
@@ -325,9 +334,7 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <CalendarDays className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                  <p className="text-muted-foreground">
-                    No upcoming events found.
-                  </p>
+                  <p className="text-muted-foreground">{t.emptyUpcoming}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -340,7 +347,7 @@ export function ParentEventsContent({ lang = "ar" }: { lang?: "ar" | "en" }) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Calendar className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                  <p className="text-muted-foreground">No past events found.</p>
+                  <p className="text-muted-foreground">{t.emptyPast}</p>
                 </CardContent>
               </Card>
             ) : (

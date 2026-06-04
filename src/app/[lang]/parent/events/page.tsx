@@ -4,11 +4,20 @@
 import { Metadata } from "next"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ParentEventsContent } from "@/components/school-dashboard/parent-portal/events/content"
 
-export const metadata: Metadata = {
-  title: "Events | Parent Portal",
-  description: "View upcoming school events and manage registrations",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary.parentPortal.events.metaTitle,
+    description: dictionary.parentPortal.events.metaDescription,
+  }
 }
 
 export default async function ParentEvents({
@@ -17,5 +26,6 @@ export default async function ParentEvents({
   params: Promise<{ lang: Locale }>
 }) {
   const { lang } = await params
-  return <ParentEventsContent lang={lang} />
+  const dictionary = await getDictionary(lang)
+  return <ParentEventsContent lang={lang} dictionary={dictionary} />
 }
