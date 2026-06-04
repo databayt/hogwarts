@@ -87,9 +87,16 @@ export default async function LocaleLayout({
   const config = localeConfig[lang as Locale]
   const isRTL = config.dir === "rtl"
 
-  // Check if we're in a subdomain route
-  const headersList = await headers()
-  const subdomain = headersList.get("x-subdomain")
+  // Check if we're in a subdomain route. Skip headers() during `next build`
+  // page-data collection — it's a dynamic API that would otherwise opt every
+  // page under [lang] out of static generation (e.g. docs, marketing). Subdomain
+  // routes have their own force-dynamic layouts and are never prerendered, so
+  // defaulting to "not a subdomain" at build time is correct for static pages.
+  let subdomain: string | null = null
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    const headersList = await headers()
+    subdomain = headersList.get("x-subdomain")
+  }
   const isSubdomain = !!subdomain
 
   // Use dynamic font for subdomain pages, hardcoded fonts for saas-marketing/lab pages

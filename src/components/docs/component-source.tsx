@@ -2,8 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import * as React from "react"
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock"
 
+import { highlightCode } from "@/lib/highlight-code"
 import { cn } from "@/lib/utils"
 import { CodeCollapsibleWrapper } from "@/components/docs/code-collapsible-wrapper"
 import { CopyButton } from "@/components/docs/copy-button"
@@ -17,7 +17,7 @@ interface ComponentSourceProps extends React.HTMLAttributes<HTMLDivElement> {
   collapsible?: boolean
 }
 
-export function ComponentSource({
+export async function ComponentSource({
   name,
   code: codeProp,
   language,
@@ -27,7 +27,7 @@ export function ComponentSource({
   className,
   ...props
 }: ComponentSourceProps) {
-  const code = codeProp
+  let code = codeProp
 
   // If name provided but no code, we'd need a registry lookup
   // For now, just use the provided code
@@ -36,30 +36,41 @@ export function ComponentSource({
   }
 
   const lang = language ?? title?.split(".").pop() ?? "tsx"
+  const highlightedCode = await highlightCode(code, lang)
 
-  // Highlighting is deferred to the browser via DynamicCodeBlock — that's how
-  // we keep shiki out of the Vercel build heap. See `source.config.ts`.
   if (!collapsible) {
     return (
       <div className={cn("relative", className)} {...props}>
-        <ComponentCode code={code} language={lang} title={title} />
+        <ComponentCode
+          code={code}
+          highlightedCode={highlightedCode}
+          language={lang}
+          title={title}
+        />
       </div>
     )
   }
 
   return (
     <CodeCollapsibleWrapper className={className}>
-      <ComponentCode code={code} language={lang} title={title} />
+      <ComponentCode
+        code={code}
+        highlightedCode={highlightedCode}
+        language={lang}
+        title={title}
+      />
     </CodeCollapsibleWrapper>
   )
 }
 
 function ComponentCode({
   code,
+  highlightedCode,
   language,
   title,
 }: {
   code: string
+  highlightedCode: string
   language: string
   title: string | undefined
 }) {
@@ -75,7 +86,7 @@ function ComponentCode({
         </figcaption>
       )}
       <CopyButton value={code} />
-      <DynamicCodeBlock lang={language} code={code} />
+      <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
     </figure>
   )
 }

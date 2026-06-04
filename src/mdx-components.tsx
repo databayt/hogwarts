@@ -2,11 +2,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // @ts-nocheck
-import * as React from "react"
 import type { ComponentProps } from "react"
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock"
 
-import { detectNpmCommand } from "@/lib/detect-npm-command"
 import { cn } from "@/lib/utils"
 import {
   Accordion,
@@ -87,6 +84,7 @@ import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
 import { ComponentSource } from "@/components/docs/component-source"
+import { CopyButton } from "@/components/docs/copy-button"
 import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
 import { CardGrid, DocCard } from "@/components/docs/doc-card"
@@ -96,20 +94,6 @@ import { StoryVideo } from "@/components/docs/story-video"
 import { Structure } from "@/components/docs/structure"
 
 // This file is required to use MDX in `app` directory.
-
-// Walk a React node tree and concatenate all string-typed text. Used by the
-// `pre` MDX override to recover the raw fenced-code-block contents that MDX
-// hands us via the wrapping `<code>` element's `children`.
-function extractCodeText(node: React.ReactNode): string {
-  if (node == null || typeof node === "boolean") return ""
-  if (typeof node === "string") return node
-  if (typeof node === "number") return String(node)
-  if (Array.isArray(node)) return node.map(extractCodeText).join("")
-  if (React.isValidElement(node)) {
-    return extractCodeText((node as React.ReactElement<any>).props?.children)
-  }
-  return ""
-}
 
 // Create a default dictionary for MDX components that require it
 const defaultDictionary = {
@@ -251,46 +235,71 @@ const mdxComponents = {
       {...props}
     />
   ),
-  // Block code: ` ```lang ... ``` ` in MDX produces `<pre><code class="language-lang">…</code></pre>`.
-  // We intercept at `pre` level — the original `<code>` element from the `code`
-  // override is never rendered into the DOM; we read its raw text + language
-  // class and either render the package-manager tabs (`CodeBlockCommand`) or
-  // hand the code to fumadocs's lazy `DynamicCodeBlock` (browser shiki).
   pre: ({ className, children, ...props }: React.ComponentProps<"pre">) => {
-    if (!React.isValidElement(children)) {
-      return (
-        <pre className={className} {...props}>
-          {children}
-        </pre>
-      )
-    }
-    const codeProps = (children as React.ReactElement<any>).props ?? {}
-    const lang =
-      (codeProps.className as string | undefined)?.replace(/^language-/, "") ||
-      "text"
-    const text = extractCodeText(codeProps.children).replace(/\n$/, "")
-
-    const npm = detectNpmCommand(text)
-    if (npm) {
-      return <CodeBlockCommand {...npm} />
-    }
-
-    return <DynamicCodeBlock lang={lang} code={text} />
+    return (
+      <pre
+        className={cn(
+          "no-scrollbar min-w-0 overflow-x-auto px-4 py-3.5 outline-none has-[[data-highlighted-line]]:px-0 has-[[data-line-numbers]]:px-0 has-[[data-slot=tabs]]:p-0",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </pre>
+    )
   },
   figure: ({ className, ...props }: React.ComponentProps<"figure">) => {
     return <figure className={cn(className)} {...props} />
   },
-  // Inline code (`` `code` ``). Block code's `<code>` is consumed inside `pre`
-  // above and never reaches the DOM, so this branch only handles inline.
-  code: ({ className, ...props }: React.ComponentProps<"code">) => (
-    <code
-      className={cn(
-        "bg-muted relative rounded-md px-[0.3rem] py-[0.2rem] font-mono text-[0.8rem] break-words outline-none",
-        className
-      )}
-      {...props}
-    />
-  ),
+  code: ({
+    className,
+    __raw__,
+    __npm__,
+    __yarn__,
+    __pnpm__,
+    __bun__,
+    ...props
+  }: React.ComponentProps<"code"> & {
+    __raw__?: string
+    __npm__?: string
+    __yarn__?: string
+    __pnpm__?: string
+    __bun__?: string
+  }) => {
+    // Inline Code.
+    if (typeof props.children === "string") {
+      return (
+        <code
+          className={cn(
+            "bg-muted relative rounded-md px-[0.3rem] py-[0.2rem] font-mono text-[0.8rem] break-words outline-none",
+            className
+          )}
+          {...props}
+        />
+      )
+    }
+
+    // npm command.
+    const isNpmCommand = __npm__ && __yarn__ && __pnpm__ && __bun__
+    if (isNpmCommand) {
+      return (
+        <CodeBlockCommand
+          __npm__={__npm__}
+          __yarn__={__yarn__}
+          __pnpm__={__pnpm__}
+          __bun__={__bun__}
+        />
+      )
+    }
+
+    // Default codeblock.
+    return (
+      <>
+        {__raw__ && <CopyButton value={__raw__} />}
+        <code {...props} />
+      </>
+    )
+  },
   Accordion,
   AccordionContent,
   AccordionItem,

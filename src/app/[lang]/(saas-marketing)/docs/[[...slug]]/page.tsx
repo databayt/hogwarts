@@ -18,16 +18,21 @@ import { DocsTableOfContents } from "@/components/docs/toc"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-// Force-dynamic to bypass Next.js page-data collection entirely. With ~155
-// MDX files across two locales plus an async `generateMetadata`, leaving
-// the route in "auto" mode triggered the same dynamic-import storm
-// documented in `community/page.tsx` — Vercel's 1-worker page-data step
-// was hanging past the 45-min build ceiling. `force-dynamic` skips the
-// data-collection pass; metadata + body render per-request at runtime.
-// Code blocks still use runtime shiki via fumadocs-ui's DynamicCodeBlock.
-// See `source.config.ts` and `src/mdx-components.tsx`.
+// Statically generated at build (restored on Vercel Pro). Every docs page is
+// pre-rendered per locale via generateStaticParams; code blocks are highlighted
+// at build time by rehype-pretty-code/shiki (see `source.config.ts` +
+// `src/mdx-components.tsx`). Previously force-dynamic to dodge the Hobby 45-min
+// page-data build ceiling.
 export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
+
+export function generateStaticParams({
+  params,
+}: {
+  params: { lang: string }
+}) {
+  const source = params.lang === "ar" ? docsArabicSource : docsSource
+  return source.getPages().map((page) => ({ slug: page.slugs }))
+}
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[]; lang: string }>
