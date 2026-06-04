@@ -15,7 +15,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 
 import { FullPaperMockup } from "../../atoms"
 import { saveTemplate } from "../actions"
-import { getStepLabel, QUESTION_TYPE_LABELS, t } from "../labels"
+import { commonLabels, getStepLabel, QUESTION_TYPE_LABELS, t } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { completeTemplateWizard } from "../wizard-actions"
 
@@ -83,10 +83,13 @@ export default function PreviewContent() {
         const lang = params.lang as string
         router.push(`/${lang}/exams/generate`)
       } else {
-        setError(result.error || "Failed to save")
+        setError(
+          result.error ||
+            commonLabels.failedToSave[locale === "ar" ? "ar" : "en"]
+        )
       }
     } catch {
-      setError("An error occurred")
+      setError(commonLabels.errorOccurred[locale === "ar" ? "ar" : "en"])
     } finally {
       setSaving(false)
     }

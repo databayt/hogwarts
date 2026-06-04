@@ -17,6 +17,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { VARIANT_REGISTRY } from "../../../templates/composition/registry"
 import type { SlotName } from "../../../templates/composition/types"
 import { SectionCard } from "../../atoms"
+import { commonLabels } from "../labels"
 import { updateTemplateFooterLayout } from "./actions"
 
 const SLOT: SlotName = "footer"
@@ -54,13 +55,16 @@ export const FooterLayoutForm = forwardRef<
               selected
             )
             if (!result.success) {
-              ErrorToast(result.error || "Failed to save")
+              ErrorToast(result.error || commonLabels.failedToSave[lang])
               reject(new Error(result.error))
               return
             }
             resolve()
           } catch (err) {
-            const msg = err instanceof Error ? err.message : "Failed to save"
+            const msg =
+              err instanceof Error
+                ? err.message
+                : commonLabels.failedToSave[lang]
             ErrorToast(msg)
             reject(err)
           }

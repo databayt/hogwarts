@@ -129,6 +129,56 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; ar: string }> =
     ORDERING: { en: "Ordering", ar: "ترتيب" },
   }
 
+/** Shared common strings used across step forms */
+export const commonLabels = {
+  failedToSave: { en: "Failed to save", ar: "فشل الحفظ" },
+  errorOccurred: { en: "An error occurred", ar: "حدث خطأ" },
+} as const
+
+/** Difficulty step form body labels */
+export const difficultyLabels = {
+  levels: {
+    EASY: { en: "Easy", ar: "سهل" },
+    MEDIUM: { en: "Medium", ar: "متوسط" },
+    HARD: { en: "Hard", ar: "صعب" },
+  },
+  distributePrefix: { en: "Distribute", ar: "وزّع" },
+  distributeSuffix: {
+    en: "questions across difficulty levels.",
+    ar: "سؤالًا على مستويات الصعوبة.",
+  },
+  distributed: { en: "Distributed", ar: "الموزّع" },
+  remaining: {
+    en: "questions remaining to assign",
+    ar: "سؤالًا متبقيًا للتوزيع",
+  },
+  overLimit: { en: "questions over the limit", ar: "سؤالًا فوق الحد" },
+  mustEqualPrefix: { en: "Distribution must equal", ar: "يجب أن يساوي التوزيع" },
+  currently: { en: "currently", ar: "حاليًا" },
+} as const
+
+/** Question types step form body labels */
+export const questionTypesLabels = {
+  selectAtLeastOne: {
+    en: "Select at least one question type",
+    ar: "اختر نوع سؤال واحد على الأقل",
+  },
+} as const
+
+/** Duration & marks step form body labels */
+export const durationMarksLabels = {
+  duration: { en: "Duration (minutes)", ar: "المدة (بالدقائق)" },
+  totalMarks: { en: "Total Marks", ar: "إجمالي الدرجات" },
+} as const
+
+/** Gallery step form body labels */
+export const galleryLabels = {
+  blank: { en: "Blank", ar: "فارغ" },
+  startFromScratch: { en: "Start from scratch", ar: "ابدأ من الصفر" },
+  selected: { en: "Selected", ar: "محدد" },
+  schoolTemplates: { en: "School Templates", ar: "قوالب المدرسة" },
+} as const
+
 export type StepKey = keyof typeof labels
 
 export function getStepLabel(

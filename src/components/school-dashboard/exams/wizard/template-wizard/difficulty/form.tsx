@@ -17,24 +17,20 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 
+import {
+  commonLabels,
+  difficultyLabels,
+  QUESTION_TYPE_LABELS,
+} from "../labels"
 import { updateTemplateDifficulty } from "./actions"
 
 const DIFFICULTY_LEVELS = [
-  { key: "EASY" as const, label: "Easy", color: "bg-emerald-500" },
-  { key: "MEDIUM" as const, label: "Medium", color: "bg-amber-500" },
-  { key: "HARD" as const, label: "Hard", color: "bg-red-500" },
-]
-
-const QUESTION_TYPE_LABELS: Record<string, string> = {
-  MULTIPLE_CHOICE: "Multiple Choice",
-  TRUE_FALSE: "True / False",
-  SHORT_ANSWER: "Short Answer",
-  ESSAY: "Essay",
-  FILL_BLANK: "Fill in the Blank",
-  MATCHING: "Matching",
-  ORDERING: "Ordering",
-}
+  { key: "EASY" as const, color: "bg-emerald-500" },
+  { key: "MEDIUM" as const, color: "bg-amber-500" },
+  { key: "HARD" as const, color: "bg-red-500" },
+] as const
 
 interface DifficultyFormProps {
   templateId: string
@@ -50,6 +46,8 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
     ref
   ) => {
     const [isPending, startTransition] = useTransition()
+    const { locale } = useLocale()
+    const lang = locale === "ar" ? "ar" : "en"
     const [difficulty, setDifficulty] = useState(() => ({
       EASY: initialDifficulty.EASY,
       MEDIUM: initialDifficulty.MEDIUM,
@@ -90,7 +88,7 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
             try {
               if (!isValid) {
                 ErrorToast(
-                  `Distribution must equal ${totalCount} (currently ${distributed})`
+                  `${difficultyLabels.mustEqualPrefix[lang]} ${totalCount} (${difficultyLabels.currently[lang]} ${distributed})`
                 )
                 reject(new Error("Validation failed"))
                 return
@@ -101,13 +99,16 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
                 difficulty
               )
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                ErrorToast(result.error || commonLabels.failedToSave[lang])
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg = err instanceof Error ? err.message : "Failed to save"
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : commonLabels.failedToSave[lang]
               ErrorToast(msg)
               reject(err)
             }
@@ -115,24 +116,28 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
         }),
     }))
 
-    const typeLabel = QUESTION_TYPE_LABELS[questionType] || questionType
+    const typeLabel =
+      QUESTION_TYPE_LABELS[questionType]?.[lang] || questionType
 
     return (
       <div className="space-y-6">
         <div className="rounded-lg border p-4">
           <p className="text-muted-foreground text-sm">
-            Distribute <strong>{totalCount}</strong> {typeLabel} questions
-            across difficulty levels.
+            {difficultyLabels.distributePrefix[lang]}{" "}
+            <strong>{totalCount}</strong> {typeLabel}{" "}
+            {difficultyLabels.distributeSuffix[lang]}
           </p>
         </div>
 
         <div className="space-y-4">
-          {DIFFICULTY_LEVELS.map(({ key, label, color }) => (
+          {DIFFICULTY_LEVELS.map(({ key, color }) => (
             <div key={key} className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className={`h-3 w-3 rounded-full ${color}`} />
-                  <Label htmlFor={`difficulty-${key}`}>{label}</Label>
+                  <Label htmlFor={`difficulty-${key}`}>
+                    {difficultyLabels.levels[key][lang]}
+                  </Label>
                 </div>
                 <span className="text-muted-foreground text-sm tabular-nums">
                   {difficulty[key]} / {totalCount}
@@ -156,7 +161,9 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Distributed</span>
+            <span className="text-muted-foreground">
+              {difficultyLabels.distributed[lang]}
+            </span>
             <span
               className={`font-medium tabular-nums ${
                 isValid
@@ -173,8 +180,8 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
           {!isValid && (
             <p className="text-muted-foreground text-xs">
               {distributed < totalCount
-                ? `${totalCount - distributed} questions remaining to assign`
-                : `${distributed - totalCount} questions over the limit`}
+                ? `${totalCount - distributed} ${difficultyLabels.remaining[lang]}`
+                : `${distributed - totalCount} ${difficultyLabels.overLimit[lang]}`}
             </p>
           )}
         </div>
