@@ -6106,7 +6106,10 @@
         "noTemplatesYet": "لا توجد قوالب بعد",
         "createTemplateToStart": "أنشئ قالب شهادة للبدء.",
         "edit": "تعديل",
-        "delete": "حذف"
+        "delete": "حذف",
+        "setAsDefault": "تعيين كافتراضي",
+        "defaultBadge": "افتراضي",
+        "defaultSet": "تم تحديث القالب الافتراضي"
       },
       "configForm": {
         "namePlaceholder": "مثال: شهادة التفوق",
@@ -6114,6 +6117,9 @@
         "bodyPlaceholder": "استخدم العناصر النائبة: {{studentName}}، {{score}}، {{grade}}، {{examTitle}}، {{examDate}}، {{rank}}",
         "availablePlaceholders": "العناصر النائبة المتاحة",
         "addSignature": "إضافة توقيع",
+        "signatureImage": "صورة التوقيع (اختياري)",
+        "removeSignatureImage": "إزالة الصورة",
+        "uploadError": "فشل الرفع",
         "saving": "جارٍ الحفظ...",
         "updateTemplate": "تحديث القالب",
         "createTemplate": "إنشاء القالب",

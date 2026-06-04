@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import crypto from "crypto"
 import React from "react"
 import { auth } from "@/auth"
 import { renderToBuffer } from "@react-pdf/renderer"
@@ -412,4 +411,77 @@ export async function previewCertificate(
           : "Failed to preview certificate",
     }
   }
+}
+
+// ============================================================================
+// CRON WORKER — render queued certificate PDFs (session-less)
+// ============================================================================
+
+/**
+ * Render PDFs for issued certificates that don't have one yet.
+ *
+ * Unlike `generateCertificatePDF` / `batchGenerateCertificatePDFs`, this is
+ * NOT session-scoped — it's driven by the `process-certificate-pdfs` cron and
+ * derives schoolId/locale from each certificate row, so it can safely process
+ * pending certs across all schools. `pdfUrl: null` is the work-queue signal;
+ * `limit` caps work per invocation to stay within the serverless budget.
+ */
+export async function renderPendingCertificatePDFs(
+  options: { limit?: number } = {}
+): Promise<{ processed: number; generated: number; failed: number }> {
+  const limit = options.limit ?? 25
+
+  const certs = await db.examCertificate.findMany({
+    where: { pdfUrl: null, status: "active" },
+    include: { config: true, student: true, school: true },
+    take: limit,
+    orderBy: { issuedAt: "asc" },
+  })
+
+  let generated = 0
+  let failed = 0
+
+  for (const cert of certs) {
+    try {
+      const locale: Locale =
+        cert.school.preferredLanguage === "en" ? "en" : "ar"
+
+      const certData = buildCertificateData(
+        cert,
+        cert.config,
+        { name: cert.school.name, logoUrl: cert.school.logoUrl },
+        undefined,
+        locale
+      )
+
+      const pdfUrl = await renderAndUploadCertPdf(
+        certData,
+        {
+          templateStyle: cert.config.templateStyle,
+          orientation: cert.config.orientation,
+          pageSize: cert.config.pageSize,
+          compositionConfig: cert.config.compositionConfig,
+          regionPreset: cert.config.regionPreset,
+        },
+        cert.schoolId,
+        cert.certificateNumber,
+        locale
+      )
+
+      if (pdfUrl) {
+        await db.examCertificate.update({
+          where: { id: cert.id },
+          data: { pdfUrl },
+        })
+        generated++
+      } else {
+        failed++
+      }
+    } catch (e) {
+      failed++
+      console.error(`[cert-pdf cron] render failed for ${cert.id}:`, e)
+    }
+  }
+
+  return { processed: certs.length, generated, failed }
 }

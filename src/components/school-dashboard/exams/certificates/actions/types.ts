@@ -56,6 +56,7 @@ export interface CertificateConfigSummary {
   type: string
   templateStyle: string
   isActive: boolean
+  isDefault: boolean
   certificateCount: number
   createdAt: Date
 }

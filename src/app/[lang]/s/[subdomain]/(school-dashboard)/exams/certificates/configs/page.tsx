@@ -89,6 +89,7 @@ export default async function ConfigsPage({ params }: ConfigsPageProps) {
           type: c.type,
           templateStyle: c.templateStyle,
           isActive: c.isActive,
+          isDefault: c.isDefault,
           certificateCount: c._count.certificates,
           createdAt: c.createdAt,
         }))}

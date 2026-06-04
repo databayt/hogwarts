@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, MoreHorizontal, Star, Trash2 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
 import { useToast } from "@/hooks/use-toast"
@@ -27,7 +27,10 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { deleteCertificateConfig } from "./actions"
+import {
+  deleteCertificateConfig,
+  setDefaultCertificateConfig,
+} from "./actions"
 import type { CertificateConfigSummary } from "./actions/types"
 
 export function CertificateConfigList({
@@ -49,6 +52,22 @@ export function CertificateConfigList({
 
     if (result.success) {
       toast({ title: t?.toast?.deleted ?? "Template deleted" })
+    } else if (!result.success) {
+      toast({
+        title: t?.toast?.error ?? "Error",
+        description: result.error,
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function handleSetDefault(id: string) {
+    setLoading(id)
+    const result = await setDefaultCertificateConfig({ id })
+    setLoading(null)
+
+    if (result.success) {
+      toast({ title: cfl?.defaultSet ?? "Default template updated" })
     } else if (!result.success) {
       toast({
         title: t?.toast?.error ?? "Error",
@@ -87,7 +106,17 @@ export function CertificateConfigList({
       <TableBody>
         {configs.map((config) => (
           <TableRow key={config.id}>
-            <TableCell className="font-medium">{config.name}</TableCell>
+            <TableCell className="font-medium">
+              <span className="inline-flex items-center gap-2">
+                {config.name}
+                {config.isDefault && (
+                  <Badge className="gap-1">
+                    <Star className="h-3 w-3 fill-current" />
+                    {cfl?.defaultBadge ?? "Default"}
+                  </Badge>
+                )}
+              </span>
+            </TableCell>
             <TableCell>
               <Badge variant="secondary">{config.type}</Badge>
             </TableCell>
@@ -114,6 +143,14 @@ export function CertificateConfigList({
                       {cfl?.edit ?? "Edit"}
                     </a>
                   </DropdownMenuItem>
+                  {!config.isDefault && (
+                    <DropdownMenuItem
+                      onClick={() => handleSetDefault(config.id)}
+                    >
+                      <Star className="me-2 h-4 w-4" />
+                      {cfl?.setAsDefault ?? "Set as default"}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     className="text-destructive"
                     onClick={() => handleDelete(config.id)}
