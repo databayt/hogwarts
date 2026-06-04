@@ -321,7 +321,9 @@ export function canViewField(
 // Self-Edit Permissions
 // ============================================================================
 
-const SELF_EDITABLE_STEPS = {
+// Steps a user can edit on their own profile (single source of truth —
+// also consumed by edit-role-actions.ts).
+export const SELF_EDITABLE_STEPS = {
   teacher: ["contact", "qualifications", "experience"],
   student: ["contact"],
 } as const

@@ -39,7 +39,7 @@ Admin control center for individual schools (30+ sub-features, 85% complete). Ev
 | exams      | `exams/`      | Ready   | Yes                  |
 | finance    | `finance/`    | Ready   | Yes (per sub-module) |
 | listings   | `listings/`   | Ready   | No                   |
-| timetable  | `timetable/`  | Ready   | Yes/No               |
+| timetable  | `timetable/`  | Ready   | Yes/Yes (+CLAUDE.md) |
 | settings   | `settings/`   | Ready   | No                   |
 
 ## Related Blocks

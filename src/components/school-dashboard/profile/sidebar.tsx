@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { MapPin } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
@@ -22,11 +22,9 @@ import {
 import {
   OcticonBook,
   OcticonClock,
-  OcticonOrganization,
   OcticonPeople,
   OcticonRepo,
   OcticonSmiley,
-  OcticonTable,
   OcticonTrophy,
 } from "@/components/atom/icons"
 
@@ -58,423 +56,109 @@ function getRoleConfig(
   const initials =
     `${(data.firstName as string)?.[0] || ""}${(data.lastName as string)?.[0] || ""}`.toUpperCase()
 
-  switch (role) {
-    case "student":
-      return {
-        title: fullName,
-        subtitle:
-          (data.grNumber as string) ||
-          `@student_${(data.id as string)?.slice(-6)}`,
-        role: p?.roles?.student ?? "Student",
+  const permission = (data.viewerPermission as string) || "PUBLIC"
+  const canSeeContact = ["OWNER", "ADMIN", "STAFF"].includes(permission)
+  const num = (v: unknown): number | undefined =>
+    typeof v === "number" ? v : undefined
+
+  // Real, tenant-scoped counts derived in getProfileBasicData. Each stat is
+  // omitted (never invented) when its value is undefined.
+  const stats: ProfileStat[] = []
+  if (role === "student") {
+    const subjects = num(data.subjectCount)
+    const classes = num(data.classCount)
+    if (subjects !== undefined)
+      stats.push({
+        label: p?.sidebar?.subjects ?? "subjects",
+        value: subjects,
         icon: <OcticonBook className="size-4" />,
-        imageSrc:
-          (data.profilePhotoUrl as string) ||
-          asset("/photos/contributors-h.jpeg"),
-        initials,
-        stats: [
-          {
-            label: p?.sidebar?.subjects ?? "subjects",
-            value: 8,
-            icon: <OcticonRepo className="size-4" />,
-          },
-          {
-            label: p?.sidebar?.projects ?? "projects",
-            value: 12,
-            icon: <OcticonTable className="size-4" />,
-          },
-        ] as ProfileStat[],
-        info: [
-          {
-            icon: <OcticonOrganization className="size-4" />,
-            value: "Grade 10 - Section A",
-          },
-          {
-            icon: <MapPin className="size-4" />,
-            value: (data.city as string) || "Campus",
-          },
-          {
-            icon: <OcticonClock className="size-4" />,
-            value: `${p?.sidebar?.enrolled ?? "Enrolled"} ${formatDate(data.enrollmentDate as string)}`,
-          },
-        ],
-        achievements: [
-          {
-            id: "1",
-            title: "Student of the Year",
-            description:
-              "Awarded for outstanding academic performance and leadership",
-            icon: "starstruck",
-            level: "platinum" as const,
-            earnedAt: "2025-06-15",
-            context: "Academic Year 2024-2025 · School-wide Award",
-          },
-          {
-            id: "2",
-            title: "First of Class",
-            description: "Ranked 1st in class for the academic term",
-            icon: "galaxy-brain",
-            level: "gold" as const,
-            earnedAt: "2025-12-20",
-            context: "Term 1, 2025-2026 · Grade 10 Mathematics",
-          },
-          {
-            id: "3",
-            title: "Second of Class",
-            description: "Ranked 2nd in class for the academic term",
-            icon: "galaxy-brain",
-            level: "silver" as const,
-            earnedAt: "2025-06-15",
-            context: "Term 2, 2024-2025 · Grade 10 Science",
-          },
-          {
-            id: "4",
-            title: "Best Football Player",
-            description: "MVP of the school football team",
-            icon: "yolo",
-            level: "gold" as const,
-            earnedAt: "2025-11-10",
-            context: "Inter-school Tournament 2025",
-          },
-          {
-            id: "5",
-            title: "Perfect Attendance",
-            description: "100% attendance for the full semester",
-            icon: "quickdraw",
-            level: "silver" as const,
-            earnedAt: "2025-12-20",
-            context: "Term 1, 2025-2026",
-          },
-          {
-            id: "6",
-            title: "Science Fair Winner",
-            description: "1st place in the annual science fair",
-            icon: "galaxy-brain",
-            level: "gold" as const,
-            earnedAt: "2025-03-22",
-            context: "Annual Science Fair 2025 · Physics Category",
-          },
-          {
-            id: "7",
-            title: "Math Olympiad",
-            description: "Bronze medal in the regional math competition",
-            icon: "galaxy-brain",
-            level: "bronze" as const,
-            earnedAt: "2025-04-15",
-            context: "Regional Math Olympiad 2025",
-          },
-        ] as ProfileAchievement[],
-        organizations: [
-          {
-            id: "1",
-            name: "Student Council",
-            avatarUrl: asset("/icons/council.png"),
-            role: "Member",
-          },
-          {
-            id: "2",
-            name: "Science Club",
-            avatarUrl: asset("/icons/science.png"),
-            role: "Secretary",
-          },
-          {
-            id: "3",
-            name: "Chess Club",
-            avatarUrl: asset("/icons/chess.png"),
-            role: "Member",
-          },
-        ] as Organization[],
-      }
-    case "teacher":
-      return {
-        title: fullName,
-        subtitle:
-          (data.employeeId as string) ||
-          `@teacher_${(data.id as string)?.slice(-6)}`,
-        role: p?.roles?.teacher ?? "Teacher",
+      })
+    if (classes !== undefined)
+      stats.push({
+        label: p?.sidebar?.classes ?? "classes",
+        value: classes,
         icon: <OcticonRepo className="size-4" />,
-        imageSrc:
-          (data.profilePhotoUrl as string) ||
-          asset("/photos/contributors-d.jpeg"),
-        initials,
-        stats: [
-          {
-            label: p?.sidebar?.classes ?? "classes",
-            value: 6,
-            icon: <OcticonRepo className="size-4" />,
-          },
-          {
-            label: p?.sidebar?.students ?? "students",
-            value: 127,
-            icon: <OcticonPeople className="size-4" />,
-          },
-        ] as ProfileStat[],
-        info: [
-          {
-            icon: <OcticonOrganization className="size-4" />,
-            value: "Mathematics Department",
-          },
-          {
-            icon: <OcticonBook className="size-4" />,
-            value: data.emailAddress as string,
-          },
-          {
-            icon: <OcticonClock className="size-4" />,
-            value: `${p?.sidebar?.joined ?? "Joined"} ${formatDate((data.joiningDate as string) || (data.createdAt as string))}`,
-          },
-        ],
-        achievements: [
-          {
-            id: "1",
-            title: "Teacher of the Year",
-            description: "Recognized as the most impactful teacher school-wide",
-            icon: "starstruck",
-            level: "platinum" as const,
-            earnedAt: "2025-06-15",
-            context: "Academic Year 2024-2025 · School-wide Award",
-          },
-          {
-            id: "2",
-            title: "Best Curriculum Design",
-            description: "Outstanding curriculum innovation and design",
-            icon: "pull-shark",
-            level: "gold" as const,
-            earnedAt: "2025-09-01",
-            context: "Term 1, 2025-2026 · Mathematics Department",
-          },
-          {
-            id: "3",
-            title: "Student Favorite",
-            description: "Highest-rated teacher by student surveys",
-            icon: "starstruck",
-            level: "silver" as const,
-            earnedAt: "2025-12-20",
-            context: "Term 1, 2025-2026 · Grade 10-12 Students",
-          },
-          {
-            id: "4",
-            title: "Department Leader",
-            description: "Led the mathematics department with distinction",
-            icon: "pull-shark",
-            level: "gold" as const,
-            earnedAt: "2025-01-15",
-            context: "Academic Year 2024-2025 · Mathematics",
-          },
-          {
-            id: "5",
-            title: "Perfect Attendance",
-            description: "100% attendance for 12 consecutive months",
-            icon: "quickdraw",
-            level: "silver" as const,
-            earnedAt: "2025-12-31",
-            context: "Calendar Year 2025",
-          },
-          {
-            id: "6",
-            title: "Innovation Award",
-            description: "Pioneered new teaching methodologies",
-            icon: "starstruck",
-            level: "gold" as const,
-            earnedAt: "2025-03-15",
-            context: "STEM Innovation Week 2025",
-          },
-        ] as ProfileAchievement[],
-        organizations: [
-          {
-            id: "1",
-            name: "Mathematics Dept",
-            avatarUrl: asset("/icons/math.png"),
-            role: "Senior Teacher",
-          },
-          {
-            id: "2",
-            name: "Curriculum Committee",
-            avatarUrl: asset("/icons/curriculum.png"),
-            role: "Member",
-          },
-        ] as Organization[],
-      }
-    case "parent":
-      return {
-        title: fullName,
-        subtitle: `@parent_${(data.id as string)?.slice(-6)}`,
-        role: p?.roles?.parent ?? "Parent / Guardian",
+      })
+  } else if (role === "teacher") {
+    const classes = num(data.classCount)
+    const students = num(data.studentsTaught)
+    if (classes !== undefined)
+      stats.push({
+        label: p?.sidebar?.classes ?? "classes",
+        value: classes,
+        icon: <OcticonRepo className="size-4" />,
+      })
+    if (students !== undefined)
+      stats.push({
+        label: p?.sidebar?.students ?? "students",
+        value: students,
         icon: <OcticonPeople className="size-4" />,
-        imageSrc:
-          (data.profilePhotoUrl as string) ||
-          asset("/photos/contributors-d.jpeg"),
-        initials,
-        stats: [
-          {
-            label: p?.sidebar?.children ?? "children",
-            value: 3,
-            icon: <OcticonPeople className="size-4" />,
-          },
-          {
-            label: p?.sidebar?.events ?? "events",
-            value: 5,
-            icon: <OcticonTable className="size-4" />,
-          },
-        ] as ProfileStat[],
-        info: [
-          {
-            icon: <OcticonBook className="size-4" />,
-            value: (data.emailAddress as string) || "parent@email.com",
-          },
-          {
-            icon: <OcticonOrganization className="size-4" />,
-            value: "+966 50 XXX XXXX",
-          },
-          {
-            icon: <OcticonClock className="size-4" />,
-            value: `${p?.sidebar?.memberSince ?? "Member since"} ${formatDate(data.createdAt as string)}`,
-          },
-        ],
-        achievements: [
-          {
-            id: "1",
-            title: "Most Engaged Parent",
-            description: "Attended every school event and parent meeting",
-            icon: "pair-extraordinaire",
-            level: "gold" as const,
-            earnedAt: "2025-12-20",
-            context: "Term 1, 2025-2026 · 100% Event Attendance",
-          },
-          {
-            id: "2",
-            title: "Community Champion",
-            description: "Led community initiatives and fundraising efforts",
-            icon: "pair-extraordinaire",
-            level: "silver" as const,
-            earnedAt: "2025-06-15",
-            context: "Academic Year 2024-2025 · Parent Association",
-          },
-          {
-            id: "3",
-            title: "Volunteer of the Year",
-            description: "Most active volunteer in school programs",
-            icon: "public-sponsor",
-            level: "gold" as const,
-            earnedAt: "2025-06-15",
-            context: "Academic Year 2024-2025 · 200+ Volunteer Hours",
-          },
-        ] as ProfileAchievement[],
-        organizations: [
-          {
-            id: "1",
-            name: "Parent Association",
-            avatarUrl: asset("/icons/parents.png"),
-            role: "Member",
-          },
-        ] as Organization[],
-      }
-    case "staff":
-      return {
-        title: fullName,
-        subtitle: `@staff_${(data.id as string)?.slice(-6)}`,
-        role: p?.roles?.staff ?? "Staff Member",
-        icon: <OcticonOrganization className="size-4" />,
-        imageSrc:
-          (data.profilePhotoUrl as string) ||
-          (data.role === "ADMIN"
-            ? asset("/photos/dumbledore.jpeg")
-            : asset("/photos/contributors-d.jpeg")),
-        initials,
-        stats: [
-          {
-            label: p?.sidebar?.tasks ?? "tasks",
-            value: 24,
-            icon: <OcticonRepo className="size-4" />,
-          },
-          {
-            label: p?.sidebar?.projects ?? "projects",
-            value: 8,
-            icon: <OcticonTable className="size-4" />,
-          },
-        ] as ProfileStat[],
-        info: [
-          {
-            icon: <OcticonOrganization className="size-4" />,
-            value: "Administration",
-          },
-          {
-            icon: <OcticonBook className="size-4" />,
-            value: (data.emailAddress as string) || "staff@school.edu",
-          },
-          {
-            icon: <OcticonClock className="size-4" />,
-            value: `${p?.sidebar?.joined ?? "Joined"} ${formatDate(data.createdAt as string)}`,
-          },
-        ],
-        achievements: [
-          {
-            id: "1",
-            title: "Employee of the Year",
-            description:
-              "Recognized for exceptional performance and dedication",
-            icon: "starstruck",
-            level: "platinum" as const,
-            earnedAt: "2025-06-15",
-            context: "Academic Year 2024-2025 · School-wide Award",
-          },
-          {
-            id: "2",
-            title: "Best Team Player",
-            description: "Outstanding collaboration and teamwork",
-            icon: "pair-extraordinaire",
-            level: "gold" as const,
-            earnedAt: "2025-12-20",
-            context: "Term 1, 2025-2026 · Administration",
-          },
-          {
-            id: "3",
-            title: "Perfect Attendance",
-            description: "100% attendance for 6 consecutive months",
-            icon: "quickdraw",
-            level: "silver" as const,
-            earnedAt: "2025-12-31",
-            context: "Jul-Dec 2025",
-          },
-          {
-            id: "4",
-            title: "Service Excellence",
-            description: "Consistently exceeded service quality standards",
-            icon: "pull-shark",
-            level: "gold" as const,
-            earnedAt: "2025-09-01",
-            context: "Term 1, 2025-2026 · Admin Department",
-          },
-          {
-            id: "5",
-            title: "Outstanding Support",
-            description: "Provided exceptional support to faculty and students",
-            icon: "galaxy-brain",
-            level: "silver" as const,
-            earnedAt: "2025-03-15",
-            context: "Academic Year 2024-2025 · IT Support",
-          },
-        ] as ProfileAchievement[],
-        organizations: [
-          {
-            id: "1",
-            name: "Admin Team",
-            avatarUrl: asset("/icons/admin.png"),
-            role: "Coordinator",
-          },
-        ] as Organization[],
-      }
-    default:
-      return {
-        title: "Unknown",
-        subtitle: "@unknown",
-        role: p?.roles?.unknown ?? "Unknown Role",
-        icon: null,
-        imageSrc: asset("/photos/contributors-d.jpeg"),
-        initials: "??",
-        stats: [],
-        info: [],
-        achievements: [],
-        organizations: [],
-      }
+      })
+  } else if (role === "parent") {
+    const children = num(data.childrenCount)
+    if (children !== undefined)
+      stats.push({
+        label: p?.sidebar?.children ?? "children",
+        value: children,
+        icon: <OcticonPeople className="size-4" />,
+      })
+  }
+
+  // Real info rows only: city, enrollment/joining date, permission-gated email.
+  const info: { icon: ReactNode; value: string }[] = []
+  if (data.city)
+    info.push({
+      icon: <MapPin className="size-4" />,
+      value: data.city as string,
+    })
+  const joinDate = (data.enrollmentDate ?? data.joiningDate) as
+    | string
+    | undefined
+  if (joinDate)
+    info.push({
+      icon: <OcticonClock className="size-4" />,
+      value: `${
+        role === "student"
+          ? (p?.sidebar?.enrolled ?? "Enrolled")
+          : (p?.sidebar?.joined ?? "Joined")
+      } ${formatDate(joinDate)}`,
+    })
+  if (canSeeContact && data.emailAddress)
+    info.push({
+      icon: <OcticonBook className="size-4" />,
+      value: data.emailAddress as string,
+    })
+
+  const subtitle =
+    (data.grNumber as string) ||
+    (data.employeeId as string) ||
+    `@${role}_${(data.id as string)?.slice(-6) ?? ""}`
+
+  const roleLabel =
+    role === "student"
+      ? (p?.roles?.student ?? "Student")
+      : role === "teacher"
+        ? (p?.roles?.teacher ?? "Teacher")
+        : role === "parent"
+          ? (p?.roles?.parent ?? "Parent")
+          : (p?.roles?.staff ?? "Staff")
+
+  const defaultPhoto =
+    role === "teacher"
+      ? asset("/photos/contributors-d.jpeg")
+      : asset("/photos/contributors-h.jpeg")
+
+  return {
+    title: fullName || subtitle,
+    subtitle,
+    role: roleLabel,
+    icon: <OcticonBook className="size-4" />,
+    imageSrc: (data.profilePhotoUrl as string) || defaultPhoto,
+    initials,
+    stats,
+    info,
+    achievements: (data.achievements as ProfileAchievement[]) ?? [],
+    organizations: [] as Organization[],
   }
 }
 

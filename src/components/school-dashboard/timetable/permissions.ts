@@ -8,6 +8,7 @@
 
 import { auth } from "@/auth"
 
+import { logAudit } from "@/lib/audit-log"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -214,60 +215,26 @@ export async function logTimetableAction(
     ...details,
   }
 
-  // In production, this would write to an audit log table or service
+  // Local breadcrumb for debugging during development.
   if (process.env.NODE_ENV === "development") {
     console.log("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
   }
 
-  // You could also send to monitoring service like Sentry
-  // Sentry.captureMessage('Timetable Action', { extra: auditLog })
+  // Persist to the shared audit trail (db.auditLog). Namespacing the action
+  // with "timetable." keeps these rows distinguishable from other blocks.
+  // logAudit is fire-and-forget and self-contains its own errors, so a
+  // logging failure can never break the mutation that triggered it. We pass
+  // the already-resolved actor/tenant to avoid a second auth() round-trip.
+  await logAudit({
+    action: `timetable.${action}`,
+    entityType: details.entityType,
+    entityId: details.entityId,
+    previousValue: details.changes?.from ?? undefined,
+    newValue: details.changes?.to ?? details.changes ?? undefined,
+    metadata: { ...details.metadata, role, email },
+    userId: userId ?? null,
+    schoolId: schoolId ?? null,
+  })
 
   return auditLog
-}
-
-// ============================================================================
-// Middleware Functions
-// ============================================================================
-
-/**
- * Wrap server actions with permission checks
- * Example usage:
- * export const myAction = withPermission('edit', async (input) => { ... })
- */
-export function withPermission<T extends (...args: any[]) => any>(
-  requiredAction: TimetableAction,
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    await requirePermission(requiredAction)
-    return handler(...args)
-  }) as T
-}
-
-/**
- * Wrap server actions with admin checks
- */
-export function withAdminAccess<T extends (...args: any[]) => any>(
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    await requireAdminAccess()
-    return handler(...args)
-  }) as T
-}
-
-/**
- * Wrap server actions with audit logging
- */
-export function withAudit<T extends (...args: any[]) => any>(
-  action: TimetableAction,
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    const result = await handler(...args)
-    await logTimetableAction(action, {
-      metadata: { args: args[0], result: result?.id || result },
-    })
-    return result
-  }) as T
 }

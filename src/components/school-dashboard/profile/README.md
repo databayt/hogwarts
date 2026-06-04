@@ -1,62 +1,82 @@
-## Profile -- User Profile Management
+## Profile — User Profile Management
 
 ### Overview
 
-The Profile block provides user-facing profile pages with role-specific views, a GitHub-style contribution graph, activity feeds, pinned items, and editable personal information. Supports all school roles (student, teacher, parent, staff) with tailored profile layouts and a shared detail view for viewing other users' profiles.
+The Profile block renders a GitHub-style user profile on the school-dashboard
+route `/{lang}/profile/[[...id]]` — own profile when no id, another user's
+profile when an id is supplied. It shows **only real, tenant-scoped data**:
+identity, a contribution graph aggregated from real activity tables, an
+activity feed, pinned items, derived role stats, and self-service edit forms.
+Sections without real backing data render an explicit empty-state rather than
+fabricated content.
 
-### Capabilities by Role
+### Capabilities by role
 
-- **Admin**: View any user's profile, edit role-specific data for any user
-- **Teacher**: View/edit own profile, see teaching schedule and contribution data
-- **Student**: View/edit own profile, see academic contribution graph and activity
-- **Guardian**: View/edit own profile, view linked children's profiles
-- **Staff**: View/edit own profile
-- **All Roles**: Upload avatar, update bio, configure settings, manage pinned items, view contribution graph
+- **All roles**: view own profile, edit GitHub-style fields (display name, bio,
+  website, timezone, pronouns, status, social links), upload avatar, view the
+  contribution graph (real attendance/submissions/results/etc.), manage pinned
+  items (drag-to-reorder, persisted), view the activity feed.
+- **Student**: real average grade, enrolled subjects, real achievements
+  (`Achievement` model), self-edit contact details.
+- **Teacher**: real class count, students taught, class list; self-edit
+  contact / qualifications / experience.
+- **Guardian**: real linked-children list + count.
+- **Staff / Admin**: identity + contribution graph + pinned (no fabricated
+  per-staff dashboard — school-wide KPIs live in the dashboard block).
 
 ### Routes
 
-| Route                                                   | Page            | Status |
-| ------------------------------------------------------- | --------------- | ------ |
-| `/{lang}/s/{subdomain}/(school-dashboard)/profile`      | Own Profile     | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/profile/[id]` | View Other User | Ready  |
+| Route                  | Page            | Status |
+| ---------------------- | --------------- | ------ |
+| `/{lang}/profile`      | Own profile     | Ready  |
+| `/{lang}/profile/{id}` | View other user | Ready  |
 
-Note: The route uses `[[...id]]` optional catch-all -- no ID shows own profile, with ID shows another user's profile.
+Optional catch-all `[[...id]]` — no id → own profile; id → another user.
+Client-facing paths omit the internal `/s/{subdomain}/` segment.
 
-### File Structure
+### File structure
 
 ```
 src/components/school-dashboard/profile/
-  actions.ts              # Server actions (17 functions: get/update profile, contributions, activity)
-  types.ts                # TypeScript interfaces (ProfileRole, ActivityType, ContributionData)
-  validation.ts           # Zod schemas (profile, bio, settings, pinned items, GitHub)
-  client.tsx              # Client-side profile wrapper
-  form.tsx                # Profile edit form
-  sidebar.tsx             # Profile sidebar layout
-  graph.tsx               # GitHub-style contribution graph
-  activity.tsx            # Activity feed component
-  pinned.tsx              # Pinned items display
-  student.tsx             # Student-specific profile view
-  teacher.tsx             # Teacher-specific profile view
-  parent.tsx              # Parent/guardian-specific profile view
-  staff.tsx               # Staff-specific profile view
-  edit-role-data.tsx      # Role-specific data editor
-  edit-role-actions.ts    # Server actions for role data editing
+  actions.ts            # Server actions: getProfileBasicData (+ attachRoleStats),
+                        #   getContributionData, getPinnedItems/updatePinnedItems,
+                        #   getRecentActivity, logUserActivity, update* mutations
+  validation.ts         # Zod schemas (profile/bio/settings/github/pinned/logActivity)
+  types.ts              # Types (ProfileRole, ActivityType, ContributionGraphData, …)
+  client.tsx            # ProfileContent — tabs + layout (Overview + one role tab)
+  sidebar.tsx           # Real identity, derived stats, real achievements, empty-aware
+  form.tsx              # Edit GitHub-style fields
+  graph.tsx             # Contribution graph (real data; empty grid when none)
+  activity.tsx          # Activity feed via getRecentActivity (empty-aware)
+  pinned.tsx            # Pinned items wired to the real backend (reorder persists)
+  student.tsx / teacher.tsx / parent.tsx   # Real-data role dashboards (empty-aware)
+  edit-role-data.tsx    # Lazy-loaded self-edit wizard steps
+  edit-role-actions.ts  # getOwnEntity / canSelfEdit / getSelfEditableSteps
   detail/
-    content.tsx           # Detail view for viewing other users
-    actions.ts            # Detail-specific server actions
-    permissions.ts        # Who can view whose profile
-    types.ts              # Detail view types
-  __tests__/
-    actions.test.ts       # Server action tests
+    content.tsx         # ProfileDetailContent (what the route renders) + error mapping
+    actions.ts          # getProfileById / canViewProfile (strict RBAC; not yet routed)
+    permissions.ts      # Permission matrix + SELF_EDITABLE_STEPS (single source)
+    types.ts
+  __tests__/            # actions, contribution, validation, edit-role-actions
+  detail/__tests__/     # permissions, actions
 ```
 
-### Status
+### What is real vs deferred
 
-**Completion:** 85% | **Blockers:** None
+**Real now:** identity, contribution graph, edit forms, pinned items (read +
+reorder-persist), student achievements/average/subjects, teacher class
+counts + list, guardian children list. All server reads are `schoolId`-scoped
+(self-writes scope by `session.user.id`).
 
-### Integration Points
+**Deferred (honest empty-states, not fabricated):** the activity feed is empty
+until `logUserActivity` is wired into cross-block flows; per-subject grades,
+attendance-rate card, grading queue, top students, timetable schedules, and the
+pinned add/remove editor are not built. `updateProfileSettings` returns
+`NOT_IMPLEMENTED` (no settings columns). See `ISSUE.md`.
 
-- **Authentication**: Profile data sourced from User model via NextAuth session
-- **Students/Teachers/Staff**: Role-specific profile views pull from respective models
-- **Attendance**: Contribution graph can reflect attendance patterns
-- **Activity Log**: Tracks user actions across the platform
+### Tests
+
+`pnpm vitest run src/components/school-dashboard/profile` — 108 tests across 6
+files (actions, contribution, validation, edit-role-actions, detail/permissions,
+detail/actions). Covers auth, multi-tenant scoping, cross-tenant regressions,
+validation, and the real-stat derivations.

@@ -44,7 +44,7 @@ export default async function Page({ params }: Props) {
         role="staff"
         isOwner={false}
         userId=""
-        error="Not authenticated"
+        error="NOT_AUTHENTICATED"
         dictionary={dictionary}
         lang={lang}
       />

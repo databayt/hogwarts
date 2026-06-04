@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { Prisma } from "@prisma/client"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -12,7 +13,9 @@ import {
   deletePeriod,
   deleteScheduleException,
   detectTimetableConflicts,
+  findAvailableSubstitutes,
   getWeeklyTimetable,
+  importTimetableSlots,
   moveTimetableSlot,
   respondToSubstitution,
   setActiveTerm,
@@ -25,6 +28,15 @@ import {
   upsertTeacherConstraints,
   upsertTimetableSlot,
 } from "../actions"
+import { getPermissionContext } from "../permissions"
+
+/** Build a Prisma P2002 unique-constraint error without touching a real DB. */
+function p2002(): Prisma.PrismaClientKnownRequestError {
+  return new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+    code: "P2002",
+    clientVersion: "test",
+  })
+}
 
 // ---------------------------------------------------------------------------
 // Test CUIDs (c + 24 lowercase alphanumeric = 25 chars, matches /^c[a-z0-9]{24}$/)
@@ -130,14 +142,26 @@ vi.mock("@/lib/db", () => ({
     },
     teacher: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     classroom: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    teacherSubjectExpertise: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    school: {
+      findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
+    },
+    user: {
+      findMany: vi.fn().mockResolvedValue([]),
     },
     teacherUnavailableBlock: {
       findMany: vi.fn().mockResolvedValue([]),
     },
     $queryRaw: vi.fn().mockResolvedValue([]),
+    $transaction: vi.fn(),
   },
 }))
 
@@ -181,18 +205,18 @@ const SCHOOL_ID = "school-123"
 function mockTenantAdmin() {
   vi.mocked(getTenantContext).mockResolvedValue({
     schoolId: SCHOOL_ID,
-    subdomain: "test-school",
+    requestId: "req-1",
     role: "ADMIN",
-    locale: "en",
+    isPlatformAdmin: false,
   })
 }
 
 function mockNoSchool() {
   vi.mocked(getTenantContext).mockResolvedValue({
-    schoolId: null as any,
-    subdomain: "",
+    schoolId: null,
+    requestId: "req-1",
     role: "ADMIN",
-    locale: "en",
+    isPlatformAdmin: false,
   })
 }
 
@@ -522,7 +546,7 @@ describe("Timetable Actions", () => {
           targetDayOfWeek: 1,
           targetPeriodId: CPERIOD2,
         })
-      ).rejects.toThrow("Slot not found")
+      ).rejects.toThrow("SLOT_NOT_FOUND")
     })
   })
 
@@ -553,7 +577,7 @@ describe("Timetable Actions", () => {
       mockNoSchool()
 
       await expect(setActiveTerm({ termId: "term-1" })).rejects.toThrow(
-        "Missing school context"
+        "MISSING_SCHOOL_CONTEXT"
       )
     })
   })
@@ -598,7 +622,7 @@ describe("Timetable Actions", () => {
           startDate: new Date("2026-01-01"),
           endDate: new Date("2026-06-30"),
         })
-      ).rejects.toThrow("Term not found")
+      ).rejects.toThrow("TERM_NOT_FOUND")
     })
 
     it("throws when start date >= end date", async () => {
@@ -608,7 +632,7 @@ describe("Timetable Actions", () => {
           startDate: new Date("2026-06-30"),
           endDate: new Date("2026-01-01"),
         })
-      ).rejects.toThrow("Start date must be before end date")
+      ).rejects.toThrow("INVALID_DATE_RANGE")
     })
   })
 
@@ -648,7 +672,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updatePeriod({ periodId: "period-other-school", name: "Updated" })
-      ).rejects.toThrow("Period not found")
+      ).rejects.toThrow("PERIOD_NOT_FOUND")
     })
   })
 
@@ -672,7 +696,7 @@ describe("Timetable Actions", () => {
       vi.mocked(db.timetable.count).mockResolvedValue(5)
 
       await expect(deletePeriod({ periodId: "period-1" })).rejects.toThrow(
-        "Cannot delete period"
+        "PERIOD_IN_USE"
       )
     })
   })
@@ -711,7 +735,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updateScheduleException({ id: "exc-other", title: "X" })
-      ).rejects.toThrow("Schedule exception not found")
+      ).rejects.toThrow("EXCEPTION_NOT_FOUND")
     })
   })
 
@@ -743,7 +767,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         deleteScheduleException({ id: "exc-other" })
-      ).rejects.toThrow("Schedule exception not found")
+      ).rejects.toThrow("EXCEPTION_NOT_FOUND")
     })
   })
 
@@ -873,7 +897,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updateTeacherAbsence({ id: "abs-other", status: "APPROVED" })
-      ).rejects.toThrow("Absence not found")
+      ).rejects.toThrow("ABSENCE_NOT_FOUND")
     })
   })
 
@@ -909,7 +933,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         respondToSubstitution({ id: "sub-other", response: "CONFIRMED" })
-      ).rejects.toThrow("Substitution record not found")
+      ).rejects.toThrow("SUBSTITUTION_NOT_FOUND")
     })
 
     it("throws when status is not PENDING", async () => {
@@ -921,7 +945,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         respondToSubstitution({ id: "sub-1", response: "CONFIRMED" })
-      ).rejects.toThrow("Can only respond to pending substitutions")
+      ).rejects.toThrow("SUBSTITUTION_NOT_PENDING")
     })
   })
 
@@ -954,7 +978,7 @@ describe("Timetable Actions", () => {
       vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue(null)
 
       await expect(cancelSubstitution({ id: "sub-other" })).rejects.toThrow(
-        "Substitution record not found"
+        "SUBSTITUTION_NOT_FOUND"
       )
     })
 
@@ -966,7 +990,7 @@ describe("Timetable Actions", () => {
       } as any)
 
       await expect(cancelSubstitution({ id: "sub-1" })).rejects.toThrow(
-        "Cannot cancel a completed substitution"
+        "SUBSTITUTION_ALREADY_COMPLETED"
       )
     })
   })
@@ -1002,7 +1026,307 @@ describe("Timetable Actions", () => {
           templateId: "tpl-other-school",
           targetTermId: "term-1",
         })
-      ).rejects.toThrow("Template not found")
+      ).rejects.toThrow("TEMPLATE_NOT_FOUND")
+    })
+
+    it("counts a P2002 unique-constraint as a conflict and keeps going (P1-4)", async () => {
+      vi.mocked(db.timetableTemplate.findFirst).mockResolvedValue({
+        slotPatterns: [
+          {
+            dayOfWeek: 1,
+            periodId: CPERIOD1,
+            classId: CCLASS1,
+            teacherId: CTEACHER1,
+            classroomId: CROOM1,
+            rotationWeek: 0,
+          },
+        ],
+        workingDays: [0, 1, 2, 3, 4],
+      } as any)
+      vi.mocked(db.timetable.create).mockRejectedValue(p2002())
+      vi.mocked(db.templateApplication.create).mockResolvedValue({} as any)
+
+      // Should NOT throw — a unique-constraint collision is an expected conflict.
+      await expect(
+        applyTemplateToTerm({ templateId: "tpl-1", targetTermId: "term-1" })
+      ).resolves.toBeDefined()
+      expect(db.templateApplication.create).toHaveBeenCalled()
+    })
+
+    it("surfaces a non-P2002 DB error instead of swallowing it (P1-4)", async () => {
+      vi.mocked(db.timetableTemplate.findFirst).mockResolvedValue({
+        slotPatterns: [
+          {
+            dayOfWeek: 1,
+            periodId: CPERIOD1,
+            classId: CCLASS1,
+            teacherId: CTEACHER1,
+            classroomId: CROOM1,
+            rotationWeek: 0,
+          },
+        ],
+        workingDays: [0, 1, 2, 3, 4],
+      } as any)
+      vi.mocked(db.timetable.create).mockRejectedValue(
+        new Error("connection reset")
+      )
+
+      await expect(
+        applyTemplateToTerm({ templateId: "tpl-1", targetTermId: "term-1" })
+      ).rejects.toThrow("connection reset")
+    })
+  })
+
+  // =========================================================================
+  // respondToSubstitution — authorization (P1-2)
+  // =========================================================================
+
+  describe("respondToSubstitution authorization", () => {
+    const SUB_TEACHER_ID = "teacher-sub"
+
+    function mockNonAdminTeacher() {
+      // A TEACHER role: canModify is false, so ownership must be checked.
+      vi.mocked(getPermissionContext).mockResolvedValue({
+        userId: "user-1",
+        schoolId: SCHOOL_ID,
+        role: "TEACHER",
+        canView: true,
+        canModify: false,
+      } as any)
+    }
+
+    it("allows the assigned substitute teacher to respond", async () => {
+      mockNonAdminTeacher()
+      vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue({
+        id: "sub-1",
+        schoolId: SCHOOL_ID,
+        status: "PENDING",
+        substituteTeacherId: SUB_TEACHER_ID,
+      } as any)
+      // The caller resolves to the assigned substitute teacher.
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({
+        id: SUB_TEACHER_ID,
+      } as any)
+      vi.mocked(db.substitutionRecord.updateMany).mockResolvedValue({
+        count: 1,
+      })
+
+      const result = await respondToSubstitution({
+        id: "sub-1",
+        response: "CONFIRMED",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.substitutionRecord.updateMany).toHaveBeenCalledWith({
+        where: { id: "sub-1", schoolId: SCHOOL_ID },
+        data: expect.objectContaining({ status: "CONFIRMED" }),
+      })
+    })
+
+    it("rejects a teacher who is NOT the assigned substitute", async () => {
+      mockNonAdminTeacher()
+      vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue({
+        id: "sub-1",
+        schoolId: SCHOOL_ID,
+        status: "PENDING",
+        substituteTeacherId: SUB_TEACHER_ID,
+      } as any)
+      // The caller is a different teacher.
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({
+        id: "teacher-other",
+      } as any)
+
+      await expect(
+        respondToSubstitution({ id: "sub-1", response: "CONFIRMED" })
+      ).rejects.toThrow("FORBIDDEN")
+      expect(db.substitutionRecord.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("rejects a non-admin with no teacher record", async () => {
+      mockNonAdminTeacher()
+      vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue({
+        id: "sub-1",
+        schoolId: SCHOOL_ID,
+        status: "PENDING",
+        substituteTeacherId: SUB_TEACHER_ID,
+      } as any)
+      vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
+
+      await expect(
+        respondToSubstitution({ id: "sub-1", response: "CONFIRMED" })
+      ).rejects.toThrow("FORBIDDEN")
+      expect(db.substitutionRecord.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("allows an admin to respond without an ownership check", async () => {
+      // Explicitly assert the admin path (canModify: true) — clearAllMocks does
+      // not restore implementations set by a previous test in this block.
+      vi.mocked(getPermissionContext).mockResolvedValue({
+        userId: "user-1",
+        schoolId: SCHOOL_ID,
+        role: "ADMIN",
+        canView: true,
+        canModify: true,
+      } as any)
+      vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue({
+        id: "sub-1",
+        schoolId: SCHOOL_ID,
+        status: "PENDING",
+        substituteTeacherId: SUB_TEACHER_ID,
+      } as any)
+      vi.mocked(db.substitutionRecord.updateMany).mockResolvedValue({
+        count: 1,
+      })
+
+      const result = await respondToSubstitution({
+        id: "sub-1",
+        response: "DECLINED",
+        declineReason: "unavailable",
+      })
+
+      expect(result.success).toBe(true)
+      // Admins skip the teacher-ownership lookup entirely.
+      expect(db.teacher.findFirst).not.toHaveBeenCalled()
+    })
+  })
+
+  // =========================================================================
+  // findAvailableSubstitutes — schoolId scoping + weekOffset (P1-3)
+  // =========================================================================
+
+  describe("findAvailableSubstitutes", () => {
+    const baseInput = {
+      originalTeacherId: CTEACHER1,
+      dayOfWeek: 1,
+      periodId: CPERIOD1,
+      slotDate: new Date("2026-01-12T00:00:00.000Z"),
+      termId: CTERM1,
+    }
+
+    function freeTeacher() {
+      return [
+        {
+          id: "teacher-free",
+          firstName: "Free",
+          lastName: "Teacher",
+          subjectExpertise: [],
+          constraints: [],
+          timetables: [],
+        },
+      ]
+    }
+
+    it("scopes every nested include by schoolId and weekOffset (defaults 0)", async () => {
+      vi.mocked(db.teacher.findMany).mockResolvedValue(freeTeacher() as any)
+      vi.mocked(db.timetable.count).mockResolvedValue(0)
+
+      const result = await findAvailableSubstitutes(baseInput)
+
+      expect(result.substitutes).toHaveLength(1)
+      const callArg = vi.mocked(db.teacher.findMany).mock.calls[0][0] as any
+      expect(callArg.include.timetables.where).toMatchObject({
+        schoolId: SCHOOL_ID,
+        weekOffset: 0,
+      })
+      expect(callArg.include.constraints.where.schoolId).toBe(SCHOOL_ID)
+      expect(
+        callArg.include.constraints.include.unavailableBlocks.where.schoolId
+      ).toBe(SCHOOL_ID)
+    })
+
+    it("threads a non-zero weekOffset into the busy check", async () => {
+      vi.mocked(db.teacher.findMany).mockResolvedValue(freeTeacher() as any)
+      vi.mocked(db.timetable.count).mockResolvedValue(0)
+
+      await findAvailableSubstitutes({ ...baseInput, weekOffset: 1 })
+
+      const callArg = vi.mocked(db.teacher.findMany).mock.calls[0][0] as any
+      expect(callArg.include.timetables.where.weekOffset).toBe(1)
+    })
+
+    it("excludes a teacher already booked in the queried week", async () => {
+      vi.mocked(db.teacher.findMany).mockResolvedValue([
+        {
+          id: "teacher-busy",
+          firstName: "Busy",
+          lastName: "Teacher",
+          subjectExpertise: [],
+          constraints: [],
+          timetables: [{ id: "slot-x" }], // booked this week → skipped
+        },
+      ] as any)
+      vi.mocked(db.timetable.count).mockResolvedValue(0)
+
+      const result = await findAvailableSubstitutes(baseInput)
+      expect(result.substitutes).toHaveLength(0)
+    })
+  })
+
+  // =========================================================================
+  // importTimetableSlots — error handling (P1-4)
+  // =========================================================================
+
+  describe("importTimetableSlots", () => {
+    const validSlot = {
+      dayOfWeek: 1,
+      periodId: CPERIOD1,
+      classId: CCLASS1,
+      teacherId: CTEACHER1,
+      classroomId: CROOM1,
+      weekOffset: 0 as const,
+    }
+
+    function mockImportLookups() {
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        yearId: "year-1",
+      } as any)
+      vi.mocked(db.class.findMany).mockResolvedValue([
+        { id: CCLASS1, subjectId: "subj-1" },
+      ] as any)
+      vi.mocked(db.teacher.findMany).mockResolvedValue([
+        { id: CTEACHER1 },
+      ] as any)
+      vi.mocked(db.classroom.findMany).mockResolvedValue([
+        { id: CROOM1 },
+      ] as any)
+      vi.mocked(db.period.findMany).mockResolvedValue([{ id: CPERIOD1 }] as any)
+      vi.mocked(db.$transaction).mockImplementation(
+        async (cb: any) => cb(db) as any
+      )
+    }
+
+    it("counts a P2002 collision as skipped without failing the import (P1-4)", async () => {
+      mockImportLookups()
+      vi.mocked(db.timetable.upsert).mockRejectedValue(p2002())
+
+      const result = await importTimetableSlots({
+        termId: CTERM1,
+        slots: [validSlot],
+        options: { overwrite: false, validateOnly: false },
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.skippedCount).toBe(1)
+      expect(result.successCount).toBe(0)
+    })
+
+    it("records a non-P2002 DB error instead of silently skipping (P1-4)", async () => {
+      mockImportLookups()
+      vi.mocked(db.timetable.upsert).mockRejectedValue(
+        new Error("deadlock detected")
+      )
+
+      const result = await importTimetableSlots({
+        termId: CTERM1,
+        slots: [validSlot],
+        options: { overwrite: false, validateOnly: false },
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+      // The real error message is surfaced, not masked as a skipped row.
+      expect(result.errors.some((e) => /deadlock/.test(e.message))).toBe(true)
+      expect(result.skippedCount).toBe(0)
     })
   })
 })

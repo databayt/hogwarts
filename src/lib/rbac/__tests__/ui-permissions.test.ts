@@ -9,11 +9,11 @@ import {
   ADMIN_ROLES,
   FINANCE_WRITE_ROLES,
   FULL_UI_PERMISSIONS,
+  intersectPermissions,
+  isRoleIn,
   NO_UI_PERMISSIONS,
   READ_ONLY_UI_PERMISSIONS,
   STAFF_WRITE_ROLES,
-  intersectPermissions,
-  isRoleIn,
   type UIPermissions,
 } from "../ui-permissions"
 
@@ -30,7 +30,10 @@ const ROLE_BUCKETS = {
 
 // Expected membership per role × bucket. Reading this table answers
 // "which roles can write what" without grepping the codebase.
-const EXPECTED_MEMBERSHIP: Record<Role, Record<keyof typeof ROLE_BUCKETS, boolean>> = {
+const EXPECTED_MEMBERSHIP: Record<
+  Role,
+  Record<keyof typeof ROLE_BUCKETS, boolean>
+> = {
   DEVELOPER: {
     ADMIN_ROLES: true,
     STAFF_WRITE_ROLES: true,
@@ -182,8 +185,14 @@ describe("intersectPermissions", () => {
   })
 
   it("OR-s readOnlyMode (read-only in either side makes the result read-only)", () => {
-    const writable: UIPermissions = { ...FULL_UI_PERMISSIONS, readOnlyMode: false }
-    const readonly: UIPermissions = { ...FULL_UI_PERMISSIONS, readOnlyMode: true }
+    const writable: UIPermissions = {
+      ...FULL_UI_PERMISSIONS,
+      readOnlyMode: false,
+    }
+    const readonly: UIPermissions = {
+      ...FULL_UI_PERMISSIONS,
+      readOnlyMode: true,
+    }
     expect(intersectPermissions(writable, readonly).readOnlyMode).toBe(true)
     expect(intersectPermissions(readonly, writable).readOnlyMode).toBe(true)
     expect(intersectPermissions(writable, writable).readOnlyMode).toBe(false)

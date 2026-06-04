@@ -35,6 +35,18 @@ export function ProfileDetailContent({
 
   const p = (dictionary as any)?.profile
 
+  // Map server error codes → translated messages (never render a raw code).
+  const ERROR_KEY: Record<string, string> = {
+    NOT_AUTHENTICATED: "notAuthenticated",
+    MISSING_SCHOOL: "missingSchool",
+    NOT_FOUND: "notFound",
+  }
+  const errorMessage = error
+    ? (p?.errors?.[ERROR_KEY[error] ?? "failedToLoad"] ??
+      p?.errors?.failedToLoad ??
+      "Failed to load profile")
+    : (p?.errors?.failedToLoad ?? "Failed to load profile")
+
   // Error state
   if (error || !profileData) {
     return (
@@ -42,9 +54,7 @@ export function ProfileDetailContent({
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
           <AlertTitle>{p?.errors?.error ?? "Error"}</AlertTitle>
-          <AlertDescription>
-            {error || p?.errors?.failedToLoad || "Failed to load profile"}
-          </AlertDescription>
+          <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>
         <div className="mt-4">
           <Button onClick={() => router.back()}>

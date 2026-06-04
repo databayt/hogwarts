@@ -2,7 +2,7 @@
 
 ### Overview
 
-The Exams block provides a comprehensive examination platform covering the full lifecycle from question authoring through exam generation, administration, automated marking, and results analytics. Organized into 5 core sub-blocks plus additional modules (paper, wizard, grading, progress, mock). Components are fully built but routes are not yet wired.
+The Exams block provides a comprehensive examination platform covering the full lifecycle from question authoring through exam generation, administration, automated marking, and results analytics. Organized into 5 core sub-blocks plus additional modules (paper, wizard, grading, progress, mock). Components are fully built and **all routes are wired** (100+ route files under `(school-dashboard)/exams/` and `(exam-wizard)/`). See `PRODUCTION-AUDIT.md` for the authoritative production-readiness status and remaining (mostly schema-level) blockers.
 
 ### Capabilities by Role
 
@@ -14,19 +14,19 @@ The Exams block provides a comprehensive examination platform covering the full 
 
 ### Routes
 
-| Route                                                               | Page              | Status    |
-| ------------------------------------------------------------------- | ----------------- | --------- |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams`                    | Exam Dashboard    | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage`             | Exam Management   | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage/[id]`        | Exam Detail       | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/qbank`              | Question Bank     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate`           | Auto-Generate     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate/templates` | Exam Templates    | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark`               | Auto-Mark         | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark/grade/[id]`    | Grade Exam        | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results`            | Results Dashboard | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/[examId]`   | Exam Results      | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/analytics`  | Analytics         | Not wired |
+| Route                                                               | Page              | Status |
+| ------------------------------------------------------------------- | ----------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams`                    | Exam Dashboard    | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage`             | Exam Management   | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/manage/[id]`        | Exam Detail       | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/qbank`              | Question Bank     | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate`           | Auto-Generate     | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/generate/templates` | Exam Templates    | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark`               | Auto-Mark         | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/mark/grade/[id]`    | Grade Exam        | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results`            | Results Dashboard | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/[examId]`   | Exam Results      | Wired  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/exams/results/analytics`  | Analytics         | Wired  |
 
 ### File Structure
 
@@ -60,9 +60,9 @@ src/components/school-dashboard/exams/
 
 ### Status
 
-**Completion:** 65% | **Blockers:** Route pages not created in app directory
+**Completion:** ~75% | **Authoritative status:** see [`PRODUCTION-AUDIT.md`](./PRODUCTION-AUDIT.md)
 
-All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration. The main gap is that no `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` to wire the components to routes.
+All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration, and **all routes are wired** (the earlier "routes not created" blocker is resolved — 100+ `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` and `(exam-wizard)/`). Remaining production blockers are tracked in `PRODUCTION-AUDIT.md` and are predominantly **schema-level** (bilingual-field removal, `Cascade`→`Restrict`, `Int`→`Decimal` marks, `lang` on 17 models, dual `Result`/`ExamResult` models) requiring a Prisma migration + Neon branch. The code-only hardening pass (2026-05-30) landed: RBAC matrix tests, submit-flow ID-resolution test, CSV/formula-injection escaping, lang-aware exam notifications, and a full green unit suite (211 tests).
 
 ### Integration Points
 

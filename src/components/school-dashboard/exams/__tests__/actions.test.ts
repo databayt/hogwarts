@@ -10,7 +10,7 @@ import { createExam, deleteExam, getExams, updateExam } from "../manage/actions"
 
 vi.mock("@/lib/db", () => ({
   db: {
-    exam: {
+    schoolExam: {
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
@@ -22,12 +22,15 @@ vi.mock("@/lib/db", () => ({
     class: {
       findFirst: vi.fn(),
     },
-    subject: {
+    subjectSelection: {
+      findFirst: vi.fn(),
+    },
+    school: {
       findFirst: vi.fn(),
     },
     $transaction: vi.fn((callback) =>
       callback({
-        exam: {
+        schoolExam: {
           create: vi.fn(),
           update: vi.fn(),
           updateMany: vi.fn(),
@@ -40,6 +43,10 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotificationsToAudience: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("next/cache", () => ({
@@ -83,8 +90,9 @@ describe("Exam Actions", () => {
         id: "class-1",
         schoolId: mockSchoolId,
       } as any)
-      vi.mocked(db.subject.findFirst).mockResolvedValue({
-        id: "subject-1",
+      vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
+        id: "subject-selection-1",
+        catalogSubjectId: "subject-1",
       } as any)
       vi.mocked(db.schoolExam.create).mockResolvedValue(mockExam as any)
 

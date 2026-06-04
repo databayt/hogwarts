@@ -818,23 +818,6 @@ export const CONTRIBUTION_COLORS = {
   level4: "bg-emerald-400",
 } as const
 
-export const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-]
-
-export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
 // Activity types for different roles
 export type ActivityType =
   // Student activities
@@ -862,7 +845,6 @@ export type ActivityType =
 export interface ActivityBreakdown {
   type: ActivityType
   count: number
-  label: string
 }
 
 export interface ContributionDataPoint {
@@ -896,27 +878,3 @@ export interface GetContributionDataParams {
 export type GetContributionDataResult =
   | { success: true; data: ContributionGraphData }
   | { success: false; error: string }
-
-export const ACTIVITY_LABELS: Record<ActivityType, string> = {
-  // Student
-  attendance: "Attended class",
-  assignment_submitted: "Submitted assignment",
-  exam_completed: "Completed exam",
-  library_visit: "Library visit",
-  club_activity: "Club activity",
-  // Teacher
-  class_taught: "Taught class",
-  grade_published: "Published grade",
-  attendance_taken: "Marked attendance",
-  lesson_created: "Created lesson",
-  // Parent
-  portal_login: "Portal login",
-  payment_made: "Made payment",
-  message_sent: "Sent message",
-  event_rsvp: "Event RSVP",
-  // Staff
-  task_completed: "Completed task",
-  report_generated: "Generated report",
-  expense_processed: "Processed expense",
-  meeting_attended: "Attended meeting",
-}

@@ -2,336 +2,302 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { describe, expect, it } from "vitest"
-import { z } from "zod"
 
-// Timetable validation schema tests
-describe("Timetable Validation Schemas", () => {
-  const dayOfWeekEnum = z.enum([
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
-    "SUNDAY",
-  ])
+// Import the REAL production schemas (this file previously redefined its own
+// local schemas and tested Zod itself — it now exercises the source of truth).
+import {
+  cuidSchema,
+  dayOfWeekSchema,
+  deleteTimetableSlotSchema,
+  getWeeklyTimetableSchema,
+  suggestFreeSlotsSchema,
+  upsertSchoolWeekConfigSchema,
+  upsertTimetableSlotSchema,
+  validateRoomAvailability,
+  validateSubjectDistribution,
+  validateTeacherAvailability,
+  validateTeacherTravelTime,
+  validateTimeSlot,
+  weekOffsetSchema,
+  workingDaysSchema,
+} from "../validation"
 
-  const timetableEntrySchema = z.object({
-    classId: z.string().min(1, "Class is required"),
-    subjectId: z.string().min(1, "Subject is required"),
-    teacherId: z.string().min(1, "Teacher is required"),
-    classroomId: z.string().optional(),
-    dayOfWeek: dayOfWeekEnum,
-    periodId: z.string().min(1, "Period is required"),
-    termId: z.string().optional(),
-    yearId: z.string().optional(),
-    isRecurring: z.boolean().default(true),
-  })
+// Valid CUID = c + 24 lowercase alphanumerics (matches /^c[a-z0-9]{24}$/)
+const CUID_A = "caaaaaaaaaaaaaaaaaaa00001"
+const CUID_B = "caaaaaaaaaaaaaaaaaaa00002"
+const CUID_C = "caaaaaaaaaaaaaaaaaaa00003"
+const CUID_D = "caaaaaaaaaaaaaaaaaaa00004"
 
-  const timetableUpdateSchema = timetableEntrySchema.partial().extend({
-    id: z.string().min(1, "ID is required"),
-  })
+describe("Timetable Validation Schemas (real source)", () => {
+  describe("cuidSchema", () => {
+    it("accepts a well-formed CUID", () => {
+      expect(cuidSchema.parse(CUID_A)).toBe(CUID_A)
+    })
 
-  const bulkTimetableSchema = z.object({
-    classId: z.string().min(1, "Class is required"),
-    termId: z.string().optional(),
-    entries: z
-      .array(
-        z.object({
-          subjectId: z.string().min(1),
-          teacherId: z.string().min(1),
-          dayOfWeek: dayOfWeekEnum,
-          periodId: z.string().min(1),
-          classroomId: z.string().optional(),
-        })
+    it("rejects an empty string", () => {
+      expect(cuidSchema.safeParse("").success).toBe(false)
+    })
+
+    it("rejects an uppercase / wrong-length value", () => {
+      expect(cuidSchema.safeParse("CAAAAAAAAAAAAAAAAAAA00001").success).toBe(
+        false
       )
-      .min(1, "At least one entry is required"),
-    clearExisting: z.boolean().default(false),
+      expect(cuidSchema.safeParse("c123").success).toBe(false)
+    })
   })
 
-  const getTimetableSchema = z.object({
-    classId: z.string().optional(),
-    teacherId: z.string().optional(),
-    studentId: z.string().optional(),
-    classroomId: z.string().optional(),
-    termId: z.string().optional(),
-    yearId: z.string().optional(),
-    dayOfWeek: dayOfWeekEnum.optional(),
-    week: z.string().optional(), // ISO week format
+  describe("dayOfWeekSchema", () => {
+    it("accepts boundary values 0 and 6", () => {
+      expect(dayOfWeekSchema.parse(0)).toBe(0)
+      expect(dayOfWeekSchema.parse(6)).toBe(6)
+    })
+
+    it("rejects out-of-range days", () => {
+      expect(dayOfWeekSchema.safeParse(-1).success).toBe(false)
+      expect(dayOfWeekSchema.safeParse(7).success).toBe(false)
+    })
+
+    it("rejects non-integers", () => {
+      expect(dayOfWeekSchema.safeParse(2.5).success).toBe(false)
+    })
   })
 
-  const conflictCheckSchema = z
-    .object({
-      teacherId: z.string().optional(),
-      classroomId: z.string().optional(),
-      classId: z.string().optional(),
-      dayOfWeek: dayOfWeekEnum,
-      periodId: z.string().min(1),
-      excludeId: z.string().optional(), // Exclude self when updating
-    })
-    .refine((data) => data.teacherId || data.classroomId || data.classId, {
-      message: "At least one of teacherId, classroomId, or classId is required",
+  describe("weekOffsetSchema", () => {
+    it("accepts 0 and 1", () => {
+      expect(weekOffsetSchema.parse(0)).toBe(0)
+      expect(weekOffsetSchema.parse(1)).toBe(1)
     })
 
-  describe("timetableEntrySchema", () => {
-    it("validates complete timetable entry", () => {
-      const validData = {
-        classId: "class-123",
-        subjectId: "subject-123",
-        teacherId: "teacher-123",
-        classroomId: "room-123",
-        dayOfWeek: "MONDAY",
-        periodId: "period-1",
-        termId: "term-123",
-        yearId: "year-123",
-        isRecurring: true,
-      }
-
-      const result = timetableEntrySchema.safeParse(validData)
-      expect(result.success).toBe(true)
+    it("defaults to 0 when undefined", () => {
+      expect(weekOffsetSchema.parse(undefined)).toBe(0)
     })
 
-    it("requires mandatory fields", () => {
-      const missingClass = {
-        subjectId: "s1",
-        teacherId: "t1",
-        dayOfWeek: "MONDAY",
-        periodId: "p1",
-      }
+    it("rejects values other than 0 or 1", () => {
+      expect(weekOffsetSchema.safeParse(2).success).toBe(false)
+    })
+  })
 
-      const missingSubject = {
-        classId: "c1",
-        teacherId: "t1",
-        dayOfWeek: "MONDAY",
-        periodId: "p1",
-      }
-
-      const missingTeacher = {
-        classId: "c1",
-        subjectId: "s1",
-        dayOfWeek: "MONDAY",
-        periodId: "p1",
-      }
-
-      expect(timetableEntrySchema.safeParse(missingClass).success).toBe(false)
-      expect(timetableEntrySchema.safeParse(missingSubject).success).toBe(false)
-      expect(timetableEntrySchema.safeParse(missingTeacher).success).toBe(false)
+  describe("workingDaysSchema", () => {
+    it("accepts a valid Sun-Thu week", () => {
+      expect(workingDaysSchema.parse([0, 1, 2, 3, 4])).toEqual([0, 1, 2, 3, 4])
     })
 
-    it("validates dayOfWeek enum", () => {
-      const validDays = [
-        "MONDAY",
-        "TUESDAY",
-        "WEDNESDAY",
-        "THURSDAY",
-        "FRIDAY",
-        "SATURDAY",
-        "SUNDAY",
-      ]
+    it("rejects an empty array", () => {
+      expect(workingDaysSchema.safeParse([]).success).toBe(false)
+    })
 
-      validDays.forEach((dayOfWeek) => {
-        const data = {
-          classId: "c1",
-          subjectId: "s1",
-          teacherId: "t1",
-          dayOfWeek,
-          periodId: "p1",
-        }
-        expect(timetableEntrySchema.safeParse(data).success).toBe(true)
+    it("rejects duplicate days", () => {
+      expect(workingDaysSchema.safeParse([1, 1, 2]).success).toBe(false)
+    })
+
+    it("rejects more than 7 days", () => {
+      expect(
+        workingDaysSchema.safeParse([0, 1, 2, 3, 4, 5, 6, 0]).success
+      ).toBe(false)
+    })
+  })
+
+  describe("upsertTimetableSlotSchema", () => {
+    const valid = {
+      termId: CUID_A,
+      dayOfWeek: 1,
+      periodId: CUID_B,
+      classId: CUID_C,
+      teacherId: CUID_D,
+      classroomId: CUID_A,
+      weekOffset: 0,
+    }
+
+    it("accepts a complete slot", () => {
+      expect(upsertTimetableSlotSchema.parse(valid)).toMatchObject(valid)
+    })
+
+    it("rejects when a required id is missing", () => {
+      const { teacherId, ...missing } = valid
+      void teacherId
+      expect(upsertTimetableSlotSchema.safeParse(missing).success).toBe(false)
+    })
+
+    it("rejects an invalid CUID", () => {
+      expect(
+        upsertTimetableSlotSchema.safeParse({ ...valid, classId: "nope" })
+          .success
+      ).toBe(false)
+    })
+  })
+
+  describe("deleteTimetableSlotSchema", () => {
+    const valid = {
+      termId: CUID_A,
+      dayOfWeek: 3,
+      periodId: CUID_B,
+      classId: CUID_C,
+      weekOffset: 1,
+    }
+
+    it("accepts a valid delete payload", () => {
+      expect(deleteTimetableSlotSchema.parse(valid)).toMatchObject(valid)
+    })
+
+    it("rejects an out-of-range day", () => {
+      expect(
+        deleteTimetableSlotSchema.safeParse({ ...valid, dayOfWeek: 9 }).success
+      ).toBe(false)
+    })
+  })
+
+  describe("upsertSchoolWeekConfigSchema", () => {
+    it("accepts a minimal valid config", () => {
+      const result = upsertSchoolWeekConfigSchema.parse({
+        termId: null,
+        workingDays: [0, 1, 2, 3, 4],
       })
+      expect(result.workingDays).toEqual([0, 1, 2, 3, 4])
+    })
 
-      const invalidDay = {
+    it("rejects a lunch period after period 10", () => {
+      expect(
+        upsertSchoolWeekConfigSchema.safeParse({
+          termId: null,
+          workingDays: [0, 1, 2],
+          defaultLunchAfterPeriod: 11,
+        }).success
+      ).toBe(false)
+    })
+
+    it("rejects extra-lunch-rule durations outside 15-60 minutes", () => {
+      expect(
+        upsertSchoolWeekConfigSchema.safeParse({
+          termId: null,
+          workingDays: [0, 1, 2],
+          extraLunchRules: { "1": { afterPeriod: 3, duration: 5 } },
+        }).success
+      ).toBe(false)
+    })
+  })
+
+  describe("getWeeklyTimetableSchema & suggestFreeSlotsSchema", () => {
+    it("accepts a weekly-timetable query with an optional view", () => {
+      const parsed = getWeeklyTimetableSchema.parse({
+        termId: CUID_A,
+        weekOffset: 1,
+        view: { classId: CUID_B },
+      })
+      expect(parsed.termId).toBe(CUID_A)
+    })
+
+    it("requires a termId for weekly timetable", () => {
+      expect(getWeeklyTimetableSchema.safeParse({}).success).toBe(false)
+    })
+
+    it("accepts suggest-free-slots with preferred days/periods", () => {
+      const parsed = suggestFreeSlotsSchema.parse({
+        termId: CUID_A,
+        teacherId: CUID_B,
+        preferredDays: [0, 1],
+        preferredPeriods: [CUID_C],
+      })
+      expect(parsed.preferredDays).toEqual([0, 1])
+    })
+  })
+})
+
+describe("Timetable Validation Helpers (real source)", () => {
+  describe("validateTimeSlot", () => {
+    it("passes for a working day", () => {
+      expect(validateTimeSlot(1, "p1", [0, 1, 2, 3, 4])).toBe(true)
+    })
+
+    it("throws for a non-working day", () => {
+      expect(() => validateTimeSlot(5, "p1", [0, 1, 2, 3, 4])).toThrow(
+        /not a working day/
+      )
+    })
+  })
+
+  describe("validateTeacherAvailability", () => {
+    const existing = [{ teacherId: "t1", dayOfWeek: 1, periodId: "p1" }]
+
+    it("passes when the teacher is free", () => {
+      expect(validateTeacherAvailability("t1", 2, "p1", existing)).toBe(true)
+    })
+
+    it("throws when the teacher already has a class", () => {
+      expect(() =>
+        validateTeacherAvailability("t1", 1, "p1", existing)
+      ).toThrow(/already has a class/)
+    })
+  })
+
+  describe("validateRoomAvailability", () => {
+    const existing = [{ classroomId: "r1", dayOfWeek: 1, periodId: "p1" }]
+
+    it("passes when the room is free", () => {
+      expect(validateRoomAvailability("r1", 2, "p1", existing)).toBe(true)
+    })
+
+    it("throws when the room is double-booked", () => {
+      expect(() => validateRoomAvailability("r1", 1, "p1", existing)).toThrow(
+        /already booked/
+      )
+    })
+  })
+
+  describe("validateSubjectDistribution", () => {
+    it("is valid below the weekly cap", () => {
+      const slots = [{ classId: "c1", subjectId: "s1" }]
+      expect(validateSubjectDistribution("c1", "s1", slots).isValid).toBe(true)
+    })
+
+    it("is invalid once the cap is reached", () => {
+      const slots = Array.from({ length: 6 }, () => ({
         classId: "c1",
         subjectId: "s1",
-        teacherId: "t1",
-        dayOfWeek: "FUNDAY",
-        periodId: "p1",
-      }
-      expect(timetableEntrySchema.safeParse(invalidDay).success).toBe(false)
+      }))
+      const result = validateSubjectDistribution("c1", "s1", slots)
+      expect(result.isValid).toBe(false)
+      expect(result.message).toMatch(/max/)
     })
 
-    it("applies default for isRecurring", () => {
-      const minimal = {
-        classId: "c1",
-        subjectId: "s1",
-        teacherId: "t1",
-        dayOfWeek: "MONDAY",
-        periodId: "p1",
-      }
-
-      const result = timetableEntrySchema.parse(minimal)
-      expect(result.isRecurring).toBe(true)
+    it("respects a per-call override", () => {
+      const slots = [
+        { classId: "c1", subjectId: "s1" },
+        { classId: "c1", subjectId: "s1" },
+      ]
+      expect(validateSubjectDistribution("c1", "s1", slots, 2).isValid).toBe(
+        false
+      )
     })
   })
 
-  describe("timetableUpdateSchema", () => {
-    it("requires id for updates", () => {
-      const withoutId = {
-        teacherId: "new-teacher",
-      }
-
-      const result = timetableUpdateSchema.safeParse(withoutId)
-      expect(result.success).toBe(false)
+  describe("validateTeacherTravelTime", () => {
+    it("flags back-to-back classes in different rooms", () => {
+      const existing = [
+        {
+          teacherId: "t1",
+          dayOfWeek: 1,
+          periodId: "p1",
+          classroomId: "r1",
+          periodOrder: 1,
+        },
+      ]
+      const result = validateTeacherTravelTime("t1", 1, 2, "r2", existing)
+      expect(result.isValid).toBe(false)
     })
 
-    it("allows partial updates with id", () => {
-      const partialUpdate = {
-        id: "entry-123",
-        classroomId: "new-room",
-      }
-
-      const result = timetableUpdateSchema.safeParse(partialUpdate)
-      expect(result.success).toBe(true)
-    })
-  })
-
-  describe("bulkTimetableSchema", () => {
-    it("validates bulk timetable data", () => {
-      const validData = {
-        classId: "class-123",
-        termId: "term-123",
-        entries: [
-          {
-            subjectId: "s1",
-            teacherId: "t1",
-            dayOfWeek: "MONDAY",
-            periodId: "p1",
-          },
-          {
-            subjectId: "s2",
-            teacherId: "t2",
-            dayOfWeek: "MONDAY",
-            periodId: "p2",
-          },
-          {
-            subjectId: "s1",
-            teacherId: "t1",
-            dayOfWeek: "TUESDAY",
-            periodId: "p1",
-          },
-        ],
-        clearExisting: true,
-      }
-
-      const result = bulkTimetableSchema.safeParse(validData)
-      expect(result.success).toBe(true)
-    })
-
-    it("requires at least one entry", () => {
-      const emptyEntries = {
-        classId: "class-123",
-        entries: [],
-      }
-
-      const result = bulkTimetableSchema.safeParse(emptyEntries)
-      expect(result.success).toBe(false)
-    })
-
-    it("validates each entry in bulk", () => {
-      const invalidEntry = {
-        classId: "class-123",
-        entries: [
-          {
-            subjectId: "s1",
-            teacherId: "t1",
-            dayOfWeek: "MONDAY",
-            periodId: "p1",
-          },
-          {
-            subjectId: "",
-            teacherId: "t2",
-            dayOfWeek: "MONDAY",
-            periodId: "p2",
-          }, // Invalid
-        ],
-      }
-
-      const result = bulkTimetableSchema.safeParse(invalidEntry)
-      expect(result.success).toBe(false)
-    })
-
-    it("applies default for clearExisting", () => {
-      const minimal = {
-        classId: "class-123",
-        entries: [
-          {
-            subjectId: "s1",
-            teacherId: "t1",
-            dayOfWeek: "MONDAY",
-            periodId: "p1",
-          },
-        ],
-      }
-
-      const result = bulkTimetableSchema.parse(minimal)
-      expect(result.clearExisting).toBe(false)
-    })
-  })
-
-  describe("getTimetableSchema", () => {
-    it("accepts various filter combinations", () => {
-      const byClass = { classId: "class-123" }
-      const byTeacher = { teacherId: "teacher-123" }
-      const byStudent = { studentId: "student-123" }
-      const byRoom = { classroomId: "room-123" }
-      const byDay = { classId: "class-123", dayOfWeek: "MONDAY" }
-
-      expect(getTimetableSchema.safeParse(byClass).success).toBe(true)
-      expect(getTimetableSchema.safeParse(byTeacher).success).toBe(true)
-      expect(getTimetableSchema.safeParse(byStudent).success).toBe(true)
-      expect(getTimetableSchema.safeParse(byRoom).success).toBe(true)
-      expect(getTimetableSchema.safeParse(byDay).success).toBe(true)
-    })
-
-    it("accepts empty filters (get all)", () => {
-      const result = getTimetableSchema.safeParse({})
-      expect(result.success).toBe(true)
-    })
-  })
-
-  describe("conflictCheckSchema", () => {
-    it("validates conflict check with teacher", () => {
-      const validData = {
-        teacherId: "teacher-123",
-        dayOfWeek: "MONDAY",
-        periodId: "period-1",
-      }
-
-      const result = conflictCheckSchema.safeParse(validData)
-      expect(result.success).toBe(true)
-    })
-
-    it("validates conflict check with classroom", () => {
-      const validData = {
-        classroomId: "room-123",
-        dayOfWeek: "MONDAY",
-        periodId: "period-1",
-      }
-
-      const result = conflictCheckSchema.safeParse(validData)
-      expect(result.success).toBe(true)
-    })
-
-    it("requires at least one of teacherId, classroomId, or classId", () => {
-      const noTarget = {
-        dayOfWeek: "MONDAY",
-        periodId: "period-1",
-      }
-
-      const result = conflictCheckSchema.safeParse(noTarget)
-      expect(result.success).toBe(false)
-    })
-
-    it("allows excludeId for update scenarios", () => {
-      const withExclude = {
-        teacherId: "teacher-123",
-        dayOfWeek: "MONDAY",
-        periodId: "period-1",
-        excludeId: "entry-123",
-      }
-
-      const result = conflictCheckSchema.safeParse(withExclude)
-      expect(result.success).toBe(true)
+    it("allows back-to-back classes in the same room", () => {
+      const existing = [
+        {
+          teacherId: "t1",
+          dayOfWeek: 1,
+          periodId: "p1",
+          classroomId: "r1",
+          periodOrder: 1,
+        },
+      ]
+      expect(
+        validateTeacherTravelTime("t1", 1, 2, "r1", existing).isValid
+      ).toBe(true)
     })
   })
 })

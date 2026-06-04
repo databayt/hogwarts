@@ -147,106 +147,6 @@ export const upsertSchoolWeekConfigSchema = z.object({
     .optional(),
 })
 
-export const bulkUpsertTimetableSlotsSchema = z.object({
-  termId: cuidSchema,
-  slots: z.array(
-    z.object({
-      dayOfWeek: dayOfWeekSchema,
-      periodId: cuidSchema,
-      classId: cuidSchema,
-      teacherId: cuidSchema,
-      classroomId: cuidSchema,
-      weekOffset: weekOffsetSchema,
-    })
-  ),
-  clearExisting: z.boolean().default(false),
-})
-
-// ============================================================================
-// Import/Export Schemas
-// ============================================================================
-
-export const exportTimetableSchema = z.object({
-  termId: cuidSchema,
-  format: z.enum(["json", "csv", "pdf"]).default("json"),
-  includeMetadata: z.boolean().default(true),
-  filters: z
-    .object({
-      classIds: z.array(cuidSchema).optional(),
-      teacherIds: z.array(cuidSchema).optional(),
-      dayOfWeek: dayOfWeekSchema.optional(),
-      weekOffset: weekOffsetSchema.optional(),
-    })
-    .optional(),
-})
-
-export const importTimetableSchema = z.object({
-  termId: cuidSchema,
-  format: z.enum(["json", "csv"]),
-  data: z.union([
-    z.string(), // CSV string
-    z.array(
-      z.object({
-        dayOfWeek: dayOfWeekSchema,
-        periodId: cuidSchema,
-        classId: cuidSchema,
-        teacherId: cuidSchema,
-        classroomId: cuidSchema,
-        weekOffset: weekOffsetSchema,
-      })
-    ), // JSON array
-  ]),
-  mode: z.enum(["merge", "replace"]).default("merge"),
-})
-
-// ============================================================================
-// Conflict Resolution Schemas
-// ============================================================================
-
-export const resolveConflictSchema = z.object({
-  conflictId: cuidSchema,
-  resolution: z.enum(["keep_first", "keep_second", "remove_both", "reassign"]),
-  reassignTo: z
-    .object({
-      teacherId: cuidSchema.optional(),
-      classroomId: cuidSchema.optional(),
-      periodId: cuidSchema.optional(),
-      dayOfWeek: dayOfWeekSchema.optional(),
-    })
-    .optional(),
-})
-
-export const autoResolveConflictsSchema = z.object({
-  termId: cuidSchema,
-  strategy: z.enum([
-    "prefer_senior_teacher",
-    "prefer_larger_class",
-    "prefer_core_subjects",
-    "distribute_evenly",
-  ]),
-  dryRun: z.boolean().default(true),
-})
-
-// ============================================================================
-// Analytics Schemas
-// ============================================================================
-
-export const getTimetableStatsSchema = z.object({
-  termId: cuidSchema,
-  groupBy: z.enum(["teacher", "class", "subject", "room"]).optional(),
-  metrics: z
-    .array(
-      z.enum([
-        "total_periods",
-        "utilization_rate",
-        "conflict_count",
-        "free_periods",
-        "back_to_back_classes",
-      ])
-    )
-    .optional(),
-})
-
 // ============================================================================
 // Type Exports
 // ============================================================================
@@ -257,16 +157,6 @@ export type DeleteTimetableSlotInput = z.infer<typeof deleteTimetableSlotSchema>
 export type UpsertSchoolWeekConfigInput = z.infer<
   typeof upsertSchoolWeekConfigSchema
 >
-export type BulkUpsertTimetableSlotsInput = z.infer<
-  typeof bulkUpsertTimetableSlotsSchema
->
-export type ExportTimetableInput = z.infer<typeof exportTimetableSchema>
-export type ImportTimetableInput = z.infer<typeof importTimetableSchema>
-export type ResolveConflictInput = z.infer<typeof resolveConflictSchema>
-export type AutoResolveConflictsInput = z.infer<
-  typeof autoResolveConflictsSchema
->
-export type GetTimetableStatsInput = z.infer<typeof getTimetableStatsSchema>
 export type SuggestFreeSlotsInput = z.infer<typeof suggestFreeSlotsSchema>
 
 // ============================================================================

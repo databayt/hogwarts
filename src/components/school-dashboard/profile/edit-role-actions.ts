@@ -8,11 +8,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-// Steps the user can edit on their own profile (not admin-only fields)
-const SELF_EDITABLE_STEPS = {
-  teacher: ["contact", "qualifications", "experience"],
-  student: ["contact"],
-} as const
+import { SELF_EDITABLE_STEPS } from "./detail/permissions"
 
 type EntityType = keyof typeof SELF_EDITABLE_STEPS
 

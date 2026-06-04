@@ -22,7 +22,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    exam: {
+    schoolExam: {
       findFirst: vi.fn(),
     },
     student: {

@@ -11,6 +11,7 @@ import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { examCancelledNotification } from "../notification-text"
 import type { ActionResponse } from "./types"
 
 /**
@@ -270,12 +271,18 @@ export async function cancelExam(
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const cancelLang = schoolPref?.preferredLanguage ?? "ar"
+    const cancelNotif = examCancelledNotification(
+      exam.title,
+      cancelLang,
+      reason
+    )
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "إلغاء امتحان",
-      body: `تم إلغاء امتحان "${exam.title}"${reason ? `: ${reason}` : ""}`,
-      lang: schoolPref?.preferredLanguage ?? "ar",
+      title: cancelNotif.title,
+      body: cancelNotif.body,
+      lang: cancelLang,
       priority: "high",
       channels: ["in_app"],
       metadata: {

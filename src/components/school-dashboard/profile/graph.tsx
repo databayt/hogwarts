@@ -61,68 +61,37 @@ const ROLE_LABEL_KEYS: Record<ProfileRole, string> = {
 }
 
 // ============================================================================
-// Mock Data Generator (Fallback)
+// Empty Graph Builder (real data absent → render an honest, empty grid)
 // ============================================================================
 
-function generateMockData(
+function buildEmptyGraph(
   role: ProfileRole,
   year: number
 ): ContributionGraphData {
-  const startDate = new Date(year, 0, 1)
   const endDate = new Date(year, 11, 31)
   const contributions: ContributionDataPoint[] = []
-  const current = new Date(startDate)
+  const current = new Date(year, 0, 1)
 
-  // Adjust start to Sunday of that week
-  const startDayOfWeek = current.getDay()
-  current.setDate(current.getDate() - startDayOfWeek)
+  // Align the grid to the Sunday of the first week.
+  current.setDate(current.getDate() - current.getDay())
 
   while (current <= endDate) {
-    const dayOfWeek = current.getDay()
-    const month = current.getMonth()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    const isSchoolMonth = month >= 8 || month <= 5
-    const isVacation = month === 6 || month === 7
-
-    let baseIntensity = Math.random()
-
-    // Adjust intensity based on realistic patterns
-    if (isWeekend) baseIntensity *= 0.3
-    if (!isSchoolMonth || isVacation) baseIntensity *= 0.2
-
-    // Role-specific patterns
-    if (role === "teacher" && dayOfWeek >= 1 && dayOfWeek <= 5)
-      baseIntensity *= 1.2
-    if (role === "parent" && dayOfWeek === 3) baseIntensity *= 0.8
-    if (role === "student" && dayOfWeek === 2) baseIntensity *= 1.3
-
-    let level: 0 | 1 | 2 | 3 | 4 = 0
-    if (baseIntensity > 0.8) level = 4
-    else if (baseIntensity > 0.6) level = 3
-    else if (baseIntensity > 0.4) level = 2
-    else if (baseIntensity > 0.15) level = 1
-
-    const count = Math.floor(baseIntensity * 10)
-
     contributions.push({
       date: current.toISOString().split("T")[0],
-      level,
-      count,
+      level: 0,
+      count: 0,
       activities: [],
     })
-
     current.setDate(current.getDate() + 1)
   }
 
-  const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
-
   return {
     contributions,
-    totalActivities,
+    totalActivities: 0,
     year,
     role,
     summary: {
-      activeDays: contributions.filter((c) => c.count > 0).length,
+      activeDays: 0,
       longestStreak: 0,
       currentStreak: 0,
       averagePerDay: 0,
@@ -203,10 +172,10 @@ export default function ActivityGraph({
     }
   )
 
-  // Use fetched data, fallback to mock
+  // Use real data; render an empty (zero-filled) grid when absent — never mock.
   const graphData = useMemo(() => {
     if (fetchedData) return fetchedData
-    return generateMockData(role, parseInt(selectedYear))
+    return buildEmptyGraph(role, parseInt(selectedYear))
   }, [fetchedData, role, selectedYear])
 
   // Group data into weeks (columns)
@@ -334,7 +303,8 @@ export default function ActivityGraph({
                             <p className="font-semibold">
                               {day.count > 0
                                 ? `${day.count} ${roleLabel}`
-                                : `No ${roleLabel}`}
+                                : (p?.graph?.noContributions ??
+                                  "No contributions")}
                             </p>
                             <p className="text-muted-foreground">
                               {formatDate(day.date, locale)}
@@ -346,7 +316,11 @@ export default function ActivityGraph({
                                     key={i}
                                     className="text-muted-foreground text-xs"
                                   >
-                                    • {activity.label} ({activity.count})
+                                    •{" "}
+                                    {p?.overview?.activityLabels?.[
+                                      activity.type
+                                    ] ?? activity.type}{" "}
+                                    ({activity.count})
                                   </p>
                                 ))}
                               </div>

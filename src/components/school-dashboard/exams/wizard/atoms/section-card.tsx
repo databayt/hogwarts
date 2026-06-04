@@ -39,11 +39,9 @@ export function SectionCard({
           : "border-border hover:border-primary/50 hover:shadow-sm"
       )}
     >
-      {/* Section mockup — rendered standalone at 3x size */}
-      <div className="bg-muted/30 flex h-20 w-full items-center justify-center overflow-hidden rounded-md">
-        <div className="w-1/3 origin-center scale-[3] transform-gpu">
-          <MiniPaperMockup slot={slot} variant={variant} />
-        </div>
+      {/* Pure section preview — compact, fills the card (no A4 page frame) */}
+      <div className="bg-card w-full overflow-hidden rounded-md border p-3">
+        <MiniPaperMockup slot={slot} variant={variant} />
       </div>
 
       {/* Label and description */}

@@ -11,10 +11,6 @@ import {
   getPinnedItems,
   getProfileBasicData,
   getRecentActivity,
-  getStaffProfile,
-  getStudentProfile,
-  getTeacherProfile,
-  getUserProfileRole,
   logUserActivity,
   updateGitHubProfile,
   updatePinnedItems,
@@ -33,6 +29,11 @@ vi.mock("@/lib/db", () => ({
     student: { findFirst: vi.fn() },
     teacher: { findFirst: vi.fn() },
     guardian: { findFirst: vi.fn() },
+    studentClass: { findMany: vi.fn() },
+    class: { findMany: vi.fn() },
+    result: { aggregate: vi.fn() },
+    achievement: { findMany: vi.fn() },
+    studentGuardian: { findMany: vi.fn() },
     pinnedItem: {
       findMany: vi.fn(),
       deleteMany: vi.fn(),
@@ -102,83 +103,15 @@ function asAuthedNoSchool() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-})
-
-describe("Profile fetch actions", () => {
-  describe("getStudentProfile", () => {
-    it("rejects unauthenticated callers with NOT_AUTHENTICATED", async () => {
-      asUnauthed()
-      const res = await getStudentProfile()
-      expect(res.success).toBe(false)
-      if (!res.success) expect(res.error).toBe("NOT_AUTHENTICATED")
-    })
-
-    it("rejects callers without a school context", async () => {
-      asAuthedNoSchool()
-      const res = await getStudentProfile()
-      expect(res.success).toBe(false)
-      if (!res.success) expect(res.error).toBe("MISSING_SCHOOL")
-    })
-
-    it("scopes the query by schoolId and target id", async () => {
-      asAuthed()
-      vi.mocked(db.student.findFirst).mockResolvedValue({
-        id: "stu-1",
-      } as never)
-      await getStudentProfile("stu-1")
-      const call = vi.mocked(db.student.findFirst).mock.calls[0][0] as {
-        where: { id: string; schoolId: string }
-      }
-      expect(call.where).toMatchObject({ id: "stu-1", schoolId: SCHOOL_ID })
-    })
-
-    it("falls back to the session user id when none is supplied", async () => {
-      asAuthed()
-      vi.mocked(db.student.findFirst).mockResolvedValue({
-        id: USER_ID,
-      } as never)
-      await getStudentProfile()
-      const call = vi.mocked(db.student.findFirst).mock.calls[0][0] as {
-        where: { id: string }
-      }
-      expect(call.where.id).toBe(USER_ID)
-    })
-
-    it("returns STUDENT_NOT_FOUND when the student is missing", async () => {
-      asAuthed()
-      vi.mocked(db.student.findFirst).mockResolvedValue(null)
-      const res = await getStudentProfile("missing")
-      expect(res.success).toBe(false)
-      if (!res.success) expect(res.error).toBe("STUDENT_NOT_FOUND")
-    })
-  })
-
-  describe("getTeacherProfile", () => {
-    it("returns TEACHER_NOT_FOUND when the teacher is missing", async () => {
-      asAuthed()
-      vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
-      const res = await getTeacherProfile("missing")
-      expect(res.success).toBe(false)
-      if (!res.success) expect(res.error).toBe("TEACHER_NOT_FOUND")
-    })
-  })
-
-  describe("getStaffProfile", () => {
-    it("scopes by role to STAFF/ACCOUNTANT/ADMIN/DEVELOPER only", async () => {
-      asAuthed("ADMIN")
-      vi.mocked(db.user.findFirst).mockResolvedValue({ id: USER_ID } as never)
-      await getStaffProfile()
-      const call = vi.mocked(db.user.findFirst).mock.calls[0][0] as {
-        where: { role: { in: string[] } }
-      }
-      expect(call.where.role.in).toEqual([
-        "STAFF",
-        "ACCOUNTANT",
-        "ADMIN",
-        "DEVELOPER",
-      ])
-    })
-  })
+  // attachRoleStats (inside getProfileBasicData) queries these — default empty
+  // so role-relation profiles don't throw. Individual tests override as needed.
+  vi.mocked(db.studentClass.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.class.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.achievement.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.studentGuardian.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.result.aggregate).mockResolvedValue({
+    _avg: { percentage: null },
+  } as never)
 })
 
 describe("getProfileBasicData", () => {
@@ -313,6 +246,184 @@ describe("getProfileBasicData", () => {
     if (!res.success) return
     expect(res.data.role).toBe("STUDENT")
     expect(res.data.grNumber).toBe("GR-1")
+  })
+})
+
+describe("getProfileBasicData real stats (attachRoleStats)", () => {
+  it("derives real student counts, average, subjects and achievements", async () => {
+    asAuthed("STUDENT")
+    vi.mocked(db.user.findFirst).mockResolvedValue({
+      id: USER_ID,
+      username: "stu",
+      email: "s@school.edu",
+      image: null,
+      role: "STUDENT",
+      bio: null,
+      website: null,
+      timezone: null,
+      pronouns: null,
+      socialLinks: null,
+      statusEmoji: null,
+      statusMessage: null,
+      createdAt: new Date("2024-01-01"),
+      student: {
+        id: "stu-1",
+        firstName: "Sam",
+        lastName: "Lee",
+        profilePhotoUrl: null,
+        grNumber: "GR-9",
+        city: null,
+        enrollmentDate: null,
+        email: "s@school.edu",
+        application: null,
+      },
+    } as never)
+    vi.mocked(db.studentClass.findMany).mockResolvedValue([
+      { class: { name: "Math A", subjectId: "math" } },
+      { class: { name: "Math B", subjectId: "math" } },
+      { class: { name: "Science", subjectId: "sci" } },
+    ] as never)
+    vi.mocked(db.result.aggregate).mockResolvedValue({
+      _avg: { percentage: 87.4 },
+    } as never)
+    vi.mocked(db.achievement.findMany).mockResolvedValue([
+      {
+        id: "a1",
+        title: "Top of Class",
+        description: "First place",
+        achievementDate: new Date("2025-06-01"),
+        category: "Academic",
+        level: "National",
+        position: "1st",
+        issuedBy: "Board",
+      },
+    ] as never)
+
+    const res = await getProfileBasicData(USER_ID)
+    expect(res.success).toBe(true)
+    if (!res.success) return
+    expect(res.data.classCount).toBe(3)
+    expect(res.data.subjectCount).toBe(2)
+    // one name per distinct subject (Map keeps the last name per subjectId)
+    expect(res.data.subjects).toEqual(["Math B", "Science"])
+    expect(res.data.averagePercentage).toBe(87)
+    const ach = res.data.achievements as Array<Record<string, unknown>>
+    expect(ach).toHaveLength(1)
+    expect(ach[0].title).toBe("Top of Class")
+    expect(ach[0].level).toBe("platinum") // National → platinum
+    const call = vi.mocked(db.achievement.findMany).mock.calls[0][0] as {
+      where: { studentId: string; schoolId: string }
+    }
+    expect(call.where).toMatchObject({
+      studentId: "stu-1",
+      schoolId: SCHOOL_ID,
+    })
+  })
+
+  it("derives real teacher class count and students taught", async () => {
+    asAuthed("TEACHER")
+    vi.mocked(db.user.findFirst).mockResolvedValue({
+      id: USER_ID,
+      username: "t",
+      email: "t@s.edu",
+      image: null,
+      role: "TEACHER",
+      bio: null,
+      website: null,
+      timezone: null,
+      pronouns: null,
+      socialLinks: null,
+      statusEmoji: null,
+      statusMessage: null,
+      createdAt: new Date("2024-01-01"),
+      teacher: {
+        id: "tch-1",
+        firstName: "Tom",
+        lastName: "R",
+        profilePhotoUrl: null,
+        employeeId: "E1",
+        emailAddress: "t@s.edu",
+        joiningDate: null,
+      },
+    } as never)
+    vi.mocked(db.class.findMany).mockResolvedValue([
+      { id: "c1", name: "Class 1", _count: { studentClasses: 20 } },
+      { id: "c2", name: "Class 2", _count: { studentClasses: 15 } },
+    ] as never)
+
+    const res = await getProfileBasicData(USER_ID)
+    expect(res.success).toBe(true)
+    if (!res.success) return
+    expect(res.data.classCount).toBe(2)
+    expect(res.data.studentsTaught).toBe(35)
+    const classes = res.data.classes as Array<Record<string, unknown>>
+    expect(classes[0]).toMatchObject({
+      id: "c1",
+      name: "Class 1",
+      studentCount: 20,
+    })
+  })
+
+  it("derives the real guardian children list and count", async () => {
+    asAuthed("GUARDIAN")
+    vi.mocked(db.user.findFirst).mockResolvedValue({
+      id: USER_ID,
+      username: "g",
+      email: "g@s.edu",
+      image: null,
+      role: "GUARDIAN",
+      bio: null,
+      website: null,
+      timezone: null,
+      pronouns: null,
+      socialLinks: null,
+      statusEmoji: null,
+      statusMessage: null,
+      createdAt: new Date("2024-01-01"),
+      guardian: {
+        id: "grd-1",
+        firstName: "Gina",
+        lastName: "P",
+        emailAddress: "g@s.edu",
+      },
+    } as never)
+    vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
+      {
+        student: {
+          id: "s1",
+          firstName: "Kid",
+          lastName: "One",
+          profilePhotoUrl: null,
+        },
+      },
+      {
+        student: {
+          id: "s2",
+          firstName: "Kid",
+          lastName: "Two",
+          profilePhotoUrl: null,
+        },
+      },
+    ] as never)
+
+    const res = await getProfileBasicData(USER_ID)
+    expect(res.success).toBe(true)
+    if (!res.success) return
+    expect(res.data.childrenCount).toBe(2)
+    const children = res.data.children as Array<Record<string, unknown>>
+    expect(children).toHaveLength(2)
+    expect(children[0]).toMatchObject({
+      id: "s1",
+      firstName: "Kid",
+      lastName: "One",
+    })
+    const call = vi.mocked(db.studentGuardian.findMany).mock.calls[0][0] as {
+      where: { guardianId: string; schoolId: string }
+    }
+    expect(call.where).toMatchObject({
+      guardianId: "grd-1",
+      schoolId: SCHOOL_ID,
+    })
   })
 })
 
@@ -508,49 +619,36 @@ describe("Recent activity", () => {
     expect(call.data.userId).toBe(USER_ID)
     expect(call.data.activityType).toBe("PROFILE_UPDATED")
   })
-})
 
-describe("getUserProfileRole", () => {
-  it("maps STUDENT to 'student'", async () => {
+  it("logUserActivity rejects an empty title (Zod validation)", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
-      role: "STUDENT",
+    const res = await logUserActivity({
+      activityType: "PROFILE_UPDATED",
+      title: "",
     } as never)
-    expect(await getUserProfileRole("u1")).toBe("student")
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error).toBe("VALIDATION_ERROR")
+    expect(db.userActivity.create).not.toHaveBeenCalled()
   })
 
-  it("maps TEACHER to 'teacher'", async () => {
+  it("logUserActivity rejects an unknown activity type (Zod validation)", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
-      role: "TEACHER",
+    const res = await logUserActivity({
+      activityType: "NOT_A_REAL_TYPE",
+      title: "x",
     } as never)
-    expect(await getUserProfileRole("u1")).toBe("teacher")
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error).toBe("VALIDATION_ERROR")
+    expect(db.userActivity.create).not.toHaveBeenCalled()
   })
 
-  it("maps GUARDIAN to 'parent'", async () => {
-    asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
-      role: "GUARDIAN",
-    } as never)
-    expect(await getUserProfileRole("u1")).toBe("parent")
-  })
-
-  it("maps STAFF/ADMIN/ACCOUNTANT to 'staff'", async () => {
-    asAuthed()
-    for (const role of ["STAFF", "ADMIN", "ACCOUNTANT"] as const) {
-      vi.mocked(db.user.findUnique).mockResolvedValue({ role } as never)
-      expect(await getUserProfileRole("u1")).toBe("staff")
-    }
-  })
-
-  it("returns null for unknown roles", async () => {
-    asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({ role: "USER" } as never)
-    expect(await getUserProfileRole("u1")).toBeNull()
-  })
-
-  it("returns null when no session and no userId is given", async () => {
-    asUnauthed()
-    expect(await getUserProfileRole()).toBeNull()
+  it("logUserActivity rejects logging without a school context", async () => {
+    asAuthedNoSchool()
+    const res = await logUserActivity({
+      activityType: "PROFILE_UPDATED",
+      title: "x",
+    })
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error).toBe("MISSING_SCHOOL")
   })
 })

@@ -54,3 +54,29 @@ export const pinnedItemSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
   isPublic: z.boolean().default(true),
 })
+
+// Single source of truth for the UserActivity write path (logUserActivity).
+// The enum mirrors the Prisma UserActivityType values.
+export const logUserActivitySchema = z.object({
+  activityType: z.enum([
+    "ASSIGNMENT_SUBMITTED",
+    "ATTENDANCE_MARKED",
+    "ACHIEVEMENT_EARNED",
+    "EXAM_COMPLETED",
+    "COURSE_ENROLLED",
+    "COURSE_COMPLETED",
+    "LIBRARY_CHECKOUT",
+    "LIBRARY_RETURN",
+    "EVENT_ATTENDED",
+    "CLUB_JOINED",
+    "PROJECT_CREATED",
+    "PROJECT_UPDATED",
+    "GRADE_RECEIVED",
+    "CERTIFICATE_EARNED",
+    "PROFILE_UPDATED",
+    "OTHER",
+  ]),
+  title: z.string().min(1).max(200),
+  description: z.string().max(1000).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})

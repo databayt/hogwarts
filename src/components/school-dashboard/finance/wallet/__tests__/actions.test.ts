@@ -38,12 +38,15 @@ const WALLET_ID = "wal-1"
 const TRANSACTION_ID = "txn-1"
 const TOPUP_DATE = new Date("2026-05-25T10:00:00Z")
 
-function buildFormData(overrides: Partial<Record<string, string>> = {}): FormData {
+function buildFormData(
+  overrides: Partial<Record<string, string>> = {}
+): FormData {
   const fd = new FormData()
   fd.set("walletId", overrides.walletId ?? WALLET_ID)
   fd.set("amount", overrides.amount ?? "150")
   fd.set("paymentMethod", overrides.paymentMethod ?? "CASH")
-  if (overrides.description !== undefined) fd.set("description", overrides.description)
+  if (overrides.description !== undefined)
+    fd.set("description", overrides.description)
   return fd
 }
 

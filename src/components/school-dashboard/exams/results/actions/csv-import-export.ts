@@ -20,6 +20,8 @@ import { cacheKeys, gradeBoundaryCache } from "@/lib/cache/exam-cache"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { escapeCsv } from "../lib/csv-utils"
+
 // Validation schemas
 const exportResultsSchema = z.object({
   examId: z.string().min(1, "Exam ID is required"),
@@ -183,21 +185,21 @@ export async function exportExamResultsToCSV(
       } ${result.student.lastName}`.trim()
 
       const row = [
-        result.student.studentId || "",
-        `"${studentName}"`,
-        `"${exam.class.name}"`,
-        `"${exam.subject.name}"`,
-        `"${exam.title}"`,
+        escapeCsv(result.student.studentId || ""),
+        escapeCsv(studentName),
+        escapeCsv(exam.class.name),
+        escapeCsv(exam.subject.name),
+        escapeCsv(exam.title),
         exam.examDate.toISOString().split("T")[0],
         result.marksObtained.toString(),
         result.totalMarks.toString(),
         result.percentage.toFixed(2),
-        result.grade || "",
+        escapeCsv(result.grade || ""),
         result.gpa?.toString() || "",
         result.rank.toString(),
         result.marksObtained >= exam.passingMarks ? "Pass" : "Fail",
         result.isAbsent ? "Yes" : "No",
-        result.remarks ? `"${result.remarks.replace(/"/g, '""')}"` : "",
+        escapeCsv(result.remarks || ""),
       ].join(",")
 
       rows.push(row)

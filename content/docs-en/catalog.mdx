@@ -16,38 +16,64 @@ Onboarding a school takes seconds — `setupCatalogForSchool()` reads `country` 
 
 ## Three layers
 
-| Layer                 | Models                                                                         | Scope                                      |
-| --------------------- | ------------------------------------------------------------------------------ | ------------------------------------------ |
-| Global catalog        | `Subject`, `Chapter`, `Lesson`                                                 | No `schoolId`                              |
-| Content (contributed) | `Video`, `Attachment`, `Exam`, `Question`, `Material`, `Assignment`, `Book`    | Optional `schoolId` for source attribution |
-| School bridge         | `SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference` | Carries `schoolId`                         |
+| Layer                 | Models                                                                         | Scope                                                                            |
+| --------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Global catalog        | `Subject`, `Chapter`, `Lesson`                                                 | No `schoolId`                                                                    |
+| Content (contributed) | `Video`, `Attachment`, `Exam`, `Question`, `Material`, `Assignment`, `Book`    | No `schoolId` — attribution is the `contributedSchoolId` string (see note below) |
+| School bridge         | `SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference` | Carries `schoolId`                                                               |
+
+> **`schoolId` on content.** Of the contributed models, only `Video` / `VideoPurchase` carry an
+> _optional_ `schoolId` (for source attribution and free-for-my-school gating). The rest
+> (`Exam`, `Question`, `Material`, `Assignment`, `Book`, `Textbook`, `Document`, `Image`,
+> `ExamTemplate`) have **no** `schoolId` — who contributed them is recorded in the plain
+> `contributedSchoolId` string field, not a tenant FK.
 
 ## Models and tables
 
 Catalog models use **bare names** mapped to `catalog_*` tables; bridge models map to `school_*`. The Prisma client accessor is the camelCase of the model name (`db.subject`, `db.subjectSelection`).
 
-| Layer   | Prisma model           | Table (`@@map`)                        | Client accessor              |
-| ------- | ---------------------- | -------------------------------------- | ---------------------------- |
-| Catalog | `Subject`              | `catalog_subjects`                     | `db.subject`                 |
-| Catalog | `Chapter`              | `catalog_chapters`                     | `db.chapter`                 |
-| Catalog | `Lesson`               | `catalog_lessons`                      | `db.lesson`                  |
-| Catalog | `Video` / `Attachment` | `lesson_videos` / `lesson_attachments` | `db.video` / `db.attachment` |
-| Catalog | `Question`             | `catalog_questions`                    | `db.question`                |
-| Catalog | `ExamQuestion`         | `catalog_exam_questions`               | `db.examQuestion`            |
-| Catalog | `Exam`                 | `catalog_exams`                        | `db.exam`                    |
-| Catalog | `Material`             | `catalog_materials`                    | `db.material`                |
-| Catalog | `Assignment`           | `catalog_assignments`                  | `db.assignment`              |
-| Catalog | `Book`                 | `catalog_books`                        | `db.book`                    |
-| Catalog | `Curriculum`           | `catalog_curricula`                    | `db.curriculum`              |
-| Catalog | `Proposal`             | `catalog_proposals`                    | `db.proposal`                |
-| Catalog | `Document`             | `catalog_documents`                    | `db.document`                |
-| Bridge  | `SubjectSelection`     | `school_subject_selections`            | `db.subjectSelection`        |
-| Bridge  | `ContentOverride`      | `school_content_overrides`             | `db.contentOverride`         |
-| Bridge  | `InstructorPreference` | `school_instructor_preferences`        | `db.instructorPreference`    |
-| Bridge  | `BookSelection`        | `school_book_selections`               | `db.bookSelection`           |
-| LMS     | `Enrollment`           | `enrollments`                          | `db.enrollment`              |
-| LMS     | `LessonProgress`       | `lesson_progress`                      | `db.lessonProgress`          |
-| LMS     | `SubjectCertificate`   | `subject_certificates`                 | `db.subjectCertificate`      |
+| Layer    | Prisma model            | Table (`@@map`)                              | Client accessor               |
+| -------- | ----------------------- | -------------------------------------------- | ----------------------------- |
+| Catalog  | `Subject`               | `catalog_subjects`                           | `db.subject`                  |
+| Catalog  | `Chapter`               | `catalog_chapters`                           | `db.chapter`                  |
+| Catalog  | `Lesson`                | `catalog_lessons`                            | `db.lesson`                   |
+| Catalog  | `Curriculum`            | `catalog_curricula`                          | `db.curriculum`               |
+| Catalog  | `Video` / `Attachment`  | `lesson_videos` / `lesson_attachments`       | `db.video` / `db.attachment`  |
+| Catalog  | `VideoPurchase`         | `video_purchases`                            | `db.videoPurchase`            |
+| Catalog  | `Question`              | `catalog_questions`                          | `db.question`                 |
+| Catalog  | `ExamQuestion`          | `catalog_exam_questions`                     | `db.examQuestion`             |
+| Catalog  | `Quiz` / `QuizQuestion` | `catalog_quizzes` / `catalog_quiz_questions` | `db.quiz` / `db.quizQuestion` |
+| Catalog  | `Exam`                  | `catalog_exams`                              | `db.exam`                     |
+| Catalog  | `ExamTemplate`          | `catalog_exam_templates`                     | `db.examTemplate`             |
+| Catalog  | `ExamBlueprint`         | `catalog_exam_blueprints`                    | `db.examBlueprint`            |
+| Catalog  | `PaperTemplate`         | `catalog_paper_templates`                    | `db.paperTemplate`            |
+| Catalog  | `Material`              | `catalog_materials`                          | `db.material`                 |
+| Catalog  | `Assignment`            | `catalog_assignments`                        | `db.assignment`               |
+| Catalog  | `Book`                  | `catalog_books`                              | `db.book`                     |
+| Catalog  | `Textbook`              | `catalog_textbooks`                          | `db.textbook`                 |
+| Catalog  | `Document`              | `catalog_documents`                          | `db.document`                 |
+| Catalog  | `Image`                 | `catalog_images`                             | `db.image`                    |
+| Bridge   | `SubjectSelection`      | `school_subject_selections`                  | `db.subjectSelection`         |
+| Bridge   | `ContentOverride`       | `school_content_overrides`                   | `db.contentOverride`          |
+| Bridge   | `InstructorPreference`  | `school_instructor_preferences`              | `db.instructorPreference`     |
+| Bridge   | `BookSelection`         | `school_book_selections`                     | `db.bookSelection`            |
+| Bridge   | `Proposal`†             | `catalog_proposals`                          | `db.proposal`                 |
+| Academic | `AcademicLevel`         | `academic_levels`                            | `db.academicLevel`            |
+| Academic | `AcademicGrade`         | `academic_grades`                            | `db.academicGrade`            |
+| Academic | `AcademicStream`        | `academic_streams`                           | `db.academicStream`           |
+| LMS      | `Enrollment`            | `enrollments`                                | `db.enrollment`               |
+| LMS      | `LessonProgress`        | `lesson_progress`                            | `db.lessonProgress`           |
+| LMS      | `SubjectCertificate`    | `subject_certificates`                       | `db.subjectCertificate`       |
+
+> † `Proposal` maps to `catalog_proposals` but carries a **required `schoolId`** — it is a
+> school-initiated curriculum proposal, so it is tenant-scoped despite the `catalog_` table prefix.
+> The `Academic*` and bridge models are all `schoolId`-scoped (a school's provisioned structure).
+
+**FK naming** — two conventions live side by side. The hierarchy spine (`Chapter.subjectId`,
+`Lesson.chapterId`) and `Exam` / `Quiz` use **bare** FK names (`subjectId` / `chapterId` /
+`lessonId`). Content attachments (`Question`, `Material`, `Assignment`, `Book`, `ExamTemplate`)
+use **`catalog`-prefixed** FKs (`catalogSubjectId` / `catalogChapterId` / `catalogLessonId`).
+Exceptions: `Document` and `Textbook` break the content convention and use bare FKs.
 
 **Name collisions** — a catalog model and its school-scoped counterpart are _different_ models. When you read `Exam`, check the table to know which one:
 
@@ -68,6 +94,75 @@ Catalog models use **bare names** mapped to `catalog_*` tables; bridge models ma
 | `schoolLevel` | `String?` | `elementary`, `middle`, `high`, `k12` |
 
 `Subject.curriculumId` is an optional FK into `Curriculum` (`catalog_curricula`) alongside the `country` / `curriculum` string fields — the `curriculum` seed backfills it.
+
+## Curriculums
+
+A `Curriculum` row (`catalog_curricula`, unique on `country` + `code`) groups the subjects for one
+country/framework. Ten exist today, but only two carry real chapters and lessons — the rest are
+**subject-only shells** (tiles with no content yet).
+
+### What we have
+
+| Country | Code       | Curriculum                  | Source seed                               | Depth                         | In default seed? |
+| ------- | ---------- | --------------------------- | ----------------------------------------- | ----------------------------- | ---------------- |
+| US      | `us-k12`   | US K-12                     | `us-catalog.ts`                           | **Full** (chapters + lessons) | ✅ yes           |
+| SD      | `national` | Sudan National              | `sd-catalog.ts` / `sync-sd-curriculum.ts` | **Full** (chapters + lessons) | ✅ base set only |
+| GB      | `national` | British National            | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| —       | `ib`       | International Baccalaureate | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| SA      | `national` | Saudi National              | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| EG      | `national` | Egyptian National           | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| AE      | `national` | UAE National                | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| QA      | `national` | Qatari National             | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| KW      | `national` | Kuwaiti National            | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+| JO      | `national` | Jordanian National          | `world-curricula.ts`                      | Subjects only                 | ❌ separate      |
+
+> IB uses `country = "*"` (worldwide). For exact subject/chapter/lesson counts per curriculum, see
+> [Curriculum engineering](/docs/curriculum-engineering); for Sudan specifics see
+> [Sudan curriculum](/docs/sudan-curriculum).
+
+**Default vs separate seeds.** `pnpm db:seed` (Phase 0) only loads US + the Sudan base set via
+`seedCatalog`. The eight world curricula, the formal `Curriculum` records, and the full Sudan
+content tree are explicit, separate runs:
+
+```bash
+pnpm db:seed:single world-curricula    # GB, IB, SA, EG, AE, QA, KW, JO (subjects only)
+pnpm db:seed:single curriculum         # Curriculum records + curriculumId backfill
+pnpm db:seed:single sync-sd-curriculum # Full Sudan tree (authoritative)
+```
+
+A new school picks its curriculum at onboarding via `inferCurriculum(country, schoolType)` in
+`src/lib/catalog-setup.ts` (`international → us-k12`; `US → us-k12`, `GB → british`, and the MENA
+countries `SD/SA/EG/AE/QA/KW/JO → national`; unknown → `us-k12`).
+
+### What to add next
+
+1. **Deepen IB and British first.** They already have subject shells but no chapters/lessons —
+   the highest-demand international curricula. Add real content the same way Sudan was built
+   (directory tree or JSON data file → a sync seed that creates `Chapter` / `Lesson` rows).
+2. **Wire the prepared data.** `scripts/curriculum-data/cbse-curriculum.json` (India CBSE) and
+   `french-curriculum.json` (France) already exist on disk but are not referenced by any seed or by
+   `inferCurriculum` yet.
+
+### How to add a curriculum
+
+**Shallow (a new country, subjects only):**
+
+1. Add a `CurriculumWithSubjects` block to `prisma/seeds/world-curricula.ts` — `curriculum` metadata
+   (`country`, `code`, `slug`, `name`, `lang`, `gradeRange`, `structure`) plus `subjects[]`, each
+   with `name` / `slug` / `department` / `concept` / `color` (via `colorFor(concept)`) / `grades[]`.
+2. Push the block into `ALL_CURRICULA` and add a `sortOrder` band in `getSortBase()`.
+3. Add the country → code entry to `inferCurriculum` (`catalog-setup.ts`) **and** its mirror in
+   `src/lib/timetable-reference.ts` (they must stay in sync).
+4. `pnpm db:seed:single world-curricula`. No new images needed — concept S3 paths are reused.
+
+**Content-rich (real chapters + lessons):** additionally provide either
+
+- a **directory tree** like `curriculum/sd/` (`g{N}/<subject>/chapters/<ch>/lessons/<lesson>` +
+  `curriculum.json` + `structure.json`) consumed by a directory-driven sync (model
+  `sync-sd-curriculum.ts`), **or**
+- a **JSON data file** (model `scripts/sudan-data/sudan-curriculum.json` or
+  `scripts/clickview-data/*.json`) consumed by a dedicated seed (model `sd-catalog.ts` /
+  `us-catalog.ts`) that creates `Chapter` and `Lesson` rows and updates the denormalized counts.
 
 ## Auto-assignment
 
@@ -213,9 +308,39 @@ ProposalStatus     DRAFT, SUBMITTED, IN_REVIEW, APPROVED, REJECTED, PUBLISHED
 EnrollmentStatus   PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
 ```
 
-## Image pipeline
+## Shared concept & CDN assets
 
-Server-side via Sharp, served from CloudFront CDN. Pure client/server split.
+Catalog images are **shared by concept, not cloned per subject**. Every `Subject` carries an
+optional `concept` string (`"math"`, `"languages"`, …) that resolves to one set of S3 assets reused
+across all grades and all curricula. Arabic in Sudan and World Languages in the US both map to the
+same `languages` concept and serve the same images — so ~1,300 subjects share ~two dozen source
+images instead of one image each. The full concept list, cross-curriculum map, and chapter rotation
+pools live in [Concepts](/docs/concept); this section covers how the keys turn into URLs.
+
+### The four S3 key fields on `Subject`
+
+| Field       | DB column      | Kind   | Resolves to                                                                         |
+| ----------- | -------------- | ------ | ----------------------------------------------------------------------------------- |
+| `thumbnail` | `thumbnailKey` | prefix | `{key}-{sm\|md\|lg\|original}.webp` appended at read time                           |
+| `banner`    | `bannerUrl`    | prefix | same `-{size}.webp` suffixing, wide landscape art                                   |
+| `cover`     | `cover`        | full   | textbook cover — passed verbatim, grade-agnostic `catalog/concepts/{concept}/cover` |
+| `pdf`       | `pdf`          | full   | textbook PDF, unique per subject (only populated for Sudan today)                   |
+
+`thumbnail` / `banner` are **prefixes** (the size + `.webp` is appended on read); `cover` / `pdf`
+are **full keys** passed straight to the CDN with no suffixing.
+
+### Pipeline (server) → URL (client)
+
+| File                           | Environment | Purpose                                                                                          |
+| ------------------------------ | ----------- | ------------------------------------------------------------------------------------------------ |
+| `src/lib/catalog-image.ts`     | Server only | Sharp → 4 WebP variants → S3 upload (`processAndUploadCatalogImage`, `deleteCatalogImage`)       |
+| `src/lib/catalog-image-url.ts` | Client-safe | `getCatalogImageUrl(key, size)`, `getCatalogImageSrcSet(key)`                                    |
+| `src/lib/cloudfront-url.ts`    | Client-safe | Pure env/string helpers — the real fallback chain (`getCloudFrontUrl`, `isCloudFrontConfigured`) |
+| `src/lib/cloudfront.ts`        | Server only | AWS SDK — signed URLs for paid video, cache invalidation                                         |
+
+The split is deliberate: `catalog-image.ts` and `cloudfront.ts` pull in Sharp / `@aws-sdk/*` and are
+server-only; `catalog-image-url.ts` and `cloudfront-url.ts` are SDK-free so they can ship in client
+bundles.
 
 | Variant          | Width  | Quality  | Use             |
 | ---------------- | ------ | -------- | --------------- |
@@ -224,16 +349,32 @@ Server-side via Sharp, served from CloudFront CDN. Pure client/server split.
 | `-lg.webp`       | 1200px | 100      | Hero banners    |
 | `-original.webp` | Full   | Lossless | Full resolution |
 
-| File                           | Environment | Purpose                                              |
-| ------------------------------ | ----------- | ---------------------------------------------------- |
-| `src/lib/catalog-image.ts`     | Server only | `processAndUploadCatalogImage`, `deleteCatalogImage` |
-| `src/lib/catalog-image-url.ts` | Client-safe | `getCatalogImageUrl`, `getCatalogImageSrcSet`        |
+All variants upload as `image/webp` with `Cache-Control: public, max-age=31536000, immutable`.
 
-`Subject` carries four S3 key fields — `thumbnail` (`@map("thumbnailKey")`), `banner` (`@map("bannerUrl")`), `cover` (textbook cover), `pdf` (textbook PDF). URL resolution priority:
+### URL resolution & CDN config
 
-1. CloudFront CDN URL from `thumbnail` → `{CDN}/{thumbnailKey}-{size}.webp`
-2. Concept-based static fallback (shared concept thumbnails per [/docs/concept](/docs/concept))
-3. `null` — UI falls back to color background
+`getCloudFrontUrl(key)` resolves in order: **(1)** `CLOUDFRONT_DOMAIN` → `https://{domain}/{key}`;
+**(2)** else `AWS_S3_BUCKET` set → `https://{bucket}.s3.{AWS_REGION}.amazonaws.com/{key}`; **(3)**
+else the bare key is returned unchanged. `isCloudFrontConfigured()` is true if **either**
+`CLOUDFRONT_DOMAIN` or `AWS_S3_BUCKET` is set. For thumbnails, `getCatalogImageUrl` returns `null`
+when nothing is configured, and the `CatalogImage` atom renders a color/"No image" placeholder.
+
+> A separate `NEXT_PUBLIC_CDN_DOMAIN` powers the generic `src/lib/asset-url.ts` — don't confuse it
+> with `CLOUDFRONT_DOMAIN`, which is the one the catalog concept pipeline uses. Note also that URL
+> helpers never check S3 object existence, so a key set without a matching upload surfaces as a
+> broken `<img>` (404), not the placeholder — see [Known gaps](#known-gaps--roadmap).
+
+## Lesson progress and certificates
+
+`LessonProgress` tracks per-lesson state: `watchedSeconds` (resume), `isCompleted`, `watchCount`, `lessonVideoId`. Linked to both `Enrollment` and `Lesson`.
+
+When `markLessonComplete` (`src/components/stream/dashboard/lesson/catalog-actions.ts`) is called:
+
+1. Upsert `LessonProgress` with `isCompleted: true`
+2. Query all published lessons in the subject
+3. If all complete → set `Enrollment.status = COMPLETED`
+4. Generate `SubjectCertificate` with unique number
+5. Send completion email asynchronously
 
 ## Lesson progress and certificates
 
@@ -295,6 +436,15 @@ await db.question.findMany({
 })
 ```
 
+### Coverage reporting
+
+`src/lib/catalog/coverage.ts` (pure reads, no auth/side-effects) answers "what's actually seeded per
+curriculum" — `listCurriculaWithCoverage()` returns every curriculum with its subject count and grade
+spread; `getCurriculumCoverage(curriculumId)` drills into per-grade / per-department distribution and
+chapters-with-lessons vs empty. It is the read-side counterpart to the provisioning engine and feeds
+the planned catalog browse + bridge UI (it has no production consumer yet — see
+[Known gaps](#known-gaps--roadmap)).
+
 ## Seed pipeline
 
 The default `catalog` seed loads US K-12 plus a Sudan base set. The full Sudan curriculum and eight more world curricula ship as **separate** seeds — they are not in the default path.
@@ -320,51 +470,150 @@ For exact subject/chapter/lesson counts and the seed architecture, see [Curricul
 
 ## File structure
 
-```
-prisma/
-  models/
-    catalog.prisma            # Subject (root) + shared enums
-    chapter.prisma            # Chapter
-    lesson.prisma             # Lesson
-    video.prisma              # Video, VideoPurchase, Attachment
-    question.prisma           # Question, ExamQuestion
-    exam.prisma               # Exam, ExamTemplate, ExamBlueprint, PaperTemplate
-    quiz.prisma               # Quiz, QuizQuestion
-    material.prisma           # Material
-    assignment.prisma         # Assignment
-    book.prisma               # Book
-    textbook.prisma           # Textbook
-    document.prisma           # Document (unified file registry: PDF/PPTX/DOCX/audio)
-    proposal.prisma           # Proposal
-    curriculum.prisma         # Curriculum
-    bridge.prisma             # SubjectSelection, ContentOverride, InstructorPreference, BookSelection
-    enrollment.prisma         # Enrollment, LessonProgress, SubjectCertificate
-    academic-structure.prisma # AcademicLevel, AcademicGrade, AcademicStream
-  seeds/
-    catalog.ts                # Orchestrator → us-catalog + sd-catalog
-    us-catalog.ts             # US K-12 subjects
-    sd-catalog.ts             # Sudan Grade-1 pilot
-    sync-sd-curriculum.ts     # Full Sudan curriculum from curriculum/sd/
-    world-curricula.ts        # GB, IB, SA, EG, AE, QA, KW, JO
-    curriculum.ts             # Curriculum records + curriculumId backfill
-    concept-images.ts         # Shared concept thumbnails → S3
-    clickview-images.ts       # ClickView thumbnails
-    catalog-books.ts, catalog-content.ts, catalog-videos.ts, catalog-exam-templates.ts
-    academic-structure-catalog.ts
-    single.ts                 # Seed CLI registry
+### Prisma — models & seeds
 
-src/
-  app/[lang]/(saas-dashboard)/(catalog)/      # Platform catalog admin (DEVELOPER)
-    catalog/{page,[subjectId]}, analytics, approvals, assignments,
-    books, materials, proposals, questions
-  components/saas-dashboard/catalog/          # Catalog CRUD UI (detail.tsx, actions.ts, …)
-  app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/
-    catalog/, contribute/, contributions/     # School subject adoption + browse
-  components/school-dashboard/listings/subjects/
-    catalog/{content,actions,subject-picker}.tsx, contribution-actions.ts, …
-  components/stream/data/catalog/             # LMS read/query adapter layer
-  components/ui/catalog-image.tsx
-  lib/{catalog-setup,catalog-image,catalog-image-url}.ts
+```
+prisma/models/
+  catalog.prisma              # Subject (root) + all shared enums
+  curriculum.prisma           # Curriculum
+  chapter.prisma              # Chapter
+  lesson.prisma               # Lesson
+  video.prisma                # Video, VideoPurchase, Attachment
+  question.prisma             # Question, ExamQuestion
+  quiz.prisma                 # Quiz, QuizQuestion
+  exam.prisma                 # Exam, ExamTemplate, ExamBlueprint, PaperTemplate
+  material.prisma             # Material
+  assignment.prisma           # Assignment
+  book.prisma                 # Book
+  textbook.prisma             # Textbook
+  document.prisma             # Document (unified file registry: PDF/PPTX/DOCX/audio)
+  image.prisma                # Image (concept/variant registry)
+  proposal.prisma             # Proposal (school-scoped)
+  bridge.prisma               # SubjectSelection, ContentOverride, InstructorPreference, BookSelection
+  enrollment.prisma           # Enrollment, LessonProgress, SubjectCertificate
+  academic-structure.prisma   # AcademicLevel, AcademicGrade, AcademicStream
+
+prisma/seeds/
+  catalog.ts                  # Default orchestrator → seedUsCatalog + seedSudanCatalog
+  us-catalog.ts               # US K-12 subjects/chapters/lessons (ClickView JSON)
+  sd-catalog.ts               # Sudan base set (sudan-curriculum.json)
+  sync-sd-curriculum.ts       # Full Sudan tree from curriculum/sd/ (authoritative)
+  world-curricula.ts          # GB, IB, SA, EG, AE, QA, KW, JO (subjects only)
+  curriculum.ts               # Curriculum records + curriculumId backfill
+  concept-images.ts           # Shared concept thumbnails → Sharp → S3
+  banner-copy.ts              # Copy ClickView banners → concept banner paths
+  catalog-books.ts            # Catalog books
+  catalog-content.ts          # Materials/content
+  catalog-videos.ts           # Catalog videos
+  catalog-exam-templates.ts   # Exam templates
+  academic-structure-catalog.ts # Per-school levels/grades/streams + selections
+  single.ts                   # Seed CLI registry (pnpm db:seed:single)
+  # catalog-images.ts, clickview-images.ts — DEPRECATED no-ops (source dirs removed)
+```
+
+### App routes
+
+```
+src/app/[lang]/(saas-dashboard)/(catalog)/      # Platform catalog admin (DEVELOPER)
+  layout.tsx
+  catalog/page.tsx · loading.tsx                 # Subjects list
+  catalog/[subjectId]/page.tsx · loading.tsx · error.tsx
+  catalog/analytics/{page,loading}.tsx
+  catalog/approvals/{page,loading}.tsx
+  catalog/assignments/{page,loading}.tsx
+  catalog/books/{page,loading}.tsx · books/[bookId]/{page,loading}.tsx
+  catalog/materials/{page,loading}.tsx
+  catalog/proposals/{page,loading}.tsx
+  catalog/questions/{page,loading}.tsx
+
+src/app/[lang]/s/[subdomain]/(school-dashboard)/(listings)/subjects/   # School adoption + browse
+  layout.tsx · loading.tsx · error.tsx
+  (browse)/{layout,loading,page}.tsx
+  (browse)/{elementary,middle,high}/{page,loading}.tsx
+  [slug]/{layout,page,loading,error}.tsx
+  [slug]/chapters/{page,loading}.tsx · [slug]/materials/{page,loading}.tsx
+  catalog/{page,loading}.tsx
+  contribute/{page,loading}.tsx
+  contribute/{assignments,materials}/{page,loading}.tsx
+  contributions/{page,loading}.tsx
+
+# Cross-feature catalog routes (other blocks built on the catalog)
+src/app/[lang]/s/[subdomain]/(school-dashboard)/library/catalog/{page,loading}.tsx
+src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/generate/catalog/{page,loading}.tsx
+```
+
+### API routes
+
+```
+src/app/api/catalog-lessons/[id]/route.ts            # Catalog lesson by id
+src/app/api/mobile/catalog/subjects/route.ts         # Mobile: subjects list (lazy-provisions)
+src/app/api/mobile/catalog/subjects/[slug]/route.ts  # Mobile: subject by slug
+```
+
+### Components — platform admin (`src/components/saas-dashboard/catalog/`)
+
+```
+content.tsx · detail.tsx · table.tsx · columns.tsx · actions.ts · validation.ts · loading.tsx
+create-subject-dialog.tsx
+analytics-content.tsx
+approval-content.tsx · approval-table.tsx · approval-actions.ts
+exam-approval-actions.ts · exam-approval-types.ts
+assignment-{content,table,columns,actions,validation}.* · create-assignment-dialog.tsx
+book-{content,detail,table,columns,actions,validation}.*
+material-{content,table,columns,actions,validation}.* · create-material-dialog.tsx
+question-{content,table,columns,actions,validation}.* · create-question-dialog.tsx
+proposal-content.tsx · proposal-actions.ts
+video-manager.tsx · video-approve-dialog.tsx · video-actions.ts · video-validation.ts
+image-upload.tsx · image-actions.ts
+__tests__/  # 10 action test suites (actions, approval, assignment, book,
+            #   exam-approval, image, material, proposal, question, video)
+```
+
+### Components — school subjects (`src/components/school-dashboard/listings/subjects/`)
+
+```
+content.tsx · detail.tsx · table.tsx · columns.tsx · form.tsx · hero.tsx · information.tsx
+actions.ts · authorization.ts · permissions.ts · queries.ts · validation.ts
+config.ts · types.ts · list-params.ts · image-map.ts
+catalog-subjects-grid.tsx · catalog-detail.tsx · catalog-hero.tsx
+catalog-chapters.tsx · catalog-materials.tsx · catalog-content-sections.tsx
+subject-card.tsx · topic-card.tsx · year-section.tsx
+README.md · ISSUE.md · __tests__/
+catalog/                                  # Adoption + contribution UI
+  content.tsx · subject-picker.tsx · propose-subject.tsx
+  school-catalog-customization.tsx · topic-overrides.tsx
+  contribute-{material,assignment,question}.tsx
+  my-contributions.tsx · lesson-contributions.tsx
+  actions.ts · contribution-actions.ts · proposal-actions.ts · validation.ts
+  __tests__/  # actions, contribution-actions, proposal-actions
+```
+
+### LMS read adapter (`src/components/stream/data/catalog/`)
+
+```
+get-course.ts · get-all-courses.ts · get-course-sidebar-data.ts · get-course-progress.ts
+get-lesson-content.ts · get-lesson-with-progress.ts · get-continue-watching.ts
+get-dashboard-data.ts · get-certificates.ts · check-enrollment.ts
+admin-get-course.ts · admin-get-lesson.ts
+```
+
+### Library & UI atom
+
+```
+src/lib/
+  catalog-setup.ts            # Provisioning engine (setupCatalogForSchool, ensureSubjectSelections, …)
+  catalog-image.ts            # Server: Sharp + S3 upload
+  catalog-image-url.ts        # Client-safe URL + srcSet
+  catalog-engagement.ts       # Rating / usage / ranking server actions
+  cloudfront-url.ts           # Pure CDN URL + fallback helpers
+  cloudfront.ts               # Server: signed URLs, cache invalidation
+  asset-url.ts                # Generic CDN resolver (NEXT_PUBLIC_CDN_DOMAIN)
+  catalog/
+    coverage.ts               # Per-curriculum coverage reporting (pure reads)
+    exam-generator.ts         # Build catalog Exam from a question pool
+    __tests__/coverage.test.ts
+
+src/components/ui/catalog-image.tsx   # Responsive <img srcSet> atom
 ```
 
 ## Known gaps & roadmap
@@ -381,29 +630,46 @@ this writing:
   Arabic Sudanese grade names and forced Science/Arts streams on grades 10–12. Fix: split
   `catalog-setup.ts` into a shared engine + per-curriculum `CurriculumConfig`
   (`src/lib/catalog/curricula/{sd,us,gb,ib}.ts`). Do **not** split the `catalog_subjects` table.
-- **British / IB are not provisionable end-to-end.** `inferCurriculum` maps `GB → british` and
-  international → `ib`, but the `world-curricula` seed is **not** in the default `catalog` seed,
-  so `findSubjects` may fall through to the US baseline until it is run explicitly.
+- **British / IB are not provisionable end-to-end.** The eight world curricula are subjects-only
+  (no chapters/lessons) and the `world-curricula` seed is **not** in the default `catalog` seed, so
+  `findSubjects` falls through to the US baseline until it is run explicitly.
+- **GB curriculum-code mismatch.** `inferCurriculum` returns `british` for `GB`, but
+  `world-curricula.ts` creates GB subjects with code `national` (slug `gb-national`). A GB school
+  looks for `british` subjects and finds none — it only works via the progressive fallback. Pick one
+  code (`national`) and use it in both places.
+- **IB is unreachable via inference.** IB uses `country = "*"` and no country maps to `ib` in
+  `inferCurriculum`, so IB can only be selected by passing `options.curriculum: "ib"` explicitly.
 
 ### P1
 
 - **Partial-failure recovery is incomplete.** Provisioning runs fire-and-forget via Next.js
   `after()` (`onboarding/legal/actions.ts`). Only `ensureSubjectSelections` self-heals — and only
-  for subject selections, not levels/grades/timetable/sections/fees.
-- **Unwired exports.** `setupLibraryForSchool` (library books are never provisioned at
-  onboarding), `teardownCatalogForSchool` (referenced only by tests), and `publishSchool`
-  (no caller) — wire them in or remove them.
+  for subject selections, not levels/grades/streams/timetable/sections/fees.
+- **Dead / unwired exports.** `setupLibraryForSchool` (library books are never provisioned at
+  onboarding), `teardownCatalogForSchool`, `getRankedVideos`, and `recordVideoView` have **no**
+  production callers (test-only). The last two are stream-domain logic that doesn't belong here.
+  (`publishSchool` referenced in older docs actually lives in
+  `onboarding/congratulations/actions.ts`, not `catalog-setup.ts`.) Wire them in or remove them.
 - **`findSubjects` has no visibility guard** (filters on `status: PUBLISHED` only) —
-  defense-in-depth gap.
-- **Single-responsibility drift.** `catalog-setup.ts` also owns timetable generation, section
-  auto-provisioning, and `getRankedVideos` / `recordVideoView` (stream-domain) — split these out.
+  defense-in-depth gap: a published-but-non-public catalog subject could be provisioned anywhere.
+- **Single-responsibility drift.** `catalog-setup.ts` also owns timetable generation and section
+  auto-provisioning (plus the dead stream helpers above) — split these out.
 
 ### P2
 
-- Duplicated weekly-period logic (`getDefaultWeeklyPeriods` vs `src/lib/timetable-reference.ts`).
+- **`getDefaultWeeklyPeriods` is dead code** — production resolves weekly periods via
+  `getReferenceWeeklyPeriods` (`src/lib/timetable-reference.ts`); the `catalog-setup.ts` copy
+  survives only in the `_testing` export. Remove it.
 - `gpa` in `SCORE_RANGE_DEFAULTS` is stripped before insert (no `gpa` column on `ScoreRange`).
 - `legalData` is collected during onboarding but discarded (legal-step TODO).
-- Academic-structure rows are inserted in a sequential `tx.create` loop — batch with `createMany`.
+- Academic levels/grades/streams are inserted in a sequential `tx.create` loop — batch with
+  `createMany` (subject selections already use `createMany`).
+- **`coverage.ts` has no consumer.** The per-curriculum coverage module (PR #348) is ready but the
+  catalog browse + bridge UI it feeds is not built yet.
+- **CDN asset gaps.** No seed uploads the `cover` object, so `Subject.cover` keys can 404; banners
+  depend on `banner-copy.ts` (ClickView source); `pdf` is only populated for Sudan; and URL helpers
+  never check S3 existence, so missing assets surface as broken images, not the placeholder.
+- `inferCurriculum` is duplicated in `timetable-reference.ts` — the two copies must be kept in sync.
 - TOC extraction quality and denormalized count-update performance — tracked in
   [Curriculum engineering → Improvement areas](/docs/curriculum-engineering).
 

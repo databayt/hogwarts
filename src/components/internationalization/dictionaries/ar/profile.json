@@ -19,7 +19,10 @@
     "events": "الفعاليات",
     "communications": "الرسائل",
     "issues": "المسائل",
-    "reports": "التقارير"
+    "reports": "التقارير",
+    "academics": "الدراسة",
+    "teaching": "التدريس",
+    "family": "العائلة"
   },
   "roles": {
     "student": "طالب",
@@ -66,7 +69,28 @@
     "footerHelp": "هل تحتاج مساعدة في التنقل؟ اطلع على",
     "portalGuide": "دليل البوابة المدرسية",
     "bannerText": "لقد فتحت إنجازات جديدة بمساهمات خاصة! اعرضها بتضمين المساهمات الخاصة في ملفك الشخصي في",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "contributionsHeading": "المساهمات في {year}",
+    "noPinned": "لا عناصر مثبتة بعد",
+    "activityLabels": {
+      "attendance": "حضر الحصة",
+      "assignment_submitted": "سلّم واجبًا",
+      "exam_completed": "أكمل اختبارًا",
+      "library_visit": "زار المكتبة",
+      "club_activity": "نشاط نادٍ",
+      "class_taught": "درّس حصة",
+      "grade_published": "نشر درجة",
+      "attendance_taken": "سجّل الحضور",
+      "lesson_created": "أنشأ درسًا",
+      "portal_login": "دخول البوابة",
+      "payment_made": "سدّد دفعة",
+      "message_sent": "أرسل رسالة",
+      "event_rsvp": "أكّد حضور فعالية",
+      "task_completed": "أكمل مهمة",
+      "report_generated": "أنشأ تقريرًا",
+      "expense_processed": "عالج مصروفًا",
+      "meeting_attended": "حضر اجتماعًا"
+    }
   },
   "form": {
     "name": "الاسم",
@@ -111,7 +135,12 @@
     "latestAccomplishments": "أحدث إنجازاتك",
     "viewAllAchievements": "عرض جميع الإنجازات",
     "subjectPerformance": "أداء المواد",
-    "gradesAcrossSubjects": "درجاتك في جميع المواد"
+    "gradesAcrossSubjects": "درجاتك في جميع المواد",
+    "averageGrade": "متوسط الدرجات",
+    "noGradesYet": "لا توجد درجات مسجلة بعد",
+    "subjects": "المواد",
+    "noSubjects": "لا مواد مسجلة بعد",
+    "noAchievementsYet": "لا إنجازات بعد"
   },
   "teacher": {
     "editTitle": "تعديل معلوماتك",
@@ -134,7 +163,12 @@
     "weeklyTeachingLoad": "عبء التدريس الأسبوعي",
     "classDistribution": "توزيع فصولك هذا الأسبوع",
     "teachingHours": "{count} ساعات تدريس",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "classes": "الفصول",
+    "students": "الطلاب",
+    "myClasses": "فصولي",
+    "studentsCount": "{count} طالبًا",
+    "noClasses": "لا فصول مسندة بعد"
   },
   "staff": {
     "totalStudents": "إجمالي الطلاب",
@@ -187,12 +221,15 @@
     "contactTeacher": "التواصل مع المعلم",
     "payFees": "دفع الرسوم",
     "requestLeave": "طلب إجازة",
-    "viewReports": "عرض التقارير"
+    "viewReports": "عرض التقارير",
+    "childrenCount": "{count} مرتبط",
+    "noChildren": "لا أبناء مرتبطون بعد"
   },
   "graph": {
     "activities": "أنشطة",
     "interactions": "تفاعلات",
-    "tasks": "مهام"
+    "tasks": "مهام",
+    "noContributions": "لا مساهمات"
   },
   "editRole": {
     "contactInformation": "معلومات الاتصال",
@@ -206,6 +243,8 @@
     "notAuthenticated": "غير مصادق",
     "failedToLoad": "فشل في تحميل الملف الشخصي",
     "error": "خطأ",
-    "goBack": "رجوع"
+    "goBack": "رجوع",
+    "notFound": "لم يتم العثور على الملف",
+    "missingSchool": "لا سياق مدرسة"
   }
 }

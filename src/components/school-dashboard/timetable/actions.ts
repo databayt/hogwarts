@@ -91,6 +91,14 @@ import {
   type TeacherAvailability,
 } from "./generate/algorithm"
 import {
+  slotCancelledNotif,
+  substituteAssignedNotif,
+  substituteDeclinedNotif,
+  substitutionCancelledNotif,
+  timetableMovedNotif,
+  toNotifLang,
+} from "./notification-templates"
+import {
   filterTimetableByRole,
   getPermissionContext,
   logTimetableAction,
@@ -107,6 +115,7 @@ import type {
   TeacherConstraintCheck,
 } from "./types"
 import {
+  deleteTimetableSlotSchema,
   detectTimetableConflictsSchema,
   getClassesForSelectionSchema,
   getScheduleConfigSchema,
@@ -893,16 +902,6 @@ export async function upsertTimetableSlot(input: unknown) {
     })
 
     if (!teacherExpertise) {
-      // Get teacher name for better error message
-      const teacher = await db.teacher.findFirst({
-        where: { id: validatedInput.teacherId, schoolId },
-        select: { firstName: true, lastName: true },
-      })
-      const teacherName = teacher
-        ? `${teacher.firstName} ${teacher.lastName}`
-        : "Selected teacher"
-      const name = classInfo.subject?.name || "this subject"
-
       throw new Error("TEACHER_NOT_QUALIFIED")
     }
   }
@@ -1143,13 +1142,17 @@ export async function moveTimetableSlot(input: {
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const lang = toNotifLang(schoolPref?.preferredLanguage)
+      const { title, body } = timetableMovedNotif(lang, {
+        className: existingSlot.class?.name,
+      })
       dispatchNotification({
         schoolId,
         userId: teacherUser.userId,
         type: "class_rescheduled",
-        title: "تغيير في الجدول",
-        body: `تم نقل حصة ${existingSlot.class?.name || "الحصة"} إلى يوم ووقت جديد`,
-        lang: schoolPref?.preferredLanguage ?? "ar",
+        title,
+        body,
+        lang,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -2391,13 +2394,16 @@ export async function getTimetableAnalytics(input: { termId: string }) {
 /**
  * Delete a timetable slot
  */
-export async function deleteTimetableSlot(input: {
+export async function deleteTimetableSlot(rawInput: {
   termId: string
   dayOfWeek: number
   periodId: string
   classId: string
   weekOffset: 0 | 1
 }) {
+  // Validate input
+  const input = deleteTimetableSlotSchema.parse(rawInput)
+
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
@@ -2443,13 +2449,17 @@ export async function deleteTimetableSlot(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const lang2 = toNotifLang(schoolPref2?.preferredLanguage)
+    const { title, body } = slotCancelledNotif(lang2, {
+      className: slotToDelete.class?.name,
+    })
     dispatchNotification({
       schoolId,
       userId: slotToDelete.teacher.userId,
       type: "class_cancelled",
-      title: "إلغاء حصة",
-      body: `تم إلغاء حصة ${slotToDelete.class?.name || "الحصة"} من الجدول`,
-      lang: schoolPref2?.preferredLanguage ?? "ar",
+      title,
+      body,
+      lang: lang2,
       priority: "normal",
       channels: ["in_app"],
       metadata: {
@@ -3522,9 +3532,18 @@ export async function applyTemplateToTerm(input: {
         },
       })
       slotsCreated++
-    } catch {
-      // Likely a conflict
-      conflictsFound++
+    } catch (e) {
+      // A P2002 (unique constraint) means the slot collides with an existing
+      // one — that's an expected "conflict", count it and continue. Any other
+      // error is a real DB failure that must NOT be silently swallowed.
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        conflictsFound++
+      } else {
+        throw e
+      }
     }
   }
 
@@ -4207,8 +4226,19 @@ export async function importTimetableSlots(input: {
             },
           })
           result.successCount++
-        } catch {
-          result.skippedCount++
+        } catch (e) {
+          // P2002 = the row collides with an existing slot; skip and continue.
+          // Any other error is a real DB failure — rethrow so it aborts the
+          // transaction and surfaces in result.errors rather than masquerading
+          // as a harmless "skipped" row.
+          if (
+            e instanceof Prisma.PrismaClientKnownRequestError &&
+            e.code === "P2002"
+          ) {
+            result.skippedCount++
+          } else {
+            throw e
+          }
         }
       }
     })
@@ -5330,13 +5360,20 @@ export async function findAvailableSubstitutes(input: {
   slotDate: Date
   termId: string
   subjectId?: string // Optional: prefer teachers with this subject expertise
+  weekOffset?: number // Which week the slot is in (0 = current, 1 = next)
 }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  // Get all active teachers except the absent one
+  const weekOffset = input.weekOffset ?? 0
+
+  // Get all active teachers except the absent one. Every nested filter is
+  // schoolId-scoped for defense-in-depth (the parent is already scoped, but a
+  // missing scope on an include is a latent cross-tenant hazard). The busy
+  // check must also match weekOffset — a teacher free this week but booked next
+  // week must NOT be excluded for the current-week slot.
   const teachers = await db.teacher.findMany({
     where: {
       schoolId,
@@ -5349,11 +5386,13 @@ export async function findAvailableSubstitutes(input: {
       },
       constraints: {
         where: {
+          schoolId,
           OR: [{ termId: input.termId }, { termId: null }],
         },
         include: {
           unavailableBlocks: {
             where: {
+              schoolId,
               dayOfWeek: input.dayOfWeek,
               periodId: input.periodId,
             },
@@ -5362,9 +5401,11 @@ export async function findAvailableSubstitutes(input: {
       },
       timetables: {
         where: {
+          schoolId,
           termId: input.termId,
           dayOfWeek: input.dayOfWeek,
           periodId: input.periodId,
+          weekOffset,
         },
       },
     },
@@ -5531,13 +5572,20 @@ export async function assignSubstitute(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const lang3 = toNotifLang(schoolPref3?.preferredLanguage)
+    const { title, body } = substituteAssignedNotif(lang3, {
+      originalTeacher:
+        `${originalSlot.teacher?.firstName ?? ""} ${originalSlot.teacher?.lastName ?? ""}`.trim(),
+      className: originalSlot.class?.name,
+      periodName: originalSlot.period?.name,
+    })
     dispatchNotification({
       schoolId,
       userId: subTeacherUser.userId,
       type: "system_alert",
-      title: "تعيين بديل",
-      body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.firstName} ${originalSlot.teacher?.lastName} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
-      lang: schoolPref3?.preferredLanguage ?? "ar",
+      title,
+      body,
+      lang: lang3,
       priority: "high",
       channels: ["in_app", "email"],
       metadata: {
@@ -5562,7 +5610,12 @@ export async function respondToSubstitution(input: {
   response: "CONFIRMED" | "DECLINED"
   declineReason?: string
 }) {
-  await requireAdminAccess()
+  // This action is invoked by the SUBSTITUTE TEACHER to confirm/decline their
+  // own assignment, so it cannot be admin-only. Authorize the actor first, then
+  // gate on ownership below once we have the record.
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -5572,6 +5625,20 @@ export async function respondToSubstitution(input: {
   })
 
   if (!record) throw new Error("SUBSTITUTION_NOT_FOUND")
+
+  // Authorization: an admin/DEVELOPER may act on any record; otherwise the
+  // caller must be the substitute teacher assigned to THIS record.
+  const ctx = await getPermissionContext()
+  if (!ctx.canModify) {
+    const teacher = await db.teacher.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+    if (!teacher || teacher.id !== record.substituteTeacherId) {
+      throw new Error("FORBIDDEN")
+    }
+  }
+
   if (record.status !== "PENDING") {
     throw new Error("SUBSTITUTION_NOT_PENDING")
   }
@@ -5611,14 +5678,18 @@ export async function respondToSubstitution(input: {
       where: { schoolId, role: "ADMIN" },
       select: { id: true },
     })
+    const lang4 = toNotifLang(schoolPref4?.preferredLanguage)
+    const { title, body } = substituteDeclinedNotif(lang4, {
+      declineReason: input.declineReason,
+    })
     for (const admin of admins) {
       dispatchNotification({
         schoolId,
         userId: admin.id,
         type: "system_alert",
-        title: "رفض البدالة",
-        body: `رفض المعلم البديل التعيين${input.declineReason ? `: ${input.declineReason}` : ""}`,
-        lang: schoolPref4?.preferredLanguage ?? "ar",
+        title,
+        body,
+        lang: lang4,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -5786,13 +5857,17 @@ export async function cancelSubstitution(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const lang5 = toNotifLang(schoolPref5?.preferredLanguage)
+    const { title, body } = substitutionCancelledNotif(lang5, {
+      reason: input.reason,
+    })
     dispatchNotification({
       schoolId,
       userId: subTeacher.userId,
       type: "system_alert",
-      title: "إلغاء البدالة",
-      body: `تم إلغاء تعيينك كبديل${input.reason ? `: ${input.reason}` : ""}`,
-      lang: schoolPref5?.preferredLanguage ?? "ar",
+      title,
+      body,
+      lang: lang5,
       priority: "normal",
       channels: ["in_app"],
       metadata: {

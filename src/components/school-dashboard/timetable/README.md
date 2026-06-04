@@ -94,15 +94,25 @@ src/components/school-dashboard/timetable/
   views/role-router.tsx       # Routes to correct view by role
   views/preview.tsx           # Preview mode
   views/simple-grid.tsx       # Simplified grid
-  __tests__/actions.test.ts
-  __tests__/structures.test.ts
-  __tests__/validation.test.ts
-  __tests__/production-readiness.test.ts
+  notification-templates.ts   # Lang-aware (AR/EN) server notification copy
+  __tests__/actions.test.ts        # Server actions incl. P1 auth/error-handling cases
+  __tests__/structures.test.ts     # Structure/transform helpers
+  __tests__/validation.test.ts     # Real Zod schema + helper coverage
+  __tests__/permissions.test.ts    # RBAC matrix + audit persistence + role filtering
+  __tests__/algorithm.test.ts      # Section scheduler invariants + unit helpers
+  __tests__/utils.test.ts          # Pure utilities (conflicts, CSV, workload)
 ```
 
 ### Status
 
-**Completion:** 90% | **Blockers:** None
+**Completion:** ~97% | **Blockers:** None | **Tests:** 176 passing (6 files) | **tsc:** 0 errors
+
+Hardening pass (2026-05-30) resolved the 4 production blockers: audit trail now persists
+to `db.auditLog` (was a dev-only no-op), substitute teachers can confirm/decline their own
+assignments (`respondToSubstitution` was admin-only), `findAvailableSubstitutes` is
+schoolId-scoped on every nested include and honours `weekOffset`, and template-apply / bulk
+import no longer swallow real DB errors as "conflicts" (P2002-aware). Server notification
+copy is now lang-aware (AR/EN). See `ISSUE.md` for the full record and deferred items.
 
 ### Architecture: Section-Based Scheduling
 

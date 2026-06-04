@@ -17,18 +17,33 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    exam: {
+    schoolExam: {
       findFirst: vi.fn(),
       updateMany: vi.fn(),
     },
     examResult: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    school: {
+      findFirst: vi.fn(),
+    },
+    generatedExam: {
+      findFirst: vi.fn(),
+    },
+    studentAnswer: {
+      findMany: vi.fn(),
+      upsert: vi.fn(),
     },
   },
 }))
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotificationsToAudience: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("next/cache", () => ({

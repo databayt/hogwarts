@@ -2,19 +2,9 @@
 
 import { useState } from "react"
 
-import { Badge } from "@/components/ui/badge"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  OcticonBook,
-  OcticonClose,
-  OcticonIssueOpened,
-  OcticonPackage,
-  OcticonRepo,
-  OcticonStar,
-  OcticonTable,
-  OcticonTriangleDown,
-} from "@/components/atom/icons"
+import { OcticonBook, OcticonRepo } from "@/components/atom/icons"
 import type { Locale } from "@/components/internationalization/config"
 
 import ContributionActivity from "./activity"
@@ -22,7 +12,6 @@ import ContributionGraph from "./graph"
 import ParentDashboard from "./parent"
 import PinnedItems from "./pinned"
 import ProfileSidebar from "./sidebar"
-import StaffDashboard from "./staff"
 import StudentDashboard from "./student"
 import TeacherDashboard from "./teacher"
 import type { ProfileRole, ProfileTab } from "./types"
@@ -36,7 +25,9 @@ interface Props {
   userId?: string
 }
 
-// Tab configurations per role
+// Overview is shared; each non-staff role gets one tab for its real dashboard.
+// No fabricated count badges — the GitHub-style "Repositories/Projects" tabs
+// were placeholders and have been removed.
 const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
   student: [
     {
@@ -45,28 +36,9 @@ const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
       icon: <OcticonBook className="size-4" />,
     },
     {
-      id: "repositories",
-      label: "Repositories",
-      count: 8,
+      id: "academics",
+      label: "Academics",
       icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      count: 12,
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "achievements",
-      label: "Achievements",
-      count: 5,
-      icon: <OcticonPackage className="size-4" />,
-    },
-    {
-      id: "awards",
-      label: "Awards",
-      count: 2,
-      icon: <OcticonStar className="size-4" />,
     },
   ],
   teacher: [
@@ -76,27 +48,9 @@ const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
       icon: <OcticonBook className="size-4" />,
     },
     {
-      id: "repositories",
-      label: "Repositories",
-      count: 6,
+      id: "teaching",
+      label: "Teaching",
       icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "schedule",
-      label: "Schedule",
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "achievements",
-      label: "Awards",
-      count: 4,
-      icon: <OcticonPackage className="size-4" />,
-    },
-    {
-      id: "resources",
-      label: "Resources",
-      count: 15,
-      icon: <OcticonStar className="size-4" />,
     },
   ],
   parent: [
@@ -105,48 +59,13 @@ const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
       label: "Overview",
       icon: <OcticonBook className="size-4" />,
     },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 3,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "events",
-      label: "Events",
-      count: 5,
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "communications",
-      label: "Messages",
-      count: 8,
-      icon: <OcticonPackage className="size-4" />,
-    },
+    { id: "family", label: "Family", icon: <OcticonRepo className="size-4" /> },
   ],
   staff: [
     {
       id: "overview",
       label: "Overview",
       icon: <OcticonBook className="size-4" />,
-    },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 12,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "issues",
-      label: "Issues",
-      count: 24,
-      icon: <OcticonIssueOpened className="size-4" />,
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      count: 8,
-      icon: <OcticonPackage className="size-4" />,
     },
   ],
 }
@@ -162,7 +81,6 @@ export default function ProfileContent({
   const { isMobile } = useSidebar()
   const [activeTab, setActiveTab] = useState("overview")
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [showBanner, setShowBanner] = useState(true)
 
   const p = (dictionary as any)?.profile
 
@@ -182,8 +100,6 @@ export default function ProfileContent({
         return <StudentDashboard data={data} isOwner={isOwner} dictionary={p} />
       case "teacher":
         return <TeacherDashboard data={data} isOwner={isOwner} dictionary={p} />
-      case "staff":
-        return <StaffDashboard data={data} dictionary={p} />
       case "parent":
         return <ParentDashboard data={data} dictionary={p} />
       default:
@@ -207,14 +123,6 @@ export default function ProfileContent({
                 <span className="hidden sm:inline">
                   {p?.tabs?.[tab.id] ?? tab.label}
                 </span>
-                {tab.count !== undefined && (
-                  <Badge
-                    variant="secondary"
-                    className="ms-0.5 h-4 px-1.5 py-0 text-[10px]"
-                  >
-                    {tab.count}
-                  </Badge>
-                )}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -222,49 +130,20 @@ export default function ProfileContent({
 
         {/* Overview Tab Content */}
         <TabsContent value="overview" className="mt-6 space-y-6">
-          {/* Notification Banner */}
-          {isOwner && showBanner && (
-            <div className="flex items-start gap-3 rounded border border-[#54aeff]/40 bg-[#ddf4ff] px-3 py-4 dark:border-blue-800/40 dark:bg-blue-950/30">
-              <p className="text-foreground flex-1 text-xs">
-                {p?.overview?.bannerText ??
-                  "You unlocked new Achievements with private contributions! Show them off by including private contributions in your Profile in"}{" "}
-                <a href="#" className="text-[#0969da] hover:underline">
-                  {p?.overview?.settings ?? "settings"}
-                </a>
-                .
-              </p>
-              <button
-                onClick={() => setShowBanner(false)}
-                className="shrink-0 p-0.5 text-[#0969da] transition-colors hover:text-[#0969da]/80"
-              >
-                <OcticonClose className="size-3.5" />
-              </button>
-            </div>
-          )}
-
           {/* Pinned Section */}
-          <PinnedItems role={role} data={data} dictionary={p} />
+          <PinnedItems userId={userId} isOwner={isOwner} dictionary={p} />
 
           {/* Content + Year Column */}
           <div className="flex gap-4">
             <div className="min-w-0 flex-1 space-y-6">
               {/* Contribution Graph */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-foreground text-sm font-medium">
-                    {(
-                      p?.overview?.contributionsIn ??
-                      "1,086 contributions in {year}"
-                    )
-                      .replace("{count}", "1,086")
-                      .replace("{year}", String(new Date().getFullYear()))}
-                  </h3>
-                  <button className="text-muted-foreground flex items-center gap-0.5 text-xs transition-colors hover:text-[#0969da] hover:underline">
-                    {p?.overview?.contributionSettings ??
-                      "Contribution settings"}
-                    <OcticonTriangleDown className="size-4" />
-                  </button>
-                </div>
+                <h3 className="text-foreground text-sm font-medium">
+                  {(
+                    p?.overview?.contributionsHeading ??
+                    "Contributions in {year}"
+                  ).replace("{year}", String(selectedYear))}
+                </h3>
                 <div className="border-border rounded-md border p-3">
                   <ContributionGraph
                     role={role}
@@ -279,7 +158,7 @@ export default function ProfileContent({
               {/* Contribution Activity */}
               <ContributionActivity
                 role={role}
-                data={data}
+                userId={userId}
                 selectedYear={selectedYear}
                 onYearChange={setSelectedYear}
                 dictionary={p}
@@ -310,16 +189,6 @@ export default function ProfileContent({
           </TabsContent>
         ))}
       </Tabs>
-
-      {/* Footer Help Link */}
-      <p className="text-muted-foreground pb-6 text-center text-sm">
-        {p?.overview?.footerHelp ??
-          "Need help navigating the system? Check out the"}{" "}
-        <a href="#" className="text-primary hover:underline">
-          {p?.overview?.portalGuide ?? "school portal guide"}
-        </a>
-        .
-      </p>
     </div>
   )
 

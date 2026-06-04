@@ -9,6 +9,10 @@ import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import {
+  examCancelledNotification,
+  examScheduledNotification,
+} from "../notification-text"
 import { examCreateSchema, examUpdateSchema } from "../validation"
 import { checkExamConflicts } from "./conflict-detection"
 import type { ActionResponse } from "./types"
@@ -124,12 +128,18 @@ export async function createExam(
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const createLang = schoolPref?.preferredLanguage ?? "ar"
+    const createNotif = examScheduledNotification(
+      parsed.title,
+      new Date(parsed.examDate),
+      createLang
+    )
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "امتحان جديد",
-      body: `تم جدولة امتحان "${parsed.title}" في ${new Date(parsed.examDate).toLocaleDateString("ar")}`,
-      lang: schoolPref?.preferredLanguage ?? "ar",
+      title: createNotif.title,
+      body: createNotif.body,
+      lang: createLang,
       priority: "high",
       channels: ["in_app"],
       metadata: {
@@ -363,12 +373,14 @@ export async function deleteExam(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const deleteLang = schoolPref2?.preferredLanguage ?? "ar"
+    const deleteNotif = examCancelledNotification(examExists.title, deleteLang)
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "إلغاء امتحان",
-      body: `تم إلغاء امتحان "${examExists.title}"`,
-      lang: schoolPref2?.preferredLanguage ?? "ar",
+      title: deleteNotif.title,
+      body: deleteNotif.body,
+      lang: deleteLang,
       priority: "high",
       channels: ["in_app"],
       metadata: {

@@ -1,8 +1,20 @@
 # Exams -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 65%
-**Last Updated:** 2026-03-19
+**Completion:** ~75%
+**Last Updated:** 2026-05-30
+
+> **Authoritative status lives in [`PRODUCTION-AUDIT.md`](./PRODUCTION-AUDIT.md).**
+> The old "Route pages not created (BLOCKER)" items below are **resolved** — all
+> routes are wired (100+ `page.tsx` under `(school-dashboard)/exams/` +
+> `(exam-wizard)/`). Remaining blockers are mostly schema-level (see audit).
+>
+> **Code-only hardening pass (2026-05-30):** unit suite green (211 tests, was
+> 18 failing); added RBAC role×permission matrix tests (`lib/__tests__/permissions.test.ts`),
+> CSV/formula-injection escaping (`results/lib/csv-utils.ts`), lang-aware exam
+> notifications (`manage/notification-text.ts` — removed hardcoded Arabic),
+> and revived 3 dead form-test suites. The wizard section steps now render a
+> compact "pure section" preview instead of a scaled mockup floating in a gray box.
 
 ---
 
@@ -19,7 +31,7 @@
 - [x] Conflict detection (same class, overlapping time)
 - [x] Export capabilities (CSV, PDF schedule)
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (DONE — all routes wired)
 
 ### Question Bank Sub-Block
 
@@ -31,7 +43,7 @@
 - [x] Practice mode and sessions
 - [x] Catalog tab view
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (DONE — all routes wired)
 
 ### Generate Sub-Block
 
@@ -43,7 +55,7 @@
 - [x] Difficulty distribution
 - [x] Template reuse across classes
 - [x] Version library
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (DONE — all routes wired)
 
 ### Mark Sub-Block
 
@@ -56,7 +68,7 @@
 - [x] Mobile grading view
 - [x] Answer key management
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (DONE — all routes wired)
 
 ### Results Sub-Block
 
@@ -69,7 +81,7 @@
 - [x] Question-wise breakdown
 - [x] Analytics charts
 - [x] Cache manager for performance
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (DONE — all routes wired)
 
 ### Additional Modules
 
@@ -86,8 +98,8 @@
 - [x] TypeScript types for all data models
 - [x] i18n dictionary keys (150+ keys, EN/AR)
 - [x] RTL support for Arabic
-- [ ] Route pages wired for all sub-blocks (BLOCKER)
-- [ ] Sidebar navigation entries added
+- [x] Route pages wired for all sub-blocks (DONE — 100+ page.tsx)
+- [x] Sidebar navigation entries added
 
 ---
 
@@ -95,13 +107,23 @@
 
 ### P0 -- Critical
 
-1. **No route pages exist** -- The entire `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` directory is missing. All components are built but not accessible via URL.
+> See [`PRODUCTION-AUDIT.md`](./PRODUCTION-AUDIT.md) for the full, current P0 list.
+> The remaining P0s are predominantly **schema migrations** (deferred to an
+> approved Neon-branch DB session): bilingual-field removal, `Cascade`→`Restrict`
+>
+> - soft-deletes, `ExamResult.marksObtained Int`→`Decimal`, `lang` on 17 models,
+>   and resolving the dual `Result`/`ExamResult` models.
+
+1. ~~**No route pages exist**~~ -- RESOLVED. All routes are wired (100+ `page.tsx`).
+2. **Schema rule violations** -- bilingual fields, missing `lang`, destructive cascades, `Int` marks (see audit §C). Needs a Prisma migration.
 
 ### P1 -- High
 
 1. **Gradebook integration** -- Exam results do not sync to gradebook module
 2. **OCR dependency** -- AI-assisted marking requires OpenAI API key configuration
 3. **AI generation costs** -- No budget controls or cost tracking in production
+4. **Orphaned `mark/form.tsx` `QuestionForm`** -- not mounted anywhere; reads a `dictionary.marking.*` structure that is empty in `school-en.json`. Wire its dictionary keys or remove the component.
+5. **N+1 / pagination** -- see audit §P1 (7 N+1 patterns, 12 unbounded `findMany`).
 
 ### P2 -- Medium
 
@@ -127,4 +149,4 @@
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-05-30

@@ -21,8 +21,8 @@ import type {
   GetContributionDataResult,
   ProfileRole,
 } from "./types"
-import { ACTIVITY_LABELS } from "./types"
 import {
+  logUserActivitySchema,
   pinnedItemSchema,
   updateBioSchema,
   updateGitHubProfileSchema,
@@ -53,234 +53,6 @@ function computeViewerPermission(args: {
     profileType: "USER",
   }
   return getPermissionLevel(ctx)
-}
-
-// ============================================================================
-// Profile Fetching Actions
-// ============================================================================
-
-export async function getStudentProfile(studentId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Use provided ID or current user's ID
-    const targetId = studentId || session.user.id
-
-    const student = await db.student.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        application: {
-          select: {
-            applicationNumber: true,
-            campaignId: true,
-            status: true,
-            submittedAt: true,
-            confirmationDate: true,
-            meritRank: true,
-            meritScore: true,
-            campaign: { select: { name: true, academicYear: true } },
-          },
-        },
-        studentYearLevels: {
-          include: {
-            yearLevel: true,
-          },
-        },
-        studentClasses: {
-          include: {
-            class: {
-              include: {
-                subject: true,
-                teacher: {
-                  include: {
-                    user: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        studentGuardians: {
-          include: {
-            guardian: {
-              include: {
-                user: true,
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!student) {
-      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
-    }
-
-    return { success: true as const, data: student }
-  } catch (error) {
-    console.error("Error fetching student profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getTeacherProfile(teacherId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = teacherId || session.user.id
-
-    const teacher = await db.teacher.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        teacherDepartments: {
-          include: {
-            department: true,
-          },
-        },
-        classes: {
-          include: {
-            subject: true,
-            studentClasses: {
-              include: {
-                student: {
-                  include: {
-                    user: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!teacher) {
-      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
-    }
-
-    return { success: true as const, data: teacher }
-  } catch (error) {
-    console.error("Error fetching teacher profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getParentProfile(parentId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = parentId || session.user.id
-
-    const parent = await db.guardian.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        studentGuardians: {
-          include: {
-            student: {
-              include: {
-                user: true,
-                studentYearLevels: {
-                  include: {
-                    yearLevel: true,
-                  },
-                },
-                studentClasses: {
-                  include: {
-                    class: {
-                      include: {
-                        subject: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!parent) {
-      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
-    }
-
-    return { success: true as const, data: parent }
-  } catch (error) {
-    console.error("Error fetching parent profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getStaffProfile(staffId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = staffId || session.user.id
-
-    // For staff, we fetch the user directly with school context
-    const user = await db.user.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-        role: {
-          in: ["STAFF", "ACCOUNTANT", "ADMIN", "DEVELOPER"],
-        },
-      },
-    })
-
-    if (!user) {
-      return actionError(ACTION_ERRORS.STAFF_NOT_FOUND)
-    }
-
-    return { success: true as const, data: user }
-  } catch (error) {
-    console.error("Error fetching staff profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
 }
 
 // ============================================================================
@@ -697,10 +469,159 @@ export async function getProfileBasicData(userId: string, lang?: string) {
       if (translatedBio) data.bio = translatedBio
     }
 
+    // Attach real, tenant-scoped stats/achievements/relations. Replaces the
+    // fabricated counts/achievements the sidebar + dashboards used to hardcode.
+    await attachRoleStats(
+      data,
+      {
+        studentId: user.student?.id ?? null,
+        teacherId: user.teacher?.id ?? null,
+        guardianId: user.guardian?.id ?? null,
+      },
+      schoolId
+    )
+
     return { success: true as const, data }
   } catch (error) {
     console.error("Error fetching profile basic data:", error)
     return actionError(ACTION_ERRORS.SAVE_FAILED)
+  }
+}
+
+// Map a stored Achievement.category to one of the available badge
+// illustrations (decorative only — title/description/date stay real).
+function badgeForAchievementCategory(category: string): string {
+  switch (category.toLowerCase()) {
+    case "academic":
+      return "galaxy-brain"
+    case "sports":
+      return "yolo"
+    case "arts":
+      return "starstruck"
+    case "cultural":
+      return "pull-shark"
+    case "leadership":
+      return "quickdraw"
+    case "community service":
+      return "public-sponsor"
+    default:
+      return "starstruck"
+  }
+}
+
+// Map a stored Achievement.level to a badge tier.
+function mapAchievementLevel(
+  level: string | null
+): "bronze" | "silver" | "gold" | "platinum" {
+  switch ((level ?? "").toLowerCase()) {
+    case "international":
+    case "national":
+      return "platinum"
+    case "state":
+      return "gold"
+    case "district":
+      return "silver"
+    default:
+      return "bronze"
+  }
+}
+
+/**
+ * Derive real, tenant-scoped stats/relations for the sidebar and role
+ * dashboards and mutate them onto `data`. Each query is scoped by schoolId.
+ * Counts/lists are left undefined when absent so the UI omits them (honest).
+ */
+async function attachRoleStats(
+  data: Record<string, unknown>,
+  ids: {
+    studentId?: string | null
+    teacherId?: string | null
+    guardianId?: string | null
+  },
+  schoolId: string
+): Promise<void> {
+  if (ids.studentId) {
+    const [classes, avg, achievements] = await Promise.all([
+      db.studentClass.findMany({
+        where: { studentId: ids.studentId, schoolId },
+        select: { class: { select: { name: true, subjectId: true } } },
+      }),
+      db.result.aggregate({
+        where: { studentId: ids.studentId, schoolId },
+        _avg: { percentage: true },
+      }),
+      db.achievement.findMany({
+        where: { studentId: ids.studentId, schoolId },
+        orderBy: { achievementDate: "desc" },
+        take: 12,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          achievementDate: true,
+          category: true,
+          level: true,
+          position: true,
+          issuedBy: true,
+        },
+      }),
+    ])
+    data.classCount = classes.length
+    data.subjectCount = new Set(classes.map((c) => c.class.subjectId)).size
+    data.subjects = Array.from(
+      new Map(classes.map((c) => [c.class.subjectId, c.class.name])).values()
+    )
+    data.averagePercentage =
+      avg._avg.percentage != null ? Math.round(avg._avg.percentage) : undefined
+    data.achievements = achievements.map((a) => ({
+      id: a.id,
+      title: a.title,
+      description: a.description ?? "",
+      icon: badgeForAchievementCategory(a.category),
+      earnedAt: a.achievementDate.toISOString(),
+      level: mapAchievementLevel(a.level),
+      context: [a.position, a.issuedBy].filter(Boolean).join(" · "),
+    }))
+  } else if (ids.teacherId) {
+    const classes = await db.class.findMany({
+      where: { teacherId: ids.teacherId, schoolId },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { studentClasses: true } },
+      },
+    })
+    data.classCount = classes.length
+    data.studentsTaught = classes.reduce(
+      (n, c) => n + c._count.studentClasses,
+      0
+    )
+    data.classes = classes.map((c) => ({
+      id: c.id,
+      name: c.name,
+      studentCount: c._count.studentClasses,
+    }))
+  } else if (ids.guardianId) {
+    const links = await db.studentGuardian.findMany({
+      where: { guardianId: ids.guardianId, schoolId },
+      select: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePhotoUrl: true,
+          },
+        },
+      },
+    })
+    data.childrenCount = links.length
+    data.children = links.map((l) => ({
+      id: l.student.id,
+      firstName: l.student.firstName ?? "",
+      lastName: l.student.lastName ?? "",
+      profilePhotoUrl: l.student.profilePhotoUrl ?? null,
+    }))
   }
 }
 
@@ -910,7 +831,6 @@ function addActivity(
     day.activities.push({
       type,
       count,
-      label: ACTIVITY_LABELS[type],
     })
   }
 }
@@ -1101,29 +1021,20 @@ async function fetchParentActivities(
   endDate: Date,
   map: Map<string, ContributionDataPoint>
 ): Promise<void> {
-  const [payments, messages] = await Promise.all([
-    db.payment
-      .findMany({
-        where: {
-          schoolId,
-          paymentDate: { gte: startDate, lte: endDate },
-        },
-        select: { paymentDate: true },
-        take: 0,
-      })
-      .catch(() => []),
-    db.message
-      .findMany({
-        where: {
-          senderId: guardianUserId,
-          createdAt: { gte: startDate, lte: endDate },
-        },
-        select: { createdAt: true },
-      })
-      .catch(() => []),
-  ])
+  // Messages sent by this guardian. Message has no schoolId column — tenant
+  // isolation is enforced through its Conversation relation.
+  // (Payment-based parent contributions are not wired yet — see ISSUE.md.)
+  const messages = await db.message
+    .findMany({
+      where: {
+        senderId: guardianUserId,
+        conversation: { schoolId },
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      select: { createdAt: true },
+    })
+    .catch(() => [])
 
-  payments.forEach((p) => addActivity(map, p.paymentDate, "payment_made"))
   messages.forEach((m) => addActivity(map, m.createdAt, "message_sent"))
 }
 
@@ -1232,8 +1143,10 @@ export async function getContributionData(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
+    // Scope the role lookup by schoolId so a caller-supplied userId from
+    // another tenant returns NOT_FOUND instead of leaking role/existence.
+    const user = await db.user.findFirst({
+      where: { id: userId, schoolId },
       select: { role: true },
     })
 
@@ -1258,31 +1171,6 @@ export async function getContributionData(
           ? error.message
           : "Failed to fetch contribution data",
     }
-  }
-}
-
-/**
- * Determine profile role for a user
- */
-export async function getUserProfileRole(
-  userId?: string
-): Promise<ProfileRole | null> {
-  try {
-    const session = await auth()
-    const targetUserId = userId || session?.user?.id
-
-    if (!targetUserId) return null
-
-    const user = await db.user.findUnique({
-      where: { id: targetUserId },
-      select: { role: true },
-    })
-
-    if (!user) return null
-
-    return mapUserRoleToProfileRole(user.role)
-  } catch {
-    return null
   }
 }
 
@@ -1324,28 +1212,9 @@ export async function getRecentActivity(userId?: string, limit = 20) {
 // Log User Activity (for contribution tracking)
 // ============================================================================
 
-export async function logUserActivity(input: {
-  activityType:
-    | "ASSIGNMENT_SUBMITTED"
-    | "ATTENDANCE_MARKED"
-    | "ACHIEVEMENT_EARNED"
-    | "EXAM_COMPLETED"
-    | "COURSE_ENROLLED"
-    | "COURSE_COMPLETED"
-    | "LIBRARY_CHECKOUT"
-    | "LIBRARY_RETURN"
-    | "EVENT_ATTENDED"
-    | "CLUB_JOINED"
-    | "PROJECT_CREATED"
-    | "PROJECT_UPDATED"
-    | "GRADE_RECEIVED"
-    | "CERTIFICATE_EARNED"
-    | "PROFILE_UPDATED"
-    | "OTHER"
-  title: string
-  description?: string
-  metadata?: Record<string, unknown>
-}) {
+export async function logUserActivity(
+  input: z.infer<typeof logUserActivitySchema>
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -1357,137 +1226,25 @@ export async function logUserActivity(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
+    const parsed = logUserActivitySchema.parse(input)
+
     await db.userActivity.create({
       data: {
         schoolId,
         userId: session.user.id,
-        activityType: input.activityType,
-        title: input.title,
-        description: input.description ?? undefined,
-        metadata: (input.metadata as Prisma.InputJsonValue) ?? undefined,
+        activityType: parsed.activityType,
+        title: parsed.title,
+        description: parsed.description ?? undefined,
+        metadata: (parsed.metadata as Prisma.InputJsonValue) ?? undefined,
       },
     })
 
     return { success: true as const }
   } catch (error) {
     console.error("Error logging activity:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-// ============================================================================
-// Get User Profile with GitHub-style Fields
-// ============================================================================
-
-export async function getUserProfileWithGitHubFields(userId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    if (error instanceof z.ZodError) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetUserId = userId || session.user.id
-
-    const user = await db.user.findFirst({
-      where: {
-        id: targetUserId,
-        schoolId,
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        image: true,
-        role: true,
-        bio: true,
-        website: true,
-        timezone: true,
-        statusEmoji: true,
-        statusMessage: true,
-        pronouns: true,
-        socialLinks: true,
-        createdAt: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            middleName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            grNumber: true,
-            city: true,
-            enrollmentDate: true,
-          },
-        },
-        teacher: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            employeeId: true,
-            emailAddress: true,
-            joiningDate: true,
-          },
-        },
-        guardian: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            emailAddress: true,
-          },
-        },
-        pinnedItems: {
-          where: {
-            ...(targetUserId !== session.user.id && { isPublic: true }),
-          },
-          orderBy: { order: "asc" },
-          take: 6,
-        },
-        userActivities: {
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-      },
-    })
-
-    if (!user) {
-      return actionError(ACTION_ERRORS.NOT_FOUND)
-    }
-
-    // Get name based on role
-    let displayName = user.username || ""
-    let profilePhoto = user.image
-    if (user.student) {
-      displayName =
-        `${user.student.firstName || ""} ${user.student.lastName || ""}`.trim()
-      profilePhoto = user.student.profilePhotoUrl || user.image
-    } else if (user.teacher) {
-      displayName =
-        `${user.teacher.firstName || ""} ${user.teacher.lastName || ""}`.trim()
-      profilePhoto = user.teacher.profilePhotoUrl || user.image
-    } else if (user.guardian) {
-      displayName =
-        `${user.guardian.firstName || ""} ${user.guardian.lastName || ""}`.trim()
-    }
-
-    return {
-      success: true as const,
-      data: {
-        ...user,
-        displayName,
-        profilePhoto,
-        isOwner: targetUserId === session.user.id,
-      },
-    }
-  } catch (error) {
-    console.error("Error fetching user profile:", error)
     return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

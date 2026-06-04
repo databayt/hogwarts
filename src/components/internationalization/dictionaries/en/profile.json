@@ -19,7 +19,10 @@
     "events": "Events",
     "communications": "Messages",
     "issues": "Issues",
-    "reports": "Reports"
+    "reports": "Reports",
+    "academics": "Academics",
+    "teaching": "Teaching",
+    "family": "Family"
   },
   "roles": {
     "student": "Student",
@@ -66,7 +69,28 @@
     "footerHelp": "Need help navigating the system? Check out the",
     "portalGuide": "school portal guide",
     "bannerText": "You unlocked new Achievements with private contributions! Show them off by including private contributions in your Profile in",
-    "settings": "settings"
+    "settings": "settings",
+    "contributionsHeading": "Contributions in {year}",
+    "noPinned": "No pinned items yet",
+    "activityLabels": {
+      "attendance": "Attended class",
+      "assignment_submitted": "Submitted assignment",
+      "exam_completed": "Completed exam",
+      "library_visit": "Library visit",
+      "club_activity": "Club activity",
+      "class_taught": "Taught class",
+      "grade_published": "Published grade",
+      "attendance_taken": "Marked attendance",
+      "lesson_created": "Created lesson",
+      "portal_login": "Portal login",
+      "payment_made": "Made payment",
+      "message_sent": "Sent message",
+      "event_rsvp": "Event RSVP",
+      "task_completed": "Completed task",
+      "report_generated": "Generated report",
+      "expense_processed": "Processed expense",
+      "meeting_attended": "Attended meeting"
+    }
   },
   "form": {
     "name": "Name",
@@ -111,7 +135,12 @@
     "latestAccomplishments": "Your latest accomplishments",
     "viewAllAchievements": "View all achievements",
     "subjectPerformance": "Subject Performance",
-    "gradesAcrossSubjects": "Your grades across all subjects"
+    "gradesAcrossSubjects": "Your grades across all subjects",
+    "averageGrade": "Average grade",
+    "noGradesYet": "No grades recorded yet",
+    "subjects": "Subjects",
+    "noSubjects": "No subjects enrolled yet",
+    "noAchievementsYet": "No achievements yet"
   },
   "teacher": {
     "editTitle": "Edit Your Information",
@@ -134,7 +163,12 @@
     "weeklyTeachingLoad": "Weekly Teaching Load",
     "classDistribution": "Your class distribution this week",
     "teachingHours": "{count} teaching hours",
-    "total": "Total"
+    "total": "Total",
+    "classes": "Classes",
+    "students": "Students",
+    "myClasses": "My Classes",
+    "studentsCount": "{count} students",
+    "noClasses": "No classes assigned yet"
   },
   "staff": {
     "totalStudents": "Total Students",
@@ -187,12 +221,15 @@
     "contactTeacher": "Contact Teacher",
     "payFees": "Pay Fees",
     "requestLeave": "Request Leave",
-    "viewReports": "View Reports"
+    "viewReports": "View Reports",
+    "childrenCount": "{count} linked",
+    "noChildren": "No children linked yet"
   },
   "graph": {
     "activities": "activities",
     "interactions": "interactions",
-    "tasks": "tasks"
+    "tasks": "tasks",
+    "noContributions": "No contributions"
   },
   "editRole": {
     "contactInformation": "Contact Information",
@@ -206,6 +243,8 @@
     "notAuthenticated": "Not authenticated",
     "failedToLoad": "Failed to load profile",
     "error": "Error",
-    "goBack": "Go Back"
+    "goBack": "Go Back",
+    "notFound": "Profile not found",
+    "missingSchool": "No school context"
   }
 }
