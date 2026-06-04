@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { PageHeader } from "@/components/atom/page-header"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -14,14 +16,23 @@ import { communitySearchParams } from "@/components/saas-marketing/community/sea
 import { CommunitySubjectsGrid } from "@/components/saas-marketing/community/subjects-grid"
 import { CommunityTabsNav } from "@/components/saas-marketing/community/tabs-nav"
 
-// Static metadata — async generateMetadata + getDictionary triggers a
-// dynamic-import storm during Next.js "Collecting page data" that pushed
-// Vercel past the 45-min build timeout. The visible <h1> is still
-// locale-aware via the dictionary at render time.
-export const metadata = {
-  title: "Community — Free Educational Resources",
-  description:
-    "Open subjects, textbooks, mock exams, question banks, videos, and learning materials for educators and students.",
+// Locale-aware metadata. The page is force-dynamic (reads searchParams +
+// Prisma), so generateMetadata runs per-request — no build-time page-data
+// cost. (It was previously hardcoded English to dodge the Vercel Hobby
+// 45-min build ceiling; restored now that we're on Pro.)
+export async function generateMetadata(props: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await props.params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.community?.title
+      ? `${dictionary.community.title} — ${dictionary.community.lead ?? ""}`.trim()
+      : "Community — Free Educational Resources",
+    description:
+      dictionary?.community?.lead ??
+      "Open subjects, textbooks, mock exams, question banks, videos, and learning materials for educators and students.",
+  }
 }
 
 // Page reads searchParams + Prisma — never statically renderable.
