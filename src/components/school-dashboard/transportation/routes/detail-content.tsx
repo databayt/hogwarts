@@ -10,6 +10,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
+import { translateRoute, translateStops } from "../shared/translate-display"
 import { StopEditor } from "./stop-editor"
 
 interface Props {
@@ -42,7 +43,10 @@ export async function RouteDetailContent({
     )
   }
 
-  const route = result.data
+  const route = {
+    ...(await translateRoute(result.data, locale)),
+    stops: await translateStops(result.data.stops, locale),
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">

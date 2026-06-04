@@ -8,6 +8,7 @@ import { listDrivers } from "../actions/drivers"
 import { listAvailableGeofences, listRoutes } from "../actions/routes"
 import { listVehicles } from "../actions/vehicles"
 import { TransportationEmptyState } from "../empty-state"
+import { translateRoutes } from "../shared/translate-display"
 import { RoutesClient } from "./routes-client"
 
 interface Props {
@@ -37,7 +38,7 @@ export async function RoutesContent({ locale, dictionary }: Props) {
   return (
     <RoutesClient
       locale={locale}
-      routes={routesResult.data}
+      routes={await translateRoutes(routesResult.data, locale)}
       vehicles={vehiclesResult.success ? vehiclesResult.data : []}
       drivers={driversResult.success ? driversResult.data : []}
       geofences={geofencesResult.success ? geofencesResult.data : []}

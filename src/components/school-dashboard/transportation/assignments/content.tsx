@@ -11,6 +11,7 @@ import {
 } from "../actions/assignments"
 import { listRoutes } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
+import { translateRoutes } from "../shared/translate-display"
 import { AssignmentsClient } from "./assignments-client"
 
 interface Props {
@@ -56,7 +57,11 @@ export async function AssignmentsContent({ locale, dictionary }: Props) {
     <AssignmentsClient
       locale={locale}
       assignments={assignmentsResult.data}
-      routes={routesResult.success ? routesResult.data : []}
+      routes={
+        routesResult.success
+          ? await translateRoutes(routesResult.data, locale)
+          : []
+      }
       students={students}
       stopsByRoute={stopsByRoute}
       dictionary={dictionary}
