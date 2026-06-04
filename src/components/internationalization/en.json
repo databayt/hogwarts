@@ -2243,5 +2243,34 @@
     "submitting": "Submitting...",
     "success": "Submitted. Thank you!",
     "error": "Something went wrong. Try again."
+  },
+  "certificate": {
+    "verify": {
+      "verifiedTitle": "Certificate Verified",
+      "verifiedDescription": "This certificate is authentic.",
+      "statusActive": "This certificate is active.",
+      "statusRevoked": "This certificate has been revoked.",
+      "statusExpired": "This certificate has expired.",
+      "notFoundTitle": "Certificate Not Found",
+      "notFoundDescription": "The verification code is invalid or the certificate has been revoked.",
+      "recipient": "Recipient",
+      "exam": "Exam",
+      "score": "Score",
+      "grade": "Grade",
+      "examDate": "Exam Date",
+      "issued": "Issued",
+      "school": "School"
+    },
+    "share": {
+      "title": "Certificate",
+      "unavailableTitle": "Certificate Unavailable",
+      "unavailableDescription": "This certificate is no longer available or the share link has expired.",
+      "generatingTitle": "Certificate Is Being Prepared",
+      "generatingDescription": "The certificate document is being generated. Please check back in a moment.",
+      "download": "Download Certificate",
+      "issuedBy": "Issued by",
+      "recipient": "Recipient",
+      "verifyHint": "Verify authenticity with code"
+    }
   }
 }

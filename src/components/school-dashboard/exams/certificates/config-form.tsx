@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { Uploader } from "@/components/file/upload/uploader"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createCertificateConfig, updateCertificateConfig } from "./actions"
@@ -405,27 +406,72 @@ export function CertificateConfigForm({ initialData }: ConfigFormProps) {
         </div>
         <div className="space-y-4">
           {signatures.map((sig, i) => (
-            <div key={i} className="flex gap-4">
-              <Input
-                placeholder={t?.form?.signatureName ?? "Name"}
-                value={sig.name}
-                onChange={(e) => updateSignature(i, "name", e.target.value)}
-              />
-              <Input
-                placeholder={t?.form?.signatureTitle ?? "Title"}
-                value={sig.title}
-                onChange={(e) => updateSignature(i, "title", e.target.value)}
-              />
-              {signatures.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeSignature(i)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+            <div key={i} className="space-y-3 rounded-md border p-3">
+              <div className="flex gap-4">
+                <Input
+                  placeholder={t?.form?.signatureName ?? "Name"}
+                  value={sig.name}
+                  onChange={(e) => updateSignature(i, "name", e.target.value)}
+                />
+                <Input
+                  placeholder={t?.form?.signatureTitle ?? "Title"}
+                  value={sig.title}
+                  onChange={(e) => updateSignature(i, "title", e.target.value)}
+                />
+                {signatures.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeSignature(i)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-muted-foreground text-xs">
+                  {cf?.signatureImage ?? "Signature image (optional)"}
+                </span>
+                {sig.signatureUrl ? (
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sig.signatureUrl}
+                      alt={sig.name || "signature"}
+                      className="h-12 w-auto rounded border bg-white object-contain p-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => updateSignature(i, "signatureUrl", "")}
+                    >
+                      {cf?.removeSignatureImage ?? "Remove image"}
+                    </Button>
+                  </div>
+                ) : (
+                  <Uploader
+                    category="image"
+                    folder="certificate-signatures"
+                    variant="compact"
+                    maxFiles={1}
+                    optimizeImages
+                    onUploadComplete={(results) => {
+                      const url = results[0]?.url
+                      if (url) updateSignature(i, "signatureUrl", url)
+                    }}
+                    onUploadError={(err) =>
+                      toast({
+                        title: cf?.uploadError ?? "Upload failed",
+                        description: err,
+                        variant: "destructive",
+                      })
+                    }
+                  />
+                )}
+              </div>
             </div>
           ))}
         </div>

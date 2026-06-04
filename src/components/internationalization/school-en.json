@@ -6098,7 +6098,10 @@
         "noTemplatesYet": "No templates yet",
         "createTemplateToStart": "Create a certificate template to get started.",
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "setAsDefault": "Set as default",
+        "defaultBadge": "Default",
+        "defaultSet": "Default template updated"
       },
       "configForm": {
         "namePlaceholder": "e.g., Excellence Certificate",
@@ -6106,6 +6109,9 @@
         "bodyPlaceholder": "Use placeholders: {{studentName}}, {{score}}, {{grade}}, {{examTitle}}, {{examDate}}, {{rank}}",
         "availablePlaceholders": "Available placeholders",
         "addSignature": "Add Signature",
+        "signatureImage": "Signature image (optional)",
+        "removeSignatureImage": "Remove image",
+        "uploadError": "Upload failed",
         "saving": "Saving...",
         "updateTemplate": "Update Template",
         "createTemplate": "Create Template",
