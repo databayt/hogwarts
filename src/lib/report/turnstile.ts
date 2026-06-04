@@ -12,14 +12,23 @@
 
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
+/**
+ * Is Turnstile configured for this deployment? When false, captcha is NOT
+ * enforced — the pipeline leaves captchaValid=null so anonymous reports still
+ * go through (degraded trust, lower score) instead of silently vanishing.
+ */
+export function isTurnstileConfigured(): boolean {
+  return Boolean(process.env.TURNSTILE_SECRET_KEY)
+}
+
 export async function verifyTurnstile(
   token: string | undefined,
   ip: string
 ): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY
   if (!secret) {
-    // In development without a Turnstile secret, pass through. Real deployments
-    // must set the env var (otherwise HF3 would reject every anonymous report).
+    // Unconfigured: callers should gate on isTurnstileConfigured() and not
+    // enforce captcha at all. If we still get here, pass in dev, fail in prod.
     if (process.env.NODE_ENV !== "production") return true
     console.warn("[turnstile] TURNSTILE_SECRET_KEY not set in production")
     return false
