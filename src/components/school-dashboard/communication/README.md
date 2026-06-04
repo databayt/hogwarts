@@ -1,3 +1,16 @@
+---
+epic: 06
+sprint: Q3-2026
+title: Communication
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 80
+tracker: https://github.com/databayt/hogwarts/issues/324
+docs: https://ed.databayt.org/en/docs/messages
+last_audited: 2026-05-25
+---
+
 ## Communication — School communication hub for announcements, broadcasts, and notifications
 
 ### Overview
@@ -35,3 +48,11 @@ src/components/school-dashboard/communication/
 - `src/components/school-dashboard/messaging/` -- Direct messaging (1:1 and group chats)
 - `src/lib/dispatch-notification.ts` -- Notification dispatch system
 - Route pages at `src/app/[lang]/s/[subdomain]/(school-dashboard)/school/communication/`
+
+### Agents & Skills
+
+- `agent:nextjs` — Socket.io + webhook routes
+- `agent:react` — messaging surface
+- `agent:comment` — copy + i18n strings
+- `skill:/wire` — UI layer sweep
+- `skill:/check` — quality gate

@@ -1,3 +1,16 @@
+---
+epic: 06
+sprint: Q3-2026
+title: Notifications
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/324
+docs: https://ed.databayt.org/en/docs/messages
+last_audited: 2026-05-25
+---
+
 ## Notifications — Real-time multi-channel notification system
 
 ### Overview
@@ -52,3 +65,11 @@ Comprehensive notification center with in-app delivery, user preferences, and RB
 
 **Completion:** 90% | **Done:** Resend email delivery, batch processing, RBAC, real-time hooks, full i18n, quiet hours, digest preferences, 254 tests
 **Remaining:** Push notifications (channel reserved, no provider), SMS (channel reserved, no provider), WhatsApp (channel reserved, Evolution API not wired)
+
+### Agents & Skills
+
+- `agent:nextjs` — Socket.io + webhook routes
+- `agent:react` — messaging surface
+- `agent:comment` — copy + i18n strings
+- `skill:/wire` — UI layer sweep
+- `skill:/check` — quality gate

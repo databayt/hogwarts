@@ -1,8 +1,21 @@
+---
+epic: 01
+sprint: Q3-2026
+title: Payment (multi-gateway block)
+file_type: issue
+owner: Abdout
+maturity: Built+Polish
+completion: 70
+tracker: https://github.com/databayt/hogwarts/issues/313
+docs: https://ed.databayt.org/en/docs/fees
+last_audited: 2026-05-25
+---
+
 # Payment — Production Readiness Tracker
 
 **Status:** IN PROGRESS
 **Completion:** 70%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-05-25
 
 ---
 

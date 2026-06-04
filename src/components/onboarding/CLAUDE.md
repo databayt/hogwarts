@@ -1,3 +1,16 @@
+---
+epic: 02
+sprint: Q3-2026
+title: Admission (onboarding wizard)
+file_type: claude
+owner: Abdout
+maturity: Built
+completion: 75
+tracker: https://github.com/databayt/hogwarts/issues/314
+docs: https://ed.databayt.org/en/docs/admission
+last_audited: 2026-05-25
+---
+
 # Onboarding Block
 
 ## Context

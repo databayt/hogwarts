@@ -1,3 +1,16 @@
+---
+epic: 01
+sprint: Q3-2026
+title: Finance (school dashboard)
+file_type: claude
+owner: Abdout
+maturity: Built+Polish
+completion: 79
+tracker: https://github.com/databayt/hogwarts/issues/313
+docs: https://ed.databayt.org/en/docs/fees
+last_audited: 2026-05-25
+---
+
 # Finance Block
 
 ## Context

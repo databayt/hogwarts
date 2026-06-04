@@ -1,3 +1,16 @@
+---
+epic: 02
+sprint: Q3-2026
+title: Admission (onboarding wizard)
+file_type: readme
+owner: Abdout
+maturity: Built
+completion: 75
+tracker: https://github.com/databayt/hogwarts/issues/314
+docs: https://ed.databayt.org/en/docs/admission
+last_audited: 2026-05-25
+---
+
 ## Onboarding -- Multi-step school setup wizard for new platform subscribers
 
 ### Overview
@@ -131,3 +144,11 @@ Core onboarding flow (all 15 steps with UI, forms, validation, server actions, a
 - `src/lib/school-access.ts` -- Atomic school-user linking with `$transaction`
 - `src/auth.ts` -- Smart redirect sends users to their school subdomain after completion
 - `src/middleware.ts` -- Subdomain rewriting enables `school.databayt.org` routing post-onboarding
+
+### Agents & Skills
+
+- `agent:hogwarts` — admission domain expert
+- `agent:react` — wizard step components
+- `agent:nextjs` — App Router segments + server actions
+- `skill:/wire` — UI layer sweep
+- `skill:/report` — auto-fix pilot-reported friction

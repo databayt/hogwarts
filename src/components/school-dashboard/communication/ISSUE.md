@@ -1,3 +1,16 @@
+---
+epic: 06
+sprint: Q3-2026
+title: Communication
+file_type: issue
+owner: Abdout
+maturity: Built+Polish
+completion: 80
+tracker: https://github.com/databayt/hogwarts/issues/324
+docs: https://ed.databayt.org/en/docs/messages
+last_audited: 2026-05-25
+---
+
 # Communication — Production Readiness Tracker
 
 **Status:** 🟡 IN PROGRESS

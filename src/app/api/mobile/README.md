@@ -1,3 +1,16 @@
+---
+epic: 09
+sprint: Q3-2026
+title: Mobile API Layer
+file_type: readme
+owner: Abdout
+maturity: In Progress
+completion: 40
+tracker: https://github.com/databayt/hogwarts/issues/315
+docs: https://ed.databayt.org/en/docs/mobile-api
+last_audited: 2026-05-25
+---
+
 # Mobile API Layer
 
 Backend API endpoints serving the Hogwarts Android and iOS mobile apps.
@@ -276,3 +289,12 @@ Add rewrite rules or alias routes in Next.js middleware to map `/api/students` �
 5. **Test with demo accounts**:
    - `admin@databayt.org` / `1234` → School: نموذج (demo)
    - Backend has: 3,109 users, 58k attendance records, 1,120 timetable slots, 400 exams, 79 conversations
+
+### Agents & Skills
+
+- `agent:nextjs` — API route handlers
+- `agent:prisma` — schema for mobile endpoints
+- `agent:guardian` — auth + tenant scoping audit
+- `skill:/security` — OWASP sweep
+- `skill:/test` — endpoint test coverage
+- `skill:/check` — quality gate

@@ -1,3 +1,16 @@
+---
+epic: 12
+sprint: Q3-2026
+title: SaaS Marketing (sales surface)
+file_type: readme
+owner: Mutaz
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/316
+docs: https://ed.databayt.org/en/docs/sales
+last_audited: 2026-05-25
+---
+
 ## SaaS Marketing — Public-Facing Landing and Conversion Pages
 
 ### Overview
@@ -89,3 +102,10 @@ src/components/saas-marketing/
 - **Dictionary**: `src/components/internationalization/{en,ar}.json`
 - **Pricing**: `src/components/saas-marketing/pricing/` (separate README)
 - **Auth**: Login/signup flows for conversion
+
+### Agents & Skills
+
+- `agent:growth` — funnel, outreach, content
+- `agent:revenue` — proposals, contracts, pricing
+- `skill:/proposal` — client proposal generator
+- `skill:/pricing` — tier + comparison

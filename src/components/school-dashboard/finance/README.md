@@ -1,3 +1,16 @@
+---
+epic: 01
+sprint: Q3-2026
+title: Finance (school dashboard)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 79
+tracker: https://github.com/databayt/hogwarts/issues/313
+docs: https://ed.databayt.org/en/docs/fees
+last_audited: 2026-05-25
+---
+
 ## Finance Block -- Comprehensive School Finance Management
 
 ### Overview
@@ -126,3 +139,12 @@ src/components/school-dashboard/finance/
 - Adding a feature → confirm it's catalogued in the relevant `ISSUE.md` before coding
 - Fixing a bug → update the sub-module `ISSUE.md` once shipped
 - Money math change → read `lib/accounting/` first; double-entry invariants must hold
+
+### Agents & Skills
+
+- `agent:revenue` — fees · billing · payroll · pricing
+- `agent:prisma` — finance schema (`finance-*.prisma`) + multi-tenant scoping
+- `agent:guardian` — OWASP + tenant boundary audit
+- `skill:/security` — security sweep
+- `skill:/guard` — auth + validation sweep
+- `skill:/check` — quality gate before ship

@@ -1,3 +1,16 @@
+---
+epic: 05
+sprint: Q3-2026
+title: Stream (LMS)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 80
+tracker: https://github.com/databayt/hogwarts/issues/323
+docs: https://ed.databayt.org/en/docs/clickview
+last_audited: 2026-05-25
+---
+
 ## Stream — Learning Management System (LMS)
 
 ### Overview
@@ -157,3 +170,11 @@ The stream block uses a **catalog-based architecture**. Legacy `stream.prisma` m
 - **Rate Limiting**: Arcjet for API protection
 - **Prisma Models**: `prisma/models/enrollment.prisma`, `prisma/models/video.prisma`
 - **Dictionary**: `src/components/internationalization/stream-{en,ar}.json`
+
+### Agents & Skills
+
+- `agent:nextjs` — App Router + streaming
+- `agent:react` — lesson + chapter UI
+- `agent:performance` — CDN asset migration + Core Web Vitals
+- `skill:/performance` — perf audit
+- `skill:/skeleton` — loading-state sweep
