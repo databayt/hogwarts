@@ -1,0 +1,222 @@
+// Live Class — video conferencing (LiveKit built-in OR external meeting link)
+//
+// See:
+//   src/lib/livekit/*               — server SDK wrappers (rooms, tokens, egress, webhook)
+//   src/components/school-dashboard/live-classes/  — block UI + server actions
+//   src/app/api/webhooks/livekit/   — webhook ingestion
+//
+// All models are schoolId-scoped. For the LiveKit provider the room name embeds
+// schoolId so the SFU namespace cannot leak across tenants. Recordings live in
+// AWS S3 me-central-1 with PDPL-configurable retention. The `external` provider
+// stores a pasted meeting URL (Google Meet / Zoom / Teams) and needs no SFU —
+// it works on any deployment tier; LiveKit is gated on env presence.
+
+enum LiveClassProvider {
+  livekit // Built-in self-hosted SFU room (gated on LiveKit env vars)
+  external // Pasted meeting URL — Google Meet / Zoom / Teams
+}
+
+enum LiveClassStatus {
+  scheduled
+  live
+  ended
+  cancelled
+  failed
+}
+
+enum LiveClassRecordingStatus {
+  pending // Egress requested, not started
+  processing // Egress in flight
+  ready // S3 object available
+  failed // Egress error
+  expired // Past retention, S3 deleted
+}
+
+enum LiveClassParticipantRole {
+  HOST // Teacher running the class
+  CO_HOST // Co-teacher or observer with publish rights
+  PARTICIPANT // Student
+  OBSERVER // Parent (subscribe-only)
+}
+
+enum LiveClassParticipantStatus {
+  invited
+  joined
+  left
+  removed
+  no_show
+}
+
+// A scheduled or ad-hoc live class session.
+model LiveClassSession {
+  id       String @id @default(cuid())
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Anchoring — all optional, supports both scheduled (Timetable) and ad-hoc.
+  timetableId String?
+  timetable   Timetable? @relation(fields: [timetableId], references: [id], onDelete: SetNull)
+  sectionId   String?
+  section     Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  subjectId   String?
+  subject     Subject?   @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  // Meeting provider — `livekit` = built-in SFU room, `external` = pasted URL.
+  provider LiveClassProvider @default(livekit)
+
+  // LiveKit metadata (provider = livekit). Null for external sessions.
+  roomName String? @unique // sch-{schoolId}-lc-{id} — globally unique
+  roomSid  String? // LiveKit room SID, set on first connection
+
+  // External meeting link (provider = external, OR a per-session override that
+  // beats the subject+section LiveClassDefaultLink fallback).
+  meetingUrl      String? // pasted Google Meet / Zoom / Teams URL
+  meetingProvider String? // human label, e.g. "Google Meet", "Zoom"
+
+  // Scheduling
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  actualStart    DateTime?
+  actualEnd      DateTime?
+
+  // State
+  status           LiveClassStatus @default(scheduled)
+  recordingEnabled Boolean         @default(true)
+  maxParticipants  Int             @default(50)
+
+  // Content (single-language storage — see translation rule)
+  title       String
+  description String? @db.Text
+  lang        String  @default("ar")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  participants LiveClassParticipant[]
+  recordings   LiveClassRecording[]
+  events       LiveClassEvent[]
+
+  @@index([schoolId, status])
+  @@index([schoolId, teacherId])
+  @@index([schoolId, sectionId])
+  @@index([schoolId, scheduledStart])
+  @@index([schoolId, sectionId, subjectId, scheduledStart])
+  @@index([timetableId])
+  @@index([deletedAt])
+  @@map("live_class_sessions")
+}
+
+// One row per user invited to a live class (host, students, observers).
+model LiveClassParticipant {
+  id        String           @id @default(cuid())
+  schoolId  String
+  sessionId String
+  session   LiveClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User             @relation("LiveClassParticipations", fields: [userId], references: [id], onDelete: Cascade)
+
+  role   LiveClassParticipantRole
+  status LiveClassParticipantStatus @default(invited)
+
+  tokenIssuedAt   DateTime?
+  joinedAt        DateTime?
+  leftAt          DateTime?
+  durationSeconds Int?
+
+  // Connection-quality telemetry — informs ops, especially Meeting-3 UAE test.
+  avgRttMs       Int?
+  hadTcpFallback Boolean @default(false) // true if TURN-over-443-TCP was used
+  lastIceState   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sessionId, userId])
+  @@index([schoolId, userId])
+  @@index([schoolId, sessionId])
+  @@map("live_class_participants")
+}
+
+// Composite room recording produced by LiveKit Egress.
+model LiveClassRecording {
+  id        String           @id @default(cuid())
+  schoolId  String
+  school    School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   LiveClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  egressId String @unique // LiveKit Egress ID
+  s3Bucket String
+  s3Key    String
+  s3Region String @default("me-central-1")
+
+  fileSizeBytes   BigInt?
+  durationSeconds Int?
+  mimeType        String  @default("video/mp4")
+
+  status      LiveClassRecordingStatus @default(pending)
+  startedAt   DateTime?
+  completedAt DateTime?
+  expiresAt   DateTime?
+  deletedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, status])
+  @@index([schoolId, expiresAt])
+  @@index([sessionId])
+  @@index([deletedAt])
+  @@map("live_class_recordings")
+}
+
+// Lightweight audit log for room lifecycle + webhook idempotency.
+model LiveClassEvent {
+  id        String           @id @default(cuid())
+  schoolId  String
+  sessionId String
+  session   LiveClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  eventType   String // 'room_started','participant_joined','egress_started',...
+  actorUserId String?
+  payload     Json? // Truncated webhook payload for forensics
+  // LiveKit webhook event id — used for idempotent replay protection
+  eventId     String? @unique
+
+  occurredAt DateTime @default(now())
+
+  @@index([schoolId, sessionId, occurredAt])
+  @@index([schoolId, eventType])
+  @@map("live_class_events")
+}
+
+// Stable recurring meeting link for a (subject, section, term) — set once,
+// reused every week. A LiveClassSession.meetingUrl beats this; this is the
+// fallback the timetable Join button resolves to when no session-specific
+// link exists. Primarily for the `external` provider.
+model LiveClassDefaultLink {
+  id        String  @id @default(cuid())
+  schoolId  String
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  termId    String
+
+  provider        LiveClassProvider @default(external)
+  meetingUrl      String
+  meetingProvider String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, subjectId, sectionId, termId])
+  @@index([schoolId, sectionId])
+  @@map("live_class_default_links")
+}

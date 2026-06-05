@@ -2,15 +2,21 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useState, useTransition, type ReactNode } from "react"
 import { TriangleAlert } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getActiveTerm, getPersonalizedTimetable } from "../actions"
+import {
+  getActiveTerm,
+  getPersonalizedTimetable,
+  provisionTimetableForSchool,
+} from "../actions"
+import { DRAFT_TERM_ID } from "../constants"
 import AdminView from "./admin-view"
 import GuardianView from "./guardian-view"
 import StudentView from "./student-view"
@@ -49,6 +55,10 @@ interface PersonalizedData {
     isBreak: boolean
   }>
   lunchAfterPeriod: number | null
+  /** True when this is a display-only fallback grid (no real Term exists yet). */
+  isDraft?: boolean
+  /** True when the current user (ADMIN/DEVELOPER) can provision a real term. */
+  canProvision?: boolean
 }
 
 export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
@@ -56,6 +66,7 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [termId, setTermId] = useState<string | null>(null)
   const [viewData, setViewData] = useState<PersonalizedData | null>(null)
+  const [provisioning, setProvisioning] = useState(false)
 
   // Load active term and personalized data on mount
   useEffect(() => {
@@ -66,11 +77,13 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
     startTransition(async () => {
       setError(null)
       try {
-        // Get active term
+        // Get active term. getActiveTerm now always returns a term — a
+        // display-only draft (id = DRAFT_TERM_ID) when the school has none — so
+        // the grid renders an empty fallback instead of hard-blocking.
         const { term, source } = await getActiveTerm()
 
         if (!term) {
-          setError("No term configured for this school")
+          setViewData(null)
           return
         }
 
@@ -88,6 +101,27 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
         )
       }
     })
+  }
+
+  // Provision a real term from the school's structure, then reload into the
+  // editable real grid. Backs the draft "Set up timetable" CTA (admins only).
+  const handleProvision = async () => {
+    setProvisioning(true)
+    setError(null)
+    try {
+      const res = await provisionTimetableForSchool()
+      if (res.success) {
+        loadInitialData()
+      } else {
+        setError(dictionary.timetable.setupFailed)
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : dictionary.timetable.setupFailed
+      )
+    } finally {
+      setProvisioning(false)
+    }
   }
 
   // Loading state
@@ -131,43 +165,38 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
     isLoading: isPending,
   }
 
+  let view: ReactNode
   switch (viewData.viewType) {
     case "admin":
-      return (
+      view = (
         <AdminView {...commonProps} editable={viewData.editable !== false} />
       )
+      break
 
     case "teacher":
-      return (
+      view = (
         <TeacherView
           {...commonProps}
           teacherId={viewData.filterData.teacherId}
           defaultTab={defaultTab}
         />
       )
-
-    case "student":
-      return (
-        <StudentView
-          {...commonProps}
-          classId={viewData.filterData.classId}
-          classIds={viewData.filterData.classIds}
-          defaultTab={defaultTab}
-        />
-      )
+      break
 
     case "guardian":
-      return (
+      view = (
         <GuardianView
           {...commonProps}
           childrenIds={viewData.filterData.childrenIds}
           defaultTab={defaultTab}
         />
       )
+      break
 
+    case "student":
     default:
-      // Fallback to student view (most restricted)
-      return (
+      // Student view is also the most-restricted fallback.
+      view = (
         <StudentView
           {...commonProps}
           classId={viewData.filterData.classId}
@@ -176,4 +205,29 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
         />
       )
   }
+
+  const isDraft = viewData.termInfo.id === DRAFT_TERM_ID
+
+  return (
+    <div className="space-y-4">
+      {isDraft && viewData.canProvision && (
+        <Alert>
+          <TriangleAlert className="h-4 w-4" />
+          <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span>{dictionary.timetable.draftNotice}</span>
+            <Button
+              size="sm"
+              onClick={handleProvision}
+              disabled={provisioning}
+            >
+              {provisioning
+                ? dictionary.timetable.settingUp
+                : dictionary.timetable.setupTimetable}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      {view}
+    </div>
+  )
 }

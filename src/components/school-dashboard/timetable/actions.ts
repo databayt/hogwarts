@@ -71,9 +71,11 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import { applyTimetableStructureForNewSchool } from "@/lib/catalog-setup"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
-import { ABSENCE_TYPES, SUBSTITUTION_STATUS } from "./constants"
+import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./constants"
+import { getStructureBySlug } from "./structures"
 // ============================================================================
 // AI-POWERED TIMETABLE GENERATION
 // ============================================================================
@@ -2505,8 +2507,57 @@ export async function getPeriodsForTerm(input: { termId: string }) {
 // ============================================================================
 
 /**
+ * Build a display-only schedule (term shell + period grid) from the school's
+ * timetable structure, for schools that have no real `Term` yet.
+ *
+ * Pure read: writes NOTHING to the database. Used to render an empty fallback
+ * grid instead of hard-blocking with "No term configured". The school's
+ * `timetableStructure` slug drives the periods/working-days; falls back to the
+ * always-present "us-standard" structure when unset/unknown.
+ */
+async function buildDraftSchedule(schoolId: string) {
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { timetableStructure: true },
+  })
+  const structure =
+    getStructureBySlug(school?.timetableStructure ?? "us-standard") ??
+    getStructureBySlug("us-standard")!
+
+  const now = new Date()
+  const startYear =
+    now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  const startDate = new Date(startYear, 8, 1) // Sep 1
+  const endDate = new Date(startYear + 1, 5, 30) // Jun 30
+
+  const periods = structure.periods.map((p, idx) => {
+    const [sh, sm] = p.startTime.split(":").map(Number)
+    const [eh, em] = p.endTime.split(":").map(Number)
+    return {
+      id: `draft-${idx}`,
+      name: p.name,
+      order: idx + 1,
+      startTime: new Date(Date.UTC(1970, 0, 1, sh, sm)),
+      endTime: new Date(Date.UTC(1970, 0, 1, eh, em)),
+      isBreak: p.type !== "class",
+    }
+  })
+
+  return {
+    yearName: structure.name,
+    startDate,
+    endDate,
+    workingDays: structure.workingDays,
+    lunchAfterPeriod: structure.lunchAfterPeriod,
+    periods,
+  }
+}
+
+/**
  * Get the active term for the current school
  * Priority: 1) Term.isActive=true 2) Today within term dates 3) Most recent
+ * Fallback: when the school has NO term yet, return a display-only draft term
+ * (id = DRAFT_TERM_ID) so the timetable still renders an empty grid.
  */
 export async function getActiveTerm() {
   await requireReadAccess()
@@ -2517,7 +2568,20 @@ export async function getActiveTerm() {
   const { term, source } = await resolveActiveTerm(schoolId)
 
   if (!term) {
-    return { term: null, source: "none" as const }
+    // No real term yet — synthesize a draft so the grid renders (no DB writes).
+    const draft = await buildDraftSchedule(schoolId)
+    return {
+      term: {
+        id: DRAFT_TERM_ID,
+        termNumber: 1,
+        label: `${draft.yearName} — Draft`,
+        startDate: draft.startDate,
+        endDate: draft.endDate,
+        yearId: DRAFT_TERM_ID,
+      },
+      source: "none" as const,
+      isDraft: true,
+    }
   }
 
   // Fetch year name for label
@@ -2536,6 +2600,7 @@ export async function getActiveTerm() {
       yearId: term.yearId,
     },
     source,
+    isDraft: false,
   }
 }
 
@@ -2567,6 +2632,53 @@ export async function setActiveTerm(input: { termId: string }) {
   })
 
   return { success: true }
+}
+
+/**
+ * Provision a real academic year + terms + periods + week config from the
+ * school's timetable structure. Backs the timetable "Set up timetable" CTA that
+ * appears on the draft fallback grid. Admin-only.
+ *
+ * Idempotent + non-destructive: skips entirely if a term already exists, and
+ * only invokes the structure applier when there are zero periods AND zero terms
+ * (applyTimetableStructureForNewSchool duplicates periods on re-run, so the
+ * count guard is mandatory).
+ */
+export async function provisionTimetableForSchool() {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  // Already has a resolvable term — nothing to do.
+  const existing = await resolveActiveTerm(schoolId)
+  if (existing.term) return { success: true, provisioned: false }
+
+  const [periodCount, termCount] = await Promise.all([
+    db.period.count({ where: { schoolId } }),
+    db.term.count({ where: { schoolId } }),
+  ])
+
+  if (periodCount === 0 && termCount === 0) {
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { timetableStructure: true },
+    })
+    await applyTimetableStructureForNewSchool(
+      schoolId,
+      school?.timetableStructure ?? "us-standard"
+    )
+    await logTimetableAction("configure_settings", {
+      entityType: "term",
+      entityId: "auto-provision",
+      changes: { provisioned: true },
+    })
+    return { success: true, provisioned: true }
+  }
+
+  // Partial state (periods or terms exist but no term resolved) — don't risk
+  // duplicate periods; surface so it can be fixed in settings.
+  return { success: false, errorCode: "TIMETABLE_PARTIAL_STATE" as const }
 }
 
 type ViewType = "admin" | "teacher" | "student" | "guardian"
@@ -2673,6 +2785,29 @@ export async function getPersonalizedTimetable(input: {
 
     default:
       viewType = "student" // Default to most restricted view
+  }
+
+  // Draft fallback: no real term yet — render a read-only grid built from the
+  // school's structure. Writes nothing; editing is unlocked once an admin
+  // provisions a real term via provisionTimetableForSchool().
+  if (input.termId === DRAFT_TERM_ID) {
+    const draft = await buildDraftSchedule(schoolId)
+    return {
+      viewType,
+      editable: false,
+      filterData,
+      termInfo: {
+        id: DRAFT_TERM_ID,
+        termNumber: 1,
+        yearName: draft.yearName,
+        label: `${draft.yearName} — Draft`,
+      },
+      workingDays: draft.workingDays,
+      periods: draft.periods,
+      lunchAfterPeriod: draft.lunchAfterPeriod,
+      isDraft: true,
+      canProvision: role === "ADMIN" || role === "DEVELOPER",
+    }
   }
 
   // Get base schedule data

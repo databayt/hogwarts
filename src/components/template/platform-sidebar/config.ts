@@ -200,27 +200,15 @@ export const platformNav: PlatformNavItem[] = [
     roles: ALL_ROLES,
   },
   {
-    key: "messages",
-    title: "Messages",
-    href: "/messages",
-    icon: "envelope",
-    roles: [
-      "DEVELOPER",
-      "ADMIN",
-      "TEACHER",
-      "STUDENT",
-      "GUARDIAN",
-      "ACCOUNTANT",
-      "STAFF",
-    ],
+    key: "liveClasses",
+    title: "Live Classes",
+    href: "/live-classes",
+    icon: "monitorPlay",
+    roles: ALL_ROLES,
   },
-  {
-    key: "whatsapp",
-    title: "WhatsApp",
-    href: "/whatsapp",
-    icon: "whatsapp",
-    roles: ["ADMIN", "DEVELOPER"],
-  },
+  // Messages and WhatsApp are intentionally omitted from the sidebar —
+  // both channels are reachable from the top-header navigation. The routes
+  // still exist; this only removes the redundant sidebar entries.
 
   // Core – always visible, not toggleable
   {
@@ -240,27 +228,27 @@ export const platformNav: PlatformNavItem[] = [
     alwaysVisible: true,
   },
 
-  // Showcase – admin only
+  // Showcase + Billing – developer only
   {
     key: "charts",
     title: "Charts",
     href: "/charts",
     icon: "barChart",
-    roles: ["ADMIN"],
+    roles: ["DEVELOPER"],
   },
   {
     key: "stats",
     title: "Stats",
     href: "/stats",
     icon: "trendingUp",
-    roles: ["ADMIN"],
+    roles: ["DEVELOPER"],
   },
   {
     key: "billing",
     title: "Billing",
     href: "/billing",
     icon: "receipt",
-    roles: ["ADMIN", "DEVELOPER"],
+    roles: ["DEVELOPER"],
   },
 ]
 

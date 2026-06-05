@@ -7,6 +7,18 @@
  * Shared constants for timetable components and actions.
  */
 
+/**
+ * Sentinel term id for the display-only fallback grid.
+ *
+ * When a school has no real `Term` row yet, the timetable still renders an
+ * empty grid built from the school's timetable structure instead of hard-
+ * blocking with "No term configured". This id flows through getActiveTerm →
+ * getPersonalizedTimetable as a marker that the grid is a non-persisted draft;
+ * nothing is ever written to the database for it. An admin clicks "Set up
+ * timetable" to provision a real term and unlock editing.
+ */
+export const DRAFT_TERM_ID = "__draft__"
+
 // Working day presets for quick configuration
 export const WORKING_DAY_PRESETS = {
   "sun-thu": {
