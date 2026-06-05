@@ -30,6 +30,12 @@ type L = {
   typingPreview: string
   groupFallbackName: string
   directFallbackName: string
+  previewPhoto: string
+  previewVideo: string
+  previewVoice: string
+  previewLocation: string
+  previewDeleted: string
+  relativeYesterday: string
 }
 
 const DEFAULT_L: L = {
@@ -50,6 +56,12 @@ const DEFAULT_L: L = {
   typingPreview: "is typing...",
   groupFallbackName: "Group",
   directFallbackName: "Unknown",
+  previewPhoto: "Photo",
+  previewVideo: "Video",
+  previewVoice: "Voice message",
+  previewLocation: "Location",
+  previewDeleted: "You deleted this message.",
+  relativeYesterday: "Yesterday",
 }
 
 type Props = {
@@ -267,7 +279,11 @@ function getAvatarUrl(
   return null
 }
 
-function formatTimestamp(d: Date | string, locale: "ar" | "en"): string {
+function formatTimestamp(
+  d: Date | string,
+  locale: "ar" | "en",
+  yesterdayLabel: string
+): string {
   const date = typeof d === "string" ? new Date(d) : d
   const now = new Date()
   const sameDay = date.toDateString() === now.toDateString()
@@ -281,7 +297,7 @@ function formatTimestamp(d: Date | string, locale: "ar" | "en"): string {
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   if (date.toDateString() === yesterday.toDateString()) {
-    return locale === "ar" ? "أمس" : "Yesterday"
+    return yesterdayLabel
   }
   return date.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
     day: "2-digit",
@@ -317,21 +333,21 @@ function toRowData(
     previewText = L.typingPreview
     previewItalic = true
   } else if (last?.isDeleted) {
-    previewText = "You deleted this message."
+    previewText = L.previewDeleted
     previewLeading = "deleted"
     previewItalic = true
   } else if (last) {
     const isMine = last.senderId === currentUserId
     if (last.contentType === "voice" || last.contentType === "audio") {
       previewLeading = "voice"
-      previewText = "Voice message"
+      previewText = L.previewVoice
     } else if (last.contentType === "location") {
       previewLeading = "location"
-      previewText = "Location"
+      previewText = L.previewLocation
     } else if (last.contentType === "image") {
-      previewText = "Photo"
+      previewText = L.previewPhoto
     } else if (last.contentType === "video") {
-      previewText = "Video"
+      previewText = L.previewVideo
     } else {
       previewText = last.content || ""
     }
@@ -349,7 +365,7 @@ function toRowData(
     preview: previewText,
     previewLeading,
     previewItalic,
-    timestamp: formatTimestamp(c.lastMessageAt, locale),
+    timestamp: formatTimestamp(c.lastMessageAt, locale, L.relativeYesterday),
     unreadCount: c.unreadCount,
     mentioned: isMentioned,
     pinned: self?.isPinned ?? false,

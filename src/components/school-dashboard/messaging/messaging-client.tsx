@@ -629,6 +629,13 @@ export function MessagingClient({
             encryptTopic: m?.ui?.encrypt?.topic_messages ?? "messages",
             encryptSuffix: m?.ui?.encrypt?.suffix ?? "are",
             typingPreview: m?.ui?.typing ?? "typing...",
+            previewPhoto: m?.ui?.preview?.photo ?? "Photo",
+            previewVideo: m?.ui?.preview?.video ?? "Video",
+            previewVoice: m?.ui?.preview?.voice ?? "Voice message",
+            previewLocation: m?.ui?.preview?.location ?? "Location",
+            previewDeleted:
+              m?.ui?.preview?.deleted ?? "You deleted this message.",
+            relativeYesterday: m?.ui?.relative_yesterday ?? "Yesterday",
           }}
         />
       </div>

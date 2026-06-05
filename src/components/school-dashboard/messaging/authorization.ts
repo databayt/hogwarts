@@ -326,32 +326,6 @@ export function canAccessConversationType(
 }
 
 /**
- * Message content restrictions
- */
-export function validateMessageContent(
-  content: string,
-  conversationType: ConversationType
-): { valid: boolean; error?: string } {
-  if (!content || content.trim().length === 0) {
-    return { valid: false, error: "Message content cannot be empty" }
-  }
-
-  if (content.length > 4000) {
-    return { valid: false, error: "Message is too long (max 4000 characters)" }
-  }
-
-  // Announcement channels may have stricter requirements
-  if (conversationType === "announcement" && content.length < 10) {
-    return {
-      valid: false,
-      error: "Announcement messages must be at least 10 characters",
-    }
-  }
-
-  return { valid: true }
-}
-
-/**
  * File upload authorization
  */
 export function canUploadFile(

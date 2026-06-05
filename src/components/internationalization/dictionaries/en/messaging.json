@@ -13,6 +13,14 @@
     "no_messages": "No messages yet",
     "no_participants": "No participants",
     "typing": "{user} is typing...",
+    "preview": {
+      "photo": "Photo",
+      "video": "Video",
+      "voice": "Voice message",
+      "location": "Location",
+      "deleted": "You deleted this message."
+    },
+    "relative_yesterday": "Yesterday",
     "typing_multiple": "{count} people are typing...",
     "read_by": "Read by {count}",
     "read_by_all": "Read by everyone",
