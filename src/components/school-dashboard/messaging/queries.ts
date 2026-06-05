@@ -163,6 +163,9 @@ export const messageListSelect = {
     select: {
       attachments: true,
       reactions: true,
+      // Eager count only — full readReceipts are loaded on demand via
+      // getMessageReadReceipts (keeps the 50-message hot path lean).
+      readReceipts: true,
     },
   },
 } as const

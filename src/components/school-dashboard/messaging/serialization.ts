@@ -138,6 +138,10 @@ export function serializeMessage(message: any) {
     attachments: message.attachments?.map(serializeAttachment) || [],
     reactions: message.reactions?.map(serializeReaction) || [],
     readReceipts: message.readReceipts?.map(serializeReadReceipt) || [],
+    // readCount comes from the eager _count; falls back to the array length
+    // when a caller selected full receipts instead of the count.
+    readCount:
+      message._count?.readReceipts ?? message.readReceipts?.length ?? 0,
     replyTo: serializeReplyTo(message.replyTo),
   }
 }

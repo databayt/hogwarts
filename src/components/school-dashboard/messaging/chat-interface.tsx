@@ -588,7 +588,9 @@ export function ChatInterface({
       }
     }
 
-    const timer = setInterval(poll, 5000)
+    // 10s: the single active-conversation poller (the list polls at 15s).
+    // Only runs while the socket is disconnected (fallback path).
+    const timer = setInterval(poll, 10000)
     return () => {
       active = false
       clearInterval(timer)

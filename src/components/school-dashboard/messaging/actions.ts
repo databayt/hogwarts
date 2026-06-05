@@ -1012,10 +1012,20 @@ export async function markMessageAsRead(
 
     const parsed = markMessageAsReadSchema.parse(input)
 
-    // Get message
+    // Get message (getMessage is schoolId-scoped — prevents cross-tenant)
     const message = await getMessage(schoolId, parsed.messageId)
     if (!message) {
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
+
+    // Only a participant of the message's conversation may mark it read
+    const canRead = await isConversationParticipant(
+      schoolId,
+      message.conversationId,
+      authContext.userId
+    )
+    if (!canRead) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Create or update read receipt
@@ -2235,6 +2245,11 @@ export async function forwardMessage(
       return actionError(ACTION_ERRORS.MESSAGE_NOT_FOUND)
     }
 
+    // Never forward a soft-deleted message (its content is tombstoned)
+    if (originalMessage.isDeleted) {
+      return actionError(ACTION_ERRORS.MESSAGE_NOT_FOUND)
+    }
+
     // Verify user is participant of the source conversation
     const isSourceParticipant = await isConversationParticipant(
       schoolId,
@@ -2387,10 +2402,14 @@ export async function unstarMessage(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    // Scope the delete to the verified conversation so a caller can't unstar
+    // by pairing a conversation they belong to with an unrelated messageId
+    // (parity with starMessage, which ties the star to conversationId).
     await db.starredMessage.deleteMany({
       where: {
         userId: authContext.userId,
         messageId: input.messageId,
+        conversationId: input.conversationId,
       },
     })
 
