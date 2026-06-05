@@ -138,7 +138,7 @@ export async function dispatchMessageToWhatsApp(
       isActive: true,
       userId: { not: senderUserId },
     },
-    select: { userId: true, whatsappPhone: true },
+    select: { id: true, userId: true, whatsappPhone: true },
   })
 
   const participants = allParticipants.filter((p) => p.whatsappPhone)
@@ -161,10 +161,10 @@ export async function dispatchMessageToWhatsApp(
 
   // Message has scalar whatsappPhone/whatsappStatus/whatsappMessageId columns,
   // but groups fan out to N recipients. Writing those scalars in a loop would
-  // last-writer-wins and break retry semantics. Only mirror scalar state for
-  // 1:1 dispatches (one recipient); for groups, rely on per-recipient
-  // WhatsAppMessage rows below. Until a MessageWhatsappDelivery join table
-  // lands, group retries are best-effort via WhatsAppMessage audit rows only.
+  // last-writer-wins and break retry semantics. So: 1:1 dispatches mirror state
+  // onto the Message scalars (retried via the Message sweep), while groups write
+  // a per-recipient MessageWhatsappDelivery row (retried via the delivery sweep)
+  // plus a WhatsAppMessage audit row. The two retry paths never overlap.
   const isSingleRecipient = participants.length === 1
 
   for (const participant of participants) {
@@ -195,6 +195,19 @@ export async function dispatchMessageToWhatsApp(
             triggerType: "messaging",
             triggerId: messageId,
           },
+        })
+        await db.messageWhatsappDelivery.upsert({
+          where: {
+            messageId_participantId: { messageId, participantId: participant.id },
+          },
+          create: {
+            schoolId,
+            messageId,
+            participantId: participant.id,
+            phone,
+            status: "pending",
+          },
+          update: { status: "pending" },
         })
       }
       continue
@@ -265,7 +278,8 @@ export async function dispatchMessageToWhatsApp(
       if (!representativeResult) continue
 
       // Only mirror WA state onto the Message row for 1:1 conversations.
-      // For groups the scalar fields would clobber sibling recipients.
+      // For groups the scalar fields would clobber sibling recipients, so each
+      // recipient's status goes to its own MessageWhatsappDelivery row instead.
       if (isSingleRecipient) {
         await db.message.update({
           where: { id: messageId },
@@ -273,6 +287,27 @@ export async function dispatchMessageToWhatsApp(
             whatsappMessageId: representativeResult.key.id,
             whatsappStatus: "sent",
             whatsappPhone: phone,
+          },
+        })
+      } else {
+        await db.messageWhatsappDelivery.upsert({
+          where: {
+            messageId_participantId: { messageId, participantId: participant.id },
+          },
+          create: {
+            schoolId,
+            messageId,
+            participantId: participant.id,
+            phone,
+            status: "sent",
+            providerMessageId: representativeResult.key.id,
+            sentAt: new Date(),
+          },
+          update: {
+            status: "sent",
+            providerMessageId: representativeResult.key.id,
+            sentAt: new Date(),
+            lastError: null,
           },
         })
       }
@@ -287,6 +322,7 @@ export async function dispatchMessageToWhatsApp(
           data: { whatsappStatus: "failed", whatsappPhone: phone },
         })
       } else {
+        const lastError = error instanceof Error ? error.message : String(error)
         await db.whatsAppMessage.create({
           data: {
             schoolId,
@@ -302,6 +338,20 @@ export async function dispatchMessageToWhatsApp(
             triggerType: "messaging",
             triggerId: messageId,
           },
+        })
+        await db.messageWhatsappDelivery.upsert({
+          where: {
+            messageId_participantId: { messageId, participantId: participant.id },
+          },
+          create: {
+            schoolId,
+            messageId,
+            participantId: participant.id,
+            phone,
+            status: "failed",
+            lastError,
+          },
+          update: { status: "failed", lastError },
         })
       }
     }
@@ -443,8 +493,125 @@ export async function retryFailedMessageDispatches(): Promise<{
     }
   }
 
+  // --- Part B: group fan-out — per-recipient MessageWhatsappDelivery rows ---
+  // 1:1 dispatches live on the Message scalars (Part A); groups can't, so each
+  // recipient is retried independently here (re-dispatching the whole message
+  // would double-send to already-delivered recipients).
+  const failedDeliveries = await db.messageWhatsappDelivery.findMany({
+    where: {
+      status: { in: ["failed", "pending"] },
+      retryCount: { lt: MAX_RETRY_ATTEMPTS },
+      message: { conversation: { whatsappEnabled: true } },
+    },
+    select: {
+      id: true,
+      schoolId: true,
+      phone: true,
+      retryCount: true,
+      updatedAt: true,
+      message: {
+        select: {
+          content: true,
+          attachments: {
+            select: { fileUrl: true, fileType: true, fileName: true },
+          },
+        },
+      },
+    },
+    take: 20,
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (failedDeliveries.length > 0) {
+    const evolution = await import("@/lib/whatsapp/evolution-client")
+    const { checkAndConsumeRateLimit } = await import(
+      "@/lib/whatsapp/rate-limiter"
+    )
+    // One session lookup per school, reused across that school's deliveries.
+    const sessionCache = new Map<
+      string,
+      { instanceName: string; status: string } | null
+    >()
+
+    for (const delivery of failedDeliveries) {
+      // Exponential backoff keyed off the row's own retryCount + updatedAt.
+      const backoffMs = BASE_RETRY_DELAY_MS * Math.pow(2, delivery.retryCount)
+      if (Date.now() - new Date(delivery.updatedAt).getTime() < backoffMs) {
+        skipped++
+        continue
+      }
+
+      let session = sessionCache.get(delivery.schoolId)
+      if (session === undefined) {
+        session = await db.whatsAppSession.findUnique({
+          where: { schoolId: delivery.schoolId },
+          select: { instanceName: true, status: true },
+        })
+        sessionCache.set(delivery.schoolId, session)
+      }
+      if (!session || session.status !== "connected") {
+        skipped++
+        continue
+      }
+
+      const rateCheck = await checkAndConsumeRateLimit(delivery.schoolId)
+      if (!rateCheck.allowed) {
+        skipped++
+        continue
+      }
+
+      try {
+        const atts = delivery.message.attachments
+        let providerMessageId: string | undefined
+        if (atts.length > 0) {
+          for (const a of atts) {
+            const r = await evolution.sendMedia(
+              session.instanceName,
+              delivery.phone,
+              a.fileUrl,
+              {
+                mediatype: mimeToMediaType(a.fileType),
+                caption: delivery.message.content || undefined,
+                fileName: a.fileName,
+              }
+            )
+            if (!providerMessageId) providerMessageId = r.key.id
+          }
+        } else {
+          const r = await evolution.sendText(
+            session.instanceName,
+            delivery.phone,
+            delivery.message.content
+          )
+          providerMessageId = r.key.id
+        }
+        await db.messageWhatsappDelivery.update({
+          where: { id: delivery.id },
+          data: {
+            status: "sent",
+            providerMessageId,
+            sentAt: new Date(),
+            lastError: null,
+            retryCount: { increment: 1 },
+          },
+        })
+        sent++
+      } catch (error) {
+        await db.messageWhatsappDelivery.update({
+          where: { id: delivery.id },
+          data: {
+            status: "failed",
+            lastError: error instanceof Error ? error.message : String(error),
+            retryCount: { increment: 1 },
+          },
+        })
+        failed++
+      }
+    }
+  }
+
   return {
-    processed: failedMessages.length,
+    processed: failedMessages.length + failedDeliveries.length,
     sent,
     failed,
     skipped,
