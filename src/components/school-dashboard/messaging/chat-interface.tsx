@@ -813,32 +813,9 @@ export function ChatInterface({
             )}
         </div>
 
-        {/* Action icons — video + call */}
+        {/* Action icons. Video/voice call buttons removed — no telephony
+            backend exists; decorative no-op buttons don't ship to production. */}
         <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            aria-label={m?.ui?.video_call || "Video call"}
-          >
-            <img
-              src="/cam-recorder.png"
-              alt=""
-              className="h-5 w-5 object-contain"
-            />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            aria-label={m?.ui?.voice_call || "Voice call"}
-          >
-            <img
-              src="/telephone.png"
-              alt=""
-              className="h-3.5 w-3.5 object-contain"
-            />
-          </Button>
           {whatsappConnected && (
             <Button
               variant="ghost"
