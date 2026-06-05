@@ -2,12 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
-import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCategoryFromMimeType } from "@/components/file/config"
 import {
@@ -16,13 +13,7 @@ import {
 } from "@/components/file/providers/factory"
 
 import { logAttachmentUploaded } from "./audit"
-import { MESSAGES_PATH } from "./config"
 import { isConversationParticipant } from "./queries"
-
-// Validation schema for attachment metadata
-const attachmentMetadataSchema = z.object({
-  conversationId: z.string().min(1, "Conversation ID is required"),
-})
 
 // Size limits for message attachments (bytes)
 const ATTACHMENT_SIZE_LIMITS = {

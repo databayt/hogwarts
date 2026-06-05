@@ -15,7 +15,7 @@ last_audited: 2026-05-25
 
 ## Context
 
-Real-time messaging for a school: 1:1 direct + group chats, with file attachments, reactions, read receipts, search, typing/presence, and WhatsApp dual-delivery. ~13k LOC across 80 files — a large, polished block with **no TODO/stub markers**. **Status: 100% code, 0% ops** — code has been frozen since 2026-04-25 and is multi-tenant-solid, but it is **not live end-to-end**: the Socket.IO server isn't deployed (#262), so realtime is on a polling fallback, and several ops env vars are unset. The unit suite is currently red (18 failing / 192 passing — fixture gaps, not bugs). Read `ISSUE.md` before assuming anything is "shipped." Note the directory is `messaging/`, but the route is `/messages` under the `(school-messaging)` route group.
+Real-time messaging for a school: 1:1 direct + group chats, with file attachments, reactions, read receipts, search, typing/presence, and WhatsApp dual-delivery. **Status: CODE PRODUCTION-READY, 0% ops** — multi-tenant-solid; a 2026-06-05 hardening pass (branch `fix/messaging-production-ready`) added group-WhatsApp delivery+retry, a durable rate limiter, correctness fixes, and removed ~1,740 lines of dead code. It is **not live end-to-end**: the Socket.IO server isn't deployed (#262), so realtime is on a polling fallback, and the inbound/realtime ops secrets are unset (see ISSUE.md → "WhatsApp Activation Balance"). The unit suite is **green: 223/223** (`pnpm exec vitest run src/components/school-dashboard/messaging`). Read `ISSUE.md` before assuming anything is "shipped." Note the directory is `messaging/`, but the route is `/messages` under the `(school-messaging)` route group.
 
 ## Before You Start
 
@@ -27,16 +27,16 @@ Real-time messaging for a school: 1:1 direct + group chats, with file attachment
 ## Key Decisions
 
 - **Not the DataTable triplet.** This is a chat UI (split-pane: contacts/conversation list + chat interface + info panel), so there's no `*-content/*-table/*-columns`. Server entry is `content.tsx`; client orchestrator is `messaging-client.tsx`.
-- **Realtime = Socket.IO (external `socket-server/`) with a polling fallback.** When the socket is disconnected, the client polls every 15s (list) / 10s (active conversation). Server→client pushes go through `POST /api/emit*` guarded by `x-emit-secret`.
+- **Realtime = Socket.IO (external `socket-server/`) with a polling fallback.** When the socket is disconnected, the client polls every 15s (list) / 10s (active conversation — the single active poller lives in `chat-interface.tsx`). Server→client pushes go through `POST /api/emit*` guarded by a constant-time `x-emit-secret` check.
 - **Only `direct` + `group` are creatable.** `class`/`department`/`announcement` are in the enum + RBAC config but have no creation UI.
-- **WhatsApp status on `Message` is scalar → 1:1 only.** Group delivery is logged per-recipient in `WhatsAppMessage`; group retry is intentionally not wired (needs a join table — P0).
-- **Client UI is dictionary-keyed** (dedicated `messaging` namespace), but server errors + `validation.ts` still hardcode English (i18n debt, see ISSUE.md).
+- **WhatsApp status: 1:1 → `Message` scalars; group → `MessageWhatsappDelivery` rows.** Group fan-out writes one delivery row per recipient (retried per-recipient); 1:1 uses the scalar columns (retried via the Message sweep). The two retry paths never overlap.
+- **Client UI is dictionary-keyed** (dedicated `messaging` namespace). Server errors use error codes resolved client-side. `validation.ts`'s Zod messages stay English **by design** — server-only, caught → codes, never user-visible (not debt).
 - Message bodies have **no `lang` field** by design — user-to-user content, translated on demand at render, not stored bilingually.
 
 ## Danger Zones
 
 - **Multi-tenant scoping is the block's strongest property — keep it that way.** Every action calls `getTenantContext()` and returns `actionError(ACTION_ERRORS.MISSING_SCHOOL)` when absent; every query filters by `schoolId` directly or via `conversation: { schoolId }`. Actions that take raw IDs (`forwardMessage`, `pollNewMessages`, `removeReaction`) re-assert `schoolId`. Don't add a query path that skips it — `__tests__/multi-tenant.test.ts` guards this.
-- **`whatsapp-bridge.ts` group path:** do not "fix" the 1:1-only scalar mirroring by writing group status to `Message` — that reintroduces the last-writer-wins corruption patched on 2026-04-22. The correct fix is the `MessageWhatsappDelivery` join table (needs migration approval).
+- **`whatsapp-bridge.ts` group path:** never write group status to the `Message` scalar columns — that reintroduces the last-writer-wins corruption patched on 2026-04-22. Group per-recipient state lives in `MessageWhatsappDelivery` (added 2026-06-05); 1:1 keeps the scalars. Keep these two paths separate.
 - **Ops env vars fail closed in production:** the webhook (`WHATSAPP_WEBHOOK_SECRET`) and cron (`CRON_SECRET`) refuse to run when unset. Don't loosen these to "make it work" — set the env vars (#262).
 - **Subdomain URLs:** conversation switching uses clean `/${locale}/messages` paths via `history.replaceState` — never introduce `/s/${subdomain}/`.
 - **Socket events are conversation-scoped:** emit functions key off `conversationId`/`userId` after schoolId validation. Don't broaden room membership without re-checking tenant.

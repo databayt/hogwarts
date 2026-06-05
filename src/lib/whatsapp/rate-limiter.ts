@@ -68,9 +68,10 @@ function getUpstashRedis(): import("@upstash/redis").Redis | null {
     return null
   }
   try {
-    const { Redis } =
-      require("@upstash/redis") as typeof import("@upstash/redis")
-    _upstashRedis = new Redis({ url, token })
+    // Sync lazy require keeps the client out of the import graph until needed.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require("@upstash/redis") as typeof import("@upstash/redis")
+    _upstashRedis = new mod.Redis({ url, token })
     _upstashAvailable = true
     return _upstashRedis
   } catch {
