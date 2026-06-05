@@ -362,6 +362,46 @@ describe("dispatchMessageToWhatsApp", () => {
     })
   })
 
+  it("group fan-out writes a per-recipient delivery row and no Message scalars", async () => {
+    vi.mocked(db.whatsAppSession.findUnique).mockResolvedValue(
+      connectedSession as any
+    )
+    vi.mocked(db.message.findUnique).mockResolvedValue({
+      attachments: [],
+    } as any)
+    // Two recipients → group fan-out
+    vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([
+      { id: "part-1", userId: "u1", whatsappPhone: "+966500000001" },
+      { id: "part-2", userId: "u2", whatsappPhone: "+966500000002" },
+    ] as any)
+    mockSendText.mockResolvedValue(sendTextResult)
+
+    await dispatchMessageToWhatsApp(
+      SCHOOL_ID,
+      CONVERSATION_ID,
+      MESSAGE_ID,
+      "Hello group",
+      SENDER_USER_ID
+    )
+
+    // One delivery row per recipient (the retry handle for group fan-out)
+    expect(db.messageWhatsappDelivery.upsert).toHaveBeenCalledTimes(2)
+    expect(db.messageWhatsappDelivery.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          schoolId: SCHOOL_ID,
+          messageId: MESSAGE_ID,
+          participantId: "part-1",
+          phone: "+966500000001",
+          status: "sent",
+          providerMessageId: "wa-msg-123",
+        }),
+      })
+    )
+    // Group dispatch must NOT clobber the shared Message scalar columns
+    expect(db.message.update).not.toHaveBeenCalled()
+  })
+
   it("creates WhatsAppMessage audit record with media contentType for attachments", async () => {
     vi.mocked(db.whatsAppSession.findUnique).mockResolvedValue(
       connectedSession as any

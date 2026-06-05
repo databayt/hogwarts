@@ -48,8 +48,6 @@ src/components/school-dashboard/messaging/
 ├── types.ts                        # 20+ TypeScript DTOs and type definitions
 ├── content.tsx                     # Server component (entry point, data fetching + translation)
 ├── messaging-client.tsx            # Main client component (split-pane layout, Socket.IO wiring)
-├── conversation-list.tsx           # Conversation sidebar
-├── conversation-card.tsx           # Single conversation preview card
 ├── conversation-info-panel.tsx     # Conversation details panel (participants, media, actions)
 ├── chat-interface.tsx              # Active chat view
 ├── message-list.tsx                # Scrollable message list
@@ -58,7 +56,6 @@ src/components/school-dashboard/messaging/
 ├── message-input.tsx               # Compose area with attachment support
 ├── message-search.tsx              # Message search overlay
 ├── new-conversation-dialog.tsx     # Create conversation dialog (direct + group tabs only)
-├── attachment-upload.tsx           # File attachment upload UI
 ├── auto-scroller.tsx               # Auto-scroll to latest message
 ├── empty-state.tsx                 # Empty state placeholder
 ├── notification-helpers.ts         # Push notification utilities
@@ -72,8 +69,7 @@ src/components/school-dashboard/messaging/
 ├── index.ts                        # Public barrel exports
 ├── hooks/
 │   ├── index.ts
-│   ├── use-realtime-messages.ts    # Socket.IO real-time subscription hook (15 events)
-│   └── use-presence.ts             # Online/offline presence tracking hook (Redis-backed)
+│   └── use-presence.ts             # Online/offline presence tracking hook (Socket.IO events)
 ├── contacts/
 │   ├── config.ts                   # Role-based contact categories + sidebar filters
 │   ├── types.ts                    # ContactDTO, ContactCategory, SidebarFilter types
@@ -97,9 +93,9 @@ src/components/school-dashboard/messaging/
 
 ### Status
 
-**Completion:** 100% code | **Status:** 🟡 CODE-READY, blocked on ops (audited 2026-05-21)
+**Completion:** 100% code | **Status:** 🟢 CODE PRODUCTION-READY, blocked on ops only (hardened 2026-06-05)
 
-All application code is complete and **frozen since 2026-04-25**, but the feature is **not live end-to-end**. The Socket.IO server is not deployed (tracked in [#262](https://github.com/databayt/hogwarts/issues/262)), so realtime currently falls back to polling. Several ops env vars are unset (`CRON_SECRET`, `SOCKET_SECRET`, `EMIT_SECRET`, `WHATSAPP_WEBHOOK_SECRET`; `NEXT_PUBLIC_SOCKET_URL` still points at `localhost`). The unit suite is **green (210/210 as of 2026-05-22)**. See `ISSUE.md` for the full blocker + optimization tracker.
+Application code is production-ready (a 2026-06-05 hardening pass added group-WhatsApp delivery+retry, a durable rate limiter, correctness fixes, and removed ~1,740 lines of dead code), but the feature is **not live end-to-end**. The Socket.IO server is not deployed (tracked in [#262](https://github.com/databayt/hogwarts/issues/262)), so realtime currently falls back to polling, and the inbound/realtime ops secrets (`WHATSAPP_WEBHOOK_SECRET`, `EMIT_SECRET`, `SOCKET_SECRET`, `NEXT_PUBLIC_SOCKET_URL`) are unset. The unit suite is **green (223/223 as of 2026-06-05)**. See `ISSUE.md` → "WhatsApp Activation Balance" for the exact remaining ops steps.
 
 ### WhatsApp Integration
 
@@ -118,7 +114,7 @@ Messages sent in-app are automatically dual-delivered to WhatsApp when the schoo
 2. `sendMessage()` calls `dispatchMessageToWhatsApp()` non-blocking when `conversation.whatsappEnabled`
 3. Phone numbers resolved from domain models: Guardian > Teacher > StaffMember
 4. Rate limited: 1 msg/sec, 500 DMs/day per school
-5. Failed dispatches retried with exponential backoff (max 5 attempts) -- **1:1 only** (group retry needs a join table, see ISSUE.md P0)
+5. Failed dispatches retried with exponential backoff (max 5 attempts) -- **1:1 (Message scalars) AND group (per-recipient `MessageWhatsappDelivery` rows)** as of 2026-06-05
 6. Chat header has a **W** toggle to enable/disable per conversation
 7. Message bubbles show WhatsApp delivery status (sent/delivered/read/failed)
 
@@ -130,7 +126,7 @@ Messages sent in-app are automatically dual-delivered to WhatsApp when the schoo
 - `src/components/school-dashboard/whatsapp/` -- WhatsApp admin dashboard (QR connection, groups, templates)
 - Route: `src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page.tsx`
 - Header icon: `mail-icon.tsx` with unread badge (fetches `/api/messages/unread-count` on mount + focus, increments via Socket.IO)
-- Prisma models: 11 in `prisma/models/messages.prisma` (Conversation, ConversationParticipant, Message, MessageAttachment, MessageReaction, MessageReadReceipt, TypingIndicator, MessageDraft, PinnedMessage, ConversationInvite, StarredMessage); WhatsApp models (WhatsAppSession, WhatsAppMessage, …) in `prisma/models/whatsapp.prisma`
+- Prisma models: 12 in `prisma/models/messages.prisma` (Conversation, ConversationParticipant, Message, MessageAttachment, MessageReaction, MessageReadReceipt, TypingIndicator, MessageDraft, PinnedMessage, ConversationInvite, StarredMessage, **MessageWhatsappDelivery** — group WhatsApp per-recipient delivery); WhatsApp models (WhatsAppSession, WhatsAppMessage, …) in `prisma/models/whatsapp.prisma`
 
 ### Agents & Skills
 

@@ -13,6 +13,7 @@ import {
   forwardMessage,
   getStarredMessages,
   markConversationAsRead,
+  markMessageAsRead,
   sendMessage,
   starMessage,
   unstarMessage,
@@ -349,6 +350,23 @@ describe("Messaging Actions", () => {
       expect(result.error).toBe("MESSAGE_NOT_FOUND")
     })
 
+    it("returns MESSAGE_NOT_FOUND when source message is soft-deleted", async () => {
+      vi.mocked(db.message.findUnique).mockResolvedValue({
+        ...mockOriginalMessage,
+        isDeleted: true,
+      } as any)
+
+      const result = await forwardMessage({
+        messageId: "msg-original",
+        targetConversationIds: ["conv-target"],
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("MESSAGE_NOT_FOUND")
+      // Tombstoned content must never be copied into a new message
+      expect(db.message.create).not.toHaveBeenCalled()
+    })
+
     it("returns error when user not participant of source conversation", async () => {
       vi.mocked(db.message.findUnique).mockResolvedValue(
         mockOriginalMessage as any
@@ -591,6 +609,56 @@ describe("Messaging Actions", () => {
           messageId: "msg-1",
         },
       })
+    })
+
+    it("scopes the delete to the verified conversation (no cross-conversation unstar)", async () => {
+      vi.mocked(db.starredMessage.deleteMany).mockResolvedValue({ count: 1 })
+
+      const result = await unstarMessage({
+        messageId: "msg-1",
+        conversationId: "conv-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.starredMessage.deleteMany).toHaveBeenCalledWith({
+        where: {
+          userId: mockUserId,
+          messageId: "msg-1",
+          conversationId: "conv-1",
+        },
+      })
+    })
+  })
+
+  describe("markMessageAsRead", () => {
+    it("rejects a same-school non-participant marking a message read", async () => {
+      vi.mocked(getMessage).mockResolvedValue({
+        id: "msg-1",
+        conversationId: "conv-1",
+      } as any)
+      // getMessage is schoolId-scoped (no cross-tenant), but a non-participant
+      // of the conversation must still not be able to mark it read.
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(false)
+
+      const result = await markMessageAsRead({ messageId: "msg-1" })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.messageReadReceipt.upsert).not.toHaveBeenCalled()
+    })
+
+    it("writes a read receipt for a participant", async () => {
+      vi.mocked(getMessage).mockResolvedValue({
+        id: "msg-1",
+        conversationId: "conv-1",
+      } as any)
+      vi.mocked(isConversationParticipant).mockResolvedValueOnce(true)
+      vi.mocked(db.messageReadReceipt.upsert).mockResolvedValue({} as any)
+
+      const result = await markMessageAsRead({ messageId: "msg-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.messageReadReceipt.upsert).toHaveBeenCalled()
     })
   })
 
