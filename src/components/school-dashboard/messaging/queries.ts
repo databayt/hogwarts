@@ -601,55 +601,6 @@ export async function getUnreadMessageCount(schoolId: string, userId: string) {
 }
 
 /**
- * Get unread message count for user (optimized Prisma version)
- *
- * Alternative implementation using Prisma queries if raw SQL is not preferred.
- * Still optimized compared to the original N+1 approach.
- */
-export async function getUnreadMessageCountPrisma(
-  schoolId: string,
-  userId: string
-) {
-  // Get all user's conversation participations with unread message counts
-  const participations = await db.conversationParticipant.findMany({
-    where: {
-      userId,
-      conversation: {
-        schoolId,
-      },
-    },
-    select: {
-      conversationId: true,
-      lastReadAt: true,
-      conversation: {
-        select: {
-          messages: {
-            where: {
-              senderId: { not: userId },
-              isDeleted: false,
-            },
-            select: {
-              createdAt: true,
-            },
-          },
-        },
-      },
-    },
-  })
-
-  // Count messages created after lastReadAt for each conversation
-  let unreadCount = 0
-  for (const participation of participations) {
-    const lastRead = participation.lastReadAt || new Date(0)
-    unreadCount += participation.conversation.messages.filter(
-      (msg) => msg.createdAt > lastRead
-    ).length
-  }
-
-  return unreadCount
-}
-
-/**
  * Get unread message counts for multiple conversations
  *
  * Returns a map of conversationId -> unread count

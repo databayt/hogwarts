@@ -100,7 +100,6 @@ import {
 import {
   assertMessagingPermission,
   canManageParticipants,
-  canSendMessage,
   getAuthContext,
   validateConversationType,
 } from "./authorization"
@@ -121,27 +120,20 @@ import {
   addParticipantSchema,
   addReactionSchema,
   archiveConversationSchema,
-  createConversationInviteSchema,
   createConversationSchema,
   createMessageSchema,
-  deleteDraftSchema,
   deleteMessageSchema,
   forwardMessageSchema,
   markConversationAsReadSchema,
   markMessageAsReadSchema,
   muteConversationSchema,
-  pinMessageSchema,
   removeParticipantSchema,
   removeReactionSchema,
-  respondToInviteSchema,
-  saveDraftSchema,
   starMessageSchema,
   unmuteConversationSchema,
-  unpinMessageSchema,
   unstarMessageSchema,
   updateConversationSchema,
   updateMessageSchema,
-  updateParticipantSchema,
 } from "./validation"
 
 // Action response type
