@@ -233,7 +233,7 @@ export async function sendWhatsAppMessage(
     }
 
     // Rate limit check
-    const rateCheck = checkAndConsumeRateLimit(schoolId, {
+    const rateCheck = await checkAndConsumeRateLimit(schoolId, {
       groupId: groupId ?? undefined,
       connectedSince: session.connectedAt ?? undefined,
     })
@@ -320,7 +320,7 @@ export async function sendBroadcast(
     let failed = 0
 
     for (const group of groups) {
-      const rateCheck = checkAndConsumeRateLimit(schoolId, {
+      const rateCheck = await checkAndConsumeRateLimit(schoolId, {
         groupId: group.id,
         connectedSince: session.connectedAt ?? undefined,
       })

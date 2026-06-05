@@ -10,6 +10,7 @@
  * Tenant isolation: All rooms scoped by schoolId.
  */
 
+import { timingSafeEqual } from "crypto"
 import { createServer } from "http"
 import { createAdapter } from "@socket.io/redis-adapter"
 import cors from "cors"
@@ -24,9 +25,26 @@ import { Server, Socket } from "socket.io"
 
 const PORT = parseInt(process.env.PORT || "3001", 10)
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000"
-const SOCKET_SECRET = process.env.SOCKET_SECRET || "dev-socket-secret"
+const IS_PRODUCTION = process.env.NODE_ENV === "production"
+// In production the dev fallback is NOT used: if SOCKET_SECRET is unset the
+// secret stays "" so the (constant-time) guard rejects every emit — fail closed.
+const SOCKET_SECRET =
+  process.env.SOCKET_SECRET || (IS_PRODUCTION ? "" : "dev-socket-secret")
 const REDIS_URL = process.env.REDIS_URL // ioredis connection string
 const EMIT_SECRET = process.env.EMIT_SECRET || SOCKET_SECRET // for /api/emit auth
+
+/**
+ * Constant-time secret comparison. Rejects an empty expected secret (so an
+ * unset secret in production never authorizes) and mismatched lengths before
+ * the timing-safe compare.
+ */
+function secretsMatch(provided: unknown, expected: string): boolean {
+  if (!expected || typeof provided !== "string") return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
+}
 
 // Presence TTL in seconds (refresh every heartbeat)
 const PRESENCE_TTL = 90
@@ -269,8 +287,7 @@ io.on("connection", async (socket: Socket) => {
 // ---------------------------------------------------------------------------
 
 app.post("/api/emit", (req, res) => {
-  const secret = req.headers["x-emit-secret"]
-  if (secret !== EMIT_SECRET) {
+  if (!secretsMatch(req.headers["x-emit-secret"], EMIT_SECRET)) {
     res.status(401).json({ error: "Unauthorized" })
     return
   }
@@ -317,8 +334,7 @@ app.post("/api/emit", (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.post("/api/emit-to-users", (req, res) => {
-  const secret = req.headers["x-emit-secret"]
-  if (secret !== EMIT_SECRET) {
+  if (!secretsMatch(req.headers["x-emit-secret"], EMIT_SECRET)) {
     res.status(401).json({ error: "Unauthorized" })
     return
   }

@@ -182,7 +182,7 @@ export async function getWhatsAppStats(
     ]
   )
 
-  const rateLimitStatus = getRateLimitStatus(schoolId)
+  const rateLimitStatus = await getRateLimitStatus(schoolId)
 
   return {
     isConnected: session?.status === "connected",
