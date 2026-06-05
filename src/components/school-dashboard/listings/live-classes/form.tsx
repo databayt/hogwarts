@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ar, enUS } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
@@ -27,12 +27,8 @@ import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import {
-  createLiveClass,
-  getLiveClass,
-  getLiveClassFormData,
-  updateLiveClass,
-} from "./actions"
+import { createLiveClass, getLiveClass, updateLiveClass } from "./actions"
+import { type LiveClassFormOptions } from "./queries"
 import { createLiveClassSchema, type LiveClassFormData } from "./validation"
 
 const FIELD_NAMES = [
@@ -49,31 +45,32 @@ interface LiveClassFormProps {
   onSuccess?: () => void
   lang?: Locale
   dictionary: Dictionary["school"]["liveClasses"]
+  /**
+   * Dropdown options resolved on the server and passed in as stable props.
+   * The form deliberately does NOT fetch these on mount: a parent re-render
+   * loop would turn an on-mount fetch into a request storm and flicker the
+   * option-backed selects on every remount.
+   */
+  options: LiveClassFormOptions
 }
-
-type Option = { id: string; name: string }
 
 export function LiveClassForm({
   onSuccess,
   lang = "en",
   dictionary,
+  options,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
-  // `isPending` must reflect ONLY an in-flight submit — it drives the
-  // "Saving…" footer label and disables every field. Loading the dropdown
-  // options on open is a separate concern with its own flag, so opening the
-  // modal no longer presents the form as mid-save with all inputs locked.
+  // `isPending` reflects ONLY an in-flight submit — it drives the "Saving…"
+  // footer label and disables every field while saving.
   const [isPending, startTransition] = useTransition()
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
   const itemId = modal.id
   const isEdit = !!itemId
 
   const t = dictionary
   const f = t.form
 
-  const [teachers, setTeachers] = useState<Option[]>([])
-  const [subjects, setSubjects] = useState<Option[]>([])
-  const [sections, setSections] = useState<Option[]>([])
+  const { teachers, subjects, sections } = options
 
   const schema = useMemo(
     () => createLiveClassSchema(t.validation),
@@ -98,28 +95,6 @@ export function LiveClassForm({
       description: "",
     },
   })
-
-  // Load dropdown data (teachers/subjects/sections), scoped to the school.
-  // Plain async (not a submit transition) so the form stays interactive while
-  // options load; only the option-backed selects show a loading state.
-  useEffect(() => {
-    let active = true
-    ;(async () => {
-      try {
-        const result = await getLiveClassFormData()
-        if (active && result.success && result.data) {
-          setTeachers(result.data.teachers)
-          setSubjects(result.data.subjects)
-          setSections(result.data.sections)
-        }
-      } finally {
-        if (active) setIsLoadingOptions(false)
-      }
-    })()
-    return () => {
-      active = false
-    }
-  }, [])
 
   // Load existing data for edit mode. Plain async — prefilling values must not
   // flip the submit-pending UI ("Saving…" + disabled fields) on open.
@@ -184,9 +159,7 @@ export function LiveClassForm({
   }).length
   const progress = (filledCount / FIELD_NAMES.length) * 100
 
-  // Only treat the school as having no teachers once the fetch has settled —
-  // an empty array mid-load is "still loading", not "none available".
-  const noTeachers = !isLoadingOptions && teachers.length === 0
+  const noTeachers = teachers.length === 0
 
   return (
     <Form {...form}>
@@ -209,7 +182,7 @@ export function LiveClassForm({
               label={f.teacherLabel}
               placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
               required
-              disabled={isPending || isLoadingOptions || noTeachers}
+              disabled={isPending || noTeachers}
               options={teachers.map((teacher) => ({
                 value: teacher.id,
                 label: teacher.name,
@@ -221,7 +194,7 @@ export function LiveClassForm({
                 name="subjectId"
                 label={f.subjectLabel}
                 placeholder={f.subjectPlaceholder}
-                disabled={isPending || isLoadingOptions}
+                disabled={isPending}
                 options={subjects.map((subject) => ({
                   value: subject.id,
                   label: subject.name,
@@ -231,7 +204,7 @@ export function LiveClassForm({
                 name="sectionId"
                 label={f.sectionLabel}
                 placeholder={f.sectionPlaceholder}
-                disabled={isPending || isLoadingOptions}
+                disabled={isPending}
                 options={sections.map((section) => ({
                   value: section.id,
                   label: section.name,

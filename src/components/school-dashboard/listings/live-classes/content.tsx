@@ -11,7 +11,11 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type LiveClassRow } from "@/components/school-dashboard/listings/live-classes/columns"
 import { liveClassesSearchParams } from "@/components/school-dashboard/listings/live-classes/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/live-classes/permissions"
-import { getLiveClassesList } from "@/components/school-dashboard/listings/live-classes/queries"
+import {
+  getLiveClassesList,
+  getLiveClassFormOptions,
+  type LiveClassFormOptions,
+} from "@/components/school-dashboard/listings/live-classes/queries"
 import { LiveClassesTable } from "@/components/school-dashboard/listings/live-classes/table"
 
 interface Props {
@@ -32,16 +36,30 @@ export default async function LiveClassesContent({
 
   let data: LiveClassRow[] = []
   let total = 0
+  // Resolve form dropdown options on the server (teachers/subjects/sections)
+  // and hand them to the table as stable props. The create/edit form must not
+  // fetch these on the client — a parent re-render loop would otherwise turn
+  // the on-mount fetch into a request storm with flickering selects.
+  let formOptions: LiveClassFormOptions = {
+    teachers: [],
+    subjects: [],
+    sections: [],
+  }
 
   if (schoolId) {
     try {
-      const { rows, count } = await getLiveClassesList(schoolId, {
-        title: sp.title,
-        status: sp.status,
-        page: sp.page,
-        perPage: sp.perPage,
-        sort: sp.sort,
-      })
+      const [list, options] = await Promise.all([
+        getLiveClassesList(schoolId, {
+          title: sp.title,
+          status: sp.status,
+          page: sp.page,
+          perPage: sp.perPage,
+          sort: sp.sort,
+        }),
+        getLiveClassFormOptions(schoolId),
+      ])
+      const { rows, count } = list
+      formOptions = options
 
       // Map results with on-demand title translation (single-language storage).
       data = await Promise.all(
@@ -93,6 +111,7 @@ export default async function LiveClassesContent({
         lang={lang}
         perPage={sp.perPage}
         permissions={permissions}
+        formOptions={formOptions}
       />
     </div>
   )

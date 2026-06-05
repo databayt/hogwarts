@@ -35,6 +35,7 @@ import { deleteLiveClass, getLiveClasses } from "./actions"
 import type { LiveClassRow } from "./columns"
 import { getLiveClassColumns } from "./columns"
 import { LiveClassForm } from "./form"
+import type { LiveClassFormOptions } from "./queries"
 
 interface LiveClassesTableProps {
   initialData: LiveClassRow[]
@@ -43,6 +44,8 @@ interface LiveClassesTableProps {
   lang: Locale
   perPage?: number
   permissions?: UIPermissions
+  /** Server-resolved dropdown options for the create/edit form. */
+  formOptions: LiveClassFormOptions
 }
 
 function LiveClassesTableInner({
@@ -52,6 +55,7 @@ function LiveClassesTableInner({
   lang,
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
+  formOptions,
 }: LiveClassesTableProps) {
   const t = dictionary
   const { openModal } = useModal()
@@ -271,7 +275,12 @@ function LiveClassesTableInner({
       <Modal
         hideClose
         content={
-          <LiveClassForm onSuccess={refresh} lang={lang} dictionary={t} />
+          <LiveClassForm
+            onSuccess={refresh}
+            lang={lang}
+            dictionary={t}
+            options={formOptions}
+          />
         }
       />
     </>
