@@ -19,8 +19,14 @@
 
 import "dotenv/config"
 
+import { writeFileSync } from "node:fs"
+
 import { db } from "@/lib/db"
-import { applyTimetableStructureForNewSchool } from "@/lib/catalog-setup"
+import {
+  applyTimetableStructureForNewSchool,
+  setupCatalogForSchool,
+  teardownCatalogForSchool,
+} from "@/lib/catalog-setup"
 
 const TARGET_STRUCTURE = "us-standard"
 
@@ -42,6 +48,10 @@ function parseArg(name: string, fallback: string): string {
       .find((a) => a.startsWith(`--${name}=`))
       ?.split("=")[1] ?? fallback
   )
+}
+
+function hasFlag(name: string): boolean {
+  return process.argv.slice(2).includes(`--${name}`)
 }
 
 async function main() {
@@ -113,14 +123,50 @@ async function main() {
     )
   }
 
+  // 4) Catalog subjects — DESTRUCTIVE re-provision to us-k12 (opt-in only) ---
+  // Switches the school's offered subjects from SD (national) to US (us-k12).
+  // Gated behind --reprovision-subjects because teardown deletes the school's
+  // academic levels/grades/streams + subject selections (NOT the global
+  // catalog subjects, NOT timetable slots). Backs up current selections first.
+  if (hasFlag("reprovision-subjects")) {
+    const before = await db.subjectSelection.findMany({
+      where: { schoolId },
+      select: {
+        catalogSubjectId: true,
+        gradeId: true,
+        streamId: true,
+        isActive: true,
+      },
+    })
+    const backupPath = `/tmp/albayan-subjects-backup-${domain}.json`
+    writeFileSync(backupPath, JSON.stringify(before, null, 2))
+    console.log(
+      `  ✓ Backed up ${before.length} subject selections → ${backupPath}`
+    )
+
+    await teardownCatalogForSchool(schoolId)
+    console.log(`  ✓ Tore down SD catalog (selections + academic levels/grades)`)
+
+    const setupResult = await setupCatalogForSchool(schoolId, {
+      curriculum: "us-k12",
+      skipIfExists: false,
+    })
+    console.log(`  ✓ Provisioned us-k12 catalog:`, setupResult)
+  } else {
+    console.log(
+      `  • Skipped subject re-provisioning (pass --reprovision-subjects to switch to us-k12).`
+    )
+  }
+
   // Verify final state -----------------------------------------------------
-  const [levels, terms, periods] = await Promise.all([
+  const [levels, terms, periods, selections] = await Promise.all([
     db.yearLevel.count({ where: { schoolId } }),
     db.term.count({ where: { schoolId } }),
     db.period.count({ where: { schoolId } }),
+    db.subjectSelection.count({ where: { schoolId, isActive: true } }),
   ])
   console.log(
-    `✓ Done. ${levels} year levels, ${terms} terms, ${periods} periods.`
+    `✓ Done. ${levels} year levels, ${terms} terms, ${periods} periods, ${selections} active subject selections.`
   )
 }
 
