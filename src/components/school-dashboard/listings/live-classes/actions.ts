@@ -3,6 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { randomUUID } from "node:crypto"
+
 import { revalidatePath } from "next/cache"
 
 import { auth } from "@/auth"
@@ -251,6 +253,9 @@ export async function createLiveClass(
         subjectId: d.subjectId || null,
         sectionId: d.sectionId || null,
         provider: "external",
+        // External sessions have no SFU room; roomName is a required @unique
+        // column, so generate a synthetic, non-colliding value.
+        roomName: `ext-${randomUUID()}`,
         meetingUrl: d.meetingUrl,
         meetingProvider: d.meetingProvider || null,
         scheduledStart,

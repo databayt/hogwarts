@@ -9,6 +9,7 @@ import Stripe from "stripe"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n } from "@/components/internationalization/config"
@@ -47,6 +48,16 @@ export async function enrollInSubject(catalogSubjectId: string) {
   if (!authCtx || !session?.user) throw new Error("Authentication required")
   authCtx.schoolId = schoolId
   assertStreamPermission(authCtx, "enroll")
+
+  // Rate limit: paid enrollment creates a Stripe customer/checkout session.
+  const rl = await checkUserRateLimit(
+    session.user.id,
+    RATE_LIMITS.STREAM_ENROLLMENT,
+    "stream-enroll"
+  )
+  if (!rl.allowed) {
+    throw new Error("Too many enrollment attempts. Please try again shortly.")
+  }
 
   let checkoutUrl: string
 

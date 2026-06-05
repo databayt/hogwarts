@@ -186,6 +186,13 @@ export const platformNav: PlatformNavItem[] = [
     roles: ["STUDENT", "GUARDIAN"],
   },
   {
+    key: "parentPortal",
+    title: "Parent portal",
+    href: "/parent",
+    icon: "user",
+    roles: ["GUARDIAN", "DEVELOPER"],
+  },
+  {
     key: "transportationTrips",
     title: "Trips",
     href: "/transportation/trips",
@@ -207,8 +214,17 @@ export const platformNav: PlatformNavItem[] = [
     roles: ALL_ROLES,
   },
   // Messages and WhatsApp are intentionally omitted from the sidebar —
-  // both channels are reachable from the top-header navigation. The routes
-  // still exist; this only removes the redundant sidebar entries.
+  // both channels remain reachable from the top-header navigation.
+  {
+    // Visible to ADMIN/STAFF/DEVELOPER. The page itself enforces the
+    // `country === "AE"` regulator gate; this entry stays in the sidebar so
+    // operator + ops teams can find it. Page redirects non-UAE schools to /dashboard.
+    key: "compliance",
+    title: "Compliance",
+    href: "/compliance",
+    icon: "shield",
+    roles: ["ADMIN", "STAFF", "DEVELOPER"],
+  },
 
   // Core – always visible, not toggleable
   {

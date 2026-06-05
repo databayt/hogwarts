@@ -576,6 +576,11 @@ model ExamCertificateConfig {
   enableVerification Boolean @default(true)
   verificationPrefix String?
 
+  // The school's "favorite" template. At most one config per school should
+  // have isDefault=true (enforced in setDefaultCertificateConfig via a
+  // transaction, not a DB constraint). Auto-generation picks the default.
+  isDefault Boolean @default(false)
+
   school       School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   certificates ExamCertificate[]
 
@@ -585,6 +590,7 @@ model ExamCertificateConfig {
 
   @@index([schoolId, type])
   @@index([schoolId, isActive])
+  @@index([schoolId, isDefault])
   @@map("exam_certificate_configs")
 }
 

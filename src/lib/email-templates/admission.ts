@@ -28,6 +28,18 @@ const T = {
       reviewSoon: "سنقوم بمراجعة طلبك وسنعاود التواصل معك قريباً.",
       bestRegards: "مع أطيب التحيات",
     },
+    offer: {
+      subject: (appNo: string) => `عرض القبول - ${appNo}`,
+      heading: "تهانينا! تم قبول طلبك",
+      dearParent: (name: string) => `عزيزي/عزيزتي ${name}،`,
+      congrats: (studentName: string) =>
+        `يسعدنا إبلاغك بقبول الطالب/ة <strong>${studentName}</strong> للالتحاق بمدرستنا.`,
+      appNumber: (n: string) => `<strong>رقم الطلب:</strong> ${n}`,
+      offerPrompt: "لتأكيد القبول وإتمام التسجيل، يرجى الضغط على الرابط التالي:",
+      offerLink: "عرض القبول والتسجيل",
+      expiryNote: (date: string) => `هذا العرض صالح حتى ${date}.`,
+      bestRegards: "مع أطيب التحيات",
+    },
     resumeApplication: {
       subject: "طلبك قيد التعبئة",
       hello: "مرحباً،",
@@ -73,6 +85,19 @@ const T = {
         "You can track your application status at any time using this link:",
       trackLink: "Track Application",
       reviewSoon: "We will review your application and get back to you soon.",
+      bestRegards: "Best regards",
+    },
+    offer: {
+      subject: (appNo: string) => `Admission Offer - ${appNo}`,
+      heading: "Congratulations! Your application has been accepted",
+      dearParent: (name: string) => `Dear ${name},`,
+      congrats: (studentName: string) =>
+        `We are pleased to offer <strong>${studentName}</strong> admission to our school.`,
+      appNumber: (n: string) => `<strong>Application Number:</strong> ${n}`,
+      offerPrompt:
+        "To accept the offer and complete registration, please use this link:",
+      offerLink: "View Offer & Register",
+      expiryNote: (date: string) => `This offer is valid until ${date}.`,
       bestRegards: "Best regards",
     },
     resumeApplication: {
@@ -135,6 +160,34 @@ export function buildApplicationReceivedEmail(args: {
   <p>${t.trackPrompt}</p>
   <p><a href="${args.trackUrl}">${t.trackLink}</a></p>
   <p>${t.reviewSoon}</p>
+  <p>${t.bestRegards},<br>${name}</p>
+</div>`,
+  }
+}
+
+export function buildOfferEmail(args: {
+  school: SchoolForEmail
+  parentName: string
+  studentName: string
+  applicationNumber: string
+  offerUrl: string
+  expiryDate?: string
+  langOverride?: Lang
+}): { subject: string; html: string } {
+  const lang = resolveLang(args.school, args.langOverride)
+  const t = T[lang].offer
+  const dir = lang === "ar" ? "rtl" : "ltr"
+  const name = getSchoolDisplayName(args.school, lang)
+  return {
+    subject: t.subject(args.applicationNumber),
+    html: `<div dir="${dir}">
+  <h2>${t.heading}</h2>
+  <p>${t.dearParent(args.parentName)}</p>
+  <p>${t.congrats(args.studentName)}</p>
+  <p>${t.appNumber(args.applicationNumber)}</p>
+  <p>${t.offerPrompt}</p>
+  <p><a href="${args.offerUrl}">${t.offerLink}</a></p>
+  ${args.expiryDate ? `<p>${t.expiryNote(args.expiryDate)}</p>` : ""}
   <p>${t.bestRegards},<br>${name}</p>
 </div>`,
   }

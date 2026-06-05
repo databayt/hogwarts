@@ -115,6 +115,14 @@ export async function getAttendanceTrends(input: {
       return { success: false, error: "Missing school context" }
     }
 
+    const session = await auth()
+    if (
+      !session?.user?.role ||
+      !canViewSchoolAnalytics(session.user.role as any)
+    ) {
+      return { success: false, error: "Unauthorized" }
+    }
+
     const where: Prisma.AttendanceWhereInput = {
       schoolId,
       deletedAt: null,
@@ -187,6 +195,14 @@ export async function getMethodUsageStats(input?: {
     return { success: false, error: "Missing school context" }
   }
 
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
+  }
+
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
   if (input?.dateFrom || input?.dateTo) {
@@ -224,6 +240,14 @@ export async function getDayWisePatterns(input?: {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { success: false, error: "Missing school context" }
+  }
+
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
   }
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
@@ -293,6 +317,14 @@ export async function getCalendarData(input: {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { success: false, error: "Missing school context" }
+  }
+
+  const session = await auth()
+  if (
+    !session?.user?.role ||
+    !canViewSchoolAnalytics(session.user.role as any)
+  ) {
+    return { success: false, error: "Unauthorized" }
   }
 
   // Calculate date range for the month

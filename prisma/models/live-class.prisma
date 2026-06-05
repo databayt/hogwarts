@@ -1,19 +1,21 @@
-// Live Class — video conferencing (LiveKit built-in OR external meeting link)
+// Live Class — LiveKit video conferencing
 //
 // See:
 //   src/lib/livekit/*               — server SDK wrappers (rooms, tokens, egress, webhook)
 //   src/components/school-dashboard/live-classes/  — block UI + server actions
 //   src/app/api/webhooks/livekit/   — webhook ingestion
 //
-// All models are schoolId-scoped. For the LiveKit provider the room name embeds
-// schoolId so the SFU namespace cannot leak across tenants. Recordings live in
-// AWS S3 me-central-1 with PDPL-configurable retention. The `external` provider
-// stores a pasted meeting URL (Google Meet / Zoom / Teams) and needs no SFU —
-// it works on any deployment tier; LiveKit is gated on env presence.
+// All models are schoolId-scoped. Room name embeds schoolId so the SFU
+// namespace cannot leak across tenants. Recordings live in AWS S3
+// me-central-1 with PDPL-configurable retention.
 
+// Meeting provider. `livekit` = built-in SFU room; `external` = pasted meeting
+// URL (Google Meet / Zoom / Teams). Matches the live `provider` column on the
+// `live_class_sessions` table (already deployed). Additive — main's single-
+// provider feature defaults to `livekit`; the listing creates `external` rows.
 enum LiveClassProvider {
-  livekit // Built-in self-hosted SFU room (gated on LiveKit env vars)
-  external // Pasted meeting URL — Google Meet / Zoom / Teams
+  livekit
+  external
 }
 
 enum LiveClassStatus {
@@ -64,17 +66,16 @@ model LiveClassSession {
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
 
-  // Meeting provider — `livekit` = built-in SFU room, `external` = pasted URL.
-  provider LiveClassProvider @default(livekit)
-
-  // LiveKit metadata (provider = livekit). Null for external sessions.
-  roomName String? @unique // sch-{schoolId}-lc-{id} — globally unique
+  // LiveKit metadata
+  roomName String  @unique // sch-{schoolId}-lc-{id} — globally unique
   roomSid  String? // LiveKit room SID, set on first connection
 
-  // External meeting link (provider = external, OR a per-session override that
-  // beats the subject+section LiveClassDefaultLink fallback).
-  meetingUrl      String? // pasted Google Meet / Zoom / Teams URL
-  meetingProvider String? // human label, e.g. "Google Meet", "Zoom"
+  // Provider + external meeting link. `external` sessions store a pasted URL
+  // (these columns already exist on the live DB). Additive; main's LiveKit flow
+  // leaves provider at the `livekit` default and ignores meetingUrl.
+  provider        LiveClassProvider @default(livekit)
+  meetingUrl      String?
+  meetingProvider String?
 
   // Scheduling
   scheduledStart DateTime
@@ -104,7 +105,6 @@ model LiveClassSession {
   @@index([schoolId, teacherId])
   @@index([schoolId, sectionId])
   @@index([schoolId, scheduledStart])
-  @@index([schoolId, sectionId, subjectId, scheduledStart])
   @@index([timetableId])
   @@index([deletedAt])
   @@map("live_class_sessions")
@@ -192,31 +192,4 @@ model LiveClassEvent {
   @@index([schoolId, sessionId, occurredAt])
   @@index([schoolId, eventType])
   @@map("live_class_events")
-}
-
-// Stable recurring meeting link for a (subject, section, term) — set once,
-// reused every week. A LiveClassSession.meetingUrl beats this; this is the
-// fallback the timetable Join button resolves to when no session-specific
-// link exists. Primarily for the `external` provider.
-model LiveClassDefaultLink {
-  id        String  @id @default(cuid())
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  sectionId String
-  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  termId    String
-
-  provider        LiveClassProvider @default(external)
-  meetingUrl      String
-  meetingProvider String?
-
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([schoolId, subjectId, sectionId, termId])
-  @@index([schoolId, sectionId])
-  @@map("live_class_default_links")
 }

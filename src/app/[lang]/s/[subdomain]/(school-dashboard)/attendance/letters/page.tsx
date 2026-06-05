@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { LettersContent } from "@/components/school-dashboard/attendance/letters/content"
 
 export const metadata = { title: "Dashboard: Compliance Letters" }
@@ -18,14 +19,7 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
 
   if (!["ADMIN", "DEVELOPER"].includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          Only administrators can generate compliance letters.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return <LettersContent locale={lang} />

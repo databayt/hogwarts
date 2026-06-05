@@ -1,3 +1,16 @@
+---
+epic: 12
+sprint: Q3-2026
+title: SaaS Marketing (sales surface)
+file_type: issue
+owner: Mutaz
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/316
+docs: https://ed.databayt.org/en/docs/sales
+last_audited: 2026-05-25
+---
+
 # SaaS Marketing — Production Readiness Tracker
 
 **Status:** IN PROGRESS

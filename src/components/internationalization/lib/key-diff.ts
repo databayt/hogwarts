@@ -12,7 +12,13 @@
 
 /** Any JSON-shaped object. Translations are leaves, sub-namespaces are nested. */
 export type Dictionary = {
-  readonly [key: string]: Dictionary | string | number | boolean | null | unknown[]
+  readonly [key: string]:
+    | Dictionary
+    | string
+    | number
+    | boolean
+    | null
+    | unknown[]
 }
 
 /**
@@ -30,11 +36,7 @@ export function flattenKeys(obj: Dictionary, prefix = ""): string[] {
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key
 
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      !Array.isArray(value)
-    ) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       keys.push(...flattenKeys(value as Dictionary, fullKey))
     } else {
       keys.push(fullKey)

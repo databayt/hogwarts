@@ -38,7 +38,8 @@ export type FineRow = {
 export const getFineColumns = (
   lang?: string,
   col?: Record<string, string>,
-  callbacks?: { onDelete?: (row: FineRow) => void }
+  callbacks?: { onDelete?: (row: FineRow) => void },
+  currency: string = "USD"
 ): ColumnDef<FineRow>[] => {
   return [
     {
@@ -90,7 +91,11 @@ export const getFineColumns = (
       ),
       cell: ({ getValue }) => (
         <span className="text-end font-medium tabular-nums">
-          {formatCurrency(getValue<number>(), (lang || "en") as Locale)}
+          {formatCurrency(
+            getValue<number>(),
+            (lang || "en") as Locale,
+            currency
+          )}
         </span>
       ),
       meta: { label: col?.amount || "Amount", variant: "text" },

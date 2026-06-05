@@ -106,6 +106,41 @@ describe("updateVideoVisibility — auth/ownership", () => {
   })
 })
 
+describe("updateVideoVisibility — paid paywall guard", () => {
+  it("refuses to un-paywall a PAID video and does not write", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    mockFindUnique.mockResolvedValueOnce({ ...ownedVideo, visibility: "PAID" })
+    const result = await updateVideoVisibility("v-1", "PUBLIC")
+    expect(result.status).toBe("error")
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it("blocks PAID even for the DEVELOPER (no silent un-paywall path)", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "dev-1", role: "DEVELOPER" },
+    })
+    mockFindUnique.mockResolvedValueOnce({ ...ownedVideo, visibility: "PAID" })
+    const result = await updateVideoVisibility("v-1", "SCHOOL")
+    expect(result.status).toBe("error")
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it("still allows visibility changes on non-PAID videos", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    mockFindUnique.mockResolvedValueOnce({ ...ownedVideo, visibility: "SCHOOL" })
+    const result = await updateVideoVisibility("v-1", "PUBLIC")
+    expect(result.status).toBe("success")
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "v-1" },
+      data: { visibility: "PUBLIC" },
+    })
+  })
+})
+
 describe("deleteOwnVideo", () => {
   it("denies stranger", async () => {
     mockAuth.mockResolvedValueOnce({

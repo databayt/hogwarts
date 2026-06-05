@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
@@ -16,6 +17,15 @@ export async function adminGetCatalogCourse(
   subjectId: string,
   schoolId: string | null
 ) {
+  // Admin-only accessor (exposes unpublished chapters/lessons + hidden-content
+  // override flags), so it must never be reachable by students/teachers or
+  // anonymous callers. notFound() (404) avoids leaking whether the subject exists.
+  const session = await auth()
+  const role = session?.user?.role
+  if (role !== "ADMIN" && role !== "DEVELOPER") {
+    notFound()
+  }
+
   const subject = await db.subject.findFirst({
     where: {
       id: subjectId,

@@ -9,12 +9,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import type { UserRole } from "@prisma/client"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 
+import { isStaffRole } from "../authorization"
 import {
   awardBadgeSchema,
   awardPointsSchema,
@@ -45,8 +47,9 @@ export async function awardPoints(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -85,8 +88,9 @@ export async function processAttendancePoints(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -262,8 +266,9 @@ export async function awardBadge(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -519,8 +524,9 @@ export async function createCompetition(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -664,8 +670,9 @@ export async function updateCompetitionStandings(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -740,8 +747,9 @@ export async function updateCompetitionStandings(
 export async function initializeDefaultBadges(): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 

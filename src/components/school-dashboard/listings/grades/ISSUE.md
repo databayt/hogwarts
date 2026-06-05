@@ -28,9 +28,14 @@
 ### P1 — High
 
 - [ ] GPA calculation engine not yet implemented
-- [ ] Report card PDF generation not functional
+- [ ] Report card PDF generation not functional (DB rows generate; server-side
+      PDF render → `reportCard.pdfUrl` is still pending — see grades block
+      ISSUE.md "Deferred")
 - [ ] Grade boundaries not configurable per school
-- [ ] Promotion/transcripts pages are stubs
+- [x] ~~Promotion/transcripts pages are stubs~~ — RESOLVED. Promotion,
+      transcripts, report-card generation, and the certificate engine are
+      implemented in the sibling `grades/` block (`grades/actions/*`,
+      `grades/promotion`, `grades/transcripts`, `grades/report-cards`).
 
 ### P2 — Medium
 

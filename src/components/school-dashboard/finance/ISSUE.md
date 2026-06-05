@@ -1,18 +1,33 @@
+---
+epic: 01
+sprint: Q3-2026
+title: Finance (school dashboard)
+file_type: issue
+owner: Abdout
+maturity: Built+Polish
+completion: 79
+tracker: https://github.com/databayt/hogwarts/issues/313
+docs: https://ed.databayt.org/en/docs/fees
+last_audited: 2026-05-25
+---
+
 # Finance -- Readiness & Verified Gap Register
 
-> Last updated: 2026-05-21 · ~79% ready · 14 sub-modules
+> Last updated: 2026-05-28 · ~83% ready · 14 sub-modules
 >
 > This file is the **engineering source of truth** for finance readiness. The public-facing mirror is `/docs/finance` (hub) + a page per sub-block. The hub's status matrix and `README.md`'s matrix are kept identical to the banner below.
+>
+> **Aldar UAE payment readiness:** consolidated trace lives at [hogwarts#356](https://github.com/databayt/hogwarts/issues/356) — payment-method enum extended (APPLE_PAY/GOOGLE_PAY/MADA/KNET/ATM_DEPOSIT), `PENDING_VERIFICATION` flow, currency snapshot on Payment/FeeAssignment/FeeStructure/Receipt, reconciliation report live at `/finance/banking/reconciliation`, server-side receipt PDF.
 
 ## Status banner
 
 | Sub-module  | Readiness | Ledger wired                       | i18n | Tests  | Docs |
 | ----------- | --------- | ---------------------------------- | ---- | ------ | ---- |
 | invoice     | 90%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
-| fees        | 85%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 13  | ✅   |
+| fees        | 92%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 17  | ✅   |
 | budget      | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
 | receipt     | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| banking     | 80%       | ➖ n/a                             | ⚠️   | 🟡 5   | ✅   |
+| banking     | 85%       | 🔗 reconciliation live             | ⚠️   | 🟡 5   | ✅   |
 | dashboard   | 80%       | ➖ n/a (trends are mock)           | ✅   | ❌     | ✅   |
 | expenses    | 80%       | ❌ `postExpensePayment` orphaned   | ⚠️   | ❌     | ✅   |
 | accounts    | 75%       | 🟢 engine home (fee payments only) | ⚠️   | 🟡 10  | ✅   |
@@ -69,7 +84,7 @@ The block-level "P0: none" of prior cycles was inaccurate. These are silent-data
 ### P2 -- stubs / incomplete
 
 - **`invoice/bulk-generate.tsx`** — fully stubbed ("Bulk invoice generation is currently unavailable"); blocked on the deleted `actions-enhanced.ts`. Needs reimplementation from the current schema.
-- **`banking/reconciliation-panel.tsx`** — fully stubbed; same deleted-`actions-enhanced.ts` cause.
+- ~~`banking/reconciliation-panel.tsx`~~ — **REPLACED 2026-05-28** by Aldar P2.3. New live 3-column diff at `/finance/banking/reconciliation` and `/finance/accounts/reconciliation`. Persistence into `BankReconciliation` model deferred to v2; today's view computes live.
 - **`banking/my-banks` Plaid sync** — stub (`"Bank sync is not yet implemented"`); needs live Plaid sandbox creds. Dwolla webhook handler missing.
 - **`bankak` provider** (`src/lib/payment/providers/bankak.ts`) — intentional placeholder; `createCheckout` always returns `success:false` pending Bank of Khartoum API spec.
 - **Refunds absent from the `PaymentProvider` interface.** It declares only `supportsCurrency` / `isConfigured` / `createCheckout` — no `verifyWebhook`, no `createRefund`. The only refund logic is Stripe **course-enrollment** refunds in `api/webhooks/stripe/route.ts`; there is no fee/invoice/wallet refund path (wallet refunds are manual journal entries).
@@ -122,6 +137,14 @@ Forward-looking work beyond closing the gaps above.
 - [ ] [Wallet](./wallet/ISSUE.md)
 
 > Note: where a sub-module README still claims it posts journal entries (salary, payroll, invoice, expenses, wallet), that is captured in P0 above; correcting each sub-README is a tracked follow-up, not done this docs pass.
+
+## Recent Work (2026-05-28 — Aldar UAE P0+P1+P2+P3, see [#356](https://github.com/databayt/hogwarts/issues/356))
+
+- **P0 demo-able** — `formatCurrency` big-bang (currency required across ~30 files), Stripe wallet auto-unlock, parent-side gateway picker on fee assignment page, Aldar demo seed (`pnpm db:seed:aldar`).
+- **P1 production gates** — currency snapshot columns on Payment + Fee tables (live + backfilled), Tap webhook fails-closed on missing secret, `Payment.gatewayMethod` preserves Tap source provenance, `PaymentMethod` enum extended (APPLE_PAY/GOOGLE_PAY/MADA/KNET/ATM_DEPOSIT), server-side payment receipt PDF at `/api/payment/[paymentId]/receipt`.
+- **P2 feature parity** — `PaymentStatus.PENDING_VERIFICATION` + offline-payment capture fields (depositSlipUrl/bankBranch/IBAN), `markPaymentCleared` server action with `$transaction`-wrapped status flip + ledger post + invoice sync + notifications, ATM-deposit form variant, reconciliation report (Payments / Gateway / Ledger 3-column diff), branded receipt PDF (school logo + signature).
+- **P3 polish** — 5 Stripe webhook events added (subscription updated/deleted, invoice.payment_failed, payment_intent.succeeded/failed — the succeeded handler retroactively enriches `Payment.gatewayMethod` with the wallet identity), Tap webhook FAILED/DECLINED dispatches retry notification, sidebar reconciliation links thread `/${locale}` prefix, payment-method names localized en + ar.
+- Migration records at `prisma/migrations/20260528000000_aldar_payment_p1/` and `20260528010000_aldar_payment_p2/`.
 
 ## Recent Work (2026-05-21)
 

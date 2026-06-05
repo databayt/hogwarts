@@ -1,8 +1,8 @@
 ## Transportation — Fleet, Routes, Drivers, Trips, Boarding
 
-> **Status:** ✅ Functionally production-ready. All 9 tables live in production Postgres
-> (`br-small-tooth-adscsfmb`); 67/67 unit tests green. A polish/hardening backlog
-> remains — see [`ISSUE.md`](./ISSUE.md). Last audited 2026-05-21.
+> **Status:** ✅ Production-ready. All 9 tables live in production Postgres
+> (`br-small-tooth-adscsfmb`); **300/300 unit tests green across 14 files**. The polish/hardening
+> backlog is closed — see [`ISSUE.md`](./ISSUE.md). Last audited 2026-05-29.
 
 ### Overview
 
@@ -34,9 +34,9 @@ The Transportation block provides school bus and route management:
 
 > The live sidebar (`template/platform-sidebar/config.ts`) wires per-role entries — `ADMIN/STAFF/DEVELOPER`
 > → overview, `ACCOUNTANT` → `/fees`, `STUDENT/GUARDIAN` → `/me`, `TEACHER` → `/trips` — all with the
-> `bus` icon. (The older `school-dashboard/config.ts` is dead/legacy and not rendered.) Its 4 titles are
-> **missing from the `platform.sidebar` dictionary**, so they show in English in `/ar` (ISSUE.md P2-10).
-> `read_class` and `export` permissions exist in the matrix but have **zero callers** (dead) — ISSUE.md P2-5/P2-6.
+> `bus` icon and titles in the `platform.sidebar` dictionary (en + ar; P2-10 landed). (The older
+> `school-dashboard/config.ts` is dead/legacy and not rendered.) The `PERMISSION_MATRIX` has **no dead
+> entries** — the unused `read_class`/`export` permissions were removed (P2-5/P2-6).
 
 ### Routes
 
@@ -60,8 +60,8 @@ Server actions independently enforce the RBAC matrix via `requireContext()`.
 | `/{lang}/transportation/fees`                | Fee preview                                         | ACCOUNTANT (+DEV/ADMIN)          |
 | `POST /api/transportation/geofence-boarding` | Service-account boarding webhook                    | Bearer token (`SchoolApiToken`)  |
 
-> No `drivers/[id]` or `assignments/[id]` detail pages exist (only vehicles/routes/trips have
-> drill-in). See ISSUE.md P2-9.
+> All five entities have `[id]` detail pages with row drill-in — `drivers/[id]` and `assignments/[id]`
+> landed alongside vehicles/routes/trips (P2-9).
 
 ### File Structure
 
@@ -70,7 +70,7 @@ src/components/school-dashboard/transportation/
 ├── CLAUDE.md, README.md, ISSUE.md
 ├── content.tsx                           # Overview (server)
 ├── authorization.ts                      # 13-action × 8-role RBAC matrix (+ convenience helpers)
-├── validation.ts                         # Zod factories (i18n) + raw server schemas + Settings schema
+├── validation.ts                         # Raw Zod server schemas + Settings schema (validation is server-only)
 ├── empty-state.tsx, loading-skeleton.tsx, error-boundary.tsx
 ├── shared/types.ts                       # Row shapes for tables
 ├── actions.ts                            # Barrel export
@@ -99,7 +99,11 @@ src/components/school-dashboard/transportation/
 ├── settings/{content,form}.tsx
 ├── me/content.tsx
 ├── fees/content.tsx
-└── __tests__/{authorization,validation,multi-tenant}.test.ts
+└── __tests__/                           # 14 files, 300 tests
+    ├── authorization, validation, multi-tenant, geofence-webhook   # original suites
+    ├── crud-mutations, stops, trips-state-machine                  # mutating CRUD + reorder + state machine
+    ├── settings, me, notifications, api-tokens                     # settings / portal / notify / token actions
+    └── geofence-action, geofence-webhook-route, overview-reports   # wrapper / HTTP handler / reports
 
 src/app/[lang]/s/[subdomain]/(school-dashboard)/transportation/
 ├── page.tsx, loading.tsx, error.tsx     # (single root error.tsx covers all nested segments)
@@ -110,8 +114,8 @@ src/app/[lang]/s/[subdomain]/(school-dashboard)/transportation/
 ├── trips/{page,loading}.tsx + [id]/{page,loading}.tsx
 ├── reports/{page,loading}.tsx
 ├── settings/{page,loading}.tsx
-├── me/page.tsx                           # ⚠ no loading.tsx (ISSUE.md P2-7)
-└── fees/page.tsx                         # ⚠ no loading.tsx (ISSUE.md P2-7)
+├── me/{page,loading}.tsx
+└── fees/{page,loading}.tsx
 
 src/app/api/transportation/geofence-boarding/route.ts   # Bearer-token webhook
 src/lib/api-tokens.ts                                    # verifyApiToken (bcrypt, prefix lookup)
@@ -151,8 +155,8 @@ Located in `prisma/migrations/` — **all applied to production**:
 
 - **GeoFence** — `Route.geofenceId` links to a `GeoFence` (intended `type=BUS_ROUTE`). When set,
   ENTER/EXIT events drive `TripBoarding` writes via `recordBoardingFromGeofence` (UI action) or the
-  webhook. ⚠ The route **form has no geofence picker yet** — `geofenceId` is only settable via
-  seed/SQL/webhook flow (ISSUE.md P2-2).
+  webhook. The route form has a geofence picker (`listAvailableGeofences`), so `geofenceId` is
+  settable from the admin UI as well as the seed/SQL/webhook flow (P2-2 landed).
 - **Notification** — Trip events create `Notification` rows for guardians (`type=system_alert`,
   `metadata.kind=trip_*`), rendered in the school's `preferredLanguage`, gated by per-event opt-out
   flags in `TransportationSettings`. No `NotificationType` enum migration required.
@@ -165,16 +169,27 @@ Located in `prisma/migrations/` — **all applied to production**:
 
 ### Tests
 
-`__tests__/` — run `pnpm vitest run src/components/school-dashboard/transportation`. **67/67 green** (verified 2026-05-21):
+`__tests__/` — run `pnpm vitest run src/components/school-dashboard/transportation`. **300/300 green across 14 files** (verified 2026-05-29):
 
-- `authorization.test.ts` — 31 tests, full (role × action) RBAC matrix
-- `validation.test.ts` — 20 tests for the i18n Zod factory schemas
-- `multi-tenant.test.ts` — 16 tests: `schoolId` scoping on list/count actions, permission rejections, trip state-machine, DEVELOPER-without-school denial
+- `authorization.test.ts` (31) — full (role × action) RBAC matrix
+- `validation.test.ts` (56) — every raw Zod schema (entity + update + trip + settings), valid/invalid parses
+- `multi-tenant.test.ts` (16) — `schoolId` scoping on list/count actions, permission rejections, DEVELOPER-without-school denial
+- `crud-mutations.test.ts` (44) — create/update/delete/restore for vehicles/drivers/routes/assignments + ownership guards + uniqueness + overlap
+- `stops.test.ts` (18) — add/update/delete + the two-phase `reorderStops` ordering invariant
+- `trips-state-machine.test.ts` (30) — schedule/start/finish/cancel/recordBoarding/restore state guards + auto-populated boardings + notification dispatch
+- `settings.test.ts` (12) — defaults-when-no-row, upsert, Decimal→Number coercion
+- `me.test.ts` (15) — STUDENT/GUARDIAN/DEVELOPER/ADMIN branches + fall-through gate
+- `notifications.test.ts` (20) — en/ar rendering, `{route}`/`{reason}` interpolation, per-event opt-out, dedup, best-effort no-throw
+- `api-tokens.test.ts` (15) — mint (plaintext-once, hash-only persist), list (no hash exposed), revoke (ownership-scoped, idempotent)
+- `geofence-action.test.ts` (5) — public wrapper permission gate + schoolId/recordedBy injection
+- `geofence-webhook-route.test.ts` (11) — HTTP handler 401/403/400/200-ack/500 matrix + **schoolId-from-token-never-body** invariant
+- `geofence-webhook.test.ts` (12) — token generate/verify + the internal boarding bridge
+- `overview-reports.test.ts` (15) — expiring-doc window, recent assignments, driver-hour aggregation, trip-stat math
 
-> Coverage is concentrated in RBAC/validation/list-scoping. Stateful business logic (full trip
-> lifecycle, boarding upsert, geofence bridging, token verification, settings, `/me` resolution,
-> notification fan-out) has little-to-no direct coverage, and there are no mutation-isolation tests.
-> See ISSUE.md P3-1.
+> Coverage spans RBAC, validation, multi-tenant scoping, the full mutating surface, the trip state
+> machine, the two-phase stop reorder, settings, `/me`, notification fan-out, API tokens, and the
+> geofence webhook handler. The two named hard invariants (reorder ordering, token-not-body schoolId)
+> are explicitly proven. See ISSUE.md for the (closed) coverage history.
 
 ### Demo Seed
 
@@ -191,23 +206,23 @@ Located in `prisma/migrations/` — **all applied to production**:
 
 ### Status
 
-| Milestone / surface                                      | Status                                    |
-| -------------------------------------------------------- | ----------------------------------------- |
-| M1 MVP (5 entities)                                      | ✅ shipped + in prod                      |
-| M2-1 Trips + boarding + state machine                    | ✅ shipped                                |
-| M2-2 Drag-drop stops                                     | ✅ shipped                                |
-| M2-3 Geofence link (schema + webhook + UI picker)        | ✅ shipped (P2-2 picker landed)           |
-| M2-4 Fee preview + CSV export                            | ✅ shipped (CSV landed — P2-5)            |
-| M2-5 Parent notifications (i18n + opt-outs + route name) | ✅ shipped (P3-2 templating)              |
-| M2-6 Reports                                             | ✅ shipped                                |
-| Production migration (all 9 tables)                      | ✅ applied                                |
-| Writable settings + API-token admin UI                   | ✅ shipped (P3-5)                         |
-| STUDENT/GUARDIAN `/me` + ACCOUNTANT `/fees`              | ✅ shipped                                |
-| Geofence webhook + API tokens                            | ✅ shipped (mint/revoke from settings)    |
-| `drivers/[id]` + `assignments/[id]` detail               | ✅ shipped (P2-9)                         |
-| Demo seed                                                | ✅ shipped                                |
-| Per-role sidebar entries + `bus` icon + titles           | ✅ shipped (P2-10 dict titles)            |
-| Error-code → toast mapping (all clients)                 | ✅ shipped (P1-2)                         |
-| AlertDialog confirms                                     | ✅ shipped (P2-3)                         |
-| react-hook-form forms                                    | ⏳ deferred — see ISSUE.md P2-4           |
-| Business-logic test coverage                             | 🟡 partial — webhook/token covered (P3-1) |
+| Milestone / surface                                      | Status                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| M1 MVP (5 entities)                                      | ✅ shipped + in prod                                         |
+| M2-1 Trips + boarding + state machine                    | ✅ shipped                                                   |
+| M2-2 Drag-drop stops                                     | ✅ shipped                                                   |
+| M2-3 Geofence link (schema + webhook + UI picker)        | ✅ shipped (P2-2 picker landed)                              |
+| M2-4 Fee preview + CSV export                            | ✅ shipped (CSV landed — P2-5)                               |
+| M2-5 Parent notifications (i18n + opt-outs + route name) | ✅ shipped (P3-2 templating)                                 |
+| M2-6 Reports                                             | ✅ shipped                                                   |
+| Production migration (all 9 tables)                      | ✅ applied                                                   |
+| Writable settings + API-token admin UI                   | ✅ shipped (P3-5)                                            |
+| STUDENT/GUARDIAN `/me` + ACCOUNTANT `/fees`              | ✅ shipped                                                   |
+| Geofence webhook + API tokens                            | ✅ shipped (mint/revoke from settings)                       |
+| `drivers/[id]` + `assignments/[id]` detail               | ✅ shipped (P2-9)                                            |
+| Demo seed                                                | ✅ shipped                                                   |
+| Per-role sidebar entries + `bus` icon + titles           | ✅ shipped (P2-10 dict titles)                               |
+| Error-code → toast mapping (all clients)                 | ✅ shipped (P1-2)                                            |
+| AlertDialog confirms                                     | ✅ shipped (P2-3)                                            |
+| Form validation                                          | ✅ server-only — dead i18n factories deleted (P2-4 resolved) |
+| Business-logic test coverage                             | ✅ comprehensive — 300 tests / 14 files (P3-1 closed)        |

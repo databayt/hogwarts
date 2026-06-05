@@ -167,3 +167,59 @@ export function fromFullName(entry: GuardianFullNameEntry): GuardianEntry {
   const { firstName, lastName } = splitGuardianName(fullName)
   return { ...rest, firstName, lastName }
 }
+
+// ---------------------------------------------------------------------------
+// Guardian resolution for notification dispatch
+// ---------------------------------------------------------------------------
+
+export interface ResolvedGuardian {
+  guardianId: string
+  /** User ID for in-app + email notifications. Null if guardian has no auth account. */
+  userId: string | null
+  /** Primary phone number for SMS/WhatsApp. Null if none set. */
+  primaryPhone: string | null
+  isPrimary: boolean
+}
+
+/**
+ * Resolve a student's guardians for contact (notifications, SMS, WhatsApp).
+ * Returns one row per linked guardian, primary-flagged guardian first.
+ *
+ * Extracted from the include-chain pattern repeated across attendance, admission,
+ * and notification code. Always scope by `schoolId` to enforce tenant isolation.
+ */
+export async function getGuardiansForStudent(
+  db: PrismaClient,
+  schoolId: string,
+  studentId: string
+): Promise<ResolvedGuardian[]> {
+  const student = await db.student.findFirst({
+    where: { id: studentId, schoolId },
+    include: {
+      studentGuardians: {
+        include: {
+          guardian: {
+            include: {
+              phoneNumbers: {
+                where: { isPrimary: true },
+                take: 1,
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!student) return []
+
+  const rows: ResolvedGuardian[] = student.studentGuardians.map((sg) => ({
+    guardianId: sg.guardian.id,
+    userId: sg.guardian.userId ?? null,
+    primaryPhone: sg.guardian.phoneNumbers?.[0]?.phoneNumber ?? null,
+    isPrimary: Boolean(sg.isPrimary),
+  }))
+  // Primary first
+  rows.sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+  return rows
+}

@@ -88,9 +88,11 @@ export async function parseAndValidate(
 
       if (!name) {
         invalidRows.push({ row: i + 1, error: "Missing name" })
-      } else if (isStudents && !id) {
-        invalidRows.push({ row: i + 1, error: "Missing studentId" })
       } else if (!isStudents && (!id || !email)) {
+        // Teachers/staff still need an employeeId + email. Students do NOT need
+        // a studentId here — the import engine auto-generates the per-school
+        // code when absent (generateStudentUsername), so requiring it needlessly
+        // rejected valid rows that /school/bulk (Path B) accepts.
         invalidRows.push({
           row: i + 1,
           error: !id ? "Missing employeeId" : "Missing email",

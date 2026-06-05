@@ -2,34 +2,26 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Invoice Email API - Stub Endpoint
+ * Deprecated invoice email endpoint — orphaned since the MongoDB → Prisma
+ * migration. Email delivery of the payment receipt is scoped for P2.4
+ * (parent receipt with school logo + signature, sent via Resend on
+ * webhook success).
  *
- * Currently returns { ok: true } as a placeholder.
- *
- * HISTORICAL NOTE:
- * Previously sent invoice emails via custom email config.
- * Migration to Prisma broke the MongoDB connection.
- * Legacy code preserved in comments for reference.
- *
- * INTENDED FUNCTIONALITY:
- * - POST: Send invoice email to recipient
- * - Includes invoice PDF link
- * - Customizable subject line
- *
- * EMAIL TEMPLATE:
- * - Invoice number
- * - Due date
- * - Total amount with currency
- * - Link to view/pay invoice
- *
- * TODO: Implement with Resend/SendGrid and Prisma
- * @see /components/template/SendInvoiceEmail for template
+ * Returns 410 Gone so callers fail loudly instead of silently consuming
+ * the placeholder JSON.
  */
-
 import { NextResponse } from "next/server"
 
-export async function POST() {
-  return NextResponse.json({ ok: true })
+export function POST() {
+  return NextResponse.json(
+    {
+      success: false,
+      errorCode: "ENDPOINT_DEPRECATED",
+      message:
+        "This endpoint is deprecated. Invoice email delivery is scheduled for P2.4.",
+    },
+    { status: 410 }
+  )
 }
 // import { auth } from "@/auth";
 // import { sendEmail } from "@/components/invoice/email.config";

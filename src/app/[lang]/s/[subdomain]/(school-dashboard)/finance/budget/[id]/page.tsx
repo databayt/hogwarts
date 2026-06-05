@@ -35,22 +35,30 @@ export default async function BudgetDetailPage({ params }: Props) {
     )
   }
 
-  const budget = await db.budget.findFirst({
-    where: { id, schoolId },
-    include: {
-      fiscalYear: { select: { name: true } },
-      allocations: {
-        include: {
-          category: { select: { name: true } },
+  const [budget, schoolForCurrency] = await Promise.all([
+    db.budget.findFirst({
+      where: { id, schoolId },
+      include: {
+        fiscalYear: { select: { name: true } },
+        allocations: {
+          include: {
+            category: { select: { name: true } },
+          },
+          orderBy: { allocated: "desc" },
         },
-        orderBy: { allocated: "desc" },
       },
-    },
-  })
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
 
   if (!budget) {
     notFound()
   }
+
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   const totalAllocated = budget.allocations.reduce(
     (sum, a) => sum + Number(a.allocated),
@@ -94,7 +102,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(Number(budget.totalAmount), lang)}
+              {formatCurrency(Number(budget.totalAmount), lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -106,7 +114,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(totalAllocated, lang)}
+              {formatCurrency(totalAllocated, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -118,7 +126,7 @@ export default async function BudgetDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(totalSpent, lang)}
+              {formatCurrency(totalSpent, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -155,14 +163,15 @@ export default async function BudgetDetailPage({ params }: Props) {
                     <div className="flex items-center gap-4 text-sm">
                       <span>
                         {c?.allocated || "Allocated"}:{" "}
-                        {formatCurrency(allocated, lang)}
+                        {formatCurrency(allocated, lang, currency)}
                       </span>
                       <span>
-                        {c?.spent || "Spent"}: {formatCurrency(spent, lang)}
+                        {c?.spent || "Spent"}:{" "}
+                        {formatCurrency(spent, lang, currency)}
                       </span>
                       <span>
                         {c?.remaining || "Remaining"}:{" "}
-                        {formatCurrency(remaining, lang)}
+                        {formatCurrency(remaining, lang, currency)}
                       </span>
                       <Badge variant={pct > 90 ? "destructive" : "secondary"}>
                         {pct.toFixed(0)}%

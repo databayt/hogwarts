@@ -35,6 +35,7 @@ import { FeeAdjustmentsDialog } from "../fee-adjustments-dialog"
 interface FeesTabProps {
   studentId: string
   lang: Locale
+  currency?: string
   dictionary?: Record<string, string>
 }
 
@@ -46,7 +47,12 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-gray-500/10 text-gray-500",
 }
 
-export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
+export function FeesTab({
+  studentId,
+  lang,
+  currency = "USD",
+  dictionary,
+}: FeesTabProps) {
   const d = dictionary
   const [assignments, setAssignments] = useState<StudentFeeAssignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -159,7 +165,7 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                   {d?.totalFees || "Total Fees"}
                 </p>
                 <p className="text-2xl font-bold tabular-nums">
-                  {formatCurrency(totalFees, lang)}
+                  {formatCurrency(totalFees, lang, currency)}
                 </p>
               </div>
               <CreditCard className="text-muted-foreground h-8 w-8" />
@@ -175,7 +181,7 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                   {d?.paid || "Paid"}
                 </p>
                 <p className="text-2xl font-bold text-green-600 tabular-nums">
-                  {formatCurrency(totalPaid, lang)}
+                  {formatCurrency(totalPaid, lang, currency)}
                 </p>
               </div>
               <CircleCheck className="h-8 w-8 text-green-600" />
@@ -191,7 +197,7 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                   {d?.pending || "Pending"}
                 </p>
                 <p className="text-2xl font-bold text-yellow-600 tabular-nums">
-                  {formatCurrency(totalPending, lang)}
+                  {formatCurrency(totalPending, lang, currency)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -207,7 +213,7 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                   {d?.overdue || "Overdue"}
                 </p>
                 <p className="text-2xl font-bold text-red-600 tabular-nums">
-                  {formatCurrency(totalOverdue, lang)}
+                  {formatCurrency(totalOverdue, lang, currency)}
                 </p>
               </div>
               <TriangleAlert className="h-8 w-8 text-red-600" />
@@ -231,10 +237,14 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
             <Progress value={progressPercent} className="h-3" />
             <div className="text-muted-foreground flex justify-between text-xs tabular-nums">
               <span>
-                {formatCurrency(totalPaid, lang)} {d?.paid || "paid"}
+                {formatCurrency(totalPaid, lang, currency)} {d?.paid || "paid"}
               </span>
               <span>
-                {formatCurrency(Math.max(totalFees - totalPaid, 0), lang)}{" "}
+                {formatCurrency(
+                  Math.max(totalFees - totalPaid, 0),
+                  lang,
+                  currency
+                )}{" "}
                 {d?.remaining || "remaining"}
               </span>
             </div>
@@ -255,9 +265,9 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                 {d?.overdueMessage
                   ? d.overdueMessage.replace(
                       "{amount}",
-                      formatCurrency(totalOverdue, lang)
+                      formatCurrency(totalOverdue, lang, currency)
                     )
-                  : `You have overdue fees totaling ${formatCurrency(totalOverdue, lang)}. Please make payment immediately to avoid late fees.`}
+                  : `You have overdue fees totaling ${formatCurrency(totalOverdue, lang, currency)}. Please make payment immediately to avoid late fees.`}
               </p>
             </div>
           </CardContent>
@@ -299,15 +309,16 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                     </TableCell>
                     <TableCell>{a.academicYear}</TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(a.finalAmount, lang)}
+                      {formatCurrency(a.finalAmount, lang, currency)}
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {formatCurrency(a.paidAmount, lang)}
+                      {formatCurrency(a.paidAmount, lang, currency)}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatCurrency(
                         Math.max(a.finalAmount - a.paidAmount, 0),
-                        lang
+                        lang,
+                        currency
                       )}
                     </TableCell>
                     <TableCell>
@@ -353,7 +364,7 @@ export function FeesTab({ studentId, lang, dictionary }: FeesTabProps) {
                       {new Date(p.paymentDate).toLocaleDateString(dateLocale)}
                     </TableCell>
                     <TableCell className="font-medium tabular-nums">
-                      {formatCurrency(p.amount, lang)}
+                      {formatCurrency(p.amount, lang, currency)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">

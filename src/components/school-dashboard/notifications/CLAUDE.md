@@ -1,3 +1,16 @@
+---
+epic: 06
+sprint: Q3-2026
+title: Notifications
+file_type: claude
+owner: Abdout
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/324
+docs: https://ed.databayt.org/en/docs/messages
+last_audited: 2026-05-25
+---
+
 # Notifications Block
 
 ## Context

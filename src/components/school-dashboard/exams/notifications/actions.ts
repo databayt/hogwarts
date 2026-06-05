@@ -13,17 +13,24 @@
 
 "use server"
 
-import { auth } from "@/auth"
-
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
-import { formatDate, formatDateTime } from "@/lib/i18n-format"
+import { getTenantContext } from "@/lib/tenant-context"
 
+import { DEFAULT_NOTIFICATION_LANG, formatExamNotification } from "./formatter"
 import type {
   ExamNotificationData,
   ExamNotificationType,
   RecipientType,
 } from "./types"
+
+async function getSchoolLang(schoolId: string): Promise<string> {
+  const school = await db.school.findFirst({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  return school?.preferredLanguage ?? DEFAULT_NOTIFICATION_LANG
+}
 
 /**
  * Send exam notification to relevant recipients
@@ -32,8 +39,7 @@ export async function sendExamNotification(
   data: ExamNotificationData,
   recipients?: { userId: string; type: RecipientType }[]
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -73,19 +79,22 @@ export async function sendExamNotification(
     throw new Error("Exam not found")
   }
 
+  const lang = await getSchoolLang(schoolId)
+
   // Determine recipients if not provided
   const targetRecipients = recipients ?? getDefaultRecipients(data.type, exam)
 
   // Create notifications
   const notifications = await Promise.all(
     targetRecipients.map(async (recipient) => {
-      const { title, body } = formatNotification(data, recipient.type)
+      const { title, body } = formatExamNotification(data, recipient.type, lang)
 
       return dispatchNotification({
         schoolId,
         userId: recipient.userId,
         title,
         body,
+        lang,
         type: "grade_posted", // Using existing notification type for exam results
         metadata: {
           notificationType: data.type,
@@ -102,8 +111,7 @@ export async function sendExamNotification(
  * Send exam scheduled notification to all students and parents
  */
 export async function notifyExamScheduled(examId: string) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -140,8 +148,7 @@ export async function notifyExamScheduled(examId: string) {
  * Send exam reminder notification
  */
 export async function notifyExamReminder(examId: string, hoursUntil: number) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -179,8 +186,7 @@ export async function notifyResultsPublished(
   examId: string,
   studentId: string
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -288,8 +294,7 @@ export async function notifyRetakeAvailable(
   studentId: string,
   attemptNumber: number
 ) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -345,8 +350,7 @@ export async function notifyRetakeAvailable(
  * Bulk notify all students when results are published
  */
 export async function notifyAllResultsPublished(examId: string) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     throw new Error("Unauthorized")
@@ -419,52 +423,4 @@ function getDefaultRecipients(
   }
 
   return recipients
-}
-
-function formatNotification(
-  data: ExamNotificationData,
-  _recipientType: RecipientType
-): { title: string; body: string } {
-  switch (data.type) {
-    case "EXAM_SCHEDULED":
-      return {
-        title: `New Exam: ${data.examTitle}`,
-        body: `${data.name} exam scheduled for ${formatDate(data.examDate, "ar")}. Duration: ${data.duration} minutes.`,
-      }
-    case "EXAM_REMINDER":
-      return {
-        title: `Exam Reminder: ${data.examTitle}`,
-        body: `Your ${data.name} exam starts in ${data.hoursUntil} hours.`,
-      }
-    case "EXAM_STARTED":
-      return {
-        title: `Exam Started: ${data.examTitle}`,
-        body: `The ${data.name} exam has started and will end at ${formatDateTime(data.endTime, "ar", { hour: "2-digit", minute: "2-digit" })}.`,
-      }
-    case "EXAM_COMPLETED":
-      return {
-        title: `Exam Completed: ${data.examTitle}`,
-        body: `Completed ${data.name} exam. Answered ${data.questionsAnswered}/${data.totalQuestions} questions.`,
-      }
-    case "RESULTS_PUBLISHED":
-      return {
-        title: `Results: ${data.examTitle}`,
-        body: `Score: ${data.percentage.toFixed(1)}% (${data.grade}). ${data.passed ? "Passed!" : "Did not pass."}`,
-      }
-    case "RETAKE_AVAILABLE":
-      return {
-        title: `Retake Available: ${data.examTitle}`,
-        body: `You can retake the ${data.name} exam. Previous: ${data.previousScore}%. Attempt ${data.attemptNumber}/${data.maxAttempts}.`,
-      }
-    case "GRADE_UPDATED":
-      return {
-        title: `Grade Updated: ${data.examTitle}`,
-        body: `Your ${data.name} grade changed from ${data.previousGrade} to ${data.newGrade}.`,
-      }
-    default:
-      return {
-        title: "Exam Notification",
-        body: "You have a new exam notification.",
-      }
-  }
 }

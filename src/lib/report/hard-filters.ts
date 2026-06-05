@@ -74,12 +74,14 @@ export function runHardFilters(
     }
   }
 
-  // HF3 — anonymous needs valid captcha. (When ctx.captchaValid is null, captcha
-  // wasn't required — e.g. authenticated user on a non-anon page.)
-  if (reporter.kind === "anonymous" && ctx.captchaValid !== true) {
+  // HF3 — reject only when captcha was CONFIGURED-but-failed (explicit false).
+  // When captchaValid is null (Turnstile not enforced: authenticated user, or a
+  // deployment with no Turnstile keys) the report proceeds at degraded trust —
+  // a missing env var must never silently eat a legit report.
+  if (reporter.kind === "anonymous" && ctx.captchaValid === false) {
     return {
       code: "HF3_no_captcha",
-      detail: "Anonymous reports require a valid Turnstile token.",
+      detail: "Anonymous report failed Turnstile verification.",
     }
   }
 

@@ -7,6 +7,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { KioskContent } from "@/components/school-dashboard/attendance/kiosk/content"
 
 export const metadata = { title: "Dashboard: Attendance Kiosk" }
@@ -25,14 +26,7 @@ export default async function Page({ params }: Props) {
 
   // Admin/Developer only for kiosk setup
   if (!["ADMIN", "DEVELOPER"].includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          Only administrators can configure attendance kiosks.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   const school = await db.school.findUnique({

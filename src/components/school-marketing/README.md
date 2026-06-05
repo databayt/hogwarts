@@ -1,3 +1,16 @@
+---
+epic: 14
+sprint: Q3-2026
+title: School Marketing
+file_type: readme
+owner: Samia
+maturity: Built+Polish
+completion: 85
+tracker: https://github.com/databayt/hogwarts/issues/327
+docs: https://databayt.org
+last_audited: 2026-05-25
+---
+
 ## School Marketing — Public-facing school website and admission portal
 
 ### Overview
@@ -135,3 +148,8 @@ school-marketing/
 ### Status
 
 **Completion:** 85% | **Blockers:** i18n dictionary keys for admission validation messages are placeholders (hardcoded English defaults in `validation.ts`)
+
+### Agents & Skills
+
+- `agent:growth` — content + SEO + community
+- `skill:/content-calendar` — plan + review the calendar

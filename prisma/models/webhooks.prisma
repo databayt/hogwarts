@@ -23,7 +23,7 @@ model ProcessedWebhookEvent {
 
   // Optional FK so DELETE on a school cascades cleanup. Stripe SaaS-side
   // events keep schoolId null and are unaffected.
-  school          School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  school School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
 
   @@unique([provider, providerEventId])
   @@index([schoolId])

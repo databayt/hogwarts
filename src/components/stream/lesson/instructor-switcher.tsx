@@ -36,7 +36,9 @@ export function InstructorSwitcher({
   className,
   dictionary,
 }: Props) {
-  const d = dictionary?.stream?.instructorSwitcher ?? {}
+  // Receives the `stream` dictionary subtree from the lesson content component,
+  // so descend a single level (not `?.stream?.instructorSwitcher`).
+  const d = dictionary?.instructorSwitcher ?? {}
   const labels = {
     hogwarts: d.hogwarts ?? "Hogwarts",
     yourSchool: d.yourSchool ?? "Your school",

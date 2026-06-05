@@ -10,7 +10,12 @@
 
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { AttendanceStatus, Prisma, StudentStatus } from "@prisma/client"
+import type {
+  AttendanceStatus,
+  Prisma,
+  StudentStatus,
+  UserRole,
+} from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import {
@@ -20,6 +25,8 @@ import {
 import { db } from "@/lib/db"
 import { detectLanguage } from "@/lib/i18n-content"
 import { translateWithCache } from "@/lib/translate"
+
+import { isStaffRole } from "../authorization"
 
 import {
   getRiskLevelFromScore,
@@ -51,9 +58,14 @@ export async function runRiskPredictions(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
 
   if (!schoolId) {
     return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+  }
+
+  if (!role || !isStaffRole(role as UserRole)) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -283,8 +295,9 @@ export async function runRiskPredictions(
 export async function getAtRiskStudents(): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role as UserRole)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -392,8 +405,9 @@ export async function translateMessage(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role as UserRole)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -444,8 +458,9 @@ export async function batchTranslateMessages(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role
 
-  if (!schoolId) {
+  if (!schoolId || !role || !isStaffRole(role as UserRole)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -496,8 +511,9 @@ export async function createInterventionFromRecommendation(
   const session = await auth()
   const schoolId = session?.user?.schoolId
   const userId = session?.user?.id
+  const role = session?.user?.role
 
-  if (!schoolId || !userId) {
+  if (!schoolId || !userId || !role || !isStaffRole(role as UserRole)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 

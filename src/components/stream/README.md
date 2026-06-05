@@ -1,3 +1,16 @@
+---
+epic: 05
+sprint: Q3-2026
+title: Stream (LMS)
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 80
+tracker: https://github.com/databayt/hogwarts/issues/323
+docs: https://ed.databayt.org/en/docs/clickview
+last_audited: 2026-05-25
+---
+
 ## Stream — Learning Management System (LMS)
 
 ### Overview
@@ -35,14 +48,12 @@ The stream block uses a catalog-based architecture where courses map to subjects
 ```
 src/components/stream/
 ├── types.ts                        # StreamDictionary, StreamContentProps, CatalogCourseType
-├── queries.ts                      # Shared query builders (course list, detail, stats)
 ├── authorization.ts                # RBAC (DEVELOPER > ADMIN > TEACHER > STUDENT)
 ├── list-params.ts                  # URL state utilities
 ├── header.tsx                      # Stream navigation header
 ├── loading.tsx                     # Loading skeletons
-├── search.tsx                      # Search component
-├── search-bar.tsx                  # Debounced search bar
-├── explore.tsx                     # Browse/explore courses
+├── search-bar.tsx                  # Debounced search bar (live)
+├── lib/quota.ts                    # Per-school video storage quota (wired on upload/delete)
 ├── home/
 │   ├── content.tsx                 # Landing page orchestrator
 │   ├── teaching-hero-section.tsx   # Hero banner
@@ -132,12 +143,21 @@ src/components/stream/
 │   └── admin-get-lesson.ts         # Admin lesson detail
 ├── not-admin/
 │   └── content.tsx                 # Access denied fallback
-└── __tests__/                      # 72 tests (duration, URL, slug, types)
+└── __tests__/                      # utility + action + data-fetcher tests
 ```
+
+> Tests: ~280 stream unit tests + the Stripe webhook suite (incl. the
+> `video_purchase` branch). The legacy `StreamCourse`-based query layer and its
+> tests were removed in the 2026-05-29 cleanup.
 
 ### Status
 
-**Completion:** 100% | **Blockers:** None
+**Catalog runtime path: production-hardened (2026-05-29).** P0 paywall + payment
+webhook, the P1 integrity cluster, critical-path tests, the lesson hot-path perf
+work, and P2 video hardening are done and tested (see `ISSUES.md` →
+"Production-Readiness Pass"). Deferred: a Float→Decimal money-type migration +
+two composite indexes (schema), and the server-action / teacher-dashboard /
+search-bar i18n consumption layer. Do **not** assume "100%" — check `ISSUES.md`.
 
 ### Data Architecture
 
@@ -157,3 +177,11 @@ The stream block uses a **catalog-based architecture**. Legacy `stream.prisma` m
 - **Rate Limiting**: Arcjet for API protection
 - **Prisma Models**: `prisma/models/enrollment.prisma`, `prisma/models/video.prisma`
 - **Dictionary**: `src/components/internationalization/stream-{en,ar}.json`
+
+### Agents & Skills
+
+- `agent:nextjs` — App Router + streaming
+- `agent:react` — lesson + chapter UI
+- `agent:performance` — CDN asset migration + Core Web Vitals
+- `skill:/performance` — perf audit
+- `skill:/skeleton` — loading-state sweep

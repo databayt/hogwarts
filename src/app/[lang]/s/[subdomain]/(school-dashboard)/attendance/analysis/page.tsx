@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import AnalyticsContent from "@/components/school-dashboard/attendance/analytics/content"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 import { EarlyWarningContent } from "@/components/school-dashboard/attendance/early-warning/content"
 
@@ -34,14 +35,7 @@ export default async function Page({ params }: Props) {
     session?.user?.role !== "TEACHER" &&
     session?.user?.role !== "DEVELOPER"
   ) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          You do not have permission to access attendance analysis.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return (

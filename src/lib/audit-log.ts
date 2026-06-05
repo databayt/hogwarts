@@ -16,25 +16,44 @@ interface AuditLogParams {
   ip?: string
   userAgent?: string
   reason?: string
+  // System-actor overrides for cron / worker contexts where auth() is unavailable.
+  // Pass `userId: null` (or the literal string "system" which is normalized to null)
+  // for cron/worker/webhook events that have no human actor.
+  userId?: string | null
+  schoolId?: string | null
 }
 
 /**
  * Log an audit event. Non-blocking - fire-and-forget with error handling.
- * Auto-captures userId and schoolId from session.
+ * Auto-captures userId and schoolId from session unless overridden.
+ *
+ * System contexts (cron, RPA worker, webhook) pass `userId: null` to record
+ * the event with no human actor. The schema permits null `userId`.
  */
 export async function logAudit(params: AuditLogParams): Promise<void> {
   try {
-    const [session, tenantContext] = await Promise.all([
-      auth(),
-      getTenantContext().catch(() => ({ schoolId: null })),
-    ])
+    let userId: string | null
+    let schoolId: string | null | undefined = params.schoolId
 
-    if (!session?.user?.id) return
+    if (params.userId === undefined) {
+      const session = await auth()
+      if (!session?.user?.id) return
+      userId = session.user.id
+    } else {
+      // Normalize the legacy "system" sentinel that early callers used.
+      userId = params.userId === "system" ? null : params.userId
+    }
+    if (schoolId === undefined) {
+      const tenantContext = await getTenantContext().catch(() => ({
+        schoolId: null,
+      }))
+      schoolId = tenantContext.schoolId || null
+    }
 
     await db.auditLog.create({
       data: {
-        userId: session.user.id,
-        schoolId: tenantContext.schoolId || null,
+        userId,
+        schoolId: schoolId || null,
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId,

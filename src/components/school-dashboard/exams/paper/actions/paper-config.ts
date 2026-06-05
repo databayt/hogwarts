@@ -8,9 +8,9 @@
  * CRUD operations for exam paper configurations
  */
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import { detectRegionPreset } from "../../templates/presets"
 import { DEFAULT_PAPER_CONFIG } from "../config"
@@ -29,8 +29,7 @@ export async function createPaperConfig(
   input: CreatePaperConfigInput
 ): Promise<ActionResult<PaperConfigWithRelations>> {
   try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
@@ -183,8 +182,7 @@ export async function getPaperConfig(
   generatedExamId: string
 ): Promise<ActionResult<PaperConfigWithRelations | null>> {
   try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
@@ -238,8 +236,7 @@ export async function updatePaperConfig(
   input: UpdatePaperConfigInput
 ): Promise<ActionResult<PaperConfigWithRelations>> {
   try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
@@ -344,8 +341,7 @@ export async function deletePaperConfig(
   configId: string
 ): Promise<ActionResult<void>> {
   try {
-    const session = await auth()
-    const schoolId = session?.user?.schoolId
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }

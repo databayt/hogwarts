@@ -24,6 +24,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { type Locale } from "@/components/internationalization/config"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,19 +39,12 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const [, session] = await Promise.all([params, auth()])
+  const [{ lang }, session] = await Promise.all([params, auth()])
 
   // Admin/Developer only
   const role = session?.user?.role ?? ""
   if (role !== "ADMIN" && role !== "DEVELOPER") {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          Only administrators can access attendance settings.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return (

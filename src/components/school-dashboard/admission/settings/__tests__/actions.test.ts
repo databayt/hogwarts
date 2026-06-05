@@ -146,7 +146,7 @@ describe("Admission Settings Actions", () => {
       const result = await getAdmissionSettings()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -181,7 +181,7 @@ describe("Admission Settings Actions", () => {
       const result = await saveAdmissionSettings(validSettings)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("returns error for non-admin role", async () => {
@@ -190,7 +190,7 @@ describe("Admission Settings Actions", () => {
       const result = await saveAdmissionSettings(validSettings)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Insufficient permissions")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("returns validation error for invalid data", async () => {
@@ -209,7 +209,7 @@ describe("Admission Settings Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Merit weights must sum to 100%")
+      expect(result.error).toBe("VALIDATION_ERROR")
     })
   })
 })

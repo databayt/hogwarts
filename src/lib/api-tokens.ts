@@ -18,6 +18,20 @@ import { db } from "@/lib/db"
 const PREFIX_MIN_LEN = 4
 const PREFIX_LEN = 8
 
+/**
+ * Catalog of well-known scopes. Keep in sync with route-side `requiredScope`
+ * checks. New scopes should be added here AND surfaced in the issuance UI.
+ *
+ * Adding a value is non-breaking; removing or renaming is a breaking change.
+ */
+export const API_TOKEN_SCOPES = {
+  TRANSPORTATION_GEOFENCE_BOARDING: "transportation.geofence_boarding",
+  COMPLIANCE_RPA_CLAIM: "compliance.rpa_claim",
+} as const
+
+export type ApiTokenScope =
+  (typeof API_TOKEN_SCOPES)[keyof typeof API_TOKEN_SCOPES]
+
 export interface GeneratedApiToken {
   /** Full `<prefix>.<secret>` — returned ONCE; never recoverable after. */
   plaintext: string

@@ -1,0 +1,134 @@
+{
+  "title": "الفصول المباشرة",
+  "subtitle": "جدولة الفصول المباشرة عبر الفيديو والانضمام إليها ومراجعة تسجيلاتها.",
+  "nav": {
+    "upcoming": "القادمة",
+    "live": "الجارية الآن",
+    "past": "السابقة",
+    "schedule": "جدولة",
+    "recordings": "التسجيلات",
+    "networkTest": "اختبار الشبكة"
+  },
+  "actions": {
+    "schedule": "جدولة",
+    "start": "بدء الفصل",
+    "end": "إنهاء الفصل",
+    "cancel": "إلغاء",
+    "kick": "إزالة",
+    "join": "انضمام",
+    "delete": "حذف",
+    "refresh": "تحديث",
+    "play": "تشغيل",
+    "loading": "جارٍ التحميل…",
+    "back": "رجوع",
+    "viewRecordings": "عرض التسجيلات"
+  },
+  "form": {
+    "title": "العنوان",
+    "description": "الوصف",
+    "section": "الشعبة",
+    "subject": "المادة",
+    "scheduledStart": "البداية",
+    "scheduledEnd": "النهاية",
+    "recordingEnabled": "تسجيل هذا الفصل",
+    "maxParticipants": "الحد الأقصى للمشاركين"
+  },
+  "labels": {
+    "section": "الشعبة",
+    "subject": "المادة",
+    "teacher": "المعلم",
+    "recording": "التسجيل",
+    "enabled": "مفعّل",
+    "disabled": "معطّل",
+    "recordings": "التسجيلات"
+  },
+  "status": {
+    "scheduled": "مجدول",
+    "live": "مباشر",
+    "ended": "منتهي",
+    "cancelled": "ملغى",
+    "failed": "فشل"
+  },
+  "roles": {
+    "host": "المضيف",
+    "coHost": "مضيف مشارك",
+    "participant": "مشارك",
+    "observer": "مراقب"
+  },
+  "recording": {
+    "pending": "قيد الانتظار",
+    "processing": "قيد المعالجة",
+    "ready": "جاهز",
+    "failed": "فشل",
+    "expired": "منتهي الصلاحية",
+    "empty": "لا توجد تسجيلات لهذا الفصل بعد.",
+    "deleteConfirm": "حذف هذا التسجيل؟ لا يمكن التراجع عن هذا الإجراء.",
+    "retentionInfo": "تُحفظ التسجيلات لمدة {days} يوماً."
+  },
+  "room": {
+    "micMuted": "الميكروفون مغلق",
+    "cameraOff": "الكاميرا معطّلة",
+    "leave": "مغادرة",
+    "participants": "المشاركون",
+    "connection": "الاتصال",
+    "reconnecting": "جارٍ إعادة الاتصال…"
+  },
+  "errors": {
+    "notAuthenticated": "يجب تسجيل الدخول.",
+    "missingSchool": "سياق المدرسة غير متوفر.",
+    "unauthorized": "ليست لديك الصلاحية.",
+    "validation": "يرجى التحقق من النموذج.",
+    "notFound": "الفصل المباشر غير موجود.",
+    "invalidState": "الفصل ليس في الحالة المناسبة.",
+    "roomFull": "الغرفة ممتلئة.",
+    "maxDuration": "مدة الفصل تتجاوز الحد المسموح به في المدرسة.",
+    "tokenFailed": "تعذّر إصدار رمز الانضمام.",
+    "tokenExpired": "انتهت صلاحية الرمز. يرجى إعادة الانضمام.",
+    "participantDenied": "أنت غير مسجّل في هذا الفصل.",
+    "providerUnavailable": "خدمة الفيديو غير متاحة. حاول مرة أخرى لاحقاً.",
+    "recordingNotFound": "التسجيل غير موجود.",
+    "recordingFailed": "تعذّر تحميل التسجيل."
+  },
+  "notifications": {
+    "scheduled": {
+      "title": "تم جدولة فصل مباشر",
+      "body": "{title} مع {teacher} في {when}"
+    },
+    "startingSoon": {
+      "title": "فصل مباشر يبدأ قريباً",
+      "body": "{title} يبدأ خلال 10 دقائق"
+    },
+    "started": {
+      "title": "الفصل المباشر يبث الآن",
+      "body": "انضم الآن إلى {title}"
+    },
+    "cancelled": {
+      "title": "تم إلغاء الفصل المباشر",
+      "body": "{title} — {reason}"
+    },
+    "recordingReady": {
+      "title": "تسجيل الفصل جاهز",
+      "body": "تسجيل {title} متاح للمشاهدة"
+    }
+  },
+  "networkTest": {
+    "title": "اختبار الشبكة",
+    "description": "للتأكد من إمكانية إنشاء جلسة LiveKit من هذه الشبكة.",
+    "idle": "تشغيل الاختبار",
+    "running": "جارٍ التشغيل…",
+    "passed": "ناجح",
+    "failed": "فشل",
+    "connected": "متصل",
+    "setupTime": "زمن الإعداد",
+    "quality": "جودة الاتصال",
+    "path": "المسار المُستنتج",
+    "yes": "نعم",
+    "no": "لا",
+    "tcpFallback": "تم استخدام احتياطي TCP",
+    "details": "تفاصيل التشخيص"
+  },
+  "empty": {
+    "title": "لا توجد فصول مباشرة بعد",
+    "description": "ستظهر هنا الفصول المباشرة المجدولة لشعبتك."
+  }
+}

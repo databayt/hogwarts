@@ -55,6 +55,7 @@ model AcademicGrade {
   sections          Section[]
   bookSelections    BookSelection[]
   students          Student[]
+  pricingRules      PricingRule[]
 
   // Promotion
   promotionPolicies PromotionPolicy[]
@@ -84,6 +85,7 @@ model AcademicStream {
   grade             AcademicGrade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   subjectSelections SubjectSelection[]
   students          Student[]
+  pricingRules      PricingRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

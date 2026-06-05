@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -91,7 +92,7 @@ describe("Kiosk Actions - schoolId scoping", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Student not found")
+      expect(result.error).toBe("STUDENT_NOT_FOUND")
     })
 
     it("returns error when missing school context", async () => {
@@ -110,7 +111,44 @@ describe("Kiosk Actions - schoolId scoping", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Missing school context")
+      // requireKioskOperator collapses every failure mode (no user / no role /
+      // no schoolId / wrong role) into a single UNAUTHORIZED code so it never
+      // leaks which gate failed.
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+
+    it("rejects a non-staff role (kiosk auth gate)", async () => {
+      vi.mocked(auth).mockResolvedValueOnce({
+        user: { id: "student-user", role: "STUDENT", schoolId: mockSchoolId },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as any)
+
+      const result = await processKioskCheck({
+        kioskId: "kiosk-1",
+        studentId: mockStudentId,
+        action: "CHECK_IN",
+        method: "BARCODE",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      // The gate must short-circuit before any DB write.
+      expect(db.student.findFirst).not.toHaveBeenCalled()
+    })
+
+    it("rejects an unauthenticated caller (kiosk auth gate)", async () => {
+      vi.mocked(auth).mockResolvedValueOnce(null as any)
+
+      const result = await processKioskCheck({
+        kioskId: "kiosk-1",
+        studentId: mockStudentId,
+        action: "CHECK_IN",
+        method: "BARCODE",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.student.findFirst).not.toHaveBeenCalled()
     })
   })
 })

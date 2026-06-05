@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 import QRCodeAttendanceContent from "@/components/school-dashboard/attendance/qr-code/content"
 
@@ -21,14 +22,7 @@ export default async function Page({ params }: Props) {
   // Staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
   if (!staffRoles.includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          You do not have permission to access QR code attendance.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return (

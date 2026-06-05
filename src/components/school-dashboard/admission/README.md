@@ -1,3 +1,16 @@
+---
+epic: 02
+sprint: Q3-2026
+title: Admission (school dashboard)
+file_type: readme
+owner: Abdout
+maturity: Built
+completion: 60
+tracker: https://github.com/databayt/hogwarts/issues/314
+docs: https://ed.databayt.org/en/docs/admission
+last_audited: 2026-05-25
+---
+
 ## Admission (Dashboard) — School-side admission management pipeline
 
 ### Overview
@@ -92,3 +105,11 @@ Core CRUD/review/enrollment work, but 3 flagship flows are broken: offer accepta
 - `src/lib/enrollment-sync.ts` -- auto-enroll placed students into grade classes
 - `src/lib/dispatch-notification.ts` -- notification dispatch on status changes
 - `prisma/models/admission.prisma` -- 9 models: AdmissionCampaign, Application, Communication, AdmissionInquiry, AdmissionTimeSlot, TourBooking, ApplicationSession, AdmissionSettings, AdmissionOTP
+
+### Agents & Skills
+
+- `agent:hogwarts` — admission domain expert
+- `agent:react` — wizard step components
+- `agent:nextjs` — App Router segments + server actions
+- `skill:/wire` — UI layer sweep
+- `skill:/report` — auto-fix pilot-reported friction

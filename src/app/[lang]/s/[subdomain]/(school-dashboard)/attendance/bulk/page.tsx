@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -80,14 +81,7 @@ export default async function Page({ params }: Props) {
   // Staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
   if (!staffRoles.includes(session?.user?.role ?? "")) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2>Access Denied</h2>
-        <p className="text-muted-foreground">
-          You do not have permission to access bulk attendance.
-        </p>
-      </div>
-    )
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   const basePath = `/${lang}/attendance`

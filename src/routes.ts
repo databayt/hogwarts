@@ -19,6 +19,11 @@ export const publicRoutes = [
   "/docs",
   "/stream",
   "/stream/courses",
+  // Public transcript verification (Phase 5 of Aldar parent portal).
+  // Anyone with a transcript's verificationCode can confirm its
+  // authenticity without an account — the page only renders the same
+  // information that's already printed on the physical document.
+  "/verify",
   // NOTE: /onboarding is removed from public routes
   // Auth is now handled client-side in OnboardingContent for better UX
   // This allows the component to redirect with callback URL
@@ -303,6 +308,11 @@ export const roleRoutes: Record<string, Role[]> = {
   ],
   "/parents": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
   "/parents/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  // Parent self-service portal (singular). Distinct from `/parents` (plural,
+  // staff-facing CRUD above). Guardians land here to follow up on their
+  // children. DEVELOPER kept for cross-tenant debugging.
+  "/parent": ["GUARDIAN", "DEVELOPER"],
+  "/parent/*": ["GUARDIAN", "DEVELOPER"],
 
   // ============================================================================
   // Attendance (all school roles - role-specific views handled in UI)
@@ -366,6 +376,28 @@ export const roleRoutes: Record<string, Role[]> = {
     "STAFF",
     "STUDENT",
     "GUARDIAN",
+    "DEVELOPER",
+  ],
+
+  // ============================================================================
+  // Live classes (LiveKit video conferencing — all school roles)
+  // ============================================================================
+  "/live-classes": [
+    "ADMIN",
+    "TEACHER",
+    "STUDENT",
+    "GUARDIAN",
+    "STAFF",
+    "ACCOUNTANT",
+    "DEVELOPER",
+  ],
+  "/live-classes/*": [
+    "ADMIN",
+    "TEACHER",
+    "STUDENT",
+    "GUARDIAN",
+    "STAFF",
+    "ACCOUNTANT",
     "DEVELOPER",
   ],
 

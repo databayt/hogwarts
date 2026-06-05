@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server"
 
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 
@@ -14,9 +15,8 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
  * Configure in vercel.json crons array
  */
 export async function GET(request: Request) {
-  // Verify cron secret for security
-  const authHeader = request.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify cron secret for security (fail-closed when CRON_SECRET is unset)
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

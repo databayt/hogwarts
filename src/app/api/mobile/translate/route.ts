@@ -61,8 +61,10 @@ async function loadEntity(
       return { text, source_lang: row.lang as "ar" | "en" }
     }
     case "assignment": {
+      // Assignment is a catalog-level template (shared, no schoolId — see
+      // prisma/models/assignment.prisma). Look it up by id only.
       const row = await db.assignment.findFirst({
-        where: { id: entityId, schoolId },
+        where: { id: entityId },
         select: { title: true, description: true, lang: true },
       })
       if (!row) return null

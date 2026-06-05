@@ -178,6 +178,46 @@ export async function checkRateLimitAsync(
 }
 
 /**
+ * Async, user-scoped rate limit for server actions (where no NextRequest is
+ * available). Uses distributed Redis when configured — correct on serverless,
+ * where the in-memory store resets every invocation — and falls back to the
+ * in-memory store otherwise.
+ */
+export async function checkUserRateLimit(
+  userId: string,
+  config: RateLimitConfig,
+  prefix: string = "api"
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+  const key = `${prefix}:user:${userId}`
+  const r = getUpstashRedis()
+
+  if (r) {
+    try {
+      const windowS = Math.ceil(config.windowMs / 1000)
+      const redisKey = `rl:${key}`
+      const count = await r.incr(redisKey)
+      if (count === 1) {
+        await r.expire(redisKey, windowS)
+      }
+      const resetTime = Date.now() + config.windowMs
+      if (count > config.maxRequests) {
+        return { allowed: false, remaining: 0, resetTime }
+      }
+      return { allowed: true, remaining: config.maxRequests - count, resetTime }
+    } catch {
+      // Redis error — fall through to in-memory
+    }
+  }
+
+  const result = checkRateLimitByKey(key, config)
+  return {
+    allowed: result.allowed,
+    remaining: result.remaining,
+    resetTime: result.resetTime,
+  }
+}
+
+/**
  * Clean up expired rate limit entries to prevent memory leaks
  */
 function cleanupExpiredEntries(windowStart: number): void {

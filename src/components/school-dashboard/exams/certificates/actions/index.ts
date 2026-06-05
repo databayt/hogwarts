@@ -4,9 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   batchGenerateCertificatesSchema,
@@ -14,6 +14,7 @@ import {
   certificateConfigUpdateSchema,
   generateCertificateSchema,
   revokeCertificateSchema,
+  setDefaultCertificateConfigSchema,
   shareCertificateSchema,
   verifyCertificateSchema,
 } from "../validation"
@@ -48,8 +49,9 @@ function generateShareToken(): string {
 }
 
 async function getSchoolId(): Promise<string | null> {
-  const session = await auth()
-  return session?.user?.schoolId ?? null
+  // Honour impersonation + subdomain header before falling back to the session.
+  const { schoolId } = await getTenantContext()
+  return schoolId
 }
 
 // ============================================================================
@@ -125,6 +127,7 @@ export async function getCertificateConfigs(): Promise<
       type: c.type,
       templateStyle: c.templateStyle,
       isActive: c.isActive,
+      isDefault: c.isDefault,
       certificateCount: c._count.certificates,
       createdAt: c.createdAt,
     }))
@@ -231,6 +234,125 @@ export async function deleteCertificateConfig(
       success: false,
       error: "Failed to delete config",
       code: "DELETE_FAILED",
+    }
+  }
+}
+
+/**
+ * Mark a certificate config as the school's default ("favorite") template.
+ *
+ * At most one config per school is default. We flip the flag inside a
+ * transaction: unset every other default first, then set this one — so the
+ * invariant can't be violated by a partial failure. The config is verified
+ * to belong to the caller's school before any write (tenant safety).
+ */
+export async function setDefaultCertificateConfig(
+  input: unknown
+): Promise<ActionResponse> {
+  try {
+    const schoolId = await getSchoolId()
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+    }
+
+    const { id } = setDefaultCertificateConfigSchema.parse(input)
+
+    const existing = await db.examCertificateConfig.findFirst({
+      where: { id, schoolId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return { success: false, error: "Config not found", code: "NOT_FOUND" }
+    }
+
+    await db.$transaction([
+      db.examCertificateConfig.updateMany({
+        where: { schoolId, isDefault: true },
+        data: { isDefault: false },
+      }),
+      db.examCertificateConfig.update({
+        where: { id },
+        data: { isDefault: true },
+      }),
+    ])
+
+    revalidatePath("/exams/certificates")
+    return { success: true }
+  } catch (error) {
+    console.error("Error setting default certificate config:", error)
+    return {
+      success: false,
+      error: "Failed to set default config",
+      code: "SET_DEFAULT_FAILED",
+    }
+  }
+}
+
+/**
+ * Resolve the school's default certificate config (active + isDefault).
+ * Used by the auto-generation chain. Returns null when no default is set.
+ */
+export async function getDefaultCertificateConfig() {
+  const schoolId = await getSchoolId()
+  if (!schoolId) return null
+  return db.examCertificateConfig.findFirst({
+    where: { schoolId, isDefault: true, isActive: true },
+  })
+}
+
+/**
+ * One-click "automate grades → certificates" for an exam.
+ *
+ * Issues certificate rows for every eligible result using the school's
+ * DEFAULT (favorite) template. PDF rendering is intentionally NOT done
+ * inline — the issued rows have `pdfUrl: null` and the
+ * `process-certificate-pdfs` cron renders them out-of-band. This keeps the
+ * request fast and avoids serverless timeouts on large classes.
+ */
+export async function autoGenerateCertificates(input: {
+  examId: string
+}): Promise<
+  ActionResponse<{ configId: string; generated: number; skipped: number }>
+> {
+  try {
+    const schoolId = await getSchoolId()
+    if (!schoolId) {
+      return { success: false, error: "Unauthorized", code: "NO_SCHOOL" }
+    }
+
+    const def = await db.examCertificateConfig.findFirst({
+      where: { schoolId, isDefault: true, isActive: true },
+      select: { id: true },
+    })
+    if (!def) {
+      return {
+        success: false,
+        error: "No default certificate template is set for this school",
+        code: "NO_DEFAULT_CONFIG",
+      }
+    }
+
+    const result = await batchGenerateCertificates({
+      examId: input.examId,
+      configId: def.id,
+    })
+    if (!result.success) return result
+
+    revalidatePath("/exams/certificates")
+    return {
+      success: true,
+      data: {
+        configId: def.id,
+        generated: result.data?.generated ?? 0,
+        skipped: result.data?.skipped ?? 0,
+      },
+    }
+  } catch (error) {
+    console.error("Error auto-generating certificates:", error)
+    return {
+      success: false,
+      error: "Failed to auto-generate certificates",
+      code: "AUTO_GENERATE_FAILED",
     }
   }
 }
@@ -635,7 +757,10 @@ export async function shareCertificate(
       success: true,
       data: {
         shareToken: shareToken || "",
-        shareUrl: shareToken ? `/exams/certificates/share/${shareToken}` : "",
+        // Clean, locale-prefixed public path that resolves to the public
+        // share page at src/app/[lang]/certificate/[shareToken]/page.tsx.
+        // (The old `/exams/certificates/share/...` path had no route.)
+        shareUrl: shareToken ? `/${parsed.lang}/certificate/${shareToken}` : "",
         shareExpiry: shareExpiry || new Date(),
       },
     }

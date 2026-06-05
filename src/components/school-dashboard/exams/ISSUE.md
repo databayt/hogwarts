@@ -1,3 +1,16 @@
+---
+epic: 03
+sprint: Q3-2026
+title: Exams
+file_type: issue
+owner: Abdout
+maturity: Built+Polish
+completion: 65
+tracker: https://github.com/databayt/hogwarts/issues/321
+docs: https://ed.databayt.org/en/docs/exams
+last_audited: 2026-05-25
+---
+
 # Exams -- Production Readiness Tracker
 
 **Status:** IN PROGRESS

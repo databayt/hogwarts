@@ -1,3 +1,16 @@
+---
+epic: 03
+sprint: Q3-2026
+title: Exams
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 65
+tracker: https://github.com/databayt/hogwarts/issues/321
+docs: https://ed.databayt.org/en/docs/exams
+last_audited: 2026-05-25
+---
+
 ## Exams -- Examination Management System
 
 ### Overview
@@ -72,3 +85,11 @@ All 5 sub-blocks have complete component code, server actions, validation schema
 - **Students**: Results linked to student profiles
 - **Grades**: Exam results feed into gradebook (planned)
 - **Notifications**: Exam reminders for students (planned)
+
+### Agents & Skills
+
+- `agent:prisma` — exams schema + Student.id correctness
+- `agent:test` — RBAC + grade-calculator coverage
+- `agent:guardian` — rate-limiter + security audit
+- `skill:/test` — generate + run test suites
+- `skill:/security` — OWASP sweep

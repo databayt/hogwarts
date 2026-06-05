@@ -41,9 +41,10 @@ export type ActionResponse<T = void> =
 async function triggerAbsenceNotification(
   schoolId: string,
   studentId: string,
-  classId: string,
+  classId: string | null,
   date: Date,
-  markedBy?: string
+  markedBy?: string,
+  sectionId?: string | null
 ): Promise<void> {
   try {
     // Get student info with guardians (including phone for SMS)
@@ -75,20 +76,42 @@ async function triggerAbsenceNotification(
       return
     }
 
-    // Get class and school info
-    const [classInfo, schoolInfo] = await Promise.all([
-      db.class.findFirst({
-        where: { id: classId, schoolId },
-        select: { name: true },
-      }),
-      db.school.findFirst({
-        where: { id: schoolId },
-        select: { name: true, preferredLanguage: true },
-      }),
-    ])
+    // Get class, school info, and compliance config (extra channels = ADEK 2h SLA)
+    // Section-based marking passes a sectionId (not a classId) — resolve the
+    // display name from whichever is present so the alert isn't "Unknown class".
+    const [classInfo, sectionInfo, schoolInfo, complianceConfig] =
+      await Promise.all([
+        classId
+          ? db.class.findFirst({
+              where: { id: classId, schoolId },
+              select: { name: true },
+            })
+          : Promise.resolve(null),
+        sectionId
+          ? db.section.findFirst({
+              where: { id: sectionId, schoolId },
+              select: { name: true },
+            })
+          : Promise.resolve(null),
+        db.school.findFirst({
+          where: { id: schoolId },
+          select: { name: true, preferredLanguage: true },
+        }),
+        db.schoolComplianceConfig.findFirst({
+          where: { schoolId, enabled: true },
+          select: { parentContactSlaMinutes: true },
+        }),
+      ])
+
+    // When compliance is enabled, the email + WhatsApp crons must drain the
+    // notification row so we have multi-channel attempt evidence for the ADEK
+    // 2h SLA. For non-compliance schools we keep the in-app + (SMS) status quo.
+    const extraChannels: ("email" | "whatsapp")[] = complianceConfig
+      ? ["email", "whatsapp"]
+      : []
 
     const studentName = `${student.firstName} ${student.lastName}`
-    const className = classInfo?.name || "Unknown class"
+    const className = classInfo?.name || sectionInfo?.name || "Unknown class"
     const schoolName = schoolInfo?.name || "School"
     const dateStrAr = date.toLocaleDateString("ar-SA", {
       weekday: "long",
@@ -122,12 +145,13 @@ async function triggerAbsenceNotification(
       const primaryPhone = guardian.phoneNumbers?.[0]?.phoneNumber
       const hasSMS = smsAvailable && !!primaryPhone
 
-      // Create in-app notification (and email via notification system)
+      // Create in-app notification (+ email/whatsapp for compliance tenants)
       await dispatchNotification({
         schoolId,
         userId: guardian.userId,
         type: "attendance_alert",
         priority: "high",
+        channels: ["in_app", ...extraChannels],
         title: `تنبيه غياب: ${studentName}`,
         body: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
         metadata: {
@@ -196,10 +220,7 @@ export async function markAttendance(
 
     const session = await auth()
     if (!session?.user?.role || !canMarkAttendance(session.user.role as any)) {
-      return {
-        success: false,
-        error: "Unauthorized: insufficient role to mark attendance",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     const parsed = markAttendanceSchema.parse(input)
 
@@ -309,9 +330,10 @@ export async function markAttendance(
         triggerAbsenceNotification(
           schoolId,
           studentId,
-          parsed.classId || parsed.sectionId || "",
+          parsed.classId || null,
           attendanceDate,
-          session?.user?.id
+          session?.user?.id,
+          parsed.sectionId || null
         )
       )
     ).catch((err) => console.error("[markAttendance] Notification error:", err))

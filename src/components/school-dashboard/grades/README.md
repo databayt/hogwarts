@@ -1,3 +1,16 @@
+---
+epic: 03
+sprint: Q3-2026
+title: Grades
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 70
+tracker: https://github.com/databayt/hogwarts/issues/321
+docs: https://ed.databayt.org/en/docs/exams
+last_audited: 2026-05-25
+---
+
 ## Grades — Report cards, transcripts, certificates, and student promotion
 
 ### Overview
@@ -74,3 +87,11 @@ src/components/school-dashboard/grades/
 - `src/components/file/providers/factory.ts` -- File storage provider for PDF uploads
 - `src/app/api/grades/[id]/route.ts` -- REST API for grade data
 - Prisma models: Grade, ReportCard, Transcript, PromotionBatch, PromotionPolicy
+
+### Agents & Skills
+
+- `agent:prisma` — exams schema + Student.id correctness
+- `agent:test` — RBAC + grade-calculator coverage
+- `agent:guardian` — rate-limiter + security audit
+- `skill:/test` — generate + run test suites
+- `skill:/security` — OWASP sweep

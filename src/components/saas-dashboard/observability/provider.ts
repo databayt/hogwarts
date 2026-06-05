@@ -20,7 +20,7 @@ export type LogFilters = {
 export type UnifiedLog = {
   id: string
   createdAt: Date
-  userId: string
+  userId: string | null
   schoolId: string | null
   action: string
   reason: string | null
@@ -123,7 +123,9 @@ export async function fetchLogs(
         db.auditLog.count({ where }),
       ])
       // Batch-fetch users and schools to avoid N+1
-      const userIds = [...new Set(logs.map((l) => l.userId))]
+      const userIds = [
+        ...new Set(logs.map((l) => l.userId).filter(Boolean) as string[]),
+      ]
       const schoolIds = [
         ...new Set(logs.map((l) => l.schoolId).filter(Boolean) as string[]),
       ]
@@ -152,7 +154,7 @@ export async function fetchLogs(
         action: l.action,
         reason: l.reason ?? null,
         ip: l.ip ?? null,
-        userEmail: userMap.get(l.userId) ?? null,
+        userEmail: l.userId ? (userMap.get(l.userId) ?? null) : null,
         schoolName: l.schoolId ? (schoolMap.get(l.schoolId) ?? null) : null,
         level: null,
         requestId: null,

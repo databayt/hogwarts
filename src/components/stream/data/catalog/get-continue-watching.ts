@@ -1,7 +1,8 @@
-"use server"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+// Render-time read (home page) — wrapped in React cache() for request-level
+// dedupe. Server-only; not a "use server" action.
+import { cache } from "react"
 import { auth } from "@/auth"
 
 import { getCatalogImageUrl } from "@/lib/catalog-image-url"
@@ -29,7 +30,7 @@ export interface ContinueWatchingItem {
  * Returns lessons where the user has started watching but not completed,
  * ordered by most recently watched.
  */
-export async function getContinueWatching(
+export const getContinueWatching = cache(async function getContinueWatching(
   limit = 10
 ): Promise<ContinueWatchingItem[]> {
   const session = await auth()
@@ -102,4 +103,4 @@ export async function getContinueWatching(
       courseSlug: p.lesson.chapter.subject.slug,
       lastWatchedAt: p.updatedAt,
     }))
-}
+})

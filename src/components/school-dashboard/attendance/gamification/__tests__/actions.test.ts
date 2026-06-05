@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 
 import {
+  awardPoints,
   getStudentGamificationStats,
   processAttendancePoints,
 } from "../actions"
@@ -194,7 +195,7 @@ describe("Gamification Actions - schoolId scoping", () => {
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Unauthorized")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -217,6 +218,48 @@ describe("Gamification Actions - schoolId scoping", () => {
           },
         })
       )
+    })
+  })
+
+  describe("staff role gating (mutations)", () => {
+    const validAward = {
+      studentId: mockStudentId,
+      points: 10,
+      reason: "PERFECT_ATTENDANCE",
+    }
+
+    it("awardPoints denies a STUDENT role (cannot self-award)", async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "STUDENT" },
+      } as any)
+
+      const result = await awardPoints(validAward as any)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+      expect(db.attendanceReward.create).not.toHaveBeenCalled()
+    })
+
+    it("awardPoints denies a GUARDIAN role", async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: mockUserId, schoolId: mockSchoolId, role: "GUARDIAN" },
+      } as any)
+
+      const result = await awardPoints(validAward as any)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+
+    it("awardPoints passes the staff gate for a TEACHER (not UNAUTHORIZED)", async () => {
+      // beforeEach already sets role TEACHER.
+      vi.mocked(db.attendanceReward.create).mockResolvedValue({
+        id: "reward-1",
+      } as any)
+
+      const result = await awardPoints(validAward as any)
+
+      expect(result.error).not.toBe("UNAUTHORIZED")
     })
   })
 })

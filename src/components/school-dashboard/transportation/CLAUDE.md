@@ -2,14 +2,16 @@
 
 ## Context
 
-School transportation: fleet inventory (vehicles), drivers with licenses, named routes with ordered stops, student-route assignments, daily trip runs with boarding records, settings, fees view, STUDENT/GUARDIAN view, and a service-account geofence-boarding webhook. Multi-tenant; every model is `schoolId`-scoped. **Production-ready** — all 9 transportation tables live in production Postgres (`br-small-tooth-adscsfmb`), 67/67 tests green.
+School transportation: fleet inventory (vehicles), drivers with licenses, named routes with ordered stops, student-route assignments, daily trip runs with boarding records, settings, fees view, STUDENT/GUARDIAN view, and a service-account geofence-boarding webhook. Multi-tenant; every model is `schoolId`-scoped. **Production-ready** — all 9 transportation tables live in production Postgres (`br-small-tooth-adscsfmb`), 300/300 unit tests green across 14 files.
 
 ## Before You Start
 
 1. Read `README.md` here for routes, file structure, and integration points
-2. Read `ISSUE.md` here for the gap/blocker/improvement tracker — the block is functionally
-   production-ready but carries a known polish/hardening backlog (sidebar RBAC mismatch, error-code
-   toast flattening, missing geofence picker, dead permissions, thin business-logic tests)
+2. Read `ISSUE.md` here for the gap/blocker/improvement tracker — the block is production-ready;
+   the 2026-05-22 + 2026-05-29 remediation passes closed the polish/hardening backlog (error-code
+   toasts, geofence picker, dead permissions, AlertDialog confirms, full business-logic test
+   coverage). Only consciously-deferred items remain (page-gate de-dup P3-3, accepted token
+   prefix-scan P3-6)
 3. The 9 Prisma models live in `prisma/models/transportation.prisma`:
    - 7 core: Vehicle, Driver, Route, RouteStop, RouteAssignment, Trip, TripBoarding
    - 2 added in production-readiness sweep: TransportationSettings, SchoolApiToken
@@ -30,7 +32,7 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **`startTrip` auto-populates TripBoardings** with status=PENDING for every active assignment on the route. Drivers/staff then mark BOARDED/ALIGHTED/MISSED per stop via `recordBoarding`.
 - **Stop reorder uses two-phase update** (negative offset → final order) to avoid hitting the `@@unique([schoolId, routeId, stopOrder])` constraint mid-transaction. See `actions/stops.ts:reorderStops`.
 - **Trip lifecycle is state-machine guarded**: `startTrip` requires SCHEDULED, `finishTrip` requires IN_PROGRESS, `cancelTrip` requires SCHEDULED|IN_PROGRESS, `recordBoarding` requires IN_PROGRESS. Returns `TRIP_INVALID_STATE` on violation.
-- **Geofence integration is opt-in**: `Route.geofenceId` is nullable. When set, `recordBoardingFromGeofence(studentId, geofenceId, eventType)` bridges existing `GeoFence`/`GeoAttendanceEvent` ENTER/EXIT events into TripBoarding rows. The data layer is wired (`routeSchema` accepts `geofenceId`; `create/updateRoute` persist it) and the `/api/transportation/geofence-boarding` webhook works — **but the route form has no geofence picker yet**, so `geofenceId` is currently only settable via seed/SQL/webhook, not the admin UI (ISSUE.md P2-2).
+- **Geofence integration is opt-in**: `Route.geofenceId` is nullable. When set, `recordBoardingFromGeofence(studentId, geofenceId, eventType)` bridges existing `GeoFence`/`GeoAttendanceEvent` ENTER/EXIT events into TripBoarding rows. The data layer is wired (`routeSchema` accepts `geofenceId`; `create/updateRoute` persist it), the route form has a geofence picker (`listAvailableGeofences` action → `routes-client`), and the `/api/transportation/geofence-boarding` webhook works — so `geofenceId` is settable from the admin UI as well as seed/SQL/webhook (P2-2 landed 2026-05-22).
 - **Service-account webhook**: `POST /api/transportation/geofence-boarding` accepts a Bearer token from `school_api_tokens` (bcrypt-hashed; plaintext shape is `<8-char-prefix>.<32-hex-secret>`). Token's `schoolId` IS the tenant — never read from request body. Rate limit: 120/min/IP.
 - **Trip-event notifications honor school's preferredLanguage** — guardian notifications render in `en` or `ar` based on `school.preferredLanguage`. Per-event opt-out flags in `TransportationSettings`.
 - **Settings model is one-row-per-school** (`@@unique([schoolId])`); `getSettings()` returns defaults if no row exists. `updateSettings()` upserts.
@@ -46,7 +48,7 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **Two sidebar configs — only one is live.** The rendered sidebar is `template/platform-sidebar/config.ts` (`platformNav`), with correct per-role transportation entries + `bus` icon (`platform-sidebar/icons.tsx`) and titles in the `platform.sidebar` dict (en + ar). `school-dashboard/config.ts` is **dead/legacy** (imported nowhere) — don't edit it expecting nav changes.
 - **Error toasts go through `error-map.ts`** — clients call `resolveTransportationError(t, "error" in result ? result.error : undefined)` to turn a server code into a translated message. When you add a new surfaced error code, add a `case` to `resolveTransportationError` (otherwise it falls back to `errors.internalError`).
 - **RBAC matrix has no dead entries** — `read_class` and `export` were removed (2026-05-22); every `PERMISSION_MATRIX` action has a caller. Fee CSV export is client-side and gated by the `view_fees` page (no separate permission).
-- **Unused i18n form factories** — `createVehicleSchema`/`createDriverSchema`/… are exported but dead: no client uses them (forms are plain `useState`) and tests exercise the raw `vehicleSchema` etc. Don't trust them as proof of inline client validation. P2-4 (wire react-hook-form, or delete the factories) is deferred — see ISSUE.md.
+- **Validation is server-only** — the dead i18n `createXSchema` factories were **deleted (2026-05-29, P2-4 resolved)**. `validation.ts` now holds only the raw schemas (`vehicleSchema`, `driverSchema`, …) that server actions parse with; clients submit plain inputs and surface translated messages via `error-map.ts`. There is no inline client-side field validation by design. `TransportationSettingsInput` is derived from the raw `transportationSettingsSchema`.
 
 ## Related Blocks
 
@@ -73,6 +75,6 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 
 1. Update `README.md` — if routes or file structure changed
 2. Run `pnpm tsc --noEmit` to verify no regressions
-3. `pnpm vitest run src/components/school-dashboard/transportation` — keeps 67/67 green
+3. `pnpm vitest run src/components/school-dashboard/transportation` — keeps 300/300 green
 4. Test: `admin@databayt.org` (pw: 1234) on `demo.localhost:3000` → `/en/transportation`
 5. **Before applying any DB changes:** create a Neon branch via `mcp__Neon__create_branch`, test on the branch first, then promote

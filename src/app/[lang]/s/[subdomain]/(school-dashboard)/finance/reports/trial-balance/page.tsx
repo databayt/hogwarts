@@ -35,9 +35,16 @@ export default async function TrialBalancePage({ params }: Props) {
     )
   }
 
-  const fiscalYear = await db.fiscalYear.findFirst({
-    where: { schoolId, isCurrent: true },
-  })
+  const [fiscalYear, schoolForCurrency] = await Promise.all([
+    db.fiscalYear.findFirst({
+      where: { schoolId, isCurrent: true },
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   const result = await generateTrialBalance(fiscalYear?.id)
 
@@ -127,12 +134,12 @@ export default async function TrialBalancePage({ params }: Props) {
                     </td>
                     <td className="py-2 text-end">
                       {a.debitBalance > 0
-                        ? formatCurrency(a.debitBalance, lang)
+                        ? formatCurrency(a.debitBalance, lang, currency)
                         : "\u2014"}
                     </td>
                     <td className="py-2 text-end">
                       {a.creditBalance > 0
-                        ? formatCurrency(a.creditBalance, lang)
+                        ? formatCurrency(a.creditBalance, lang, currency)
                         : "\u2014"}
                     </td>
                   </tr>
@@ -142,10 +149,10 @@ export default async function TrialBalancePage({ params }: Props) {
                     {d?.totals || "Totals"}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalDebits, lang)}
+                    {formatCurrency(data.totalDebits, lang, currency)}
                   </td>
                   <td className="pt-2 text-end">
-                    {formatCurrency(data.totalCredits, lang)}
+                    {formatCurrency(data.totalCredits, lang, currency)}
                   </td>
                 </tr>
               </tbody>
@@ -164,7 +171,7 @@ export default async function TrialBalancePage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalDebits, lang)}
+              {formatCurrency(data.totalDebits, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -176,7 +183,7 @@ export default async function TrialBalancePage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(data.totalCredits, lang)}
+              {formatCurrency(data.totalCredits, lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -190,7 +197,8 @@ export default async function TrialBalancePage({ params }: Props) {
             <p className="text-2xl font-bold">
               {formatCurrency(
                 Math.abs(data.totalDebits - data.totalCredits),
-                lang
+                lang,
+                currency
               )}
             </p>
           </CardContent>

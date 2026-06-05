@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import {
   notifyExamReminder,
@@ -12,15 +13,13 @@ import {
   sendExamNotification,
 } from "../actions"
 
-vi.mock("@/auth", () => ({
-  auth: vi.fn().mockResolvedValue({
-    user: { id: "user-1", schoolId: "school-1", role: "ADMIN" },
-  }),
+vi.mock("@/lib/tenant-context", () => ({
+  getTenantContext: vi.fn(),
 }))
 
 vi.mock("@/lib/db", () => ({
   db: {
-    exam: {
+    schoolExam: {
       findFirst: vi.fn(),
     },
     examResult: {
@@ -30,7 +29,14 @@ vi.mock("@/lib/db", () => ({
     notification: {
       create: vi.fn(),
     },
+    school: {
+      findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "ar" }),
+    },
   },
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotification: vi.fn().mockResolvedValue({ id: "notif-1" }),
 }))
 
 vi.mock("next/cache", () => ({
@@ -43,6 +49,15 @@ describe("Exam Notification Actions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId: SCHOOL_A,
+      requestId: "req-1",
+      role: "ADMIN",
+      isPlatformAdmin: false,
+    } as any)
+    vi.mocked(db.school.findFirst).mockResolvedValue({
+      preferredLanguage: "ar",
+    } as any)
   })
 
   describe("sendExamNotification", () => {

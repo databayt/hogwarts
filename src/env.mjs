@@ -15,6 +15,47 @@ export const env = createEnv({
     EMAIL_FROM: z.string().min(1).optional(),
     STRIPE_API_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // Payment gateways — Tap (UAE/Gulf), Bankak (Sudan). Optional so dev
+    // works without them; webhooks fail closed when the secret is unset
+    // (P1.2). Aldar production MUST set TAP_SECRET_KEY + TAP_WEBHOOK_SECRET.
+    TAP_SECRET_KEY: z.string().min(1).optional(),
+    TAP_WEBHOOK_SECRET: z.string().min(1).optional(),
+    BANKAK_MERCHANT_ID: z.string().min(1).optional(),
+    BANKAK_SECRET_KEY: z.string().min(1).optional(),
+    BANKAK_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // Cron auth — every src/app/api/cron/* route checks this against the
+    // Authorization header. Vercel cron sets `Bearer <CRON_SECRET>` for us.
+    CRON_SECRET: z.string().min(1).optional(),
+
+    // ADEK / regulator compliance (Epic 01). encryption.ts reads
+    // COMPLIANCE_ENCRYPTION_KEY directly (AES-256-GCM, 32-byte hex); the ADEK
+    // webhook verifies ADEK_WEBHOOK_SECRET. Optional so dev works without them;
+    // both fail closed in production (webhook refuses, decrypt throws).
+    COMPLIANCE_ENCRYPTION_KEY: z.string().min(1).optional(),
+    ADEK_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+    // LiveKit video conferencing (Epic 03). Optional so dev/build works without
+    // a provisioned SFU; the UAE-region SFU + S3 egress creds land at deploy.
+    // API_KEY/SECRET sign join JWTs + verify webhooks; WS_URL is handed to the
+    // client via the join ticket. S3_* are the SFU's egress-write creds (the
+    // app reads recordings with AWS_ACCESS_KEY_ID/SECRET — keep them separate).
+    LIVEKIT_HOST: z.string().min(1).optional(),
+    LIVEKIT_WS_URL: z.string().min(1).optional(),
+    LIVEKIT_API_KEY: z.string().min(1).optional(),
+    LIVEKIT_API_SECRET: z.string().min(1).optional(),
+    LIVEKIT_RECORDING_BUCKET: z.string().min(1).optional(),
+    LIVEKIT_RECORDING_REGION: z.string().min(1).optional(),
+    LIVEKIT_S3_ACCESS_KEY: z.string().min(1).optional(),
+    LIVEKIT_S3_SECRET: z.string().min(1).optional(),
+
+    // Firebase Cloud Messaging (Epic 04 parent push). Optional so the push
+    // cron no-ops gracefully when unset; set all three to enable push.
+    FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+    FIREBASE_CLIENT_EMAIL: z.string().min(1).optional(),
+    FIREBASE_PRIVATE_KEY: z.string().min(1).optional(),
+
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
@@ -150,6 +191,25 @@ export const env = createEnv({
     NEXT_PUBLIC_DEMO_URL: process.env.NEXT_PUBLIC_DEMO_URL,
     STRIPE_API_KEY: process.env.STRIPE_API_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    TAP_SECRET_KEY: process.env.TAP_SECRET_KEY,
+    TAP_WEBHOOK_SECRET: process.env.TAP_WEBHOOK_SECRET,
+    BANKAK_MERCHANT_ID: process.env.BANKAK_MERCHANT_ID,
+    BANKAK_SECRET_KEY: process.env.BANKAK_SECRET_KEY,
+    BANKAK_WEBHOOK_SECRET: process.env.BANKAK_WEBHOOK_SECRET,
+    CRON_SECRET: process.env.CRON_SECRET,
+    COMPLIANCE_ENCRYPTION_KEY: process.env.COMPLIANCE_ENCRYPTION_KEY,
+    ADEK_WEBHOOK_SECRET: process.env.ADEK_WEBHOOK_SECRET,
+    LIVEKIT_HOST: process.env.LIVEKIT_HOST,
+    LIVEKIT_WS_URL: process.env.LIVEKIT_WS_URL,
+    LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY,
+    LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET,
+    LIVEKIT_RECORDING_BUCKET: process.env.LIVEKIT_RECORDING_BUCKET,
+    LIVEKIT_RECORDING_REGION: process.env.LIVEKIT_RECORDING_REGION,
+    LIVEKIT_S3_ACCESS_KEY: process.env.LIVEKIT_S3_ACCESS_KEY,
+    LIVEKIT_S3_SECRET: process.env.LIVEKIT_S3_SECRET,
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
     NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID:

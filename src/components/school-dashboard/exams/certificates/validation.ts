@@ -63,6 +63,9 @@ export const shareCertificateSchema = z.object({
   id: z.string().min(1, "Certificate ID is required"),
   isPublic: z.boolean(),
   expiryDays: z.number().int().min(1).max(365).default(30),
+  // Locale used to build the client-facing share URL. Clean path only
+  // (`/{lang}/certificate/{token}`) — never the internal `/s/{subdomain}/`.
+  lang: z.enum(["ar", "en"]).default("ar"),
 })
 
 export const verifyCertificateSchema = z.object({
@@ -72,4 +75,8 @@ export const verifyCertificateSchema = z.object({
 export const revokeCertificateSchema = z.object({
   id: z.string().min(1, "Certificate ID is required"),
   reason: z.string().min(1, "Revocation reason is required"),
+})
+
+export const setDefaultCertificateConfigSchema = z.object({
+  id: z.string().min(1, "Config ID is required"),
 })

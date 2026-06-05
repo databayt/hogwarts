@@ -1,3 +1,16 @@
+---
+epic: 06
+sprint: Q3-2026
+title: Messaging
+file_type: readme
+owner: Abdout
+maturity: Built+Polish
+completion: 90
+tracker: https://github.com/databayt/hogwarts/issues/324
+docs: https://ed.databayt.org/en/docs/messages
+last_audited: 2026-05-25
+---
+
 ## Messaging — Real-time direct messages and group chats
 
 ### Overview
@@ -118,3 +131,11 @@ Messages sent in-app are automatically dual-delivered to WhatsApp when the schoo
 - Route: `src/app/[lang]/s/[subdomain]/(school-messaging)/messages/page.tsx`
 - Header icon: `mail-icon.tsx` with unread badge (fetches `/api/messages/unread-count` on mount + focus, increments via Socket.IO)
 - Prisma models: 11 in `prisma/models/messages.prisma` (Conversation, ConversationParticipant, Message, MessageAttachment, MessageReaction, MessageReadReceipt, TypingIndicator, MessageDraft, PinnedMessage, ConversationInvite, StarredMessage); WhatsApp models (WhatsAppSession, WhatsAppMessage, …) in `prisma/models/whatsapp.prisma`
+
+### Agents & Skills
+
+- `agent:nextjs` — Socket.io + webhook routes
+- `agent:react` — messaging surface
+- `agent:comment` — copy + i18n strings
+- `skill:/wire` — UI layer sweep
+- `skill:/check` — quality gate

@@ -50,6 +50,56 @@ import { db } from "@/lib/db"
 import { getTierIdFromStripePrice } from "@/components/saas-marketing/pricing/lib/get-tier-id"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
+// Lightweight shape for the bits of a Stripe Subscription we read.
+interface StripeSubscriptionLike {
+  id: string
+  customer: string | { id: string }
+  items: {
+    data: Array<{
+      id: string
+      price: { id: string }
+      current_period_end?: number
+    }>
+  }
+  current_period_end?: number
+  cancel_at_period_end?: boolean
+  status: string
+}
+
+/**
+ * Resolve the subscription period-end as a valid Date.
+ *
+ * Under the pinned API version (clover, 2025-03+) `current_period_end` lives on
+ * the subscription ITEM, not the subscription object. Older code read the
+ * top-level field, which is now undefined → `new Date(undefined * 1000)` =
+ * Invalid Date written to the DB. Prefer the item field, fall back to the
+ * legacy top-level, and only return a Date when the timestamp is finite.
+ */
+function resolvePeriodEnd(sub: StripeSubscriptionLike): Date | null {
+  const seconds =
+    sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end
+  if (typeof seconds !== "number" || !Number.isFinite(seconds)) return null
+  return new Date(seconds * 1000)
+}
+
+/**
+ * Map a Stripe price id to a tier id without throwing inside the webhook.
+ * getTierIdFromStripePrice throws when no tier maps to the price — letting that
+ * propagate would 500 the webhook and make Stripe retry a legitimately-paid
+ * checkout forever. Log and return null instead.
+ */
+async function safeTierId(priceId: string): Promise<string | null> {
+  try {
+    return await getTierIdFromStripePrice(priceId)
+  } catch (err) {
+    console.error(
+      `[Webhook] No tier mapping for price ${priceId} (continuing):`,
+      err
+    )
+    return null
+  }
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return new Response("Stripe is not configured", { status: 500 })
@@ -112,6 +162,36 @@ export async function POST(req: Request) {
       "[Webhook] ProcessedWebhookEvent insert failed (continuing):",
       err
     )
+  }
+
+  // Money-mutating branches (video purchase, catalog enrollment) must NOT
+  // swallow a DB failure with 200 — that takes the customer's money but never
+  // grants access, with no retry. Instead, release the dedupe row (so Stripe's
+  // replay is reprocessed rather than short-circuited at the top) and return
+  // 5xx so Stripe actually retries. The underlying writes are idempotent
+  // (upsert on a unique key / update by id), so reprocessing is safe.
+  async function releaseDedupeAndFail(
+    context: string,
+    error: unknown
+  ): Promise<Response> {
+    console.error(
+      `[Webhook] ${context} failed — releasing dedupe for retry:`,
+      error
+    )
+    try {
+      await db.processedWebhookEvent.delete({
+        where: {
+          provider_providerEventId: {
+            provider: "stripe",
+            providerEventId: eventEnvelope.id,
+          },
+        },
+      })
+    } catch (delErr) {
+      // P2025 (row absent) is fine — the dedupe insert may have no-op'd above.
+      console.error("[Webhook] Failed to release dedupe row:", delErr)
+    }
+    return new Response(`Webhook handler error: ${context}`, { status: 500 })
   }
 
   if ((event as { type: string })?.type === "checkout.session.completed") {
@@ -190,15 +270,19 @@ export async function POST(req: Request) {
               },
             })
             if (app?.userId && app.schoolId) {
-              const { dispatchNotification } =
+              const { dispatchNotification, resolveSchoolLang } =
                 await import("@/lib/dispatch-notification")
+              const lang = await resolveSchoolLang(app.schoolId)
+              const isAr = lang === "ar"
               await dispatchNotification({
                 schoolId: app.schoolId,
                 userId: app.userId,
                 type: "fee_paid",
-                title: "تم استلام الدفع",
-                body: `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`,
-                lang: "ar",
+                title: isAr ? "تم استلام الدفع" : "Payment Received",
+                body: isAr
+                  ? `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`
+                  : `Application fee payment for ${app.applicationNumber} confirmed.`,
+                lang,
                 priority: "normal",
                 channels: ["in_app", "email"],
                 metadata: {
@@ -276,15 +360,21 @@ export async function POST(req: Request) {
               },
             })
             if (app?.userId && app.schoolId) {
-              const { dispatchNotification } =
+              const { dispatchNotification, resolveSchoolLang } =
                 await import("@/lib/dispatch-notification")
+              const lang = await resolveSchoolLang(app.schoolId)
+              const isAr = lang === "ar"
               await dispatchNotification({
                 schoolId: app.schoolId,
                 userId: app.userId,
                 type: "fee_paid",
-                title: "تم استلام رسوم التسجيل",
-                body: `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`,
-                lang: "ar",
+                title: isAr
+                  ? "تم استلام رسوم التسجيل"
+                  : "Registration Fee Received",
+                body: isAr
+                  ? `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`
+                  : `Registration fee for application ${app.applicationNumber} confirmed.`,
+                lang,
                 priority: "normal",
                 channels: ["in_app", "email"],
                 metadata: {
@@ -318,7 +408,9 @@ export async function POST(req: Request) {
           const feeAssignmentId = session.metadata.feeAssignmentId
           const schoolId = session.metadata.schoolId
 
-          // Get the assignment with existing payments to calculate remaining
+          // Get the assignment with existing payments to calculate remaining.
+          // Include school.currency so the new Payment row carries a snapshot
+          // of the school's currency at charge time (P1.1).
           const assignment = await db.feeAssignment.findFirst({
             where: {
               id: feeAssignmentId,
@@ -332,6 +424,7 @@ export async function POST(req: Request) {
               student: {
                 select: { userId: true, firstName: true, lastName: true },
               },
+              school: { select: { currency: true } },
             },
           })
 
@@ -346,7 +439,14 @@ export async function POST(req: Request) {
             const paymentAmount = finalAmount - totalPaid
 
             if (paymentAmount > 0) {
-              // Create payment record
+              // Create payment record. P1.1: snapshot currency from
+              // assignment (set at create time from School.currency).
+              // P1.3: gatewayMethod left null here — Stripe Checkout doesn't
+              // surface the wallet (Apple Pay/Google Pay) on session.completed;
+              // the underlying PaymentIntent would, but we'd need to attach a
+              // payment_intent.succeeded handler to read it.
+              const paymentCurrency =
+                assignment.currency ?? assignment.school?.currency ?? "USD"
               const payment = await db.payment.create({
                 data: {
                   schoolId: assignment.schoolId,
@@ -355,6 +455,7 @@ export async function POST(req: Request) {
                   paymentNumber:
                     `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
                   amount: paymentAmount,
+                  currency: paymentCurrency,
                   paymentMethod: "CREDIT_CARD",
                   paymentDate: new Date(),
                   status: "SUCCESS",
@@ -429,15 +530,19 @@ export async function POST(req: Request) {
               // Notify student (non-fatal)
               try {
                 if (assignment.student?.userId) {
-                  const { dispatchNotification } =
+                  const { dispatchNotification, resolveSchoolLang } =
                     await import("@/lib/dispatch-notification")
+                  const lang = await resolveSchoolLang(assignment.schoolId)
+                  const isAr = lang === "ar"
                   await dispatchNotification({
                     schoolId: assignment.schoolId,
                     userId: assignment.student.userId,
                     type: "fee_paid",
-                    title: "تم استلام الدفعة",
-                    body: `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`,
-                    lang: "ar",
+                    title: isAr ? "تم استلام الدفعة" : "Payment Received",
+                    body: isAr
+                      ? `تم تأكيد الدفع الإلكتروني بنجاح. ${newStatus === "PAID" ? "تم سداد الرسوم بالكامل." : ""}`
+                      : `Online payment confirmed. ${newStatus === "PAID" ? "The fee is fully paid." : ""}`,
+                    lang,
                     priority: "normal",
                     channels: ["in_app", "email", "whatsapp"],
                     metadata: {
@@ -510,7 +615,7 @@ export async function POST(req: Request) {
             `[Webhook] Video purchase recorded: ${session.metadata.videoId} for user ${session.metadata.userId}`
           )
         } catch (error) {
-          console.error("[Webhook] Failed to record video purchase:", error)
+          return releaseDedupeAndFail("video purchase", error)
         }
       }
 
@@ -544,10 +649,7 @@ export async function POST(req: Request) {
             `[Webhook] Catalog enrollment activated: ${session.metadata.enrollmentId}`
           )
         } catch (error) {
-          console.error(
-            "[Webhook] Failed to activate catalog enrollment:",
-            error
-          )
+          return releaseDedupeAndFail("catalog enrollment", error)
         }
       }
 
@@ -595,18 +697,13 @@ export async function POST(req: Request) {
       return new Response(null, { status: 200 })
     }
 
-    // Retrieve the subscription details from Stripe (cast to lightweight shape to avoid type deps)
+    // Retrieve the subscription details from Stripe.
     const subscriptionRes = await stripe.subscriptions.retrieve(
       session.subscription as string
     )
-    const subscription = subscriptionRes as unknown as {
-      id: string
-      customer: string | { id: string }
-      items: { data: Array<{ price: { id: string } }> }
-      current_period_end: number
-      cancel_at_period_end?: boolean
-      status: string
-    }
+    const subscription = subscriptionRes as unknown as StripeSubscriptionLike
+    const priceId = subscription.items.data[0].price.id
+    const periodEnd = resolvePeriodEnd(subscription)
 
     // Update the user stripe info in our database.
     const updatedUser = await db.user.update({
@@ -616,36 +713,44 @@ export async function POST(req: Request) {
       data: {
         stripeSubscriptionId: subscription.id,
         stripeCustomerId: subscription.customer as string,
-        stripePriceId: subscription.items.data[0].price.id,
-        stripeCurrentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ),
+        stripePriceId: priceId,
+        ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
       },
     })
 
-    // Also upsert school-level subscription if user belongs to a school
+    // Also upsert school-level subscription if user belongs to a school.
+    // currentPeriodEnd + tierId are required columns, so only upsert when both
+    // resolve; a missing tier mapping or period must not 500 the webhook (which
+    // would make Stripe retry a legitimately-paid checkout forever).
     if (updatedUser.schoolId) {
-      await db.subscription.upsert({
-        where: { stripeSubscriptionId: subscription.id },
-        update: {
-          stripePriceId: subscription.items.data[0].price.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-          status: subscription.status,
-        },
-        create: {
-          schoolId: updatedUser.schoolId,
-          stripeSubscriptionId: subscription.id,
-          stripeCustomerId: subscription.customer as string,
-          stripePriceId: subscription.items.data[0].price.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-          status: subscription.status,
-          tierId: await getTierIdFromStripePrice(
-            subscription.items.data[0].price.id
-          ),
-        },
-      })
+      const tierId = await safeTierId(priceId)
+      if (periodEnd && tierId) {
+        await db.subscription.upsert({
+          where: { stripeSubscriptionId: subscription.id },
+          update: {
+            stripePriceId: priceId,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+            status: subscription.status,
+            tierId,
+          },
+          create: {
+            schoolId: updatedUser.schoolId,
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: subscription.customer as string,
+            stripePriceId: priceId,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+            status: subscription.status,
+            tierId,
+          },
+        })
+      } else {
+        console.error(
+          "[Webhook] Skipping subscription upsert — unresolved periodEnd/tierId",
+          { subscriptionId: subscription.id, periodEnd, tierId }
+        )
+      }
     }
   }
 
@@ -674,18 +779,13 @@ export async function POST(req: Request) {
     // If the billing reason is not subscription_create, it means the customer has updated their subscription.
     // If it is subscription_create, we don't need to update the subscription id and it will handle by the checkout.session.completed event.
     if (session.billing_reason != "subscription_create") {
-      // Retrieve the subscription details from Stripe (cast to lightweight shape)
+      // Retrieve the subscription details from Stripe.
       const subscriptionRes = await stripe.subscriptions.retrieve(
         session.subscription as string
       )
-      const subscription = subscriptionRes as unknown as {
-        id: string
-        customer: string | { id: string }
-        items: { data: Array<{ price: { id: string } }> }
-        current_period_end: number
-        cancel_at_period_end?: boolean
-        status: string
-      }
+      const subscription = subscriptionRes as unknown as StripeSubscriptionLike
+      const priceId = subscription.items.data[0].price.id
+      const periodEnd = resolvePeriodEnd(subscription)
 
       // Find the user by subscription id (not unique) and update by id
       const existingUser = await db.user.findFirst({
@@ -698,37 +798,42 @@ export async function POST(req: Request) {
         await db.user.update({
           where: { id: existingUser.id },
           data: {
-            stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(
-              subscription.current_period_end * 1000
-            ),
+            stripePriceId: priceId,
+            ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
           },
         })
       }
 
       // Upsert school-level subscription and record invoice
       if (user?.schoolId) {
-        await db.subscription.upsert({
-          where: { stripeSubscriptionId: subscription.id },
-          update: {
-            stripePriceId: subscription.items.data[0].price.id,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-            status: subscription.status,
-          },
-          create: {
-            schoolId: user.schoolId,
-            stripeSubscriptionId: subscription.id,
-            stripeCustomerId: subscription.customer as string,
-            stripePriceId: subscription.items.data[0].price.id,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-            status: subscription.status,
-            tierId: await getTierIdFromStripePrice(
-              subscription.items.data[0].price.id
-            ),
-          },
-        })
+        const tierId = await safeTierId(priceId)
+        if (periodEnd && tierId) {
+          await db.subscription.upsert({
+            where: { stripeSubscriptionId: subscription.id },
+            update: {
+              stripePriceId: priceId,
+              currentPeriodEnd: periodEnd,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+              status: subscription.status,
+              tierId,
+            },
+            create: {
+              schoolId: user.schoolId,
+              stripeSubscriptionId: subscription.id,
+              stripeCustomerId: subscription.customer as string,
+              stripePriceId: priceId,
+              currentPeriodEnd: periodEnd,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
+              status: subscription.status,
+              tierId,
+            },
+          })
+        } else {
+          console.error(
+            "[Webhook] Skipping subscription upsert (invoice path) — unresolved periodEnd/tierId",
+            { subscriptionId: subscription.id, periodEnd, tierId }
+          )
+        }
 
         if (session.id) {
           await db.invoice.upsert({
@@ -863,6 +968,210 @@ export async function POST(req: Request) {
   }
 
   // ============================================
+  // SUBSCRIPTION: Updated (plan change, renewal, status change)
+  // P3.1 — was documented as handled but never implemented; the dedupe
+  // primitive already runs above, so this branch just syncs the row.
+  // ============================================
+  if ((event as { type: string })?.type === "customer.subscription.updated") {
+    const sub = (
+      event as {
+        data: {
+          object: {
+            id: string
+            status: string
+            current_period_end?: number
+            cancel_at_period_end?: boolean
+            items?: { data?: Array<{ price?: { id?: string } }> }
+            metadata?: { schoolId?: string; userId?: string }
+          }
+        }
+      }
+    ).data.object
+    try {
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          stripePriceId: sub.items?.data?.[0]?.price?.id,
+          stripeCurrentPeriodEnd: sub.current_period_end
+            ? new Date(sub.current_period_end * 1000)
+            : undefined,
+        },
+      })
+      console.log(
+        `[Webhook] customer.subscription.updated: ${sub.id} status=${sub.status}`
+      )
+    } catch (err) {
+      console.error("[Webhook] subscription.updated sync failed:", err)
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: Deleted (cancellation took effect)
+  // P3.1 — flip the user's stripeCurrentPeriodEnd so JWT-side gating sees
+  // them as a free-plan user. Notification dispatch is intentionally
+  // skipped; Stripe already emails the customer on cancellation.
+  // ============================================
+  if ((event as { type: string })?.type === "customer.subscription.deleted") {
+    const sub = (event as { data: { object: { id: string } } }).data.object
+    try {
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          stripeCurrentPeriodEnd: new Date(0), // hard-expire — JWT will treat as free
+        },
+      })
+      console.log(`[Webhook] customer.subscription.deleted: ${sub.id}`)
+    } catch (err) {
+      console.error("[Webhook] subscription.deleted sync failed:", err)
+    }
+  }
+
+  // ============================================
+  // INVOICE: Payment failed — notify school admin so they can retry
+  // before the subscription enters dunning. P3.1.
+  // ============================================
+  if ((event as { type: string })?.type === "invoice.payment_failed") {
+    const invoice = (
+      event as {
+        data: {
+          object: {
+            id: string
+            customer?: string
+            subscription?: string
+            amount_due?: number
+            currency?: string
+            hosted_invoice_url?: string
+          }
+        }
+      }
+    ).data.object
+    console.warn(
+      `[Webhook] invoice.payment_failed: invoice=${invoice.id} subscription=${invoice.subscription ?? "none"}`
+    )
+    // TODO(P3.1-followup): dispatch notification to school admin. Today we
+    // log + ack so the dedupe row gets written and Stripe stops retrying.
+  }
+
+  // ============================================
+  // PAYMENT_INTENT: Succeeded — when a Checkout Session uses
+  // automatic_payment_methods (the P0.3 default), the wallet identity
+  // (Apple Pay / Google Pay / Link) is reported here, not on
+  // checkout.session.completed. We enrich Payment.gatewayMethod
+  // retroactively so the receipt + reconciliation report show the right
+  // wallet badge. P3.1.
+  // ============================================
+  if ((event as { type: string })?.type === "payment_intent.succeeded") {
+    const pi = (
+      event as {
+        data: {
+          object: {
+            id: string
+            payment_method_types?: string[]
+            charges?: {
+              data?: Array<{
+                payment_method_details?: {
+                  card?: { wallet?: { type?: string }; brand?: string }
+                  type?: string
+                }
+              }>
+            }
+            metadata?: { schoolId?: string; feeAssignmentId?: string }
+          }
+        }
+      }
+    ).data.object
+    // Resolve the wallet/method: prefer wallet.type (apple_pay/google_pay/link),
+    // fall back to card.brand (visa/mastercard/mada), then the generic
+    // payment_method_details.type (card/ideal/etc.).
+    const charge = pi.charges?.data?.[0]
+    const wallet = charge?.payment_method_details?.card?.wallet?.type
+    const brand = charge?.payment_method_details?.card?.brand
+    const fallback = charge?.payment_method_details?.type
+    const gatewayMethod = (wallet ?? brand ?? fallback ?? "")
+      .toString()
+      .toUpperCase()
+    if (gatewayMethod) {
+      try {
+        await db.payment.updateMany({
+          where: { transactionId: pi.id, gatewayMethod: null },
+          data: { gatewayMethod },
+        })
+        console.log(
+          `[Webhook] payment_intent.succeeded: enriched gatewayMethod=${gatewayMethod} for ${pi.id}`
+        )
+      } catch (err) {
+        console.error("[Webhook] payment_intent.succeeded enrich failed:", err)
+      }
+    }
+  }
+
+  // ============================================
+  // PAYMENT_INTENT: Payment failed — surface to the parent with a retry
+  // link so they don't think the payment vanished. P3.1.
+  // ============================================
+  if ((event as { type: string })?.type === "payment_intent.payment_failed") {
+    const pi = (
+      event as {
+        data: {
+          object: {
+            id: string
+            last_payment_error?: { message?: string; code?: string }
+            metadata?: {
+              schoolId?: string
+              feeAssignmentId?: string
+              studentId?: string
+              type?: string
+            }
+          }
+        }
+      }
+    ).data.object
+    const meta = pi.metadata
+    const errMsg =
+      pi.last_payment_error?.message ?? pi.last_payment_error?.code ?? "unknown"
+    console.warn(
+      `[Webhook] payment_intent.payment_failed: ${pi.id} type=${meta?.type ?? "none"} reason=${errMsg}`
+    )
+    if (
+      meta?.schoolId &&
+      meta?.feeAssignmentId &&
+      meta?.studentId &&
+      meta?.type === "fee_payment"
+    ) {
+      try {
+        const student = await db.student.findFirst({
+          where: { id: meta.studentId, schoolId: meta.schoolId },
+          select: { userId: true },
+        })
+        if (student?.userId) {
+          const { dispatchNotification } =
+            await import("@/lib/dispatch-notification")
+          await dispatchNotification({
+            schoolId: meta.schoolId,
+            userId: student.userId,
+            type: "fee_due",
+            title: "Payment Failed",
+            body: `Your card payment didn't go through (${errMsg}). Please try again or use another payment method.`,
+            lang: "ar",
+            priority: "high",
+            channels: ["in_app", "email"],
+            metadata: {
+              feeAssignmentId: meta.feeAssignmentId,
+              paymentIntentId: pi.id,
+              url: `/finance/fees/assignments/${meta.feeAssignmentId}`,
+            },
+          })
+        }
+      } catch (notifErr) {
+        console.error(
+          "[Webhook] payment_intent.payment_failed notification failed:",
+          notifErr
+        )
+      }
+    }
+  }
+
+  // ============================================
   // COURSE ENROLLMENT: Expired checkout cleanup
   // ============================================
   if ((event as { type: string })?.type === "checkout.session.expired") {
@@ -901,6 +1210,85 @@ export async function POST(req: Request) {
         )
       } catch (error) {
         console.error("[Webhook] Failed to clean up expired enrollment:", error)
+      }
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: out-of-band update (plan change, renewal, portal edit)
+  // ============================================
+  // Previously unhandled — a school that downgraded or whose renewal changed in
+  // the Stripe Billing Portal never synced back, so the app kept showing the
+  // old plan/period. event.data.object IS the Subscription here.
+  if ((event as { type: string })?.type === "customer.subscription.updated") {
+    const sub = (event as { data: { object: StripeSubscriptionLike } }).data
+      .object
+    const priceId = sub.items?.data?.[0]?.price?.id
+    const periodEnd = resolvePeriodEnd(sub)
+    try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          status: sub.status,
+          cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
+        },
+      })
+      // Mirror onto User so JWT-based entitlement reflects the change.
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
+        },
+      })
+      console.log(`[Webhook] Subscription updated: ${sub.id} (${sub.status})`)
+    } catch (error) {
+      console.error("[Webhook] Failed to sync subscription update:", error)
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: cancellation / deletion → downgrade entitlement
+  // ============================================
+  if ((event as { type: string })?.type === "customer.subscription.deleted") {
+    const sub = (event as { data: { object: { id: string } } }).data.object
+    try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: { status: "canceled", cancelAtPeriodEnd: true },
+      })
+      // Null the period-end so getUserSubscriptionPlan().isPaid flips to false
+      // (it requires stripeCurrentPeriodEnd in the future).
+      await db.user.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: { stripeCurrentPeriodEnd: null },
+      })
+      console.log(`[Webhook] Subscription canceled: ${sub.id}`)
+    } catch (error) {
+      console.error("[Webhook] Failed to process subscription deletion:", error)
+    }
+  }
+
+  // ============================================
+  // SUBSCRIPTION: failed renewal → past_due (dunning)
+  // ============================================
+  if ((event as { type: string })?.type === "invoice.payment_failed") {
+    const invoice = (
+      event as { data: { object: { subscription?: string } } }
+    ).data.object
+    if (invoice.subscription) {
+      try {
+        await db.subscription.updateMany({
+          where: { stripeSubscriptionId: invoice.subscription },
+          data: { status: "past_due" },
+        })
+        console.log(
+          `[Webhook] Invoice payment failed → past_due: ${invoice.subscription}`
+        )
+      } catch (error) {
+        console.error("[Webhook] Failed to mark subscription past_due:", error)
       }
     }
   }

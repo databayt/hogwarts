@@ -26,8 +26,22 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { QuickAction } from "./types"
+
+/**
+ * Prefix the action's href with the active locale. Dashboard `actions.ts`
+ * intentionally stores hrefs without `/${lang}` so they can be reused from
+ * server contexts that don't know the locale; this helper threads it in at
+ * render time so Link navigation hits the real route (otherwise the browser
+ * goes to apex which has no /finance segment).
+ */
+function withLocale(href: string, locale: string): string {
+  if (!href.startsWith("/")) return href
+  if (href.startsWith(`/${locale}/`) || href === `/${locale}`) return href
+  return `/${locale}${href}`
+}
 
 interface QuickActionsProps {
   actions: QuickAction[]
@@ -50,6 +64,7 @@ const iconMap: Record<string, any> = {
 
 export function QuickActions({ actions, className }: QuickActionsProps) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const fd = (dictionary as any)?.finance
   const dp = fd?.dashboardPage as Record<string, string> | undefined
 
@@ -119,7 +134,7 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
 
             if (action.href) {
               return (
-                <Link key={action.id} href={action.href}>
+                <Link key={action.id} href={withLocale(action.href, locale)}>
                   <Button
                     variant="default"
                     className={buttonClasses}
@@ -168,6 +183,7 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
 // Compact version for smaller spaces
 export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const fd = (dictionary as any)?.finance
   const dp = fd?.dashboardPage as Record<string, string> | undefined
 
@@ -181,7 +197,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
       {actions.slice(0, 4).map((action) => {
         if (action.href) {
           return (
-            <Link key={action.id} href={action.href}>
+            <Link key={action.id} href={withLocale(action.href, locale)}>
               <Button variant="outline" size="sm" title={action.description}>
                 {getIcon(action.icon)}
                 <span className="ms-2">{action.label}</span>

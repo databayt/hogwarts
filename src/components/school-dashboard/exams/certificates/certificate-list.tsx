@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { revokeCertificate, shareCertificate } from "./actions"
 
@@ -62,6 +63,7 @@ export function CertificateList({
   const { toast } = useToast()
   const [loading, setLoading] = useState<string | null>(null)
   const { dictionary } = useDictionary()
+  const { locale } = useLocale()
   const t = dictionary?.school?.exams?.certificates?.list
   const cl = dictionary?.school?.exams?.certificateList
 
@@ -71,6 +73,7 @@ export function CertificateList({
       id,
       isPublic: true,
       expiryDays: 30,
+      lang: locale,
     })
     setLoading(null)
 

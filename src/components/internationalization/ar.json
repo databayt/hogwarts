@@ -1968,7 +1968,9 @@
       "Transportation": "النقل",
       "Transport fees": "رسوم النقل",
       "My transportation": "نقلي",
-      "Trips": "الرحلات"
+      "Trips": "الرحلات",
+      "Compliance": "الامتثال التنظيمي",
+      "LiveClasses": "الفصول المباشرة"
     },
     "breadcrumb": {
       "dashboard": "لوحة التحكم",
@@ -2248,5 +2250,34 @@
     "submitting": "جاري الإرسال...",
     "success": "تم الإرسال. شكراً لك!",
     "error": "حدث خطأ. حاول مرة أخرى."
+  },
+  "certificate": {
+    "verify": {
+      "verifiedTitle": "تم التحقق من الشهادة",
+      "verifiedDescription": "هذه الشهادة أصلية وموثقة.",
+      "statusActive": "هذه الشهادة سارية المفعول.",
+      "statusRevoked": "تم إلغاء هذه الشهادة.",
+      "statusExpired": "انتهت صلاحية هذه الشهادة.",
+      "notFoundTitle": "الشهادة غير موجودة",
+      "notFoundDescription": "رمز التحقق غير صحيح أو تم إلغاء الشهادة.",
+      "recipient": "المستلم",
+      "exam": "الاختبار",
+      "score": "الدرجة",
+      "grade": "التقدير",
+      "examDate": "تاريخ الاختبار",
+      "issued": "تاريخ الإصدار",
+      "school": "المدرسة"
+    },
+    "share": {
+      "title": "شهادة",
+      "unavailableTitle": "الشهادة غير متوفرة",
+      "unavailableDescription": "هذه الشهادة لم تعد متوفرة أو انتهت صلاحية رابط المشاركة.",
+      "generatingTitle": "جارٍ تجهيز الشهادة",
+      "generatingDescription": "يتم الآن إنشاء مستند الشهادة. يرجى المحاولة مرة أخرى بعد قليل.",
+      "download": "تنزيل الشهادة",
+      "issuedBy": "صادرة من",
+      "recipient": "المستلم",
+      "verifyHint": "تحقق من صحة الشهادة برمز"
+    }
   }
 }

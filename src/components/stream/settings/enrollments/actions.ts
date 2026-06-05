@@ -4,9 +4,16 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+// Bound the batch so a single call can't enqueue an unbounded createMany.
+const bulkEnrollSchema = z.object({
+  catalogSubjectId: z.string().min(1),
+  userIds: z.array(z.string().min(1)).min(1).max(500),
+})
 
 export interface EnrollmentRecord {
   id: string
@@ -45,6 +52,10 @@ export async function getSchoolEnrollments(): Promise<EnrollmentRecord[]> {
       },
     },
     orderBy: { createdAt: "desc" },
+    // Safety cap to bound the payload (whole-table read + per-row progress
+    // join). A future iteration should paginate the admin DataTable server-side
+    // and replace the progress include with a _count projection.
+    take: 500,
   })
 
   return enrollments.map((e) => ({
@@ -78,9 +89,15 @@ export async function bulkEnrollStudents(data: {
     return { success: false, enrolled: 0, message: "Insufficient permissions" }
   }
 
-  // Verify subject exists
+  const parsed = bulkEnrollSchema.safeParse(data)
+  if (!parsed.success) {
+    return { success: false, enrolled: 0, message: "Invalid request" }
+  }
+  const { catalogSubjectId, userIds } = parsed.data
+
+  // Verify subject exists (catalog Subject is platform-global by design).
   const subject = await db.subject.findUnique({
-    where: { id: data.catalogSubjectId },
+    where: { id: catalogSubjectId },
     select: { id: true, name: true },
   })
 
@@ -88,18 +105,35 @@ export async function bulkEnrollStudents(data: {
     return { success: false, enrolled: 0, message: "Subject not found" }
   }
 
+  // Tenant safety: only enroll userIds that actually belong to THIS school.
+  // Without this, the action would write Enrollment rows for arbitrary foreign
+  // userIds (cross-tenant association). Drop any id not in the current school.
+  const members = await db.user.findMany({
+    where: { id: { in: userIds }, schoolId },
+    select: { id: true },
+  })
+  const memberIds = members.map((m) => m.id)
+
+  if (memberIds.length === 0) {
+    return {
+      success: false,
+      enrolled: 0,
+      message: "No valid students for this school",
+    }
+  }
+
   // Get existing enrollments to skip duplicates (scoped to current school)
   const existing = await db.enrollment.findMany({
     where: {
-      catalogSubjectId: data.catalogSubjectId,
-      userId: { in: data.userIds },
+      catalogSubjectId,
+      userId: { in: memberIds },
       schoolId,
     },
     select: { userId: true },
   })
 
   const existingUserIds = new Set(existing.map((e) => e.userId))
-  const newUserIds = data.userIds.filter((id) => !existingUserIds.has(id))
+  const newUserIds = memberIds.filter((id) => !existingUserIds.has(id))
 
   if (newUserIds.length === 0) {
     return {

@@ -2,6 +2,10 @@
   "title": "Attendance",
   "subtitle": "Track student attendance and manage records",
   "description": "Monitor and manage student attendance across all classes",
+  "accessDenied": {
+    "title": "Access Denied",
+    "description": "You do not have permission to access this page."
+  },
   "status": {
     "PRESENT": "Present",
     "ABSENT": "Absent",
@@ -140,7 +144,29 @@
     "threshold": "Absence Threshold",
     "alerts": "Alerts",
     "viewDetails": "View Details",
-    "createIntervention": "Create Intervention"
+    "createIntervention": "Create Intervention",
+    "riskLevels": {
+      "satisfactory": {
+        "label": "Satisfactory",
+        "description": "Attendance on track",
+        "threshold": "≥95%"
+      },
+      "atRisk": {
+        "label": "At Risk",
+        "description": "Needs early intervention",
+        "threshold": "90-94.9%"
+      },
+      "moderatelyChronic": {
+        "label": "Moderately Chronic",
+        "description": "Requires immediate attention",
+        "threshold": "80-89.9%"
+      },
+      "severelyChronic": {
+        "label": "Severely Chronic",
+        "description": "Requires urgent intervention",
+        "threshold": "<80%"
+      }
+    }
   },
   "reports": {
     "title": "Attendance Reports",

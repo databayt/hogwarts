@@ -68,6 +68,48 @@ describe("dispatchNotification", () => {
     })
   })
 
+  it("keeps the OTHER channels when only in_app is disabled (no longer drops the whole notification)", async () => {
+    // in_app disabled; email + whatsapp enabled (default).
+    mockDb.notificationPreference.findUnique.mockImplementation((async ({
+      where,
+    }: {
+      where: { userId_type_channel: { channel: string } }
+    }) => {
+      const channel = where.userId_type_channel.channel
+      return channel === "in_app" ? { enabled: false } : null
+    }) as never)
+    mockDb.notification.create.mockResolvedValue({ id: "notif-2" } as never)
+
+    const result = await dispatchNotification({
+      ...baseParams,
+      type: "fee_overdue" as const,
+      channels: ["in_app", "email", "whatsapp"],
+    })
+
+    expect(result).toBe("notif-2")
+    // The persisted row carries only the still-enabled channels.
+    expect(mockDb.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        channels: ["email", "whatsapp"],
+      }),
+    })
+  })
+
+  it("returns null only when EVERY requested channel is disabled", async () => {
+    mockDb.notificationPreference.findUnique.mockResolvedValue({
+      enabled: false,
+    } as never)
+
+    const result = await dispatchNotification({
+      ...baseParams,
+      type: "fee_overdue" as const,
+      channels: ["in_app", "email", "whatsapp"],
+    })
+
+    expect(result).toBeNull()
+    expect(mockDb.notification.create).not.toHaveBeenCalled()
+  })
+
   it("respects custom priority and channels", async () => {
     mockDb.notificationPreference.findUnique.mockResolvedValue(null)
     mockDb.notification.create.mockResolvedValue({ id: "notif-2" } as any)

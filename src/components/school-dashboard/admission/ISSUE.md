@@ -1,3 +1,16 @@
+---
+epic: 02
+sprint: Q3-2026
+title: Admission (school dashboard)
+file_type: issue
+owner: Abdout
+maturity: Built
+completion: 60
+tracker: https://github.com/databayt/hogwarts/issues/314
+docs: https://ed.databayt.org/en/docs/admission
+last_audited: 2026-05-25
+---
+
 # Admission — Production Readiness Tracker
 
 **Status:** 🟠 NOT READY — offer flow + key security/UX holes fixed (2026-05-22); merit ranking + AI pipeline still broken

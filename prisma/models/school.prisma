@@ -49,8 +49,8 @@ model School {
   videoStorageUsedBytes  BigInt? @default(0)
   videoStorageQuotaBytes BigInt? // null = unlimited
 
-  // Live class (video conferencing) per-school config
-  liveClassRecordingRetentionDays Int     @default(90) // PDPL-configurable
+  // Live-class (LiveKit) — per-school capacity + PDPL retention
+  liveClassRecordingRetentionDays Int     @default(90)
   liveClassMaxConcurrentPerSchool Int     @default(50)
   liveClassMaxDurationMinutes     Int     @default(120)
   liveClassRecordingDefault       Boolean @default(true)
@@ -194,6 +194,7 @@ model School {
   // Fees relations
   feeStructures           FeeStructure[]
   feeAssignments          FeeAssignment[]
+  pricingRules            PricingRule[]
   payments                Payment[]
   refunds                 Refund[]
   scholarships            Scholarship[]
@@ -246,6 +247,11 @@ model School {
   attendanceStreaks       AttendanceStreak[]
   attendanceCompetitions  AttendanceCompetition[]
   classCompetitionEntries ClassCompetitionEntry[]
+
+  // Compliance (regulator submission, e.g., ADEK eSIS)
+  complianceConfigs     SchoolComplianceConfig[]
+  complianceCredentials SchoolComplianceCredential[]
+  complianceSubmissions ComplianceSubmission[]
 
   // Quiz relations
   quizGames         QuizGame[]
@@ -407,13 +413,12 @@ model School {
   transportationSettings TransportationSettings?
   apiTokens              SchoolApiToken[]
 
+  // Live-class relations
+  liveClassSessions   LiveClassSession[]
+  liveClassRecordings LiveClassRecording[]
+
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]
-
-  // Live class relations — see prisma/models/live-class.prisma
-  liveClassSessions     LiveClassSession[]
-  liveClassRecordings   LiveClassRecording[]
-  liveClassDefaultLinks LiveClassDefaultLink[]
 
   @@map("schools")
 }

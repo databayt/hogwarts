@@ -6,7 +6,13 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkSchoolVideoQuota,
+  incrementSchoolVideoUsage,
+} from "@/components/stream/lib/quota"
+import { isValidVideoUrl } from "@/components/stream/shared/url-validators"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -28,6 +34,9 @@ export interface UploadVideoInput {
   pricing?: VideoPricing
   price?: number
   currency?: string
+  // Bytes consumed in our storage (self-hosted uploads). null/0 for external
+  // URLs (YouTube/Vimeo) which consume no quota.
+  fileSize?: number
 }
 
 /**
@@ -56,10 +65,29 @@ export async function uploadVideo(
     return { status: "error", message: "School context required" }
   }
 
+  const rl = await checkUserRateLimit(
+    session.user.id,
+    RATE_LIMITS.STREAM_UPLOAD,
+    "stream-upload"
+  )
+  if (!rl.allowed) {
+    return {
+      status: "error",
+      message: "Too many uploads. Please try again shortly.",
+    }
+  }
+
   const title = data.title?.trim()
   const videoUrl = data.videoUrl?.trim()
   if (!title || !videoUrl) {
     return { status: "error", message: "Title and video URL are required" }
+  }
+
+  // Validate the URL server-side (never trust the client) — a known video host,
+  // CDN, or a video file extension over http(s). Blocks stored garbage/phishing
+  // hrefs that would surface on the reviewer screen.
+  if (!isValidVideoUrl(videoUrl)) {
+    return { status: "error", message: "Invalid or unsupported video URL" }
   }
 
   const audience: VideoAudience = data.audience ?? "SCHOOL"
@@ -85,8 +113,12 @@ export async function uploadVideo(
   const visibility = pricing === "PAID" ? "PAID" : audience
 
   try {
-    const lesson = await db.lesson.findUnique({
-      where: { id: data.catalogLessonId },
+    // Only allow attaching to a lesson whose subject is PUBLISHED.
+    const lesson = await db.lesson.findFirst({
+      where: {
+        id: data.catalogLessonId,
+        chapter: { subject: { status: "PUBLISHED" } },
+      },
       select: {
         id: true,
         chapter: {
@@ -103,6 +135,19 @@ export async function uploadVideo(
       return { status: "error", message: "Lesson not found" }
     }
 
+    // Storage quota: only relevant for self-hosted bytes (external URLs have
+    // no fileSize). Skips entirely when no size is provided or quota is unset.
+    const fileSize = data.fileSize && data.fileSize > 0 ? data.fileSize : 0
+    if (fileSize > 0) {
+      const quota = await checkSchoolVideoQuota(schoolId, fileSize)
+      if (!quota.allowed) {
+        return {
+          status: "error",
+          message: "Storage quota exceeded for this school",
+        }
+      }
+    }
+
     const created = await db.video.create({
       data: {
         catalogLessonId: data.catalogLessonId,
@@ -113,6 +158,7 @@ export async function uploadVideo(
         videoUrl,
         provider: data.provider,
         durationSeconds: data.durationSeconds ?? null,
+        fileSize: fileSize > 0 ? fileSize : null,
         approvalStatus: "PENDING",
         visibility,
         price: pricing === "PAID" ? data.price : null,
@@ -120,6 +166,11 @@ export async function uploadVideo(
       },
       select: { id: true },
     })
+
+    // Bump the school's used-bytes counter now that the row exists.
+    if (fileSize > 0) {
+      await incrementSchoolVideoUsage(schoolId, fileSize)
+    }
 
     revalidatePath(
       `/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.subject.slug}`

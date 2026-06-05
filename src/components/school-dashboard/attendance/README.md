@@ -15,17 +15,33 @@ The Attendance block provides a comprehensive student attendance management syst
 
 ### Routes
 
-| Route                                                               | Page                | Status    |
-| ------------------------------------------------------------------- | ------------------- | --------- |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance`               | Mark Attendance     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/history`       | Attendance History  | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/reports`       | Reports and Export  | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/analytics`     | Analytics Dashboard | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/qr-code`       | QR Code Attendance  | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/geofence`      | Geofence Attendance | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/barcode`       | Barcode Scanner     | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/interventions` | Intervention Mgmt   | Not wired |
-| `/{lang}/s/{subdomain}/(school-dashboard)/attendance/excuses`       | Excuse Management   | Not wired |
+All 23 subroutes are **wired and page-level auth-gated**. Client-facing paths
+use `/{lang}/attendance/...` (the `/s/{subdomain}/` segment is internal — the
+middleware maps it). Each has its own `error.tsx` + `loading.tsx`.
+
+| Route (clean path)              | Page                  | In primary nav?       |
+| ------------------------------- | --------------------- | --------------------- |
+| `/{lang}/attendance`            | Overview / Mark       | Yes (Overview)        |
+| `/{lang}/attendance/manual`     | Manual marking        | Yes (staff)           |
+| `/{lang}/attendance/records`    | Records (own/child)   | Yes (non-staff)       |
+| `/{lang}/attendance/reports`    | Reports & export      | Yes (staff)           |
+| `/{lang}/attendance/analytics`  | Analytics dashboard   | Yes (staff)           |
+| `/{lang}/attendance/qr-code`    | QR code attendance    | Yes (staff)           |
+| `/{lang}/attendance/geo`        | Geofence attendance   | Deep-link             |
+| `/{lang}/attendance/barcode`    | Barcode/RFID scanner  | Deep-link             |
+| `/{lang}/attendance/excuses`    | Excuse management      | Yes                   |
+| `/{lang}/attendance/intentions` | Absence intentions    | Deep-link             |
+| `/{lang}/attendance/interventions` (+`/tiers`) | Interventions / MTSS | Yes (staff) |
+| `/{lang}/attendance/early-warning` | Early-warning system | Yes (staff)         |
+| `/{lang}/attendance/kiosk`      | Kiosk check-in        | Deep-link (admin)     |
+| `/{lang}/attendance/letters`    | Attendance letters    | Deep-link (admin)     |
+| `/{lang}/attendance/gamification` | Gamification        | Deep-link             |
+| `/{lang}/attendance/ai`         | AI risk insights      | Deep-link             |
+| `/{lang}/attendance/{bulk,bulk-upload,analysis,recent}` | Bulk / analysis / recent | Deep-link |
+| `/{lang}/attendance/settings`   | Settings (mockup)     | Yes (admin)           |
+
+"Deep-link" = functional + auth-gated but not yet surfaced in `getTabsForRole`
+(see ISSUE.md P2 — a product decision on which to promote to tabs).
 
 ### File Structure
 
@@ -127,13 +143,53 @@ src/components/school-dashboard/attendance/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** Route pages not created in app directory
+**Completion:** ~92% | **Deploy blockers:** Vercel Pro (sub-daily compliance crons), Neon DB push, env vars — see [ISSUE.md](./ISSUE.md).
 
-Components, server actions (48+), validation schemas, and tests are implemented. The main gap is that no `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/` to wire the components to routes.
+Components, ~140 server actions, validation schemas, 23 wired auth-gated routes
+(each with `error.tsx` + `loading.tsx`), and a comprehensive Vitest suite
+(575/575 green across 45 files in the attendance + compliance + cron + webhook
+scope) are in place. The ADEK/eSIS compliance + live-classes bundle has been
+re-landed on `fix/attendance-production-ready`. Remaining work is the i18n
+long-tail (server-action error codes, Zod messages, settings mockup) and the
+deploy-time gates — all tracked in [ISSUE.md](./ISSUE.md).
 
 ### Integration Points
 
 - **Timetable**: Period-by-period tracking uses timetable data for current period detection
 - **Students**: Attendance records link to student profiles via `studentId`
 - **Classes**: Class roster loaded for attendance marking via `classId`
-- **Notifications**: Planned integration for absence alerts to parents (not yet implemented)
+- **Notifications**: `triggerAbsenceNotification` (actions/core.ts) fires on
+  ABSENT marks. For schools with compliance enabled it now dispatches on
+  `in_app + email + whatsapp` channels so the existing crons drain them; for
+  all other schools the legacy in_app + SMS path is unchanged.
+- **Compliance (ADEK eSIS)**: ADEK-regulated schools (UAE) can opt in to a
+  regulator-submission connector that uploads daily CSV to eSIS and contacts
+  guardians within 2h of an unreported absence. See
+  [`compliance/`](../compliance/README.md) and Epic 01 plan at
+  `~/.claude/plans/read-attendance-block-and-distributed-wozniak.md`.
+
+### Compliance Sub-System (new)
+
+The attendance block emits two compliance touchpoints:
+
+1. **Daily submission cron** (`/api/cron/esis-submit`, 10:00 UTC = 14:00 GST)
+   reads today's attendance, builds a CSV via the generic
+   `src/lib/compliance/providers/adek/mapper.ts`, and dispatches to the
+   configured connector (DRY_RUN / PIGGYBACK / OFFICIAL_API / RPA).
+2. **2-hour parent-contact SLA cron** (`/api/cron/absence-followup`, every
+   30 min) finds ABSENT rows that are still unreported past
+   `SchoolComplianceConfig.parentContactSlaMinutes`, dispatches guardian
+   notifications on multi-channel, and writes an `AttendanceIntervention`
+   row of type `PARENT_EMAIL` as ADEK audit evidence.
+
+Schema is generic — `ComplianceProvider` enum lets a future regulator
+(SEC KSA, MoE Qatar) be added without touching attendance code.
+
+### Multi-Channel Absence Channels (compliance-only)
+
+When a school has `SchoolComplianceConfig.enabled = true`,
+`triggerAbsenceNotification` writes the notification with `channels =
+["in_app", "email", "whatsapp"]` instead of `["in_app"]`. This lets the
+existing email + WhatsApp crons drain the row, producing multi-channel
+delivery evidence the ADEK 2h SLA report needs. Schools without compliance
+keep the lighter in_app + SMS path to avoid notification spam.

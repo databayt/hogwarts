@@ -70,7 +70,9 @@ model FiscalYear {
 model JournalEntry {
   id              String    @id @default(cuid())
   schoolId        String
-  entryNumber     String    @unique
+  // entryNumber is generated per-school (JE-{year}-{seq}); a global @unique
+  // collided across tenants once posting actually wrote. Scope it per school.
+  entryNumber     String
   entryDate       DateTime
   description     String    @db.Text
   reference       String? // Invoice #, Payment #, etc.
@@ -100,6 +102,7 @@ model JournalEntry {
   expenses           Expense[]
   walletTransactions WalletTransaction[]
 
+  @@unique([schoolId, entryNumber])
   @@index([schoolId, entryDate])
   @@index([schoolId, fiscalYearId])
   @@index([schoolId, sourceModule, sourceRecordId])

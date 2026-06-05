@@ -242,6 +242,24 @@ export function generateAbsenceSMSAr(params: AttendanceSMSParams): string {
 }
 
 /**
+ * Generate unreported-absence follow-up SMS in English (ADEK 2h SLA path).
+ */
+export function generateUnreportedAbsenceFollowupSMSEn(
+  params: AttendanceSMSParams
+): string {
+  return `Urgent: ${params.schoolName || "School"} — ${params.studentName}'s absence on ${params.date} has not been excused. Please contact the school now.`
+}
+
+/**
+ * Generate unreported-absence follow-up SMS in Arabic.
+ */
+export function generateUnreportedAbsenceFollowupSMSAr(
+  params: AttendanceSMSParams
+): string {
+  return `عاجل: ${params.schoolName || "المدرسة"} — لم يتم تبرير غياب ${params.studentName} بتاريخ ${params.date}. يرجى التواصل مع المدرسة الآن.`
+}
+
+/**
  * Send attendance notification SMS to guardian
  */
 export async function sendAttendanceSMS(

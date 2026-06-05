@@ -34,21 +34,29 @@ export default async function PayrollRunDetailPage({ params }: Props) {
     )
   }
 
-  const run = await db.payrollRun.findFirst({
-    where: { id, schoolId },
-    include: {
-      salarySlips: {
-        include: {
-          teacher: {
-            select: { firstName: true, lastName: true, employeeId: true },
+  const [run, schoolForCurrency] = await Promise.all([
+    db.payrollRun.findFirst({
+      where: { id, schoolId },
+      include: {
+        salarySlips: {
+          include: {
+            teacher: {
+              select: { firstName: true, lastName: true, employeeId: true },
+            },
           },
+          orderBy: { teacher: { lastName: "asc" } },
         },
-        orderBy: { teacher: { lastName: "asc" } },
       },
-    },
-  })
+    }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+  ])
 
   if (!run) notFound()
+
+  const currency = schoolForCurrency?.currency ?? "USD"
 
   return (
     <div className="space-y-6">
@@ -72,7 +80,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(Number(run.totalGross), lang)}
+              {formatCurrency(Number(run.totalGross), lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -84,7 +92,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(Number(run.totalDeductions), lang)}
+              {formatCurrency(Number(run.totalDeductions), lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -96,7 +104,7 @@ export default async function PayrollRunDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {formatCurrency(Number(run.totalNet), lang)}
+              {formatCurrency(Number(run.totalNet), lang, currency)}
             </p>
           </CardContent>
         </Card>
@@ -127,11 +135,15 @@ export default async function PayrollRunDetailPage({ params }: Props) {
                   <div className="flex items-center gap-3">
                     <div className="text-end">
                       <p className="font-medium">
-                        {formatCurrency(Number(slip.netSalary), lang)}
+                        {formatCurrency(Number(slip.netSalary), lang, currency)}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         {c?.gross || "Gross"}:{" "}
-                        {formatCurrency(Number(slip.grossSalary), lang)}
+                        {formatCurrency(
+                          Number(slip.grossSalary),
+                          lang,
+                          currency
+                        )}
                       </p>
                     </div>
                     <Badge

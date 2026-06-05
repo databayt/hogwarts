@@ -31,7 +31,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
     },
     lesson: {
-      count: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }))
@@ -39,11 +39,12 @@ vi.mock("@/lib/db", () => ({
 const mockGetTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockFindGuardian = db.guardian.findUnique as ReturnType<typeof vi.fn>
 const mockFindEnrollments = db.enrollment.findMany as ReturnType<typeof vi.fn>
-const mockLessonCount = db.lesson.count as ReturnType<typeof vi.fn>
+const mockLessonFindMany = db.lesson.findMany as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockGetTenant.mockResolvedValue({ schoolId: "school-123", subdomain: "demo" })
+  mockLessonFindMany.mockResolvedValue([])
 })
 
 // ---------------------------------------------------------------------------
@@ -72,7 +73,7 @@ describe("getChildrenProgress", () => {
     expect(mockFindEnrollments).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          userId: "student-user-1",
+          userId: { in: ["student-user-1"] },
           isActive: true,
           schoolId: "school-123",
         },
@@ -106,12 +107,16 @@ describe("getChildrenProgress", () => {
     mockFindEnrollments.mockResolvedValue([
       {
         id: "enroll-1",
+        userId: "student-user-1",
         isActive: true,
         subject: { id: "subj-1", name: "Math", slug: "math" },
         progress: [{ isCompleted: true }, { isCompleted: false }],
       },
     ])
-    mockLessonCount.mockResolvedValue(5)
+    // 5 published lessons in subj-1 (batched findMany, grouped in memory).
+    mockLessonFindMany.mockResolvedValue(
+      Array.from({ length: 5 }, () => ({ chapter: { subjectId: "subj-1" } }))
+    )
 
     const result = await getChildrenProgress()
 
