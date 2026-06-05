@@ -59,7 +59,12 @@ export function LiveClassForm({
   dictionary,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
+  // `isPending` must reflect ONLY an in-flight submit — it drives the
+  // "Saving…" footer label and disables every field. Loading the dropdown
+  // options on open is a separate concern with its own flag, so opening the
+  // modal no longer presents the form as mid-save with all inputs locked.
   const [isPending, startTransition] = useTransition()
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
   const itemId = modal.id
   const isEdit = !!itemId
 
@@ -95,23 +100,35 @@ export function LiveClassForm({
   })
 
   // Load dropdown data (teachers/subjects/sections), scoped to the school.
+  // Plain async (not a submit transition) so the form stays interactive while
+  // options load; only the option-backed selects show a loading state.
   useEffect(() => {
-    startTransition(async () => {
-      const result = await getLiveClassFormData()
-      if (result.success && result.data) {
-        setTeachers(result.data.teachers)
-        setSubjects(result.data.subjects)
-        setSections(result.data.sections)
+    let active = true
+    ;(async () => {
+      try {
+        const result = await getLiveClassFormData()
+        if (active && result.success && result.data) {
+          setTeachers(result.data.teachers)
+          setSubjects(result.data.subjects)
+          setSections(result.data.sections)
+        }
+      } finally {
+        if (active) setIsLoadingOptions(false)
       }
-    })
+    })()
+    return () => {
+      active = false
+    }
   }, [])
 
-  // Load existing data for edit mode.
+  // Load existing data for edit mode. Plain async — prefilling values must not
+  // flip the submit-pending UI ("Saving…" + disabled fields) on open.
   useEffect(() => {
     if (isEdit && itemId) {
-      startTransition(async () => {
+      let active = true
+      ;(async () => {
         const result = await getLiveClass({ id: itemId })
-        if (result.success && result.data) {
+        if (active && result.success && result.data) {
           const d = result.data
           const start = new Date(d.scheduledStart)
           const end = new Date(d.scheduledEnd)
@@ -130,7 +147,10 @@ export function LiveClassForm({
             description: d.description ?? "",
           })
         }
-      })
+      })()
+      return () => {
+        active = false
+      }
     }
   }, [isEdit, itemId, form])
 
@@ -164,7 +184,9 @@ export function LiveClassForm({
   }).length
   const progress = (filledCount / FIELD_NAMES.length) * 100
 
-  const noTeachers = teachers.length === 0
+  // Only treat the school as having no teachers once the fetch has settled —
+  // an empty array mid-load is "still loading", not "none available".
+  const noTeachers = !isLoadingOptions && teachers.length === 0
 
   return (
     <Form {...form}>
@@ -187,7 +209,7 @@ export function LiveClassForm({
               label={f.teacherLabel}
               placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
               required
-              disabled={isPending || noTeachers}
+              disabled={isPending || isLoadingOptions || noTeachers}
               options={teachers.map((teacher) => ({
                 value: teacher.id,
                 label: teacher.name,
@@ -199,7 +221,7 @@ export function LiveClassForm({
                 name="subjectId"
                 label={f.subjectLabel}
                 placeholder={f.subjectPlaceholder}
-                disabled={isPending}
+                disabled={isPending || isLoadingOptions}
                 options={subjects.map((subject) => ({
                   value: subject.id,
                   label: subject.name,
@@ -209,7 +231,7 @@ export function LiveClassForm({
                 name="sectionId"
                 label={f.sectionLabel}
                 placeholder={f.sectionPlaceholder}
-                disabled={isPending}
+                disabled={isPending || isLoadingOptions}
                 options={sections.map((section) => ({
                   value: section.id,
                   label: section.name,
