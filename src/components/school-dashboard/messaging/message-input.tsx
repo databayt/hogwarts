@@ -310,7 +310,7 @@ export function MessageInput({
         if (nonce) onMessageFailed?.(nonce)
         toast({
           title: m?.notifications?.error || "Error",
-          description: uploadResult.error || "Failed to upload",
+          description: resolveMessagingError(uploadResult.error, m),
         })
         URL.revokeObjectURL(localUrl)
         return
@@ -427,10 +427,7 @@ export function MessageInput({
           if (!uploadResult.success) {
             toast({
               title: m?.notifications?.error || "Error",
-              description:
-                uploadResult.error ||
-                m?.errors?.send_failed ||
-                "Failed to upload voice message",
+              description: resolveMessagingError(uploadResult.error, m),
             })
             return
           }

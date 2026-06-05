@@ -13,6 +13,14 @@
     "no_messages": "لا توجد رسائل بعد",
     "no_participants": "لا يوجد مشاركون",
     "typing": "{user} يكتب...",
+    "preview": {
+      "photo": "صورة",
+      "video": "فيديو",
+      "voice": "رسالة صوتية",
+      "location": "الموقع",
+      "deleted": "لقد حذفت هذه الرسالة."
+    },
+    "relative_yesterday": "أمس",
     "typing_multiple": "{count} أشخاص يكتبون...",
     "read_by": "قرأها {count}",
     "read_by_all": "قرأها الجميع",

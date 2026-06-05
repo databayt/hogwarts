@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { auth } from "@/auth"
 import { z } from "zod"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getCategoryFromMimeType } from "@/components/file/config"
@@ -90,12 +91,12 @@ export async function uploadMessageAttachment(
     // 1. Authenticate
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 2. Extract and validate input
@@ -103,11 +104,14 @@ export async function uploadMessageAttachment(
     const conversationId = formData.get("conversationId") as string | null
 
     if (!file || !(file instanceof File)) {
-      return { success: false, error: "No file provided" }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "No file provided")
     }
 
     if (!conversationId) {
-      return { success: false, error: "Conversation ID is required" }
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        "Conversation ID is required"
+      )
     }
 
     // 3. Check user is participant in conversation
@@ -117,19 +121,12 @@ export async function uploadMessageAttachment(
       session.user.id
     )
     if (!isParticipant) {
-      return {
-        success: false,
-        error: "You are not a participant in this conversation",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    // 4. Validate file type
+    // 4. Validate file type (client pre-validates; this is the server fallback)
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      return {
-        success: false,
-        error:
-          "File type not allowed. Supported: images, videos, audio, documents.",
-      }
+      return actionError(ACTION_ERRORS.ATTACHMENT_TYPE_INVALID)
     }
 
     // 5. Validate file size
@@ -140,10 +137,10 @@ export async function uploadMessageAttachment(
 
     if (file.size > sizeLimit) {
       const maxMB = Math.round(sizeLimit / (1024 * 1024))
-      return {
-        success: false,
-        error: `File too large. Maximum size: ${maxMB}MB`,
-      }
+      return actionError(
+        ACTION_ERRORS.ATTACHMENT_TOO_LARGE,
+        `Maximum size: ${maxMB}MB`
+      )
     }
 
     // 6. Generate unique filename with path
@@ -216,11 +213,10 @@ export async function uploadMessageAttachment(
     return { success: true, data: result }
   } catch (error) {
     console.error("[uploadMessageAttachment] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to upload attachment",
-    }
+    return actionError(
+      ACTION_ERRORS.ATTACHMENT_UPLOAD_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -235,20 +231,17 @@ export async function deleteMessageAttachment(
     // 1. Authenticate
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // 2. Verify the file URL belongs to this conversation and school
     if (!fileUrl.includes(`messaging/${schoolId}/${conversationId}`)) {
-      return {
-        success: false,
-        error: "Invalid attachment URL",
-      }
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "Invalid attachment URL")
     }
 
     // 3. Check user is participant in conversation
@@ -258,10 +251,7 @@ export async function deleteMessageAttachment(
       session.user.id
     )
     if (!isParticipant) {
-      return {
-        success: false,
-        error: "You are not a participant in this conversation",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // 4. Get storage provider and delete
@@ -277,11 +267,10 @@ export async function deleteMessageAttachment(
     return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteMessageAttachment] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete attachment",
-    }
+    return actionError(
+      ACTION_ERRORS.DELETE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }
 
@@ -296,12 +285,12 @@ export async function validateMessageAttachments(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" }
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" }
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
     // Validate each URL belongs to this conversation and school
@@ -319,12 +308,9 @@ export async function validateMessageAttachments(
     return { success: true, data: validUrls }
   } catch (error) {
     console.error("[validateMessageAttachments] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to validate attachments",
-    }
+    return actionError(
+      ACTION_ERRORS.SAVE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

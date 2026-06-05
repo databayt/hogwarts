@@ -38,6 +38,9 @@ const CODE_TO_ERROR_KEY: Record<string, string> = {
   PARTICIPANT_REMOVE_FAILED: "cannot_remove_participant",
   SEARCH_QUERY_TOO_SHORT: "search_query_too_short",
   WHATSAPP_NOT_CONNECTED: "whatsapp_not_connected",
+  ATTACHMENT_TOO_LARGE: "attachment_too_large",
+  ATTACHMENT_TYPE_INVALID: "invalid_file_type",
+  ATTACHMENT_UPLOAD_FAILED: "attachment_upload_failed",
 }
 
 /**
