@@ -1,50 +1,53 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import type { ComponentProps } from "react"
-import { Info, Lightbulb, OctagonAlert, TriangleAlert } from "lucide-react"
+import type { ComponentProps, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-type CalloutType = "info" | "warning" | "danger" | "tip"
-
-interface CalloutProps extends Omit<ComponentProps<typeof Alert>, "title"> {
-  type?: CalloutType
+// Mirrors ui.shadcn.com/docs <Callout> exactly: one neutral surface for every
+// callout — the box never tints. An icon renders ONLY when explicitly passed in
+// MDX. The legacy `type` prop is still accepted (existing content) but no longer
+// drives color or an auto icon; it only maps onto shadcn's `data-variant` hook.
+interface CalloutProps extends Omit<
+  ComponentProps<typeof Alert>,
+  "title" | "variant"
+> {
   title?: string
-}
-
-const ICONS: Record<CalloutType, typeof Info> = {
-  info: Info,
-  warning: TriangleAlert,
-  danger: OctagonAlert,
-  tip: Lightbulb,
-}
-
-const VARIANT_CLASSES: Record<CalloutType, string> = {
-  info: "border-border bg-muted/40 [&>svg]:text-foreground/70",
-  warning:
-    "border-amber-500/30 bg-amber-500/5 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-500",
-  danger: "border-destructive/30 bg-destructive/5 [&>svg]:text-destructive",
-  tip: "border-primary/30 bg-primary/5 [&>svg]:text-primary",
+  icon?: ReactNode
+  variant?: "default" | "info" | "warning"
+  /** @deprecated visual no-op — kept so existing `<Callout type=…>` content compiles */
+  type?: "info" | "warning" | "danger" | "tip"
 }
 
 export function Callout({
-  type = "info",
   title,
+  icon,
+  variant,
+  type,
   className,
   children,
   ...props
 }: CalloutProps) {
-  const Icon = ICONS[type]
+  const dataVariant =
+    variant ??
+    (type === "warning" ? "warning" : type === "info" ? "info" : "default")
+
   return (
     <Alert
-      className={cn("not-prose my-6", VARIANT_CLASSES[type], className)}
+      data-variant={dataVariant}
+      className={cn(
+        "not-prose border-surface bg-surface text-surface-foreground mt-6 w-auto rounded-xl md:-mx-1 **:[code]:border",
+        className
+      )}
       {...props}
     >
-      <Icon />
+      {icon}
       {title && <AlertTitle>{title}</AlertTitle>}
-      <AlertDescription>{children}</AlertDescription>
+      <AlertDescription className="text-card-foreground/80">
+        {children}
+      </AlertDescription>
     </Alert>
   )
 }

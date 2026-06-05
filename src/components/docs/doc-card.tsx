@@ -71,8 +71,8 @@ export function DocCard({
   )
 
   const baseClass = cn(
-    "block rounded-lg border bg-card p-6 transition-colors",
-    href && "hover:bg-muted/50",
+    "block rounded-xl bg-surface p-6 text-surface-foreground transition-colors",
+    href && "hover:bg-surface/80",
     className
   )
 
