@@ -135,7 +135,7 @@ export async function processWhatsAppNotifications(): Promise<{
     }
 
     // Rate limit check
-    const rateCheck = checkAndConsumeRateLimit(schoolId, {
+    const rateCheck = await checkAndConsumeRateLimit(schoolId, {
       connectedSince: session.connectedAt ?? undefined,
     })
 

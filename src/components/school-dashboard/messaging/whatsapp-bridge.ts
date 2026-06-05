@@ -127,16 +127,30 @@ export async function dispatchMessageToWhatsApp(
 
   const attachments = messageWithAttachments?.attachments ?? []
 
-  // Get participants with WhatsApp phones (excluding sender)
-  const participants = await db.conversationParticipant.findMany({
+  // Get active participants (excluding sender), then split into reachable
+  // (cached WhatsApp phone) vs unreachable. Plain User rows with no
+  // Guardian/Teacher/StaffMember profile have no resolvable phone — surface
+  // that explicitly instead of silently dropping them, so admins can see who
+  // is unreachable on WhatsApp.
+  const allParticipants = await db.conversationParticipant.findMany({
     where: {
       conversationId,
       isActive: true,
       userId: { not: senderUserId },
-      whatsappPhone: { not: null },
     },
-    select: { whatsappPhone: true },
+    select: { userId: true, whatsappPhone: true },
   })
+
+  const participants = allParticipants.filter((p) => p.whatsappPhone)
+  const unreachable = allParticipants.filter((p) => !p.whatsappPhone)
+  if (unreachable.length > 0) {
+    console.warn(
+      `[whatsapp-bridge] ${unreachable.length}/${allParticipants.length} ` +
+        `participant(s) in conversation ${conversationId} have no WhatsApp ` +
+        `phone (no Guardian/Teacher/StaffMember number) — skipped`,
+      unreachable.map((p) => p.userId)
+    )
+  }
 
   if (participants.length === 0) return
 
@@ -157,7 +171,7 @@ export async function dispatchMessageToWhatsApp(
     const phone = participant.whatsappPhone!
 
     // Check rate limits
-    const rateCheck = checkAndConsumeRateLimit(schoolId)
+    const rateCheck = await checkAndConsumeRateLimit(schoolId)
     if (!rateCheck.allowed) {
       if (isSingleRecipient) {
         await db.message.update({
