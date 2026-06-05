@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
@@ -28,6 +28,7 @@ import { ContactsPanel } from "./contacts/contacts-panel"
 import { ConversationInfoPanel } from "./conversation-info-panel"
 import { NoActiveConversation } from "./empty-state"
 import { resolveMessagingError } from "./errors"
+import { usePresence } from "./hooks"
 import { IosChatList } from "./mobile"
 import type { ConversationDTO, MessageAttachmentDTO, MessageDTO } from "./types"
 
@@ -240,6 +241,27 @@ export function MessagingClient({
   const activeContactUserId = activeConversation?.participants?.find(
     (p) => p.userId !== currentUserId
   )?.userId
+
+  // Track every "other" participant's presence so the mobile sidebar can show
+  // online dots. Renders only once the Socket.IO server is live (#262); until
+  // then onlineUserIds stays empty (same as no presence) — no behavior change.
+  const trackedUserIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const conv of conversations) {
+      for (const p of conv.participants ?? []) {
+        if (p.userId !== currentUserId) ids.add(p.userId)
+      }
+    }
+    return Array.from(ids)
+  }, [conversations, currentUserId])
+  const { presenceMap } = usePresence(trackedUserIds)
+  const onlineUserIds = useMemo(() => {
+    const online = new Set<string>()
+    presenceMap.forEach((status, id) => {
+      if (status.state === "online") online.add(id)
+    })
+    return online
+  }, [presenceMap])
 
   // --- Socket.IO connection (reactive) ---
   useEffect(() => {
@@ -611,6 +633,7 @@ export function MessagingClient({
           currentUserId={currentUserId}
           activeConversationId={activeConversation?.id ?? null}
           typingConversations={typingConversations}
+          onlineUserIds={onlineUserIds}
           onConversationClick={switchToConversation}
           locale={locale}
           labels={{
