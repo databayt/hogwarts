@@ -414,8 +414,9 @@ model School {
   apiTokens              SchoolApiToken[]
 
   // Live-class relations
-  liveClassSessions   LiveClassSession[]
-  liveClassRecordings LiveClassRecording[]
+  liveClassSessions     LiveClassSession[]
+  liveClassRecordings   LiveClassRecording[]
+  liveClassDefaultLinks LiveClassDefaultLink[]
 
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]

@@ -218,6 +218,7 @@ model Subject {
   schoolQuestionBanks    QuestionBank[]
   schoolResults          Result[]
   liveClassSessions      LiveClassSession[]
+  liveClassDefaultLinks  LiveClassDefaultLink[]
   schoolReportGrades     ReportCardGrade[]
   schoolTeacherExpertise TeacherSubjectExpertise[]
   schoolQuickAssessments QuickAssessment[]

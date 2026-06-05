@@ -4816,7 +4816,9 @@
         "providerZoom": "زوم",
         "providerTeams": "مايكروسوفت تيمز",
         "descriptionLabel": "الوصف",
-        "descriptionPlaceholder": "وصف اختياري..."
+        "descriptionPlaceholder": "وصف اختياري...",
+        "saveAsDefaultLabel": "إعادة استخدام هذا الرابط كل أسبوع",
+        "saveAsDefaultHint": "احفظه كرابط متكرر لهذه المادة والشعبة ليظهر تلقائيًا في زر الانضمام بالجدول الدراسي."
       },
       "toasts": {
         "created": "تم إنشاء الفصل المباشر",

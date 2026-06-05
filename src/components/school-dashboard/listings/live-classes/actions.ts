@@ -13,6 +13,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
+import { resolveActiveTerm } from "@/lib/term-resolver"
 import { detectLanguage, prepareContentData } from "@/components/translation/util"
 
 import {
@@ -268,7 +269,46 @@ export async function createLiveClass(
       select: { id: true },
     })
 
+    // "Set once & reuse": persist the link as the section+subject default for
+    // the active term so every weekly recurrence surfaces the same timetable
+    // Join button without re-entering it. Best-effort — a default-link failure
+    // must not fail the schedule create.
+    if (d.saveAsDefault && d.subjectId && d.sectionId) {
+      try {
+        const { term } = await resolveActiveTerm(schoolId)
+        if (term) {
+          await db.liveClassDefaultLink.upsert({
+            where: {
+              schoolId_subjectId_sectionId_termId: {
+                schoolId,
+                subjectId: d.subjectId,
+                sectionId: d.sectionId,
+                termId: term.id,
+              },
+            },
+            create: {
+              schoolId,
+              subjectId: d.subjectId,
+              sectionId: d.sectionId,
+              termId: term.id,
+              provider: "external",
+              meetingUrl: d.meetingUrl,
+              meetingProvider: d.meetingProvider || null,
+              createdBy: session.user.id ?? null,
+            },
+            update: {
+              meetingUrl: d.meetingUrl,
+              meetingProvider: d.meetingProvider || null,
+            },
+          })
+        }
+      } catch (err) {
+        console.error("[createLiveClass] default-link upsert failed:", err)
+      }
+    }
+
     revalidatePath("/live-classes")
+    revalidatePath("/timetable")
     return { success: true, data: { id: created.id } }
   } catch (error) {
     console.error("[createLiveClass]", error)

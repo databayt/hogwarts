@@ -75,6 +75,7 @@ import { applyTimetableStructureForNewSchool } from "@/lib/catalog-setup"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./constants"
+import { attachLiveClasses } from "./live-class-join"
 import { getStructureBySlug } from "./structures"
 // ============================================================================
 // AI-POWERED TIMETABLE GENERATION
@@ -3116,6 +3117,10 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
       : "",
     room: slot.classroom?.roomName || "",
+    // Anchors for live-class matching (section-based slots carry these).
+    sectionId: slot.sectionId,
+    subjectId: slot.subjectId,
+    isBreak: false,
   }))
 
   // Fill in empty periods
@@ -3135,12 +3140,23 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       className: "",
       teacher: "",
       room: "",
+      sectionId: null,
+      subjectId: null,
       isBreak,
     }
   })
 
+  // Attach the Join target (today's session, else the recurring default link)
+  // for each entry. Scoped by schoolId + active term.
+  const scheduleWithLiveClasses = await attachLiveClasses(
+    schoolId,
+    term.id,
+    targetDate,
+    fullSchedule
+  )
+
   return {
-    schedule: fullSchedule,
+    schedule: scheduleWithLiveClasses,
     dayOfWeek,
     date: targetDate.toISOString(),
     termLabel: term.label,

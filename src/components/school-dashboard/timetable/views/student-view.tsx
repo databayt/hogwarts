@@ -40,6 +40,7 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByStudentGrade, getTodaySchedule } from "../actions"
 import { useTimetableExport } from "../export"
+import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -346,6 +347,16 @@ export default function StudentView({
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
+              {isLiveJoinable(
+                currentClassInfo.type as "current" | "next",
+                currentClassInfo.item.startTime
+              ) && (
+                <LiveJoinButton
+                  liveClass={currentClassInfo.item.liveClass}
+                  lang={lang}
+                  label={dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")}
+                />
+              )}
             </div>
           </CardContent>
         </Card>

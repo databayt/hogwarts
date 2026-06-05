@@ -193,3 +193,30 @@ model LiveClassEvent {
   @@index([schoolId, eventType])
   @@map("live_class_events")
 }
+
+// Stable recurring meeting link for a (subject, section, term) — set once,
+// reused every week. A LiveClassSession scheduled for the day beats this; this
+// is the fallback the timetable Join button resolves to when no session-specific
+// link exists. Primarily for the `external` provider (Google Meet / Zoom / Teams).
+model LiveClassDefaultLink {
+  id        String  @id @default(cuid())
+  schoolId  String
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  termId    String
+
+  provider        LiveClassProvider @default(external)
+  meetingUrl      String
+  meetingProvider String?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, subjectId, sectionId, termId])
+  @@index([schoolId, sectionId])
+  @@map("live_class_default_links")
+}

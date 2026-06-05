@@ -23,7 +23,12 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
-import { InputField, SelectField, TextareaField } from "@/components/form"
+import {
+  CheckboxField,
+  InputField,
+  SelectField,
+  TextareaField,
+} from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -93,6 +98,7 @@ export function LiveClassForm({
       endTime: "10:00",
       status: "scheduled",
       description: "",
+      saveAsDefault: false,
     },
   })
 
@@ -319,6 +325,18 @@ export function LiveClassForm({
               rows={3}
               disabled={isPending}
             />
+
+            {/* "Set once & reuse": only meaningful when both subject and section
+                are chosen, since the recurring link is keyed by section+subject
+                for the active term. */}
+            {watched.subjectId && watched.sectionId && (
+              <CheckboxField
+                name="saveAsDefault"
+                checkboxLabel={f.saveAsDefaultLabel}
+                description={f.saveAsDefaultHint}
+                disabled={isPending}
+              />
+            )}
           </div>
         </ModalFormLayout>
       </form>

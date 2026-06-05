@@ -4808,7 +4808,9 @@
         "providerZoom": "Zoom",
         "providerTeams": "Microsoft Teams",
         "descriptionLabel": "Description",
-        "descriptionPlaceholder": "Optional description..."
+        "descriptionPlaceholder": "Optional description...",
+        "saveAsDefaultLabel": "Reuse this link every week",
+        "saveAsDefaultHint": "Save as the recurring link for this subject & section so it appears on the timetable Join button automatically."
       },
       "toasts": {
         "created": "Live class created",

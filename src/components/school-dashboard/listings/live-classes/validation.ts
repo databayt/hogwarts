@@ -73,6 +73,10 @@ export function createLiveClassSchema(dict?: V) {
     endTime: z.string().regex(TIME_REGEX, m.endTimeInvalid),
     status: z.enum(LIVE_CLASS_STATUS_VALUES).default("scheduled"),
     description: z.string().max(2000, m.descriptionMax).optional().nullable(),
+    // "Set once & reuse" — also store this meeting link as the recurring
+    // default for its (subject, section, term) so the timetable Join button
+    // resurfaces it every week without re-entering it.
+    saveAsDefault: z.boolean().optional().default(false),
   })
 
   return base.refine(
