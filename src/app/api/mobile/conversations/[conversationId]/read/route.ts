@@ -21,7 +21,13 @@ export async function POST(
     const { conversationId } = await params
 
     await db.conversationParticipant.updateMany({
-      where: { conversationId, userId: auth.userId },
+      // Scope by conversation.schoolId so a token from one school can't reset
+      // unread state on another school's conversation (parity with siblings).
+      where: {
+        conversationId,
+        userId: auth.userId,
+        conversation: { schoolId: auth.schoolId },
+      },
       data: { unreadCount: 0, lastReadAt: new Date() },
     })
 
