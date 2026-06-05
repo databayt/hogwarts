@@ -28,6 +28,11 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
     },
     whatsAppMessage: { create: vi.fn() },
+    messageWhatsappDelivery: {
+      upsert: vi.fn(),
+      update: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     conversation: { update: vi.fn(), findUnique: vi.fn() },
     guardian: { findUnique: vi.fn() },
     teacher: { findUnique: vi.fn() },

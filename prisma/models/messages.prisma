@@ -100,8 +100,9 @@ model ConversationParticipant {
   leftAt   DateTime?
 
   // Relationships
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user         User         @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+  conversation       Conversation              @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user               User                      @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+  whatsappDeliveries MessageWhatsappDelivery[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -158,11 +159,12 @@ model Message {
   sender         User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
   replies        Message[]            @relation("MessageReplies")
   forwards       Message[]            @relation("MessageForwards")
-  attachments    MessageAttachment[]
-  reactions      MessageReaction[]
-  readReceipts   MessageReadReceipt[]
-  pinnedMessages PinnedMessage[]      @relation("PinnedMessage")
-  starredBy      StarredMessage[]     @relation("StarredMessage")
+  attachments        MessageAttachment[]
+  reactions          MessageReaction[]
+  readReceipts       MessageReadReceipt[]
+  pinnedMessages     PinnedMessage[]           @relation("PinnedMessage")
+  starredBy          StarredMessage[]          @relation("StarredMessage")
+  whatsappDeliveries MessageWhatsappDelivery[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,6 +177,38 @@ model Message {
   @@index([whatsappMessageId]) // WhatsApp webhook status lookup
   @@index([forwardedFromId]) // Forwarded messages lookup
   @@map("messages")
+}
+
+// Per-recipient WhatsApp delivery for a single message.
+//
+// The scalar whatsapp* columns on Message can only represent ONE recipient, so
+// they are written for 1:1 conversations only. For group conversations each
+// recipient gets a row here, which is what makes group fan-out retry and
+// per-recipient delivery status possible (see messaging ISSUE.md — group P0).
+model MessageWhatsappDelivery {
+  id            String @id @default(cuid())
+  schoolId      String // Multi-tenant scoping (CRITICAL)
+  messageId     String
+  participantId String // ConversationParticipant.id of the recipient
+  phone         String // Recipient phone (E.164)
+
+  status            String    @default("pending") // pending|sent|delivered|read|failed
+  providerMessageId String? // Evolution API message key.id
+  retryCount        Int       @default(0)
+  lastError         String?   @db.Text
+  sentAt            DateTime?
+
+  message     Message                 @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  participant ConversationParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([messageId, participantId]) // one delivery row per recipient per message
+  @@index([schoolId])
+  @@index([status]) // retry sweep
+  @@index([messageId])
+  @@map("message_whatsapp_deliveries")
 }
 
 // Message attachments (files, images, documents)
