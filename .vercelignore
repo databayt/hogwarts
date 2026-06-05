@@ -36,10 +36,20 @@ scripts/clickview-clone.md
 
 # Backup and dev files
 .backup/
-.gitignore.banner-test
-src/proxy.ts.real
-screenshots/
 
 # Claude plans
 .claude/plans/
 .claude/error.log
+
+# Next.js build cache
+.next/
+
+# Local dependencies & system directories
+node_modules/
+.git/
+.idea/
+.DS_Store
+
+# Large developer-only/seeding directories
+curriculum/
+.vercel/
