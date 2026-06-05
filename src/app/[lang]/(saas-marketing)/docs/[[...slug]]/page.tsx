@@ -25,11 +25,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 // page-data build ceiling.
 export const runtime = "nodejs"
 
-export function generateStaticParams({
-  params,
-}: {
-  params: { lang: string }
-}) {
+export function generateStaticParams({ params }: { params: { lang: string } }) {
   const source = params.lang === "ar" ? docsArabicSource : docsSource
   return source.getPages().map((page) => ({ slug: page.slugs }))
 }
@@ -101,11 +97,11 @@ export default async function DocsPage(props: {
         <div className="text-foreground mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-8 py-6 lg:py-8">
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between md:items-start">
-                <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight sm:text-3xl">
+              <div className="flex items-start justify-between">
+                <h1 className="scroll-m-24 text-3xl font-semibold tracking-tight">
                   {doc.title}
                 </h1>
-                <div className="docs-nav flex items-center gap-2 sm:pt-1.5">
+                <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
                   <DocsCopyPage
                     page={raw}
                     url={pageUrl}
@@ -144,7 +140,7 @@ export default async function DocsPage(props: {
                 </div>
               </div>
               {doc.description && (
-                <p className="text-muted-foreground text-[1.05rem] sm:text-base sm:text-balance md:max-w-[80%]">
+                <p className="text-muted-foreground text-[1.05rem] text-balance sm:text-base">
                   {doc.description}
                 </p>
               )}

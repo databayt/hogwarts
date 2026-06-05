@@ -121,7 +121,7 @@ const mdxComponents = {
           .replace(/\?/g, "")
           .toLowerCase()}
         className={cn(
-          "font-heading [&+]*:[code]:text-xl mt-10 scroll-m-28 text-xl font-medium tracking-tight first:mt-0 lg:mt-16 [&+.steps]:!mt-0 [&+.steps>h3]:!mt-4 [&+h3]:!mt-6 [&+p]:!mt-4",
+          "font-heading [&+]*:[code]:text-xl mt-10 scroll-m-28 text-xl font-medium tracking-tight first:mt-0 lg:mt-12 [&+.steps]:!mt-0 [&+.steps>h3]:!mt-4 [&+h3]:!mt-6 [&+p]:!mt-4",
           className
         )}
         {...props}
@@ -349,7 +349,7 @@ const mdxComponents = {
   Step: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <h3
       className={cn(
-        "font-heading mt-8 scroll-m-32 text-xl font-medium tracking-tight",
+        "font-heading mt-8 scroll-m-32 text-lg font-medium tracking-tight",
         className
       )}
       {...props}
@@ -357,7 +357,7 @@ const mdxComponents = {
   ),
   Steps: ({ ...props }) => (
     <div
-      className="[&>h3]:step steps mb-12 [counter-reset:step] *:[h3]:first:!mt-0"
+      className="[&>h3]:step steps mb-12 [counter-reset:step] md:ms-4 md:border-s md:ps-8 *:[h3]:first:!mt-0"
       {...props}
     />
   ),
