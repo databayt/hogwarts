@@ -25,10 +25,15 @@ For labels, buttons, headings, placeholders, error messages, toast messages, sel
 
 For user-generated DB content (announcements, subjects, student names, etc.):
 
-- `getDisplayText(text, contentLang, displayLang, schoolId)` from `@/components/translation/display`
-- `getDisplayFields(entity, fields, contentLang, displayLang, schoolId)` for batch
-- `prepareContentData(data, lang)` when writing to DB -- adds the `lang` field
-- `TranslationCache` model handles caching -- same text never translated twice
+- `getText(text, contentLang, displayLang, schoolId)` from `@/components/translation/display`
+- `getFields(entity, fields, contentLang, displayLang, schoolId)` for batch (one entity, many fields)
+- **Names & labels** (`@/components/translation/person`): `getName(person, lang, schoolId)`, `getNames(rows, accessor, lang, schoolId)`, `getLabels(values, lang, schoolId)` -- all de-dup to avoid N+1 and fall back to offline transliteration when the API is down. Prefer these over `getText` for person names.
+- `withLang(data, lang)` when writing to DB -- adds the `lang` field. When the locale isn't trustworthy, `detectScript(text)` keys off the actual script (the right choice for names).
+- Bilingual search: `search(term, fields, schoolId, storageLang, displayLang)` from `@/components/translation/search` -- cache-only, no API cost.
+- Mobile: `POST /api/mobile/translate` reuses the same cache (whitelist: `announcement`, `assignment`).
+- `Translation` model handles caching -- same text never translated twice.
+
+> Full reference: [Translation Guide](/docs/translation-guide).
 
 ## NEVER Do These
 
@@ -48,8 +53,8 @@ For user-generated DB content (announcements, subjects, student names, etc.):
 - Use ToastHelper: `const { toast: t } = createI18nHelpers(dictionary.messages); toast.success(t.success.created())`
 - Use ValidationHelper for Zod: `z.string().min(1, v.required())`
 - Use ErrorHelper or error codes in server actions: `return { success: false, errorCode: "NOT_AUTHENTICATED" }`
-- Pass `lang` (current locale) when creating/updating content: `prepareContentData(data, lang)`
-- Use `getDisplayText()` when displaying DB content that may be in a different language
+- Pass `lang` (current locale) when creating/updating content: `withLang(data, lang)`
+- Use `getText()` when displaying DB content that may be in a different language
 - Use dictionary for placeholders: `<Input placeholder={d.form.namePlaceholder} />`
 - Include `lang` field in Prisma creates for content models
 
@@ -95,12 +100,14 @@ export const getGenderOptions = (d: Dictionary["school"]) => [
 
 ## Key Files
 
-| File                                                   | Purpose                                     |
-| ------------------------------------------------------ | ------------------------------------------- |
-| `src/components/translation/display.ts`                | `getDisplayText()`, `getDisplayFields()`    |
-| `src/components/translation/actions.ts`                | `translateWithCache()`, `translateFields()` |
-| `src/components/translation/util.ts`                   | `prepareContentData()`, `detectLanguage()`  |
-| `src/components/internationalization/dictionaries.ts`  | Dictionary loaders                          |
-| `src/components/internationalization/helpers/index.ts` | ValidationHelper, ToastHelper, ErrorHelper  |
-| `src/components/internationalization/school-en.json`   | English dictionary                          |
-| `src/components/internationalization/school-ar.json`   | Arabic dictionary                           |
+| File                                                   | Purpose                                        |
+| ------------------------------------------------------ | ---------------------------------------------- |
+| `src/components/translation/display.ts`                | `getText()`, `getFields()`                     |
+| `src/components/translation/person.ts`                 | `getName()`, `getNames()`, `getLabels()`       |
+| `src/components/translation/actions.ts`                | `translate()`, `translateFields()`             |
+| `src/components/translation/util.ts`                   | `withLang()`, `detectScript()`, `detectLang()` |
+| `src/components/translation/search.ts`                 | `search()` — bilingual, cache-only             |
+| `src/components/internationalization/dictionaries.ts`  | Dictionary loaders                             |
+| `src/components/internationalization/helpers/index.ts` | ValidationHelper, ToastHelper, ErrorHelper     |
+| `src/components/internationalization/school-en.json`   | English dictionary                             |
+| `src/components/internationalization/school-ar.json`   | Arabic dictionary                              |

@@ -1,0 +1,268 @@
+---
+title: Translation Guide
+description: How DB content is translated on demand — single-language storage, getText, the Google-backed cache, name helpers, trade-offs, best practices, and tooling.
+---
+
+## Structure
+
+<TranslationStructure />
+
+## How it works
+
+The flow is: **store in one language → stamp it with `lang` → translate at display time → cache the result per school.**
+
+### Which helper do I use?
+
+| You have…                                  | Use                         | From         |
+| ------------------------------------------ | --------------------------- | ------------ |
+| One stored field to display                | `getText`                   | `display.ts` |
+| Several fields of one entity               | `getFields`                 | `display.ts` |
+| A person's name                            | `getName`                   | `person.ts`  |
+| A list of rows with names                  | `getNames` _(de-dups)_      | `person.ts`  |
+| Arbitrary labels (rooms, subjects, grades) | `getLabels` _(de-dups)_     | `person.ts`  |
+| Writing content to the DB                  | `withLang` / `detectScript` | `util.ts`    |
+| Searching across languages                 | `search`                    | `search.ts`  |
+
+Every read here is **server-only** and needs a `schoolId`. Resolve in `content.tsx`, pass plain strings down to client `columns.tsx`. The rest of this page explains each.
+
+### Single-language storage (the data model)
+
+Every content model stores text in one language plus a `lang` field. Field names are **generic** — never `titleAr`/`titleEn`. The default storage language follows `School.preferredLanguage`.
+
+```prisma
+model Announcement {
+  title String?          // generic name (NOT titleEn/titleAr)
+  body  String? @db.Text
+  lang  String  @default("ar") // the language THIS row is stored in
+}
+```
+
+The language type is `Lang = "en" | "ar"` (`src/components/translation/types.ts`).
+
+### Writing content — stamp the language
+
+`withLang` simply attaches the `lang` field to whatever you're about to persist:
+
+```ts
+// src/components/translation/util.ts
+await db.announcement.create({ data: withLang(input, lang) })
+// => { ...input, lang }
+```
+
+When you don't have a trustworthy locale at write time, detect it from the **actual script** with `detectScript` — Arabic script wins, then Latin, else `"ar"`. This is deliberately robust to a _wrong_ flag (admission writes Latin names with the default `lang="ar"`) and an _absent_ one (`StaffMember` has no `lang` column):
+
+```ts
+// src/components/translation/util.ts
+detectScript("محمد علي") // "ar"
+detectScript("Mohammed Ali") // "en"
+detectScript("B102") // "en"
+```
+
+`detectScript` keys off the characters themselves, which is why it's the right detector for names and any untrusted `lang` flag. A sibling `detectLang` (also in `util.ts`) exists for locale-style guesses — but when in doubt about a name, reach for `detectScript`.
+
+### Reading content — translate on display
+
+`getText` is the core read primitive. If content and display languages match it returns the text untouched; it guards against script mismatches (so a mislabeled row isn't garbled); and if translation fails it **falls back to the source string** — it never blocks the render.
+
+```ts
+// src/components/translation/display.ts
+const title = await getText(a.title, a.lang, displayLang, schoolId)
+```
+
+For multiple fields of one entity, `getFields` translates them in parallel:
+
+```ts
+const { title, body } = await getFields(
+  announcement,
+  ["title", "body"],
+  announcement.lang,
+  displayLang,
+  schoolId
+)
+```
+
+### Caching — translate once per tenant
+
+Translation is cache-first. `translate` looks up `Translation`, bumps `hitCount` on a hit (fire-and-forget), and only calls Google on a miss — so each unique string is paid for once per school:
+
+```ts
+// src/components/translation/actions.ts
+export async function translate(
+  text: string,
+  sourceLang: "en" | "ar",
+  targetLang: "en" | "ar",
+  schoolId: string
+): Promise<string> // findUnique → hit ? bump+return : translateRaw → create
+```
+
+```prisma
+// prisma/models/translation.prisma — tenant-scoped, dedup by composite key
+model Translation {
+  schoolId       String
+  sourceText     String @db.Text
+  sourceLanguage String
+  targetLanguage String
+  translatedText String @db.Text
+  provider       String @default("google")
+  hitCount       Int    @default(0)
+  lastAccessedAt DateTime @default(now())
+  @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([lastAccessedAt])
+  @@map("translation_cache")
+}
+```
+
+Companion server actions in the same file:
+
+| Function          | Purpose                                                                          |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `translateText`   | Auth + tenant-gated single-string translate (returns `{ success, translated }`). |
+| `translateFields` | Batch-translate a `Record` via `translateBatch`, then **upsert** every result.   |
+| `autoTranslate`   | Stamp `lang` + optionally pre-translate fields (e.g. admin preview before save). |
+
+These three take typed input objects (see `types.ts`), not positional string args — unlike the lower-level `translate(text, source, target, schoolId)`.
+
+### The Google layer
+
+`src/components/translation/google.ts` wraps Cloud Translation v2: `translateRaw()` and `translateBatch()` read `GOOGLE_TRANSLATE_API_KEY` (free tier ~500K chars/month). A missing or rejected key **throws** (so `getText`/`translate` fall back to source) and is surfaced by a private, throttled `reportTranslationDegraded()` — at most one `console.error` to the Vercel runtime logs every 5 minutes, so a silently-misconfigured key still leaves a trail instead of an unexplained all-Arabic `/en`. There is **no public getter or health endpoint yet** — see [areas of improvement](#areas-of-improvement).
+
+### Names & labels — use the canonical helper
+
+Names are the highest-traffic case, so they have a dedicated module — `src/components/translation/person.ts`. **Prefer it over `getText` for names.** It composes the parts, detects the script (ignoring a possibly-wrong `lang` flag), de-duplicates the list to avoid an N+1, and — uniquely — **transliterates ar→Latin offline** when the API is down, so a degraded `/en` shows "Mohammed Ali" rather than "محمد علي".
+
+```ts
+// resolve once on the server, then hand plain strings to client columns
+const names = await getNames(rows, (r) => r.student, lang, schoolId)
+const display = names.get(fullName(row.student)) ?? fullName(row.student)
+
+// getName(person, lang, schoolId)  — a single name
+// getLabels(values, lang, schoolId)       — rooms / subjects / grade labels
+```
+
+<Callout type="warning">
+  These helpers are **server-only** (DB cache + Google API). For client tables,
+  resolve names in the server `content.tsx` and pass already-translated strings
+  down to `columns.tsx` — never call them from a client component.
+</Callout>
+
+### Bilingual search
+
+`search` (`src/components/translation/search.ts`) builds Prisma `OR` conditions that match both the raw field and its cached translation — so searching "Ahmed" finds "أحمد". It reads `Translation` only and **never** triggers the API.
+
+### Mobile API
+
+`POST /api/mobile/translate` lets iOS/Android reuse the same cache instead of baking a second pipeline. It's whitelist-only (`announcement`, `assignment`) and authenticated. School-owned content stays `schoolId`-scoped — an `announcement` is loaded via `findFirst({ where: { id, schoolId } })`; an `assignment` is a **global catalog template** (no `schoolId` column) so it's fetched by id. The route probes the cache to honestly report `cached: true|false`, then calls `translate`.
+
+## Caching & fine-tuning
+
+The cache key is `(schoolId, sourceText, sourceLanguage, targetLanguage)` — **per-school on purpose**, and **cache-first**, which makes the `Translation` table both the dedup layer and the override layer.
+
+### Fine-tuning is already possible
+
+Because reads hit `Translation` before Google, you fine-tune by writing the row you want: set `translatedText` to the corrected/preferred wording and flag it (e.g. `provider: "manual"`) so a later API call never overwrites it. Per-school keys mean one school's wording never leaks into another's.
+
+### Why not one global cache
+
+Dropping `schoolId` (a global cache) would raise the hit-rate and cut Google spend — a string translated once would serve every tenant. But it (a) co-mingles tenant content into a shared row, breaking the `schoolId` isolation the whole app rests on, and (b) can hold only **one** translation, so it can't represent two schools' different preferred wording. Globalize a _generic_ slice, not the whole thing.
+
+### "Cache single words" → a glossary, not sentence-splitting
+
+MT isn't compositional — you can't translate a sentence by translating its words and joining them (`بنك الدم` = "blood bank", not "bank blood"). But the intuition holds for a **bounded set of repeated terms** (subjects, grade labels, statuses, room codes): translate each _term_ once and reuse it — that's a glossary. The highest-repetition case, **names**, is already handled without MT: `getNames`/`getLabels` dedupe unique values and `transliterate` romanizes offline.
+
+### A layered cache (where this lands)
+
+| Layer                              | Scope                                  | Holds                                         | Role                                                                  |
+| ---------------------------------- | -------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| **Glossary / term base**           | global defaults + per-school overrides | subjects, grades, statuses, common phrases    | the "by-term" + fine-tuning surface; hot terms can sit in memory      |
+| **Shared auto-cache** _(optional)_ | global                                 | generic, non-sensitive strings                | the global hit-rate win, gated to avoid co-mingling sensitive content |
+| **Per-school cache** _(today)_     | `schoolId`                             | free-form content (announcements) + long tail | isolation; names via transliterate + dedupe                           |
+
+### Upgrade paths
+
+- **Google Cloud Translation v3** supports custom **glossaries** (v2 — used today — does not).
+- Route the _curated tier_ through an **LLM** (with the glossary in-prompt) for context- and dialect-aware quality; keep Google for the cheap long tail.
+
+### Performance reality
+
+A cache _hit_ is one indexed lookup either way — globalizing makes _more requests hit_ (fewer slow Google calls), it doesn't speed up a hit. The real latency win is an **in-memory glossary** for hot terms (no DB roundtrip). Two gaps amplify everything: there's **no eviction/TTL** (a global cache grows unbounded), and lookups are by _exact_ `sourceText` — **normalizing** (trim/collapse whitespace) lifts the hit-rate for free.
+
+## Pros & cons
+
+### Why this approach
+
+| Benefit                   | Detail                                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| No bilingual-field sprawl | One `title` + `lang`, not `titleAr`/`titleEn` per model. One row, one write path.             |
+| Pay-once translation      | `Translation` is tenant-scoped with a `hitCount`; each unique string hits Google once.        |
+| Graceful degradation      | `getText` falls back to source; names transliterate ar→Latin offline. Never a blank UI.       |
+| Script-aware              | `detectScript` trusts the actual script, so a wrong/absent `lang` flag doesn't break display. |
+| N+1 avoidance             | `getNames` / `getLabels` de-dup and translate a whole list in parallel.                       |
+| Cross-language search     | Cached translations make search bilingual at zero API cost.                                   |
+| One cache, web + mobile   | The mobile API surfaces the same `Translation` — no duplicate pipeline.                       |
+
+### What it costs
+
+| Trade-off                   | Detail                                                                                                                                                                                  |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server-only + async         | Helpers need a `schoolId` and can't run on the client; you must resolve in `content.tsx`.                                                                                               |
+| First-view latency          | Lazy-on-read: an uncached string pays the Google round-trip the first time it's viewed.                                                                                                 |
+| Machine-translation quality | Google MT, weakest on proper nouns/names; transliteration is heuristic.                                                                                                                 |
+| Single vendor + ceiling     | One Google dependency; the free tier (~500K chars/mo) is a real cap; missing key → silent source fallback.                                                                              |
+| Unbounded cache             | `Translation` has a `lastAccessedAt` index but no eviction/TTL policy.                                                                                                                  |
+| Detection edge cases        | Mixed-script strings resolve to Arabic; short codes like `B102` resolve to English.                                                                                                     |
+| Adoption gap                | A small, tracked backlog of render surfaces still composes names without a helper — run `pnpm i18n:audit-content` for the current list; a Vitest ratchet keeps that count from growing. |
+| Schema drift                | Some models lack a `lang` column; some write paths persist the wrong flag.                                                                                                              |
+
+## Best practices
+
+1. **Stamp `lang` on every write** — `withLang(data, lang)`, or `detectScript(text)` when the locale isn't trustworthy.
+2. **Never trust a stored `lang` flag for names** — detect from script (the name helpers already do).
+3. **Read with the right helper:** fields → `getText`/`getFields`; names → `getName`/`getNames`; arbitrary labels (rooms, subjects, grades) → `getLabels`.
+4. **Always pass `schoolId`** — it scopes the cache and enforces tenant isolation.
+5. **Resolve on the server, render on the client** — translate in `content.tsx`, pass plain strings to `columns.tsx` (helpers are server-only).
+6. **Batch to avoid N+1** — `getFields` for an entity, `getNames`/`getLabels` for lists (they de-dup).
+7. **Search via `search`** — bilingual, cache-only, no API cost.
+8. **Never reintroduce bilingual fields or per-language helpers** (`titleAr`/`titleEn`, `nameEn`) — one generic field plus `lang` is the only pattern.
+9. **Mobile goes through `/api/mobile/translate`** — reuse the cache, don't bake a second pipeline.
+10. **Mind the audit ratchet** — `pnpm i18n:audit-content` lists raw-name surfaces, and a Vitest test (`src/tests/i18n/audit-untranslated.test.ts`) fails if you add one. Fix it (route through `getName`/`getNames`) and lower the baseline.
+
+## Areas of improvement
+
+- **Burn down the adoption backlog.** The gate is now wired: `findOffenders` runs as a Vitest ratchet (`src/tests/i18n/audit-untranslated.test.ts`) so a _new_ raw-name surface fails the suite. What's left is reducing the current (small) backlog to zero and lowering the baseline each time. Caveat: CI's `pnpm tests` step currently points at a missing script name — reconcile it to `pnpm test` so the ratchet enforces on every PR.
+- **Degradation observability.** Today a failing/absent API key only emits a throttled `console.error` (`reportTranslationDegraded`). Add a public signal — a getter or a `/api/health` field — so a dashboard can _see_ when `/en` is silently falling back to source.
+- **Cache lifecycle.** Add TTL/LRU eviction for `Translation` (the `lastAccessedAt` index is there but unused for cleanup), plus hit-rate observability and exact-`sourceText` normalization (trim/collapse whitespace) to lift the hit-rate for free.
+- **Pre-warm on write.** `translateFields` / `autoTranslate` exist but aren't wired into most create paths — translating at write time would remove the first-view latency hit.
+- **Name/proper-noun quality.** Add a glossary / do-not-translate list and consider human review for high-visibility names; lean on transliteration rather than MT for person names.
+- **Provider abstraction.** The `provider` column only ever stores `"google"` — abstract the client so a fallback/second provider is possible.
+- **Schema consistency.** Give every content model a `lang` column and stamp it correctly on write (e.g. admission persisting Latin names as `lang="ar"`), so detection becomes a safety net rather than the primary mechanism.
+- **Extend the mobile API** beyond `announcement`/`assignment` as more entities need on-device translation.
+
+## Claude Code config & keywords
+
+Most i18n automation targets the **static** dictionary system (hardcoded-string scanning). The DB-content pipeline has its own, narrower set — and that thinness is itself an [area of improvement](#areas-of-improvement).
+
+### Project level (`/.claude/`, in-repo)
+
+| File                            | Role (DB-content relevance)                                                                                                                                                                                                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.claude/rules/translation.md`  | The rulebook. Its **"Dynamic Content (On-Demand Translation)"** section is the authority for `getText`, `withLang`, the `lang` field, and the `Translation`.                                                                                                                               |
+| `scripts/audit-untranslated.ts` | **The** DB-content audit — finds render surfaces composing stored text (`${x.firstName} ${x.lastName}`, etc.) without a translation helper. Run `pnpm i18n:audit-content` (`--json` for the machine list). Now enforced as a Vitest ratchet (`src/tests/i18n/audit-untranslated.test.ts`). |
+| `.claude/agents/i18n.md`        | Project i18n agent (model `sonnet`) — covers both systems, including on-demand content.                                                                                                                                                                                                    |
+| `CLAUDE.md`                     | "Single-Language Storage (CRITICAL)" section + gotcha #12.                                                                                                                                                                                                                                 |
+
+The static-only tooling — `.claude/hooks/check-i18n.sh`, the `/i18n-check` skill/command, `dictionary-validator`, and `scripts/dev-i18n-sync.ts` — targets hardcoded JSX strings and `ar`/`en` key parity, **not** DB content. See [Internationalization](/docs/internationalization) for those.
+
+### User level (`~/.claude/`, personal/global)
+
+| File / keyword                             | Role                                                                                               |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `~/.claude/agents/internationalization.md` | Global i18n playbook (model `sonnet`) — includes the single-language-storage + on-demand sections. |
+| `~/.claude/rules/i18n.md`                  | Condensed global rule; covers the `lang` field, `getText`, and `Translation`.                      |
+| `lang` (keyword)                           | "RTL/LTR + translation check" — visual verification that `/en` actually shows translated content.  |
+
+## See also
+
+- [Internationalization](/docs/internationalization) — the _other_ system: static UI strings (dictionaries), routing, RTL CSS
+- [Translation](/docs/translation) — adoption tracker and per-area coverage
+- [Multi-Tenancy](/docs/multi-tenancy) — why every read here needs a `schoolId`
+- [Database](/docs/database) — the `lang` field on content models
