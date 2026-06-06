@@ -1,10 +1,10 @@
 /**
- * Live-classes feature pages — smoke load test
+ * Conference feature pages — smoke load test
  *
- * For each live-classes sub-route, verify the page loads as ADMIN without
+ * For each conference sub-route, verify the page loads as ADMIN without
  * SSE. Same pattern as `tests/e2e/attendance/feature-pages-load.spec.ts`.
  *
- * Tag: @live-classes @smoke
+ * Tag: @conference @smoke
  */
 
 import { expect, test } from "@playwright/test"
@@ -17,16 +17,16 @@ const env = getTestEnv()
 const SUBDOMAIN = "demo"
 
 const ROUTES = [
-  "/live-classes",
-  "/live-classes/schedule",
-  "/live-classes/network-test",
+  "/conference",
+  "/conference/schedule",
+  "/conference/network-test",
 ] as const
 
 async function clearAuthState(page: import("@playwright/test").Page) {
   await page.context().clearCookies()
 }
 
-test.describe("Live-classes — feature pages smoke @live-classes @smoke", () => {
+test.describe("Conference — feature pages smoke @conference @smoke", () => {
   test.beforeEach(async ({ page }) => {
     await clearAuthState(page)
     const loginPage = new SchoolLoginPage(page, SUBDOMAIN)
@@ -52,16 +52,16 @@ test.describe("Live-classes — feature pages smoke @live-classes @smoke", () =>
         return
       }
 
-      // Page reached its target route (or got redirected within /live-classes/*).
-      // For ADMIN, no /live-classes route should send them to /dashboard.
-      expect(page.url()).toMatch(/\/live-classes/)
+      // Page reached its target route (or got redirected within /conference/*).
+      // For ADMIN, no /conference route should send them to /dashboard.
+      expect(page.url()).toMatch(/\/conference/)
       await assertNoSSE(page)
     })
   }
 
   test("LC-SMK-overview-renders-empty-state-or-list", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live-classes", "en", env))
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/conference", "en", env))
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {
@@ -89,7 +89,7 @@ test.describe("Live-classes — feature pages smoke @live-classes @smoke", () =>
 
   test("LC-SMK-ar-overview-renders-rtl", async ({ page }) => {
     test.setTimeout(60_000)
-    await page.goto(buildSchoolUrl(SUBDOMAIN, "/live-classes", "ar", env))
+    await page.goto(buildSchoolUrl(SUBDOMAIN, "/conference", "ar", env))
     await page.waitForLoadState("domcontentloaded")
 
     if (page.url().includes("chrome-error://")) {
