@@ -51,6 +51,39 @@ export function isLiveKitConfigured(): boolean {
   }
 }
 
+// Env vars that gate a usable SFU (must be present for isLiveKitConfigured).
+const REQUIRED_ENV = [
+  "LIVEKIT_HOST",
+  "LIVEKIT_WS_URL",
+  "LIVEKIT_API_KEY",
+  "LIVEKIT_API_SECRET",
+  "LIVEKIT_RECORDING_BUCKET",
+] as const
+
+// S3 egress creds — optional (the SFU can use its host IAM role instead), but
+// when absent, recording falls back to instance-role auth. Surfaced as advisory.
+const RECORDING_ENV = ["LIVEKIT_S3_ACCESS_KEY", "LIVEKIT_S3_SECRET"] as const
+
+export interface LiveKitReadiness {
+  /** True when every REQUIRED_ENV var is set (== isLiveKitConfigured). */
+  configured: boolean
+  /** Required vars still missing — the actionable provisioning gap. */
+  missing: string[]
+  /** Optional S3 creds missing — recording will use host IAM role if absent. */
+  recordingMissing: string[]
+}
+
+/**
+ * Itemized readiness for ops/admin diagnostics. Unlike isLiveKitConfigured()
+ * (a bare boolean), this names exactly which env vars are unset so the network-
+ * test page can tell an admin what still needs provisioning. See RUNBOOK.md.
+ */
+export function getLiveKitReadiness(): LiveKitReadiness {
+  const missing = REQUIRED_ENV.filter((k) => !process.env[k])
+  const recordingMissing = RECORDING_ENV.filter((k) => !process.env[k])
+  return { configured: missing.length === 0, missing, recordingMissing }
+}
+
 export function getRoomServiceClient(): RoomServiceClient {
   if (roomServiceClient) return roomServiceClient
   const { host, apiKey, apiSecret } = getLiveKitConfig()

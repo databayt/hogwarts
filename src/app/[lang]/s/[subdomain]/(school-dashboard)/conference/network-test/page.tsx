@@ -4,7 +4,10 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { getLiveKitConfig, isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import {
+  getLiveKitConfig,
+  getLiveKitReadiness,
+} from "@/components/school-dashboard/conference/livekit/client"
 import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -26,11 +29,28 @@ export default async function Page({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const t = dictionary?.liveClasses
 
-  if (!isLiveKitConfigured()) {
+  const readiness = getLiveKitReadiness()
+  if (!readiness.configured) {
     return (
-      <div className="text-muted-foreground mx-auto max-w-xl p-6 text-sm">
-        {t?.errors?.providerUnavailable ??
-          "Video service is unavailable. Try again shortly."}
+      <div className="mx-auto max-w-xl space-y-3 p-6">
+        <p className="text-muted-foreground text-sm">
+          {t?.errors?.providerUnavailable ??
+            "LiveKit SFU is not yet provisioned for this deployment."}
+        </p>
+        <div className="text-sm">
+          <p className="font-medium">
+            {t?.networkTest?.missingEnv ?? "Missing configuration:"}
+          </p>
+          <ul className="text-muted-foreground mt-1 list-inside list-disc font-mono text-xs">
+            {readiness.missing.map((k) => (
+              <li key={k}>{k}</li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground mt-2 text-xs">
+            {t?.networkTest?.seeRunbook ??
+              "See conference/RUNBOOK.md for provisioning steps."}
+          </p>
+        </div>
       </div>
     )
   }

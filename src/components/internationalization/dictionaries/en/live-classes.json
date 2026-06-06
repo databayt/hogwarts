@@ -125,7 +125,9 @@
     "yes": "yes",
     "no": "no",
     "tcpFallback": "TCP fallback used",
-    "details": "Diagnostic details"
+    "details": "Diagnostic details",
+    "missingEnv": "Missing configuration:",
+    "seeRunbook": "See the provisioning runbook for setup steps."
   },
   "empty": {
     "title": "No live classes yet",
