@@ -55,7 +55,7 @@ describe("getTabsForRole", () => {
   it("tab hrefs are clean (no /s/[subdomain]) and locale-prefixed", () => {
     const tabs = getTabsForRole("TEACHER", "ar", fakeDict)
     for (const tab of tabs) {
-      expect(tab.href.startsWith("/ar/live-classes")).toBe(true)
+      expect(tab.href.startsWith("/ar/conference")).toBe(true)
       expect(tab.href).not.toContain("/s/")
     }
   })

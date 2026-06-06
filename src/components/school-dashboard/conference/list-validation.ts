@@ -48,7 +48,7 @@ export const LIVE_CLASS_STATUS_VALUES = [
   "failed",
 ] as const
 
-export type LiveClassStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
+export type ConferenceStatusValue = (typeof LIVE_CLASS_STATUS_VALUES)[number]
 
 // ---------------------------------------------------------------------------
 // Schema factory

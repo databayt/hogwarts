@@ -18,9 +18,9 @@
       `LIVEKIT_S3_ACCESS_KEY`, `LIVEKIT_S3_SECRET` (separate from
       app-side `AWS_*` creds).
 - [ ] **Meeting-3 network test** from inside Aldar school WiFi.
-      `/live-classes/network-test` is the surface — run as
+      `/conference/network-test` is the surface — run as
       `admin@kingfahad.databayt.org`. **Block on TURN/443 failure.**
-- [ ] **Docs**: `content/docs-en/live-classes.mdx` + Arabic mirror
+- [ ] **Docs**: `content/docs-en/conference.mdx` + Arabic mirror
       not yet written.
 
 ## P1 — Phase 2 (Scheduling + reminders)
@@ -29,9 +29,9 @@
       (`src/components/school-dashboard/timetable/<slot-detail>.tsx`).
       Gated by `canStartLiveClass(role) && teacherId ===
 session.user.id`. Calls `createLiveClass({ timetableId })` then
-      `router.push` to `/live-classes/${id}/room`.
+      `router.push` to `/conference/${id}/room`.
 - [ ] **Auto-start egress** on `room_started` if
-      `LiveClassSession.recordingEnabled`. Currently the webhook
+      `Conference.recordingEnabled`. Currently the webhook
       handler upserts the recording row only after the SFU sends
       `egress_started` — but nothing in our app triggers egress, so
       Phase 1 has no automatic recording start. Either (a) call
@@ -42,12 +42,12 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
 
 ## P2 — Phase 4 (Settings + ops)
 
-- [ ] **Settings UI** for `liveClassRecordingRetentionDays`,
-      `liveClassMaxDurationMinutes`, `liveClassRecordingDefault`,
-      `liveClassMaxConcurrentPerSchool`. Should live under
+- [ ] **Settings UI** for `conferenceRetentionDays`,
+      `conferenceMaxDuration`, `conferenceRecordingDefault`,
+      `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
 - [ ] **Capacity dashboard** in SaaS dashboard
-      (`/observability/live-classes`) — concurrent rooms per school,
+      (`/observability/conference`) — concurrent rooms per school,
       egress queue depth, TCP fallback rate. Wave-2 ops visibility.
 - [ ] **Kick participant UI** in `room/room-client.tsx` for HOST.
       Server action exists (`removeParticipant`) but isn't wired.
@@ -71,7 +71,7 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
 - [x] **Eligibility resolution test** — HOST vs CO_HOST vs PARTICIPANT
       vs OBSERVER resolution per role + section/guardian membership.
       (`__tests__/eligibility.test.ts`, 17 tests)
-- [x] **Playwright RBAC + smoke specs** — `tests/e2e/live-classes/`
+- [x] **Playwright RBAC + smoke specs** — `tests/e2e/conference/`
       with `feature-pages-load.spec.ts` (5 tests) and `rbac.spec.ts`
       (11 tests) covering ADMIN/TEACHER/STUDENT/GUARDIAN/STAFF/ACCOUNTANT
       allowed-vs-blocked routes + ar RTL rendering. 103 test rows

@@ -31,7 +31,7 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { deleteLiveClass, getLiveClasses } from "./actions"
+import { deleteLiveClass, getLiveClasses } from "./list-actions"
 import type { LiveClassRow } from "./columns"
 import { getLiveClassColumns } from "./columns"
 import { LiveClassForm } from "./form"

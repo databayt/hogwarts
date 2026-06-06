@@ -6,9 +6,9 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { joinLiveClass } from "@/components/school-dashboard/live-classes/actions/tokens"
-import { resolveLiveClassError } from "@/components/school-dashboard/live-classes/error-map"
-import { RoomClient } from "@/components/school-dashboard/live-classes/room/room-client"
+import { joinLiveClass } from "@/components/school-dashboard/conference/actions/tokens"
+import { resolveLiveClassError } from "@/components/school-dashboard/conference/error-map"
+import { RoomClient } from "@/components/school-dashboard/conference/room"
 
 // Page-data OOM safety: auth-gated room, render on demand.
 export const dynamic = "force-dynamic"
@@ -35,7 +35,7 @@ export default async function Page({ params }: Props) {
         <p className="text-destructive text-base font-medium">
           {resolveLiveClassError(dictionary, code)}
         </p>
-        <a className="text-sm underline" href={`/${lang}/live-classes/${id}`}>
+        <a className="text-sm underline" href={`/${lang}/conference/${id}`}>
           {t?.actions?.back ?? "Back"}
         </a>
       </div>

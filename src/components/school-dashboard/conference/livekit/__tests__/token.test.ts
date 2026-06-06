@@ -7,7 +7,7 @@
 // a Uint8Array whose prototype isn't Node's global one. Forcing this
 // suite to the node environment sidesteps the realm mismatch.
 
-import type { LiveClassParticipantRole } from "@prisma/client"
+import type { ConferenceParticipantRole } from "@prisma/client"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { roomNameFor } from "../room-naming"
@@ -58,7 +58,7 @@ describe("issueAccessToken", () => {
     }
   })
 
-  async function issue(role: LiveClassParticipantRole, ttlSec?: number) {
+  async function issue(role: ConferenceParticipantRole, ttlSec?: number) {
     return issueAccessToken({
       schoolId: SCHOOL_ID,
       sessionId: SESSION_ID,

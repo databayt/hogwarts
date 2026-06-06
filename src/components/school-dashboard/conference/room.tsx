@@ -12,8 +12,8 @@ import {
 
 import "@livekit/components-styles"
 
-import { refreshLiveClassToken } from "@/components/school-dashboard/live-classes/actions/tokens"
-import type { RoomJoinTicket } from "@/components/school-dashboard/live-classes/types"
+import { refreshLiveClassToken } from "@/components/school-dashboard/conference/actions/tokens"
+import type { RoomJoinTicket } from "@/components/school-dashboard/conference/types"
 
 interface Props {
   initialTicket: RoomJoinTicket
@@ -63,7 +63,7 @@ export function RoomClient({
         <button
           type="button"
           className="text-sm underline"
-          onClick={() => router.push(`/${locale}/live-classes/${sessionId}`)}
+          onClick={() => router.push(`/${locale}/conference/${sessionId}`)}
         >
           {labels.leaving}
         </button>
@@ -80,7 +80,7 @@ export function RoomClient({
         audio={ticket.role !== "OBSERVER"}
         video={ticket.role !== "OBSERVER"}
         onDisconnected={() => {
-          router.push(`/${locale}/live-classes/${sessionId}`)
+          router.push(`/${locale}/conference/${sessionId}`)
         }}
         className="h-full w-full"
       >

@@ -16,16 +16,16 @@ export const liveClassStatusEnum = z.enum([
   "cancelled",
   "failed",
 ])
-export type LiveClassStatusInput = z.infer<typeof liveClassStatusEnum>
+export type ConferenceStatusInput = z.infer<typeof liveClassStatusEnum>
 
-export const liveClassParticipantRoleEnum = z.enum([
+export const conferenceParticipantRoleEnum = z.enum([
   "HOST",
   "CO_HOST",
   "PARTICIPANT",
   "OBSERVER",
 ])
-export type LiveClassParticipantRoleInput = z.infer<
-  typeof liveClassParticipantRoleEnum
+export type ConferenceParticipantRoleInput = z.infer<
+  typeof conferenceParticipantRoleEnum
 >
 
 // ============================================================================
@@ -130,10 +130,10 @@ export const cancelSchema = z.object({
 export type CancelInput = z.infer<typeof cancelSchema>
 
 export const liveClassSettingsSchema = z.object({
-  liveClassRecordingRetentionDays: z.number().int().min(1).max(3650),
-  liveClassMaxConcurrentPerSchool: z.number().int().min(1).max(500),
-  liveClassMaxDurationMinutes: z.number().int().min(15).max(MAX_DURATION_MIN),
-  liveClassRecordingDefault: z.boolean(),
+  conferenceRetentionDays: z.number().int().min(1).max(3650),
+  conferenceMaxConcurrent: z.number().int().min(1).max(500),
+  conferenceMaxDuration: z.number().int().min(15).max(MAX_DURATION_MIN),
+  conferenceRecordingDefault: z.boolean(),
 })
 export type LiveClassSettingsInput = z.infer<typeof liveClassSettingsSchema>
 

@@ -15,20 +15,20 @@ import { handleWebhookEvent } from "../webhook"
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: {
+    conference: {
       findFirst: vi.fn(),
       update: vi.fn(),
     },
-    liveClassParticipant: {
+    conferenceParticipant: {
       findFirst: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
-    liveClassRecording: {
+    conferenceRecording: {
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
-    liveClassEvent: {
+    conferenceEvent: {
       findUnique: vi.fn(),
       create: vi.fn(),
     },
@@ -39,7 +39,7 @@ const notifyClassStarted = vi.fn(async () => ({ created: 0 }))
 const notifyClassRecordingReady = vi.fn(async () => ({ created: 0 }))
 
 vi.mock(
-  "@/components/school-dashboard/live-classes/actions/notifications",
+  "@/components/school-dashboard/conference/actions/notifications",
   () => ({
     notifyClassStarted: (...a: unknown[]) => notifyClassStarted(...a),
     notifyClassRecordingReady: (...a: unknown[]) =>
@@ -71,17 +71,17 @@ beforeEach(() => {
   process.env.LIVEKIT_RECORDING_BUCKET = "aldar-recordings"
   process.env.LIVEKIT_RECORDING_REGION = "me-central-1"
 
-  vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+  vi.mocked(db.conference.findFirst).mockResolvedValue({
     id: SESSION_ID,
     recordingEnabled: true,
-    school: { liveClassRecordingRetentionDays: 90 },
+    school: { conferenceRetentionDays: 90 },
   } as never)
-  vi.mocked(db.liveClassEvent.findUnique).mockResolvedValue(null as never)
-  vi.mocked(db.liveClassEvent.create).mockResolvedValue({} as never)
-  vi.mocked(db.liveClassSession.update).mockResolvedValue({} as never)
-  vi.mocked(db.liveClassRecording.upsert).mockResolvedValue({} as never)
-  vi.mocked(db.liveClassRecording.updateMany).mockResolvedValue({} as never)
-  vi.mocked(db.liveClassParticipant.updateMany).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceEvent.findUnique).mockResolvedValue(null as never)
+  vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
+  vi.mocked(db.conference.update).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceRecording.upsert).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceRecording.updateMany).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue({} as never)
 })
 
 afterEach(() => {
@@ -104,7 +104,7 @@ describe("handleWebhookEvent — room lifecycle", () => {
   it("room_started → status=live, actualStart set, roomSid captured, notifyClassStarted fired", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(true)
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: SESSION_ID },
         data: expect.objectContaining({
@@ -120,7 +120,7 @@ describe("handleWebhookEvent — room lifecycle", () => {
   it("room_finished → status=ended, actualEnd set", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
     expect(ok).toBe(true)
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: "ended",
@@ -138,7 +138,7 @@ describe("handleWebhookEvent — room lifecycle", () => {
       })
     )
     expect(ok).toBe(true)
-    expect(db.liveClassParticipant.updateMany).toHaveBeenCalledWith(
+    expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { sessionId: SESSION_ID, userId: "u-stu-1" },
         data: expect.objectContaining({ status: "joined" }),
@@ -148,11 +148,11 @@ describe("handleWebhookEvent — room lifecycle", () => {
 
   it("participant_left → computes duration from joinedAt", async () => {
     const joinedAt = new Date(Date.now() - 60_000) // joined 60s ago
-    vi.mocked(db.liveClassParticipant.findFirst).mockResolvedValue({
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
       id: "lcp-1",
       joinedAt,
     } as never)
-    vi.mocked(db.liveClassParticipant.update).mockResolvedValue({} as never)
+    vi.mocked(db.conferenceParticipant.update).mockResolvedValue({} as never)
     const ok = await handleWebhookEvent(
       evt({
         event: "participant_left",
@@ -160,7 +160,7 @@ describe("handleWebhookEvent — room lifecycle", () => {
       })
     )
     expect(ok).toBe(true)
-    expect(db.liveClassParticipant.update).toHaveBeenCalledWith(
+    expect(db.conferenceParticipant.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: "left",
@@ -169,7 +169,7 @@ describe("handleWebhookEvent — room lifecycle", () => {
         }),
       })
     )
-    const [[call]] = vi.mocked(db.liveClassParticipant.update).mock.calls
+    const [[call]] = vi.mocked(db.conferenceParticipant.update).mock.calls
     const durationSec = (call?.data as { durationSeconds?: number })
       .durationSeconds
     expect(durationSec).toBeGreaterThanOrEqual(59)
@@ -186,7 +186,7 @@ describe("handleWebhookEvent — egress / recording", () => {
       })
     )
     expect(ok).toBe(true)
-    expect(db.liveClassRecording.upsert).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { egressId: "egr-1" },
         create: expect.objectContaining({
@@ -214,7 +214,7 @@ describe("handleWebhookEvent — egress / recording", () => {
       })
     )
     expect(ok).toBe(true)
-    const upsertArg = vi.mocked(db.liveClassRecording.upsert).mock
+    const upsertArg = vi.mocked(db.conferenceRecording.upsert).mock
       .calls[0]?.[0] as
       | { create: { s3Bucket?: string; s3Region?: string } }
       | undefined
@@ -237,7 +237,7 @@ describe("handleWebhookEvent — egress / recording", () => {
       })
     )
     expect(ok).toBe(true)
-    expect(db.liveClassRecording.updateMany).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { egressId: "egr-1" },
         data: expect.objectContaining({
@@ -262,7 +262,7 @@ describe("handleWebhookEvent — egress / recording", () => {
       })
     )
     expect(ok).toBe(true)
-    const call = vi.mocked(db.liveClassRecording.updateMany).mock.calls[0]?.[0]
+    const call = vi.mocked(db.conferenceRecording.updateMany).mock.calls[0]?.[0]
     const data = (call as { data: Record<string, unknown> }).data
     // No file → status/s3Key/expiresAt are NOT written (left processing);
     // only metadata is recorded. Prevents a "ready" row with an empty key.
@@ -277,14 +277,14 @@ describe("handleWebhookEvent — egress / recording", () => {
 
 describe("handleWebhookEvent — idempotency + safety", () => {
   it("duplicate eventId is dropped — no side effects", async () => {
-    vi.mocked(db.liveClassEvent.findUnique).mockResolvedValueOnce({
+    vi.mocked(db.conferenceEvent.findUnique).mockResolvedValueOnce({
       id: "already",
     } as never)
     const ok = await handleWebhookEvent(
       evt({ event: "room_started", id: "evt-dup" })
     )
     expect(ok).toBe(false)
-    expect(db.liveClassSession.update).not.toHaveBeenCalled()
+    expect(db.conference.update).not.toHaveBeenCalled()
     expect(notifyClassStarted).not.toHaveBeenCalled()
   })
 
@@ -296,21 +296,21 @@ describe("handleWebhookEvent — idempotency + safety", () => {
       })
     )
     expect(ok).toBe(false)
-    expect(db.liveClassSession.update).not.toHaveBeenCalled()
+    expect(db.conference.update).not.toHaveBeenCalled()
   })
 
   it("room name parses to a session that does not belong to this tenant → drops", async () => {
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValueOnce(
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce(
       null as never
     )
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(false)
-    expect(db.liveClassSession.update).not.toHaveBeenCalled()
+    expect(db.conference.update).not.toHaveBeenCalled()
   })
 
-  it("every dispatched event writes a LiveClassEvent audit row", async () => {
+  it("every dispatched event writes a ConferenceEvent audit row", async () => {
     await handleWebhookEvent(evt({ event: "room_started", id: "audit-1" }))
-    expect(db.liveClassEvent.create).toHaveBeenCalledWith(
+    expect(db.conferenceEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           schoolId: SCHOOL_ID,

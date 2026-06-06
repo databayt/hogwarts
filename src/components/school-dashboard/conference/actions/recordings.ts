@@ -9,7 +9,7 @@ import { db } from "@/lib/db"
 import {
   deleteRecordingObject,
   getRecordingPlaybackUrl,
-} from "@/lib/livekit/recording-urls"
+} from "@/components/school-dashboard/conference/livekit/recording-urls"
 
 import {
   canAccessSession,
@@ -26,7 +26,7 @@ export async function listRecordings(sessionId: string) {
   const ctx = await requireContext("view_recordings")
   if (!ctx.ok) return ctx.response
   try {
-    const session = await db.liveClassSession.findFirst({
+    const session = await db.conference.findFirst({
       where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
       select: { sectionId: true },
     })
@@ -34,7 +34,7 @@ export async function listRecordings(sessionId: string) {
     if (!(await canAccessSession(ctx, session.sectionId))) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
-    const recordings = await db.liveClassRecording.findMany({
+    const recordings = await db.conferenceRecording.findMany({
       where: {
         schoolId: ctx.schoolId,
         sessionId,
@@ -56,7 +56,7 @@ export async function getRecordingUrl(recordingId: string) {
   const ctx = await requireContext("view_recordings")
   if (!ctx.ok) return ctx.response
   try {
-    const recording = await db.liveClassRecording.findFirst({
+    const recording = await db.conferenceRecording.findFirst({
       where: {
         id: recordingId,
         schoolId: ctx.schoolId,
@@ -92,7 +92,7 @@ export async function deleteRecording(recordingId: string) {
   const ctx = await requireContext("delete_recording")
   if (!ctx.ok) return ctx.response
   try {
-    const recording = await db.liveClassRecording.findFirst({
+    const recording = await db.conferenceRecording.findFirst({
       where: {
         id: recordingId,
         schoolId: ctx.schoolId,
@@ -110,7 +110,7 @@ export async function deleteRecording(recordingId: string) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
     await deleteRecordingObject(recording)
-    await db.liveClassRecording.update({
+    await db.conferenceRecording.update({
       where: { id: recording.id },
       data: { status: "expired", deletedAt: new Date() },
     })

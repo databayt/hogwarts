@@ -32,9 +32,9 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { createLiveClass, getLiveClass, updateLiveClass } from "./actions"
+import { createLiveClass, getLiveClass, updateLiveClass } from "./list-actions"
 import { type LiveClassFormOptions } from "./queries"
-import { createLiveClassSchema, type LiveClassFormData } from "./validation"
+import { createLiveClassSchema, type LiveClassFormData } from "./list-validation"
 
 const FIELD_NAMES = [
   "title",

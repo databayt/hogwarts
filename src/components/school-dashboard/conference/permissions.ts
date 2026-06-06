@@ -15,7 +15,7 @@ import {
 import {
   ADMIN_ROLES,
   HOST_ROLES,
-} from "@/components/school-dashboard/live-classes/authorization"
+} from "@/components/school-dashboard/conference/authorization"
 
 export type LiveClassTab = {
   name: string
@@ -32,22 +32,22 @@ export function getTabsForRole(
   const tabs: LiveClassTab[] = [
     {
       name: t.upcoming ?? "Upcoming",
-      href: `/${lang}/live-classes`,
+      href: `/${lang}/conference`,
       exact: true,
     },
-    { name: t.live ?? "Live now", href: `/${lang}/live-classes?status=live` },
-    { name: t.past ?? "Past", href: `/${lang}/live-classes?status=ended` },
+    { name: t.live ?? "Live now", href: `/${lang}/conference?status=live` },
+    { name: t.past ?? "Past", href: `/${lang}/conference?status=ended` },
   ]
   if (HOST_ROLES.includes(role)) {
     tabs.push({
       name: t.schedule ?? "Schedule",
-      href: `/${lang}/live-classes/schedule`,
+      href: `/${lang}/conference/schedule`,
     })
   }
   if (ADMIN_ROLES.includes(role)) {
     tabs.push({
       name: t.networkTest ?? "Network test",
-      href: `/${lang}/live-classes/network-test`,
+      href: `/${lang}/conference/network-test`,
     })
   }
   return tabs

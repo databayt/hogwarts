@@ -3,7 +3,7 @@
 
 import "server-only"
 
-import type { LiveClassParticipantRole } from "@prisma/client"
+import type { ConferenceParticipantRole } from "@prisma/client"
 import { AccessToken, type VideoGrant } from "livekit-server-sdk"
 
 import { getLiveKitConfig } from "./client"
@@ -11,12 +11,12 @@ import { getLiveKitConfig } from "./client"
 export interface IssueTokenInput {
   /** Tenant scoping — also encoded in roomName. */
   schoolId: string
-  /** LiveClassSession.id */
+  /** Conference.id */
   sessionId: string
   /** App user id used as the LiveKit identity. Must be unique per room. */
   userId: string
   /** Participant role drives publish/subscribe/admin grants. */
-  role: LiveClassParticipantRole
+  role: ConferenceParticipantRole
   /** roomName from `roomNameFor(schoolId, sessionId)`. */
   roomName: string
   /** Display name shown in the room (e.g., "Sarah Khan"). Optional. */
@@ -28,7 +28,7 @@ export interface IssueTokenInput {
 }
 
 /**
- * Map LiveClassParticipantRole → LiveKit VideoGrant.
+ * Map ConferenceParticipantRole → LiveKit VideoGrant.
  *
  * HOST     — full control: publish, subscribe, mute others, end room.
  * CO_HOST  — co-teacher / TA: publish + subscribe.
@@ -36,7 +36,7 @@ export interface IssueTokenInput {
  * OBSERVER — parent: subscribe-only.
  */
 function grantsForRole(
-  role: LiveClassParticipantRole,
+  role: ConferenceParticipantRole,
   roomName: string
 ): VideoGrant {
   const base: VideoGrant = {

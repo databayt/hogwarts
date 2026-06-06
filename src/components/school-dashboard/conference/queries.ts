@@ -5,7 +5,7 @@
  * Read-only query builders for live classes.
  *
  * Single-Language Storage:
- * - LiveClassSession has title, description, and a `lang` field
+ * - Conference has title, description, and a `lang` field
  * - Content is stored in one language; translate on demand for display
  *
  * Multi-tenant: every where clause includes `schoolId` and `deletedAt: null`.
@@ -57,8 +57,8 @@ const liveClassListInclude = {
 export function buildLiveClassWhere(
   schoolId: string,
   filters: LiveClassListFilters = {}
-): Prisma.LiveClassSessionWhereInput {
-  const where: Prisma.LiveClassSessionWhereInput = {
+): Prisma.ConferenceWhereInput {
+  const where: Prisma.ConferenceWhereInput = {
     schoolId,
     deletedAt: null,
   }
@@ -71,7 +71,7 @@ export function buildLiveClassWhere(
   }
 
   if (filters.status) {
-    where.status = filters.status as Prisma.LiveClassSessionWhereInput["status"]
+    where.status = filters.status as Prisma.ConferenceWhereInput["status"]
   }
 
   return where
@@ -79,7 +79,7 @@ export function buildLiveClassWhere(
 
 export function buildLiveClassOrderBy(
   sortParams?: SortParam[]
-): Prisma.LiveClassSessionOrderByWithRelationInput[] {
+): Prisma.ConferenceOrderByWithRelationInput[] {
   if (sortParams && Array.isArray(sortParams) && sortParams.length > 0) {
     return sortParams.map((s) => ({
       [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
@@ -119,14 +119,14 @@ export async function getLiveClassesList(
   )
 
   const [rows, count] = await Promise.all([
-    db.liveClassSession.findMany({
+    db.conference.findMany({
       where,
       orderBy,
       skip,
       take,
       include: liveClassListInclude,
     }),
-    db.liveClassSession.count({ where }),
+    db.conference.count({ where }),
   ])
 
   return { rows, count }
@@ -186,7 +186,7 @@ export async function getLiveClassFormOptions(
  * @param id - Live class session ID
  */
 export async function getLiveClassDetail(schoolId: string, id: string) {
-  return db.liveClassSession.findFirst({
+  return db.conference.findFirst({
     where: {
       id,
       schoolId,

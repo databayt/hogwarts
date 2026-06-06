@@ -10,7 +10,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import {
   checkLiveClassPermission,
   type LiveClassAction,
-} from "@/components/school-dashboard/live-classes/authorization"
+} from "@/components/school-dashboard/conference/authorization"
 
 const SESSION_STAFF_ROLES: UserRole[] = [
   "DEVELOPER",
@@ -98,5 +98,5 @@ export async function requireContext(
  */
 export function liveClassRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""
-  return `/[lang]/s/[subdomain]/live-classes${sub}`
+  return `/[lang]/s/[subdomain]/conference${sub}`
 }

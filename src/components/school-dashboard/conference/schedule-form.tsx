@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { createLiveClass } from "@/components/school-dashboard/live-classes/actions/sessions"
-import { resolveLiveClassError } from "@/components/school-dashboard/live-classes/error-map"
+import { createLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
+import { resolveLiveClassError } from "@/components/school-dashboard/conference/error-map"
 
 interface Props {
   locale: string
@@ -69,7 +69,7 @@ export function ScheduleLiveClassForm({
             maxParticipants: form.maxParticipants,
           })
           if ("success" in result && result.success) {
-            router.push(`/${locale}/live-classes/${result.data.id}`)
+            router.push(`/${locale}/conference/${result.data.id}`)
           } else {
             setError(
               resolveLiveClassError(

@@ -8,21 +8,21 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
-import { createLiveClass } from "../actions"
+import { createLiveClass } from "../list-actions"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/lib/term-resolver", () => ({ resolveActiveTerm: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
-vi.mock("../permissions", () => ({
+vi.mock("../list-permissions", () => ({
   canManageLiveClasses: vi.fn(() => true),
   canDeleteLiveClasses: vi.fn(() => true),
 }))
 vi.mock("@/lib/db", () => ({
   db: {
     teacher: { findFirst: vi.fn() },
-    liveClassSession: { create: vi.fn() },
-    liveClassDefaultLink: { upsert: vi.fn() },
+    conference: { create: vi.fn() },
+    conferenceLink: { upsert: vi.fn() },
   },
 }))
 
@@ -53,17 +53,17 @@ beforeEach(() => {
     term: { id: "term-1" },
   } as never)
   vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t-1" } as never)
-  vi.mocked(db.liveClassSession.create).mockResolvedValue({
+  vi.mocked(db.conference.create).mockResolvedValue({
     id: "lcs-1",
   } as never)
-  vi.mocked(db.liveClassDefaultLink.upsert).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceLink.upsert).mockResolvedValue({} as never)
 })
 
 describe("createLiveClass — saveAsDefault", () => {
-  it("upserts the recurring LiveClassDefaultLink keyed by school+subject+section+term", async () => {
+  it("upserts the recurring ConferenceLink keyed by school+subject+section+term", async () => {
     const result = await createLiveClass({ ...baseInput, saveAsDefault: true })
     expect(result.success).toBe(true)
-    expect(db.liveClassDefaultLink.upsert).toHaveBeenCalledWith(
+    expect(db.conferenceLink.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           schoolId_subjectId_sectionId_termId: {
@@ -87,7 +87,7 @@ describe("createLiveClass — saveAsDefault", () => {
   it("does NOT persist a default link when saveAsDefault is false", async () => {
     const result = await createLiveClass({ ...baseInput, saveAsDefault: false })
     expect(result.success).toBe(true)
-    expect(db.liveClassDefaultLink.upsert).not.toHaveBeenCalled()
+    expect(db.conferenceLink.upsert).not.toHaveBeenCalled()
   })
 
   it("does NOT persist a default link when subject or section is missing", async () => {
@@ -97,15 +97,15 @@ describe("createLiveClass — saveAsDefault", () => {
       saveAsDefault: true,
     })
     expect(result.success).toBe(true)
-    expect(db.liveClassDefaultLink.upsert).not.toHaveBeenCalled()
+    expect(db.conferenceLink.upsert).not.toHaveBeenCalled()
   })
 
   it("still creates the session if the default-link upsert throws (best-effort)", async () => {
-    vi.mocked(db.liveClassDefaultLink.upsert).mockRejectedValue(
+    vi.mocked(db.conferenceLink.upsert).mockRejectedValue(
       new Error("db down")
     )
     const result = await createLiveClass({ ...baseInput, saveAsDefault: true })
     expect(result.success).toBe(true)
-    expect(db.liveClassSession.create).toHaveBeenCalled()
+    expect(db.conference.create).toHaveBeenCalled()
   })
 })

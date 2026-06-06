@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { getRecordingUrl } from "@/components/school-dashboard/live-classes/actions/recordings"
+import { getRecordingUrl } from "@/components/school-dashboard/conference/actions/recordings"
 
 interface Props {
   recordingId: string

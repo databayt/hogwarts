@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 import {
   notifyClassRecordingReady,
   notifyClassStarted,
-} from "@/components/school-dashboard/live-classes/actions/notifications"
+} from "@/components/school-dashboard/conference/actions/notifications"
 
 import { getLiveKitConfig } from "./client"
 import { parseRoomName } from "./room-naming"
@@ -54,7 +54,7 @@ function truncatePayload(event: WebhookEvent): Record<string, unknown> {
 
 /**
  * Process a verified webhook event. Routes to the right session and writes
- * a `LiveClassEvent` row for audit + idempotency. Returns `true` if the
+ * a `ConferenceEvent` row for audit + idempotency. Returns `true` if the
  * event was new, `false` if it was a duplicate (already seen by eventId).
  */
 export async function handleWebhookEvent(
@@ -67,12 +67,12 @@ export async function handleWebhookEvent(
   const { schoolId, sessionId } = parsed
 
   // Confirm the session exists + actually belongs to this school.
-  const session = await db.liveClassSession.findFirst({
+  const session = await db.conference.findFirst({
     where: { id: sessionId, schoolId },
     select: {
       id: true,
       recordingEnabled: true,
-      school: { select: { liveClassRecordingRetentionDays: true } },
+      school: { select: { conferenceRetentionDays: true } },
     },
   })
   if (!session) return false
@@ -82,13 +82,13 @@ export async function handleWebhookEvent(
   // column), so we'd re-fire non-idempotent notifications on every redelivery.
   // Drop id-less events (non-spec per the SDK type) rather than reprocess them.
   if (!event.id) return false
-  const existing = await db.liveClassEvent.findUnique({
+  const existing = await db.conferenceEvent.findUnique({
     where: { eventId: event.id },
     select: { id: true },
   })
   if (existing) return false
 
-  await db.liveClassEvent.create({
+  await db.conferenceEvent.create({
     data: {
       schoolId,
       sessionId,
@@ -101,7 +101,7 @@ export async function handleWebhookEvent(
 
   switch (event.event) {
     case "room_started":
-      await db.liveClassSession.update({
+      await db.conference.update({
         where: { id: sessionId },
         data: {
           status: "live",
@@ -114,7 +114,7 @@ export async function handleWebhookEvent(
       break
 
     case "room_finished":
-      await db.liveClassSession.update({
+      await db.conference.update({
         where: { id: sessionId },
         data: { status: "ended", actualEnd: new Date() },
       })
@@ -123,7 +123,7 @@ export async function handleWebhookEvent(
     case "participant_joined": {
       const identity = event.participant?.identity
       if (identity) {
-        await db.liveClassParticipant.updateMany({
+        await db.conferenceParticipant.updateMany({
           where: { sessionId, userId: identity },
           data: { joinedAt: new Date(), status: "joined" },
         })
@@ -134,7 +134,7 @@ export async function handleWebhookEvent(
     case "participant_left": {
       const identity = event.participant?.identity
       if (identity) {
-        const existing = await db.liveClassParticipant.findFirst({
+        const existing = await db.conferenceParticipant.findFirst({
           where: { sessionId, userId: identity },
           select: { id: true, joinedAt: true },
         })
@@ -148,7 +148,7 @@ export async function handleWebhookEvent(
                 )
               )
             : null
-          await db.liveClassParticipant.update({
+          await db.conferenceParticipant.update({
             where: { id: existing.id },
             data: { leftAt, durationSeconds, status: "left" },
           })
@@ -172,7 +172,7 @@ export async function handleWebhookEvent(
         } catch {
           // LiveKit env missing — still write the row so we don't drop the event.
         }
-        await db.liveClassRecording.upsert({
+        await db.conferenceRecording.upsert({
           where: { egressId },
           create: {
             schoolId,
@@ -198,7 +198,7 @@ export async function handleWebhookEvent(
     case "egress_ended": {
       const egressId = event.egressInfo?.egressId
       if (egressId) {
-        const retention = session.school.liveClassRecordingRetentionDays
+        const retention = session.school.conferenceRetentionDays
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + retention)
         // EgressInfo.fileResults carries the final S3 key + size in newer SDKs.
@@ -222,7 +222,7 @@ export async function handleWebhookEvent(
         // otherwise getRecordingUrl would sign a URL against an empty s3Key.
         // No file → keep prior status (processing) + record metadata only.
         const hasFile = filename.length > 0
-        await db.liveClassRecording.updateMany({
+        await db.conferenceRecording.updateMany({
           where: { egressId },
           data: {
             ...(hasFile ? { status: "ready", s3Key: filename, expiresAt } : {}),

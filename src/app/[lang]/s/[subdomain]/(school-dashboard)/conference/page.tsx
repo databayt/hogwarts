@@ -10,7 +10,7 @@ import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
-import LiveClassesContent from "@/components/school-dashboard/listings/live-classes/content"
+import LiveClassesContent from "@/components/school-dashboard/conference/content"
 
 export async function generateMetadata({
   params,
@@ -49,7 +49,7 @@ export default async function Page({ params, searchParams }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.school?.liveClasses
   const pages: PageNavItem[] = [
-    { name: d?.navAll || "All", href: `/${lang}/live-classes` },
+    { name: d?.navAll || "All", href: `/${lang}/conference` },
   ]
 
   // Announcement-pattern listing: title + nav scoped to this page only (main's

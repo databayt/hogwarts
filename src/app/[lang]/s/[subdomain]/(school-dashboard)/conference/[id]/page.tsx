@@ -6,7 +6,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { RecordingsContent } from "@/components/school-dashboard/live-classes/recordings/recordings-content"
+import { LiveClassDetailContent } from "@/components/school-dashboard/conference/detail"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -19,6 +19,7 @@ const ALLOWED_ROLES = [
   "STUDENT",
   "GUARDIAN",
   "STAFF",
+  "ACCOUNTANT",
 ]
 
 export default async function Page({ params }: Props) {
@@ -29,6 +30,6 @@ export default async function Page({ params }: Props) {
   }
   const dictionary = await getDictionary(lang)
   return (
-    <RecordingsContent sessionId={id} locale={lang} dictionary={dictionary} />
+    <LiveClassDetailContent id={id} locale={lang} dictionary={dictionary} />
   )
 }

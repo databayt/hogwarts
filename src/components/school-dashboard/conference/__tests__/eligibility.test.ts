@@ -22,11 +22,11 @@ import { joinLiveClass } from "../actions/tokens"
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: {
+    conference: {
       findFirst: vi.fn(),
       update: vi.fn(),
     },
-    liveClassParticipant: {
+    conferenceParticipant: {
       upsert: vi.fn(),
     },
     student: { findFirst: vi.fn() },
@@ -37,7 +37,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
-vi.mock("@/lib/livekit/rooms", () => ({
+vi.mock("@/components/school-dashboard/conference/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
 }))
 
@@ -68,7 +68,7 @@ beforeEach(() => {
   process.env.LIVEKIT_API_SECRET = "test-secret-must-be-long-enough-for-hs256"
   process.env.LIVEKIT_RECORDING_BUCKET = "test-bucket"
 
-  vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+  vi.mocked(db.conference.findFirst).mockResolvedValue({
     id: SESSION_ID,
     roomName: ROOM_NAME,
     sectionId: SECTION_ID,
@@ -77,7 +77,7 @@ beforeEach(() => {
     lang: "ar",
     teacher: { userId: TEACHER_USER_ID },
   } as never)
-  vi.mocked(db.liveClassParticipant.upsert).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceParticipant.upsert).mockResolvedValue({} as never)
   vi.mocked(db.user.findUnique).mockResolvedValue({
     username: "Test User",
     email: "test@x.test",
@@ -206,7 +206,7 @@ describe("joinLiveClass eligibility", () => {
   })
 
   it("session with no section + non-host caller → no eligible role", async () => {
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
       sectionId: null, // ad-hoc class with no section roster
@@ -231,7 +231,7 @@ describe("joinLiveClass eligibility", () => {
 
   it("session not found → LIVE_CLASS_NOT_FOUND", async () => {
     mockUser(TEACHER_USER_ID, "TEACHER")
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValue(null as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_FOUND")
@@ -239,7 +239,7 @@ describe("joinLiveClass eligibility", () => {
 
   it("cancelled session → LIVE_CLASS_INVALID_STATE", async () => {
     mockUser(TEACHER_USER_ID, "TEACHER")
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
       sectionId: SECTION_ID,
@@ -255,7 +255,7 @@ describe("joinLiveClass eligibility", () => {
 
   it("scheduled (not yet live) class can be joined by HOST → triggers ensureRoom + status flip", async () => {
     mockUser(TEACHER_USER_ID, "TEACHER")
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
       sectionId: SECTION_ID,
@@ -266,7 +266,7 @@ describe("joinLiveClass eligibility", () => {
     } as never)
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(true)
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "live" }),
       })
@@ -278,7 +278,7 @@ describe("joinLiveClass eligibility", () => {
     vi.mocked(db.student.findFirst).mockResolvedValue({
       id: "stu-1",
     } as never)
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       roomName: ROOM_NAME,
       sectionId: SECTION_ID,
@@ -294,7 +294,7 @@ describe("joinLiveClass eligibility", () => {
 
   it("cross-tenant: student in school B cannot join a class in school A", async () => {
     mockUser(STUDENT_USER_ID, "STUDENT", "school-B")
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue(null as never) // findFirst filters by schoolId, so school B finds nothing
+    vi.mocked(db.conference.findFirst).mockResolvedValue(null as never) // findFirst filters by schoolId, so school B finds nothing
     const result = await joinLiveClass(SESSION_ID)
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_FOUND")

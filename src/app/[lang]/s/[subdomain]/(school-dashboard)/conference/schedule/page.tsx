@@ -8,7 +8,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { ScheduleLiveClassForm } from "@/components/school-dashboard/live-classes/schedule/schedule-form"
+import { ScheduleLiveClassForm } from "@/components/school-dashboard/conference/schedule-form"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

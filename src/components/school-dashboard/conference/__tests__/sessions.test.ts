@@ -5,7 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { endRoom, ensureRoom } from "@/lib/livekit/rooms"
+import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -19,13 +19,13 @@ import {
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: {
+    conference: {
       create: vi.fn(),
       update: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
-    liveClassParticipant: {
+    conferenceParticipant: {
       upsert: vi.fn(),
     },
     school: {
@@ -48,14 +48,14 @@ vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
 // Stub LiveKit lib so we don't hit env-var or network at module init.
-vi.mock("@/lib/livekit/rooms", () => ({
+vi.mock("@/components/school-dashboard/conference/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
 }))
-vi.mock("@/lib/livekit/room-naming", async () => {
+vi.mock("@/components/school-dashboard/conference/livekit/room-naming", async () => {
   const actual = await vi.importActual<
-    typeof import("@/lib/livekit/room-naming")
-  >("@/lib/livekit/room-naming")
+    typeof import("@/components/school-dashboard/conference/livekit/room-naming")
+  >("@/components/school-dashboard/conference/livekit/room-naming")
   return actual
 })
 
@@ -135,22 +135,22 @@ const goodInput = {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(db.school.findUnique).mockResolvedValue({
-    liveClassMaxDurationMinutes: 120,
-    liveClassRecordingDefault: true,
+    conferenceMaxDuration: 120,
+    conferenceRecordingDefault: true,
     preferredLanguage: "ar",
   } as never)
   vi.mocked(db.teacher.findFirst).mockResolvedValue({
     id: TEACHER_ID,
     userId: TEACHER_USER_ID,
   } as never)
-  vi.mocked(db.liveClassSession.create).mockResolvedValue({
+  vi.mocked(db.conference.create).mockResolvedValue({
     id: SESSION_ID,
   } as never)
-  vi.mocked(db.liveClassSession.update).mockResolvedValue({
+  vi.mocked(db.conference.update).mockResolvedValue({
     id: SESSION_ID,
     roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
   } as never)
-  vi.mocked(db.liveClassParticipant.upsert).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceParticipant.upsert).mockResolvedValue({} as never)
 })
 
 describe("createLiveClass", () => {
@@ -160,8 +160,8 @@ describe("createLiveClass", () => {
     expect("success" in result && result.success).toBe(true)
     if (!("success" in result) || !result.success) return
     expect(result.data.roomName).toBe(`sch-${SCHOOL_ID}-lc-${SESSION_ID}`)
-    expect(db.liveClassSession.create).toHaveBeenCalled()
-    expect(db.liveClassParticipant.upsert).toHaveBeenCalledWith(
+    expect(db.conference.create).toHaveBeenCalled()
+    expect(db.conferenceParticipant.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ role: "HOST" }),
       })
@@ -196,8 +196,8 @@ describe("createLiveClass", () => {
   it("duration > school max → LIVE_CLASS_MAX_DURATION_EXCEEDED", async () => {
     mockAdmin()
     vi.mocked(db.school.findUnique).mockResolvedValue({
-      liveClassMaxDurationMinutes: 30,
-      liveClassRecordingDefault: true,
+      conferenceMaxDuration: 30,
+      conferenceRecordingDefault: true,
       preferredLanguage: "ar",
     } as never)
     const result = await createLiveClass(goodInput) // 60 min
@@ -227,13 +227,13 @@ describe("createLiveClass", () => {
 describe("cancelLiveClass", () => {
   it("admin cancels a scheduled class → flips to cancelled", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
     } as never)
     const result = await cancelLiveClass({ id: SESSION_ID, reason: "Sick" })
     expect("success" in result && result.success).toBe(true)
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "cancelled" }),
       })
@@ -242,7 +242,7 @@ describe("cancelLiveClass", () => {
 
   it("cannot cancel a live class → LIVE_CLASS_INVALID_STATE", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "live",
     } as never)
@@ -253,7 +253,7 @@ describe("cancelLiveClass", () => {
 
   it("not found → LIVE_CLASS_NOT_FOUND", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValue(null as never)
     const result = await cancelLiveClass({ id: "missing" })
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("LIVE_CLASS_NOT_FOUND")
@@ -270,7 +270,7 @@ describe("cancelLiveClass", () => {
 describe("startLiveClass", () => {
   it("teacher starts own scheduled class → ensures room, flips to live", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
       roomName: `sch-${SCHOOL_ID}-lc-${SESSION_ID}`,
@@ -280,7 +280,7 @@ describe("startLiveClass", () => {
     const result = await startLiveClass({ id: SESSION_ID })
     expect("success" in result && result.success).toBe(true)
     expect(ensureRoom).toHaveBeenCalled()
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "live" }),
       })
@@ -289,7 +289,7 @@ describe("startLiveClass", () => {
 
   it("teacher cannot start another teacher's class → UNAUTHORIZED", async () => {
     mockTeacher("u-other-teacher")
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
       roomName: "x",
@@ -303,7 +303,7 @@ describe("startLiveClass", () => {
 
   it("already-live class → no-op success (idempotent)", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "live",
       roomName: "x",
@@ -317,7 +317,7 @@ describe("startLiveClass", () => {
 
   it("ended class cannot be re-started → LIVE_CLASS_INVALID_STATE", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "ended",
       roomName: "x",
@@ -331,7 +331,7 @@ describe("startLiveClass", () => {
 
   it("LiveKit unavailable → LIVE_CLASS_PROVIDER_UNAVAILABLE", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "scheduled",
       roomName: "x",
@@ -349,7 +349,7 @@ describe("startLiveClass", () => {
 describe("endLiveClass", () => {
   it("teacher ends own live class → kicks room + flips to ended", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "live",
       roomName: "x",
@@ -362,7 +362,7 @@ describe("endLiveClass", () => {
 
   it("already-ended class → no-op success", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "ended",
       roomName: "x",
@@ -375,7 +375,7 @@ describe("endLiveClass", () => {
 
   it("SFU endRoom failure is swallowed (best-effort) — status still flips", async () => {
     mockTeacher()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
       status: "live",
       roomName: "x",
@@ -384,7 +384,7 @@ describe("endLiveClass", () => {
     vi.mocked(endRoom).mockRejectedValueOnce(new Error("404"))
     const result = await endLiveClass({ id: SESSION_ID })
     expect("success" in result && result.success).toBe(true)
-    expect(db.liveClassSession.update).toHaveBeenCalledWith(
+    expect(db.conference.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "ended" }),
       })
@@ -395,10 +395,10 @@ describe("endLiveClass", () => {
 describe("listLiveClasses", () => {
   it("admin lists all sessions in school", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
     const result = await listLiveClasses()
     expect("success" in result && result.success).toBe(true)
-    expect(db.liveClassSession.findMany).toHaveBeenCalledWith(
+    expect(db.conference.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ schoolId: SCHOOL_ID }),
       })
@@ -410,9 +410,9 @@ describe("listLiveClasses", () => {
     vi.mocked(db.teacher.findFirst).mockResolvedValue({
       id: TEACHER_ID,
     } as never)
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
     await listLiveClasses()
-    expect(db.liveClassSession.findMany).toHaveBeenCalledWith(
+    expect(db.conference.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_ID,
@@ -427,9 +427,9 @@ describe("listLiveClasses", () => {
     vi.mocked(db.student.findFirst).mockResolvedValue({
       sectionId: "sec-1",
     } as never)
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
     await listLiveClasses()
-    expect(db.liveClassSession.findMany).toHaveBeenCalledWith(
+    expect(db.conference.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_ID,
@@ -455,11 +455,11 @@ describe("listLiveClasses", () => {
 describe("getLiveClass (tenant-leak guard)", () => {
   it("scopes findFirst by resolved schoolId", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
     } as never)
     await getLiveClass(SESSION_ID)
-    expect(db.liveClassSession.findFirst).toHaveBeenCalledWith(
+    expect(db.conference.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           id: SESSION_ID,
@@ -472,11 +472,11 @@ describe("getLiveClass (tenant-leak guard)", () => {
 
   it("student gets schoolId from join_as_participant when not staff", async () => {
     mockStudent()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       id: SESSION_ID,
     } as never)
     await getLiveClass(SESSION_ID)
-    expect(db.liveClassSession.findFirst).toHaveBeenCalledWith(
+    expect(db.conference.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_ID,
@@ -493,6 +493,6 @@ describe("getLiveClass (tenant-leak guard)", () => {
       expect(["UNAUTHORIZED", "NOT_AUTHENTICATED", "MISSING_SCHOOL"]).toContain(
         result.error
       )
-    expect(db.liveClassSession.findFirst).not.toHaveBeenCalled()
+    expect(db.conference.findFirst).not.toHaveBeenCalled()
   })
 })

@@ -15,12 +15,12 @@ import {
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassRecording: {
+    conferenceRecording: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
     },
-    liveClassSession: {
+    conference: {
       findFirst: vi.fn(),
     },
     student: {
@@ -36,7 +36,7 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
-vi.mock("@/lib/livekit/recording-urls", () => ({
+vi.mock("@/components/school-dashboard/conference/livekit/recording-urls", () => ({
   getRecordingPlaybackUrl: vi.fn(async () => "https://signed.example/play.mp4"),
   deleteRecordingObject: vi.fn(async () => true),
 }))
@@ -74,12 +74,12 @@ beforeEach(() => {
 describe("listRecordings", () => {
   it("admin lists recordings — scoped to schoolId + sessionId + not soft-deleted", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       sectionId: "sec-1",
     } as never)
-    vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conferenceRecording.findMany).mockResolvedValue([] as never)
     await listRecordings("lcs-1")
-    expect(db.liveClassRecording.findMany).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_ID,
@@ -92,18 +92,18 @@ describe("listRecordings", () => {
 
   it("enrolled student can list (section matches)", async () => {
     mockStudent()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       sectionId: "sec-1",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
-    vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conferenceRecording.findMany).mockResolvedValue([] as never)
     const result = await listRecordings("lcs-1")
     expect("success" in result && result.success).toBe(true)
   })
 
   it("student NOT enrolled in the section is DENIED (P0 cross-section leak)", async () => {
     mockStudent()
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       sectionId: "other-section",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue(null as never) // not enrolled
@@ -111,14 +111,14 @@ describe("listRecordings", () => {
     expect("success" in result && result.success).toBe(false)
     if ("error" in result) expect(result.error).toBe("UNAUTHORIZED")
     // Must short-circuit before reading any recordings.
-    expect(db.liveClassRecording.findMany).not.toHaveBeenCalled()
+    expect(db.conferenceRecording.findMany).not.toHaveBeenCalled()
   })
 })
 
 describe("getRecordingUrl", () => {
   it("returns short-lived signed URL when recording is ready", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue({
+    vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue({
       s3Bucket: "b",
       s3Key: "k",
       s3Region: "me-central-1",
@@ -130,7 +130,7 @@ describe("getRecordingUrl", () => {
     if ("success" in result && result.success) {
       expect(result.data.url).toMatch(/^https:\/\//)
     }
-    expect(db.liveClassRecording.findFirst).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           id: "rec-1",
@@ -144,7 +144,7 @@ describe("getRecordingUrl", () => {
 
   it("recording not found / not ready → LIVE_CLASS_RECORDING_NOT_FOUND", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue(null as never)
     const result = await getRecordingUrl("missing")
     expect("success" in result && result.success).toBe(false)
     if ("error" in result)
@@ -153,7 +153,7 @@ describe("getRecordingUrl", () => {
 
   it("student NOT enrolled in the recording's section is DENIED (P0)", async () => {
     mockStudent()
-    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue({
+    vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue({
       s3Bucket: "b",
       s3Key: "k",
       s3Region: "me-central-1",
@@ -171,17 +171,17 @@ describe("getRecordingUrl", () => {
 describe("deleteRecording", () => {
   it("admin deletes — calls S3 delete, sets deletedAt, flips status=expired", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue({
+    vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue({
       id: "rec-1",
       sessionId: "lcs-1",
       s3Bucket: "b",
       s3Key: "k",
       s3Region: "me-central-1",
     } as never)
-    vi.mocked(db.liveClassRecording.update).mockResolvedValue({} as never)
+    vi.mocked(db.conferenceRecording.update).mockResolvedValue({} as never)
     const result = await deleteRecording("rec-1")
     expect("success" in result && result.success).toBe(true)
-    expect(db.liveClassRecording.update).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: "expired",
@@ -208,7 +208,7 @@ describe("deleteRecording", () => {
 
   it("not found → LIVE_CLASS_RECORDING_NOT_FOUND", async () => {
     mockAdmin()
-    vi.mocked(db.liveClassRecording.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue(null as never)
     const result = await deleteRecording("nope")
     expect("success" in result && result.success).toBe(false)
     if ("error" in result)

@@ -8,7 +8,7 @@ import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getLiveClass } from "@/components/school-dashboard/live-classes/actions/sessions"
+import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
 
 interface Props {
   id: string
@@ -102,14 +102,14 @@ export async function LiveClassDetailContent({
       <div className="flex gap-2">
         {canJoin && (
           <Button asChild>
-            <Link href={`/${locale}/live-classes/${session.id}/room`}>
+            <Link href={`/${locale}/conference/${session.id}/room`}>
               {t?.actions?.join ?? "Join"}
             </Link>
           </Button>
         )}
         {session.status === "ended" && (
           <Button asChild variant="outline">
-            <Link href={`/${locale}/live-classes/${session.id}/recordings`}>
+            <Link href={`/${locale}/conference/${session.id}/recordings`}>
               {t?.actions?.viewRecordings ?? "View recordings"}
             </Link>
           </Button>

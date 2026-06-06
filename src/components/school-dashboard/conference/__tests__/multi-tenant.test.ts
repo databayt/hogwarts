@@ -21,16 +21,16 @@ import {
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: {
+    conference: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
     },
-    liveClassRecording: {
+    conferenceRecording: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
     },
-    liveClassParticipant: {
+    conferenceParticipant: {
       upsert: vi.fn(),
     },
     student: { findFirst: vi.fn() },
@@ -41,7 +41,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
-vi.mock("@/lib/livekit/rooms", () => ({
+vi.mock("@/components/school-dashboard/conference/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
 }))
@@ -72,9 +72,9 @@ beforeEach(() => {
 describe("Live-classes — multi-tenant isolation", () => {
   it("listLiveClasses scopes findMany by schoolId from tenant context", async () => {
     mockAdmin(SCHOOL_A)
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
     await listLiveClasses()
-    expect(db.liveClassSession.findMany).toHaveBeenCalledWith(
+    expect(db.conference.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ schoolId: SCHOOL_A }),
       })
@@ -83,9 +83,9 @@ describe("Live-classes — multi-tenant isolation", () => {
 
   it("getLiveClass scopes findFirst by schoolId — school B admin cannot fetch school A's class", async () => {
     mockAdmin(SCHOOL_B)
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValue(null as never)
     const result = await getLiveClass("lcs-from-school-A")
-    expect(db.liveClassSession.findFirst).toHaveBeenCalledWith(
+    expect(db.conference.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           id: "lcs-from-school-A",
@@ -99,9 +99,9 @@ describe("Live-classes — multi-tenant isolation", () => {
 
   it("cancelLiveClass enforces schoolId on findFirst — school B cannot cancel school A's class", async () => {
     mockAdmin(SCHOOL_B)
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.conference.findFirst).mockResolvedValue(null as never)
     const result = await cancelLiveClass({ id: "lcs-from-school-A" })
-    expect(db.liveClassSession.findFirst).toHaveBeenCalledWith(
+    expect(db.conference.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           id: "lcs-from-school-A",
@@ -116,12 +116,12 @@ describe("Live-classes — multi-tenant isolation", () => {
 
   it("listRecordings scopes findMany by schoolId + sessionId", async () => {
     mockAdmin(SCHOOL_A)
-    vi.mocked(db.liveClassSession.findFirst).mockResolvedValue({
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
       sectionId: "sec-1",
     } as never)
-    vi.mocked(db.liveClassRecording.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.conferenceRecording.findMany).mockResolvedValue([] as never)
     await listRecordings("lcs-1")
-    expect(db.liveClassRecording.findMany).toHaveBeenCalledWith(
+    expect(db.conferenceRecording.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_A,
@@ -145,6 +145,6 @@ describe("Live-classes — multi-tenant isolation", () => {
     expect("success" in result && result.success).toBe(false)
     if ("error" in result)
       expect(["MISSING_SCHOOL", "UNAUTHORIZED"]).toContain(result.error)
-    expect(db.liveClassSession.findMany).not.toHaveBeenCalled()
+    expect(db.conference.findMany).not.toHaveBeenCalled()
   })
 })

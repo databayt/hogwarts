@@ -25,7 +25,7 @@ export function getTabsForRole(
 ): PageNavItem[] {
   if (!role) return []
 
-  return [{ name: d?.navAll || "All", href: `/${lang}/live-classes` }]
+  return [{ name: d?.navAll || "All", href: `/${lang}/conference` }]
 }
 
 /**

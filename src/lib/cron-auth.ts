@@ -44,7 +44,7 @@ export function verifyCronSecret(request: Request): boolean {
  * Mirrors the hardened pattern in `process-whatsapp-notifications/route.ts`.
  * Fails closed in production if `CRON_SECRET` is unset; allows requests in
  * dev so localhost cron testing works without env vars. Used by the cron
- * routes restored with the compliance/live-classes bundle.
+ * routes restored with the compliance/conference bundle.
  *
  * `timingSafeEqual` needs equal-length buffers — length mismatch short-circuits.
  */

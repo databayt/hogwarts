@@ -4,7 +4,7 @@
 import { typography } from "@/lib/typography"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { listRecordings } from "@/components/school-dashboard/live-classes/actions/recordings"
+import { listRecordings } from "@/components/school-dashboard/conference/actions/recordings"
 
 import { RecordingPlayer } from "./recording-player"
 

@@ -6,8 +6,8 @@ import { revalidatePath } from "next/cache"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { roomNameFor } from "@/lib/livekit/room-naming"
-import { endRoom, ensureRoom } from "@/lib/livekit/rooms"
+import { roomNameFor } from "@/components/school-dashboard/conference/livekit/room-naming"
+import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import {
   cancelSchema,
   idOnlySchema,
@@ -15,7 +15,7 @@ import {
   type CancelInput,
   type IdOnly,
   type LiveClassServerInput,
-} from "@/components/school-dashboard/live-classes/validation"
+} from "@/components/school-dashboard/conference/validation"
 
 import { liveClassRevalidatePath, requireContext } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
@@ -68,8 +68,8 @@ async function createLiveClassWithCtx(
     const school = await db.school.findUnique({
       where: { id: ctx.schoolId },
       select: {
-        liveClassMaxDurationMinutes: true,
-        liveClassRecordingDefault: true,
+        conferenceMaxDuration: true,
+        conferenceRecordingDefault: true,
         preferredLanguage: true,
       },
     })
@@ -79,7 +79,7 @@ async function createLiveClassWithCtx(
       (new Date(data.scheduledEnd).getTime() -
         new Date(data.scheduledStart).getTime()) /
       60_000
-    if (durationMin > school.liveClassMaxDurationMinutes) {
+    if (durationMin > school.conferenceMaxDuration) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_DURATION_EXCEEDED)
     }
 
@@ -92,7 +92,7 @@ async function createLiveClassWithCtx(
 
     // Two-step create so we can write the final roomName containing the cuid.
     const placeholder = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const created = await db.liveClassSession.create({
+    const created = await db.conference.create({
       data: {
         schoolId: ctx.schoolId,
         teacherId: teacher.id,
@@ -105,13 +105,13 @@ async function createLiveClassWithCtx(
         scheduledStart: new Date(data.scheduledStart),
         scheduledEnd: new Date(data.scheduledEnd),
         recordingEnabled:
-          data.recordingEnabled ?? school.liveClassRecordingDefault,
+          data.recordingEnabled ?? school.conferenceRecordingDefault,
         maxParticipants: data.maxParticipants ?? 50,
         roomName: placeholder,
       },
     })
     const finalRoomName = roomNameFor(ctx.schoolId, created.id)
-    const session = await db.liveClassSession.update({
+    const session = await db.conference.update({
       where: { id: created.id },
       data: { roomName: finalRoomName },
     })
@@ -119,7 +119,7 @@ async function createLiveClassWithCtx(
     // Auto-invite the teacher as HOST. Students/observers are resolved
     // lazily on join via the section roster, so we don't pre-fan-out.
     if (teacher.userId) {
-      await db.liveClassParticipant.upsert({
+      await db.conferenceParticipant.upsert({
         where: {
           sessionId_userId: { sessionId: session.id, userId: teacher.userId },
         },
@@ -155,7 +155,7 @@ export async function cancelLiveClass(input: CancelInput) {
   }
 
   try {
-    const session = await db.liveClassSession.findFirst({
+    const session = await db.conference.findFirst({
       where: {
         id: parsed.data.id,
         schoolId: ctx.schoolId,
@@ -168,7 +168,7 @@ export async function cancelLiveClass(input: CancelInput) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
 
-    await db.liveClassSession.update({
+    await db.conference.update({
       where: { id: session.id },
       data: { status: "cancelled" },
     })
@@ -194,7 +194,7 @@ export async function startLiveClass(input: IdOnly) {
   if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
   try {
-    const session = await db.liveClassSession.findFirst({
+    const session = await db.conference.findFirst({
       where: { id: parsed.data.id, schoolId: ctx.schoolId, deletedAt: null },
       select: {
         id: true,
@@ -227,7 +227,7 @@ export async function startLiveClass(input: IdOnly) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
     }
 
-    await db.liveClassSession.update({
+    await db.conference.update({
       where: { id: session.id },
       data: { status: "live", actualStart: new Date() },
     })
@@ -252,7 +252,7 @@ export async function endLiveClass(input: IdOnly) {
   if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
   try {
-    const session = await db.liveClassSession.findFirst({
+    const session = await db.conference.findFirst({
       where: { id: parsed.data.id, schoolId: ctx.schoolId, deletedAt: null },
       select: {
         id: true,
@@ -274,7 +274,7 @@ export async function endLiveClass(input: IdOnly) {
     } catch {
       // best-effort — the room may have already auto-closed
     }
-    await db.liveClassSession.update({
+    await db.conference.update({
       where: { id: session.id },
       data: { status: "ended", actualEnd: new Date() },
     })
@@ -314,7 +314,7 @@ export async function listLiveClasses(filter?: {
   }
 
   try {
-    const sessions = await db.liveClassSession.findMany({
+    const sessions = await db.conference.findMany({
       where: {
         schoolId: ctx.schoolId,
         deletedAt: null,
@@ -343,7 +343,7 @@ async function listForTeacher(ctx: Ctx, filter?: { status?: string[] }) {
     select: { id: true },
   })
   if (!teacher) return { success: true as const, data: [] }
-  const sessions = await db.liveClassSession.findMany({
+  const sessions = await db.conference.findMany({
     where: {
       schoolId: ctx.schoolId,
       teacherId: teacher.id,
@@ -380,7 +380,7 @@ async function listForStudent(ctx: Ctx, filter?: { status?: string[] }) {
     select: { sectionId: true },
   })
   if (!student?.sectionId) return { success: true as const, data: [] }
-  const sessions = await db.liveClassSession.findMany({
+  const sessions = await db.conference.findMany({
     where: {
       schoolId: ctx.schoolId,
       sectionId: student.sectionId,
@@ -426,7 +426,7 @@ async function listForGuardian(ctx: Ctx, filter?: { status?: string[] }) {
     .map((sg) => sg.student.sectionId)
     .filter((id): id is string => Boolean(id))
   if (sectionIds.length === 0) return { success: true as const, data: [] }
-  const sessions = await db.liveClassSession.findMany({
+  const sessions = await db.conference.findMany({
     where: {
       schoolId: ctx.schoolId,
       sectionId: { in: sectionIds },
@@ -483,7 +483,7 @@ export async function getLiveClass(id: string) {
   }
 
   try {
-    const session = await db.liveClassSession.findFirst({
+    const session = await db.conference.findFirst({
       where: { id, schoolId, deletedAt: null },
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true } },

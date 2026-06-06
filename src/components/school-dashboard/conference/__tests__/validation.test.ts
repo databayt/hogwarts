@@ -71,30 +71,30 @@ describe("liveClassSettingsSchema", () => {
   it("accepts in-range values", () => {
     expect(
       liveClassSettingsSchema.safeParse({
-        liveClassRecordingRetentionDays: 90,
-        liveClassMaxConcurrentPerSchool: 50,
-        liveClassMaxDurationMinutes: 120,
-        liveClassRecordingDefault: true,
+        conferenceRetentionDays: 90,
+        conferenceMaxConcurrent: 50,
+        conferenceMaxDuration: 120,
+        conferenceRecordingDefault: true,
       }).success
     ).toBe(true)
   })
   it("rejects retention > 10 years", () => {
     expect(
       liveClassSettingsSchema.safeParse({
-        liveClassRecordingRetentionDays: 9999,
-        liveClassMaxConcurrentPerSchool: 50,
-        liveClassMaxDurationMinutes: 120,
-        liveClassRecordingDefault: true,
+        conferenceRetentionDays: 9999,
+        conferenceMaxConcurrent: 50,
+        conferenceMaxDuration: 120,
+        conferenceRecordingDefault: true,
       }).success
     ).toBe(false)
   })
   it("rejects max-duration > 240min", () => {
     expect(
       liveClassSettingsSchema.safeParse({
-        liveClassRecordingRetentionDays: 90,
-        liveClassMaxConcurrentPerSchool: 50,
-        liveClassMaxDurationMinutes: 300,
-        liveClassRecordingDefault: true,
+        conferenceRetentionDays: 90,
+        conferenceMaxConcurrent: 50,
+        conferenceMaxDuration: 300,
+        conferenceRecordingDefault: true,
       }).success
     ).toBe(false)
   })

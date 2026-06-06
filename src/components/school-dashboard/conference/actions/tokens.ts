@@ -3,15 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
-import type { LiveClassParticipantRole, UserRole } from "@prisma/client"
+import type { ConferenceParticipantRole, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { getLiveKitConfig } from "@/lib/livekit/client"
-import { ensureRoom } from "@/lib/livekit/rooms"
-import { issueAccessToken } from "@/lib/livekit/token"
+import { getLiveKitConfig } from "@/components/school-dashboard/conference/livekit/client"
+import { ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
+import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { RoomJoinTicket } from "@/components/school-dashboard/live-classes/types"
+import type { RoomJoinTicket } from "@/components/school-dashboard/conference/types"
 
 /**
  * Decide a user's role within a given session based on their UserRole and
@@ -24,7 +24,7 @@ async function resolveParticipantRole(
   sessionId: string,
   sessionTeacherUserId: string | null,
   sessionSectionId: string | null
-): Promise<LiveClassParticipantRole | null> {
+): Promise<ConferenceParticipantRole | null> {
   if (userRole === "DEVELOPER") return "HOST"
   if (userRole === "ADMIN") return "CO_HOST"
   if (userRole === "TEACHER") {
@@ -73,7 +73,7 @@ export async function joinLiveClass(
   const { schoolId } = await getTenantContext()
   if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-  const liveClass = await db.liveClassSession.findFirst({
+  const liveClass = await db.conference.findFirst({
     where: { id: sessionId, schoolId, deletedAt: null },
     select: {
       id: true,
@@ -112,7 +112,7 @@ export async function joinLiveClass(
         roomName: liveClass.roomName,
         maxParticipants: liveClass.maxParticipants,
       })
-      await db.liveClassSession.update({
+      await db.conference.update({
         where: { id: sessionId },
         data: { status: "live", actualStart: new Date() },
       })
@@ -122,7 +122,7 @@ export async function joinLiveClass(
   }
 
   // Upsert participant row + token timestamp.
-  await db.liveClassParticipant.upsert({
+  await db.conferenceParticipant.upsert({
     where: { sessionId_userId: { sessionId, userId } },
     create: {
       schoolId,

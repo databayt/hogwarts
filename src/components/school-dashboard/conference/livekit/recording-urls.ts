@@ -5,7 +5,7 @@ import "server-only"
 
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import type { LiveClassRecording } from "@prisma/client"
+import type { ConferenceRecording } from "@prisma/client"
 
 let s3: S3Client | null = null
 
@@ -29,7 +29,7 @@ function getS3Client(region: string): S3Client {
  */
 export async function getRecordingPlaybackUrl(
   recording: Pick<
-    LiveClassRecording,
+    ConferenceRecording,
     "s3Bucket" | "s3Key" | "s3Region" | "mimeType"
   >,
   ttlSec = 300
@@ -52,7 +52,7 @@ export async function getRecordingPlaybackUrl(
  * Returns true if deleted, false if the object was already gone.
  */
 export async function deleteRecordingObject(
-  recording: Pick<LiveClassRecording, "s3Bucket" | "s3Key" | "s3Region">
+  recording: Pick<ConferenceRecording, "s3Bucket" | "s3Key" | "s3Region">
 ): Promise<boolean> {
   const { DeleteObjectCommand } = await import("@aws-sdk/client-s3")
   const client = getS3Client(recording.s3Region)

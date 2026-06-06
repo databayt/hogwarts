@@ -19,14 +19,14 @@ import { detectLanguage, prepareContentData } from "@/components/translation/uti
 import {
   canDeleteLiveClasses,
   canManageLiveClasses,
-} from "./permissions"
+} from "./list-permissions"
 import { getLiveClassDetail, getLiveClassesList } from "./queries"
 import {
   liveClassSchema,
   updateLiveClassSchema,
   type LiveClassFormData,
   type UpdateLiveClassData,
-} from "./validation"
+} from "./list-validation"
 
 // ============================================================================
 // Helpers
@@ -247,7 +247,7 @@ export async function createLiveClass(
       detectLanguage(d.title)
     )
 
-    const created = await db.liveClassSession.create({
+    const created = await db.conference.create({
       data: {
         schoolId,
         teacherId: d.teacherId,
@@ -277,7 +277,7 @@ export async function createLiveClass(
       try {
         const { term } = await resolveActiveTerm(schoolId)
         if (term) {
-          await db.liveClassDefaultLink.upsert({
+          await db.conferenceLink.upsert({
             where: {
               schoolId_subjectId_sectionId_termId: {
                 schoolId,
@@ -307,7 +307,7 @@ export async function createLiveClass(
       }
     }
 
-    revalidatePath("/live-classes")
+    revalidatePath("/conference")
     revalidatePath("/timetable")
     return { success: true, data: { id: created.id } }
   } catch (error) {
@@ -369,7 +369,7 @@ export async function updateLiveClass(
     const needsStart = d.startDate !== undefined || d.startTime !== undefined
     const needsEnd = d.endDate !== undefined || d.endTime !== undefined
     if (needsStart || needsEnd) {
-      const existing = await db.liveClassSession.findFirst({
+      const existing = await db.conference.findFirst({
         where: { id: d.id, schoolId, deletedAt: null },
         select: { scheduledStart: true, scheduledEnd: true },
       })
@@ -390,14 +390,14 @@ export async function updateLiveClass(
     }
 
     // Tenant-safe scoped write: updateMany with {id, schoolId}.
-    const result = await db.liveClassSession.updateMany({
+    const result = await db.conference.updateMany({
       where: { id: d.id, schoolId, deletedAt: null },
       data: updateData,
     })
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    revalidatePath("/live-classes")
+    revalidatePath("/conference")
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateLiveClass]", error)
@@ -420,14 +420,14 @@ export async function deleteLiveClass(params: {
     }
 
     // Soft delete, tenant-scoped via updateMany on {id, schoolId}.
-    const result = await db.liveClassSession.updateMany({
+    const result = await db.conference.updateMany({
       where: { id: params.id, schoolId, deletedAt: null },
       data: { deletedAt: new Date() },
     })
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    revalidatePath("/live-classes")
+    revalidatePath("/conference")
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteLiveClass]", error)

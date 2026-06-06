@@ -12,10 +12,10 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
 1. Read `README.md` here for file inventory + routes
 2. Read `ISSUE.md` for the open backlog
 3. The 4 Prisma models live in `prisma/models/live-class.prisma`:
-   - `LiveClassSession` — scheduled or ad-hoc class
-   - `LiveClassParticipant` — one row per invited user (host / student / observer)
-   - `LiveClassRecording` — composite Egress recording metadata
-   - `LiveClassEvent` — webhook audit log + idempotency
+   - `Conference` — scheduled or ad-hoc class
+   - `ConferenceParticipant` — one row per invited user (host / student / observer)
+   - `ConferenceRecording` — composite Egress recording metadata
+   - `ConferenceEvent` — webhook audit log + idempotency
 4. LiveKit lib wrappers in `src/lib/livekit/`:
    - `client.ts` (singletons), `token.ts` (JWT), `rooms.ts`, `egress.ts`,
      `recording-urls.ts`, `webhook.ts`, `room-naming.ts`
@@ -69,7 +69,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
   UNAUTHORIZED rather than falling through to a global lookup.
 - **Webhook signature**: `/api/webhooks/livekit/route.ts` verifies HMAC
   via `WebhookReceiver.receive()` before touching the DB. Don't bypass.
-- **Webhook idempotency**: `LiveClassEvent.eventId` is `@unique`. The
+- **Webhook idempotency**: `ConferenceEvent.eventId` is `@unique`. The
   handler checks for an existing row before mutating — preserves
   at-least-once delivery semantics.
 - **Room name parsing**: `parseRoomName()` is the only way to recover
@@ -94,7 +94,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
 - [Notifications](../notifications/CLAUDE.md) — dispatches 5 new
   `live_class_*` notification types
 - [Timetable](../timetable/) — anchors scheduled sessions
-  (`LiveClassSession.timetableId` is optional)
+  (`Conference.timetableId` is optional)
 - [Sections](../listings/students/) — `Section.students` is the
   enrollment source for student-join eligibility
 
@@ -119,7 +119,7 @@ Required env vars (set in `.env`):
 
 1. Update `ISSUE.md` and `README.md` here
 2. Run `pnpm tsc --noEmit` to verify no regressions
-3. `pnpm vitest run src/components/school-dashboard/live-classes src/lib/livekit`
+3. `pnpm vitest run src/components/school-dashboard/conference src/lib/livekit`
    — should stay green (45 tests at last count)
 4. **Before any Prisma changes**: create a Neon branch via
    `mcp__Neon__create_branch`, test on the branch, then promote

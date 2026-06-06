@@ -4,11 +4,11 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
-import { getLiveKitConfig, isLiveKitConfigured } from "@/lib/livekit/client"
-import { issueAccessToken } from "@/lib/livekit/token"
+import { getLiveKitConfig, isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { NetworkTestClient } from "@/components/school-dashboard/live-classes/network-test/network-test-client"
+import { NetworkTestClient } from "@/components/school-dashboard/conference/network-test"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

@@ -2,24 +2,24 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type {
-  LiveClassParticipant,
-  LiveClassParticipantRole,
-  LiveClassRecording,
-  LiveClassRecordingStatus,
-  LiveClassSession,
-  LiveClassStatus,
+  ConferenceParticipant,
+  ConferenceParticipantRole,
+  ConferenceRecording,
+  ConferenceRecordingStatus,
+  Conference,
+  ConferenceStatus,
 } from "@prisma/client"
 
 export type {
-  LiveClassParticipant,
-  LiveClassParticipantRole,
-  LiveClassRecording,
-  LiveClassRecordingStatus,
-  LiveClassSession,
-  LiveClassStatus,
+  ConferenceParticipant,
+  ConferenceParticipantRole,
+  ConferenceRecording,
+  ConferenceRecordingStatus,
+  Conference,
+  ConferenceStatus,
 }
 
-export type LiveClassSessionWithRefs = LiveClassSession & {
+export type ConferenceWithRefs = Conference & {
   teacher: { id: string; firstName: string; lastName: string } | null
   section: { id: string; name: string } | null
   subject: { id: string; name: string } | null
@@ -31,6 +31,6 @@ export type RoomJoinTicket = {
   wsUrl: string
   roomName: string
   identity: string
-  role: LiveClassParticipantRole
+  role: ConferenceParticipantRole
   expiresAt: string // ISO
 }

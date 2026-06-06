@@ -124,7 +124,7 @@ model ConferenceParticipant {
   id         String     @id @default(cuid())
   schoolId   String
   sessionId  String
-  conference Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId     String
   user       User       @relation("ConferenceParticipations", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -156,7 +156,7 @@ model ConferenceRecording {
   schoolId   String
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   sessionId  String
-  conference Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   egressId String @unique // LiveKit Egress ID
   s3Bucket String
@@ -188,7 +188,7 @@ model ConferenceEvent {
   id         String     @id @default(cuid())
   schoolId   String
   sessionId  String
-  conference Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   eventType   String // 'room_started','participant_joined','egress_started',...
   actorUserId String?

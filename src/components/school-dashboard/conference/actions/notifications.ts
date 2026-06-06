@@ -8,7 +8,7 @@
 
 import { db } from "@/lib/db"
 
-type LiveClassEventKind =
+type ConferenceEventKind =
   | "scheduled"
   | "startingSoon"
   | "started"
@@ -18,7 +18,7 @@ type LiveClassEventKind =
 // Minimal lang-aware templates. Kept inline to avoid coupling to the
 // dictionary loader at module init time (so cron + webhook stay cheap).
 const TEMPLATES: Record<
-  LiveClassEventKind,
+  ConferenceEventKind,
   Record<"ar" | "en", { title: string; body: string }>
 > = {
   scheduled: {
@@ -98,7 +98,7 @@ async function loadSession(
   lang: "ar" | "en"
   userIds: string[]
 } | null> {
-  const session = await db.liveClassSession.findFirst({
+  const session = await db.conference.findFirst({
     where: { id: sessionId, schoolId },
     select: {
       id: true,
@@ -117,7 +117,7 @@ async function loadSession(
   const lang = pickLang(session.school.preferredLanguage)
   const teacherFullName =
     `${session.teacher.firstName} ${session.teacher.lastName}`.trim()
-  const routePath = `/live-classes/${session.id}`
+  const routePath = `/conference/${session.id}`
 
   const userIds = new Set<string>()
   if (session.teacher.userId) userIds.add(session.teacher.userId)
@@ -164,7 +164,7 @@ async function loadSession(
 async function dispatch(
   schoolId: string,
   sessionId: string,
-  kind: LiveClassEventKind,
+  kind: ConferenceEventKind,
   type:
     | "live_class_scheduled"
     | "live_class_starting_soon"

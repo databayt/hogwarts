@@ -9,12 +9,12 @@ and `LIVEKIT_*` env config before E2E test.
 
 | Path                            | Layout           | Roles                                                     |
 | ------------------------------- | ---------------- | --------------------------------------------------------- |
-| `/live-classes`                 | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF, ACCOUNTANT |
-| `/live-classes/[id]`            | school-dashboard | same                                                      |
-| `/live-classes/[id]/recordings` | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             |
-| `/live-classes/schedule`        | school-dashboard | DEV, ADMIN, TEACHER                                       |
-| `/live-classes/network-test`    | school-dashboard | DEV, ADMIN                                                |
-| `/live-classes/[id]/room`       | **(live-room)**  | session participants                                      |
+| `/conference`                 | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF, ACCOUNTANT |
+| `/conference/[id]`            | school-dashboard | same                                                      |
+| `/conference/[id]/recordings` | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             |
+| `/conference/schedule`        | school-dashboard | DEV, ADMIN, TEACHER                                       |
+| `/conference/network-test`    | school-dashboard | DEV, ADMIN                                                |
+| `/conference/[id]/room`       | **(live-room)**  | session participants                                      |
 
 ## API
 
@@ -27,7 +27,7 @@ and `LIVEKIT_*` env config before E2E test.
 ## File Structure
 
 ```
-src/components/school-dashboard/live-classes/
+src/components/school-dashboard/conference/
 ├── CLAUDE.md                  — block context + danger zones
 ├── README.md                  — this file
 ├── ISSUE.md                   — open backlog
@@ -81,7 +81,7 @@ src/lib/livekit/
     └── webhook.test.ts        (12)  — dispatch + idempotency + tenant
 ```
 
-Playwright E2E (`tests/e2e/live-classes/`):
+Playwright E2E (`tests/e2e/conference/`):
 
 ```
 feature-pages-load.spec.ts     — 5 smoke tests per browser project
@@ -101,7 +101,7 @@ rbac.spec.ts                   — 11 RBAC matrix tests per browser
 | Recordings list + signed playback      | ✅                                            |
 | Webhook handler (room + egress events) | ✅                                            |
 | Reminder + retention crons             | ✅                                            |
-| RBAC (`/live-classes/*`)               | ✅                                            |
+| RBAC (`/conference/*`)               | ✅                                            |
 | Sidebar + dictionaries (en+ar)         | ✅                                            |
 | Notification type sync (5 sync points) | ✅                                            |
 | Network test page                      | ✅ (env-gated)                                |
@@ -121,17 +121,17 @@ rbac.spec.ts                   — 11 RBAC matrix tests per browser
   `live_class_started`, `live_class_cancelled`,
   `live_class_recording_ready`). All five sync points wired (see
   `CLAUDE.md > Danger Zones`).
-- **Timetable**: `LiveClassSession.timetableId?` is the join key for
+- **Timetable**: `Conference.timetableId?` is the join key for
   Phase 3 "Start live class" buttons on the timetable slot detail page.
 - **Section / Subject / Teacher**: optional back-relations on each.
 - **School**: 4 new columns —
-  `liveClassRecordingRetentionDays` (default 90),
-  `liveClassMaxConcurrentPerSchool` (default 50),
-  `liveClassMaxDurationMinutes` (default 120),
-  `liveClassRecordingDefault` (default true).
+  `conferenceRetentionDays` (default 90),
+  `conferenceMaxConcurrent` (default 50),
+  `conferenceMaxDuration` (default 120),
+  `conferenceRecordingDefault` (default true).
 
 ## Testing
 
 ```bash
-pnpm vitest run src/components/school-dashboard/live-classes src/lib/livekit
+pnpm vitest run src/components/school-dashboard/conference src/lib/livekit
 ```
