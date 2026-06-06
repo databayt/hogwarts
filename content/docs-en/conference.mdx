@@ -1,0 +1,127 @@
+---
+title: Video Conference
+description: The consolidated conference feature — one standardized block (external pasted-link LIVE, LiveKit SFU coded-but-dormant, native Meet/Zoom/Teams adapters scaffolded), the Conference* schema, and what remains to light up each provider.
+---
+
+This is the trace + plan doc for video conferencing. It is the companion to
+[Live Classes](/docs/live-classes) (the older feature reference, pending update to the new names).
+This page tracks **what is wired versus coded-but-off**, the consolidated structure, and the path to
+one solid feature.
+
+> **Status.** The split-brain is resolved. The feature is **one standardized block** at
+> `src/components/school-dashboard/conference/`, served at **`/conference`**. The **external
+> pasted-link** path (Meet/Zoom/Teams URLs) is **live**; the **LiveKit SFU** is fully coded but
+> **dormant** until its infra is provisioned (now a turnkey [runbook](#remaining)); native
+> **Meet/Zoom/Teams APIs** are **adapter-scaffolded**, awaiting OAuth credentials. Consolidation +
+> the code-doable gaps shipped on branch `refactor/conference` (Waves 1–4), pending merge.
+
+## What runs in production today
+
+A teacher schedules a class and pastes a meeting URL; it's stored on `Conference.meetingUrl` with
+`provider: "external"`, listed in a DataTable, and surfaced as a Join button on the timetable slot.
+LiveKit (in-app rooms, recordings, telemetry) is shipped but switched off behind
+`isLiveKitConfigured()`.
+
+## Provider landscape
+
+| Provider                         | Status                    | Mechanism                                                                                                                    | What's missing                                                   |
+| -------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **External link**                | ✅ **Live**               | `provider:"external"` + `meetingUrl`; DataTable + timetable Join. DB-backed, `schoolId`-scoped.                              | — (the universal zero-infra default)                             |
+| **LiveKit (self-hosted SFU)**    | 🟡 **Coded, dormant**     | Full stack in `conference/livekit/`, gated by `isLiveKitConfigured()`. Recording **auto-starts** on `room_started` (Wave 2). | The 6 P0 infra gates — now a turnkey [`RUNBOOK.md`](#remaining). |
+| **Google Meet (native API)**     | 🟦 **Adapter scaffolded** | `providers/google-meet.ts` stub; `isConfigured()` reads OAuth env.                                                           | Google Cloud OAuth creds + `createMeeting` impl (Calendar API).  |
+| **Zoom (native API)**            | 🟦 **Adapter scaffolded** | `providers/zoom.ts` stub.                                                                                                    | Server-to-Server OAuth app + Meetings API impl.                  |
+| **Microsoft Teams (native API)** | 🟦 **Adapter scaffolded** | `providers/teams.ts` stub.                                                                                                   | Azure AD app (Graph `OnlineMeetings`) + impl.                    |
+
+Natives persist as `provider="external"` + `meetingProvider="<id>"`, so activating them needs **no
+Prisma enum migration**.
+
+## Full structure
+
+One standardized block at `src/components/school-dashboard/conference/`. `schoolId`-scoped, soft-delete.
+
+```
+conference/
+├── content.tsx          server list (the live DataTable index)
+├── actions.ts           barrel
+├── actions/
+│   ├── sessions.ts      LiveKit lifecycle (create/cancel/start/end/list/get)
+│   ├── tokens.ts        join + token refresh
+│   ├── recordings.ts    list / signed URL / delete
+│   ├── notifications.ts lifecycle fan-out
+│   ├── settings.ts      get/updateConferenceSettings (Wave 2)
+│   ├── moderation.ts    kickParticipant (Wave 2)
+│   ├── recurring.ts     carryForwardConferenceLinks (Wave 2)
+│   └── helpers.ts       requireContext · conferenceRevalidatePath
+├── queries.ts           DataTable reads
+├── authorization.ts     PERMISSION_MATRIX (RBAC)
+├── permissions.ts       UI gating (rich)
+├── list-permissions.ts  UI gating (listings)
+├── validation.ts · list-validation.ts        Zod schemas
+├── columns.tsx · table.tsx · form.tsx · list-params.ts        DataTable
+├── content.tsx · detail.tsx · room.tsx · recordings.tsx · recording-player.tsx
+├── network-test.tsx     LiveKit RTT/TURN diagnostic + readiness (Wave 3)
+├── schedule-form.tsx · settings-form.tsx · empty-state.tsx · loading-skeleton.tsx
+├── types.ts · error-map.ts · list-actions.ts
+├── livekit/             SFU server lib (client[+getLiveKitReadiness] · token · rooms · egress · recording-urls · room-naming · webhook)
+├── providers/           link-provider adapters (Wave 4): types · external · google-meet · zoom · teams · index + README
+├── RUNBOOK.md           LiveKit 6-gate provisioning runbook (Wave 3)
+├── __tests__/  ·  README.md  ·  ISSUE.md
+```
+
+**Routes** (`app/[lang]/s/[subdomain]/`): `(school-dashboard)/conference/` (index, `[id]`,
+`[id]/recordings`, `schedule`, `network-test`, `settings`) + `(live-room)/conference/[id]/room`. A
+catch-all `live-classes/[[...rest]]` **redirects** old bookmarks to `/conference`.
+
+**API** (unchanged paths, external/scheduler-invoked → must stay routes): webhook
+`api/webhooks/livekit`; crons `api/cron/{live-class-reminders, expire-live-recordings}`.
+
+## Schema — `prisma/models/conference.prisma`
+
+Renamed `LiveClass*` → `Conference*`; every DB table/column/enum-type name is **preserved via
+`@@map`/`@map`**, so the rename was a **zero-change migration** (proven by a byte-identical
+`prisma migrate diff` vs baseline).
+
+| Model                   | Purpose                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `Conference`            | A class. `provider` (`livekit`\|`external`), `meetingUrl?`, `meetingProvider?`, `roomName?`. |
+| `ConferenceParticipant` | One row per invited user + connection telemetry.                                             |
+| `ConferenceRecording`   | Egress metadata + S3 location.                                                               |
+| `ConferenceEvent`       | Webhook audit log + idempotency.                                                             |
+| `ConferenceLink`        | Set-once recurring link, unique on `[schoolId, subjectId, sectionId, termId]`.               |
+
+Enums `ConferenceProvider` / `ConferenceStatus` / `ConferenceRecordingStatus` /
+`ConferenceParticipantRole` / `ConferenceParticipantStatus`; 4 `School.conference*` config columns.
+
+## Server actions vs API routes
+
+App logic is 100% server actions. The only API routes — the LiveKit **webhook** and the two **crons**
+— are external/scheduler-invoked, so they **must stay routes** (a server action can't receive a
+LiveKit webhook or a Vercel cron). Nothing to convert.
+
+## What shipped (refactor/conference, Waves 1–4)
+
+- **Wave 1** — merged `src/lib/livekit/` + the rich block + the listings block into one
+  standardized `conference/`; `LiveClass*`→`Conference*` (DB-safe); route `/live-classes`→`/conference`
+  - redirect. Resolves the surface-duplication + orphaned-overview gaps.
+- **Wave 2** — recording auto-starts on `room_started`; admin **Settings** UI for the 4 config knobs;
+  `kickParticipant` host moderation action; `carryForwardConferenceLinks` term rollover.
+- **Wave 3** — `getLiveKitReadiness()` itemizes missing env; network-test surfaces it; `RUNBOOK.md`.
+- **Wave 4** — `providers/` adapter interface + `external` (functional) + Meet/Zoom/Teams stubs + registry.
+
+## Remaining
+
+- **LiveKit production cutover** — provision the SFU/TURN/S3 + register webhook + set the 8 env vars +
+  pass the Meeting-3 in-school test. All six gates are documented turnkey in
+  `conference/RUNBOOK.md`; the steps are cloud/ops tasks (not code).
+- **Native provider activation** — register the OAuth apps (Google Cloud / Zoom Marketplace /
+  Azure AD), set the env vars in `conference/providers/README.md`, and implement each stub's
+  `createMeeting`.
+- **Kick button UI** — the moderation _action_ is wired; the in-room kick _button_ is deferred
+  (LiveKit's prebuilt `VideoConference` has no slot for per-participant controls).
+- **Browser smoke** — pending a working browser MCP + a seeded school (the demo tenant is empty).
+
+## Related
+
+- [Live Classes](/docs/live-classes) — older feature reference (pending rename to `Conference*`)
+- [Timetable](/docs/timetable) · [Notifications](/docs/notifications) · [Authorization](/docs/authorization)
+- [Aldar Epic 03](https://kun.databayt.org/en/docs/aldar) · [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3)
