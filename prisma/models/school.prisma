@@ -49,11 +49,11 @@ model School {
   videoStorageUsedBytes  BigInt? @default(0)
   videoStorageQuotaBytes BigInt? // null = unlimited
 
-  // Live-class (LiveKit) — per-school capacity + PDPL retention
-  liveClassRecordingRetentionDays Int     @default(90)
-  liveClassMaxConcurrentPerSchool Int     @default(50)
-  liveClassMaxDurationMinutes     Int     @default(120)
-  liveClassRecordingDefault       Boolean @default(true)
+  // Conference (LiveKit) — per-school capacity + PDPL retention
+  conferenceRetentionDays    Int     @default(90) @map("liveClassRecordingRetentionDays")
+  conferenceMaxConcurrent    Int     @default(50) @map("liveClassMaxConcurrentPerSchool")
+  conferenceMaxDuration      Int     @default(120) @map("liveClassMaxDurationMinutes")
+  conferenceRecordingDefault Boolean @default(true) @map("liveClassRecordingDefault")
 
   // Join code for users to self-enroll (6-char alphanumeric, regeneratable)
   joinCode String? @unique
@@ -413,10 +413,10 @@ model School {
   transportationSettings TransportationSettings?
   apiTokens              SchoolApiToken[]
 
-  // Live-class relations
-  liveClassSessions     LiveClassSession[]
-  liveClassRecordings   LiveClassRecording[]
-  liveClassDefaultLinks LiveClassDefaultLink[]
+  // Conference relations
+  conferences          Conference[]
+  conferenceRecordings ConferenceRecording[]
+  conferenceLinks      ConferenceLink[]
 
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]

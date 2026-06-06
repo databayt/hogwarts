@@ -113,8 +113,8 @@ model User {
   notificationSubscriptions NotificationSubscription[] @relation("UserNotificationSubscriptions")
   notificationSummaries     NotificationSummary[]      @relation("UserNotificationSummaries")
 
-  // Live-class relations
-  liveClassParticipations LiveClassParticipant[] @relation("LiveClassParticipations")
+  // Conference relations
+  conferenceParticipations ConferenceParticipant[] @relation("ConferenceParticipations")
 
   // Messaging relations
   conversationsCreated        Conversation[]            @relation("ConversationCreator")

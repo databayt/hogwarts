@@ -39,16 +39,16 @@ model Section {
   classroomId       String?
   maxCapacity       Int     @default(30)
 
-  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  grade             AcademicGrade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
-  homeroomTeacher   Teacher?           @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
-  classroom         Classroom?         @relation(fields: [classroomId], references: [id], onDelete: SetNull)
-  students          Student[]
-  timetables        Timetable[]
-  attendances       Attendance[]
-  whatsappGroups        WhatsAppGroup[]
-  liveClassSessions     LiveClassSession[]
-  liveClassDefaultLinks LiveClassDefaultLink[]
+  school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade           AcademicGrade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  homeroomTeacher Teacher?         @relation("HomeroomTeacher", fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  classroom       Classroom?       @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  students        Student[]
+  timetables      Timetable[]
+  attendances     Attendance[]
+  whatsappGroups  WhatsAppGroup[]
+  conferences     Conference[]
+  conferenceLinks ConferenceLink[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
