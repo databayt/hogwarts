@@ -47,6 +47,17 @@ vi.mock(
   })
 )
 
+// Mock the egress lib so room_started auto-recording doesn't hit a real SFU.
+const startCompositeEgress = vi.fn(async () => ({
+  egressId: "egr-auto",
+  s3Bucket: "aldar-recordings",
+  s3Key: "schools/sch1/live-class/lcs1/1.mp4",
+  s3Region: "me-central-1",
+}))
+vi.mock("../egress", () => ({
+  startCompositeEgress: (...a: unknown[]) => startCompositeEgress(...a),
+}))
+
 const SCHOOL_ID = "sch1"
 const SESSION_ID = "lcs1"
 const ROOM_NAME = `sch-${SCHOOL_ID}-lc-${SESSION_ID}`
@@ -174,6 +185,40 @@ describe("handleWebhookEvent — room lifecycle", () => {
       .durationSeconds
     expect(durationSec).toBeGreaterThanOrEqual(59)
     expect(durationSec).toBeLessThanOrEqual(62)
+  })
+})
+
+describe("handleWebhookEvent — auto-recording on room_started", () => {
+  it("recordingEnabled → auto-starts composite egress for the room", async () => {
+    await handleWebhookEvent(evt({ event: "room_started" }))
+    expect(startCompositeEgress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        roomName: ROOM_NAME,
+        schoolId: SCHOOL_ID,
+        sessionId: SESSION_ID,
+      })
+    )
+  })
+
+  it("recordingEnabled=false → does NOT auto-start egress", async () => {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      recordingEnabled: false,
+      school: { conferenceRetentionDays: 90 },
+    } as never)
+    await handleWebhookEvent(evt({ event: "room_started" }))
+    expect(startCompositeEgress).not.toHaveBeenCalled()
+  })
+
+  it("egress start failure is best-effort — room still goes live", async () => {
+    startCompositeEgress.mockRejectedValueOnce(new Error("egress boom") as never)
+    const ok = await handleWebhookEvent(evt({ event: "room_started" }))
+    expect(ok).toBe(true)
+    expect(db.conference.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "live" }),
+      })
+    )
   })
 })
 

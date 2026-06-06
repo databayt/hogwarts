@@ -30,7 +30,7 @@
       Gated by `canStartLiveClass(role) && teacherId ===
 session.user.id`. Calls `createLiveClass({ timetableId })` then
       `router.push` to `/conference/${id}/room`.
-- [ ] **Auto-start egress** on `room_started` if
+- [x] **Auto-start egress** (DONE: webhook room_started → startCompositeEgress when recordingEnabled) on `room_started` if
       `Conference.recordingEnabled`. Currently the webhook
       handler upserts the recording row only after the SFU sends
       `egress_started` — but nothing in our app triggers egress, so
@@ -42,14 +42,14 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
 
 ## P2 — Phase 4 (Settings + ops)
 
-- [ ] **Settings UI** for `conferenceRetentionDays`,
+- [x] **Settings UI** (DONE: /conference/settings + updateConferenceSettings, ADMIN/DEV) for `conferenceRetentionDays`,
       `conferenceMaxDuration`, `conferenceRecordingDefault`,
       `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
 - [ ] **Capacity dashboard** in SaaS dashboard
       (`/observability/conference`) — concurrent rooms per school,
       egress queue depth, TCP fallback rate. Wave-2 ops visibility.
-- [ ] **Kick participant UI** in `room/room-client.tsx` for HOST.
+- [~] **Kick participant** (server action kickParticipant wired + host-scoped; custom LiveKit-tile UI deferred) in `room/room-client.tsx` for HOST.
       Server action exists (`removeParticipant`) but isn't wired.
 
 ## P3 — Hardening

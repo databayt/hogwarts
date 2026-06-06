@@ -96,7 +96,7 @@ export async function requireContext(
  * Includes `/s/[subdomain]` because revalidatePath references the
  * internal file-system route, not the client-facing URL.
  */
-export function liveClassRevalidatePath(subPath = ""): string {
+export function conferenceRevalidatePath(subPath = ""): string {
   const sub = subPath ? `/${subPath.replace(/^\//, "")}` : ""
   return `/[lang]/s/[subdomain]/conference${sub}`
 }

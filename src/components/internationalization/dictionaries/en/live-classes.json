@@ -130,5 +130,17 @@
   "empty": {
     "title": "No live classes yet",
     "description": "Live classes scheduled for your section will appear here."
+  },
+  "settings": {
+    "title": "Conference settings",
+    "description": "Per-school recording retention and capacity limits.",
+    "retention": "Recording retention (days)",
+    "maxConcurrent": "Max concurrent rooms",
+    "maxDuration": "Max duration (minutes)",
+    "recordingDefault": "Record by default",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "error": "Could not save"
   }
 }

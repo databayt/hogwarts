@@ -13,7 +13,7 @@ import {
 
 import {
   canAccessSession,
-  liveClassRevalidatePath,
+  conferenceRevalidatePath,
   requireContext,
 } from "./helpers"
 
@@ -114,7 +114,7 @@ export async function deleteRecording(recordingId: string) {
       where: { id: recording.id },
       data: { status: "expired", deletedAt: new Date() },
     })
-    revalidatePath(liveClassRevalidatePath(`${recording.sessionId}/recordings`))
+    revalidatePath(conferenceRevalidatePath(`${recording.sessionId}/recordings`))
     return { success: true as const, data: { id: recording.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)

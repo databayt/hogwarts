@@ -41,7 +41,7 @@ src/components/school-dashboard/conference/
 ├── error-map.ts               — code → translated string
 ├── actions.ts                 — barrel
 ├── actions/
-│   ├── helpers.ts             — requireContext + liveClassRevalidatePath
+│   ├── helpers.ts             — requireContext + conferenceRevalidatePath
 │   ├── sessions.ts            — create / cancel / start / end / list / get
 │   ├── tokens.ts              — joinLiveClass / refreshLiveClassToken
 │   ├── notifications.ts       — lang-aware dispatch (internal helper)

@@ -12,7 +12,8 @@ import {
   notifyClassStarted,
 } from "@/components/school-dashboard/conference/actions/notifications"
 
-import { getLiveKitConfig } from "./client"
+import { getLiveKitConfig, isLiveKitConfigured } from "./client"
+import { startCompositeEgress } from "./egress"
 import { parseRoomName } from "./room-naming"
 
 let receiver: WebhookReceiver | null = null
@@ -111,6 +112,17 @@ export async function handleWebhookEvent(
       })
       // Best-effort fan-out to enrolled students + guardians + teacher.
       void notifyClassStarted(schoolId, sessionId)
+      // Auto-start recording when the session opted in. The SFU emits
+      // `egress_started` back to this webhook, which creates the
+      // ConferenceRecording row — so we only kick off egress here. Best-effort:
+      // an egress failure must never roll back the room going live.
+      if (session.recordingEnabled && isLiveKitConfigured()) {
+        try {
+          await startCompositeEgress({ roomName, schoolId, sessionId })
+        } catch (err) {
+          console.error("[webhook] auto-egress start failed:", err)
+        }
+      }
       break
 
     case "room_finished":

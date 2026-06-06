@@ -17,7 +17,7 @@ import {
   type LiveClassServerInput,
 } from "@/components/school-dashboard/conference/validation"
 
-import { liveClassRevalidatePath, requireContext } from "./helpers"
+import { conferenceRevalidatePath, requireContext } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 
 /**
@@ -136,7 +136,7 @@ async function createLiveClassWithCtx(
     // Best-effort fan-out — failures here must not roll back the create.
     void notifyClassScheduled(ctx.schoolId, session.id)
 
-    revalidatePath(liveClassRevalidatePath())
+    revalidatePath(conferenceRevalidatePath())
     return { success: true as const, data: session }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_CREATE_FAILED)
@@ -175,8 +175,8 @@ export async function cancelLiveClass(input: CancelInput) {
 
     void notifyClassCancelled(ctx.schoolId, session.id, parsed.data.reason)
 
-    revalidatePath(liveClassRevalidatePath())
-    revalidatePath(liveClassRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(session.id))
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -232,8 +232,8 @@ export async function startLiveClass(input: IdOnly) {
       data: { status: "live", actualStart: new Date() },
     })
 
-    revalidatePath(liveClassRevalidatePath())
-    revalidatePath(liveClassRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(session.id))
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
@@ -279,8 +279,8 @@ export async function endLiveClass(input: IdOnly) {
       data: { status: "ended", actualEnd: new Date() },
     })
 
-    revalidatePath(liveClassRevalidatePath())
-    revalidatePath(liveClassRevalidatePath(session.id))
+    revalidatePath(conferenceRevalidatePath())
+    revalidatePath(conferenceRevalidatePath(session.id))
     return { success: true as const, data: { id: session.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_UPDATE_FAILED)
