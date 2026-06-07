@@ -12,8 +12,13 @@
  *
  * This script finds render surfaces that compose a person name
  * (`${x.firstName} ${x.lastName}`, `firstName + … + lastName`,
- * `[firstName, …, lastName].join`) but never import a translation helper. Those rows
- * reach the UI as raw stored (usually Arabic) text.
+ * `[firstName, …, lastName].join`) but never import a translation helper (now
+ * including `localize` — the registry-driven batched path). Those rows reach the
+ * UI as raw stored (usually Arabic) text.
+ *
+ * NEXT STEP (see translation-guide “Areas of improvement”): extend detection
+ * beyond person-names to ANY registered translatable field (registry.ts) rendered
+ * raw — designed deliberately to keep the ratchet baseline meaningful.
  *
  * Usage:
  *   pnpm i18n:audit-content                           # human report
@@ -29,7 +34,7 @@ import { readFileSync } from "node:fs"
 
 /** Helpers that mean "this file translates its content". */
 const TRANSLATION_HELPERS =
-  /getText|getFields|getName|getNames|getLabels|formatName|transliterate|content-display/
+  /\blocalize\b|getText|getFields|getName|getNames|getLabels|formatName|transliterate|content-display/
 
 /** Person-name composition patterns that ship raw text to the UI. */
 const NAME_COMPOSITION: RegExp[] = [
