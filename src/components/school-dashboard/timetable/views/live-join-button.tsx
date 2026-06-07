@@ -53,7 +53,7 @@ export function LiveJoinButton({
   // LiveKit session → in-app room.
   return (
     <Button asChild size="sm" className="gap-2">
-      <Link href={`/${lang}/live-classes/${liveClass.sessionId}/room`}>
+      <Link href={`/${lang}/conference/${liveClass.sessionId}/room`}>
         <Video className="h-4 w-4" />
         {label}
       </Link>

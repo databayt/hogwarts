@@ -9,8 +9,8 @@ import { attachLiveClasses } from "../live-class-join"
 
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: { findMany: vi.fn() },
-    liveClassDefaultLink: { findMany: vi.fn() },
+    conference: { findMany: vi.fn() },
+    conferenceLink: { findMany: vi.fn() },
   },
 }))
 
@@ -20,21 +20,21 @@ const DATE = new Date("2026-06-01T12:00:00Z")
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
-  vi.mocked(db.liveClassDefaultLink.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.conferenceLink.findMany).mockResolvedValue([] as never)
 })
 
 describe("attachLiveClasses", () => {
   it("short-circuits with no DB calls when no entry has a section+subject", async () => {
     const entries = [{ periodId: "p1" }, { sectionId: null, subjectId: null }]
     const result = await attachLiveClasses(SCHOOL, TERM, DATE, entries)
-    expect(db.liveClassSession.findMany).not.toHaveBeenCalled()
-    expect(db.liveClassDefaultLink.findMany).not.toHaveBeenCalled()
+    expect(db.conference.findMany).not.toHaveBeenCalled()
+    expect(db.conferenceLink.findMany).not.toHaveBeenCalled()
     expect(result.every((e) => e.liveClass === null)).toBe(true)
   })
 
   it("attaches a scheduled session (sessionId set) to the matching entry", async () => {
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([
+    vi.mocked(db.conference.findMany).mockResolvedValue([
       {
         id: "lcs-1",
         provider: "external",
@@ -55,7 +55,7 @@ describe("attachLiveClasses", () => {
   })
 
   it("falls back to the recurring default link (sessionId null) when no session today", async () => {
-    vi.mocked(db.liveClassDefaultLink.findMany).mockResolvedValue([
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
       {
         sectionId: "sec-1",
         subjectId: "sub-1",
@@ -74,7 +74,7 @@ describe("attachLiveClasses", () => {
   })
 
   it("prefers the session over the default link when both exist", async () => {
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([
+    vi.mocked(db.conference.findMany).mockResolvedValue([
       {
         id: "lcs-1",
         provider: "external",
@@ -84,7 +84,7 @@ describe("attachLiveClasses", () => {
         subjectId: "sub-1",
       },
     ] as never)
-    vi.mocked(db.liveClassDefaultLink.findMany).mockResolvedValue([
+    vi.mocked(db.conferenceLink.findMany).mockResolvedValue([
       {
         sectionId: "sec-1",
         subjectId: "sub-1",
@@ -101,7 +101,7 @@ describe("attachLiveClasses", () => {
 
   it("keeps the earliest session when several match the same section+subject", async () => {
     // findMany returns ordered-by scheduledStart asc; the first wins.
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([
+    vi.mocked(db.conference.findMany).mockResolvedValue([
       {
         id: "lcs-early",
         provider: "external",
@@ -126,7 +126,7 @@ describe("attachLiveClasses", () => {
   })
 
   it("returns null for entries that have no section+subject match", async () => {
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([
+    vi.mocked(db.conference.findMany).mockResolvedValue([
       {
         id: "lcs-1",
         provider: "external",
@@ -151,12 +151,12 @@ describe("attachLiveClasses", () => {
     await attachLiveClasses(SCHOOL, TERM, DATE, [
       { sectionId: "sec-1", subjectId: "sub-1" },
     ])
-    expect(db.liveClassSession.findMany).toHaveBeenCalledWith(
+    expect(db.conference.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ schoolId: SCHOOL }),
       })
     )
-    expect(db.liveClassDefaultLink.findMany).toHaveBeenCalledWith(
+    expect(db.conferenceLink.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ schoolId: SCHOOL, termId: TERM }),
       })

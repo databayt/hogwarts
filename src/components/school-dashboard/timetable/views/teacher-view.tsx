@@ -35,6 +35,7 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
 import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
+import { StartLiveClassButton } from "./start-live-class-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -340,13 +341,33 @@ export default function TeacherView({
               {isLiveJoinable(
                 currentClassInfo.type as "current" | "next",
                 currentClassInfo.item.startTime
-              ) && (
-                <LiveJoinButton
-                  liveClass={currentClassInfo.item.liveClass}
-                  lang={lang}
-                  label={dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")}
-                />
-              )}
+              ) &&
+                (currentClassInfo.item.liveClass ? (
+                  <LiveJoinButton
+                    liveClass={currentClassInfo.item.liveClass}
+                    lang={lang}
+                    label={dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")}
+                  />
+                ) : (
+                  <StartLiveClassButton
+                    timetableId={currentClassInfo.item.timetableId}
+                    lang={lang}
+                    label={
+                      dictionary?.liveClasses?.start ??
+                      (isRTL ? "بدء البث المباشر" : "Start live class")
+                    }
+                    startingLabel={
+                      dictionary?.liveClasses?.starting ??
+                      (isRTL ? "جارٍ البدء…" : "Starting…")
+                    }
+                    errorLabel={
+                      dictionary?.liveClasses?.startError ??
+                      (isRTL
+                        ? "تعذّر بدء البث المباشر"
+                        : "Couldn't start the live class")
+                    }
+                  />
+                ))}
             </div>
           </CardContent>
         </Card>

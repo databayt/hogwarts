@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 /**
  * Live-class Join info attached to a today-schedule entry. `sessionId` is
  * present only for an actual scheduled session (LiveKit room or external
- * meeting URL); a recurring `LiveClassDefaultLink` resolves with
+ * meeting URL); a recurring `ConferenceLink` resolves with
  * `sessionId: null`.
  */
 export type LiveClassJoinInfo = {
@@ -53,7 +53,7 @@ export async function attachLiveClasses<
   dayEnd.setHours(23, 59, 59, 999)
 
   const [sessions, defaults] = await Promise.all([
-    db.liveClassSession.findMany({
+    db.conference.findMany({
       where: {
         schoolId,
         sectionId: { in: sectionIds },
@@ -72,7 +72,7 @@ export async function attachLiveClasses<
       },
       orderBy: { scheduledStart: "asc" },
     }),
-    db.liveClassDefaultLink.findMany({
+    db.conferenceLink.findMany({
       where: {
         schoolId,
         termId,

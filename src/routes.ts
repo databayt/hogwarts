@@ -382,7 +382,7 @@ export const roleRoutes: Record<string, Role[]> = {
   // ============================================================================
   // Live classes (LiveKit video conferencing — all school roles)
   // ============================================================================
-  "/live-classes": [
+  "/conference": [
     "ADMIN",
     "TEACHER",
     "STUDENT",
@@ -391,7 +391,7 @@ export const roleRoutes: Record<string, Role[]> = {
     "ACCOUNTANT",
     "DEVELOPER",
   ],
-  "/live-classes/*": [
+  "/conference/*": [
     "ADMIN",
     "TEACHER",
     "STUDENT",

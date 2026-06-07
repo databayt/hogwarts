@@ -3,13 +3,13 @@
 //
 // Cron: daily — finds recordings past their expiresAt and deletes the S3
 // object + marks the row deleted. Per-school retention is set on
-// School.liveClassRecordingRetentionDays and resolved at egress_ended.
+// School.conferenceRetentionDays and resolved at egress_ended.
 
 import { NextResponse } from "next/server"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { deleteRecordingObject } from "@/lib/livekit/recording-urls"
+import { deleteRecordingObject } from "@/components/school-dashboard/conference/livekit/recording-urls"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   }
 
   const now = new Date()
-  const due = await db.liveClassRecording.findMany({
+  const due = await db.conferenceRecording.findMany({
     where: {
       status: "ready",
       deletedAt: null,
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
   for (const r of due) {
     try {
       await deleteRecordingObject(r)
-      await db.liveClassRecording.update({
+      await db.conferenceRecording.update({
         where: { id: r.id },
         data: { status: "expired", deletedAt: new Date() },
       })

@@ -5,19 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
-import { notifyClassStartingSoon } from "@/components/school-dashboard/live-classes/actions/notifications"
+import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
 
 import { GET } from "../route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
 vi.mock("@/lib/db", () => ({
   db: {
-    liveClassSession: { findMany: vi.fn() },
-    liveClassEvent: { findFirst: vi.fn(), create: vi.fn() },
+    conference: { findMany: vi.fn() },
+    conferenceEvent: { findFirst: vi.fn(), create: vi.fn() },
   },
 }))
 vi.mock(
-  "@/components/school-dashboard/live-classes/actions/notifications",
+  "@/components/school-dashboard/conference/actions/notifications",
   () => ({ notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })) })
 )
 
@@ -29,9 +29,9 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(NOW)
   vi.mocked(isAuthorizedCron).mockReturnValue(true)
-  vi.mocked(db.liveClassSession.findMany).mockResolvedValue([] as never)
-  vi.mocked(db.liveClassEvent.findFirst).mockResolvedValue(null as never)
-  vi.mocked(db.liveClassEvent.create).mockResolvedValue({} as never)
+  vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
+  vi.mocked(db.conferenceEvent.findFirst).mockResolvedValue(null as never)
+  vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
 })
 
 afterEach(() => {
@@ -43,14 +43,14 @@ describe("live-class-reminders cron — auth", () => {
     vi.mocked(isAuthorizedCron).mockReturnValue(false)
     const res = await GET(req())
     expect(res.status).toBe(401)
-    expect(db.liveClassSession.findMany).not.toHaveBeenCalled()
+    expect(db.conference.findMany).not.toHaveBeenCalled()
   })
 })
 
 describe("live-class-reminders cron — detection window", () => {
   it("queries a 5-min-wide window [now+5min, now+10min] with no blind spot", async () => {
     await GET(req())
-    const call = vi.mocked(db.liveClassSession.findMany).mock.calls[0][0] as {
+    const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
       where: { scheduledStart: { gte: Date; lte: Date }; status: string }
     }
     const gte = call.where.scheduledStart.gte.getTime()
@@ -74,11 +74,11 @@ describe("live-class-reminders cron — detection window", () => {
 
 describe("live-class-reminders cron — dispatch + idempotency", () => {
   it("notifies once per fresh session and skips already-reminded ones", async () => {
-    vi.mocked(db.liveClassSession.findMany).mockResolvedValue([
+    vi.mocked(db.conference.findMany).mockResolvedValue([
       { id: "lcs-fresh", schoolId: "school-1" },
       { id: "lcs-already", schoolId: "school-1" },
     ] as never)
-    vi.mocked(db.liveClassEvent.findFirst)
+    vi.mocked(db.conferenceEvent.findFirst)
       .mockResolvedValueOnce(null as never)
       .mockResolvedValueOnce({ id: "evt-existing" } as never)
 
@@ -89,8 +89,8 @@ describe("live-class-reminders cron — dispatch + idempotency", () => {
     expect(body.dispatched).toBe(1)
     expect(notifyClassStartingSoon).toHaveBeenCalledTimes(1)
     expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-1", "lcs-fresh")
-    expect(db.liveClassEvent.create).toHaveBeenCalledTimes(1)
-    expect(db.liveClassEvent.create).toHaveBeenCalledWith(
+    expect(db.conferenceEvent.create).toHaveBeenCalledTimes(1)
+    expect(db.conferenceEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           schoolId: "school-1",

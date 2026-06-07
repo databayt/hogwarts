@@ -62,8 +62,8 @@ model Teacher {
   originalSubstitutions SubstitutionRecord[] @relation("OriginalTeacher")
   substituteAssignments SubstitutionRecord[] @relation("SubstituteTeacher")
 
-  // Live-class relations
-  liveClassSessions LiveClassSession[]
+  // Conference relations
+  conferences Conference[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
