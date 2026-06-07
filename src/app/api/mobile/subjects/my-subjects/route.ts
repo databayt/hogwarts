@@ -3,10 +3,10 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
@@ -35,13 +35,13 @@ type SubjectSummary = {
  */
 async function localizeSubject(
   subject: SubjectSummary,
-  lang: SupportedLanguage,
+  lang: Lang,
   schoolId: string
 ) {
-  const srcLang = (subject.lang || "ar") as SupportedLanguage
+  const srcLang = (subject.lang || "ar") as Lang
   const [name, department] = await Promise.all([
-    getDisplayText(subject.name, srcLang, lang, schoolId),
-    getDisplayText(subject.department, srcLang, lang, schoolId),
+    getText(subject.name, srcLang, lang, schoolId),
+    getText(subject.department, srcLang, lang, schoolId),
   ])
   return {
     id: subject.id,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     if (isAuthError(auth)) return auth
 
     const { searchParams } = new URL(request.url)
-    const lang = (searchParams.get("lang") || "en") as SupportedLanguage
+    const lang = (searchParams.get("lang") || "en") as Lang
 
     if (auth.role === "STUDENT") {
       const student = await db.student.findFirst({

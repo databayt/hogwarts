@@ -7,9 +7,9 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getText } from "@/components/translation/display"
 
 import type { YearLevelDetail, YearLevelRow } from "./types"
 import {
@@ -323,7 +323,7 @@ export async function getYearLevels(
     const mapped: YearLevelRow[] = await Promise.all(
       rows.map(async (l) => ({
         id: l.id,
-        levelName: await getDisplayText(
+        levelName: await getText(
           l.levelName,
           (l.lang as "ar" | "en") || "ar",
           lang,

@@ -1,25 +1,25 @@
 ---
 title: Translation
-description: Two-tier i18n — dictionary JSON for static UI, getDisplayText for dynamic content. Coverage gaps and adoption patterns.
+description: Two-tier i18n — dictionary JSON for static UI, getText for dynamic content. Coverage gaps and adoption patterns.
 ---
 
-Translation runs on two tiers: dictionary JSON files for static UI (synced across `ar.json`/`en.json`) and `getDisplayText()` for dynamic database content via Google Translate + DB cache. Infrastructure is solid; adoption is partial — thousands of hardcoded English strings remain across hundreds of school-dashboard files. Run `/i18n-check` for the live count.
+Translation runs on two tiers: dictionary JSON files for static UI (synced across `ar.json`/`en.json`) and `getText()` for dynamic database content via Google Translate + DB cache. Infrastructure is solid; adoption is partial — thousands of hardcoded English strings remain across hundreds of school-dashboard files. Run `/i18n-check` for the live count.
 
 ## Architecture
 
-| Tier          | What                                          | How                                                                    |
-| ------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`                 |
-| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → `getDisplayText()` → cached Google Translate |
+| Tier          | What                                          | How                                                             |
+| ------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`          |
+| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → `getText()` → cached Google Translate |
 
 ## Infrastructure files
 
 | File                                                   | Purpose                                          |
 | ------------------------------------------------------ | ------------------------------------------------ |
-| `src/lib/content-display.ts`                           | `getDisplayText()`, `getDisplayFields()`         |
-| `src/lib/translate.ts`                                 | `translateWithCache()`, server actions           |
-| `src/lib/google-translate.ts`                          | Google Translate client                          |
-| `src/lib/auto-translate.ts`                            | Auto-translate utilities                         |
+| `src/components/translation/display.ts`                | `getText()`, `getFields()`                       |
+| `src/components/translation/actions.ts`                | `translate()`, server actions                    |
+| `src/components/translation/google.ts`                 | Google Translate client                          |
+| `src/components/translation/util.ts`                   | `withLang`, `detectScript`                       |
 | `src/components/internationalization/helpers/index.ts` | `ValidationHelper`, `ToastHelper`, `ErrorHelper` |
 | `src/components/internationalization/dictionaries.ts`  | Route-scoped dictionary loaders                  |
 
@@ -48,7 +48,7 @@ Translation runs on two tiers: dictionary JSON files for static UI (synced acros
 6. Server action errors — needs error code pattern.
 7. Empty states.
 8. Toast messages — needs dictionary plumbing.
-9. `getDisplayText` expansion to remaining content files.
+9. `getText` expansion to remaining content files.
 
 ## Form pattern
 
@@ -129,7 +129,7 @@ toast.error(
 
 ## Per-area status
 
-All 21 areas (Dashboard, Students, Teachers, Classes, Subjects, Announcements, Events, Assignments, Parents, Grades, Classrooms, Exams, Finance, Attendance, Timetable, Profile, Settings, Notifications, Admission, School Config, Reports) use the dictionary for table headers and sidebar but are partial on `getDisplayText`, forms, selects, validation, toasts, and actions. Students/Teachers/Classes/Subjects/Announcements/Parents/Classrooms/Exams/Attendance/Profile use `getDisplayText` for some surfaces; the rest are display-text-pending.
+All 21 areas (Dashboard, Students, Teachers, Classes, Subjects, Announcements, Events, Assignments, Parents, Grades, Classrooms, Exams, Finance, Attendance, Timetable, Profile, Settings, Notifications, Admission, School Config, Reports) use the dictionary for table headers and sidebar but are partial on `getText`, forms, selects, validation, toasts, and actions. Students/Teachers/Classes/Subjects/Announcements/Parents/Classrooms/Exams/Attendance/Profile use `getText` for some surfaces; the rest are display-text-pending.
 
 Wizard routes (`/students/add`, `/teachers/add`, `/exams/manage`, `/exams/qbank`, `/finance/invoice`) have hardcoded forms, selects, validation, toasts, and action errors.
 
@@ -143,6 +143,8 @@ Wizard routes (`/students/add`, `/teachers/add`, `/exams/manage`, `/exams/qbank`
 
 ## See also
 
+- [Translation Guide](/docs/translation-guide) — deep guide to DB-content translation (cache, name helpers, trade-offs, tooling)
+- [Internationalization](/docs/internationalization) — architecture reference
 - [Multi-Tenancy](/docs/multi-tenancy)
 - [Pattern](/docs/pattern)
 - [Validation](/docs/validation)

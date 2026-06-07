@@ -36,7 +36,6 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,6 +79,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"

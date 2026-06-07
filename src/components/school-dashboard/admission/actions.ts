@@ -20,7 +20,7 @@ import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { generateStudentUsername } from "@/lib/student-username"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
-import { detectLanguage } from "@/components/translation/util"
+import { detectLang } from "@/components/translation/util"
 
 import { assertAdmissionPermission } from "./authorization"
 import {
@@ -1082,7 +1082,7 @@ export async function confirmEnrollment(params: {
                   emergencyContactRelation:
                     application.guardianRelation || "Parent",
                   // Detect language from the applicant's name
-                  lang: detectLanguage(
+                  lang: detectLang(
                     [application.firstName, application.lastName]
                       .filter(Boolean)
                       .join(" ")

@@ -81,7 +81,7 @@ Hogwarts automates the operational core of a school — admissions, classrooms, 
 
 ## Conventions
 
-- **Single-language storage.** One `lang` field per row; generic field names (`title`, `body`, `name`); on-demand translation cached in `TranslationCache`.
+- **Single-language storage.** One `lang` field per row; generic field names (`title`, `body`, `name`); on-demand translation cached in `Translation`.
 - **`schoolId` scoping on every query.** Missing `schoolId` = data leak across tenants.
 - **Semantic HTML.** No hardcoded `text-*` / `font-*` classes; logical CSS properties so RTL works without overrides — see [Style guide](/docs/documentation).
 

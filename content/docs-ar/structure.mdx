@@ -237,7 +237,7 @@ prisma/
 │   ├── auth.prisma
 │   ├── students.prisma
 │   ├── staff.prisma
-│   ├── academic-structure.prisma
+│   ├── academic.prisma
 │   ├── timetable.prisma
 │   ├── attendance.prisma
 │   ├── catalog.prisma
@@ -266,7 +266,7 @@ prisma/
 | `catalog-setup.ts`    | تزويد جسر الكتالوج                                                    |
 | `google-translate.ts` | عميل Google Translate API                                             |
 | `translate.ts`        | ترجمة مع تخزين DB                                                     |
-| `content-display.ts`  | `getDisplayText()` للترجمة عند الطلب                                  |
+| `content-display.ts`  | `getText()` للترجمة عند الطلب                                         |
 | `auto-translate.ts`   | utilities ترجمة تلقائية                                               |
 | `stripe.ts`           | مدفوعات Stripe                                                        |
 | `cloudfront.ts`       | توقيع CloudFront CDN                                                  |
@@ -300,7 +300,6 @@ prisma/
 ```typescript
 import { auth } from "@/auth"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
@@ -309,6 +308,7 @@ import { Card } from "@/components/ui/card"
 import { PageHeader } from "@/components/atom/page-header"
 import { Content } from "@/components/school-dashboard/listings/students/content"
 import { PlatformSidebar } from "@/components/template/platform-sidebar"
+import { getText } from "@/components/translation/display"
 ```
 
 ## انظر أيضاً

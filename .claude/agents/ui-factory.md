@@ -622,7 +622,7 @@ await invokeAgent("ui-factory", {
     accessibilityConfirmed: true,
     i18nKeys: ["forms.stepNext", "forms.stepPrev", "forms.submit", "ui.cancel"],
     testsGenerated: true, // TDD enforced
-    testFiles: ["multi-step-form.test.tsx", "multi-step-form.e2e.test.ts"],
+    testFiles: ["multi-step-form.tests.tsx", "multi-step-form.e2e.tests.ts"],
   },
 })
 

@@ -4,8 +4,8 @@
 
 echo "🎨 Validating UI Component Quality..."
 
-# Get staged UI component files (excluding test files)
-UI_FILES=$(git diff --cached --name-only | grep 'src/components/.*\.tsx$' | grep -v '.test.tsx$' || echo '')
+# Get staged UI component files (excluding tests files)
+UI_FILES=$(git diff --cached --name-only | grep 'src/components/.*\.tsx$' | grep -v '.tests.tsx$' || echo '')
 
 if [ -z "$UI_FILES" ]; then
   echo "✅ UI Quality: No UI component changes detected"

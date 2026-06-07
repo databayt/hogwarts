@@ -3,13 +3,13 @@
 
 import React from "react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { Separator } from "@/components/ui/separator"
 import { UserButton } from "@/components/auth/user-button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
+import { getText } from "@/components/translation/display"
 
 import { marketingConfig } from "./config"
 import { MainNav } from "./main-nav"
@@ -57,7 +57,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
       ? school.nameEn
       : displayLang === "ar"
         ? school.name
-        : await getDisplayText(school.name, contentLang, displayLang, school.id)
+        : await getText(school.name, contentLang, displayLang, school.id)
 
   const translatedNav = marketingConfig.mainNav.map((item) => ({
     ...item,

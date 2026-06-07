@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
 
 import { getRoomClasses, getRoomDetail, getRoomTimetable } from "../actions"
 import { RoomDetail } from "./room-detail"
@@ -57,20 +57,20 @@ export default async function RoomDetailContent({
   ])
 
   // Translate display text
-  const roomName = await getDisplayText(
+  const roomName = await getText(
     room.roomName,
     (room.lang as "ar" | "en") || "ar",
     lang,
     schoolId
   )
-  const typeName = await getDisplayText(
+  const typeName = await getText(
     room.classroomType.name,
     (room.classroomType.lang as "ar" | "en") || "ar",
     lang,
     schoolId
   )
   const gradeName = room.grade
-    ? await getDisplayText(
+    ? await getText(
         room.grade.name,
         (room.grade.lang as "ar" | "en") || "ar",
         lang,

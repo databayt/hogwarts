@@ -4,7 +4,6 @@
 import type { Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -15,6 +14,7 @@ import { getTargetAudiences } from "@/components/school-dashboard/listings/event
 import { eventsSearchParams } from "@/components/school-dashboard/listings/events/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/events/permissions"
 import { EventsTable } from "@/components/school-dashboard/listings/events/table"
+import { getText } from "@/components/translation/display"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -76,16 +76,16 @@ export default async function EventsContent({
     data = await Promise.all(
       rows.map(async (e: any) => ({
         id: e.id,
-        title: await getDisplayText(e.title, e.lang || "ar", lang, schoolId!),
+        title: await getText(e.title, e.lang || "ar", lang, schoolId!),
         eventType: e.eventType,
         eventDate: (e.eventDate as Date).toISOString(),
         startTime: e.startTime,
         endTime: e.endTime,
         location: e.location
-          ? await getDisplayText(e.location, e.lang || "ar", lang, schoolId!)
+          ? await getText(e.location, e.lang || "ar", lang, schoolId!)
           : dictionary?.events?.locationTBD || "TBD",
         organizer: e.organizer
-          ? await getDisplayText(e.organizer, e.lang || "ar", lang, schoolId!)
+          ? await getText(e.organizer, e.lang || "ar", lang, schoolId!)
           : dictionary?.events?.organizerTBD || "TBD",
         targetAudience: e.targetAudience
           ? (audienceMap[e.targetAudience] ?? e.targetAudience)

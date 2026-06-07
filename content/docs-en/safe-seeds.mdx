@@ -21,21 +21,19 @@ Seeds split into global and school-scoped in `prisma/seeds/single.ts`.
 
 **Global** (`global: true`) — populate platform-wide reference data:
 
-| Seed                | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `catalog`           | Global catalog (subjects, chapters, lessons)                  |
-| `catalog-images`    | Upload ClickView images to S3/CloudFront                      |
-| `clickview-catalog` | ClickView US catalog (62 subjects, 201 chapters, 986 lessons) |
-| `clickview-images`  | Upload ClickView subject images                               |
-| `school`            | Demo school + branding                                        |
+| Seed      | Description                                  |
+| --------- | -------------------------------------------- |
+| `catalog` | Global catalog (subjects, chapters, lessons) |
+| `us`      | US K-12 catalog from the ClickView inventory |
+| `school`  | Demo school + branding                       |
 
 **School-scoped** — require demo school to exist (students, teachers, classes, attendance, etc.).
 
 ```bash
-pnpm db:seed:single --list                  # List all seeds
-pnpm db:seed:single clickview-catalog       # Global seed (works on empty DB)
-pnpm db:seed:single subjects                # School-scoped seed (requires demo)
-pnpm db:seed                                # BLOCKED — see below
+pnpm db:seed:single --list    # List all seeds
+pnpm db:seed:single catalog   # Global seed (works on empty DB)
+pnpm db:seed:single subjects  # School-scoped seed (requires demo)
+pnpm db:seed                  # BLOCKED — see below
 ```
 
 ### Why `pnpm db:seed` is blocked

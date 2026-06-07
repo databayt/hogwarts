@@ -4,7 +4,7 @@
 /**
  * Messaging Phone Numbers Seed
  *
- * Creates StaffMember records for admin and accountant test accounts
+ * Creates StaffMember records for admin and accountant tests accounts
  * and adds WhatsApp-reachable phone numbers. Required for WhatsApp
  * dual-delivery testing.
  *

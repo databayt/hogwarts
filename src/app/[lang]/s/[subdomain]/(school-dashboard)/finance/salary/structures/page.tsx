@@ -1,14 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type SalaryStructureRow } from "@/components/school-dashboard/finance/salary/columns"
 import { getSalaryStructureList } from "@/components/school-dashboard/finance/salary/queries"
 import { SalaryStructuresTable } from "@/components/school-dashboard/finance/salary/table"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 export const metadata = { title: "Salary Structures" }
 
@@ -38,9 +38,9 @@ export default async function SalaryStructuresPage({ params }: Props) {
   const data: SalaryStructureRow[] = await Promise.all(
     rows.map(async (s: any) => ({
       id: s.id,
-      teacherName: await getDisplayText(
+      teacherName: await getText(
         [s.teacher?.firstName, s.teacher?.lastName].filter(Boolean).join(" "),
-        detectLanguage(
+        detectLang(
           [s.teacher?.firstName, s.teacher?.lastName].filter(Boolean).join(" ")
         ),
         lang,

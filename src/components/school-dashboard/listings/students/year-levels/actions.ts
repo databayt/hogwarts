@@ -7,9 +7,9 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getText } from "@/components/translation/display"
 
 import {
   createYearLevelSchema,
@@ -59,7 +59,7 @@ export async function getYearLevels(
     const translatedYearLevels = await Promise.all(
       yearLevels.map(async (level) => ({
         ...level,
-        levelName: await getDisplayText(
+        levelName: await getText(
           level.levelName,
           (level.lang as "ar" | "en") || "ar",
           lang,

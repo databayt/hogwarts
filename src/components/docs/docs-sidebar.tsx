@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -11,10 +12,40 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
+type TreeNode = (typeof docsSource.pageTree)["children"][number]
+type PageNode = Extract<TreeNode, { type: "page" }>
+
+interface NavGroup {
+  label: React.ReactNode | null
+  pages: PageNode[]
+}
+
+// Walk the flat fumadocs page tree and split it into sections. A `---Label---`
+// entry in `meta.json` becomes a `separator` node (no url, no children); it
+// opens a new labeled group. Pages before the first separator land in an
+// unlabeled leading group, mirroring shadcn's grouped docs sidebar.
+function groupBySeparator(children: TreeNode[]): NavGroup[] {
+  const groups: NavGroup[] = []
+  let current: NavGroup = { label: null, pages: [] }
+
+  for (const node of children) {
+    if (node.type === "separator") {
+      if (current.pages.length > 0) groups.push(current)
+      current = { label: node.name ?? null, pages: [] }
+    } else if (node.type === "page") {
+      current.pages.push(node)
+    }
+  }
+  if (current.pages.length > 0) groups.push(current)
+
+  return groups
+}
 
 export function DocsSidebar({
   tree,
@@ -26,6 +57,10 @@ export function DocsSidebar({
 }) {
   const pathname = usePathname()
   const prefix = lang ? `/${lang}` : ""
+  const groups = React.useMemo(
+    () => groupBySeparator(tree.children as TreeNode[]),
+    [tree.children]
+  )
 
   return (
     <Sidebar
@@ -33,13 +68,20 @@ export function DocsSidebar({
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="overflow-x-hidden overflow-y-auto">
-        <div className="ps-0 pt-2 pb-4">
-          <SidebarGroup className="p-0">
+      <SidebarContent className="no-scrollbar overflow-x-hidden overflow-y-auto">
+        {groups.map((group, groupIndex) => (
+          <SidebarGroup
+            key={(group.label as string) ?? `group-${groupIndex}`}
+            className={groupIndex === 0 ? "px-0 pt-2" : "px-0"}
+          >
+            {group.label ? (
+              <SidebarGroupLabel className="text-muted-foreground font-medium">
+                {group.label}
+              </SidebarGroupLabel>
+            ) : null}
             <SidebarGroupContent>
-              <SidebarMenu>
-                {tree.children.map((node) => {
-                  if (node.type !== "page") return null
+              <SidebarMenu className="gap-0.5">
+                {group.pages.map((node) => {
                   const fullHref = `${prefix}${node.url}`
                   const isActive =
                     pathname === fullHref || pathname === node.url
@@ -48,11 +90,9 @@ export function DocsSidebar({
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        className="relative h-[30px] w-full border border-transparent p-0 text-[0.8rem] font-medium"
+                        className="data-[active=true]:border-accent data-[active=true]:bg-accent relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"
                       >
-                        <Link href={fullHref} className="block w-full">
-                          {node.name}
-                        </Link>
+                        <Link href={fullHref}>{node.name}</Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
@@ -60,7 +100,7 @@ export function DocsSidebar({
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        </div>
+        ))}
       </SidebarContent>
     </Sidebar>
   )

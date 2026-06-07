@@ -78,15 +78,15 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       }
 
-      console.log("OAuth subdomain test (AUTHORIZED):", debugInfo)
+      console.log("OAuth subdomain tests (AUTHORIZED):", debugInfo)
 
       return createDebugResponse({
         success: true,
         debugInfo,
-        message: "OAuth subdomain test completed (secured)",
+        message: "OAuth subdomain tests completed (secured)",
       })
     } catch (error) {
-      console.error("OAuth subdomain test error:", error)
+      console.error("OAuth subdomain tests error:", error)
       return createDebugResponse(
         {
           success: false,

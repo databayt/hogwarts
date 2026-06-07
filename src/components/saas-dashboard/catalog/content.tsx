@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import type { SubjectRow } from "./columns"
 import { CatalogTable } from "./table"
@@ -40,16 +40,16 @@ export async function CatalogContent({ lang }: Props) {
   const rows: SubjectRow[] = await Promise.all(
     subjects.map(async ({ lang: contentLang, ...s }) => ({
       ...s,
-      name: await getDisplayText(
+      name: await getText(
         s.name,
-        (contentLang || "ar") as SupportedLanguage,
+        (contentLang || "ar") as Lang,
         lang,
         "global"
       ),
       department: s.department
-        ? await getDisplayText(
+        ? await getText(
             s.department,
-            (contentLang || "ar") as SupportedLanguage,
+            (contentLang || "ar") as Lang,
             lang,
             "global"
           )

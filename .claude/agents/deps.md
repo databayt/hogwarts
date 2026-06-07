@@ -234,8 +234,8 @@ pnpm audit --json > daily-audit.json
 pnpm update <vulnerable-package>@<safe-version>
 
 # 5. Test affected features
-pnpm test
-pnpm test:e2e
+pnpm tests
+pnpm tests:e2e
 
 # 6. Deploy fix
 # Critical/High: Emergency deployment
@@ -270,7 +270,7 @@ pnpm outdated
 
 # Update with testing
 pnpm update <package>
-pnpm test && pnpm build
+pnpm tests && pnpm build
 
 # Examples: 1.2.3 → 1.3.0
 # - New features
@@ -290,7 +290,7 @@ pnpm test && pnpm build
 
 # Update in isolation
 pnpm add <package>@latest
-pnpm test && pnpm test:e2e && pnpm build
+pnpm tests && pnpm tests:e2e && pnpm build
 
 # Deploy to staging first
 # Monitor for errors
@@ -445,7 +445,7 @@ pnpm prisma generate
 pnpm prisma migrate dev
 
 # Test database operations
-pnpm test src/lib/db.test.ts
+pnpm tests src/lib/db.tests.ts
 ```
 
 ### Prisma Version Compatibility
@@ -594,7 +594,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit
-      - run: pnpm test
+      - run: pnpm tests
       - run: pnpm build
 ```
 

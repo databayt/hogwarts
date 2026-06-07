@@ -21,21 +21,19 @@ Seeds مقسومة إلى عامة ومُحدَّدة بالمدرسة في `pri
 
 **عامة** (`global: true`) — تملأ بيانات مرجعية على مستوى المنصة:
 
-| Seed                | الوصف                                             |
-| ------------------- | ------------------------------------------------- |
-| `catalog`           | الكتالوج العام (مواد، فصول، دروس)                 |
-| `catalog-images`    | رفع صور ClickView إلى S3/CloudFront               |
-| `clickview-catalog` | كتالوج ClickView US (62 مادة، 201 فصل، 986 درساً) |
-| `clickview-images`  | رفع صور مواد ClickView                            |
-| `school`            | المدرسة التجريبية + علامتها                       |
+| Seed      | الوصف                             |
+| --------- | --------------------------------- |
+| `catalog` | الكتالوج العام (مواد، فصول، دروس) |
+| `us`      | كتالوج US K-12 من مخزون ClickView |
+| `school`  | المدرسة التجريبية + علامتها       |
 
 **مُحدَّدة بالمدرسة** — تتطلب وجود المدرسة التجريبية (طلاب، مدرّسون، فصول، حضور، وما إلى ذلك).
 
 ```bash
-pnpm db:seed:single --list                  # عرض كل الـseeds
-pnpm db:seed:single clickview-catalog       # seed عام (يعمل على DB فارغة)
-pnpm db:seed:single subjects                # seed مُحدَّد بالمدرسة (يتطلب التجريبية)
-pnpm db:seed                                # محظور — راجع أدناه
+pnpm db:seed:single --list    # عرض كل الـseeds
+pnpm db:seed:single catalog   # seed عام (يعمل على DB فارغة)
+pnpm db:seed:single subjects  # seed مُحدَّد بالمدرسة (يتطلب التجريبية)
+pnpm db:seed                  # محظور — راجع أدناه
 ```
 
 ### لماذا `pnpm db:seed` محظور

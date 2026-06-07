@@ -66,6 +66,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-highlight: var(--code-highlight);
+  --color-code-number: var(--code-number);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -133,6 +139,12 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  --surface: oklch(0.98 0 0);
+  --surface-foreground: var(--foreground);
+  --code: var(--surface);
+  --code-foreground: var(--surface-foreground);
+  --code-highlight: oklch(0.96 0 0);
+  --code-number: oklch(0.56 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -200,6 +212,12 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+  --surface: oklch(0.2 0 0);
+  --surface-foreground: oklch(0.708 0 0);
+  --code: var(--surface);
+  --code-foreground: var(--surface-foreground);
+  --code-highlight: oklch(0.27 0 0);
+  --code-number: oklch(0.72 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -314,6 +332,19 @@ body {
 @utility extend-touch-target {
   @media (pointer: coarse) {
     @apply relative touch-manipulation after:absolute after:-inset-2 after:content-[''];
+  }
+}
+
+/* Numbered "Steps" in docs (mirrors shadcn/ui). RTL-safe logical port:
+   me-/ms- instead of mr-/ml- so the circle sits on the correct side of the
+   vertical rule in Arabic (RTL default) and English (LTR). Pairs with the
+   `[&>h3]:step steps md:border-s md:ps-8` classes on the Steps container. */
+@utility step {
+  counter-increment: step;
+
+  &:before {
+    @apply text-muted-foreground border-background bg-muted me-2 inline-flex size-6 items-center justify-center rounded-full text-center -indent-px font-mono text-sm font-medium md:absolute md:ms-[-50px] md:mt-[-4px] md:size-9 md:border-4;
+    content: counter(step);
   }
 }
 
@@ -620,3 +651,53 @@ body {
   --wa-text-quote-title: #f26196;
 }
 /* WA TOKENS END */
+
+/* ── shadcn-style code blocks ──────────────────────────────────────────────
+   Docs render fenced code via fumadocs `DynamicCodeBlock` (runtime shiki —
+   build-time shiki is disabled for the OOM reason in docs/documentation.mdx).
+   We deliberately do NOT load `fumadocs-ui/css`, so its `.shiki` figure is
+   unthemed and the github-light/github-dark token variables it emits
+   (--shiki-light / --shiki-dark) go unconsumed (code renders monochrome).
+   These rules give the shadcn surface + filename title bar and light up the
+   syntax colors. Unlayered on purpose so they win over fumadocs' utilities. */
+figure.shiki {
+  position: relative;
+  margin-block: 1.5rem;
+  margin-inline: -0.25rem;
+  border-width: 0;
+  border-radius: var(--radius-xl);
+  background-color: var(--code);
+  color: var(--code-foreground);
+  box-shadow: none;
+  overflow: hidden;
+  font-size: var(--text-sm);
+}
+
+/* Code area padding (fumadocs' scroll viewport) */
+figure.shiki .fd-scroll-container {
+  padding: 1rem;
+}
+
+/* Let the figure surface show through shiki's own backgrounds */
+figure.shiki pre,
+figure.shiki code {
+  background-color: transparent !important;
+}
+
+/* Syntax token colors from shiki's dual-theme CSS variables */
+figure.shiki span {
+  color: var(--shiki-light);
+}
+.dark figure.shiki span {
+  color: var(--shiki-dark);
+}
+
+/* Filename title bar → shadcn [data-rehype-pretty-code-title] treatment */
+figure.shiki figcaption {
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 30%, transparent);
+  padding-block: 0.625rem;
+  padding-inline: 1rem;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  color: var(--code-foreground);
+}

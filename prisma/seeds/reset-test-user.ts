@@ -9,7 +9,7 @@
  * - No schoolId
  * - Clears any associated data
  *
- * Usage: pnpm db:reset-test-user
+ * Usage: pnpm db:reset-tests-user
  */
 
 import { PrismaClient } from "@prisma/client"
@@ -24,7 +24,7 @@ const TEST_USER_EMAIL = "user@databayt.org"
 const PROTECTED_EMAILS = ["dev@databayt.org"]
 
 async function resetTestUser() {
-  console.log("🔄 Resetting test user: user@databayt.org")
+  console.log("🔄 Resetting tests user: user@databayt.org")
 
   const passwordHash = await getPasswordHash()
 
@@ -119,7 +119,7 @@ async function resetTestUser() {
       console.log("   Password: 1234")
     }
   } catch (error) {
-    console.error("❌ Failed to reset test user:", error)
+    console.error("❌ Failed to reset tests user:", error)
     process.exit(1)
   } finally {
     await prisma.$disconnect()

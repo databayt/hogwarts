@@ -1,14 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { PageTitle } from "@/components/atom/page-title"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { SubjectPicker } from "./subject-picker"
 
@@ -88,17 +88,17 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   const translatedSubjects = await Promise.all(
     catalogSubjects.map(async ({ lang: contentLang, ...s }) => ({
       id: s.id,
-      name: await getDisplayText(
+      name: await getText(
         s.name,
-        (contentLang || "ar") as SupportedLanguage,
+        (contentLang || "ar") as Lang,
         lang,
         schoolId
       ),
       slug: s.slug,
       department: s.department
-        ? await getDisplayText(
+        ? await getText(
             s.department,
-            (contentLang || "ar") as SupportedLanguage,
+            (contentLang || "ar") as Lang,
             lang,
             schoolId
           )
@@ -116,17 +116,12 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   const translatedGrades = await Promise.all(
     grades.map(async (g) => ({
       id: g.id,
-      name: await getDisplayText(
-        g.name,
-        (g.lang || "ar") as SupportedLanguage,
-        lang,
-        schoolId
-      ),
+      name: await getText(g.name, (g.lang || "ar") as Lang, lang, schoolId),
       gradeNumber: g.gradeNumber,
       levelName: g.level?.name
-        ? await getDisplayText(
+        ? await getText(
             g.level.name,
-            (g.level.lang || "ar") as SupportedLanguage,
+            (g.level.lang || "ar") as Lang,
             lang,
             schoolId
           )

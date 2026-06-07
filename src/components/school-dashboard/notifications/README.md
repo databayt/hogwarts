@@ -33,7 +33,7 @@ Comprehensive notification center with in-app delivery, user preferences, and RB
 - `validation.ts` — Zod schemas for all inputs (24 types, 5 channels, quiet-hours/digest pairing rules)
 - `config.ts` — `NOTIFICATION_TYPE_CONFIG`, `PRIORITY_CONFIG`, `CHANNEL_CONFIG`, `NOTIFICATION_EXPIRATION`, `DEFAULT_NOTIFICATION_PREFERENCES`, `NOTIFICATION_FILTER_TYPES`
 - `types.ts` — TypeScript type definitions (DTO, filters, stats, socket events)
-- `content.tsx` — Server component (main entry, runs `getDisplayText` for cross-lang content)
+- `content.tsx` — Server component (main entry, runs `getText` for cross-lang content)
 - `center.tsx` — Notification center (client, tabs/filters/groupings)
 - `notification-center-client.tsx` — Client wrapper that wires server actions
 - `bell-icon.tsx` — Bell icon with unread badge (client, polling + WebSocket)

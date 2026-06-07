@@ -123,7 +123,8 @@ function TeachersTableInner({
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getTeachers(params)
+      // Pass the route locale so search/load-more match the initial render.
+      const result = await getTeachers({ ...params, lang })
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }

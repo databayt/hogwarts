@@ -150,7 +150,7 @@ console.log(`
 interface BenchmarkOptions {
   iterations?: number // Number of runs (default: 100)
   warmup?: number // Warmup runs (default: 10)
-  timeout?: number // Max time per test (default: 60s)
+  timeout?: number // Max time per tests (default: 60s)
   compare?: string // Branch to compare against
   threshold?: number // Performance regression threshold (%)
   output?: "json" | "html" // Report format

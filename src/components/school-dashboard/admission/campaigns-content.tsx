@@ -3,8 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -12,6 +10,8 @@ import type { CampaignRow } from "@/components/school-dashboard/admission/campai
 import { CampaignsTable } from "@/components/school-dashboard/admission/campaigns-table"
 import { campaignsSearchParams } from "@/components/school-dashboard/admission/list-params"
 import { getCampaignsList } from "@/components/school-dashboard/admission/queries"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -45,12 +45,7 @@ export default async function CampaignsContent({
       data = await Promise.all(
         rows.map(async (c) => ({
           id: c.id,
-          name: await getDisplayText(
-            c.name,
-            detectLanguage(c.name),
-            lang,
-            schoolId!
-          ),
+          name: await getText(c.name, detectLang(c.name), lang, schoolId!),
           academicYear: c.academicYear,
           startDate: c.startDate
             ? new Date(c.startDate).toISOString()

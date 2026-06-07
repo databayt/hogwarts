@@ -1,7 +1,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/table"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
 
 import { getRoomCapacityOverview } from "./actions"
 
@@ -59,21 +59,21 @@ export default async function RoomCapacityContent({ lang }: Props) {
   const translatedRooms = await Promise.all(
     rooms.map(async (r) => ({
       id: r.id,
-      roomName: await getDisplayText(
+      roomName: await getText(
         r.roomName,
         (r.lang as "ar" | "en") || "ar",
         lang,
         schoolId
       ),
       capacity: r.capacity,
-      typeName: await getDisplayText(
+      typeName: await getText(
         r.classroomType.name,
         (r.classroomType.lang as "ar" | "en") || "ar",
         lang,
         schoolId
       ),
       gradeName: r.grade
-        ? await getDisplayText(
+        ? await getText(
             r.grade.name,
             (r.grade.lang as "ar" | "en") || "ar",
             lang,

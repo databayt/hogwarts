@@ -3,8 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -15,6 +13,8 @@ import {
   getMeritList,
   getMeritStats,
 } from "@/components/school-dashboard/admission/queries"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -53,9 +53,9 @@ export default async function MeritContent({
         listResult.rows.map(async (a) => ({
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: await getDisplayText(
+          applicantName: await getText(
             `${a.firstName} ${a.lastName}`,
-            detectLanguage(`${a.firstName} ${a.lastName}`),
+            detectLang(`${a.firstName} ${a.lastName}`),
             lang,
             schoolId!
           ),
@@ -68,9 +68,9 @@ export default async function MeritContent({
           meritRank: a.meritRank,
           entranceScore: a.entranceScore?.toString() ?? null,
           interviewScore: a.interviewScore?.toString() ?? null,
-          campaignName: await getDisplayText(
+          campaignName: await getText(
             a.campaign.name,
-            detectLanguage(a.campaign.name),
+            detectLang(a.campaign.name),
             lang,
             schoolId!
           ),

@@ -17,7 +17,7 @@ program
   .requiredOption("-n, --name <name>", "Component name (PascalCase)")
   .requiredOption("-t, --type <type>", "Type: page|feature|atom|ui")
   .option("--i18n", "Include internationalization")
-  .option("--tests", "Include test files")
+  .option("--tests", "Include tests files")
   .option("--stories", "Include Storybook stories")
   .option("--path <path>", "Custom path (default: auto-detect from type)")
   .parse()
@@ -240,7 +240,7 @@ import { ${options.name}Content } from '@/components/${toKebabCase(options.name)
 - \`actions.ts\` - Server actions
 - \`validation.ts\` - Zod schemas
 - \`types.ts\` - TypeScript types
-${options.tests ? "- `content.test.tsx` - Tests" : ""}
+${options.tests ? "- `content.tests.tsx` - Tests" : ""}
 
 ## Generated
 ${new Date().toISOString()}
@@ -289,7 +289,7 @@ async function generateComponent() {
     // Tests
     if (options.tests) {
       files.push({
-        path: join(componentPath, "content.test.tsx"),
+        path: join(componentPath, "content.tests.tsx"),
         content: generateTest(),
       })
     }

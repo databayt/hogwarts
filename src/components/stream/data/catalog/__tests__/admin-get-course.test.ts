@@ -13,7 +13,7 @@ import { adminGetCatalogCourse } from "../admin-get-course"
 // ---------------------------------------------------------------------------
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
-vi.mock("@/lib/catalog-image-url", () => ({
+vi.mock("@/components/catalog/image-url", () => ({
   getCatalogImageUrl: (v: string | null) => v,
 }))
 

@@ -1,12 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
+import { detectScript } from "@/components/translation/util"
 
 import { getUIConfigForRole } from "./permissions"
 import { getStaffList } from "./queries"
@@ -70,24 +71,28 @@ export async function StaffContent({
 
   const rawData = rows.map(transformStaffToRow)
 
-  // Translate text fields for display
+  // Translate text fields for display. StaffMember has NO `lang` column, so detect
+  // each field's content language from its actual script (detectScript) rather
+  // than reading a phantom column that always resolved to "ar".
   const data = await Promise.all(
-    rawData.map(async (row, i) => {
-      const staffLang = ((rows[i] as any).lang as "ar" | "en") || "ar"
-      const deptLang =
-        ((rows[i] as any).department?.lang as "ar" | "en") || "ar"
+    rawData.map(async (row) => {
       return {
         ...row,
-        name: await getDisplayText(row.name, staffLang, locale, schoolId!),
-        position: await getDisplayText(
-          row.position,
-          staffLang,
+        name: await getText(
+          row.name,
+          detectScript(row.name),
           locale,
           schoolId!
         ),
-        departmentName: await getDisplayText(
+        position: await getText(
+          row.position,
+          detectScript(row.position),
+          locale,
+          schoolId!
+        ),
+        departmentName: await getText(
           row.departmentName,
-          deptLang,
+          detectScript(row.departmentName),
           locale,
           schoolId!
         ),

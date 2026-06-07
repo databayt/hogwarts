@@ -18,7 +18,6 @@
 import { PrismaClient } from "@prisma/client"
 
 import { seedAcademicStructure } from "./academic"
-import { seedAcademicStructureCatalog } from "./academic-structure-catalog"
 import { seedAdmission } from "./admission"
 import { seedAnnouncements } from "./announcements"
 import { seedAssignments, seedAssignmentSubmissions } from "./assignments"
@@ -30,22 +29,24 @@ import {
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
-import { backfillExamCatalogBridges } from "./backfill-exam-catalog-bridges"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
-import { seedBannerCopy } from "./banner-copy"
-import { seedCatalog } from "./catalog"
-import { seedBooks } from "./catalog-books"
-import { seedCatalogContent } from "./catalog-content"
-import { seedExamTemplates } from "./catalog-exam-templates"
-import { seedCatalogImages } from "./catalog-images"
-import { seedCatalogVideos } from "./catalog-videos"
+import { seedBannerCopy } from "./catalog/banners"
+import { seedBooks } from "./catalog/books"
+import { seedClickViewLessonImages } from "./catalog/clickview-lessons"
+import { seedConceptImages } from "./catalog/concepts"
+import { seedCatalogContent } from "./catalog/content"
+import { seedAcademicStructureCatalog } from "./catalog/demo"
+import { seedExamTemplates } from "./catalog/exam-templates"
+import { seedCatalog } from "./catalog/index"
+import { seedCurriculum } from "./catalog/meta"
+import { syncSdCurriculum } from "./catalog/sd"
+import { seedSudanCatalog } from "./catalog/sd-base"
+import { seedUsCatalog } from "./catalog/us"
+import { seedCatalogVideos } from "./catalog/videos"
+import { seedWorldCurricula } from "./catalog/world"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import { seedClickViewImages } from "./clickview-images"
-import { seedClickViewLessonImages } from "./clickview-lesson-images"
-import { seedConceptImages } from "./concept-images"
-import { seedCurriculum } from "./curriculum"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -65,12 +66,10 @@ import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
 import { seedSalesNetwork } from "./sales-network"
 import { seedSchoolWithBranding } from "./school"
-import { seedSudanCatalog } from "./sd-catalog"
 import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
-import { syncSdCurriculum } from "./sync-sd-curriculum"
 import { seedTimetable } from "./timetable"
 import { seedTransportation } from "./transportation"
 import type {
@@ -86,9 +85,7 @@ import type {
   UserRef,
   YearLevelRef,
 } from "./types"
-import { seedUsCatalog } from "./us-catalog"
 import { measureDuration } from "./utils"
-import { seedWorldCurricula } from "./world-curricula"
 
 // ============================================================================
 // DB RESOLVERS - Fetch existing data instead of re-seeding
@@ -367,14 +364,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedCatalog(prisma)
     },
   },
-  "catalog-images": {
-    description: "Upload ClickView images to S3/CloudFront",
-    global: true,
-    run: async (prisma) => {
-      await seedCatalogImages(prisma)
-    },
-  },
-  "us-catalog": {
+  us: {
     description:
       "US K-12 catalog (~220 grade-specific subjects, ~800 chapters, ~4000 lessons)",
     global: true,
@@ -390,14 +380,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedSalesNetwork(prisma)
     },
   },
-  "clickview-images": {
-    description: "Upload ClickView subject images to S3/CloudFront",
-    global: true,
-    run: async (prisma) => {
-      await seedClickViewImages(prisma)
-    },
-  },
-  "clickview-lesson-images": {
+  "clickview-lessons": {
     description:
       "Upload ClickView lesson + chapter images to S3/CloudFront (~891 unique)",
     global: true,
@@ -405,7 +388,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedClickViewLessonImages(prisma)
     },
   },
-  "sd-catalog": {
+  "sd-base": {
     description:
       "Sudan national curriculum (Grade 1 pilot: 4 subjects, ~17 chapters, ~120 lessons)",
     global: true,
@@ -413,7 +396,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedSudanCatalog(prisma)
     },
   },
-  curriculum: {
+  meta: {
     description:
       "Curriculum records (SD-national, US-k12) + backfill Subject.curriculumId",
     global: true,
@@ -421,7 +404,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedCurriculum(prisma)
     },
   },
-  "world-curricula": {
+  world: {
     description:
       "8 world curricula (GB, IB, SA, EG, AE, QA, KW, JO) with grade-specific subjects",
     global: true,
@@ -429,7 +412,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedWorldCurricula(prisma)
     },
   },
-  "banner-copy": {
+  banners: {
     description:
       "Copy old curated wide banners to new concept S3 paths (all grades)",
     global: true,
@@ -437,7 +420,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedBannerCopy()
     },
   },
-  "concept-images": {
+  concepts: {
     description:
       "Universal concept images → Sharp/WebP → S3/CloudFront (shared across all curricula)",
     global: true,
@@ -445,7 +428,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedConceptImages(prisma)
     },
   },
-  "sync-sd-curriculum": {
+  sd: {
     description:
       "Sync Sudan curriculum chapters/lessons from curriculum/sd/ directory + concept images",
     global: true,
@@ -453,7 +436,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await syncSdCurriculum(prisma)
     },
   },
-  "catalog-content": {
+  content: {
     description:
       "Catalog content (videos, materials, exams, questions, assignments)",
     global: true,
@@ -461,14 +444,14 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedCatalogContent(prisma)
     },
   },
-  "catalog-videos": {
+  videos: {
     description: "Catalog lesson videos (S3/CloudFront)",
     global: true,
     run: async (prisma) => {
       await seedCatalogVideos(prisma)
     },
   },
-  "catalog-books": {
+  books: {
     description: "Global catalog books (90 books, approved + published)",
     global: true,
     run: async (prisma) => {
@@ -498,7 +481,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedAcademicStructure(prisma, schoolId)
     },
   },
-  "academic-catalog": {
+  demo: {
     description: "Academic structure + catalog bridge",
     run: async (prisma, schoolId) => {
       const yearLevels = await resolveYearLevels(prisma, schoolId)
@@ -700,7 +683,7 @@ const SEEDS: Record<string, SeedEntry> = {
     },
   },
   "messaging-phones": {
-    description: "WhatsApp phone numbers for admin + accountant test accounts",
+    description: "WhatsApp phone numbers for admin + accountant tests accounts",
     run: async (prisma, schoolId) => {
       await seedMessagingPhones(prisma, schoolId)
     },
@@ -874,13 +857,6 @@ const SEEDS: Record<string, SeedEntry> = {
       await backfillClassGrades()
     },
   },
-  "backfill-exam-catalog-bridges": {
-    description: "Backfill catalogSubjectId on Exam records from Subject",
-    global: true,
-    run: async () => {
-      await backfillExamCatalogBridges()
-    },
-  },
   "backfill-student-sections": {
     description:
       "Distribute unassigned students across sections (round-robin). Set BACKFILL_SCHOOL_DOMAIN=xxx to target one school.",
@@ -898,7 +874,7 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedComboniTeachers()
     },
   },
-  "catalog-exam-templates": {
+  "exam-templates": {
     description:
       "Catalog exam blueprints, exam templates (2 per subject), paper templates",
     global: true,

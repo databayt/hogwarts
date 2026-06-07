@@ -4,12 +4,12 @@
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
-import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getFields } from "@/components/translation/display"
 
 import { DocumentsSection } from "./ai/documents-section"
 import type { ProcessedDocument } from "./ai/types"
@@ -158,7 +158,7 @@ export default async function ApplicationDetailContent({
     "guardianRelation",
     "reviewNotes",
   ]
-  const translated = await getDisplayFields(
+  const translated = await getFields(
     application as unknown as Record<string, unknown>,
     translatableFields,
     contentLang,

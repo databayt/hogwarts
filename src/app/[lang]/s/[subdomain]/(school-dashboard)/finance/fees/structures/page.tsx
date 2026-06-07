@@ -1,9 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { detectFeeProvisioningDrift } from "@/lib/fee-provisioning"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -11,6 +9,8 @@ import { type FeeStructureRow } from "@/components/school-dashboard/finance/fees
 import { FeeDriftBanner } from "@/components/school-dashboard/finance/fees/drift-banner"
 import { getFeeStructureList } from "@/components/school-dashboard/finance/fees/queries"
 import { FeeStructuresTable } from "@/components/school-dashboard/finance/fees/table"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 export const metadata = { title: "Fee Structures" }
 
@@ -42,17 +42,12 @@ export default async function FeeStructuresPage({ params }: Props) {
   const data: FeeStructureRow[] = await Promise.all(
     rows.map(async (fs) => ({
       id: fs.id,
-      name: await getDisplayText(
-        fs.name,
-        detectLanguage(fs.name),
-        lang,
-        schoolId
-      ),
+      name: await getText(fs.name, detectLang(fs.name), lang, schoolId),
       academicYear: fs.academicYear,
       className: fs.class?.name
-        ? await getDisplayText(
+        ? await getText(
             fs.class.name,
-            detectLanguage(fs.class.name),
+            detectLang(fs.class.name),
             lang,
             schoolId
           )

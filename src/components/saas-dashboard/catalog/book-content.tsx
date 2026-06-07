@@ -3,7 +3,6 @@
 
 import { BookOpen, CheckCircle2, Clock, GraduationCap } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import {
   Card,
@@ -15,7 +14,8 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import type { BookRow } from "./book-columns"
 import { BookTable } from "./book-table"
@@ -55,27 +55,17 @@ export async function BookContent({ lang }: Props) {
   const rows: BookRow[] = await Promise.all(
     books.map(async ({ lang: contentLang, ...b }) => ({
       ...b,
-      title: await getDisplayText(
+      title: await getText(
         b.title,
-        (contentLang || "ar") as SupportedLanguage,
+        (contentLang || "ar") as Lang,
         lang,
         "global"
       ),
       author: b.author
-        ? await getDisplayText(
-            b.author,
-            (contentLang || "ar") as SupportedLanguage,
-            lang,
-            "global"
-          )
+        ? await getText(b.author, (contentLang || "ar") as Lang, lang, "global")
         : b.author,
       genre: b.genre
-        ? await getDisplayText(
-            b.genre,
-            (contentLang || "ar") as SupportedLanguage,
-            lang,
-            "global"
-          )
+        ? await getText(b.genre, (contentLang || "ar") as Lang, lang, "global")
         : b.genre,
     }))
   )

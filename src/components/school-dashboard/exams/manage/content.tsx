@@ -4,13 +4,13 @@
 import { ExamStatus, ExamType, type Prisma } from "@prisma/client"
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { type ExamRow } from "./columns"
 import { examsSearchParams } from "./list-params"
@@ -75,17 +75,17 @@ export default async function ExamsContent({
         id: e.id,
         title: e.title,
         className: e.class?.name
-          ? await getDisplayText(
+          ? await getText(
               e.class.name,
-              (e.class.lang || "ar") as SupportedLanguage,
+              (e.class.lang || "ar") as Lang,
               lang,
               schoolId!
             )
           : "Unknown",
         name: e.subject?.name
-          ? await getDisplayText(
+          ? await getText(
               e.subject.name,
-              (e.subject.lang || "ar") as SupportedLanguage,
+              (e.subject.lang || "ar") as Lang,
               lang,
               schoolId!
             )

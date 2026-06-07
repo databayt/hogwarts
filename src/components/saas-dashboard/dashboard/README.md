@@ -352,7 +352,7 @@ export function BarGraph() {
 ### Unit Tests
 
 ```bash
-pnpm test src/components/saas-dashboard/lab/**/*.test.tsx
+pnpm tests src/components/saas-dashboard/lab/**/*.tests.tsx
 ```
 
 ### Test Coverage Areas

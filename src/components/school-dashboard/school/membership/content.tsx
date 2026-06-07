@@ -1,11 +1,11 @@
 import { auth } from "@/auth"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
 
 import { canManageMembers } from "./authorization"
 import {
@@ -54,9 +54,9 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
   const translatedMembers = await Promise.all(
     members.map(async (m) => ({
       ...m,
-      name: await getDisplayText(m.name, contentLang, lang, schoolId),
+      name: await getText(m.name, contentLang, lang, schoolId),
       gradeName: m.gradeName
-        ? await getDisplayText(m.gradeName, contentLang, lang, schoolId)
+        ? await getText(m.gradeName, contentLang, lang, schoolId)
         : null,
     }))
   )

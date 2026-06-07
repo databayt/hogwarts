@@ -153,7 +153,7 @@ library/
 pnpm vitest run src/components/library/ --reporter=verbose
 
 # Run catalog-setup tests including setupLibraryForSchool (54 tests)
-pnpm vitest run src/lib/__tests__/catalog-setup.test.ts --reporter=verbose
+pnpm vitest run src/lib/__tests__/catalog-setup.tests.ts --reporter=verbose
 ```
 
 | Suite                                  | Tests | Coverage                         |

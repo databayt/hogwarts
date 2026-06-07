@@ -82,7 +82,7 @@ git checkout -b release/v2.0.0 develop
 npm version minor
 
 # 3. Run final tests
-pnpm test
+pnpm tests
 pnpm build
 
 # 4. Merge to main
@@ -115,7 +115,7 @@ pnpm tsc --noEmit || exit 1
 pnpm lint || exit 1
 
 # Tests
-pnpm test --changed || exit 1
+pnpm tests --changed || exit 1
 
 # Build verification (main branch)
 if [[ $(git branch --show-current) == "main" ]]; then
@@ -151,13 +151,13 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        run: pnpm test --coverage
+        run: pnpm tests --coverage
 
       - name: Build
         run: pnpm build
 
       - name: E2E tests
-        run: pnpm test:e2e
+        run: pnpm tests:e2e
 
   security:
     runs-on: ubuntu-latest

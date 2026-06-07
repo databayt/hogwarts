@@ -77,7 +77,7 @@ program.name("db").description("Database management utilities").version("1.0.0")
 
 program
   .command("seed")
-  .description("Seed database with test data")
+  .description("Seed database with tests data")
   .option("-s, --school <id>", "School ID to seed")
   .option("-u, --users <count>", "Number of users to create", "10")
   .action(async (options) => {
@@ -217,7 +217,7 @@ program
     if (!options.skipTests) {
       const testSpinner = ora("Running tests...").start()
       try {
-        execSync("pnpm test", { stdio: "ignore" })
+        execSync("pnpm tests", { stdio: "ignore" })
         testSpinner.succeed("Tests passed")
       } catch {
         testSpinner.fail("Tests failed")
@@ -267,11 +267,11 @@ import { Command } from "commander"
 const program = new Command()
 const prisma = new PrismaClient()
 
-program.name("generate").description("Generate test data").version("1.0.0")
+program.name("generate").description("Generate tests data").version("1.0.0")
 
 program
   .command("students")
-  .description("Generate test students")
+  .description("Generate tests students")
   .option("-n, --number <count>", "Number of students", "50")
   .option("-s, --school <id>", "School ID (required)")
   .requiredOption("-s, --school <id>", "School ID is required")
@@ -290,7 +290,7 @@ program
 
 program
   .command("teachers")
-  .description("Generate test teachers")
+  .description("Generate tests teachers")
   .option("-n, --number <count>", "Number of teachers", "20")
   .option("-s, --school <id>", "School ID (required)")
   .action(async (options) => {
@@ -396,7 +396,7 @@ _hogwarts() {
     'db:Database management'
     'tenant:Multi-tenant management'
     'deploy:Deploy to environment'
-    'generate:Generate test data'
+    'generate:Generate tests data'
   )
 
   _describe 'command' commands

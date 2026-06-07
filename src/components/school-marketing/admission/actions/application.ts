@@ -551,7 +551,7 @@ export async function submitApplication(
     const resolvedNationality = validated.nationality || validated.country || ""
 
     // Normalize the applicant's UI locale into a stored content language so
-    // dashboard-side getDisplayText() can translate free-text correctly.
+    // dashboard-side getText() can translate free-text correctly.
     const contentLang = lang === "en" ? "en" : "ar"
 
     if (!campaign) {

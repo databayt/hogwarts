@@ -3,8 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -15,6 +13,8 @@ import {
   getEnrollmentList,
   getEnrollmentStats,
 } from "@/components/school-dashboard/admission/queries"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -60,9 +60,9 @@ export default async function EnrollmentContent({
         listResult.rows.map(async (a) => ({
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: await getDisplayText(
+          applicantName: await getText(
             `${a.firstName} ${a.lastName}`,
-            detectLanguage(`${a.firstName} ${a.lastName}`),
+            detectLang(`${a.firstName} ${a.lastName}`),
             lang,
             schoolId!
           ),
@@ -89,9 +89,9 @@ export default async function EnrollmentContent({
           hasDocuments:
             a.documents != null &&
             (Array.isArray(a.documents) ? a.documents.length > 0 : true),
-          campaignName: await getDisplayText(
+          campaignName: await getText(
             a.campaign.name,
-            detectLanguage(a.campaign.name),
+            detectLang(a.campaign.name),
             lang,
             schoolId!
           ),

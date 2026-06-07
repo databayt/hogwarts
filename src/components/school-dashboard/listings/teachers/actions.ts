@@ -73,10 +73,8 @@ import { auth } from "@/auth"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModelOrThrow } from "@/lib/prisma-guards"
-import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
@@ -85,6 +83,10 @@ import {
   teacherCreateSchema,
   teacherUpdateSchema,
 } from "@/components/school-dashboard/listings/teachers/validation"
+import { getText } from "@/components/translation/display"
+import { getNames } from "@/components/translation/person"
+import { search } from "@/components/translation/search"
+import { fullName } from "@/components/translation/util"
 
 import { assertTeacherPermission, getAuthContext } from "./authorization"
 
@@ -783,9 +785,11 @@ export async function getTeachers(
 
     const sp = getTeachersSchema.parse(input ?? {})
 
-    // Build where clause with bilingual search support
+    // Display language: the ROUTE [lang] (passed by the client table) is the source
+    // of truth; the NEXT_LOCALE cookie is only a fallback for non-routed callers.
     const cookieStore = await cookies()
-    const displayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+    const displayLang: "ar" | "en" =
+      sp.lang ?? (cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar")
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: { preferredLanguage: true },
@@ -794,7 +798,7 @@ export async function getTeachers(
 
     let nameFilter = {}
     if (sp.name) {
-      const nameConditions = await buildTranslatedSearchConditions(
+      const nameConditions = await search(
         sp.name,
         ["firstName", "lastName"],
         schoolId,
@@ -836,28 +840,26 @@ export async function getTeachers(
       teacherModel.count({ where }),
     ])
 
-    // Map results — use employmentStatus for consistency with content.tsx
-    const mapped = (rows as Array<any>).map((t) => ({
-      id: t.id as string,
-      userId: t.userId as string | null,
-      name: [t.firstName, t.lastName].filter(Boolean).join(" "),
-      lang: t.lang || "ar",
-      emailAddress: t.emailAddress || "-",
-      status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
-      createdAt: (t.createdAt as Date).toISOString(),
-    }))
-
-    // Translate teacher names when display language differs from content language
-    for (const row of mapped) {
-      if (row.lang !== displayLang && row.name) {
-        row.name = await getDisplayText(
-          row.name,
-          row.lang as "ar" | "en",
-          displayLang as "ar" | "en",
-          schoolId
-        )
+    // Translate teacher names via the canonical helper (script-detected + dedup +
+    // transliterate fallback) — must match the initial render in content.tsx.
+    const nameTranslations = await getNames(
+      rows as Array<any>,
+      (t) => t,
+      displayLang,
+      schoolId
+    )
+    const mapped = (rows as Array<any>).map((t) => {
+      const rawName = fullName(t)
+      return {
+        id: t.id as string,
+        userId: t.userId as string | null,
+        name: nameTranslations.get(rawName) || rawName,
+        lang: t.lang || "ar",
+        emailAddress: t.emailAddress || "-",
+        status: t.employmentStatus === "ACTIVE" ? "active" : "inactive",
+        createdAt: (t.createdAt as Date).toISOString(),
       }
-    }
+    })
 
     return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {

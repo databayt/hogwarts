@@ -72,7 +72,7 @@ interface HealthCheckResult {
 async function checkDatabase(): Promise<HealthCheckResult> {
   const start = Date.now()
   try {
-    // Simple database connectivity test
+    // Simple database connectivity tests
     await db.$queryRaw`SELECT 1`
     const responseTime = Date.now() - start
 

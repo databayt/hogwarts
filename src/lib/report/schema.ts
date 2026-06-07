@@ -22,7 +22,7 @@ export const REPORT_CATEGORIES = [
 
 /**
  * Bounds reasoned in plan §4:
- *  - 30 char min kills "test", "asdf", "doesn't work" (real spam patterns).
+ *  - 30 char min kills "tests", "asdf", "doesn't work" (real spam patterns).
  *  - 2000 char max prevents paste-bomb / prompt-injection wall-of-text.
  *  - pageUrl is checked again later against the repo's host allowlist (HF5).
  *  - viewport regex bounds the existing client capture format (e.g. "1280x720").

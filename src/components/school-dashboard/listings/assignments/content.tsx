@@ -3,8 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -16,6 +14,8 @@ import { assignmentsSearchParams } from "@/components/school-dashboard/listings/
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/assignments/permissions"
 import { AssignmentsTable } from "@/components/school-dashboard/listings/assignments/table"
 import { Shell as PageContainer } from "@/components/table/shell"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -68,9 +68,9 @@ export default async function AssignmentsContent({
     data = await Promise.all(
       rows.map(async (a: any) => ({
         id: a.id,
-        title: await getDisplayText(
+        title: await getText(
           a.title,
-          detectLanguage(a.title || ""),
+          detectLang(a.title || ""),
           lang,
           schoolId!
         ),

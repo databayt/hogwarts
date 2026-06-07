@@ -42,7 +42,7 @@ last_audited: 2026-05-25
 - [x] WhatsApp phone resolution (Guardian > Teacher > StaffMember)
 - [x] WhatsApp delivery status on message bubbles (sent/delivered/read/failed)
 - [x] Unread badge on header mail icon (fetch on mount + focus, Socket.IO increment)
-- [x] Contact name translation (getDisplayText when locale differs from school language)
+- [x] Contact name translation (getText when locale differs from school language)
 - [x] Contacts sidebar with role-based grouping (WhatsApp-style click-to-chat)
 - [x] 1:1 conversation deduplication (reuses existing direct conversation)
 - [x] Polling fallback for conversation list (15s interval when disconnected)

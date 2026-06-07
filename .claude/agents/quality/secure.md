@@ -197,7 +197,7 @@ if (!["ADMIN", "TEACHER"].includes(session.user.role)) {
 npm audit
 pnpm audit --audit-level moderate
 
-# Security headers test
+# Security headers tests
 curl -I https://yourdomain.com
 
 # OWASP ZAP scan

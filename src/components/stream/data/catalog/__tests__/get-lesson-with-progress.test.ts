@@ -16,7 +16,7 @@ import { getLessonWithProgress } from "../get-lesson-with-progress"
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/lib/asset-url", () => ({ asset: (p: string) => p }))
-vi.mock("@/lib/catalog-image-url", () => ({
+vi.mock("@/components/catalog/image-url", () => ({
   getCatalogImageUrl: (v: string | null) => v,
 }))
 // getVideoUrl is the boundary the paywall fix turns on. Encode isFree so tests

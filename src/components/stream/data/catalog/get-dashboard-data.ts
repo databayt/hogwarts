@@ -4,8 +4,8 @@
 // cache() to dedupe per request. Server-only; not a "use server" action.
 import { cache } from "react"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 /**
  * Fetches catalog-based dashboard data for a user.

@@ -29,7 +29,7 @@
 
 - [ ] Fines overview cards hardcode English titles (`Student Assignments`, `Fine Reports`, `Fines & Penalties`, `Scholarships`) -- see `content.tsx` card section
 - [ ] Fine type enum badges (`LATE FEE`, `DAMAGE FINE`, `LIBRARY FINE`, `DISCIPLINE FINE`) not translated on AR side -- map via `dictionary.finance.fees.fineTypes.*`
-- [ ] Fine reason text (`Late payment penalty`, `School property damage`, etc.) stored English-only in seed data -- resolve via `getDisplayText()` or require `lang` field on Fine model
+- [ ] Fine reason text (`Late payment penalty`, `School property damage`, etc.) stored English-only in seed data -- resolve via `getText()` or require `lang` field on Fine model
 - [ ] Installment plans (schema: `FeePaymentPlan` exists, no UI flow)
 - [ ] Fee reminders via WhatsApp (hook exists in `src/lib/whatsapp/`)
 - [ ] Scholarship auto-apply based on merit / need criteria

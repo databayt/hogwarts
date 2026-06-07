@@ -28,8 +28,8 @@ Generate and validate visual snapshots for UI components using Playwright
 ### 2. Generate Snapshot Test
 
 ```typescript
-// Generate test file
-import { expect, test } from "@playwright/test"
+// Generate tests file
+import { expect, test } from "@playwright/tests"
 
 test.describe("Visual Snapshots: ${componentName}", () => {
   test("default state", async ({ page }) => {
@@ -55,10 +55,10 @@ test.describe("Visual Snapshots: ${componentName}", () => {
 
 ```bash
 # Execute Playwright snapshot tests
-pnpm playwright test --project=chromium --grep="Visual Snapshots"
+pnpm playwright tests --project=chromium --grep="Visual Snapshots"
 
 # Update snapshots if --update flag
-pnpm playwright test --update-snapshots
+pnpm playwright tests --update-snapshots
 ```
 
 ### 4. Multi-Browser Testing

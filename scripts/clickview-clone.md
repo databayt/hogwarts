@@ -123,8 +123,8 @@ WebP variants: `sm` (200px), `md` (600px), `lg` (1200px), `original` (full res)
 | `public/clickview/banners/`                     | Banner images (detail page heroes)                    |
 | `prisma/seeds/clickview-catalog.ts`             | Seed: inventory → CatalogSubject/Chapter/Lesson       |
 | `prisma/seeds/clickview-images.ts`              | Seed: local images → S3 WebP variants                 |
-| `src/lib/catalog-image.ts`                      | Sharp → WebP → S3 processing pipeline                 |
-| `src/lib/catalog-image-url.ts`                  | Client-safe CDN URL resolution                        |
+| `src/components/catalog/image.ts`               | Sharp → WebP → S3 processing pipeline                 |
+| `src/components/catalog/image-url.ts`           | Client-safe CDN URL resolution                        |
 
 ## Seeds
 

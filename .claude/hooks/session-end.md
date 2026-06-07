@@ -83,7 +83,7 @@ fi
 ### 4. Test & Coverage Changes
 
 ```bash
-# Compare test metrics
+# Compare tests metrics
 echo ""
 echo "🧪 Test Metrics:"
 

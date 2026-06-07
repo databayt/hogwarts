@@ -69,10 +69,10 @@ export async function GET(request: NextRequest) {
         success: true,
         environment: envCheck,
         oauthStatus,
-        message: "OAuth configuration test completed (secured)",
+        message: "OAuth configuration tests completed (secured)",
       })
     } catch (error) {
-      console.error("OAuth test error:", error)
+      console.error("OAuth tests error:", error)
       return createDebugResponse(
         {
           success: false,

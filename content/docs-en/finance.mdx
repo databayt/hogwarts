@@ -104,7 +104,7 @@ See [Double-entry model](#double-entry-model) above and the [Accounts](/docs/fin
 
 ### i18n and the `lang` gap
 
-UI strings flow through the dictionary system, and notifications dispatch via the school's `preferredLanguage`. But **no finance Prisma model has a `lang` field**, so DB-stored, user-facing finance text — `Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description — can't use the platform's `getDisplayText` convention and renders in its stored language only. This is the block's biggest i18n debt.
+UI strings flow through the dictionary system, and notifications dispatch via the school's `preferredLanguage`. But **no finance Prisma model has a `lang` field**, so DB-stored, user-facing finance text — `Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description — can't use the platform's `getText` convention and renders in its stored language only. This is the block's biggest i18n debt.
 
 ## RBAC
 
@@ -128,7 +128,7 @@ Finance models span several files under `prisma/models/`: `finance-core` (chart 
 - Replace the dashboard `Math.random()` trend charts with real aggregation.
 - Payroll tax is a hardcoded flat 15% — needs real brackets (its `config.ts` already ships unused ones).
 - Wire the invoice PDF (the fees receipt PDF already works); add payslip PDF.
-- Add `lang` to user-facing finance models; route through `getDisplayText`.
+- Add `lang` to user-facing finance models; route through `getText`.
 - Add `createRefund` / `verifyWebhook` to the payment interface; finish Bankak.
 - Test coverage: 11 of 14 sub-modules have none.
 

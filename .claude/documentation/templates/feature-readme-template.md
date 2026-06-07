@@ -138,13 +138,13 @@ Component       | Statements | Branches | Functions | Lines |
 
 ```bash
 # Run all tests
-pnpm test {{feature}}
+pnpm tests {{feature}}
 
-# Run specific test
-pnpm test {{feature}}/{{component}}.test.tsx
+# Run specific tests
+pnpm tests {{feature}}/{{component}}.tests.tsx
 
 # With coverage
-pnpm test {{feature}} --coverage
+pnpm tests {{feature}} --coverage
 ```
 
 ### Test Structure

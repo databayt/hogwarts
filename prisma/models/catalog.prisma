@@ -10,7 +10,7 @@
 //   chapter.prisma   — Chapter
 //   lesson.prisma    — Lesson
 //   video.prisma     — Video, Attachment
-//   question.prisma  — Question, ExamQuestion
+//   qbank.prisma  — Question, ExamQuestion
 //   exam.prisma      — Exam, ExamTemplate, ExamBlueprint, PaperTemplate
 //   quiz.prisma      — Quiz, QuizQuestion
 //   assignment.prisma — Assignment

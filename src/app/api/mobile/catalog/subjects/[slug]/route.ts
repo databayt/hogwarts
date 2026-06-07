@@ -3,11 +3,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { toCloudFrontUrl } from "@/lib/cloudfront-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { verifyToken } from "../../../auth/jwt"
 
@@ -43,7 +43,7 @@ export async function GET(
     const schoolId = payload.schoolId as string | null
     const { slug } = await params
     const { searchParams } = new URL(request.url)
-    const lang = (searchParams.get("lang") || "en") as SupportedLanguage
+    const lang = (searchParams.get("lang") || "en") as Lang
 
     // Fetch subject with chapters and lessons
     const subject = await db.subject.findFirst({
@@ -154,7 +154,7 @@ async function buildResponse(
     }[]
   },
   schoolId: string | null,
-  lang: SupportedLanguage
+  lang: Lang
 ) {
   // Check content overrides for this school
   let hiddenChapterIds = new Set<string>()
@@ -188,10 +188,10 @@ async function buildResponse(
   }
 
   // Translate
-  const srcLang = (subject.lang || "ar") as SupportedLanguage
+  const srcLang = (subject.lang || "ar") as Lang
   const cacheKey = schoolId || subject.id
   const t = (text: string | null | undefined) =>
-    getDisplayText(text ?? "", srcLang, lang, cacheKey)
+    getText(text ?? "", srcLang, lang, cacheKey)
 
   const [title, description, departmentName] = await Promise.all([
     t(subject.name),

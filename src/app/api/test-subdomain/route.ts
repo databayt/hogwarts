@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       host,
       rootDomain,
       subdomain,
-      message: "Subdomain test endpoint working (secured)",
+      message: "Subdomain tests endpoint working (secured)",
       env: getSafeEnvVars(),
     })
   })

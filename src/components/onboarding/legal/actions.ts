@@ -9,17 +9,17 @@ import {
   createActionResponse,
   type ActionResponse,
 } from "@/lib/action-response"
+import { db } from "@/lib/db"
+import { generateUniqueJoinCode } from "@/lib/join-code"
+import { dispatchSetupGuideNotifications } from "@/lib/setup-guide-notifications"
+import { syncStudentGrades } from "@/lib/sync-student-grades"
 import {
   applyTimetableStructureForNewSchool,
   autoGenerateTimetableForSchool,
   autoProvisionSections,
   setupCatalogForSchool,
   setupDefaultsForSchool,
-} from "@/lib/catalog-setup"
-import { db } from "@/lib/db"
-import { generateUniqueJoinCode } from "@/lib/join-code"
-import { dispatchSetupGuideNotifications } from "@/lib/setup-guide-notifications"
-import { syncStudentGrades } from "@/lib/sync-student-grades"
+} from "@/components/catalog/setup"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 

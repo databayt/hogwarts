@@ -1,13 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { ensureSubjectSelections } from "@/lib/catalog-setup"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { ensureSubjectSelections } from "@/components/catalog/setup"
 import { type Locale } from "@/components/internationalization/config"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { SubjectsGrid, type SubjectItem } from "./catalog-subjects-grid"
 
@@ -98,16 +98,16 @@ export default async function SubjectsContent({ lang, level }: Props) {
         catalogRows.map(async (s) => ({
           id: s.id,
           slug: s.slug,
-          name: await getDisplayText(
+          name: await getText(
             customNames.get(s.id) ?? s.name,
-            (s.lang || "ar") as SupportedLanguage,
+            (s.lang || "ar") as Lang,
             lang,
             schoolId!
           ),
           department: s.department
-            ? await getDisplayText(
+            ? await getText(
                 s.department,
-                (s.lang || "ar") as SupportedLanguage,
+                (s.lang || "ar") as Lang,
                 lang,
                 schoolId!
               )

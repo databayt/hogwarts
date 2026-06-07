@@ -42,7 +42,7 @@ This matrix is the authoritative readiness view; it is kept identical to the ban
 
 Legend -- **Ledger**: 🟢 posts · 🟡 posts but not transactional · ❌ posting fn exists but zero callers · 🔗 consumes ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 
-> **i18n caveat:** the i18n column tracks UI/validation strings only. Separately, **no finance Prisma model has a `lang` field**, so DB-stored finance text (`Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description) can't use the platform's `getDisplayText` convention. Tracked in `ISSUE.md` P1.
+> **i18n caveat:** the i18n column tracks UI/validation strings only. Separately, **no finance Prisma model has a `lang` field**, so DB-stored finance text (`Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description) can't use the platform's `getText` convention. Tracked in `ISSUE.md` P1.
 
 Each sub-module has its own `ISSUE.md` with MVP checklist, known issues (P1/P2/P3), and test gaps. Root `ISSUE.md` is the verified gap register across the block.
 

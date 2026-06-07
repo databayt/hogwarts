@@ -394,11 +394,11 @@ These are future features, not production blockers.
 ### Adding Tests
 
 ```bash
-# Add test file
-src/components/stream/__tests__/[name].test.ts
+# Add tests file
+src/components/stream/__tests__/[name].tests.ts
 
 # Run tests
-pnpm test src/components/stream/__tests__/ --run
+pnpm tests src/components/stream/__tests__/ --run
 ```
 
 ---

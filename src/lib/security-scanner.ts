@@ -33,7 +33,7 @@
  * GOTCHAS:
  * - Some tests require live database (can't run in CI without fixtures)
  * - Rate limiting tests may trigger actual limits
- * - Multi-tenant test needs multiple school fixtures
+ * - Multi-tenant tests needs multiple school fixtures
  *
  * USAGE:
  * ```ts

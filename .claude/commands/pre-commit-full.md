@@ -514,7 +514,7 @@ SKIP_PRE_COMMIT=1 git commit -m "Emergency fix"
 ```json
 {
   "exclude": [
-    "**/*.test.ts",
+    "**/*.tests.ts",
     "**/*.spec.ts",
     "**/node_modules/**",
     "**/.next/**"

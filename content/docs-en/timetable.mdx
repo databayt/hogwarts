@@ -1,100 +1,105 @@
 ---
 title: Timetable
-description: School schedule management — structure catalog, role-based views, slot assignment, AI generation, conflict detection, substitutions, templates, analytics, and export.
+description: How the timetable works today — where it lives, how a schedule is built and generated, how each role sees it, and what is built but not yet wired.
 ---
 
-The timetable module handles school schedules end-to-end: choose a structure during onboarding, configure working days and periods, assign weekly slots, detect conflicts, generate via AI, export to PDF, and serve role-specific views. All operations are scoped by `schoolId`.
+The timetable module builds and serves weekly school schedules. An admin picks a structure during onboarding, configures working days and periods, assigns or auto-generates weekly slots, resolves conflicts, and exports to PDF; every other role gets a read view tailored to who they are. Schedules are **section-based** — each section (Grade 1-A, Grade 7-B) gets a full week, with `Timetable` rows carrying `sectionId`, `subjectId`, `classroomId`, and a nullable `teacherId`. The legacy `classId` is kept for backward compatibility. All operations are scoped by `schoolId`.
+
+## Where it lives
+
+<TimetableStructure />
+
+The block is unusually centralized: `actions.ts` is a single ~6,000-line file holding all ~70 server actions **and** every read query — there is no separate `queries.ts`. The route tree under `app/.../timetable/` mirrors the component tree, and every route is reachable from the UI — the admin's room/teacher axes are a filter inside one view, not separate routes (see [Routes](#routes)).
 
 ## Permissions
 
-| Role       | Access            | Modify | Export | Conflicts | Settings |
-| ---------- | ----------------- | :----: | :----: | :-------: | :------: |
-| DEVELOPER  | Full              |   Y    |   Y    |     Y     |    Y     |
-| ADMIN      | Full              |   Y    |   Y    |     Y     |    Y     |
-| ACCOUNTANT | Read (admin grid) |   —    |   —    |     —     |    —     |
-| STAFF      | Read (admin grid) |   —    |   —    |     —     |    —     |
-| TEACHER    | Read + own        |   —    |   Y    |     —     |    —     |
-| STUDENT    | Read              |   —    |   Y    |     —     |    —     |
-| GUARDIAN   | Read              |   —    |   —    |     —     |    —     |
+Roles map to actions through `PERMISSION_MATRIX` in `permissions-config.ts` (client-safe, imported by both the layout and the views). "Modify" covers create / edit / delete / import / bulk-edit.
+
+| Role       | View            | Modify | Conflicts | Settings | Analytics | Export |
+| ---------- | --------------- | :----: | :-------: | :------: | :-------: | :----: |
+| DEVELOPER  | All             |   Y    |     Y     |    Y     |     Y     |   Y    |
+| ADMIN      | All             |   Y    |     Y     |    Y     |     Y     |   Y    |
+| TEACHER    | All + own       |   —    |     —     |    —     |     Y     |   Y    |
+| ACCOUNTANT | All (read-only) |   —    |     —     |    —     |     Y     |   Y    |
+| STAFF      | All (read-only) |   —    |     —     |    —     |     —     |   Y    |
+| STUDENT    | Own grade       |   —    |     —     |    —     |     —     |   Y    |
+| GUARDIAN   | Child           |   —    |     —     |    —     |     —     |   Y    |
+| USER       | None            |   —    |     —     |    —     |     —     |   —    |
+
+Every role except `USER` can export. `manage_substitutions` is granted to ADMIN / DEVELOPER in the matrix, but the substitution UI has no route yet (see [Substitutions](#substitutions)).
 
 ## Routes
 
-`layout.tsx` renders role-based tabs via `PageNav`. Admin tabs: Overview, Analytics, Generate, Conflicts, Settings. Non-admin tabs: Today, Full Week.
+`layout.tsx` renders role-based tabs via `PageNav`, each tab individually permission-gated. Admins see **Overview, Analytics, Generate, Conflicts, Settings**. Non-admins see **Today** and **Full**; the **Analytics** tab additionally appears for any role with `view_analytics` (teacher, accountant).
 
-| Route                   | Component                   | Access                       |
-| ----------------------- | --------------------------- | ---------------------------- |
-| `/timetable`            | `TimetableContent`          | ADMIN, TEACHER, DEVELOPER    |
-| `/timetable/full`       | `TimetableContent` (full)   | ADMIN, TEACHER, DEVELOPER    |
-| `/timetable/by-class`   | `TimetableByClassContent`   | ADMIN, DEVELOPER             |
-| `/timetable/by-teacher` | `TimetableByTeacherContent` | ADMIN, DEVELOPER             |
-| `/timetable/by-room`    | `TimetableByRoomContent`    | ADMIN, DEVELOPER             |
-| `/timetable/conflicts`  | `TimetableConflictsContent` | ADMIN, DEVELOPER             |
-| `/timetable/generate`   | `GenerateTimetableContent`  | ADMIN, DEVELOPER             |
-| `/timetable/templates`  | `TemplatesContent`          | ADMIN, DEVELOPER             |
-| `/timetable/analytics`  | `TimetableAnalyticsContent` | ADMIN, DEVELOPER             |
-| `/timetable/settings`   | `TimetableSettingsContent`  | ADMIN, DEVELOPER             |
-| `/my-timetable`         | (student / guardian)        | STUDENT, GUARDIAN, DEVELOPER |
+There is no separate `/my-timetable` route. Students and guardians use the same `/timetable` and `/timetable/full` routes — both render `TimetableContent`, differing only by `defaultTab` (`"today"` vs `"full"`), and `RoleRouter` dispatches to the correct view by role.
 
-Every route has `error.tsx` and `loading.tsx`. The `by-class`, `by-teacher`, `by-room`, and `templates` routes are **orphaned** — accessible by URL only, not linked from layout tabs or sidebar.
+| Route                  | Component                   | In nav?              |
+| ---------------------- | --------------------------- | -------------------- |
+| `/timetable`           | `TimetableContent`          | Yes — Overview/Today |
+| `/timetable/full`      | `TimetableContent`          | Yes — Full           |
+| `/timetable/analytics` | `TimetableAnalyticsContent` | Yes — Analytics      |
+| `/timetable/generate`  | `GenerateTimetableContent`  | Yes — Generate       |
+| `/timetable/conflicts` | `TimetableConflictsContent` | Yes — Conflicts      |
+| `/timetable/settings`  | `TimetableSettingsContent`  | Yes — Settings       |
 
-Sidebar entry: `href: "/timetable"`, icon `clock`, visible to ADMIN / TEACHER / STUDENT.
+Earlier builds carried standalone `by-class`, `by-teacher`, `by-room`, and `templates` routes that nothing linked to. They were removed: the admin already sees a single role-routed grid (`AdminView`) whose **classroom / teacher selection is a cookie-persistent filter** — one route serves every admin axis, and the choice survives refresh and navigation. (The template _actions_ remain in `actions.ts`; only the unreached UI was deleted.)
+
+Boundaries are uneven: there is a single top-level `error.tsx`, the remaining sub-routes ship a `loading.tsx`, and `full/` has neither. Sidebar entry: `key: "timetable"`, `href: "/timetable"`, icon `clock`, roles ADMIN / TEACHER / STUDENT.
 
 ## Role-based views
 
-`content-production.tsx` wraps `RoleRouter` in `SessionProvider`. `RoleRouter` calls `getPersonalizedTimetable()` to determine `viewType` + `editable` and renders the matching view.
+`content.tsx` wraps `RoleRouter` in `SessionProvider`. On mount `RoleRouter` calls `getActiveTerm()` then `getPersonalizedTimetable()` to resolve `viewType` + `editable`, and renders the matching view, which fetches its own data.
 
-| Role       | View           | Data                                           | Sees                                              |
-| ---------- | -------------- | ---------------------------------------------- | ------------------------------------------------- |
-| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher` | Room / teacher grid, editable slots, slot editor  |
-| ADMIN      | `AdminView`    | Same as DEVELOPER                              | Same as DEVELOPER                                 |
-| TEACHER    | `TeacherView`  | `getTimetableByTeacher`                        | Personal schedule, workload, current / next class |
-| STUDENT    | `StudentView`  | `getTimetableByStudentGrade`                   | All enrolled subjects (grade-based), PDF export   |
-| GUARDIAN   | `GuardianView` | `getChildTimetable`                            | Child selector + each child's enrolled classes    |
-| ACCOUNTANT | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only (`editable={false}`)   |
-| STAFF      | `AdminView`    | Same as ADMIN                                  | Full admin view, read-only                        |
+| Role       | View           | Data source                                       | Sees                                              |
+| ---------- | -------------- | ------------------------------------------------- | ------------------------------------------------- |
+| DEVELOPER  | `AdminView`    | `getTimetableByRoom` / `getTimetableByTeacher`    | Room / teacher grid, editable slots, slot editor  |
+| ADMIN      | `AdminView`    | Same as DEVELOPER                                 | Same as DEVELOPER                                 |
+| TEACHER    | `TeacherView`  | `getTimetableByTeacher` + `getTodaySchedule`      | Personal schedule, workload, current / next class |
+| STUDENT    | `StudentView`  | `getTimetableByStudentGrade` + `getTodaySchedule` | Enrolled subjects (grade-based), PDF export       |
+| GUARDIAN   | `GuardianView` | `getGuardianChildren` + `getChildTimetable`       | Child selector + each child's timetable           |
+| ACCOUNTANT | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only (`editable={false}`)   |
+| STAFF      | `AdminView`    | Same as ADMIN                                     | Full admin grid, read-only                        |
 
-Routing: role → `viewType` switch + `editable` flag (default `true`); ACCOUNTANT / STAFF get `editable: false`. `AdminView` passes `editable` to `SimpleGrid` and conditionally disables `onSlotClick`.
-
-Known bugs: admin views lack a class / grade filter mode; teacher view has no export button despite `canExport` permission.
+`getPersonalizedTimetable` sets `editable: false` for ACCOUNTANT / STAFF; `AdminView` forwards `editable` to `SimpleGrid` and disables `onSlotClick` when read-only. `AdminView`'s classroom / teacher selection is saved to a cookie (`tt_filter`), so the chosen axis and entity persist across refresh and navigation. The `classId` prop on `StudentView` is legacy and unused — student data is grade-resolved.
 
 ## Student grade resolution
 
-Student timetable resolves through enrollment:
+`getTimetableByStudentGrade` resolves a student's classes for the active term:
 
 ```
 User (session)
-  → Student (db.student.findFirst where userId)
-    → StudentClass (db.studentClass.findMany where studentId)
-      → classIds[]
-        → Timetable (db.timetable.findMany where classId IN classIds)
+  → Student (db.student.findFirst where userId, schoolId)
+    → StudentClass (studentClasses relation, filtered to the requested termId)
+      → classIds[]  → Timetable rows
 ```
 
-Grade name: `Student → StudentYearLevel → YearLevel.levelName`.
+If no `StudentClass` rows match the term, it falls back to **grade-name pattern matching** — `db.class.findMany` where `name` ends with `" - {gradeName}"` — for backward compatibility with older data. The grade label comes from `Student → StudentYearLevel → YearLevel.levelName` (with `lang` for the localized name).
 
 ## Onboarding schedule step
 
-Inserted between Capacity (order 5) and Branding (order 6).
+The schedule picker is an optional onboarding step (order 5), between Capacity and Branding.
 
 ```
 1. Read school country, schoolType, schoolLevel
-2. getRecommendedStructures(...) — show top recommendations + alternatives
-3. User picks (auto-saves to school.system) or skips
-4. "Next" always enabled — step is optional
+2. getSchoolScheduleData() — recommended structures + alternatives
+3. User picks (saveScheduleChoice → school.system) or skips
+4. "Next" is always enabled — the step is optional
 ```
 
-Each structure card shows name, description, period count, time range, working days, color-coded timeline (blue = class, amber = break, green = lunch), "Recommended" badge.
+Each structure card shows name, description, period count, time range, working days, and a color-coded timeline (blue = class, amber = break, green = lunch), with a "Recommended" badge on the top matches.
 
-| File                                                                         | Purpose                                           |
-| ---------------------------------------------------------------------------- | ------------------------------------------------- |
-| `src/app/[lang]/onboarding/[id]/schedule/page.tsx`                           | Route                                             |
-| `src/components/onboarding/schedule/content.tsx`                             | Step UI                                           |
-| `src/components/onboarding/schedule/structure-preview.tsx`                   | Visual timeline                                   |
-| `src/components/onboarding/schedule/actions.ts`                              | `getSchoolScheduleData()`, `saveScheduleChoice()` |
-| `src/components/onboarding/schedule/{config,validation,config-row}.{ts,tsx}` | Constants, Zod schema, row UI                     |
+| File                                                        | Purpose                                           |
+| ----------------------------------------------------------- | ------------------------------------------------- |
+| `src/app/[lang]/onboarding/[id]/schedule/page.tsx`          | Route                                             |
+| `src/components/onboarding/schedule/content.tsx`            | Step UI                                           |
+| `src/components/onboarding/schedule/structure-preview.tsx`  | Visual timeline                                   |
+| `src/components/onboarding/schedule/actions.ts`             | `getSchoolScheduleData()`, `saveScheduleChoice()` |
+| `src/components/onboarding/schedule/{config,validation}.ts` | Constants + Zod schema                            |
 
 ## Applying a structure
 
-`applyTimetableStructure()` creates Period records and updates `SchoolWeekConfig`.
+`applyTimetableStructure()` turns a named structure into `Period` rows and a `SchoolWeekConfig`.
 
 ```typescript
 await applyTimetableStructure({
@@ -110,10 +115,52 @@ await applyTimetableStructure({
 })
 ```
 
-Steps: validate admin + tenant, look up structure (legacy map), optionally delete existing periods (`replaceExisting`), create `Period` rows for each entry (class, break, lunch), upsert `SchoolWeekConfig` with working days + lunch position, log audit entry.
+It validates admin + tenant, looks up the structure (resolving legacy names), optionally deletes existing periods (`replaceExisting`), creates a `Period` row per entry (class / break / lunch), upserts `SchoolWeekConfig` with the working days + lunch position, and logs an audit entry.
+
+## Generating a timetable
+
+The **Generate** tab is a two-step, preview-then-commit flow:
+
+1. `generateTimetablePreview()` runs `generateSectionTimetable()` (`generate/algorithm.ts`) over every section. For each section it fills the week from the grade's subject allocations, assigns a teacher from that teacher's subject expertise (left **Unassigned** when none is free), routes regular subjects to the section's homeroom and lab subjects to a lab/common room, and prevents a section from being double-booked in the same period.
+2. `applyGeneratedTimetable()` commits the preview into `Timetable` rows.
+
+`detectTimetableConflicts()` backs the **Conflicts** tab — teacher, room, and section double-booking — and `suggestFreeSlots()` powers the slot editor's free-period suggestions. `getTimetableAnalytics()` backs the **Analytics** tab.
+
+## Substitutions
+
+The substitution subsystem is fully built in the data and action layers — the `TeacherAbsence` and `SubstitutionRecord` models, and the `createTeacherAbsence`, `findAvailableSubstitutes`, `assignSubstitute`, `respondToSubstitution`, `getSubstitutionRecords`, and `cancelSubstitution` server actions — plus a complete UI under `substitutions/` (absence form, substitute finder, record list).
+
+**None of it is wired.** There is no route page and no tab, and nothing imports `substitutions/content`. The `manage_substitutions` permission exists for ADMIN / DEVELOPER but has no surface. Adding a route + tab is the remaining step to ship it.
+
+## What is wired vs. not
+
+**Working end-to-end:** builder grid, the five role views (admin room / teacher grid with a cookie-persistent filter), conflict detection, generate (preview + apply), analytics, settings, PDF export, the onboarding schedule step, and the REST + mobile endpoints.
+
+**Built but not surfaced:** the substitution subsystem (above). The template _actions_ (`createTemplateFromTerm`, `applyTemplateToTerm`, …) also remain in `actions.ts` with no UI, after the unreached standalone `templates` route (and the `by-class` / `by-teacher` / `by-room` routes) were removed and folded into the role-routed view + filter.
+
+**Open** (from the block's `ISSUE.md`): drag-and-drop slot editing (currently click-based), mobile-view polish, ARIA grid pattern + keyboard navigation, fuller role enforcement on mutations, and print tuning for varied day counts.
 
 ## See also
 
-- [Onboarding](/docs/onboarding) — schedule step
-- [Multi-tenancy](/docs/multi-tenancy) — tenant scoping
-- [Attendance](/docs/attendance) — period auto-detection consumer
+<CardGrid cols={2}>
+  <DocCard
+    title="Onboarding"
+    href="/docs/onboarding"
+    description="The wizard that runs the schedule-picker step."
+  />
+  <DocCard
+    title="Attendance"
+    href="/docs/attendance"
+    description="Section-based consumer — periods drive auto-detection."
+  />
+  <DocCard
+    title="Multi-tenancy"
+    href="/docs/multi-tenancy"
+    description="How schoolId scoping isolates every query."
+  />
+  <DocCard
+    title="Catalog"
+    href="/docs/catalog"
+    description="Subjects and grade allocations the generator reads."
+  />
+</CardGrid>

@@ -154,8 +154,8 @@ NEXT_TELEMETRY_DEBUG=1 pnpm dev
     ".next",
     "out",
     "dist",
-    "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.tests.ts",
+    "**/*.tests.tsx"
   ]
 }
 ```
@@ -190,19 +190,19 @@ export default defineConfig({
       },
     },
 
-    // Faster test runs
+    // Faster tests runs
     isolate: false, // Reuse context (faster, less isolation)
     passWithNoTests: true,
     globals: true,
 
-    // Smart test selection
+    // Smart tests selection
     changed: true, // Only run tests for changed files
 
     // Coverage optimization
     coverage: {
       provider: "v8", // Faster than istanbul
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["**/*.test.{ts,tsx}", "**/*.config.ts"],
+      exclude: ["**/*.tests.{ts,tsx}", "**/*.config.ts"],
     },
   },
 })
@@ -212,13 +212,13 @@ export default defineConfig({
 
 ```bash
 # Run tests for changed files only
-pnpm test --changed
+pnpm tests --changed
 
 # Run tests matching pattern
-pnpm test <feature>
+pnpm tests <feature>
 
 # Skip coverage for faster feedback
-pnpm test --no-coverage
+pnpm tests --no-coverage
 ```
 
 ### 5. Linting & Formatting Speed
@@ -445,7 +445,7 @@ pnpm exec lint-staged
 pnpm type-check
 
 # Run tests for changed files
-pnpm test --changed --run
+pnpm tests --changed --run
 ```
 
 **package.json**:
@@ -530,9 +530,9 @@ async function measureDX() {
   execSync("pnpm dev &", { timeout: 10000 })
   metrics.devServerStartup = performance.now() - start
 
-  // Measure test suite
+  // Measure tests suite
   const testStart = performance.now()
-  execSync("pnpm test --run", { stdio: "ignore" })
+  execSync("pnpm tests --run", { stdio: "ignore" })
   metrics.testSuiteTime = performance.now() - testStart
 
   // Measure build

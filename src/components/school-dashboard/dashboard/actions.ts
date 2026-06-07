@@ -62,11 +62,11 @@ import {
   subMonths,
 } from "date-fns"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { formatDate } from "@/lib/i18n-format"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import type {
   AcademicPerformanceMetrics,
@@ -4101,29 +4101,19 @@ export async function getQuickLookData(
           userRole,
           last24Hours,
           now,
-          locale as SupportedLanguage
+          locale as Lang
         ),
         // 2. EVENTS - upcoming events in the next 30 days
-        getEventsQuickLook(
-          schoolId,
-          last7Days,
-          now,
-          locale as SupportedLanguage
-        ),
+        getEventsQuickLook(schoolId, last7Days, now, locale as Lang),
         // 3. NOTIFICATIONS - unread notifications for user
         getNotificationsQuickLook(
           schoolId,
           userId,
           last24Hours,
-          locale as SupportedLanguage
+          locale as Lang
         ),
         // 4. MESSAGES - unread messages in conversations
-        getMessagesQuickLook(
-          schoolId,
-          userId,
-          last24Hours,
-          locale as SupportedLanguage
-        ),
+        getMessagesQuickLook(schoolId, userId, last24Hours, locale as Lang),
       ])
 
     return {
@@ -4144,7 +4134,7 @@ async function getAnnouncementsQuickLook(
   userRole: string | undefined,
   last24Hours: Date,
   now: Date,
-  locale: SupportedLanguage
+  locale: Lang
 ): Promise<QuickLookItem> {
   // Get all active announcements for the school
   const announcements = await db.announcement.findMany({
@@ -4186,9 +4176,9 @@ async function getAnnouncementsQuickLook(
   const mostRecent = announcements[0]
 
   const recentTitle = mostRecent
-    ? await getDisplayText(
+    ? await getText(
         mostRecent.title,
-        (mostRecent.lang || "ar") as SupportedLanguage,
+        (mostRecent.lang || "ar") as Lang,
         locale,
         schoolId
       )
@@ -4206,7 +4196,7 @@ async function getEventsQuickLook(
   schoolId: string,
   last7Days: Date,
   now: Date,
-  locale: SupportedLanguage
+  locale: Lang
 ): Promise<QuickLookItem> {
   const thirtyDaysFromNow = addDays(now, 30)
 
@@ -4235,9 +4225,9 @@ async function getEventsQuickLook(
   const nextEvent = events[0]
 
   const recentTitle = nextEvent
-    ? await getDisplayText(
+    ? await getText(
         nextEvent.title,
-        (nextEvent.lang || "ar") as SupportedLanguage,
+        (nextEvent.lang || "ar") as Lang,
         locale,
         schoolId
       )
@@ -4255,7 +4245,7 @@ async function getNotificationsQuickLook(
   schoolId: string,
   userId: string,
   last24Hours: Date,
-  locale: SupportedLanguage
+  locale: Lang
 ): Promise<QuickLookItem> {
   const [totalUnread, newNotifications, mostRecent] = await Promise.all([
     // Total unread notifications
@@ -4287,9 +4277,9 @@ async function getNotificationsQuickLook(
   ])
 
   const recentTitle = mostRecent?.title
-    ? await getDisplayText(
+    ? await getText(
         mostRecent.title,
-        (mostRecent.lang || "ar") as SupportedLanguage,
+        (mostRecent.lang || "ar") as Lang,
         locale,
         schoolId
       )
@@ -4307,7 +4297,7 @@ async function getMessagesQuickLook(
   schoolId: string,
   userId: string,
   last24Hours: Date,
-  locale: SupportedLanguage
+  locale: Lang
 ): Promise<QuickLookItem> {
   // Get user's conversations with unread counts
   const participations = await db.conversationParticipant.findMany({
@@ -4355,7 +4345,7 @@ async function getMessagesQuickLook(
     const content = mostRecentParticipation.conversation.messages[0].content
     const truncated =
       content.length > 50 ? content.substring(0, 47) + "..." : content
-    recentPreview = await getDisplayText(truncated, "en", locale, schoolId)
+    recentPreview = await getText(truncated, "en", locale, schoolId)
   }
 
   return {

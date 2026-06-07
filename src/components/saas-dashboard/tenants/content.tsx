@@ -1,11 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { EmptyState } from "@/components/saas-dashboard/common/empty-state"
+import { getText } from "@/components/translation/display"
 
 import type { TenantRow } from "./columns"
 import { TenantsTable } from "./table"
@@ -88,7 +88,7 @@ async function getTenants(searchParams: Props["searchParams"], lang: Locale) {
   const translatedNames = await Promise.all(
     tenants.map((tenant) => {
       if (lang === "en" && tenant.nameEn) return tenant.nameEn
-      return getDisplayText(
+      return getText(
         tenant.name,
         (tenant.preferredLanguage ?? "ar") as "en" | "ar",
         lang,

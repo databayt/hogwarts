@@ -9,8 +9,8 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ReportIssue } from "@/components/report-issue"
 import { ConfigSidebar } from "@/components/school-dashboard/school/configuration/config-sidebar"
-import { getDisplayText } from "@/components/translation/display"
-import { detectLanguage } from "@/components/translation/util"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   children: React.ReactNode
@@ -141,13 +141,8 @@ export default async function EditorLayout({ children, params }: Props) {
     switch (key) {
       case "title": {
         if (lang === "en" && school.nameEn) return school.nameEn
-        if (school.name && schoolId && detectLanguage(school.name) !== lang) {
-          return getDisplayText(
-            school.name,
-            detectLanguage(school.name),
-            lang,
-            schoolId
-          )
+        if (school.name && schoolId && detectLang(school.name) !== lang) {
+          return getText(school.name, detectLang(school.name), lang, schoolId)
         }
         return school.name || null
       }
@@ -164,16 +159,10 @@ export default async function EditorLayout({ children, params }: Props) {
       case "location": {
         let parts = [school.city, school.state, school.country].filter(Boolean)
         const locationText = parts.join(" ")
-        if (
-          schoolId &&
-          parts.length > 0 &&
-          detectLanguage(locationText) !== lang
-        ) {
-          const detected = detectLanguage(locationText)
+        if (schoolId && parts.length > 0 && detectLang(locationText) !== lang) {
+          const detected = detectLang(locationText)
           parts = await Promise.all(
-            parts.map((p) =>
-              getDisplayText(p as string, detected, lang, schoolId)
-            )
+            parts.map((p) => getText(p as string, detected, lang, schoolId))
           )
         }
         return parts.length > 0 ? parts.join(", ") : null

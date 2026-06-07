@@ -68,7 +68,7 @@ Resolution flow:
 
 ### Single-language storage
 
-Hogwarts does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `TranslationCache`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getDisplayText()` (`@/lib/content-display`) is the canonical accessor.
+Hogwarts does not use bilingual columns. All content is stored in the school's chosen language with a `lang` field. Reads in another language go through Google Translate, cached in `Translation`. UI strings live in dictionaries (`src/components/internationalization/dictionaries/`); `getText()` (`@/components/translation/display`) is the canonical accessor.
 
 ## Roles
 
@@ -191,7 +191,7 @@ Stripe + bankak + tap + mobile-money + bank-transfer + cash, Plaid + Dwolla, Res
 | URL pattern  | `/[lang]/path` → `/ar/docs`, `/en/docs`                                                                      |
 | Dictionaries | `src/components/internationalization/dictionaries/` — EN + AR pairs across 8 top-level + 16 per-domain files |
 | RTL          | Bidirectional layouts via logical properties + `<DirectionProvider>`                                         |
-| Storage      | Single `lang` field + on-demand Google Translate cached in `TranslationCache`                                |
+| Storage      | Single `lang` field + on-demand Google Translate cached in `Translation`                                     |
 
 See [Translation](/docs/translation) for the full dictionary contract.
 

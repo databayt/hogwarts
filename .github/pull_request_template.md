@@ -42,7 +42,7 @@ Fixes #XXXX
 
 ## How to Test
 
-<!-- Describe the steps to test your changes. Include any relevant details. -->
+<!-- Describe the steps to tests your changes. Include any relevant details. -->
 
 1.
 2.

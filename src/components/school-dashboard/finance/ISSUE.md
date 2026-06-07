@@ -53,7 +53,7 @@ Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transact
 - [ ] Wire (or honestly retire) the 5 orphaned posting functions
 - [ ] `postFeePayment` made transactional with rollback
 - [ ] `debit = credit` invariant test on actual posting
-- [ ] `lang` field on user-facing finance models + `getDisplayText` routing
+- [ ] `lang` field on user-facing finance models + `getText` routing
 - [ ] 11 `validation.ts` factories wired to `ValidationHelper` in consumers
 - [ ] Test coverage for the 11 untested sub-modules
 - [ ] PDF rendering wired for invoice (fees receipt PDF already works)
@@ -77,7 +77,7 @@ The block-level "P0: none" of prior cycles was inaccurate. These are silent-data
 - **Dashboard trend charts are `Math.random()` mock data** (`dashboard/actions.ts:278-288` — `generateTrend()` for revenues/expenses/profit/collection). KPI totals are real DB aggregations; only the sparkline trends are fabricated.
 - **Payroll tax is a hardcoded flat 15%** (`payroll/actions.ts:286` — `grossSalary * 0.15 // Simplified 15% tax rate`). No brackets, no per-country rules. (Prior doc claimed 0% — corrected.)
 - **Invoice PDF not wired.** Infrastructure exists at `src/components/file/generate/invoice.tsx` but nothing in `finance/invoice/**` imports it. Contrast: the **fees receipt PDF is real** (`fees/receipt-pdf.tsx`, `@react-pdf/renderer`).
-- **No finance Prisma model has a `lang` field.** DB-stored, user-facing finance text (`Fine.reason`, `Scholarship` name/description, `ExpenseCategory`, `ChartOfAccount` account names, `FeeStructure` name/description) renders English-only on the Arabic side. The rest of the platform uses the `lang` + `getDisplayText` convention; finance can't.
+- **No finance Prisma model has a `lang` field.** DB-stored, user-facing finance text (`Fine.reason`, `Scholarship` name/description, `ExpenseCategory`, `ChartOfAccount` account names, `FeeStructure` name/description) renders English-only on the Arabic side. The rest of the platform uses the `lang` + `getText` convention; finance can't.
 - **Test coverage: 11 of 14 sub-modules have zero tests** (see table below).
 - **11 `validation.ts` factories are uncalled by their consumers** — Zod schemas exist but mutations don't run them; messages are still hardcoded English (`// TODO: add custom validation key`).
 
@@ -114,7 +114,7 @@ Forward-looking work beyond closing the gaps above.
 - **Accounting integrity** — wire the 5 orphaned posting functions (or remove the false posting claims from sub-READMEs); make `postFeePayment` transactional with rollback; add a `debit = credit` invariant test plus a per-school trial-balance test.
 - **Remove mock data** — replace the dashboard `Math.random()` trends with real historical aggregation off the ledger / payment tables.
 - **Payments interface** — add `verifyWebhook` + `createRefund` to `PaymentProvider`; generalize the Stripe-only refund to fees/invoice/wallet; finish `bankak` once the BoK spec lands.
-- **i18n migration** — add `lang` to `FeeStructure`, `Scholarship`, `ExpenseCategory`, `ChartOfAccount`, `Fine`; route display through `getDisplayText` / `getDisplayFields`; wire the 11 `validation.ts` factories to `ValidationHelper`.
+- **i18n migration** — add `lang` to `FeeStructure`, `Scholarship`, `ExpenseCategory`, `ChartOfAccount`, `Fine`; route display through `getText` / `getFields`; wire the 11 `validation.ts` factories to `ValidationHelper`.
 - **Code-reuse / perf** — consolidate the duplicated DataTable + columns + list-params patterns across sub-modules; audit N+1 in dashboard and report aggregations; verify the Decimal whole-units-vs-cents convention per model against `lib/format.ts` (`formatMoney` vs `formatCurrency`) to prevent off-by-100 bugs.
 - **PDF** — wire the invoice PDF (map `UserInvoice` fields to the `file/generate/invoice.tsx` template + add a download button); add payslip PDF for payroll.
 - **Testing** — cover the 11 untested sub-modules, money-movers first (payroll, expenses, wallet, then the others).

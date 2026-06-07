@@ -56,7 +56,7 @@ echo "" >> CHANGELOG.md
 ```bash
 # If tests were modified
 if git diff HEAD~1 --name-only | grep -q "\.test\.tsx?$"; then
-  pnpm test --coverage --silent
+  pnpm tests --coverage --silent
   cp coverage/coverage-summary.json .bmad/metrics/coverage-latest.json
 fi
 ```

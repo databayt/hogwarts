@@ -35,7 +35,7 @@ NO `auth()` and NO `getTenantContext()`. The `Subject`, `Chapter`, `Lesson`, `Ma
 - Visibility/approval filters are the only thing keeping non-public rows from leaking. Never weaken without a security review.
 - `Question.catalogSubjectId` is nullable — orphan questions (no subject) are intentionally dropped from filtered results.
 - The reused `CatalogContentSections` component hardcodes `/${lang}/subjects/...`, `/${lang}/exams/...`, and `/${lang}/stream/dashboard/...` deep links. On the public domain (no school subdomain) those routes 404 — known MVP limitation. The inline content (chapter scroll, video tiles, materials/exams/qbank pipelines) is what carries the page.
-- The `getDisplayText()` translation pipeline in school-dashboard subject detail is gated on `schoolId` (`schoolId ? getDisplayText(...) : Promise.resolve(text ?? "")`). For the public mirror, schoolId is null and original-language text falls through. We additionally filter rows by `lang === currentLocale` so the fall-through is correct.
+- The `getText()` translation pipeline in school-dashboard subject detail is gated on `schoolId` (`schoolId ? getText(...) : Promise.resolve(text ?? "")`). For the public mirror, schoolId is null and original-language text falls through. We additionally filter rows by `lang === currentLocale` so the fall-through is correct.
 
 ## Related Blocks
 

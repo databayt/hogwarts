@@ -111,7 +111,9 @@ function StudentsTableInner({
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getStudents(params)
+      // Pass the route locale so search/load-more translate to the SAME language as
+      // the initial server render (the NEXT_LOCALE cookie can disagree with the URL).
+      const result = await getStudents({ ...params, lang })
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }

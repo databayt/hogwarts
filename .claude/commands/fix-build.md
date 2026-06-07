@@ -429,7 +429,7 @@ After applying fixes, the command runs:
 4. **Test Suite** (optional)
 
    ```bash
-   pnpm test
+   pnpm tests
    ```
 
    - Run affected tests
@@ -758,8 +758,8 @@ Output:
 2. **Test After Fixing**
 
    ```bash
-   # Fix then test
-   /fix-build && pnpm test
+   # Fix then tests
+   /fix-build && pnpm tests
    ```
 
 3. **Keep Backups**

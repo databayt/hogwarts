@@ -479,13 +479,13 @@ describe("ComponentName", () => {
 ### Validation Code
 
 ```bash
-# Check if test file exists
+# Check if tests file exists
 if [ ! -f "${component}.test.tsx" ]; then
   echo "❌ Test file missing"
 fi
 
 # Run coverage
-pnpm test "${component}" --coverage
+pnpm tests "${component}" --coverage
 # Parse coverage report
 # Fail if < 95%
 ```

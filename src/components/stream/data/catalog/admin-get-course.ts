@@ -5,8 +5,8 @@
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 /**
  * Fetches a catalog subject by ID for admin viewing/editing.

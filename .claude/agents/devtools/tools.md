@@ -79,7 +79,7 @@ program.parse()
 ### 2. Database Seeder
 
 ```bash
-# Seed database with test data
+# Seed database with tests data
 pnpm seed
 
 # Options:
@@ -167,9 +167,9 @@ pnpm typecheck --fix
 
 ```bash
 # Generate tests from component
-pnpm generate:test components/students/form.tsx
+pnpm generate:tests components/students/form.tsx
 
-# Creates comprehensive test suite:
+# Creates comprehensive tests suite:
 # - Render tests
 # - User interaction tests
 # - Validation tests
@@ -316,7 +316,7 @@ watch("scripts/**/*.ts").on("change", restart)
 ### Script Testing
 
 ```typescript
-// scripts/__tests__/tool.test.ts
+// scripts/__tests__/tool.tests.ts
 import { execSync } from "child_process"
 
 describe("Tool", () => {

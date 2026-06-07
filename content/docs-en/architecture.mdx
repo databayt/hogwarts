@@ -25,6 +25,8 @@ For route `/abc`:
 - `app/[lang]/abc/` — `page.tsx`, `layout.tsx`
 - `components/abc/` — `content.tsx`, `actions.ts`, `form.tsx`, `validation.ts`, `types.ts`, `use-abc.ts`, `README.md`
 
+<Structure />
+
 ## Tech Stack
 
 See [/docs/stack](/docs/stack) for the canonical version table.
@@ -50,19 +52,19 @@ See [/docs/pattern](/docs/pattern) for the canonical naming reference.
 
 ## Critical Files Reference
 
-| File                          | Purpose                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `src/proxy.ts`                | Edge middleware: subdomain detection, RBAC, URL rewriting, custom domains |
-| `src/auth.ts`                 | NextAuth: JWT callbacks, session management, redirect logic               |
-| `src/auth.config.ts`          | OAuth providers: Google, Facebook, Credentials                            |
-| `src/routes.ts`               | RBAC matrix: role-based route protection                                  |
-| `src/lib/rate-limit.ts`       | Rate limiting configs across routes                                       |
-| `src/lib/tenant-context.ts`   | Tenant resolution with two-tier cache (Redis 5 min → in-memory Map 1 min) |
-| `src/lib/catalog-setup.ts`    | Catalog bridge: academic structure provisioning                           |
-| `src/lib/dns-service.ts`      | DNS verification: multi-provider custom domains                           |
-| `src/lib/security-headers.ts` | CSP, HSTS, XSS protection                                                 |
-| `prisma/models/`              | Prisma multi-file schema (see [/docs/database](/docs/database))           |
-| `CLAUDE.md`                   | Project-wide architectural guidelines                                     |
+| File                              | Purpose                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------- |
+| `src/proxy.ts`                    | Edge middleware: subdomain detection, RBAC, URL rewriting, custom domains |
+| `src/auth.ts`                     | NextAuth: JWT callbacks, session management, redirect logic               |
+| `src/auth.config.ts`              | OAuth providers: Google, Facebook, Credentials                            |
+| `src/routes.ts`                   | RBAC matrix: role-based route protection                                  |
+| `src/lib/rate-limit.ts`           | Rate limiting configs across routes                                       |
+| `src/lib/tenant-context.ts`       | Tenant resolution with two-tier cache (Redis 5 min → in-memory Map 1 min) |
+| `src/components/catalog/setup.ts` | Catalog bridge: academic structure provisioning                           |
+| `src/lib/dns-service.ts`          | DNS verification: multi-provider custom domains                           |
+| `src/lib/security-headers.ts`     | CSP, HSTS, XSS protection                                                 |
+| `prisma/models/`                  | Prisma multi-file schema (see [/docs/database](/docs/database))           |
+| `CLAUDE.md`                       | Project-wide architectural guidelines                                     |
 
 ## Anti-patterns
 

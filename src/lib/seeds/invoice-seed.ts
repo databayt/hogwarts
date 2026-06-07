@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // Invoice seed data for testing and development
-// This file provides comprehensive test data for the invoice module
+// This file provides comprehensive tests data for the invoice module
 
 import { InvoiceStatus, PrismaClient } from "@prisma/client"
 
@@ -383,8 +383,8 @@ export async function main() {
   try {
     // You need to provide a valid userId and schoolId
     // These should come from your existing user and school data
-    const userId = process.env.SEED_USER_ID || "test-user-id"
-    const schoolId = process.env.SEED_SCHOOL_ID || "test-school-id"
+    const userId = process.env.SEED_USER_ID || "tests-user-id"
+    const schoolId = process.env.SEED_SCHOOL_ID || "tests-school-id"
 
     if (!userId || !schoolId) {
       throw new Error(

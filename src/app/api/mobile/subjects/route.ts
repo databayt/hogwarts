@@ -3,11 +3,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { ensureSubjectSelections } from "@/lib/catalog-setup"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { ensureSubjectSelections } from "@/components/catalog/setup"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || undefined
     const department = searchParams.get("department") || undefined
-    const lang = (searchParams.get("lang") || "en") as SupportedLanguage
+    const lang = (searchParams.get("lang") || "en") as Lang
 
     let selections = await db.subjectSelection.findMany({
       where: { schoolId, isActive: true },
@@ -101,16 +101,11 @@ export async function GET(request: NextRequest) {
           return true
         })
         .map(async (s) => {
-          const srcLang = (s.subject.lang || "ar") as SupportedLanguage
+          const srcLang = (s.subject.lang || "ar") as Lang
           const [name, desc, dept] = await Promise.all([
-            getDisplayText(
-              s.customName || s.subject.name,
-              srcLang,
-              lang,
-              schoolId
-            ),
-            getDisplayText(s.subject.description, srcLang, lang, schoolId),
-            getDisplayText(s.subject.department, srcLang, lang, schoolId),
+            getText(s.customName || s.subject.name, srcLang, lang, schoolId),
+            getText(s.subject.description, srcLang, lang, schoolId),
+            getText(s.subject.department, srcLang, lang, schoolId),
           ])
 
           return {

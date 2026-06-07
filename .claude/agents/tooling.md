@@ -217,9 +217,9 @@ async function analyzePerformance(): Promise<PerformanceMetrics> {
   metrics.coldBuild = performance.now() - buildStart
 
   // Test suite
-  console.log("Testing test suite...")
+  console.log("Testing tests suite...")
   const testStart = performance.now()
-  execSync("pnpm test --run", { stdio: "ignore" })
+  execSync("pnpm tests --run", { stdio: "ignore" })
   metrics.testSuite = performance.now() - testStart
 
   // Type check

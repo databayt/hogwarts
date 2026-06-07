@@ -4,8 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 /**
  * Fetches catalog subject structure for sidebar navigation.

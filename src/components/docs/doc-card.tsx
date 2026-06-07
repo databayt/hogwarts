@@ -55,8 +55,8 @@ export function DocCard({
   className,
 }: DocCardProps) {
   const body = (
-    <>
-      <h3 className="mb-2 text-base font-medium tracking-tight">{title}</h3>
+    <div className="flex flex-col gap-2">
+      <h3 className="leading-none font-semibold tracking-tight">{title}</h3>
       {description && (
         <p className="text-muted-foreground text-sm leading-relaxed">
           {description}
@@ -67,12 +67,12 @@ export function DocCard({
           {children}
         </div>
       )}
-    </>
+    </div>
   )
 
   const baseClass = cn(
-    "block rounded-lg border bg-card p-6 transition-colors",
-    href && "hover:bg-muted/50",
+    "block rounded-xl bg-surface p-6 text-surface-foreground transition-colors",
+    href && "hover:bg-surface/80",
     className
   )
 

@@ -25,7 +25,7 @@ import { z, ZodError } from "zod"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 import { generateStudentUsername } from "@/lib/student-username"
-import { detectLanguage } from "@/components/translation/util"
+import { detectLang } from "@/components/translation/util"
 
 import {
   createRowErrorMessage,
@@ -340,7 +340,7 @@ class CsvImportService {
 
       // Detect CSV language from a sample of names
       const sampleNames = validRows.slice(0, 5).map((r) => r.validated.name)
-      const detectedLang = detectLanguage(sampleNames.join(" "))
+      const detectedLang = detectLang(sampleNames.join(" "))
 
       // Pre-load academic grades and sections for section auto-linking
       const [existingGrades, existingSections] = await Promise.all([
@@ -851,7 +851,7 @@ class CsvImportService {
 
       // Detect CSV language from a sample of names
       const sampleNames = validRows.slice(0, 5).map((r) => r.validated.name)
-      const detectedLang = detectLanguage(sampleNames.join(" "))
+      const detectedLang = detectLang(sampleNames.join(" "))
 
       // Pre-load departments for linking
       const departments = await db.department.findMany({
@@ -1249,7 +1249,7 @@ class CsvImportService {
         .map((r: any) => `${r.firstName || ""} ${r.lastName || ""}`.trim())
         .filter(Boolean)
       const detectedLang = sampleNames.length
-        ? detectLanguage(sampleNames.join(" "))
+        ? detectLang(sampleNames.join(" "))
         : ("ar" as const)
 
       for (let i = 0; i < rows.length; i++) {

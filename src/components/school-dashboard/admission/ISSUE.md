@@ -115,7 +115,7 @@ Shared model: `prisma/models/admission.prisma` (9 models). Cross-block rule: `.c
   _Fixed:_ flipped toast precedence at 9 sites (localized fallback now wins over the raw code) + added `campaignSaveFailed`/`campaignDeleteFailed` to both dictionaries for the two campaign sites that had no localized fallback. _Follow-up:_ code-specific translation via `resolveActionError` + `common.errors` threading (deferred — needs dictionary + component plumbing; most admission codes aren't in `common.errors` yet).
 
 - **P1-6 — `Application` model has no `lang` field. [flag — schema]**
-  Violates Single-Language Storage. `submitApplication` never sets `lang`; downstream `getDisplayText()` can't translate applicant content; the Student record derives lang via fragile Arabic-character regex sniffing (`actions.ts:968`, `application-detail-content.tsx:134`).
+  Violates Single-Language Storage. `submitApplication` never sets `lang`; downstream `getText()` can't translate applicant content; the Student record derives lang via fragile Arabic-character regex sniffing (`actions.ts:968`, `application-detail-content.tsx:134`).
 
 - **P1-7 — Student→section placement UI is unreachable. [safe]**
   `PlacementDialog` (`placement-dialog.tsx`) and `BulkPlacement` (`bulk-placement.tsx`) are never imported anywhere. The enrollment table shows a "needs placement" banner (`enrollment-table.tsx:180`) but exposes no placement action. Admins can confirm enrollment but can't manually place students into sections from the UI (only the single-section auto-suggest in `confirmEnrollment` works).

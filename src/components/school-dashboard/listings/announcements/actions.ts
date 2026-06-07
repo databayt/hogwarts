@@ -87,8 +87,6 @@ import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/cli
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { withAutoTranslation } from "@/lib/auto-translate"
-import { getDisplayFields, getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -106,6 +104,8 @@ import {
   announcementUpdateSchema,
   getAnnouncementsSchema,
 } from "@/components/school-dashboard/listings/announcements/validation"
+import { autoTranslate } from "@/components/translation/actions"
+import { getFields, getText } from "@/components/translation/display"
 
 // ============================================================================
 // Types
@@ -333,7 +333,7 @@ export async function createAnnouncementWithTranslation(input: {
     }
 
     // Auto-translate content (optional preview, not stored)
-    const translatedData = await withAutoTranslation(
+    const translatedData = await autoTranslate(
       { title: input.title, body: input.body },
       ["title", "body"],
       input.sourceLanguage
@@ -785,7 +785,7 @@ export async function getAnnouncement(input: {
 
     // On-demand translation if displayLang differs from stored lang
     if (input.displayLang && schoolId) {
-      const translated = await getDisplayFields(
+      const translated = await getFields(
         announcement,
         ["title", "body"],
         (announcement.lang as "ar" | "en") || "ar",
@@ -902,7 +902,7 @@ export async function getAnnouncements(
         id: a.id,
         title:
           sp.displayLang && a.lang !== sp.displayLang
-            ? await getDisplayText(
+            ? await getText(
                 a.title,
                 (a.lang as "ar" | "en") || "ar",
                 sp.displayLang,
@@ -994,7 +994,7 @@ export async function getPreviousAnnouncements(options?: {
         announcements.map(async (a) => {
           const storedLang = (a.lang as "ar" | "en") || "ar"
           if (storedLang === displayLang) return a
-          const fields = await getDisplayFields(
+          const fields = await getFields(
             a,
             ["title", "body"],
             storedLang,

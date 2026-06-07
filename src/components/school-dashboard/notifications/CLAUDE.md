@@ -27,7 +27,7 @@ Real-time multi-channel notification system. 24 types × 4 priorities × 5 chann
 - **Enum drift guard**: `getAllowedNotificationTypes("DEVELOPER" | "ADMIN")` returns `Object.values(NotificationType)` rather than a hardcoded list. The previous hardcoded list silently drifted from Prisma (missed `setup_guide`, `absence_intention*`). Don't reintroduce the static list.
 - **Role allow-lists**: TEACHER / ACCOUNTANT / STAFF have explicit allow-lists in `ROLE_SEND_TYPES` (authorization.ts). Add new role-restricted types here.
 - **`db.$transaction` for preferences**: `updateNotificationPreferences` upserts inside a transaction so partial failures don't leave the user with a half-updated preference set. Test mocks must include a callable `$transaction`.
-- **`getDisplayText` for cross-language reads**: notifications are stored in one language (`lang` field). The notification center and bell-icon translate on-demand to the viewer's locale via `getDisplayText`. Translations are cached in `TranslationCache`.
+- **`getText` for cross-language reads**: notifications are stored in one language (`lang` field). The notification center and bell-icon translate on-demand to the viewer's locale via `getText`. Translations are cached in `Translation`.
 - **Single source for notification types**: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, validation enum, dictionary key sets — all must list the same 24 types. `config.test.ts` and `rbac-matrix.test.ts` enforce this.
 
 ## Danger Zones

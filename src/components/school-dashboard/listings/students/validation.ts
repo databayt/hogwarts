@@ -92,4 +92,8 @@ export const getStudentsSchema = z.object({
   status: z.string().optional().default(""),
   scope: z.enum(["active", "archived", "all"]).optional().default("active"),
   sort: z.array(sortItemSchema).optional().default([]),
+  // UI locale from the ROUTE ([lang] segment) — the only reliable source of truth.
+  // The client table passes this so search/load-more translate to the same language
+  // as the initial server render (the NEXT_LOCALE cookie can disagree with the URL).
+  lang: z.enum(["ar", "en"]).optional(),
 })

@@ -302,7 +302,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: pnpm install
-      - run: pnpm test
+      - run: pnpm tests
       - run: pnpm build
 ```
 

@@ -7,8 +7,8 @@ import { cookies } from "next/headers"
 import type { School } from "@prisma/client"
 import { z } from "zod"
 
-import { setupCatalogForSchool } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
+import { setupCatalogForSchool } from "@/components/catalog/setup"
 import {
   logOperatorAudit,
   requireNotImpersonating,

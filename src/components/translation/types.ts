@@ -5,16 +5,11 @@
  * Translation system types
  */
 
-export type SupportedLanguage = "en" | "ar"
-
-export type ContentWithLang = {
-  text: string
-  lang: SupportedLanguage
-}
+export type Lang = "en" | "ar"
 
 export interface TranslateTextInput {
   text: string
-  sourceLanguage: SupportedLanguage
+  sourceLanguage: Lang
 }
 
 export interface TranslateTextResult {
@@ -25,7 +20,7 @@ export interface TranslateTextResult {
 
 export interface TranslateFieldsInput {
   fields: Record<string, string>
-  sourceLanguage: SupportedLanguage
+  sourceLanguage: Lang
 }
 
 export interface TranslateFieldsResult {
@@ -36,7 +31,7 @@ export interface TranslateFieldsResult {
 
 export interface TranslationResult<T> {
   success: boolean
-  data: T & { lang: SupportedLanguage }
+  data: T & { lang: Lang }
   error?: string
 }
 

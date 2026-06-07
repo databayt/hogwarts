@@ -77,7 +77,7 @@ Root `validation.ts` exports `validateStep(step, data, dictionary)` and `getRequ
 
 When `completeOnboarding()` runs at the legal step, the school is marked active and a 5-step provisioning chain creates academic infrastructure. Each step is wrapped in `try/catch` so one failure doesn't block the rest.
 
-Source: `src/components/onboarding/legal/actions.ts` → `src/lib/catalog-setup.ts`.
+Source: `src/components/onboarding/legal/actions.ts` → `src/components/catalog/setup.ts`.
 
 | Step                            | Creates                                                               |
 | ------------------------------- | --------------------------------------------------------------------- |
@@ -132,7 +132,7 @@ In `src/components/onboarding/actions.ts`:
 | `src/components/onboarding/auth-helpers.ts`      | `getAuthContext`, `requireSchoolOwnership` |
 | `src/components/form/footer.tsx`                 | `FormFooter` + `ONBOARDING_CONFIG`         |
 | `src/lib/school-access.ts`                       | `ensureUserSchool()` atomic transaction    |
-| `src/lib/catalog-setup.ts`                       | Provisioning chain                         |
+| `src/components/catalog/setup.ts`                | Provisioning chain                         |
 
 ## Troubleshooting
 

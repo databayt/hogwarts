@@ -479,7 +479,7 @@ Server actions must follow this pattern:
 {
   "entryPoints": ["src"],
   "out": "docs/api",
-  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/node_modules/**"],
+  "exclude": ["**/*.tests.ts", "**/*.tests.tsx", "**/node_modules/**"],
   "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "excludePrivate": true,

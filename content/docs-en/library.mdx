@@ -245,7 +245,7 @@ interface Book extends BookListItem {
 
 ```bash
 pnpm vitest run src/components/library/ --reporter=verbose                   # 160 tests
-pnpm vitest run src/lib/__tests__/catalog-setup.test.ts --reporter=verbose   # 54 tests
+pnpm vitest run src/components/catalog/__tests__/setup.test.ts --reporter=verbose   # 54 tests
 ```
 
 | Suite                                  | Tests | Coverage                                                               |
@@ -288,7 +288,7 @@ Route `/catalog/books`. DEVELOPER only — global records, no `schoolId`. `creat
 ### Seed
 
 ```bash
-pnpm db:seed:single catalog-books
+pnpm db:seed:single books
 ```
 
 90 entries across 8 genres (Arabic Literature, Islamic Studies, Sciences, Mathematics, Quran Sciences, History & Geography, Children's, English, Computer Science & Reference) — all APPROVED + PUBLISHED + PUBLIC, with picsum.photos placeholder covers. Idempotent.

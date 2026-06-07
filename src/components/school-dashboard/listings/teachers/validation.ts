@@ -154,4 +154,7 @@ export const getTeachersSchema = z.object({
   subjectId: z.string().optional().default(""),
   workloadStatus: z.enum(["UNDERUTILIZED", "NORMAL", "OVERLOAD"]).optional(),
   sort: z.array(sortItemSchema).optional().default([]),
+  // UI locale from the ROUTE — passed by the client table so search/load-more
+  // translate to the same language as the initial render (cookie can disagree).
+  lang: z.enum(["ar", "en"]).optional(),
 })

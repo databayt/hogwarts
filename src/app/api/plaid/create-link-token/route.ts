@@ -30,7 +30,7 @@
  *
  * ENVIRONMENT SWITCHING:
  * - PLAID_ENV=sandbox: Test with fake accounts
- * - PLAID_ENV=development: Real banks, test credentials
+ * - PLAID_ENV=development: Real banks, tests credentials
  * - PLAID_ENV=production: Live bank connections
  *
  * GOTCHAS:

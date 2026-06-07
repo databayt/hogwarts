@@ -4,14 +4,14 @@
 import Link from "next/link"
 import { auth } from "@/auth"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { BookPicker } from "./book-picker"
 
@@ -80,18 +80,18 @@ export async function LibraryCatalogContent({ lang }: Props) {
 
   const booksWithSelection = await Promise.all(
     catalogBooks.map(async ({ lang: contentLang, ...b }) => {
-      const srcLang = (contentLang || "ar") as SupportedLanguage
+      const srcLang = (contentLang || "ar") as Lang
       return {
         ...b,
-        title: await getDisplayText(b.title, srcLang, lang, schoolId!),
+        title: await getText(b.title, srcLang, lang, schoolId!),
         author: b.author
-          ? await getDisplayText(b.author, srcLang, lang, schoolId!)
+          ? await getText(b.author, srcLang, lang, schoolId!)
           : b.author,
         genre: b.genre
-          ? await getDisplayText(b.genre, srcLang, lang, schoolId!)
+          ? await getText(b.genre, srcLang, lang, schoolId!)
           : b.genre,
         description: b.description
-          ? await getDisplayText(b.description, srcLang, lang, schoolId!)
+          ? await getText(b.description, srcLang, lang, schoolId!)
           : b.description,
         isSelected: selectionMap.has(b.id),
       }

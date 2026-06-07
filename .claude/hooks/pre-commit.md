@@ -69,7 +69,7 @@ git add -u  # Re-stage formatted files
 
 ```bash
 # Run tests for changed files
-git diff --cached --name-only --diff-filter=ACM | grep -E "\.test\.(ts|tsx)$" | xargs pnpm test
+git diff --cached --name-only --diff-filter=ACM | grep -E "\.test\.(ts|tsx)$" | xargs pnpm tests
 ```
 
 ### 8. Multi-Tenant Safety

@@ -17,7 +17,7 @@ The attendance module tracks student attendance across multiple capture methods,
 | Reports export                                                                              | Production | CSV, Excel (5 sheets), PDF (branded)                 |
 | Soft delete + restore                                                                       | Production | `deletedAt`                                          |
 | Auto-excuse                                                                                 | Production | Approved `AbsenceIntention` → EXCUSED                |
-| Locale-aware names                                                                          | Production | `getDisplayText()` translates on demand              |
+| Locale-aware names                                                                          | Production | `getText()` translates on demand                     |
 | Geofence / Master gate / Policy engine / Compliance reports                                 | Wired      | Functional, surface still maturing                   |
 | Settings                                                                                    | UI only    | Save not connected                                   |
 | AI predictions / Gamification / Hall pass / Kiosk / Absence intentions / Compliance letters | Component  | No route page                                        |
@@ -51,7 +51,7 @@ Grade filter: actions accept `gradeId` to filter via `Class.gradeId → Academic
 
 ## Manual attendance
 
-Flat inline toolbar (`PlatformToolbar`): class selector, date picker, bulk status buttons, Save. `getCurrentPeriod()` auto-selects the class matching the current timetable period; names translate on demand via `getDisplayText()`. Keyboard: `P` / `A` / `L` for present / absent / late, `Cmd/Ctrl+S` save. Absent-student guardians are auto-notified on save; an approved `AbsenceIntention` converts ABSENT → EXCUSED.
+Flat inline toolbar (`PlatformToolbar`): class selector, date picker, bulk status buttons, Save. `getCurrentPeriod()` auto-selects the class matching the current timetable period; names translate on demand via `getText()`. Keyboard: `P` / `A` / `L` for present / absent / late, `Cmd/Ctrl+S` save. Absent-student guardians are auto-notified on save; an approved `AbsenceIntention` converts ABSENT → EXCUSED.
 
 ## Capture methods
 

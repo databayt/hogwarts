@@ -277,7 +277,7 @@ import { FeatureForm } from "@/components/feature/form"
 **Run Tests**:
 
 ```bash
-pnpm test src/components/feature
+pnpm tests src/components/feature
 ```
 
 ## Dependencies
@@ -495,7 +495,7 @@ const changedFiles = await detectChangedFiles()
 const components = changedFiles.filter((f) => f.startsWith("src/components/"))
 const routes = changedFiles.filter((f) => f.startsWith("src/app/"))
 const schemas = changedFiles.filter((f) => f.includes("prisma/models/"))
-const tests = changedFiles.filter((f) => f.endsWith(".test.tsx"))
+const tests = changedFiles.filter((f) => f.endsWith(".tests.tsx"))
 
 // Identify feature directories
 const featureDirs = extractFeatureDirectories(components)

@@ -6,7 +6,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ConfigTitleForm } from "@/components/school-dashboard/school/configuration/config-title-form"
-import { getDisplayText } from "@/components/translation/display"
+import { getText } from "@/components/translation/display"
 
 export const metadata = { title: "Configuration: Title" }
 
@@ -44,12 +44,7 @@ export default async function TitlePage({ params }: Props) {
     if (lang === "en" && school?.nameEn) {
       displayName = school.nameEn
     } else {
-      const translated = await getDisplayText(
-        storedName,
-        storedLang,
-        lang,
-        schoolId
-      )
+      const translated = await getText(storedName, storedLang, lang, schoolId)
       if (translated) displayName = translated
     }
   }

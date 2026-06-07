@@ -220,7 +220,7 @@ export const validateEmail = (email: string): boolean => {
 ```bash
 /refactor-all **/*.tsx            # All React components
 /refactor-all **/actions.ts       # All server actions
-/refactor-all **/*.test.ts        # All test files
+/refactor-all **/*.tests.ts        # All tests files
 ```
 
 ### Module Scopes
@@ -376,7 +376,7 @@ const batchConfig = {
 ```typescript
 // Ensure tests exist before refactoring
 if (coverage < 80) {
-  console.warn("Low test coverage detected")
+  console.warn("Low tests coverage detected")
   console.log("Generating tests first...")
   await generateTests()
 }

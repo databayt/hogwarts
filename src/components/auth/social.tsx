@@ -318,7 +318,7 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
 
   return (
     <div className="space-y-4">
-      {/* Debug test button */}
+      {/* Debug tests button */}
       {/* <Button
         size="sm"
         variant="outline"

@@ -217,12 +217,12 @@ export function PrismaStructure({ className }: PrismaStructureProps) {
               {
                 name: "admission.ts",
                 type: "file",
-                description: "Admission test data",
+                description: "Admission tests data",
               },
               {
                 name: "finance.ts",
                 type: "file",
-                description: "Financial test data",
+                description: "Financial tests data",
               },
             ],
           },

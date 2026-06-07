@@ -8,7 +8,6 @@ import { format } from "date-fns"
 import { Award, Download, FileBarChart, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { BatchIssueDialog } from "../certificates/batch-issue-dialog"
 import { StudentProgress } from "../shared/student-progress"
@@ -130,9 +130,9 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     const allResultCards = await Promise.all(
       results.map(async (result) => {
         const name = result.exam.subject?.name
-          ? await getDisplayText(
+          ? await getText(
               result.exam.subject.name,
-              (result.exam.subject.lang || "ar") as SupportedLanguage,
+              (result.exam.subject.lang || "ar") as Lang,
               lang,
               schoolId!
             )
@@ -318,15 +318,15 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
           id: exam.id,
           title: exam.title,
           examDate: exam.examDate,
-          className: await getDisplayText(
+          className: await getText(
             exam.class.name,
-            (exam.class.lang || "ar") as SupportedLanguage,
+            (exam.class.lang || "ar") as Lang,
             lang,
             schoolId!
           ),
-          name: await getDisplayText(
+          name: await getText(
             exam.subject.name,
-            (exam.subject.lang || "ar") as SupportedLanguage,
+            (exam.subject.lang || "ar") as Lang,
             lang,
             schoolId!
           ),

@@ -22,7 +22,7 @@ Platform operator control center (DEVELOPER role only): tenants, billing, domain
 
 - No `schoolId` scoping is INTENTIONAL here -- do not add it (unlike every other block)
 - Impersonation logic -- incorrect changes could let non-DEVELOPER roles impersonate
-- Catalog changes propagate to all schools via `src/lib/catalog-setup.ts`
+- Catalog changes propagate to all schools via `src/components/catalog/setup.ts`
 - Billing/invoice data is sensitive -- verify RBAC before any billing action changes
 
 ## Related Blocks

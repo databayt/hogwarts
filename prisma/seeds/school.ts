@@ -64,8 +64,8 @@ export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
 
   logSuccess("School", 1, DEMO_SCHOOL.domain)
 
-  // Pre-seed TranslationCache so demo school name → "Hogwarts Academy" in English
-  await prisma.translationCache.upsert({
+  // Pre-seed Translation so demo school name → "Hogwarts Academy" in English
+  await prisma.translation.upsert({
     where: {
       schoolId_sourceText_sourceLanguage_targetLanguage: {
         schoolId: school.id,

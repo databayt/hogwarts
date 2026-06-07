@@ -8,58 +8,24 @@
 
 import type { Locale } from "@/components/internationalization/config"
 
-import type { SupportedLanguage } from "./types"
+import type { Lang } from "./types"
 
 /**
  * Prepare content data for database storage.
  * Simply adds the `lang` field to indicate content language.
  *
  * @example
- * const data = prepareContentData(
+ * const data = withLang(
  *   { title: "مرحبا", body: "محتوى الإعلان", priority: "HIGH" },
  *   "ar"
  * );
  * // { title: "مرحبا", body: "محتوى الإعلان", priority: "HIGH", lang: "ar" }
  */
-export function prepareContentData<T extends Record<string, unknown>>(
+export function withLang<T extends Record<string, unknown>>(
   data: T,
-  lang: SupportedLanguage
-): T & { lang: SupportedLanguage } {
+  lang: Lang
+): T & { lang: Lang } {
   return { ...data, lang }
-}
-
-/**
- * Get the display text from an entity.
- * Returns the stored value directly.
- *
- * For on-demand translation when display locale differs from content lang,
- * use getDisplayText() from display.ts instead.
- *
- * @example
- * const title = getContentField(announcement, "title");
- * // Returns announcement.title directly
- */
-export function getContentField<T extends Record<string, unknown>>(
-  entity: T,
-  fieldName: string
-): string {
-  const value = entity[fieldName]
-  return typeof value === "string" ? value : ""
-}
-
-/**
- * Get content text from an entity that uses the single-language storage pattern.
- * Returns the stored value directly. For translation, use getDisplayText from display.ts.
- *
- * @example
- * const title = getContentText(announcement, "title");
- */
-export function getContentText<T extends Record<string, unknown>>(
-  entity: T,
-  fieldName: string
-): string {
-  const value = entity[fieldName]
-  return typeof value === "string" ? value : ""
 }
 
 /**
@@ -93,7 +59,7 @@ export function needsTranslation<T extends Record<string, unknown>>(
 /**
  * Detect the primary language of text content
  */
-export function detectLanguage(text: string): "ar" | "en" {
+export function detectLang(text: string): "ar" | "en" {
   const arabicPattern = /[\u0600-\u06FF]/g
   const matches = text.match(arabicPattern)
   const arabicRatio = (matches?.length ?? 0) / text.length
@@ -101,21 +67,46 @@ export function detectLanguage(text: string): "ar" | "en" {
 }
 
 /**
- * Check if content text has a non-empty value
+ * Detect the content language of a short value (name, room code, label) from its
+ * ACTUAL script \u2014 not a stored `lang` flag.
+ *
+ * This is the single source of truth for "what language is this stored text in",
+ * replacing the ad-hoc `const hasLatin = (s) => /[a-zA-Z]/.tests(s)` that was copied
+ * inline across students/teachers/staff/parents. It is robust to:
+ *  - a wrong `lang` flag (admission writes Latin names with the default `lang="ar"`)
+ *  - an ABSENT `lang` flag (StaffMember has no `lang` column at all)
+ *
+ * Rule: any Arabic script -> "ar"; otherwise any Latin letter -> "en"; else "ar".
+ * Arabic wins on mixed strings so the Arabic portion still gets translated on `/en`.
+ *
+ * @example
+ * detectScript("\u0645\u062D\u0645\u062F \u0639\u0644\u064A") // "ar"
+ * detectScript("Mohammed Ali") // "en"
+ * detectScript("B102") // "en"
  */
-export function hasContent(text: string | null | undefined): boolean {
-  return Boolean(text?.trim())
+export function detectScript(text: string | null | undefined): "ar" | "en" {
+  if (!text) return "ar"
+  if (/[\u0600-\u06FF]/.test(text)) return "ar"
+  if (/[a-zA-Z]/.test(text)) return "en"
+  return "ar"
 }
 
 /**
- * Truncate text for display preview
+ * Compose a person's full name from its parts in storage order.
+ * Single source of truth for `${firstName} ${lastName}` composition \u2014 replaces the
+ * ~173 inline concatenations across the dashboard.
+ *
+ * @example
+ * fullName({ firstName: "\u0645\u062D\u0645\u062F", lastName: "\u0639\u0644\u064A" }) // "\u0645\u062D\u0645\u062F \u0639\u0644\u064A"
+ * fullName({ firstName: "Ali", middleName: "B", lastName: "Khan" }) // "Ali B Khan"
  */
-export function getContentPreview(
-  text: string | null | undefined,
-  maxLength = 100
-): string {
-  if (!text) return ""
-  return text.length > maxLength
-    ? text.slice(0, maxLength - 1) + "\u2026"
-    : text
+export function fullName(person: {
+  firstName?: string | null
+  middleName?: string | null
+  lastName?: string | null
+}): string {
+  return [person.firstName, person.middleName, person.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
 }

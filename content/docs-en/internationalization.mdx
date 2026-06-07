@@ -69,14 +69,14 @@ export function LocaleIndicator() {
 
 ## User Content Storage
 
-All user-generated content uses **single-language storage** with a `lang` field. Content is stored in one language only. Translation happens on-demand via Google Translate API with database caching through the `TranslationCache` model.
+All user-generated content uses **single-language storage** with a `lang` field. Content is stored in one language only. Translation happens on-demand via Google Translate API with database caching through the `Translation` model.
 
 ### Rules
 
 1. **Generic field names only** — `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
 2. **`lang` field** — Every content model has `lang String @default("ar")` indicating the stored language
-3. **On-demand translation** — Use `getDisplayText()` from `@/lib/content-display` to translate at display time
-4. **TranslationCache** — Translated strings are cached in the database to avoid repeated API calls
+3. **On-demand translation** — Use `getText()` from `@/components/translation/display` to translate at display time
+4. **Translation** — Translated strings are cached in the database to avoid repeated API calls
 5. **School's preferred language** — `School.preferredLanguage` determines the default storage language
 
 ### Schema Pattern
@@ -94,13 +94,13 @@ model Announcement {
 ### Display with Translation
 
 ```tsx
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 
 // Stored in Arabic, user views in English -> translates via API
-const title = await getDisplayText(announcement.title, "ar", "en", schoolId)
+const title = await getText(announcement.title, "ar", "en", schoolId)
 
 // Same language -> returns directly, no API call
-const title = await getDisplayText(announcement.title, "ar", "ar", schoolId)
+const title = await getText(announcement.title, "ar", "ar", schoolId)
 ```
 
 ### Migration from legacy bilingual fields
@@ -109,13 +109,13 @@ The migration off `titleEn`/`titleAr` patterns to single-language storage is com
 
 ### Infrastructure
 
-| File                          | Purpose                     |
-| ----------------------------- | --------------------------- |
-| `src/lib/google-translate.ts` | Google Translate API client |
-| `src/lib/translate.ts`        | Translation with caching    |
-| `src/lib/auto-translate.ts`   | Auto-translation utilities  |
-| `src/lib/content-display.ts`  | `getDisplayText()` for UI   |
-| `prisma/models/school.prisma` | `TranslationCache` model    |
+| File                                    | Purpose                       |
+| --------------------------------------- | ----------------------------- |
+| `src/components/translation/display.ts` | `getText()`, `getFields()`    |
+| `src/components/translation/actions.ts` | `translate()`, server actions |
+| `src/components/translation/google.ts`  | Google Translate API client   |
+| `src/components/translation/util.ts`    | `withLang`, `detectScript`    |
+| `prisma/models/translation.prisma`      | `Translation` model           |
 
 ---
 
@@ -382,7 +382,7 @@ arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 1. **Avoid string concatenation** — Use full-sentence translations
 2. **Generic field names only** — `title`, `body`, `name` (never `titleEn`/`titleAr`)
 3. **Single-language storage** — Store in one language with a `lang` field
-4. **On-demand translation** — Use `getDisplayText()` for display-time translation
+4. **On-demand translation** — Use `getText()` for display-time translation
 
 ### Typography
 
@@ -412,10 +412,7 @@ src/
       en/
       ar/
   lib/
-    content-display.ts     # getDisplayText() for on-demand translation
-    google-translate.ts    # Google Translate API client
-    translate.ts           # Translation with caching
-    auto-translate.ts      # Auto-translation utilities
+    i18n-format.ts         # locale-aware number/date/currency formatting
   styles/
     globals.css            # Base styles with logical properties
 ```
@@ -426,10 +423,11 @@ src/
 
 ### Internal
 
+- [Translation Guide](/docs/translation-guide) — deep guide to DB-content (on-demand) translation
 - [Translation](/docs/translation) — adoption patterns, coverage tracker
-- `src/lib/content-display.ts` — `getDisplayText()` for on-demand translation
-- `src/lib/google-translate.ts` — Google Translate API client
-- `src/lib/translate.ts` — Translation with database caching
+- `src/components/translation/display.ts` — `getText()` for on-demand translation
+- `src/components/translation/google.ts` — Google Translate API client
+- `src/components/translation/actions.ts` — Translation with database caching
 - `src/components/internationalization/` — Full i18n implementation
 
 ### External

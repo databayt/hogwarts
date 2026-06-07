@@ -4,11 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Prisma } from "@prisma/client"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { ensureSubjectSelections } from "@/lib/catalog-setup"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { ensureSubjectSelections } from "@/components/catalog/setup"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 /**
  * Fetches published catalog subjects available at a school with pagination.
@@ -34,7 +34,7 @@ export async function getAllCatalogCourses(
   const page = params.page ?? 1
   const perPage = params.perPage ?? 12
   const skip = (page - 1) * perPage
-  const displayLang = (params.lang || "en") as SupportedLanguage
+  const displayLang = (params.lang || "en") as Lang
 
   // Get catalog subjects that this school has selected
   let selections = await db.subjectSelection.findMany({
@@ -152,14 +152,14 @@ async function toCourseShape(
     updatedAt: Date
   },
   schoolId: string,
-  displayLang: SupportedLanguage,
+  displayLang: Lang,
   customName?: string
 ) {
-  const srcLang = (subject.lang || "ar") as SupportedLanguage
+  const srcLang = (subject.lang || "ar") as Lang
   const [title, description, departmentName] = await Promise.all([
-    getDisplayText(customName || subject.name, srcLang, displayLang, schoolId),
-    getDisplayText(subject.description, srcLang, displayLang, schoolId),
-    getDisplayText(subject.department, srcLang, displayLang, schoolId),
+    getText(customName || subject.name, srcLang, displayLang, schoolId),
+    getText(subject.description, srcLang, displayLang, schoolId),
+    getText(subject.department, srcLang, displayLang, schoolId),
   ])
 
   return {

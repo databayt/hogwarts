@@ -23,8 +23,8 @@ import {
   type StudentAttendanceData,
 } from "@/lib/ai/attendance-predictor"
 import { db } from "@/lib/db"
-import { detectLanguage } from "@/lib/i18n-content"
-import { translateWithCache } from "@/lib/translate"
+import { translate } from "@/components/translation/actions"
+import { detectLang } from "@/components/translation/util"
 
 import { isStaffRole } from "../authorization"
 
@@ -413,7 +413,7 @@ export async function translateMessage(
 
   try {
     const validated = translateMessageSchema.parse(input)
-    const sourceLang = detectLanguage(validated.message) as "en" | "ar"
+    const sourceLang = detectLang(validated.message) as "en" | "ar"
     const targetLang = validated.targetLanguage as "en" | "ar"
 
     if (sourceLang === targetLang) {
@@ -427,7 +427,7 @@ export async function translateMessage(
       }
     }
 
-    const translatedText = await translateWithCache(
+    const translatedText = await translate(
       validated.message,
       sourceLang,
       targetLang,
@@ -467,9 +467,9 @@ export async function batchTranslateMessages(
   try {
     const results = await Promise.all(
       messages.map(async (message) => {
-        const sourceLang = detectLanguage(message) as "en" | "ar"
+        const sourceLang = detectLang(message) as "en" | "ar"
         try {
-          const translated = await translateWithCache(
+          const translated = await translate(
             message,
             sourceLang,
             targetLanguage,

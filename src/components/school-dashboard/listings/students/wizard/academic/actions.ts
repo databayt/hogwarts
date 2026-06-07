@@ -6,29 +6,28 @@ import { cookies } from "next/headers"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { academicSchema, type AcademicFormData } from "./validation"
 
 async function getDisplayLocale(schoolId: string, locale?: string) {
-  let displayLang: SupportedLanguage
+  let displayLang: Lang
   if (locale && (locale === "en" || locale === "ar")) {
     displayLang = locale
   } else {
     const cookieStore = await cookies()
-    displayLang =
-      (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+    displayLang = (cookieStore.get("NEXT_LOCALE")?.value as Lang) || "ar"
   }
   const school = await db.school.findUnique({
     where: { id: schoolId },
     select: { preferredLanguage: true },
   })
-  const contentLang = (school?.preferredLanguage || "ar") as SupportedLanguage
+  const contentLang = (school?.preferredLanguage || "ar") as Lang
   return { displayLang, contentLang }
 }
 
@@ -55,7 +54,7 @@ export async function getGradeOptions(
     const data = await Promise.all(
       grades.map(async (g) => ({
         value: g.id,
-        label: await getDisplayText(g.name, contentLang, displayLang, schoolId),
+        label: await getText(g.name, contentLang, displayLang, schoolId),
         gradeNumber: g.gradeNumber,
       }))
     )
@@ -91,7 +90,7 @@ export async function getStreamOptions(
     const data = await Promise.all(
       streams.map(async (s) => ({
         value: s.id,
-        label: await getDisplayText(s.name, contentLang, displayLang, schoolId),
+        label: await getText(s.name, contentLang, displayLang, schoolId),
       }))
     )
 
@@ -126,7 +125,7 @@ export async function getSectionOptions(
     const data = await Promise.all(
       sections.map(async (s) => ({
         value: s.id,
-        label: await getDisplayText(s.name, contentLang, displayLang, schoolId),
+        label: await getText(s.name, contentLang, displayLang, schoolId),
       }))
     )
 

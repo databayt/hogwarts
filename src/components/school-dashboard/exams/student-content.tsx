@@ -15,7 +15,6 @@ import {
   Sparkles,
 } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +28,8 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 interface Props {
   dictionary: Dictionary
@@ -243,17 +243,17 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
               upcomingExams.map(async (exam) => {
                 const daysUntil = differenceInDays(exam.examDate, today)
                 const name = exam.subject?.name
-                  ? await getDisplayText(
+                  ? await getText(
                       exam.subject.name,
-                      (exam.subject.lang || "ar") as SupportedLanguage,
+                      (exam.subject.lang || "ar") as Lang,
                       lang,
                       schoolId!
                     )
                   : ""
                 const className = exam.class?.name
-                  ? await getDisplayText(
+                  ? await getText(
                       exam.class.name,
-                      (exam.class.lang || "ar") as SupportedLanguage,
+                      (exam.class.lang || "ar") as Lang,
                       lang,
                       schoolId!
                     )
@@ -341,9 +341,9 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
             {await Promise.all(
               recentResults.map(async (result) => {
                 const name = result.exam.subject?.name
-                  ? await getDisplayText(
+                  ? await getText(
                       result.exam.subject.name,
-                      (result.exam.subject.lang || "ar") as SupportedLanguage,
+                      (result.exam.subject.lang || "ar") as Lang,
                       lang,
                       schoolId!
                     )

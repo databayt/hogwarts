@@ -1151,7 +1151,7 @@ describe("calculateDistance", () => {
 describe("checkGeofences", () => {
   it("should detect point inside circular geofence", async () => {
     const location = { lat: 24.7136, lon: 46.6753 }
-    const schoolId = "test-school-123"
+    const schoolId = "tests-school-123"
 
     // Mock database to return circular geofence
     const results = await checkGeofences(location, schoolId)
@@ -1162,7 +1162,7 @@ describe("checkGeofences", () => {
 
   it("should detect point outside geofence", async () => {
     const location = { lat: 25.0, lon: 47.0 } // Far away
-    const schoolId = "test-school-123"
+    const schoolId = "tests-school-123"
 
     const results = await checkGeofences(location, schoolId)
 
@@ -1184,16 +1184,18 @@ import { submitLocation } from "./actions"
 
 describe("submitLocation", () => {
   beforeAll(async () => {
-    // Setup test database with seed data
-    await db.school.create({ data: { id: "test-school", name: "Test School" } })
+    // Setup tests database with seed data
+    await db.school.create({
+      data: { id: "tests-school", name: "Test School" },
+    })
     await db.student.create({
-      data: { id: "test-student", schoolId: "test-school" },
+      data: { id: "tests-student", schoolId: "tests-school" },
     })
   })
 
   it("should save location trace", async () => {
     const result = await submitLocation({
-      studentId: "test-student",
+      studentId: "tests-student",
       lat: 24.7136,
       lon: 46.6753,
       accuracy: 10,
@@ -1203,7 +1205,7 @@ describe("submitLocation", () => {
 
     // Verify database insert
     const trace = await db.locationTrace.findFirst({
-      where: { studentId: "test-student" },
+      where: { studentId: "tests-student" },
     })
 
     expect(trace).toBeDefined()
@@ -1213,7 +1215,7 @@ describe("submitLocation", () => {
   it("should reject invalid coordinates", async () => {
     await expect(
       submitLocation({
-        studentId: "test-student",
+        studentId: "tests-student",
         lat: 999, // Invalid
         lon: 46.6753,
       })
@@ -1224,7 +1226,7 @@ describe("submitLocation", () => {
     // Submit 21 locations rapidly (limit is 20)
     const promises = Array.from({ length: 21 }, () =>
       submitLocation({
-        studentId: "test-student",
+        studentId: "tests-student",
         lat: 24.7136,
         lon: 46.6753,
       })
@@ -1244,7 +1246,7 @@ describe("submitLocation", () => {
 #### geo-tracking.spec.ts
 
 ```typescript
-import { expect, test } from "@playwright/test"
+import { expect, test } from "@playwright/tests"
 
 test.describe("Geofence Tracking", () => {
   test("student can enable location tracking", async ({ page, context }) => {
@@ -1303,7 +1305,7 @@ test.describe("Geofence Tracking", () => {
 #### k6 Load Test Script
 
 ```javascript
-// load-test.js
+// load-tests.js
 import { check, sleep } from "k6"
 import http from "k6/http"
 
@@ -1323,7 +1325,7 @@ export const options = {
 
 export default function () {
   const payload = JSON.stringify({
-    studentId: "test-student-123",
+    studentId: "tests-student-123",
     lat: 24.7136 + (Math.random() - 0.5) * 0.01, // Random location near school
     lon: 46.6753 + (Math.random() - 0.5) * 0.01,
     accuracy: 10,

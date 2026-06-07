@@ -13,8 +13,8 @@ import type { UserRole } from "@prisma/client"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
+import { getText } from "@/components/translation/display"
 
 import { isStaffRole } from "../authorization"
 import {
@@ -416,7 +416,7 @@ export async function getLeaderboard(
         badges: await Promise.all(
           entry.badges.map(async (badge) => ({
             code: badge.code,
-            name: await getDisplayText(
+            name: await getText(
               badge.name,
               (badge.lang as "ar" | "en") || "en",
               lang,
@@ -614,7 +614,7 @@ export async function getActiveCompetitions(
     const translatedCompetitions = await Promise.all(
       competitions.map(async (c) => ({
         id: c.id,
-        name: await getDisplayText(
+        name: await getText(
           c.name,
           (c.lang as "ar" | "en") || "ar",
           lang,
@@ -622,7 +622,7 @@ export async function getActiveCompetitions(
         ),
         lang: c.lang,
         description: c.description
-          ? await getDisplayText(
+          ? await getText(
               c.description,
               (c.lang as "ar" | "en") || "ar",
               lang,
@@ -636,7 +636,7 @@ export async function getActiveCompetitions(
           c.entries.map(async (e, index) => ({
             rank: index + 1,
             classId: e.classId,
-            className: await getDisplayText(
+            className: await getText(
               e.class.name,
               (e.class.lang as "ar" | "en") || "ar",
               lang,

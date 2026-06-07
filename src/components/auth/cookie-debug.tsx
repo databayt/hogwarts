@@ -76,7 +76,7 @@ export function CookieDebug() {
       const data = await response.json()
       console.log("🔍 Session API Response:", data)
 
-      // Also test the debug session API
+      // Also tests the debug session API
       const debugResponse = await fetch("/api/debug-session")
       const debugData = await debugResponse.json()
       console.log("🔍 Debug Session API Response:", debugData)

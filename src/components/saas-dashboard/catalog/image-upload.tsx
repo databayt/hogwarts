@@ -8,9 +8,9 @@ import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react"
 import Dropzone from "react-dropzone"
 import { toast } from "sonner"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 import { deleteCatalogThumbnail, uploadCatalogThumbnail } from "./image-actions"
 

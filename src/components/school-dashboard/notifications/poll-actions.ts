@@ -5,9 +5,9 @@
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 
-import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { getRecentNotifications, getUnreadNotificationCount } from "./queries"
 import type { NotificationDTO } from "./types"
@@ -21,7 +21,7 @@ export interface NotificationBellData {
  * Detect the current display locale from the request URL.
  * Falls back to "ar" if not determinable.
  */
-function getDisplayLocale(): SupportedLanguage {
+function getDisplayLocale(): Lang {
   try {
     const headersList = headers()
     const pathname =
@@ -31,7 +31,7 @@ function getDisplayLocale(): SupportedLanguage {
       ""
     // Match /{lang}/ at the start of the path or after the domain
     const match = pathname.match(/\/(?:s\/[^/]+\/)?(en|ar)(?:\/|$)/)
-    return (match?.[1] as SupportedLanguage) ?? "ar"
+    return (match?.[1] as Lang) ?? "ar"
   } catch {
     return "ar"
   }
@@ -47,7 +47,7 @@ function getDisplayLocale(): SupportedLanguage {
  *   from client components).
  */
 export async function fetchNotificationBellData(
-  locale?: SupportedLanguage
+  locale?: Lang
 ): Promise<NotificationBellData | null> {
   try {
     const [session, { schoolId }] = await Promise.all([
@@ -66,10 +66,10 @@ export async function fetchNotificationBellData(
     // Translate notification titles and bodies to the display locale
     const translatedRecent = await Promise.all(
       recent.map(async (n) => {
-        const contentLang = (n.lang || "ar") as SupportedLanguage
+        const contentLang = (n.lang || "ar") as Lang
         const [translatedTitle, translatedBody] = await Promise.all([
-          getDisplayText(n.title, contentLang, displayLocale, schoolId),
-          getDisplayText(n.body, contentLang, displayLocale, schoolId),
+          getText(n.title, contentLang, displayLocale, schoolId),
+          getText(n.body, contentLang, displayLocale, schoolId),
         ])
 
         return {

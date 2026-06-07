@@ -474,7 +474,7 @@ Apply fix? [Y/n]
     "confirmBeforeFix": true
   },
   "schemaPath": "prisma/schema.prisma",
-  "excludePatterns": ["*.test.ts", "*.spec.ts"]
+  "excludePatterns": ["*.tests.ts", "*.spec.ts"]
 }
 ```
 

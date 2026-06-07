@@ -50,9 +50,9 @@ const nextConfig: NextConfig = {
       "./public/icons/**",
       // Content (processed at build time by fumadocs-mdx)
       "./content/**",
-      // Dev/test artifacts
+      // Dev/tests artifacts
       "./playwright-report/**",
-      "./test-results/**",
+      "./tests-results/**",
       "./.playwright-mcp/**",
       "./tests/**",
       "./scripts/**",

@@ -13,7 +13,7 @@ import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
 
 /**
  * Middleware to secure debug endpoints
- * Must be used on all debug/test API endpoints
+ * Must be used on all debug/tests API endpoints
  */
 export async function secureDebugEndpoint(
   request: NextRequest,

@@ -14,15 +14,38 @@ import { GOOGLE_TRANSLATE_API_URL } from "./config"
 import type { TranslateResponse } from "./types"
 
 /**
+ * Loud-but-throttled degradation signal.
+ *
+ * Both `getText` and `translate` callers `catch -> return source text`,
+ * which is correct for UX but historically meant a missing/failing API key produced
+ * "everything is Arabic on /en" with ZERO log signal — indistinguishable from a page
+ * that simply wasn't wired. We surface it here so it reaches Vercel runtime logs,
+ * without spamming once per row.
+ */
+let _lastDegradedLogAt = 0
+const DEGRADED_LOG_THROTTLE_MS = 5 * 60 * 1000
+
+function reportTranslationDegraded(reason: string): void {
+  const now = Date.now()
+  if (now - _lastDegradedLogAt > DEGRADED_LOG_THROTTLE_MS) {
+    _lastDegradedLogAt = now
+    console.error(
+      `[translation] DEGRADED — display text is falling back to source/transliteration. Reason: ${reason}`
+    )
+  }
+}
+
+/**
  * Translate a single text using Google Cloud Translation API
  */
-export async function googleTranslate(
+export async function translateRaw(
   text: string,
   sourceLang: string,
   targetLang: string
 ): Promise<string> {
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
   if (!apiKey) {
+    reportTranslationDegraded("GOOGLE_TRANSLATE_API_KEY is not configured")
     throw new Error("GOOGLE_TRANSLATE_API_KEY not configured")
   }
 
@@ -42,6 +65,9 @@ export async function googleTranslate(
 
   if (!response.ok) {
     const error = await response.text()
+    reportTranslationDegraded(
+      `Google Translate API ${response.status}: ${error.slice(0, 200)}`
+    )
     throw new Error(`Google Translate API error: ${response.status} - ${error}`)
   }
 
@@ -53,13 +79,14 @@ export async function googleTranslate(
  * Batch translate multiple texts in a single API call
  * More efficient than individual calls for multiple fields
  */
-export async function googleTranslateBatch(
+export async function translateBatch(
   texts: string[],
   sourceLang: string,
   targetLang: string
 ): Promise<string[]> {
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
   if (!apiKey) {
+    reportTranslationDegraded("GOOGLE_TRANSLATE_API_KEY is not configured")
     throw new Error("GOOGLE_TRANSLATE_API_KEY not configured")
   }
 
@@ -86,6 +113,9 @@ export async function googleTranslateBatch(
 
   if (!response.ok) {
     const error = await response.text()
+    reportTranslationDegraded(
+      `Google Translate API ${response.status}: ${error.slice(0, 200)}`
+    )
     throw new Error(`Google Translate API error: ${response.status} - ${error}`)
   }
 

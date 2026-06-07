@@ -120,7 +120,7 @@ echo "📋 Rebase plan saved to .git/rebase-plan.txt"
 ```bash
 # Ensure tests pass before rebase
 echo "🧪 Running tests before rebase..."
-pnpm test --run
+pnpm tests --run
 if [ $? -ne 0 ]; then
   echo "❌ Tests failing before rebase"
   echo "Fix tests first to avoid complications during rebase"
@@ -240,6 +240,6 @@ git branch -D $BACKUP_BRANCH  # Delete backup if everything is OK
 rm .git/rebase-plan.txt  # Remove plan file
 
 # Validate
-pnpm test  # Ensure tests still pass
+pnpm tests  # Ensure tests still pass
 pnpm build  # Ensure build works
 ```

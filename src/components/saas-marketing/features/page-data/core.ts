@@ -220,7 +220,7 @@ export const corePageData: Record<string, FeaturePageData> = {
           {
             title: "Streamlined Examination Scheduling",
             description:
-              "Enables administrators to effortlessly generate exam schedules, simplifying the management of exams, test papers, and essential documents.",
+              "Enables administrators to effortlessly generate exam schedules, simplifying the management of exams, tests papers, and essential documents.",
           },
           {
             title: "Swift and Precise Results Processing",

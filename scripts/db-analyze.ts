@@ -22,7 +22,7 @@ const prisma = new PrismaClient({
 const program = new Command()
 program
   .option("-t, --threshold <ms>", "Slow query threshold in ms", "100")
-  .option("--sample", "Run sample queries to test")
+  .option("--sample", "Run sample queries to tests")
   .parse()
 
 const options = program.opts()

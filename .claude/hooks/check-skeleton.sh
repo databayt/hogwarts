@@ -7,8 +7,8 @@ FILE="$CLAUDE_FILE_PATH"
 # Only check tsx/ts files
 echo "$FILE" | grep -qE '\.(tsx?|jsx?)$' || exit 0
 
-# Skip test files
-echo "$FILE" | grep -qE '(__tests__/|\.test\.|\.spec\.)' && exit 0
+# Skip tests files
+echo "$FILE" | grep -qE '(__tests__/|\.tests\.|\.spec\.)' && exit 0
 
 FOUND=""
 

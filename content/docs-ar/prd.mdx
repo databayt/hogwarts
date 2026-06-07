@@ -78,7 +78,7 @@ Hogwarts منصة مفتوحة المصدر متعددة المستأجرين ل
 
 ### تخزين بلغة واحدة
 
-لا تستخدم Hogwarts أعمدة ثنائية اللغة. كل المحتوى يُخزَّن بلغة المدرسة المختارة مع حقل `lang`. القراءات بلغة أخرى تمرّ عبر Google Translate وتُخزَّن مؤقتاً في `TranslationCache`. نصوص الواجهة في القواميس (`src/components/internationalization/dictionaries/`)، و`getDisplayText()` (`@/lib/content-display`) هو الوصول القانوني.
+لا تستخدم Hogwarts أعمدة ثنائية اللغة. كل المحتوى يُخزَّن بلغة المدرسة المختارة مع حقل `lang`. القراءات بلغة أخرى تمرّ عبر Google Translate وتُخزَّن مؤقتاً في `Translation`. نصوص الواجهة في القواميس (`src/components/internationalization/dictionaries/`)، و`getText()` (`@/components/translation/display`) هو الوصول القانوني.
 
 ## الأدوار
 
@@ -212,7 +212,7 @@ Stripe + bankak + tap + mobile-money + bank-transfer + cash، Plaid + Dwolla، R
 | نمط الرابط | `/[lang]/path` → `/ar/docs`, `/en/docs`                                                                  |
 | القواميس   | `src/components/internationalization/dictionaries/` — أزواج EN + AR عبر 8 ملفات أعلى مستوى + 16 لكل مجال |
 | RTL        | تخطيطات ثنائية الاتجاه عبر خصائص منطقية + `<DirectionProvider>`                                          |
-| التخزين    | حقل `lang` وحيد + Google Translate عند الطلب مع تخزين في `TranslationCache`                              |
+| التخزين    | حقل `lang` وحيد + Google Translate عند الطلب مع تخزين في `Translation`                                   |
 
 راجع [الترجمة](/ar/docs/translation) لعقد القاموس الكامل.
 

@@ -45,7 +45,7 @@ Improve code quality to target
 Increase test coverage
 
 ```bash
-/loop test 95  # Target 95% coverage
+/loop tests 95  # Target 95% coverage
 ```
 
 ## Examples
@@ -61,7 +61,7 @@ Increase test coverage
 /loop refactor coverage:95 complexity:8
 
 # Write tests until 95% coverage
-/loop test 95
+/loop tests 95
 
 # Quality improvement loop
 /loop quality all  # Runs all quality improvements
@@ -148,7 +148,7 @@ Targets:
 Generates tests systematically:
 
 ```bash
-/loop test 95
+/loop tests 95
 ```
 
 Process:
@@ -318,7 +318,7 @@ await invokeAgent("/agents/bmad/loop", {
 /loop release
 # Runs:
 # 1. Fix critical bugs
-# 2. Increase test coverage
+# 2. Increase tests coverage
 # 3. Resolve lint errors
 # 4. Build verification
 ```

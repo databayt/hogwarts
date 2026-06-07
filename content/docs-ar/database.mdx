@@ -12,7 +12,7 @@ description: PostgreSQL متعدّد المستأجرين مع Prisma — 302 ن
 - **هوية بالنطاق الفرعي** — المدارس فريدة بالنطاق الفرعي (مثل `kingfahad.databayt.org`)، نطاقات مخصّصة عبر CNAME.
 - **أمان نوع end-to-end** — Prisma → Zod → TypeScript بلا تسليمات يدوية.
 - **schema متعدّد الملفات** — 73 ملف `.prisma` منطقياً في `prisma/models/` للصيانة.
-- **تخزين بلغة واحدة** — المحتوى يُخزَّن بلغة واحدة مع حقل `lang`، والترجمة عند الطلب عبر Google Translate مع تخزين في `TranslationCache`.
+- **تخزين بلغة واحدة** — المحتوى يُخزَّن بلغة واحدة مع حقل `lang`، والترجمة عند الطلب عبر Google Translate مع تخزين في `Translation`.
 
 ## التخطيط
 
@@ -25,7 +25,7 @@ description: PostgreSQL متعدّد المستأجرين مع Prisma — 302 ن
 | الأساس (school، year، term، period، subscription) |      12 | `school.prisma`                                                                                                                                                                                        |
 | Auth والمستخدمون                                  |       7 | `auth.prisma`                                                                                                                                                                                          |
 | الأشخاص (طلاب، معلمون، أهل، كادر)                 |      32 | `students.prisma`, `staff.prisma`, `staff-member.prisma`, `profile.prisma`                                                                                                                             |
-| البنية الأكاديمية                                 |      13 | `academic-structure.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                               |
+| البنية الأكاديمية                                 |      13 | `academic.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                                         |
 | الكتالوج (عام)                                    |     22+ | `catalog.prisma`, `bridge.prisma`, `chapter.prisma`, `lesson.prisma`، إلخ                                                                                                                              |
 | الحضور                                            |     33+ | `attendance.prisma`, `attendance-enhanced.prisma`, `geo-attendance.prisma`                                                                                                                             |
 | الامتحانات والتقييم                               |     40+ | `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`، إلخ                                                                         |
@@ -40,7 +40,7 @@ description: PostgreSQL متعدّد المستأجرين مع Prisma — 302 ن
 | النقل                                             |       7 | `transportation.prisma`                                                                                                                                                                                |
 | المكتبة                                           |       4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
 | الملفات / الوثائق                                 |      15 | `files.prisma`, `file-record.prisma`, `document.prisma`, `document-processing.prisma`, `image.prisma`, `video.prisma`                                                                                  |
-| تدقيق / أمن / متفرق                               |      10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation-cache.prisma`, `purge-tokens.prisma`                                                                                    |
+| تدقيق / أمن / متفرق                               |      10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation.prisma`, `purge-tokens.prisma`                                                                                          |
 
 ## عزل متعدّد المستأجرين
 
@@ -195,7 +195,7 @@ model ComplianceLog {
 
 ## تخزين بلغة واحدة
 
-المحتوى يُخزَّن بلغة واحدة مع حقل `lang`. الترجمة عند الطلب عبر Google Translate API، مع تخزين في `TranslationCache`.
+المحتوى يُخزَّن بلغة واحدة مع حقل `lang`. الترجمة عند الطلب عبر Google Translate API، مع تخزين في `Translation`.
 
 ```prisma
 model Announcement {
@@ -204,7 +204,7 @@ model Announcement {
   lang  String  @default("ar")
 }
 
-model TranslationCache {
+model Translation {
   id             String   @id @default(cuid())
   schoolId       String
   sourceText     String   @db.Text
@@ -222,13 +222,13 @@ model TranslationCache {
 ```
 
 ```typescript
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 
 // مخزَّن بالعربية، يُعرَض بالإنجليزية → يترجم ويخزّن
-const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
+const title = await getText("مرحبا", "ar", "en", schoolId)
 
 // نفس اللغة → يعود مباشرة بدون استدعاء API
-const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+const title = await getText("مرحبا", "ar", "ar", schoolId)
 ```
 
 ### نماذج تحمل `lang`

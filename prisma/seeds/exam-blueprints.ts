@@ -590,7 +590,7 @@ const CATEGORY_QUESTION_TEMPLATES: Record<SubjectCategory, QuestionTemplate[]> =
       },
       {
         prefix: "Design",
-        text: "Design an experiment to test a hypothesis about {topic}.",
+        text: "Design an experiment to tests a hypothesis about {topic}.",
         bloom: "CREATE",
       },
       {

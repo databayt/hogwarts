@@ -50,7 +50,7 @@ This guide documents the **automated TDD-first development workflows** for the H
 /deploy staging
 
 # Generate tests
-/test src/components/feature/**/*.tsx
+/tests src/components/feature/**/*.tsx
 
 # Check internationalization
 /i18n-check
@@ -132,7 +132,7 @@ This guide documents the **automated TDD-first development workflows** for the H
 **Example Test Structure**:
 
 ```typescript
-// src/components/school-dashboard/attendance/content.test.tsx
+// src/components/school-dashboard/attendance/content.tests.tsx
 describe("AttendanceContent", () => {
   it("should render attendance calendar", () => {
     // Test implementation
@@ -147,7 +147,7 @@ describe("AttendanceContent", () => {
   })
 })
 
-// src/components/school-dashboard/attendance/actions.test.ts
+// src/components/school-dashboard/attendance/actions.tests.ts
 describe("markAttendance", () => {
   it("should mark student as present", async () => {
     // Test implementation - FAILS (not implemented yet)
@@ -221,7 +221,7 @@ src/
 **Automated Actions**: 8. **Run Tests**: Execute test suite
 
 ```bash
-pnpm test src/components/school-dashboard/attendance/**/*.test.tsx
+pnpm tests src/components/school-dashboard/attendance/**/*.tests.tsx
 ```
 
 9. **If Tests Fail**:
@@ -334,7 +334,7 @@ feat(attendance): Add student attendance tracking with calendar view
 - Add bulk attendance marking
 - Create server actions with schoolId scoping
 - Add Arabic/English translations
-- Achieve 97.3% test coverage
+- Achieve 97.3% tests coverage
 
 🤖 Generated with Claude Code
 Co-Authored-By: Claude <noreply@anthropic.com>
@@ -460,14 +460,14 @@ Solution: Wrap object creation in useMemo hook
 #### Step 2: Write Regression Test (5 min)
 
 ```bash
-# Generate test that reproduces the bug
-/agents/test -p "Create regression test for timetable infinite loop bug"
+# Generate tests that reproduces the bug
+/agents/tests -p "Create regression test for timetable infinite loop bug"
 ```
 
 **Test Example**:
 
 ```typescript
-// src/components/school-dashboard/timetable/content.test.tsx
+// src/components/school-dashboard/timetable/content.tests.tsx
 describe('TimetableContent - Bug Fixes', () => {
   it('should not cause infinite loop when rendering', () => {
     const renderSpy = vi.fn()
@@ -520,7 +520,7 @@ function TimetableContent({ timetable }) {
 
 ```bash
 # Run tests to verify bug is fixed
-pnpm test src/components/school-dashboard/timetable/**/*.test.tsx
+pnpm tests src/components/school-dashboard/timetable/**/*.tests.tsx
 
 # Run comprehensive review
 /review
@@ -708,7 +708,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ```bash
 # Run tests before refactoring (all should pass)
-pnpm test
+pnpm tests
 
 # Run comprehensive review to identify refactoring opportunities
 /review
@@ -774,15 +774,15 @@ pnpm test
 
 # Step 1: Extract TimetableGrid
 /agents/react -p "Extract TimetableGrid component from TimetableContent"
-pnpm test  # Verify tests still pass
+pnpm tests  # Verify tests still pass
 
 # Step 2: Extract TimetableHeader
 /agents/react -p "Extract TimetableHeader component from TimetableContent"
-pnpm test  # Verify tests still pass
+pnpm tests  # Verify tests still pass
 
 # Step 3: Move data fetching to server actions
 /agents/api -p "Move timetable data fetching to server actions"
-pnpm test  # Verify tests still pass
+pnpm tests  # Verify tests still pass
 
 # Continue iteratively...
 ```
@@ -799,8 +799,8 @@ pnpm test  # Verify tests still pass
 #### Step 4: Verify Refactoring (10 min)
 
 ```bash
-# Run full test suite
-pnpm test
+# Run full tests suite
+pnpm tests
 
 # Run comprehensive review
 /review
@@ -922,7 +922,7 @@ git push origin main  # Triggers Vercel production deploy
 # (Manual checks via browser or automated E2E tests)
 
 # Run smoke tests
-pnpm test:e2e --grep "@smoke"
+pnpm tests:e2e --grep "@smoke"
 ```
 
 **Smoke Test Checklist**:
@@ -988,8 +988,8 @@ git checkout -b hotfix/critical-bug-name
 # Quick fix
 /agents/auth -p "Fix login authentication issue"
 
-# Write minimal regression test
-/agents/test -p "Create minimal test for login bug"
+# Write minimal regression tests
+/agents/tests -p "Create minimal test for login bug"
 ```
 
 **Hotfix Checklist** (streamlined):
@@ -1012,10 +1012,10 @@ git checkout -b hotfix/critical-bug-name
 
 ```bash
 # Run tests (only affected areas)
-pnpm test src/components/auth/**/*.test.tsx
+pnpm tests src/components/auth/**/*.tests.tsx
 
-# Quick smoke test
-pnpm test:e2e --grep "@auth"
+# Quick smoke tests
+pnpm tests:e2e --grep "@auth"
 
 # Build verification
 pnpm build

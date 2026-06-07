@@ -301,7 +301,7 @@ export async function sendNotificationEmail(
 ): Promise<EmailDeliveryResult> {
   const from = env.EMAIL_FROM ?? "School Portal <noreply@school.databayt.org>"
 
-  // In development, use Resend's test recipient
+  // In development, use Resend's tests recipient
   const recipient =
     process.env.NODE_ENV === "development" ? "delivered@resend.dev" : params.to
 

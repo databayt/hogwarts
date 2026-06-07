@@ -413,8 +413,8 @@ const validated = GetStudentAnalyticsSchema.parse(args)
 ### Unit Tests
 
 ```typescript
-// src/mcp/__tests__/hogwarts-server.test.ts
-import { testMCPServer } from "@modelcontextprotocol/sdk/server/test.js"
+// src/mcp/__tests__/hogwarts-server.tests.ts
+import { testMCPServer } from "@modelcontextprotocol/sdk/server/tests.js"
 import { describe, expect, it } from "vitest"
 
 describe("Hogwarts MCP Server", () => {
@@ -433,7 +433,7 @@ describe("Hogwarts MCP Server", () => {
       params: {
         name: "get_student_analytics",
         arguments: {
-          schoolId: "test-school",
+          schoolId: "tests-school",
           yearLevel: "GRADE_10",
         },
       },

@@ -262,7 +262,7 @@ NEXT_PUBLIC_MAX_UPLOAD_SIZE=10485760  # 10MB
 ## Testing
 
 ```typescript
-// Example test
+// Example tests
 describe("Document Extraction", () => {
   it("should extract school name from PDF", async () => {
     const file = new File([pdfBuffer], "school.pdf", {

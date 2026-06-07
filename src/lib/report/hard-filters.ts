@@ -9,7 +9,7 @@
  * so a silent-reject from here is indistinguishable from a real success to the user.
  *
  * Triggers (plan §1.2):
- *   HF1  description < 30 chars                 ("test", "asdf", "doesn't work")
+ *   HF1  description < 30 chars                 ("tests", "asdf", "doesn't work")
  *   HF2  description > 2000 chars               (paste-bomb)
  *   HF3  anonymous + invalid Turnstile          (bot defense)
  *   HF4  reporter.isSuspended                   (banned user)

@@ -7,9 +7,9 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
-import { getDisplayText } from "@/components/translation/display"
-import type { SupportedLanguage } from "@/components/translation/types"
-import { detectLanguage } from "@/components/translation/util"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
+import { detectLang } from "@/components/translation/util"
 
 import { MessagingClient } from "./messaging-client"
 import { getConversation, getConversationsList } from "./queries"
@@ -106,9 +106,9 @@ export async function MessagingContent({
   // Translate participant names when their actual language differs from the UI locale
   const translateIfNeeded = async (name: string | null) => {
     if (!name) return name
-    const detected = detectLanguage(name) as SupportedLanguage
+    const detected = detectLang(name) as Lang
     if (detected === locale) return name
-    return getDisplayText(name, detected, locale, schoolId)
+    return getText(name, detected, locale, schoolId)
   }
 
   // Translate participant names in all conversations

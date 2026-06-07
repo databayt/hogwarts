@@ -7,10 +7,10 @@ import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getText } from "@/components/translation/display"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
 import { bulkUpdateSubjectRoomsSchema } from "./validation"
@@ -141,7 +141,7 @@ export async function getSubjectRoomAssignments(
       const translatedClasses = await Promise.all(
         classes.map(async (c) => ({
           classId: c.id,
-          name: await getDisplayText(
+          name: await getText(
             c.subject.name,
             (c.subject.lang as "ar" | "en") || "ar",
             lang,
@@ -151,13 +151,13 @@ export async function getSubjectRoomAssignments(
             .filter(Boolean)
             .join(" "),
           currentRoomId: c.classroomId,
-          currentRoomName: await getDisplayText(
+          currentRoomName: await getText(
             c.classroom.roomName,
             (c.classroom.lang as "ar" | "en") || "ar",
             lang,
             schoolId
           ),
-          currentRoomType: await getDisplayText(
+          currentRoomType: await getText(
             c.classroom.classroomType.name,
             (c.classroom.classroomType.lang as "ar" | "en") || "ar",
             lang,
@@ -170,13 +170,13 @@ export async function getSubjectRoomAssignments(
       const translatedRooms = await Promise.all(
         availableRooms.map(async (r) => ({
           id: r.id,
-          roomName: await getDisplayText(
+          roomName: await getText(
             r.roomName,
             (r.lang as "ar" | "en") || "ar",
             lang,
             schoolId
           ),
-          typeName: await getDisplayText(
+          typeName: await getText(
             r.classroomType.name,
             (r.classroomType.lang as "ar" | "en") || "ar",
             lang,
@@ -190,7 +190,7 @@ export async function getSubjectRoomAssignments(
 
       result.push({
         gradeId: grade.id,
-        gradeName: await getDisplayText(
+        gradeName: await getText(
           grade.name,
           (grade.lang as "ar" | "en") || "ar",
           lang,

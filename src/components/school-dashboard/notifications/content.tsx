@@ -6,12 +6,12 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+import { getText } from "@/components/translation/display"
 
 import { NotificationCenterClient } from "./notification-center-client"
 import { getNotificationsList } from "./queries"
@@ -91,8 +91,8 @@ export async function NotificationCenterContent({
     rows.map(async (n) => {
       const contentLang = (n.lang as "ar" | "en") || "ar"
       const [title, body] = await Promise.all([
-        getDisplayText(n.title, contentLang, locale, schoolId),
-        getDisplayText(n.body, contentLang, locale, schoolId),
+        getText(n.title, contentLang, locale, schoolId),
+        getText(n.body, contentLang, locale, schoolId),
       ])
       return {
         ...n,

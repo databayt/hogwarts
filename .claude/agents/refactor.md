@@ -463,7 +463,7 @@ pnpm exec ts-complex src/
 ### Step 2: Write Tests (if missing)
 
 ```typescript
-// Before refactoring, ensure test coverage
+// Before refactoring, ensure tests coverage
 describe("calculateGrade", () => {
   it("should return A for 90+", () => {
     expect(calculateGrade({ scores: [90, 95, 92] })).toBe("A")
@@ -482,29 +482,29 @@ describe("calculateGrade", () => {
 git add -A && git commit -m "refactor: Extract calculateAverage function"
 
 # 2. Run tests
-pnpm test
+pnpm tests
 
 # 3. Simplify conditionals
 git add -A && git commit -m "refactor: Replace nested ifs with guard clauses"
 
 # 4. Run tests again
-pnpm test
+pnpm tests
 
 # 5. Extract constants
 git add -A && git commit -m "refactor: Extract magic numbers to constants"
 
 # 6. Run tests
-pnpm test
+pnpm tests
 ```
 
 ### Step 4: Verify No Behavior Change
 
 ```bash
-# Run full test suite
-pnpm test
+# Run full tests suite
+pnpm tests
 
 # Run E2E tests
-pnpm test:e2e
+pnpm tests:e2e
 
 # Manual testing (if needed)
 pnpm dev

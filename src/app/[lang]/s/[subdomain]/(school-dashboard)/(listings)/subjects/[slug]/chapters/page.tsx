@@ -3,15 +3,15 @@
 
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { ChaptersContent } from "@/components/school-dashboard/listings/subjects/catalog-chapters"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -21,14 +21,13 @@ export default async function ChaptersPage({ params }: Props) {
   const { lang, slug } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
-  const contentLang = (l: string | null | undefined) =>
-    (l || "ar") as SupportedLanguage
+  const contentLang = (l: string | null | undefined) => (l || "ar") as Lang
   const t = (
     text: string | null | undefined,
     srcLang: string | null | undefined
   ) =>
     schoolId
-      ? getDisplayText(text ?? "", contentLang(srcLang), lang, schoolId)
+      ? getText(text ?? "", contentLang(srcLang), lang, schoolId)
       : Promise.resolve(text ?? "")
 
   const subject = await db.subject.findUnique({

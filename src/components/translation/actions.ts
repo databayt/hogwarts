@@ -7,9 +7,9 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { googleTranslate, googleTranslateBatch } from "./google"
+import { translateBatch, translateRaw } from "./google"
 import type {
-  SupportedLanguage,
+  Lang,
   TranslateFieldsInput,
   TranslateFieldsResult,
   TranslateTextInput,
@@ -18,10 +18,10 @@ import type {
 } from "./types"
 
 /**
- * Translate with database caching via TranslationCache model.
+ * Translate with database caching via Translation model.
  * Checks cache first, falls back to Google Translate API.
  */
-export async function translateWithCache(
+export async function translate(
   text: string,
   sourceLang: "en" | "ar",
   targetLang: "en" | "ar",
@@ -31,7 +31,7 @@ export async function translateWithCache(
   if (sourceLang === targetLang) return text
 
   // Check cache first
-  const cached = await db.translationCache.findUnique({
+  const cached = await db.translation.findUnique({
     where: {
       schoolId_sourceText_sourceLanguage_targetLanguage: {
         schoolId,
@@ -44,7 +44,7 @@ export async function translateWithCache(
 
   if (cached) {
     // Update hit count and last accessed (fire-and-forget)
-    db.translationCache
+    db.translation
       .update({
         where: { id: cached.id },
         data: {
@@ -58,10 +58,10 @@ export async function translateWithCache(
   }
 
   // Translate via Google
-  const translated = await googleTranslate(text, sourceLang, targetLang)
+  const translated = await translateRaw(text, sourceLang, targetLang)
 
   // Cache the result
-  await db.translationCache
+  await db.translation
     .create({
       data: {
         schoolId,
@@ -102,7 +102,7 @@ export async function translateText(
   const targetLang = input.sourceLanguage === "en" ? "ar" : "en"
 
   try {
-    const translated = await translateWithCache(
+    const translated = await translate(
       input.text,
       input.sourceLanguage,
       targetLang,
@@ -149,7 +149,7 @@ export async function translateFields(
     const texts = entries.map(([, value]) => value)
 
     // Batch translate for efficiency
-    const translations = await googleTranslateBatch(
+    const translations = await translateBatch(
       texts,
       input.sourceLanguage,
       targetLang
@@ -158,7 +158,7 @@ export async function translateFields(
     // Cache all results
     await Promise.allSettled(
       texts.map((text, i) =>
-        db.translationCache
+        db.translation
           .upsert({
             where: {
               schoolId_sourceText_sourceLanguage_targetLanguage: {
@@ -205,10 +205,10 @@ export async function translateFields(
  * Translates specified fields and returns the translated versions
  * alongside the original. Used when admin wants to preview translation.
  */
-export async function withAutoTranslation<T extends Record<string, unknown>>(
+export async function autoTranslate<T extends Record<string, unknown>>(
   data: T,
   translatableFields: (keyof T)[],
-  sourceLanguage: SupportedLanguage
+  sourceLanguage: Lang
 ): Promise<
   TranslationResult<T> & { translatedFields?: Record<string, string> }
 > {
@@ -247,7 +247,7 @@ export async function withAutoTranslation<T extends Record<string, unknown>>(
       error: result.error || "Translation failed",
     }
   } catch (error) {
-    console.error("[withAutoTranslation] Error:", error)
+    console.error("[autoTranslate] Error:", error)
     return {
       success: false,
       data: resultData,

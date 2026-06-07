@@ -5,9 +5,9 @@
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { getText } from "@/components/translation/display"
 
 export async function getParentAnnouncements(displayLang?: "ar" | "en") {
   try {
@@ -107,13 +107,13 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
     const mappedAnnouncements = await Promise.all(
       announcements.map(async (announcement) => ({
         id: announcement.id,
-        title: await getDisplayText(
+        title: await getText(
           announcement.title || "",
           (announcement.lang as "ar" | "en") || "ar",
           lang,
           schoolId
         ),
-        body: await getDisplayText(
+        body: await getText(
           announcement.body || "",
           (announcement.lang as "ar" | "en") || "ar",
           lang,

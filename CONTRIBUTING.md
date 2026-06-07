@@ -253,7 +253,7 @@ Hogwarts includes powerful CLI commands for development automation:
 
 ```bash
 /review                  # Comprehensive code review
-/test <file>             # Generate and run tests
+/tests <file>             # Generate and run tests
 /security-scan           # OWASP vulnerability audit
 /fix-all                 # Auto-fix all issues
 ```
@@ -494,19 +494,19 @@ See the [i18n Documentation](https://ed.databayt.org/docs/i18n) for detailed gui
 Run all tests:
 
 ```bash
-pnpm test
+pnpm tests
 ```
 
 Run specific tests:
 
 ```bash
-pnpm test src/components/school-dashboard/students/**/*.test.tsx
+pnpm tests src/components/school-dashboard/students/**/*.tests.tsx
 ```
 
 Run in watch mode:
 
 ```bash
-pnpm test -- --watch
+pnpm tests -- --watch
 ```
 
 ### E2E Tests (Playwright)
@@ -514,25 +514,25 @@ pnpm test -- --watch
 Run all E2E tests:
 
 ```bash
-pnpm test:e2e
+pnpm tests:e2e
 ```
 
 Run with UI mode (interactive):
 
 ```bash
-pnpm test:e2e:ui
+pnpm tests:e2e:ui
 ```
 
 Run in debug mode:
 
 ```bash
-pnpm test:e2e:debug
+pnpm tests:e2e:debug
 ```
 
 View test report:
 
 ```bash
-pnpm test:e2e:report
+pnpm tests:e2e:report
 ```
 
 ### Test Requirements

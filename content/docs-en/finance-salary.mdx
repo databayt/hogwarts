@@ -23,7 +23,7 @@ Salary defines each teacher's base pay, taxable/non-taxable allowances, and dedu
 | Salary calculator                        | Ready (tax is a flat 15%)                   |
 | Salary increment (fixed / percentage)    | Ready                                       |
 | CSV export of structures                 | Production (client-side, `canExport`-gated) |
-| On-demand translation of names on list   | Production (`getDisplayText` at read-time)  |
+| On-demand translation of names on list   | Production (`getText` at read-time)         |
 | Create-structure UI form                 | Stubbed — "coming soon" placeholder         |
 | Salary history                           | Planned (overwritten on update)             |
 | Formula allowances (e.g. 20% of basic)   | Planned                                     |
@@ -75,7 +75,7 @@ All use `auth()` + `getTenantContext()`. RBAC is enforced in `content.tsx`. None
 - **`SalaryAllowance`** — `name`, `amount`, `isTaxable`, `isRecurring`, `description`.
 - **`SalaryDeduction`** — `name`, `amount`, `type`, `isRecurring`, `description`.
 
-No `lang` field. The structures list page bridges this at read-time with `getDisplayText`, but the underlying allowance/deduction names are stored untagged.
+No `lang` field. The structures list page bridges this at read-time with `getText`, but the underlying allowance/deduction names are stored untagged.
 
 ## Output formats
 

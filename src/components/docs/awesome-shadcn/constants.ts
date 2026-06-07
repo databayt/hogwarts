@@ -1606,7 +1606,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "threejs-page-transition",
     title: "ThreejsPageTransition",
     description:
-      "Web application that uses THREE.JS and NextJS for the transitions between pages. Created to test the possibility of merging SPA's and awwwards-like page transitions.",
+      "Web application that uses THREE.JS and NextJS for the transitions between pages. Created to tests the possibility of merging SPA's and awwwards-like page transitions.",
     link: "https://next-training-six.vercel.app/",
     repository: "https://github.com/michalzalobny/threejs-page-transition",
     tags: ["templates", "specialized", "three", "modern", "enhanced"],

@@ -4,9 +4,9 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getText } from "@/components/translation/display"
 
 import type { ActionResult } from "./types"
 import {
@@ -65,7 +65,7 @@ export async function getDepartments(
       departments.map(async (dept) => ({
         id: dept.id,
         schoolId: dept.schoolId,
-        departmentName: await getDisplayText(
+        departmentName: await getText(
           dept.departmentName,
           (dept.lang as "ar" | "en") || "ar",
           lang,

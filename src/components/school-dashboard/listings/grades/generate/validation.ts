@@ -24,7 +24,7 @@
  * Why AI generation:
  * - Teachers create 20 questions at once (batch > one-by-one)
  * - LLM-generated: Reduces prep time, ensures pedagogical quality
- * - Bloom's levels: Questions test different cognitive skills (not just recall)
+ * - Bloom's levels: Questions tests different cognitive skills (not just recall)
  * - Randomization: Prevents academic dishonesty (different question per student)
  *
  * Why discriminated union (type-specific schemas):

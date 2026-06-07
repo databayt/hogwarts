@@ -3,8 +3,8 @@
 
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getCloudFrontUrl } from "@/lib/cloudfront-url"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import {
   getCommunitySubjectBySlug,

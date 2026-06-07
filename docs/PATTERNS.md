@@ -731,11 +731,14 @@ export function StudentCard({ student }: { student: Student }) {
 
 ### Component Testing
 
+Tests live under `src/tests/<url-category>/<feature>/`, mirroring the app URL (no `__tests__/`).
+Import the module-under-test via the `@/` alias, never relative `../`.
+
 ```tsx
-// __tests__/student-card.test.tsx
+// src/tests/school-dashboard/students/student-card.test.tsx
 import { render, screen } from "@testing-library/react"
 
-import { StudentCard } from "../student-card"
+import { StudentCard } from "@/components/school-dashboard/students/student-card"
 
 describe("StudentCard", () => {
   const mockStudent = {
@@ -758,13 +761,12 @@ describe("StudentCard", () => {
 ### Server Action Testing
 
 ```typescript
-// __tests__/actions.test.ts
+// src/tests/school-dashboard/students/actions.test.ts
 import { db } from "@/lib/db"
+import { createStudent } from "@/components/school-dashboard/students/actions"
 
-import { createStudent } from "../actions"
-
-jest.mock("@/lib/db")
-jest.mock("@/lib/tenant-context", () => ({
+vi.mock("@/lib/db")
+vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: () => ({ schoolId: "school-123" }),
 }))
 

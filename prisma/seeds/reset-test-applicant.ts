@@ -9,7 +9,7 @@
  * - No schoolId
  * - Clears all application artifacts (Application, ApplicationSession, Student, Enrollment)
  *
- * Usage: pnpm db:reset-test-applicant
+ * Usage: pnpm db:reset-tests-applicant
  */
 
 import { PrismaClient } from "@prisma/client"
@@ -21,7 +21,7 @@ const TEST_APPLICANT_EMAIL = "applicant@databayt.org"
 export async function resetTestApplicant() {
   const prisma = new PrismaClient()
 
-  console.log("🔄 Resetting test applicant: applicant@databayt.org")
+  console.log("🔄 Resetting tests applicant: applicant@databayt.org")
 
   const passwordHash = await getPasswordHash()
 
@@ -116,7 +116,7 @@ export async function resetTestApplicant() {
       console.log("   Password: 1234")
     }
   } catch (error) {
-    console.error("❌ Failed to reset test applicant:", error)
+    console.error("❌ Failed to reset tests applicant:", error)
     process.exit(1)
   } finally {
     await prisma.$disconnect()

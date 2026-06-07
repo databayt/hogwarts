@@ -82,5 +82,5 @@ If all phases pass, ask user:
 For faster validation (skip agents, run commands only):
 
 ```bash
-pnpm tsc --noEmit && pnpm lint && pnpm test && pnpm build
+pnpm tsc --noEmit && pnpm lint && pnpm tests && pnpm build
 ```

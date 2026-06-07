@@ -583,7 +583,7 @@ export const FEATURES: Feature[] = [
     id: "notice-board",
     title: "Notice Board",
     description:
-      "Post test schedules, deadlines, and notices well ahead of due dates.",
+      "Post tests schedules, deadlines, and notices well ahead of due dates.",
     icon: "StickyNote",
     category: "communication",
   },
@@ -633,7 +633,7 @@ export const FEATURES: Feature[] = [
     id: "quiz",
     title: "Quiz",
     description:
-      "Foster student practice and test preparation with engaging quiz tools.",
+      "Foster student practice and tests preparation with engaging quiz tools.",
     icon: "HelpCircle",
     category: "lms",
   },
@@ -2160,7 +2160,7 @@ export const FEATURE_DETAILS: Record<
   },
   quiz: {
     longDescription:
-      "Engaging classroom quiz activities for fun and collaboration. Offers enhancements for practice and test preparation with a focus on equity, standards-based reports, data-driven instruction, and universal access across campuses — supporting 8 different question types for diverse assessment needs.",
+      "Engaging classroom quiz activities for fun and collaboration. Offers enhancements for practice and tests preparation with a focus on equity, standards-based reports, data-driven instruction, and universal access across campuses — supporting 8 different question types for diverse assessment needs.",
     benefits: [
       "Assessment and practice tools with equity-focused design",
       "Data-driven insights through standards-based reporting",
@@ -2174,7 +2174,7 @@ export const FEATURE_DETAILS: Record<
     ],
     useCases: [
       "Weekly class quizzes with instant grading and performance analytics",
-      "Standardized test preparation with timed practice sessions",
+      "Standardized tests preparation with timed practice sessions",
       "Interactive study review sessions with gamified quiz activities",
     ],
     relatedFeatures: ["exam", "quiz-anti-cheating", "lms"],
@@ -2495,7 +2495,7 @@ export const FEATURE_DETAILS: Record<
       "Resource sharing for class materials, assignments, and videos",
       "Increased collaboration enabling student idea-sharing",
       "Student onboarding with guided information completion",
-      "Automated exam results distribution and test reports",
+      "Automated exam results distribution and tests reports",
       "Class reminders with scheduled updates and notifications",
       "Real-time Q&A and student engagement support",
       "Organization tools for sharing schedules and assignments",

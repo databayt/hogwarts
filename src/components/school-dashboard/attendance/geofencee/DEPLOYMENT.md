@@ -24,12 +24,12 @@
 
 - [ ] All tests passing (unit, integration, E2E)
   ```bash
-  pnpm test
-  pnpm test:e2e
+  pnpm tests
+  pnpm tests:e2e
   ```
 - [ ] Test coverage ≥ 80%
   ```bash
-  pnpm test --coverage
+  pnpm tests --coverage
   ```
 - [ ] No TypeScript errors
   ```bash
@@ -219,7 +219,7 @@ ORDER BY tablename, indexname;
 #### Step 5: Test Triggers
 
 ```sql
--- Insert test geofence event
+-- Insert tests geofence event
 INSERT INTO geo_attendance_events (
   id, school_id, student_id, geofence_id, event_type, lat, lon, timestamp
 ) VALUES (
@@ -316,7 +316,7 @@ vercel ls
 
 ```bash
 # Set BASE_URL to staging
-BASE_URL=https://hogwarts-git-staging-your-team.vercel.app pnpm test:e2e
+BASE_URL=https://hogwarts-git-staging-your-team.vercel.app pnpm tests:e2e
 
 # All tests should pass
 ```

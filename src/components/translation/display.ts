@@ -2,8 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { translateWithCache } from "./actions"
-import type { SupportedLanguage } from "./types"
+import { translate } from "./actions"
+import type { Lang } from "./types"
 
 /**
  * Get display text with on-demand translation.
@@ -18,17 +18,17 @@ import type { SupportedLanguage } from "./types"
  *
  * @example
  * // Content stored in Arabic, user viewing in English
- * const title = await getDisplayText("مرحبا", "ar", "en", schoolId);
+ * const title = await getText("مرحبا", "ar", "en", schoolId);
  * // Returns "Hello" (translated and cached)
  *
  * // Content stored in Arabic, user viewing in Arabic
- * const title = await getDisplayText("مرحبا", "ar", "ar", schoolId);
+ * const title = await getText("مرحبا", "ar", "ar", schoolId);
  * // Returns "مرحبا" (no translation needed)
  */
-export async function getDisplayText(
+export async function getText(
   text: string | null | undefined,
-  contentLang: SupportedLanguage,
-  displayLang: SupportedLanguage,
+  contentLang: Lang,
+  displayLang: Lang,
   schoolId: string
 ): Promise<string> {
   if (!text || text.trim() === "") return ""
@@ -40,7 +40,7 @@ export async function getDisplayText(
       if (stripped && /^[a-zA-Z]+$/.test(stripped)) {
         // Text is Latin but claimed as Arabic — translate from English
         try {
-          return await translateWithCache(text, "en", displayLang, schoolId)
+          return await translate(text, "en", displayLang, schoolId)
         } catch {
           return text
         }
@@ -58,19 +58,16 @@ export async function getDisplayText(
   }
 
   try {
-    return await translateWithCache(text, contentLang, displayLang, schoolId)
+    return await translate(text, contentLang, displayLang, schoolId)
   } catch (error) {
-    console.error(
-      "[getDisplayText] Translation failed, returning source:",
-      error
-    )
+    console.error("[getText] Translation failed, returning source:", error)
     return text // Fallback to source text
   }
 }
 
 /**
  * Batch translate multiple fields of an entity for display.
- * More efficient than calling getDisplayText for each field.
+ * More efficient than calling getText for each field.
  *
  * @param entity - The database entity with content fields
  * @param fields - Array of field names to translate
@@ -80,7 +77,7 @@ export async function getDisplayText(
  * @returns Object with translated field values
  *
  * @example
- * const translated = await getDisplayFields(
+ * const translated = await getFields(
  *   announcement,
  *   ["title", "body"],
  *   announcement.lang,
@@ -89,11 +86,11 @@ export async function getDisplayText(
  * );
  * // { title: "Hello", body: "Welcome to school" }
  */
-export async function getDisplayFields<T extends Record<string, unknown>>(
+export async function getFields<T extends Record<string, unknown>>(
   entity: T,
   fields: string[],
-  contentLang: SupportedLanguage,
-  displayLang: SupportedLanguage,
+  contentLang: Lang,
+  displayLang: Lang,
   schoolId: string
 ): Promise<Record<string, string>> {
   // Same language - return fields directly
@@ -119,7 +116,7 @@ export async function getDisplayFields<T extends Record<string, unknown>>(
         return [field, text] as const
       }
       try {
-        const translated = await translateWithCache(
+        const translated = await translate(
           text,
           contentLang,
           displayLang,

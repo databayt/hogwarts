@@ -5,9 +5,9 @@ import { NextRequest, NextResponse } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { getContactsByRole } from "@/components/school-dashboard/messaging/contacts/queries"
-import { getDisplayText } from "@/components/translation/display"
-import type { SupportedLanguage } from "@/components/translation/types"
-import { detectLanguage } from "@/components/translation/util"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
+import { detectLang } from "@/components/translation/util"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") ?? undefined
     const category = searchParams.get("category") ?? undefined
-    const locale = (searchParams.get("locale") ?? "en") as SupportedLanguage
+    const locale = (searchParams.get("locale") ?? "en") as Lang
 
     const groups = await getContactsByRole(
       auth.schoolId,
@@ -47,12 +47,10 @@ export async function GET(request: NextRequest) {
           group.contacts.map(async (contact) => {
             if (
               contact.displayName &&
-              detectLanguage(contact.displayName) !== locale
+              detectLang(contact.displayName) !== locale
             ) {
-              const detected = detectLanguage(
-                contact.displayName
-              ) as SupportedLanguage
-              contact.displayName = await getDisplayText(
+              const detected = detectLang(contact.displayName) as Lang
+              contact.displayName = await getText(
                 contact.displayName,
                 detected,
                 locale,

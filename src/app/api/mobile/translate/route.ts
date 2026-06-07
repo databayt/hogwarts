@@ -5,7 +5,7 @@
  * POST /api/mobile/translate
  *
  * Per-entity on-demand translation for iOS / Android. Surfaces the
- * existing TranslationCache so mobile clients can display
+ * existing Translation so mobile clients can display
  * announcements/assignments in the user's app language without each
  * client baking its own translation pipeline.
  *
@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
-import { translateWithCache } from "@/components/translation/actions"
+import { translate } from "@/components/translation/actions"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -40,7 +40,7 @@ interface EntitySnapshot {
  * (tenant-isolated by schoolId).
  *
  * Whitelist-only — adding a new entity type means adding a case here AND
- * a route test, never trusting an arbitrary client-supplied table name.
+ * a route tests, never trusting an arbitrary client-supplied table name.
  */
 async function loadEntity(
   entityType: "announcement" | "assignment",
@@ -126,11 +126,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Probe the cache directly so the response can honestly report whether
-    // this was a hit or a fresh Google Translate call. translateWithCache
+    // this was a hit or a fresh Google Translate call. translate
     // does the same lookup internally; the extra read costs ~1ms and the
     // honest signal helps the iOS analytics distinguish hit-rate decay
     // from real translation latency.
-    const cacheHit = await db.translationCache.findUnique({
+    const cacheHit = await db.translation.findUnique({
       where: {
         schoolId_sourceText_sourceLanguage_targetLanguage: {
           schoolId: auth.schoolId,
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     })
 
-    const translated_text = await translateWithCache(
+    const translated_text = await translate(
       snapshot.text,
       snapshot.source_lang,
       target_lang,

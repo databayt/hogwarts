@@ -348,7 +348,7 @@ import { ESLintUtils } from "@typescript-eslint/utils"
 // Measure cyclomatic complexity
 // Identify high-risk areas for migration
 // Prioritize by:
-// 1. High complexity + low test coverage
+// 1. High complexity + low tests coverage
 // 2. Frequently changed files
 // 3. Performance bottlenecks
 ```
@@ -410,15 +410,15 @@ export function StudentListWrapper() {
 
 ```bash
 # Before migration
-pnpm test src/components/legacy/StudentList.test.tsx
+pnpm tests src/components/legacy/StudentList.tests.tsx
 # Coverage: 85%
 
 # After migration
-pnpm test src/components/students/content.test.tsx
+pnpm tests src/components/students/content.tests.tsx
 # Coverage: 85% (maintained or improved)
 
 # Integration tests
-pnpm test:e2e tests/students.spec.ts
+pnpm tests:e2e tests/students.spec.ts
 ```
 
 **Performance Benchmarking**:

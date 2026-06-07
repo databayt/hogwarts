@@ -8,12 +8,12 @@ import {
   createActionResponse,
   type ActionResponse,
 } from "@/lib/action-response"
+import { db } from "@/lib/db"
 import {
   applyTimetableStructureForNewSchool,
   autoGenerateTimetableForSchool,
   setupCatalogForSchool,
-} from "@/lib/catalog-setup"
-import { db } from "@/lib/db"
+} from "@/components/catalog/setup"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 

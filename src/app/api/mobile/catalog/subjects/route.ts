@@ -3,11 +3,11 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { ensureSubjectSelections } from "@/lib/catalog-setup"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { ensureSubjectSelections } from "@/components/catalog/setup"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { verifyToken } from "../../auth/jwt"
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category") || undefined
     const page = parseInt(searchParams.get("page") || "1")
     const perPage = parseInt(searchParams.get("per_page") || "50")
-    const lang = (searchParams.get("lang") || "en") as SupportedLanguage
+    const lang = (searchParams.get("lang") || "en") as Lang
     const skip = (page - 1) * perPage
 
     // Get school's subject selections
@@ -123,16 +123,11 @@ export async function GET(request: NextRequest) {
     // Translate and map to mobile DTO (snake_case)
     const rows = await Promise.all(
       subjects.map(async (s) => {
-        const srcLang = (s.lang || "ar") as SupportedLanguage
+        const srcLang = (s.lang || "ar") as Lang
         const [title, description, departmentName] = await Promise.all([
-          getDisplayText(
-            customNames.get(s.id) || s.name,
-            srcLang,
-            lang,
-            schoolId
-          ),
-          getDisplayText(s.description, srcLang, lang, schoolId),
-          getDisplayText(s.department, srcLang, lang, schoolId),
+          getText(customNames.get(s.id) || s.name, srcLang, lang, schoolId),
+          getText(s.description, srcLang, lang, schoolId),
+          getText(s.department, srcLang, lang, schoolId),
         ])
 
         return {

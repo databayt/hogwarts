@@ -8,9 +8,9 @@ import type { UserRole } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getContactsByRole } from "@/components/school-dashboard/messaging/contacts/queries"
-import { getDisplayText } from "@/components/translation/display"
-import type { SupportedLanguage } from "@/components/translation/types"
-import { detectLanguage } from "@/components/translation/util"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
+import { detectLang } from "@/components/translation/util"
 
 export const dynamic = "force-dynamic"
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") ?? undefined
     const category = searchParams.get("category") ?? undefined
-    const locale = (searchParams.get("locale") ?? "en") as SupportedLanguage
+    const locale = (searchParams.get("locale") ?? "en") as Lang
 
     const groups = await getContactsByRole(
       schoolId,
@@ -54,40 +54,28 @@ export async function GET(request: NextRequest) {
           group.contacts.map(async (contact) => {
             if (
               contact.displayName &&
-              detectLanguage(contact.displayName) !== locale
+              detectLang(contact.displayName) !== locale
             ) {
-              const detected = detectLanguage(
-                contact.displayName
-              ) as SupportedLanguage
-              contact.displayName = await getDisplayText(
+              const detected = detectLang(contact.displayName) as Lang
+              contact.displayName = await getText(
                 contact.displayName,
                 detected,
                 locale,
                 schoolId
               )
             }
-            if (
-              contact.firstName &&
-              detectLanguage(contact.firstName) !== locale
-            ) {
-              const detected = detectLanguage(
-                contact.firstName
-              ) as SupportedLanguage
-              contact.firstName = await getDisplayText(
+            if (contact.firstName && detectLang(contact.firstName) !== locale) {
+              const detected = detectLang(contact.firstName) as Lang
+              contact.firstName = await getText(
                 contact.firstName,
                 detected,
                 locale,
                 schoolId
               )
             }
-            if (
-              contact.lastName &&
-              detectLanguage(contact.lastName) !== locale
-            ) {
-              const detected = detectLanguage(
-                contact.lastName
-              ) as SupportedLanguage
-              contact.lastName = await getDisplayText(
+            if (contact.lastName && detectLang(contact.lastName) !== locale) {
+              const detected = detectLang(contact.lastName) as Lang
+              contact.lastName = await getText(
                 contact.lastName,
                 detected,
                 locale,

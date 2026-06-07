@@ -24,7 +24,7 @@
  * - Low: Minor improvement opportunity
  *
  * RESPONSE FORMAT:
- * - results: Array of test results with pass/fail
+ * - results: Array of tests results with pass/fail
  * - recommendations: Actionable fixes for failures
  * - criticalIssues: Count of critical findings
  *
@@ -43,7 +43,7 @@
  * - Some checks require external network access
  * - Rate limit this endpoint to prevent DoS
  *
- * @see /lib/security-scanner.ts for test implementations
+ * @see /lib/security-scanner.ts for tests implementations
  */
 
 import { NextRequest, NextResponse } from "next/server"

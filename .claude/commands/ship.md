@@ -91,14 +91,14 @@ git status -uno
 ### Stage 2: Test Execution
 
 ```bash
-# Run test suite
-pnpm test
+# Run tests suite
+pnpm tests
 
 # Run E2E tests
-pnpm test:e2e
+pnpm tests:e2e
 
 # Check coverage
-pnpm test --coverage
+pnpm tests --coverage
 ```
 
 ### Stage 3: Security Scan
@@ -147,7 +147,7 @@ vercel --prod --build-env KEY=value
 curl https://app.domain.com/api/health
 
 # Smoke tests
-pnpm test:smoke
+pnpm tests:smoke
 
 # Performance check
 lighthouse https://app.domain.com
@@ -298,7 +298,7 @@ await invokeAgent("/agents/workflow/git", {
   task: "ensure-clean-state",
 })
 
-await invokeAgent("/agents/quality/test", {
+await invokeAgent("/agents/quality/tests", {
   task: "run-all-tests",
 })
 

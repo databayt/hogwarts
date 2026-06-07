@@ -219,7 +219,7 @@ pnpm add -D lint-staged
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run lint-staged (format, lint, test changed files)
+# Run lint-staged (format, lint, tests changed files)
 pnpm exec lint-staged
 
 # Type check
@@ -249,9 +249,9 @@ pnpm exec commitlint --edit $1
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run full test suite
+# Run full tests suite
 echo "🧪 Running tests..."
-pnpm test --run || exit 1
+pnpm tests --run || exit 1
 
 # Verify build
 echo "🏗️ Verifying build..."

@@ -93,7 +93,7 @@ export const lmsPageData: Record<string, FeaturePageData> = {
         type: "hero",
         heading: "Engaging Classroom Quiz Activities",
         description:
-          "Offers enhancements aimed at fostering practice and test preparation, in addition to student engagement features highly valued by educators.",
+          "Offers enhancements aimed at fostering practice and tests preparation, in addition to student engagement features highly valued by educators.",
       },
       {
         type: "feature-cards",

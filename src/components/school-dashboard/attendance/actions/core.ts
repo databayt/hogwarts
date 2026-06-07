@@ -8,7 +8,6 @@ import type { AttendanceMethod, AttendanceStatus, Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { isChannelAvailable, sendAttendanceSMS } from "@/lib/notifications/sms"
@@ -19,6 +18,7 @@ import {
   isStaffRole,
 } from "@/components/school-dashboard/attendance/authorization"
 import { markAttendanceSchema } from "@/components/school-dashboard/attendance/validation"
+import { getText } from "@/components/translation/display"
 
 import { getTeacherClassIds } from "./helpers"
 
@@ -570,7 +570,7 @@ export async function getAttendanceList(input: {
         const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
 
         const name = needsTranslation
-          ? await getDisplayText(rawName, contentLang, displayLang, schoolId)
+          ? await getText(rawName, contentLang, displayLang, schoolId)
           : rawName
 
         return {

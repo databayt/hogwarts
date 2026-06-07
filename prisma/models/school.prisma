@@ -306,7 +306,7 @@ model School {
   fileRecords  FileRecord[]
 
   // Translation cache
-  translationCache TranslationCache[]
+  translations Translation[]
 
   // Audit relations
   auditLogs     AuditLog[]

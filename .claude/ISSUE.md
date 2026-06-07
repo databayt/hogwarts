@@ -69,7 +69,7 @@ pnpm list prettier
 ls .prettierrc.json
 
 # 4. Test Prettier manually
-npx prettier --write src/test.tsx
+npx prettier --write src/tests.tsx
 ```
 
 #### MCP Server Connection Failed

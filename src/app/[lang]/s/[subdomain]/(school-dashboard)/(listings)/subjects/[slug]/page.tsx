@@ -3,18 +3,18 @@
 
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getCloudFrontUrl } from "@/lib/cloudfront-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogContentSections } from "@/components/school-dashboard/listings/subjects/catalog-content-sections"
 import { CatalogDetailContent } from "@/components/school-dashboard/listings/subjects/catalog-detail"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>
@@ -24,14 +24,13 @@ export default async function SubjectDetailPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
-  const contentLang = (l: string | null | undefined) =>
-    (l || "ar") as SupportedLanguage
+  const contentLang = (l: string | null | undefined) => (l || "ar") as Lang
   const t = (
     text: string | null | undefined,
     srcLang: string | null | undefined
   ) =>
     schoolId
-      ? getDisplayText(text ?? "", contentLang(srcLang), lang, schoolId)
+      ? getText(text ?? "", contentLang(srcLang), lang, schoolId)
       : Promise.resolve(text ?? "")
 
   // Try catalog slug first, then fallback to school subject by ID

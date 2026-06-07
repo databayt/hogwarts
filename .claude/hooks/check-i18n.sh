@@ -7,8 +7,8 @@ FILE="$CLAUDE_FILE_PATH"
 # Skip non-TS/TSX files
 echo "$FILE" | grep -qE '\.(tsx?|jsx?)$' || exit 0
 
-# Skip dictionary files and test files (false positives)
-echo "$FILE" | grep -qE '(dictionaries/|__tests__/|\.test\.|\.spec\.)' && exit 0
+# Skip dictionary files and tests files (false positives)
+echo "$FILE" | grep -qE '(dictionaries/|__tests__/|\.tests\.|\.spec\.)' && exit 0
 
 FOUND=""
 

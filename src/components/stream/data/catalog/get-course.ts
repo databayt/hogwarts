@@ -3,10 +3,10 @@
 import { cache } from "react"
 import { notFound } from "next/navigation"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 /**
  * Fetches individual catalog subject with chapters and lessons.
@@ -127,7 +127,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
             const storedLang = (school.preferredLanguage || "ar") as "ar" | "en"
             const displayLang = (lang === "ar" ? "ar" : "en") as "ar" | "en"
             if (storedLang === displayLang) return school.name
-            return getDisplayText(
+            return getText(
               school.name,
               storedLang,
               displayLang,
@@ -139,11 +139,11 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
   ])
 
   // Translate all content names for the current locale
-  const srcLang = (subject.lang || "ar") as SupportedLanguage
-  const displayLang = (lang === "ar" ? "ar" : "en") as SupportedLanguage
+  const srcLang = (subject.lang || "ar") as Lang
+  const displayLang = (lang === "ar" ? "ar" : "en") as Lang
   const cacheSchoolId = schoolId || subject.id // fallback for cache key
   const t = (text: string | null | undefined) =>
-    getDisplayText(text ?? "", srcLang, displayLang, cacheSchoolId)
+    getText(text ?? "", srcLang, displayLang, cacheSchoolId)
 
   const [title, description, departmentName] = await Promise.all([
     t(subject.name),

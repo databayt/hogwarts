@@ -23,7 +23,7 @@ import {
   announcementCreateSchema,
   type AnnouncementFormValues,
 } from "@/components/school-dashboard/listings/announcements/validation"
-import { detectLanguage } from "@/components/translation/util"
+import { detectLang } from "@/components/translation/util"
 
 import { InformationStep } from "./information"
 import { ScopeStep } from "./scope"
@@ -89,7 +89,7 @@ export function AnnouncementCreateForm({
 
   async function onSubmit(values: AnnouncementFormValues) {
     // Detect actual content language from title text
-    const detectedLang = detectLanguage(values.title || "")
+    const detectedLang = detectLang(values.title || "")
     values.lang = detectedLang
 
     const res = currentId

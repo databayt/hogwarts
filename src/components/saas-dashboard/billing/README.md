@@ -357,7 +357,7 @@ export const receiptSchema = z
 ### Unit Tests
 
 ```bash
-pnpm test src/components/saas-dashboard/billing/**/*.test.ts
+pnpm tests src/components/saas-dashboard/billing/**/*.tests.ts
 ```
 
 ### Test Coverage Areas

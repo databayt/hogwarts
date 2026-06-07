@@ -33,7 +33,7 @@ Generate comprehensive E2E tests for user workflows using Playwright
 
 ```typescript
 // e2e/student-enrollment.spec.ts
-import { expect, test } from "@playwright/test"
+import { expect, test } from "@playwright/tests"
 
 import { loginAs } from "./helpers/auth"
 import { fillStudentForm } from "./helpers/forms"
@@ -255,7 +255,7 @@ test.describe("Accessibility", () => {
     await page.keyboard.press("Tab")
     await page.keyboard.type("Test Student")
     await page.keyboard.press("Tab")
-    await page.keyboard.type("test@example.com")
+    await page.keyboard.type("tests@example.com")
   })
 
   test("should work with screen reader", async ({ page }) => {
@@ -287,7 +287,7 @@ test.describe("Accessibility", () => {
 export const testStudents = {
   valid: {
     name: "Test Student",
-    email: "test@example.com",
+    email: "tests@example.com",
     yearLevel: "10",
   },
   invalid: {
@@ -305,9 +305,9 @@ export const testStudents = {
 export async function seedTestData() {
   await prisma.student.createMany({
     data: [
-      { name: "Harry Potter", schoolId: "test-school" },
-      { name: "Hermione Granger", schoolId: "test-school" },
-      { name: "Ron Weasley", schoolId: "test-school" },
+      { name: "Harry Potter", schoolId: "tests-school" },
+      { name: "Hermione Granger", schoolId: "tests-school" },
+      { name: "Ron Weasley", schoolId: "tests-school" },
     ],
   })
 }
@@ -317,9 +317,9 @@ export async function seedTestData() {
 
 ```typescript
 test.afterEach(async () => {
-  // Clean up test data
+  // Clean up tests data
   await prisma.student.deleteMany({
-    where: { email: { contains: "@test.com" } },
+    where: { email: { contains: "@tests.com" } },
   })
 })
 ```
@@ -336,7 +336,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["html"], ["json", { outputFile: "test-results.json" }]],
+  reporter: [["html"], ["json", { outputFile: "tests-results.json" }]],
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3000",
     trace: "on-first-retry",
@@ -383,7 +383,7 @@ jobs:
       - run: pnpm db:seed
       - run: pnpm dev &
       - run: npx playwright install
-      - run: npx playwright test
+      - run: npx playwright tests
 
       - uses: actions/upload-artifact@v3
         if: always()
@@ -398,13 +398,13 @@ jobs:
 
 ```bash
 # Run tests in headed mode
-npx playwright test --headed
+npx playwright tests --headed
 
-# Debug specific test
-npx playwright test --debug student-enrollment
+# Debug specific tests
+npx playwright tests --debug student-enrollment
 
 # Use Playwright Inspector
-PWDEBUG=1 npx playwright test
+PWDEBUG=1 npx playwright tests
 ```
 
 ### Trace Viewer

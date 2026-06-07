@@ -329,7 +329,7 @@ const isMobile = useMediaQuery('(max-width: 640px)')
 ### Step 8: Test Generation
 
 ```tsx
-// [component-name].test.tsx
+// [component-name].tests.tsx
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"

@@ -22,7 +22,7 @@ If errors found:
 ### Step 2: Test Changed Files (10s)
 
 ```bash
-pnpm test --changed --run
+pnpm tests --changed --run
 ```
 
 If tests fail → STOP and report failures

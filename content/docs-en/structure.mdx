@@ -204,7 +204,7 @@ prisma/
 │   ├── auth.prisma
 │   ├── students.prisma
 │   ├── staff.prisma
-│   ├── academic-structure.prisma
+│   ├── academic.prisma
 │   ├── timetable.prisma
 │   ├── attendance.prisma
 │   ├── catalog.prisma
@@ -233,7 +233,7 @@ Key utilities you'll touch often.
 | `catalog-setup.ts`    | Catalog bridge provisioning                                                 |
 | `google-translate.ts` | Google Translate API client                                                 |
 | `translate.ts`        | Translation with DB caching                                                 |
-| `content-display.ts`  | `getDisplayText()` for on-demand translation                                |
+| `content-display.ts`  | `getText()` for on-demand translation                                       |
 | `auto-translate.ts`   | Auto-translation utilities                                                  |
 | `stripe.ts`           | Stripe payments                                                             |
 | `cloudfront.ts`       | CloudFront CDN signing                                                      |
@@ -267,7 +267,6 @@ Key utilities you'll touch often.
 ```typescript
 import { auth } from "@/auth"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
@@ -276,6 +275,7 @@ import { Card } from "@/components/ui/card"
 import { PageHeader } from "@/components/atom/page-header"
 import { Content } from "@/components/school-dashboard/listings/students/content"
 import { PlatformSidebar } from "@/components/template/platform-sidebar"
+import { getText } from "@/components/translation/display"
 ```
 
 ## See also

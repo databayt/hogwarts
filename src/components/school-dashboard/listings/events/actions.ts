@@ -9,7 +9,6 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayFields } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
@@ -21,6 +20,7 @@ import {
   eventUpdateSchema,
   getEventsSchema,
 } from "@/components/school-dashboard/listings/events/validation"
+import { getFields } from "@/components/translation/display"
 
 type EventSelectResult = {
   id: string
@@ -334,7 +334,7 @@ export async function getEvent(input: {
 
     // On-demand translation if displayLang differs from stored lang
     if (input.displayLang && schoolId) {
-      const translated = await getDisplayFields(
+      const translated = await getFields(
         event,
         ["title", "description"],
         (event.lang as "ar" | "en") || "ar",
@@ -879,7 +879,7 @@ export async function getPreviousEvents(options?: {
         events.map(async (e) => {
           const storedLang = (e.lang as "ar" | "en") || "ar"
           if (storedLang === displayLang) return e
-          const fields = await getDisplayFields(
+          const fields = await getFields(
             e,
             ["title", "description"],
             storedLang,

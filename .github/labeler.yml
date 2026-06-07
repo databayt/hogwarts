@@ -87,7 +87,7 @@
 "type: tests":
   - changed-files:
       - any-glob-to-any-file:
-          - "**/*.test.*"
+          - "**/*.tests.*"
           - "**/*.spec.*"
           - tests/**/*
           - vitest.config.*

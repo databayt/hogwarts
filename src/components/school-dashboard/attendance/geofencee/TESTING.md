@@ -99,7 +99,7 @@ vi.mock("@/lib/db", () => ({
 describe("checkGeofences", () => {
   it("should detect point inside circular geofence", async () => {
     const location = { lat: 24.7136, lon: 46.6753 }
-    const schoolId = "test-school"
+    const schoolId = "tests-school"
 
     // Mock database response
     vi.mocked(db.geoFence.findMany).mockResolvedValue([
@@ -125,7 +125,7 @@ describe("checkGeofences", () => {
 
   it("should detect point outside circular geofence", async () => {
     const location = { lat: 25.0, lon: 47.0 } // Far away
-    const schoolId = "test-school"
+    const schoolId = "tests-school"
 
     vi.mocked(db.geoFence.findMany).mockResolvedValue([
       {
@@ -147,7 +147,7 @@ describe("checkGeofences", () => {
 
   it("should include points near boundary (< 100m)", async () => {
     const location = { lat: 24.7136, lon: 46.6803 } // ~50m from center
-    const schoolId = "test-school"
+    const schoolId = "tests-school"
 
     vi.mocked(db.geoFence.findMany).mockResolvedValue([
       {
@@ -370,8 +370,8 @@ describe("geofenceSchema", () => {
 **Run Unit Tests**:
 
 ```bash
-pnpm test src/lib/geo-service.test.ts
-pnpm test src/components/school-dashboard/attendance/geofence/
+pnpm tests src/lib/geo-service.tests.ts
+pnpm tests src/components/school-dashboard/attendance/geofence/
 ```
 
 ---
@@ -398,10 +398,10 @@ describe("Server Actions Integration", () => {
   let testStudentId: string
 
   beforeAll(async () => {
-    // Setup test database
+    // Setup tests database
     const school = await db.school.create({
       data: {
-        id: "test-school-123",
+        id: "tests-school-123",
         name: "Test School",
       },
     })
@@ -409,7 +409,7 @@ describe("Server Actions Integration", () => {
 
     const student = await db.student.create({
       data: {
-        id: "test-student-123",
+        id: "tests-student-123",
         schoolId: testSchoolId,
         firstName: "Test",
         lastName: "Student",
@@ -560,7 +560,7 @@ describe("Server Actions Integration", () => {
 **Run Integration Tests**:
 
 ```bash
-pnpm test src/components/school-dashboard/attendance/geofence/actions.test.ts
+pnpm tests src/components/school-dashboard/attendance/geofence/actions.tests.ts
 ```
 
 ---
@@ -572,7 +572,7 @@ pnpm test src/components/school-dashboard/attendance/geofence/actions.test.ts
 Test end-to-end user flows.
 
 ```typescript
-import { expect, test } from "@playwright/test"
+import { expect, test } from "@playwright/tests"
 
 test.describe("Student Location Tracking", () => {
   test("student can enable location tracking", async ({ page, context }) => {
@@ -582,7 +582,7 @@ test.describe("Student Location Tracking", () => {
 
     // Login as student
     await page.goto("/auth/signin")
-    await page.fill('input[name="email"]', "student@test.com")
+    await page.fill('input[name="email"]', "student@tests.com")
     await page.fill('input[name="password"]', "password123")
     await page.click('button[type="submit"]')
 
@@ -658,7 +658,7 @@ test.describe("Admin Live Map", () => {
   test("admin can view live student locations", async ({ page }) => {
     // Login as admin
     await page.goto("/auth/signin")
-    await page.fill('input[name="email"]', "admin@test.com")
+    await page.fill('input[name="email"]', "admin@tests.com")
     await page.fill('input[name="password"]', "admin123")
     await page.click('button[type="submit"]')
 
@@ -745,9 +745,9 @@ test.describe("Geofence Auto-Attendance", () => {
 **Run E2E Tests**:
 
 ```bash
-pnpm test:e2e tests/geo-tracking.spec.ts
-pnpm test:e2e:ui # Run with UI
-pnpm test:e2e:debug # Debug mode
+pnpm tests:e2e tests/geo-tracking.spec.ts
+pnpm tests:e2e:ui # Run with UI
+pnpm tests:e2e:debug # Debug mode
 ```
 
 ---
@@ -824,7 +824,7 @@ brew install k6  # macOS
 # OR
 choco install k6  # Windows
 
-# Run load test
+# Run load tests
 k6 run tests/load/location-submission.js
 ```
 
@@ -923,20 +923,20 @@ const db = new PrismaClient()
 async function seedGeoTestData() {
   const school = await db.school.create({
     data: {
-      id: "test-school-geo",
+      id: "tests-school-geo",
       name: "Test School (Geo)",
-      slug: "test-school-geo",
+      slug: "tests-school-geo",
     },
   })
 
-  // Create test students
+  // Create tests students
   const students = await Promise.all([
     db.student.create({
       data: {
         schoolId: school.id,
         firstName: "Ahmad",
         lastName: "Al-Rashid",
-        email: "ahmad@test.com",
+        email: "ahmad@tests.com",
       },
     }),
     db.student.create({
@@ -944,12 +944,12 @@ async function seedGeoTestData() {
         schoolId: school.id,
         firstName: "Fatima",
         lastName: "Al-Zahrani",
-        email: "fatima@test.com",
+        email: "fatima@tests.com",
       },
     }),
   ])
 
-  // Create test geofence (circular)
+  // Create tests geofence (circular)
   const mainCampus = await db.geoFence.create({
     data: {
       schoolId: school.id,
@@ -962,7 +962,7 @@ async function seedGeoTestData() {
     },
   })
 
-  // Create test geofence (polygon)
+  // Create tests geofence (polygon)
   const classroom = await db.geoFence.create({
     data: {
       schoolId: school.id,
@@ -984,7 +984,7 @@ async function seedGeoTestData() {
     },
   })
 
-  // Create test location traces
+  // Create tests location traces
   for (const student of students) {
     await db.locationTrace.create({
       data: {
@@ -999,7 +999,7 @@ async function seedGeoTestData() {
     })
   }
 
-  console.log("✅ Geo test data seeded")
+  console.log("✅ Geo tests data seeded")
 }
 
 seedGeoTestData()
@@ -1010,7 +1010,7 @@ seedGeoTestData()
 **Run Seed**:
 
 ```bash
-pnpm tsx prisma/seeds/geo-test-data.ts
+pnpm tsx prisma/seeds/geo-tests-data.ts
 ```
 
 ---

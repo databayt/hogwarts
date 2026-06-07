@@ -94,7 +94,7 @@ const docTriggers = {
   "content.tsx": "component-docs",
   "validation.ts": "schema-docs",
   "schema.prisma": "database-docs",
-  "*.test.tsx": "test-docs",
+  "*.test.tsx": "tests-docs",
 }
 ```
 

@@ -10,11 +10,13 @@
  * teacher-subject expertise, or timetable slots. The page works; it has
  * nothing to show.
  *
- * WHAT: seeds a realistic, teacher-assigned schedule for THREE representative
- * grades (1, 5, 10) so the per-classroom grid fills up for a demo:
- *   Phase A — ~12 teachers (Sudanese names) + TeacherSubjectExpertise
- *   Phase C — 2 sections + homeroom classrooms per target grade (6 sections)
- *   Phase B — ~30 students distributed across the new sections
+ * WHAT: seeds a realistic, teacher-assigned schedule for all 12 schedulable
+ * grades (1-12; KG grades -1/0 have no subjects) so every grade room fills up:
+ *   Pre — relabel empty KG rooms ('Grade -1/0-*' → 'KG1/KG2-*') so the room
+ *         selector (orderBy roomName asc) opens on a populated 'Grade 1-A'
+ *   Phase A — ~40 teachers (unique Sudanese names) + TeacherSubjectExpertise
+ *   Phase C — 2 sections + homeroom classrooms per grade (24 sections)
+ *   Phase B — ~5 students per section (~120) distributed across sections
  *   Phase D — lay out each section's week with a balanced interleave
  *             (subjects spread across days, not clustered) + assign teachers
  *
@@ -28,17 +30,17 @@
  * SAFETY: additive + idempotent. All seeded rows carry markers so teardown is
  * a targeted delete (no Neon branch is available — project at branch limit):
  *   - teachers:  emailAddress LIKE 'tt.teacher%@albayan.edu', employeeId 'TT-T-%'
- *   - students:  studentId    LIKE 'TTS-%'
- *   - sections:  letter A/B for grades 1/5/10; homerooms 'Grade {1,5,10}-{A,B}'
- *   - slots:     scoped to the 6 seeded sectionIds
+ *   - students:  studentId    LIKE 'TTS-%' (grNumber 'GR9%')
+ *   - sections:  all sections (grades 1-12, A/B); homerooms 'Grade {1..12}-{A,B}'
+ *   - slots:     scoped to the seeded sectionIds
  *
- * TEARDOWN (raw SQL against the same DB):
- *   DELETE FROM timetables WHERE "schoolId"='cmpwoul5p00008ojdlmx75d4h'
- *     AND "sectionId" IN (SELECT id FROM sections WHERE "schoolId"='cmpwoul5p00008ojdlmx75d4h' AND letter IN ('A','B') AND "gradeId" IN ('cmq0t3cve00078oeuq1br1sf4','cmq0t3do9000f8oeur2x9khnr','cmq0t3ej9000p8oeufyqwikfg'));
+ * TEARDOWN (raw SQL against the same DB; schoolId 'cmpwoul5p00008ojdlmx75d4h'):
+ *   DELETE FROM timetables WHERE "schoolId"='...' AND "sectionId" IN (SELECT id FROM sections WHERE "schoolId"='...');
  *   DELETE FROM teacher_subject_expertise WHERE "schoolId"='...' AND "teacherId" IN (SELECT id FROM teachers WHERE "emailAddress" LIKE 'tt.teacher%@albayan.edu');
  *   DELETE FROM students WHERE "schoolId"='...' AND "studentId" LIKE 'TTS-%';
  *   DELETE FROM teachers WHERE "schoolId"='...' AND "emailAddress" LIKE 'tt.teacher%@albayan.edu';
- *   DELETE FROM sections WHERE "schoolId"='...' AND name IN ('Grade 1-A','Grade 1-B','Grade 5-A','Grade 5-B','Grade 10-A','Grade 10-B');
+ *   DELETE FROM sections WHERE "schoolId"='...' AND name LIKE 'Grade %';
+ *   -- optional: revert KG labels  UPDATE classrooms SET "roomName"=replace(replace("roomName",'KG1','Grade -1'),'KG2','Grade 0') WHERE "schoolId"='...' AND "roomName" LIKE 'KG%';
  *
  * RUN: npx tsx prisma/seeds/seed-albayan-timetable.ts
  * (dotenv MUST load before @/lib/db — db.ts reads DATABASE_URL at module scope)
@@ -54,16 +56,26 @@ import { db } from "@/lib/db"
 
 const SCHOOL_ID = "cmpwoul5p00008ojdlmx75d4h" // albayan (verified, us-standard)
 
-// Representative subset — three grades that already have active subjects.
+// Full school — all 12 schedulable grades (KG grades -1/0 have no subjects).
 const TARGET_GRADES = [
   { id: "cmq0t3cve00078oeuq1br1sf4", gradeNumber: 1 },
+  { id: "cmq0t3d6s00098oeukeskc8tq", gradeNumber: 2 },
+  { id: "cmq0t3dcg000b8oeu5rpifjvr", gradeNumber: 3 },
+  { id: "cmq0t3di9000d8oeuzu6qvgti", gradeNumber: 4 },
   { id: "cmq0t3do9000f8oeur2x9khnr", gradeNumber: 5 },
+  { id: "cmq0t3dtt000h8oeuhcfinx8u", gradeNumber: 6 },
+  { id: "cmq0t3dzg000j8oeucxhqog1u", gradeNumber: 7 },
+  { id: "cmq0t3e85000l8oeufdpii51f", gradeNumber: 8 },
+  { id: "cmq0t3eds000n8oeulw6p9yv3", gradeNumber: 9 },
   { id: "cmq0t3ej9000p8oeufyqwikfg", gradeNumber: 10 },
+  { id: "cmq0t3eow000r8oeuhxh0tiyq", gradeNumber: 11 },
+  { id: "cmq0t3eui000t8oeuugoxecb4", gradeNumber: 12 },
 ] as const
 
 const SECTION_LETTERS = ["A", "B"] as const
 const STUDENTS_PER_SECTION = 5
-const NUM_TEACHERS = 12
+// 24 sections × 35 slots = 840; @25 periods/wk/teacher needs ≥34 → headroom.
+const NUM_TEACHERS = 40
 const TEACHERS_PER_SUBJECT = 3
 const MAX_PERIODS_PER_WEEK = 25
 
@@ -115,7 +127,7 @@ const SURNAMES = [
 
 async function main() {
   console.log(
-    "🌱 Albayan timetable seed — representative subset (grades 1, 5, 10)\n"
+    `🌱 Albayan timetable seed — full school (${TARGET_GRADES.length} grades, ${TARGET_GRADES.length * SECTION_LETTERS.length} sections)\n`
   )
 
   const gradeIds = TARGET_GRADES.map((g) => g.id)
@@ -146,29 +158,56 @@ async function main() {
       `(${activeTerm.id}) | year ${activeTerm.yearId}\n`
   )
 
+  // --- Pre: relabel empty KG rooms ------------------------------------------
+  // The KG classrooms were named "Grade -1/0-*", which sort before the
+  // digit-named rooms (the "-" precedes "0"-"9"). getRoomsForSelection orders
+  // by roomName asc and the admin grid auto-selects rooms[0], so the page would
+  // open on an empty KG room. Rename so "Grade 1-A" sorts first. Idempotent.
+  const KG_RENAMES: Array<[string, string]> = [
+    ["Grade -1-A", "KG1-A"],
+    ["Grade -1-B", "KG1-B"],
+    ["Grade 0-A", "KG2-A"],
+    ["Grade 0-B", "KG2-B"],
+  ]
+  let renamed = 0
+  for (const [from, to] of KG_RENAMES) {
+    const r = await db.classroom.updateMany({
+      where: { schoolId: SCHOOL_ID, roomName: from },
+      data: { roomName: to },
+    })
+    renamed += r.count
+  }
+  if (renamed > 0) console.log(`🏷️  Relabelled ${renamed} KG rooms → KG1/KG2\n`)
+
   // --- Phase A: teachers + expertise ----------------------------------------
   console.log("👩‍🏫 Phase A — teachers + expertise")
 
+  // Per-gender counters + a surname offset of floor(n/poolLen) guarantee a
+  // distinct (given, surname) pair for every teacher (no repeated full names).
   const teacherIds: string[] = []
+  let maleN = 0
+  let femaleN = 0
   for (let i = 0; i < NUM_TEACHERS; i++) {
-    const isFemale = i % 3 === 0 // ~4 female, 8 male
-    const given = isFemale
-      ? FEMALE_GIVEN[i % FEMALE_GIVEN.length]
-      : MALE_GIVEN[i % MALE_GIVEN.length]
-    const surname = SURNAMES[(i * 5) % SURNAMES.length]
+    const isFemale = i % 3 === 0 // ~1/3 female
+    const pool = isFemale ? FEMALE_GIVEN : MALE_GIVEN
+    const n = isFemale ? femaleN++ : maleN++
+    const given = pool[n % pool.length]
+    const surname =
+      SURNAMES[(n + Math.floor(n / pool.length)) % SURNAMES.length]
+    const gender = isFemale ? "female" : "male"
     const emailAddress = `tt.teacher${i + 1}@albayan.edu`
     const employeeId = `TT-T-${String(i + 1).padStart(3, "0")}`
 
     const teacher = await db.teacher.upsert({
       where: { schoolId_emailAddress: { schoolId: SCHOOL_ID, emailAddress } },
-      update: {},
+      update: { firstName: given, lastName: surname, gender }, // normalise on re-run
       create: {
         schoolId: SCHOOL_ID,
         firstName: given,
         lastName: surname,
         emailAddress,
         employeeId,
-        gender: isFemale ? "female" : "male",
+        gender,
         lang: "ar",
         employmentStatus: "ACTIVE",
         employmentType: "FULL_TIME",
@@ -310,11 +349,17 @@ async function main() {
       const surname = SURNAMES[(studentIdx * 3) % SURNAMES.length]
       const birthYear = 2026 - (5 + section.gradeNumber) // age-appropriate per grade
 
+      // Stable per-(grade,letter,j) GR number — independent of section order so
+      // re-runs at any scope never collide (GR9xxx avoids the real GR0001 and
+      // the earlier 3-grade run's GR10xx students).
+      const letterIdx = section.letter === "B" ? 1 : 0
+      const grSeq = section.gradeNumber * 100 + letterIdx * 10 + (j + 1)
+
       await db.student.create({
         data: {
           schoolId: SCHOOL_ID,
           studentId: externalStudentId,
-          grNumber: `GR${String(1000 + studentIdx).padStart(4, "0")}`,
+          grNumber: `GR9${grSeq}`,
           firstName: given,
           lastName: surname,
           gender: isFemale ? "female" : "male",

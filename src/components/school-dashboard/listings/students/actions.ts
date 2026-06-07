@@ -82,13 +82,11 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { withArchiveScope } from "@/lib/archive-scope"
-import { getDisplayText } from "@/lib/content-display"
 import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModelOrThrow } from "@/lib/prisma-guards"
-import { buildTranslatedSearchConditions } from "@/lib/search-with-translation"
 import { revalidateSpotlight } from "@/lib/spotlight-cache"
 import { generateStudentUsername } from "@/lib/student-username"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
@@ -103,6 +101,10 @@ import {
   studentCreateSchema,
   studentUpdateSchema,
 } from "@/components/school-dashboard/listings/students/validation"
+import { getText } from "@/components/translation/display"
+import { getNames } from "@/components/translation/person"
+import { search } from "@/components/translation/search"
+import { fullName } from "@/components/translation/util"
 
 // ============================================================================
 // Status Helpers
@@ -1206,9 +1208,13 @@ export async function getStudents(
     // Parse and validate input
     const sp = getStudentsSchema.parse(input ?? {})
 
-    // Build where clause with bilingual search support
+    // Display language: the ROUTE [lang] (passed by the client table) is the source
+    // of truth. The NEXT_LOCALE cookie is only a fallback for non-routed callers — it
+    // is global and can disagree with the URL, which is what regressed search/load-more
+    // back to Arabic on /en even after a correct initial render.
     const cookieStore = await cookies()
-    const displayLang = cookieStore.get("NEXT_LOCALE")?.value || "ar"
+    const displayLang: "ar" | "en" =
+      sp.lang ?? (cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar")
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: { preferredLanguage: true },
@@ -1217,7 +1223,7 @@ export async function getStudents(
 
     let nameFilter = {}
     if (sp.name) {
-      const nameConditions = await buildTranslatedSearchConditions(
+      const nameConditions = await search(
         sp.name,
         ["firstName", "lastName"],
         schoolId,
@@ -1284,32 +1290,18 @@ export async function getStudents(
       studentModel.count({ where }),
     ])
 
-    // Translate student names for current locale
-    const nameTranslations = new Map<string, string>()
-    const uniqueNames = new Map<string, string>()
-    for (const s of rows as Array<any>) {
-      const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
-      // Override lang field when text clearly doesn't match
-      // (e.g. lang="ar" default but name is Latin characters from admission)
-      const textLang = hasLatin(rawName) ? "en" : "ar"
-      const contentLang = textLang !== s.lang ? textLang : s.lang || textLang
-      if (contentLang !== displayLang) {
-        uniqueNames.set(rawName, contentLang)
-      }
-    }
-    if (uniqueNames.size > 0) {
-      await Promise.all(
-        Array.from(uniqueNames.entries()).map(async ([name, contentLang]) => {
-          const translated = await getDisplayText(
-            name,
-            contentLang as "ar" | "en",
-            displayLang as "ar" | "en",
-            schoolId
-          )
-          nameTranslations.set(name, translated)
-        })
-      )
-    }
+    // Translate student names for current locale (canonical helper — must match the
+    // initial server render in content.tsx: display = first + last, no middle).
+    const nameOf = (s: any) => ({
+      firstName: s.firstName,
+      lastName: s.lastName,
+    })
+    const nameTranslations = await getNames(
+      rows as Array<any>,
+      nameOf,
+      displayLang,
+      schoolId
+    )
 
     // Translate classroom names for current locale
     const classroomTranslations = new Map<string, string>()
@@ -1336,7 +1328,7 @@ export async function getStudents(
             )
           } else {
             const sourceLang = hasLatin(name) ? "en" : "ar"
-            const translated = await getDisplayText(
+            const translated = await getText(
               name,
               sourceLang,
               displayLang as "ar" | "en",
@@ -1355,14 +1347,8 @@ export async function getStudents(
           ? getGradeLabel(s.academicGrade.gradeNumber, displayLang)
           : null
 
-      const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
-      const mapTextLang = hasLatin(rawName) ? "en" : "ar"
-      const contentLang =
-        mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang
-      const name =
-        contentLang !== displayLang
-          ? nameTranslations.get(rawName) || rawName
-          : rawName
+      const rawName = fullName(nameOf(s))
+      const name = nameTranslations.get(rawName) || rawName
 
       const rawClassroom = (s.section?.classroom?.roomName as string) || null
       const classroom = rawClassroom
@@ -1528,7 +1514,7 @@ export async function getStudentsCSV(
       await Promise.all(
         Array.from(csvUniqueNames.entries()).map(
           async ([name, contentLang]) => {
-            const translated = await getDisplayText(
+            const translated = await getText(
               name,
               contentLang as "ar" | "en",
               csvDisplayLang as "ar" | "en",

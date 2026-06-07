@@ -626,17 +626,17 @@ export const themePresets = {
 
 ```bash
 # Run theme utility tests
-pnpm test src/lib/theme-utils.test.ts
+pnpm tests src/lib/theme-utils.tests.ts
 
 # Run component tests
-pnpm test src/components/theme/**/*.test.tsx
+pnpm tests src/components/theme/**/*.tests.tsx
 ```
 
 ### Integration Tests
 
 ```bash
 # E2E theme switching tests
-pnpm test:e2e tests/e2e/theme-switching.spec.ts
+pnpm tests:e2e tests/e2e/theme-switching.spec.ts
 ```
 
 ### Manual Testing Checklist

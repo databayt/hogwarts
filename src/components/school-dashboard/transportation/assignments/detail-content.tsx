@@ -3,10 +3,12 @@
 
 import Link from "next/link"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getName } from "@/components/translation/person"
 
 import { getAssignment } from "../actions/assignments"
 import { TransportationEmptyState } from "../empty-state"
@@ -51,7 +53,8 @@ export async function AssignmentDetailContent({
   }
 
   const a = result.data
-  const studentName = `${a.student.firstName} ${a.student.lastName}`
+  const { schoolId } = await getTenantContext()
+  const studentName = await getName(a.student, locale, schoolId!)
 
   return (
     <div className="flex flex-col gap-6 p-6">

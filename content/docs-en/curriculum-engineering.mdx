@@ -79,18 +79,18 @@ SubjectSelection.findMany({ schoolId })
 
 Seeds are idempotent (upsert). These two produce the bulk of the catalog content:
 
-| Seed                    | Source                  | Subjects | Chapters | Lessons | Slug                | Country | Curriculum | Lang |
-| ----------------------- | ----------------------- | -------: | -------: | ------: | ------------------- | ------- | ---------- | ---- |
-| `us-catalog.ts`         | `master-inventory.json` |      240 |      750 |   3,993 | `us-g{N}-{subject}` | US      | `us-k12`   | en   |
-| `sync-sd-curriculum.ts` | `curriculum/sd/`        |       97 |      406 |   1,049 | `sd-g{N}-{subject}` | SD      | `national` | ar   |
+| Seed            | Source                  | Subjects | Chapters | Lessons | Slug                | Country | Curriculum | Lang |
+| --------------- | ----------------------- | -------: | -------: | ------: | ------------------- | ------- | ---------- | ---- |
+| `catalog/us.ts` | `master-inventory.json` |      240 |      750 |   3,993 | `us-g{N}-{subject}` | US      | `us-k12`   | en   |
+| `catalog/sd.ts` | `curriculum/sd/`        |       97 |      406 |   1,049 | `sd-g{N}-{subject}` | SD      | `national` | ar   |
 
-Plus `sd-catalog.ts` (a smaller Sudan base set from `sudan-curriculum.json`, ~32 subjects) and
-`world-curricula.ts` (grade-specific subjects across eight curricula — GB, IB, SA, EG, AE, QA,
-KW, JO). The default `catalog` seed runs `us-catalog` + `sd-catalog`; the full Sudan sync
-(`sync-sd-curriculum`) and the eight world curricula (`world-curricula`) are separate, explicit
+Plus `catalog/sd-base.ts` (a smaller Sudan base set from `sudan-curriculum.json`, ~32 subjects) and
+`catalog/world.ts` (grade-specific subjects across eight curricula — GB, IB, SA, EG, AE, QA,
+KW, JO). The default `catalog` seed runs `us` + `sd-base`; the full Sudan sync
+(`sd`) and the eight world curricula (`world`) are separate, explicit
 runs.
 
-A `concept-images.ts` seed runs after the catalog seeds:
+A `catalog/concepts.ts` seed runs after the catalog seeds:
 
 1. Reads `public/subjects/concepts/*.jpg` (24 images).
 2. Sharp → 4 WebP variants → S3 upload.
@@ -125,7 +125,7 @@ At 10 curricula × ~300 subjects each (~3,000 total), PostgreSQL handles it triv
 Two seeds share duplicated logic (upsert, denormalized count update, chapter/lesson loop). Extract `seedCurriculumFromJSON()`:
 
 ```ts
-// prisma/seeds/shared/seed-curriculum.ts
+// prisma/seeds/catalog/_ingest.ts
 interface CurriculumInput {
   country: string
   curriculum: string
@@ -225,12 +225,12 @@ Expected: 822s → ~5s.
 prisma/
   models/catalog.prisma              # Subject, Chapter, Lesson schema
   seeds/
-    us-catalog.ts                    # US K-12 (240 subjects)
-    sd-catalog.ts                    # Sudan base set (~32 subjects)
-    sync-sd-curriculum.ts            # Full Sudan from curriculum/sd/ (97 subjects)
-    world-curricula.ts               # GB, IB, SA, EG, AE, QA, KW, JO
-    concept-images.ts                # Shared image upload + backfill
-    catalog.ts                       # Orchestrator (us-catalog + sd-catalog)
+    catalog/us.ts                    # US K-12 (240 subjects)
+    catalog/sd-base.ts                    # Sudan base set (~32 subjects)
+    catalog/sd.ts            # Full Sudan from curriculum/sd/ (97 subjects)
+    catalog/world.ts               # GB, IB, SA, EG, AE, QA, KW, JO
+    catalog/concepts.ts                # Shared image upload + backfill
+    catalog.ts                       # Orchestrator (us + sd-base)
     single.ts                        # CLI registry
 
 scripts/
@@ -240,10 +240,10 @@ scripts/
     pdfs/grade-{N}/                  # Organized PDFs
   assemble-sudan-curriculum.ts       # TOC files → master JSON
 
-src/lib/
-  catalog-setup.ts                   # findSubjects(), inferCurriculum()
-  catalog-image.ts                   # Sharp pipeline
-  catalog-image-url.ts               # URL resolution chain
+src/components/catalog/
+  setup.ts                           # findSubjects(), inferCurriculum()
+  image.ts                           # Sharp pipeline
+  image-url.ts                       # URL resolution chain
 
 public/subjects/concepts/*.jpg       # 24 source concept images
 ```

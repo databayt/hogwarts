@@ -191,7 +191,7 @@ The master file `sudan-curriculum.json` groups all TOC files by subject with `gr
 
 ```bash
 pnpm db:seed:single sudan-catalog       # 97 subjects, 406 chapters, 1049 lessons
-pnpm db:seed:single concept-images      # Upload 19 concept images, set thumbnailKey
+pnpm db:seed:single concepts      # Upload 19 concept images, set thumbnailKey
 npx tsx scripts/assemble-sudan-curriculum.ts   # Rebuild master JSON from TOC files
 ```
 
@@ -206,11 +206,11 @@ Both seeds are registered with `global: true` in `prisma/seeds/single.ts` (no `s
 | `scripts/sudan-data/pdfs/grade-{N}/`       | Organized textbook PDFs                        |
 | `scripts/assemble-sudan-curriculum.ts`     | Assembles TOC files into master JSON           |
 | `prisma/seeds/sudan-catalog.ts`            | Database seed                                  |
-| `prisma/seeds/concept-images.ts`           | Concept image upload + `thumbnailKey` backfill |
+| `prisma/seeds/catalog/concepts.ts`         | Concept image upload + `thumbnailKey` backfill |
 | `public/subjects/concepts/*.jpg`           | 24 source concept images                       |
-| `src/lib/catalog-setup.ts`                 | Fallback chain, stream patterns                |
-| `src/lib/catalog-image.ts`                 | Sharp pipeline (WebP variants)                 |
-| `src/lib/catalog-image-url.ts`             | URL resolution                                 |
+| `src/components/catalog/setup.ts`          | Fallback chain, stream patterns                |
+| `src/components/catalog/image.ts`          | Sharp pipeline (WebP variants)                 |
+| `src/components/catalog/image-url.ts`      | URL resolution                                 |
 
 ## Known gaps
 
@@ -228,9 +228,9 @@ For a new country (e.g. Egypt `EG`):
 
 1. Add TOC JSON files under a per-country directory.
 2. Add subject metadata to `scripts/assemble-sudan-curriculum.ts`.
-3. Add `EG → "national"` mapping in `inferCurriculum()` at `src/lib/catalog-setup.ts`.
-4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/concept-images.ts`.
-5. Run `pnpm db:seed:single {country}-catalog` and `pnpm db:seed:single concept-images`.
+3. Add `EG → "national"` mapping in `inferCurriculum()` at `src/components/catalog/setup.ts`.
+4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/catalog/concepts.ts`.
+5. Run `pnpm db:seed:single {country}-catalog` and `pnpm db:seed:single concepts`.
 
 ## See also
 

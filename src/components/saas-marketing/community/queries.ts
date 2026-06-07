@@ -3,8 +3,8 @@
 
 import "server-only"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 import { DEFAULT_RESOURCE_LIMIT } from "./config"
 import type {

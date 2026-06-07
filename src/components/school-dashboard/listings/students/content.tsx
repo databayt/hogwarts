@@ -4,7 +4,6 @@
 import { SearchParams } from "nuqs/server"
 
 import { withArchiveScope } from "@/lib/archive-scope"
-import { getDisplayText } from "@/lib/content-display"
 import { getGradeLabel } from "@/lib/grade-label"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
@@ -15,6 +14,9 @@ import { type StudentRow } from "@/components/school-dashboard/listings/students
 import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/students/permissions"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
+import { getText } from "@/components/translation/display"
+import { getNames } from "@/components/translation/person"
+import { detectScript, fullName } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -165,58 +167,47 @@ export default async function StudentsContent({
       studentModel.count({ where }),
     ])
 
+    // Student names: one canonical helper (compose -> detect script -> dedupe ->
+    // translate, with transliterate fallback). Display = first + last (no middle),
+    // preserving the prior column behaviour. See getNames in translation/.
+    const nameOf = (s: any) => ({
+      firstName: s.firstName,
+      lastName: s.lastName,
+    })
     const classroomTranslations = new Map<string, string>()
-    const nameTranslations = new Map<string, string>()
-
-    const uniqueClassrooms = new Set<string>()
-    const uniqueNames = new Map<string, string>()
-    // Detect if a string contains Latin letters (needs translation to Arabic)
-    const hasLatin = (s: string) => /[a-zA-Z]/.test(s)
-
-    for (const s of rows as any[]) {
-      if (
-        s.section?.classroom?.roomName &&
-        (s.section.classroom.lang !== lang ||
-          (lang === "ar" && hasLatin(s.section.classroom.roomName)))
-      )
-        uniqueClassrooms.add(s.section.classroom.roomName)
-      // Detect actual content language from text — override lang field when
-      // text clearly doesn't match (e.g. lang="ar" but name is Latin characters)
-      const rawName = `${s.firstName} ${s.lastName}`.trim()
-      const textLang = hasLatin(rawName) ? "en" : "ar"
-      const contentLang = textLang !== s.lang ? textLang : s.lang || textLang
-      if (contentLang !== lang) {
-        uniqueNames.set(rawName, contentLang)
-      }
-    }
-
-    // Translate unique classroom/grade/name values in parallel
-    await Promise.all([
-      ...Array.from(uniqueClassrooms).map(async (name) => {
-        // Room codes like "B102" — transliterate letters directly
-        // (Google Translate returns them unchanged)
-        if (/^[A-Z]\d/.test(name)) {
-          classroomTranslations.set(name, transliterateRoomCode(name, lang))
-        } else {
-          const sourceLang = hasLatin(name) ? "en" : "ar"
-          const translated = await getDisplayText(
-            name,
-            sourceLang,
-            lang,
-            effectiveSchoolId!
-          )
-          classroomTranslations.set(name, translated)
+    const [nameTranslations] = await Promise.all([
+      getNames(rows as any[], nameOf, lang, effectiveSchoolId!),
+      // Classrooms: room codes (B102) transliterate directly; real names translate.
+      (async () => {
+        const uniqueClassrooms = new Set<string>()
+        for (const s of rows as any[]) {
+          const room = s.section?.classroom?.roomName
+          if (
+            room &&
+            (detectScript(room) !== lang ||
+              (lang === "ar" && /[a-zA-Z]/.test(room)))
+          ) {
+            uniqueClassrooms.add(room)
+          }
         }
-      }),
-      ...Array.from(uniqueNames.entries()).map(async ([name, contentLang]) => {
-        const translated = await getDisplayText(
-          name,
-          contentLang as "ar" | "en",
-          lang,
-          effectiveSchoolId!
+        await Promise.all(
+          Array.from(uniqueClassrooms).map(async (name) => {
+            if (/^[A-Z]\d/.test(name)) {
+              classroomTranslations.set(name, transliterateRoomCode(name, lang))
+            } else {
+              classroomTranslations.set(
+                name,
+                await getText(
+                  name,
+                  detectScript(name),
+                  lang,
+                  effectiveSchoolId!
+                )
+              )
+            }
+          })
         )
-        nameTranslations.set(name, translated)
-      }),
+      })(),
     ])
 
     // Collect unique grade options for faceted filter
@@ -229,14 +220,8 @@ export default async function StudentsContent({
     gradeOptions = Array.from(gradeSet).map((g) => ({ label: g, value: g }))
 
     data = (rows as any[]).map((s) => {
-      const rawName = `${s.firstName} ${s.lastName}`.trim()
-      const mapTextLang = hasLatin(rawName) ? "en" : "ar"
-      const contentLang =
-        mapTextLang !== s.lang ? mapTextLang : s.lang || mapTextLang
-      const name =
-        contentLang !== lang
-          ? nameTranslations.get(rawName) || rawName
-          : rawName
+      const rawName = fullName(nameOf(s))
+      const name = nameTranslations.get(rawName) || rawName
 
       const rawClassroom = s.section?.classroom?.roomName || null
       const classroom = rawClassroom

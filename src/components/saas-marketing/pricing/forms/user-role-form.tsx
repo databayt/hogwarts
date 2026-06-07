@@ -82,7 +82,7 @@ export function UserRoleForm({ user }: UserNameFormProps) {
         <SectionColumns
           title={r?.title || "Your Role"}
           description={
-            r?.description || "Select the role what you want for test the app."
+            r?.description || "Select the role what you want for tests the app."
           }
         >
           <div className="flex w-full items-center gap-2">

@@ -186,9 +186,9 @@ git checkout -b feature/geo-add-polygon-editing
 1. **Write test first** (TDD approach)
 
    ```typescript
-   // geo-service.test.ts
+   // geo-service.tests.ts
    it("should detect polygon geofence", async () => {
-     // ... test code
+     // ... tests code
    })
    ```
 
@@ -204,7 +204,7 @@ git checkout -b feature/geo-add-polygon-editing
 3. **Run tests**
 
    ```bash
-   pnpm test src/lib/geo-service.test.ts
+   pnpm tests src/lib/geo-service.tests.ts
    ```
 
 4. **Manual testing**
@@ -225,10 +225,10 @@ pnpm lint
 pnpm lint --fix
 
 # Run all tests
-pnpm test
+pnpm tests
 
-# Check test coverage
-pnpm test --coverage
+# Check tests coverage
+pnpm tests --coverage
 ```
 
 #### 5. Commit Changes
@@ -923,7 +923,7 @@ if (process.env.NEXT_PUBLIC_MOCK_GEOLOCATION === "true") {
 
 ```bash
 # Create seed script
-pnpm tsx prisma/seeds/geo-test-data.ts
+pnpm tsx prisma/seeds/geo-tests-data.ts
 
 # Or add to package.json
 {

@@ -14,7 +14,7 @@ import ora from "ora"
 const program = new Command()
 program
   .requiredOption("-e, --env <env>", "Environment: staging|production")
-  .option("--skip-tests", "Skip test execution")
+  .option("--skip-tests", "Skip tests execution")
   .option("--skip-lint", "Skip linting")
   .parse()
 
@@ -86,7 +86,7 @@ async function preFlightChecks() {
     (await runCheck(
       "Tests",
       () => {
-        execSync("pnpm test --run", { stdio: "pipe" })
+        execSync("pnpm tests --run", { stdio: "pipe" })
       },
       options.skipTests
     )) && allPassed

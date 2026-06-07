@@ -113,7 +113,7 @@ Test accounts (`pnpm db:seed:single messaging-phones`): `admin@databayt.org` (00
 
 ## Contacts sidebar
 
-WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getDisplayText()`. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
+WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getText()`. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
 
 ## Unread badge
 
@@ -176,7 +176,7 @@ createConversation(input: {
 
 11 Prisma models in `prisma/models/messages.prisma`: `Conversation`, `ConversationParticipant`, `Message`, `MessageAttachment`, `MessageReaction`, `MessageReadReceipt`, `TypingIndicator`, `MessageDraft`, `PinnedMessage`, `ConversationInvite`, `StarredMessage`. WhatsApp models (`WhatsAppSession`, `WhatsAppMessage`, `WhatsAppGroup`, …) live separately in `prisma/models/whatsapp.prisma`.
 
-`Message` carries no `lang` field — message bodies are user-to-user content, translated on demand at render time (via `getDisplayText()` for contact names), not stored bilingually.
+`Message` carries no `lang` field — message bodies are user-to-user content, translated on demand at render time (via `getText()` for contact names), not stored bilingually.
 
 Indexes:
 

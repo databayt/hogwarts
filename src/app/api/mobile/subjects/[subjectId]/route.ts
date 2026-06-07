@@ -3,10 +3,10 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
 
@@ -29,7 +29,7 @@ export async function GET(
 
     const { subjectId } = await params
     const { searchParams } = new URL(request.url)
-    const lang = (searchParams.get("lang") || "en") as SupportedLanguage
+    const lang = (searchParams.get("lang") || "en") as Lang
 
     const selection = await db.subjectSelection.findFirst({
       where: { schoolId, catalogSubjectId: subjectId, isActive: true },
@@ -96,9 +96,9 @@ export async function GET(
       return NextResponse.json({ error: "Subject not found" }, { status: 404 })
     }
 
-    const srcLang = (subject.lang || "ar") as SupportedLanguage
+    const srcLang = (subject.lang || "ar") as Lang
     const t = (text: string | null | undefined) =>
-      getDisplayText(text ?? "", srcLang, lang, schoolId)
+      getText(text ?? "", srcLang, lang, schoolId)
 
     const [name, description, department] = await Promise.all([
       t(selection?.customName || subject.name),

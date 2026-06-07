@@ -6,9 +6,9 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getText } from "@/components/translation/display"
 
 import { getPermissionLevel } from "./detail/permissions"
 import type { PermissionLevel, ProfileContext } from "./detail/types"
@@ -397,7 +397,7 @@ export async function uploadProfileAvatar(formData: FormData) {
     }
 
     // Hand off to the shared file/upload pipeline (auth + tenant + S3 + DB).
-    // Imported lazily so that test mocks and tree-shaking are unaffected.
+    // Imported lazily so that tests mocks and tree-shaking are unaffected.
     const { uploadFile } = await import("@/components/file/upload/actions")
 
     const fd = new FormData()
@@ -557,7 +557,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         }
 
         if (lang && lang !== "ar" && schoolId && data.firstName) {
-          const translated = await getDisplayText(
+          const translated = await getText(
             data.firstName as string,
             "ar",
             lang as "en",
@@ -605,7 +605,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
         }
 
         if (lang && lang !== "ar" && schoolId && data.firstName) {
-          const translated = await getDisplayText(
+          const translated = await getText(
             data.firstName as string,
             "ar",
             lang as "en",
@@ -677,7 +677,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
     if (displayLang !== "ar" && schoolId) {
       const [translatedName, translatedBio] = await Promise.all([
         data.firstName
-          ? getDisplayText(
+          ? getText(
               data.firstName as string,
               "ar",
               displayLang as "en",
@@ -685,12 +685,7 @@ export async function getProfileBasicData(userId: string, lang?: string) {
             )
           : Promise.resolve(null),
         data.bio
-          ? getDisplayText(
-              data.bio as string,
-              "ar",
-              displayLang as "en",
-              schoolId
-            )
+          ? getText(data.bio as string, "ar", displayLang as "en", schoolId)
           : Promise.resolve(null),
       ])
       if (translatedName) data.firstName = translatedName

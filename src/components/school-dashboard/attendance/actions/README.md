@@ -429,7 +429,7 @@ If any create/update fails during transaction, entire operation rolls back:
 See `bulk.test.ts` for comprehensive test coverage:
 
 ```bash
-pnpm test -- bulk.test.ts
+pnpm tests -- bulk.tests.ts
 ```
 
 Tests cover:

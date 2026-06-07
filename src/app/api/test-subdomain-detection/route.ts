@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
         extractedSubdomain: subdomain,
       },
       environment: getSafeEnvVars(),
-      message: "Subdomain detection test (secured) - using middleware logic",
+      message: "Subdomain detection tests (secured) - using middleware logic",
     })
   })
 }

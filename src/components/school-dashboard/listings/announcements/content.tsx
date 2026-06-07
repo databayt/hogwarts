@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -13,6 +12,7 @@ import { announcementsSearchParams } from "@/components/school-dashboard/listing
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/announcements/permissions"
 import { getAnnouncementsList } from "@/components/school-dashboard/listings/announcements/queries"
 import { AnnouncementsTable } from "@/components/school-dashboard/listings/announcements/table"
+import { getText } from "@/components/translation/display"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -51,7 +51,7 @@ export default async function AnnouncementsContent({
       data = await Promise.all(
         rows.map(async (a) => ({
           id: a.id,
-          title: await getDisplayText(
+          title: await getText(
             a.title,
             (a.lang as "ar" | "en") || "ar",
             lang,

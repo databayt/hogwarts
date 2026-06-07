@@ -3,8 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
-import { detectLanguage } from "@/lib/i18n-content"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -17,6 +15,8 @@ import {
   getResultsList,
 } from "@/components/school-dashboard/listings/grades/queries"
 import { ResultsTable } from "@/components/school-dashboard/listings/grades/table"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -56,29 +56,24 @@ export default async function GradesContent({
         rawData.map(async (row, i) => {
           const r = rows[i]
           const studentLang =
-            (r.student?.lang as "ar" | "en") || detectLanguage(row.studentName)
+            (r.student?.lang as "ar" | "en") || detectLang(row.studentName)
           const classLang =
-            (r.class?.lang as "ar" | "en") || detectLanguage(row.className)
+            (r.class?.lang as "ar" | "en") || detectLang(row.className)
           return {
             ...row,
-            studentName: await getDisplayText(
+            studentName: await getText(
               row.studentName,
               studentLang,
               lang,
               schoolId!
             ),
-            assignmentTitle: await getDisplayText(
+            assignmentTitle: await getText(
               row.assignmentTitle,
-              detectLanguage(row.assignmentTitle),
+              detectLang(row.assignmentTitle),
               lang,
               schoolId!
             ),
-            className: await getDisplayText(
-              row.className,
-              classLang,
-              lang,
-              schoolId!
-            ),
+            className: await getText(row.className, classLang, lang, schoolId!),
           }
         })
       )

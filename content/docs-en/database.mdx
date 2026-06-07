@@ -12,7 +12,7 @@ Hogwarts runs on a multi-tenant PostgreSQL database. All schools share the schem
 - **Subdomain-based identity** — schools are unique by subdomain (e.g. `kingfahad.databayt.org`); custom domains via CNAME.
 - **End-to-end type safety** — Prisma → Zod → TypeScript with no manual handoffs.
 - **Multi-file schema** — 73 logical `.prisma` files in `prisma/models/` for maintainability.
-- **Single-language storage** — content stored in one language with a `lang` field; translation on-demand via Google Translate cached in `TranslationCache`.
+- **Single-language storage** — content stored in one language with a `lang` field; translation on-demand via Google Translate cached in `Translation`.
 
 ## Layout
 
@@ -25,7 +25,7 @@ Hogwarts runs on a multi-tenant PostgreSQL database. All schools share the schem
 | Core (school, year, term, period, subscription) |     12 | `school.prisma`                                                                                                                                                                                        |
 | Auth and users                                  |      7 | `auth.prisma`                                                                                                                                                                                          |
 | People (students, teachers, parents, staff)     |     32 | `students.prisma`, `staff.prisma`, `staff-member.prisma`, `profile.prisma`                                                                                                                             |
-| Academic structure                              |     13 | `academic-structure.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                               |
+| Academic structure                              |     13 | `academic.prisma`, `subjects.prisma`, `classrooms.prisma`, `enrollment.prisma`                                                                                                                         |
 | Catalog (global)                                |    22+ | `catalog.prisma`, `bridge.prisma`, `chapter.prisma`, `lesson.prisma`, etc.                                                                                                                             |
 | Attendance                                      |    33+ | `attendance.prisma`, `attendance-enhanced.prisma`, `geo-attendance.prisma`                                                                                                                             |
 | Exams and assessment                            |    40+ | `exam.prisma`, `school-exam.prisma`, `school-qbank.prisma`, `quiz.prisma`, `quiz-game.prisma`, `quick-assessments.prisma`, etc.                                                                        |
@@ -40,7 +40,7 @@ Hogwarts runs on a multi-tenant PostgreSQL database. All schools share the schem
 | Transportation                                  |      7 | `transportation.prisma`                                                                                                                                                                                |
 | Library                                         |      4 | `book.prisma`, `school-book.prisma`, `textbook.prisma`                                                                                                                                                 |
 | Files / documents                               |     15 | `files.prisma`, `file-record.prisma`, `document.prisma`, `document-processing.prisma`, `image.prisma`, `video.prisma`                                                                                  |
-| Audit / security / misc                         |     10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation-cache.prisma`, `purge-tokens.prisma`                                                                                    |
+| Audit / security / misc                         |     10 | `audit.prisma`, `legal.prisma`, `webhooks.prisma`, `task.prisma`, `translation.prisma`, `purge-tokens.prisma`                                                                                          |
 
 ## Multi-tenant isolation
 
@@ -195,7 +195,7 @@ model ComplianceLog {
 
 ## Single-language storage
 
-Content stored in one language with a `lang` field. Translation on-demand via Google Translate API, cached in `TranslationCache`.
+Content stored in one language with a `lang` field. Translation on-demand via Google Translate API, cached in `Translation`.
 
 ```prisma
 model Announcement {
@@ -204,7 +204,7 @@ model Announcement {
   lang  String  @default("ar")
 }
 
-model TranslationCache {
+model Translation {
   id             String   @id @default(cuid())
   schoolId       String
   sourceText     String   @db.Text
@@ -222,13 +222,13 @@ model TranslationCache {
 ```
 
 ```typescript
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 
 // Stored in Arabic, viewing in English → translates and caches
-const title = await getDisplayText("مرحبا", "ar", "en", schoolId)
+const title = await getText("مرحبا", "ar", "en", schoolId)
 
 // Same language → returns directly, no API call
-const title = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+const title = await getText("مرحبا", "ar", "ar", schoolId)
 ```
 
 ### Models with `lang`

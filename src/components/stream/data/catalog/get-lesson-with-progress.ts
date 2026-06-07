@@ -7,10 +7,10 @@ import { cache } from "react"
 import { auth } from "@/auth"
 
 import { asset } from "@/lib/asset-url"
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { getVideoUrl } from "@/lib/cloudfront"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 export interface AvailableVideo {
   id: string

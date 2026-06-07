@@ -3,10 +3,12 @@
 
 import Link from "next/link"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getName } from "@/components/translation/person"
 
 import { getRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
@@ -43,6 +45,10 @@ export async function RouteDetailContent({
   }
 
   const route = result.data
+  const { schoolId } = await getTenantContext()
+  const driverName = route.driver
+    ? await getName(route.driver, locale, schoolId!)
+    : "—"
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -99,14 +105,7 @@ export async function RouteDetailContent({
               label={t.routes.fields.vehicle}
               value={route.vehicle?.plateNumber ?? "—"}
             />
-            <Row
-              label={t.routes.fields.driver}
-              value={
-                route.driver
-                  ? `${route.driver.firstName} ${route.driver.lastName}`
-                  : "—"
-              }
-            />
+            <Row label={t.routes.fields.driver} value={driverName} />
             <Row
               label={t.assignments.title}
               value={String(route._count.assignments)}

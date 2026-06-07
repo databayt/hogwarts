@@ -103,10 +103,10 @@ fi
 ```bash
 # Run tests to ensure merge didn't break anything
 echo "🧪 Running tests..."
-pnpm test --run
+pnpm tests --run
 if [ $? -eq 0 ]; then
   # Generate coverage report
-  pnpm test --coverage --silent
+  pnpm tests --coverage --silent
   cp coverage/coverage-summary.json .bmad/metrics/coverage-postmerge.json
 else
   echo "❌ Tests failing after merge"

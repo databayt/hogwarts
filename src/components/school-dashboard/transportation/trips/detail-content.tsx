@@ -3,10 +3,12 @@
 
 import Link from "next/link"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getName } from "@/components/translation/person"
 
 import { getTrip } from "../actions/trips"
 import { TransportationEmptyState } from "../empty-state"
@@ -48,6 +50,10 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
   }
 
   const trip = result.data
+  const { schoolId } = await getTenantContext()
+  const driverName = trip.driver
+    ? await getName(trip.driver, locale, schoolId!)
+    : "—"
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -94,14 +100,7 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
               label={t.trips.fields.vehicle}
               value={trip.vehicle?.plateNumber ?? "—"}
             />
-            <Row
-              label={t.trips.fields.driver}
-              value={
-                trip.driver
-                  ? `${trip.driver.firstName} ${trip.driver.lastName}`
-                  : "—"
-              }
-            />
+            <Row label={t.trips.fields.driver} value={driverName} />
           </CardContent>
         </Card>
 

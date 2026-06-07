@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
@@ -14,6 +13,8 @@ import { type TeacherRow } from "@/components/school-dashboard/listings/teachers
 import { teachersSearchParams } from "@/components/school-dashboard/listings/teachers/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/teachers/permissions"
 import { TeachersTable } from "@/components/school-dashboard/listings/teachers/table"
+import { getText } from "@/components/translation/display"
+import { getName } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -116,7 +117,7 @@ export default async function TeachersContent({
       rows.map(async (t: any) => {
         const primaryDept = t.teacherDepartments?.[0]?.department
         const departmentName = primaryDept
-          ? await getDisplayText(
+          ? await getText(
               primaryDept.departmentName,
               primaryDept.lang || "ar",
               lang,
@@ -126,15 +127,9 @@ export default async function TeachersContent({
 
         return {
           id: t.id,
-          name:
-            t.lang && t.lang !== lang
-              ? await getDisplayText(
-                  `${t.firstName} ${t.lastName}`.trim(),
-                  t.lang || "ar",
-                  lang,
-                  schoolId!
-                )
-              : `${t.firstName} ${t.lastName}`.trim(),
+          // Canonical helper: detects the actual script (robust to a null/wrong
+          // `lang` flag) and falls back to transliteration when the API is degraded.
+          name: await getName(t, lang, schoolId!),
           firstName: t.firstName || "",
           lastName: t.lastName || "",
           emailAddress: t.emailAddress || "-",

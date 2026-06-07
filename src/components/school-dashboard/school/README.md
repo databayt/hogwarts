@@ -58,7 +58,7 @@ Tracked in `ISSUE.md` in this folder. High-level order:
 pnpm install
 pnpm dev
 pnpm build
-pnpm test
+pnpm tests
 ```
 
 ### References

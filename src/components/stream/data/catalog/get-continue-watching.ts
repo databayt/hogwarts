@@ -5,9 +5,9 @@
 import { cache } from "react"
 import { auth } from "@/auth"
 
-import { getCatalogImageUrl } from "@/lib/catalog-image-url"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
 export interface ContinueWatchingItem {
   lessonId: string

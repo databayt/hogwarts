@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
+import { getCookie, setCookie } from "cookies-next"
 import { Check, ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -70,6 +71,29 @@ interface Props {
 }
 
 type ViewMode = "classroom" | "teacher"
+
+/** Persisted classroom/teacher filter selection (per browser). */
+const FILTER_COOKIE = "tt_filter"
+
+interface SavedFilter {
+  viewMode?: ViewMode
+  roomId?: string
+  teacherId?: string
+}
+
+function readFilterCookie(): SavedFilter | null {
+  try {
+    const raw = getCookie(FILTER_COOKIE)
+    if (typeof raw !== "string") return null
+    return JSON.parse(raw) as SavedFilter
+  } catch {
+    return null
+  }
+}
+
+function writeFilterCookie(next: SavedFilter): void {
+  setCookie(FILTER_COOKIE, JSON.stringify(next))
+}
 
 export default function AdminView({
   dictionary,
@@ -148,8 +172,34 @@ export default function AdminView({
     setRooms(roomsResult.rooms)
     setTeachers(teachersResult.teachers)
 
-    // Default to first classroom
-    if (roomsResult.rooms.length > 0) {
+    // Restore the last filter from the cookie, but only if the saved id still
+    // exists in this school/term's options; otherwise fall back to the first
+    // classroom. Server queries are schoolId-scoped, so a stale id is harmless —
+    // this just avoids landing on an empty grid.
+    const saved = readFilterCookie()
+    const savedTeacher =
+      saved?.viewMode === "teacher" &&
+      saved.teacherId &&
+      teachersResult.teachers.some((t) => t.id === saved.teacherId)
+        ? saved.teacherId
+        : null
+    const savedRoom =
+      saved?.viewMode === "classroom" &&
+      saved.roomId &&
+      roomsResult.rooms.some((r) => r.id === saved.roomId)
+        ? saved.roomId
+        : null
+
+    if (savedTeacher) {
+      setViewMode("teacher")
+      setSelectedId(savedTeacher)
+      setIsLoadingData(true)
+    } else if (savedRoom) {
+      setViewMode("classroom")
+      setSelectedClassroom(savedRoom)
+      setIsLoadingData(true)
+    } else if (roomsResult.rooms.length > 0) {
+      // Default to first classroom
       setSelectedClassroom(roomsResult.rooms[0].id)
       setViewMode("classroom")
       setIsLoadingData(true)
@@ -217,6 +267,7 @@ export default function AdminView({
     setSlots([])
     setEntityInfo(null)
     setIsLoadingData(true)
+    writeFilterCookie({ viewMode: "classroom", roomId })
   }
 
   const handleTeacherSelect = (teacherId: string) => {
@@ -226,6 +277,7 @@ export default function AdminView({
     setSlots([])
     setEntityInfo(null)
     setIsLoadingData(true)
+    writeFilterCookie({ viewMode: "teacher", teacherId })
   }
 
   const handleSlotClick = useCallback(

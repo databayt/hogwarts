@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,6 +12,7 @@ import { type ClassRow } from "@/components/school-dashboard/listings/classes/co
 import { classesSearchParams } from "@/components/school-dashboard/listings/classes/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/classes/permissions"
 import { ClassesTable } from "@/components/school-dashboard/listings/classes/table"
+import { getText } from "@/components/translation/display"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -88,20 +88,20 @@ export default async function ClassesContent({
     data = await Promise.all(
       rows.map(async (c: any) => ({
         id: c.id,
-        name: await getDisplayText(
+        name: await getText(
           c.name,
           (c.lang as "ar" | "en") || "ar",
           lang,
           schoolId!
         ),
-        subjectName: await getDisplayText(
+        subjectName: await getText(
           c.subject?.name || "Unknown",
           (c.subject?.lang as "ar" | "en") || "ar",
           lang,
           schoolId!
         ),
         teacherName: c.teacher
-          ? await getDisplayText(
+          ? await getText(
               `${c.teacher.firstName} ${c.teacher.lastName}`,
               (c.teacher.lang as "ar" | "en") || "ar",
               lang,
@@ -113,7 +113,7 @@ export default async function ClassesContent({
             ? `الفصل ${c.term.termNumber}`
             : `Term ${c.term.termNumber}`
           : "-",
-        gradeName: await getDisplayText(
+        gradeName: await getText(
           c.grade?.name || "",
           (c.grade?.lang as "ar" | "en") || "ar",
           lang,

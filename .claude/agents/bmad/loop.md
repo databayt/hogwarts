@@ -268,7 +268,7 @@ async function executeRefactorLoop(target: RefactorTarget) {
     for (const issue of prioritized) {
       console.log(`🔧 Refactoring: ${issue.file} - ${issue.type}`)
 
-      // Ensure test coverage
+      // Ensure tests coverage
       if (issue.coverage < 80) {
         await addTests(issue.file)
       }

@@ -6,22 +6,21 @@ import { cookies } from "next/headers"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { expertiseSchema, type ExpertiseFormData } from "./validation"
 
 async function getDisplayLocale(schoolId: string) {
   const cookieStore = await cookies()
-  const displayLang =
-    (cookieStore.get("NEXT_LOCALE")?.value as SupportedLanguage) || "ar"
+  const displayLang = (cookieStore.get("NEXT_LOCALE")?.value as Lang) || "ar"
   const school = await db.school.findUnique({
     where: { id: schoolId },
     select: { preferredLanguage: true },
   })
-  const contentLang = (school?.preferredLanguage || "ar") as SupportedLanguage
+  const contentLang = (school?.preferredLanguage || "ar") as Lang
   return { displayLang, contentLang }
 }
 
@@ -139,19 +138,19 @@ export async function getGradesAndSubjects(): Promise<
     const data = await Promise.all(
       grades.map(async (g) => ({
         id: g.id,
-        name: await getDisplayText(g.name, contentLang, displayLang, schoolId),
+        name: await getText(g.name, contentLang, displayLang, schoolId),
         gradeNumber: g.gradeNumber,
         subjects: await Promise.all(
           g.subjectSelections.map(async (s) => ({
             id: s.subject.id,
-            name: await getDisplayText(
+            name: await getText(
               s.subject.name,
               contentLang,
               displayLang,
               schoolId
             ),
             department: s.subject.department
-              ? await getDisplayText(
+              ? await getText(
                   s.subject.department,
                   contentLang,
                   displayLang,

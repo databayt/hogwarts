@@ -43,7 +43,6 @@ import {
   Zap,
 } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { cn } from "@/lib/utils"
@@ -60,7 +59,8 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import { ExamCardFlip } from "./exam-card-flip"
 import GuardianExamsContent from "./guardian-content"
@@ -179,17 +179,17 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     // Translate nextExam relation fields
     if (nextExam) {
       if (nextExam.subject?.name) {
-        nextExam.subject.name = await getDisplayText(
+        nextExam.subject.name = await getText(
           nextExam.subject.name,
-          (nextExam.subject.lang || "ar") as SupportedLanguage,
+          (nextExam.subject.lang || "ar") as Lang,
           lang,
           schoolId!
         )
       }
       if (nextExam.class?.name) {
-        nextExam.class.name = await getDisplayText(
+        nextExam.class.name = await getText(
           nextExam.class.name,
-          (nextExam.class.lang || "ar") as SupportedLanguage,
+          (nextExam.class.lang || "ar") as Lang,
           lang,
           schoolId!
         )

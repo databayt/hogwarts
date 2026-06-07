@@ -824,7 +824,11 @@ export async function getClassesForSelection(input: unknown) {
       distinct: ["classId"],
     })
     return {
-      classes: rows.map((r: any) => ({ id: r.class.id, label: r.class.name })),
+      // Section-based timetable rows have a null legacy `classId` (no `class`
+      // relation); drop those so we never deref null.
+      classes: rows
+        .filter((r: any) => r.class)
+        .map((r: any) => ({ id: r.class.id, label: r.class.name })),
     }
   }
 

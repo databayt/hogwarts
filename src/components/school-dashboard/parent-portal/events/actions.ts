@@ -5,9 +5,9 @@
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+import { getText } from "@/components/translation/display"
 
 export async function getParentEvents(displayLang?: "ar" | "en") {
   try {
@@ -107,19 +107,9 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
         const storedLang = (event.lang as "ar" | "en") || "ar"
         return {
           id: event.id,
-          title: await getDisplayText(
-            event.title || "",
-            storedLang,
-            lang,
-            schoolId
-          ),
+          title: await getText(event.title || "", storedLang, lang, schoolId),
           description: event.description
-            ? await getDisplayText(
-                event.description,
-                storedLang,
-                lang,
-                schoolId
-              )
+            ? await getText(event.description, storedLang, lang, schoolId)
             : null,
           eventType: event.eventType,
           eventDate: event.eventDate.toISOString(),

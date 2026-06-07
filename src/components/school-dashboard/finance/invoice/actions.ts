@@ -11,11 +11,11 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resend } from "@/components/school-dashboard/finance/invoice/email.config"
 import { SendInvoiceEmail } from "@/components/school-dashboard/finance/invoice/send-invoice-email"
+import { getText } from "@/components/translation/display"
 
 import { checkCurrentUserPermission } from "../lib/permissions"
 import { InvoiceSchemaZod } from "./validation"
@@ -540,7 +540,7 @@ export async function getInvoicesWithFilters(
     const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
 
     // Dedupe client names so each unique name hits Google Translate at most once
-    // per request (TranslationCache covers subsequent requests).
+    // per request (Translation covers subsequent requests).
     const uniqueNames = Array.from(new Set(invoices.map((i) => i.to.name)))
     const translations = new Map<string, string>(
       await Promise.all(
@@ -548,7 +548,7 @@ export async function getInvoicesWithFilters(
           async (name) =>
             [
               name,
-              await getDisplayText(name, storageLang, lang, ctx.schoolId),
+              await getText(name, storageLang, lang, ctx.schoolId),
             ] as const
         )
       )

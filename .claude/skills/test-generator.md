@@ -107,7 +107,7 @@ describe("createStudent Server Action", () => {
     const formData = new FormData()
     formData.append("name", "Harry Potter")
     formData.append("email", "harry@hogwarts.edu")
-    formData.append("schoolId", "test-school-id")
+    formData.append("schoolId", "tests-school-id")
 
     db.student.create.mockResolvedValue({
       id: "1",
@@ -123,7 +123,7 @@ describe("createStudent Server Action", () => {
       data: expect.objectContaining({
         name: "Harry Potter",
         email: "harry@hogwarts.edu",
-        schoolId: "test-school-id",
+        schoolId: "tests-school-id",
       }),
     })
   })
@@ -190,7 +190,7 @@ describe('StudentForm Integration', () => {
     const onSubmit = vi.fn();
 
     render(
-      <StudentForm onSubmit={onSubmit} schoolId="test-school" />
+      <StudentForm onSubmit={onSubmit} schoolId="tests-school" />
     );
 
     // Act - Fill form
@@ -209,7 +209,7 @@ describe('StudentForm Integration', () => {
         email: 'harry@hogwarts.edu',
         yearLevel: '1',
         isActive: true,
-        schoolId: 'test-school'
+        schoolId: 'tests-school'
       });
     });
   });
@@ -219,7 +219,7 @@ describe('StudentForm Integration', () => {
 ### 5. E2E Tests (Playwright)
 
 ```typescript
-import { expect, test } from "@playwright/test"
+import { expect, test } from "@playwright/tests"
 
 test.describe("Student Management E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -297,7 +297,7 @@ export function createStudent(overrides = {}) {
     id: faker.string.uuid(),
     name: faker.person.fullName(),
     email: faker.internet.email(),
-    schoolId: "test-school",
+    schoolId: "tests-school",
     yearLevel: faker.number.int({ min: 1, max: 7 }),
     isActive: true,
     ...overrides,
@@ -313,8 +313,8 @@ export class StudentBuilder {
   private student = {
     id: "1",
     name: "Test Student",
-    email: "test@example.com",
-    schoolId: "test-school",
+    email: "tests@example.com",
+    schoolId: "tests-school",
   }
 
   withName(name: string) {
@@ -370,10 +370,10 @@ export default defineConfig({
       reporter: ["text", "json", "html", "lcov"],
       exclude: [
         "node_modules/",
-        "test/",
+        "tests/",
         "*.config.*",
         "**/*.d.ts",
-        "**/*.test.*",
+        "**/*.tests.*",
         "**/fixtures/**",
       ],
       thresholds: {

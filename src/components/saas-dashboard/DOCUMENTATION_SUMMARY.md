@@ -230,9 +230,9 @@ CACHE_TTL_DASHBOARD=60
 
 ```bash
 # Run all saas-dashboard tests
-pnpm test src/components/saas-dashboard/**/*.test.{ts,tsx}
+pnpm tests src/components/saas-dashboard/**/*.tests.{ts,tsx}
 
-# Specific test suites needed:
+# Specific tests suites needed:
 - Server actions validation
 - Chart rendering edge cases
 - Table filtering and sorting

@@ -15,8 +15,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
-import { getDisplayText } from "@/components/translation/display"
-import { detectLanguage } from "@/components/translation/util"
+import { getText } from "@/components/translation/display"
+import { detectLang } from "@/components/translation/util"
 
 // All school-messaging pages are dynamic - they require auth, subdomain lookup, and query the database
 export const dynamic = "force-dynamic"
@@ -54,10 +54,10 @@ export default async function MessagingLayout({
   // Translate school name for display when viewing in a different language
   if (lang === "en" && school.nameEn) {
     school.name = school.nameEn
-  } else if (detectLanguage(school.name) !== lang && school.id) {
-    school.name = await getDisplayText(
+  } else if (detectLang(school.name) !== lang && school.id) {
+    school.name = await getText(
       school.name,
-      detectLanguage(school.name) as "ar" | "en",
+      detectLang(school.name) as "ar" | "en",
       lang as "ar" | "en",
       school.id
     )

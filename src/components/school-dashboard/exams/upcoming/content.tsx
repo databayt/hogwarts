@@ -13,7 +13,6 @@ import {
   Clock,
 } from "lucide-react"
 
-import { getDisplayText } from "@/lib/content-display"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +26,8 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { SupportedLanguage } from "@/components/translation/types"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 import type { CalendarExam } from "./calendar-view"
 import { ViewToggle } from "./view-toggle"
@@ -143,17 +143,17 @@ export default async function UpcomingExamsContent({
         examType: exam.examType,
         status: exam.status,
         className: exam.class?.name
-          ? await getDisplayText(
+          ? await getText(
               exam.class.name,
-              (exam.class.lang || "ar") as SupportedLanguage,
+              (exam.class.lang || "ar") as Lang,
               lang,
               schoolId!
             )
           : "Unknown",
         name: exam.subject?.name
-          ? await getDisplayText(
+          ? await getText(
               exam.subject.name,
-              (exam.subject.lang || "ar") as SupportedLanguage,
+              (exam.subject.lang || "ar") as Lang,
               lang,
               schoolId!
             )

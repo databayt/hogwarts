@@ -80,7 +80,7 @@ agentConfiguration:
     "@react": agents/react
     "@db": agents/prisma
     "@next": agents/nextjs
-    "@test": agents/test
+    "@test": agents/tests
     "@sec": agents/security
     "@perf": agents/performance
     "@i18n": agents/i18n
@@ -109,13 +109,13 @@ features:
 parallelization:
   maxConcurrentAgents: 5
   independentTasks:
-    - test generation
+    - tests generation
     - documentation
     - linting
     - formatting
 
   sequentialTasks:
-    - build → test → deploy
+    - build → tests → deploy
     - migrate → seed → verify
 ```
 

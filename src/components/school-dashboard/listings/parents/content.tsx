@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -13,6 +12,7 @@ import { type ParentRow } from "@/components/school-dashboard/listings/parents/c
 import { parentsSearchParams } from "@/components/school-dashboard/listings/parents/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/parents/permissions"
 import { ParentsTable } from "@/components/school-dashboard/listings/parents/table"
+import { getName } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -67,15 +67,7 @@ export default async function ParentsContent({
       rows.map(async (p: any) => ({
         id: p.id,
         userId: p.userId || null,
-        name:
-          p.lang && p.lang !== lang
-            ? await getDisplayText(
-                `${p.firstName} ${p.lastName}`.trim(),
-                p.lang || "ar",
-                lang,
-                schoolId!
-              )
-            : `${p.firstName} ${p.lastName}`.trim(),
+        name: await getName(p, lang, schoolId!),
         emailAddress: p.emailAddress || "-",
         status: p.userId ? "active" : "inactive",
         createdAt: (p.createdAt as Date).toISOString(),
