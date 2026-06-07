@@ -4,6 +4,7 @@
 import { Metadata } from "next"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ParentAnnouncementsContent } from "@/components/school-dashboard/parent-portal/announcements/content"
 
 export const metadata: Metadata = {
@@ -17,5 +18,6 @@ export default async function ParentAnnouncementsPage({
   params: Promise<{ lang: Locale; subdomain: string }>
 }) {
   const { lang } = await params
-  return <ParentAnnouncementsContent lang={lang} />
+  const dictionary = await getDictionary(lang)
+  return <ParentAnnouncementsContent lang={lang} dictionary={dictionary} />
 }

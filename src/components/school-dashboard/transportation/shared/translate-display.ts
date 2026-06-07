@@ -4,13 +4,13 @@
 import "server-only"
 
 import type { Locale } from "@/components/internationalization/config"
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 
 // Transportation content (route/stop names, addresses, notes) is stored in one
 // language with a `lang` field. These helpers translate the user-authored text
 // fields on demand into the viewer's locale (System B), so a route stored in
 // Arabic reads in English when the dashboard is viewed in English. They run only
-// in server components/actions — getDisplayText is a server action and falls
+// in server components/actions — getText is a server action and falls
 // back to the source text on any failure, so callers never need a try/catch.
 
 type Lang = "ar" | "en"
@@ -22,7 +22,7 @@ async function tx(
   schoolId: string
 ): Promise<string | null> {
   if (!text) return text ?? null
-  return getDisplayText(text, (srcLang as Lang) || "ar", displayLang as Lang, schoolId)
+  return getText(text, (srcLang as Lang) || "ar", displayLang as Lang, schoolId)
 }
 
 type RouteLike = {

@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { Locale } from "@/components/internationalization/config"
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
@@ -153,7 +153,7 @@ export async function getMyTransportationView(displayLang?: Locale) {
           // Route/stop names are stored in one language; translate on demand
           // into the viewer's locale so guardians/students see them localized.
           routeName: displayLang
-            ? await getDisplayText(
+            ? await getText(
                 a.route.name,
                 (a.route.lang as Locale) || "ar",
                 displayLang,
@@ -162,7 +162,7 @@ export async function getMyTransportationView(displayLang?: Locale) {
             : a.route.name,
           routeCode: a.route.code,
           stopName: displayLang
-            ? await getDisplayText(
+            ? await getText(
                 a.stop.name,
                 (a.stop.lang as Locale) || "ar",
                 displayLang,
