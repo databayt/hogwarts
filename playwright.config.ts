@@ -6,14 +6,14 @@ import { defineConfig, devices } from "@playwright/test"
  * Supports:
  * - Local development (localhost:3000)
  * - Production testing (ed.databayt.org)
- * - Multiple projects for different test suites
- * - Tagged test filtering (@smoke, @rbac, @multi-tenant)
+ * - Multiple projects for different tests suites
+ * - Tagged tests filtering (@smoke, @rbac, @multi-tenant)
  *
  * Usage:
- *   All tests:     pnpm test:e2e
- *   Smoke only:    pnpm test:e2e --project=smoke
- *   RBAC only:     pnpm test:e2e --grep @rbac
- *   Production:    TEST_ENV=production pnpm test:e2e
+ *   All tests:     pnpm tests:e2e
+ *   Smoke only:    pnpm tests:e2e --project=smoke
+ *   RBAC only:     pnpm tests:e2e --grep @rbac
+ *   Production:    TEST_ENV=production pnpm tests:e2e
  *
  * @see https://playwright.dev/docs/test-configuration
  */
@@ -24,26 +24,22 @@ const baseURL = isProduction
   ? "https://ed.databayt.org"
   : "http://localhost:3000"
 
-export default defineConfig({
-  testDir: "./tests",
+/* Cross-cutting suites that run under their own dedicated projects (smoke, lifecycle).
+   Browser projects exclude these so each spec runs in exactly one project. */
+const DEDICATED = ["**/e2e/smoke/**", "**/e2e/lifecycle/**"]
 
-  /* Match only .spec.ts files in e2e and smoke directories */
+export default defineConfig({
+  /* Tests are URL-mirrored under src/tests/<category>/; e2e specs are *.spec.ts
+     (next to *.test.ts unit tests), cross-cutting ones under src/tests/e2e/. */
+  testDir: "./src/tests",
+
+  /* Only *.spec.ts are Playwright e2e; *.test.ts (Vitest) and support .ts are ignored. */
   testMatch: ["**/*.spec.ts"],
 
-  /* Ignore old test files during migration */
-  testIgnore: [
-    "**/auth/helpers.ts",
-    "**/exams/helpers.ts",
-    "**/saas-marketing/*.ts",
-    "**/saas-dashboard/*.ts",
-    "**/school-marketing/*.ts",
-    "**/school-dashboard/*.ts",
-  ],
-
-  /* Parallel execution for faster test runs */
+  /* Parallel execution for faster tests runs */
   fullyParallel: true,
 
-  /* Fail the build on CI if you accidentally left test.only in the source code */
+  /* Fail the build on CI if you accidentally left tests.only in the source code */
   forbidOnly: !!process.env.CI,
 
   /* Retry on CI only, more retries for production (network flakiness) */
@@ -59,7 +55,7 @@ export default defineConfig({
     ...(process.env.CI ? ([["github", {}]] as const) : []),
   ],
 
-  /* Global timeout for each test (longer for production network latency) */
+  /* Global timeout for each tests (longer for production network latency) */
   timeout: isProduction ? 60_000 : 30_000,
 
   /* Expect timeout for assertions */
@@ -108,7 +104,7 @@ export default defineConfig({
     },
   },
 
-  /* Configure projects for different test suites */
+  /* Configure projects for different tests suites */
   projects: [
     // ============================================
     // Auth Setup (runs once, saves storage state)
@@ -116,7 +112,7 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /.*\.setup\.ts/,
-      testDir: "./tests",
+      testDir: "./src/tests",
       fullyParallel: false,
       use: {
         navigationTimeout: 30_000,
@@ -128,7 +124,7 @@ export default defineConfig({
     // ============================================
     {
       name: "smoke",
-      testDir: "./tests/smoke",
+      testDir: "./src/tests/e2e/smoke",
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",
@@ -138,10 +134,12 @@ export default defineConfig({
 
     // ============================================
     // E2E Tests - Chromium (default, depends on auth setup)
+    // Runs all URL-mirrored specs except the dedicated smoke/lifecycle suites.
     // ============================================
     {
       name: "chromium",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -156,7 +154,8 @@ export default defineConfig({
     // ============================================
     {
       name: "firefox",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       use: {
         ...devices["Desktop Firefox"],
         baseURL: "http://localhost:3000",
@@ -168,7 +167,8 @@ export default defineConfig({
     // ============================================
     {
       name: "webkit",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       use: {
         ...devices["Desktop Safari"],
         baseURL: "http://localhost:3000",
@@ -180,7 +180,8 @@ export default defineConfig({
     // ============================================
     {
       name: "mobile-chrome",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       use: {
         ...devices["Pixel 5"],
         baseURL: "http://localhost:3000",
@@ -188,7 +189,8 @@ export default defineConfig({
     },
     {
       name: "mobile-safari",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       use: {
         ...devices["iPhone 12"],
         baseURL: "http://localhost:3000",
@@ -200,7 +202,7 @@ export default defineConfig({
     // ============================================
     {
       name: "lifecycle",
-      testDir: "./tests/e2e/lifecycle",
+      testDir: "./src/tests/e2e/lifecycle",
       fullyParallel: false,
       workers: 1,
       timeout: 300_000,
@@ -216,7 +218,7 @@ export default defineConfig({
     // ============================================
     {
       name: "production-smoke",
-      testDir: "./tests/smoke",
+      testDir: "./src/tests/e2e/smoke",
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",
@@ -225,7 +227,8 @@ export default defineConfig({
     },
     {
       name: "production-chromium",
-      testDir: "./tests/e2e",
+      testDir: "./src/tests",
+      testIgnore: DEDICATED,
       use: {
         ...devices["Desktop Chrome"],
         channel: "chromium",

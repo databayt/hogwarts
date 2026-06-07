@@ -12,8 +12,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["src/**/*.integration.test.{ts,tsx}"],
-    setupFiles: ["./src/test/integration/setup.ts"],
+    include: ["src/tests/**/*.integration.test.{ts,tsx}"],
+    setupFiles: ["./src/tests/integration/setup.ts"],
     testTimeout: 30_000,
     pool: "forks",
     singleFork: true,

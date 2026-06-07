@@ -158,6 +158,10 @@ function classifySpec(epicRel: string): string[] {
       return ["internal-onboarding", base]
     case "lifecycle":
       return ["e2e", "lifecycle", base]
+    case "attendance":
+      return ["school-dashboard", "attendance", base]
+    case "conference":
+      return ["school-dashboard", "conference", base]
     case "messaging":
       return ["school-dashboard", "messaging", base]
     case "onboarding":

@@ -41,7 +41,7 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/__tests__/**",
-    "src/test/**",
+    "src/tests/**",
     "src/components/school-dashboard/file/**",
     "src/components/school-marketing/application/**",
     "socket-server/**",
