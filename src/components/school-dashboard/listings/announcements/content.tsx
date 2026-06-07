@@ -12,7 +12,7 @@ import { announcementsSearchParams } from "@/components/school-dashboard/listing
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/announcements/permissions"
 import { getAnnouncementsList } from "@/components/school-dashboard/listings/announcements/queries"
 import { AnnouncementsTable } from "@/components/school-dashboard/listings/announcements/table"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -46,30 +46,26 @@ export default async function AnnouncementsContent({
         sort: sp.sort,
       })
 
-      // Map results to table format with on-demand translation
+      // ONE batched translation pass for the whole page (replaces N×getText).
+      const localized = await localize("Announcement", rows, { schoolId, lang })
+
+      // Map results to table format
       // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
-      data = await Promise.all(
-        rows.map(async (a) => ({
-          id: a.id,
-          title: await getText(
-            a.title,
-            (a.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId!
-          ),
-          lang: a.lang,
-          scope: a.scope,
-          published: a.published,
-          // Safe date serialization - fallback to current time if null/undefined
-          createdAt: a.createdAt
-            ? new Date(a.createdAt).toISOString()
-            : new Date().toISOString(),
-          createdBy: a.createdBy,
-          priority: a.priority,
-          pinned: a.pinned,
-          featured: a.featured,
-        }))
-      )
+      data = localized.map((a) => ({
+        id: a.id,
+        title: a.title ?? "",
+        lang: a.lang,
+        scope: a.scope,
+        published: a.published,
+        // Safe date serialization - fallback to current time if null/undefined
+        createdAt: a.createdAt
+          ? new Date(a.createdAt).toISOString()
+          : new Date().toISOString(),
+        createdBy: a.createdBy,
+        priority: a.priority,
+        pinned: a.pinned,
+        featured: a.featured,
+      }))
 
       total = count
     } catch (error) {

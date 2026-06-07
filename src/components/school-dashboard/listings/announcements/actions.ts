@@ -81,6 +81,7 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/client"
@@ -106,6 +107,7 @@ import {
 } from "@/components/school-dashboard/listings/announcements/validation"
 import { autoTranslate } from "@/components/translation/actions"
 import { getFields, getText } from "@/components/translation/display"
+import { prewarm } from "@/components/translation/prewarm"
 
 // ============================================================================
 // Types
@@ -229,6 +231,11 @@ export async function createAnnouncement(
         publishedAt: parsed.published ? new Date() : null,
       },
     })
+
+    // Pre-translate the other language OFF the response path, so the first reader
+    // in either language hits the cache — never waits on Google, never sees the
+    // source language. Non-blocking and best-effort.
+    after(() => prewarm("Announcement", row, { schoolId }))
 
     // Dispatch notifications when publishing immediately
     if (parsed.published) {
