@@ -3120,6 +3120,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     // Anchors for live-class matching (section-based slots carry these).
     sectionId: slot.sectionId,
     subjectId: slot.subjectId,
+    // Timetable slot id — lets the teacher start a live class from this slot.
+    timetableId: slot.id,
     isBreak: false,
   }))
 
@@ -3142,6 +3144,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       room: "",
       sectionId: null,
       subjectId: null,
+      timetableId: null,
       isBreak,
     }
   })

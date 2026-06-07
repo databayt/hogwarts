@@ -71,7 +71,14 @@
     "leave": "Leave",
     "participants": "Participants",
     "connection": "Connection",
-    "reconnecting": "Reconnecting…"
+    "reconnecting": "Reconnecting…",
+    "moderation": {
+      "remove": "Remove",
+      "removing": "Removing…",
+      "removed": "Participant removed",
+      "failed": "Couldn't remove participant",
+      "empty": "No other participants"
+    }
   },
   "errors": {
     "notAuthenticated": "You need to sign in.",
@@ -143,6 +150,16 @@
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
-    "error": "Could not save"
+    "error": "Could not save",
+    "carryForward": {
+      "title": "Carry forward recurring links",
+      "from": "From term",
+      "to": "To term",
+      "button": "Carry forward",
+      "running": "Carrying forward…",
+      "success": "Carried forward {count} links",
+      "error": "Could not carry forward links",
+      "termPrefix": "Term"
+    }
   }
 }

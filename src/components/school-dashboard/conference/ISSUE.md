@@ -20,16 +20,18 @@
 - [ ] **Meeting-3 network test** from inside Aldar school WiFi.
       `/conference/network-test` is the surface — run as
       `admin@kingfahad.databayt.org`. **Block on TURN/443 failure.**
-- [ ] **Docs**: `content/docs-en/conference.mdx` + Arabic mirror
-      not yet written.
+- [x] **Docs**: `content/docs-en/conference.mdx` written. Arabic mirror
+      (`content/docs-ar/conference.mdx`) still pending.
 
 ## P1 — Phase 2 (Scheduling + reminders)
 
-- [ ] **"Start live class" button on Timetable slot detail page**
-      (`src/components/school-dashboard/timetable/<slot-detail>.tsx`).
-      Gated by `canStartLiveClass(role) && teacherId ===
-session.user.id`. Calls `createLiveClass({ timetableId })` then
-      `router.push` to `/conference/${id}/room`.
+- [x] **"Start live class" button on Timetable slot detail page** — DONE.
+      `StartLiveClassButton` on the teacher Current/Next card
+      (`timetable/views/teacher-view.tsx`) calls the new
+      `createLiveClassFromTimetable({ timetableId })` action (derives
+      teacher/section/subject + period window, reuses or creates+starts the
+      session) then routes to `/conference/${id}/room`. Shown only when there
+      is no session/link to join yet.
 - [x] **Auto-start egress** (DONE: webhook room_started → startCompositeEgress when recordingEnabled) on `room_started` if
       `Conference.recordingEnabled`. Currently the webhook
       handler upserts the recording row only after the SFU sends
@@ -49,8 +51,11 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
 - [ ] **Capacity dashboard** in SaaS dashboard
       (`/observability/conference`) — concurrent rooms per school,
       egress queue depth, TCP fallback rate. Wave-2 ops visibility.
-- [~] **Kick participant** (server action kickParticipant wired + host-scoped; custom LiveKit-tile UI deferred) in `room/room-client.tsx` for HOST.
-      Server action exists (`removeParticipant`) but isn't wired.
+- [x] **Kick participant** — DONE. `ParticipantsPanel` (HOST/CO_HOST-only
+      overlay in `participants-panel.tsx`, rendered by `room.tsx` beside the
+      prebuilt `<VideoConference/>`) lists remote participants via
+      `useRemoteParticipants()` and calls the existing `kickParticipant`
+      action with the participant identity.
 
 ## P3 — Hardening
 
@@ -61,13 +66,13 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
 - [x] **Webhook integration test** with simulated LiveKit payloads —
       room lifecycle, egress lifecycle, idempotency on duplicate
       `eventId`, malformed roomName drop, cross-tenant drop, audit row.
-      (`src/lib/livekit/__tests__/webhook.test.ts`, 12 tests)
+      (`livekit/__tests__/webhook.test.ts`, 12 tests)
 - [x] **State-machine test** — `scheduled → live → ended` happy path + every invalid transition (`__tests__/sessions.test.ts`,
       26 tests across create/cancel/start/end/list/get; idempotent
       start, kick-on-end, SFU-failure handling)
 - [x] **Token grant test** — HOST has `roomAdmin/roomCreate/roomRecord`,
       OBSERVER is subscribe-only, TTL claim honored, metadata claims
-      shape. (`src/lib/livekit/__tests__/token.test.ts`, 9 tests)
+      shape. (`livekit/__tests__/token.test.ts`, 9 tests)
 - [x] **Eligibility resolution test** — HOST vs CO_HOST vs PARTICIPANT
       vs OBSERVER resolution per role + section/guardian membership.
       (`__tests__/eligibility.test.ts`, 17 tests)
@@ -87,6 +92,21 @@ session.user.id`. Calls `createLiveClass({ timetableId })` then
       inferred from JSON imports.)
 
 ## Done
+
+### Maturity pass (2026-06-06)
+
+- [x] In-room HOST moderation UI (`participants-panel.tsx` + kick wiring).
+- [x] Real ICE-path detection in `network-test.tsx` (`network-protocol.ts`
+      `classifyFromStats` → direct-udp / turn-udp / turn-tcp-443).
+- [x] Timetable "Start live class" button + `createLiveClassFromTimetable`.
+- [x] Native provider adapters implemented (`providers/{google-meet,zoom,teams}`
+      real OAuth + createMeeting) + wired into the create flow behind
+      `isConfigured()` (ships dark until OAuth creds land).
+- [x] `stopEgress` wired into `endLiveClass`; `carryForwardConferenceLinks`
+      exposed as an admin button on `/conference/settings`.
+- [x] ~40 new tests (moderation panel, start button, protocol classifier,
+      stop-egress, native providers via mocked fetch, webhook route,
+      expire-recordings cron, egress + recording-urls units). Whole-project tsc 0.
 
 - [x] Prisma schema + Neon promotion (2026-05-28)
 - [x] LiveKit lib (client, token, rooms, egress, recording-urls,

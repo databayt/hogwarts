@@ -51,6 +51,14 @@ export default async function Page({ params }: Props) {
         leaving: t?.room?.leave ?? "Leave",
         reconnecting: t?.room?.reconnecting ?? "Reconnecting…",
         error: t?.errors?.tokenExpired ?? "Token expired. Please rejoin.",
+        participants: {
+          title: t?.room?.participants ?? "Participants",
+          remove: t?.room?.moderation?.remove ?? "Remove",
+          removing: t?.room?.moderation?.removing ?? "Removing…",
+          removed: t?.room?.moderation?.removed ?? "Participant removed",
+          failed: t?.room?.moderation?.failed ?? "Couldn't remove participant",
+          empty: t?.room?.moderation?.empty ?? "No other participants",
+        },
       }}
     />
   )

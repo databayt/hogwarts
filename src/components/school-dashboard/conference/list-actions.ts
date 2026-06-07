@@ -20,6 +20,7 @@ import {
   canDeleteLiveClasses,
   canManageLiveClasses,
 } from "./list-permissions"
+import { getProviderAdapter, type ProviderId } from "./providers"
 import { getLiveClassDetail, getLiveClassesList } from "./queries"
 import {
   liveClassSchema,
@@ -41,6 +42,15 @@ function combineDateAndTime(date: Date, time: string): Date {
   const result = new Date(date)
   result.setHours(h ?? 0, m ?? 0, 0, 0)
   return result
+}
+
+/** Map the form's free-text provider label to a provider-adapter id. */
+function mapMeetingProviderToId(provider?: string | null): ProviderId {
+  const p = (provider ?? "").toLowerCase()
+  if (p.includes("google") || p.includes("meet")) return "google_meet"
+  if (p.includes("zoom")) return "zoom"
+  if (p.includes("teams")) return "teams"
+  return "external"
 }
 
 // ============================================================================
@@ -247,6 +257,29 @@ export async function createLiveClass(
       detectLanguage(d.title)
     )
 
+    // When a native provider (Meet/Zoom/Teams) is configured, auto-generate a
+    // fresh meeting link via its API; otherwise keep the pasted URL. Ships dark
+    // — a no-op until the provider's OAuth credentials are present.
+    let meetingUrl = d.meetingUrl
+    const providerId = mapMeetingProviderToId(d.meetingProvider)
+    if (providerId !== "external") {
+      const adapter = getProviderAdapter(providerId)
+      if (adapter.isConfigured()) {
+        try {
+          const meeting = await adapter.createMeeting({
+            schoolId,
+            title: content.title,
+            scheduledStart,
+            scheduledEnd,
+            hostUserId: session.user.id ?? "",
+          })
+          meetingUrl = meeting.joinUrl
+        } catch (err) {
+          console.error("[createLiveClass] provider createMeeting failed:", err)
+        }
+      }
+    }
+
     const created = await db.conference.create({
       data: {
         schoolId,
@@ -257,7 +290,7 @@ export async function createLiveClass(
         // External sessions have no SFU room; roomName is a required @unique
         // column, so generate a synthetic, non-colliding value.
         roomName: `ext-${randomUUID()}`,
-        meetingUrl: d.meetingUrl,
+        meetingUrl,
         meetingProvider: d.meetingProvider || null,
         scheduledStart,
         scheduledEnd,
@@ -292,12 +325,12 @@ export async function createLiveClass(
               sectionId: d.sectionId,
               termId: term.id,
               provider: "external",
-              meetingUrl: d.meetingUrl,
+              meetingUrl,
               meetingProvider: d.meetingProvider || null,
               createdBy: session.user.id ?? null,
             },
             update: {
-              meetingUrl: d.meetingUrl,
+              meetingUrl,
               meetingProvider: d.meetingProvider || null,
             },
           })

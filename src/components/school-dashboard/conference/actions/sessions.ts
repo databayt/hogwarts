@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import { stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
 import { roomNameFor } from "@/components/school-dashboard/conference/livekit/room-naming"
 import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import {
@@ -144,6 +146,93 @@ async function createLiveClassWithCtx(
 }
 
 /**
+ * Start a live class straight from a Timetable slot (the teacher's
+ * Current/Next card). Resolves the slot's teacher/section/subject + period
+ * window, reuses any not-yet-ended session on the slot (idempotent re-click),
+ * otherwise creates one, then starts it (provisions the SFU room and flips to
+ * live). HOST-scoped via `start_live_class`; ownership is enforced downstream
+ * by `createLiveClass` (teacher fallback) + `startLiveClass`.
+ */
+export async function createLiveClassFromTimetable(input: {
+  timetableId: string
+}) {
+  const ctx = await requireContext("start_live_class")
+  if (!ctx.ok) return ctx.response
+  if (!input?.timetableId) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+
+  const slot = await db.timetable.findFirst({
+    where: { id: input.timetableId, schoolId: ctx.schoolId },
+    select: {
+      id: true,
+      teacherId: true,
+      sectionId: true,
+      subjectId: true,
+      subject: { select: { name: true } },
+      section: { select: { name: true } },
+      period: { select: { startTime: true, endTime: true } },
+    },
+  })
+  if (!slot) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+  if (!slot.teacherId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+  // Idempotent: reuse a scheduled/live session already on this slot.
+  const existing = await db.conference.findFirst({
+    where: {
+      schoolId: ctx.schoolId,
+      timetableId: slot.id,
+      status: { in: ["scheduled", "live"] },
+      deletedAt: null,
+    },
+    select: { id: true },
+    orderBy: { createdAt: "desc" },
+  })
+
+  let sessionId = existing?.id
+  if (!sessionId) {
+    const school = await db.school.findUnique({
+      where: { id: ctx.schoolId },
+      select: {
+        conferenceMaxDuration: true,
+        conferenceRecordingDefault: true,
+        preferredLanguage: true,
+      },
+    })
+    const maxDuration = school?.conferenceMaxDuration ?? 120
+    const periodMin = slot.period
+      ? Math.round(
+          (new Date(slot.period.endTime).getTime() -
+            new Date(slot.period.startTime).getTime()) /
+            60_000
+        )
+      : 0
+    const durationMin = Math.min(periodMin > 0 ? periodMin : 60, maxDuration)
+    const now = new Date()
+    const end = new Date(now.getTime() + durationMin * 60_000)
+
+    const createRes = await createLiveClass({
+      title: slot.subject?.name || slot.section?.name || "Live Class",
+      teacherId: slot.teacherId,
+      sectionId: slot.sectionId ?? undefined,
+      subjectId: slot.subjectId ?? undefined,
+      timetableId: slot.id,
+      lang: school?.preferredLanguage ?? "ar",
+      scheduledStart: now.toISOString(),
+      scheduledEnd: end.toISOString(),
+      recordingEnabled: school?.conferenceRecordingDefault ?? true,
+      maxParticipants: 50,
+    })
+    if (!("success" in createRes) || !createRes.success) return createRes
+    sessionId = createRes.data.id
+  }
+
+  if (!sessionId) return actionError(ACTION_ERRORS.LIVE_CLASS_CREATE_FAILED)
+
+  const startRes = await startLiveClass({ id: sessionId })
+  if (!("success" in startRes) || !startRes.success) return startRes
+  return { success: true as const, data: { id: sessionId } }
+}
+
+/**
  * Cancel a scheduled (not yet live) class. Notifies enrolled students.
  */
 export async function cancelLiveClass(input: CancelInput) {
@@ -259,6 +348,11 @@ export async function endLiveClass(input: IdOnly) {
         status: true,
         roomName: true,
         teacher: { select: { userId: true } },
+        recordings: {
+          where: { status: { in: ["pending", "processing"] } },
+          select: { egressId: true },
+          take: 1,
+        },
       },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
@@ -267,6 +361,18 @@ export async function endLiveClass(input: IdOnly) {
     }
     if (session.status === "ended" || session.status === "cancelled") {
       return { success: true as const, data: { id: session.id } }
+    }
+
+    // Stop any in-flight recording so the MP4 flushes promptly. Best-effort:
+    // the SFU also stops egress on room close, then emits egress_ended which
+    // the webhook finalizes.
+    const activeEgressId = session.recordings?.[0]?.egressId
+    if (activeEgressId && isLiveKitConfigured()) {
+      try {
+        await stopEgress(activeEgressId)
+      } catch {
+        // best-effort
+      }
     }
 
     try {

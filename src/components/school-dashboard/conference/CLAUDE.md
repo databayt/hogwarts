@@ -16,7 +16,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
    - `ConferenceParticipant` — one row per invited user (host / student / observer)
    - `ConferenceRecording` — composite Egress recording metadata
    - `ConferenceEvent` — webhook audit log + idempotency
-4. LiveKit lib wrappers in `src/lib/livekit/`:
+4. LiveKit lib wrappers in `livekit/`:
    - `client.ts` (singletons), `token.ts` (JWT), `rooms.ts`, `egress.ts`,
      `recording-urls.ts`, `webhook.ts`, `room-naming.ts`
 5. The plan: `~/.claude/plans/read-https-kun-databayt-org-en-docs-alda-swift-mango.md`
@@ -26,7 +26,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
 - **Room naming**: `sch-{schoolId}-lc-{sessionId}` — globally unique and
   embeds the tenant boundary, so the SFU namespace can't leak across
   schools and the webhook handler recovers `schoolId` from the room name
-  alone via `parseRoomName()` (`src/lib/livekit/room-naming.ts`).
+  alone via `parseRoomName()` (`livekit/room-naming.ts`).
 - **Token TTL is 5 minutes** with client-side refresh ~60s before expiry
   (see `room/room-client.tsx`). Refresh re-runs the eligibility check, so
   revoked access takes effect at the **next refresh boundary** — revocation
@@ -34,7 +34,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
   no server-side invalidation of an already-issued token (no `removeParticipant`
   is wired to access-revoke). `tokenIssuedAt` is reserved for future instant
   revocation but is not yet read.
-- **Role → LiveKit grants** mapping is in `src/lib/livekit/token.ts`:
+- **Role → LiveKit grants** mapping is in `livekit/token.ts`:
   HOST = full + roomAdmin, CO_HOST = publish + subscribe, PARTICIPANT
   = publish + subscribe, OBSERVER = subscribe only.
 - **Participant eligibility** is resolved per-join in `actions/tokens.ts`
@@ -119,7 +119,7 @@ Required env vars (set in `.env`):
 
 1. Update `ISSUE.md` and `README.md` here
 2. Run `pnpm tsc --noEmit` to verify no regressions
-3. `pnpm vitest run src/components/school-dashboard/conference src/lib/livekit`
+3. `pnpm vitest run src/components/school-dashboard/conference`
    — should stay green (45 tests at last count)
 4. **Before any Prisma changes**: create a Neon branch via
    `mcp__Neon__create_branch`, test on the branch, then promote

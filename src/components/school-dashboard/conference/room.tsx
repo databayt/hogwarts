@@ -13,6 +13,10 @@ import {
 import "@livekit/components-styles"
 
 import { refreshLiveClassToken } from "@/components/school-dashboard/conference/actions/tokens"
+import {
+  ParticipantsPanel,
+  type ParticipantsPanelLabels,
+} from "@/components/school-dashboard/conference/participants-panel"
 import type { RoomJoinTicket } from "@/components/school-dashboard/conference/types"
 
 interface Props {
@@ -23,6 +27,7 @@ interface Props {
     leaving: string
     reconnecting: string
     error: string
+    participants: ParticipantsPanelLabels
   }
 }
 
@@ -85,6 +90,13 @@ export function RoomClient({
         className="h-full w-full"
       >
         <VideoConference />
+        <ParticipantsPanel
+          sessionId={sessionId}
+          canModerate={
+            ticket.role === "HOST" || ticket.role === "CO_HOST"
+          }
+          labels={labels.participants}
+        />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>

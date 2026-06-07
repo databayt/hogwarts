@@ -67,7 +67,7 @@ src/components/school-dashboard/conference/
 Lib (shared, lives outside the block):
 
 ```
-src/lib/livekit/
+livekit/
 ├── client.ts                  — RoomServiceClient + EgressClient singletons
 ├── token.ts                   — issueAccessToken (role → grants)
 ├── rooms.ts                   — ensureRoom / endRoom / kick
@@ -133,5 +133,5 @@ rbac.spec.ts                   — 11 RBAC matrix tests per browser
 ## Testing
 
 ```bash
-pnpm vitest run src/components/school-dashboard/conference src/lib/livekit
+pnpm vitest run src/components/school-dashboard/conference
 ```

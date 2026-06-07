@@ -59,3 +59,19 @@ export async function carryForwardConferenceLinks(
 
   return { success: true as const, data: { created, skipped: source.length - created } }
 }
+
+/**
+ * List the school's terms (most recent first) for the carry-forward picker.
+ * ADMIN/DEVELOPER only (same `manage_settings` gate as the action above).
+ */
+export async function listConferenceTerms() {
+  const ctx = await requireContext("manage_settings")
+  if (!ctx.ok) return ctx.response
+  const terms = await db.term.findMany({
+    where: { schoolId: ctx.schoolId },
+    orderBy: { startDate: "desc" },
+    select: { id: true, termNumber: true, startDate: true, isActive: true },
+    take: 24,
+  })
+  return { success: true as const, data: terms }
+}

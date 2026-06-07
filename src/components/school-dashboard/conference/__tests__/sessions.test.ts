@@ -5,6 +5,8 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import { stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
 import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import { getTenantContext } from "@/lib/tenant-context"
 
@@ -51,6 +53,12 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/components/school-dashboard/conference/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
+}))
+vi.mock("@/components/school-dashboard/conference/livekit/egress", () => ({
+  stopEgress: vi.fn(async () => undefined),
+}))
+vi.mock("@/components/school-dashboard/conference/livekit/client", () => ({
+  isLiveKitConfigured: vi.fn(() => false),
 }))
 vi.mock("@/components/school-dashboard/conference/livekit/room-naming", async () => {
   const actual = await vi.importActual<
@@ -389,6 +397,38 @@ describe("endLiveClass", () => {
         data: expect.objectContaining({ status: "ended" }),
       })
     )
+  })
+
+  it("stops an in-flight recording before ending the room", async () => {
+    mockTeacher()
+    vi.mocked(isLiveKitConfigured).mockReturnValue(true)
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "live",
+      roomName: "x",
+      teacher: { userId: TEACHER_USER_ID },
+      recordings: [{ egressId: "EG_123" }],
+    } as never)
+    const result = await endLiveClass({ id: SESSION_ID })
+    expect("success" in result && result.success).toBe(true)
+    expect(stopEgress).toHaveBeenCalledWith("EG_123")
+    expect(endRoom).toHaveBeenCalled()
+  })
+
+  it("swallows a stopEgress failure — the room still ends", async () => {
+    mockTeacher()
+    vi.mocked(isLiveKitConfigured).mockReturnValue(true)
+    vi.mocked(stopEgress).mockRejectedValueOnce(new Error("egress 404"))
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "live",
+      roomName: "x",
+      teacher: { userId: TEACHER_USER_ID },
+      recordings: [{ egressId: "EG_123" }],
+    } as never)
+    const result = await endLiveClass({ id: SESSION_ID })
+    expect("success" in result && result.success).toBe(true)
+    expect(endRoom).toHaveBeenCalled()
   })
 })
 

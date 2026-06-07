@@ -7,6 +7,7 @@ import { ConnectionQuality, ConnectionState, Room } from "livekit-client"
 
 import { typography } from "@/lib/typography"
 import { Button } from "@/components/ui/button"
+import { classifyFromStats } from "./network-protocol"
 
 interface Props {
   wsUrl: string
@@ -53,7 +54,7 @@ export function NetworkTestClient({ wsUrl, token, labels }: Props) {
     try {
       await room.connect(wsUrl, token, { autoSubscribe: false })
       const quality = qualityName(room.localParticipant.connectionQuality)
-      const protocol = inferProtocol(room)
+      const protocol = await inferProtocol(room)
       setResult({
         connected: true,
         durationMs: Date.now() - t0,
@@ -139,7 +140,17 @@ function qualityName(q: ConnectionQuality): string {
   }
 }
 
-function inferProtocol(room: Room): string {
+async function inferProtocol(room: Room): Promise<string> {
   if (room.state !== ConnectionState.Connected) return "—"
-  return "direct/turn"
+  // Reach the connected ICE transport via the SDK's public engine surface.
+  // Subscriber-primary completes ICE on join even with autoSubscribe off; fall
+  // back to the publisher transport.
+  const transport =
+    room.engine?.pcManager?.subscriber ?? room.engine?.pcManager?.publisher
+  if (!transport) return "unknown"
+  try {
+    return classifyFromStats(await transport.getStats())
+  } catch {
+    return "unknown"
+  }
 }
