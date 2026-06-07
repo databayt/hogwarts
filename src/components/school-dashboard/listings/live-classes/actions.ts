@@ -14,7 +14,7 @@ import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
-import { detectLanguage, prepareContentData } from "@/components/translation/util"
+import { detectLang, withLang } from "@/components/translation/util"
 
 import {
   canDeleteLiveClasses,
@@ -242,9 +242,9 @@ export async function createLiveClass(
     const scheduledEnd = combineDateAndTime(d.endDate, d.endTime)
 
     // Single-language storage: detect lang from title and stamp it.
-    const content = prepareContentData(
+    const content = withLang(
       { title: d.title, description: d.description ?? null },
-      detectLanguage(d.title)
+      detectLang(d.title)
     )
 
     const created = await db.liveClassSession.create({
@@ -353,7 +353,7 @@ export async function updateLiveClass(
 
     if (d.title !== undefined) {
       updateData.title = d.title
-      updateData.lang = detectLanguage(d.title)
+      updateData.lang = detectLang(d.title)
     }
     if (d.description !== undefined) updateData.description = d.description ?? null
     if (d.teacherId !== undefined) updateData.teacherId = d.teacherId

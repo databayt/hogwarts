@@ -3,7 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getDisplayText } from "@/lib/content-display"
+import { getText } from "@/components/translation/display"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -65,7 +65,7 @@ export default async function LiveClassesContent({
       data = await Promise.all(
         rows.map(async (r) => ({
           id: r.id,
-          title: await getDisplayText(
+          title: await getText(
             r.title,
             (r.lang as "ar" | "en") || "ar",
             lang,

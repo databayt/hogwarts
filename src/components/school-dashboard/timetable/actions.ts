@@ -71,7 +71,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
-import { applyTimetableStructureForNewSchool } from "@/lib/catalog-setup"
+import { applyTimetableStructureForNewSchool } from "@/components/catalog/setup"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./constants"

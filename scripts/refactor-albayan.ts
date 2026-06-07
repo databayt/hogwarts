@@ -26,7 +26,7 @@ import {
   applyTimetableStructureForNewSchool,
   setupCatalogForSchool,
   teardownCatalogForSchool,
-} from "@/lib/catalog-setup"
+} from "@/components/catalog/setup"
 
 const TARGET_STRUCTURE = "us-standard"
 
