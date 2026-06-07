@@ -11,19 +11,49 @@ description: How DB content is translated on demand — single-language storage,
 
 The flow is: **store in one language → stamp it with `lang` → translate at display time → cache the result per school.**
 
+### The one call you need: `localize()`
+
+For any model in the registry (`src/components/translation/registry.ts`), translate
+a whole page in **one batched pass** — no per-field calls, no passing `schoolId`/`lang`:
+
+```ts
+// content.tsx — resolve on the server, hand plain strings to the client table
+import { localize } from "@/components/translation/localize"
+
+const rows = await getAnnouncementsList(schoolId, filters)
+const localized = await localize("Announcement", rows) // ← that's the whole thing
+```
+
+`localize` collapses what used to be **N×M `getText` lookups** into a **single**
+`db.translation.findMany`, serves hot terms from an in-memory LRU (zero DB round-trip),
+and falls back to the source string if anything fails (a render never blocks).
+Adding a new content model is a **one-line** entry in `registry.ts` — then every
+list of it is translated automatically. Pair it with `prewarm` on the write path
+(`after(() => prewarm("Announcement", row, { schoolId }))`) and the first reader in
+either language never waits on Google and **never sees the source language** —
+translation is invisible.
+
+The `lang` is resolved ambiently (`getDisplayLang()` reads the `x-locale` header),
+so you stop prop-drilling it. The helpers below are the lower-level primitives
+`localize` is built on — reach for them only for a one-off field, a person's name,
+or an ad-hoc label.
+
 ### Which helper do I use?
 
-| You have…                                  | Use                         | From         |
-| ------------------------------------------ | --------------------------- | ------------ |
-| One stored field to display                | `getText`                   | `display.ts` |
-| Several fields of one entity               | `getFields`                 | `display.ts` |
-| A person's name                            | `getName`                   | `person.ts`  |
-| A list of rows with names                  | `getNames` _(de-dups)_      | `person.ts`  |
-| Arbitrary labels (rooms, subjects, grades) | `getLabels` _(de-dups)_     | `person.ts`  |
-| Writing content to the DB                  | `withLang` / `detectScript` | `util.ts`    |
-| Searching across languages                 | `search`                    | `search.ts`  |
+| You have…                                  | Use                                                 | From              |
+| ------------------------------------------ | --------------------------------------------------- | ----------------- |
+| **A list/entity of a content model**       | **`localize` / `localizeOne`** _(batched, default)_ | **`localize.ts`** |
+| One stored field to display                | `getText`                                           | `display.ts`      |
+| Several fields of one entity               | `getFields`                                         | `display.ts`      |
+| A person's name                            | `getName`                                           | `person.ts`       |
+| A list of rows with names                  | `getNames` _(de-dups)_                              | `person.ts`       |
+| Arbitrary labels (rooms, subjects, grades) | `getLabels` _(de-dups)_                             | `person.ts`       |
+| Writing content to the DB                  | `withLang` / `detectScript`                         | `util.ts`         |
+| Pre-translate on write (no read latency)   | `prewarm`                                           | `prewarm.ts`      |
+| Searching across languages                 | `search`                                            | `search.ts`       |
 
-Every read here is **server-only** and needs a `schoolId`. Resolve in `content.tsx`, pass plain strings down to client `columns.tsx`. The rest of this page explains each.
+Every read here is **server-only** and needs a `schoolId` (resolved ambiently if you
+don't pass one). Resolve in `content.tsx`, pass plain strings down to client `columns.tsx`.
 
 ### Single-language storage (the data model)
 
@@ -230,8 +260,9 @@ A cache _hit_ is one indexed lookup either way — globalizing makes _more reque
 
 - **Burn down the adoption backlog.** The gate is now wired: `findOffenders` runs as a Vitest ratchet (`src/tests/i18n/audit-untranslated.test.ts`) so a _new_ raw-name surface fails the suite. What's left is reducing the current (small) backlog to zero and lowering the baseline each time. Caveat: CI's `pnpm tests` step currently points at a missing script name — reconcile it to `pnpm test` so the ratchet enforces on every PR.
 - **Degradation observability.** Today a failing/absent API key only emits a throttled `console.error` (`reportTranslationDegraded`). Add a public signal — a getter or a `/api/health` field — so a dashboard can _see_ when `/en` is silently falling back to source.
-- **Cache lifecycle.** Add TTL/LRU eviction for `Translation` (the `lastAccessedAt` index is there but unused for cleanup), plus hit-rate observability and exact-`sourceText` normalization (trim/collapse whitespace) to lift the hit-rate for free.
-- **Pre-warm on write.** `translateFields` / `autoTranslate` exist but aren't wired into most create paths — translating at write time would remove the first-view latency hit.
+- **Adopt `localize()` everywhere.** ✅ The batched engine is shipped (`localize.ts` + `registry.ts`): one `findMany` per page instead of N×M `findUnique`. Announcements is migrated; rolling the rest of the ~24 features onto `localize` (and registering their models) is the remaining adoption work. Extend the audit ratchet to flag _any_ registered field rendered raw (not just person-names).
+- **Cache lifecycle.** ✅ An in-memory LRU glossary for hot terms now fronts the DB cache (`memory-cache.ts`, 0 round-trip on hit). Still pending: TTL eviction for the `Translation` table (the `lastAccessedAt` index exists but is unused for cleanup) and exact-`sourceText` normalization.
+- **Pre-warm on write.** ✅ `prewarm()` (`prewarm.ts`) translates the other language off the response path via `after()`, so reads are cache hits — no first-view latency, no source-language flash. Wired into announcements; rolling it into the remaining create/update paths is the rest of the work.
 - **Name/proper-noun quality.** Add a glossary / do-not-translate list and consider human review for high-visibility names; lean on transliteration rather than MT for person names.
 - **Provider abstraction.** The `provider` column only ever stores `"google"` — abstract the client so a fallback/second provider is possible.
 - **Schema consistency.** Give every content model a `lang` column and stamp it correctly on write (e.g. admission persisting Latin names as `lang="ar"`), so detection becomes a safety net rather than the primary mechanism.
