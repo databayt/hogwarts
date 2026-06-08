@@ -23,7 +23,7 @@ import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
-import { InputField, SelectField, TextareaField } from "@/components/form"
+import { InputField, SelectField } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -169,25 +169,26 @@ export function LiveClassForm({
           description={isEdit ? t.editDescription : t.createDescription}
         >
           <div className="space-y-4">
-            <InputField
-              name="title"
-              label={f.titleLabel}
-              placeholder={f.titlePlaceholder}
-              required
-              disabled={isPending}
-            />
-
-            <SelectField
-              name="teacherId"
-              label={f.teacherLabel}
-              placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
-              required
-              disabled={isPending || noTeachers}
-              options={teachers.map((teacher) => ({
-                value: teacher.id,
-                label: teacher.name,
-              }))}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                name="title"
+                label={f.titleLabel}
+                placeholder={f.titlePlaceholder}
+                required
+                disabled={isPending}
+              />
+              <SelectField
+                name="teacherId"
+                label={f.teacherLabel}
+                placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
+                required
+                disabled={isPending || noTeachers}
+                options={teachers.map((teacher) => ({
+                  value: teacher.id,
+                  label: teacher.name,
+                }))}
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <SelectField
@@ -291,34 +292,27 @@ export function LiveClassForm({
               />
             </div>
 
-            <InputField
-              name="meetingUrl"
-              label={f.meetingUrlLabel}
-              placeholder={f.meetingUrlPlaceholder}
-              type="url"
-              required
-              disabled={isPending}
-            />
-
-            <SelectField
-              name="meetingProvider"
-              label={f.meetingProviderLabel}
-              placeholder={f.meetingProviderPlaceholder}
-              disabled={isPending}
-              options={[
-                { value: "Google Meet", label: f.providerGoogleMeet },
-                { value: "Zoom", label: f.providerZoom },
-                { value: "Microsoft Teams", label: f.providerTeams },
-              ]}
-            />
-
-            <TextareaField
-              name="description"
-              label={f.descriptionLabel}
-              placeholder={f.descriptionPlaceholder}
-              rows={3}
-              disabled={isPending}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                name="meetingUrl"
+                label={f.meetingUrlLabel}
+                placeholder={f.meetingUrlPlaceholder}
+                type="url"
+                required
+                disabled={isPending}
+              />
+              <SelectField
+                name="meetingProvider"
+                label={f.meetingProviderLabel}
+                placeholder={f.meetingProviderPlaceholder}
+                disabled={isPending}
+                options={[
+                  { value: "Google Meet", label: f.providerGoogleMeet },
+                  { value: "Zoom", label: f.providerZoom },
+                  { value: "Microsoft Teams", label: f.providerTeams },
+                ]}
+              />
+            </div>
           </div>
         </ModalFormLayout>
       </form>
