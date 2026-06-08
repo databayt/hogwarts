@@ -119,6 +119,25 @@ const ARABIC_TO_ENGLISH: Map<string, string> = new Map([
   ["كمال", "Kamal"],
   ["جلال", "Jalal"],
   ["نصر", "Nasr"],
+
+  // Sudanese names used by the albayan seed (seed-albayan-timetable.ts) that the
+  // original constants.ts-derived set above didn't cover. Without these, /en
+  // degrades to rough letter-by-letter output ("Myrghny", "Alfky", "Idrys").
+  ["مصعب", "Musab"],
+  ["الصادق", "Elsadig"],
+  ["إسراء", "Israa"],
+  ["رؤى", "Ruaa"],
+  ["هند", "Hind"],
+  ["تسنيم", "Tasneem"],
+  ["إدريس", "Idris"],
+  ["ميرغني", "Mirghani"],
+  ["التجاني", "Eltijani"],
+  ["الفكي", "Elfaki"],
+  ["حمد", "Hamad"],
+  ["الفاضل", "Elfadil"],
+  // Bare "عبد" only reaches lookup when it is NOT part of a "عبد الـ…" compound;
+  // those are joined to "عبدالله"/"عبدالرحمن" before lookup (see normalizeCompounds).
+  ["عبد", "Abdel"],
 ])
 
 // Basic Arabic-to-Latin transliteration for unknown names
