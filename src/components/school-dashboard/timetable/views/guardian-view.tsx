@@ -22,6 +22,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getChildTimetable, getGuardianChildren } from "../actions"
+import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -209,8 +210,10 @@ export default function GuardianView({
   // Get current/next class
   const getCurrentClass = () => {
     const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
+    // Period times are UTC wall-clock (@db.Time, displayed via getUTCHours);
+    // read "now" in UTC too so the comparison is internally consistent.
+    const currentHour = now.getUTCHours()
+    const currentMinute = now.getUTCMinutes()
 
     for (const item of todaySchedule) {
       if (item.isBreak) continue
@@ -411,6 +414,19 @@ export default function GuardianView({
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
+              {isLiveJoinable(
+                currentClassInfo.item.liveClass,
+                currentClassInfo.type as "current" | "next",
+                currentClassInfo.item.startTime
+              ) && (
+                <LiveJoinButton
+                  liveClass={currentClassInfo.item.liveClass}
+                  lang={lang}
+                  label={
+                    dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
+                  }
+                />
+              )}
             </div>
           </CardContent>
         </Card>

@@ -4,40 +4,102 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { isLiveJoinable, LiveJoinButton } from "../live-join-button"
+import {
+  isLiveJoinable,
+  LiveJoinButton,
+  type LiveClassJoinInfo,
+} from "../live-join-button"
 
-// startTime is read via getUTCHours/getUTCMinutes (matching the timetable
-// convention where Period times are stored as @db.Time UTC wall-clock). Build a
-// Date whose UTC time-of-day is `minutesFromNow` after the local now.
+// Both "now" and the period start are read via getUTCHours/getUTCMinutes
+// (Period times are stored as @db.Time UTC wall-clock and displayed that way).
+// Build a Date whose UTC time-of-day is `minutesFromNow` after the UTC now.
 function startAtDelta(minutesFromNow: number): Date {
   const now = new Date()
-  const targetLocalMin = now.getHours() * 60 + now.getMinutes() + minutesFromNow
+  const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes()
+  const targetMin = (((nowMin + minutesFromNow) % 1440) + 1440) % 1440
   const d = new Date()
-  d.setUTCHours(Math.floor(targetLocalMin / 60), targetLocalMin % 60, 0, 0)
+  d.setUTCHours(Math.floor(targetMin / 60), targetMin % 60, 0, 0)
   return d
 }
 
-describe("isLiveJoinable", () => {
+// A recurring external/default link: no live-state machine, gated purely on time.
+const EXTERNAL: LiveClassJoinInfo = {
+  sessionId: null,
+  provider: "external",
+  meetingUrl: "https://meet.google.com/recurring",
+  status: null,
+}
+
+describe("isLiveJoinable — time window (external / default link)", () => {
   it("current class is always joinable", () => {
-    expect(isLiveJoinable("current", startAtDelta(999))).toBe(true)
-    expect(isLiveJoinable("current", startAtDelta(-999))).toBe(true)
+    expect(isLiveJoinable(EXTERNAL, "current", startAtDelta(999))).toBe(true)
+    expect(isLiveJoinable(EXTERNAL, "current", startAtDelta(-999))).toBe(true)
   })
 
   it("next class within the window (<=10 min) is joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(5))).toBe(true)
-    expect(isLiveJoinable("next", startAtDelta(10))).toBe(true)
+    expect(isLiveJoinable(EXTERNAL, "next", startAtDelta(5))).toBe(true)
+    expect(isLiveJoinable(EXTERNAL, "next", startAtDelta(10))).toBe(true)
   })
 
   it("next class outside the window (>10 min away) is not joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(20))).toBe(false)
+    expect(isLiveJoinable(EXTERNAL, "next", startAtDelta(20))).toBe(false)
   })
 
   it("next class already started (negative delta) is not joinable", () => {
-    expect(isLiveJoinable("next", startAtDelta(-5))).toBe(false)
+    expect(isLiveJoinable(EXTERNAL, "next", startAtDelta(-5))).toBe(false)
   })
 
   it("respects a custom window", () => {
-    expect(isLiveJoinable("next", startAtDelta(20), 30)).toBe(true)
+    expect(
+      isLiveJoinable(EXTERNAL, "next", startAtDelta(20), { windowMin: 30 })
+    ).toBe(true)
+  })
+})
+
+describe("isLiveJoinable — provider/status gating", () => {
+  const livekit = (status: string): LiveClassJoinInfo => ({
+    sessionId: "lcs-1",
+    provider: "livekit",
+    meetingUrl: null,
+    status,
+  })
+
+  it("returns false when there is no live class", () => {
+    expect(isLiveJoinable(null, "current", startAtDelta(0))).toBe(false)
+    expect(isLiveJoinable(undefined, "current", startAtDelta(0))).toBe(false)
+  })
+
+  it("returns false for an ended or cancelled session", () => {
+    expect(isLiveJoinable(livekit("ended"), "current", startAtDelta(0))).toBe(
+      false
+    )
+    expect(
+      isLiveJoinable(
+        { ...EXTERNAL, status: "cancelled" },
+        "current",
+        startAtDelta(0)
+      )
+    ).toBe(false)
+  })
+
+  it("blocks a student from a scheduled LiveKit room (only host can start)", () => {
+    expect(
+      isLiveJoinable(livekit("scheduled"), "current", startAtDelta(0))
+    ).toBe(false)
+  })
+
+  it("lets a host open a scheduled LiveKit room", () => {
+    expect(
+      isLiveJoinable(livekit("scheduled"), "current", startAtDelta(0), {
+        canHostScheduled: true,
+      })
+    ).toBe(true)
+  })
+
+  it("allows anyone into a live LiveKit room", () => {
+    expect(isLiveJoinable(livekit("live"), "current", startAtDelta(0))).toBe(
+      true
+    )
   })
 })
 

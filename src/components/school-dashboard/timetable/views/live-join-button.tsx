@@ -62,21 +62,53 @@ export function LiveJoinButton({
 }
 
 /**
- * Whether the Join button should show for the current/next card. Current
- * classes are always joinable; the next class becomes joinable within
- * `windowMin` minutes of its start. Mirrors getCurrentClass's local-vs-UTC
- * time convention used across the timetable views (now read in local time,
- * the period start read in UTC).
+ * Whether the Join button should show on the current/next card for a given
+ * live class. The gate is both **provider-aware** and time-windowed:
+ *
+ * - No live class, or one that has `ended`/`cancelled` → never joinable.
+ * - **LiveKit session**: a student/guardian can only join once the room is
+ *   `live` — the server rejects participants on a still-`scheduled` room
+ *   (only the host can start it; see `live-classes/actions/tokens.ts`). A host
+ *   (teacher/admin) may open a `scheduled` room to start it, so pass
+ *   `canHostScheduled: true` from the teacher view.
+ * - **External / recurring default link**: no live-state machine (external
+ *   sessions never auto-flip to `live`), so joinability is purely the time
+ *   window below.
+ *
+ * Time window: a `current` class is always in-window; a `next` class becomes
+ * joinable within `windowMin` minutes of its start. Times are compared in UTC
+ * on both sides — Period times are stored as `@db.Time` UTC wall-clock and are
+ * displayed across the timetable via `getUTCHours()`, so "now" is read the same
+ * way to keep the comparison internally consistent.
+ *
+ * NOTE: true per-school-timezone correctness needs a `School.timezone` field
+ * (a follow-up) — this keeps the join window consistent with how the grid
+ * already renders period times rather than mixing local and UTC clocks.
  */
 export function isLiveJoinable(
+  liveClass: LiveClassJoinInfo | null | undefined,
   type: "current" | "next",
   startTime: Date | string,
-  windowMin = 10
+  opts: { canHostScheduled?: boolean; windowMin?: number } = {}
 ): boolean {
+  if (!liveClass) return false
+  if (liveClass.status === "ended" || liveClass.status === "cancelled") {
+    return false
+  }
+
+  const { canHostScheduled = false, windowMin = 10 } = opts
+
+  // LiveKit room that is not yet live: only a host may open it.
+  const isLivekitSession =
+    liveClass.provider === "livekit" && !!liveClass.sessionId
+  if (isLivekitSession && liveClass.status !== "live" && !canHostScheduled) {
+    return false
+  }
+
   if (type === "current") return true
   const now = new Date()
   const start = new Date(startTime)
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes()
   const startMin = start.getUTCHours() * 60 + start.getUTCMinutes()
   return startMin - nowMin <= windowMin && startMin - nowMin >= 0
 }
