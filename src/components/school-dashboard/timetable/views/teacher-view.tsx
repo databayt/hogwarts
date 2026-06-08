@@ -35,8 +35,8 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
 import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
-import { StartLiveClassButton } from "./start-live-class-button"
 import SimpleGrid from "./simple-grid"
+import { StartLiveClassButton } from "./start-live-class-button"
 
 interface Props {
   dictionary: Dictionary["school"]
@@ -346,7 +346,10 @@ export default function TeacherView({
                   <LiveJoinButton
                     liveClass={currentClassInfo.item.liveClass}
                     lang={lang}
-                    label={dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")}
+                    label={
+                      dictionary?.liveClasses?.join ??
+                      (isRTL ? "انضمام" : "Join")
+                    }
                   />
                 ) : (
                   <StartLiveClassButton

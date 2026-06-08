@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { processKioskCheck } from "@/components/school-dashboard/attendance/kiosk/actions"
 
 // Mock dependencies

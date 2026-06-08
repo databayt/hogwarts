@@ -4,7 +4,6 @@
 import type { GradeBoundary } from "@prisma/client"
 import { describe, expect, it } from "vitest"
 
-import type { StudentResultDTO } from "@/components/school-dashboard/exams/results/types"
 import {
   calculateClassAverage,
   calculateClassAveragePercentage,
@@ -27,6 +26,7 @@ import {
   identifyNeedsAttention,
   identifyTopPerformers,
 } from "@/components/school-dashboard/exams/results/lib/calculator"
+import type { StudentResultDTO } from "@/components/school-dashboard/exams/results/types"
 
 // ---------------------------------------------------------------------------
 // Fixtures

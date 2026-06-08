@@ -39,29 +39,47 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
         },
         { name: "loading.tsx", type: "file", description: "skeleton" },
         {
-          name: "full/page.tsx",
-          type: "file",
-          description: 'Full-week tab (defaultTab="full")',
+          name: "full/",
+          type: "directory",
+          children: [
+            {
+              name: "page.tsx",
+              type: "file",
+              description: 'Full-week tab (defaultTab="full")',
+            },
+          ],
         },
         {
           name: "analytics/",
           type: "directory",
-          description: "page + loading",
+          children: [
+            { name: "page.tsx", type: "file" },
+            { name: "loading.tsx", type: "file" },
+          ],
         },
         {
           name: "conflicts/",
           type: "directory",
-          description: "page + loading",
+          children: [
+            { name: "page.tsx", type: "file" },
+            { name: "loading.tsx", type: "file" },
+          ],
         },
         {
           name: "generate/",
           type: "directory",
-          description: "page + loading",
+          children: [
+            { name: "page.tsx", type: "file" },
+            { name: "loading.tsx", type: "file" },
+          ],
         },
         {
           name: "settings/",
           type: "directory",
-          description: "page + loading",
+          children: [
+            { name: "page.tsx", type: "file" },
+            { name: "loading.tsx", type: "file" },
+          ],
         },
       ],
     },
@@ -71,31 +89,21 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
       description: "the block — all UI and logic live here",
       children: [
         {
-          name: "actions.ts",
-          type: "file",
-          description: "~70 server actions + every query (~6k lines)",
-        },
-        {
           name: "content.tsx",
           type: "file",
-          description: "entry: wraps RoleRouter in SessionProvider",
+          description: "entry: SessionProvider → RoleRouter",
         },
         {
-          name: "content-production.tsx",
+          name: "actions.ts",
           type: "file",
-          description: "TimetableContent — the production entry",
+          description: 'server actions + queries ("use server", ~6k lines)',
         },
         { name: "validation.ts", type: "file", description: "Zod schemas" },
         { name: "types.ts", type: "file", description: "domain + UI types" },
         {
-          name: "constants.ts",
+          name: "config.ts",
           type: "file",
-          description: "day / period constants",
-        },
-        {
-          name: "config.ts · config.json",
-          type: "file",
-          description: "runtime + static config",
+          description: "options, labels, defaults + constants",
         },
         {
           name: "permissions-config.ts",
@@ -113,39 +121,19 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
           description: "predefined school structures (sd-gov-default, …)",
         },
         {
-          name: "fallback-data.ts · utils.ts · timetable.ts",
+          name: "util.ts",
           type: "file",
-          description: "demo data + helpers",
+          description: "pure helpers (findAvailableSlots, …)",
         },
         {
-          name: "timetable-grid.tsx · -cell.tsx · -header.tsx · -mobile.tsx",
+          name: "live-class-join.ts",
           type: "file",
-          description: "grid rendering",
+          description: "live-class join/start resolver (conference link)",
         },
         {
-          name: "slot-editor.tsx · slot-editor-dialog.tsx",
+          name: "slot-editor-dialog.tsx",
           type: "file",
           description: "assign subject / teacher / room to a slot",
-        },
-        {
-          name: "subject-selector.tsx · conflicts-drawer.tsx",
-          type: "file",
-          description: "pickers + conflict panel",
-        },
-        {
-          name: "schedule-settings-dialog.tsx · config-dialog.tsx · import-export.tsx",
-          type: "file",
-          description: "working-days / lunch config + CSV/JSON IO",
-        },
-        {
-          name: "about-hover-card.tsx · teacher-info-popup.tsx · theme-provider.tsx",
-          type: "file",
-          description: "ancillary UI",
-        },
-        {
-          name: "use-mobile.tsx · use-media-query.ts · use-toast.ts",
-          type: "file",
-          description: "hooks",
         },
         { name: "print.css", type: "file", description: "A4 print styles" },
         {
@@ -167,10 +155,11 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
             { name: "teacher-view.tsx", type: "file" },
             { name: "student-view.tsx", type: "file" },
             { name: "guardian-view.tsx", type: "file" },
-            {
-              name: "simple-grid.tsx · preview.tsx · index.ts",
-              type: "file",
-            },
+            { name: "simple-grid.tsx", type: "file" },
+            { name: "preview.tsx", type: "file" },
+            { name: "live-join-button.tsx", type: "file" },
+            { name: "start-live-class-button.tsx", type: "file" },
+            { name: "index.ts", type: "file" },
           ],
         },
         {
@@ -187,14 +176,29 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
           ],
         },
         {
-          name: "analytics/content.tsx",
-          type: "file",
-          description: "utilization reporting",
+          name: "analytics/",
+          type: "directory",
+          children: [
+            {
+              name: "content.tsx",
+              type: "file",
+              description: "utilization reporting",
+            },
+          ],
         },
         {
-          name: "conflicts/content.tsx · settings/content.tsx",
-          type: "file",
-          description: "conflict + config pages",
+          name: "conflicts/",
+          type: "directory",
+          children: [
+            { name: "content.tsx", type: "file", description: "conflict page" },
+          ],
+        },
+        {
+          name: "settings/",
+          type: "directory",
+          children: [
+            { name: "content.tsx", type: "file", description: "config page" },
+          ],
         },
         {
           name: "substitutions/",
@@ -202,10 +206,10 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
           description: "BUILT but not wired to any route or tab",
           children: [
             { name: "content.tsx", type: "file" },
-            {
-              name: "absence-form.tsx · substitute-finder.tsx · substitution-list.tsx · index.ts",
-              type: "file",
-            },
+            { name: "absence-form.tsx", type: "file" },
+            { name: "substitute-finder.tsx", type: "file" },
+            { name: "substitution-list.tsx", type: "file" },
+            { name: "index.ts", type: "file" },
           ],
         },
         {
@@ -213,22 +217,30 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
           type: "directory",
           description: "PDF export",
           children: [
-            {
-              name: "timetable-pdf.tsx · use-timetable-export.ts · index.ts",
-              type: "file",
-            },
+            { name: "timetable-pdf.tsx", type: "file" },
+            { name: "use-timetable-export.ts", type: "file" },
+            { name: "index.ts", type: "file" },
           ],
         },
         {
-          name: "__tests__/",
-          type: "directory",
-          description: "actions, structures, validation, production-readiness",
-        },
-        {
-          name: "README.md · ISSUE.md · FEATURES.md",
+          name: "README.md",
           type: "file",
-          description: "block docs (partly stale)",
+          description: "block docs (decisions, danger zones)",
         },
+        { name: "ISSUE.md", type: "file" },
+        { name: "FEATURES.md", type: "file" },
+        { name: "CLAUDE.md", type: "file" },
+      ],
+    },
+    {
+      name: "src/tests/school-dashboard/timetable/",
+      type: "directory",
+      description: "Vitest suites",
+      children: [
+        { name: "actions.test.ts", type: "file" },
+        { name: "structures.test.ts", type: "file" },
+        { name: "validation.test.ts", type: "file" },
+        { name: "production-readiness.test.ts", type: "file" },
       ],
     },
     {
@@ -255,19 +267,14 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
       ],
     },
     {
-      name: "src/app/api/",
+      name: "src/app/api/mobile/",
       type: "directory",
-      description: "REST endpoints (mobile + legacy)",
+      description: "REST — mobile only (web uses server actions directly)",
       children: [
+        { name: "timetable/[userId]/route.ts", type: "file" },
         {
-          name: "timetable/route.ts · slot/ · conflicts/ · suggest/",
+          name: "guardian/children/[childId]/timetable/route.ts",
           type: "file",
-          description: "read + slot mutate + conflict + suggestion",
-        },
-        {
-          name: "mobile/timetable/[userId]/route.ts",
-          type: "file",
-          description: "mobile app feed",
         },
       ],
     },
@@ -277,15 +284,22 @@ export function TimetableStructure({ className }: TimetableStructureProps) {
       description: "onboarding step (order 5, optional)",
       children: [
         {
-          name: "content.tsx · structure-preview.tsx",
+          name: "content.tsx",
           type: "file",
-          description: "structure picker + visual timeline",
+          description: "structure picker",
         },
         {
-          name: "actions.ts · config.ts · validation.ts",
+          name: "structure-preview.tsx",
+          type: "file",
+          description: "visual timeline",
+        },
+        {
+          name: "actions.ts",
           type: "file",
           description: "getSchoolScheduleData / saveScheduleChoice",
         },
+        { name: "config.ts", type: "file", description: "constants" },
+        { name: "validation.ts", type: "file", description: "Zod schema" },
       ],
     },
   ]

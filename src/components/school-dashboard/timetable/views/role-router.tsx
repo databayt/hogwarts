@@ -16,7 +16,7 @@ import {
   getPersonalizedTimetable,
   provisionTimetableForSchool,
 } from "../actions"
-import { DRAFT_TERM_ID } from "../constants"
+import { DRAFT_TERM_ID } from "../config"
 import AdminView from "./admin-view"
 import GuardianView from "./guardian-view"
 import StudentView from "./student-view"
@@ -215,11 +215,7 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
           <TriangleAlert className="h-4 w-4" />
           <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span>{dictionary.timetable.draftNotice}</span>
-            <Button
-              size="sm"
-              onClick={handleProvision}
-              disabled={provisioning}
-            >
+            <Button size="sm" onClick={handleProvision} disabled={provisioning}>
               {provisioning
                 ? dictionary.timetable.settingUp
                 : dictionary.timetable.setupTimetable}

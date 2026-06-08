@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   approvePromotionBatch,
   getPromotionBatches,
@@ -114,13 +113,13 @@ describe("overridePromotionDecision", () => {
 
     expect(r.success).toBe(true)
     const findArg = vi.mocked(db.promotionCandidate.findFirst).mock.calls[0][0]
-    expect(
-      (findArg as { where: Record<string, unknown> }).where
-    ).toMatchObject({ id: "cand-1", schoolId: SCHOOL })
-    const updArg = vi.mocked(db.promotionCandidate.update).mock.calls[0][0]
-    expect((updArg as { data: { finalDecision: string } }).data.finalDecision).toBe(
-      "RETAIN"
+    expect((findArg as { where: Record<string, unknown> }).where).toMatchObject(
+      { id: "cand-1", schoolId: SCHOOL }
     )
+    const updArg = vi.mocked(db.promotionCandidate.update).mock.calls[0][0]
+    expect(
+      (updArg as { data: { finalDecision: string } }).data.finalDecision
+    ).toBe("RETAIN")
   })
 
   it("blocks override when the batch is not in review", async () => {

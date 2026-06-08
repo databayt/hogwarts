@@ -7,8 +7,10 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
-import { approveContent, rejectContent } from "@/components/saas-dashboard/catalog/approval-actions"
+import {
+  approveContent,
+  rejectContent,
+} from "@/components/saas-dashboard/catalog/approval-actions"
 
 // ============================================================================
 // Mocks

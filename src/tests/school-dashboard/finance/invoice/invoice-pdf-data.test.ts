@@ -4,8 +4,8 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  type InvoiceForPdf,
   mapInvoiceToInvoiceData,
+  type InvoiceForPdf,
 } from "@/components/school-dashboard/finance/invoice/invoice-pdf-data"
 
 const baseInvoice: InvoiceForPdf = {
@@ -42,12 +42,25 @@ describe("mapInvoiceToInvoiceData", () => {
   })
 
   it("maps status enum values to the template's display status", () => {
-    expect(mapInvoiceToInvoiceData({ ...baseInvoice, status: "PAID" }, "en").status).toBe("paid")
-    expect(mapInvoiceToInvoiceData({ ...baseInvoice, status: "OVERDUE" }, "en").status).toBe("overdue")
-    expect(mapInvoiceToInvoiceData({ ...baseInvoice, status: "CANCELLED" }, "en").status).toBe("cancelled")
-    expect(mapInvoiceToInvoiceData({ ...baseInvoice, status: "PARTIAL" }, "en").status).toBe("pending")
+    expect(
+      mapInvoiceToInvoiceData({ ...baseInvoice, status: "PAID" }, "en").status
+    ).toBe("paid")
+    expect(
+      mapInvoiceToInvoiceData({ ...baseInvoice, status: "OVERDUE" }, "en")
+        .status
+    ).toBe("overdue")
+    expect(
+      mapInvoiceToInvoiceData({ ...baseInvoice, status: "CANCELLED" }, "en")
+        .status
+    ).toBe("cancelled")
+    expect(
+      mapInvoiceToInvoiceData({ ...baseInvoice, status: "PARTIAL" }, "en")
+        .status
+    ).toBe("pending")
     // Unknown status degrades gracefully.
-    expect(mapInvoiceToInvoiceData({ ...baseInvoice, status: "WEIRD" }, "en").status).toBe("pending")
+    expect(
+      mapInvoiceToInvoiceData({ ...baseInvoice, status: "WEIRD" }, "en").status
+    ).toBe("pending")
   })
 
   it("computes tax from percentage and includes discount only when > 0", () => {

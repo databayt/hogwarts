@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { generateTranscript, getTranscripts } from "../actions/transcripts"
 

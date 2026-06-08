@@ -5,7 +5,6 @@
 //
 // Host moderation — remove a participant from a live conference. Wraps the
 // LiveKit `removeParticipant` room-service call with auth + tenant scoping.
-
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"

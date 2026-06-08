@@ -2,7 +2,6 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-
 import { useState, useTransition } from "react"
 
 import { Button } from "@/components/ui/button"

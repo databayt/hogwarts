@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   generateReportCards,
   getReportCard,
@@ -69,7 +68,8 @@ describe("generateReportCards", () => {
     vi.mocked(db.student.findMany).mockResolvedValue([] as never)
     const r = await generateReportCards({ termId: "term-1" })
     expect(r.success).toBe(true)
-    if (r.success) expect(r.data).toEqual({ created: 0, updated: 0, skipped: 0 })
+    if (r.success)
+      expect(r.data).toEqual({ created: 0, updated: 0, skipped: 0 })
   })
 
   it("404s when the term is missing", async () => {

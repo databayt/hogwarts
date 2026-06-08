@@ -6,7 +6,6 @@
 // Conference settings — per-school capacity + retention knobs stored on the
 // School row (conferenceRetentionDays / conferenceMaxConcurrent /
 // conferenceMaxDuration / conferenceRecordingDefault). ADMIN/DEVELOPER only.
-
 import { revalidatePath } from "next/cache"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"

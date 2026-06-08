@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Mock } from "vitest"
 
 import { createPaymentCheckout, getProvider } from "@/lib/payment/provider"
-import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 import { tapProvider } from "@/lib/payment/providers/tap"
+import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -18,9 +18,11 @@ vi.mock("@/components/saas-marketing/pricing/lib/stripe", () => ({
   },
 }))
 
-const stripeCreate = (stripe as unknown as {
-  checkout: { sessions: { create: Mock } }
-}).checkout.sessions.create
+const stripeCreate = (
+  stripe as unknown as {
+    checkout: { sessions: { create: Mock } }
+  }
+).checkout.sessions.create
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -213,9 +215,9 @@ describe("Tap Provider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0]
     expect(url).toMatch(/api\.tap\.company/)
-    expect((init as { headers: Record<string, string> }).headers.Authorization).toMatch(
-      /Bearer tk_test_x/
-    )
+    expect(
+      (init as { headers: Record<string, string> }).headers.Authorization
+    ).toMatch(/Bearer tk_test_x/)
     expect(result.success).toBe(true)
     expect(result.checkoutUrl).toBe("https://tap/checkout/chg_1")
     expect(result.sessionId).toBe("chg_1")

@@ -4,7 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { getLiveKitReadiness, isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import {
+  getLiveKitReadiness,
+  isLiveKitConfigured,
+} from "@/components/school-dashboard/conference/livekit/client"
 
 const ENV = [
   "LIVEKIT_HOST",

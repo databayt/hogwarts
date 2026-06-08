@@ -16,14 +16,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 // Import modules AFTER mocking
 import { db } from "@/lib/db"
 import { getPasswordResetTokenByEmail } from "@/components/auth/password/token"
-import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
-import { getVerificationTokenByEmail } from "@/components/auth/verification/verificiation-token"
-
 import {
   generatePasswordResetToken,
   generateTwoFactorToken,
   generateVerificationToken,
 } from "@/components/auth/tokens"
+import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
+import { getVerificationTokenByEmail } from "@/components/auth/verification/verificiation-token"
 
 // Mock the db module
 vi.mock("@/lib/db", () => ({

@@ -19,11 +19,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Import modules AFTER mocking
 import { db } from "@/lib/db"
+import { register } from "@/components/auth/join/action"
 import { sendVerificationEmail } from "@/components/auth/mail"
 import { generateVerificationToken } from "@/components/auth/tokens"
 import { getUserByEmail } from "@/components/auth/user"
-
-import { register } from "@/components/auth/join/action"
 
 // Mock all dependencies BEFORE any imports
 vi.mock("@/lib/db", () => ({

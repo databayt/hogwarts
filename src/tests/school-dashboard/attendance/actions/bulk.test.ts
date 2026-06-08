@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import * as module from "@/lib/tenant-context"
-
-import { bulkUploadAttendance, getAttendanceReport } from "@/components/school-dashboard/attendance/actions/bulk"
+import {
+  bulkUploadAttendance,
+  getAttendanceReport,
+} from "@/components/school-dashboard/attendance/actions/bulk"
 
 // Mock dependencies - explicit inline mock so vi.spyOn finds existing methods
 vi.mock("@/lib/db", () => ({

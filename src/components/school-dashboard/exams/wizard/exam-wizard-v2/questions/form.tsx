@@ -183,9 +183,7 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
                 <p className="line-clamp-2 text-sm">{q.questionText}</p>
                 <div className="mt-1 flex gap-2">
                   <Badge variant="outline" className="text-xs">
-                    {typeLabels?.[
-                      q.questionType as keyof typeof typeLabels
-                    ] ||
+                    {typeLabels?.[q.questionType as keyof typeof typeLabels] ||
                       TYPE_LABELS[q.questionType] ||
                       q.questionType}
                   </Badge>

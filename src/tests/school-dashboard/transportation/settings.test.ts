@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { getSettings, updateSettings } from "@/components/school-dashboard/transportation/actions/settings"
+import {
+  getSettings,
+  updateSettings,
+} from "@/components/school-dashboard/transportation/actions/settings"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({

@@ -11,8 +11,8 @@
 // dictionary (System A) or getDisplayText/getDisplayFields (System B). Pure
 // heuristic — agents verify the ambiguous rows.
 
-import { readFileSync, readdirSync, statSync, existsSync } from "fs"
-import { join, dirname, resolve, relative } from "path"
+import { existsSync, readdirSync, readFileSync, statSync } from "fs"
+import { dirname, join, relative, resolve } from "path"
 
 const ROOT = process.cwd()
 const SRC = join(ROOT, "src")
@@ -59,7 +59,8 @@ function importsOf(content: string): string[] {
   return specs
 }
 
-const DICT_RE = /\b(getDictionary|get[A-Z]\w*Dictionary|useDictionary|DictionaryProvider|useDictionaryContext)\b/
+const DICT_RE =
+  /\b(getDictionary|get[A-Z]\w*Dictionary|useDictionary|DictionaryProvider|useDictionaryContext)\b/
 const DICT_PROP_RE = /\bdictionary\b/
 const DISPLAY_RE = /\b(getDisplayText|getDisplayFields)\b/
 const REDIRECT_RE = /\b(redirect|notFound|permanentRedirect)\s*\(/
@@ -93,9 +94,14 @@ function groupOf(route: string): string {
     const feat = after.split("/")[0] || "(root)"
     return "school:" + feat
   }
-  if (route.includes("(saas-dashboard)") || route.includes("/operator")) return "operator"
+  if (route.includes("(saas-dashboard)") || route.includes("/operator"))
+    return "operator"
   if (route.includes("(saas-marketing)")) return "marketing"
-  if (route.includes("(auth)") || /\/(login|register|reset|verify|error)/.test(route)) return "auth"
+  if (
+    route.includes("(auth)") ||
+    /\/(login|register|reset|verify|error)/.test(route)
+  )
+    return "auth"
   if (route.includes("/docs")) return "docs"
   return "misc"
 }

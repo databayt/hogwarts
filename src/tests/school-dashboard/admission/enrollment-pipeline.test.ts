@@ -5,11 +5,10 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
-
 import { confirmEnrollment } from "@/components/school-dashboard/admission/actions"
 import { getCampaignsList } from "@/components/school-dashboard/admission/queries"
+import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 
 // ---------------------------------------------------------------------------
 // Mocks

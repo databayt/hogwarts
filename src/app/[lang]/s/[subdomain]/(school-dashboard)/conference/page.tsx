@@ -3,14 +3,14 @@
 
 import { type Metadata } from "next"
 import { redirect } from "next/navigation"
+import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
-import { auth } from "@/auth"
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import LiveClassesContent from "@/components/school-dashboard/conference/content"
+import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 
 export async function generateMetadata({
   params,

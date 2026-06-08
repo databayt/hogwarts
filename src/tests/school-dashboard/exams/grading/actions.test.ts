@@ -13,8 +13,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { getGradingConfig, saveGradingConfig } from "@/components/school-dashboard/exams/grading/actions"
+import {
+  getGradingConfig,
+  saveGradingConfig,
+} from "@/components/school-dashboard/exams/grading/actions"
 
 vi.mock("@/lib/db", () => ({
   db: {

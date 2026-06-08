@@ -17,7 +17,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { joinLiveClass } from "@/components/school-dashboard/conference/actions/tokens"
 
 vi.mock("@/lib/db", () => ({
@@ -28,6 +27,7 @@ vi.mock("@/lib/db", () => ({
     },
     conferenceParticipant: {
       upsert: vi.fn(),
+      findUnique: vi.fn(),
     },
     student: { findFirst: vi.fn() },
     guardian: { findFirst: vi.fn() },

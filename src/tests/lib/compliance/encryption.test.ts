@@ -4,7 +4,11 @@
 import { randomBytes } from "node:crypto"
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 
-import { decryptSecret, encryptSecret, rotateSecret } from "@/lib/compliance/encryption"
+import {
+  decryptSecret,
+  encryptSecret,
+  rotateSecret,
+} from "@/lib/compliance/encryption"
 
 const KEY_V1 = randomBytes(32).toString("hex")
 const KEY_V2 = randomBytes(32).toString("hex")

@@ -13,7 +13,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { getExamResults } from "@/components/school-dashboard/exams/results/actions"
 
 vi.mock("@/lib/db", () => ({

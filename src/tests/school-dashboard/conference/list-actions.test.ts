@@ -1,13 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
-
 import { createLiveClass } from "@/components/school-dashboard/conference/list-actions"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
@@ -101,9 +100,7 @@ describe("createLiveClass — saveAsDefault", () => {
   })
 
   it("still creates the session if the default-link upsert throws (best-effort)", async () => {
-    vi.mocked(db.conferenceLink.upsert).mockRejectedValue(
-      new Error("db down")
-    )
+    vi.mocked(db.conferenceLink.upsert).mockRejectedValue(new Error("db down"))
     const result = await createLiveClass({ ...baseInput, saveAsDefault: true })
     expect(result.success).toBe(true)
     expect(db.conference.create).toHaveBeenCalled()

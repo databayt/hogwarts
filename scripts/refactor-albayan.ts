@@ -104,7 +104,9 @@ async function main() {
       created++
     }
   }
-  console.log(`  ✓ Year levels: ${renamed} updated, ${created} created (lang=en)`)
+  console.log(
+    `  ✓ Year levels: ${renamed} updated, ${created} created (lang=en)`
+  )
 
   // 3) Periods / terms / week — provision only when totally empty ----------
   const [periodCount, termCount] = await Promise.all([
@@ -145,7 +147,9 @@ async function main() {
     )
 
     await teardownCatalogForSchool(schoolId)
-    console.log(`  ✓ Tore down SD catalog (selections + academic levels/grades)`)
+    console.log(
+      `  ✓ Tore down SD catalog (selections + academic levels/grades)`
+    )
 
     const setupResult = await setupCatalogForSchool(schoolId, {
       curriculum: "us-k12",

@@ -4,7 +4,6 @@
 import { describe, expect, it, vi } from "vitest"
 
 import * as dbMod from "@/lib/db"
-
 import { getTenants } from "@/components/saas-dashboard/tenants/queries"
 
 vi.mock("@/lib/db", () => {

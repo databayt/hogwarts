@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 
 // ---------------------------------------------------------------------------
@@ -50,9 +49,12 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/lib/permissions", () => ({
-  checkCurrentUserPermission: vi.fn(),
-}))
+vi.mock(
+  "@/components/school-dashboard/finance/invoice/lib/permissions",
+  () => ({
+    checkCurrentUserPermission: vi.fn(),
+  })
+)
 
 vi.mock("@/components/school-dashboard/finance/invoice/validation", () => ({
   InvoiceSchemaZod: {},
@@ -62,9 +64,12 @@ vi.mock("@/components/school-dashboard/finance/invoice/email.config", () => ({
   resend: { emails: { send: vi.fn() } },
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/send-invoice-email", () => ({
-  SendInvoiceEmail: vi.fn(),
-}))
+vi.mock(
+  "@/components/school-dashboard/finance/invoice/send-invoice-email",
+  () => ({
+    SendInvoiceEmail: vi.fn(),
+  })
+)
 
 // Access the mock transaction context
 const mockTx = (db as any).__mockTx

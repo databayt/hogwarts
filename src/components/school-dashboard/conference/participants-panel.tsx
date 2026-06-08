@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRemoteParticipants } from "@livekit/components-react"
 
 import { Button } from "@/components/ui/button"
@@ -39,8 +39,20 @@ export function ParticipantsPanel({
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState<Set<string>>(() => new Set())
   const [removed, setRemoved] = useState<Set<string>>(() => new Set())
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Move focus into the panel when it opens so keyboard users land on it.
+  useEffect(() => {
+    if (open) panelRef.current?.focus()
+  }, [open])
 
   if (!canModerate) return null
+
+  function closePanel() {
+    setOpen(false)
+    toggleRef.current?.focus()
+  }
 
   async function onRemove(identity: string) {
     setPending((prev) => new Set(prev).add(identity))
@@ -70,15 +82,28 @@ export function ParticipantsPanel({
   return (
     <div className="absolute end-4 top-4 z-10 w-64">
       <Button
+        ref={toggleRef}
         type="button"
         size="sm"
         variant="secondary"
+        aria-expanded={open}
+        aria-controls="conference-participants-panel"
         onClick={() => setOpen((o) => !o)}
       >
         {labels.title} ({visible.length})
       </Button>
       {open && (
-        <div className="bg-background/95 mt-2 rounded-lg border p-3 shadow-lg backdrop-blur">
+        <div
+          ref={panelRef}
+          id="conference-participants-panel"
+          role="region"
+          aria-label={labels.title}
+          tabIndex={-1}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") closePanel()
+          }}
+          className="bg-background/95 mt-2 rounded-lg border p-3 shadow-lg backdrop-blur outline-none"
+        >
           {visible.length === 0 ? (
             <p className="text-muted-foreground text-sm">{labels.empty}</p>
           ) : (
@@ -96,6 +121,7 @@ export function ParticipantsPanel({
                     size="sm"
                     variant="ghost"
                     className="text-destructive h-7 px-2"
+                    aria-label={`${labels.remove}: ${p.name || p.identity}`}
                     disabled={pending.has(p.identity)}
                     onClick={() => onRemove(p.identity)}
                   >

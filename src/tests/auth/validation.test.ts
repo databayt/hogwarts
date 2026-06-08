@@ -15,8 +15,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-
 import {
   createLoginSchema,
   createNewPasswordSchema,
@@ -29,6 +27,7 @@ import {
   ResetSchema,
   SettingsSchema,
 } from "@/components/auth/validation"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 // ============================================================================
 // Mock Dictionary for i18n Tests

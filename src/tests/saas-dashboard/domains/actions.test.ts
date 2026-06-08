@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import * as domains from "@/components/saas-dashboard/domains/actions"
 
 // ============================================================================

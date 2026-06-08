@@ -27,7 +27,8 @@ function v(dict?: V) {
     meetingUrlInvalid: dict?.meetingUrlInvalid || "Enter a valid URL",
     startDateRequired: dict?.startDateRequired || "Start date is required",
     endDateRequired: dict?.endDateRequired || "End date is required",
-    startTimeInvalid: dict?.startTimeInvalid || "Enter a valid start time (HH:mm)",
+    startTimeInvalid:
+      dict?.startTimeInvalid || "Enter a valid start time (HH:mm)",
     endTimeInvalid: dict?.endTimeInvalid || "Enter a valid end time (HH:mm)",
     endDateAfterStart:
       dict?.endDateAfterStart || "End date must be on or after start date",
@@ -124,11 +125,7 @@ export function createUpdateLiveClassSchema(dict?: V) {
       startTime: z.string().regex(TIME_REGEX, m.startTimeInvalid).optional(),
       endTime: z.string().regex(TIME_REGEX, m.endTimeInvalid).optional(),
       status: z.enum(LIVE_CLASS_STATUS_VALUES).optional(),
-      description: z
-        .string()
-        .max(2000, m.descriptionMax)
-        .optional()
-        .nullable(),
+      description: z.string().max(2000, m.descriptionMax).optional().nullable(),
     })
     .refine(
       (data) => {

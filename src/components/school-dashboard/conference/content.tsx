@@ -3,7 +3,6 @@
 
 import { SearchParams } from "nuqs/server"
 
-import { getText } from "@/components/translation/display"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -17,6 +16,7 @@ import {
   type LiveClassFormOptions,
 } from "@/components/school-dashboard/conference/queries"
 import { LiveClassesTable } from "@/components/school-dashboard/conference/table"
+import { getText } from "@/components/translation/display"
 
 interface Props {
   searchParams: Promise<SearchParams>

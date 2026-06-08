@@ -4,15 +4,14 @@
 //
 // Wave-2 gap fixes: settings update, host kick, recurring-link carry-forward.
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { updateConferenceSettings } from "@/components/school-dashboard/conference/actions/settings"
 import { kickParticipant } from "@/components/school-dashboard/conference/actions/moderation"
 import { carryForwardConferenceLinks } from "@/components/school-dashboard/conference/actions/recurring"
+import { updateConferenceSettings } from "@/components/school-dashboard/conference/actions/settings"
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
@@ -67,7 +66,10 @@ describe("updateConferenceSettings", () => {
 
   it("invalid input (out of range) → VALIDATION_ERROR, no write", async () => {
     asRole("ADMIN")
-    const res = await updateConferenceSettings({ ...valid, conferenceMaxDuration: 9999 })
+    const res = await updateConferenceSettings({
+      ...valid,
+      conferenceMaxDuration: 9999,
+    })
     expect("success" in res && res.success).toBe(false)
     expect(db.school.update).not.toHaveBeenCalled()
   })
@@ -87,12 +89,16 @@ describe("kickParticipant", () => {
       roomName: "sch-sch1-lc-s1",
       teacherId: "t9",
     } as never)
-    vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue({} as never)
+    vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue(
+      {} as never
+    )
     const res = await kickParticipant("s1", "victim")
     expect("success" in res && res.success).toBe(true)
     expect(removeParticipant).toHaveBeenCalledWith("sch-sch1-lc-s1", "victim")
     expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: "removed" }) })
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "removed" }),
+      })
     )
   })
 
@@ -110,7 +116,9 @@ describe("kickParticipant", () => {
       roomName: "sch-sch1-lc-s1",
       teacherId: "t-owner",
     } as never)
-    vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t-other" } as never)
+    vi.mocked(db.teacher.findFirst).mockResolvedValue({
+      id: "t-other",
+    } as never)
     const res = await kickParticipant("s1", "victim")
     expect("success" in res && res.success).toBe(false)
     expect(removeParticipant).not.toHaveBeenCalled()
@@ -122,8 +130,20 @@ describe("carryForwardConferenceLinks", () => {
     asRole("ADMIN")
     vi.mocked(db.conferenceLink.findMany)
       .mockResolvedValueOnce([
-        { subjectId: "su1", sectionId: "se1", provider: "external", meetingUrl: "u1", meetingProvider: null },
-        { subjectId: "su2", sectionId: "se2", provider: "external", meetingUrl: "u2", meetingProvider: null },
+        {
+          subjectId: "su1",
+          sectionId: "se1",
+          provider: "external",
+          meetingUrl: "u1",
+          meetingProvider: null,
+        },
+        {
+          subjectId: "su2",
+          sectionId: "se2",
+          provider: "external",
+          meetingUrl: "u2",
+          meetingProvider: null,
+        },
       ] as never) // source (fromTerm)
       .mockResolvedValueOnce([{ subjectId: "su1", sectionId: "se1" }] as never) // existing (toTerm)
     vi.mocked(db.conferenceLink.create).mockResolvedValue({} as never)

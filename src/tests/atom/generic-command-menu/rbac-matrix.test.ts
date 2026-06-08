@@ -30,7 +30,10 @@ import {
   vehicleWhere,
   type PredicateCtx,
 } from "@/components/atom/generic-command-menu/server/rbac-predicates"
-import type { Role, SpotlightGroupKind } from "@/components/atom/generic-command-menu/types"
+import type {
+  Role,
+  SpotlightGroupKind,
+} from "@/components/atom/generic-command-menu/types"
 
 const ALL_KINDS: SpotlightGroupKind[] = [
   "student",

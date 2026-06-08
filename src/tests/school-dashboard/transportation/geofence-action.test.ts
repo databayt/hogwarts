@@ -17,16 +17,18 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { recordBoardingFromGeofence } from "@/components/school-dashboard/transportation/actions/geofence"
 import { recordBoardingFromGeofenceInternal } from "@/components/school-dashboard/transportation/actions/geofence-internal"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
-vi.mock("@/components/school-dashboard/transportation/actions/geofence-internal", () => ({
-  recordBoardingFromGeofenceInternal: vi.fn(),
-}))
+vi.mock(
+  "@/components/school-dashboard/transportation/actions/geofence-internal",
+  () => ({
+    recordBoardingFromGeofenceInternal: vi.fn(),
+  })
+)
 
 const SCHOOL_A = "school-A"
 const USER_ID = "user-1"

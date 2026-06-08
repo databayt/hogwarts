@@ -153,7 +153,10 @@ export const difficultyLabels = {
     ar: "سؤالًا متبقيًا للتوزيع",
   },
   overLimit: { en: "questions over the limit", ar: "سؤالًا فوق الحد" },
-  mustEqualPrefix: { en: "Distribution must equal", ar: "يجب أن يساوي التوزيع" },
+  mustEqualPrefix: {
+    en: "Distribution must equal",
+    ar: "يجب أن يساوي التوزيع",
+  },
   currently: { en: "currently", ar: "حاليًا" },
 } as const
 

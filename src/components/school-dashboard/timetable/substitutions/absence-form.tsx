@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createTeacherAbsence, getTeachersForSelection } from "../actions"
-import { ABSENCE_TYPES } from "../constants"
+import { ABSENCE_TYPES } from "../config"
 
 interface Teacher {
   id: string

@@ -27,7 +27,10 @@ const ledgerMock = vi.hoisted(() => ({
   postWalletTopup: vi.fn(),
 }))
 
-vi.mock("@/components/school-dashboard/finance/lib/accounting/actions", () => ledgerMock)
+vi.mock(
+  "@/components/school-dashboard/finance/lib/accounting/actions",
+  () => ledgerMock
+)
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -83,7 +86,8 @@ describe("wallet/actions — topupWallet ledger wiring (issue #330)", () => {
   it("posts to the ledger after a successful top-up with the schoolId, transactionId, amount, and topupDate", async () => {
     const { transaction } = stubSuccessfulTransaction()
 
-    const { topupWallet } = await import("@/components/school-dashboard/finance/wallet/actions")
+    const { topupWallet } =
+      await import("@/components/school-dashboard/finance/wallet/actions")
     const result = await topupWallet(buildFormData())
 
     expect(result.success).toBe(true)
@@ -103,7 +107,8 @@ describe("wallet/actions — topupWallet ledger wiring (issue #330)", () => {
     })
     const consoleErr = vi.spyOn(console, "error").mockImplementation(() => {})
 
-    const { topupWallet } = await import("@/components/school-dashboard/finance/wallet/actions")
+    const { topupWallet } =
+      await import("@/components/school-dashboard/finance/wallet/actions")
     const result = await topupWallet(buildFormData())
 
     expect(result.success).toBe(true)
@@ -119,7 +124,8 @@ describe("wallet/actions — topupWallet ledger wiring (issue #330)", () => {
     ledgerMock.postWalletTopup.mockRejectedValue(new Error("boom"))
     const consoleErr = vi.spyOn(console, "error").mockImplementation(() => {})
 
-    const { topupWallet } = await import("@/components/school-dashboard/finance/wallet/actions")
+    const { topupWallet } =
+      await import("@/components/school-dashboard/finance/wallet/actions")
     const result = await topupWallet(buildFormData())
 
     expect(result.success).toBe(true)
@@ -134,7 +140,8 @@ describe("wallet/actions — topupWallet ledger wiring (issue #330)", () => {
     vi.mocked(db.$transaction).mockRejectedValue(new Error("db unavailable"))
     const consoleErr = vi.spyOn(console, "error").mockImplementation(() => {})
 
-    const { topupWallet } = await import("@/components/school-dashboard/finance/wallet/actions")
+    const { topupWallet } =
+      await import("@/components/school-dashboard/finance/wallet/actions")
     const result = await topupWallet(buildFormData())
 
     expect(result.success).toBe(false)

@@ -104,7 +104,8 @@ async function setupAuthAndTenant(opts: { allowed?: boolean } = {}) {
     role: "ADMIN" as never,
     isPlatformAdmin: false,
   })
-  const { checkCurrentUserPermission } = await import("@/components/school-dashboard/finance/lib/permissions")
+  const { checkCurrentUserPermission } =
+    await import("@/components/school-dashboard/finance/lib/permissions")
   vi.mocked(checkCurrentUserPermission).mockResolvedValue(opts.allowed ?? true)
 }
 
@@ -116,7 +117,8 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
   it("uses subdomain.databayt.org host in production", async () => {
     const original = process.env.NODE_ENV
     process.env.NODE_ENV = "production"
-    const { buildTenantBaseUrl } = await import("@/components/school-dashboard/finance/fees/tenant-url")
+    const { buildTenantBaseUrl } =
+      await import("@/components/school-dashboard/finance/fees/tenant-url")
     expect(buildTenantBaseUrl("acme")).toBe("https://acme.databayt.org")
     if (original) process.env.NODE_ENV = original
   })
@@ -125,7 +127,8 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
     const original = process.env.NODE_ENV
     process.env.NODE_ENV = "development"
     vi.resetModules() // re-import to pick up new NODE_ENV
-    const { buildTenantBaseUrl } = await import("@/components/school-dashboard/finance/fees/tenant-url")
+    const { buildTenantBaseUrl } =
+      await import("@/components/school-dashboard/finance/fees/tenant-url")
     expect(buildTenantBaseUrl("acme")).toBe("http://acme.localhost:3000")
     if (original) process.env.NODE_ENV = original
   })
@@ -134,7 +137,8 @@ describe("fees/actions.ts — buildTenantBaseUrl", () => {
     const originalUrl = process.env.NEXT_PUBLIC_APP_URL
     process.env.NEXT_PUBLIC_APP_URL = "https://app.databayt.org"
     vi.resetModules()
-    const { buildTenantBaseUrl } = await import("@/components/school-dashboard/finance/fees/tenant-url")
+    const { buildTenantBaseUrl } =
+      await import("@/components/school-dashboard/finance/fees/tenant-url")
     expect(buildTenantBaseUrl(null)).toBe("https://app.databayt.org")
     expect(buildTenantBaseUrl(undefined)).toBe("https://app.databayt.org")
     expect(buildTenantBaseUrl("")).toBe("https://app.databayt.org")
@@ -153,7 +157,8 @@ describe("createFeePaymentCheckout", () => {
   it("returns NOT_AUTHENTICATED when no session", async () => {
     const { auth } = await import("@/auth")
     vi.mocked(auth).mockResolvedValueOnce(null as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -168,7 +173,8 @@ describe("createFeePaymentCheckout", () => {
       role: null,
       isPlatformAdmin: false,
     })
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -178,7 +184,8 @@ describe("createFeePaymentCheckout", () => {
 
   it("returns UNAUTHORIZED when permission check fails", async () => {
     await setupAuthAndTenant({ allowed: false })
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -188,7 +195,8 @@ describe("createFeePaymentCheckout", () => {
 
   it("returns NOT_FOUND when fee assignment is missing", async () => {
     vi.mocked(db.feeAssignment.findFirst).mockResolvedValue(null)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -207,7 +215,8 @@ describe("createFeePaymentCheckout", () => {
       student: { id: STUDENT_ID, firstName: "Ada", lastName: "Lovelace" },
       feeStructure: { name: "Tuition Q1" },
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -238,7 +247,8 @@ describe("createFeePaymentCheckout", () => {
       referenceNumber: "FEE-X",
       checkoutUrl: "https://checkout.stripe.com/x",
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -272,7 +282,8 @@ describe("createFeePaymentCheckout", () => {
       referenceNumber: "FEE-X",
       checkoutUrl: "https://checkout.stripe.com/x",
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -308,7 +319,8 @@ describe("createFeePaymentCheckout", () => {
       referenceNumber: "FEE-X",
       checkoutUrl: "https://checkout.stripe.com/x",
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -353,7 +365,8 @@ describe("createFeePaymentCheckout", () => {
       referenceNumber: "FEE-X",
       error: "stripe down",
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -384,7 +397,8 @@ describe("createFeePaymentCheckout", () => {
       referenceNumber: "FEE-X",
       checkoutUrl: "https://checkout.stripe.com/sess",
     } as never)
-    const { createFeePaymentCheckout } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { createFeePaymentCheckout } =
+      await import("@/components/school-dashboard/finance/fees/actions")
 
     const result = await createFeePaymentCheckout(FEE_ASSIGNMENT_ID, LANG)
 
@@ -425,7 +439,8 @@ describe("markPaymentCleared", () => {
       },
     } as never)
 
-    const { markPaymentCleared } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { markPaymentCleared } =
+      await import("@/components/school-dashboard/finance/fees/actions")
     const result = await markPaymentCleared(PAYMENT_ID)
 
     expect(result.success).toBe(true)
@@ -451,7 +466,8 @@ describe("markPaymentCleared", () => {
       feeAssignment: { finalAmount: 1000, payments: [] },
     } as never)
 
-    const { markPaymentCleared } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { markPaymentCleared } =
+      await import("@/components/school-dashboard/finance/fees/actions")
     const result = await markPaymentCleared("pay-failed")
 
     expect(result.success).toBe(false)
@@ -481,7 +497,8 @@ describe("markPaymentCleared", () => {
     } as never)
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([])
 
-    const { markPaymentCleared } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { markPaymentCleared } =
+      await import("@/components/school-dashboard/finance/fees/actions")
     const result = await markPaymentCleared(PAYMENT_ID)
 
     expect(result.success).toBe(true)
@@ -511,7 +528,8 @@ describe("markPaymentCleared", () => {
     // shape as an admin clicking a stale link.
     vi.mocked(db.payment.findFirst).mockResolvedValue(null)
 
-    const { markPaymentCleared } = await import("@/components/school-dashboard/finance/fees/actions")
+    const { markPaymentCleared } =
+      await import("@/components/school-dashboard/finance/fees/actions")
     const result = await markPaymentCleared("does-not-exist")
 
     expect(result.success).toBe(false)

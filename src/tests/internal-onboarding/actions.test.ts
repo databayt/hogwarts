@@ -15,8 +15,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
 import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
-
-import { checkExistingApplication, submitInternalOnboarding } from "@/components/internal-onboarding/actions"
+import {
+  checkExistingApplication,
+  submitInternalOnboarding,
+} from "@/components/internal-onboarding/actions"
 
 // =============================================================================
 // Mocks

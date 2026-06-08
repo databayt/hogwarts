@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import { getText } from "@/components/translation/display"
-import { db } from "@/lib/db"
 
 import { requireContext } from "./helpers"
 
@@ -143,47 +143,47 @@ export async function getMyTransportationView(displayLang?: Locale) {
 
     const data: MyTransportationChild[] = await Promise.all(
       students.map(async (s) => ({
-      studentId: s.id,
-      firstName: s.firstName,
-      lastName: s.lastName,
-      assignments: await Promise.all(
-        s.routeAssignments.map(async (a) => ({
-          id: a.id,
-          routeId: a.routeId,
-          // Route/stop names are stored in one language; translate on demand
-          // into the viewer's locale so guardians/students see them localized.
-          routeName: displayLang
-            ? await getText(
-                a.route.name,
-                (a.route.lang as Locale) || "ar",
-                displayLang,
-                schoolId
-              )
-            : a.route.name,
-          routeCode: a.route.code,
-          stopName: displayLang
-            ? await getText(
-                a.stop.name,
-                (a.stop.lang as Locale) || "ar",
-                displayLang,
-                schoolId
-              )
-            : a.stop.name,
-          stopOrder: a.stop.stopOrder,
-          direction: a.direction,
-          status: a.status,
-          vehicle: a.route.vehicle ?? null,
-          driver: a.route.driver ?? null,
-        }))
-      ),
-      recentTrips: s.tripBoardings.map((b) => ({
-        tripId: b.trip.id,
-        scheduledDate: b.trip.scheduledDate,
-        scheduledTime: b.trip.scheduledTime,
-        status: b.trip.status,
-        boardingStatus: b.status,
-      })),
-    }))
+        studentId: s.id,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        assignments: await Promise.all(
+          s.routeAssignments.map(async (a) => ({
+            id: a.id,
+            routeId: a.routeId,
+            // Route/stop names are stored in one language; translate on demand
+            // into the viewer's locale so guardians/students see them localized.
+            routeName: displayLang
+              ? await getText(
+                  a.route.name,
+                  (a.route.lang as Locale) || "ar",
+                  displayLang,
+                  schoolId
+                )
+              : a.route.name,
+            routeCode: a.route.code,
+            stopName: displayLang
+              ? await getText(
+                  a.stop.name,
+                  (a.stop.lang as Locale) || "ar",
+                  displayLang,
+                  schoolId
+                )
+              : a.stop.name,
+            stopOrder: a.stop.stopOrder,
+            direction: a.direction,
+            status: a.status,
+            vehicle: a.route.vehicle ?? null,
+            driver: a.route.driver ?? null,
+          }))
+        ),
+        recentTrips: s.tripBoardings.map((b) => ({
+          tripId: b.trip.id,
+          scheduledDate: b.trip.scheduledDate,
+          scheduledTime: b.trip.scheduledTime,
+          status: b.trip.status,
+          boardingStatus: b.status,
+        })),
+      }))
     )
 
     return { success: true as const, data }

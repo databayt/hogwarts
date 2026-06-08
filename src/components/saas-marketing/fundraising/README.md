@@ -11,7 +11,6 @@ docs: https://ed.databayt.org/en/docs/fundraising
 last_audited: 2026-05-25
 ---
 
-
 ## Fundraising — non-dilutive first
 
 > Stub. This is a **non-tech epic** — the activity is org-level (Databayt as a

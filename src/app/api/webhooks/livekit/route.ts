@@ -3,7 +3,10 @@
 
 import { NextResponse, type NextRequest } from "next/server"
 
-import { handleWebhookEvent, verifyWebhook } from "@/components/school-dashboard/conference/livekit/webhook"
+import {
+  handleWebhookEvent,
+  verifyWebhook,
+} from "@/components/school-dashboard/conference/livekit/webhook"
 
 export const runtime = "nodejs"
 

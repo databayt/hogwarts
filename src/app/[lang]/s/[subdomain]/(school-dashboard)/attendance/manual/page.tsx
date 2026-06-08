@@ -6,8 +6,8 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { AttendanceContent } from "@/components/school-dashboard/attendance/content"
 import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
+import { AttendanceContent } from "@/components/school-dashboard/attendance/content"
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 
 export async function generateMetadata({

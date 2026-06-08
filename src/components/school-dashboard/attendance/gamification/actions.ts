@@ -9,8 +9,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import type { UserRole } from "@prisma/client"
 import { auth } from "@/auth"
+import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"

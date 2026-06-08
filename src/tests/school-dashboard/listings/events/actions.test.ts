@@ -5,8 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { createEvent, deleteEvent, getEvents, updateEvent } from "@/components/school-dashboard/listings/events/actions"
+import {
+  createEvent,
+  deleteEvent,
+  getEvents,
+  updateEvent,
+} from "@/components/school-dashboard/listings/events/actions"
 
 vi.mock("@/lib/db", () => ({
   db: {

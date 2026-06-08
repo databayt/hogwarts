@@ -9,11 +9,15 @@ import { db } from "@/lib/db"
 import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
 import { stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
 import { roomNameFor } from "@/components/school-dashboard/conference/livekit/room-naming"
-import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
+import {
+  endRoom,
+  ensureRoom,
+} from "@/components/school-dashboard/conference/livekit/rooms"
 import {
   cancelSchema,
   idOnlySchema,
   liveClassScheduleSchema,
+  timetableStartSchema,
   type CancelInput,
   type IdOnly,
   type LiveClassServerInput,
@@ -158,10 +162,11 @@ export async function createLiveClassFromTimetable(input: {
 }) {
   const ctx = await requireContext("start_live_class")
   if (!ctx.ok) return ctx.response
-  if (!input?.timetableId) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+  const parsed = timetableStartSchema.safeParse(input)
+  if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
   const slot = await db.timetable.findFirst({
-    where: { id: input.timetableId, schoolId: ctx.schoolId },
+    where: { id: parsed.data.timetableId, schoolId: ctx.schoolId },
     select: {
       id: true,
       teacherId: true,
@@ -305,6 +310,20 @@ export async function startLiveClass(input: IdOnly) {
     }
     if (session.status !== "scheduled") {
       return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
+    }
+
+    // Enforce the per-school concurrent-room cap before provisioning.
+    const [school, liveCount] = await Promise.all([
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: { conferenceMaxConcurrent: true },
+      }),
+      db.conference.count({
+        where: { schoolId: ctx.schoolId, status: "live", deletedAt: null },
+      }),
+    ])
+    if (school && liveCount >= school.conferenceMaxConcurrent) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_CONCURRENT)
     }
 
     try {

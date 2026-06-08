@@ -1275,9 +1275,8 @@ export async function POST(req: Request) {
   // SUBSCRIPTION: failed renewal → past_due (dunning)
   // ============================================
   if ((event as { type: string })?.type === "invoice.payment_failed") {
-    const invoice = (
-      event as { data: { object: { subscription?: string } } }
-    ).data.object
+    const invoice = (event as { data: { object: { subscription?: string } } })
+      .data.object
     if (invoice.subscription) {
       try {
         await db.subscription.updateMany({

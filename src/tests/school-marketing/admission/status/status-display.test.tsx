@@ -4,8 +4,8 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { ApplicationStatus } from "@/components/school-marketing/admission/types"
 import StatusDisplay from "@/components/school-marketing/admission/status/status-display"
+import type { ApplicationStatus } from "@/components/school-marketing/admission/types"
 
 // ---------------------------------------------------------------------------
 // Helpers

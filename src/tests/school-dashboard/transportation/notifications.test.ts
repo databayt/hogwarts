@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import arDict from "@/components/internationalization/dictionaries/ar/transportation.json"
 import enDict from "@/components/internationalization/dictionaries/en/transportation.json"
-
 import { notifyGuardiansOfTripEvent } from "@/components/school-dashboard/transportation/actions/notifications"
 
 vi.mock("@/lib/db", () => ({

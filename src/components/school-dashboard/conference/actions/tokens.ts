@@ -7,10 +7,10 @@ import type { ConferenceParticipantRole, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { getLiveKitConfig } from "@/components/school-dashboard/conference/livekit/client"
 import { ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { RoomJoinTicket } from "@/components/school-dashboard/conference/types"
 
 /**
@@ -73,19 +73,35 @@ export async function joinLiveClass(
   const { schoolId } = await getTenantContext()
   if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
-  const liveClass = await db.conference.findFirst({
-    where: { id: sessionId, schoolId, deletedAt: null },
-    select: {
-      id: true,
-      roomName: true,
-      sectionId: true,
-      maxParticipants: true,
-      status: true,
-      lang: true,
-      teacher: { select: { userId: true } },
-    },
-  })
+  // Fetch the session, the joining user (display name), and any existing
+  // participant row concurrently — all keyed only by ids known here.
+  const [liveClass, userRow, existingParticipant] = await Promise.all([
+    db.conference.findFirst({
+      where: { id: sessionId, schoolId, deletedAt: null },
+      select: {
+        id: true,
+        roomName: true,
+        sectionId: true,
+        maxParticipants: true,
+        status: true,
+        lang: true,
+        teacher: { select: { userId: true } },
+      },
+    }),
+    db.user.findUnique({
+      where: { id: userId },
+      select: { username: true, email: true },
+    }),
+    db.conferenceParticipant.findUnique({
+      where: { sessionId_userId: { sessionId, userId } },
+      select: { status: true },
+    }),
+  ])
   if (!liveClass) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+  // A kicked participant cannot rejoin — revocation that doesn't wait for TTL.
+  if (existingParticipant?.status === "removed") {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)
+  }
   if (liveClass.status === "cancelled" || liveClass.status === "ended") {
     return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
   }
@@ -137,11 +153,6 @@ export async function joinLiveClass(
     },
   })
 
-  // Pull display name for the room UI.
-  const userRow = await db.user.findUnique({
-    where: { id: userId },
-    select: { username: true, email: true },
-  })
   const displayName = userRow?.username ?? userRow?.email ?? userId
 
   let token: string

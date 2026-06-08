@@ -114,6 +114,9 @@ model Conference {
   @@index([schoolId, teacherId])
   @@index([schoolId, sectionId])
   @@index([schoolId, scheduledStart])
+  // Hot path: attachLiveClasses (every today-view) filters status + a one-day
+  // scheduledStart window scoped by school.
+  @@index([schoolId, status, scheduledStart])
   @@index([timetableId])
   @@index([deletedAt])
   @@map("live_class_sessions")
@@ -227,5 +230,7 @@ model ConferenceLink {
 
   @@unique([schoolId, subjectId, sectionId, termId])
   @@index([schoolId, sectionId])
+  // Hot path: attachLiveClasses resolves the active term's default links.
+  @@index([schoolId, termId, sectionId])
   @@map("live_class_default_links")
 }

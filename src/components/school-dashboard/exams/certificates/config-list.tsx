@@ -27,10 +27,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import {
-  deleteCertificateConfig,
-  setDefaultCertificateConfig,
-} from "./actions"
+import { deleteCertificateConfig, setDefaultCertificateConfig } from "./actions"
 import type { CertificateConfigSummary } from "./actions/types"
 
 export function CertificateConfigList({

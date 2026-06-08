@@ -5,8 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { createExam, deleteExam, getExams, updateExam } from "@/components/school-dashboard/exams/manage/actions"
+import {
+  createExam,
+  deleteExam,
+  getExams,
+  updateExam,
+} from "@/components/school-dashboard/exams/manage/actions"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -56,12 +60,15 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
-vi.mock("@/components/school-dashboard/exams/manage/actions/conflict-detection", () => ({
-  checkExamConflicts: vi.fn().mockResolvedValue({
-    success: true,
-    data: { hasConflicts: false, conflicts: [], suggestions: [] },
-  }),
-}))
+vi.mock(
+  "@/components/school-dashboard/exams/manage/actions/conflict-detection",
+  () => ({
+    checkExamConflicts: vi.fn().mockResolvedValue({
+      success: true,
+      data: { hasConflicts: false, conflicts: [], suggestions: [] },
+    }),
+  })
+)
 
 describe("Exam Actions", () => {
   const mockSchoolId = "school-123"

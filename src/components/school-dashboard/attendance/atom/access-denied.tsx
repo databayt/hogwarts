@@ -23,8 +23,7 @@ export async function AttendanceAccessDenied({ lang }: { lang: Locale }) {
     <div className="flex min-h-[60vh] flex-col items-center justify-center">
       <h2>{t?.title || "Access Denied"}</h2>
       <p className="text-muted-foreground">
-        {t?.description ||
-          "You do not have permission to access this page."}
+        {t?.description || "You do not have permission to access this page."}
       </p>
     </div>
   )

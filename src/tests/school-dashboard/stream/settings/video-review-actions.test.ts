@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { getPendingVideos, reviewVideo } from "@/components/stream/settings/video-review-actions"
+import {
+  getPendingVideos,
+  reviewVideo,
+} from "@/components/stream/settings/video-review-actions"
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),

@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest"
 
-import { getTabsForRole, getUIConfigForRole } from "@/components/school-dashboard/listings/classrooms/permissions"
+import {
+  getTabsForRole,
+  getUIConfigForRole,
+} from "@/components/school-dashboard/listings/classrooms/permissions"
 
 describe("getTabsForRole", () => {
   it("returns no tabs for null/unknown role", () => {

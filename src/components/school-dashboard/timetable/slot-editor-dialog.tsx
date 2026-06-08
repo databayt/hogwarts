@@ -59,7 +59,7 @@ import {
   TeacherInfo,
   TimetableSlot,
 } from "./types"
-import { findAvailableSlots, validateSlotPlacement } from "./utils"
+import { findAvailableSlots, validateSlotPlacement } from "./util"
 
 const slotSchema = z.object({
   dayOfWeek: z.number().min(0).max(6),

@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest"
 
-import { calculateDistance, isInsideCircularGeofence } from "@/components/school-dashboard/attendance/geofencee/geo-service"
+import {
+  calculateDistance,
+  isInsideCircularGeofence,
+} from "@/components/school-dashboard/attendance/geofencee/geo-service"
 
 describe("Geo Service - Haversine Distance Calculation", () => {
   describe("calculateDistance", () => {

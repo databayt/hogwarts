@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import {
   autoGenerateCertificates,
   batchGenerateCertificates,
@@ -333,12 +332,14 @@ describe("generateCertificate", () => {
     vi.mocked(db.examCertificateConfig.findFirst).mockResolvedValue(
       mockConfig() as never
     )
-    vi.mocked(db.examCertificate.create).mockImplementation(
-      (async ({ data }: { data: Record<string, unknown> }) => ({
-        id: "cert-1",
-        ...data,
-      })) as never
-    )
+    vi.mocked(db.examCertificate.create).mockImplementation((async ({
+      data,
+    }: {
+      data: Record<string, unknown>
+    }) => ({
+      id: "cert-1",
+      ...data,
+    })) as never)
 
     const r = await generateCertificate({
       examResultId: "res-1",
@@ -442,12 +443,14 @@ describe("generateCertificate", () => {
       mockConfig({ type: "MERIT" }) as never
     )
     vi.mocked(db.examResult.count).mockResolvedValue(2 as never)
-    vi.mocked(db.examCertificate.create).mockImplementation(
-      (async ({ data }: { data: Record<string, unknown> }) => ({
-        id: "cert-1",
-        ...data,
-      })) as never
-    )
+    vi.mocked(db.examCertificate.create).mockImplementation((async ({
+      data,
+    }: {
+      data: Record<string, unknown>
+    }) => ({
+      id: "cert-1",
+      ...data,
+    })) as never)
 
     await generateCertificate({ examResultId: "res-1", configId: "cfg-1" })
 
@@ -573,9 +576,7 @@ describe("shareCertificate", () => {
     expect(r.success).toBe(true)
     if (r.success) {
       expect(r.data?.shareToken).toBeTruthy()
-      expect(r.data?.shareUrl).toBe(
-        `/en/certificate/${r.data?.shareToken}`
-      )
+      expect(r.data?.shareUrl).toBe(`/en/certificate/${r.data?.shareToken}`)
       // must NOT use the old dead path or the internal /s/ segment
       expect(r.data?.shareUrl).not.toContain("/exams/certificates/share")
       expect(r.data?.shareUrl).not.toContain("/s/")

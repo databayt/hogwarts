@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { bulkUpdateSubjectRooms, getSubjectRoomAssignments } from "@/components/school-dashboard/listings/classrooms/subjects/actions"
+import {
+  bulkUpdateSubjectRooms,
+  getSubjectRoomAssignments,
+} from "@/components/school-dashboard/listings/classrooms/subjects/actions"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))

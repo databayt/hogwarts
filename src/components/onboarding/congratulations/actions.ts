@@ -99,9 +99,8 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
     // ledger posts have accounts to write to. Without this every postFeePayment
     // silently fails ("Required accounts not found"). Idempotent. Non-blocking.
     try {
-      const { initializeAccountingSystem } = await import(
-        "@/components/school-dashboard/finance/lib/accounting/seed-accounts"
-      )
+      const { initializeAccountingSystem } =
+        await import("@/components/school-dashboard/finance/lib/accounting/seed-accounts")
       await initializeAccountingSystem(schoolId)
     } catch (acctError) {
       console.error(

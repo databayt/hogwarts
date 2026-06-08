@@ -370,6 +370,9 @@ importers:
       mapbox-gl:
         specifier: ^3.17.0
         version: 3.17.0
+      mermaid:
+        specifier: ^11.15.0
+        version: 11.15.0
       moment:
         specifier: ^2.30.1
         version: 2.30.1
@@ -1627,34 +1630,10 @@ packages:
         integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==,
       }
 
-  "@chevrotain/cst-dts-gen@11.0.3":
+  "@chevrotain/types@11.1.2":
     resolution:
       {
-        integrity: sha512-BvIKpRLeS/8UbfxXxgC33xOumsacaeCKAjAeLyOn7Pcp95HiRbrpl14S+9vaZLolnbssPIUuiUd8IvgkRyt6NQ==,
-      }
-
-  "@chevrotain/gast@11.0.3":
-    resolution:
-      {
-        integrity: sha512-+qNfcoNk70PyS/uxmj3li5NiECO+2YKZZQMbmjTqRI3Qchu8Hig/Q9vgkHpI3alNjr7M+a2St5pw5w5F6NL5/Q==,
-      }
-
-  "@chevrotain/regexp-to-ast@11.0.3":
-    resolution:
-      {
-        integrity: sha512-1fMHaBZxLFvWI067AVbGJav1eRY7N8DDvYCTwGBiE/ytKBgP8azTdgyrKyWZ9Mfh09eHWb5PgTSO8wi7U824RA==,
-      }
-
-  "@chevrotain/types@11.0.3":
-    resolution:
-      {
-        integrity: sha512-gsiM3G8b58kZC2HaWR50gu6Y1440cHiJ+i3JUvcp/35JchYejb2+5MVeJK0iKThYpAa/P2PYFV4hoi44HD+aHQ==,
-      }
-
-  "@chevrotain/utils@11.0.3":
-    resolution:
-      {
-        integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==,
+        integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==,
       }
 
   "@csstools/color-helpers@5.1.0":
@@ -3391,10 +3370,10 @@ packages:
       "@types/react": ">=16"
       react: ">=16"
 
-  "@mermaid-js/parser@0.6.3":
+  "@mermaid-js/parser@1.1.1":
     resolution:
       {
-        integrity: sha512-lnjOhe7zyHjc+If7yT4zoedx2vo4sHaTmtkl1+or8BRTnCtDmcTpAjpzDSfCZrshM5bCoz0GyidzadJAH1xobA==,
+        integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==,
       }
 
   "@napi-rs/canvas-android-arm64@0.1.80":
@@ -7877,6 +7856,12 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  "@upsetjs/venn.js@2.0.0":
+    resolution:
+      {
+        integrity: sha512-WbBhLrooyePuQ1VZxrJjtLvTc4NVfpOyKx0sKqioq9bX1C1m7Jgykkn8gLrtwumBioXIqam8DLxp88Adbue6Hw==,
+      }
+
   "@upstash/core-analytics@0.0.10":
     resolution:
       {
@@ -8856,20 +8841,6 @@ packages:
         integrity: sha512-0BJa8f4t141BYKQyn9NSQt1PguFQXMXwZiA5shfoaBYHAb2fFk2RAX+tiWMoQU+Agtzt3mdt0JtuyshAXqZ+Vw==,
       }
 
-  chevrotain-allstar@0.3.1:
-    resolution:
-      {
-        integrity: sha512-b7g+y9A0v4mxCW1qUhf3BSVPg+/NvGErk/dOkrDaHA0nQIQGAtrOjlX//9OQtRlSCy+x9rfB5N8yC71lH1nvMw==,
-      }
-    peerDependencies:
-      chevrotain: ^11.0.0
-
-  chevrotain@11.0.3:
-    resolution:
-      {
-        integrity: sha512-ci2iJH6LeIkvP9eJW6gpueU8cnZhv85ELY8w8WiFtNjMHA5ad6pQLaJo9mEly/9qUyCpvqX8/POVUTf18/HFdw==,
-      }
-
   chokidar@3.6.0:
     resolution:
       {
@@ -9607,10 +9578,10 @@ packages:
       }
     engines: { node: ">=12" }
 
-  dagre-d3-es@7.0.13:
+  dagre-d3-es@7.0.14:
     resolution:
       {
-        integrity: sha512-efEhnxpSuwpYOKRm/L5KbqoZmNNukHa/Flty4Wp62JRvgH2ojwVgPgdYyr4twpieZnyRDdIH7PY2mopX26+j2Q==,
+        integrity: sha512-P4rFMVq9ESWqmOgK+dlXvOtLwYg0i7u0HBGJER0LZDJT2VHIPAMZ/riPxqJceWMStH5+E61QxFra9kIS3AqdMg==,
       }
 
   damerau-levenshtein@1.0.8:
@@ -9937,6 +9908,12 @@ packages:
         integrity: sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw==,
       }
 
+  dompurify@3.4.8:
+    resolution:
+      {
+        integrity: sha512-yb1cEmaOum7wFvOCSQxyfgVlv5D47Rc30iZWoMpbDIWTnJ6grDDQyu2KFJzB2k7u0pMuJcQ1zphH//fFnw2tjQ==,
+      }
+
   domutils@3.2.2:
     resolution:
       {
@@ -10187,6 +10164,12 @@ packages:
         integrity: sha512-w+5mJ3GuFL+NjVtJlvydShqE1eN3h3PbI7/5LAsYJP/2qtuMXjfL2LpHSRqo4b4eSF5K/DH1JXKUAHSB2UW50g==,
       }
     engines: { node: ">= 0.4" }
+
+  es-toolkit@1.47.0:
+    resolution:
+      {
+        integrity: sha512-n1GuoD0WEQZMBk5tttoZSqwgyLx01oqa5XsBmCHwPyNe1S9jPBEmtR2pSgp2kJuWE3ciFZ6yRHmY4pM4C3OOkw==,
+      }
 
   esast-util-from-estree@2.0.0:
     resolution:
@@ -12250,13 +12233,6 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
-  langium@3.3.1:
-    resolution:
-      {
-        integrity: sha512-QJv/h939gDpvT+9SiLVlY7tZC3xB2qK57v0J04Sh9wpMb6MP1q8gB21L3WIo8T5P1MSMg3Ep14L7KkDCFG3y4w==,
-      }
-    engines: { node: ">=16.0.0" }
-
   langsmith@0.3.82:
     resolution:
       {
@@ -12931,10 +12907,10 @@ packages:
       }
     engines: { node: ">= 8" }
 
-  mermaid@11.12.2:
+  mermaid@11.15.0:
     resolution:
       {
-        integrity: sha512-n34QPDPEKmaeCG4WDMGy0OT6PSyxKCfy2pJgShP+Qow2KLrvWjclwbc3yXfSIf4BanqWEhQEpngWwNp/XhZt6w==,
+        integrity: sha512-pTMbcf3rWdtLiYGpmoTjHEpeY8seiy6sR+9nD7LOs8KfUbHE4lOUAprTRqRAcWSQ6MQpdX+YEsxShtGsINtPtw==,
       }
 
   micromark-core-commonmark@2.0.3:
@@ -16950,44 +16926,6 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
-  vscode-jsonrpc@8.2.0:
-    resolution:
-      {
-        integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==,
-      }
-    engines: { node: ">=14.0.0" }
-
-  vscode-languageserver-protocol@3.17.5:
-    resolution:
-      {
-        integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==,
-      }
-
-  vscode-languageserver-textdocument@1.0.12:
-    resolution:
-      {
-        integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==,
-      }
-
-  vscode-languageserver-types@3.17.5:
-    resolution:
-      {
-        integrity: sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==,
-      }
-
-  vscode-languageserver@9.0.1:
-    resolution:
-      {
-        integrity: sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==,
-      }
-    hasBin: true
-
-  vscode-uri@3.0.8:
-    resolution:
-      {
-        integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==,
-      }
-
   w3c-keyname@2.2.8:
     resolution:
       {
@@ -18595,22 +18533,7 @@ snapshots:
 
   "@cfworker/json-schema@4.1.1": {}
 
-  "@chevrotain/cst-dts-gen@11.0.3":
-    dependencies:
-      "@chevrotain/gast": 11.0.3
-      "@chevrotain/types": 11.0.3
-      lodash-es: 4.17.21
-
-  "@chevrotain/gast@11.0.3":
-    dependencies:
-      "@chevrotain/types": 11.0.3
-      lodash-es: 4.17.21
-
-  "@chevrotain/regexp-to-ast@11.0.3": {}
-
-  "@chevrotain/types@11.0.3": {}
-
-  "@chevrotain/utils@11.0.3": {}
+  "@chevrotain/types@11.1.2": {}
 
   "@csstools/color-helpers@5.1.0": {}
 
@@ -19500,9 +19423,9 @@ snapshots:
       "@types/react": 19.2.6
       react: 19.2.0
 
-  "@mermaid-js/parser@0.6.3":
+  "@mermaid-js/parser@1.1.1":
     dependencies:
-      langium: 3.3.1
+      "@chevrotain/types": 11.1.2
 
   "@napi-rs/canvas-android-arm64@0.1.80":
     optional: true
@@ -22764,6 +22687,11 @@ snapshots:
   "@unrs/resolver-binding-win32-x64-msvc@1.11.1":
     optional: true
 
+  "@upsetjs/venn.js@2.0.0":
+    optionalDependencies:
+      d3-selection: 3.0.0
+      d3-transition: 3.0.1(d3-selection@3.0.0)
+
   "@upstash/core-analytics@0.0.10":
     dependencies:
       "@upstash/redis": 1.35.6
@@ -23356,20 +23284,6 @@ snapshots:
 
   cheap-ruler@4.0.0: {}
 
-  chevrotain-allstar@0.3.1(chevrotain@11.0.3):
-    dependencies:
-      chevrotain: 11.0.3
-      lodash-es: 4.17.21
-
-  chevrotain@11.0.3:
-    dependencies:
-      "@chevrotain/cst-dts-gen": 11.0.3
-      "@chevrotain/gast": 11.0.3
-      "@chevrotain/regexp-to-ast": 11.0.3
-      "@chevrotain/types": 11.0.3
-      "@chevrotain/utils": 11.0.3
-      lodash-es: 4.17.21
-
   chokidar@3.6.0:
     dependencies:
       anymatch: 3.1.3
@@ -23789,7 +23703,7 @@ snapshots:
       d3-transition: 3.0.1(d3-selection@3.0.0)
       d3-zoom: 3.0.0
 
-  dagre-d3-es@7.0.13:
+  dagre-d3-es@7.0.14:
     dependencies:
       d3: 7.9.0
       lodash-es: 4.17.21
@@ -23946,6 +23860,11 @@ snapshots:
       domelementtype: 2.3.0
 
   dompurify@3.2.7:
+    optionalDependencies:
+      "@types/trusted-types": 2.0.7
+    optional: true
+
+  dompurify@3.4.8:
     optionalDependencies:
       "@types/trusted-types": 2.0.7
 
@@ -24155,6 +24074,8 @@ snapshots:
       is-callable: 1.2.7
       is-date-object: 1.1.0
       is-symbol: 1.1.1
+
+  es-toolkit@1.47.0: {}
 
   esast-util-from-estree@2.0.0:
     dependencies:
@@ -25652,14 +25573,6 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  langium@3.3.1:
-    dependencies:
-      chevrotain: 11.0.3
-      chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
-      vscode-languageserver: 9.0.1
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.0.8
-
   langsmith@0.3.82(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.2.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)):
     dependencies:
       "@types/uuid": 10.0.0
@@ -26161,23 +26074,24 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  mermaid@11.12.2:
+  mermaid@11.15.0:
     dependencies:
       "@braintree/sanitize-url": 7.1.1
       "@iconify/utils": 3.1.0
-      "@mermaid-js/parser": 0.6.3
+      "@mermaid-js/parser": 1.1.1
       "@types/d3": 7.4.3
+      "@upsetjs/venn.js": 2.0.0
       cytoscape: 3.33.1
       cytoscape-cose-bilkent: 4.1.0(cytoscape@3.33.1)
       cytoscape-fcose: 2.2.0(cytoscape@3.33.1)
       d3: 7.9.0
       d3-sankey: 0.12.3
-      dagre-d3-es: 7.0.13
+      dagre-d3-es: 7.0.14
       dayjs: 1.11.19
-      dompurify: 3.2.7
+      dompurify: 3.4.8
+      es-toolkit: 1.47.0
       katex: 0.16.25
       khroma: 2.1.0
-      lodash-es: 4.17.21
       marked: 16.4.2
       roughjs: 4.6.6
       stylis: 4.3.6
@@ -28258,7 +28172,7 @@ snapshots:
       katex: 0.16.25
       lucide-react: 0.542.0(react@19.2.0)
       marked: 16.4.2
-      mermaid: 11.12.2
+      mermaid: 11.15.0
       react: 19.2.0
       rehype-harden: 1.1.6
       rehype-katex: 7.0.1
@@ -28979,23 +28893,6 @@ snapshots:
       - yaml
 
   void-elements@3.1.0: {}
-
-  vscode-jsonrpc@8.2.0: {}
-
-  vscode-languageserver-protocol@3.17.5:
-    dependencies:
-      vscode-jsonrpc: 8.2.0
-      vscode-languageserver-types: 3.17.5
-
-  vscode-languageserver-textdocument@1.0.12: {}
-
-  vscode-languageserver-types@3.17.5: {}
-
-  vscode-languageserver@9.0.1:
-    dependencies:
-      vscode-languageserver-protocol: 3.17.5
-
-  vscode-uri@3.0.8: {}
 
   w3c-keyname@2.2.8: {}
 

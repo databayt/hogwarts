@@ -96,7 +96,7 @@ The pre-signature gate. **Must be run from inside an Aldar school's WiFi**, not 
 1. Open `/conference/network-test` as `admin@kingfahad.databayt.org` on the school network.
 2. Run the test. It establishes a calibration LiveKit connection and records setup time, connection
    quality, and **TCP-fallback usage** into `ConferenceParticipant.{avgRttMs, hadTcpFallback,
-   lastIceState}`.
+lastIceState}`.
 3. **Block production cutover on any TURN/443 failure** — if media can't establish or TCP fallback
    fails, return to Gate 2.
 

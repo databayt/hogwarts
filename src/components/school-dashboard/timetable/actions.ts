@@ -74,9 +74,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/setup"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
-import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./constants"
-import { attachLiveClasses } from "./live-class-join"
-import { getStructureBySlug } from "./structures"
+import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./config"
 // ============================================================================
 // AI-POWERED TIMETABLE GENERATION
 // ============================================================================
@@ -93,6 +91,7 @@ import {
   type SubjectAllocation,
   type TeacherAvailability,
 } from "./generate/algorithm"
+import { attachLiveClasses } from "./live-class-join"
 import {
   filterTimetableByRole,
   getPermissionContext,
@@ -101,6 +100,7 @@ import {
   requirePermission,
   requireReadAccess,
 } from "./permissions"
+import { getStructureBySlug } from "./structures"
 // Types imported from ./types.ts to avoid "use server" export restrictions
 import type {
   ConstraintViolation,
@@ -3052,12 +3052,27 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     return { schedule: [], dayOfWeek, message: "No active term" }
   }
 
-  // Get periods for this term
-  const periods = await db.period.findMany({
-    where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
-  })
+  // Fetch periods (role-independent) alongside the role-entity lookup so the
+  // today-view doesn't pay two serial round-trips on its hottest endpoint.
+  const [periods, teacher, student] = await Promise.all([
+    db.period.findMany({
+      where: { schoolId, yearId: term.yearId },
+      orderBy: { startTime: "asc" },
+      select: { id: true, name: true, startTime: true, endTime: true },
+    }),
+    role === "TEACHER"
+      ? db.teacher.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+    role === "STUDENT"
+      ? db.student.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ])
 
   // Build filter based on role
   const where: {
@@ -3075,16 +3090,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   }
 
   if (role === "TEACHER") {
-    const teacher = await db.teacher.findFirst({
-      where: { userId, schoolId },
-      select: { id: true },
-    })
     if (teacher) where.teacherId = teacher.id
   } else if (role === "STUDENT") {
-    const student = await db.student.findFirst({
-      where: { userId, schoolId },
-      select: { id: true },
-    })
     if (student) {
       const enrollments = await db.studentClass.findMany({
         where: { studentId: student.id, schoolId },

@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
-
 import { confirmEnrollment } from "@/components/school-dashboard/admission/actions"
 
 // ---------------------------------------------------------------------------

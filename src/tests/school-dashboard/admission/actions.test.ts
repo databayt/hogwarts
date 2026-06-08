@@ -5,7 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
+import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import {
   confirmEnrollment,
   createCampaign,
@@ -32,7 +32,6 @@ import {
   getMeritList,
 } from "@/components/school-dashboard/admission/queries"
 import { campaignSchemaWithValidation } from "@/components/school-dashboard/admission/validation"
-import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 
 // ---------------------------------------------------------------------------
 // Mocks

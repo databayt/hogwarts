@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest"
 
-import { parseRoomName, roomNameFor } from "@/components/school-dashboard/conference/livekit/room-naming"
+import {
+  parseRoomName,
+  roomNameFor,
+} from "@/components/school-dashboard/conference/livekit/room-naming"
 
 describe("roomNameFor", () => {
   it("composes 'sch-{schoolId}-lc-{sessionId}'", () => {

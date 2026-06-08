@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import {
   extractReceiptData,
   retryExtraction,
@@ -64,7 +63,11 @@ describe("extractReceiptData — tenant isolation", () => {
     // updateMany scoped by {id, schoolId} matches nothing → count 0.
     vi.mocked(db.expenseReceipt.updateMany).mockResolvedValue({ count: 0 })
 
-    const result = await extractReceiptData(RECEIPT_ID, "http://f", OTHER_SCHOOL)
+    const result = await extractReceiptData(
+      RECEIPT_ID,
+      "http://f",
+      OTHER_SCHOOL
+    )
 
     expect(result.success).toBe(false)
     // The whole point: no money spent on another tenant's receipt.

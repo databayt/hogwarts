@@ -92,9 +92,7 @@ export function RoomClient({
         <VideoConference />
         <ParticipantsPanel
           sessionId={sessionId}
-          canModerate={
-            ticket.role === "HOST" || ticket.role === "CO_HOST"
-          }
+          canModerate={ticket.role === "HOST" || ticket.role === "CO_HOST"}
           labels={labels.participants}
         />
         <RoomAudioRenderer />

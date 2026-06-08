@@ -62,7 +62,9 @@ export function ConfigHeroForm({
       if (result.success) {
         setIsDirty(false)
       } else {
-        setError(result.error || t?.updateError || "Failed to update hero image")
+        setError(
+          result.error || t?.updateError || "Failed to update hero image"
+        )
       }
     })
   }

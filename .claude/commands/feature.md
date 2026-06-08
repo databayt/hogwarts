@@ -85,15 +85,13 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
     - Repeat step 12
 14. **If Build Passes**: Proceed to Phase 7
 
-### Phase 7: Commit & Push (with smart blocking)
+### Phase 7: Commit & Push (straight to `main`, with smart blocking)
 
-15. **Git-GitHub Agent**:
+15. **Git-GitHub Agent** (working directly on `main` — no branches/PRs):
     - Create conventional commit message
-    - Commit changes
-    - Push to remote
-    - **Smart Blocking**:
-      - Main/master/production branches: Blocked if any quality check fails
-      - Feature branches: Warning only, allow override
+    - Commit changes on `main`
+    - `git pull --rebase origin main`, then `git push origin main`
+    - **Smart Blocking**: on `main` the pre-commit/pre-push hook BLOCKS if any quality check fails — fix it, then push again. This gate is what lets us commit straight to `main`.
 
 ### Phase 8: Documentation (automated)
 
@@ -112,17 +110,13 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 - ✅ Tests pass for changed files
 - ✅ ESLint passes (quiet mode)
 - ✅ TypeScript type check passes (noEmit)
-- **Behavior**:
-  - Main branch: BLOCKS commit if any check fails
-  - Feature branch: WARNS but allows commit
+- **Behavior**: we always work on `main`, so this **BLOCKS** the commit if any check fails. Fix it, then commit again.
 
 ### Pre-Push Checks (via PreToolUse hooks)
 
 - ✅ Full production build passes
 - ✅ Prettier format check passes
-- **Behavior**:
-  - Main branch: BLOCKS push if any check fails
-  - Feature branch: WARNS but allows push
+- **Behavior**: on `main` this **BLOCKS** the push if any check fails. Fix it, then push again.
 
 ### Comprehensive Review Checklist
 
@@ -185,8 +179,8 @@ $ /feature "student attendance tracking with calendar view"
 
 📝 Phase 7: Commit & Push
   ✅ Commit created: "feat(attendance): Add student attendance tracking with calendar view"
-  ✅ Pushed to origin/feature/attendance-tracking
-  ℹ️  Branch: feature branch (warnings only, no blocking)
+  ✅ Rebased onto origin/main, pushed to origin/main
+  ℹ️  Branch: main (pre-commit/pre-push hook passed — quality gate green)
 
 📚 Phase 8: Documentation
   ✅ README updated: src/components/school-dashboard/attendance/README.md
@@ -204,8 +198,8 @@ Summary:
 - 📝 Docs: Updated
 
 Next Steps:
-- Create pull request: gh pr create
-- Deploy to staging: /deploy staging
+- Already on main — the push triggered a Vercel deploy automatically
+- Verify production: /watch
 ```
 
 ---
@@ -293,7 +287,7 @@ Next Steps:
 2. **Mention constraints**: Include technical requirements (WebSockets, specific libraries, etc.)
 3. **Trust the process**: Let the workflow run fully before manual intervention
 4. **Review output**: Check the summary for any warnings or suggestions
-5. **Feature branch**: Work on feature branches for permissive quality gates
+5. **Work on `main`**: We commit straight to `main`; the pre-commit/pre-push hook is the quality gate (no branches, no PRs)
 
 ---
 
@@ -343,6 +337,6 @@ Next Steps:
 
 - **v1.0** (2025-10-28): Initial release with TDD-first workflow
   - 8-phase automated workflow
-  - Smart quality gates (branch-aware blocking)
+  - Smart quality gates (pre-commit/pre-push blocking on `main`)
   - Comprehensive review (10-point checklist)
   - Auto-documentation with GitHub issues

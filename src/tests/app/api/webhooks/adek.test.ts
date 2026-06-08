@@ -5,7 +5,6 @@ import { createHmac } from "node:crypto"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { POST } from "@/app/api/webhooks/adek/route"
 
 vi.mock("@/lib/audit-log", () => ({ logAudit: vi.fn() }))

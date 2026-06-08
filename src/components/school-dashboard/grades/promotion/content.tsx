@@ -3,9 +3,9 @@
 
 import { auth } from "@/auth"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getPromotionBatches } from "../actions/promotion"
 import { PromotionDashboard } from "./dashboard"

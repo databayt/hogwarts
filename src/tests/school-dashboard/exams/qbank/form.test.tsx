@@ -83,17 +83,20 @@ describe("QuestionBankForm — smoke", () => {
   })
 
   it("mounts in create mode without throwing", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     expect(() => render(<QuestionBankForm />)).not.toThrow()
   })
 
   it("mounts in view mode (no submit buttons)", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     expect(() => render(<QuestionBankForm isView={true} />)).not.toThrow()
   })
 
   it("mounts in edit mode with MULTIPLE_CHOICE data", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     expect(() =>
       render(
         <QuestionBankForm
@@ -117,7 +120,8 @@ describe("QuestionBankForm — smoke", () => {
   })
 
   it("mounts in edit mode with FILL_BLANK data", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     expect(() =>
       render(
         <QuestionBankForm
@@ -138,7 +142,8 @@ describe("QuestionBankForm — smoke", () => {
   })
 
   it("mounts in edit mode with ESSAY data", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     expect(() =>
       render(
         <QuestionBankForm
@@ -158,7 +163,8 @@ describe("QuestionBankForm — smoke", () => {
   })
 
   it("renders interactable controls", async () => {
-    const { QuestionBankForm } = await import("@/components/school-dashboard/exams/qbank/form")
+    const { QuestionBankForm } =
+      await import("@/components/school-dashboard/exams/qbank/form")
     const { container } = render(<QuestionBankForm />)
     expect(container.querySelectorAll("button").length).toBeGreaterThan(0)
     expect(

@@ -36,17 +36,25 @@ export async function GET(req: Request) {
     take: 1000,
   })
 
+  // Batch-load which of these sessions already have a reminder event — one
+  // query instead of one findFirst per session (was an N+1 over up to 1000 rows).
+  const reminded = new Set(
+    sessions.length === 0
+      ? []
+      : (
+          await db.conferenceEvent.findMany({
+            where: {
+              sessionId: { in: sessions.map((s) => s.id) },
+              eventType: "reminder_starting_soon",
+            },
+            select: { sessionId: true },
+          })
+        ).map((e) => e.sessionId)
+  )
+
   let dispatched = 0
   for (const s of sessions) {
-    const already = await db.conferenceEvent.findFirst({
-      where: {
-        schoolId: s.schoolId,
-        sessionId: s.id,
-        eventType: "reminder_starting_soon",
-      },
-      select: { id: true },
-    })
-    if (already) continue
+    if (reminded.has(s.id)) continue
     await notifyClassStartingSoon(s.schoolId, s.id)
     await db.conferenceEvent.create({
       data: {

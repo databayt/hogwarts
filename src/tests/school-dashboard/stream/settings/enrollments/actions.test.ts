@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { bulkEnrollStudents, getSchoolEnrollments } from "@/components/stream/settings/enrollments/actions"
+import {
+  bulkEnrollStudents,
+  getSchoolEnrollments,
+} from "@/components/stream/settings/enrollments/actions"
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),

@@ -4,8 +4,10 @@
 import { describe, expect, it } from "vitest"
 
 import { ValidationHelper } from "@/components/internationalization/helpers"
-
-import { createDescriptionSchema, descriptionSchema } from "@/components/onboarding/description/validation"
+import {
+  createDescriptionSchema,
+  descriptionSchema,
+} from "@/components/onboarding/description/validation"
 
 // Minimal fixture: only the keys the schema reads via ValidationHelper
 const messages = {

@@ -7,7 +7,6 @@
 // set-once weekly meeting link silently disappears at term rollover. This
 // clones every link from one term into the next. Idempotent: skips
 // (subject, section) pairs that already have a link in the target term.
-
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
@@ -57,7 +56,10 @@ export async function carryForwardConferenceLinks(
     }
   }
 
-  return { success: true as const, data: { created, skipped: source.length - created } }
+  return {
+    success: true as const,
+    data: { created, skipped: source.length - created },
+  }
 }
 
 /**

@@ -39,7 +39,16 @@ export async function GET(req: Request) {
   let purged = 0
   for (const r of due) {
     try {
-      await deleteRecordingObject(r)
+      const deleted = await deleteRecordingObject(r)
+      if (!deleted) {
+        // S3 delete failed (a missing object counts as success). Keep the row
+        // so the next run retries — never flag it deleted while the object lives.
+        console.error(
+          "[live-class] retention purge: S3 delete failed, keeping row",
+          { recordingId: r.id }
+        )
+        continue
+      }
       await db.conferenceRecording.update({
         where: { id: r.id },
         data: { status: "expired", deletedAt: new Date() },

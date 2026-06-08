@@ -631,8 +631,7 @@ export const getDictionary = async (locale: Locale) => {
         transportationDictionaries["en"](),
       complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
       liveClassesDictionaries[locale]?.() ?? liveClassesDictionaries["en"](),
-      parentPortalDictionaries[locale]?.() ??
-        parentPortalDictionaries["en"](),
+      parentPortalDictionaries[locale]?.() ?? parentPortalDictionaries["en"](),
     ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces

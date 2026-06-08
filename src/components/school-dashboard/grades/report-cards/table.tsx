@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   generateReportCards,
@@ -229,7 +229,9 @@ export function ReportCardsTable({
                   </TableCell>
                   <TableCell>
                     <Badge variant={rc.isPublished ? "default" : "secondary"}>
-                      {rc.isPublished ? dict.status.published : dict.status.draft}
+                      {rc.isPublished
+                        ? dict.status.published
+                        : dict.status.draft}
                     </Badge>
                   </TableCell>
                 </TableRow>

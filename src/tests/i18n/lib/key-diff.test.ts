@@ -3,7 +3,11 @@
 
 import { describe, expect, it } from "vitest"
 
-import { compareTranslationFiles, diffKeys, flattenKeys } from "@/components/internationalization/lib/key-diff"
+import {
+  compareTranslationFiles,
+  diffKeys,
+  flattenKeys,
+} from "@/components/internationalization/lib/key-diff"
 
 // ---------------------------------------------------------------------------
 // flattenKeys

@@ -108,14 +108,16 @@ describe("QuestionForm (Marking) — smoke", () => {
   })
 
   it("mounts in create mode without throwing", async () => {
-    const { QuestionForm } = await import("@/components/school-dashboard/exams/mark/form")
+    const { QuestionForm } =
+      await import("@/components/school-dashboard/exams/mark/form")
     expect(() =>
       render(<QuestionForm dictionary={dictionary} locale="en" />)
     ).not.toThrow()
   })
 
   it("renders form controls (buttons + textboxes)", async () => {
-    const { QuestionForm } = await import("@/components/school-dashboard/exams/mark/form")
+    const { QuestionForm } =
+      await import("@/components/school-dashboard/exams/mark/form")
     const { container } = render(
       <QuestionForm dictionary={dictionary} locale="en" />
     )
@@ -126,7 +128,8 @@ describe("QuestionForm (Marking) — smoke", () => {
   })
 
   it("accepts initialData for edit mode", async () => {
-    const { QuestionForm } = await import("@/components/school-dashboard/exams/mark/form")
+    const { QuestionForm } =
+      await import("@/components/school-dashboard/exams/mark/form")
     expect(() =>
       render(
         <QuestionForm

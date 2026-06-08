@@ -145,7 +145,7 @@ Use for: Quality improvement, optimization
 5. /agents/multi-tenant (safety)
 6. /agents/test (tests)
 7. /agents/security (audit)
-8. /agents/git-github (commit + PR)
+8. /agents/git-github (commit + push to main)
 ```
 
 ### Workflow 2: Bug Fix
@@ -228,14 +228,14 @@ Phase 6: Build Verification (Iterative - Loop until PASS)
    - Return to step 12
 14. If build passes: Proceed to Phase 7
 
-Phase 7: Commit & Push (with smart blocking)
-15. /agents/git-github:
+Phase 7: Commit & Push (straight to main, with smart blocking)
+15. /agents/git-github (working directly on main — no branches/PRs):
    - Create conventional commit message
-   - Commit changes
-   - Push to remote
-   - Smart blocking enforced via PreToolUse hooks:
-     * Main/master/production: BLOCKS if quality checks fail
-     * Feature branches: WARNS but allows commit
+   - Commit changes on main
+   - git pull --rebase origin main, then git push origin main
+   - Quality gate enforced via PreToolUse hooks on main:
+     * BLOCKS the commit/push if quality checks fail — fix, then push again
+     * This gate is what lets us commit straight to main safely
 
 Phase 8: Documentation (Automated)
 16. /agents/docs-manager:
@@ -244,9 +244,9 @@ Phase 8: Documentation (Automated)
    - Update main README (if significant)
    - Generate changelog entry
 
-Quality Gates (Automated via PreToolUse hooks):
-- Pre-Commit: tests, eslint, tsc (block on main, warn on feature)
-- Pre-Push: build, prettier (block on main, warn on feature)
+Quality Gates (Automated via PreToolUse hooks — we always work on main):
+- Pre-Commit: tests, eslint, tsc (blocks the commit on failure)
+- Pre-Push: build, prettier (blocks the push on failure)
 
 Success Criteria:
 - ✅ Tests pass (95%+ coverage)

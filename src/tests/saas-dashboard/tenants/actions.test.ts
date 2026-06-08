@@ -6,7 +6,6 @@ import { cookies } from "next/headers"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import * as tenants from "@/components/saas-dashboard/tenants/actions"
 
 // ============================================================================

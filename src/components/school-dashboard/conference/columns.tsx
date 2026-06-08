@@ -59,10 +59,10 @@ const STATUS_VARIANT: Record<
 }
 
 function formatTime(iso: string, locale: Locale): string {
-  return new Date(iso).toLocaleTimeString(
-    locale === "ar" ? "ar-SA" : "en-US",
-    { hour: "2-digit", minute: "2-digit" }
-  )
+  return new Date(iso).toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
 }
 
 export const getLiveClassColumns = (
@@ -164,8 +164,7 @@ export const getLiveClassColumns = (
       ),
       cell: ({ getValue }) => {
         const status = getValue<string>()
-        const label =
-          t.status[status as keyof typeof t.status] || status
+        const label = t.status[status as keyof typeof t.status] || status
         return (
           <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{label}</Badge>
         )

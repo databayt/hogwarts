@@ -8,12 +8,11 @@ import {
   processAndUploadCatalogImage,
 } from "@/lib/catalog-image"
 import { db } from "@/lib/db"
-import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
-
 import {
   deleteCatalogThumbnail,
   uploadCatalogThumbnail,
 } from "@/components/saas-dashboard/catalog/image-actions"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
 // Mocks

@@ -97,9 +97,7 @@ export default async function PublicCertificatePage({
       <div className="mx-auto w-full max-w-3xl space-y-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">
-              {cert.recipientName}
-            </CardTitle>
+            <CardTitle className="text-2xl">{cert.recipientName}</CardTitle>
             <CardDescription>
               {cert.examTitle} · {d?.issuedBy ?? "Issued by"}{" "}
               {cert.school?.name}

@@ -7,7 +7,6 @@ import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getGuardiansForStudent } from "@/lib/guardian-utils"
-
 import { GET } from "@/app/api/cron/absence-followup/route"
 
 vi.mock("@/lib/audit-log", () => ({ logAudit: vi.fn() }))

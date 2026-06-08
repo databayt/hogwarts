@@ -350,7 +350,11 @@ describe("ensureStudentFeeAssignments — pricing-matrix variants", () => {
         {
           id: "fs-base",
           totalAmount: 5000,
-          sourceSignals: { gradeId: GRADE_ID, streamId: null, studentType: null },
+          sourceSignals: {
+            gradeId: GRADE_ID,
+            streamId: null,
+            studentType: null,
+          },
         },
         {
           id: "fs-science",
@@ -384,7 +388,11 @@ describe("ensureStudentFeeAssignments — pricing-matrix variants", () => {
         {
           id: "fs-base",
           totalAmount: 5000,
-          sourceSignals: { gradeId: GRADE_ID, streamId: null, studentType: null },
+          sourceSignals: {
+            gradeId: GRADE_ID,
+            streamId: null,
+            studentType: null,
+          },
         },
         {
           id: "fs-science",
@@ -425,7 +433,11 @@ describe("ensureStudentFeeAssignments — pricing-matrix variants", () => {
         {
           id: "fs-base",
           totalAmount: 5000,
-          sourceSignals: { gradeId: GRADE_ID, streamId: null, studentType: null },
+          sourceSignals: {
+            gradeId: GRADE_ID,
+            streamId: null,
+            studentType: null,
+          },
         },
         {
           id: "fs-intl",

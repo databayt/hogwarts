@@ -109,12 +109,18 @@ export async function deleteRecording(recordingId: string) {
     if (!recording) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
-    await deleteRecordingObject(recording)
+    const deleted = await deleteRecordingObject(recording)
+    if (!deleted) {
+      // Don't mark the row deleted while the S3 object still exists.
+      return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)
+    }
     await db.conferenceRecording.update({
       where: { id: recording.id },
       data: { status: "expired", deletedAt: new Date() },
     })
-    revalidatePath(conferenceRevalidatePath(`${recording.sessionId}/recordings`))
+    revalidatePath(
+      conferenceRevalidatePath(`${recording.sessionId}/recordings`)
+    )
     return { success: true as const, data: { id: recording.id } }
   } catch {
     return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_FAILED)

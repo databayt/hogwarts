@@ -89,6 +89,7 @@
     "invalidState": "The class is not in the right state.",
     "roomFull": "Room is full.",
     "maxDuration": "Class duration exceeds the school maximum.",
+    "maxConcurrent": "The school has reached its limit of concurrent live classes.",
     "tokenFailed": "Could not issue a room token.",
     "tokenExpired": "Token expired. Please rejoin.",
     "participantDenied": "You are not enrolled in this class.",

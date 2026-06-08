@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { markLessonComplete } from "@/components/stream/dashboard/lesson/catalog-actions"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))

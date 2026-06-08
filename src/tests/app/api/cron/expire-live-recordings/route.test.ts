@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { deleteRecordingObject } from "@/components/school-dashboard/conference/livekit/recording-urls"
-
 import { GET } from "@/app/api/cron/expire-live-recordings/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))

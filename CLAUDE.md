@@ -10,7 +10,7 @@ This file provides guidance to Claude Code when working with this repository.
 pnpm install && pnpm prisma generate && pnpm dev
 ```
 
-### The 8 Critical Rules
+### The 9 Critical Rules
 
 1. **Always use pnpm** (Vercel requirement)
 2. **Always include schoolId** in database queries (multi-tenant isolation)
@@ -20,6 +20,7 @@ pnpm install && pnpm prisma generate && pnpm dev
 6. **Always use port 3000** for dev server - NEVER switch to another port
 7. **Only use central `.env`** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files
 8. **NEVER run `pnpm db:seed`** - Always use `pnpm db:seed:single <name>`. Full seed is manual-only.
+9. **Work directly on `main`** - Edit and commit in `/Users/abdout/hogwarts` on `main`. NEVER create git branches, worktrees, stashes, or snapshots, and never `git checkout`/`switch` to another branch. No "park" / "snapshot" / "integration" switching. Push to production only when the user says "deploy".
 
 ---
 

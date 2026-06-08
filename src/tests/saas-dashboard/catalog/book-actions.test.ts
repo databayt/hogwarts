@@ -6,8 +6,11 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
-import { createBook, deleteBook, updateBook } from "@/components/saas-dashboard/catalog/book-actions"
+import {
+  createBook,
+  deleteBook,
+  updateBook,
+} from "@/components/saas-dashboard/catalog/book-actions"
 
 // ============================================================================
 // Mocks

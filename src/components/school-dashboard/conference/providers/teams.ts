@@ -10,47 +10,53 @@
 // meetings — app-only Graph cannot use `/me`). createMeeting is wired;
 // getRecording/getAttendance stay deferred.
 
+import { getCachedToken } from "./token-cache"
 import {
+  ProviderNotConfiguredError,
+  ProviderNotImplementedError,
   type ConferenceProviderAdapter,
   type CreateMeetingInput,
   type MeetingResult,
-  ProviderNotConfiguredError,
-  ProviderNotImplementedError,
 } from "./types"
 
 function configured(): boolean {
   return Boolean(
     process.env.AZURE_TENANT_ID &&
-      process.env.AZURE_CLIENT_ID &&
-      process.env.AZURE_CLIENT_SECRET
+    process.env.AZURE_CLIENT_ID &&
+    process.env.AZURE_CLIENT_SECRET
   )
 }
 
 /** Client-credentials grant against the tenant's Graph token endpoint. */
 async function getAccessToken(): Promise<string> {
-  const res = await fetch(
-    `https://login.microsoftonline.com/${encodeURIComponent(
-      process.env.AZURE_TENANT_ID ?? ""
-    )}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: process.env.AZURE_CLIENT_ID ?? "",
-        client_secret: process.env.AZURE_CLIENT_SECRET ?? "",
-        scope: "https://graph.microsoft.com/.default",
-        grant_type: "client_credentials",
-      }),
+  return getCachedToken("teams", async () => {
+    const res = await fetch(
+      `https://login.microsoftonline.com/${encodeURIComponent(
+        process.env.AZURE_TENANT_ID ?? ""
+      )}/oauth2/v2.0/token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: process.env.AZURE_CLIENT_ID ?? "",
+          client_secret: process.env.AZURE_CLIENT_SECRET ?? "",
+          scope: "https://graph.microsoft.com/.default",
+          grant_type: "client_credentials",
+        }),
+      }
+    )
+    if (!res.ok) {
+      throw new Error(`Azure OAuth token exchange failed (${res.status})`)
     }
-  )
-  if (!res.ok) {
-    throw new Error(`Azure OAuth token exchange failed (${res.status})`)
-  }
-  const json = (await res.json()) as { access_token?: string }
-  if (!json.access_token) {
-    throw new Error("Azure OAuth returned no access_token")
-  }
-  return json.access_token
+    const json = (await res.json()) as {
+      access_token?: string
+      expires_in?: number
+    }
+    if (!json.access_token) {
+      throw new Error("Azure OAuth returned no access_token")
+    }
+    return { token: json.access_token, expiresInSec: json.expires_in ?? 3600 }
+  })
 }
 
 export const teamsAdapter: ConferenceProviderAdapter = {
@@ -86,7 +92,11 @@ export const teamsAdapter: ConferenceProviderAdapter = {
     }
     const json = (await res.json()) as { id?: string; joinWebUrl?: string }
     if (!json.joinWebUrl) throw new Error("Teams returned no joinWebUrl")
-    return { provider: "teams", externalId: json.id ?? "", joinUrl: json.joinWebUrl }
+    return {
+      provider: "teams",
+      externalId: json.id ?? "",
+      joinUrl: json.joinWebUrl,
+    }
   },
 
   async getRecording() {

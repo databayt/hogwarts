@@ -10,7 +10,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { canUseAI } from "@/lib/ai/budget"
 import { extractWithSchema } from "@/lib/document-extraction"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { extractForAutoFill } from "@/components/school-marketing/application/attachments/extract-action"
 
 // ---------------------------------------------------------------------------

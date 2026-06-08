@@ -10,7 +10,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { handleWebhookEvent } from "@/components/school-dashboard/conference/livekit/webhook"
 
 vi.mock("@/lib/db", () => ({
@@ -211,7 +210,9 @@ describe("handleWebhookEvent — auto-recording on room_started", () => {
   })
 
   it("egress start failure is best-effort — room still goes live", async () => {
-    startCompositeEgress.mockRejectedValueOnce(new Error("egress boom") as never)
+    startCompositeEgress.mockRejectedValueOnce(
+      new Error("egress boom") as never
+    )
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(true)
     expect(db.conference.update).toHaveBeenCalledWith(
@@ -345,9 +346,7 @@ describe("handleWebhookEvent — idempotency + safety", () => {
   })
 
   it("room name parses to a session that does not belong to this tenant → drops", async () => {
-    vi.mocked(db.conference.findFirst).mockResolvedValueOnce(
-      null as never
-    )
+    vi.mocked(db.conference.findFirst).mockResolvedValueOnce(null as never)
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(false)
     expect(db.conference.update).not.toHaveBeenCalled()

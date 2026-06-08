@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
-
 import { GET } from "@/app/api/cron/attendance-policies/route"
 
 vi.mock("@/lib/db", () => ({

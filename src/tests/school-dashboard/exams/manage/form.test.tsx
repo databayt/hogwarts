@@ -87,12 +87,14 @@ describe("ExamCreateForm — smoke", () => {
   })
 
   it("mounts without throwing", async () => {
-    const { ExamCreateForm } = await import("@/components/school-dashboard/exams/manage/form")
+    const { ExamCreateForm } =
+      await import("@/components/school-dashboard/exams/manage/form")
     expect(() => render(<ExamCreateForm />)).not.toThrow()
   })
 
   it("renders interactable elements (buttons + inputs)", async () => {
-    const { ExamCreateForm } = await import("@/components/school-dashboard/exams/manage/form")
+    const { ExamCreateForm } =
+      await import("@/components/school-dashboard/exams/manage/form")
     const { container } = render(<ExamCreateForm />)
     expect(container.querySelectorAll("button").length).toBeGreaterThan(0)
     expect(container.querySelectorAll("input,textarea").length).toBeGreaterThan(
@@ -101,7 +103,8 @@ describe("ExamCreateForm — smoke", () => {
   })
 
   it("dispatches input change events without crashing", async () => {
-    const { ExamCreateForm } = await import("@/components/school-dashboard/exams/manage/form")
+    const { ExamCreateForm } =
+      await import("@/components/school-dashboard/exams/manage/form")
     const { container } = render(<ExamCreateForm />)
     const firstInput = container.querySelector(
       "input"

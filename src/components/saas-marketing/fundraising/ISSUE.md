@@ -11,7 +11,6 @@ docs: https://ed.databayt.org/en/docs/fundraising
 last_audited: 2026-05-25
 ---
 
-
 # Fundraising — Production Readiness Tracker
 
 **Status:** IN PROGRESS
@@ -35,6 +34,7 @@ last_audited: 2026-05-25
 ## Known Issues
 
 ### P1 — High
+
 - [ ] _Non-dilutive routes have to close before any SAFE-cap is opened — see [Get support](https://ed.databayt.org/en/docs/fundraising)._
 
 ## Resolved Issues

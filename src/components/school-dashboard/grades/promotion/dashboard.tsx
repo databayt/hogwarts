@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
   approvePromotionBatch,
@@ -164,7 +164,9 @@ export function PromotionDashboard({
             </Select>
             <Select value={gradeId} onValueChange={setGradeId}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t.evaluation.selectGradePlaceholder} />
+                <SelectValue
+                  placeholder={t.evaluation.selectGradePlaceholder}
+                />
               </SelectTrigger>
               <SelectContent>
                 {grades.map((g) => (

@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { notifyGuardiansOfTripEvent } from "@/components/school-dashboard/transportation/actions/notifications"
 import {
   cancelTrip,
@@ -46,9 +45,12 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 // Mock the notification side-effect (fired with `void`, must not run real code)
-vi.mock("@/components/school-dashboard/transportation/actions/notifications", () => ({
-  notifyGuardiansOfTripEvent: vi.fn(),
-}))
+vi.mock(
+  "@/components/school-dashboard/transportation/actions/notifications",
+  () => ({
+    notifyGuardiansOfTripEvent: vi.fn(),
+  })
+)
 
 const SCHOOL_A = "school-A"
 const SCHOOL_B = "school-B"

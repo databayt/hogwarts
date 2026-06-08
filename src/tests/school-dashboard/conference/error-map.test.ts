@@ -4,7 +4,6 @@
 import { describe, expect, it } from "vitest"
 
 import { ACTION_ERRORS } from "@/lib/action-errors"
-
 import { resolveLiveClassError } from "@/components/school-dashboard/conference/error-map"
 
 const dictWithErrors = {

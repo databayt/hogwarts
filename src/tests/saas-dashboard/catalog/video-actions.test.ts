@@ -5,14 +5,13 @@ import { revalidatePath } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
-
 import {
   createVideo,
   deleteVideo,
   getVideos,
   toggleVideoFeatured,
 } from "@/components/saas-dashboard/catalog/video-actions"
+import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
 // Mocks

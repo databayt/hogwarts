@@ -5,8 +5,8 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { AIContent } from "@/components/school-dashboard/attendance/ai/content"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 
 export const metadata = { title: "Dashboard: AI Attendance" }
 

@@ -4,6 +4,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { StartLiveClassButton } from "@/components/school-dashboard/timetable/views/start-live-class-button"
+
 const { push, createLiveClassFromTimetable, ErrorToast } = vi.hoisted(() => ({
   push: vi.fn(),
   createLiveClassFromTimetable: vi.fn(),
@@ -15,8 +17,6 @@ vi.mock("@/components/school-dashboard/conference/actions/sessions", () => ({
   createLiveClassFromTimetable,
 }))
 vi.mock("@/components/atom/toast", () => ({ ErrorToast }))
-
-import { StartLiveClassButton } from "@/components/school-dashboard/timetable/views/start-live-class-button"
 
 const labels = {
   label: "Start live class",

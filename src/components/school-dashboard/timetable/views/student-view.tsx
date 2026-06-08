@@ -354,7 +354,9 @@ export default function StudentView({
                 <LiveJoinButton
                   liveClass={currentClassInfo.item.liveClass}
                   lang={lang}
-                  label={dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")}
+                  label={
+                    dictionary?.liveClasses?.join ?? (isRTL ? "انضمام" : "Join")
+                  }
                 />
               )}
             </div>

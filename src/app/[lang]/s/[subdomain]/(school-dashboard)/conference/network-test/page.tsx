@@ -4,13 +4,13 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   getLiveKitConfig,
   getLiveKitReadiness,
 } from "@/components/school-dashboard/conference/livekit/client"
 import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
-import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { NetworkTestClient } from "@/components/school-dashboard/conference/network-test"
 
 interface Props {

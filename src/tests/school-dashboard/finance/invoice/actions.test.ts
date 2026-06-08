@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import * as actions from "@/components/school-dashboard/finance/invoice/actions"
 
 // ============================================================================
@@ -69,9 +68,12 @@ vi.mock("@/components/school-dashboard/finance/invoice/email.config", () => ({
   },
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/send-invoice-email", () => ({
-  SendInvoiceEmail: vi.fn().mockReturnValue("<div>email</div>"),
-}))
+vi.mock(
+  "@/components/school-dashboard/finance/invoice/send-invoice-email",
+  () => ({
+    SendInvoiceEmail: vi.fn().mockReturnValue("<div>email</div>"),
+  })
+)
 
 // ============================================================================
 // Helpers
@@ -595,7 +597,8 @@ describe("invoice/actions.ts", () => {
         total: 5000,
       } as any)
 
-      const { resend } = await import("@/components/school-dashboard/finance/invoice/email.config")
+      const { resend } =
+        await import("@/components/school-dashboard/finance/invoice/email.config")
       vi.mocked(resend.emails.send).mockResolvedValueOnce({
         error: { message: "Rate limited" },
       } as any)

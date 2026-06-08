@@ -4,8 +4,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
-import { getClassIdsByGrade, getTeacherClassIds } from "@/components/school-dashboard/attendance/actions/helpers"
+import {
+  getClassIdsByGrade,
+  getTeacherClassIds,
+} from "@/components/school-dashboard/attendance/actions/helpers"
 
 vi.mock("@/lib/db", () => ({
   db: {

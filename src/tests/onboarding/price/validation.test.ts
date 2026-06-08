@@ -4,7 +4,6 @@
 import { describe, expect, it } from "vitest"
 
 import { ValidationHelper } from "@/components/internationalization/helpers"
-
 import {
   createSchoolPriceSchema,
   createTuitionSchema,

@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { startExamSession } from "@/components/school-dashboard/exams/take/actions"
 
 const SCHOOL_ID = "clschool000000000000000001"

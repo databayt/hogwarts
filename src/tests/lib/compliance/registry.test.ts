@@ -4,7 +4,10 @@
 import { ComplianceProvider, ConnectorMode } from "@prisma/client"
 import { describe, expect, it } from "vitest"
 
-import { getConnector, listConnectorsForProvider } from "@/lib/compliance/registry"
+import {
+  getConnector,
+  listConnectorsForProvider,
+} from "@/lib/compliance/registry"
 
 describe("compliance connector registry", () => {
   describe("getConnector", () => {

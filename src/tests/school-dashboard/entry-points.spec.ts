@@ -8,7 +8,10 @@
 
 import { expect, test } from "@playwright/test"
 
-import { assertNoSSE, assertRedirectedToLogin } from "../e2e/_support/helpers/assertions"
+import {
+  assertNoSSE,
+  assertRedirectedToLogin,
+} from "../e2e/_support/helpers/assertions"
 import {
   buildSchoolUrl,
   getSchoolUrl,

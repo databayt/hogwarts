@@ -6,7 +6,14 @@ model: sonnet
 
 # Git & GitHub Workflow Agent
 
-**Specialization**: Git operations, conventional commits, GitHub integration, PR/issue management
+**Specialization**: Git operations, conventional commits, GitHub integration, issue management
+
+---
+
+> ## 🚩 HOUSE RULE — work directly on `main`
+>
+> No feature branches. No worktrees. No PRs. Commit + `pull --rebase` + push straight to `main`.
+> Concurrent worktree sessions kept resetting `main` and wiping work — so: one working tree, one branch, commit early and often. Branch/PR/worktree patterns below are reference only — do not apply them.
 
 ---
 
@@ -66,85 +73,31 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ## GitHub Integration
 
-### Creating Pull Requests
+### Shipping a Change (main-only)
 
 ```bash
-# Create feature branch
-git checkout -b feature/student-reports
+# Confirm on main and sync
+git branch --show-current        # → main
+git pull --rebase origin main
 
 # Make changes and commit
 git add .
-git commit -m "feat: add student report generation"
+git commit -m "feat: add student report generation
 
-# Push branch
-git push -u origin feature/student-reports
-
-# Create PR with gh CLI
-gh pr create \
-  --title "Add student report generation" \
-  --body "$(cat <<'EOF'
-## Summary
-- Added PDF report generation for student records
-- Implemented customizable report templates
-- Added bulk export functionality
-
-## Changes
-- New report generation service
-- PDF template system
-- Bulk export API endpoint
-
-## Testing
-- [ ] Unit tests for report service
-- [ ] E2E tests for export flow
-- [ ] Manual testing of PDF generation
-
-## Screenshots
-[Add if applicable]
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)"
-```
-
-### PR Template
-
-```markdown
-## Summary
-
-Brief description of changes
-
-## Type of Change
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Changes Made
-
-- Bullet point list
-- Of specific changes
-
-## Testing
-
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
-
-## Checklist
-
-- [ ] Code follows project style
-- [ ] Self-review completed
-- [ ] Comments added for complex code
-- [ ] Documentation updated
-- [ ] No console.log statements
-- [ ] Multi-tenant safety verified
-- [ ] i18n keys added
-
-## Related Issues
+- Add PDF report generation for student records
+- Implement customizable report templates
+- Add bulk export functionality
 
 Closes #123
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# Sync again, then push straight to main (Vercel auto-deploys)
+git pull --rebase origin main
+git push origin main
 ```
+
+> The pre-commit/pre-push quality gate (tests, lint, tsc, build, prettier) is our automated reviewer — it replaces PR review. Fix any blocked check, then push again.
 
 ### Working with Issues
 
@@ -158,59 +111,27 @@ gh issue create \
   --body "Description of the issue" \
   --label "bug,priority:high"
 
-# Link PR to issue
-gh pr create --body "Fixes #123"
+# Link a commit to an issue: put "Closes #123" in the commit message
+git commit -m "fix(students): resolve enrollment validation
+
+Closes #123"
 ```
 
 ## Branching Strategy
 
-### Branch Types
+> Reference only — not our workflow. We use a single branch (`main`): no `develop`, `feature/*`, `fix/*`, `hotfix/*`, or `release/*`, and no worktrees. The structure below is documented for historical context; do not create these branches.
 
 ```
-main                    # Production code
-├── develop            # Integration branch
-├── feature/*          # New features
-├── fix/*             # Bug fixes
-├── hotfix/*          # Urgent production fixes
-└── release/*         # Release preparation
+main                    # The single branch — all work commits here
 ```
 
-### Branch Naming
+## Conflict Resolution (during `pull --rebase`)
 
-```
-feature/add-payment-gateway
-fix/student-enrollment-validation
-hotfix/security-patch
-release/v2.1.0
-```
-
-### Branch Commands
+### Resolving a rebase conflict
 
 ```bash
-# Create and switch to new branch
-git checkout -b feature/new-feature
-
-# List all branches
-git branch -a
-
-# Delete local branch
-git branch -d feature/old-feature
-
-# Delete remote branch
-git push origin --delete feature/old-feature
-
-# Merge branch
-git checkout main
-git merge feature/new-feature
-```
-
-## Conflict Resolution
-
-### Merge Conflicts
-
-```bash
-# Pull latest changes
-git pull origin main
+# Sync main with rebase
+git pull --rebase origin main
 
 # If conflicts occur
 # 1. Open conflicted files
@@ -218,21 +139,17 @@ git pull origin main
 # 3. Stage resolved files
 git add .
 
-# 4. Complete merge
-git commit
+# 4. Continue the rebase
+git rebase --continue
 
-# Or abort merge
-git merge --abort
+# Or abort and re-try
+git rebase --abort
 ```
 
-### Rebase Workflow
+### Cleaning local history before push
 
 ```bash
-# Rebase feature branch on main
-git checkout feature/my-feature
-git rebase main
-
-# Interactive rebase to clean history
+# Interactive rebase to tidy your local commits (before pushing)
 git rebase -i HEAD~3
 
 # If conflicts during rebase
@@ -329,19 +246,20 @@ gh run rerun <run-id>
 - [ ] Sign commits when required
 - [ ] Keep commits atomic and focused
 
-### PR Guidelines
+### Push Guidelines (main-only)
 
-- [ ] Keep PRs small and focused
-- [ ] Write comprehensive descriptions
+- [ ] Keep commits small, atomic, and focused
+- [ ] Write comprehensive commit messages
 - [ ] Add tests for new features
-- [ ] Request reviews from relevant people
-- [ ] Address all review comments
-- [ ] Ensure CI passes before merging
+- [ ] `git pull --rebase origin main` before pushing
+- [ ] Let the pre-commit/pre-push hook gate the push (it must pass)
+- [ ] Commit early and often so concurrent sessions don't clobber `main`
+
+> PR review guidelines (small focused PRs, request reviewers, address comments) are reference only — we don't open PRs.
 
 ### Security
 
 - [ ] Never commit secrets
 - [ ] Use .gitignore properly
 - [ ] Review changes before committing
-- [ ] Verify branch protection rules
 - [ ] Use signed commits when possible

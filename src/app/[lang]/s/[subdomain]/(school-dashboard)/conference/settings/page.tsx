@@ -39,7 +39,9 @@ export default async function Page({ params }: Props) {
   return (
     <div className="space-y-6 p-6">
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold">{t?.title ?? "Conference settings"}</h2>
+        <h2 className="text-lg font-semibold">
+          {t?.title ?? "Conference settings"}
+        </h2>
         <p className="text-muted-foreground text-sm">
           {t?.description ??
             "Per-school recording retention and capacity limits."}

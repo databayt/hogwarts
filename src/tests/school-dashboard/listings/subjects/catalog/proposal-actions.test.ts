@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   getMyProposals,
   submitChapterProposal,

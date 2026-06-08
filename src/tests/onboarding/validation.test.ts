@@ -55,6 +55,7 @@ import {
   // Helper functions
   validateStep,
 } from "@/components/onboarding/validation"
+
 import { createMockDictionary } from "./factories/dictionary"
 import {
   createBrandingStepData,

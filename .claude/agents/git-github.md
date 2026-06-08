@@ -6,7 +6,14 @@ model: sonnet
 
 # Git & GitHub Workflow Agent
 
-**Specialization**: Git workflow, conventional commits, GitHub integration, PR/issue management
+**Specialization**: Git workflow, conventional commits, GitHub integration, issue management
+
+---
+
+> ## 🚩 HOUSE RULE — work directly on `main`
+>
+> No feature branches. No worktrees. No PRs. Commit + `pull --rebase` + push straight to `main`.
+> Concurrent worktree sessions kept resetting `main` and wiping work — so: one working tree, one branch, commit early and often. Branch/PR/worktree patterns below are reference only — do not apply them.
 
 ---
 
@@ -45,11 +52,11 @@ git commit -m "feat(students): Add bulk attendance marking
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
-### Basic Workflow
+### Basic Workflow (main-only)
 
 ```bash
-# Update local repository
-git fetch
+# Confirm we're on main
+git branch --show-current   # → main
 
 # Check status
 git status
@@ -59,49 +66,37 @@ git add <files>
 # or
 git add .
 
-# Commit with message
+# Commit with conventional message
 git commit -m "type(scope): message"
 
-# Push to remote
-git push origin <branch>
+# Sync then push straight to main
+git pull --rebase origin main
+git push origin main
 ```
 
 ### Branch Strategy
 
-- **main** - Production-ready code
-- **develop** - Development/staging code
-- **feature/\*** - New features (e.g., feature/attendance-tracking)
-- **fix/\*** - Bug fixes (e.g., fix/login-error)
-- **hotfix/\*** - Urgent production fixes
+> Reference only — not our workflow. We work directly on `main` (no `develop`, no `feature/*`, no `hotfix/*`). Listed for historical context.
+
+- **main** - The single branch. All work commits here.
 
 ### Common Operations
 
-#### Create Feature Branch
+#### Sync `main` before working
 
 ```bash
-git checkout -b feature/new-feature
-git push -u origin feature/new-feature
+git branch --show-current   # → main
+git pull --rebase origin main
 ```
 
-#### Update Branch from Main
+#### Conflict Resolution (during `pull --rebase`)
 
 ```bash
-git checkout main
-git pull
-git checkout feature/my-feature
-git rebase main
-```
-
-#### Merge Conflict Resolution
-
-```bash
-# During rebase or merge
+# If a rebase conflict occurs while pulling main
 git status  # See conflicted files
 # Edit files to resolve conflicts
 git add <resolved-files>
 git rebase --continue
-# or
-git merge --continue
 ```
 
 ---
@@ -112,39 +107,14 @@ git merge --continue
 
 #### Pull Requests
 
+> Reference only — not our workflow. We commit + push straight to `main`; we do not open PRs. The commands below are kept for the rare case of an external contribution that arrives as a PR.
+
 ```bash
-# Create PR
-gh pr create --title "feat: Add attendance feature" --body "Description"
-
-# Create PR with template
-gh pr create --title "Title" --body "$(cat <<'EOF'
-## Summary
-Brief description of changes
-
-## Changes
-- Change 1
-- Change 2
-
-## Testing
-- [x] Unit tests pass
-- [x] Manual testing done
-
-## Screenshots
-(if UI changes)
-EOF
-)"
-
-# List PRs
+# List PRs (e.g. to review an external contribution)
 gh pr list
 
 # View PR details
 gh pr view 123
-
-# Check PR status
-gh pr status
-
-# Merge PR
-gh pr merge 123 --squash
 ```
 
 #### Issues
@@ -201,15 +171,16 @@ gh repo create my-new-repo --public
 
 ## PR Best Practices
 
+> Reference only — not our workflow. We don't open PRs; we commit + push to `main`. The pre-commit/pre-push quality gate (tests, lint, tsc, build, prettier) replaces PR review for us. Keep this section only for understanding inbound external PRs.
+
 ### PR Checklist
 
-Before creating a PR:
+Reference checklist for an inbound external PR before it's accepted:
 
 - [ ] Code follows project conventions
 - [ ] All tests pass locally
 - [ ] Commit messages are clear and conventional
-- [ ] Branch is up to date with base branch
-- [ ] No merge conflicts
+- [ ] No merge conflicts with `main`
 - [ ] Documentation updated (if needed)
 - [ ] Changelog updated (if applicable)
 
@@ -324,28 +295,28 @@ Common labels to use:
 
 ## Common Workflows
 
-### Creating a Feature PR
+### Shipping a Feature (main-only)
 
 ```bash
-# 1. Create feature branch
-git checkout -b feature/attendance-tracking
+# 1. Confirm on main and sync
+git branch --show-current   # → main
+git pull --rebase origin main
 
 # 2. Make changes and commit
 git add .
 git commit -m "feat(attendance): Add tracking feature"
 
-# 3. Push to GitHub
-git push -u origin feature/attendance-tracking
-
-# 4. Create PR
-gh pr create --title "feat: Add attendance tracking" --body "Implements student attendance tracking with bulk operations"
+# 3. Push straight to main (Vercel auto-deploys; pre-push hook gates)
+git pull --rebase origin main
+git push origin main
 ```
 
-### Fixing a Bug
+### Fixing a Bug (main-only)
 
 ```bash
-# 1. Create fix branch
-git checkout -b fix/login-timeout
+# 1. Confirm on main and sync
+git branch --show-current   # → main
+git pull --rebase origin main
 
 # 2. Fix and commit
 git add src/auth/session.ts
@@ -353,22 +324,23 @@ git commit -m "fix(auth): Resolve session timeout issue
 
 - Increase session duration to 24 hours
 - Add automatic session refresh
-- Update session handling in middleware"
+- Update session handling in middleware
 
-# 3. Push and create PR
-git push -u origin fix/login-timeout
-gh pr create --title "fix: Resolve session timeout" --body "Fixes #123"
+Fixes #123"
+
+# 3. Push straight to main
+git pull --rebase origin main
+git push origin main
 ```
 
-### Updating PR After Review
+### Following Up After Review
 
 ```bash
-# Make requested changes
+# Review happens on the commit/issue, not a PR. Make requested changes:
 git add .
-git commit -m "refactor: Address code review feedback"
-
-# Force push if rebased
-git push origin feature/my-feature
+git commit -m "refactor: Address review feedback"
+git pull --rebase origin main
+git push origin main
 ```
 
 ---
@@ -376,32 +348,31 @@ git push origin feature/my-feature
 ## Integration Points
 
 - `/agents/orchestrate` - For complex multi-step workflows
-- `/commands/review` - Before creating PR
-- `/commands/deploy` - After PR merge
+- `/commands/review` - Before committing to `main`
+- `/commands/deploy` - After pushing to `main` (Vercel auto-deploys)
 
 ---
 
 ## Invoke This Agent When
 
 - Creating commits with conventional format
-- Managing branches
-- Creating pull requests
+- Committing + pushing straight to `main`
 - Managing issues
-- Resolving merge conflicts
-- GitHub CLI operations
-- Code review workflows
+- Resolving `pull --rebase` conflicts on `main`
+- GitHub CLI operations (issues, repo)
+- Pre-commit/pre-push quality-gate questions
 
 ---
 
 ## Red Flags
 
 - ❌ Commit messages not following conventional format
-- ❌ Force pushing to main/master branch
-- ❌ Large PRs with mixed concerns (>500 lines)
-- ❌ PRs without description or testing info
+- ❌ Creating a feature branch, worktree, or PR instead of committing to `main`
+- ❌ `git reset --hard` on `main` while another session may be working (wipes uncommitted work)
+- ❌ Force pushing to `main`
 - ❌ Committing sensitive data (.env files, secrets)
-- ❌ Merge commits instead of rebase (if project uses rebase)
+- ❌ Letting work pile up uncommitted — commit early and often
 
 ---
 
-**Rule**: Conventional commits. Clear PR descriptions. Link issues. Request reviews. Keep PRs focused.
+**Rule**: Work on `main`. Conventional commits. `pull --rebase` then push. Link issues. Commit early and often — the pre-commit/pre-push gate keeps `main` green.

@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { rateLimit } from "@/lib/rate-limit"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { GET } from "@/app/api/classrooms/route"
 
 vi.mock("@/lib/db", () => ({

@@ -5,8 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { exportSchoolData, getSchoolUsers, updateUserRole } from "@/components/school-dashboard/settings/actions"
+import {
+  exportSchoolData,
+  getSchoolUsers,
+  updateUserRole,
+} from "@/components/school-dashboard/settings/actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({

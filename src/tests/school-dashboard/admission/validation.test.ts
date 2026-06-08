@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest"
 
-import { campaignSchema, campaignSchemaWithValidation } from "@/components/school-dashboard/admission/validation"
+import {
+  campaignSchema,
+  campaignSchemaWithValidation,
+} from "@/components/school-dashboard/admission/validation"
 
 describe("Admission Validation", () => {
   const validCampaign = {

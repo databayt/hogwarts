@@ -33,6 +33,11 @@ export function resolveLiveClassError(
       return errs?.roomFull ?? "Room is full."
     case "LIVE_CLASS_MAX_DURATION_EXCEEDED":
       return errs?.maxDuration ?? "Class duration exceeds the school maximum."
+    case "LIVE_CLASS_MAX_CONCURRENT":
+      return (
+        errs?.maxConcurrent ??
+        "The school has reached its limit of concurrent live classes."
+      )
     case "LIVE_CLASS_TOKEN_FAILED":
       return errs?.tokenFailed ?? "Could not issue a room token."
     case "LIVE_CLASS_PARTICIPANT_DENIED":

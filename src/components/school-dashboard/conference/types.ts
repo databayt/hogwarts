@@ -2,11 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type {
+  Conference,
   ConferenceParticipant,
   ConferenceParticipantRole,
   ConferenceRecording,
   ConferenceRecordingStatus,
-  Conference,
   ConferenceStatus,
 } from "@prisma/client"
 

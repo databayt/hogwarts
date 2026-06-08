@@ -30,12 +30,15 @@ canonical for code-side context (read by the `/report` agent)._
 ## Known Issues
 
 ### P0 — Critical
+
 - [ ] _To be filled in_
 
 ### P1 — High
+
 - [ ] _To be filled in_
 
 ### P2 — Medium
+
 - [ ] _To be filled in_
 
 ## Resolved Issues

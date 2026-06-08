@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { getSchoolSubjects } from "@/lib/school-subjects"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { getSubjects } from "@/components/school-dashboard/listings/subjects/actions"
 
 // Mock dependencies

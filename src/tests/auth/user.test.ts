@@ -22,7 +22,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Import modules AFTER mocking
 import { db } from "@/lib/db"
-
 import {
   deleteCurrentUser,
   getOrCreateOAuthUser,

@@ -41,33 +41,33 @@ src/components/school-dashboard/conference/
 
 ## Components
 
-| File                                  | Purpose                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------ |
-| `content.tsx`                         | Server component — fetches + renders the conference DataTable index.     |
-| `actions.ts` + `actions/`             | Server actions: `sessions` (lifecycle), `tokens` (join), `recordings`, `notifications`, `settings`, `moderation` (kick), `recurring` (link carry-forward), `helpers`. |
-| `queries.ts`                          | Read-only DataTable queries.                                             |
-| `authorization.ts`                    | `PERMISSION_MATRIX` — RBAC per action.                                   |
-| `permissions.ts` · `list-permissions.ts` | UI gating (tabs / show-hide per role).                               |
-| `validation.ts` · `list-validation.ts`   | Zod schemas + inferred types.                                        |
-| `columns.tsx` · `table.tsx` · `form.tsx` · `list-params.ts` | DataTable client surface.                          |
-| `detail.tsx` · `room.tsx` · `recordings.tsx` · `recording-player.tsx` | LiveKit detail / in-app room / playback. |
-| `network-test.tsx`                    | LiveKit connectivity + `getLiveKitReadiness()` diagnostic (DEV/ADMIN).   |
-| `schedule-form.tsx` · `settings-form.tsx` | Scheduler + admin settings client forms.                             |
-| `types.ts` · `error-map.ts`           | Domain types + error-code → string mapping.                             |
-| `livekit/`                            | SFU SDK wrappers: `client` (config + readiness), `token`, `rooms`, `egress`, `recording-urls`, `room-naming`, `webhook`. |
-| `providers/`                          | Link-provider adapters: `types`, `external` (live), `google-meet`/`zoom`/`teams` (stubs), `index` registry. |
+| File                                                                  | Purpose                                                                                                                                                               |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content.tsx`                                                         | Server component — fetches + renders the conference DataTable index.                                                                                                  |
+| `actions.ts` + `actions/`                                             | Server actions: `sessions` (lifecycle), `tokens` (join), `recordings`, `notifications`, `settings`, `moderation` (kick), `recurring` (link carry-forward), `helpers`. |
+| `queries.ts`                                                          | Read-only DataTable queries.                                                                                                                                          |
+| `authorization.ts`                                                    | `PERMISSION_MATRIX` — RBAC per action.                                                                                                                                |
+| `permissions.ts` · `list-permissions.ts`                              | UI gating (tabs / show-hide per role).                                                                                                                                |
+| `validation.ts` · `list-validation.ts`                                | Zod schemas + inferred types.                                                                                                                                         |
+| `columns.tsx` · `table.tsx` · `form.tsx` · `list-params.ts`           | DataTable client surface.                                                                                                                                             |
+| `detail.tsx` · `room.tsx` · `recordings.tsx` · `recording-player.tsx` | LiveKit detail / in-app room / playback.                                                                                                                              |
+| `network-test.tsx`                                                    | LiveKit connectivity + `getLiveKitReadiness()` diagnostic (DEV/ADMIN).                                                                                                |
+| `schedule-form.tsx` · `settings-form.tsx`                             | Scheduler + admin settings client forms.                                                                                                                              |
+| `types.ts` · `error-map.ts`                                           | Domain types + error-code → string mapping.                                                                                                                           |
+| `livekit/`                                                            | SFU SDK wrappers: `client` (config + readiness), `token`, `rooms`, `egress`, `recording-urls`, `room-naming`, `webhook`.                                              |
+| `providers/`                                                          | Link-provider adapters: `types`, `external` (live), `google-meet`/`zoom`/`teams` (stubs), `index` registry.                                                           |
 
 ## Routes
 
-| Route                         | Layout           | Renders             |
-| ----------------------------- | ---------------- | ------------------- |
-| `/conference`                 | school-dashboard | DataTable index     |
-| `/conference/[id]`            | school-dashboard | `detail.tsx`        |
-| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`    |
-| `/conference/schedule`        | school-dashboard | `schedule-form.tsx` |
-| `/conference/settings`        | school-dashboard | `settings-form.tsx` |
-| `/conference/network-test`    | school-dashboard | `network-test.tsx`  |
-| `/conference/[id]/room`       | (live-room)      | `room.tsx`          |
+| Route                         | Layout           | Renders                  |
+| ----------------------------- | ---------------- | ------------------------ |
+| `/conference`                 | school-dashboard | DataTable index          |
+| `/conference/[id]`            | school-dashboard | `detail.tsx`             |
+| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`         |
+| `/conference/schedule`        | school-dashboard | `schedule-form.tsx`      |
+| `/conference/settings`        | school-dashboard | `settings-form.tsx`      |
+| `/conference/network-test`    | school-dashboard | `network-test.tsx`       |
+| `/conference/[id]/room`       | (live-room)      | `room.tsx`               |
 | `/live-classes/*`             | —                | redirect → `/conference` |
 
 API (external/scheduler-invoked → stay routes): `api/webhooks/livekit`, `api/cron/{live-class-reminders, expire-live-recordings}`.

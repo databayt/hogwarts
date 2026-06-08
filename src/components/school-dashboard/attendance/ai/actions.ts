@@ -27,7 +27,6 @@ import { translate } from "@/components/translation/actions"
 import { detectLang } from "@/components/translation/util"
 
 import { isStaffRole } from "../authorization"
-
 import {
   getRiskLevelFromScore,
   runPredictionSchema,

@@ -92,8 +92,7 @@ export function AcademicContent({
     periodsDescription:
       c?.periodsDescription ?? "Configure daily class periods",
     levels: c?.levels ?? "Year Levels",
-    levelsDescription:
-      c?.levelsDescription ?? "Define grades and year levels",
+    levelsDescription: c?.levelsDescription ?? "Define grades and year levels",
     grading: c?.grading ?? "Grading Scale",
     gradingDescription:
       c?.gradingDescription ?? "Configure grading and score ranges",

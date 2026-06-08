@@ -123,6 +123,9 @@ export type LiveClassServerInput = z.infer<typeof liveClassScheduleSchema>
 export const idOnlySchema = z.object({ id: idSchema })
 export type IdOnly = z.infer<typeof idOnlySchema>
 
+export const timetableStartSchema = z.object({ timetableId: idSchema })
+export type TimetableStartInput = z.infer<typeof timetableStartSchema>
+
 export const cancelSchema = z.object({
   id: idSchema,
   reason: z.string().max(500).optional(),

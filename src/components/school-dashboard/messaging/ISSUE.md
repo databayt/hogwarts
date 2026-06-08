@@ -91,15 +91,15 @@ See **WhatsApp Activation Balance** near the bottom for the exact remaining ops 
 ### P0 — Critical
 
 - [x] **Group WhatsApp dispatch join table — DONE 2026-06-05.** Added the
-  `MessageWhatsappDelivery(schoolId, messageId, participantId, phone, status,
-  providerMessageId, retryCount, lastError, sentAt)` model + table (additive,
-  applied to the Neon default branch via `CREATE TABLE IF NOT EXISTS`; record at
-  `prisma/migrations/20260605000000_add_message_whatsapp_delivery`). Group
-  dispatch now writes one delivery row per recipient (pending/sent/failed), and
-  `retryFailedMessageDispatches()` has a Part B that re-sends **per recipient**
-  with exponential backoff — so already-delivered recipients aren't double-sent.
-  1:1 still uses the `Message` scalars (Part A); the two retry paths never
-  overlap. `Message` scalar columns are unchanged (no last-writer-wins).
+      `MessageWhatsappDelivery(schoolId, messageId, participantId, phone, status,
+providerMessageId, retryCount, lastError, sentAt)` model + table (additive,
+      applied to the Neon default branch via `CREATE TABLE IF NOT EXISTS`; record at
+      `prisma/migrations/20260605000000_add_message_whatsapp_delivery`). Group
+      dispatch now writes one delivery row per recipient (pending/sent/failed), and
+      `retryFailedMessageDispatches()` has a Part B that re-sends **per recipient**
+      with exponential backoff — so already-delivered recipients aren't double-sent.
+      1:1 still uses the `Message` scalars (Part A); the two retry paths never
+      overlap. `Message` scalar columns are unchanged (no last-writer-wins).
 
 ### P1 — High (Ops blockers — must complete before real traffic; tracked in #262)
 

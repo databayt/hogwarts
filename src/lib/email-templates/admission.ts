@@ -35,7 +35,8 @@ const T = {
       congrats: (studentName: string) =>
         `يسعدنا إبلاغك بقبول الطالب/ة <strong>${studentName}</strong> للالتحاق بمدرستنا.`,
       appNumber: (n: string) => `<strong>رقم الطلب:</strong> ${n}`,
-      offerPrompt: "لتأكيد القبول وإتمام التسجيل، يرجى الضغط على الرابط التالي:",
+      offerPrompt:
+        "لتأكيد القبول وإتمام التسجيل، يرجى الضغط على الرابط التالي:",
       offerLink: "عرض القبول والتسجيل",
       expiryNote: (date: string) => `هذا العرض صالح حتى ${date}.`,
       bestRegards: "مع أطيب التحيات",

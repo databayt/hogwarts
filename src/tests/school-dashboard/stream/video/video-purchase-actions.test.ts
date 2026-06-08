@@ -8,7 +8,6 @@ import { db } from "@/lib/db"
 import { checkUserRateLimit } from "@/lib/rate-limit"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { purchaseVideo } from "@/components/stream/video/video-purchase-actions"
 
 // ---------------------------------------------------------------------------

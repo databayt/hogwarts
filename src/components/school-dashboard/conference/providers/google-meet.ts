@@ -9,42 +9,48 @@
 // GOOGLE_MEET_CLIENT_SECRET, GOOGLE_MEET_REFRESH_TOKEN. createMeeting is wired;
 // getRecording/getAttendance stay deferred (Workspace Enterprise scopes).
 
+import { getCachedToken } from "./token-cache"
 import {
+  ProviderNotConfiguredError,
+  ProviderNotImplementedError,
   type ConferenceProviderAdapter,
   type CreateMeetingInput,
   type MeetingResult,
-  ProviderNotConfiguredError,
-  ProviderNotImplementedError,
 } from "./types"
 
 function configured(): boolean {
   return Boolean(
     process.env.GOOGLE_MEET_CLIENT_ID &&
-      process.env.GOOGLE_MEET_CLIENT_SECRET &&
-      process.env.GOOGLE_MEET_REFRESH_TOKEN
+    process.env.GOOGLE_MEET_CLIENT_SECRET &&
+    process.env.GOOGLE_MEET_REFRESH_TOKEN
   )
 }
 
 /** Exchange the long-lived refresh token for a short-lived access token. */
 async function getAccessToken(): Promise<string> {
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_MEET_CLIENT_ID ?? "",
-      client_secret: process.env.GOOGLE_MEET_CLIENT_SECRET ?? "",
-      refresh_token: process.env.GOOGLE_MEET_REFRESH_TOKEN ?? "",
-      grant_type: "refresh_token",
-    }),
+  return getCachedToken("google_meet", async () => {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_MEET_CLIENT_ID ?? "",
+        client_secret: process.env.GOOGLE_MEET_CLIENT_SECRET ?? "",
+        refresh_token: process.env.GOOGLE_MEET_REFRESH_TOKEN ?? "",
+        grant_type: "refresh_token",
+      }),
+    })
+    if (!res.ok) {
+      throw new Error(`Google OAuth token exchange failed (${res.status})`)
+    }
+    const json = (await res.json()) as {
+      access_token?: string
+      expires_in?: number
+    }
+    if (!json.access_token) {
+      throw new Error("Google OAuth returned no access_token")
+    }
+    return { token: json.access_token, expiresInSec: json.expires_in ?? 3600 }
   })
-  if (!res.ok) {
-    throw new Error(`Google OAuth token exchange failed (${res.status})`)
-  }
-  const json = (await res.json()) as { access_token?: string }
-  if (!json.access_token) {
-    throw new Error("Google OAuth returned no access_token")
-  }
-  return json.access_token
 }
 
 export const googleMeetAdapter: ConferenceProviderAdapter = {

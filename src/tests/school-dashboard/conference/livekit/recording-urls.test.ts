@@ -4,6 +4,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import {
+  deleteRecordingObject,
+  getRecordingPlaybackUrl,
+} from "@/components/school-dashboard/conference/livekit/recording-urls"
+
 const { sendMock, getSignedUrlMock, GetObjectCommand, DeleteObjectCommand } =
   vi.hoisted(() => ({
     sendMock: vi.fn(),
@@ -30,11 +35,6 @@ vi.mock("@aws-sdk/client-s3", () => {
 vi.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: getSignedUrlMock,
 }))
-
-import {
-  deleteRecordingObject,
-  getRecordingPlaybackUrl,
-} from "@/components/school-dashboard/conference/livekit/recording-urls"
 
 beforeEach(() => {
   vi.clearAllMocks()

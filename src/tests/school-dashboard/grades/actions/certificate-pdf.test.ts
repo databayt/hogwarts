@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getProvider } from "@/components/file/providers/factory"
-
 import {
   batchGenerateCertificatePDFs,
   generateCertificatePDF,
@@ -109,9 +108,9 @@ describe("generateCertificatePDF", () => {
       schoolId: SCHOOL,
     })
     const updateArg = vi.mocked(db.examCertificate.update).mock.calls[0][0]
-    expect(
-      (updateArg as { data: { pdfUrl: string } }).data.pdfUrl
-    ).toBe("https://cdn/certificates/x.pdf")
+    expect((updateArg as { data: { pdfUrl: string } }).data.pdfUrl).toBe(
+      "https://cdn/certificates/x.pdf"
+    )
   })
 
   it("rejects when not authenticated", async () => {

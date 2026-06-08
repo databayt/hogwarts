@@ -14,9 +14,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { fetchNotificationBellData } from "@/components/school-dashboard/notifications/poll-actions"
-import { getRecentNotifications, getUnreadNotificationCount } from "@/components/school-dashboard/notifications/queries"
+import {
+  getRecentNotifications,
+  getUnreadNotificationCount,
+} from "@/components/school-dashboard/notifications/queries"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))

@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import * as dbMod from "@/lib/db"
-
 import { fetchLogs } from "@/components/saas-dashboard/observability/provider"
 
 describe("observability/provider", () => {

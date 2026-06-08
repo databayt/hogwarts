@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest"
 
-import { getTabsForRole, getUIConfigForRole } from "@/components/school-dashboard/attendance/permissions"
+import {
+  getTabsForRole,
+  getUIConfigForRole,
+} from "@/components/school-dashboard/attendance/permissions"
 
 describe("attendance UI permissions", () => {
   describe("getTabsForRole", () => {

@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
-import { generateSections, getGradeConfiguration } from "@/components/school-dashboard/listings/classrooms/configure/actions"
+import {
+  generateSections,
+  getGradeConfiguration,
+} from "@/components/school-dashboard/listings/classrooms/configure/actions"
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),

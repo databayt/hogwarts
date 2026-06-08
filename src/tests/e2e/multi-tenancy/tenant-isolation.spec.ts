@@ -10,7 +10,11 @@
 import { expect, test } from "@playwright/test"
 
 import { assertNoSSE } from "../_support/helpers/assertions"
-import { buildSchoolUrl, getTestEnv, TIMEOUTS } from "../_support/helpers/test-data"
+import {
+  buildSchoolUrl,
+  getTestEnv,
+  TIMEOUTS,
+} from "../_support/helpers/test-data"
 import { LoginPage, SchoolLoginPage } from "../_support/page-objects"
 
 const env = getTestEnv()

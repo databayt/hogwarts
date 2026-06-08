@@ -8,7 +8,6 @@ import {
   handleWebhookEvent,
   verifyWebhook,
 } from "@/components/school-dashboard/conference/livekit/webhook"
-
 import { POST } from "@/app/api/webhooks/livekit/route"
 
 vi.mock("@/components/school-dashboard/conference/livekit/webhook", () => ({
@@ -35,7 +34,9 @@ describe("livekit webhook route", () => {
   })
 
   it("processes a verified event → { ok: true, processed }", async () => {
-    vi.mocked(verifyWebhook).mockResolvedValue({ event: "room_started" } as never)
+    vi.mocked(verifyWebhook).mockResolvedValue({
+      event: "room_started",
+    } as never)
     vi.mocked(handleWebhookEvent).mockResolvedValue(true as never)
     const res = await POST(req())
     expect(res.status).toBe(200)

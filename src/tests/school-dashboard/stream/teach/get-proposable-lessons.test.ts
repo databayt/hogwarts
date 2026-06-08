@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { getProposableLessons } from "@/components/stream/teach/get-proposable-lessons"
 
 vi.mock("@/lib/db", () => ({

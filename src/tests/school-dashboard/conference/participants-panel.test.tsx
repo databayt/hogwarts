@@ -4,6 +4,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { ParticipantsPanel } from "@/components/school-dashboard/conference/participants-panel"
+
 // Hoisted spies so the hoisted vi.mock factories can reference them.
 const state = vi.hoisted(() => ({
   participants: [] as Array<{ identity: string; name?: string }>,
@@ -17,10 +19,10 @@ const { kickParticipant, SuccessToast, ErrorToast } = vi.hoisted(() => ({
 vi.mock("@livekit/components-react", () => ({
   useRemoteParticipants: () => state.participants,
 }))
-vi.mock("@/components/school-dashboard/conference/actions/moderation", () => ({ kickParticipant }))
+vi.mock("@/components/school-dashboard/conference/actions/moderation", () => ({
+  kickParticipant,
+}))
 vi.mock("@/components/atom/toast", () => ({ SuccessToast, ErrorToast }))
-
-import { ParticipantsPanel } from "@/components/school-dashboard/conference/participants-panel"
 
 const labels = {
   title: "Participants",
@@ -60,7 +62,7 @@ describe("ParticipantsPanel", () => {
     expect(screen.getByText("Alice")).toBeInTheDocument()
     expect(screen.getByText("Bob")).toBeInTheDocument()
 
-    fireEvent.click(screen.getAllByRole("button", { name: /^remove$/i })[0])
+    fireEvent.click(screen.getAllByRole("button", { name: /^remove:/i })[0])
 
     await waitFor(() =>
       expect(kickParticipant).toHaveBeenCalledWith("s1", "u1")
@@ -77,12 +79,15 @@ describe("ParticipantsPanel", () => {
 
   it("shows an error toast and keeps the row when the kick fails", async () => {
     state.participants = [{ identity: "u1", name: "Alice" }]
-    kickParticipant.mockResolvedValue({ success: false, error: "UPDATE_FAILED" })
+    kickParticipant.mockResolvedValue({
+      success: false,
+      error: "UPDATE_FAILED",
+    })
 
     render(<ParticipantsPanel sessionId="s1" canModerate labels={labels} />)
 
     fireEvent.click(screen.getByRole("button", { name: /participants \(1\)/i }))
-    fireEvent.click(screen.getByRole("button", { name: /^remove$/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^remove:/i }))
 
     await waitFor(() => expect(ErrorToast).toHaveBeenCalledWith(labels.failed))
     expect(screen.getByText("Alice")).toBeInTheDocument()

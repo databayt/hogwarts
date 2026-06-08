@@ -31,10 +31,10 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { deleteLiveClass, getLiveClasses } from "./list-actions"
 import type { LiveClassRow } from "./columns"
 import { getLiveClassColumns } from "./columns"
 import { LiveClassForm } from "./form"
+import { deleteLiveClass, getLiveClasses } from "./list-actions"
 import type { LiveClassFormOptions } from "./queries"
 
 interface LiveClassesTableProps {
@@ -162,11 +162,7 @@ function LiveClassesTableInner({
             : "secondary"
     return {
       label,
-      variant: variant as
-        | "default"
-        | "outline"
-        | "secondary"
-        | "destructive",
+      variant: variant as "default" | "outline" | "secondary" | "destructive",
     }
   }
 
@@ -245,9 +241,7 @@ function LiveClassesTableInner({
                         )}
                       </div>
                       <p className="text-muted-foreground text-xs">
-                        {new Date(
-                          liveClass.scheduledStart
-                        ).toLocaleDateString(
+                        {new Date(liveClass.scheduledStart).toLocaleDateString(
                           lang === "ar" ? "ar-SA" : "en-US"
                         )}
                       </p>

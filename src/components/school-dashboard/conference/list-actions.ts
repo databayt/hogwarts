@@ -2,12 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-
 import { randomUUID } from "node:crypto"
-
 import { revalidatePath } from "next/cache"
-
 import { auth } from "@/auth"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
@@ -16,18 +14,15 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { detectLang, withLang } from "@/components/translation/util"
 
-import {
-  canDeleteLiveClasses,
-  canManageLiveClasses,
-} from "./list-permissions"
-import { getProviderAdapter, type ProviderId } from "./providers"
-import { getLiveClassDetail, getLiveClassesList } from "./queries"
+import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
 import {
   liveClassSchema,
   updateLiveClassSchema,
   type LiveClassFormData,
   type UpdateLiveClassData,
 } from "./list-validation"
+import { getProviderAdapter, type ProviderId } from "./providers"
+import { getLiveClassDetail, getLiveClassesList } from "./queries"
 
 // ============================================================================
 // Helpers
@@ -388,7 +383,8 @@ export async function updateLiveClass(
       updateData.title = d.title
       updateData.lang = detectLang(d.title)
     }
-    if (d.description !== undefined) updateData.description = d.description ?? null
+    if (d.description !== undefined)
+      updateData.description = d.description ?? null
     if (d.teacherId !== undefined) updateData.teacherId = d.teacherId
     if (d.subjectId !== undefined) updateData.subjectId = d.subjectId || null
     if (d.sectionId !== undefined) updateData.sectionId = d.sectionId || null
@@ -416,8 +412,7 @@ export async function updateLiveClass(
       }
       if (needsEnd) {
         const baseDate = d.endDate ?? existing.scheduledEnd
-        const baseTime =
-          d.endTime ?? formatTimeFromDate(existing.scheduledEnd)
+        const baseTime = d.endTime ?? formatTimeFromDate(existing.scheduledEnd)
         updateData.scheduledEnd = combineDateAndTime(baseDate, baseTime)
       }
     }

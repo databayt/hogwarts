@@ -6,7 +6,14 @@ model: sonnet
 
 # Workflow Management Agent
 
-**Specialization**: Development workflows, branching strategies, CI/CD pipelines
+**Specialization**: Development workflows, the main-only flow, CI/CD pipelines
+
+---
+
+> ## 🚩 HOUSE RULE — work directly on `main`
+>
+> No feature branches. No worktrees. No PRs. Commit + `pull --rebase` + push straight to `main`.
+> Concurrent worktree sessions kept resetting `main` and wiping work — so: one working tree, one branch, commit early and often. Branch/PR/worktree patterns below are reference only — do not apply them.
 
 ---
 
@@ -33,12 +40,12 @@ Plan → Generate Stories → Implement → Test → Review → Ship
 #### Phase 3: Implementation Loop
 
 ```bash
-For each story:
-  1. Create feature branch
+For each story (working on main):
+  1. git pull --rebase origin main
   2. Write tests first (TDD)
   3. Implement solution
-  4. Run quality gates
-  5. Commit with story reference
+  4. Run quality gates (pre-commit/pre-push hook)
+  5. Commit with story reference, then push straight to main
   6. Update story status
 ```
 
@@ -49,64 +56,47 @@ For each story:
 - Deploy to staging
 - Production release
 
-## Branching Strategies
+## Branching Strategy — main-only
 
-### Git Flow
-
-```
-main (production)
-├── develop (integration)
-│   ├── feature/payment-gateway
-│   ├── feature/student-reports
-│   └── feature/notifications
-├── release/v2.0.0
-└── hotfix/critical-bug
-```
-
-### GitHub Flow (Simplified)
+We use exactly one branch: `main`. No `develop`, no `feature/*`, no `release/*`, no `hotfix/*`, no worktrees.
 
 ```
-main
-├── feature/new-feature
-├── fix/bug-fix
-└── docs/update-readme
+main  ←  every commit lands here, directly → Vercel auto-deploys
 ```
 
-### Release Process
+> Reference only — not our workflow: Git Flow and GitHub Flow (with `develop`, `feature/*`, `release/*`, `hotfix/*` branches) are documented Git patterns. Do not apply them here.
+
+### Release Process (main-only)
 
 ```bash
-# 1. Create release branch
-git checkout -b release/v2.0.0 develop
+# 1. Confirm on main and sync
+git branch --show-current        # → main
+git pull --rebase origin main
 
-# 2. Bump version
+# 2. Bump version (commits to main)
 npm version minor
 
 # 3. Run final tests
 pnpm tests
 pnpm build
 
-# 4. Merge to main
-git checkout main
-git merge --no-ff release/v2.0.0
-
-# 5. Tag release
+# 4. Tag the release
 git tag -a v2.0.0 -m "Release version 2.0.0"
 
-# 6. Push everything
+# 5. Push main + tags (Vercel auto-deploys)
 git push origin main --tags
-
-# 7. Merge back to develop
-git checkout develop
-git merge --no-ff release/v2.0.0
 ```
 
 ## CI/CD Pipeline
 
 ### Pre-Commit Hooks
 
+This is the quality gate that lets us commit straight to `main` — it blocks bad commits.
+
 ```bash
 #!/bin/bash
 # .claude/hooks/pre-commit.sh
+# We always work on main, so these checks always run and block on failure.
 
 # TypeScript check
 pnpm tsc --noEmit || exit 1
@@ -117,10 +107,8 @@ pnpm lint || exit 1
 # Tests
 pnpm tests --changed || exit 1
 
-# Build verification (main branch)
-if [[ $(git branch --show-current) == "main" ]]; then
-  pnpm build || exit 1
-fi
+# Build verification
+pnpm build || exit 1
 ```
 
 ### GitHub Actions Workflow
@@ -179,14 +167,14 @@ jobs:
 
 ## Team Collaboration
 
-### Code Review Process
+### Review Process (main-only)
 
-1. **Draft PR** - Work in progress
-2. **Ready for Review** - Tests passing
-3. **Review Requested** - Assign reviewers
-4. **Changes Requested** - Address feedback
-5. **Approved** - Ready to merge
-6. **Merged** - Deployed automatically
+Review happens on commits and issues, not PRs. The pre-commit/pre-push hook is the automated gate; humans review the shipped commit and follow up with another commit.
+
+1. **Commit + push to `main`** - hook gates tests/lint/tsc/build
+2. **Deployed automatically** - Vercel ships every push to `main`
+3. **Reviewer comments** - on the commit or a tracking issue
+4. **Follow-up commit** - address feedback, push to `main` again
 
 ### Review Checklist
 
@@ -336,12 +324,12 @@ pnpm prisma migrate resolve --rolled-back
 - Reference story/issue
 - Follow conventional format
 
-### PR Descriptions
+### Commit Bodies
 
-- Summary of changes
+- Summary of changes (the WHY)
 - Testing instructions
-- Screenshots if UI changes
 - Breaking changes noted
+- Reference the issue (`Closes #N`)
 
 ### Documentation Updates
 
@@ -375,21 +363,19 @@ pnpm prisma migrate resolve --rolled-back
 
 ## Best Practices
 
-### Daily Workflow
+### Daily Workflow (main-only)
 
-1. Pull latest changes
-2. Create feature branch
+1. `git branch --show-current` → main
+2. `git pull --rebase origin main`
 3. Write tests first
 4. Implement feature
 5. Run local tests
-6. Commit with message
-7. Push and create PR
-8. Address reviews
-9. Merge when approved
+6. Commit with conventional message (small + atomic)
+7. `git pull --rebase origin main` then `git push origin main`
+8. Reviewer comments on the commit/issue; address with a follow-up commit
 
 ### Weekly Tasks
 
-- Review open PRs
 - Update dependencies
 - Check security alerts
 - Review metrics

@@ -9,7 +9,10 @@
 
 import { expect, test } from "@playwright/test"
 
-import { assertLoginFormVisible, assertNoSSE } from "../e2e/_support/helpers/assertions"
+import {
+  assertLoginFormVisible,
+  assertNoSSE,
+} from "../e2e/_support/helpers/assertions"
 import {
   buildSchoolUrl,
   getSchoolUrl,

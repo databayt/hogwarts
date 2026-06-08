@@ -134,7 +134,7 @@ The substitution subsystem is fully built in the data and action layers — the 
 
 ## What is wired vs. not
 
-**Working end-to-end:** builder grid, the five role views (admin room / teacher grid with a cookie-persistent filter), conflict detection, generate (preview + apply), analytics, settings, PDF export, the onboarding schedule step, and the REST + mobile endpoints.
+**Working end-to-end:** builder grid, the five role views (admin room / teacher grid with a cookie-persistent filter), conflict detection, generate (preview + apply), analytics, settings, PDF export, the onboarding schedule step, and the mobile endpoints. The web app calls server actions directly — the old `/api/timetable/*` REST routes (thin wrappers consumed only by a now-deleted client store) were removed; only the mobile feeds under `/api/mobile/` remain.
 
 **Built but not surfaced:** the substitution subsystem (above). The template _actions_ (`createTemplateFromTerm`, `applyTemplateToTerm`, …) also remain in `actions.ts` with no UI, after the unreached standalone `templates` route (and the `by-class` / `by-teacher` / `by-room` routes) were removed and folded into the role-routed view + filter.
 

@@ -4,7 +4,10 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { isLiveJoinable, LiveJoinButton } from "@/components/school-dashboard/timetable/views/live-join-button"
+import {
+  isLiveJoinable,
+  LiveJoinButton,
+} from "@/components/school-dashboard/timetable/views/live-join-button"
 
 // startTime is read via getUTCHours/getUTCMinutes (matching the timetable
 // convention where Period times are stored as @db.Time UTC wall-clock). Build a

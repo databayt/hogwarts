@@ -28,14 +28,16 @@ function makeDb(knownCodes: string[]) {
   const db = {
     whereCalls,
     chartOfAccount: {
-      findFirst: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
-        whereCalls.push(where)
-        const code = where.code as string | undefined
-        if (code && knownCodes.includes(code)) {
-          return { id: `acct-${code}`, type: "ASSET" }
+      findFirst: vi.fn(
+        async ({ where }: { where: Record<string, unknown> }) => {
+          whereCalls.push(where)
+          const code = where.code as string | undefined
+          if (code && knownCodes.includes(code)) {
+            return { id: `acct-${code}`, type: "ASSET" }
+          }
+          return null
         }
-        return null
-      }),
+      ),
     },
   }
   return db
@@ -123,12 +125,19 @@ describe("accounting/posting-rules — whole-unit amounts (no cents inflation)",
       },
       db as never
     )
-    expect(assignment.lines.every((l) => l.debit <= 1234.56 && l.credit <= 1234.56)).toBe(true)
+    expect(
+      assignment.lines.every((l) => l.debit <= 1234.56 && l.credit <= 1234.56)
+    ).toBe(true)
     expect(validateDoubleEntry(assignment.lines)).toBe(true)
 
     const invoice = await createInvoicePaymentEntry(
       SCHOOL_ID,
-      { invoiceId: "inv-1", amount: 800, paymentDate: new Date(), invoiceNumber: "INV-001" },
+      {
+        invoiceId: "inv-1",
+        amount: 800,
+        paymentDate: new Date(),
+        invoiceNumber: "INV-001",
+      },
       db as never
     )
     expect(invoice.lines[0]?.debit).toBe(800)

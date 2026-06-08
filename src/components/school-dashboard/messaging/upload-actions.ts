@@ -232,7 +232,10 @@ export async function deleteMessageAttachment(
 
     // 2. Verify the file URL belongs to this conversation and school
     if (!fileUrl.includes(`messaging/${schoolId}/${conversationId}`)) {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR, "Invalid attachment URL")
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        "Invalid attachment URL"
+      )
     }
 
     // 3. Check user is participant in conversation

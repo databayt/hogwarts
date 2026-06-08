@@ -19,6 +19,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Import modules AFTER mocking
 import { db } from "@/lib/db"
+import { login } from "@/components/auth/login/action"
 import {
   sendTwoFactorTokenEmail,
   sendVerificationEmail,
@@ -30,8 +31,6 @@ import {
 import { getUserByEmail } from "@/components/auth/user"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
-
-import { login } from "@/components/auth/login/action"
 
 // Mock all dependencies BEFORE any imports
 // These need to be hoisted to avoid next-auth import issues

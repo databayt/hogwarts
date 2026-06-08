@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ACTION_ERRORS } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   createCircularGeofence,
   createPolygonGeofence,
@@ -64,11 +63,14 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
-vi.mock("@/components/school-dashboard/attendance/geofencee/geo-service", () => ({
-  getCurrentGeofences: vi.fn().mockResolvedValue([]),
-  checkGeofences: vi.fn().mockResolvedValue([]),
-  processGeofenceEvents: vi.fn().mockResolvedValue([]),
-}))
+vi.mock(
+  "@/components/school-dashboard/attendance/geofencee/geo-service",
+  () => ({
+    getCurrentGeofences: vi.fn().mockResolvedValue([]),
+    checkGeofences: vi.fn().mockResolvedValue([]),
+    processGeofenceEvents: vi.fn().mockResolvedValue([]),
+  })
+)
 
 const SCHOOL = "school-1"
 

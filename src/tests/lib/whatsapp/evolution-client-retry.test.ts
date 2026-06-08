@@ -77,18 +77,24 @@ describe("evolution-client — isRetryableError", () => {
   })
 
   it("retries on TypeError (fetch network failure)", async () => {
-    const { isRetryableError } = (await import("@/lib/whatsapp/evolution-client")).__testing
+    const { isRetryableError } = (
+      await import("@/lib/whatsapp/evolution-client")
+    ).__testing
     expect(isRetryableError(new TypeError("fetch failed"))).toBe(true)
   })
 
   it("retries on AbortError (per-attempt timeout)", async () => {
-    const { isRetryableError } = (await import("@/lib/whatsapp/evolution-client")).__testing
+    const { isRetryableError } = (
+      await import("@/lib/whatsapp/evolution-client")
+    ).__testing
     const err = new DOMException("aborted", "AbortError")
     expect(isRetryableError(err)).toBe(true)
   })
 
   it("does NOT retry on generic Errors", async () => {
-    const { isRetryableError } = (await import("@/lib/whatsapp/evolution-client")).__testing
+    const { isRetryableError } = (
+      await import("@/lib/whatsapp/evolution-client")
+    ).__testing
     expect(isRetryableError(new Error("anything else"))).toBe(false)
   })
 })
@@ -99,8 +105,9 @@ describe("evolution-client — isRetryableError", () => {
 
 describe("evolution-client — backoffWithJitter", () => {
   it("produces exponential growth: ~200, ~400, ~800 with ±25% jitter", async () => {
-    const { backoffWithJitter } = (await import("@/lib/whatsapp/evolution-client"))
-      .__testing
+    const { backoffWithJitter } = (
+      await import("@/lib/whatsapp/evolution-client")
+    ).__testing
     for (let attempt = 0; attempt < 3; attempt++) {
       const base = 200 * Math.pow(2, attempt) // 200, 400, 800
       const samples = Array.from({ length: 50 }, () =>
@@ -115,8 +122,9 @@ describe("evolution-client — backoffWithJitter", () => {
   })
 
   it("never returns a negative delay", async () => {
-    const { backoffWithJitter } = (await import("@/lib/whatsapp/evolution-client"))
-      .__testing
+    const { backoffWithJitter } = (
+      await import("@/lib/whatsapp/evolution-client")
+    ).__testing
     for (let i = 0; i < 100; i++) {
       expect(backoffWithJitter(0, 0)).toBeGreaterThanOrEqual(0)
     }

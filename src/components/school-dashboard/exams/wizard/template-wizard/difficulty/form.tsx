@@ -19,11 +19,7 @@ import { ErrorToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import {
-  commonLabels,
-  difficultyLabels,
-  QUESTION_TYPE_LABELS,
-} from "../labels"
+import { commonLabels, difficultyLabels, QUESTION_TYPE_LABELS } from "../labels"
 import { updateTemplateDifficulty } from "./actions"
 
 const DIFFICULTY_LEVELS = [
@@ -116,8 +112,7 @@ export const DifficultyForm = forwardRef<WizardFormRef, DifficultyFormProps>(
         }),
     }))
 
-    const typeLabel =
-      QUESTION_TYPE_LABELS[questionType]?.[lang] || questionType
+    const typeLabel = QUESTION_TYPE_LABELS[questionType]?.[lang] || questionType
 
     return (
       <div className="space-y-6">

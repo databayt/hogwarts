@@ -3,8 +3,11 @@
 
 import { describe, expect, it } from "vitest"
 
+import {
+  buildAdekCsv,
+  categorizeForAdek,
+} from "@/lib/compliance/providers/adek/mapper"
 import type { ComplianceAttendanceRecord } from "@/lib/compliance/types"
-import { buildAdekCsv, categorizeForAdek } from "@/lib/compliance/providers/adek/mapper"
 
 function makeRecord(
   overrides: Partial<ComplianceAttendanceRecord> = {}

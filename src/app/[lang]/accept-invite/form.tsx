@@ -6,11 +6,11 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { type Dictionary } from "@/components/internationalization/dictionaries"
 import {
   acceptInvitation,
   declineInvitation,
 } from "@/components/school-dashboard/school/membership/actions"
-import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface AcceptInviteFormProps {
   token: string

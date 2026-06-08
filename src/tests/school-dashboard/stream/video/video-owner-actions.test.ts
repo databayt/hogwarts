@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import {
   deleteOwnVideo,
   getMyOwnedVideos,
@@ -131,7 +130,10 @@ describe("updateVideoVisibility — paid paywall guard", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "owner-1", role: "TEACHER" },
     })
-    mockFindUnique.mockResolvedValueOnce({ ...ownedVideo, visibility: "SCHOOL" })
+    mockFindUnique.mockResolvedValueOnce({
+      ...ownedVideo,
+      visibility: "SCHOOL",
+    })
     const result = await updateVideoVisibility("v-1", "PUBLIC")
     expect(result.status).toBe("success")
     expect(mockUpdate).toHaveBeenCalledWith({

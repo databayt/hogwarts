@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import type { MobileAuthContext } from "@/app/api/mobile/lib/authenticate"
 import { canAccessStudent } from "@/app/api/mobile/lib/student-access"
 

@@ -5,9 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { publishResults } from "@/components/school-dashboard/exams/manage/actions/results"
-import { cancelExam, completeExam, startExam } from "@/components/school-dashboard/exams/manage/actions/status"
+import {
+  cancelExam,
+  completeExam,
+  startExam,
+} from "@/components/school-dashboard/exams/manage/actions/status"
 
 vi.mock("@/auth", () => ({
   auth: vi.fn().mockResolvedValue({

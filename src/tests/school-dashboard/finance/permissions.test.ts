@@ -8,7 +8,6 @@ import {
   FULL_UI_PERMISSIONS,
   NO_UI_PERMISSIONS,
 } from "@/lib/rbac/ui-permissions"
-
 import {
   buildFinanceSubTabs,
   getFeesTabs,

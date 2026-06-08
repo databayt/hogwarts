@@ -5,7 +5,6 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { adminGetLesson } from "@/components/stream/data/catalog/admin-get-lesson"
 
 // ---------------------------------------------------------------------------

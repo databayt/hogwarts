@@ -80,6 +80,7 @@ import {
   UrlsReference,
 } from "@/components/docs/auth-flow"
 import { Callout } from "@/components/docs/callout"
+import { CatalogStructure } from "@/components/docs/catalog-structure"
 import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
@@ -89,9 +90,12 @@ import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
 import { CardGrid, DocCard } from "@/components/docs/doc-card"
 import { ListingStructure } from "@/components/docs/listing-structure"
+import { Mermaid } from "@/components/docs/mermaid"
 import { PrismaStructure } from "@/components/docs/prisma-structure"
 import { StoryVideo } from "@/components/docs/story-video"
 import { Structure } from "@/components/docs/structure"
+import { TimetableStructure } from "@/components/docs/timetable-structure"
+import { TranslationStructure } from "@/components/docs/translation-structure"
 
 // This file is required to use MDX in `app` directory.
 
@@ -403,9 +407,14 @@ const mdxComponents = {
   FormFieldText,
   PaymentMethodSelector,
   DependencyChain,
+  CatalogStructure,
+  CatalogPipeline,
+  CatalogAssetFlow,
   DirectoryStructure,
   ListingStructure,
   Structure,
+  TimetableStructure,
+  TranslationStructure,
   PrismaStructure,
   // AI components
   AiPromptInput: AiPromptInputPreview,

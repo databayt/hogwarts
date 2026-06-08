@@ -6,12 +6,12 @@ auto-generating links and syncing recordings/attendance from native provider API
 
 ## Status
 
-| Provider | id | State | Env it needs |
-| --- | --- | --- | --- |
-| External link | `external` | ✅ functional | — (host pastes any URL) |
-| Google Meet | `google_meet` | 🟡 scaffold (stub) | `GOOGLE_MEET_CLIENT_ID`, `GOOGLE_MEET_CLIENT_SECRET`, `GOOGLE_MEET_REFRESH_TOKEN` |
-| Zoom | `zoom` | 🟡 scaffold (stub) | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` |
-| Microsoft Teams | `teams` | 🟡 scaffold (stub) | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` |
+| Provider        | id            | State              | Env it needs                                                                      |
+| --------------- | ------------- | ------------------ | --------------------------------------------------------------------------------- |
+| External link   | `external`    | ✅ functional      | — (host pastes any URL)                                                           |
+| Google Meet     | `google_meet` | 🟡 scaffold (stub) | `GOOGLE_MEET_CLIENT_ID`, `GOOGLE_MEET_CLIENT_SECRET`, `GOOGLE_MEET_REFRESH_TOKEN` |
+| Zoom            | `zoom`        | 🟡 scaffold (stub) | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                         |
+| Microsoft Teams | `teams`       | 🟡 scaffold (stub) | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`                       |
 
 The stubs throw `ProviderNotImplementedError` until credentials land. `isConfigured()` already reflects
 whether each provider's env is present, so the UI can show/hide a provider without code changes.
@@ -22,9 +22,9 @@ whether each provider's env is present, so the UI can show/hide a provider witho
 interface ConferenceProviderAdapter {
   id: ProviderId
   isConfigured(): boolean
-  createMeeting(input): Promise<MeetingResult>       // join URL (echoed / API-generated)
+  createMeeting(input): Promise<MeetingResult> // join URL (echoed / API-generated)
   getRecording(externalId): Promise<RecordingResult | null>
-  getAttendance(externalId): Promise<AttendanceRecord[]>   // real telemetry, not clicked-Join
+  getAttendance(externalId): Promise<AttendanceRecord[]> // real telemetry, not clicked-Join
 }
 ```
 
@@ -41,7 +41,7 @@ distinguishes Meet/Zoom/Teams on an external row.
 1. **Google Meet** — Google Cloud project + Calendar API; OAuth client or service account with
    domain-wide delegation for the school's Workspace. Implement `createMeeting` via `events.insert`
    with `conferenceData.createRequest`.
-2. **Zoom** — a Marketplace *Server-to-Server OAuth* app on the school account. Implement
+2. **Zoom** — a Marketplace _Server-to-Server OAuth_ app on the school account. Implement
    `createMeeting` via `POST /users/{host}/meetings`.
 3. **Teams** — Azure AD app registration with Graph `OnlineMeetings.ReadWrite` (app permission +
    admin consent + application access policy). Implement `createMeeting` via

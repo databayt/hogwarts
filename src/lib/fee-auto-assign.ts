@@ -153,7 +153,11 @@ export async function ensureStudentFeeAssignments(
   // `db.$transaction`; when the caller passed a `tx`, the create loop joins
   // their atomic unit directly (no nested transaction — Prisma forbids it).
   const created = tx
-    ? await createMissingAssignments(tx, { schoolId, studentId, academicYear }, missing)
+    ? await createMissingAssignments(
+        tx,
+        { schoolId, studentId, academicYear },
+        missing
+      )
     : await db.$transaction((innerTx) =>
         createMissingAssignments(
           innerTx,

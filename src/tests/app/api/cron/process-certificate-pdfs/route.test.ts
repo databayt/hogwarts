@@ -4,7 +4,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { renderPendingCertificatePDFs } from "@/components/school-dashboard/grades/actions/certificate-pdf"
-
 import { GET } from "@/app/api/cron/process-certificate-pdfs/route"
 
 vi.mock("@/components/school-dashboard/grades/actions/certificate-pdf", () => ({
@@ -59,9 +58,7 @@ describe("GET /api/cron/process-certificate-pdfs", () => {
   })
 
   it("500s when the worker throws", async () => {
-    vi.mocked(renderPendingCertificatePDFs).mockRejectedValue(
-      new Error("boom")
-    )
+    vi.mocked(renderPendingCertificatePDFs).mockRejectedValue(new Error("boom"))
     const res = await GET(req(`Bearer ${SECRET}`))
     expect(res.status).toBe(500)
   })

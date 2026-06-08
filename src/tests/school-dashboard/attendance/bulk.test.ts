@@ -119,7 +119,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   })
 
   it("issues exactly ONE attendance.findMany prefetch — not one per record (the N+1 fix)", async () => {
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     await bulkUploadAttendance(bulkInput(["stu-1", "stu-2", "stu-3"]))
 
     // Three findMany calls total: 1 for students (Phase 1), 1 for prefetch
@@ -160,7 +161,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       return cb(capturedTx)
     })
 
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     const result = await bulkUploadAttendance(
       bulkInput(["stu-1", "stu-2", "stu-3"])
     )
@@ -201,7 +203,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       return cb(capturedTx)
     })
 
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     const result = await bulkUploadAttendance(
       bulkInput(["stu-1", "stu-2", "stu-3"])
     )
@@ -238,7 +241,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       return cb(capturedTx)
     })
 
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     const result = await bulkUploadAttendance(
       bulkInput(["stu-1", "stu-2", "stu-3"])
     )
@@ -258,7 +262,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
       new Error("constraint violation")
     )
 
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     const result = await bulkUploadAttendance(bulkInput(["stu-1"]))
 
     expect(result.successful).toBe(0)
@@ -270,7 +275,8 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
   it("does not prefetch when validation fails (missing student) — Phase 1 still short-circuits", async () => {
     vi.mocked(db.student.findMany).mockResolvedValue([{ id: "stu-1" }] as never)
 
-    const { bulkUploadAttendance } = await import("@/components/school-dashboard/attendance/actions/bulk")
+    const { bulkUploadAttendance } =
+      await import("@/components/school-dashboard/attendance/actions/bulk")
     const result = await bulkUploadAttendance(
       bulkInput(["stu-1", "stu-missing"])
     )

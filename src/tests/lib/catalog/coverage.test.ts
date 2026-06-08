@@ -3,9 +3,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import {
+  getCurriculumCoverage,
+  listCurriculaWithCoverage,
+} from "@/lib/catalog/coverage"
 import { db } from "@/lib/db"
-
-import { getCurriculumCoverage, listCurriculaWithCoverage } from "@/lib/catalog/coverage"
 
 // ---------------------------------------------------------------------------
 // Mocks

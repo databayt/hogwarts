@@ -4,12 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-// ============================================================================
-// Helpers
-// ============================================================================
-
-import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
-
 import {
   calculateChurnRate,
   calculateMRR,
@@ -17,6 +11,11 @@ import {
   getMRRHistory,
   getRevenueTrends,
 } from "@/components/saas-dashboard/analytics/actions"
+// ============================================================================
+// Helpers
+// ============================================================================
+
+import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
 // Mocks

@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { generateApiToken, verifyApiToken } from "@/lib/api-tokens"
 import { db } from "@/lib/db"
-
 import { recordBoardingFromGeofenceInternal } from "@/components/school-dashboard/transportation/actions/geofence-internal"
 
 vi.mock("@/lib/db", () => ({

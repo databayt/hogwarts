@@ -113,10 +113,7 @@ export async function getLiveClassesList(
 ) {
   const where = buildLiveClassWhere(schoolId, params)
   const orderBy = buildLiveClassOrderBy(params.sort)
-  const { skip, take } = buildPagination(
-    params.page ?? 1,
-    params.perPage ?? 20
-  )
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
 
   const [rows, count] = await Promise.all([
     db.conference.findMany({

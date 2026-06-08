@@ -19,26 +19,26 @@ All 23 subroutes are **wired and page-level auth-gated**. Client-facing paths
 use `/{lang}/attendance/...` (the `/s/{subdomain}/` segment is internal — the
 middleware maps it). Each has its own `error.tsx` + `loading.tsx`.
 
-| Route (clean path)              | Page                  | In primary nav?       |
-| ------------------------------- | --------------------- | --------------------- |
-| `/{lang}/attendance`            | Overview / Mark       | Yes (Overview)        |
-| `/{lang}/attendance/manual`     | Manual marking        | Yes (staff)           |
-| `/{lang}/attendance/records`    | Records (own/child)   | Yes (non-staff)       |
-| `/{lang}/attendance/reports`    | Reports & export      | Yes (staff)           |
-| `/{lang}/attendance/analytics`  | Analytics dashboard   | Yes (staff)           |
-| `/{lang}/attendance/qr-code`    | QR code attendance    | Yes (staff)           |
-| `/{lang}/attendance/geo`        | Geofence attendance   | Deep-link             |
-| `/{lang}/attendance/barcode`    | Barcode/RFID scanner  | Deep-link             |
-| `/{lang}/attendance/excuses`    | Excuse management      | Yes                   |
-| `/{lang}/attendance/intentions` | Absence intentions    | Deep-link             |
-| `/{lang}/attendance/interventions` (+`/tiers`) | Interventions / MTSS | Yes (staff) |
-| `/{lang}/attendance/early-warning` | Early-warning system | Yes (staff)         |
-| `/{lang}/attendance/kiosk`      | Kiosk check-in        | Deep-link (admin)     |
-| `/{lang}/attendance/letters`    | Attendance letters    | Deep-link (admin)     |
-| `/{lang}/attendance/gamification` | Gamification        | Deep-link             |
-| `/{lang}/attendance/ai`         | AI risk insights      | Deep-link             |
-| `/{lang}/attendance/{bulk,bulk-upload,analysis,recent}` | Bulk / analysis / recent | Deep-link |
-| `/{lang}/attendance/settings`   | Settings (mockup)     | Yes (admin)           |
+| Route (clean path)                                      | Page                     | In primary nav?   |
+| ------------------------------------------------------- | ------------------------ | ----------------- |
+| `/{lang}/attendance`                                    | Overview / Mark          | Yes (Overview)    |
+| `/{lang}/attendance/manual`                             | Manual marking           | Yes (staff)       |
+| `/{lang}/attendance/records`                            | Records (own/child)      | Yes (non-staff)   |
+| `/{lang}/attendance/reports`                            | Reports & export         | Yes (staff)       |
+| `/{lang}/attendance/analytics`                          | Analytics dashboard      | Yes (staff)       |
+| `/{lang}/attendance/qr-code`                            | QR code attendance       | Yes (staff)       |
+| `/{lang}/attendance/geo`                                | Geofence attendance      | Deep-link         |
+| `/{lang}/attendance/barcode`                            | Barcode/RFID scanner     | Deep-link         |
+| `/{lang}/attendance/excuses`                            | Excuse management        | Yes               |
+| `/{lang}/attendance/intentions`                         | Absence intentions       | Deep-link         |
+| `/{lang}/attendance/interventions` (+`/tiers`)          | Interventions / MTSS     | Yes (staff)       |
+| `/{lang}/attendance/early-warning`                      | Early-warning system     | Yes (staff)       |
+| `/{lang}/attendance/kiosk`                              | Kiosk check-in           | Deep-link (admin) |
+| `/{lang}/attendance/letters`                            | Attendance letters       | Deep-link (admin) |
+| `/{lang}/attendance/gamification`                       | Gamification             | Deep-link         |
+| `/{lang}/attendance/ai`                                 | AI risk insights         | Deep-link         |
+| `/{lang}/attendance/{bulk,bulk-upload,analysis,recent}` | Bulk / analysis / recent | Deep-link         |
+| `/{lang}/attendance/settings`                           | Settings (mockup)        | Yes (admin)       |
 
 "Deep-link" = functional + auth-gated but not yet surfaced in `getTabsForRole`
 (see ISSUE.md P2 — a product decision on which to promote to tabs).

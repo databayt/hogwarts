@@ -49,7 +49,13 @@ export function StartLiveClassButton({
   }
 
   return (
-    <Button size="sm" className="gap-2" disabled={pending} onClick={onStart}>
+    <Button
+      size="sm"
+      className="gap-2"
+      disabled={pending}
+      aria-busy={pending}
+      onClick={onStart}
+    >
       <Video className="h-4 w-4" />
       {pending ? startingLabel : label}
     </Button>

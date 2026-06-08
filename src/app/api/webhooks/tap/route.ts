@@ -178,8 +178,14 @@ async function recordTapFeePayment(args: {
   currency?: string
   gatewayMethod?: string
 }): Promise<void> {
-  const { chargeId, feeAssignmentId, schoolId, amount, currency, gatewayMethod } =
-    args
+  const {
+    chargeId,
+    feeAssignmentId,
+    schoolId,
+    amount,
+    currency,
+    gatewayMethod,
+  } = args
 
   const assignment = await db.feeAssignment.findFirst({
     where: { id: feeAssignmentId, schoolId },

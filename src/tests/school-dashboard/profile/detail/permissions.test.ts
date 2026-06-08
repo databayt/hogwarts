@@ -9,7 +9,10 @@ import {
   filterProfileData,
   getPermissionLevel,
 } from "@/components/school-dashboard/profile/detail/permissions"
-import type { ProfileContext, ProfileData } from "@/components/school-dashboard/profile/detail/types"
+import type {
+  ProfileContext,
+  ProfileData,
+} from "@/components/school-dashboard/profile/detail/types"
 
 const baseContext: Omit<ProfileContext, "viewerId" | "viewerRole"> = {
   viewerSchoolId: "school-1",

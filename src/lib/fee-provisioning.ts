@@ -459,9 +459,7 @@ function variantKey(
 /** Count of pinned (non-null) dimension selectors — higher wins ties. */
 function ruleSpecificity(r: LoadedPricingRule): number {
   return (
-    (r.gradeId ? 1 : 0) +
-    (r.academicStreamId ? 1 : 0) +
-    (r.studentType ? 1 : 0)
+    (r.gradeId ? 1 : 0) + (r.academicStreamId ? 1 : 0) + (r.studentType ? 1 : 0)
   )
 }
 

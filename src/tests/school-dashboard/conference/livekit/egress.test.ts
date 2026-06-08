@@ -4,8 +4,14 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { getEgressClient, getLiveKitConfig } from "@/components/school-dashboard/conference/livekit/client"
-import { startCompositeEgress, stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
+import {
+  getEgressClient,
+  getLiveKitConfig,
+} from "@/components/school-dashboard/conference/livekit/client"
+import {
+  startCompositeEgress,
+  stopEgress,
+} from "@/components/school-dashboard/conference/livekit/egress"
 
 vi.mock("@/components/school-dashboard/conference/livekit/client", () => ({
   getEgressClient: vi.fn(),

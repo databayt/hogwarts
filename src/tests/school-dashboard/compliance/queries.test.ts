@@ -5,7 +5,6 @@ import { ComplianceProvider } from "@prisma/client"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import {
   getComplianceConfigForSchool,
   getParentContactSlaReport,

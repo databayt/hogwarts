@@ -5,11 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
-import { stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
-import { endRoom, ensureRoom } from "@/components/school-dashboard/conference/livekit/rooms"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   cancelLiveClass,
   createLiveClass,
@@ -18,6 +14,12 @@ import {
   listLiveClasses,
   startLiveClass,
 } from "@/components/school-dashboard/conference/actions/sessions"
+import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
+import { stopEgress } from "@/components/school-dashboard/conference/livekit/egress"
+import {
+  endRoom,
+  ensureRoom,
+} from "@/components/school-dashboard/conference/livekit/rooms"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -26,6 +28,7 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     conferenceParticipant: {
       upsert: vi.fn(),
@@ -60,21 +63,27 @@ vi.mock("@/components/school-dashboard/conference/livekit/egress", () => ({
 vi.mock("@/components/school-dashboard/conference/livekit/client", () => ({
   isLiveKitConfigured: vi.fn(() => false),
 }))
-vi.mock("@/components/school-dashboard/conference/livekit/room-naming", async () => {
-  const actual = await vi.importActual<
-    typeof import("@/components/school-dashboard/conference/livekit/room-naming")
-  >("@/components/school-dashboard/conference/livekit/room-naming")
-  return actual
-})
+vi.mock(
+  "@/components/school-dashboard/conference/livekit/room-naming",
+  async () => {
+    const actual = await vi.importActual<
+      typeof import("@/components/school-dashboard/conference/livekit/room-naming")
+    >("@/components/school-dashboard/conference/livekit/room-naming")
+    return actual
+  }
+)
 
 // Notification helpers fire as best-effort `void` — stub to keep tests fast.
-vi.mock("@/components/school-dashboard/conference/actions/notifications", () => ({
-  notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
-  notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
-  notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
-  notifyClassStarted: vi.fn(async () => ({ created: 0 })),
-  notifyClassRecordingReady: vi.fn(async () => ({ created: 0 })),
-}))
+vi.mock(
+  "@/components/school-dashboard/conference/actions/notifications",
+  () => ({
+    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+    notifyClassStartingSoon: vi.fn(async () => ({ created: 0 })),
+    notifyClassStarted: vi.fn(async () => ({ created: 0 })),
+    notifyClassRecordingReady: vi.fn(async () => ({ created: 0 })),
+  })
+)
 
 const SCHOOL_ID = "school-aldar"
 const TEACHER_USER_ID = "u-teacher-1"

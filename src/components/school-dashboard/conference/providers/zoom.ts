@@ -8,41 +8,47 @@
 // createMeeting is wired; getRecording/getAttendance stay deferred (attendance
 // reports need a paid plan).
 
+import { getCachedToken } from "./token-cache"
 import {
+  ProviderNotConfiguredError,
+  ProviderNotImplementedError,
   type ConferenceProviderAdapter,
   type CreateMeetingInput,
   type MeetingResult,
-  ProviderNotConfiguredError,
-  ProviderNotImplementedError,
 } from "./types"
 
 function configured(): boolean {
   return Boolean(
     process.env.ZOOM_ACCOUNT_ID &&
-      process.env.ZOOM_CLIENT_ID &&
-      process.env.ZOOM_CLIENT_SECRET
+    process.env.ZOOM_CLIENT_ID &&
+    process.env.ZOOM_CLIENT_SECRET
   )
 }
 
 /** Server-to-server OAuth: account-credentials grant with Basic client auth. */
 async function getAccessToken(): Promise<string> {
-  const basic = Buffer.from(
-    `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
-  ).toString("base64")
-  const res = await fetch(
-    `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(
-      process.env.ZOOM_ACCOUNT_ID ?? ""
-    )}`,
-    { method: "POST", headers: { Authorization: `Basic ${basic}` } }
-  )
-  if (!res.ok) {
-    throw new Error(`Zoom OAuth token exchange failed (${res.status})`)
-  }
-  const json = (await res.json()) as { access_token?: string }
-  if (!json.access_token) {
-    throw new Error("Zoom OAuth returned no access_token")
-  }
-  return json.access_token
+  return getCachedToken("zoom", async () => {
+    const basic = Buffer.from(
+      `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
+    ).toString("base64")
+    const res = await fetch(
+      `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${encodeURIComponent(
+        process.env.ZOOM_ACCOUNT_ID ?? ""
+      )}`,
+      { method: "POST", headers: { Authorization: `Basic ${basic}` } }
+    )
+    if (!res.ok) {
+      throw new Error(`Zoom OAuth token exchange failed (${res.status})`)
+    }
+    const json = (await res.json()) as {
+      access_token?: string
+      expires_in?: number
+    }
+    if (!json.access_token) {
+      throw new Error("Zoom OAuth returned no access_token")
+    }
+    return { token: json.access_token, expiresInSec: json.expires_in ?? 3600 }
+  })
 }
 
 export const zoomAdapter: ConferenceProviderAdapter = {

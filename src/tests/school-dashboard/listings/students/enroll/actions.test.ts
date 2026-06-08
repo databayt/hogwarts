@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { enrollStudent } from "@/components/school-dashboard/listings/students/enroll/actions"
 
 // ---------------------------------------------------------------------------

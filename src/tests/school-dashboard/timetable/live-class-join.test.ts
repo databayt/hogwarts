@@ -4,7 +4,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
 import { attachLiveClasses } from "@/components/school-dashboard/timetable/live-class-join"
 
 vi.mock("@/lib/db", () => ({

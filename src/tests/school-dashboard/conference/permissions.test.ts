@@ -8,8 +8,10 @@ import {
   NO_UI_PERMISSIONS,
   READ_ONLY_UI_PERMISSIONS,
 } from "@/lib/rbac/ui-permissions"
-
-import { getTabsForRole, getUIConfigForRole } from "@/components/school-dashboard/conference/permissions"
+import {
+  getTabsForRole,
+  getUIConfigForRole,
+} from "@/components/school-dashboard/conference/permissions"
 
 const fakeDict = {
   liveClasses: {

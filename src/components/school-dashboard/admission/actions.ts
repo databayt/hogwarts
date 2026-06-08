@@ -652,9 +652,7 @@ export async function updateApplicationStatus(params: {
         try {
           const [{ buildOfferEmail }, { sendRawEmail }] = await Promise.all([
             import("@/lib/email-templates/admission"),
-            import(
-              "@/components/school-dashboard/notifications/email-service"
-            ),
+            import("@/components/school-dashboard/notifications/email-service"),
           ])
           const isProd = process.env.NODE_ENV === "production"
           const baseUrl = isProd

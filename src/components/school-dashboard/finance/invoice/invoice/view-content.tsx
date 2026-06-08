@@ -6,10 +6,8 @@ import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
-import {
-  DownloadInvoiceButton,
-  SendInvoiceButton,
-} from "../download-invoice"
+
+import { DownloadInvoiceButton, SendInvoiceButton } from "../download-invoice"
 
 interface InvoiceViewProps {
   invoice: any | null

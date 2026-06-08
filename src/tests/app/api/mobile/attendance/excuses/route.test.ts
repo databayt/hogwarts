@@ -5,9 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
-import { authenticate } from "@/app/api/mobile/lib/authenticate"
 import { POST } from "@/app/api/mobile/attendance/excuses/route"
+import { authenticate } from "@/app/api/mobile/lib/authenticate"
 
 vi.mock("@/lib/db", () => ({
   db: {

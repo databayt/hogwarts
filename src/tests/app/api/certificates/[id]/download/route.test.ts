@@ -1,15 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { auth } from "@/auth"
 import { NextRequest } from "next/server"
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getProvider } from "@/components/file/providers/factory"
-
-import { canAccessStudent } from "@/app/api/mobile/lib/student-access"
 import { GET } from "@/app/api/certificates/[id]/download/route"
+import { canAccessStudent } from "@/app/api/mobile/lib/student-access"
 
 vi.mock("@/lib/db", () => ({
   db: { examCertificate: { findFirst: vi.fn() } },

@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-
 import {
   getApplicationStatus,
   requestStatusOTP,

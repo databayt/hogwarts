@@ -3,9 +3,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { canUserAccessSchool, ensureUserSchool } from "@/lib/school-access"
-
 import { requireSchoolOwnership, TenantError } from "@/lib/auth-security"
+import { canUserAccessSchool, ensureUserSchool } from "@/lib/school-access"
 
 // ---------------------------------------------------------------------------
 // Mocks

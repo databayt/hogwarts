@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { syncDefaultClassrooms } from "@/components/school-dashboard/listings/classrooms/actions"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))

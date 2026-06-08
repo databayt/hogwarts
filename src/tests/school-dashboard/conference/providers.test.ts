@@ -10,12 +10,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
-  ProviderNotConfiguredError,
-  ProviderNotImplementedError,
   configuredProviderIds,
   getProviderAdapter,
   listProviderAdapters,
+  ProviderNotConfiguredError,
+  ProviderNotImplementedError,
 } from "@/components/school-dashboard/conference/providers"
+import { clearTokenCache } from "@/components/school-dashboard/conference/providers/token-cache"
 
 const NATIVE_ENV = [
   "GOOGLE_MEET_CLIENT_ID",
@@ -32,6 +33,7 @@ const NATIVE_ENV = [
 const saved: Record<string, string | undefined> = {}
 
 beforeEach(() => {
+  clearTokenCache()
   for (const k of NATIVE_ENV) {
     saved[k] = process.env[k]
     delete process.env[k]
@@ -54,7 +56,11 @@ const INPUT = {
 }
 
 function jsonResponse(body: unknown): Response {
-  return { ok: true, status: 200, json: async () => body } as unknown as Response
+  return {
+    ok: true,
+    status: 200,
+    json: async () => body,
+  } as unknown as Response
 }
 
 describe("provider registry", () => {
@@ -200,5 +206,39 @@ describe("native createMeeting against mocked APIs", () => {
     expect(String(fetchMock.mock.calls[1][0])).toContain(
       "graph.microsoft.com/v1.0/users/org-1/onlineMeetings"
     )
+  })
+
+  it("reuses the cached OAuth token across createMeeting calls", async () => {
+    process.env.GOOGLE_MEET_CLIENT_ID = "cid"
+    process.env.GOOGLE_MEET_CLIENT_SECRET = "csec"
+    process.env.GOOGLE_MEET_REFRESH_TOKEN = "rtok"
+    const meet = () =>
+      jsonResponse({
+        id: "evt",
+        conferenceData: {
+          entryPoints: [
+            { entryPointType: "video", uri: "https://meet.google.com/x" },
+          ],
+        },
+      })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({ access_token: "AT", expires_in: 3600 })
+      )
+      .mockResolvedValueOnce(meet())
+      .mockResolvedValueOnce(meet())
+    vi.stubGlobal("fetch", fetchMock)
+
+    await getProviderAdapter("google_meet").createMeeting(INPUT)
+    await getProviderAdapter("google_meet").createMeeting(INPUT)
+
+    // 3 calls: 1 token + 2 creates — the 2nd createMeeting reused the token.
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "oauth2.googleapis.com/token"
+    )
+    expect(String(fetchMock.mock.calls[1][0])).toContain("calendar/v3")
+    expect(String(fetchMock.mock.calls[2][0])).toContain("calendar/v3")
   })
 })

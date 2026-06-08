@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import {
   deleteRecording,
   getRecordingUrl,
@@ -36,10 +35,15 @@ vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
-vi.mock("@/components/school-dashboard/conference/livekit/recording-urls", () => ({
-  getRecordingPlaybackUrl: vi.fn(async () => "https://signed.example/play.mp4"),
-  deleteRecordingObject: vi.fn(async () => true),
-}))
+vi.mock(
+  "@/components/school-dashboard/conference/livekit/recording-urls",
+  () => ({
+    getRecordingPlaybackUrl: vi.fn(
+      async () => "https://signed.example/play.mp4"
+    ),
+    deleteRecordingObject: vi.fn(async () => true),
+  })
+)
 
 const SCHOOL_ID = "school-aldar"
 

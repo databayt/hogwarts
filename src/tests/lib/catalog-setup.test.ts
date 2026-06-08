@@ -3,8 +3,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { db } from "@/lib/db"
-
 import {
   _testing,
   applyTimetableStructureForNewSchool,
@@ -15,6 +13,7 @@ import {
   setupLibraryForSchool,
   teardownCatalogForSchool,
 } from "@/lib/catalog-setup"
+import { db } from "@/lib/db"
 
 vi.mock("@/lib/db", () => ({
   db: {

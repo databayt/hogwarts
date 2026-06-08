@@ -6,6 +6,13 @@
 
 ---
 
+> ## 🚩 HOUSE RULE — work directly on `main`
+>
+> No feature branches. No worktrees. No PRs. Commit + `pull --rebase` + push straight to `main`.
+> Concurrent worktree sessions kept resetting `main` and wiping work — so: one working tree, one branch, commit early and often. Branch/PR/worktree patterns below are reference only — do not apply them.
+
+---
+
 ## Overview
 
 This guide documents the **automated TDD-first development workflows** for the Hogwarts platform. All workflows leverage the **35 specialized agents**, **22 commands**, and **7 skills** in the Claude Code automation suite.
@@ -312,23 +319,25 @@ pnpm build
 
 #### Phase 7: Commit & Push (with Smart Blocking)
 
-**Automated Actions**: 15. **Git-GitHub Agent**:
+**Automated Actions**: 15. **Git-GitHub Agent** (working directly on `main`):
 
 - Creates conventional commit message
-- Commits changes
-- Pushes to remote
+- Commits changes on `main`
+- `git pull --rebase origin main`
+- `git push origin main`
 
-**Smart Blocking** (via PreToolUse hooks):
+**Smart Blocking** (via PreToolUse hooks) — this is the quality gate, not a reason to avoid `main`:
 
-- **Main/master/production branches**: BLOCKS if quality checks fail
+- On `main`: **BLOCKS** the commit/push if quality checks fail
   - Pre-Commit: tests, eslint, tsc
   - Pre-Push: build, prettier
-- **Feature branches**: WARNS but allows commit/push
+- Fix the failure, then commit + push again. We always commit straight to `main` — the hook just keeps bad commits out.
 
-**Example Commit**:
+**Example Commit** (on `main`):
 
 ```bash
-feat(attendance): Add student attendance tracking with calendar view
+git add .
+git commit -m "feat(attendance): Add student attendance tracking with calendar view
 
 - Implement attendance calendar component
 - Add bulk attendance marking
@@ -337,10 +346,12 @@ feat(attendance): Add student attendance tracking with calendar view
 - Achieve 97.3% tests coverage
 
 🤖 Generated with Claude Code
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git pull --rebase origin main
+git push origin main
 ```
 
-**Output**: Code committed and pushed to remote
+**Output**: Code committed and pushed to `main` (Vercel auto-deploys)
 
 ---
 
@@ -399,8 +410,8 @@ Summary:
 - 📝 Docs: Updated (README + Issue #123)
 
 Next Steps:
-- Create pull request: gh pr create
-- Deploy to staging: /deploy staging
+- Already on main — push triggers Vercel deploy automatically
+- Verify production: /watch
 ```
 
 **Time Savings**: 10x faster than manual development
@@ -566,7 +577,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## 3. Code Review Workflow
 
-**Use When**: Before merging PR, after significant changes
+**Use When**: Before committing significant changes to `main`, after significant changes
 
 **Duration**: 10-15 minutes (automated)
 
@@ -677,20 +688,20 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
-#### Step 4: Approve or Request Changes
+#### Step 4: Commit or Keep Fixing
 
 **If All Issues Fixed**:
 
 ```bash
-# Create pull request
-/agents/git-github -p "Create PR for attendance tracking feature"
+# Commit straight to main (quality gate runs on commit/push)
+/agents/git-github -p "Commit + push attendance tracking to main"
 ```
 
 **If Issues Remain**:
 
 - Address issues iteratively
 - Re-run `/review` after each fix
-- Only create PR when overall grade is A or B+
+- Only commit to `main` when overall grade is A or B+ (the pre-commit/pre-push hook blocks if checks fail)
 
 ---
 
@@ -874,7 +885,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 4. ✅ Environment variables configured
 5. ✅ Database migrations ready (if any)
 6. ✅ No uncommitted changes
-7. ✅ On correct branch (main for production, develop for staging)
+7. ✅ On `main` (we always work on `main`; verify `git branch --show-current` → main)
 
 **If Any Check Fails**: Deployment blocked, fix issues first
 
@@ -899,19 +910,17 @@ pnpm prisma migrate deploy
 #### Step 3: Deploy Application
 
 ```bash
-# Staging deployment
-git push origin develop  # Triggers Vercel staging deploy
-
-# Production deployment
-git push origin main  # Triggers Vercel production deploy
+# We work and ship on main — push triggers Vercel production deploy
+git pull --rebase origin main
+git push origin main
 ```
 
 **Vercel Deployment**:
 
 - Automatic via Vercel Git integration
 - Build logs available in Vercel dashboard
-- Preview URL generated for staging
-- Production URL updated for main branch
+- Production URL updated on every push to `main`
+- For a preview without touching prod, use a Vercel preview deploy (`vercel` without `--prod`) — no extra git branch needed
 
 ---
 
@@ -968,13 +977,12 @@ vercel rollback  # Roll back to previous deployment
 
 ### Step-by-Step Process
 
-#### Step 1: Create Hotfix Branch (1 min)
+#### Step 1: Sync `main` (1 min)
 
 ```bash
-# Create hotfix branch from main
-git checkout main
-git pull origin main
-git checkout -b hotfix/critical-bug-name
+# We hotfix directly on main — just make sure it's current first
+git branch --show-current   # → main
+git pull --rebase origin main
 ```
 
 ---
@@ -1026,10 +1034,11 @@ pnpm build
 #### Step 4: Deploy to Production (5 min)
 
 ```bash
-# Merge hotfix to main
-git checkout main
-git merge hotfix/critical-bug-name
-git push origin main  # Triggers production deploy
+# Commit + push straight to main (Vercel auto-deploys)
+git add .
+git commit -m "fix: <critical-bug-name>"
+git pull --rebase origin main
+git push origin main
 
 # Tag hotfix
 git tag v1.2.1-hotfix
@@ -1041,12 +1050,7 @@ git push origin v1.2.1-hotfix
 #### Step 5: Post-Hotfix Cleanup (15-20 min - can be done later)
 
 ```bash
-# Merge hotfix back to develop
-git checkout develop
-git merge main
-git push origin develop
-
-# Full review (deferred)
+# Full review (deferred) — runs against the already-shipped main
 /review
 
 # Update documentation
@@ -1147,15 +1151,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Behavior**:
 
-- **Main/master/production branches**: BLOCKS commit if any check fails
-- **Feature branches**: WARNS but allows commit
+- On `main` (where we always work): **BLOCKS** the commit if any check fails. This is the safety net that lets us commit straight to `main` — fix the failure and commit again.
 
 **Example Output**:
 
 ```bash
 $ git commit -m "feat: Add attendance feature"
 
-🔍 Pre-Commit Quality Gates (Branch: feature/attendance)
+🔍 Pre-Commit Quality Gates (Branch: main)
 
 Running tests for changed files...
 ✓ 15 tests passed
@@ -1182,24 +1185,20 @@ Running TypeScript check...
 
 **Behavior**:
 
-- **Main/master/production branches**: BLOCKS push if any check fails
-- **Feature branches**: WARNS but allows push
+- On `main` (where we always push): **BLOCKS** the push if any check fails. Fix the build/format error, then push again.
 
 **Example Output**:
 
 ```bash
-$ git push origin feature/attendance
+$ git push origin main
 
-🔍 Pre-Push Build Verification (Branch: feature/attendance)
+🔍 Pre-Push Build Verification (Branch: main)
 
 Running production build...
 ✓ Build completed in 45s
 
 Checking Prettier formatting...
 ✓ All files formatted correctly
-
-⚠️  WARNING: Quality checks passed on feature branch (feature/attendance)
-Allowing push, but please fix errors before merging to main
 
 ✅ Pre-Push checks passed
 ```
@@ -1332,9 +1331,9 @@ Allowing push, but please fix errors before merging to main
 
 1. **Always start with tests** (TDD approach)
 2. **Use `/feature` for new features** (full automation)
-3. **Run `/review` before merging** (comprehensive quality check)
+3. **Run `/review` before committing to `main`** (comprehensive quality check)
 4. **Trust the automation** (let workflows run fully)
-5. **Work on feature branches** (permissive quality gates)
+5. **Work directly on `main`** (one working tree; commit early and often — the pre-commit/pre-push hook is the gate)
 6. **Update documentation** (automated via docs-manager)
 7. **Verify after deployment** (smoke tests)
 8. **Follow mirror pattern** (route ↔ component structure)
@@ -1344,7 +1343,7 @@ Allowing push, but please fix errors before merging to main
 ### Don'ts ❌
 
 1. **Don't skip tests** (maintains quality)
-2. **Don't commit directly to main** (use feature branches)
+2. **Don't create branches, worktrees, or PRs** (work directly on `main`; concurrent worktrees kept resetting `main` and wiping work)
 3. **Don't ignore review violations** (technical debt)
 4. **Don't hardcode typography** (use semantic HTML)
 5. **Don't forget schoolId** (multi-tenant isolation)

@@ -4,8 +4,10 @@
 import { describe, expect, it } from "vitest"
 
 import { ValidationHelper } from "@/components/internationalization/helpers"
-
-import { createLocationSchema, locationSchema } from "@/components/onboarding/location/validation"
+import {
+  createLocationSchema,
+  locationSchema,
+} from "@/components/onboarding/location/validation"
 
 const messages = {
   required: "Required (t)",

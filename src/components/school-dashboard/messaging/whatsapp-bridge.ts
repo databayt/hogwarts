@@ -198,7 +198,10 @@ export async function dispatchMessageToWhatsApp(
         })
         await db.messageWhatsappDelivery.upsert({
           where: {
-            messageId_participantId: { messageId, participantId: participant.id },
+            messageId_participantId: {
+              messageId,
+              participantId: participant.id,
+            },
           },
           create: {
             schoolId,
@@ -292,7 +295,10 @@ export async function dispatchMessageToWhatsApp(
       } else {
         await db.messageWhatsappDelivery.upsert({
           where: {
-            messageId_participantId: { messageId, participantId: participant.id },
+            messageId_participantId: {
+              messageId,
+              participantId: participant.id,
+            },
           },
           create: {
             schoolId,
@@ -341,7 +347,10 @@ export async function dispatchMessageToWhatsApp(
         })
         await db.messageWhatsappDelivery.upsert({
           where: {
-            messageId_participantId: { messageId, participantId: participant.id },
+            messageId_participantId: {
+              messageId,
+              participantId: participant.id,
+            },
           },
           create: {
             schoolId,
@@ -524,9 +533,8 @@ export async function retryFailedMessageDispatches(): Promise<{
 
   if (failedDeliveries.length > 0) {
     const evolution = await import("@/lib/whatsapp/evolution-client")
-    const { checkAndConsumeRateLimit } = await import(
-      "@/lib/whatsapp/rate-limiter"
-    )
+    const { checkAndConsumeRateLimit } =
+      await import("@/lib/whatsapp/rate-limiter")
     // One session lookup per school, reused across that school's deliveries.
     const sessionCache = new Map<
       string,

@@ -9,6 +9,126 @@ The catalog is the platform-wide store of curriculum content. One copy of every 
 
 <CatalogStructure />
 
+## Content & assets
+
+The catalog holds two kinds of things: **content** — the curriculum hierarchy (subjects → chapters → lessons) plus the exams, questions, materials, and assignments attached to it — and **assets** — the images, textbook PDFs, and videos that content references. Each is produced by a different seed or pipeline, and they sit at very different stages of completeness. The plan to close the gaps is in [Completing the catalog](#completing-the-catalog).
+
+<CatalogPipeline />
+
+Authored source — a JSON inventory, an on-disk tree, a CDN, or inline data — is pulled in by a **seed** that writes rows into the global `catalog_*` tables. `setupCatalogForSchool` then bridges a tenant to that shared content through `SubjectSelection` rows, and the school app reads through the bridge into classes, the timetable, and the LMS.
+
+### All ten curricula
+
+Subjects exist for all ten curricula; **chapters and lessons exist only for US and Sudan** — the eight world curricula are subjects-only (`catalog/world.ts` writes no chapter or lesson rows), so the depth gap cascades into every artifact generated below.
+
+| Curriculum | Code          | Subjects | Chapters | Lessons | Thumbnail | Banner  | Textbook PDF | Source                                 | Seed             |
+| ---------- | ------------- | -------- | -------- | ------- | --------- | ------- | ------------ | -------------------------------------- | ---------------- |
+| US         | `us-k12`      | ~240     | ~750     | ~3,993  | yes       | partial | none         | `clickview-data/master-inventory.json` | `us` (default)   |
+| Sudan      | `national`    | 125      | 883      | 2,940   | yes       | partial | 118          | `curriculum/sd/`                       | `sd-base` + `sd` |
+| British    | `gb-national` | ~176     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| IB         | `ib-diploma`  | ~138     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| Saudi      | `sa-national` | ~132     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| Egypt      | `eg-national` | ~140     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| UAE        | `ae-national` | ~144     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| Qatar      | `qa-national` | ~122     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| Kuwait     | `kw-national` | ~139     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+| Jordan     | `jo-national` | ~150     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
+
+Subject **thumbnails** work for all ten — concepts are assigned at seed time — but **chapter and lesson thumbnails exist only for US (ClickView) and Sudan**, since only those have chapters and lessons. Two fully-authored trees sit on disk **unread**: `curriculum/uk` (British — 184 subjects / 363 chapters / 730 lessons) and `curriculum/us` (American — 128 / 266 / 535); `curriculum/fr` and `in` are image-only. Closing these gaps is the subject of [Completing the catalog](#completing-the-catalog).
+
+### Generated content — exams, questions, materials, assignments
+
+`catalog/content.ts` reads the published hierarchy and **generates synthetic** rows in bulk:
+
+- **Exams** — two per subject (`final`, `midterm`), two per chapter (`chapter_test`, `practice`), two per lesson (`quiz`, `diagnostic`), each linked to its scope and to questions through the `ExamQuestion` junction. Seeded `status: PUBLISHED` but left `approvalStatus: PENDING` — the one artifact not auto-approved.
+- **Questions** — the catalog question bank: ~10 per subject, 6 per chapter, 4 per lesson, across eight question types, seeded `APPROVED` / `PUBLIC`. (Real teacher-authored questions live in the separate school-scoped `QuestionBank`, not here.)
+- **Materials** — textbook/syllabus/reference per subject, study-guide/project per chapter, worksheet/slides/notes/lab-manual per lesson. **Metadata only — no real files are attached** (`fileUrl` is null).
+- **Assignments** — one per lesson, so a curriculum without lessons gets none.
+
+Because all of this reads the hierarchy, a subjects-only curriculum receives only the per-subject rows — no chapter- or lesson-scoped content, and no assignments. It is **placeholder data for populating the UI, not authored material**, and `catalog/content.ts` is not idempotent (re-running duplicates rows). The `Quiz` model is not seeded at all.
+
+The exception is **exam scaffolding**: `catalog/exam-templates.ts` writes real, hand-authored **blueprints** (per subject category), two **exam templates** per subject, and global **paper templates** — genuine config, idempotent, covering every subject (they need no chapters).
+
+### How assets are processed
+
+Every image and file follows the same shape — a source is processed, written to an S3 object, and read back through CloudFront — but the source and the processing step differ per asset type. The sections below detail each.
+
+<CatalogAssetFlow />
+
+### Images — thumbnails, banners, covers
+
+All catalog imagery routes through the shared **concept** system and the Sharp pipeline in `image.ts`: each source image becomes four WebP variants (`sm` 200px, `md` 600px, `lg` 1200px, `original` lossless), uploaded to S3 and served via CloudFront; `image-url.ts` builds `{key}-{size}.webp` at read time. See [Image pipeline](#image-pipeline) and [Concepts](/docs/concept).
+
+- **Thumbnails** — `catalog/concepts.ts` processes the 24 source images in `public/subjects/concepts/` into `catalog/concepts/g{grade}-{concept}/thumbnail-*.webp` for all 12 grades (~1,150 objects) and backfills each subject's `concept` and `thumbnail`. **Complete.**
+- **Banners** — `catalog/banners.ts` copies pre-existing wide ClickView banners (raw, no Sharp) into the matching concept paths. Every subject gets a `banner` key, but the copy covers about ten concepts and silently skips any whose legacy source is gone — so some `banner` keys point at objects that don't exist. **Partial.**
+- **Textbook covers** — every subject is given a `cover` key (`catalog/concepts/{concept}/cover`), but **no seed or script uploads an object to that path**, so the textbook card always falls back to an icon. **Missing.**
+
+### Textbook PDFs
+
+Sudan ships 118 `textbook.pdf` files under `curriculum/sd/`. `scripts/upload-textbooks-all.ts` uploads them raw to `catalog/textbooks/{slug}/textbook.pdf` and sets each subject's `pdf` key. **Sudan only** — no other curriculum has textbook PDFs.
+
+### Lesson & chapter thumbnails
+
+`catalog/clickview-lessons.ts` pulls each US lesson's and chapter's cover from the ClickView CDN, runs it through the same Sharp pipeline, and stores it per lesson and chapter. Scoped to `us-k12` and dependent on the live CDN at seed time. **US only.**
+
+### Videos
+
+`catalog/videos.ts` seeds up to two **placeholder** video rows per subject pointing at S3 keys with no backing `.mp4`. Real videos are **contributed** — a teacher pastes a YouTube or Vimeo URL through the SaaS flow; nothing is uploaded. So catalog video today is placeholder rows plus externally-hosted contributed links.
+
+### Books
+
+`catalog/books.ts` seeds 51 catalog books whose covers are **external Open Library URLs** — not uploaded, not on our CDN.
+
+### Status at a glance
+
+| Artifact                                    | Produced by               | Processing              | Stored as                                   | Status                                                 |
+| ------------------------------------------- | ------------------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| Subjects                                    | curriculum seeds          | —                       | `catalog_subjects`                          | all 10 curricula                                       |
+| Chapters / Lessons                          | `us.ts`, `sd.ts`          | —                       | `catalog_chapters` / `catalog_lessons`      | US + Sudan only                                        |
+| Exams / Questions / Materials / Assignments | `content.ts`              | generated (synthetic)   | `catalog_*`                                 | per-subject everywhere; chapter/lesson only US + Sudan |
+| Exam blueprints / templates                 | `exam-templates.ts`       | authored, idempotent    | `catalog_exam_*`                            | all subjects                                           |
+| Quizzes                                     | —                         | —                       | `catalog_quizzes`                           | none seeded                                            |
+| Thumbnails                                  | `concepts.ts`             | Sharp → 4 WebP          | `catalog/concepts/g{n}-{concept}/thumbnail` | complete                                               |
+| Banners                                     | `banners.ts`              | raw copy from legacy S3 | `catalog/concepts/g{n}-{concept}/banner`    | partial (some keys 404)                                |
+| Textbook covers                             | —                         | —                       | `catalog/concepts/{concept}/cover`          | key set, object never uploaded                         |
+| Textbook PDFs                               | `upload-textbooks-all.ts` | raw upload              | `catalog/textbooks/{slug}/textbook.pdf`     | Sudan only                                             |
+| Lesson / chapter thumbnails                 | `clickview-lessons.ts`    | Sharp → 4 WebP          | `catalog/subjects/{slug}/…/thumbnail`       | US only (CDN-dependent)                                |
+| Videos                                      | `videos.ts` / contributed | placeholder / URL paste | `lesson_videos`                             | placeholder rows + external links                      |
+| Books                                       | `books.ts`                | external URL            | `catalog_books`                             | external Open Library covers                           |
+
+### Where it lives & how to control it
+
+**Where each thing lives** — the source, the database table, and the S3 key (served via CloudFront):
+
+| Layer                         | Source                                                             | Database                                                                            | S3 key / CDN                                |
+| ----------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------- |
+| Subjects / chapters / lessons | `curriculum/sd`, `clickview-data`, `sudan-data`, inline `world.ts` | `catalog_subjects` / `catalog_chapters` / `catalog_lessons`                         | —                                           |
+| Generated content             | synthetic (no source)                                              | `catalog_exams` / `catalog_questions` / `catalog_materials` / `catalog_assignments` | —                                           |
+| Thumbnails                    | `public/subjects/concepts/*.jpg`                                   | `Subject.thumbnail`                                                                 | `catalog/concepts/g{n}-{concept}/thumbnail` |
+| Banners                       | legacy S3 objects                                                  | `Subject.banner`                                                                    | `catalog/concepts/g{n}-{concept}/banner`    |
+| Textbook PDFs                 | `curriculum/sd/…/textbook.pdf`                                     | `Subject.pdf`                                                                       | `catalog/textbooks/{slug}/textbook.pdf`     |
+| Lesson / chapter thumbnails   | ClickView CDN                                                      | `Lesson.thumbnail` / `Chapter.thumbnail`                                            | `catalog/subjects/{slug}/…/thumbnail`       |
+| Videos                        | external / none                                                    | `lesson_videos`                                                                     | external host                               |
+| Books                         | Open Library                                                       | `catalog_books`                                                                     | external `covers.openlibrary.org`           |
+
+**How to control it** — every layer is (re)built by a seed, a script, or the admin UI:
+
+| To…                                                         | Run / where                                                         |
+| ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Load US / Sudan / world curricula                           | `pnpm db:seed:single us` · `sd` · `world`                           |
+| Register `Curriculum` records + backfill                    | `pnpm db:seed:single meta`                                          |
+| Generate exams / questions / materials / assignments        | `pnpm db:seed:single content`                                       |
+| Seed exam blueprints + templates                            | `pnpm db:seed:single exam-templates`                                |
+| Upload concept thumbnails / banners                         | `pnpm db:seed:single concepts` · `banners`                          |
+| Upload US lesson / chapter thumbnails                       | `pnpm db:seed:single clickview-lessons`                             |
+| Upload Sudan textbook PDFs                                  | `pnpm tsx scripts/upload-textbooks-all.ts`                          |
+| Seed catalog books                                          | `pnpm db:seed:single books`                                         |
+| Author a new curriculum tree on disk                        | `curriculum/_build_tools/engine.py`, then ingest it like `sd.ts`    |
+| Edit or approve a subject, chapter, lesson, or contribution | SaaS catalog admin at `/[lang]/(saas-dashboard)/(catalog)/catalog`  |
+| Contribute content as a school                              | School subjects → contribute (`school-dashboard/listings/subjects`) |
+
+Most seeds are upsert-safe to re-run, and image seeds re-upload to immutable keys (also safe). The exception is `content` — it has no natural unique key, so **re-running it duplicates** the generated exams, questions, materials, and assignments. See [Seed pipeline](#seed-pipeline) for the full list and [Completing the catalog](#completing-the-catalog) for the roadmap.
+
 ## How it works
 
 ### Loading content

@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
-
 // Import the handler after mocks
 import { POST } from "@/app/api/webhooks/stripe/route"
 

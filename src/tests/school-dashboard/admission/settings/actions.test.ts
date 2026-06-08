@@ -5,8 +5,10 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-
-import { getAdmissionSettings, saveAdmissionSettings } from "@/components/school-dashboard/admission/settings/actions"
+import {
+  getAdmissionSettings,
+  saveAdmissionSettings,
+} from "@/components/school-dashboard/admission/settings/actions"
 import { admissionSettingsSchema } from "@/components/school-dashboard/admission/settings/validation"
 
 // ---------------------------------------------------------------------------

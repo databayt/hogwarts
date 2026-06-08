@@ -16,7 +16,11 @@ import {
   getTestEnv,
   TIMEOUTS,
 } from "../e2e/_support/helpers/test-data"
-import { LoginPage, OnboardingPage, SaasHomePage } from "../e2e/_support/page-objects"
+import {
+  LoginPage,
+  OnboardingPage,
+  SaasHomePage,
+} from "../e2e/_support/page-objects"
 
 const env = getTestEnv()
 const baseUrl = getBaseUrl(env)

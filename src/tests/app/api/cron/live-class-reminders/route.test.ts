@@ -6,14 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { isAuthorizedCron } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { notifyClassStartingSoon } from "@/components/school-dashboard/conference/actions/notifications"
-
 import { GET } from "@/app/api/cron/live-class-reminders/route"
 
 vi.mock("@/lib/cron-auth", () => ({ isAuthorizedCron: vi.fn(() => true) }))
 vi.mock("@/lib/db", () => ({
   db: {
     conference: { findMany: vi.fn() },
-    conferenceEvent: { findFirst: vi.fn(), create: vi.fn() },
+    conferenceEvent: { findMany: vi.fn(), create: vi.fn() },
   },
 }))
 vi.mock(
@@ -30,7 +29,7 @@ beforeEach(() => {
   vi.setSystemTime(NOW)
   vi.mocked(isAuthorizedCron).mockReturnValue(true)
   vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
-  vi.mocked(db.conferenceEvent.findFirst).mockResolvedValue(null as never)
+  vi.mocked(db.conferenceEvent.findMany).mockResolvedValue([] as never)
   vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
 })
 
@@ -78,9 +77,10 @@ describe("live-class-reminders cron — dispatch + idempotency", () => {
       { id: "lcs-fresh", schoolId: "school-1" },
       { id: "lcs-already", schoolId: "school-1" },
     ] as never)
-    vi.mocked(db.conferenceEvent.findFirst)
-      .mockResolvedValueOnce(null as never)
-      .mockResolvedValueOnce({ id: "evt-existing" } as never)
+    // lcs-already already has a reminder event; lcs-fresh does not.
+    vi.mocked(db.conferenceEvent.findMany).mockResolvedValue([
+      { sessionId: "lcs-already" },
+    ] as never)
 
     const res = await GET(req())
     const body = (await res.json()) as { ok: boolean; dispatched: number }
@@ -88,7 +88,10 @@ describe("live-class-reminders cron — dispatch + idempotency", () => {
     expect(body.ok).toBe(true)
     expect(body.dispatched).toBe(1)
     expect(notifyClassStartingSoon).toHaveBeenCalledTimes(1)
-    expect(notifyClassStartingSoon).toHaveBeenCalledWith("school-1", "lcs-fresh")
+    expect(notifyClassStartingSoon).toHaveBeenCalledWith(
+      "school-1",
+      "lcs-fresh"
+    )
     expect(db.conferenceEvent.create).toHaveBeenCalledTimes(1)
     expect(db.conferenceEvent.create).toHaveBeenCalledWith(
       expect.objectContaining({

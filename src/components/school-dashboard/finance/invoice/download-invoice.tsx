@@ -7,14 +7,11 @@ import { useState } from "react"
 import { Download, Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 
-import { useGenerate } from "@/components/file/generate/use-generate"
 import { Button } from "@/components/ui/button"
+import { useGenerate } from "@/components/file/generate/use-generate"
 import type { Locale } from "@/components/internationalization/config"
 
-import {
-  mapInvoiceToInvoiceData,
-  type InvoiceForPdf,
-} from "./invoice-pdf-data"
+import { mapInvoiceToInvoiceData, type InvoiceForPdf } from "./invoice-pdf-data"
 
 interface DownloadInvoiceButtonProps {
   invoice: InvoiceForPdf

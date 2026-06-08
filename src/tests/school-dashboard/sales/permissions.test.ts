@@ -8,8 +8,10 @@ import {
   FULL_UI_PERMISSIONS,
   NO_UI_PERMISSIONS,
 } from "@/lib/rbac/ui-permissions"
-
-import { getTabsForRole, getUIConfigForRole } from "@/components/school-dashboard/sales/permissions"
+import {
+  getTabsForRole,
+  getUIConfigForRole,
+} from "@/components/school-dashboard/sales/permissions"
 
 // Policy: ADMIN + DEVELOPER get full sales pipeline; every other role gets
 // nothing. The matrix below is the policy — change it intentionally if you

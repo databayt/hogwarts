@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { format } from "date-fns"
 import { Calendar, CalendarDays, ListFilter, MapPin, Users } from "lucide-react"
 
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import {
   cancelEventRegistration,

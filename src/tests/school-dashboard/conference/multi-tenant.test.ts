@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-
 import { listRecordings } from "@/components/school-dashboard/conference/actions/recordings"
 import {
   cancelLiveClass,
@@ -45,10 +44,13 @@ vi.mock("@/components/school-dashboard/conference/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
 }))
-vi.mock("@/components/school-dashboard/conference/actions/notifications", () => ({
-  notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
-  notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
-}))
+vi.mock(
+  "@/components/school-dashboard/conference/actions/notifications",
+  () => ({
+    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+  })
+)
 
 const SCHOOL_A = "school-A"
 const SCHOOL_B = "school-B"

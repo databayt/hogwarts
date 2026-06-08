@@ -39,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getSubstitutionRecords, getTeacherAbsences } from "../actions"
-import { ABSENCE_TYPES } from "../constants"
+import { ABSENCE_TYPES } from "../config"
 import { AbsenceFormDialog } from "./absence-form"
 import { SubstitutionList } from "./substitution-list"
 

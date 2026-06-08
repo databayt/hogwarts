@@ -7,8 +7,8 @@ and `LIVEKIT_*` env config before E2E test.
 
 ## Routes
 
-| Path                            | Layout           | Roles                                                     |
-| ------------------------------- | ---------------- | --------------------------------------------------------- |
+| Path                          | Layout           | Roles                                                     |
+| ----------------------------- | ---------------- | --------------------------------------------------------- |
 | `/conference`                 | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF, ACCOUNTANT |
 | `/conference/[id]`            | school-dashboard | same                                                      |
 | `/conference/[id]/recordings` | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             |
@@ -101,7 +101,7 @@ rbac.spec.ts                   — 11 RBAC matrix tests per browser
 | Recordings list + signed playback      | ✅                                            |
 | Webhook handler (room + egress events) | ✅                                            |
 | Reminder + retention crons             | ✅                                            |
-| RBAC (`/conference/*`)               | ✅                                            |
+| RBAC (`/conference/*`)                 | ✅                                            |
 | Sidebar + dictionaries (en+ar)         | ✅                                            |
 | Notification type sync (5 sync points) | ✅                                            |
 | Network test page                      | ✅ (env-gated)                                |

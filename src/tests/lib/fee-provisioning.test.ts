@@ -33,9 +33,12 @@ vi.mock("@/lib/payment/gateway-config", () => ({
 // The school-level provisioner fans out to ensureStudentFeeAssignments — mock
 // it so these tests focus on structure materialisation, not the per-student layer.
 vi.mock("@/lib/fee-auto-assign", () => ({
-  ensureStudentFeeAssignments: vi
-    .fn()
-    .mockResolvedValue({ created: 0, existing: 0, skipped: 0, assignmentIds: [] }),
+  ensureStudentFeeAssignments: vi.fn().mockResolvedValue({
+    created: 0,
+    existing: 0,
+    skipped: 0,
+    assignmentIds: [],
+  }),
 }))
 
 const SCHOOL_ID = "school-1"
@@ -51,7 +54,9 @@ function setupSchool(tuitionFee = 5000) {
     schoolLevel: "K12",
     tuitionFee,
   } as never)
-  vi.mocked(db.schoolYear.findFirst).mockResolvedValue({ yearName: YEAR } as never)
+  vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
+    yearName: YEAR,
+  } as never)
   vi.mocked(db.student.findMany).mockResolvedValue([] as never)
   vi.mocked(db.academicStream.findMany).mockResolvedValue([
     { id: "stream-sci", name: "Science" },
@@ -84,9 +89,9 @@ describe("provisionSchoolFees — pricing matrix", () => {
       .data as Record<string, unknown>
     expect(firstPayload.totalAmount).toBe(5000)
     expect(firstPayload.tuitionFee).toBe(5000)
-    expect((firstPayload.sourceSignals as Record<string, unknown>).gradeId).toBe(
-      "g1"
-    )
+    expect(
+      (firstPayload.sourceSignals as Record<string, unknown>).gradeId
+    ).toBe("g1")
     expect(
       (firstPayload.sourceSignals as Record<string, unknown>).streamId
     ).toBeNull()
@@ -125,7 +130,7 @@ describe("provisionSchoolFees — pricing matrix", () => {
     expect(result.created).toBe(2)
     const payloads = vi
       .mocked(db.feeStructure.create)
-      .mock.calls.map((c) => (c[0].data as Record<string, unknown>))
+      .mock.calls.map((c) => c[0].data as Record<string, unknown>)
 
     const base = payloads.find(
       (p) => (p.sourceSignals as Record<string, unknown>).streamId === null
