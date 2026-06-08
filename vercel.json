@@ -44,6 +44,14 @@
     {
       "path": "/api/cron/scheduled-reports",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/live-class-reminders",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-live-recordings",
+      "schedule": "0 3 * * *"
     }
   ]
 }

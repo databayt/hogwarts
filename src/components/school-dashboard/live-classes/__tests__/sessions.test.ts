@@ -28,6 +28,9 @@ vi.mock("@/lib/db", () => ({
     liveClassParticipant: {
       upsert: vi.fn(),
     },
+    liveClassDefaultLink: {
+      upsert: vi.fn(),
+    },
     school: {
       findUnique: vi.fn(),
     },
@@ -48,6 +51,13 @@ vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
 // Stub LiveKit lib so we don't hit env-var or network at module init.
+// `isLiveKitConfigured` defaults to true here: the livekit-provider create
+// path presupposes a configured SFU. The external-provider tests pass
+// `provider: "external"` explicitly, so the clamp leaves them as external
+// regardless of this value.
+vi.mock("@/lib/livekit/client", () => ({
+  isLiveKitConfigured: vi.fn(() => true),
+}))
 vi.mock("@/lib/livekit/rooms", () => ({
   ensureRoom: vi.fn(async () => undefined),
   endRoom: vi.fn(async () => undefined),
@@ -58,6 +68,11 @@ vi.mock("@/lib/livekit/room-naming", async () => {
   >("@/lib/livekit/room-naming")
   return actual
 })
+
+// `saveAsDefault` resolves the active term to key the recurring default link.
+vi.mock("@/lib/term-resolver", () => ({
+  resolveActiveTerm: vi.fn(async () => ({ term: { id: "term-1" } })),
+}))
 
 // Notification helpers fire as best-effort `void` — stub to keep tests fast.
 vi.mock("../actions/notifications", () => ({
@@ -247,6 +262,40 @@ describe("createLiveClass (external provider)", () => {
     )
     // External sessions skip the two-step roomName update.
     expect(db.liveClassSession.update).not.toHaveBeenCalled()
+  })
+
+  it("saveAsDefault → upserts the recurring LiveClassDefaultLink keyed by school+subject+section+term", async () => {
+    mockAdmin()
+    const result = await createLiveClass({
+      ...externalInput,
+      saveAsDefault: true,
+    })
+    expect("success" in result && result.success).toBe(true)
+    expect(db.liveClassDefaultLink.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          schoolId_subjectId_sectionId_termId: {
+            schoolId: SCHOOL_ID,
+            subjectId: "sub-1",
+            sectionId: "sec-1",
+            termId: "term-1",
+          },
+        },
+        create: expect.objectContaining({
+          provider: "external",
+          meetingUrl: "https://meet.google.com/abc-defg-hij",
+        }),
+        update: expect.objectContaining({
+          meetingUrl: "https://meet.google.com/abc-defg-hij",
+        }),
+      })
+    )
+  })
+
+  it("does NOT persist a default link when saveAsDefault is false", async () => {
+    mockAdmin()
+    await createLiveClass(externalInput)
+    expect(db.liveClassDefaultLink.upsert).not.toHaveBeenCalled()
   })
 })
 

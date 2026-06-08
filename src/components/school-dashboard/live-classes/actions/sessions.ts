@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { isLiveKitConfigured } from "@/lib/livekit/client"
 import { roomNameFor } from "@/lib/livekit/room-naming"
 import { endRoom, ensureRoom } from "@/lib/livekit/rooms"
 import { resolveActiveTerm } from "@/lib/term-resolver"
@@ -91,7 +92,20 @@ async function createLiveClassWithCtx(
     })
     if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
 
-    const provider = data.provider ?? "livekit"
+    // Day-1 the LiveKit SFU is dark (no env). Only honor an explicit `livekit`
+    // request when LiveKit is actually configured; otherwise fall back to the
+    // `external` provider (pasted Google Meet / Zoom / Teams link). This stops
+    // a roomless livekit session being persisted via a non-UI caller.
+    const provider: "livekit" | "external" =
+      data.provider === "livekit" && isLiveKitConfigured()
+        ? "livekit"
+        : "external"
+    // The external provider requires a meeting URL. The schedule form
+    // guarantees this; guard the direct-call path where a `livekit` request
+    // with no URL gets clamped to external while LiveKit is dark.
+    if (provider === "external" && !data.meetingUrl) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+    }
     const baseData = {
       schoolId: ctx.schoolId,
       teacherId: teacher.id,

@@ -17,7 +17,7 @@ import {
   SOCKET_EVENTS,
 } from "../config"
 
-// All 24 NotificationType enum values from Prisma schema
+// All 29 NotificationType enum values from Prisma schema
 // Source: prisma/models/notifications.prisma > enum NotificationType
 const ALL_NOTIFICATION_TYPES = [
   "message",
@@ -44,6 +44,11 @@ const ALL_NOTIFICATION_TYPES = [
   "document_shared",
   "report_ready",
   "setup_guide",
+  "live_class_scheduled",
+  "live_class_starting_soon",
+  "live_class_started",
+  "live_class_cancelled",
+  "live_class_recording_ready",
 ] as const
 
 // All 4 NotificationPriority enum values
@@ -58,7 +63,7 @@ const ALL_CHANNELS = ["in_app", "email", "push", "sms", "whatsapp"] as const
 // ============================================================================
 
 describe("NOTIFICATION_TYPE_CONFIG", () => {
-  it("has entries for all 24 NotificationType values", () => {
+  it("has entries for all 29 NotificationType values", () => {
     for (const type of ALL_NOTIFICATION_TYPES) {
       expect(NOTIFICATION_TYPE_CONFIG).toHaveProperty(type)
     }
@@ -137,7 +142,7 @@ describe("CHANNEL_CONFIG", () => {
 // ============================================================================
 
 describe("NOTIFICATION_EXPIRATION", () => {
-  it("has entries for all 24 NotificationType values", () => {
+  it("has entries for all 29 NotificationType values", () => {
     for (const type of ALL_NOTIFICATION_TYPES) {
       expect(NOTIFICATION_EXPIRATION).toHaveProperty(type)
     }
