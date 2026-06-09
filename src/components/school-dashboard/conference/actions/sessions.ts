@@ -70,16 +70,25 @@ async function createLiveClassWithCtx(
   const data = parsed.data
 
   try {
-    // Enforce per-school max duration.
-    const school = await db.school.findUnique({
-      where: { id: ctx.schoolId },
-      select: {
-        conferenceMaxDuration: true,
-        conferenceRecordingDefault: true,
-        preferredLanguage: true,
-      },
-    })
+    // School config + (optional) the section's recording opt-out, in parallel.
+    const [school, section] = await Promise.all([
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: {
+          conferenceMaxDuration: true,
+          conferenceRecordingDefault: true,
+          preferredLanguage: true,
+        },
+      }),
+      data.sectionId
+        ? db.section.findFirst({
+            where: { id: data.sectionId, schoolId: ctx.schoolId },
+            select: { conferenceRecordingOptOut: true },
+          })
+        : Promise.resolve(null),
+    ])
     if (!school) return actionError(ACTION_ERRORS.SCHOOL_NOT_FOUND)
+    const sectionOptOut = section?.conferenceRecordingOptOut ?? false
 
     const durationMin =
       (new Date(data.scheduledEnd).getTime() -
@@ -111,7 +120,8 @@ async function createLiveClassWithCtx(
         scheduledStart: new Date(data.scheduledStart),
         scheduledEnd: new Date(data.scheduledEnd),
         recordingEnabled:
-          data.recordingEnabled ?? school.conferenceRecordingDefault,
+          (data.recordingEnabled ?? school.conferenceRecordingDefault) &&
+          !sectionOptOut,
         maxParticipants: data.maxParticipants ?? 50,
         roomName: placeholder,
       },

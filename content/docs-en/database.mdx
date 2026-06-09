@@ -59,7 +59,7 @@ model School {
   timezone     String  @default("Africa/Khartoum")
   schoolType   String?                  // private, public, international, technical, special
   schoolLevel  String?                  // primary, secondary, both
-  system       String?                  // clickview, national, british, ib
+  curriculum   String?                  // @map column: timetable-structure slug ("us-standard"); curriculum CODE (US/SD/GB/IB-DP) is inferred at runtime, not stored
   planType     String  @default("basic")
   maxStudents  Int     @default(100)
   maxTeachers  Int     @default(10)
@@ -99,7 +99,7 @@ Two parallel content systems:
 | System      | Scope                         | Models                                                                                    | Source                 |
 | ----------- | ----------------------------- | ----------------------------------------------------------------------------------------- | ---------------------- |
 | **Stream**  | School-scoped (`schoolId`)    | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | School-created courses |
-| **Catalog** | Platform-wide (no `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | ClickView / curated    |
+| **Catalog** | Platform-wide (no `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | curated                |
 
 The `bridge.prisma` models (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) connect catalog content to school-specific academic structure. Schools select which subjects they use and override content without touching shared originals.
 

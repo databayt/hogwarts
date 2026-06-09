@@ -52,12 +52,18 @@ const COUNTRY_OPTIONS = [
 ] as const
 
 const CURRICULUM_OPTIONS = [
-  { value: "us-k12", label: "US K-12" },
-  { value: "national", label: "National" },
-  { value: "british", label: "British" },
-  { value: "ib", label: "IB" },
-  { value: "cbse", label: "CBSE" },
-  { value: "igcse", label: "IGCSE" },
+  { value: "US", label: "US K-12" },
+  { value: "SD", label: "Sudan National" },
+  { value: "GB", label: "British" },
+  { value: "SA", label: "Saudi National" },
+  { value: "EG", label: "Egypt National" },
+  { value: "AE", label: "UAE National" },
+  { value: "QA", label: "Qatar National" },
+  { value: "KW", label: "Kuwait National" },
+  { value: "JO", label: "Jordan National" },
+  { value: "IB-DP", label: "IB Diploma" },
+  { value: "CAIE-IGCSE", label: "Cambridge IGCSE" },
+  { value: "CBSE", label: "Indian CBSE" },
 ] as const
 
 const SCHOOL_TYPE_OPTIONS = [
@@ -93,7 +99,7 @@ export function CreateSubjectForm() {
   const [description, setDescription] = useState("")
   const [color, setColor] = useState("#3b82f6")
   const [country, setCountry] = useState("US")
-  const [curriculum, setCurriculum] = useState("us-k12")
+  const [curriculum, setCurriculum] = useState("US")
   const [schoolType, setSchoolType] = useState("public")
   const [concept, setConcept] = useState("")
   const [selectedLevel, setSelectedLevel] = useState<string>("ELEMENTARY")
@@ -132,7 +138,7 @@ export function CreateSubjectForm() {
     setDescription("")
     setColor("#3b82f6")
     setCountry("US")
-    setCurriculum("us-k12")
+    setCurriculum("US")
     setSchoolType("public")
     setConcept("")
     setSelectedLevel("ELEMENTARY")

@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Generate ClickView Content Library MDX documentation.
+ * Generate US-curriculum reference MDX.
  *
  * Produces 4 files:
  *   - clickview.mdx          (overview + quick reference)
@@ -10,7 +10,7 @@
  *   - clickview-middle.mdx     (21 subjects)
  *   - clickview-high.mdx       (23 subjects)
  *
- * Usage: npx tsx scripts/generate-clickview-mdx.ts
+ * Usage: npx tsx scripts/generate-us-curriculum-mdx.ts
  */
 
 import fs from "fs"
@@ -171,13 +171,13 @@ const DOCS = path.join(ROOT, "content/docs-en")
 
 const inventory: InventoryEntry[] = JSON.parse(
   fs.readFileSync(
-    path.join(ROOT, "scripts/clickview-data/master-inventory.json"),
+    path.join(ROOT, "scripts/us-curriculum/us-inventory.json"),
     "utf-8"
   )
 )
 const bannerMeta: BannerMetadata = JSON.parse(
   fs.readFileSync(
-    path.join(ROOT, "scripts/clickview-data/banner-metadata.json"),
+    path.join(ROOT, "scripts/us-curriculum/banner-metadata.json"),
     "utf-8"
   )
 )
@@ -230,16 +230,16 @@ function generateIndex(): string {
   const w = (line = "") => lines.push(line)
 
   w("---")
-  w("title: ClickView Content Library")
+  w("title: US Curriculum")
   w(
-    "description: Complete inventory of 62 subjects, 201 topic groups, and 986 sub-topics from the ClickView educational content library."
+    "description: Complete inventory of 62 subjects, 201 topic groups, and 986 sub-topics from the US-curriculum inventory."
   )
   w("---")
   w()
-  w("# ClickView Content Library")
+  w("# US Curriculum")
   w()
   w(
-    "Complete structural reference for all ClickView content mapped to the Hogwarts catalog system. This document covers **62 subjects** across three school levels with full topic breakdowns."
+    "Complete structural reference for the US-curriculum inventory mapped to the Hogwarts catalog system. This document covers **62 subjects** across three school levels with full topic breakdowns."
   )
   w()
   w("## Overview")
@@ -285,7 +285,7 @@ function generateIndex(): string {
   w("---")
   w()
   w(
-    `*Generated on ${new Date().toISOString().split("T")[0]} from \`scripts/clickview-data/master-inventory.json\`.*`
+    `*Generated on ${new Date().toISOString().split("T")[0]} from \`scripts/us-curriculum/us-inventory.json\`.*`
   )
   w()
   return lines.join("\n")
@@ -302,13 +302,13 @@ function generateLevel(level: "elementary" | "middle" | "high"): string {
   const w = (line = "") => lines.push(line)
 
   w("---")
-  w(`title: ClickView ${levelLabel(level)}`)
+  w(`title: US Curriculum ${levelLabel(level)}`)
   w(
-    `description: ${s.subjects} subjects, ${s.groups} topic groups, and ${s.topics} sub-topics in the ClickView ${levelLabel(level)} content library.`
+    `description: ${s.subjects} subjects, ${s.groups} topic groups, and ${s.topics} sub-topics in the US Curriculum ${levelLabel(level)} content library.`
   )
   w("---")
   w()
-  w(`# ClickView ${levelLabel(level)}`)
+  w(`# US Curriculum ${levelLabel(level)}`)
   w()
   w(
     `${entries.length} subjects | ${s.groups} groups | ${s.topics} topics | ${s.videos.toLocaleString()} videos | ${s.resources.toLocaleString()} resources`
@@ -363,7 +363,7 @@ function generateLevel(level: "elementary" | "middle" | "high"): string {
   w("---")
   w()
   w(
-    `*Generated on ${new Date().toISOString().split("T")[0]} from \`scripts/clickview-data/master-inventory.json\`.*`
+    `*Generated on ${new Date().toISOString().split("T")[0]} from \`scripts/us-curriculum/us-inventory.json\`.*`
   )
   w()
   return lines.join("\n")

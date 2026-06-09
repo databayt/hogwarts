@@ -146,7 +146,7 @@ const SCHOOL_LEVEL_TO_CATALOG: Record<string, string[]> = {
   both: ["ELEMENTARY", "MIDDLE", "HIGH"],
 }
 
-export async function seedAcademicStructureCatalog(
+export async function seedDemoSchool(
   prisma: PrismaClient,
   schoolId: string,
   yearLevels: YearLevelRef[],

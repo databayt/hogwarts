@@ -52,7 +52,7 @@ export default async function CommunityHubPage({
   const { curriculum, grade } = communitySearchParams.parse(sp)
   const dictionary = await getDictionary(lang)
 
-  const activeCurriculum = curriculum || "us-k12"
+  const activeCurriculum = curriculum || "US"
   const activeGrade = grade ?? 1
 
   const filters = {
@@ -70,9 +70,9 @@ export default async function CommunityHubPage({
   const description =
     dictionary?.community?.lead ??
     "Browse open subjects, textbooks, exams, and learning materials. No account required."
-  // Treat any change away from the defaults (us-k12 / grade 1) as "filtered"
+  // Treat any change away from the defaults (US / grade 1) as "filtered"
   // for the empty-state reset link.
-  const hasFilters = activeCurriculum !== "us-k12" || activeGrade !== 1
+  const hasFilters = activeCurriculum !== "US" || activeGrade !== 1
 
   return (
     <div className="container mx-auto max-w-6xl px-4 pb-16 lg:px-0">

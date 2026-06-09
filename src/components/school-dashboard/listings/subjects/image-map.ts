@@ -5,7 +5,7 @@
  * Subject Image Mapping
  *
  * Maps subject names to their corresponding illustration images.
- * Images are colorful educational illustrations from ClickView.
+ * Images are colorful educational colorful educational illustrations.
  */
 
 // Direct slug to image path mapping

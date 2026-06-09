@@ -10,19 +10,13 @@ import {
   Building2,
   Calendar,
   ClipboardList,
-  Cloud,
   CreditCard,
-  Database,
-  FileText,
   Globe,
-  GraduationCap,
-  Image as ImageIcon,
   Layers,
   LayoutPanelLeft,
   Megaphone,
   Presentation,
   School,
-  Server,
   Settings,
   Users,
 } from "lucide-react"
@@ -194,60 +188,4 @@ export function CompactOneFlow() {
       showIcons={false}
     />
   )
-}
-
-// Catalog content pipeline: authored source → seed → catalog tables → bridge → school → student
-export function CatalogPipeline() {
-  const nodes: Node[] = [
-    { id: "source", label: "Authored source", icon: FileText },
-    { id: "seed", label: "Seed / pipeline", icon: Settings },
-    { id: "catalog", label: "Catalog tables", icon: Database },
-    { id: "bridge", label: "SubjectSelection", icon: Layers },
-    { id: "school", label: "School app", icon: Building2 },
-    { id: "student", label: "Student LMS", icon: GraduationCap },
-  ]
-  const edges: Edge[] = [
-    { from: "source", to: "seed", note: "us · sd · world · content" },
-    {
-      from: "seed",
-      to: "catalog",
-      note: "subjects → chapters → lessons + exams/questions/…",
-    },
-    { from: "catalog", to: "bridge", note: "setupCatalogForSchool" },
-    { from: "bridge", to: "school", note: "classes · timetable · library" },
-    {
-      from: "school",
-      to: "student",
-      note: "Enrollment → Progress → Certificate",
-    },
-  ]
-  return (
-    <FlowChart nodes={nodes} edges={edges} title="Content pipeline" large />
-  )
-}
-
-// Catalog asset pipeline: source file → process → S3 → CloudFront → UI
-export function CatalogAssetFlow() {
-  const nodes: Node[] = [
-    { id: "src", label: "Source file", icon: ImageIcon },
-    { id: "proc", label: "Process", icon: Settings },
-    { id: "s3", label: "S3 object", icon: Server },
-    { id: "cdn", label: "CloudFront", icon: Cloud },
-    { id: "ui", label: "UI", icon: LayoutPanelLeft },
-  ]
-  const edges: Edge[] = [
-    {
-      from: "src",
-      to: "proc",
-      note: "Sharp 4-variant · raw copy · raw upload · URL paste",
-    },
-    {
-      from: "proc",
-      to: "s3",
-      note: "catalog/concepts/… · catalog/textbooks/…",
-    },
-    { from: "s3", to: "cdn", note: "getCatalogImageUrl → {key}-{size}.webp" },
-    { from: "cdn", to: "ui", note: "thumbnail · banner · cover · pdf · video" },
-  ]
-  return <FlowChart nodes={nodes} edges={edges} title="Asset pipeline" large />
 }

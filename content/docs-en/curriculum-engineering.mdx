@@ -33,7 +33,7 @@ Key fields for multi-curriculum routing:
 ```prisma
 model Subject {                                    // table catalog_subjects
   country      String        @default("SD")        // ISO 3166-1 alpha-2
-  curriculum   String        @default("national")  // us-k12, national, british, ib
+  curriculum   String        @default("SD")         // canonical code: bare ISO (US, SD, GB) or BODY-PROGRAMME (IB-DP, CAIE-IGCSE, CBSE)
   curriculumId String?                             // optional FK → Curriculum
   concept      String?                             // shared image key
   thumbnail    String?       @map("thumbnailKey")  // S3 key for WebP variants (unified)
@@ -51,12 +51,12 @@ model Subject {                                    // table catalog_subjects
 
 ```
 School.country = "SD"
-  → inferCurriculum("SD") → "national"
-  → findSubjects("SD", "national")
+  → inferCurriculum("SD") → "SD"
+  → findSubjects("SD", "SD")
        Step 1  exact   (country + curriculum + schoolType)
        Step 2  broad   (country + curriculum)            ← SD hits here (97 subjects)
        Step 3  worldwide (country = "*")
-       Step 4  fallback (US + us-k12)
+       Step 4  fallback (US + US)
   → filter by school.schoolLevel
        primary    → grades 1-6  (ELEMENTARY)
        secondary  → grades 7-12 (MIDDLE + HIGH)
@@ -79,16 +79,22 @@ SubjectSelection.findMany({ schoolId })
 
 Seeds are idempotent (upsert). These two produce the bulk of the catalog content:
 
-| Seed            | Source                  | Subjects | Chapters | Lessons | Slug                | Country | Curriculum | Lang |
-| --------------- | ----------------------- | -------: | -------: | ------: | ------------------- | ------- | ---------- | ---- |
-| `catalog/us.ts` | `master-inventory.json` |      240 |      750 |   3,993 | `us-g{N}-{subject}` | US      | `us-k12`   | en   |
-| `catalog/sd.ts` | `curriculum/sd/`        |       97 |      406 |   1,049 | `sd-g{N}-{subject}` | SD      | `national` | ar   |
+| Seed                    | Source                   | Subjects | Chapters | Lessons | Slug                  | Country | Curriculum   | Lang |
+| ----------------------- | ------------------------ | -------: | -------: | ------: | --------------------- | ------- | ------------ | ---- |
+| `catalog/us.ts`         | `us-inventory.json`      |      240 |      750 |   3,993 | `us-g{N}-{subject}`   | US      | `US`         | en   |
+| `catalog/sd.ts`         | `curriculum/sd/`         |       97 |      406 |   1,049 | `sd-g{N}-{subject}`   | SD      | `SD`         | ar   |
+| `catalog/gb.ts`         | `curriculum/uk/`         |      184 |      363 |     730 | `gb-g{N}-{subject}`   | GB      | `GB`         | en   |
+| `catalog/cbse.ts`       | `curriculum/in/`         |        7 |       58 |      58 | `cbse-g{N}-{subject}` | IN      | `CBSE`       | en   |
+| `catalog/caie-igcse.ts` | `curriculum/caie-igcse/` |        8 |       76 |      76 | `caie-g{N}-{subject}` | \*      | `CAIE-IGCSE` | en   |
+| `catalog/ib.ts`         | `curriculum/ib/`         |        9 |       49 |      49 | `ib-g{N}-{subject}`   | \*      | `IB-DP`      | en   |
 
-Plus `catalog/sd-base.ts` (a smaller Sudan base set from `sudan-curriculum.json`, ~32 subjects) and
-`catalog/world.ts` (grade-specific subjects across eight curricula — GB, IB, SA, EG, AE, QA,
-KW, JO). The default `catalog` seed runs `us` + `sd-base`; the full Sudan sync
-(`sd`) and the eight world curricula (`world`) are separate, explicit
-runs.
+The four deep tree sources (`gb`/`cbse`/`caie-igcse`/`ib`) all run through the shared
+`syncCurriculumTree` engine (see [Unified tree engine](#unified-tree-engine)). The
+**six subjects-only nationals** (SA, EG, AE, QA, KW, JO) each live in their own file
+(`sa.ts`…`jo.ts`) sharing `seedSubjectsOnly`; GB and IB graduated to deep tree
+sources. `catalog/sd-base.ts` remains a smaller Sudan base set (~32 subjects). The
+default `catalog` seed runs `us` + the full `sd` + `registry`; every other source is
+an explicit run.
 
 A `catalog/concepts.ts` seed runs after the catalog seeds:
 
@@ -109,70 +115,73 @@ A `catalog/concepts.ts` seed runs after the catalog seeds:
 
 Adding Egypt (~30 subjects × 12 grades = ~360):
 
-| Changes                           | Stays the same                                        |
-| --------------------------------- | ----------------------------------------------------- |
-| +360 `Subject` rows               | Schema                                                |
-| +~1,500 chapters, +~5,000 lessons | No migration                                          |
-| +0-5 new concept images           | Existing 24 cover most                                |
-| New seed `egypt-catalog.ts`       | `catalog-setup.ts` already supports `EG → "national"` |
+| Changes                             | Stays the same                                           |
+| ----------------------------------- | -------------------------------------------------------- |
+| +360 `Subject` rows                 | Schema                                                   |
+| +~1,500 chapters, +~5,000 lessons   | No migration                                             |
+| +0-5 new concept images             | Existing 24 cover most                                   |
+| New tree `curriculum/eg/` + `eg.ts` | `setup.ts` once you add `EG → "EG"` to `inferCurriculum` |
 
-At 10 curricula × ~300 subjects each (~3,000 total), PostgreSQL handles it trivially. `findSubjects` is one indexed `findMany`; UI lists go via the `SubjectSelection` bridge; denormalized counts avoid N+1.
+At 12 curricula × ~300 subjects each (~3,600 total), PostgreSQL handles it trivially. `findSubjects` is one indexed `findMany`; UI lists go via the `SubjectSelection` bridge; denormalized counts avoid N+1.
+
+## Unified tree engine
+
+The duplicated per-seed logic (upsert, denormalized count update, chapter/lesson
+loop, concept assignment) is now factored into one shipped helper,
+`syncCurriculumTree`, in `prisma/seeds/catalog/engine.ts`. A new curriculum
+is a ~20-line source file that hands it a config:
+
+```ts
+// prisma/seeds/catalog/gb.ts
+import { syncCurriculumTree } from "./engine"
+
+export async function seedGbCurriculum(prisma: PrismaClient) {
+  return syncCurriculumTree(prisma, {
+    dir: "uk", // curriculum/uk/
+    country: "GB",
+    code: "GB", // canonical curriculum code
+    slugPrefix: "gb", // gb-g{N}-{subject}
+    name: "British (England)",
+    lang: "en",
+    organization: "UK Department for Education",
+    gradeRange: [1, 12],
+    sortBase: 20000,
+  })
+}
+```
+
+`syncCurriculumTree` reads any `curriculum/<dir>/g{N}/<subject>/structure.json`
+tree, upserts `Subject`/`Chapter`/`Lesson` with the canonical `code`/`country`,
+attaches the textbook PDF S3 key when `textbook.pdf` is present, and rotates the
+shared concept thumbnail/banner/cover across chapters. It is idempotent (subject
+upsert by slug; chapters/lessons replaced). Subjects carry only the curriculum
+**code** — `registry.ts` owns the `Curriculum` row and backfills `curriculumId`.
+`gb.ts`, `cbse.ts`, `caie-igcse.ts`, and `ib.ts` are the four live callers.
+
+### On-disk contract — `structure.json`
+
+The engine (`curriculum/_build_tools/engine.py`) writes, and
+`syncCurriculumTree` reads, this tree shape:
+
+```
+curriculum/<dir>/
+  g{N}/                         # grade
+    <subject>/                  # e.g. math, science
+      structure.json            # { subject, chapters: [{ name, slug, lessons: [...] }] }
+      textbook.pdf              # optional — merged free official PDF
+```
+
+All future curricula write to this shape. Legacy formats
+(`us-inventory.json`, `sudan-curriculum.json`) keep their bespoke seeds
+(`us.ts`, `sd.ts`) — only net-new curricula go through the tree engine.
 
 ## Improvement areas
 
-### Unified seed pattern
+### Hoist the concept maps
 
-Two seeds share duplicated logic (upsert, denormalized count update, chapter/lesson loop). Extract `seedCurriculumFromJSON()`:
-
-```ts
-// prisma/seeds/catalog/_ingest.ts
-interface CurriculumInput {
-  country: string
-  curriculum: string
-  lang: string
-  sortIdxStart: number
-  dataPath: string
-}
-
-export async function seedCurriculumFromJSON(
-  prisma: PrismaClient,
-  input: CurriculumInput
-): Promise<{ subjects: number; chapters: number; lessons: number }>
-```
-
-Prerequisite: normalize `master-inventory.json` to the same shape as `sudan-curriculum.json`. Current shapes differ.
-
-### Canonical JSON schema
-
-Define `curriculum.schema.json` as the contract:
-
-```json
-{
-  "type": "object",
-  "required": ["country", "curriculum", "lang", "subjects"],
-  "properties": {
-    "subjects": {
-      "type": "array",
-      "items": {
-        "required": ["name", "slug", "department", "concept", "gradeChapters"],
-        "properties": {
-          "gradeChapters": {
-            "type": "object",
-            "additionalProperties": {
-              "required": ["level", "chapters"],
-              "properties": {
-                "level": { "enum": ["elementary", "middle", "secondary"] }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-All future curricula write to this shape. ClickView normalizer converts its format once.
+`SUBJECT_CONCEPT` / rotation `POOL` / `DEPARTMENT` maps are duplicated across
+four files (`concepts.ts`, `us.ts`, `sd.ts`, `engine.ts`). Extract a single
+`concepts-data.ts` and import everywhere.
 
 ### Slug convention (unified)
 
@@ -225,13 +234,23 @@ Expected: 822s → ~5s.
 prisma/
   models/catalog.prisma              # Subject, Chapter, Lesson schema
   seeds/
-    catalog/us.ts                    # US K-12 (240 subjects)
-    catalog/sd-base.ts                    # Sudan base set (~32 subjects)
-    catalog/sd.ts            # Full Sudan from curriculum/sd/ (97 subjects)
-    catalog/world.ts               # GB, IB, SA, EG, AE, QA, KW, JO
-    catalog/concepts.ts                # Shared image upload + backfill
-    catalog.ts                       # Orchestrator (us + sd-base)
+    catalog/engine.ts                # syncCurriculumTree + seedSubjectsOnly (shared)
+    catalog/registry.ts              # all 12 Curriculum records + curriculumId backfill
+    catalog/index.ts                 # orchestrator: seedCatalog + seedFullCatalog
+    catalog/us.ts                    # US (240 subjects, us-inventory.json)
+    catalog/sd-base.ts               # Sudan base set (~32 subjects)
+    catalog/sd.ts                    # Full Sudan from curriculum/sd/ (97 subjects)
+    catalog/gb.ts                    # GB deep tree (curriculum/uk/)
+    catalog/cbse.ts                  # CBSE deep tree (curriculum/in/)
+    catalog/caie-igcse.ts            # Cambridge IGCSE deep tree (opt-in)
+    catalog/ib.ts                    # IB-DP deep tree
+    catalog/{sa,eg,ae,qa,kw,jo}.ts   # 6 subjects-only nationals (split from world.ts)
+    catalog/concepts.ts              # Shared image upload + backfill
     single.ts                        # CLI registry
+
+curriculum/
+  <dir>/g{N}/<subject>/structure.json # On-disk content trees (sd/uk/in/caie-igcse/ib)
+  _build_tools/engine.py             # Writes the trees
 
 scripts/
   sudan-data/
@@ -239,13 +258,14 @@ scripts/
     toc/sd-g{N}-{subject}.json       # Per-textbook TOC (97 files)
     pdfs/grade-{N}/                  # Organized PDFs
   assemble-sudan-curriculum.ts       # TOC files → master JSON
+  upload-textbooks-all.ts            # Textbook PDFs → S3 (all trees)
 
 src/components/catalog/
   setup.ts                           # findSubjects(), inferCurriculum()
   image.ts                           # Sharp pipeline
   image-url.ts                       # URL resolution chain
 
-public/subjects/concepts/*.jpg       # 24 source concept images
+public/subjects/concepts/*.jpg       # 23 source concept images
 ```
 
 ## See also

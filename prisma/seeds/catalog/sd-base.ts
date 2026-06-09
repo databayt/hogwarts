@@ -104,7 +104,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
 
   // Look up Curriculum record for SD-national (set curriculumId on subjects)
   const sdCurriculum = await prisma.curriculum.findUnique({
-    where: { country_code: { country: "SD", code: "national" } },
+    where: { country_code: { country: "SD", code: "SD" } },
     select: { id: true },
   })
   if (sdCurriculum) {
@@ -114,7 +114,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
   let subjectCount = 0
   let chapterCount = 0
   let lessonCount = 0
-  let sortIdx = 1000 // Start after ClickView subjects to avoid collision
+  let sortIdx = 1000 // Start after US subjects to avoid collision
 
   for (const entry of curriculum.subjects) {
     const gradeKeys = Object.keys(entry.gradeChapters).sort(
@@ -155,7 +155,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
           grades: [grade],
           gradeRange: String(grade),
           country: "SD",
-          curriculum: "national",
+          curriculum: "SD",
           curriculumId: sdCurriculum?.id,
           concept: entry.concept,
           color: entry.color,
@@ -243,7 +243,7 @@ export async function seedSudanCatalog(prisma: PrismaClient): Promise<void> {
   console.log("  Updating denormalized counts...")
 
   const allSubjects = await prisma.subject.findMany({
-    where: { country: "SD", curriculum: "national", status: "PUBLISHED" },
+    where: { country: "SD", curriculum: "SD", status: "PUBLISHED" },
     select: { id: true },
   })
 

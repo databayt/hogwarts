@@ -30,8 +30,8 @@ import type {
  *
  * Textbook is the lone exception — only `status` (no community approval pipeline).
  *
- * Curriculum filtering matches the legacy string column on `Subject.curriculum`
- * (values: "national" | "us-k12" | "british" | "ib" — see catalog.prisma:156).
+ * Curriculum filtering matches the `Subject.curriculum` string column (canonical
+ * codes: ISO country "US"/"SD"/"GB"/… or "IB-DP"/"CAIE-IGCSE" — see catalog.prisma).
  * Grade filtering uses `{ grades: { has: grade } }` on the `Int[]` columns.
  * Books skip grade filtering — `Book.gradeLevel` is `String`, not `Int[]`.
  */

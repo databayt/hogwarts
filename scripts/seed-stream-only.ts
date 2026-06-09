@@ -4,7 +4,7 @@
 /**
  * Seed Stream Courses Only
  *
- * Standalone script to seed stream courses with ClickView content.
+ * Standalone script to seed stream courses with US stream content.
  * Run after main seed completes or if you need to update just courses.
  *
  * Usage: pnpm tsx scripts/seed-stream-only.ts

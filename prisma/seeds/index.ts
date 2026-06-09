@@ -18,7 +18,7 @@
  *   - 2000 Guardians (2 per student)
  *   - 14 Year Levels (KG1-12)
  *   - 6 Departments
- *   - 62 ClickView Subjects (K-12)
+ *   - 62 US Subjects (K-12)
  *   - 30+ Classrooms
  *   - 400+ Classes
  *   - 200+ Assignments + 500 Submissions
@@ -47,8 +47,8 @@ import {
 import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
-import { seedBooks } from "./catalog/books"
-import { seedAcademicStructureCatalog } from "./catalog/demo"
+import { seedCatalogBooks } from "./catalog/books"
+import { seedDemoSchool } from "./catalog/demo"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
@@ -133,7 +133,7 @@ async function main() {
 
     // Phase 3.5: Academic Structure + Catalog Bridge
     await measureDuration("Academic Structure + Catalog Bridge", () =>
-      seedAcademicStructureCatalog(
+      seedDemoSchool(
         prisma,
         school.id,
         yearLevels,
@@ -226,7 +226,9 @@ async function main() {
       seedLibrary(prisma, school.id, students)
     )
 
-    await measureDuration("Catalog Books", () => seedBooks(prisma, school.id))
+    await measureDuration("Catalog Books", () =>
+      seedCatalogBooks(prisma, school.id)
+    )
 
     // ========================================================================
     // PHASE 8: ASSIGNMENTS

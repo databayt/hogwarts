@@ -37,7 +37,7 @@ vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
   logOperatorAudit: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock("@/lib/catalog-setup", () => ({
+vi.mock("@/components/catalog/setup", () => ({
   setupCatalogForSchool: vi.fn(),
 }))
 

@@ -77,12 +77,24 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
         {
           name: "index.ts",
           type: "file",
-          description: "orchestrator: US + Sudan",
+          description:
+            "orchestrator: seedCatalog (US + full SD) + seedFullCatalog",
+        },
+        {
+          name: "engine.ts",
+          type: "file",
+          description:
+            "syncCurriculumTree (deep) + seedSubjectsOnly (shallow) — shared seeder",
+        },
+        {
+          name: "registry.ts",
+          type: "file",
+          description: "all 12 Curriculum records + curriculumId backfill",
         },
         {
           name: "us.ts",
           type: "file",
-          description: "US K-12 from master-inventory.json",
+          description: "US — the US-curriculum source backbone",
         },
         {
           name: "sd.ts",
@@ -92,13 +104,34 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
         {
           name: "sd-base.ts",
           type: "file",
-          description: "Sudan base from sudan-curriculum.json",
+          description:
+            "Sudan base (legacy; pending slug reconciliation with sd.ts)",
         },
-        { name: "world.ts", type: "file", description: "8 more curricula" },
         {
-          name: "meta.ts",
+          name: "gb.ts",
           type: "file",
-          description: "Curriculum records + curriculumId backfill",
+          description: "England (GB) — deep, from curriculum/uk",
+        },
+        {
+          name: "cbse.ts",
+          type: "file",
+          description: "Indian CBSE — deep, from curriculum/in",
+        },
+        {
+          name: "caie-igcse.ts",
+          type: "file",
+          description: "Cambridge IGCSE — deep, from curriculum/caie-igcse",
+        },
+        {
+          name: "ib.ts",
+          type: "file",
+          description: "IB Diploma — deep, from curriculum/ib",
+        },
+        {
+          name: "sa.ts · eg.ts · ae.ts · qa.ts · kw.ts · jo.ts",
+          type: "file",
+          description:
+            "subjects-only nationals (split from world.ts; graduate to deep trees)",
         },
         {
           name: "concepts.ts",
@@ -108,7 +141,12 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
         {
           name: "banners.ts",
           type: "file",
-          description: "ClickView banners to concept paths",
+          description: "concept banners to S3 (owned, shared)",
+        },
+        {
+          name: "lesson-covers.ts",
+          type: "file",
+          description: "per-lesson/chapter covers to S3 (US, legacy)",
         },
         { name: "books.ts", type: "file", description: "global catalog books" },
         {
@@ -177,24 +215,39 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
           description: "Sudan — read by sd",
         },
         {
-          name: "us/",
-          type: "directory",
-          description: "authored, not yet ingested",
-        },
-        {
           name: "uk/",
           type: "directory",
-          description: "authored, not yet ingested",
-        },
-        {
-          name: "fr/",
-          type: "directory",
-          description: "authored, not yet ingested",
+          description: "British → GB (read by gb)",
         },
         {
           name: "in/",
           type: "directory",
-          description: "authored, not yet ingested",
+          description: "Indian CBSE (read by cbse)",
+        },
+        {
+          name: "caie-igcse/",
+          type: "directory",
+          description: "Cambridge IGCSE (read by caie-igcse)",
+        },
+        {
+          name: "ib/",
+          type: "directory",
+          description: "IB Diploma (read by ib)",
+        },
+        {
+          name: "us/",
+          type: "directory",
+          description: "Aldar American — unread (US uses the master inventory)",
+        },
+        {
+          name: "fr/",
+          type: "directory",
+          description: "French — image-only",
+        },
+        {
+          name: "_build_tools/",
+          type: "directory",
+          description: "engine.py — generates the trees",
         },
       ],
     },
@@ -208,7 +261,7 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
       type: "directory",
       children: [
         {
-          name: "clickview-data/master-inventory.json",
+          name: "us-curriculum/us-inventory.json",
           type: "file",
           description: "US source data",
         },
@@ -220,7 +273,12 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
         {
           name: "upload-textbooks-all.ts",
           type: "file",
-          description: "upload Sudan textbook PDFs to S3",
+          description: "upload textbook PDFs to S3 (all curriculum trees)",
+        },
+        {
+          name: "gen-curriculum-structure.ts",
+          type: "file",
+          description: "spec JSON → structure.json tree",
         },
       ],
     },

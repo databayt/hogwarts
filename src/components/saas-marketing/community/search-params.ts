@@ -10,9 +10,9 @@ import {
 /**
  * URL state shared across `/community` (hub) and `/community/[slug]` (detail).
  *
- * - `curriculum` defaults to `"us-k12"` (International US). The dropdown
- *   round-trips `Curriculum.code`, which matches the legacy string column
- *   on `Subject.curriculum` directly.
+ * - `curriculum` defaults to `"US"` (United States). The dropdown round-trips
+ *   `Curriculum.code` (canonical: ISO country code or `{body}-{programme}`),
+ *   which matches the `Subject.curriculum` string column directly.
  * - `grade` is parsed as integer and defaults to `1`. Driven by the under-hero
  *   TabsNav (1..12). The "All" pill was dropped — landing on `/community`
  *   should always highlight a real grade so the visitor sees a focused result
@@ -23,7 +23,7 @@ import {
  * `useQueryStates` from `nuqs`.
  */
 export const communitySearchParams = createSearchParamsCache({
-  curriculum: parseAsString.withDefault("us-k12"),
+  curriculum: parseAsString.withDefault("US"),
   grade: parseAsInteger.withDefault(1),
 })
 

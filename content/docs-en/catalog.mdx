@@ -9,32 +9,63 @@ The catalog is the platform-wide store of curriculum content. One copy of every 
 
 <CatalogStructure />
 
+## Curricula & codes
+
+Every curriculum the catalog targets, with its canonical code and type. **National** curricula use a bare **ISO 3166-1** country code — the country _is_ the identifier; **international** programmes use a `{body}-{programme}` code. Coverage and depth per curriculum are detailed below.
+
+| Curriculum      | Code         | Type          |
+| --------------- | ------------ | ------------- |
+| Sudan           | `SD`         | National      |
+| Saudi Arabia    | `SA`         | National      |
+| Egypt           | `EG`         | National      |
+| United States   | `US`         | National      |
+| England         | `GB`         | National      |
+| UAE             | `AE`         | National      |
+| Qatar           | `QA`         | National      |
+| Kuwait          | `KW`         | National      |
+| Jordan          | `JO`         | National      |
+| IB Diploma      | `IB-DP`      | International |
+| Cambridge IGCSE | `CAIE-IGCSE` | International |
+| Indian CBSE     | `CBSE`       | International |
+
+## Curriculum coverage
+
+All **twelve** curricula have subjects. **Six now have real chapters and lessons** — US, Sudan, England (`curriculum/uk`), Cambridge IGCSE, IB-DP, and Indian CBSE — each seeded by the [tree engine](#seed-pipeline) (`syncCurriculumTree`) from an on-disk `curriculum/<dir>/` tree. The six Arab national curricula stay **subjects-only** (`sa.ts`…`jo.ts`) until their ministry textbook structures are authored.
+
+| Curriculum      | Code         | Grades | Subjects | Chapters | Lessons | Source                  | Seed         |
+| --------------- | ------------ | ------ | -------- | -------- | ------- | ----------------------- | ------------ |
+| United States   | `US`         | 1–12   | ~240     | ~750     | ~3,993  | US-curriculum inventory | `us`         |
+| Sudan           | `SD`         | 1–12   | 125      | 883      | 2,940   | `curriculum/sd`         | `sd`         |
+| England         | `GB`         | 1–12   | 184      | 363      | 730     | `curriculum/uk`         | `gb`         |
+| Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | `curriculum/caie-igcse` | `caie-igcse` |
+| IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | `curriculum/ib`         | `ib`         |
+| Indian CBSE     | `CBSE`       | 10     | 7        | 58       | 58      | `curriculum/in`         | `cbse`       |
+| Saudi Arabia    | `SA`         | 1–12   | ~132     | none     | none    | inline `sa.ts`          | `sa`         |
+| Egypt           | `EG`         | 1–12   | ~140     | none     | none    | inline `eg.ts`          | `eg`         |
+| UAE             | `AE`         | 1–12   | ~144     | none     | none    | inline `ae.ts`          | `ae`         |
+| Qatar           | `QA`         | 1–12   | ~122     | none     | none    | inline `qa.ts`          | `qa`         |
+| Kuwait          | `KW`         | 1–12   | ~139     | none     | none    | inline `kw.ts`          | `kw`         |
+| Jordan          | `JO`         | 1–12   | ~150     | none     | none    | inline `jo.ts`          | `jo`         |
+
+> The deep transnational curricula (Cambridge, IB, CBSE) cover a representative grade so far — extending to every grade is mechanical (author more `structure.json` via `scripts/gen-curriculum-structure.ts`). `Curriculum.slug` keeps its own values (`sd-national`, `ib-diploma`). Existing rows are migrated from the legacy `national` / `us-k12` / `ib` codes at deploy by the `canonicalize_curriculum_codes` migration; a school row stores **no** curriculum code — `inferCurriculum()` derives it at runtime.
+
+Subject **thumbnails** work for all twelve (shared concept images, assigned at seed time); **chapter and lesson thumbnails** now exist for the six deep curricula (rotated through the concept pools). The on-disk trees `curriculum/uk` and `curriculum/in` are now **ingested** (by `gb` / `cbse`); `curriculum/us` (Aldar American) and `curriculum/fr` remain image-only / unread. See [Completing the catalog](#completing-the-catalog).
+
 ## Content & assets
 
-The catalog holds two kinds of things: **content** — the curriculum hierarchy (subjects → chapters → lessons) plus the exams, questions, materials, and assignments attached to it — and **assets** — the images, textbook PDFs, and videos that content references. Each is produced by a different seed or pipeline, and they sit at very different stages of completeness. The plan to close the gaps is in [Completing the catalog](#completing-the-catalog).
+The catalog holds two kinds of things: **content** — the curriculum hierarchy (subjects → chapters → lessons) plus the exams, questions, materials, and assignments attached to it — and **assets** — the images, textbook PDFs, and videos that content references. Each is produced by a different seed or pipeline. The content pipeline runs source → seed → catalog tables → per-school bridge → school app:
 
-<CatalogPipeline />
+<Mermaid
+  chart={`flowchart LR
+  Source["Authored source"] --> Seeds["Seeds"]
+  Seeds --> Catalog[("Catalog tables")]
+  Catalog -->|"setupCatalogForSchool"| Bridge["SubjectSelection"]
+  Bridge --> School["School app"]
+  School --> Student["Student LMS"]
+`}
+/>
 
 Authored source — a JSON inventory, an on-disk tree, a CDN, or inline data — is pulled in by a **seed** that writes rows into the global `catalog_*` tables. `setupCatalogForSchool` then bridges a tenant to that shared content through `SubjectSelection` rows, and the school app reads through the bridge into classes, the timetable, and the LMS.
-
-### All ten curricula
-
-Subjects exist for all ten curricula; **chapters and lessons exist only for US and Sudan** — the eight world curricula are subjects-only (`catalog/world.ts` writes no chapter or lesson rows), so the depth gap cascades into every artifact generated below.
-
-| Curriculum | Code          | Subjects | Chapters | Lessons | Thumbnail | Banner  | Textbook PDF | Source                                 | Seed             |
-| ---------- | ------------- | -------- | -------- | ------- | --------- | ------- | ------------ | -------------------------------------- | ---------------- |
-| US         | `us-k12`      | ~240     | ~750     | ~3,993  | yes       | partial | none         | `clickview-data/master-inventory.json` | `us` (default)   |
-| Sudan      | `national`    | 125      | 883      | 2,940   | yes       | partial | 118          | `curriculum/sd/`                       | `sd-base` + `sd` |
-| British    | `gb-national` | ~176     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| IB         | `ib-diploma`  | ~138     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| Saudi      | `sa-national` | ~132     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| Egypt      | `eg-national` | ~140     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| UAE        | `ae-national` | ~144     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| Qatar      | `qa-national` | ~122     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| Kuwait     | `kw-national` | ~139     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-| Jordan     | `jo-national` | ~150     | none     | none    | yes       | partial | none         | inline `world.ts`                      | `world`          |
-
-Subject **thumbnails** work for all ten — concepts are assigned at seed time — but **chapter and lesson thumbnails exist only for US (ClickView) and Sudan**, since only those have chapters and lessons. Two fully-authored trees sit on disk **unread**: `curriculum/uk` (British — 184 subjects / 363 chapters / 730 lessons) and `curriculum/us` (American — 128 / 266 / 535); `curriculum/fr` and `in` are image-only. Closing these gaps is the subject of [Completing the catalog](#completing-the-catalog).
 
 ### Generated content — exams, questions, materials, assignments
 
@@ -53,14 +84,20 @@ The exception is **exam scaffolding**: `catalog/exam-templates.ts` writes real, 
 
 Every image and file follows the same shape — a source is processed, written to an S3 object, and read back through CloudFront — but the source and the processing step differ per asset type. The sections below detail each.
 
-<CatalogAssetFlow />
+<Mermaid
+  chart={`flowchart LR
+  Src["Source file"] -->|"Sharp / copy / upload"| S3[("S3 object")]
+  S3 -->|"CloudFront"| URL["Public URL"]
+  URL --> UI["UI"]
+`}
+/>
 
 ### Images — thumbnails, banners, covers
 
 All catalog imagery routes through the shared **concept** system and the Sharp pipeline in `image.ts`: each source image becomes four WebP variants (`sm` 200px, `md` 600px, `lg` 1200px, `original` lossless), uploaded to S3 and served via CloudFront; `image-url.ts` builds `{key}-{size}.webp` at read time. See [Image pipeline](#image-pipeline) and [Concepts](/docs/concept).
 
 - **Thumbnails** — `catalog/concepts.ts` processes the 24 source images in `public/subjects/concepts/` into `catalog/concepts/g{grade}-{concept}/thumbnail-*.webp` for all 12 grades (~1,150 objects) and backfills each subject's `concept` and `thumbnail`. **Complete.**
-- **Banners** — `catalog/banners.ts` copies pre-existing wide ClickView banners (raw, no Sharp) into the matching concept paths. Every subject gets a `banner` key, but the copy covers about ten concepts and silently skips any whose legacy source is gone — so some `banner` keys point at objects that don't exist. **Partial.**
+- **Banners** — `catalog/banners.ts` copies pre-existing wide curated banners (raw, no Sharp) into the matching concept paths. Every subject gets a `banner` key, but the copy covers about ten concepts and silently skips any whose legacy source is gone — so some `banner` keys point at objects that don't exist. **Partial.**
 - **Textbook covers** — every subject is given a `cover` key (`catalog/concepts/{concept}/cover`), but **no seed or script uploads an object to that path**, so the textbook card always falls back to an icon. **Missing.**
 
 ### Textbook PDFs
@@ -69,7 +106,7 @@ Sudan ships 118 `textbook.pdf` files under `curriculum/sd/`. `scripts/upload-tex
 
 ### Lesson & chapter thumbnails
 
-`catalog/clickview-lessons.ts` pulls each US lesson's and chapter's cover from the ClickView CDN, runs it through the same Sharp pipeline, and stores it per lesson and chapter. Scoped to `us-k12` and dependent on the live CDN at seed time. **US only.**
+`catalog/lesson-covers.ts` pulls each US lesson's and chapter's cover from the source CDN, runs it through the same Sharp pipeline, and stores it per lesson and chapter. Scoped to `US` and dependent on the live CDN at seed time. **US only.**
 
 ### Videos
 
@@ -92,7 +129,7 @@ Sudan ships 118 `textbook.pdf` files under `curriculum/sd/`. `scripts/upload-tex
 | Banners                                     | `banners.ts`              | raw copy from legacy S3 | `catalog/concepts/g{n}-{concept}/banner`    | partial (some keys 404)                                |
 | Textbook covers                             | —                         | —                       | `catalog/concepts/{concept}/cover`          | key set, object never uploaded                         |
 | Textbook PDFs                               | `upload-textbooks-all.ts` | raw upload              | `catalog/textbooks/{slug}/textbook.pdf`     | Sudan only                                             |
-| Lesson / chapter thumbnails                 | `clickview-lessons.ts`    | Sharp → 4 WebP          | `catalog/subjects/{slug}/…/thumbnail`       | US only (CDN-dependent)                                |
+| Lesson / chapter thumbnails                 | `lesson-covers.ts`        | Sharp → 4 WebP          | `catalog/subjects/{slug}/…/thumbnail`       | US only (CDN-dependent)                                |
 | Videos                                      | `videos.ts` / contributed | placeholder / URL paste | `lesson_videos`                             | placeholder rows + external links                      |
 | Books                                       | `books.ts`                | external URL            | `catalog_books`                             | external Open Library covers                           |
 
@@ -100,27 +137,27 @@ Sudan ships 118 `textbook.pdf` files under `curriculum/sd/`. `scripts/upload-tex
 
 **Where each thing lives** — the source, the database table, and the S3 key (served via CloudFront):
 
-| Layer                         | Source                                                             | Database                                                                            | S3 key / CDN                                |
-| ----------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------- |
-| Subjects / chapters / lessons | `curriculum/sd`, `clickview-data`, `sudan-data`, inline `world.ts` | `catalog_subjects` / `catalog_chapters` / `catalog_lessons`                         | —                                           |
-| Generated content             | synthetic (no source)                                              | `catalog_exams` / `catalog_questions` / `catalog_materials` / `catalog_assignments` | —                                           |
-| Thumbnails                    | `public/subjects/concepts/*.jpg`                                   | `Subject.thumbnail`                                                                 | `catalog/concepts/g{n}-{concept}/thumbnail` |
-| Banners                       | legacy S3 objects                                                  | `Subject.banner`                                                                    | `catalog/concepts/g{n}-{concept}/banner`    |
-| Textbook PDFs                 | `curriculum/sd/…/textbook.pdf`                                     | `Subject.pdf`                                                                       | `catalog/textbooks/{slug}/textbook.pdf`     |
-| Lesson / chapter thumbnails   | ClickView CDN                                                      | `Lesson.thumbnail` / `Chapter.thumbnail`                                            | `catalog/subjects/{slug}/…/thumbnail`       |
-| Videos                        | external / none                                                    | `lesson_videos`                                                                     | external host                               |
-| Books                         | Open Library                                                       | `catalog_books`                                                                     | external `covers.openlibrary.org`           |
+| Layer                         | Source                                                                 | Database                                                                            | S3 key / CDN                                |
+| ----------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------- |
+| Subjects / chapters / lessons | `curriculum/sd`, `us-curriculum`, `sudan-data`, inline `sa.ts`…`jo.ts` | `catalog_subjects` / `catalog_chapters` / `catalog_lessons`                         | —                                           |
+| Generated content             | synthetic (no source)                                                  | `catalog_exams` / `catalog_questions` / `catalog_materials` / `catalog_assignments` | —                                           |
+| Thumbnails                    | `public/subjects/concepts/*.jpg`                                       | `Subject.thumbnail`                                                                 | `catalog/concepts/g{n}-{concept}/thumbnail` |
+| Banners                       | legacy S3 objects                                                      | `Subject.banner`                                                                    | `catalog/concepts/g{n}-{concept}/banner`    |
+| Textbook PDFs                 | `curriculum/sd/…/textbook.pdf`                                         | `Subject.pdf`                                                                       | `catalog/textbooks/{slug}/textbook.pdf`     |
+| Lesson / chapter thumbnails   | source CDN                                                             | `Lesson.thumbnail` / `Chapter.thumbnail`                                            | `catalog/subjects/{slug}/…/thumbnail`       |
+| Videos                        | external / none                                                        | `lesson_videos`                                                                     | external host                               |
+| Books                         | Open Library                                                           | `catalog_books`                                                                     | external `covers.openlibrary.org`           |
 
 **How to control it** — every layer is (re)built by a seed, a script, or the admin UI:
 
 | To…                                                         | Run / where                                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------------------- |
 | Load US / Sudan / world curricula                           | `pnpm db:seed:single us` · `sd` · `world`                           |
-| Register `Curriculum` records + backfill                    | `pnpm db:seed:single meta`                                          |
+| Register `Curriculum` records + backfill                    | `pnpm db:seed:single registry`                                      |
 | Generate exams / questions / materials / assignments        | `pnpm db:seed:single content`                                       |
 | Seed exam blueprints + templates                            | `pnpm db:seed:single exam-templates`                                |
 | Upload concept thumbnails / banners                         | `pnpm db:seed:single concepts` · `banners`                          |
-| Upload US lesson / chapter thumbnails                       | `pnpm db:seed:single clickview-lessons`                             |
+| Upload US lesson / chapter thumbnails                       | `pnpm db:seed:single lesson-covers`                                 |
 | Upload Sudan textbook PDFs                                  | `pnpm tsx scripts/upload-textbooks-all.ts`                          |
 | Seed catalog books                                          | `pnpm db:seed:single books`                                         |
 | Author a new curriculum tree on disk                        | `curriculum/_build_tools/engine.py`, then ingest it like `sd.ts`    |
@@ -133,7 +170,7 @@ Most seeds are upsert-safe to re-run, and image seeds re-upload to immutable key
 
 ### Loading content
 
-Content is authored outside the database and pulled in by seeds. `catalog/us.ts` reads `scripts/clickview-data/master-inventory.json`; `catalog/sd-base.ts` reads `scripts/sudan-data/sudan-curriculum.json`; `catalog/sd.ts` reads the richer on-disk tree under `curriculum/sd/`. Each seed upserts rows into `catalog_subjects`, `catalog_chapters`, and `catalog_lessons` and is safe to re-run. The default `catalog` seed loads US K-12 and the Sudan base set; the full Sudan sync and the eight world curricula in `catalog/world.ts` are separate, explicit runs — see [Completing the catalog](#completing-the-catalog) and [Seed pipeline](#seed-pipeline).
+Content is authored outside the database and pulled in by seeds. `catalog/us.ts` reads `scripts/us-curriculum/us-inventory.json`; `catalog/sd-base.ts` reads `scripts/sudan-data/sudan-curriculum.json`; `catalog/sd.ts` reads the richer on-disk tree under `curriculum/sd/`. Each seed upserts rows into `catalog_subjects`, `catalog_chapters`, and `catalog_lessons` and is safe to re-run. The default `catalog` seed loads US and the full Sudan and registers them; the deep curricula and the six subjects-only nationals (`sa.ts`…`jo.ts`) are separate, explicit runs — see [Completing the catalog](#completing-the-catalog) and [Seed pipeline](#seed-pipeline).
 
 ### Images
 
@@ -211,11 +248,11 @@ Catalog models use **bare names** mapped to `catalog_*` tables; bridge models ma
 
 ## School configuration
 
-| Field         | Type      | Examples                              |
-| ------------- | --------- | ------------------------------------- |
-| `country`     | `String?` | `US`, `SD`, `GB`, `AE`                |
-| `curriculum`  | `String?` | `us-k12`, `national`, `british`, `ib` |
-| `schoolLevel` | `String?` | `elementary`, `middle`, `high`, `k12` |
+| Field         | Type      | Examples                                        |
+| ------------- | --------- | ----------------------------------------------- |
+| `country`     | `String?` | `US`, `SD`, `GB`, `AE`                          |
+| `curriculum`  | `String?` | `US`, `SD`, `GB`, `IB-DP`, `CAIE-IGCSE`, `CBSE` |
+| `schoolLevel` | `String?` | `elementary`, `middle`, `high`, `k12`           |
 
 `Subject.curriculumId` is an optional FK into `Curriculum` (`catalog_curricula`) alongside the `country` / `meta` string fields — the `meta` seed backfills it.
 
@@ -228,16 +265,16 @@ Catalog models use **bare names** mapped to `catalog_*` tables; bridge models ma
 | 1    | `country + curriculum + schoolType`    |
 | 2    | `country + curriculum`                 |
 | 3    | `country="*" + curriculum` (worldwide) |
-| 4    | `US + us-k12` (baseline fallback)      |
+| 4    | `US` (baseline fallback)               |
 
 Grade-specific subjects produce a 1:1 mapping — "Math Grade 3" maps directly to the school's Grade 3.
 
 ```ts
 import { setupCatalogForSchool } from "@/components/catalog/setup"
 
-await setupCatalogForSchool(schoolId, { country: "US", curriculum: "us-k12" })
-await setupCatalogForSchool(schoolId, { country: "AE", curriculum: "ib" })
-await setupCatalogForSchool(schoolId, { country: "GB", curriculum: "british" })
+await setupCatalogForSchool(schoolId, { country: "US", curriculum: "US" })
+await setupCatalogForSchool(schoolId, { country: "AE", curriculum: "IB-DP" })
+await setupCatalogForSchool(schoolId, { country: "GB", curriculum: "GB" })
 ```
 
 > The subject _selection_ works for any curriculum, but the academic _structure_ it builds (level/grade names, streams) is currently hardcoded to the Sudanese model — see [Known gaps & roadmap](#known-gaps--roadmap).
@@ -323,7 +360,7 @@ Indexes: `@@unique([catalogExamId, order])`, `@@unique([catalogExamId, catalogQu
 
 Full schemas in `prisma/models/video.prisma` (`lesson_videos`, `lesson_attachments`). Key fields on `Video`: `videoUrl`, `provider` (`youtube`/`vimeo`/`self-hosted`), `visibility`, `price`, `approvalStatus`, plus engagement (`viewCount`, `likeCount`, `averageRating`, `isFeatured`). Paid videos are gated through `VideoPurchase`.
 
-### ClickView extensions
+### Source extensions
 
 | Model     | Added fields                                      |
 | --------- | ------------------------------------------------- |
@@ -447,63 +484,76 @@ await db.question.findMany({
 
 ## Seed pipeline
 
-The default `catalog` seed loads US K-12 plus a Sudan base set. The full Sudan curriculum and eight more world curricula ship as **separate** seeds — they are not in the default path.
+`seedFullCatalog` (the `full` seed) runs everything in canonical order — all 12 curricula → registry → concept images. The default `catalog` seed is the fast subset: US + the full Sudan, registered. Every other curriculum ships as its own seed; per-source files only write the `curriculum` code, and `registry` owns the 12 `Curriculum` records + the `curriculumId` backfill.
 
 | Seed (`pnpm db:seed:single …`)                    | Contents                                                                       |
 | ------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `catalog`                                         | `seedUsCatalog` (US K-12, ~240 subjects) + `seedSudanCatalog` (Sudan base set) |
-| `sd`                                              | Full Sudan national curriculum from `curriculum/sd/` (125 subjects)            |
-| `world`                                           | 8 curricula — GB, IB, SA, EG, AE, QA, KW, JO — grade-specific subjects         |
-| `meta`                                            | `Curriculum` records (SD-national, US-k12) + backfill `Subject.curriculumId`   |
-| `concepts` / `banners` / `clickview-lessons`      | Concept thumbnails, banners & lesson images → Sharp → S3/CloudFront            |
+| `full`                                            | `seedFullCatalog` — all 12 curricula → registry → concept images (fresh DB)    |
+| `catalog`                                         | Fast default: US (~240) + full Sudan + registry                                |
+| `us` / `sd`                                       | US (US-curriculum inventory) / full Sudan from `curriculum/sd/` (125 subjects) |
+| `gb` / `cbse` / `caie-igcse` / `ib`               | Deep curricula via `engine.ts` (`syncCurriculumTree`) from `curriculum/<dir>/` |
+| `sa` / `eg` / `ae` / `qa` / `kw` / `jo`           | The 6 subjects-only nationals — one key each (`seedSubjectsOnly`)              |
+| `registry`                                        | All 12 `Curriculum` records + backfill `Subject.curriculumId`                  |
+| `concepts` / `banners`                            | Concept thumbnails & banners → Sharp → S3/CloudFront (owned, shared)           |
 | `books` / `content` / `videos` / `exam-templates` | Books, materials, videos, exam templates                                       |
 | `demo`                                            | Academic structure + bridge rows for the demo school                           |
 
 ```bash
-pnpm db:seed:single catalog   # US K-12 + Sudan base set
-pnpm db:seed:single world     # GB, IB, SA, EG, AE, QA, KW, JO
-pnpm db:seed:single sd        # Full Sudan curriculum
-pnpm db:seed:single concepts  # Thumbnails → S3/CDN
+pnpm db:seed:single full         # everything in one run (all 12 + registry + images)
+# …or piecemeal:
+pnpm db:seed:single catalog      # fast default: US + full Sudan + registry
+pnpm db:seed:single gb           # England — deep, from curriculum/uk
+pnpm db:seed:single sa           # Saudi Arabia — subjects-only national
+pnpm db:seed:single registry     # (re)link all 12 Curriculum records
+pnpm db:seed:single concepts     # Thumbnails → S3/CDN
 ```
 
 For exact subject/chapter/lesson counts and the seed architecture, see [Curriculum engineering](/docs/curriculum-engineering) and [Sudan curriculum](/docs/sudan-curriculum).
 
 ## Completing the catalog
 
-Today the catalog is **two curricula deep and ten curricula wide**: US and Sudan have full Subject → Chapter → Lesson content; the other eight exist as subjects only. This is the plan to close that gap and finish wiring every curriculum to the shared concept images.
+The catalog is now **six curricula deep and twelve curricula wide** (see
+[Curriculum coverage](#curriculum-coverage)). US and Sudan carry the most
+content; England, Cambridge IGCSE, IB-DP, and Indian CBSE were brought to real
+depth by the shared [tree engine](#seed-pipeline) (`syncCurriculumTree`). The six
+Arab national curricula remain subjects-only. What's left is breadth, deploy
+orchestration, and one resolved-but-unmerged decision.
 
-### Where each curriculum stands
+### What shipped
 
-| Curriculum                     | Subjects | Chapters | Lessons | Source                                         | Seed                       |
-| ------------------------------ | -------- | -------- | ------- | ---------------------------------------------- | -------------------------- |
-| US (`us-k12`)                  | ~240     | ~750     | ~3,993  | `scripts/clickview-data/master-inventory.json` | `us` (default)             |
-| Sudan (`national`)             | 125      | 883      | 2,940   | `curriculum/sd/`                               | `sd-base` (default) + `sd` |
-| GB, IB, SA, EG, AE, QA, KW, JO | yes      | none     | none    | inline in `catalog/world.ts`                   | `world` (manual)           |
+- **`syncCurriculumTree`** — the generalized ingest helper that reads any
+  `curriculum/<dir>/g{N}/<subject>/structure.json` tree. Replaces the
+  per-curriculum copy-paste; `gb.ts`, `cbse.ts`, `caie-igcse.ts`, and `ib.ts`
+  are thin callers (~20 lines each).
+- **GB depth** — `gb.ts` ingests `curriculum/uk` (184 / 363 / 730), retiring the
+  old subjects-only British block (then in the retired `world.ts`).
+- **Authoring tooling** — `curriculum/_build_tools/engine.py` writes the trees;
+  `scripts/gen-curriculum-structure.ts` turns a compact chapter-list spec into a
+  `structure.json` tree; `scripts/upload-textbooks-all.ts` pushes any tree's
+  textbook PDFs to S3.
 
-Two rich trees are authored on disk but no seed reads them: `curriculum/uk` (British — 184 subjects / 363 chapters / 730 lessons) and `curriculum/us` (American — 128 / 266 / 535), both in the same shape as `curriculum/sd/`.
+### Dual US — resolved
 
-### Two things are missing
+The database US (240 / 750 / 3,993, code `US`) stays canonical;
+the disk `curriculum/us` (Aldar American, 128 / 266 / 535) is **not ingested** —
+it collides on the `us-g{N}-*` slug space and is shallower. It remains on disk as
+a reference overlay. No merge planned.
 
-1. **Depth** — eight curricula have subjects but no chapters or lessons.
-2. **Orchestration** — the default `pnpm db:seed` loads only US and the Sudan base set; `world`, the full `sd` sync, `concepts`, and `meta` are manual single-seed runs, so a fresh database has no world curricula and no concept images until each is run by hand.
+### What remains
 
-### Completing the content
-
-The fastest unlock is already on disk. `sd.ts` (`syncSdCurriculum`) ingests the `curriculum/sd/` tree shape; generalizing it into one `syncCurriculumTree(dir, country, curriculum)` lets it read `curriculum/uk` and `curriculum/us` immediately — giving GB real depth and a real American tree to reconcile against ClickView.
-
-For the curricula with no source yet (IB, SA, EG, AE, QA, KW, JO), content must be authored before it can be ingested. Three existing pipelines produce the on-disk shape `syncCurriculumTree` consumes:
-
-- `curriculum/_build_tools/engine.py` — the authoring engine that generated the `uk` and `us` trees (`structure.json` + `qbank`/`exams` per node); `make_curriculum_json.py` defines per-curriculum subject lists with local overlays.
-- `scripts/assemble-sudan-curriculum.ts` — merges per-subject table-of-contents files into one curriculum JSON (the template for "extract a TOC, assemble, seed").
-- The content layer — teachers and schools contribute chapters and lessons through the SaaS review flow, filling depth organically.
-
-Reconcile the **dual US**: the database `us-k12` (ClickView) and the disk `curriculum/us` (American with local overlays) are two different datasets with different slugs and subjects, cross-referenced nowhere. Pick one as canonical, or merge them under one `country`/`curriculum` key, before ingesting the disk tree.
-
-Then make completion the default: order the seeds into one pipeline — `meta` → `us` → `sd-base`/`sd` → `world` → `concepts` → `banners` — so a fresh database has every curriculum and its images. See [Curriculum engineering](/docs/curriculum-engineering) for the unified `seedCurriculumFromJSON` refactor, the canonical curriculum JSON schema, and the bulk-SQL count update.
+1. **Breadth** — the deep transnational trees (Cambridge, IB, CBSE) cover a
+   representative grade; extending to every grade is mechanical (author more
+   `structure.json`). The six Arab nationals need ministry textbook structures
+   (Arabic sources — owner-supplied) before they graduate from `sa.ts`-style files to deep trees.
+2. **Orchestration** — the default `pnpm db:seed` still loads only US + the Sudan
+   base set; `gb`/`cbse`/`caie-igcse`/`ib`/`sd`/`world`/`concepts`/`banners` are
+   manual single-seed runs. Fold them into one default pipeline so a fresh
+   database has every curriculum and its images. (Deploy-coupled — see
+   [Known gaps & roadmap](#known-gaps--roadmap).)
 
 ### Connecting concept images
 
-Every subject in every curriculum already resolves to one of the shared concepts — `world.ts` assigns them inline; US and Sudan through `NAME_TO_CONCEPT`. What remains:
+Every subject in every curriculum already resolves to one of the shared concepts — the national files assign them inline; US and Sudan through `NAME_TO_CONCEPT`. What remains:
 
 - **Chapter and lesson images** are wired only for US and Sudan, because only those have chapters and lessons. They come for free for the eight world curricula once depth lands: `us.ts` and `sd.ts` rotate chapters through a `SUBJECT_CONCEPT_POOL`, and the generalized sync inherits that.
 - **One source of truth for the maps.** `NAME_TO_CONCEPT` lives in three places (`concepts.ts`, `us.ts`, and `sd.ts` as `SUBJECT_CONCEPT_MAP`) and the rotation pool in two; the US copy has already drifted (missing the Arabic keys). Hoist them into the shared core (`src/components/catalog/`) so every seed reads one map.
@@ -511,9 +561,36 @@ Every subject in every curriculum already resolves to one of the shared concepts
 
 ## Known gaps & roadmap
 
-The catalog's _content_ layer is multi-curriculum (see [Completing the catalog](#completing-the-catalog)), but the _provisioning_ layer (`src/components/catalog/setup.ts`, ~1,716 lines) still bakes in Sudanese assumptions. Status as of this writing:
+The content layer is now multi-curriculum with real depth for six curricula (see [Curriculum coverage](#curriculum-coverage)). The remaining work is deploy sequencing, content breadth, seed-code debt, the build, and the still-Sudanese provisioning layer.
 
-### P0 — Blockers
+### Deploy (load-bearing order)
+
+The canonical codes + tree-seeded curricula are shipped in code but **not yet in the live DB**. At deploy, in order:
+
+1. Run `prisma/migrations/20260608120000_canonicalize_curriculum_codes` (UPDATE legacy `Curriculum.code` / `Subject.curriculum` → canonical, split colliding `national` to its country, ALTER the column default).
+2. Delete the stale subjects-only rows superseded by the deep trees: `gb-national-g*` (old world GB) and `ib-diploma-g*` (old world IB).
+3. Re-run the catalog seeds in order: `gb`, `cbse`, `caie-igcse`, `ib`, then `concepts` / `banners`.
+
+### Content depth
+
+- **Six Arab nationals are subjects-only** (SA/EG/AE/QA/KW/JO — `sa.ts`…`jo.ts`). Their chapter/lesson depth needs the ministry textbook structures (Arabic TOCs), authored as `curriculum/<dir>/` trees.
+- **The deep transnational curricula cover a representative grade** (Cambridge g10, IB g12 DP, CBSE g10). Extend to all grades by authoring more `structure.json` via `scripts/gen-curriculum-structure.ts`. IB lost the old PYP/MYP grade breadth when it moved to the DP tree — re-add PYP/MYP grades.
+- **Encrypted / commercial textbooks** (NCERT Math, Cambridge/IB publishers) are not auto-fetched — owner-supplied.
+
+### Seed & content debt
+
+- **`content.ts` is not idempotent** — no business-key unique, so re-runs duplicate exams/questions/materials/assignments. Add a deterministic `seedKey @unique` per artifact.
+- **Concept maps duplicated 4×** (`concepts.ts`, `us.ts`, `sd.ts`, `engine.ts`) — hoist into one shared `src/components/catalog/concepts-data.ts`.
+- **Assets incomplete** — `banners.ts` skips the `arabic` concept and has a dead fallback; the `cover` S3 objects are referenced on every Subject but never uploaded.
+- **Perf** — the national seeders run ~2,850 sequential awaits (findUnique + create) through `seedSubjectsOnly`; batch with `createMany`. Each national graduates to a deep `engine.ts` caller as its `curriculum/<cc>/` tree lands (GB/IB already did).
+
+### Build & tests
+
+- ~~**12 `Duplicate identifier 'Dictionary'` tsc errors** (6 files, an unrelated concurrent codemod) block the build.~~ **Fixed** 2026-06-08 — the codemod had doubled the `Dictionary` import line in each of `accept-invite/form.tsx`, `grades/{promotion,report-cards,transcripts}`, and `parent-portal/{announcements,events}`; collapsed each duplicate. `tsc --noEmit` is now clean (exit 0).
+- ~~**`catalog-setup.test.ts` + `catalog-setup.level-config.test.ts`** fail to load on a stale `@/lib/catalog-setup` barrel import.~~ **Partly fixed** 2026-06-08 — repointed all four stale references (both test imports + the `vi.mock` paths in `tenants/actions.test.ts` and `classrooms/sync.test.ts`) to `@/components/catalog/setup`. The tests now load: `level-config` is fully green; `catalog-setup.test.ts` is 28/58. The remaining 30 failures are **half-migrated mock drift** — the `db` mock factory predates the catalog renames (`CatalogSubject→Subject`, `LessonVideo→Video`, `SchoolSubjectSelection→SubjectSelection`, `SchoolBookSelection→BookSelection`) and is missing `schoolBook`/`section`/`timetable`/`classroom`/`videoPurchase`/`instructorPreference`. Fixing it needs per-case attention (watch the `catalogSubjectId` FK-field substring trap), tracked as its own task.
+- **`subjects/actions.test.ts`** `getSubjects` lacks an `auth()` mock.
+
+### Provisioning (setup.ts — still Sudanese)
 
 - **Academic structure is hardcoded to the Sudanese model.** `LEVEL_CONFIG` (6+3+3),
   `GRADE_NAMES` (Arabic), `HIGH_SCHOOL_STREAMS` (Science/Arts), and `SCIENCE/ARTS_ONLY_PATTERNS`
@@ -521,9 +598,10 @@ The catalog's _content_ layer is multi-curriculum (see [Completing the catalog](
   Arabic Sudanese grade names and forced Science/Arts streams on grades 10–12. Fix: split
   `setup.ts` into a shared engine + per-curriculum `CurriculumConfig`
   (`src/components/catalog/curricula/{sd,us,gb,ib}.ts`). Do **not** split the `catalog_subjects` table.
-- **British / IB are not provisionable end-to-end.** `inferCurriculum` maps `GB → british` and
-  international → `ib`, but the `world` seed is **not** in the default `catalog` seed,
-  so `findSubjects` may fall through to the US baseline until it is run explicitly.
+- **Deep curricula are not in the default seed path.** GB / Cambridge / IB / CBSE ship as separate
+  `gb` / `caie-igcse` / `ib` / `cbse` seeds (not in the default `catalog` seed), so a fresh DB has them
+  only after each is run — `findSubjects` falls through to the US baseline until then. Cambridge and IB
+  are opt-in/transnational (`country: "*"`), adopted via an explicit `curriculum`, not country inference.
 
 ### P1
 
@@ -543,6 +621,14 @@ The catalog's _content_ layer is multi-curriculum (see [Completing the catalog](
 - Academic-structure rows are inserted in a sequential `tx.create` loop — batch with `createMany`.
 - TOC extraction quality and denormalized count-update performance — tracked in
   [Curriculum engineering → Improvement areas](/docs/curriculum-engineering).
+- **Curriculum codes canonicalized — code shipped, DB migration pending deploy.** The seeds
+  (`world`/`meta`/`us`/`sd`), `inferCurriculum()`, the `COUNTRY_CURRICULUM` map
+  (`timetable-reference.ts`), the community filter, and the catalog UIs now emit the
+  [Curricula & codes](#curricula--codes) scheme (bare ISO country / `{body}-{programme}`). Existing
+  catalog rows are aligned at deploy by
+  `prisma/migrations/20260608120000_canonicalize_curriculum_codes`; the colliding `national` is split
+  to its country via `Curriculum.country`. (This also fixes a latent GB bug: `inferCurriculum("GB")`
+  returned `british` while GB subjects were seeded `national`, so GB schools silently fell back to US.)
 
 ### Direction
 
@@ -551,10 +637,19 @@ The catalog's _content_ layer is multi-curriculum (see [Completing the catalog](
 - Make provisioning a resumable, idempotent pipeline with per-step status persisted on `School`;
   generalize `ensureSubjectSelections` → `ensureProvisioned`.
 
+## Origins
+
+The US-curriculum taxonomy (subjects → chapters → lessons) and the original
+concept artwork were inspired by **[ClickView](https://www.clickview.net)**, the
+American LMS we first referenced. Those assets are now owned, redrawn, and shared
+across every curriculum, and the US catalog is the reference the other curricula
+are optimized from — ClickView is credited here with thanks; it is no longer a
+runtime dependency.
+
 ## See also
 
 - [Curriculum engineering](/docs/curriculum-engineering)
 - [Concepts](/docs/concept)
-- [ClickView overview](/docs/clickview)
+- [US curriculum](/docs/us-curriculum)
 - [Sudan curriculum](/docs/sudan-curriculum)
 - [Library](/docs/library)

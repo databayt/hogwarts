@@ -40,7 +40,7 @@ interface Props {
  */
 export function CommunityFilterBar({ options, dictionary }: Props) {
   const [{ curriculum }, setFilters] = useQueryStates(
-    { curriculum: parseAsString.withDefault("us-k12") },
+    { curriculum: parseAsString.withDefault("US") },
     { shallow: false }
   )
 
@@ -58,7 +58,7 @@ export function CommunityFilterBar({ options, dictionary }: Props) {
 
   return (
     <Select
-      value={curriculum || "us-k12"}
+      value={curriculum || "US"}
       onValueChange={(value) => setFilters({ curriculum: value })}
     >
       <SelectTrigger

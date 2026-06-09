@@ -63,4 +63,14 @@ describe("expire-live-recordings cron", () => {
     expect(body.purged).toBe(1)
     expect(body.candidates).toBe(2)
   })
+
+  it("does NOT mark the row deleted when the S3 delete returns false", async () => {
+    vi.mocked(db.conferenceRecording.findMany).mockResolvedValue([
+      DUE[0],
+    ] as never)
+    vi.mocked(deleteRecordingObject).mockResolvedValue(false)
+    const res = await GET(req())
+    expect(await res.json()).toEqual({ ok: true, purged: 0, candidates: 1 })
+    expect(db.conferenceRecording.update).not.toHaveBeenCalled()
+  })
 })

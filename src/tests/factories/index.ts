@@ -242,7 +242,7 @@ export function createMockSubject(overrides?: Partial<Subject>): Subject {
     department: overrides?.department ?? "Sciences",
     levels: overrides?.levels ?? [],
     country: overrides?.country ?? "SD",
-    curriculum: overrides?.curriculum ?? "national",
+    curriculum: overrides?.curriculum ?? "SD",
     schoolTypes: overrides?.schoolTypes ?? [],
     concept: overrides?.concept ?? null,
     thumbnail: overrides?.thumbnail ?? null,

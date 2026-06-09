@@ -89,11 +89,11 @@ Source: `src/components/onboarding/legal/actions.ts` → `src/components/catalog
 
 `setupCatalogForSchool` resolves curriculum via `inferCurriculum()`:
 
-| Priority | Strategy                             | Example                            |
-| -------- | ------------------------------------ | ---------------------------------- |
-| 1        | International school type → `us-k12` | any country + `international`      |
-| 2        | Country exact match                  | `US` → `us-k12`, `SD` → `national` |
-| 3        | Unmapped country → `us-k12`          | `JP`, `KE`, …                      |
+| Priority | Strategy                         | Example                       |
+| -------- | -------------------------------- | ----------------------------- |
+| 1        | International school type → `US` | any country + `international` |
+| 2        | Country exact match              | `US` → `US`, `SD` → `SD`      |
+| 3        | Unmapped country → `US`          | `JP`, `KE`, …                 |
 
 ## API routes
 

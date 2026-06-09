@@ -38,6 +38,9 @@ model Section {
   homeroomTeacherId String?
   classroomId       String?
   maxCapacity       Int     @default(30)
+  // When true, live classes scheduled for this section are not recorded
+  // regardless of the school-wide default.
+  conferenceRecordingOptOut Boolean @default(false)
 
   school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   grade           AcademicGrade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)

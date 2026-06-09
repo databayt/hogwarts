@@ -27,7 +27,7 @@ interface TopicCardProps {
 }
 
 /**
- * TopicCard - ClickView-style topic card with image overlay
+ * TopicCard - image-overlay topic card with image overlay
  *
  * Features:
  * - Aspect-video ratio with rounded corners

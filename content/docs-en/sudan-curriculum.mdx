@@ -3,7 +3,7 @@ title: Sudan Curriculum
 description: National curriculum integration — 97 subjects across grades 1-12, sourced from official Bakht Al-Rida textbooks.
 ---
 
-Sudan covers grades 1-12 in a 6+3+3 structure (Elementary, Middle, Secondary). Content is extracted from textbook PDFs published by the **National Center for Curricula and Educational Research (Bakht Al-Rida)**. Subjects, chapters, and lessons live in the catalog with `country: "SD"` and `curriculum: "national"`.
+Sudan covers grades 1-12 in a 6+3+3 structure (Elementary, Middle, Secondary). Content is extracted from textbook PDFs published by the **National Center for Curricula and Educational Research (Bakht Al-Rida)**. Subjects, chapters, and lessons live in the catalog with `country: "SD"` and `curriculum: "SD"` (the canonical curriculum code is the bare ISO country code).
 
 ## Inventory
 
@@ -19,16 +19,21 @@ Each curriculum uses a distinct slug to prevent collision.
 
 | Curriculum | Pattern             | Example      | `country` | `curriculum` |
 | ---------- | ------------------- | ------------ | --------- | ------------ |
-| US K-12    | `us-g{N}-{subject}` | `us-g5-math` | `US`      | `us-k12`     |
-| Sudan      | `sd-g{N}-{subject}` | `sd-g5-math` | `SD`      | `national`   |
+| US         | `us-g{N}-{subject}` | `us-g5-math` | `US`      | `US`         |
+| Sudan      | `sd-g{N}-{subject}` | `sd-g5-math` | `SD`      | `SD`         |
 
 ```ts
 // US subject
-{ slug: "us-g5-math", country: "US", curriculum: "us-k12", lang: "en", concept: "math" }
+{ slug: "us-g5-math", country: "US", curriculum: "US", lang: "en", concept: "math" }
 
 // Sudan subject
-{ slug: "sd-g5-math", country: "SD", curriculum: "national", lang: "ar", concept: "math" }
+{ slug: "sd-g5-math", country: "SD", curriculum: "SD", lang: "ar", concept: "math" }
 ```
+
+The slug keeps its short lowercase prefix (`us-`, `sd-`) for readability and
+URL stability; the `curriculum` **code** is the canonical uppercase ISO value
+(`US`, `SD`). The two are intentionally distinct — slugs are cosmetic, codes
+are the join key.
 
 ## Grade distribution (Sudan)
 
@@ -108,7 +113,7 @@ Languages and humanities:
 
 ## Image architecture
 
-Sudan subjects share thumbnails via the [concept system](/docs/concept) — 23 concept images cover all 97 subjects. US subjects use per-subject thumbnails uploaded individually from ClickView.
+Sudan subjects share thumbnails via the [concept system](/docs/concept) — 23 concept images cover all 97 subjects. US subjects use per-subject thumbnails from the owned concept-asset library (originally sourced externally, now ours and shared across curricula — see [Origins](/docs/catalog#origins)).
 
 ```
 catalog/concepts/math-g5/thumbnail-{sm,md,lg,original}.webp
@@ -119,7 +124,7 @@ URL resolution falls through `thumbnailKey` → concept static fallback. The leg
 
 ## Stream assignment (grades 10-12)
 
-`catalog-setup.ts` patterns route subjects to academic streams:
+`src/components/catalog/setup.ts` patterns route subjects to academic streams:
 
 ```ts
 const SCIENCE_ONLY_PATTERNS = [
@@ -141,7 +146,7 @@ const ARTS_ONLY_PATTERNS = [
 ]
 ```
 
-Schools with `country: "SD"` automatically get the Sudan curriculum — `inferCurriculum()` maps `SD → "national"`.
+Schools with `country: "SD"` automatically get the Sudan curriculum — `inferCurriculum()` maps `SD → "SD"`.
 
 ## Data pipeline
 
@@ -152,8 +157,8 @@ Schools with `country: "SD"` automatically get the Sudan curriculum — `inferCu
   → parse TOC patterns       → scripts/sudan-data/toc/sd-g{N}-{subject}.json (97 files)
   → assemble-sudan-curriculum.ts
                              → scripts/sudan-data/sudan-curriculum.json (master)
-  → prisma/seeds/sudan-catalog.ts
-                             → CatalogSubject + CatalogChapter + CatalogLesson (upsert)
+  → prisma/seeds/catalog/sd.ts
+                             → Subject + Chapter + Lesson (upsert)
 ```
 
 ### TOC JSON format
@@ -190,7 +195,7 @@ The master file `sudan-curriculum.json` groups all TOC files by subject with `gr
 ## Seed commands
 
 ```bash
-pnpm db:seed:single sudan-catalog       # 97 subjects, 406 chapters, 1049 lessons
+pnpm db:seed:single sd            # 97 subjects, 406 chapters, 1049 lessons
 pnpm db:seed:single concepts      # Upload 19 concept images, set thumbnailKey
 npx tsx scripts/assemble-sudan-curriculum.ts   # Rebuild master JSON from TOC files
 ```
@@ -205,7 +210,7 @@ Both seeds are registered with `global: true` in `prisma/seeds/single.ts` (no `s
 | `scripts/sudan-data/toc/*.json`            | 97 per-textbook TOC files                      |
 | `scripts/sudan-data/pdfs/grade-{N}/`       | Organized textbook PDFs                        |
 | `scripts/assemble-sudan-curriculum.ts`     | Assembles TOC files into master JSON           |
-| `prisma/seeds/sudan-catalog.ts`            | Database seed                                  |
+| `prisma/seeds/catalog/sd.ts`               | Database seed                                  |
 | `prisma/seeds/catalog/concepts.ts`         | Concept image upload + `thumbnailKey` backfill |
 | `public/subjects/concepts/*.jpg`           | 24 source concept images                       |
 | `src/components/catalog/setup.ts`          | Fallback chain, stream patterns                |
@@ -224,13 +229,21 @@ Both seeds are registered with `global: true` in `prisma/seeds/single.ts` (no `s
 
 ## Adding a curriculum
 
-For a new country (e.g. Egypt `EG`):
+Sudan predates the generic pipeline, so it ships its own TOC-driven seed. New
+curricula no longer need a bespoke seed — they go through the shared
+[tree engine](/docs/curriculum-engineering) (`syncCurriculumTree`), which reads
+a `curriculum/<dir>/g{N}/<subject>/structure.json` tree. See GB (`gb.ts`),
+CBSE (`cbse.ts`), Cambridge (`caie-igcse.ts`), and IB (`ib.ts`) for the pattern.
 
-1. Add TOC JSON files under a per-country directory.
-2. Add subject metadata to `scripts/assemble-sudan-curriculum.ts`.
-3. Add `EG → "national"` mapping in `inferCurriculum()` at `src/components/catalog/setup.ts`.
+For a new national curriculum (e.g. Egypt `EG`):
+
+1. Author `curriculum/eg/g{N}/<subject>/structure.json` (subjects → chapters → lessons).
+2. Add a one-line source `prisma/seeds/catalog/eg.ts` that calls `syncCurriculumTree`
+   with `country: "EG", code: "EG"`, and register it in `prisma/seeds/single.ts`.
+3. Add `EG → "EG"` to `inferCurriculum()` (`src/components/catalog/setup.ts`) and
+   `COUNTRY_CURRICULUM` (`src/lib/timetable-reference.ts`).
 4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/catalog/concepts.ts`.
-5. Run `pnpm db:seed:single {country}-catalog` and `pnpm db:seed:single concepts`.
+5. Run `pnpm db:seed:single eg` and `pnpm db:seed:single concepts`.
 
 ## See also
 

@@ -153,7 +153,7 @@ model Subject {
   department        String // Grouping (e.g. "العلوم")
   levels            SchoolLevel[]
   country           String        @default("SD")
-  curriculum        String        @default("national") // "us-k12", "national", "british", "ib"
+  curriculum        String        @default("SD") // canonical code: ISO country ("US","SD","GB",…) or body-programme ("IB-DP","CAIE-IGCSE")
   curriculumId      String? // FK to Curriculum (Phase 4 backfill)
   catalogCurriculum Curriculum?   @relation(fields: [curriculumId], references: [id], onDelete: SetNull)
   schoolTypes       String[]      @default([]) // [\"international\", \"private\"]. Empty = all.
@@ -168,7 +168,7 @@ model Subject {
   gradeRange        String? // e.g. "1-12", "7-12"
   grades            Int[]         @default([])
 
-  // ClickView integration
+  // Source provenance (US inventory)
   clickviewId  String?
   clickviewUrl String?
 

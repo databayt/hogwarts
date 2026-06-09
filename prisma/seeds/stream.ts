@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Stream (LMS) Seed - ClickView Educational Content
+ * Stream (LMS) Seed - US educational content (stream)
  *
  * 59 K-12 courses with chapters (Arabic for demo school)
  *
@@ -11,7 +11,7 @@
 
 import type { PrismaClient } from "@prisma/client"
 
-import { CLICKVIEW_COURSES, STREAM_CATEGORIES } from "./data/courses"
+import { STREAM_CATEGORIES, STREAM_COURSES } from "./data/courses"
 import type { StudentRef, UserRef } from "./types"
 import { logSuccess, processBatch, randomNumber } from "./utils"
 
@@ -72,7 +72,7 @@ async function seedStreamCategories(
 }
 
 /**
- * Seed stream courses from ClickView educational content
+ * Seed stream courses from US educational content
  */
 export async function seedStreamCourses(
   prisma: PrismaClient,
@@ -87,7 +87,7 @@ export async function seedStreamCourses(
   const instructor = adminUsers.find((u) => u.role === "ADMIN") || adminUsers[0]
   if (!instructor) return 0
 
-  await processBatch(CLICKVIEW_COURSES, 5, async (courseData) => {
+  await processBatch(STREAM_COURSES, 5, async (courseData) => {
     // Resolve category: course.category is an English slug, map to Arabic name for DB lookup
     const categoryName = CATEGORY_SLUG_TO_NAME[courseData.category]
     const categoryId = categoryName ? categoryMap.get(categoryName) : undefined
@@ -131,7 +131,7 @@ export async function seedStreamCourses(
   logSuccess(
     "Stream Courses",
     courseCount,
-    `${CLICKVIEW_COURSES.length} topics with chapters`
+    `${STREAM_COURSES.length} topics with chapters`
   )
 
   return courseCount

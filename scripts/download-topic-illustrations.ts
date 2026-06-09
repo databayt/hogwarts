@@ -2,12 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Download ClickView Educational Images
+ * Download US topic illustration images
  *
- * Downloads 68 topic images from ClickView for course seeding.
+ * Downloads 68 topic illustration images for course seeding.
  * Images are saved to /public/courses/ with clean filenames.
  *
- * Usage: pnpm tsx scripts/download-clickview-images.ts
+ * Usage: pnpm tsx scripts/download-topic-illustrations.ts
  */
 
 import * as fs from "fs"
@@ -16,8 +16,8 @@ import * as path from "path"
 
 const OUTPUT_DIR = path.join(process.cwd(), "public", "courses")
 
-// All ClickView topic images with their source URLs
-const CLICKVIEW_IMAGES = [
+// All topic illustration images with their source URLs
+const TOPIC_ILLUSTRATIONS = [
   // Mathematics
   {
     name: "algebra",
@@ -311,7 +311,7 @@ function downloadImage(
 }
 
 async function main() {
-  console.log("🎨 ClickView Image Downloader")
+  console.log("🎨 Topic Illustration Downloader")
   console.log("============================\n")
 
   // Ensure output directory exists
@@ -323,7 +323,7 @@ async function main() {
   let skipped = 0
   let failed = 0
 
-  for (const image of CLICKVIEW_IMAGES) {
+  for (const image of TOPIC_ILLUSTRATIONS) {
     const filename = `${image.name}.png`
     const filepath = path.join(OUTPUT_DIR, filename)
 
@@ -353,7 +353,7 @@ async function main() {
   console.log(`   Downloaded: ${downloaded}`)
   console.log(`   Skipped: ${skipped}`)
   console.log(`   Failed: ${failed}`)
-  console.log(`   Total: ${CLICKVIEW_IMAGES.length}`)
+  console.log(`   Total: ${TOPIC_ILLUSTRATIONS.length}`)
   console.log(`\n📁 Output: ${OUTPUT_DIR}`)
 }
 

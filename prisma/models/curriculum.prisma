@@ -4,7 +4,7 @@ model Curriculum {
   id           String        @id @default(cuid())
   name         String // "Sudan National Curriculum"
   slug         String        @unique // "sd-national"
-  code         String // "national", "us-k12", "ib", "british"
+  code         String // canonical: ISO country ("US","SD","GB",…) or body-programme ("IB-DP","CAIE-IGCSE")
   country      String // "SD", "US", "*"
   lang         String        @default("ar")
   description  String?       @db.Text

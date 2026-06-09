@@ -6,7 +6,7 @@
  *
  * Previously contained 535 lesson definitions across 19 Sudanese subjects.
  * Content has been replaced by the US K-12 catalog (us-catalog.ts)
- * which sources chapters and lessons from master-inventory.json.
+ * which sources chapters and lessons from us-inventory.json.
  *
  * Kept as empty export for backwards compatibility with any remaining imports.
  */

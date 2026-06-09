@@ -1,9 +1,11 @@
 ---
-title: ClickView
-description: Content library inventory — 62 subjects, 201 topic groups, 986 sub-topics across three school levels.
+title: US Curriculum
+description: The US K-12 content inventory — the taxonomy the US catalog and the shared concept assets were built from, now the reference other curricula optimize from.
 ---
 
-ClickView is the source K-12 content library. Its taxonomy is normalized into the catalog: 62 base subjects expand into 240 grade-specific `CatalogSubject` records via the `clickview-catalog.ts` seed.
+> **Reference inventory.** The US-curriculum taxonomy seeded the US catalog and its imagery became the [owned, shared concept assets](/docs/concept). `scripts/us-curriculum/us-inventory.json` is the US source; every other curriculum now comes from a [`curriculum/` tree](/docs/catalog#seed-pipeline) via the tree engine, optimized from this US reference. (Origins credited in [Catalog → Origins](/docs/catalog#origins).)
+
+The US source is a K-12 content inventory: 62 base subjects expand into ~240 grade-specific `Subject` records via the `us` seed.
 
 ## Inventory
 
@@ -25,7 +27,7 @@ ClickView is the source K-12 content library. Its taxonomy is normalized into th
 
 ## Subjects (all levels)
 
-All 62 base subjects with slug, color, counts, and topic groups. Source: `scripts/clickview-data/master-inventory.json`.
+All 62 base subjects with slug, color, counts, and topic groups. Source: `scripts/us-curriculum/us-inventory.json`.
 
 | Level      | Subject                                    | Slug                                         | Color     | Groups | Topics | Topic groups                                                                                  |
 | ---------- | ------------------------------------------ | -------------------------------------------- | --------- | -----: | -----: | --------------------------------------------------------------------------------------------- |
@@ -97,12 +99,12 @@ All 62 base subjects with slug, color, counts, and topic groups. Source: `script
 Each sub-topic in the inventory is keyed by slug and exposes:
 
 ```ts
-type ClickViewTopic = {
+type SourceTopic = {
   slug: string // kebab-case identifier
   name: string // display name
   videos: number // count of video resources
   resources: number // count of supporting resources
-  coverId: string // ClickView cover image id
+  coverId: string // cover image id
   subject: string
   topicGroup: string
 }
@@ -112,11 +114,11 @@ To list every sub-topic for a tier:
 
 ```bash
 jq '.tiers.elementary.subjects[] | .topics[]' \
-  scripts/clickview-data/master-inventory.json
+  scripts/us-curriculum/us-inventory.json
 jq '.tiers.middle.subjects[] | .topics[]' \
-  scripts/clickview-data/master-inventory.json
+  scripts/us-curriculum/us-inventory.json
 jq '.tiers.high.subjects[] | .topics[]' \
-  scripts/clickview-data/master-inventory.json
+  scripts/us-curriculum/us-inventory.json
 ```
 
 ## See also

@@ -30,7 +30,7 @@ const s3 = new S3Client({
 })
 
 const BUCKET = process.env.AWS_S3_BUCKET!
-const CURRICULUM_DIR = resolve(__dirname, "../curriculum/sd")
+const CURRICULUM_ROOT = resolve(__dirname, "../curriculum")
 const DRY_RUN = process.argv.includes("--dry-run")
 
 // Same slug resolution as sync-sd-curriculum.ts
@@ -95,6 +95,19 @@ function resolveSlug(grade: string, dirSubject: string): string {
   return `sd-${grade}-${dirSubject}`
 }
 
+// Every curriculum tree under curriculum/ + how to build the DB Subject.slug it
+// maps to (must match the seed). Sudan uses its slug-overrides; the other trees
+// follow the tree-engine convention `${prefix}-${gradeDir}-${subjectDir}`.
+// Add a row here when a new tree gains textbook.pdf files.
+const CURRICULA: Array<{
+  dir: string
+  slugFor: (grade: string, subject: string) => string
+}> = [
+  { dir: "sd", slugFor: resolveSlug }, // Sudan (curriculum/sd → SD)
+  { dir: "uk", slugFor: (g, s) => `gb-${g}-${s}` }, // England (curriculum/uk → GB)
+  { dir: "in", slugFor: (g, s) => `cbse-${g}-${s}` }, // India (curriculum/in → CBSE)
+]
+
 async function exists(key: string): Promise<boolean> {
   try {
     await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }))
@@ -134,29 +147,34 @@ async function main() {
 
   const entries: TextbookEntry[] = []
 
-  for (let g = 1; g <= 12; g++) {
-    const grade = `g${g}`
-    const gradePath = join(CURRICULUM_DIR, grade)
-    if (!existsSync(gradePath)) continue
+  for (const cur of CURRICULA) {
+    const curDir = join(CURRICULUM_ROOT, cur.dir)
+    if (!existsSync(curDir)) continue
 
-    for (const subject of readdirSync(gradePath)) {
-      const subjectPath = join(gradePath, subject)
-      if (!statSync(subjectPath).isDirectory()) continue
+    for (let g = 1; g <= 12; g++) {
+      const grade = `g${g}`
+      const gradePath = join(curDir, grade)
+      if (!existsSync(gradePath)) continue
 
-      const pdfPath = join(subjectPath, "textbook.pdf")
-      if (!existsSync(pdfPath)) continue
+      for (const subject of readdirSync(gradePath)) {
+        const subjectPath = join(gradePath, subject)
+        if (!statSync(subjectPath).isDirectory()) continue
 
-      const slug = resolveSlug(grade, subject)
-      const sizeMB = statSync(pdfPath).size / 1024 / 1024
+        const pdfPath = join(subjectPath, "textbook.pdf")
+        if (!existsSync(pdfPath)) continue
 
-      entries.push({
-        grade,
-        subject,
-        slug,
-        filePath: pdfPath,
-        sizeMB,
-        s3Key: `catalog/textbooks/${slug}/textbook.pdf`,
-      })
+        const slug = cur.slugFor(grade, subject)
+        const sizeMB = statSync(pdfPath).size / 1024 / 1024
+
+        entries.push({
+          grade,
+          subject,
+          slug,
+          filePath: pdfPath,
+          sizeMB,
+          s3Key: `catalog/textbooks/${slug}/textbook.pdf`,
+        })
+      }
     }
   }
 

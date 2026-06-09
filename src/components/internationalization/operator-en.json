@@ -259,6 +259,18 @@
     },
     "observability": {
       "title": "Observability",
+      "conference": {
+        "liveRooms": "Live rooms",
+        "scheduledToday": "Scheduled today",
+        "recordingsReady": "Recordings ready",
+        "storage": "Recording storage",
+        "tcpFallback": "TURN/TCP fallback",
+        "perSchool": "Live rooms by school",
+        "noLive": "No live rooms right now.",
+        "recentEvents": "Recent events",
+        "noEvents": "No recent events.",
+        "sfuNote": "Egress queue depth and per-room bitrate require the LiveKit SFU and appear once it is provisioned."
+      },
       "auditLogs": "Audit Logs",
       "recentActions": "Recent sensitive operator actions",
       "noAuditEntries": "No audit entries",
@@ -302,6 +314,7 @@
       "analytics": "Analytics",
       "kanban": "Kanban",
       "logs": "Logs",
+      "conference": "Conference",
       "domains": "Domains",
       "allProducts": "All Products",
       "detail": "Detail",

@@ -18,6 +18,7 @@
 
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
@@ -120,6 +121,39 @@ export async function processAndUploadCatalogImage(
 
   await Promise.all(uploads)
   return key
+}
+
+// --- Raw source objects (e.g. owned cover sources, not Sharp-processed) ---
+
+/** Store a raw image buffer at an exact S3 key (no variants, no processing). */
+export async function putRawObject(
+  key: string,
+  body: Buffer,
+  contentType = "image/jpeg"
+): Promise<void> {
+  await getS3().send(
+    new PutObjectCommand({
+      Bucket: getBucket(),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  )
+}
+
+/** Read a raw object from S3 by exact key. Returns null if it doesn't exist. */
+export async function getRawObject(key: string): Promise<Buffer | null> {
+  try {
+    const res = await getS3().send(
+      new GetObjectCommand({ Bucket: getBucket(), Key: key })
+    )
+    if (!res.Body) return null
+    const bytes = await res.Body.transformToByteArray()
+    return Buffer.from(bytes)
+  } catch {
+    return null
+  }
 }
 
 // --- Deletion ---

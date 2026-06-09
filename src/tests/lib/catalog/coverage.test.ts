@@ -26,7 +26,7 @@ const SD_CURRICULUM = {
   name: "Sudan National Curriculum",
   slug: "sd-national",
   country: "SD",
-  code: "national",
+  code: "SD",
 }
 
 const SA_CURRICULUM = {
@@ -34,7 +34,7 @@ const SA_CURRICULUM = {
   name: "Saudi (Tatweer)",
   slug: "sa-tatweer",
   country: "SA",
-  code: "tatweer",
+  code: "SA",
 }
 
 // ---------------------------------------------------------------------------

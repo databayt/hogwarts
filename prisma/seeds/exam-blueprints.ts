@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Exam Blueprints for ClickView K-12 Subjects
+ * Exam Blueprints for US K-12 Subjects
  *
  * Maps 62 subjects into 8 pedagogical categories, each with:
  * - Question type distribution (what % MCQ vs Essay vs Short Answer etc.)

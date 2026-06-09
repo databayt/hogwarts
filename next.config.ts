@@ -38,7 +38,6 @@ const nextConfig: NextConfig = {
       "./node_modules/tsx",
       "./node_modules/sharp",
       // Large static assets (served from CDN/S3, not serverless functions)
-      "./public/clickview/**",
       "./public/anthropic/**",
       "./public/site/**",
       "./public/story.mp4",
@@ -108,7 +107,6 @@ const nextConfig: NextConfig = {
       },
       { protocol: "https", hostname: "www-cdn.anthropic.com", pathname: "/**" },
 
-      { protocol: "https", hostname: "img.clickviewapp.com", pathname: "/**" },
       { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
       {
         protocol: "https",

@@ -29,7 +29,7 @@ A snapshot of what's actually built today. For requirements see [PRD](/docs/prd)
 | 08 — Timetable           | `Built`        | [/docs/timetable](/docs/timetable)           |
 | 09 — Finance and billing | `Built`        | [/docs/fees](/docs/fees)                     |
 | 10 — Communication       | `Built`        | [/docs/messages](/docs/messages)             |
-| 11 — Stream / LMS        | `Built+Polish` | [/docs/clickview](/docs/clickview)           |
+| 11 — Stream / LMS        | `Built+Polish` | [/docs/us-curriculum](/docs/us-curriculum)   |
 | 12 — Library             | `Built`        | [/docs/library](/docs/library)               |
 | 13 — Transport           | `Built`        | [/docs/fees](/docs/fees)                     |
 | 14 — Catalog             | `Built+Polish` | [/docs/catalog](/docs/catalog)               |
@@ -166,13 +166,13 @@ Announcements, real-time messages, notifications, WhatsApp. See [Messages](/docs
 
 ## 11 — Stream / LMS · `Built+Polish`
 
-School-scoped LMS. ClickView asset wave partial. See [ClickView](/docs/clickview).
+School-scoped LMS. US cover-asset wave partial. See [US curriculum](/docs/us-curriculum).
 
 - Models in `stream.prisma`: `StreamCourse`, `StreamCategory`, `StreamChapter`, `StreamLesson`, `StreamEnrollment`, `StreamLessonProgress`, `StreamCertificate`, `StreamAttachment`.
 - Admin course CRUD + categories; Tiptap rich-text editor.
 - Video player with progress; student enrollment + completion certificates.
 - Stripe payment flow (cancel / success); per-school storage quota (`videoStorageUsedBytes` / `videoStorageQuotaBytes`).
-- **ClickView CDN partial** — a small fraction of lessons downloaded; rest fall back to ClickView CDN. Tracked in [Roadmap](/docs/roadmap).
+- **source CDN partial** — a small fraction of lessons downloaded; rest fall back to source CDN. Tracked in [Roadmap](/docs/roadmap).
 
 ## 12 — Library · `Built`
 
@@ -206,7 +206,7 @@ Platform-wide educational content library. See [Catalog](/docs/catalog).
 - 4 curricula on disk: SD (Sudan, 12 grades, bilingual subjects), US, IN, FR.
 - Operator dashboard at `/[lang]/(saas-dashboard)/(catalog)/catalog/...`.
 - Community contribution workflow with `Proposal` (proposed → reviewed → approved → published).
-- ClickView source library: [overview](/docs/clickview) — 62 subjects, 240 grade-specific catalog records, three tiers (Elementary/Middle/High).
+- US-curriculum source library: [overview](/docs/us-curriculum) — 62 subjects, 240 grade-specific catalog records, three tiers (Elementary/Middle/High).
 
 ## Not built yet
 

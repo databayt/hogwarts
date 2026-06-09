@@ -18,7 +18,7 @@ model Lesson {
   levels          SchoolLevel[]
   status          ContentStatus @default(PUBLISHED)
 
-  // ClickView integration
+  // Source provenance (US inventory)
   clickviewCoverId String?
   videoCount       Int     @default(0)
   resourceCount    Int     @default(0)

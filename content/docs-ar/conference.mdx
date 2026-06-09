@@ -1,0 +1,115 @@
+---
+title: الاجتماعات
+description: مؤتمرات الفيديو — كتلة واحدة موحّدة في src/components/school-dashboard/conference تُقدَّم على المسار /conference. الرابط الخارجي الملصوق فعّال، وخادم LiveKit SFU خامل، ومحوّلات Meet/Zoom/Teams الأصلية مهيّأة.
+---
+
+كتلة واحدة قائمة بذاتها في `src/components/school-dashboard/conference/`، منعكسة بنسبة 1:1 على المسار
+`/conference`. الرابط الخارجي الملصوق فعّال؛ وخادم LiveKit SFU مكتوب لكنه خامل؛ ومحوّلات
+Meet/Zoom/Teams الأصلية مهيّأة كهيكل.
+
+## البنية
+
+```
+src/components/school-dashboard/conference/
+├── content.tsx           server list (DataTable index)
+├── actions.ts            barrel
+├── actions/              sessions · tokens · recordings · notifications · settings · moderation · recurring · helpers
+├── queries.ts            DataTable reads
+├── authorization.ts      RBAC permission matrix
+├── permissions.ts        UI gating (rich)
+├── list-permissions.ts   UI gating (listings)
+├── validation.ts         Zod (sessions)
+├── list-validation.ts    Zod (listings)
+├── columns.tsx           DataTable columns
+├── table.tsx             DataTable
+├── form.tsx              create form
+├── list-params.ts        nuqs URL cache
+├── detail.tsx            single-conference detail
+├── room.tsx              in-app LiveKit room
+├── recordings.tsx        recordings list
+├── recording-player.tsx  player
+├── network-test.tsx      LiveKit RTT/TURN + readiness diagnostic
+├── schedule-form.tsx     scheduler
+├── settings-form.tsx     admin config form
+├── empty-state.tsx · loading-skeleton.tsx
+├── types.ts · error-map.ts · list-actions.ts
+├── livekit/              SFU server lib
+├── providers/            link-provider adapters
+├── RUNBOOK.md            LiveKit 6-gate provisioning
+└── __tests__/ · README.md · ISSUE.md
+```
+
+## المكوّنات
+
+| الملف                                                                 | الغرض                                                                                                                                                   |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content.tsx`                                                         | مكوّن خادمي — يجلب ويعرض فهرس DataTable للاجتماعات.                                                                                                     |
+| `actions.ts` + `actions/`                                             | إجراءات خادمية: `sessions` (دورة الحياة)، `tokens` (الانضمام)، `recordings`، `notifications`، `settings`، `moderation` (الطرد)، `recurring`، `helpers`. |
+| `queries.ts`                                                          | استعلامات DataTable للقراءة فقط.                                                                                                                        |
+| `authorization.ts`                                                    | `PERMISSION_MATRIX` — صلاحيات RBAC لكل إجراء.                                                                                                           |
+| `permissions.ts` · `list-permissions.ts`                              | التحكّم في الواجهة (التبويبات / الإظهار حسب الدور).                                                                                                     |
+| `validation.ts` · `list-validation.ts`                                | مخطّطات Zod والأنواع المستنتجة.                                                                                                                         |
+| `columns.tsx` · `table.tsx` · `form.tsx` · `list-params.ts`           | واجهة DataTable على العميل.                                                                                                                             |
+| `detail.tsx` · `room.tsx` · `recordings.tsx` · `recording-player.tsx` | تفاصيل LiveKit / الغرفة داخل التطبيق / التشغيل.                                                                                                         |
+| `network-test.tsx`                                                    | اتصال LiveKit وتشخيص `getLiveKitReadiness()` (للمطوّر/المدير).                                                                                          |
+| `schedule-form.tsx` · `settings-form.tsx`                             | نماذج الجدولة وإعدادات المدير على العميل.                                                                                                               |
+| `types.ts` · `error-map.ts`                                           | أنواع النطاق وربط رموز الأخطاء بالنصوص.                                                                                                                 |
+| `livekit/`                                                            | أغلفة SDK لخادم SFU: `client` (الإعداد والجاهزية)، `token`، `rooms`، `egress`، `recording-urls`، `room-naming`، `webhook`.                              |
+| `providers/`                                                          | محوّلات مزوّدي الروابط: `types`، `external` (فعّال)، `google-meet`/`zoom`/`teams` (هياكل)، سجلّ `index`.                                                |
+
+## المسارات
+
+| المسار                        | التخطيط          | يعرض                        |
+| ----------------------------- | ---------------- | --------------------------- |
+| `/conference`                 | school-dashboard | فهرس DataTable              |
+| `/conference/[id]`            | school-dashboard | `detail.tsx`                |
+| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`            |
+| `/conference/schedule`        | school-dashboard | `schedule-form.tsx`         |
+| `/conference/settings`        | school-dashboard | `settings-form.tsx`         |
+| `/conference/network-test`    | school-dashboard | `network-test.tsx`          |
+| `/conference/[id]/room`       | (live-room)      | `room.tsx`                  |
+| `/live-classes/*`             | —                | إعادة توجيه → `/conference` |
+
+واجهات API (مُستدعاة خارجياً/عبر المجدول → تبقى مسارات): `api/webhooks/livekit`، `api/cron/{live-class-reminders, expire-live-recordings}`.
+
+## المخطّط — `prisma/models/conference.prisma`
+
+`LiveClass*` → `Conference*`؛ مع الحفاظ على كل اسم جدول/عمود/نوع تعداد في قاعدة البيانات عبر `@@map`/`@map` →
+**ترحيل بلا تغيير** (فرق `migrate diff` مطابق تماماً للأساس).
+
+| النموذج                 | الغرض                                                                       |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `Conference`            | فصل. `provider` (`livekit`\|`external`)، `meetingUrl?`، `meetingProvider?`. |
+| `ConferenceParticipant` | صفّ لكل مستخدم مدعوّ + قياسات الاتصال.                                      |
+| `ConferenceRecording`   | بيانات الـ Egress وموقع S3.                                                 |
+| `ConferenceEvent`       | سجلّ تدقيق الـ Webhook وضمان عدم التكرار.                                   |
+| `ConferenceLink`        | رابط متكرّر يُضبط مرة واحدة `[schoolId, subjectId, sectionId, termId]`.     |
+
+التعدادات `ConferenceProvider` · `ConferenceStatus` · `ConferenceRecordingStatus` ·
+`ConferenceParticipantRole` · `ConferenceParticipantStatus`؛ و4 أعمدة إعداد `School.conference*`.
+
+## المزوّدون
+
+| المزوّد         | الحالة         | الناقص                                        |
+| --------------- | -------------- | --------------------------------------------- |
+| الرابط الخارجي  | ✅ فعّال       | — (الافتراضي العام بلا بنية تحتية)            |
+| LiveKit SFU     | 🟡 مكتوب، خامل | 6 بوابات بنية تحتية → `conference/RUNBOOK.md` |
+| Google Meet API | 🟦 محوّل مهيّأ | OAuth من Google Cloud + تنفيذ `createMeeting` |
+| Zoom API        | 🟦 محوّل مهيّأ | Server-to-Server OAuth + التنفيذ              |
+| Microsoft Teams | 🟦 محوّل مهيّأ | Azure AD (Graph `OnlineMeetings`) + التنفيذ   |
+
+تُحفظ المزوّدات الأصلية كـ `provider="external"` + `meetingProvider="<id>"` → دون ترحيل تعداد.
+
+## القرارات
+
+- **كتلة واحدة، تجريد واحد للمزوّد.** الرابط الخارجي هو الحدّ الأدنى المتاح لكل مدرسة؛ وLiveKit هو
+  السقف المتميّز الاختياري، محكوم بـ `isLiveKitConfigured()`. تبقى دورة حياة SFU خارج طبقة
+  `providers/` (لأنها ليست قائمة على الروابط).
+- **إعادة التسمية شفّافة لقاعدة البيانات.** `@@map`/`@map` تحفظ كل اسم جدول/عمود/نوع تعداد.
+- **الـ Webhook والمهام المجدولة تبقى مسارات API** — مُستدعاة خارجياً/عبر المجدول؛ لا يستطيع الإجراء الخادمي استقبالها.
+- **قيد الانتظار (غير برمجي):** تجهيز بنية LiveKit التحتية (الدليل جاهز)، وبيانات اعتماد OAuth الأصلية.
+
+## ذات صلة
+
+- [المعمارية](/docs/architecture) · [النمط](/docs/pattern) · [الجدول الدراسي](/docs/timetable) · [الإشعارات](/docs/notifications)
+- [الفصول المباشرة](/docs/live-classes) — مرجع أقدم، قبل إعادة التسمية

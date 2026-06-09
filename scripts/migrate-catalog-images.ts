@@ -6,7 +6,7 @@
  *    - Convert to WebP and upload as catalog/subjects/{concept}.webp
  *    - Update CatalogSubject.concept and CatalogSubject.imageKey
  *
- * 2. Download lesson images from ClickView CDN and upload to S3
+ * 2. Download lesson images from source CDN and upload to S3
  *    - Download each unique URL
  *    - Convert to WebP
  *    - Upload as catalog/lessons/{coverId}.webp
@@ -146,7 +146,7 @@ async function catalogLessonImageStats(): Promise<void> {
     },
   })
 
-  const lessonsWithClickviewImages = await prisma.lesson.count({
+  const lessonsWithSourceCdnImages = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
       thumbnail: { contains: "clickviewapp.com" },
@@ -162,12 +162,12 @@ async function catalogLessonImageStats(): Promise<void> {
 
   console.log(`  Total lessons: ${totalLessons}`)
   console.log(`  With imageKey: ${lessonsWithImages}`)
-  console.log(`  ClickView CDN images: ${lessonsWithClickviewImages}`)
+  console.log(`  source CDN images: ${lessonsWithSourceCdnImages}`)
   console.log(`  With coverId: ${lessonsWithCoverIds}`)
 
-  if (lessonsWithClickviewImages > 0) {
+  if (lessonsWithSourceCdnImages > 0) {
     console.log(
-      `  [ACTION NEEDED] ${lessonsWithClickviewImages} lessons still reference ClickView CDN`
+      `  [ACTION NEEDED] ${lessonsWithSourceCdnImages} lessons still reference source CDN`
     )
     console.log(`  Run with --upload-lessons flag to download and upload to S3`)
   }

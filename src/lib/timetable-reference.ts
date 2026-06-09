@@ -48,7 +48,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "SA",
-    curriculum: "national",
+    curriculum: "SA",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -236,7 +236,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "EG",
-    curriculum: "national",
+    curriculum: "EG",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -381,7 +381,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "AE",
-    curriculum: "national",
+    curriculum: "AE",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -575,7 +575,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "KW",
-    curriculum: "national",
+    curriculum: "KW",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -734,7 +734,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "SD",
-    curriculum: "national",
+    curriculum: "SD",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -902,7 +902,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "JO",
-    curriculum: "national",
+    curriculum: "JO",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -1044,7 +1044,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "QA",
-    curriculum: "national",
+    curriculum: "QA",
     schoolTypes: ["public", "private", "national"],
     subjects: [
       {
@@ -1168,7 +1168,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "US",
-    curriculum: "us-k12",
+    curriculum: "US",
     schoolTypes: ["public", "private"],
     subjects: [
       {
@@ -1312,7 +1312,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "GB",
-    curriculum: "british",
+    curriculum: "GB",
     schoolTypes: ["private", "international", "british"],
     subjects: [
       {
@@ -1477,7 +1477,7 @@ const REFERENCES: CurriculumReference[] = [
   // --------------------------------------------------------------------------
   {
     country: "*",
-    curriculum: "ib",
+    curriculum: "IB-DP",
     schoolTypes: ["international", "ib"],
     subjects: [
       {
@@ -1651,15 +1651,16 @@ const REFERENCES: CurriculumReference[] = [
 // ============================================================================
 
 const COUNTRY_CURRICULUM: Record<string, string> = {
-  US: "us-k12",
-  GB: "british",
-  SD: "national",
-  SA: "national",
-  EG: "national",
-  AE: "national",
-  QA: "national",
-  KW: "national",
-  JO: "national",
+  US: "US",
+  GB: "GB",
+  SD: "SD",
+  SA: "SA",
+  EG: "EG",
+  AE: "AE",
+  QA: "QA",
+  KW: "KW",
+  JO: "JO",
+  IN: "CBSE",
 }
 
 // ============================================================================
@@ -1675,8 +1676,7 @@ function findReference(
   curriculum?: string,
   schoolType?: string
 ): CurriculumReference | null {
-  const effectiveCurriculum =
-    curriculum || COUNTRY_CURRICULUM[country] || "us-k12"
+  const effectiveCurriculum = curriculum || COUNTRY_CURRICULUM[country] || "US"
 
   // Score each reference
   let bestRef: CurriculumReference | null = null

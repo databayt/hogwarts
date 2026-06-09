@@ -259,6 +259,18 @@
     },
     "observability": {
       "title": "المراقبة",
+      "conference": {
+        "liveRooms": "الغرف المباشرة",
+        "scheduledToday": "المجدولة اليوم",
+        "recordingsReady": "التسجيلات الجاهزة",
+        "storage": "تخزين التسجيلات",
+        "tcpFallback": "التحويل إلى TURN/TCP",
+        "perSchool": "الغرف المباشرة حسب المدرسة",
+        "noLive": "لا توجد غرف مباشرة حالياً.",
+        "recentEvents": "الأحداث الأخيرة",
+        "noEvents": "لا توجد أحداث أخيرة.",
+        "sfuNote": "يتطلب عمق طابور التسجيل ومعدل البث لكل غرفة خادم LiveKit SFU وتظهر بمجرد توفيره."
+      },
       "auditLogs": "سجلات التدقيق",
       "recentActions": "الإجراءات الحساسة الأخيرة للمشغل",
       "noAuditEntries": "لا توجد سجلات تدقيق",
@@ -302,6 +314,7 @@
       "analytics": "التحليلات",
       "kanban": "كانبان",
       "logs": "السجلات",
+      "conference": "الاجتماعات",
       "domains": "النطاقات",
       "allProducts": "جميع المنتجات",
       "detail": "التفاصيل",

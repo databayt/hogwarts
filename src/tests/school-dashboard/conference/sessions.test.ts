@@ -45,6 +45,9 @@ vi.mock("@/lib/db", () => ({
     guardian: {
       findFirst: vi.fn(),
     },
+    section: {
+      findFirst: vi.fn(),
+    },
   },
 }))
 
@@ -156,6 +159,9 @@ beforeEach(() => {
     conferenceRecordingDefault: true,
     preferredLanguage: "ar",
   } as never)
+  vi.mocked(db.section.findFirst).mockResolvedValue({
+    conferenceRecordingOptOut: false,
+  } as never)
   vi.mocked(db.teacher.findFirst).mockResolvedValue({
     id: TEACHER_ID,
     userId: TEACHER_USER_ID,
@@ -181,6 +187,20 @@ describe("createLiveClass", () => {
     expect(db.conferenceParticipant.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ role: "HOST" }),
+      })
+    )
+  })
+
+  it("a section opted out of recording forces recordingEnabled false", async () => {
+    mockAdmin()
+    vi.mocked(db.section.findFirst).mockResolvedValue({
+      conferenceRecordingOptOut: true,
+    } as never)
+    const result = await createLiveClass(goodInput)
+    expect("success" in result && result.success).toBe(true)
+    expect(db.conference.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ recordingEnabled: false }),
       })
     )
   })
@@ -302,6 +322,24 @@ describe("startLiveClass", () => {
         data: expect.objectContaining({ status: "live" }),
       })
     )
+  })
+
+  it("rejects starting once the school's concurrent cap is reached", async () => {
+    mockAdmin()
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      status: "scheduled",
+      roomName: "x",
+      maxParticipants: 50,
+      teacher: { userId: "admin-user" },
+    } as never)
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      conferenceMaxConcurrent: 2,
+    } as never)
+    vi.mocked(db.conference.count).mockResolvedValue(2 as never)
+    const result = await startLiveClass({ id: SESSION_ID })
+    expect("error" in result && result.error).toBe("LIVE_CLASS_MAX_CONCURRENT")
+    expect(ensureRoom).not.toHaveBeenCalled()
   })
 
   it("teacher cannot start another teacher's class → UNAUTHORIZED", async () => {

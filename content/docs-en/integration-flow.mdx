@@ -135,14 +135,14 @@ Auto-assignment first matches catalog `subject.grades` arrays; falls back to lev
 
 ### Progressive fallback
 
-| Step | Filter                              | Example                         |
-| ---- | ----------------------------------- | ------------------------------- |
-| 1    | `country + curriculum + schoolType` | SD + national + private         |
-| 2    | `country + curriculum`              | SD + national                   |
-| 3    | `country="*" + curriculum`          | IB worldwide, British worldwide |
-| 4    | US + us-k12                         | Baseline fallback               |
+| Step | Filter                              | Example                              |
+| ---- | ----------------------------------- | ------------------------------------ |
+| 1    | `country + curriculum + schoolType` | SD + SD + private                    |
+| 2    | `country + curriculum`              | SD + SD                              |
+| 3    | `country="*" + curriculum`          | IB-DP worldwide, Cambridge worldwide |
+| 4    | US + US                             | Baseline fallback                    |
 
-Curriculum inferred from `country + schoolType` if not set: international → `us-k12`, known countries → `national`, unknown → `us-k12`.
+Curriculum inferred from `country + schoolType` if not set: international → `US`, known countries → the bare ISO code (`SD`, `GB`, …), unknown → `US`.
 
 ### Customization
 

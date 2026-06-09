@@ -7,7 +7,7 @@ owner: Abdout
 maturity: Built+Polish
 completion: 80
 tracker: https://github.com/databayt/hogwarts/issues/323
-docs: https://ed.databayt.org/en/docs/clickview
+docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-05-25
 ---
 

@@ -23,6 +23,7 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
+import { nearestConcept } from "../../../src/components/catalog/concepts-data"
 import { logPhase, logSuccess } from "../utils"
 
 const CURRICULUM_DIR = path.resolve(__dirname, "../../../curriculum/sd")
@@ -336,7 +337,7 @@ function resolveSlugSuffix(grade: string, dirSubject: string): string {
 // Main
 // ============================================================================
 
-export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
+export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
   if (!fs.existsSync(CURRICULUM_DIR)) {
     console.log("  curriculum/sd/ not found, skipping")
     return
@@ -393,7 +394,8 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
       const subjectPath = path.join(gradePath, dirSubject)
       const slugSuffix = resolveSlugSuffix(grade, dirSubject)
       const dbSlug = `sd-${grade}-${slugSuffix}`
-      const concept = SUBJECT_CONCEPT_MAP[dirSubject] ?? null
+      const concept =
+        SUBJECT_CONCEPT_MAP[dirSubject] ?? nearestConcept(dirSubject)
 
       const chapterDirs = getChapterDirs(subjectPath)
       const chapters: DirChapter[] = chapterDirs.map((chDir, idx) => {
@@ -446,7 +448,7 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
 
   // Look up Curriculum record for SD-national
   const sdCurriculum = await prisma.curriculum.findUnique({
-    where: { country_code: { country: "SD", code: "national" } },
+    where: { country_code: { country: "SD", code: "SD" } },
     select: { id: true },
   })
 
@@ -507,7 +509,7 @@ export async function syncSdCurriculum(prisma: PrismaClient): Promise<void> {
           grades: [entry.gradeNum],
           gradeRange: String(entry.gradeNum),
           country: "SD",
-          curriculum: "national",
+          curriculum: "SD",
           curriculumId: sdCurriculum?.id,
           concept,
           color: null,

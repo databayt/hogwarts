@@ -28,9 +28,13 @@ export default async function Observability({ params, searchParams }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.operator
 
-  const n = d?.nav
+  const n = d?.nav as { logs?: string; conference?: string } | undefined
   const observabilityPages: PageNavItem[] = [
     { name: n?.logs || "Logs", href: `/${lang}/observability` },
+    {
+      name: n?.conference || "Conference",
+      href: `/${lang}/observability/conference`,
+    },
   ]
 
   return (

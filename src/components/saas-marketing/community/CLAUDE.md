@@ -8,7 +8,7 @@ Public, anonymous learning-resource hub at `/[lang]/community`. Replaces the leg
 
 - Hub renders a SubjectsGrid (one card per `Subject` row in the global catalog)
 - Per-subject route `/community/[slug]` mirrors `school-dashboard/(listings)/subjects/[slug]` — chapters scroller, video tiles per lesson, materials/exams/qbank/assignments pipelines
-- Default curriculum: `us-k12` (display label "International US")
+- Default curriculum: `US` (canonical ISO code)
 - Curriculum dropdown + grade pill nav (1..12) under the hero — kun homepage style
 
 NO `auth()` and NO `getTenantContext()`. The `Subject`, `Chapter`, `Lesson`, `Material`, `Exam`, `Question`, `Assignment`, `Book`, `Textbook` tables are platform-wide (no `schoolId` column). `Video` has an optional `schoolId` and we filter on `visibility: "PUBLIC"` to surface only opt-in rows.
@@ -17,13 +17,13 @@ NO `auth()` and NO `getTenantContext()`. The `Subject`, `Chapter`, `Lesson`, `Ma
 
 1. Read `queries.ts` — every resource query follows the public-content gate (`status: PUBLISHED`, `approvalStatus: APPROVED`, `visibility: PUBLIC`). Textbook has no `visibility`/`approvalStatus` columns, so it gates on `status` only.
 2. Route shape: `/community` (hub) + `/community/[slug]` (subject detail). The Phase 1 `[type]/page.tsx` drill-down is gone — resources are surfaced through their parent subject.
-3. URL state lives in `?curriculum=us-k12&grade=7`. Server pages parse via `communitySearchParams`; the client `<TabsNav>` and `<FilterBar>` write via `nuqs/useQueryStates`. The `grade` param is driven by the under-hero TabsNav (not a dropdown).
+3. URL state lives in `?curriculum=US&grade=7`. Server pages parse via `communitySearchParams`; the client `<TabsNav>` and `<FilterBar>` write via `nuqs/useQueryStates`. The `grade` param is driven by the under-hero TabsNav (not a dropdown).
 
 ## Key Decisions
 
 - **Subjects-first, not categories-first.** Cross-subject category pages (`/community/textbooks` etc.) were dropped in Phase 2. Per-subject pages reuse `school-dashboard/listings/subjects/{catalog-hero,catalog-detail,catalog-content-sections}.tsx` directly — those components take plain data props and consume the dictionary via `<DictionaryProvider>` (already wired by the saas-marketing layout).
-- **`Subject.curriculum` is a string column**, not an enum or FK. Values: `"national" | "us-k12" | "british" | "ib"`. The dropdown URL round-trips `Curriculum.code`, which matches `Subject.curriculum` directly.
-- **Default `curriculum=us-k12`** — set in `search-params.ts` via `parseAsString.withDefault("us-k12")`. The dropdown UI relabels the `us-k12` row as "International US" via `dictionary.community.curriculum.internationalUS` while keeping `us-k12` as the underlying value. This avoids a DB row rename.
+- **`Subject.curriculum` is a string column**, not an enum or FK. Canonical values: a bare ISO country code (`"US"`, `"SD"`, `"GB"`, …) or `"IB-DP"` / `"CAIE-IGCSE"`. The dropdown URL round-trips `Curriculum.code`, which matches `Subject.curriculum` directly.
+- **Default `curriculum=US`** — set in `search-params.ts` via `parseAsString.withDefault("US")`. The dropdown label is looked up by `Curriculum.slug` against `dictionary.community.curriculum.names`; the underlying option `value` stays `Curriculum.code` (`"US"`).
 - **Lang gating**: queries restrict `where: { lang: currentLocale }` so an English visitor doesn't see Arabic-stored content. Skips translation since the catalog doesn't yet support it.
 - **PageHeader heading style** mirrors kun's homepage (`/Users/abdout/kun/src/components/atom/page-header.tsx`) via class overrides on the existing hogwarts atom: `max-w-2xl text-balance text-4xl font-semibold tracking-tight lg:leading-[1.1] xl:text-5xl xl:tracking-tight` on the heading, hairline `border-b border-border/50 dark:border-border` on the section.
 - **TabsNav under hero** is grade-based (1..12), trimmed by the active curriculum's `gradeRange`. Defensively resets the active grade to "All" when the user picks a curriculum whose range doesn't include it (`useEffect` inside `tabs-nav.tsx`).

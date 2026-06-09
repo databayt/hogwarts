@@ -14,7 +14,7 @@ export type ConferenceObservability = {
   liveCount: number
   scheduledToday: number
   recordingsReady: number
-  storageBytes: bigint
+  storageBytes: number
   totalParticipants: number
   tcpFallbackCount: number
   tcpFallbackRate: number
@@ -91,7 +91,7 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
     liveCount,
     scheduledToday,
     recordingsReady: recordingAgg._count._all,
-    storageBytes: recordingAgg._sum.fileSizeBytes ?? 0n,
+    storageBytes: Number(recordingAgg._sum.fileSizeBytes ?? 0),
     totalParticipants,
     tcpFallbackCount,
     tcpFallbackRate:
@@ -107,9 +107,9 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
   }
 }
 
-/** Human-readable storage size from a BigInt byte count. */
-export function formatBytes(bytes: bigint): string {
-  const n = Number(bytes)
+/** Human-readable storage size from a byte count. */
+export function formatBytes(bytes: number): string {
+  const n = bytes
   if (n < 1024) return `${n} B`
   if (n < 1024 ** 2) return `${(n / 1024).toFixed(1)} KB`
   if (n < 1024 ** 3) return `${(n / 1024 ** 2).toFixed(1)} MB`

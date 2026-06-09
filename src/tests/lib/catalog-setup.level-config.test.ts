@@ -3,8 +3,8 @@
 
 import { describe, expect, it, vi } from "vitest"
 
-import { setupCatalogForSchool } from "@/lib/catalog-setup"
 import { db } from "@/lib/db"
+import { setupCatalogForSchool } from "@/components/catalog/setup"
 
 // Step 6 — lock in the invariants of LEVEL_CONFIG + SCHOOL_LEVEL_TO_CATALOG.
 // These constants are private to catalog-setup.ts but their EFFECT on the

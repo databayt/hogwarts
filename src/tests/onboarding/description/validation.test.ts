@@ -144,7 +144,7 @@ describe("createDescriptionSchema", () => {
   // Step 2 — schoolLevel production-readiness contract
   describe("schoolLevel contract (Step 2)", () => {
     it("covers every downstream catalog-setup SCHOOL_LEVEL_TO_CATALOG key", () => {
-      // Keep the form enum in lockstep with src/lib/catalog-setup.ts:125
+      // Keep the form enum in lockstep with src/components/catalog/setup.ts
       // SCHOOL_LEVEL_TO_CATALOG — adding a new level here without updating
       // the catalog map would silently create schools with no AcademicGrades.
       const schema = createDescriptionSchema()

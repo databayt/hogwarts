@@ -5,7 +5,7 @@
  * Seed S3 Videos from Pexels — HD Educational Videos
  *
  * Downloads landscape, HD (720p-1080p), 1-10 minute educational videos
- * for all 62 ClickView K-12 subjects and uploads to S3/CloudFront.
+ * for all 62 US K-12 subjects and uploads to S3/CloudFront.
  *
  * Flow:
  *   1. Search Pexels API for educational videos per subject (landscape, HD)
@@ -59,7 +59,7 @@ const DB_BATCH_SIZE = 50
 const DRY_RUN = process.argv.includes("--dry-run")
 
 // ============================================================================
-// SUBJECT -> PEXELS SEARCH QUERY MAP (62 ClickView subjects)
+// SUBJECT -> PEXELS SEARCH QUERY MAP (62 US subjects)
 // All queries include educational keywords for relevant results
 // ============================================================================
 

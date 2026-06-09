@@ -7,7 +7,11 @@ import { auth } from "@/auth"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { listConferenceTerms } from "@/components/school-dashboard/conference/actions/recurring"
-import { getConferenceSettings } from "@/components/school-dashboard/conference/actions/settings"
+import {
+  getConferenceSettings,
+  listSectionRecordingPolicy,
+} from "@/components/school-dashboard/conference/actions/settings"
+import { SectionRecordingPolicy } from "@/components/school-dashboard/conference/section-recording-policy"
 import { ConferenceSettingsForm } from "@/components/school-dashboard/conference/settings-form"
 
 interface Props {
@@ -23,18 +27,27 @@ export default async function Page({ params }: Props) {
     redirect(`/${lang}/dashboard`)
   }
 
-  const [dictionary, settings, termsResult] = await Promise.all([
-    getDictionary(lang),
-    getConferenceSettings(),
-    listConferenceTerms(),
-  ])
+  const [dictionary, settings, termsResult, sectionsResult] = await Promise.all(
+    [
+      getDictionary(lang),
+      getConferenceSettings(),
+      listConferenceTerms(),
+      listSectionRecordingPolicy(),
+    ]
+  )
   if (!("success" in settings) || !settings.success) {
     redirect(`/${lang}/conference`)
   }
   const terms =
     "success" in termsResult && termsResult.success ? termsResult.data : []
+  const sections =
+    "success" in sectionsResult && sectionsResult.success
+      ? sectionsResult.data
+      : []
   const t = dictionary?.liveClasses?.settings
   const cf = t?.carryForward
+  const sp = (t as { sectionPolicy?: Record<string, string> } | undefined)
+    ?.sectionPolicy
 
   return (
     <div className="space-y-6 p-6">
@@ -74,6 +87,18 @@ export default async function Page({ params }: Props) {
             error: cf?.error ?? "Could not carry forward links",
             termPrefix: cf?.termPrefix ?? "Term",
           },
+        }}
+      />
+      <SectionRecordingPolicy
+        sections={sections}
+        labels={{
+          title: sp?.title ?? "Recording opt-out by section",
+          description:
+            sp?.description ??
+            "Sections opted out are never recorded, regardless of the school default.",
+          optOut: sp?.optOut ?? "Opt out of recording",
+          empty: sp?.empty ?? "No sections yet.",
+          error: sp?.error ?? "Could not update the section.",
         }}
       />
     </div>

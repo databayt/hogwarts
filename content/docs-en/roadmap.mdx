@@ -46,7 +46,7 @@ These are the structural changes shaping the next two quarters. Each is an end-t
 | Initiative                          | Summary                                                                                                                                                                                                                    |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Payment umbrella (#263)             | End-to-end finance audit + phased P0/P1/P2/P3 roadmap. Today only Stripe works E2E; Tap is a stub; double-entry engine has no callers. See [Fees](/docs/fees).                                                             |
-| Fee auto-provisioning (#264)        | Hybrid sync mirroring `catalog-setup.ts` so new schools never see an empty fees page. Replaces the seed-script approach in #263 P0-3.                                                                                      |
+| Fee auto-provisioning (#264)        | Hybrid sync mirroring `catalog/setup.ts` so new schools never see an empty fees page. Replaces the seed-script approach in #263 P0-3.                                                                                      |
 | Exam block production audit         | 14 P0 / 22 P1 / 18 P2 across the exams block. Top P0s: User.id-as-Student.id submission bug, in-memory rate limiter on serverless, 17 models missing `lang`, RBAC + calculator 0% test coverage. See [Exams](/docs/exams). |
 | Translation audit                   | Systematic Playwright MCP audit of school-dashboard pages for hardcoded English. Fix per-page before moving on. See [Translation](/docs/translation).                                                                      |
 | Role-aware UI sweep                 | Sidebar / PageNav / Toolbar / row-action gating across school dashboard. Listings wired with `permissions.ts` + UIPermissions; finance + school + sales pending.                                                           |
@@ -58,7 +58,7 @@ These are the structural changes shaping the next two quarters. Each is an end-t
 
 A few things look adjacent but are explicitly deferred. Listing them so contributors do not start speculative work.
 
-- **Catalog split refactor.** Splitting `catalog-setup.ts` into per-curriculum configs is parked until a non-SD school onboards. Single DB table is fine for now.
+- **Catalog split refactor.** Splitting `catalog/setup.ts` into per-curriculum configs is parked until a non-SD school onboards. Single DB table is fine for now.
 - **Mobile API beyond current routes.** Existing routes (auth + transportation geofence-boarding) are enough. No broader mobile-first API surface this year.
 - **Marketplace plans.** No instructor / content marketplace until cross-school catalog adoption signals real demand.
 - **Hostel and cafeteria modules.** Dictionary mentions only; no schema, no UI, no roadmap entry.

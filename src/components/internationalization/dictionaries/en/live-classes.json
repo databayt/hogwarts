@@ -161,6 +161,13 @@
       "success": "Carried forward {count} links",
       "error": "Could not carry forward links",
       "termPrefix": "Term"
+    },
+    "sectionPolicy": {
+      "title": "Recording opt-out by section",
+      "description": "Sections opted out are never recorded, regardless of the school default.",
+      "optOut": "Opt out of recording",
+      "empty": "No sections yet.",
+      "error": "Could not update the section."
     }
   }
 }

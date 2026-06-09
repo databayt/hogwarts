@@ -78,6 +78,9 @@ beforeEach(() => {
     teacher: { userId: TEACHER_USER_ID },
   } as never)
   vi.mocked(db.conferenceParticipant.upsert).mockResolvedValue({} as never)
+  vi.mocked(db.conferenceParticipant.findUnique).mockResolvedValue(
+    null as never
+  )
   vi.mocked(db.user.findUnique).mockResolvedValue({
     username: "Test User",
     email: "test@x.test",
@@ -138,6 +141,18 @@ describe("joinLiveClass eligibility", () => {
     expect("success" in result && result.success).toBe(true)
     if (!("success" in result) || !result.success) return
     expect(result.data.role).toBe("CO_HOST")
+  })
+
+  it("a kicked participant cannot rejoin → PARTICIPANT_DENIED", async () => {
+    mockUser(TEACHER_USER_ID, "TEACHER") // would resolve HOST without the removal
+    vi.mocked(db.conferenceParticipant.findUnique).mockResolvedValue({
+      status: "removed",
+    } as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result) {
+      expect(result.error).toBe("LIVE_CLASS_PARTICIPANT_DENIED")
+    }
   })
 
   it("DEVELOPER → HOST (platform bypass)", async () => {

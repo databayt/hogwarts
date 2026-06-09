@@ -977,7 +977,10 @@ function slugify(text: string): string {
 // MAIN SEED FUNCTION
 // ============================================================================
 
-export async function seedBooks(prisma: PrismaClient, schoolId?: string) {
+export async function seedCatalogBooks(
+  prisma: PrismaClient,
+  schoolId?: string
+) {
   logPhase(0, "CATALOG BOOKS", "كتالوج الكتب")
 
   let catalogBookIds: string[] = []

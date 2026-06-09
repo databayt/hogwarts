@@ -72,7 +72,7 @@ async function main() {
     console.log(`Deleted ${deletedSubjects.count} CatalogSubject records`)
 
     console.log(
-      "\n✅ Sudanese catalog cleanup complete. Only ClickView subjects remain."
+      "\n✅ Sudanese catalog cleanup complete. Only US subjects remain."
     )
   } finally {
     await prisma.$disconnect()

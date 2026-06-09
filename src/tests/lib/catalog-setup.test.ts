@@ -3,6 +3,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { db } from "@/lib/db"
 import {
   _testing,
   applyTimetableStructureForNewSchool,
@@ -12,8 +13,7 @@ import {
   setupDefaultsForSchool,
   setupLibraryForSchool,
   teardownCatalogForSchool,
-} from "@/lib/catalog-setup"
-import { db } from "@/lib/db"
+} from "@/components/catalog/setup"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -378,30 +378,30 @@ describe("Catalog Setup", () => {
   // ========================================================================
 
   describe("inferCurriculum", () => {
-    it("returns us-k12 for international schoolType regardless of country", () => {
-      expect(_testing.inferCurriculum("SD", "international")).toBe("us-k12")
-      expect(_testing.inferCurriculum("EG", "international")).toBe("us-k12")
+    it("returns US for international schoolType regardless of country", () => {
+      expect(_testing.inferCurriculum("SD", "international")).toBe("US")
+      expect(_testing.inferCurriculum("EG", "international")).toBe("US")
     })
 
-    it("returns national for SD country", () => {
-      expect(_testing.inferCurriculum("SD")).toBe("national")
+    it("returns SD for SD country", () => {
+      expect(_testing.inferCurriculum("SD")).toBe("SD")
     })
 
-    it("returns national for SA country", () => {
-      expect(_testing.inferCurriculum("SA")).toBe("national")
+    it("returns SA for SA country", () => {
+      expect(_testing.inferCurriculum("SA")).toBe("SA")
     })
 
-    it("returns british for GB country", () => {
-      expect(_testing.inferCurriculum("GB")).toBe("british")
+    it("returns GB for GB country", () => {
+      expect(_testing.inferCurriculum("GB")).toBe("GB")
     })
 
-    it("returns us-k12 for US country", () => {
-      expect(_testing.inferCurriculum("US")).toBe("us-k12")
+    it("returns US for US country", () => {
+      expect(_testing.inferCurriculum("US")).toBe("US")
     })
 
-    it("returns us-k12 for unknown country (fallback)", () => {
-      expect(_testing.inferCurriculum("BR")).toBe("us-k12")
-      expect(_testing.inferCurriculum("IN")).toBe("us-k12")
+    it("returns US for unknown country (fallback)", () => {
+      expect(_testing.inferCurriculum("BR")).toBe("US")
+      expect(_testing.inferCurriculum("IN")).toBe("US")
     })
   })
 
@@ -478,7 +478,7 @@ describe("Catalog Setup", () => {
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findSubjects("SD", "national", "public")
+      const result = await _testing.findSubjects("SD", "SD", "public")
 
       expect(result).toHaveLength(1)
       // First call should include schoolType filter
@@ -499,7 +499,7 @@ describe("Catalog Setup", () => {
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findSubjects("SD", "national", "public")
+      const result = await _testing.findSubjects("SD", "SD", "public")
 
       expect(result).toHaveLength(1)
       expect(db.subject.findMany).toHaveBeenCalledTimes(2)
@@ -515,7 +515,7 @@ describe("Catalog Setup", () => {
         { id: "s1", name: "IB Math", levels: ["HIGH"], grades: [] },
       ] as any)
 
-      const result = await _testing.findSubjects("SD", "ib", "private")
+      const result = await _testing.findSubjects("SD", "IB-DP", "private")
 
       expect(result).toHaveLength(1)
       expect(db.subject.findMany).toHaveBeenCalledTimes(3)
@@ -532,15 +532,15 @@ describe("Catalog Setup", () => {
         { id: "s1", name: "US Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findSubjects("BR", "national", "public")
+      const result = await _testing.findSubjects("BR", "SD", "public")
 
       expect(result).toHaveLength(1)
-      // Baseline query should use US + us-k12
+      // Baseline query should use US
       expect(db.subject.findMany).toHaveBeenLastCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             country: "US",
-            curriculum: "us-k12",
+            curriculum: "US",
           }),
         })
       )
@@ -553,7 +553,7 @@ describe("Catalog Setup", () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([])
 
-      const result = await _testing.findSubjects("BR", "national", "public")
+      const result = await _testing.findSubjects("BR", "SD", "public")
 
       expect(result).toEqual([])
     })
@@ -564,7 +564,7 @@ describe("Catalog Setup", () => {
         { id: "s1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
       ] as any)
 
-      const result = await _testing.findSubjects("SD", "national")
+      const result = await _testing.findSubjects("SD", "SD")
 
       expect(result).toHaveLength(1)
       // Only 1 call (no exact match attempted)

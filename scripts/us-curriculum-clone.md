@@ -1,6 +1,6 @@
-# ClickView US Curriculum Clone
+# US Curriculum Source Clone
 
-Reference document for maintaining parity with ClickView's US curriculum catalog.
+Reference document for maintaining parity with the US-curriculum source catalog.
 
 ## Reference URLs
 
@@ -14,10 +14,10 @@ Reference document for maintaining parity with ClickView's US curriculum catalog
 ## Data Pipeline
 
 ```
-ClickView Discover Pages
+US source Discover Pages
   → Browser MCP scrape (complete-subjects.json)
   → Cover image download (public/clickview/illustrations/)
-  → master-inventory.json (groups + topics with ?width=2048)
+  → us-inventory.json (groups + topics with ?width=2048)
   → clickview-catalog seed (CatalogSubject/Chapter/Lesson)
   → clickview-images seed (Sharp → WebP → S3/CloudFront)
   → SubjectPicker component (thumbnailKey → CDN URL)
@@ -29,7 +29,7 @@ ClickView Discover Pages
 | ------------------- | ------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------- |
 | Illustration (tile) | `img.clickviewapp.com/v2/covers/{id}?width=2048` | `public/clickview/illustrations/{level}-{slug}.jpg` | `catalog/subjects/{level}-{slug}/thumbnail-{size}.webp` |
 | Banner (hero)       | Subject detail page hero                         | `public/clickview/banners/{level}-{slug}.jpg`       | `catalog/subjects/{level}-{slug}/thumbnail-{size}.webp` |
-| Topic cover         | `img.clickviewapp.com/v2/covers/{id}?width=2048` | Remote URL stored in `imageKey`                     | N/A (served directly from ClickView CDN)                |
+| Topic cover         | `img.clickviewapp.com/v2/covers/{id}?width=2048` | Remote URL stored in `imageKey`                     | N/A (served directly from US source CDN)                |
 
 WebP variants: `sm` (200px), `md` (600px), `lg` (1200px), `original` (full res)
 
@@ -114,17 +114,17 @@ WebP variants: `sm` (200px), `md` (600px), `lg` (1200px), `original` (full res)
 
 ## Key Files
 
-| File                                            | Purpose                                               |
-| ----------------------------------------------- | ----------------------------------------------------- |
-| `scripts/clickview-data/complete-subjects.json` | Scraped subject data (names, cover IDs, colors, URLs) |
-| `scripts/clickview-data/master-inventory.json`  | 62 subjects with groups/topics (high-res URLs)        |
-| `scripts/clickview-data/all-banners.json`       | Banner URLs and colors for all 62 subjects            |
-| `public/clickview/illustrations/`               | 62 downloaded cover images (discover page tiles)      |
-| `public/clickview/banners/`                     | Banner images (detail page heroes)                    |
-| `prisma/seeds/clickview-catalog.ts`             | Seed: inventory → CatalogSubject/Chapter/Lesson       |
-| `prisma/seeds/clickview-images.ts`              | Seed: local images → S3 WebP variants                 |
-| `src/components/catalog/image.ts`               | Sharp → WebP → S3 processing pipeline                 |
-| `src/components/catalog/image-url.ts`           | Client-safe CDN URL resolution                        |
+| File                                           | Purpose                                               |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| `scripts/us-curriculum/complete-subjects.json` | Scraped subject data (names, cover IDs, colors, URLs) |
+| `scripts/us-curriculum/us-inventory.json`      | 62 subjects with groups/topics (high-res URLs)        |
+| `scripts/us-curriculum/all-banners.json`       | Banner URLs and colors for all 62 subjects            |
+| `public/clickview/illustrations/`              | 62 downloaded cover images (discover page tiles)      |
+| `public/clickview/banners/`                    | Banner images (detail page heroes)                    |
+| `prisma/seeds/clickview-catalog.ts`            | Seed: inventory → CatalogSubject/Chapter/Lesson       |
+| `prisma/seeds/clickview-images.ts`             | Seed: local images → S3 WebP variants                 |
+| `src/components/catalog/image.ts`              | Sharp → WebP → S3 processing pipeline                 |
+| `src/components/catalog/image-url.ts`          | Client-safe CDN URL resolution                        |
 
 ## Seeds
 

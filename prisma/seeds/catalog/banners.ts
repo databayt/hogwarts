@@ -4,7 +4,7 @@
 /**
  * Banner Copy Seed
  *
- * Copies old curated ClickView wide banners (2048x378) from their
+ * Copies old curated wide banners (2048x378) from their
  * legacy S3 paths to the new concept-based paths for all 12 grades.
  *
  * Old path: catalog/subjects/{old-slug}/banner-{size}.webp
@@ -55,7 +55,7 @@ const OLD_SLUG_TO_CONCEPT: Record<string, string> = {
   sociology: "sociology",
 }
 
-// Concepts without their own legacy ClickView banner — borrow from a related concept
+// Concepts without their own legacy banner — borrow from a related concept
 const BANNER_FALLBACK: Record<string, string> = {}
 
 // ============================================================================
@@ -107,7 +107,7 @@ async function fetchWithRetry(
   return null
 }
 
-export async function seedBannerCopy(): Promise<void> {
+export async function seedConceptBanners(): Promise<void> {
   const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN
   if (!cloudfrontDomain) {
     throw new Error("CLOUDFRONT_DOMAIN not configured")

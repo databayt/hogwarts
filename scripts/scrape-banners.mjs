@@ -1,6 +1,6 @@
 /**
- * Scrape all 62 ClickView subject banner IDs using Playwright,
- * then download each banner at 2048px via the ClickView image API.
+ * Scrape all 62 US subject banner IDs using Playwright,
+ * then download each banner at 2048px via the source image API.
  *
  * Usage: node scripts/scrape-banners.mjs
  */
@@ -12,10 +12,10 @@ import { chromium } from "playwright"
 
 const SUBJECTS_PATH = join(
   import.meta.dirname,
-  "clickview-data/complete-subjects.json"
+  "us-curriculum/complete-subjects.json"
 )
 const BANNERS_DIR = join(import.meta.dirname, "../public/clickview/banners")
-const OUTPUT_JSON = join(import.meta.dirname, "clickview-data/banner-ids.json")
+const OUTPUT_JSON = join(import.meta.dirname, "us-curriculum/banner-ids.json")
 
 const BASE_URL = "https://www.clickview.net"
 const BANNER_API =

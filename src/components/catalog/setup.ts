@@ -254,25 +254,26 @@ const SCORE_RANGE_DEFAULTS = [
 // ============================================================================
 
 /**
- * Infer curriculum from country + schoolType.
- * International schools always get us-k12.
- * Known countries get their national curriculum.
- * Unknown countries fall back to us-k12 as baseline.
+ * Infer a school's canonical curriculum code from country + schoolType.
+ * National curricula use a bare ISO 3166-1 country code (US, SD, GB, …);
+ * transnational programmes use `{body}-{programme}` (IB-DP, CAIE-IGCSE).
+ * International schools and unknown countries fall back to US as baseline.
  */
 function inferCurriculum(country: string, schoolType?: string | null): string {
-  if (schoolType === "international") return "us-k12"
+  if (schoolType === "international") return "US"
   const map: Record<string, string> = {
-    US: "us-k12",
-    GB: "british",
-    SD: "national",
-    SA: "national",
-    EG: "national",
-    AE: "national",
-    QA: "national",
-    KW: "national",
-    JO: "national",
+    US: "US",
+    GB: "GB",
+    SD: "SD",
+    SA: "SA",
+    EG: "EG",
+    AE: "AE",
+    QA: "QA",
+    KW: "KW",
+    JO: "JO",
+    IN: "CBSE",
   }
-  return map[country] || "us-k12"
+  return map[country] || "US"
 }
 
 // ============================================================================
@@ -741,13 +742,13 @@ async function findSubjects(
     return universal
   }
 
-  // Step 4: Baseline fallback (US + us-k12)
-  if (country !== "US" || curriculum !== "us-k12") {
+  // Step 4: Baseline fallback (US)
+  if (country !== "US" || curriculum !== "US") {
     const fallback = await db.subject.findMany({
       where: {
         status: "PUBLISHED",
         country: "US",
-        curriculum: "us-k12",
+        curriculum: "US",
       },
       select: selectFields,
     })

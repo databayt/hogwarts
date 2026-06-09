@@ -2,12 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * ClickView Educational Courses Data
+ * US educational courses data (stream)
  *
  * 59 K-12 courses with Arabic titles and descriptions
  * Each course has 5-8 chapters organized by educational topic
  *
- * Source: ClickView Education (clickvieweducation.com)
+ * Source: US Education (clickvieweducation.com)
  */
 
 export interface CourseChapter {
@@ -36,7 +36,7 @@ export const STREAM_CATEGORIES = [
   { name: "المهارات الحياتية" },
 ] as const
 
-export const CLICKVIEW_COURSES: CourseData[] = [
+export const STREAM_COURSES: CourseData[] = [
   // ============================================
   // MATHEMATICS (6 courses)
   // ============================================

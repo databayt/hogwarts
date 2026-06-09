@@ -4,8 +4,8 @@
 /**
  * US K-12 Catalog Seed
  *
- * Creates grade-specific US K-12 subjects from ClickView master-inventory.json.
- * Each ClickView level-based entry (e.g., "Elementary Math") is expanded into
+ * Creates grade-specific US K-12 subjects from US-curriculum inventory.json.
+ * Each level-based entry (e.g., "Elementary Math") is expanded into
  * one Subject per grade (e.g., "Math Grade 1" through "Math Grade 6"),
  * with chapters and lessons duplicated under each grade-specific subject.
  *
@@ -21,29 +21,30 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
+import { nearestConcept } from "../../../src/components/catalog/concepts-data"
 import { logSuccess } from "../utils"
 
 // ============================================================================
-// Types for master-inventory.json
+// Types for us-inventory.json
 // ============================================================================
 
-interface ClickViewTopic {
+interface SourceTopic {
   name: string
   slug: string
   imgSrc: string
   stats: string // "20 videos  • 9 resources"
 }
 
-interface ClickViewGroup {
+interface SourceGroup {
   parent: string
-  topics: ClickViewTopic[]
+  topics: SourceTopic[]
 }
 
-interface ClickViewEntry {
+interface SourceEntry {
   subjectName: string
   level: "elementary" | "middle" | "high"
   url: string
-  groups: ClickViewGroup[]
+  groups: SourceGroup[]
 }
 
 // ============================================================================
@@ -103,7 +104,7 @@ function parseStats(stats: string): {
   }
 }
 
-function extractClickViewId(url: string | undefined): string | null {
+function extractSourceId(url: string | undefined): string | null {
   if (!url) return null
   // Extract ID from URL like /us/elementary/topics/GxAzY0z/arts
   const match = url.match(/\/topics\/([^/]+)\//)
@@ -111,7 +112,7 @@ function extractClickViewId(url: string | undefined): string | null {
 }
 
 function extractCoverId(imgSrc: string): string | null {
-  // Extract cover ID from URL like https://img.clickviewapp.com/v2/covers/0wrjm3?size=medium
+  // Extract cover ID from URL like https://the cover CDN
   const match = imgSrc.match(/\/covers\/([^?/]+)/)
   return match ? match[1] : null
 }
@@ -1025,10 +1026,10 @@ const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
 // Main seed function
 // ============================================================================
 
-export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
+export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
   // Look up US K-12 Curriculum record for curriculumId linkage
   const usCurriculum = await prisma.curriculum.findUnique({
-    where: { country_code: { country: "US", code: "us-k12" } },
+    where: { country_code: { country: "US", code: "US" } },
     select: { id: true },
   })
   if (usCurriculum) {
@@ -1038,7 +1039,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
   // Migrate old slugs: us-math-grade-3 → us-g3-math
   console.log("  Migrating old slug format...")
   const oldSubjects = await prisma.subject.findMany({
-    where: { curriculum: "us-k12" },
+    where: { curriculum: "US" },
     select: { id: true, slug: true, name: true, grades: true },
   })
   let migrated = 0
@@ -1060,25 +1061,25 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
     console.log(`  Migrated ${migrated} slugs to new format`)
   }
 
-  console.log("  Loading master-inventory.json...")
+  console.log("  Loading us-inventory.json...")
   const inventoryPath = path.resolve(
     __dirname,
-    "../../../scripts/clickview-data/master-inventory.json"
+    "../../../scripts/us-curriculum/us-inventory.json"
   )
 
   if (!fs.existsSync(inventoryPath)) {
-    console.log("  master-inventory.json not found, skipping ClickView seed")
+    console.log("  us-inventory.json not found, skipping US seed")
     return
   }
 
   const raw = fs.readFileSync(inventoryPath, "utf-8")
-  const entries: ClickViewEntry[] = JSON.parse(raw)
-  console.log(`  Loaded ${entries.length} ClickView entries`)
+  const entries: SourceEntry[] = JSON.parse(raw)
+  console.log(`  Loaded ${entries.length} inventory entries`)
 
   // Load scraped subject data for illustration images and accurate colors
   const completeSubjectsPath = path.resolve(
     __dirname,
-    "../../../scripts/clickview-data/complete-subjects.json"
+    "../../../scripts/us-curriculum/complete-subjects.json"
   )
   let scrapedLookup: Record<string, { coverUrl: string; bgColor: string }> = {}
   if (fs.existsSync(completeSubjectsPath)) {
@@ -1107,7 +1108,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
   console.log("  Deprecating old level-based subjects...")
   await prisma.subject.updateMany({
     where: {
-      curriculum: "us-k12",
+      curriculum: "US",
       status: "PUBLISHED",
       OR: [
         { slug: { startsWith: "elementary-" } },
@@ -1129,7 +1130,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
     const legacySlug = toSubjectSlug(entry.level, entry.subjectName)
     const schoolLevel = levelToSchoolLevel(entry.level)
     const allGrades = levelToGrades(entry.level)
-    const clickviewId = extractClickViewId(entry.url)
+    const clickviewId = extractSourceId(entry.url)
 
     // Resolve illustration image and color using legacy slug
     const illustrationFile = `clickview/illustrations/${legacySlug}.jpg`
@@ -1145,7 +1146,8 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
     const color = scrapedHex ?? FALLBACK_COLORS[entry.subjectName] ?? "#6366f1"
 
     // Derive concept and grade-based image keys
-    const concept = NAME_TO_CONCEPT[entry.subjectName] ?? null
+    const concept =
+      NAME_TO_CONCEPT[entry.subjectName] ?? nearestConcept(entry.subjectName)
 
     // Create one Subject per grade, with chapters/lessons duplicated
     // name = "Arts" (not "Arts Grade 1") — compose display name in UI as `${name} Grade ${grades[0]}`
@@ -1199,7 +1201,7 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
           grades: [grade],
           gradeRange: String(grade),
           country: "US",
-          curriculum: "us-k12",
+          curriculum: "US",
           curriculumId: usCurriculum?.id,
           clickviewId,
           clickviewUrl: entry.url
@@ -1334,15 +1336,15 @@ export async function seedUsCatalog(prisma: PrismaClient): Promise<void> {
     )
   }
 
-  logSuccess("ClickView Subjects", subjectCount, "grade-specific US K-12")
-  logSuccess("ClickView Chapters", chapterCount, "grade-specific US K-12")
-  logSuccess("ClickView Lessons", lessonCount, "grade-specific US K-12")
+  logSuccess("US Subjects", subjectCount, "grade-specific US K-12")
+  logSuccess("US Chapters", chapterCount, "grade-specific US K-12")
+  logSuccess("US Lessons", lessonCount, "grade-specific US K-12")
 
   // Update denormalized counts
   console.log("  Updating denormalized counts...")
 
   const allSubjects = await prisma.subject.findMany({
-    where: { curriculum: "us-k12", status: "PUBLISHED" },
+    where: { curriculum: "US", status: "PUBLISHED" },
     select: { id: true },
   })
 

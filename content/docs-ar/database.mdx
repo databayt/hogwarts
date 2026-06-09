@@ -59,7 +59,7 @@ model School {
   timezone     String  @default("Africa/Khartoum")
   schoolType   String?                  // private, public, international, technical, special
   schoolLevel  String?                  // primary, secondary, both
-  system       String?                  // clickview, national, british, ib
+  curriculum   String?                  // @map column: timetable-structure slug ("us-standard"); curriculum CODE (US/SD/GB/IB-DP) is inferred at runtime, not stored
   planType     String  @default("basic")
   maxStudents  Int     @default(100)
   maxTeachers  Int     @default(10)
@@ -99,7 +99,7 @@ await db.student.findMany()
 | النظام      | النطاق                             | النماذج                                                                                   | المصدر                |
 | ----------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | --------------------- |
 | **Stream**  | بنطاق المدرسة (`schoolId`)         | `StreamCourse`, `StreamCategory`, `StreamEnrollment`, `StreamLesson`, `StreamCertificate` | مساقات تنشئها المدرسة |
-| **Catalog** | على مستوى المنصة (بدون `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | ClickView / منتقى     |
+| **Catalog** | على مستوى المنصة (بدون `schoolId`) | `Subject`, `Chapter`, `Lesson`, `Material`, `Question`                                    | منتقى                 |
 
 نماذج `bridge.prisma` (`SubjectSelection`, `BookSelection`, `ContentOverride`, `InstructorPreference`) تربط محتوى الكتالوج بالبنية الأكاديمية الخاصة بالمدرسة. المدارس تختار المواد التي تستخدمها وتطبّق تجاوزات بدون لمس الأصول المشتركة.
 

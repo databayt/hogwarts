@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Catalog Content Seed (Optimized for ClickView K-12 62 Subjects)
+ * Catalog Content Seed (Optimized for US K-12 62 Subjects)
  *
  * Seeds 4 content types with subject-aware exam blueprints:
  * - Material (subject + chapter level)

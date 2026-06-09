@@ -64,10 +64,18 @@ interface Props {
 }
 
 const CURRICULUM_LABELS: Record<string, string> = {
-  "us-k12": "US K-12",
-  national: "National",
-  british: "British",
-  ib: "IB",
+  US: "US K-12",
+  SD: "Sudan National",
+  GB: "British",
+  SA: "Saudi National",
+  EG: "Egypt National",
+  AE: "UAE National",
+  QA: "Qatar National",
+  KW: "Kuwait National",
+  JO: "Jordan National",
+  "IB-DP": "IB Diploma",
+  "CAIE-IGCSE": "Cambridge IGCSE",
+  CBSE: "Indian CBSE",
 }
 
 const LEVEL_LABELS: Record<string, Record<string, string>> = {

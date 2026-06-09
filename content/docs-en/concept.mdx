@@ -15,37 +15,43 @@ Subject (any curriculum)
 
 ## The 23 concepts
 
-| Concept            | S3 path                  | Banner source                  |
-| ------------------ | ------------------------ | ------------------------------ |
-| `arts`             | `g{n}-arts/`             | ClickView the-arts             |
-| `biology`          | `g{n}-biology/`          | ClickView biology              |
-| `career-tech`      | `g{n}-career-tech/`      | ClickView career-education     |
-| `celebrations`     | `g{n}-celebrations/`     | ClickView celebrations         |
-| `chemistry`        | `g{n}-chemistry/`        | ClickView chemistry            |
-| `civics`           | `g{n}-civics/`           | ClickView social-studies       |
-| `computer-science` | `g{n}-computer-science/` | ClickView computer-science     |
-| `earth-science`    | `g{n}-earth-science/`    | ClickView earth-space-sciences |
-| `economics`        | `g{n}-economics/`        | ClickView business-economics   |
-| `english`          | `g{n}-english/`          | ClickView english              |
-| `geography`        | `g{n}-geography/`        | ClickView geography            |
-| `health`           | `g{n}-health/`           | ClickView health               |
-| `history`          | `g{n}-history/`          | ClickView history              |
-| `languages`        | `g{n}-languages/`        | ClickView french               |
-| `life-skills`      | `g{n}-life-skills/`      | ClickView life-skills          |
-| `math`             | `g{n}-math/`             | ClickView mathematics          |
-| `pe`               | `g{n}-pe/`               | ClickView physical-education   |
-| `physics`          | `g{n}-physics/`          | ClickView physics              |
-| `psychology`       | `g{n}-psychology/`       | ClickView psychology           |
-| `religion`         | `g{n}-religion/`         | ClickView islamic-education    |
-| `science`          | `g{n}-science/`          | ClickView science              |
-| `sociology`        | `g{n}-sociology/`        | ClickView sociology            |
-| `teacher-pd`       | `g{n}-teacher-pd/`       | ClickView teacher-development  |
+The banner artwork was **originally referenced from an external library** during
+early prototyping. Those assets are now **owned by us, redrawn into the concept
+library, and shared across every curriculum** — the names below are kept only
+as a historical origin trail, not a live dependency. See the
+[Origins](/docs/catalog#origins) note.
+
+| Concept            | S3 path                  | Origin label (now owned) |
+| ------------------ | ------------------------ | ------------------------ |
+| `arts`             | `g{n}-arts/`             | the-arts                 |
+| `biology`          | `g{n}-biology/`          | biology                  |
+| `career-tech`      | `g{n}-career-tech/`      | career-education         |
+| `celebrations`     | `g{n}-celebrations/`     | celebrations             |
+| `chemistry`        | `g{n}-chemistry/`        | chemistry                |
+| `civics`           | `g{n}-civics/`           | social-studies           |
+| `computer-science` | `g{n}-computer-science/` | computer-science         |
+| `earth-science`    | `g{n}-earth-science/`    | earth-space-sciences     |
+| `economics`        | `g{n}-economics/`        | business-economics       |
+| `english`          | `g{n}-english/`          | english                  |
+| `geography`        | `g{n}-geography/`        | geography                |
+| `health`           | `g{n}-health/`           | health                   |
+| `history`          | `g{n}-history/`          | history                  |
+| `languages`        | `g{n}-languages/`        | french                   |
+| `life-skills`      | `g{n}-life-skills/`      | life-skills              |
+| `math`             | `g{n}-math/`             | mathematics              |
+| `pe`               | `g{n}-pe/`               | physical-education       |
+| `physics`          | `g{n}-physics/`          | physics                  |
+| `psychology`       | `g{n}-psychology/`       | psychology               |
+| `religion`         | `g{n}-religion/`         | islamic-education        |
+| `science`          | `g{n}-science/`          | science                  |
+| `sociology`        | `g{n}-sociology/`        | sociology                |
+| `teacher-pd`       | `g{n}-teacher-pd/`       | teacher-development      |
 
 Source images live in `public/subjects/concepts/{concept}.jpg`. The `concepts` seed processes each into 4 WebP variants (sm/md/lg/original) and uploads to S3 for all 12 grades.
 
 ## Cross-curriculum map
 
-The 10 curricula (US, SD, GB, IB, SA, EG, AE, QA, KW, JO) all map their subjects to one of the 23 concepts. Sample mappings:
+All 12 curricula — six deep (US, SD, GB, CAIE-IGCSE, IB-DP, CBSE) and six subjects-only nationals (SA, EG, AE, QA, KW, JO) — map their subjects to one of the 23 concepts. Sample mappings:
 
 | Concept     | US                          | SD (Sudan)                          | GB                       | SA              |
 | ----------- | --------------------------- | ----------------------------------- | ------------------------ | --------------- |
@@ -56,7 +62,7 @@ The 10 curricula (US, SD, GB, IB, SA, EG, AE, QA, KW, JO) all map their subjects
 | `religion`  | Religion                    | Islamic Studies, Quran              | Religious Education      | Islamic Studies |
 | `civics`    | Civics and Government       | Military Sciences                   | Citizenship              | Social Studies  |
 
-For the full per-curriculum mapping (including Arabic subject names and grade ranges), see `prisma/seeds/catalog/world.ts` and `scripts/sudan-data/sudan-curriculum.json`.
+For the full per-curriculum mapping (including Arabic subject names and grade ranges), see the per-national `prisma/seeds/catalog/{sa,eg,ae,qa,kw,jo}.ts` files and `scripts/sudan-data/sudan-curriculum.json`.
 
 ## S3 storage layout
 
@@ -109,12 +115,20 @@ Helpers:
 ## Seed pipeline
 
 ```bash
-pnpm db:seed:single concepts   # 1. Process JPGs → S3 thumbnails (all 12 grades)
-pnpm db:seed:single banners      # 2. Copy ClickView banners → concept paths
-pnpm db:seed:single us       # 3. US subjects (sets concept + S3 keys)
-pnpm db:seed:single sd-base       # 4. SD subjects (sets concept + S3 keys)
-pnpm db:seed:single world  # 5. GB/IB/SA/EG/AE/QA/KW/JO subjects
+pnpm db:seed:single concepts     # 1. Process JPGs → S3 thumbnails (all 12 grades)
+pnpm db:seed:single banners      # 2. Copy owned banners → concept paths
+pnpm db:seed:single us           # 3. US subjects (sets concept + S3 keys)
+pnpm db:seed:single sd           # 4. SD subjects (sets concept + S3 keys)
+pnpm db:seed:single gb           # 5. GB deep tree (curriculum/uk)
+pnpm db:seed:single cbse         # 6. CBSE deep tree (curriculum/in)
+pnpm db:seed:single caie-igcse   # 7. Cambridge IGCSE deep tree (opt-in)
+pnpm db:seed:single ib           # 8. IB-DP deep tree
+pnpm db:seed:single sa           # 9. each national: sa/eg/ae/qa/kw/jo (or `full`)
 ```
+
+The deep-tree sources (`gb`/`cbse`/`caie-igcse`/`ib`) all run through the shared
+[tree engine](/docs/curriculum-engineering) and assign concepts the same way —
+no per-curriculum banner upload needed.
 
 ## Adding a curriculum
 
@@ -132,18 +146,19 @@ To add a new curriculum that reuses concept images:
 
 ## Source files
 
-| File                                       | Purpose                                  |
-| ------------------------------------------ | ---------------------------------------- |
-| `public/subjects/concepts/*.jpg`           | 23 source concept images                 |
-| `prisma/seeds/catalog/concepts.ts`         | NAME_TO_CONCEPT map + S3 upload          |
-| `prisma/seeds/catalog/banners.ts`          | ClickView banner migration               |
-| `prisma/seeds/catalog/us.ts`               | US subjects + rotation pools             |
-| `prisma/seeds/catalog/sd-base.ts`          | SD subjects from `sudan-curriculum.json` |
-| `prisma/seeds/catalog/world.ts`            | 8 curricula + `CONCEPT_COLORS`           |
-| `scripts/sudan-data/sudan-curriculum.json` | Sudan data with concept per subject      |
+| File                                          | Purpose                                                      |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| `public/subjects/concepts/*.jpg`              | 23 source concept images                                     |
+| `prisma/seeds/catalog/concepts.ts`            | NAME_TO_CONCEPT map + S3 upload                              |
+| `prisma/seeds/catalog/banners.ts`             | banner migration                                             |
+| `prisma/seeds/catalog/us.ts`                  | US subjects + rotation pools                                 |
+| `prisma/seeds/catalog/sd-base.ts`             | SD subjects from `sudan-curriculum.json`                     |
+| `prisma/seeds/catalog/{sa,eg,ae,qa,kw,jo}.ts` | 6 subjects-only nationals                                    |
+| `prisma/seeds/catalog/engine.ts`              | `syncCurriculumTree` + `seedSubjectsOnly` + `CONCEPT_COLORS` |
+| `scripts/sudan-data/sudan-curriculum.json`    | Sudan data with concept per subject                          |
 
 ## See also
 
 - [Catalog](/docs/catalog)
-- [ClickView overview](/docs/clickview)
+- [US curriculum](/docs/us-curriculum)
 - [Sudan curriculum](/docs/sudan-curriculum)

@@ -31,20 +31,29 @@ import { seedAllUsers } from "./auth"
 import { backfillClassGrades } from "./backfill-class-grades"
 import { backfillStudentSections } from "./backfill-student-sections"
 import { seedBanking } from "./banking"
-import { seedBannerCopy } from "./catalog/banners"
-import { seedBooks } from "./catalog/books"
-import { seedClickViewLessonImages } from "./catalog/clickview-lessons"
+import { seedAeCurriculum } from "./catalog/ae"
+import { seedConceptBanners } from "./catalog/banners"
+import { seedCatalogBooks } from "./catalog/books"
+import { seedCaieIgcseCurriculum } from "./catalog/caie-igcse"
+import { seedCbseCurriculum } from "./catalog/cbse"
 import { seedConceptImages } from "./catalog/concepts"
 import { seedCatalogContent } from "./catalog/content"
-import { seedAcademicStructureCatalog } from "./catalog/demo"
+import { seedDemoSchool } from "./catalog/demo"
+import { seedEgCurriculum } from "./catalog/eg"
 import { seedExamTemplates } from "./catalog/exam-templates"
-import { seedCatalog } from "./catalog/index"
-import { seedCurriculum } from "./catalog/meta"
-import { syncSdCurriculum } from "./catalog/sd"
+import { seedGbCurriculum } from "./catalog/gb"
+import { seedIbCurriculum } from "./catalog/ib"
+import { seedCatalog, seedFullCatalog } from "./catalog/index"
+import { seedJoCurriculum } from "./catalog/jo"
+import { seedKwCurriculum } from "./catalog/kw"
+import { seedLessonCovers } from "./catalog/lesson-covers"
+import { seedQaCurriculum } from "./catalog/qa"
+import { seedCurriculumRegistry } from "./catalog/registry"
+import { seedSaCurriculum } from "./catalog/sa"
+import { seedSdCurriculum } from "./catalog/sd"
 import { seedSudanCatalog } from "./catalog/sd-base"
-import { seedUsCatalog } from "./catalog/us"
+import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
-import { seedWorldCurricula } from "./catalog/world"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
 import { seedEvents } from "./events"
@@ -369,7 +378,7 @@ const SEEDS: Record<string, SeedEntry> = {
       "US K-12 catalog (~220 grade-specific subjects, ~800 chapters, ~4000 lessons)",
     global: true,
     run: async (prisma) => {
-      await seedUsCatalog(prisma)
+      await seedUsCurriculum(prisma)
     },
   },
   "sales-network": {
@@ -380,12 +389,12 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedSalesNetwork(prisma)
     },
   },
-  "clickview-lessons": {
+  "lesson-covers": {
     description:
-      "Upload ClickView lesson + chapter images to S3/CloudFront (~891 unique)",
+      "Upload US lesson + chapter cover images to S3/CloudFront (~891 unique)",
     global: true,
     run: async (prisma) => {
-      await seedClickViewLessonImages(prisma)
+      await seedLessonCovers(prisma)
     },
   },
   "sd-base": {
@@ -396,20 +405,94 @@ const SEEDS: Record<string, SeedEntry> = {
       await seedSudanCatalog(prisma)
     },
   },
-  meta: {
+  registry: {
     description:
-      "Curriculum records (SD-national, US-k12) + backfill Subject.curriculumId",
+      "Curriculum registry — upsert all 12 Curriculum records + backfill Subject.curriculumId",
     global: true,
     run: async (prisma) => {
-      await seedCurriculum(prisma)
+      await seedCurriculumRegistry(prisma)
     },
   },
-  world: {
+  full: {
     description:
-      "8 world curricula (GB, IB, SA, EG, AE, QA, KW, JO) with grade-specific subjects",
+      "Full catalog — all 12 curricula → registry → concept images (a fresh DB in one run)",
     global: true,
     run: async (prisma) => {
-      await seedWorldCurricula(prisma)
+      await seedFullCatalog(prisma)
+    },
+  },
+  sa: {
+    description: "Saudi Arabia (SA) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedSaCurriculum(prisma)
+    },
+  },
+  eg: {
+    description: "Egypt (EG) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedEgCurriculum(prisma)
+    },
+  },
+  ae: {
+    description: "UAE (AE) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedAeCurriculum(prisma)
+    },
+  },
+  qa: {
+    description: "Qatar (QA) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedQaCurriculum(prisma)
+    },
+  },
+  kw: {
+    description: "Kuwait (KW) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedKwCurriculum(prisma)
+    },
+  },
+  jo: {
+    description: "Jordan (JO) — subjects-only national curriculum",
+    global: true,
+    run: async (prisma) => {
+      await seedJoCurriculum(prisma)
+    },
+  },
+  gb: {
+    description:
+      "England National Curriculum (GB) — deep tree from curriculum/uk (184 subjects / 363 chapters / 730 lessons)",
+    global: true,
+    run: async (prisma) => {
+      await seedGbCurriculum(prisma)
+    },
+  },
+  cbse: {
+    description:
+      "Indian CBSE (NCERT) — tree from curriculum/in (structure.json from official NCERT chapter lists)",
+    global: true,
+    run: async (prisma) => {
+      await seedCbseCurriculum(prisma)
+    },
+  },
+  "caie-igcse": {
+    description:
+      "Cambridge IGCSE — tree from curriculum/caie-igcse (structure from official Cambridge syllabi)",
+    global: true,
+    run: async (prisma) => {
+      await seedCaieIgcseCurriculum(prisma)
+    },
+  },
+  ib: {
+    description:
+      "IB Diploma Programme — deep tree from curriculum/ib (structure from IB subject guides); replaces world.ts IB",
+    global: true,
+    run: async (prisma) => {
+      await seedIbCurriculum(prisma)
     },
   },
   banners: {
@@ -417,7 +500,7 @@ const SEEDS: Record<string, SeedEntry> = {
       "Copy old curated wide banners to new concept S3 paths (all grades)",
     global: true,
     run: async () => {
-      await seedBannerCopy()
+      await seedConceptBanners()
     },
   },
   concepts: {
@@ -433,7 +516,7 @@ const SEEDS: Record<string, SeedEntry> = {
       "Sync Sudan curriculum chapters/lessons from curriculum/sd/ directory + concept images",
     global: true,
     run: async (prisma) => {
-      await syncSdCurriculum(prisma)
+      await seedSdCurriculum(prisma)
     },
   },
   content: {
@@ -459,7 +542,7 @@ const SEEDS: Record<string, SeedEntry> = {
         where: { domain: "demo" },
         select: { id: true },
       })
-      await seedBooks(prisma, school?.id)
+      await seedCatalogBooks(prisma, school?.id)
     },
   },
   school: {
@@ -492,7 +575,7 @@ const SEEDS: Record<string, SeedEntry> = {
         where: { id: schoolId },
         select: { schoolLevel: true },
       })
-      await seedAcademicStructureCatalog(
+      await seedDemoSchool(
         prisma,
         schoolId,
         yearLevels,
