@@ -23,43 +23,76 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
     },
     academicGrade: {
+      count: vi.fn(),
       create: vi.fn(),
       deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
     academicStream: {
       create: vi.fn(),
       deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
     school: {
       findUnique: vi.fn(),
     },
-    catalogSubject: {
+    subject: {
       findMany: vi.fn(),
       update: vi.fn(),
     },
     yearLevel: {
       count: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
       findMany: vi.fn(),
     },
     department: {
       count: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
     },
     scoreRange: {
       count: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
     },
-    schoolSubjectSelection: {
+    subjectSelection: {
+      count: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
       deleteMany: vi.fn(),
+      findMany: vi.fn(),
     },
     schoolContentOverride: {
       deleteMany: vi.fn(),
     },
-    lessonVideo: {
+    contentOverride: {
+      deleteMany: vi.fn(),
+    },
+    video: {
       findMany: vi.fn(),
       update: vi.fn(),
+    },
+    videoPurchase: {
+      findMany: vi.fn(),
+    },
+    classroom: {
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+    },
+    classroomType: {
+      findFirst: vi.fn(),
+    },
+    section: {
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+    },
+    timetable: {
+      createMany: vi.fn(),
+    },
+    instructorPreference: {
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     schoolYear: {
       findFirst: vi.fn(),
@@ -80,12 +113,15 @@ vi.mock("@/lib/db", () => ({
     book: {
       count: vi.fn(),
       create: vi.fn(),
-    },
-    catalogBook: {
       findMany: vi.fn(),
       update: vi.fn(),
     },
-    schoolBookSelection: {
+    schoolBook: {
+      count: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    bookSelection: {
       findFirst: vi.fn(),
       create: vi.fn(),
       count: vi.fn(),
@@ -107,36 +143,36 @@ describe("Catalog Setup", () => {
   // ========================================================================
 
   describe("setupDefaultsForSchool", () => {
-    it("creates YearLevels, Departments, and ScoreRanges for a new school", async () => {
-      vi.mocked(db.yearLevel.count).mockResolvedValue(0)
-      vi.mocked(db.department.count).mockResolvedValue(0)
-      vi.mocked(db.scoreRange.count).mockResolvedValue(0)
+    // Source runs idempotency `count` + batch `createMany` INSIDE the tx;
+    // createMany returns `{ count }` which becomes the result. The builder
+    // reflects the source's own filtered array length back as the count.
+    const makeDefaultsTx = (
+      existing = { yearLevel: 0, department: 0, scoreRange: 0 }
+    ) => ({
+      yearLevel: {
+        count: vi.fn().mockResolvedValue(existing.yearLevel),
+        createMany: vi
+          .fn()
+          .mockImplementation(async (a: any) => ({ count: a.data.length })),
+      },
+      department: {
+        count: vi.fn().mockResolvedValue(existing.department),
+        createMany: vi
+          .fn()
+          .mockImplementation(async (a: any) => ({ count: a.data.length })),
+      },
+      scoreRange: {
+        count: vi.fn().mockResolvedValue(existing.scoreRange),
+        createMany: vi
+          .fn()
+          .mockImplementation(async (a: any) => ({ count: a.data.length })),
+      },
+    })
 
-      const created: Record<string, number> = {
-        yearLevel: 0,
-        department: 0,
-        scoreRange: 0,
-      }
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          yearLevel: {
-            create: vi.fn().mockImplementation(async () => {
-              created.yearLevel++
-            }),
-          },
-          department: {
-            create: vi.fn().mockImplementation(async () => {
-              created.department++
-            }),
-          },
-          scoreRange: {
-            create: vi.fn().mockImplementation(async () => {
-              created.scoreRange++
-            }),
-          },
-        }
-        return callback(tx)
-      })
+    it("creates YearLevels, Departments, and ScoreRanges for a new school", async () => {
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) =>
+        cb(makeDefaultsTx())
+      )
 
       const result = await setupDefaultsForSchool(schoolId, "both")
 
@@ -146,35 +182,22 @@ describe("Catalog Setup", () => {
     })
 
     it("skips creation when all records already exist (idempotent)", async () => {
-      vi.mocked(db.yearLevel.count).mockResolvedValue(14)
-      vi.mocked(db.department.count).mockResolvedValue(6)
-      vi.mocked(db.scoreRange.count).mockResolvedValue(9)
+      const tx = makeDefaultsTx({ yearLevel: 14, department: 6, scoreRange: 9 })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(tx))
 
       const result = await setupDefaultsForSchool(schoolId)
 
       expect(result).toEqual({ yearLevels: 0, departments: 0, scoreRanges: 0 })
-      expect(db.$transaction).not.toHaveBeenCalled()
+      // Idempotency is now checked inside the tx — nothing is created.
+      expect(tx.yearLevel.createMany).not.toHaveBeenCalled()
+      expect(tx.department.createMany).not.toHaveBeenCalled()
+      expect(tx.scoreRange.createMany).not.toHaveBeenCalled()
     })
 
     it("filters YearLevels by schoolLevel=primary (8 levels: KG1-2 + Grade 1-6)", async () => {
-      vi.mocked(db.yearLevel.count).mockResolvedValue(0)
-      vi.mocked(db.department.count).mockResolvedValue(0)
-      vi.mocked(db.scoreRange.count).mockResolvedValue(0)
-
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          yearLevel: {
-            create: vi.fn(),
-          },
-          department: {
-            create: vi.fn(),
-          },
-          scoreRange: {
-            create: vi.fn(),
-          },
-        }
-        return callback(tx)
-      })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) =>
+        cb(makeDefaultsTx())
+      )
 
       const result = await setupDefaultsForSchool(schoolId, "primary")
 
@@ -183,24 +206,9 @@ describe("Catalog Setup", () => {
     })
 
     it("filters YearLevels by schoolLevel=secondary (6 levels: Grade 7-12)", async () => {
-      vi.mocked(db.yearLevel.count).mockResolvedValue(0)
-      vi.mocked(db.department.count).mockResolvedValue(0)
-      vi.mocked(db.scoreRange.count).mockResolvedValue(0)
-
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          yearLevel: {
-            create: vi.fn(),
-          },
-          department: {
-            create: vi.fn(),
-          },
-          scoreRange: {
-            create: vi.fn(),
-          },
-        }
-        return callback(tx)
-      })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) =>
+        cb(makeDefaultsTx())
+      )
 
       const result = await setupDefaultsForSchool(schoolId, "secondary")
 
@@ -209,18 +217,8 @@ describe("Catalog Setup", () => {
     })
 
     it("creates departments even when yearLevels already exist", async () => {
-      vi.mocked(db.yearLevel.count).mockResolvedValue(14) // already exist
-      vi.mocked(db.department.count).mockResolvedValue(0)
-      vi.mocked(db.scoreRange.count).mockResolvedValue(0)
-
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          yearLevel: { create: vi.fn() },
-          department: { create: vi.fn() },
-          scoreRange: { create: vi.fn() },
-        }
-        return callback(tx)
-      })
+      const tx = makeDefaultsTx({ yearLevel: 14, department: 0, scoreRange: 0 })
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(tx))
 
       const result = await setupDefaultsForSchool(schoolId)
 
@@ -401,7 +399,11 @@ describe("Catalog Setup", () => {
 
     it("returns US for unknown country (fallback)", () => {
       expect(_testing.inferCurriculum("BR")).toBe("US")
-      expect(_testing.inferCurriculum("IN")).toBe("US")
+      expect(_testing.inferCurriculum("NG")).toBe("US")
+    })
+
+    it("returns CBSE for India (IN has its own curriculum)", () => {
+      expect(_testing.inferCurriculum("IN")).toBe("CBSE")
     })
   })
 
@@ -596,7 +598,26 @@ describe("Catalog Setup", () => {
 
   describe("setupCatalogForSchool", () => {
     it("skips setup if school already has academic levels (skipIfExists=true)", async () => {
-      vi.mocked(db.academicLevel.count).mockResolvedValue(3)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        schoolLevel: "both",
+        country: "SD",
+      } as any)
+      vi.mocked(db.subject.findMany).mockResolvedValue([
+        { id: "cs1", name: "Math", levels: ["ELEMENTARY"], grades: [] },
+      ] as any)
+      vi.mocked(db.yearLevel.findMany).mockResolvedValue([])
+      // Idempotency is now checked INSIDE the tx via tx.academicLevel.count
+      vi.mocked(db.$transaction).mockImplementation(async (cb: any) =>
+        cb({
+          academicLevel: {
+            count: vi.fn().mockResolvedValue(3),
+            create: vi.fn(),
+          },
+          academicGrade: { create: vi.fn() },
+          academicStream: { create: vi.fn() },
+          subjectSelection: { createMany: vi.fn() },
+        })
+      )
 
       const result = await setupCatalogForSchool(schoolId)
 
@@ -604,7 +625,6 @@ describe("Catalog Setup", () => {
         skipped: true,
         message: "School already has academic structure",
       })
-      expect(db.$transaction).not.toHaveBeenCalled()
     })
 
     it("does not skip if skipIfExists is false", async () => {
@@ -658,6 +678,7 @@ describe("Catalog Setup", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           academicLevel: {
+            count: vi.fn().mockResolvedValue(0),
             create: vi
               .fn()
               .mockResolvedValue({ id: "al1", level: "ELEMENTARY" }),
@@ -669,7 +690,7 @@ describe("Catalog Setup", () => {
             })),
           },
           academicStream: { create: vi.fn() },
-          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
+          subjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -703,6 +724,7 @@ describe("Catalog Setup", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           academicLevel: {
+            count: vi.fn().mockResolvedValue(0),
             create: vi.fn().mockImplementation(async (args: any) => {
               createdLevels.push(args.data.level)
               return { id: `al-${args.data.level}`, level: args.data.level }
@@ -715,7 +737,7 @@ describe("Catalog Setup", () => {
             })),
           },
           academicStream: { create: vi.fn() },
-          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
+          subjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -742,6 +764,7 @@ describe("Catalog Setup", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           academicLevel: {
+            count: vi.fn().mockResolvedValue(0),
             create: vi.fn().mockImplementation(async (args: any) => ({
               id: `al-${args.data.level}`,
               level: args.data.level,
@@ -760,7 +783,7 @@ describe("Catalog Setup", () => {
               return { id: `stream-${streamCount}` }
             }),
           },
-          schoolSubjectSelection: { create: vi.fn(), createMany: vi.fn() },
+          subjectSelection: { create: vi.fn(), createMany: vi.fn() },
           catalogSubject: { update: vi.fn() },
         }
         return callback(tx)
@@ -802,17 +825,19 @@ describe("Catalog Setup", () => {
 
   describe("teardownCatalogForSchool", () => {
     it("deletes all catalog data in correct order", async () => {
+      // Source reads selections (for affected-subject ids) before the tx
+      vi.mocked(db.subjectSelection.findMany).mockResolvedValue([])
       const deletions: string[] = []
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          schoolSubjectSelection: {
+          subjectSelection: {
             deleteMany: vi.fn().mockImplementation(async () => {
-              deletions.push("schoolSubjectSelection")
+              deletions.push("subjectSelection")
             }),
           },
-          schoolContentOverride: {
+          contentOverride: {
             deleteMany: vi.fn().mockImplementation(async () => {
-              deletions.push("schoolContentOverride")
+              deletions.push("contentOverride")
             }),
           },
           academicStream: {
@@ -838,7 +863,7 @@ describe("Catalog Setup", () => {
 
       expect(result).toEqual({ success: true })
       // Bridge tables deleted before structure
-      expect(deletions.indexOf("schoolSubjectSelection")).toBeLessThan(
+      expect(deletions.indexOf("subjectSelection")).toBeLessThan(
         deletions.indexOf("academicLevel")
       )
     })
@@ -891,7 +916,8 @@ describe("Catalog Setup", () => {
       expect(db.video.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            visibility: "PUBLIC",
+            // No schoolId → PUBLIC + PAID are matched via an OR clause
+            OR: expect.arrayContaining([{ visibility: "PUBLIC" }]),
           }),
         })
       )
@@ -987,20 +1013,20 @@ describe("Catalog Setup", () => {
 
     it("creates books from catalog for a new school", async () => {
       vi.mocked(db.schoolBook.count).mockResolvedValue(0)
-      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
+      vi.mocked(db.book.findMany).mockResolvedValue(mockBooks as any)
       vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi.fn().mockResolvedValue(null),
             create: vi.fn(),
           },
-          book: { create: vi.fn() },
+          schoolBook: { create: vi.fn() },
         }
         await cb(tx)
         return mockBooks.length
       })
       vi.mocked(db.bookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.book.update).mockResolvedValue({} as any)
 
       const result = await setupLibraryForSchool(schoolId)
 
@@ -1008,7 +1034,7 @@ describe("Catalog Setup", () => {
       expect(db.schoolBook.count).toHaveBeenCalledWith({
         where: { schoolId },
       })
-      expect(db.schoolBook.findMany).toHaveBeenCalledWith(
+      expect(db.book.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             status: "PUBLISHED",
@@ -1029,13 +1055,13 @@ describe("Catalog Setup", () => {
         books: 0,
         message: "School already has library books",
       })
-      expect(db.schoolBook.findMany).not.toHaveBeenCalled()
+      expect(db.book.findMany).not.toHaveBeenCalled()
       expect(db.$transaction).not.toHaveBeenCalled()
     })
 
     it("skips when no catalog books exist", async () => {
       vi.mocked(db.schoolBook.count).mockResolvedValue(0)
-      vi.mocked(db.schoolBook.findMany).mockResolvedValue([])
+      vi.mocked(db.book.findMany).mockResolvedValue([])
 
       const result = await setupLibraryForSchool(schoolId)
 
@@ -1049,23 +1075,23 @@ describe("Catalog Setup", () => {
 
     it("creates BookSelection and Book for each catalog book", async () => {
       vi.mocked(db.schoolBook.count).mockResolvedValue(0)
-      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
+      vi.mocked(db.book.findMany).mockResolvedValue(mockBooks as any)
 
       const txSelectionCreate = vi.fn()
       const txBookCreate = vi.fn()
       vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi.fn().mockResolvedValue(null),
             create: txSelectionCreate,
           },
-          book: { create: txBookCreate },
+          schoolBook: { create: txBookCreate },
         }
         await cb(tx)
         return mockBooks.length
       })
       vi.mocked(db.bookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.book.update).mockResolvedValue({} as any)
 
       await setupLibraryForSchool(schoolId)
 
@@ -1104,26 +1130,26 @@ describe("Catalog Setup", () => {
 
     it("skips catalog books that already have a selection", async () => {
       vi.mocked(db.schoolBook.count).mockResolvedValue(0)
-      vi.mocked(db.schoolBook.findMany).mockResolvedValue(mockBooks as any)
+      vi.mocked(db.book.findMany).mockResolvedValue(mockBooks as any)
 
       const txSelectionCreate = vi.fn()
       const txBookCreate = vi.fn()
       vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi
               .fn()
               .mockResolvedValueOnce({ id: "existing" }) // First book already selected
               .mockResolvedValueOnce(null), // Second book not selected
             create: txSelectionCreate,
           },
-          book: { create: txBookCreate },
+          schoolBook: { create: txBookCreate },
         }
         await cb(tx)
         return 1
       })
       vi.mocked(db.bookSelection.count).mockResolvedValue(1)
-      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
+      vi.mocked(db.book.update).mockResolvedValue({} as any)
 
       await setupLibraryForSchool(schoolId)
 
