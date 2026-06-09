@@ -168,6 +168,12 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
       description: "shared core — every surface imports from here",
       children: [
         {
+          name: "concepts-data.ts",
+          type: "file",
+          description:
+            "23 concepts, colors, nearestConcept, exact-match maps + pools — single source",
+        },
+        {
           name: "setup.ts",
           type: "file",
           description: "provisions a school onto the catalog",

@@ -47,7 +47,7 @@ All **twelve** curricula have subjects. **Six now have real chapters and lessons
 | Kuwait          | `KW`         | 1–12   | ~139     | none     | none    | inline `kw.ts`          | `kw`         |
 | Jordan          | `JO`         | 1–12   | ~150     | none     | none    | inline `jo.ts`          | `jo`         |
 
-> The deep transnational curricula (Cambridge, IB, CBSE) cover a representative grade so far — extending to every grade is mechanical (author more `structure.json` via `scripts/gen-curriculum-structure.ts`). `Curriculum.slug` keeps its own values (`sd-national`, `ib-diploma`). Existing rows are migrated from the legacy `national` / `us-k12` / `ib` codes at deploy by the `canonicalize_curriculum_codes` migration; a school row stores **no** curriculum code — `inferCurriculum()` derives it at runtime.
+> The deep transnational curricula (Cambridge, IB, CBSE) cover a representative grade so far — extending to every grade is mechanical (author more `structure.json` via `scripts/gen-curriculum-structure.ts`). `Curriculum.slug` keeps its own values (`sd-national`, `ib-diploma`). Existing rows were migrated from the legacy `national` / `us-k12` / `ib` codes by the `canonicalize_curriculum_codes` migration (now live); a school row stores **no** curriculum code — `inferCurriculum()` derives it at runtime.
 
 Subject **thumbnails** work for all twelve (shared concept images, assigned at seed time); **chapter and lesson thumbnails** now exist for the six deep curricula (rotated through the concept pools). The on-disk trees `curriculum/uk` and `curriculum/in` are now **ingested** (by `gb` / `cbse`); `curriculum/us` (Aldar American) and `curriculum/fr` remain image-only / unread. See [Completing the catalog](#completing-the-catalog).
 
@@ -553,11 +553,10 @@ a reference overlay. No merge planned.
 
 ### Connecting concept images
 
-Every subject in every curriculum already resolves to one of the shared concepts — the national files assign them inline; US and Sudan through `NAME_TO_CONCEPT`. What remains:
+Every subject in every curriculum resolves to one of the shared concepts. The national files assign them inline; US and Sudan look them up in the shared exact-match maps; and anything unmatched falls through `nearestConcept()` — a keyword heuristic (EN + AR) that maps any subject to its closest concept, so **no subject is ever image-less** (a flat color is only the true last resort). All of it lives in one file, `src/components/catalog/concepts-data.ts`: the 23 concepts, their colors, the `nearestConcept` resolver, the exact-match maps (`SUBJECT_CONCEPT_BY_SLUG`, `SUBJECT_CONCEPT_BY_NAME`), and the rotation pools (`CONCEPT_POOL`). Every seed (`us.ts`, `sd.ts`, `engine.ts`, `concepts.ts`) imports from it — no per-seed copies remain. What's left:
 
-- **Chapter and lesson images** are wired only for US and Sudan, because only those have chapters and lessons. They come for free for the eight world curricula once depth lands: `us.ts` and `sd.ts` rotate chapters through a `SUBJECT_CONCEPT_POOL`, and the generalized sync inherits that.
-- **One source of truth for the maps.** `NAME_TO_CONCEPT` lives in three places (`concepts.ts`, `us.ts`, and `sd.ts` as `SUBJECT_CONCEPT_MAP`) and the rotation pool in two; the US copy has already drifted (missing the Arabic keys). Hoist them into the shared core (`src/components/catalog/`) so every seed reads one map.
-- **Finish the assets.** `concepts.ts` uploads only the `thumbnail` variant; `banners.ts` covers 10 of 23 concepts, so the other 13 `banner` keys resolve to missing objects, and no `cover` object is uploaded. Extend the concept seed to produce `banner` (and `cover`, if used) for all concepts, or drop the unused keys. The `arabic` source image is currently orphaned — no subject maps to it.
+- **Chapter and lesson images** are wired only for the deep curricula (those with chapters and lessons). They come for free for the subjects-only curricula once depth lands: the deep seeds rotate chapters through `CONCEPT_POOL`, and the generalized sync inherits that.
+- **Finish the asset variants.** `concepts.ts` uploads only the `thumbnail` variant; `banners.ts` covers 10 of 23 concepts, so the other 13 `banner` keys resolve to missing objects, and no `cover` object is uploaded. Extend the concept seed to produce `banner` (and `cover`, if used) for all concepts, or drop the unused keys.
 
 ## Known gaps & roadmap
 
@@ -565,11 +564,10 @@ The content layer is now multi-curriculum with real depth for six curricula (see
 
 ### Deploy (load-bearing order)
 
-The canonical codes + tree-seeded curricula are shipped in code but **not yet in the live DB**. At deploy, in order:
+The canonical codes are **live** — every subject and curriculum now carries its canonical code (`US`, `SD`, `GB`, `IB-DP`, `SA`/`EG`/`AE`/`QA`/`KW`/`JO`), migrated by `prisma/migrations/20260608120000_canonicalize_curriculum_codes`. What is still **shipped in code but not in the live DB** is the deep-curricula breadth. At the next catalog deploy, in order:
 
-1. Run `prisma/migrations/20260608120000_canonicalize_curriculum_codes` (UPDATE legacy `Curriculum.code` / `Subject.curriculum` → canonical, split colliding `national` to its country, ALTER the column default).
-2. Delete the stale subjects-only rows superseded by the deep trees: `gb-national-g*` (old world GB) and `ib-diploma-g*` (old world IB).
-3. Re-run the catalog seeds in order: `gb`, `cbse`, `caie-igcse`, `ib`, then `concepts` / `banners`.
+1. Delete the stale subjects-only rows superseded by the deep trees: `gb-national-g*` (old world GB, ~156 rows) and `ib-diploma-g*` (old world IB, ~114 rows).
+2. Re-run the catalog seeds in order: `gb`, `cbse`, `caie-igcse`, `ib`, then `concepts` / `banners`. (Cambridge IGCSE and CBSE have **no rows in the live DB yet**.)
 
 ### Content depth
 
@@ -580,14 +578,14 @@ The canonical codes + tree-seeded curricula are shipped in code but **not yet in
 ### Seed & content debt
 
 - **`content.ts` is not idempotent** — no business-key unique, so re-runs duplicate exams/questions/materials/assignments. Add a deterministic `seedKey @unique` per artifact.
-- **Concept maps duplicated 4×** (`concepts.ts`, `us.ts`, `sd.ts`, `engine.ts`) — hoist into one shared `src/components/catalog/concepts-data.ts`.
-- **Assets incomplete** — `banners.ts` skips the `arabic` concept and has a dead fallback; the `cover` S3 objects are referenced on every Subject but never uploaded.
+- ~~**Concept maps duplicated 4×**~~ **Done** 2026-06-09 — the four `SUBJECT_CONCEPT` maps, both color tables, and the rotation pools are unified into one source, `src/components/catalog/concepts-data.ts`; every seed imports from it (plus a `nearestConcept` fallback so no subject is image-less).
+- **Asset variants incomplete** — `banners.ts` covers only 10 of 23 concepts (the other 13 `banner` keys resolve to missing objects), and the `cover` S3 objects are referenced on every Subject but never uploaded.
 - **Perf** — the national seeders run ~2,850 sequential awaits (findUnique + create) through `seedSubjectsOnly`; batch with `createMany`. Each national graduates to a deep `engine.ts` caller as its `curriculum/<cc>/` tree lands (GB/IB already did).
 
 ### Build & tests
 
 - ~~**12 `Duplicate identifier 'Dictionary'` tsc errors** (6 files, an unrelated concurrent codemod) block the build.~~ **Fixed** 2026-06-08 — the codemod had doubled the `Dictionary` import line in each of `accept-invite/form.tsx`, `grades/{promotion,report-cards,transcripts}`, and `parent-portal/{announcements,events}`; collapsed each duplicate. `tsc --noEmit` is now clean (exit 0).
-- ~~**`catalog-setup.test.ts` + `catalog-setup.level-config.test.ts`** fail to load on a stale `@/lib/catalog-setup` barrel import.~~ **Partly fixed** 2026-06-08 — repointed all four stale references (both test imports + the `vi.mock` paths in `tenants/actions.test.ts` and `classrooms/sync.test.ts`) to `@/components/catalog/setup`. The tests now load: `level-config` is fully green; `catalog-setup.test.ts` is 28/58. The remaining 30 failures are **half-migrated mock drift** — the `db` mock factory predates the catalog renames (`CatalogSubject→Subject`, `LessonVideo→Video`, `SchoolSubjectSelection→SubjectSelection`, `SchoolBookSelection→BookSelection`) and is missing `schoolBook`/`section`/`timetable`/`classroom`/`videoPurchase`/`instructorPreference`. Fixing it needs per-case attention (watch the `catalogSubjectId` FK-field substring trap), tracked as its own task.
+- ~~**`catalog-setup.test.ts`** mock drift (30 failing).~~ **Fixed** 2026-06-09 — reconciled the `db` mock factory and the inline `tx` objects to the refactored `setup.ts`: the model renames (`CatalogSubject→Subject`, `LessonVideo→Video`, `SchoolSubjectSelection→SubjectSelection`, `SchoolBookSelection→BookSelection`), the `Book`/`SchoolBook`/`BookSelection` split, the now-provisioned models (`section`/`timetable`/`classroom`/`videoPurchase`/`instructorPreference`), idempotency moved inside the transactions, and `inferCurriculum("IN")→CBSE`. **55/55 green.**
 - **`subjects/actions.test.ts`** `getSubjects` lacks an `auth()` mock.
 
 ### Provisioning (setup.ts — still Sudanese)

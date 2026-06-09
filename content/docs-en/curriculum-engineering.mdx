@@ -100,7 +100,7 @@ A `catalog/concepts.ts` seed runs after the catalog seeds:
 
 1. Reads `public/subjects/concepts/*.jpg` (24 images).
 2. Sharp → 4 WebP variants → S3 upload.
-3. Backfills `concept` field on subjects via `NAME_TO_CONCEPT`.
+3. Backfills `concept` field on subjects via `SUBJECT_CONCEPT_BY_NAME` (from `src/components/catalog/concepts-data.ts`).
 4. Sets `thumbnailKey` on subjects that don't have one.
 
 ## Scale analysis

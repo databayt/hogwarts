@@ -242,7 +242,7 @@ For a new national curriculum (e.g. Egypt `EG`):
    with `country: "EG", code: "EG"`, and register it in `prisma/seeds/single.ts`.
 3. Add `EG → "EG"` to `inferCurriculum()` (`src/components/catalog/setup.ts`) and
    `COUNTRY_CURRICULUM` (`src/lib/timetable-reference.ts`).
-4. Add Arabic subject names to `NAME_TO_CONCEPT` in `prisma/seeds/catalog/concepts.ts`.
+4. Add Arabic subject names to `SUBJECT_CONCEPT_BY_NAME` in `src/components/catalog/concepts-data.ts`.
 5. Run `pnpm db:seed:single eg` and `pnpm db:seed:single concepts`.
 
 ## See also
