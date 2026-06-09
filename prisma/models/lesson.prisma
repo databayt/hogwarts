@@ -19,7 +19,7 @@ model Lesson {
   status          ContentStatus @default(PUBLISHED)
 
   // Source provenance (US inventory)
-  clickviewCoverId String?
+  coverId String?
   videoCount       Int     @default(0)
   resourceCount    Int     @default(0)
 

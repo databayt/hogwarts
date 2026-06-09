@@ -32,7 +32,7 @@ export default async function CommunitySubjectLayout({
   if (!subject) notFound()
 
   const gradeSiblings = await getCommunitySubjectGradeSiblings(
-    subject.clickviewId
+    subject.subjectGroupId
   )
 
   const heroImageUrl = getCatalogImageUrl(subject.banner, "original")

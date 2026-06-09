@@ -21,7 +21,7 @@ export default async function SubjectLayout({ params, children }: Props) {
     select: {
       name: true,
       slug: true,
-      clickviewId: true,
+      subjectGroupId: true,
       description: true,
       department: true,
       color: true,
@@ -41,11 +41,11 @@ export default async function SubjectLayout({ params, children }: Props) {
     notFound()
   }
 
-  // Fetch grade siblings for toggle (same clickviewId, different grades)
+  // Fetch grade siblings for toggle (same subjectGroupId, different grades)
   let gradeSiblings: { grade: number; slug: string }[] = []
-  if (subject.clickviewId) {
+  if (subject.subjectGroupId) {
     const siblings = await db.subject.findMany({
-      where: { clickviewId: subject.clickviewId, status: "PUBLISHED" },
+      where: { subjectGroupId: subject.subjectGroupId, status: "PUBLISHED" },
       select: { grades: true, slug: true },
       orderBy: { sortOrder: "asc" },
     })

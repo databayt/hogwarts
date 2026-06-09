@@ -17,7 +17,7 @@ const SELECTION_SELECT = {
   subject: {
     select: {
       id: true,
-      clickviewId: true,
+      subjectGroupId: true,
       name: true,
       slug: true,
       department: true,

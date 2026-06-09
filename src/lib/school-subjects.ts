@@ -24,7 +24,7 @@ const SUBJECT_CORE_SELECT = {
   totalLessons: true,
   totalContent: true,
   sortOrder: true,
-  clickviewId: true,
+  subjectGroupId: true,
   createdAt: true,
   updatedAt: true,
 } as const
@@ -46,7 +46,7 @@ export type SubjectCore = {
   totalLessons: number
   totalContent: number
   sortOrder: number
-  clickviewId: string | null
+  subjectGroupId: string | null
   createdAt: Date
   updatedAt: Date
 }

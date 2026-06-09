@@ -47,7 +47,7 @@ async function processLessons(
     select: {
       id: true,
       slug: true,
-      clickviewCoverId: true,
+      coverId: true,
       chapter: { select: { subject: { select: { slug: true } } } },
     },
   })
@@ -63,7 +63,7 @@ async function processLessons(
   let skipCount = 0
 
   for (const lesson of lessons) {
-    const coverId = lesson.clickviewCoverId ?? null
+    const coverId = lesson.coverId ?? null
     if (!coverId) {
       skipCount++
       continue
@@ -117,7 +117,7 @@ async function processChapters(
       slug: true,
       subject: { select: { slug: true } },
       lessons: {
-        select: { clickviewCoverId: true },
+        select: { coverId: true },
         orderBy: { sequenceOrder: "asc" },
         take: 1,
       },
@@ -135,7 +135,7 @@ async function processChapters(
   let skipCount = 0
 
   for (const chapter of chapters) {
-    const coverId = chapter.lessons[0]?.clickviewCoverId ?? null
+    const coverId = chapter.lessons[0]?.coverId ?? null
     if (!coverId) {
       skipCount++
       continue

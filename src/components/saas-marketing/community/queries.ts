@@ -125,7 +125,7 @@ export async function getCommunitySubjectBySlug(slug: string) {
       banner: true,
       cover: true,
       pdf: true,
-      clickviewId: true,
+      subjectGroupId: true,
       levels: true,
       grades: true,
       totalChapters: true,
@@ -167,11 +167,11 @@ export async function getCommunitySubjectBySlug(slug: string) {
 
 /** Other-grade variants of the same subject (e.g. Arts G1 → G2/G3/...). */
 export async function getCommunitySubjectGradeSiblings(
-  clickviewId: string | null
+  subjectGroupId: string | null
 ): Promise<{ grade: number; slug: string }[]> {
-  if (!clickviewId) return []
+  if (!subjectGroupId) return []
   const siblings = await db.subject.findMany({
-    where: { clickviewId, status: "PUBLISHED" },
+    where: { subjectGroupId, status: "PUBLISHED" },
     select: { grades: true, slug: true },
     orderBy: { sortOrder: "asc" },
   })

@@ -169,8 +169,8 @@ model Subject {
   grades            Int[]         @default([])
 
   // Source provenance (US inventory)
-  clickviewId  String?
-  clickviewUrl String?
+  subjectGroupId  String?
+  sourceUrl String?
 
   // Pricing
   price    Decimal? @db.Decimal(10, 2)

@@ -1130,7 +1130,7 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
     const legacySlug = toSubjectSlug(entry.level, entry.subjectName)
     const schoolLevel = levelToSchoolLevel(entry.level)
     const allGrades = levelToGrades(entry.level)
-    const clickviewId = extractSourceId(entry.url)
+    const subjectGroupId = extractSourceId(entry.url)
 
     // Resolve illustration image and color using legacy slug
     const illustrationFile = `clickview/illustrations/${legacySlug}.jpg`
@@ -1174,10 +1174,8 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
           levels: [schoolLevel],
           grades: [grade],
           gradeRange: String(grade),
-          clickviewId,
-          clickviewUrl: entry.url
-            ? `https://www.clickview.net${entry.url}`
-            : null,
+          subjectGroupId,
+          sourceUrl: entry.url ?? null,
           color,
           concept,
           thumbnail: gradeConceptPrefix
@@ -1203,10 +1201,8 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
           country: "US",
           curriculum: "US",
           curriculumId: usCurriculum?.id,
-          clickviewId,
-          clickviewUrl: entry.url
-            ? `https://www.clickview.net${entry.url}`
-            : null,
+          subjectGroupId,
+          sourceUrl: entry.url ?? null,
           color,
           concept,
           thumbnail: gradeConceptPrefix
@@ -1300,7 +1296,7 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
               name: topic.name,
               description: lessonDesc,
               sequenceOrder: t + 1,
-              clickviewCoverId: coverId,
+              coverId: coverId,
               concept: lessonConcept,
               thumbnail: lessonThumbnail,
               videoCount,
@@ -1315,7 +1311,7 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
               description: lessonDesc,
               lang: "en",
               sequenceOrder: t + 1,
-              clickviewCoverId: coverId,
+              coverId: coverId,
               concept: lessonConcept,
               thumbnail: lessonThumbnail,
               videoCount,
