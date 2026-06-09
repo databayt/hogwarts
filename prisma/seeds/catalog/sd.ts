@@ -23,7 +23,11 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
-import { nearestConcept } from "../../../src/components/catalog/concepts-data"
+import {
+  nearestConcept,
+  SUBJECT_CONCEPT_BY_SLUG as SUBJECT_CONCEPT_MAP,
+  CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
+} from "../../../src/components/catalog/concepts-data"
 import { logPhase, logSuccess } from "../utils"
 
 const CURRICULUM_DIR = path.resolve(__dirname, "../../../curriculum/sd")
@@ -150,40 +154,6 @@ const GRADE_SLUG_OVERRIDES: Record<string, Record<string, string>> = {
 // Used for subjects missing concept field
 // ============================================================================
 
-const SUBJECT_CONCEPT_MAP: Record<string, string> = {
-  arabic: "languages",
-  math: "math",
-  english: "english",
-  islamic: "religion",
-  "islamic-studies": "religion",
-  "islamic-education": "religion",
-  science: "science",
-  history: "history",
-  geography: "geography",
-  art: "arts",
-  ict: "computer-science",
-  technology: "computer-science",
-  "computer-science": "computer-science",
-  physics: "physics",
-  chemistry: "chemistry",
-  biology: "biology",
-  french: "languages",
-  "arabic-literature": "languages",
-  "arabic-rhetoric": "languages",
-  "arabic-grammar": "languages",
-  "arabic-specialized": "languages",
-  "home-economics": "health",
-  "commercial-studies": "economics",
-  "military-science": "civics",
-  quran: "religion",
-  "technical-education": "career-tech",
-  engineering: "science",
-  agriculture: "biology",
-  clothing: "life-skills",
-  resources: "life-skills",
-  "earth-environment": "earth-science",
-}
-
 // ============================================================================
 // Lesson-type → concept mapping (for subjects with repeating lesson types)
 // ============================================================================
@@ -212,62 +182,6 @@ const LESSON_TYPE_CONCEPT: Record<string, string> = {
 // Subject concept → rotation pool (for chapter visual differentiation)
 // Each chapter rotates through the pool by sequenceOrder
 // ============================================================================
-
-const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
-  languages: ["languages", "english", "arts", "history", "geography"],
-  math: ["math", "science", "computer-science", "physics", "economics"],
-  english: ["english", "languages", "arts", "history", "sociology"],
-  religion: ["religion", "history", "languages", "life-skills", "psychology"],
-  science: ["science", "biology", "chemistry", "physics", "earth-science"],
-  history: ["history", "geography", "civics", "sociology", "economics"],
-  geography: ["geography", "earth-science", "science", "history", "biology"],
-  arts: ["arts", "life-skills", "celebrations", "languages", "psychology"],
-  "computer-science": [
-    "computer-science",
-    "math",
-    "science",
-    "career-tech",
-    "economics",
-  ],
-  physics: ["physics", "math", "science", "computer-science", "earth-science"],
-  chemistry: ["chemistry", "science", "biology", "physics", "health"],
-  biology: ["biology", "science", "health", "chemistry", "earth-science"],
-  health: ["health", "life-skills", "biology", "science", "economics"],
-  civics: ["civics", "history", "pe", "life-skills", "geography"],
-  economics: [
-    "economics",
-    "math",
-    "computer-science",
-    "career-tech",
-    "sociology",
-  ],
-  "career-tech": [
-    "career-tech",
-    "computer-science",
-    "science",
-    "math",
-    "economics",
-  ],
-  "earth-science": [
-    "earth-science",
-    "science",
-    "biology",
-    "geography",
-    "chemistry",
-  ],
-  "life-skills": ["life-skills", "health", "arts", "economics", "sociology"],
-  celebrations: ["celebrations", "arts", "history", "sociology", "languages"],
-  pe: ["pe", "health", "life-skills", "science", "psychology"],
-  psychology: ["psychology", "sociology", "health", "life-skills", "science"],
-  sociology: ["sociology", "psychology", "history", "economics", "civics"],
-  "teacher-pd": [
-    "teacher-pd",
-    "life-skills",
-    "psychology",
-    "sociology",
-    "career-tech",
-  ],
-}
 
 // ============================================================================
 // Helpers

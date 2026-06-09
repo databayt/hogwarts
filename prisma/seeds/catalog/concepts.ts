@@ -27,6 +27,7 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient } from "@prisma/client"
 
+import { SUBJECT_CONCEPT_BY_NAME as NAME_TO_CONCEPT } from "../../../src/components/catalog/concepts-data"
 import { processAndUploadCatalogImage } from "../../../src/components/catalog/image"
 import { logSuccess } from "../utils"
 
@@ -39,72 +40,6 @@ const MAX_GRADE = 12
 // ============================================================================
 // Subject name → concept mapping (covers all curricula)
 // ============================================================================
-
-const NAME_TO_CONCEPT: Record<string, string> = {
-  // US K-12
-  Arts: "arts",
-  "Business and Economics": "economics",
-  "Career and Technical Education": "career-tech",
-  "Careers and Technical Education": "career-tech",
-  "Celebrations, Commemorations and Festivals": "celebrations",
-  "Chemical Science": "chemistry",
-  Chemistry: "chemistry",
-  "Civics and Government": "civics",
-  "Computer Science and Technology": "computer-science",
-  "Earth and Space Science": "earth-science",
-  Economics: "economics",
-  "English Language Arts": "english",
-  Geography: "geography",
-  Health: "health",
-  History: "history",
-  "Life Science": "biology",
-  "Life Sciences": "biology",
-  "Life Skills": "life-skills",
-  Math: "math",
-  "Physical Education": "pe",
-  "Physical Science": "science",
-  Physics: "physics",
-  Psychology: "psychology",
-  Religion: "religion",
-  "Religion and Ethics": "religion",
-  "Religion and Philosophy": "religion",
-  "Science and Engineering Practices": "science",
-  Sociology: "sociology",
-  "Teacher Professional Development": "teacher-pd",
-  "U.S. History": "history",
-  "World History": "history",
-  "World Languages": "languages",
-
-  // Sudan national curriculum
-  "اللغة العربية": "languages",
-  الرياضيات: "math",
-  "التربية الإسلامية": "religion",
-  "اللغة الإنجليزية": "english",
-  العلوم: "science",
-  التاريخ: "history",
-  الجغرافيا: "geography",
-  الفنية: "arts",
-  "علوم الحاسوب": "computer-science",
-  الفيزياء: "physics",
-  الكيمياء: "chemistry",
-  الأحياء: "biology",
-  "الدراسات الإسلامية": "religion",
-  "القرآن وعلومه": "religion",
-  "اللغة الفرنسية": "languages",
-  "البلاغة والتعبير": "languages",
-  "قواعد النحو": "languages",
-  "الأدب والمطالعة": "languages",
-  "اللغة العربية الخاصة": "languages",
-  "العلوم العسكرية": "civics",
-  "العلوم الهندسية": "science",
-  "العلوم التجارية": "economics",
-  "العلوم الأسرية": "health",
-  "الإنتاج الزراعي والحيواني": "biology",
-  "الرياضيات الأساسية": "math",
-  "الفنون والتصميم": "arts",
-  "تكنولوجيا الاتصالات": "computer-science",
-  "أساسيات التربية التقنية": "career-tech",
-}
 
 // ============================================================================
 // Main seed function

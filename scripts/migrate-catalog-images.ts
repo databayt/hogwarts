@@ -156,7 +156,7 @@ async function catalogLessonImageStats(): Promise<void> {
   const lessonsWithCoverIds = await prisma.lesson.count({
     where: {
       chapter: { subject: { curriculum: "us-k12" } },
-      clickviewCoverId: { not: null },
+      coverId: { not: null },
     },
   })
 

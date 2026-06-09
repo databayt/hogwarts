@@ -115,9 +115,9 @@ Feature illustrations are used by `feature-tabs.tsx` and `dream-section.tsx`.
 | `leaflet/` (3 files)        | Leaflet CSS hardcodes relative paths |
 | `logo.png`                  | PWA manifest fallback                |
 | `exams-main/` (666 PDFs)    | Arabic exam papers, local access     |
-| `clickview/` (1,023 images) | Deferred                             |
-| `courses/` (57 PNGs)        | Deferred with clickview              |
-| `books/` (20 images)        | Deferred with clickview              |
+| `us-curriculum/` (1,023 images) | Deferred                             |
+| `courses/` (57 PNGs)        | Deferred              |
+| `books/` (20 images)        | Deferred              |
 | `subjects/` (17 PNGs)       | Catalog pipeline fallback            |
 
 ## Adding new assets
@@ -137,7 +137,7 @@ pnpm tsx scripts/migrate-assets-to-s3.ts --manifest # output JSON manifest
 
 ## Future
 
-- Move `clickview/`, `courses/`, `books/` to a `content/` prefix in S3.
+- Move `us-curriculum/`, `courses/`, `books/` to a `content/` prefix in S3.
 - Multi-tenant branding at `schools/{schoolId}/brand/`.
 
 ## See also

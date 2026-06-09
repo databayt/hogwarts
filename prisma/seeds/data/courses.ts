@@ -7,7 +7,7 @@
  * 59 K-12 courses with Arabic titles and descriptions
  * Each course has 5-8 chapters organized by educational topic
  *
- * Source: US Education (clickvieweducation.com)
+ * Source: US educational content
  */
 
 export interface CourseChapter {

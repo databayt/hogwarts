@@ -21,6 +21,6 @@ UPDATE "catalog_lessons" SET "coverId" = "clickviewCoverId"
 
 -- CONTRACT (run AFTER the new code is live and verified — DROP is destructive,
 -- so apply manually with confirmation; left here as the record):
--- ALTER TABLE "catalog_subjects" DROP COLUMN IF EXISTS "clickviewId";
--- ALTER TABLE "catalog_subjects" DROP COLUMN IF EXISTS "clickviewUrl";
--- ALTER TABLE "catalog_lessons"  DROP COLUMN IF EXISTS "clickviewCoverId";
+ALTER TABLE "catalog_subjects" DROP COLUMN IF EXISTS "clickviewId";       -- applied 2026-06-09
+ALTER TABLE "catalog_subjects" DROP COLUMN IF EXISTS "clickviewUrl";      -- applied 2026-06-09
+ALTER TABLE "catalog_lessons"  DROP COLUMN IF EXISTS "clickviewCoverId";  -- applied 2026-06-09

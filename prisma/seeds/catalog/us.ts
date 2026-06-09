@@ -21,7 +21,11 @@ import fs from "fs"
 import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
-import { nearestConcept } from "../../../src/components/catalog/concepts-data"
+import {
+  SUBJECT_CONCEPT_BY_NAME as NAME_TO_CONCEPT,
+  nearestConcept,
+  CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
+} from "../../../src/components/catalog/concepts-data"
 import { logSuccess } from "../utils"
 
 // ============================================================================
@@ -926,101 +930,11 @@ const FALLBACK_COLORS: Record<string, string> = {
 // Subject name → concept mapping (shared with concept-images.ts)
 // ============================================================================
 
-const NAME_TO_CONCEPT: Record<string, string> = {
-  Arts: "arts",
-  "Business and Economics": "economics",
-  "Career and Technical Education": "career-tech",
-  "Careers and Technical Education": "career-tech",
-  "Celebrations, Commemorations and Festivals": "celebrations",
-  "Chemical Science": "chemistry",
-  Chemistry: "chemistry",
-  "Civics and Government": "civics",
-  "Computer Science and Technology": "computer-science",
-  "Earth and Space Science": "earth-science",
-  Economics: "economics",
-  "English Language Arts": "english",
-  Geography: "geography",
-  Health: "health",
-  History: "history",
-  "Life Science": "biology",
-  "Life Sciences": "biology",
-  "Life Skills": "life-skills",
-  Math: "math",
-  "Physical Education": "pe",
-  "Physical Science": "science",
-  Physics: "physics",
-  Psychology: "psychology",
-  Religion: "religion",
-  "Religion and Ethics": "religion",
-  "Religion and Philosophy": "religion",
-  "Science and Engineering Practices": "science",
-  Sociology: "sociology",
-  "Teacher Professional Development": "teacher-pd",
-  "U.S. History": "history",
-  "World History": "history",
-  "World Languages": "languages",
-}
-
 // ============================================================================
 // Chapter/lesson concept differentiation (shared with sync-sd-curriculum.ts)
 // ============================================================================
 
 // Subject concept → rotation pool for chapter visual differentiation
-const SUBJECT_CONCEPT_POOL: Record<string, string[]> = {
-  languages: ["languages", "english", "arts", "history", "geography"],
-  math: ["math", "science", "computer-science", "physics", "economics"],
-  english: ["english", "languages", "arts", "history", "sociology"],
-  religion: ["religion", "history", "languages", "life-skills", "psychology"],
-  science: ["science", "biology", "chemistry", "physics", "earth-science"],
-  history: ["history", "geography", "civics", "sociology", "economics"],
-  geography: ["geography", "earth-science", "science", "history", "biology"],
-  arts: ["arts", "life-skills", "celebrations", "languages", "psychology"],
-  "computer-science": [
-    "computer-science",
-    "math",
-    "science",
-    "career-tech",
-    "economics",
-  ],
-  physics: ["physics", "math", "science", "computer-science", "earth-science"],
-  chemistry: ["chemistry", "science", "biology", "physics", "health"],
-  biology: ["biology", "science", "health", "chemistry", "earth-science"],
-  health: ["health", "life-skills", "biology", "science", "economics"],
-  civics: ["civics", "history", "pe", "life-skills", "geography"],
-  economics: [
-    "economics",
-    "math",
-    "computer-science",
-    "career-tech",
-    "sociology",
-  ],
-  "career-tech": [
-    "career-tech",
-    "computer-science",
-    "science",
-    "math",
-    "economics",
-  ],
-  "earth-science": [
-    "earth-science",
-    "science",
-    "biology",
-    "geography",
-    "chemistry",
-  ],
-  "life-skills": ["life-skills", "health", "arts", "economics", "sociology"],
-  celebrations: ["celebrations", "arts", "history", "sociology", "languages"],
-  pe: ["pe", "health", "life-skills", "science", "psychology"],
-  psychology: ["psychology", "sociology", "health", "life-skills", "science"],
-  sociology: ["sociology", "psychology", "history", "economics", "civics"],
-  "teacher-pd": [
-    "teacher-pd",
-    "life-skills",
-    "psychology",
-    "sociology",
-    "career-tech",
-  ],
-}
 
 // ============================================================================
 // Main seed function
@@ -1133,7 +1047,7 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
     const subjectGroupId = extractSourceId(entry.url)
 
     // Resolve illustration image and color using legacy slug
-    const illustrationFile = `clickview/illustrations/${legacySlug}.jpg`
+    const illustrationFile = `us-curriculum/illustrations/${legacySlug}.jpg`
     const illustrationAbsPath = path.join(
       __dirname,
       "../../../public",
