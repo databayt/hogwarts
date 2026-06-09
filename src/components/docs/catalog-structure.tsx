@@ -99,13 +99,8 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
         {
           name: "sd.ts",
           type: "file",
-          description: "full Sudan from curriculum/sd/",
-        },
-        {
-          name: "sd-base.ts",
-          type: "file",
           description:
-            "Sudan base (legacy; pending slug reconciliation with sd.ts)",
+            "Sudan — subjects + chapters + lessons, from curriculum/sd/",
         },
         {
           name: "gb.ts",

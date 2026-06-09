@@ -51,7 +51,6 @@ import { seedQaCurriculum } from "./catalog/qa"
 import { seedCurriculumRegistry } from "./catalog/registry"
 import { seedSaCurriculum } from "./catalog/sa"
 import { seedSdCurriculum } from "./catalog/sd"
-import { seedSudanCatalog } from "./catalog/sd-base"
 import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
 import { seedAllClasses } from "./classes"
@@ -395,14 +394,6 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedLessonCovers(prisma)
-    },
-  },
-  "sd-base": {
-    description:
-      "Sudan national curriculum (Grade 1 pilot: 4 subjects, ~17 chapters, ~120 lessons)",
-    global: true,
-    run: async (prisma) => {
-      await seedSudanCatalog(prisma)
     },
   },
   registry: {
