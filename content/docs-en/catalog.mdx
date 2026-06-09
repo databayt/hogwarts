@@ -170,7 +170,7 @@ Most seeds are upsert-safe to re-run, and image seeds re-upload to immutable key
 
 ### Loading content
 
-Content is authored outside the database and pulled in by seeds. `catalog/us.ts` reads `scripts/us-curriculum/us-inventory.json`; `catalog/sd-base.ts` reads `scripts/sudan-data/sudan-curriculum.json`; `catalog/sd.ts` reads the richer on-disk tree under `curriculum/sd/`. Each seed upserts rows into `catalog_subjects`, `catalog_chapters`, and `catalog_lessons` and is safe to re-run. The default `catalog` seed loads US and the full Sudan and registers them; the deep curricula and the six subjects-only nationals (`sa.ts`…`jo.ts`) are separate, explicit runs — see [Completing the catalog](#completing-the-catalog) and [Seed pipeline](#seed-pipeline).
+Content is authored outside the database and pulled in by seeds. `catalog/us.ts` reads `scripts/us-curriculum/us-inventory.json`; `catalog/sd.ts` reads the on-disk tree under `curriculum/sd/`. Each seed upserts rows into `catalog_subjects`, `catalog_chapters`, and `catalog_lessons` and is safe to re-run. The default `catalog` seed loads US and the full Sudan and registers them; the deep curricula and the six subjects-only nationals (`sa.ts`…`jo.ts`) are separate, explicit runs — see [Completing the catalog](#completing-the-catalog) and [Seed pipeline](#seed-pipeline).
 
 ### Images
 

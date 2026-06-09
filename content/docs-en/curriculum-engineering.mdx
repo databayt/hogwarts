@@ -92,7 +92,7 @@ The four deep tree sources (`gb`/`cbse`/`caie-igcse`/`ib`) all run through the s
 `syncCurriculumTree` engine (see [Unified tree engine](#unified-tree-engine)). The
 **six subjects-only nationals** (SA, EG, AE, QA, KW, JO) each live in their own file
 (`sa.ts`…`jo.ts`) sharing `seedSubjectsOnly`; GB and IB graduated to deep tree
-sources. `catalog/sd-base.ts` remains a smaller Sudan base set (~32 subjects). The
+sources. The
 default `catalog` seed runs `us` + the full `sd` + `registry`; every other source is
 an explicit run.
 
@@ -238,7 +238,6 @@ prisma/
     catalog/registry.ts              # all 12 Curriculum records + curriculumId backfill
     catalog/index.ts                 # orchestrator: seedCatalog + seedFullCatalog
     catalog/us.ts                    # US (240 subjects, us-inventory.json)
-    catalog/sd-base.ts               # Sudan base set (~32 subjects)
     catalog/sd.ts                    # Full Sudan from curriculum/sd/ (97 subjects)
     catalog/gb.ts                    # GB deep tree (curriculum/uk/)
     catalog/cbse.ts                  # CBSE deep tree (curriculum/in/)
