@@ -6,6 +6,11 @@ import { revalidatePath } from "next/cache"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import {
+  dispatchNotification,
+  dispatchNotificationsToAudience,
+  resolveSchoolLang,
+} from "@/lib/dispatch-notification"
 import { requireDeveloper } from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
@@ -75,7 +80,8 @@ export async function getProposalsForReview(
 }
 
 // ============================================================================
-// Approve proposal — creates catalog entity + auto-bridges to school
+// Approve proposal — publishes to the global catalog (opt-in: the school is
+// notified and adds the subject from its catalog picker; no auto-bridge)
 // ============================================================================
 
 function generateSlug(name: string): string {
@@ -105,7 +111,7 @@ export async function approveProposal(
     const userId = session.user?.id
 
     // Entire approve flow in one transaction for atomicity + race protection
-    const catalogEntityId = await db.$transaction(
+    const approved = await db.$transaction(
       async (tx) => {
         // Optimistic locking: fetch + check status inside transaction
         const proposal = await tx.proposal.findUnique({
@@ -151,39 +157,8 @@ export async function approveProposal(
               },
             })
 
-            // Auto-bridge: create SubjectSelection for ALL applicable grades
-            const proposalGrades: number[] = data.grades || []
-            let schoolGrades: Array<{ id: string; gradeNumber: number }>
-
-            if (proposalGrades.length > 0) {
-              schoolGrades = await tx.academicGrade.findMany({
-                where: {
-                  schoolId: proposal.schoolId,
-                  gradeNumber: { in: proposalGrades },
-                },
-                select: { id: true, gradeNumber: true },
-              })
-            } else {
-              // No specific grades — bridge to all school grades
-              schoolGrades = await tx.academicGrade.findMany({
-                where: { schoolId: proposal.schoolId },
-                select: { id: true, gradeNumber: true },
-              })
-            }
-
-            if (schoolGrades.length > 0) {
-              await tx.subjectSelection.createMany({
-                data: schoolGrades.map((g) => ({
-                  schoolId: proposal.schoolId,
-                  catalogSubjectId: subject.id,
-                  gradeId: g.id,
-                  isRequired: false,
-                  isActive: true,
-                })),
-                skipDuplicates: true,
-              })
-            }
-
+            // Opt-in flow: no auto-bridge. The requesting school is notified
+            // and adds the subject from its catalog picker (pinned on top).
             entityId = subject.id
             break
           }
@@ -270,14 +245,65 @@ export async function approveProposal(
           },
         })
 
-        return entityId
+        return {
+          entityId,
+          schoolId: proposal.schoolId,
+          proposedBy: proposal.proposedBy,
+          name: (data.name as string) || "",
+        }
       },
       { timeout: 30000 }
     )
 
+    // Notify the requesting school (proposer + admins) AFTER the transaction —
+    // a notification failure must never roll back or fail the approval.
+    try {
+      const lang = await resolveSchoolLang(approved.schoolId)
+      const isAr = lang === "ar"
+      const title = isAr
+        ? "تمت الموافقة على طلب المادة"
+        : "Subject request approved"
+      const body = isAr
+        ? `"${approved.name}" أصبحت متاحة الآن في الكتالوج — أضفها إلى مدرستك`
+        : `"${approved.name}" is now available in the catalog — add it to your school`
+      const common = {
+        schoolId: approved.schoolId,
+        type: "document_shared" as const,
+        title,
+        body,
+        lang,
+        priority: "normal" as const,
+        actorId: userId ?? undefined,
+        channels: ["in_app", "email"] as ("in_app" | "email")[],
+        metadata: {
+          entityType: "proposal",
+          entityId: id,
+          catalogEntityId: approved.entityId,
+          kind: "proposal_approved",
+          url: "/subjects/catalog",
+        },
+      }
+      // Skip the individual dispatch when the proposer is an ADMIN — the
+      // role-audience dispatch below already covers them (avoids duplicates).
+      const proposer = await db.user.findFirst({
+        where: { id: approved.proposedBy },
+        select: { role: true },
+      })
+      if (proposer && proposer.role !== "ADMIN") {
+        await dispatchNotification({ ...common, userId: approved.proposedBy })
+      }
+      await dispatchNotificationsToAudience({
+        ...common,
+        targetScope: "role",
+        targetRole: "ADMIN",
+      })
+    } catch (notifError) {
+      console.error("[approveProposal] Notification failed:", notifError)
+    }
+
     revalidatePath("/catalog")
     revalidatePath("/catalog/proposals")
-    return { success: true, data: { catalogEntityId } }
+    return { success: true, data: { catalogEntityId: approved.entityId } }
   } catch (error) {
     return {
       success: false,
@@ -305,7 +331,7 @@ export async function rejectProposal(
 
     const proposal = await db.proposal.findUnique({
       where: { id },
-      select: { status: true },
+      select: { status: true, schoolId: true, proposedBy: true, data: true },
     })
 
     if (!proposal) {
@@ -328,6 +354,49 @@ export async function rejectProposal(
         rejectionReason,
       },
     })
+
+    // Notify the requesting school — failure must never fail the rejection.
+    try {
+      const name =
+        ((proposal.data as Record<string, unknown>)?.name as string) || ""
+      const lang = await resolveSchoolLang(proposal.schoolId)
+      const isAr = lang === "ar"
+      const title = isAr ? "تم رفض طلب المادة" : "Subject request rejected"
+      const body = isAr
+        ? `تم رفض طلب "${name}": ${rejectionReason}`
+        : `Your request "${name}" was rejected: ${rejectionReason}`
+      const common = {
+        schoolId: proposal.schoolId,
+        type: "system_alert" as const,
+        title,
+        body,
+        lang,
+        priority: "high" as const,
+        actorId: userId ?? undefined,
+        channels: ["in_app", "email"] as ("in_app" | "email")[],
+        metadata: {
+          entityType: "proposal",
+          entityId: id,
+          kind: "proposal_rejected",
+          rejectionReason,
+          url: "/subjects/catalog",
+        },
+      }
+      const proposer = await db.user.findFirst({
+        where: { id: proposal.proposedBy },
+        select: { role: true },
+      })
+      if (proposer && proposer.role !== "ADMIN") {
+        await dispatchNotification({ ...common, userId: proposal.proposedBy })
+      }
+      await dispatchNotificationsToAudience({
+        ...common,
+        targetScope: "role",
+        targetRole: "ADMIN",
+      })
+    } catch (notifError) {
+      console.error("[rejectProposal] Notification failed:", notifError)
+    }
 
     revalidatePath("/catalog/proposals")
     return { success: true }

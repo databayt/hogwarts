@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import Image from "next/image"
-import { Check, Loader2, Plus, Search, X } from "lucide-react"
+import { Check, Loader2, Plus, Search, Star, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { toggleSubjectSelection } from "./actions"
+import { CatalogReadyReminder } from "./catalog-ready-reminder"
 
 interface Subject {
   id: string
@@ -61,6 +62,9 @@ interface Props {
   schoolLevels: string[]
   curricula: string[]
   lang: Locale
+  /** Requested-by-this-school subjects approved but not yet added (pinned). */
+  pinnedSubjectIds?: string[]
+  schoolId?: string
 }
 
 const CURRICULUM_LABELS: Record<string, string> = {
@@ -93,6 +97,8 @@ export function SubjectPicker({
   schoolLevels,
   curricula,
   lang,
+  pinnedSubjectIds,
+  schoolId,
 }: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
@@ -156,7 +162,28 @@ export function SubjectPicker({
     notIncluded: cat?.notIncluded || "Not Included",
     all: cat?.all || "All",
     status: cat?.status || "Status",
+    pinnedHeading: cat?.pinnedHeading || "Requested by your school — now ready",
+    pinnedAddCta: cat?.pinnedAddCta || "Add to school",
+    reminderTitle: cat?.reminderTitle || "Your requested subjects are ready",
+    reminderBody:
+      cat?.reminderBody ||
+      "Subjects your school requested were approved and published to the catalog. Add them to make them available to your school.",
+    reminderDismiss: cat?.reminderDismiss || "Got it",
   }
+
+  // Pinned: requested-by-this-school subjects approved but not yet added.
+  // Hidden as soon as the subject gets an (optimistic) selection for any grade.
+  const pinnedSubjects = useMemo(() => {
+    if (!pinnedSubjectIds?.length) return []
+    const pinnedSet = new Set(pinnedSubjectIds)
+    const hasAnySelection = (subjectId: string) => {
+      for (const key of optimisticSelections) {
+        if (key.startsWith(`${subjectId}:`)) return true
+      }
+      return false
+    }
+    return subjects.filter((s) => pinnedSet.has(s.id) && !hasAnySelection(s.id))
+  }, [subjects, pinnedSubjectIds, optimisticSelections])
 
   function isSelected(subjectId: string): boolean {
     if (!selectedGradeId) return false
@@ -242,6 +269,88 @@ export function SubjectPicker({
     <div className="space-y-6">
       {/* Description */}
       <p className="text-muted-foreground text-sm">{t.catalogDescription}</p>
+
+      {/* Pinned: requested-by-this-school subjects, approved & ready to add */}
+      {pinnedSubjects.length > 0 && (
+        <section
+          aria-labelledby="pinned-catalog-heading"
+          className="border-primary/40 bg-primary/5 rounded-lg border p-4"
+        >
+          <div className="mb-3 flex items-center gap-2">
+            <Star className="text-primary h-4 w-4" />
+            <h2
+              id="pinned-catalog-heading"
+              className="text-sm font-semibold tracking-wide uppercase"
+            >
+              {t.pinnedHeading}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pinnedSubjects.map((subject) => {
+              const isThisPending = isPending && pendingSubjectId === subject.id
+              return (
+                <div
+                  key={subject.id}
+                  className="bg-background flex items-center gap-3 overflow-hidden rounded-lg border"
+                >
+                  <PickerThumb
+                    imageUrl={subject.imageUrl}
+                    name={subject.name}
+                    color={subject.color}
+                  />
+                  <div className="min-w-0 flex-1 pe-1">
+                    <p className="line-clamp-2 text-sm leading-snug font-medium">
+                      {subject.name}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      {subject.levels.map((level) => (
+                        <Badge
+                          key={level}
+                          variant="secondary"
+                          className="px-1.5 py-0 text-[10px]"
+                        >
+                          {LEVEL_LABELS[level]?.[lang] ?? level}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="shrink-0 pe-3">
+                    <Button
+                      size="sm"
+                      className="h-8"
+                      onClick={() => handleToggle(subject.id)}
+                      disabled={isThisPending || !selectedGradeId}
+                    >
+                      {isThisPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                      {t.pinnedAddCta}
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* One-time reminder dialog for newly approved requested subjects */}
+      {pinnedSubjects.length > 0 && schoolId && (
+        <CatalogReadyReminder
+          schoolId={schoolId}
+          pinnedSubjects={pinnedSubjects.map((s) => ({
+            id: s.id,
+            name: s.name,
+          }))}
+          strings={{
+            title: t.reminderTitle,
+            body: t.reminderBody,
+            dismiss: t.reminderDismiss,
+          }}
+        />
+      )}
 
       {/* Toolbar */}
       <div

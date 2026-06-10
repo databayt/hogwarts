@@ -7,6 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import {
+  dispatchNotification,
+  dispatchNotificationsToAudience,
+} from "@/lib/dispatch-notification"
+import {
   approveProposal,
   getProposalsForReview,
   rejectProposal,
@@ -45,8 +49,17 @@ vi.mock("@/lib/db", () => ({
     subjectSelection: {
       createMany: vi.fn(),
     },
+    user: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
+}))
+
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotification: vi.fn().mockResolvedValue("notif-1"),
+  dispatchNotificationsToAudience: vi.fn().mockResolvedValue({ created: 1 }),
+  resolveSchoolLang: vi.fn().mockResolvedValue("en"),
 }))
 
 vi.mock("next/cache", () => ({
@@ -142,7 +155,7 @@ describe("Proposal Actions (SaaS)", () => {
   // ==========================================================================
 
   describe("approveProposal", () => {
-    it("approves SUBJECT proposal (creates Subject + auto-bridges)", async () => {
+    it("approves SUBJECT proposal (publishes only — NO auto-bridge, opt-in flow)", async () => {
       mockDeveloperSession()
 
       // The whole approve flow runs inside db.$transaction, so the proposal
@@ -154,6 +167,7 @@ describe("Proposal Actions (SaaS)", () => {
             type: "SUBJECT",
             status: "SUBMITTED",
             schoolId: "school-1",
+            proposedBy: "teacher-1",
             data: { name: "Physics", department: "Science", grades: [1] },
           }),
           update: vi.fn().mockResolvedValue({}),
@@ -174,6 +188,9 @@ describe("Proposal Actions (SaaS)", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) =>
         callback(tx)
       )
+      vi.mocked(db.user.findFirst).mockResolvedValue({
+        role: "TEACHER",
+      } as any)
 
       const result = await approveProposal("p-1", "Looks good")
 
@@ -187,6 +204,10 @@ describe("Proposal Actions (SaaS)", () => {
           status: "PUBLISHED",
         }),
       })
+      // Opt-in flow: approval must NOT bridge the subject into the school —
+      // the school adds it from the pinned catalog picker.
+      expect(tx.subjectSelection.createMany).not.toHaveBeenCalled()
+      expect(tx.academicGrade.findMany).not.toHaveBeenCalled()
       expect(tx.proposal.update).toHaveBeenCalledWith({
         where: { id: "p-1" },
         data: expect.objectContaining({
@@ -196,6 +217,126 @@ describe("Proposal Actions (SaaS)", () => {
         }),
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/proposals")
+    })
+
+    it("notifies proposer + school admins on approval", async () => {
+      mockDeveloperSession()
+
+      const tx = {
+        proposal: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "p-1",
+            type: "SUBJECT",
+            status: "SUBMITTED",
+            schoolId: "school-1",
+            proposedBy: "teacher-1",
+            data: { name: "Robotics", department: "STEM", grades: [10] },
+          }),
+          update: vi.fn().mockResolvedValue({}),
+        },
+        subject: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "cs-2" }),
+        },
+      }
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) =>
+        callback(tx)
+      )
+      // Proposer is a TEACHER → gets an individual notification on top of the
+      // ADMIN audience dispatch.
+      vi.mocked(db.user.findFirst).mockResolvedValue({
+        role: "TEACHER",
+      } as any)
+
+      const result = await approveProposal("p-1")
+
+      expect(result.success).toBe(true)
+      expect(dispatchNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          schoolId: "school-1",
+          userId: "teacher-1",
+          type: "document_shared",
+          channels: ["in_app", "email"],
+          metadata: expect.objectContaining({
+            entityType: "proposal",
+            entityId: "p-1",
+            catalogEntityId: "cs-2",
+            kind: "proposal_approved",
+            url: "/subjects/catalog",
+          }),
+        })
+      )
+      expect(dispatchNotificationsToAudience).toHaveBeenCalledWith(
+        expect.objectContaining({
+          schoolId: "school-1",
+          targetScope: "role",
+          targetRole: "ADMIN",
+          type: "document_shared",
+        })
+      )
+    })
+
+    it("skips the individual dispatch when the proposer is an ADMIN (audience covers them)", async () => {
+      mockDeveloperSession()
+
+      const tx = {
+        proposal: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "p-1",
+            type: "SUBJECT",
+            status: "SUBMITTED",
+            schoolId: "school-1",
+            proposedBy: "admin-1",
+            data: { name: "Robotics" },
+          }),
+          update: vi.fn().mockResolvedValue({}),
+        },
+        subject: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "cs-3" }),
+        },
+      }
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) =>
+        callback(tx)
+      )
+      vi.mocked(db.user.findFirst).mockResolvedValue({ role: "ADMIN" } as any)
+
+      const result = await approveProposal("p-1")
+
+      expect(result.success).toBe(true)
+      expect(dispatchNotification).not.toHaveBeenCalled()
+      expect(dispatchNotificationsToAudience).toHaveBeenCalledTimes(1)
+    })
+
+    it("approval still succeeds when notification dispatch throws", async () => {
+      mockDeveloperSession()
+
+      const tx = {
+        proposal: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "p-1",
+            type: "SUBJECT",
+            status: "SUBMITTED",
+            schoolId: "school-1",
+            proposedBy: "teacher-1",
+            data: { name: "Robotics" },
+          }),
+          update: vi.fn().mockResolvedValue({}),
+        },
+        subject: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "cs-4" }),
+        },
+      }
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) =>
+        callback(tx)
+      )
+      vi.mocked(db.user.findFirst).mockRejectedValue(new Error("db down"))
+
+      const result = await approveProposal("p-1")
+
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual({ catalogEntityId: "cs-4" })
     })
 
     it("approves CHAPTER proposal", async () => {
@@ -324,8 +465,14 @@ describe("Proposal Actions (SaaS)", () => {
       mockDeveloperSession()
       vi.mocked(db.proposal.findUnique).mockResolvedValue({
         status: "SUBMITTED",
+        schoolId: "school-1",
+        proposedBy: "teacher-1",
+        data: { name: "Astrology" },
       } as any)
       vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.user.findFirst).mockResolvedValue({
+        role: "TEACHER",
+      } as any)
 
       const result = await rejectProposal("p-1", "Duplicate subject")
 
@@ -339,6 +486,62 @@ describe("Proposal Actions (SaaS)", () => {
         }),
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/proposals")
+    })
+
+    it("notifies proposer + school admins on rejection with the reason", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
+        status: "IN_REVIEW",
+        schoolId: "school-1",
+        proposedBy: "teacher-1",
+        data: { name: "Astrology" },
+      } as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.user.findFirst).mockResolvedValue({
+        role: "TEACHER",
+      } as any)
+
+      const result = await rejectProposal("p-1", "Not curriculum-aligned")
+
+      expect(result).toEqual({ success: true })
+      expect(dispatchNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          schoolId: "school-1",
+          userId: "teacher-1",
+          type: "system_alert",
+          priority: "high",
+          body: expect.stringContaining("Not curriculum-aligned"),
+          metadata: expect.objectContaining({
+            entityType: "proposal",
+            entityId: "p-1",
+            kind: "proposal_rejected",
+            rejectionReason: "Not curriculum-aligned",
+          }),
+        })
+      )
+      expect(dispatchNotificationsToAudience).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetScope: "role",
+          targetRole: "ADMIN",
+          type: "system_alert",
+        })
+      )
+    })
+
+    it("rejection still succeeds when notification dispatch throws", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
+        status: "SUBMITTED",
+        schoolId: "school-1",
+        proposedBy: "teacher-1",
+        data: { name: "Astrology" },
+      } as any)
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.user.findFirst).mockRejectedValue(new Error("db down"))
+
+      const result = await rejectProposal("p-1", "Some reason")
+
+      expect(result).toEqual({ success: true })
     })
 
     it("returns error for empty rejection reason", async () => {
