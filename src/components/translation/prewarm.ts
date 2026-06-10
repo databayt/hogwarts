@@ -57,7 +57,7 @@ export async function prewarm(
     const list = [...texts]
     if (list.length === 0) continue
     try {
-      const translations = await translateBatch(list, from, to)
+      const translations = await translateBatch(list, from, to, { retry: true })
       const rows = list
         .map((src, i) => ({ src, translated: translations[i] ?? "" }))
         .filter((r) => r.translated.trim() !== "")

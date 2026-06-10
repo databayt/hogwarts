@@ -6,9 +6,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { translate } from "@/components/translation/actions"
 import { getFields, getText } from "@/components/translation/display"
 
-vi.mock("@/components/translation/actions", () => ({
+// --- Mocks (hoisted by vitest) -------------------------------------------------
+const { translate: translateMock } = vi.hoisted(() => ({
   translate: vi.fn(),
 }))
+
+vi.mock("@/components/translation/actions", () => ({
+  translate: translateMock,
+}))
+
+// Silence the intentional console.error fallback log in getText (cross-lang catch).
+beforeEach(() => {
+  vi.spyOn(console, "error").mockImplementation(() => {})
+})
 
 describe("getText", () => {
   const schoolId = "school-123"
@@ -17,6 +27,7 @@ describe("getText", () => {
     vi.clearAllMocks()
   })
 
+  // --- Empty / nullish inputs ------------------------------------------------
   it("returns empty string for null text", async () => {
     const result = await getText(null, "ar", "en", schoolId)
     expect(result).toBe("")
@@ -41,6 +52,7 @@ describe("getText", () => {
     expect(translate).not.toHaveBeenCalled()
   })
 
+  // --- Same-language passthrough --------------------------------------------
   it("returns text directly when content and display language are the same", async () => {
     const result = await getText("مرحبا", "ar", "ar", schoolId)
     expect(result).toBe("مرحبا")
@@ -53,6 +65,7 @@ describe("getText", () => {
     expect(translate).not.toHaveBeenCalled()
   })
 
+  // --- Cross-language translation -------------------------------------------
   it("calls translate when languages differ", async () => {
     vi.mocked(translate).mockResolvedValue("hello")
 
@@ -71,6 +84,7 @@ describe("getText", () => {
     expect(translate).toHaveBeenCalledWith("hello", "en", "ar", schoolId)
   })
 
+  // --- Cross-language fallback ----------------------------------------------
   it("returns source text as fallback when translation fails", async () => {
     vi.mocked(translate).mockRejectedValue(new Error("API unavailable"))
 
@@ -80,6 +94,8 @@ describe("getText", () => {
   })
 
   it("returns source text on network error without rethrowing", async () => {
+    // en->ar: "hello" has no Arabic script, so neither cross-lang guard fires
+    // and translate() is reached — its rejection must fall back, not rethrow.
     vi.mocked(translate).mockRejectedValue(
       new Error("GOOGLE_TRANSLATE_API_KEY not configured")
     )
@@ -87,6 +103,46 @@ describe("getText", () => {
     const result = await getText("hello", "en", "ar", schoolId)
 
     expect(result).toBe("hello")
+    expect(translate).toHaveBeenCalledWith("hello", "en", "ar", schoolId)
+  })
+
+  // --- NEW: cross-language script-mismatch guards ----------------------------
+  it("skips translation when target is ar and text is already Arabic script", async () => {
+    // contentLang flag claims "en" but the stored text is Arabic — displaying
+    // in "ar" must return it verbatim without an API round-trip.
+    const result = await getText("مرحبا", "en", "ar", schoolId)
+
+    expect(result).toBe("مرحبا")
+    expect(translate).not.toHaveBeenCalled()
+  })
+
+  it("skips translation when target is en and text is already pure Latin", async () => {
+    // contentLang flag claims "ar" but the stored text is Latin — displaying
+    // in "en" must return it verbatim without an API round-trip.
+    const result = await getText("Mathematics", "ar", "en", schoolId)
+
+    expect(result).toBe("Mathematics")
+    expect(translate).not.toHaveBeenCalled()
+  })
+
+  // --- NEW: same-language (ar/ar) Latin-stored-as-Arabic correction ----------
+  it("corrects Latin text wrongly stored as ar by translating from English", async () => {
+    vi.mocked(translate).mockResolvedValue("الرياضيات")
+
+    const result = await getText("Mathematics", "ar", "ar", schoolId)
+
+    expect(result).toBe("الرياضيات")
+    // Treated as English source despite the ar/ar same-lang call.
+    expect(translate).toHaveBeenCalledWith("Mathematics", "en", "ar", schoolId)
+  })
+
+  it("falls back to raw Latin text when the ar/ar correction translate fails", async () => {
+    vi.mocked(translate).mockRejectedValue(new Error("API down"))
+
+    const result = await getText("Mathematics", "ar", "ar", schoolId)
+
+    expect(result).toBe("Mathematics")
+    expect(translate).toHaveBeenCalledWith("Mathematics", "en", "ar", schoolId)
   })
 })
 
@@ -262,5 +318,32 @@ describe("getFields", () => {
       title: "مرحبا",
       body: "عالم",
     })
+  })
+
+  // --- NEW: per-field script-mismatch guard in one call ----------------------
+  it("skips fields already in the display script and translates only the rest", async () => {
+    // Display target is "en". "code" is already Latin (guarded, no API),
+    // while "title" is Arabic and must be translated — both in a single call.
+    vi.mocked(translate).mockResolvedValueOnce("Mathematics")
+
+    const entity = {
+      title: "الرياضيات",
+      code: "MATH101",
+    }
+
+    const result = await getFields(
+      entity,
+      ["title", "code"],
+      "ar",
+      "en",
+      schoolId
+    )
+
+    expect(result).toEqual({
+      title: "Mathematics",
+      code: "MATH101", // returned raw — already Latin
+    })
+    expect(translate).toHaveBeenCalledTimes(1)
+    expect(translate).toHaveBeenCalledWith("الرياضيات", "ar", "en", schoolId)
   })
 })

@@ -6,8 +6,14 @@
  *
  * Per-entity on-demand translation for iOS / Android. Surfaces the
  * existing Translation so mobile clients can display
- * announcements/assignments in the user's app language without each
- * client baking its own translation pipeline.
+ * announcements/assignments/events/exams in the user's app language
+ * without each client baking its own translation pipeline.
+ *
+ * Supported entities (whitelist):
+ *   - announcement: school-scoped (id + schoolId), text = title + body
+ *   - event:        school-scoped (id + schoolId), text = title + description
+ *   - assignment:   catalog-global (id only),      text = title + description
+ *   - exam:         catalog-global (id only),      text = title + description
  *
  * Contract (issue #276):
  *   Request:  { entity_type, entity_id, target_lang }
@@ -24,10 +30,12 @@ import { translate } from "@/components/translation/actions"
 import { authenticate, isAuthError } from "../lib/authenticate"
 
 const requestSchema = z.object({
-  entity_type: z.enum(["announcement", "assignment"]),
+  entity_type: z.enum(["announcement", "assignment", "event", "exam"]),
   entity_id: z.string().min(1),
   target_lang: z.enum(["ar", "en"]),
 })
+
+type EntityType = z.infer<typeof requestSchema>["entity_type"]
 
 interface EntitySnapshot {
   text: string
@@ -43,7 +51,7 @@ interface EntitySnapshot {
  * a route tests, never trusting an arbitrary client-supplied table name.
  */
 async function loadEntity(
-  entityType: "announcement" | "assignment",
+  entityType: EntityType,
   entityId: string,
   schoolId: string
 ): Promise<EntitySnapshot | null> {
@@ -60,10 +68,34 @@ async function loadEntity(
       const text = [row.title ?? "", row.body ?? ""].join("\n\n").trim()
       return { text, source_lang: row.lang as "ar" | "en" }
     }
+    case "event": {
+      // Event is school-scoped (prisma/models/events.prisma: schoolId, title,
+      // description, lang). Tenant-isolate by schoolId like announcement.
+      const row = await db.event.findFirst({
+        where: { id: entityId, schoolId },
+        select: { title: true, description: true, lang: true },
+      })
+      if (!row) return null
+      const text = [row.title, row.description ?? ""].join("\n\n").trim()
+      return { text, source_lang: row.lang as "ar" | "en" }
+    }
     case "assignment": {
       // Assignment is a catalog-level template (shared, no schoolId — see
       // prisma/models/assignment.prisma). Look it up by id only.
       const row = await db.assignment.findFirst({
+        where: { id: entityId },
+        select: { title: true, description: true, lang: true },
+      })
+      if (!row) return null
+      const text = [row.title, row.description ?? ""].join("\n\n").trim()
+      return { text, source_lang: row.lang as "ar" | "en" }
+    }
+    case "exam": {
+      // Exam is a catalog-level template (shared, NO schoolId — see
+      // prisma/models/exam.prisma "@@map(catalog_exams)"; it carries `lang`
+      // but is keyed by subjectId and mirrored to schools via SchoolExam).
+      // Look it up by id only, same as assignment.
+      const row = await db.exam.findFirst({
         where: { id: entityId },
         select: { title: true, description: true, lang: true },
       })
