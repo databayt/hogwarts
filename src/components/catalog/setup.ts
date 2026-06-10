@@ -2,57 +2,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 import { getReferenceWeeklyPeriods } from "@/lib/timetable-reference"
+import {
+  getAcademicConfig,
+  gradesForLevel,
+} from "@/components/catalog/academic-config"
 
-/**
- * Grade-to-level mapping for Sudanese education system.
- * Elementary: Grades 1-6, Middle: Grades 7-9, High: Grades 10-12
- */
-const LEVEL_CONFIG = [
-  {
-    name: "المرحلة الابتدائية",
-    slug: "elementary",
-    level: "ELEMENTARY" as const,
-    levelOrder: 1,
-    startGrade: 1,
-    endGrade: 6,
-  },
-  {
-    name: "المرحلة المتوسطة",
-    slug: "middle",
-    level: "MIDDLE" as const,
-    levelOrder: 2,
-    startGrade: 7,
-    endGrade: 9,
-  },
-  {
-    name: "المرحلة الثانوية",
-    slug: "high",
-    level: "HIGH" as const,
-    levelOrder: 3,
-    startGrade: 10,
-    endGrade: 12,
-  },
-]
-
-const GRADE_NAMES: Record<number, string> = {
-  1: "الصف الأول",
-  2: "الصف الثاني",
-  3: "الصف الثالث",
-  4: "الصف الرابع",
-  5: "الصف الخامس",
-  6: "الصف السادس",
-  7: "الصف السابع",
-  8: "الصف الثامن",
-  9: "الصف التاسع",
-  10: "الصف العاشر",
-  11: "الصف الحادي عشر",
-  12: "الصف الثاني عشر",
-}
-
-const HIGH_SCHOOL_STREAMS = [
-  { name: "العلمي", slug: "science", streamType: "SCIENCE" as const },
-  { name: "الأدبي", slug: "arts", streamType: "ARTS" as const },
-]
+// Academic structure (levels / grade names / streams) is per-curriculum —
+// see academic-config.ts. The SD config preserves the original Sudanese
+// constants byte-for-byte; US/GB/CBSE provision their own structures.
 
 /**
  * Subject name patterns that are stream-specific for grades 10-12.
@@ -396,10 +353,11 @@ export async function setupCatalogForSchool(
   const country = school?.country || options?.country || "US"
   const schoolType = school?.schoolType || options?.schoolType || undefined
   const curriculum = options?.curriculum || inferCurriculum(country, schoolType)
+  const academicConfig = getAcademicConfig(curriculum)
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both
-  const applicableLevelConfig = LEVEL_CONFIG.filter((l) =>
+  const applicableLevelConfig = academicConfig.levels.filter((l) =>
     allowedLevels.includes(l.level)
   )
 
@@ -492,7 +450,7 @@ export async function setupCatalogForSchool(
               schoolId,
               levelId: levelRecord.id,
               yearLevelId: gradeNumberToYearLevel.get(grade) ?? null,
-              name: GRADE_NAMES[grade] ?? `الصف ${grade}`,
+              name: academicConfig.gradeName(grade),
               slug: `grade-${grade}`,
               gradeNumber: grade,
             },
@@ -505,16 +463,19 @@ export async function setupCatalogForSchool(
         }
       }
 
-      // 3. Create high school streams (Science + Arts for grades 10-12)
+      // 3. Create high school streams (per-curriculum; SD = Science + Arts
+      // from streamStartGrade up, US/GB/CBSE provision none)
       const streamRecords: Array<{
         id: string
         gradeId: string
         streamType: string
       }> = []
-      const highGrades = gradeRecords.filter((g) => g.gradeNumber >= 10)
+      const highGrades = gradeRecords.filter(
+        (g) => g.gradeNumber >= academicConfig.streamStartGrade
+      )
 
       for (const grade of highGrades) {
-        for (const streamDef of HIGH_SCHOOL_STREAMS) {
+        for (const streamDef of academicConfig.streams) {
           const stream = await tx.academicStream.create({
             data: {
               schoolId,
@@ -556,20 +517,11 @@ export async function setupCatalogForSchool(
             allowedGradeNumbers.has(g)
           )
         } else {
-          const levelToGrades = (level: string): number[] => {
-            if (!allowedLevels.includes(level)) return []
-            switch (level) {
-              case "ELEMENTARY":
-                return [1, 2, 3, 4, 5, 6]
-              case "MIDDLE":
-                return [7, 8, 9]
-              case "HIGH":
-                return [10, 11, 12]
-              default:
-                return []
-            }
-          }
-          applicableGrades = subject.levels.flatMap(levelToGrades)
+          applicableGrades = subject.levels.flatMap((level) =>
+            allowedLevels.includes(level)
+              ? gradesForLevel(academicConfig, level)
+              : []
+          )
         }
 
         for (const gradeNumber of applicableGrades) {
@@ -596,7 +548,9 @@ export async function setupCatalogForSchool(
           }
 
           const subjectStreamType =
-            gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
+            gradeNumber >= academicConfig.streamStartGrade
+              ? getSubjectStreamType(subject.name)
+              : null
           const gradeStreams = streamRecords.filter(
             (s) => s.gradeId === gradeRecord.id
           )
@@ -1604,6 +1558,7 @@ export async function ensureSubjectSelections(
   const country = school?.country || "US"
   const schoolType = school?.schoolType || undefined
   const curriculum = inferCurriculum(country, schoolType ?? null)
+  const academicConfig = getAcademicConfig(curriculum)
   const allowedLevels =
     SCHOOL_LEVEL_TO_CATALOG[school?.schoolLevel ?? "both"] ??
     SCHOOL_LEVEL_TO_CATALOG.both
@@ -1642,20 +1597,11 @@ export async function ensureSubjectSelections(
         allowedGradeNumbers.has(g)
       )
     } else {
-      const levelToGrades = (level: string): number[] => {
-        if (!allowedLevels.includes(level)) return []
-        switch (level) {
-          case "ELEMENTARY":
-            return [1, 2, 3, 4, 5, 6]
-          case "MIDDLE":
-            return [7, 8, 9]
-          case "HIGH":
-            return [10, 11, 12]
-          default:
-            return []
-        }
-      }
-      applicableGrades = subject.levels.flatMap(levelToGrades)
+      applicableGrades = subject.levels.flatMap((level) =>
+        allowedLevels.includes(level)
+          ? gradesForLevel(academicConfig, level)
+          : []
+      )
     }
 
     for (const gradeNumber of applicableGrades) {
@@ -1676,7 +1622,9 @@ export async function ensureSubjectSelections(
       }
 
       const subjectStreamType =
-        gradeNumber >= 10 ? getSubjectStreamType(subject.name) : null
+        gradeNumber >= academicConfig.streamStartGrade
+          ? getSubjectStreamType(subject.name)
+          : null
       const gradeStreams = streams.filter((s) => s.gradeId === gradeRecord.id)
 
       if (subjectStreamType && gradeStreams.length > 0) {
