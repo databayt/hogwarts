@@ -40,6 +40,20 @@
     "unavailableTitle": "Verification Temporarily Unavailable",
     "unavailableDescription": "Verification system is under maintenance. Please try again later."
   },
+  "transcript": {
+    "verify": {
+      "failedTitle": "Verification failed",
+      "failedDescription": "We could not find a transcript with this code. The code may be incorrect or the transcript may have been revoked.",
+      "verifiedTitle": "Verified transcript",
+      "verifiedDescription": "This transcript was issued by the school and is unaltered.",
+      "student": "Student",
+      "school": "School",
+      "transcriptNumber": "Transcript number",
+      "cumulativeGPA": "Cumulative GPA",
+      "totalCredits": "Total credits",
+      "issued": "Issued"
+    }
+  },
   "metadata": {
     "title": "Hogwarts - School Management System",
     "description": "Comprehensive school management platform for educational institutions"

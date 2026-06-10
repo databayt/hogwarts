@@ -4,6 +4,7 @@
 import type { Metadata } from "next"
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { TranscriptVerifyContent } from "@/components/school-dashboard/grades/transcripts/verify-content"
 
 // Keep this standalone public route out of build-time page-data collection
@@ -22,5 +23,8 @@ interface Props {
 
 export default async function TranscriptVerifyPage({ params }: Props) {
   const { lang, code } = await params
-  return <TranscriptVerifyContent code={code} lang={lang} />
+  const dictionary = await getDictionary(lang)
+  return (
+    <TranscriptVerifyContent code={code} lang={lang} dictionary={dictionary} />
+  )
 }

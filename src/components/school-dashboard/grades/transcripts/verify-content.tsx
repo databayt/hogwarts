@@ -13,12 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { verifyTranscript } from "../actions/transcripts"
 
 interface Props {
   code: string
   lang: Locale
+  dictionary?: Dictionary
 }
 
 /**
@@ -29,8 +31,12 @@ interface Props {
  * credits, issue date. The verification code itself is the auth
  * token; if you know it, you've seen the document.
  */
-export async function TranscriptVerifyContent({ code, lang }: Props) {
-  const isRTL = lang === "ar"
+export async function TranscriptVerifyContent({
+  code,
+  lang,
+  dictionary,
+}: Props) {
+  const d = dictionary?.transcript?.verify
   const result = await verifyTranscript({ verificationCode: code })
 
   if (!result.valid || !result.data) {
@@ -41,13 +47,10 @@ export async function TranscriptVerifyContent({ code, lang }: Props) {
             <div className="bg-destructive/10 text-destructive mb-2 flex h-12 w-12 items-center justify-center rounded-full">
               <ShieldAlert className="h-6 w-6" />
             </div>
-            <CardTitle>
-              {isRTL ? "تعذر التحقق" : "Verification failed"}
-            </CardTitle>
+            <CardTitle>{d?.failedTitle ?? "Verification failed"}</CardTitle>
             <CardDescription>
-              {isRTL
-                ? "لم يتم العثور على شهادة بهذا الرمز. قد يكون الرمز خاطئًا أو الشهادة قد تم إلغاؤها."
-                : "We could not find a transcript with this code. The code may be incorrect or the transcript may have been revoked."}
+              {d?.failedDescription ??
+                "We could not find a transcript with this code. The code may be incorrect or the transcript may have been revoked."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -64,25 +67,18 @@ export async function TranscriptVerifyContent({ code, lang }: Props) {
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700">
             <BadgeCheck className="h-6 w-6" />
           </div>
-          <CardTitle>{isRTL ? "شهادة موثقة" : "Verified transcript"}</CardTitle>
+          <CardTitle>{d?.verifiedTitle ?? "Verified transcript"}</CardTitle>
           <CardDescription>
-            {isRTL
-              ? "هذه الشهادة صادرة عن المدرسة وغير معدّلة."
-              : "This transcript was issued by the school and is unaltered."}
+            {d?.verifiedDescription ??
+              "This transcript was issued by the school and is unaltered."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="divide-border divide-y text-sm">
+            <Row label={d?.student ?? "Student"} value={data.studentName} />
+            <Row label={d?.school ?? "School"} value={data.schoolName ?? "—"} />
             <Row
-              label={isRTL ? "الطالب" : "Student"}
-              value={data.studentName}
-            />
-            <Row
-              label={isRTL ? "المدرسة" : "School"}
-              value={data.schoolName ?? "—"}
-            />
-            <Row
-              label={isRTL ? "رقم الشهادة" : "Transcript number"}
+              label={d?.transcriptNumber ?? "Transcript number"}
               value={
                 <Badge variant="outline" className="font-mono text-xs">
                   {data.transcriptNumber}
@@ -91,18 +87,18 @@ export async function TranscriptVerifyContent({ code, lang }: Props) {
             />
             {data.cumulativeGPA !== null ? (
               <Row
-                label={isRTL ? "المعدل التراكمي" : "Cumulative GPA"}
+                label={d?.cumulativeGPA ?? "Cumulative GPA"}
                 value={data.cumulativeGPA.toFixed(2)}
               />
             ) : null}
             {data.totalCredits !== null ? (
               <Row
-                label={isRTL ? "إجمالي الساعات" : "Total credits"}
+                label={d?.totalCredits ?? "Total credits"}
                 value={String(data.totalCredits)}
               />
             ) : null}
             <Row
-              label={isRTL ? "تاريخ الإصدار" : "Issued"}
+              label={d?.issued ?? "Issued"}
               value={formatDate(new Date(data.issuedDate), lang)}
             />
           </dl>

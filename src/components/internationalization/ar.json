@@ -40,6 +40,20 @@
     "unavailableTitle": "التحقق غير متوفر مؤقتاً",
     "unavailableDescription": "يتم صيانة نظام التحقق. يرجى المحاولة لاحقاً."
   },
+  "transcript": {
+    "verify": {
+      "failedTitle": "تعذّر التحقق",
+      "failedDescription": "لم يتم العثور على كشف درجات بهذا الرمز. قد يكون الرمز خاطئًا أو أن الكشف قد تم إلغاؤه.",
+      "verifiedTitle": "كشف درجات موثّق",
+      "verifiedDescription": "هذا الكشف صادر عن المدرسة وغير معدّل.",
+      "student": "الطالب",
+      "school": "المدرسة",
+      "transcriptNumber": "رقم الكشف",
+      "cumulativeGPA": "المعدل التراكمي",
+      "totalCredits": "إجمالي الساعات",
+      "issued": "تاريخ الإصدار"
+    }
+  },
   "metadata": {
     "title": "هجورتس - نظام إدارة المدارس",
     "description": "منصة شاملة لإدارة المؤسسات التعليمية"

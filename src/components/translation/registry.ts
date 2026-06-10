@@ -22,8 +22,11 @@
 export const TRANSLATABLE = {
   // — Announcements & comms —
   Announcement: ["title", "body"],
-  AnnouncementTemplate: ["name", "description", "title", "body"],
+  // title/body deliberately EXCLUDED — they carry {{placeholders}} (see rule above)
+  AnnouncementTemplate: ["name", "description"],
   Event: ["title", "description", "location", "organizer"],
+  Notification: ["title", "body"],
+  Conference: ["title", "description"],
 
   // — Academic structure / catalog —
   Subject: ["name", "description"],
@@ -51,14 +54,43 @@ export const TRANSLATABLE = {
   Textbook: ["title", "author"],
   Document: ["title", "description"],
   StreamCourse: ["title", "description"],
+  StreamCategory: ["name"],
   Video: ["title", "description"],
 
-  // — Org —
-  Department: ["name"],
-  GradingScheme: ["name", "description"],
+  // — Org / school structure —
+  // Field names mirror the ACTUAL prisma columns (registry-schema.test.ts
+  // enforces this — a wrong name here silently no-ops localize/prewarm).
+  Department: ["departmentName"],
+  GradingScheme: ["name"],
+  YearLevel: ["levelName"],
+  Route: ["name", "originName", "destinationName"],
 } as const
 
 export type TranslatableModel = keyof typeof TRANSLATABLE
+
+/**
+ * Registered models that live in the GLOBAL catalog (no `schoolId` column).
+ * Their content is authored centrally (operator context, no tenant), so
+ * `prewarm()` is structurally impossible on their write paths — each school's
+ * first reader warms that school's cache instead (bounded by the Google
+ * timeout, then cached). `localize()` still applies at read time because the
+ * READER always has a schoolId. Kept in sync with the schema by
+ * registry-schema.test.ts (model listed here ⟺ no schoolId in prisma).
+ */
+export const CATALOG_GLOBAL: ReadonlySet<TranslatableModel> = new Set([
+  "Subject",
+  "Chapter",
+  "Lesson",
+  "Material",
+  "Curriculum",
+  "Assignment",
+  "Exam",
+  "ExamTemplate",
+  "Quiz",
+  "Book",
+  "Textbook",
+  "Document",
+] as const)
 
 /** Translatable text fields for a model, or `[]` if the model isn't registered. */
 export function fieldsFor(model: string): readonly string[] {

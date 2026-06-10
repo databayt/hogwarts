@@ -6,27 +6,26 @@ import { MessageCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { ChildrenGrid } from "./children-grid"
 
 interface Props {
   lang: Locale
+  dictionary?: Dictionary
 }
 
-export async function ParentLandingContent({ lang }: Props) {
-  const isRTL = lang === "ar"
+export async function ParentLandingContent({ lang, dictionary }: Props) {
+  const d = dictionary?.parentPortal?.landing
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">
-            {isRTL ? "بوابة ولي الأمر" : "Parent Portal"}
-          </h1>
+          <h1 className="text-2xl font-bold">{d?.title ?? "Parent Portal"}</h1>
           <p className="text-muted-foreground">
-            {isRTL
-              ? "اختر أحد أطفالك لمتابعة تقدمه الأكاديمي"
-              : "Choose a child to follow their academic progress"}
+            {d?.description ??
+              "Choose a child to follow their academic progress"}
           </p>
         </div>
         {/* Deep-link to the shared messaging route. The contacts list is
@@ -37,7 +36,7 @@ export async function ParentLandingContent({ lang }: Props) {
         <Button asChild variant="outline" size="sm">
           <Link href={`/${lang}/messages`}>
             <MessageCircle className="me-1 h-4 w-4" />
-            {isRTL ? "مراسلة المعلمين" : "Message teachers"}
+            {d?.messageTeachers ?? "Message teachers"}
           </Link>
         </Button>
       </div>

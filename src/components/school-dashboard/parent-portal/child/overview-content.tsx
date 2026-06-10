@@ -14,16 +14,22 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getChildOverview } from "../actions"
 
 interface Props {
   studentId: string
   lang: Locale
+  dictionary?: Dictionary
 }
 
-export async function ChildOverviewContent({ studentId, lang }: Props) {
-  const isRTL = lang === "ar"
+export async function ChildOverviewContent({
+  studentId,
+  lang,
+  dictionary,
+}: Props) {
+  const d = dictionary?.parentPortal?.childOverview
   const data = await getChildOverview({ studentId })
 
   if (!data.student) {
@@ -32,19 +38,19 @@ export async function ChildOverviewContent({ studentId, lang }: Props) {
 
   const cards: Array<{ label: string; value: string }> = [
     {
-      label: isRTL ? "الاسم" : "Name",
+      label: d?.name ?? "Name",
       value: data.student.name,
     },
     {
-      label: isRTL ? "متوسط الدرجات" : "Average score",
+      label: d?.averageScore ?? "Average score",
       value: `${data.averageScore}%`,
     },
     {
-      label: isRTL ? "نسبة الحضور" : "Attendance",
+      label: d?.attendance ?? "Attendance",
       value: `${data.attendance.percentage}%`,
     },
     {
-      label: isRTL ? "أيام الحضور" : "Days present",
+      label: d?.daysPresent ?? "Days present",
       value: `${data.attendance.presentDays} / ${data.attendance.totalDays}`,
     },
   ]
@@ -59,7 +65,7 @@ export async function ChildOverviewContent({ studentId, lang }: Props) {
         <Button asChild variant="outline" size="sm">
           <Link href={`/${lang}/messages`}>
             <MessageCircle className="me-1 h-4 w-4" />
-            {isRTL ? "مراسلة المعلم" : "Message teacher"}
+            {d?.messageTeacher ?? "Message teacher"}
           </Link>
         </Button>
       </div>
@@ -79,14 +85,12 @@ export async function ChildOverviewContent({ studentId, lang }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {isRTL ? "أحدث نتائج الامتحانات" : "Recent exam results"}
-          </CardTitle>
+          <CardTitle>{d?.recentExamResults ?? "Recent exam results"}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.recentExams.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {isRTL ? "لا توجد نتائج بعد" : "No results yet"}
+              {d?.noResultsYet ?? "No results yet"}
             </p>
           ) : (
             <ul className="divide-border divide-y">
