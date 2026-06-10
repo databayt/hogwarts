@@ -24,7 +24,7 @@ interface Props {
   lang: Locale
 }
 
-export async function MaterialContent({ lang }: Props) {
+export async function MaterialContent({ dictionary }: Props) {
   const materials = await db.material.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -120,7 +120,7 @@ export async function MaterialContent({ lang }: Props) {
         </Card>
       </div>
 
-      <MaterialTable data={rows} />
+      <MaterialTable data={rows} dictionary={dictionary} />
     </PageContainer>
   )
 }

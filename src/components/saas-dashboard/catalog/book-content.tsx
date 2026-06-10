@@ -25,7 +25,7 @@ interface Props {
   lang: Locale
 }
 
-export async function BookContent({ lang }: Props) {
+export async function BookContent({ dictionary, lang }: Props) {
   const [books, approvedCount, pendingCount, schoolsUsing] = await Promise.all([
     db.book.findMany({
       orderBy: { createdAt: "desc" },
@@ -37,6 +37,7 @@ export async function BookContent({ lang }: Props) {
         genre: true,
         isbn: true,
         status: true,
+        visibility: true,
         approvalStatus: true,
         usageCount: true,
         coverColor: true,
@@ -115,7 +116,7 @@ export async function BookContent({ lang }: Props) {
         </Card>
       </div>
 
-      <BookTable data={rows} />
+      <BookTable data={rows} dictionary={dictionary} />
     </PageContainer>
   )
 }

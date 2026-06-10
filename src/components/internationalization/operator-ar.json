@@ -488,7 +488,27 @@
       "statusInReview": "قيد المراجعة",
       "statusApproved": "موافق عليه",
       "statusRejected": "مرفوض",
-      "statusPublished": "منشور"
+      "statusPublished": "منشور",
+      "manage": {
+        "manageFlags": "إدارة الظهور",
+        "visibility": "الظهور",
+        "status": "الحالة",
+        "price": "السعر",
+        "currency": "العملة",
+        "visibilityPrivate": "خاص",
+        "visibilitySchool": "المدرسة فقط",
+        "visibilityPublic": "الكتالوج العام",
+        "visibilityPaid": "مدفوع (يتطلب سعراً)",
+        "statusDraft": "مسودة",
+        "statusReview": "قيد المراجعة",
+        "statusPublished": "منشور",
+        "statusArchived": "مؤرشف",
+        "statusDeprecated": "متوقف",
+        "save": "حفظ",
+        "saved": "تم حفظ التغييرات",
+        "paidRequiresPrice": "المحتوى المدفوع يتطلب سعراً وعملة من 3 أحرف",
+        "paidUnsupported": "خيار الظهور المدفوع غير مدعوم لهذا النوع من المحتوى"
+      }
     }
   }
 }

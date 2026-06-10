@@ -24,7 +24,7 @@ interface Props {
   lang: Locale
 }
 
-export async function AssignmentContent({ lang }: Props) {
+export async function AssignmentContent({ dictionary }: Props) {
   const assignments = await db.assignment.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -120,7 +120,7 @@ export async function AssignmentContent({ lang }: Props) {
         </Card>
       </div>
 
-      <AssignmentTable data={rows} />
+      <AssignmentTable data={rows} dictionary={dictionary} />
     </PageContainer>
   )
 }

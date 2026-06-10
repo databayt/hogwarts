@@ -29,7 +29,7 @@ interface Props {
   lang: Locale
 }
 
-export async function QuestionContent({ lang }: Props) {
+export async function QuestionContent({ dictionary }: Props) {
   const questions = await db.question.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -44,6 +44,8 @@ export async function QuestionContent({ lang }: Props) {
       averageScore: true,
       qualityScore: true,
       status: true,
+      price: true,
+      currency: true,
       tags: true,
       createdAt: true,
     },
@@ -71,6 +73,8 @@ export async function QuestionContent({ lang }: Props) {
     approvalStatus: q.approvalStatus as string,
     visibility: q.visibility as string,
     status: q.status as string,
+    price: q.price != null ? Number(q.price) : null,
+    currency: q.currency ?? null,
   }))
 
   return (
@@ -125,7 +129,7 @@ export async function QuestionContent({ lang }: Props) {
         </Card>
       </div>
 
-      <QuestionTable data={rows} />
+      <QuestionTable data={rows} dictionary={dictionary} />
     </PageContainer>
   )
 }

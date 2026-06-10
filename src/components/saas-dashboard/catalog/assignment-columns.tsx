@@ -2,6 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -14,8 +15,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import type { ContentStatus, ContentVisibility } from "./approval-actions"
 import { deleteAssignment } from "./assignment-actions"
+import { ContentFlagsDialog } from "./content-flags-dialog"
 
 export interface AssignmentRow {
   id: string
@@ -49,111 +53,140 @@ function getApprovalVariant(
   }
 }
 
-export const assignmentColumns: ColumnDef<AssignmentRow>[] = [
-  {
-    accessorKey: "title",
-    header: "Title",
-    cell: ({ row }) => {
-      const { title } = row.original
-      return <span className="font-medium">{title}</span>
-    },
-  },
-  {
-    accessorKey: "assignmentType",
-    header: "Type",
-    cell: ({ row }) => {
-      const type = row.original.assignmentType
-      if (!type) return <span className="text-muted-foreground">-</span>
-      return (
-        <Badge variant="outline" className="text-xs capitalize">
-          {type}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "totalPoints",
-    header: "Points",
-    cell: ({ row }) => {
-      const points = row.original.totalPoints
-      return points != null ? String(points) : "-"
-    },
-  },
-  {
-    accessorKey: "estimatedTime",
-    header: "Est. Time",
-    cell: ({ row }) => {
-      const time = row.original.estimatedTime
-      if (!time) return "-"
-      if (time < 60) return `${time}m`
-      return `${Math.floor(time / 60)}h ${time % 60}m`
-    },
-  },
-  {
-    accessorKey: "approvalStatus",
-    header: "Approval",
-    cell: ({ row }) => {
-      const status = row.original.approvalStatus
-      return (
-        <Badge variant={getApprovalVariant(status)} className="text-xs">
-          {status}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status
-      const variant =
-        status === "PUBLISHED"
-          ? "default"
-          : status === "DRAFT"
-            ? "secondary"
-            : "outline"
-      return (
-        <Badge variant={variant} className="text-xs">
-          {status}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "usageCount",
-    header: "Usage",
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const { id } = row.original
+function AssignmentRowActions({
+  row,
+  dictionary,
+}: {
+  row: AssignmentRow
+  dictionary?: Dictionary
+}) {
+  const [flagsOpen, setFlagsOpen] = useState(false)
+  const m = dictionary?.operator?.catalog?.manage
 
-      async function handleDelete() {
-        if (!confirm("Are you sure you want to delete this assignment?")) return
-        await deleteAssignment(id)
-      }
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this assignment?")) return
+    await deleteAssignment(row.id)
+  }
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(id)}>
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={handleDelete}
-            >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => navigator.clipboard.writeText(row.id)}
+          >
+            Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setFlagsOpen(true)}>
+            {m?.manageFlags ?? "Manage visibility"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ContentFlagsDialog
+        contentType="Assignment"
+        contentId={row.id}
+        currentVisibility={row.visibility as ContentVisibility}
+        currentStatus={row.status as ContentStatus}
+        open={flagsOpen}
+        onOpenChange={setFlagsOpen}
+        dictionary={dictionary}
+      />
+    </>
+  )
+}
+
+export function getAssignmentColumns(
+  dictionary?: Dictionary
+): ColumnDef<AssignmentRow>[] {
+  return [
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: ({ row }) => {
+        const { title } = row.original
+        return <span className="font-medium">{title}</span>
+      },
     },
-  },
-]
+    {
+      accessorKey: "assignmentType",
+      header: "Type",
+      cell: ({ row }) => {
+        const type = row.original.assignmentType
+        if (!type) return <span className="text-muted-foreground">-</span>
+        return (
+          <Badge variant="outline" className="text-xs capitalize">
+            {type}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "totalPoints",
+      header: "Points",
+      cell: ({ row }) => {
+        const points = row.original.totalPoints
+        return points != null ? String(points) : "-"
+      },
+    },
+    {
+      accessorKey: "estimatedTime",
+      header: "Est. Time",
+      cell: ({ row }) => {
+        const time = row.original.estimatedTime
+        if (!time) return "-"
+        if (time < 60) return `${time}m`
+        return `${Math.floor(time / 60)}h ${time % 60}m`
+      },
+    },
+    {
+      accessorKey: "approvalStatus",
+      header: "Approval",
+      cell: ({ row }) => {
+        const status = row.original.approvalStatus
+        return (
+          <Badge variant={getApprovalVariant(status)} className="text-xs">
+            {status}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status
+        const variant =
+          status === "PUBLISHED"
+            ? "default"
+            : status === "DRAFT"
+              ? "secondary"
+              : "outline"
+        return (
+          <Badge variant={variant} className="text-xs">
+            {status}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "usageCount",
+      header: "Usage",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <AssignmentRowActions row={row.original} dictionary={dictionary} />
+      ),
+    },
+  ]
+}

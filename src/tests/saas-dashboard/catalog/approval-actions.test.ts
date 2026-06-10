@@ -103,6 +103,9 @@ describe("Approval Actions", () => {
           approvalStatus: "APPROVED",
           approvedBy: "dev-1",
           rejectionReason: null,
+          // Approval must also publish so school browse paths (which filter
+          // status=PUBLISHED) can see the approved contribution.
+          status: "PUBLISHED",
         }),
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/approvals")
@@ -121,6 +124,7 @@ describe("Approval Actions", () => {
           approvalStatus: "APPROVED",
           approvedBy: "dev-1",
           rejectionReason: null,
+          status: "PUBLISHED",
         }),
       })
     })
@@ -138,6 +142,129 @@ describe("Approval Actions", () => {
           approvalStatus: "APPROVED",
           approvedBy: "dev-1",
           rejectionReason: null,
+          status: "PUBLISHED",
+        }),
+      })
+    })
+
+    it("applies an explicit visibility option on approval (Question)", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.question.update).mockResolvedValue({} as any)
+
+      const result = await approveContent("Question", "q-1", {
+        visibility: "PUBLIC",
+      })
+
+      expect(result).toEqual({ success: true })
+      expect(db.question.update).toHaveBeenCalledWith({
+        where: { id: "q-1" },
+        data: expect.objectContaining({
+          approvalStatus: "APPROVED",
+          status: "PUBLISHED",
+          visibility: "PUBLIC",
+        }),
+      })
+    })
+
+    it("applies an explicit visibility option on approval (Material)", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.material.update).mockResolvedValue({} as any)
+
+      const result = await approveContent("Material", "m-1", {
+        visibility: "SCHOOL",
+      })
+
+      expect(result).toEqual({ success: true })
+      expect(db.material.update).toHaveBeenCalledWith({
+        where: { id: "m-1" },
+        data: expect.objectContaining({
+          status: "PUBLISHED",
+          visibility: "SCHOOL",
+        }),
+      })
+    })
+
+    it("rejects PAID visibility on Material (no price column)", async () => {
+      mockDeveloperSession()
+
+      const result = await approveContent("Material", "m-1", {
+        visibility: "PAID",
+        price: 5,
+        currency: "USD",
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: "PAID visibility is not supported for this content type",
+      })
+      expect(db.material.update).not.toHaveBeenCalled()
+    })
+
+    it("rejects PAID visibility on Assignment (no price column)", async () => {
+      mockDeveloperSession()
+
+      const result = await approveContent("Assignment", "a-1", {
+        visibility: "PAID",
+        price: 5,
+        currency: "USD",
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: "PAID visibility is not supported for this content type",
+      })
+      expect(db.assignment.update).not.toHaveBeenCalled()
+    })
+
+    it("rejects PAID visibility on Book (no price column)", async () => {
+      mockDeveloperSession()
+
+      const result = await approveContent("Book", "b-1", {
+        visibility: "PAID",
+        price: 5,
+        currency: "USD",
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: "PAID visibility is not supported for this content type",
+      })
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it("rejects Question PAID approval without a valid price", async () => {
+      mockDeveloperSession()
+
+      const result = await approveContent("Question", "q-1", {
+        visibility: "PAID",
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: "Paid content requires a price and 3-letter currency",
+      })
+      expect(db.question.update).not.toHaveBeenCalled()
+    })
+
+    it("writes price + uppercased currency on valid Question PAID approval", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.question.update).mockResolvedValue({} as any)
+
+      const result = await approveContent("Question", "q-1", {
+        visibility: "PAID",
+        price: 9.99,
+        currency: "usd",
+      })
+
+      expect(result).toEqual({ success: true })
+      expect(db.question.update).toHaveBeenCalledWith({
+        where: { id: "q-1" },
+        data: expect.objectContaining({
+          approvalStatus: "APPROVED",
+          status: "PUBLISHED",
+          visibility: "PAID",
+          price: 9.99,
+          currency: "USD",
         }),
       })
     })

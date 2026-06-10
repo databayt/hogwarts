@@ -4,17 +4,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { assignmentColumns, type AssignmentRow } from "./assignment-columns"
+import { getAssignmentColumns, type AssignmentRow } from "./assignment-columns"
 
 interface Props {
   data: AssignmentRow[]
+  dictionary?: Dictionary
 }
 
-export function AssignmentTable({ data }: Props) {
-  const columns = useMemo(() => assignmentColumns, [])
+export function AssignmentTable({ data, dictionary }: Props) {
+  const columns = useMemo(() => getAssignmentColumns(dictionary), [dictionary])
 
   const { table } = useDataTable<AssignmentRow>({
     data,

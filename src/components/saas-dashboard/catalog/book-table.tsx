@@ -4,17 +4,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
 
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
-import { catalogBookColumns, type BookRow } from "./book-columns"
+import { getCatalogBookColumns, type BookRow } from "./book-columns"
 
 interface Props {
   data: BookRow[]
+  dictionary?: Dictionary
 }
 
-export function BookTable({ data }: Props) {
-  const columns = useMemo(() => catalogBookColumns, [])
+export function BookTable({ data, dictionary }: Props) {
+  const columns = useMemo(() => getCatalogBookColumns(dictionary), [dictionary])
 
   const { table } = useDataTable<BookRow>({
     data,

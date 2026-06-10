@@ -488,7 +488,27 @@
       "statusInReview": "In Review",
       "statusApproved": "Approved",
       "statusRejected": "Rejected",
-      "statusPublished": "Published"
+      "statusPublished": "Published",
+      "manage": {
+        "manageFlags": "Manage visibility",
+        "visibility": "Visibility",
+        "status": "Status",
+        "price": "Price",
+        "currency": "Currency",
+        "visibilityPrivate": "Private",
+        "visibilitySchool": "School only",
+        "visibilityPublic": "Public catalog",
+        "visibilityPaid": "Paid (requires price)",
+        "statusDraft": "Draft",
+        "statusReview": "Review",
+        "statusPublished": "Published",
+        "statusArchived": "Archived",
+        "statusDeprecated": "Deprecated",
+        "save": "Save",
+        "saved": "Changes saved",
+        "paidRequiresPrice": "Paid content requires a price and 3-letter currency",
+        "paidUnsupported": "PAID visibility is not supported for this content type"
+      }
     }
   }
 }
