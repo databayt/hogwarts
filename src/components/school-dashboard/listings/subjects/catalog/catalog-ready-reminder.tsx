@@ -53,9 +53,11 @@ export function CatalogReadyReminder({
 
   useEffect(() => {
     const dismissed = readDismissed(schoolId)
-    if (pinnedSubjects.some((s) => !dismissed.includes(s.id))) {
-      setOpen(true)
-    }
+    if (!pinnedSubjects.some((s) => !dismissed.includes(s.id))) return
+    // Deferred so the dialog opens after hydration paint (also satisfies
+    // react-hooks/set-state-in-effect).
+    const timer = setTimeout(() => setOpen(true), 0)
+    return () => clearTimeout(timer)
   }, [schoolId, pinnedSubjects])
 
   function dismiss() {
