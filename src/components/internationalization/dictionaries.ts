@@ -3,204 +3,56 @@
 
 import "server-only"
 
+import { cache } from "react"
+
 import type { Locale } from "./config"
+import {
+  flatDictionaries,
+  loadFeature,
+  loadFeatureDictionaries,
+  loadLocale,
+  type FeatureDictionaries,
+  type FeatureNamespace,
+} from "./namespaces"
 
-// We enumerate all dictionaries here for better linting and typescript support
-const generalDictionaries = {
-  en: () => import("./en.json").then((module) => module.default),
-  ar: () => import("./ar.json").then((module) => module.default),
-} as const
+// Namespace registration lives in ONE place: ./namespaces.ts (shared with the
+// client loader). Every exported loader below is wrapped in React cache() so
+// repeated calls within a single request reuse one merge.
 
-const schoolDictionaries = {
-  en: () => import("./school-en.json").then((module) => module.default),
-  ar: () => import("./school-ar.json").then((module) => module.default),
-} as const
+/** general + school + operator — the core every dashboard route needs. */
+const loadCore = (locale: Locale) =>
+  Promise.all([
+    loadLocale(flatDictionaries.general, locale),
+    loadLocale(flatDictionaries.school, locale),
+    loadLocale(flatDictionaries.operator, locale),
+  ] as const)
 
-const streamDictionaries = {
-  en: () => import("./stream-en.json").then((module) => module.default),
-  ar: () => import("./stream-ar.json").then((module) => module.default),
-} as const
-
-const operatorDictionaries = {
-  en: () => import("./operator-en.json").then((module) => module.default),
-  ar: () => import("./operator-ar.json").then((module) => module.default),
-} as const
-
-// Library module dictionaries
-const libraryDictionaries = {
-  en: () =>
-    import("./dictionaries/en/library.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/library.json").then((module) => module.default),
-} as const
-
-// Banking module dictionaries
-const bankingDictionaries = {
-  en: () =>
-    import("./dictionaries/en/banking.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/banking.json").then((module) => module.default),
-} as const
-
-// Marking module dictionaries (Auto-Marking System)
-const markingDictionaries = {
-  en: () =>
-    import("./dictionaries/en/marking.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/marking.json").then((module) => module.default),
-} as const
-
-// Auto-Generate Exams module dictionaries
-const generateDictionaries = {
-  en: () =>
-    import("./dictionaries/en/generate.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/generate.json").then((module) => module.default),
-} as const
-
-// Results module dictionaries
-const resultsDictionaries = {
-  en: () =>
-    import("./dictionaries/en/results.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/results.json").then((module) => module.default),
-} as const
-
-// Finance module dictionaries
-const financeDictionaries = {
-  en: () =>
-    import("./dictionaries/en/finance.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/finance.json").then((module) => module.default),
-} as const
-
-// Admin module dictionaries
-const adminDictionaries = {
-  en: () =>
-    import("./dictionaries/en/admin.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/admin.json").then((module) => module.default),
-} as const
-
-// Profile module dictionaries
-const profileDictionaries = {
-  en: () =>
-    import("./dictionaries/en/profile.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/profile.json").then((module) => module.default),
-} as const
-
-// Notifications module dictionaries
-const notificationsDictionaries = {
-  en: () =>
-    import("./dictionaries/en/notifications.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/notifications.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Messages module dictionaries (validation, toast, errors)
-const messagesDictionaries = {
-  en: () =>
-    import("./dictionaries/en/messages.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/messages.json").then((module) => module.default),
-} as const
-
-// Lab module dictionaries
-const labDictionaries = {
-  en: () =>
-    import("./dictionaries/en/lab.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/lab.json").then((module) => module.default),
-} as const
-
-// Sales module dictionaries (B2B CRM/Leads)
-const salesDictionaries = {
-  en: () =>
-    import("./dictionaries/en/sales.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/sales.json").then((module) => module.default),
-} as const
-
-// Attendance module dictionaries
-const attendanceDictionaries = {
-  en: () =>
-    import("./dictionaries/en/attendance.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/attendance.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Compliance module dictionaries (regulator submission, e.g., ADEK eSIS)
-const complianceDictionaries = {
-  en: () =>
-    import("./dictionaries/en/compliance.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/compliance.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Messaging module dictionaries (chat, conversations)
-const messagingDictionaries = {
-  en: () =>
-    import("./dictionaries/en/messaging.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/messaging.json").then((module) => module.default),
-} as const
-
-// WhatsApp module dictionaries (WhatsApp integration)
-const whatsappDictionaries = {
-  en: () =>
-    import("./dictionaries/en/whatsapp.json").then((module) => module.default),
-  ar: () =>
-    import("./dictionaries/ar/whatsapp.json").then((module) => module.default),
-} as const
-
-// Transportation module dictionaries (fleet, routes, drivers, assignments)
-const transportationDictionaries = {
-  en: () =>
-    import("./dictionaries/en/transportation.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/transportation.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Live-classes module dictionaries (LiveKit video conferencing)
-const liveClassesDictionaries = {
-  en: () =>
-    import("./dictionaries/en/live-classes.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/live-classes.json").then(
-      (module) => module.default
-    ),
-} as const
-
-// Parent portal module dictionaries (announcements, events)
-const parentPortalDictionaries = {
-  en: () =>
-    import("./dictionaries/en/parentPortal.json").then(
-      (module) => module.default
-    ),
-  ar: () =>
-    import("./dictionaries/ar/parentPortal.json").then(
-      (module) => module.default
-    ),
-} as const
+/**
+ * Build a route-scoped loader: core (general/school/operator, spread flat)
+ * plus the given feature namespaces nested under their keys.
+ */
+const makeRouteDictionary = <K extends FeatureNamespace>(
+  name: string,
+  keys: readonly K[]
+) =>
+  cache(async (locale: Locale) => {
+    const load = async (loc: Locale) => {
+      const [[general, school, operator], features] = await Promise.all([
+        loadCore(loc),
+        Promise.all(keys.map((k) => loadFeature(k, loc))),
+      ])
+      const nested = Object.fromEntries(
+        keys.map((k, i) => [k, features[i]])
+      ) as unknown as { [P in K]: FeatureDictionaries[P] }
+      return { ...general, ...school, ...operator, ...nested }
+    }
+    try {
+      return await load(locale)
+    } catch {
+      console.warn(`Failed to load ${name} dictionary for locale: ${locale}`)
+      return await load("en")
+    }
+  })
 
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
@@ -210,366 +62,96 @@ const parentPortalDictionaries = {
  * Marketing pages - only general translations
  * Used for: home page, landing pages, public pages
  */
-export const getMarketingDictionary = async (locale: Locale) => {
+export const getMarketingDictionary = cache(async (locale: Locale) => {
   try {
-    const general = await (generalDictionaries[locale]?.() ??
-      generalDictionaries["en"]())
-    return general
-  } catch (error) {
+    return await loadLocale(flatDictionaries.general, locale)
+  } catch {
     console.warn(`Failed to load marketing dictionary for locale: ${locale}`)
-    return await generalDictionaries["en"]()
+    return await flatDictionaries.general.en()
   }
-}
+})
 
 /**
  * Platform core pages - general + school + saas-dashboard + messages
  * Used for: lab, attendance, basic school-dashboard features
  */
-export const getPlatformCoreDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages }
-  } catch (error) {
-    console.warn(
-      `Failed to load platform core dictionary for locale: ${locale}`
-    )
-    const [general, school, operator, messages] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      messagesDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages }
-  }
-}
+export const getPlatformCoreDictionary = makeRouteDictionary("platform core", [
+  "messages",
+])
 
 /**
- * Stream pages - school-dashboard core + stream
+ * Stream pages - school-dashboard core + stream (spread flat)
  * Used for: course/stream management pages
  */
-export const getStreamDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, stream] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
+export const getStreamDictionary = cache(async (locale: Locale) => {
+  const load = async (loc: Locale) => {
+    const [[general, school, operator], stream] = await Promise.all([
+      loadCore(loc),
+      loadLocale(flatDictionaries.stream, loc),
     ])
     return { ...general, ...school, ...operator, ...stream }
-  } catch (error) {
+  }
+  try {
+    return await load(locale)
+  } catch {
     console.warn(`Failed to load stream dictionary for locale: ${locale}`)
-    const [general, school, operator, stream] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      streamDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, ...stream }
+    return await load("en")
   }
-}
+})
 
-/**
- * Library pages - school-dashboard core + library
- * Used for: library management pages
- */
-export const getLibraryDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, library] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      libraryDictionaries[locale]?.() ?? libraryDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, library }
-  } catch (error) {
-    console.warn(`Failed to load library dictionary for locale: ${locale}`)
-    const [general, school, operator, library] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      libraryDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, library }
-  }
-}
+/** Library pages - school-dashboard core + library */
+export const getLibraryDictionary = makeRouteDictionary("library", ["library"])
 
-/**
- * Banking pages - school-dashboard core + banking
- * Used for: banking/accounts pages
- */
-export const getBankingDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, banking] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      bankingDictionaries[locale]?.() ?? bankingDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, banking }
-  } catch (error) {
-    console.warn(`Failed to load banking dictionary for locale: ${locale}`)
-    const [general, school, operator, banking] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      bankingDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, banking }
-  }
-}
+/** Banking pages - school-dashboard core + banking */
+export const getBankingDictionary = makeRouteDictionary("banking", ["banking"])
 
-/**
- * Finance pages - school-dashboard core + finance
- * Used for: finance/accounting pages
- */
-export const getFinanceDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, finance] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, finance }
-  } catch (error) {
-    console.warn(`Failed to load finance dictionary for locale: ${locale}`)
-    const [general, school, operator, finance] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      financeDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, finance }
-  }
-}
+/** Finance pages - school-dashboard core + finance */
+export const getFinanceDictionary = makeRouteDictionary("finance", ["finance"])
 
-/**
- * Admin pages - school-dashboard core + admin
- * Used for: admin/settings pages
- */
-export const getAdminDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, admin] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, admin }
-  } catch (error) {
-    console.warn(`Failed to load admin dictionary for locale: ${locale}`)
-    const [general, school, operator, admin] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      adminDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, admin }
-  }
-}
+/** Admin pages - school-dashboard core + admin */
+export const getAdminDictionary = makeRouteDictionary("admin", ["admin"])
 
 /**
  * Exam pages - school-dashboard core + marking + generate + results
  * Used for: exam management, marking, results pages
  */
-export const getExamDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, marking, generate, results] =
-      await Promise.all([
-        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-        markingDictionaries[locale]?.() ?? markingDictionaries["en"](),
-        generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
-        resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
-      ])
-    return { ...general, ...school, ...operator, marking, generate, results }
-  } catch (error) {
-    console.warn(`Failed to load exam dictionary for locale: ${locale}`)
-    const [general, school, operator, marking, generate, results] =
-      await Promise.all([
-        generalDictionaries["en"](),
-        schoolDictionaries["en"](),
-        operatorDictionaries["en"](),
-        markingDictionaries["en"](),
-        generateDictionaries["en"](),
-        resultsDictionaries["en"](),
-      ])
-    return { ...general, ...school, ...operator, marking, generate, results }
-  }
-}
+export const getExamDictionary = makeRouteDictionary("exam", [
+  "marking",
+  "generate",
+  "results",
+])
 
-/**
- * Notification pages - school-dashboard core + notifications
- * Used for: notification center, notification preferences
- */
-export const getNotificationDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, notifications] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      notificationsDictionaries[locale]?.() ??
-        notificationsDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, notifications }
-  } catch (error) {
-    console.warn(`Failed to load notification dictionary for locale: ${locale}`)
-    const [general, school, operator, notifications] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      notificationsDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, notifications }
-  }
-}
+/** Notification pages - school-dashboard core + notifications */
+export const getNotificationDictionary = makeRouteDictionary("notification", [
+  "notifications",
+])
 
-/**
- * Sales pages - school-dashboard core + sales
- * Used for: leads management, CRM, B2B sales
- */
-export const getSalesDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, sales] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, sales }
-  } catch (error) {
-    console.warn(`Failed to load sales dictionary for locale: ${locale}`)
-    const [general, school, operator, sales] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      salesDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, sales }
-  }
-}
+/** Sales pages - school-dashboard core + sales (leads, CRM, B2B) */
+export const getSalesDictionary = makeRouteDictionary("sales", ["sales"])
 
-/**
- * Attendance pages - school-dashboard core + attendance
- * Used for: attendance tracking, QR codes, geofencing, interventions
- */
-export const getAttendanceDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages, attendance] = await Promise.all(
-      [
-        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-        messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-        attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, attendance }
-  } catch (error) {
-    console.warn(`Failed to load attendance dictionary for locale: ${locale}`)
-    const [general, school, operator, messages, attendance] = await Promise.all(
-      [
-        generalDictionaries["en"](),
-        schoolDictionaries["en"](),
-        operatorDictionaries["en"](),
-        messagesDictionaries["en"](),
-        attendanceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, attendance }
-  }
-}
+/** Attendance pages - school-dashboard core + messages + attendance */
+export const getAttendanceDictionary = makeRouteDictionary("attendance", [
+  "messages",
+  "attendance",
+])
 
-/**
- * Compliance pages - school-dashboard core + compliance
- * Used for: regulator submission (ADEK eSIS), settings, audit trail
- */
-export const getComplianceDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages, compliance] = await Promise.all(
-      [
-        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-        messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-        complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, compliance }
-  } catch (error) {
-    console.warn(`Failed to load compliance dictionary for locale: ${locale}`)
-    const [general, school, operator, messages, compliance] = await Promise.all(
-      [
-        generalDictionaries["en"](),
-        schoolDictionaries["en"](),
-        operatorDictionaries["en"](),
-        messagesDictionaries["en"](),
-        complianceDictionaries["en"](),
-      ]
-    )
-    return { ...general, ...school, ...operator, messages, compliance }
-  }
-}
+/** Compliance pages - school-dashboard core + messages + compliance */
+export const getComplianceDictionary = makeRouteDictionary("compliance", [
+  "messages",
+  "compliance",
+])
 
-/**
- * Messaging pages - school-dashboard core + messaging
- * Used for: chat, conversations, direct messages
- */
-export const getMessagingDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages, messaging] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-      messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages, messaging }
-  } catch (error) {
-    console.warn(`Failed to load messaging dictionary for locale: ${locale}`)
-    const [general, school, operator, messages, messaging] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      messagesDictionaries["en"](),
-      messagingDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages, messaging }
-  }
-}
+/** Messaging pages - school-dashboard core + messages + messaging (chat) */
+export const getMessagingDictionary = makeRouteDictionary("messaging", [
+  "messages",
+  "messaging",
+])
 
-/**
- * WhatsApp pages - school-dashboard core + whatsapp
- * Used for: WhatsApp integration, groups, messages, templates
- */
-export const getWhatsAppDictionary = async (locale: Locale) => {
-  try {
-    const [general, school, operator, messages, whatsapp] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-      whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages, whatsapp }
-  } catch (error) {
-    console.warn(`Failed to load whatsapp dictionary for locale: ${locale}`)
-    const [general, school, operator, messages, whatsapp] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      messagesDictionaries["en"](),
-      whatsappDictionaries["en"](),
-    ])
-    return { ...general, ...school, ...operator, messages, whatsapp }
-  }
-}
+/** WhatsApp pages - school-dashboard core + messages + whatsapp */
+export const getWhatsAppDictionary = makeRouteDictionary("whatsapp", [
+  "messages",
+  "whatsapp",
+])
 
 // ============================================================================
 // Full Dictionary Loader (Default)
@@ -579,167 +161,26 @@ export const getWhatsAppDictionary = async (locale: Locale) => {
  * Full dictionary - loads all translations
  * Use route-specific loaders above for better performance when needed
  */
-export const getDictionary = async (locale: Locale) => {
-  try {
-    // Load all dictionaries
-    const [
-      general,
-      school,
-      stream,
-      operator,
-      library,
-      banking,
-      marking,
-      generate,
-      results,
-      finance,
-      admin,
-      profile,
-      notifications,
-      messages,
-      lab,
-      sales,
-      attendance,
-      messaging,
-      whatsapp,
-      transportation,
-      compliance,
-      liveClasses,
-      parentPortal,
-    ] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      libraryDictionaries[locale]?.() ?? libraryDictionaries["en"](),
-      bankingDictionaries[locale]?.() ?? bankingDictionaries["en"](),
-      markingDictionaries[locale]?.() ?? markingDictionaries["en"](),
-      generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
-      resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
-      financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
-      adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
-      profileDictionaries[locale]?.() ?? profileDictionaries["en"](),
-      notificationsDictionaries[locale]?.() ??
-        notificationsDictionaries["en"](),
-      messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-      labDictionaries[locale]?.() ?? labDictionaries["en"](),
-      salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
-      attendanceDictionaries[locale]?.() ?? attendanceDictionaries["en"](),
-      messagingDictionaries[locale]?.() ?? messagingDictionaries["en"](),
-      whatsappDictionaries[locale]?.() ?? whatsappDictionaries["en"](),
-      transportationDictionaries[locale]?.() ??
-        transportationDictionaries["en"](),
-      complianceDictionaries[locale]?.() ?? complianceDictionaries["en"](),
-      liveClassesDictionaries[locale]?.() ?? liveClassesDictionaries["en"](),
-      parentPortalDictionaries[locale]?.() ?? parentPortalDictionaries["en"](),
+export const getDictionary = cache(async (locale: Locale) => {
+  const load = async (loc: Locale) => {
+    const [general, school, stream, operator, features] = await Promise.all([
+      loadLocale(flatDictionaries.general, loc),
+      loadLocale(flatDictionaries.school, loc),
+      loadLocale(flatDictionaries.stream, loc),
+      loadLocale(flatDictionaries.operator, loc),
+      loadFeatureDictionaries(loc),
     ])
-
-    // Merge dictionaries with module-specific keys nested under their respective namespaces
-    return {
-      ...general,
-      ...school,
-      ...stream,
-      ...operator,
-      library,
-      banking,
-      marking,
-      generate,
-      results,
-      finance,
-      admin,
-      profile,
-      notifications,
-      messages,
-      lab,
-      sales,
-      attendance,
-      messaging,
-      whatsapp,
-      transportation,
-      compliance,
-      liveClasses,
-      parentPortal,
-    }
-  } catch (error) {
+    return { ...general, ...school, ...stream, ...operator, ...features }
+  }
+  try {
+    return await load(locale)
+  } catch {
     console.warn(
       `Failed to load dictionary for locale: ${locale}. Falling back to en.`
     )
-    const [
-      general,
-      school,
-      stream,
-      operator,
-      library,
-      banking,
-      marking,
-      generate,
-      results,
-      finance,
-      admin,
-      profile,
-      notifications,
-      messages,
-      lab,
-      sales,
-      attendance,
-      messaging,
-      whatsapp,
-      transportation,
-      compliance,
-      liveClasses,
-      parentPortal,
-    ] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      streamDictionaries["en"](),
-      operatorDictionaries["en"](),
-      libraryDictionaries["en"](),
-      bankingDictionaries["en"](),
-      markingDictionaries["en"](),
-      generateDictionaries["en"](),
-      resultsDictionaries["en"](),
-      financeDictionaries["en"](),
-      adminDictionaries["en"](),
-      profileDictionaries["en"](),
-      notificationsDictionaries["en"](),
-      messagesDictionaries["en"](),
-      labDictionaries["en"](),
-      salesDictionaries["en"](),
-      attendanceDictionaries["en"](),
-      messagingDictionaries["en"](),
-      whatsappDictionaries["en"](),
-      transportationDictionaries["en"](),
-      complianceDictionaries["en"](),
-      liveClassesDictionaries["en"](),
-      parentPortalDictionaries["en"](),
-    ])
-    return {
-      ...general,
-      ...school,
-      ...stream,
-      ...operator,
-      library,
-      banking,
-      marking,
-      generate,
-      results,
-      finance,
-      admin,
-      profile,
-      notifications,
-      messages,
-      lab,
-      sales,
-      attendance,
-      messaging,
-      whatsapp,
-      transportation,
-      compliance,
-      liveClasses,
-      parentPortal,
-    }
+    return await load("en")
   }
-}
+})
 
 // ============================================================================
 // Type Helpers

@@ -3,10 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import {
-  googleTranslate,
-  googleTranslateBatch,
-} from "@/components/translation/google"
+import { translateBatch, translateRaw } from "@/components/translation/google"
 
 // Must import after mocking fetch
 const mockFetch = vi.fn()
@@ -15,7 +12,7 @@ vi.stubGlobal("fetch", mockFetch)
 // Store and restore original env
 const originalEnv = process.env.GOOGLE_TRANSLATE_API_KEY
 
-describe("googleTranslate", () => {
+describe("translateRaw", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.GOOGLE_TRANSLATE_API_KEY = "test-api-key"
@@ -34,7 +31,7 @@ describe("googleTranslate", () => {
   it("throws error when GOOGLE_TRANSLATE_API_KEY is not set", async () => {
     delete process.env.GOOGLE_TRANSLATE_API_KEY
 
-    await expect(googleTranslate("hello", "en", "ar")).rejects.toThrow(
+    await expect(translateRaw("hello", "en", "ar")).rejects.toThrow(
       "GOOGLE_TRANSLATE_API_KEY not configured"
     )
   })
@@ -42,13 +39,13 @@ describe("googleTranslate", () => {
   // --- Empty text ---
 
   it("returns empty string for empty text", async () => {
-    const result = await googleTranslate("", "en", "ar")
+    const result = await translateRaw("", "en", "ar")
     expect(result).toBe("")
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
   it("returns empty string for whitespace-only text", async () => {
-    const result = await googleTranslate("   ", "en", "ar")
+    const result = await translateRaw("   ", "en", "ar")
     expect(result).toBe("")
     expect(mockFetch).not.toHaveBeenCalled()
   })
@@ -65,7 +62,7 @@ describe("googleTranslate", () => {
       }),
     })
 
-    const result = await googleTranslate("hello", "en", "ar")
+    const result = await translateRaw("hello", "en", "ar")
 
     expect(result).toBe("مرحبا")
     expect(mockFetch).toHaveBeenCalledTimes(1)
@@ -91,7 +88,7 @@ describe("googleTranslate", () => {
       text: async () => "Forbidden - invalid API key",
     })
 
-    await expect(googleTranslate("hello", "en", "ar")).rejects.toThrow(
+    await expect(translateRaw("hello", "en", "ar")).rejects.toThrow(
       "Google Translate API error: 403 - Forbidden - invalid API key"
     )
   })
@@ -103,7 +100,7 @@ describe("googleTranslate", () => {
       text: async () => "Internal Server Error",
     })
 
-    await expect(googleTranslate("hello", "en", "ar")).rejects.toThrow(
+    await expect(translateRaw("hello", "en", "ar")).rejects.toThrow(
       "Google Translate API error: 500 - Internal Server Error"
     )
   })
@@ -120,7 +117,7 @@ describe("googleTranslate", () => {
       }),
     })
 
-    const result = await googleTranslate("hello", "en", "ar")
+    const result = await translateRaw("hello", "en", "ar")
     expect(result).toBe("")
   })
 
@@ -136,12 +133,12 @@ describe("googleTranslate", () => {
       }),
     })
 
-    const result = await googleTranslate("hello", "en", "fr")
+    const result = await translateRaw("hello", "en", "fr")
     expect(result).toBe("bonjour")
   })
 })
 
-describe("googleTranslateBatch", () => {
+describe("translateBatch", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.GOOGLE_TRANSLATE_API_KEY = "test-api-key"
@@ -160,7 +157,7 @@ describe("googleTranslateBatch", () => {
   it("throws error when GOOGLE_TRANSLATE_API_KEY is not set", async () => {
     delete process.env.GOOGLE_TRANSLATE_API_KEY
 
-    await expect(googleTranslateBatch(["hello"], "en", "ar")).rejects.toThrow(
+    await expect(translateBatch(["hello"], "en", "ar")).rejects.toThrow(
       "GOOGLE_TRANSLATE_API_KEY not configured"
     )
   })
@@ -168,7 +165,7 @@ describe("googleTranslateBatch", () => {
   // --- All empty strings ---
 
   it("returns array of empty strings when all texts are empty", async () => {
-    const result = await googleTranslateBatch(["", "  ", ""], "en", "ar")
+    const result = await translateBatch(["", "  ", ""], "en", "ar")
 
     expect(result).toEqual(["", "", ""])
     expect(mockFetch).not.toHaveBeenCalled()
@@ -189,7 +186,7 @@ describe("googleTranslateBatch", () => {
       }),
     })
 
-    const result = await googleTranslateBatch(
+    const result = await translateBatch(
       ["hello", "", "world", "  "],
       "en",
       "ar"
@@ -215,7 +212,7 @@ describe("googleTranslateBatch", () => {
       }),
     })
 
-    await googleTranslateBatch(["hello", "world", "test"], "en", "ar")
+    await translateBatch(["hello", "world", "test"], "en", "ar")
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
     const [url] = mockFetch.mock.calls[0]
@@ -243,7 +240,7 @@ describe("googleTranslateBatch", () => {
       }),
     })
 
-    const result = await googleTranslateBatch(["hello", "world"], "en", "fr")
+    const result = await translateBatch(["hello", "world"], "en", "fr")
 
     expect(result).toEqual(["bonjour", "monde"])
   })
@@ -258,7 +255,7 @@ describe("googleTranslateBatch", () => {
     })
 
     await expect(
-      googleTranslateBatch(["hello", "world"], "en", "ar")
+      translateBatch(["hello", "world"], "en", "ar")
     ).rejects.toThrow("Google Translate API error: 429 - Rate limit exceeded")
   })
 
@@ -277,7 +274,7 @@ describe("googleTranslateBatch", () => {
       }),
     })
 
-    const result = await googleTranslateBatch(["hello", "world"], "en", "ar")
+    const result = await translateBatch(["hello", "world"], "en", "ar")
 
     expect(result[0]).toBe("مرحبا")
     expect(result[1]).toBe("")

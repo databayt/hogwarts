@@ -3,17 +3,14 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { translateWithCache } from "@/components/translation/actions"
-import {
-  getDisplayFields,
-  getDisplayText,
-} from "@/components/translation/display"
+import { translate } from "@/components/translation/actions"
+import { getFields, getText } from "@/components/translation/display"
 
 vi.mock("@/components/translation/actions", () => ({
-  translateWithCache: vi.fn(),
+  translate: vi.fn(),
 }))
 
-describe("getDisplayText", () => {
+describe("getText", () => {
   const schoolId = "school-123"
 
   beforeEach(() => {
@@ -21,91 +18,79 @@ describe("getDisplayText", () => {
   })
 
   it("returns empty string for null text", async () => {
-    const result = await getDisplayText(null, "ar", "en", schoolId)
+    const result = await getText(null, "ar", "en", schoolId)
     expect(result).toBe("")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns empty string for undefined text", async () => {
-    const result = await getDisplayText(undefined, "ar", "en", schoolId)
+    const result = await getText(undefined, "ar", "en", schoolId)
     expect(result).toBe("")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns empty string for empty string text", async () => {
-    const result = await getDisplayText("", "ar", "en", schoolId)
+    const result = await getText("", "ar", "en", schoolId)
     expect(result).toBe("")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns empty string for whitespace-only text", async () => {
-    const result = await getDisplayText("   ", "ar", "en", schoolId)
+    const result = await getText("   ", "ar", "en", schoolId)
     expect(result).toBe("")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns text directly when content and display language are the same", async () => {
-    const result = await getDisplayText("مرحبا", "ar", "ar", schoolId)
+    const result = await getText("مرحبا", "ar", "ar", schoolId)
     expect(result).toBe("مرحبا")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns text directly for same language (English)", async () => {
-    const result = await getDisplayText("hello", "en", "en", schoolId)
+    const result = await getText("hello", "en", "en", schoolId)
     expect(result).toBe("hello")
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
-  it("calls translateWithCache when languages differ", async () => {
-    vi.mocked(translateWithCache).mockResolvedValue("hello")
+  it("calls translate when languages differ", async () => {
+    vi.mocked(translate).mockResolvedValue("hello")
 
-    const result = await getDisplayText("مرحبا", "ar", "en", schoolId)
+    const result = await getText("مرحبا", "ar", "en", schoolId)
 
     expect(result).toBe("hello")
-    expect(translateWithCache).toHaveBeenCalledWith(
-      "مرحبا",
-      "ar",
-      "en",
-      schoolId
-    )
+    expect(translate).toHaveBeenCalledWith("مرحبا", "ar", "en", schoolId)
   })
 
   it("translates from English to Arabic when languages differ", async () => {
-    vi.mocked(translateWithCache).mockResolvedValue("مرحبا")
+    vi.mocked(translate).mockResolvedValue("مرحبا")
 
-    const result = await getDisplayText("hello", "en", "ar", schoolId)
+    const result = await getText("hello", "en", "ar", schoolId)
 
     expect(result).toBe("مرحبا")
-    expect(translateWithCache).toHaveBeenCalledWith(
-      "hello",
-      "en",
-      "ar",
-      schoolId
-    )
+    expect(translate).toHaveBeenCalledWith("hello", "en", "ar", schoolId)
   })
 
   it("returns source text as fallback when translation fails", async () => {
-    vi.mocked(translateWithCache).mockRejectedValue(
-      new Error("API unavailable")
-    )
+    vi.mocked(translate).mockRejectedValue(new Error("API unavailable"))
 
-    const result = await getDisplayText("مرحبا", "ar", "en", schoolId)
+    const result = await getText("مرحبا", "ar", "en", schoolId)
 
     expect(result).toBe("مرحبا")
   })
 
   it("returns source text on network error without rethrowing", async () => {
-    vi.mocked(translateWithCache).mockRejectedValue(
+    vi.mocked(translate).mockRejectedValue(
       new Error("GOOGLE_TRANSLATE_API_KEY not configured")
     )
 
-    const result = await getDisplayText("hello", "en", "ar", schoolId)
+    const result = await getText("hello", "en", "ar", schoolId)
 
     expect(result).toBe("hello")
   })
 })
 
-describe("getDisplayFields", () => {
+describe("getFields", () => {
   const schoolId = "school-123"
 
   beforeEach(() => {
@@ -119,7 +104,7 @@ describe("getDisplayFields", () => {
       id: "1",
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",
@@ -131,7 +116,7 @@ describe("getDisplayFields", () => {
       title: "مرحبا",
       body: "هذا هو المحتوى",
     })
-    expect(translateWithCache).not.toHaveBeenCalled()
+    expect(translate).not.toHaveBeenCalled()
   })
 
   it("returns empty string for non-string fields when same language", async () => {
@@ -141,7 +126,7 @@ describe("getDisplayFields", () => {
       active: true,
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "count", "active"],
       "ar",
@@ -157,7 +142,7 @@ describe("getDisplayFields", () => {
   })
 
   it("translates all fields in parallel when languages differ", async () => {
-    vi.mocked(translateWithCache)
+    vi.mocked(translate)
       .mockResolvedValueOnce("hello")
       .mockResolvedValueOnce("This is the content")
 
@@ -166,7 +151,7 @@ describe("getDisplayFields", () => {
       body: "هذا هو المحتوى",
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",
@@ -178,14 +163,9 @@ describe("getDisplayFields", () => {
       title: "hello",
       body: "This is the content",
     })
-    expect(translateWithCache).toHaveBeenCalledTimes(2)
-    expect(translateWithCache).toHaveBeenCalledWith(
-      "مرحبا",
-      "ar",
-      "en",
-      schoolId
-    )
-    expect(translateWithCache).toHaveBeenCalledWith(
+    expect(translate).toHaveBeenCalledTimes(2)
+    expect(translate).toHaveBeenCalledWith("مرحبا", "ar", "en", schoolId)
+    expect(translate).toHaveBeenCalledWith(
       "هذا هو المحتوى",
       "ar",
       "en",
@@ -200,9 +180,9 @@ describe("getDisplayFields", () => {
       description: null as string | null,
     }
 
-    vi.mocked(translateWithCache).mockResolvedValueOnce("hello")
+    vi.mocked(translate).mockResolvedValueOnce("hello")
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",
@@ -212,12 +192,12 @@ describe("getDisplayFields", () => {
 
     expect(result.title).toBe("hello")
     expect(result.body).toBe("")
-    // translateWithCache should only be called for non-empty "title"
-    expect(translateWithCache).toHaveBeenCalledTimes(1)
+    // translate should only be called for non-empty "title"
+    expect(translate).toHaveBeenCalledTimes(1)
   })
 
   it("falls back to source text when translation of a field fails", async () => {
-    vi.mocked(translateWithCache)
+    vi.mocked(translate)
       .mockResolvedValueOnce("hello") // title succeeds
       .mockRejectedValueOnce(new Error("API error")) // body fails
 
@@ -226,7 +206,7 @@ describe("getDisplayFields", () => {
       body: "هذا هو المحتوى",
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",
@@ -246,7 +226,7 @@ describe("getDisplayFields", () => {
       // "body" field does not exist on entity
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",
@@ -261,7 +241,7 @@ describe("getDisplayFields", () => {
   })
 
   it("handles all translations failing by returning source texts", async () => {
-    vi.mocked(translateWithCache)
+    vi.mocked(translate)
       .mockRejectedValueOnce(new Error("Fail 1"))
       .mockRejectedValueOnce(new Error("Fail 2"))
 
@@ -270,7 +250,7 @@ describe("getDisplayFields", () => {
       body: "عالم",
     }
 
-    const result = await getDisplayFields(
+    const result = await getFields(
       entity,
       ["title", "body"],
       "ar",

@@ -7,14 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
+  translate,
   translateFields,
   translateText,
-  translateWithCache,
 } from "@/components/translation/actions"
-import {
-  googleTranslate,
-  googleTranslateBatch,
-} from "@/components/translation/google"
+import { translateBatch, translateRaw } from "@/components/translation/google"
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -22,7 +19,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    translationCache: {
+    translation: {
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -32,15 +29,15 @@ vi.mock("@/lib/db", () => ({
 }))
 
 vi.mock("@/components/translation/google", () => ({
-  googleTranslate: vi.fn(),
-  googleTranslateBatch: vi.fn(),
+  translateRaw: vi.fn(),
+  translateBatch: vi.fn(),
 }))
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
-describe("translateWithCache", () => {
+describe("translate", () => {
   const schoolId = "school-123"
 
   beforeEach(() => {
@@ -48,22 +45,22 @@ describe("translateWithCache", () => {
   })
 
   it("returns empty string for empty text", async () => {
-    const result = await translateWithCache("", "en", "ar", schoolId)
+    const result = await translate("", "en", "ar", schoolId)
     expect(result).toBe("")
-    expect(db.translationCache.findUnique).not.toHaveBeenCalled()
+    expect(db.translation.findUnique).not.toHaveBeenCalled()
   })
 
   it("returns empty string for whitespace-only text", async () => {
-    const result = await translateWithCache("   ", "en", "ar", schoolId)
+    const result = await translate("   ", "en", "ar", schoolId)
     expect(result).toBe("")
-    expect(db.translationCache.findUnique).not.toHaveBeenCalled()
+    expect(db.translation.findUnique).not.toHaveBeenCalled()
   })
 
   it("returns text unchanged when source and target language are the same", async () => {
-    const result = await translateWithCache("hello", "en", "en", schoolId)
+    const result = await translate("hello", "en", "en", schoolId)
     expect(result).toBe("hello")
-    expect(db.translationCache.findUnique).not.toHaveBeenCalled()
-    expect(googleTranslate).not.toHaveBeenCalled()
+    expect(db.translation.findUnique).not.toHaveBeenCalled()
+    expect(translateRaw).not.toHaveBeenCalled()
   })
 
   it("returns cached translation on cache hit and increments hitCount", async () => {
@@ -77,13 +74,13 @@ describe("translateWithCache", () => {
       hitCount: 5,
     }
 
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(cachedEntry)
-    vi.mocked(db.translationCache.update).mockResolvedValue(cachedEntry)
+    vi.mocked(db.translation.findUnique).mockResolvedValue(cachedEntry)
+    vi.mocked(db.translation.update).mockResolvedValue(cachedEntry)
 
-    const result = await translateWithCache("hello", "en", "ar", schoolId)
+    const result = await translate("hello", "en", "ar", schoolId)
 
     expect(result).toBe("مرحبا")
-    expect(db.translationCache.findUnique).toHaveBeenCalledWith({
+    expect(db.translation.findUnique).toHaveBeenCalledWith({
       where: {
         schoolId_sourceText_sourceLanguage_targetLanguage: {
           schoolId,
@@ -93,26 +90,26 @@ describe("translateWithCache", () => {
         },
       },
     })
-    expect(db.translationCache.update).toHaveBeenCalledWith({
+    expect(db.translation.update).toHaveBeenCalledWith({
       where: { id: "cache-1" },
       data: {
         hitCount: { increment: 1 },
         lastAccessedAt: expect.any(Date),
       },
     })
-    expect(googleTranslate).not.toHaveBeenCalled()
+    expect(translateRaw).not.toHaveBeenCalled()
   })
 
-  it("calls googleTranslate on cache miss and creates cache entry", async () => {
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(null)
-    vi.mocked(googleTranslate).mockResolvedValue("مرحبا")
-    vi.mocked(db.translationCache.create).mockResolvedValue({} as never)
+  it("calls translateRaw on cache miss and creates cache entry", async () => {
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null)
+    vi.mocked(translateRaw).mockResolvedValue("مرحبا")
+    vi.mocked(db.translation.create).mockResolvedValue({} as never)
 
-    const result = await translateWithCache("hello", "en", "ar", schoolId)
+    const result = await translate("hello", "en", "ar", schoolId)
 
     expect(result).toBe("مرحبا")
-    expect(googleTranslate).toHaveBeenCalledWith("hello", "en", "ar")
-    expect(db.translationCache.create).toHaveBeenCalledWith({
+    expect(translateRaw).toHaveBeenCalledWith("hello", "en", "ar")
+    expect(db.translation.create).toHaveBeenCalledWith({
       data: {
         schoolId,
         sourceText: "hello",
@@ -125,13 +122,13 @@ describe("translateWithCache", () => {
   })
 
   it("does not throw when cache create fails (race condition tolerance)", async () => {
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(null)
-    vi.mocked(googleTranslate).mockResolvedValue("مرحبا")
-    vi.mocked(db.translationCache.create).mockRejectedValue(
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null)
+    vi.mocked(translateRaw).mockResolvedValue("مرحبا")
+    vi.mocked(db.translation.create).mockRejectedValue(
       new Error("Unique constraint violation")
     )
 
-    const result = await translateWithCache("hello", "en", "ar", schoolId)
+    const result = await translate("hello", "en", "ar", schoolId)
     expect(result).toBe("مرحبا")
   })
 
@@ -146,12 +143,10 @@ describe("translateWithCache", () => {
       hitCount: 5,
     }
 
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(cachedEntry)
-    vi.mocked(db.translationCache.update).mockRejectedValue(
-      new Error("DB error")
-    )
+    vi.mocked(db.translation.findUnique).mockResolvedValue(cachedEntry)
+    vi.mocked(db.translation.update).mockRejectedValue(new Error("DB error"))
 
-    const result = await translateWithCache("hello", "en", "ar", schoolId)
+    const result = await translate("hello", "en", "ar", schoolId)
     expect(result).toBe("مرحبا")
   })
 })
@@ -246,9 +241,9 @@ describe("translateText", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(null)
-    vi.mocked(googleTranslate).mockResolvedValue("مرحبا")
-    vi.mocked(db.translationCache.create).mockResolvedValue({} as never)
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null)
+    vi.mocked(translateRaw).mockResolvedValue("مرحبا")
+    vi.mocked(db.translation.create).mockResolvedValue({} as never)
 
     const result = await translateText({
       text: "hello",
@@ -268,9 +263,9 @@ describe("translateText", () => {
       role: "ADMIN",
       locale: "ar",
     } as never)
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(null)
-    vi.mocked(googleTranslate).mockResolvedValue("hello")
-    vi.mocked(db.translationCache.create).mockResolvedValue({} as never)
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null)
+    vi.mocked(translateRaw).mockResolvedValue("hello")
+    vi.mocked(db.translation.create).mockResolvedValue({} as never)
 
     const result = await translateText({
       text: "مرحبا",
@@ -279,7 +274,7 @@ describe("translateText", () => {
 
     expect(result).toEqual({ success: true, translated: "hello" })
     // Verify it computed targetLang as "en" when source is "ar"
-    expect(googleTranslate).toHaveBeenCalledWith("مرحبا", "ar", "en")
+    expect(translateRaw).toHaveBeenCalledWith("مرحبا", "ar", "en")
   })
 
   it("returns error when translation throws", async () => {
@@ -292,10 +287,8 @@ describe("translateText", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(db.translationCache.findUnique).mockResolvedValue(null)
-    vi.mocked(googleTranslate).mockRejectedValue(
-      new Error("API quota exceeded")
-    )
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null)
+    vi.mocked(translateRaw).mockRejectedValue(new Error("API quota exceeded"))
 
     const result = await translateText({
       text: "hello",
@@ -381,8 +374,8 @@ describe("translateFields", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(googleTranslateBatch).mockResolvedValue(["مرحبا", "عالم"])
-    vi.mocked(db.translationCache.upsert).mockResolvedValue({} as never)
+    vi.mocked(translateBatch).mockResolvedValue(["مرحبا", "عالم"])
+    vi.mocked(db.translation.upsert).mockResolvedValue({} as never)
 
     const result = await translateFields({
       fields: { title: "hello", body: "world" },
@@ -393,11 +386,7 @@ describe("translateFields", () => {
       success: true,
       translated: { title: "مرحبا", body: "عالم" },
     })
-    expect(googleTranslateBatch).toHaveBeenCalledWith(
-      ["hello", "world"],
-      "en",
-      "ar"
-    )
+    expect(translateBatch).toHaveBeenCalledWith(["hello", "world"], "en", "ar")
   })
 
   it("filters out empty fields before batch translating", async () => {
@@ -410,8 +399,8 @@ describe("translateFields", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(googleTranslateBatch).mockResolvedValue(["مرحبا"])
-    vi.mocked(db.translationCache.upsert).mockResolvedValue({} as never)
+    vi.mocked(translateBatch).mockResolvedValue(["مرحبا"])
+    vi.mocked(db.translation.upsert).mockResolvedValue({} as never)
 
     const result = await translateFields({
       fields: { title: "hello", body: "", description: "  " },
@@ -423,7 +412,7 @@ describe("translateFields", () => {
       success: true,
       translated: { title: "مرحبا" },
     })
-    expect(googleTranslateBatch).toHaveBeenCalledWith(["hello"], "en", "ar")
+    expect(translateBatch).toHaveBeenCalledWith(["hello"], "en", "ar")
   })
 
   it("upserts translation cache for each translated field", async () => {
@@ -436,16 +425,16 @@ describe("translateFields", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(googleTranslateBatch).mockResolvedValue(["مرحبا", "عالم"])
-    vi.mocked(db.translationCache.upsert).mockResolvedValue({} as never)
+    vi.mocked(translateBatch).mockResolvedValue(["مرحبا", "عالم"])
+    vi.mocked(db.translation.upsert).mockResolvedValue({} as never)
 
     await translateFields({
       fields: { title: "hello", body: "world" },
       sourceLanguage: "en",
     })
 
-    expect(db.translationCache.upsert).toHaveBeenCalledTimes(2)
-    expect(db.translationCache.upsert).toHaveBeenCalledWith(
+    expect(db.translation.upsert).toHaveBeenCalledTimes(2)
+    expect(db.translation.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           schoolId_sourceText_sourceLanguage_targetLanguage: {
@@ -475,7 +464,7 @@ describe("translateFields", () => {
       role: "ADMIN",
       locale: "en",
     } as never)
-    vi.mocked(googleTranslateBatch).mockRejectedValue(new Error("API error"))
+    vi.mocked(translateBatch).mockRejectedValue(new Error("API error"))
 
     const result = await translateFields({
       fields: { title: "hello" },
