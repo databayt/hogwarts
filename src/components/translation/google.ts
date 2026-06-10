@@ -35,13 +35,120 @@ function reportTranslationDegraded(reason: string): void {
   }
 }
 
+// Network hardening. The read path (`localize` → `getText`) blocks renders on
+// these calls, so a hung Google socket must not hang the whole page: we cap each
+// request and, on the OFF-render-path prewarm only, allow a single retry.
+const TIMEOUT_MS = 2500
+const RETRY_BACKOFF_MS = 250
+
 /**
- * Translate a single text using Google Cloud Translation API
+ * Error carrying the HTTP status (when there is a response) so the retry policy
+ * can distinguish transient failures (429/5xx/abort/network) from permanent
+ * client errors (400 bad input, 403 bad key) that must never be retried.
+ * `status` is undefined for abort/timeout and network-level failures.
+ */
+class GoogleTranslateError extends Error {
+  readonly status?: number
+  readonly transient: boolean
+  constructor(message: string, opts: { status?: number; transient: boolean }) {
+    super(message)
+    this.name = "GoogleTranslateError"
+    this.status = opts.status
+    this.transient = opts.transient
+  }
+}
+
+/**
+ * POST to the Google Translate endpoint with a hard timeout, returning the
+ * parsed JSON. Non-2xx and abort/timeout both `reportTranslationDegraded` and
+ * throw a `GoogleTranslateError` tagged `transient` for the retry policy.
+ *
+ * Shared by both exported functions so the timeout + classification live in one
+ * place. `params` already carries q/source/target/key/format.
+ */
+async function requestTranslate(
+  params: URLSearchParams
+): Promise<TranslateResponse> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  let response: Response
+  try {
+    response = await fetch(`${GOOGLE_TRANSLATE_API_URL}?${params}`, {
+      method: "POST",
+      signal: controller.signal,
+    })
+  } catch (err) {
+    // Abort (timeout) or a network-level TypeError — both transient.
+    const aborted =
+      controller.signal.aborted ||
+      (err instanceof Error && err.name === "AbortError")
+    if (aborted) {
+      reportTranslationDegraded(
+        `Google Translate timeout after ${TIMEOUT_MS}ms`
+      )
+      throw new GoogleTranslateError(
+        `Google Translate timeout after ${TIMEOUT_MS}ms`,
+        { transient: true }
+      )
+    }
+    reportTranslationDegraded(
+      `Google Translate network error: ${err instanceof Error ? err.message : String(err)}`
+    )
+    throw new GoogleTranslateError(
+      `Google Translate network error: ${err instanceof Error ? err.message : String(err)}`,
+      { transient: true }
+    )
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (!response.ok) {
+    const error = await response.text()
+    reportTranslationDegraded(
+      `Google Translate API ${response.status}: ${error.slice(0, 200)}`
+    )
+    // Retry only 429 (rate limit) and 5xx (server). Other 4xx are permanent.
+    const transient = response.status === 429 || response.status >= 500
+    throw new GoogleTranslateError(
+      `Google Translate API error: ${response.status} - ${error}`,
+      { status: response.status, transient }
+    )
+  }
+
+  return (await response.json()) as TranslateResponse
+}
+
+/**
+ * Run `requestTranslate`, retrying ONCE after `RETRY_BACKOFF_MS` when
+ * `opts.retry` is set AND the failure is transient (429 / 5xx / abort / network).
+ * Permanent client errors (400/403) and the no-retry default fail fast so the
+ * caller can fall back to source text without delaying the render.
+ */
+async function requestTranslateWithPolicy(
+  params: URLSearchParams,
+  opts?: { retry?: boolean }
+): Promise<TranslateResponse> {
+  try {
+    return await requestTranslate(params)
+  } catch (err) {
+    const transient = err instanceof GoogleTranslateError && err.transient
+    if (!opts?.retry || !transient) throw err
+    await new Promise((resolve) => setTimeout(resolve, RETRY_BACKOFF_MS))
+    return await requestTranslate(params)
+  }
+}
+
+/**
+ * Translate a single text using Google Cloud Translation API.
+ *
+ * `opts.retry` (default false) enables a single transient-failure retry — leave
+ * it off on the read path, which must fail fast to its source-text fallback.
  */
 export async function translateRaw(
   text: string,
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
+  opts?: { retry?: boolean }
 ): Promise<string> {
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
   if (!apiKey) {
@@ -59,30 +166,31 @@ export async function translateRaw(
     format: "text",
   })
 
-  const response = await fetch(`${GOOGLE_TRANSLATE_API_URL}?${params}`, {
-    method: "POST",
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    reportTranslationDegraded(
-      `Google Translate API ${response.status}: ${error.slice(0, 200)}`
-    )
-    throw new Error(`Google Translate API error: ${response.status} - ${error}`)
-  }
-
-  const result = (await response.json()) as TranslateResponse
+  const result = await requestTranslateWithPolicy(params, opts)
   return result.data.translations[0]?.translatedText ?? ""
 }
 
+// Google v2 caps a request at 128 `q` segments; we also send params in the
+// URL (POST with query string), so cumulative characters are bounded to stay
+// well under URL-length limits. Oversized batches are chunked transparently.
+const BATCH_MAX_ITEMS = 100
+const BATCH_MAX_CHARS = 4_000
+
 /**
- * Batch translate multiple texts in a single API call
- * More efficient than individual calls for multiple fields
+ * Batch translate multiple texts.
+ * One API call for typical pages; transparently splits into sequential
+ * chunked calls when the batch exceeds Google's per-request limits.
+ * Results always map back to the original positions.
+ *
+ * `opts.retry` (default false) enables a single transient-failure retry PER
+ * chunk — used by `prewarm` (which runs off the response path via `after()`).
+ * The read path leaves it off so a transient failure falls back fast.
  */
 export async function translateBatch(
   texts: string[],
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
+  opts?: { retry?: boolean }
 ): Promise<string[]> {
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY
   if (!apiKey) {
@@ -93,39 +201,46 @@ export async function translateBatch(
   const nonEmpty = texts.filter((t) => t && t.trim() !== "")
   if (nonEmpty.length === 0) return texts.map(() => "")
 
-  const params = new URLSearchParams({
-    source: sourceLang,
-    target: targetLang,
-    key: apiKey,
-    format: "text",
-  })
+  // Split the non-empty texts into chunks under both limits.
+  const chunks: string[][] = []
+  let current: string[] = []
+  let currentChars = 0
+  for (const text of nonEmpty) {
+    if (
+      current.length > 0 &&
+      (current.length >= BATCH_MAX_ITEMS ||
+        currentChars + text.length > BATCH_MAX_CHARS)
+    ) {
+      chunks.push(current)
+      current = []
+      currentChars = 0
+    }
+    current.push(text)
+    currentChars += text.length
+  }
+  if (current.length > 0) chunks.push(current)
 
-  // Google Translate API accepts multiple `q` params
-  for (const text of texts) {
-    if (text && text.trim() !== "") {
-      params.append("q", text)
+  const translations: string[] = []
+  for (const chunk of chunks) {
+    const params = new URLSearchParams({
+      source: sourceLang,
+      target: targetLang,
+      key: apiKey,
+      format: "text",
+    })
+    for (const text of chunk) params.append("q", text)
+
+    const result = await requestTranslateWithPolicy(params, opts)
+    const chunkTranslations = result.data.translations
+    for (let i = 0; i < chunk.length; i++) {
+      translations.push(chunkTranslations[i]?.translatedText ?? "")
     }
   }
-
-  const response = await fetch(`${GOOGLE_TRANSLATE_API_URL}?${params}`, {
-    method: "POST",
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    reportTranslationDegraded(
-      `Google Translate API ${response.status}: ${error.slice(0, 200)}`
-    )
-    throw new Error(`Google Translate API error: ${response.status} - ${error}`)
-  }
-
-  const result = (await response.json()) as TranslateResponse
-  const translations = result.data.translations
 
   // Map back to original positions (empty strings stay empty)
   let translationIndex = 0
   return texts.map((text) => {
     if (!text || text.trim() === "") return ""
-    return translations[translationIndex++]?.translatedText ?? ""
+    return translations[translationIndex++] ?? ""
   })
 }

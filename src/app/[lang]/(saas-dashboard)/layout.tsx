@@ -10,7 +10,10 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  getSaasDashboardDictionary,
+  type Dictionary,
+} from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { ReportIssue } from "@/components/report-issue"
 import { PageHeadingProvider } from "@/components/school-dashboard/context/page-heading-context"
@@ -48,9 +51,11 @@ export default async function OperatorLayout({
     redirect(`/${lang}/access-denied`)
   }
 
-  // Only DEVELOPER role reaches this point
+  // Only DEVELOPER role reaches this point.
+  // Subtree consumes core + sales + messages — the scoped loader sheds
+  // stream + 17 unused feature namespaces from the RSC payload.
   const [dictionary, isRTL] = await Promise.all([
-    getDictionary(lang as Locale),
+    getSaasDashboardDictionary(lang as Locale).then((d) => d as Dictionary),
     Promise.resolve(checkIsRTL(lang as Locale)),
   ])
 

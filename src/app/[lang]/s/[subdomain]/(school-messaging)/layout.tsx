@@ -11,7 +11,10 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  getMessagingDictionary,
+  type Dictionary,
+} from "@/components/internationalization/dictionaries"
 import { DictionaryProvider } from "@/components/internationalization/dictionary-context"
 import { SchoolProvider } from "@/components/school-dashboard/context/school-context"
 import { ForceChangePasswordModal } from "@/components/school-dashboard/force-change-password-modal"
@@ -39,7 +42,11 @@ export default async function MessagingLayout({
   const [result, session, dictionary] = await Promise.all([
     getSchoolBySubdomain(subdomain),
     auth(),
-    getDictionary(lang as Locale),
+    // Route-scoped: this subtree only renders messaging UI (consumes the
+    // `messaging` namespace + core general/school). getMessagingDictionary
+    // covers core + messages + messaging; the omitted feature namespaces are
+    // never accessed here, so the narrower payload is safe at runtime.
+    getMessagingDictionary(lang as Locale),
   ])
 
   if (!result.success) {
@@ -116,7 +123,7 @@ export default async function MessagingLayout({
   const mustChangePassword = currentUser?.mustChangePassword ?? false
 
   return (
-    <DictionaryProvider dictionary={dictionary}>
+    <DictionaryProvider dictionary={dictionary as Dictionary}>
       <SchoolProvider school={school}>
         <ModalProvider>
           <div

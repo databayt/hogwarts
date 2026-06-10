@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { translateBatch, translateRaw } from "./google"
+import { memoGet, memoSet } from "./memory-cache"
 import type {
   Lang,
   TranslateFieldsInput,
@@ -18,8 +19,10 @@ import type {
 } from "./types"
 
 /**
- * Translate with database caching via Translation model.
- * Checks cache first, falls back to Google Translate API.
+ * Translate with three-tier caching: in-memory LRU (hot short terms,
+ * zero round-trips) → Translation DB cache → Google Translate API.
+ * Every legacy caller (getText/getFields/getName/getLabels) inherits the
+ * LRU through this single path.
  */
 export async function translate(
   text: string,
@@ -30,7 +33,10 @@ export async function translate(
   if (!text || text.trim() === "") return ""
   if (sourceLang === targetLang) return text
 
-  // Check cache first
+  const memo = memoGet(schoolId, sourceLang, targetLang, text)
+  if (memo !== undefined) return memo
+
+  // Check DB cache
   const cached = await db.translation.findUnique({
     where: {
       schoolId_sourceText_sourceLanguage_targetLanguage: {
@@ -54,6 +60,7 @@ export async function translate(
       })
       .catch(() => {})
 
+    memoSet(schoolId, sourceLang, targetLang, text, cached.translatedText)
     return cached.translatedText
   }
 
@@ -76,6 +83,7 @@ export async function translate(
       // Ignore duplicate key errors from race conditions
     })
 
+  memoSet(schoolId, sourceLang, targetLang, text, translated)
   return translated
 }
 

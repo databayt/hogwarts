@@ -5,6 +5,11 @@ import type { Metadata } from "next"
 import { cookies, headers } from "next/headers"
 
 import { fontRubik } from "@/components/atom/fonts"
+import {
+  i18n,
+  isRTL,
+  type Locale,
+} from "@/components/internationalization/config"
 
 import "./globals.css"
 
@@ -20,9 +25,17 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers()
   const cookieStore = await cookies()
-  const locale =
-    headersList.get("x-locale") || cookieStore.get("NEXT_LOCALE")?.value || "ar"
-  const dir = locale === "ar" ? "rtl" : "ltr"
+  const detected =
+    headersList.get("x-locale") || cookieStore.get("NEXT_LOCALE")?.value || ""
+  const locale: Locale = (i18n.locales as readonly string[]).includes(detected)
+    ? (detected as Locale)
+    : i18n.defaultLocale
+  const dir = isRTL(locale) ? "rtl" : "ltr"
+
+  // The corrective inline script is rendered server-side, so the locale list
+  // and RTL set are interpolated from config — single source of truth.
+  const localeAlternation = i18n.locales.join("|")
+  const rtlLocales = JSON.stringify(i18n.locales.filter((l) => isRTL(l)))
 
   return (
     <html
@@ -34,7 +47,7 @@ export default async function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var m=window.location.pathname.match(/^\\/(en|ar)/);var l=m?m[1]:'ar';document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr'})()`,
+            __html: `(function(){var m=window.location.pathname.match(/^\\/(${localeAlternation})/);var l=m?m[1]:'${i18n.defaultLocale}';document.documentElement.lang=l;document.documentElement.dir=${rtlLocales}.indexOf(l)>-1?'rtl':'ltr'})()`,
           }}
         />
       </head>

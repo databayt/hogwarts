@@ -1,172 +1,103 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { NextRequest, NextResponse } from "next/server"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+/**
+ * Locale-detection precedence tests against the LIVE implementation.
+ *
+ * `detectLocale` / `pathnameHasLocale` (locale-detect.ts) are the exact
+ * functions `src/proxy.ts` runs at the edge — these used to test a dead
+ * negotiator-based reference middleware that was never wired (deleted).
+ * Precedence: valid NEXT_LOCALE cookie → first Accept-Language tag → "ar".
+ */
+import { describe, expect, it } from "vitest"
 
-import { localizationMiddleware } from "@/components/internationalization/middleware"
+import {
+  detectLocale,
+  pathnameHasLocale,
+} from "@/components/internationalization/locale-detect"
 
-describe("localizationMiddleware", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  function createRequest(
-    pathname: string,
-    options?: {
-      cookies?: Record<string, string>
-      acceptLanguage?: string
-    }
-  ) {
-    const url = `http://localhost:3000${pathname}`
-    const headers: Record<string, string> = {}
-    if (options?.acceptLanguage) {
-      headers["accept-language"] = options.acceptLanguage
-    }
-    const cookieEntries = Object.entries(options?.cookies ?? {})
-    if (cookieEntries.length > 0) {
-      headers["cookie"] = cookieEntries.map(([k, v]) => `${k}=${v}`).join("; ")
-    }
-    return new NextRequest(url, { headers })
-  }
-
-  describe("locale detection", () => {
-    it("passes through when URL already has /ar/ locale", () => {
-      const req = createRequest("/ar/dashboard")
-      const res = localizationMiddleware(req)
-
-      expect(res.headers.get("x-middleware-next")).toBe("1")
-    })
-
-    it("passes through when URL already has /en/ locale", () => {
-      const req = createRequest("/en/dashboard")
-      const res = localizationMiddleware(req)
-
-      expect(res.headers.get("x-middleware-next")).toBe("1")
-    })
-
-    it("passes through for bare locale path /ar", () => {
-      const req = createRequest("/ar")
-      const res = localizationMiddleware(req)
-
-      expect(res.headers.get("x-middleware-next")).toBe("1")
-    })
-
-    it("passes through for bare locale path /en", () => {
-      const req = createRequest("/en")
-      const res = localizationMiddleware(req)
-
-      expect(res.headers.get("x-middleware-next")).toBe("1")
-    })
-  })
-
+describe("detectLocale (live proxy logic)", () => {
   describe("cookie-based locale", () => {
-    it("redirects to cookie locale when NEXT_LOCALE cookie is set to en", () => {
-      const req = createRequest("/dashboard", {
-        cookies: { NEXT_LOCALE: "en" },
-      })
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/en/dashboard")
+    it("uses NEXT_LOCALE cookie when set to en", () => {
+      expect(detectLocale({ cookieLocale: "en" })).toBe("en")
     })
 
-    it("redirects to cookie locale when NEXT_LOCALE cookie is set to ar", () => {
-      const req = createRequest("/dashboard", {
-        cookies: { NEXT_LOCALE: "ar" },
-      })
-      const res = localizationMiddleware(req)
+    it("uses NEXT_LOCALE cookie when set to ar", () => {
+      expect(detectLocale({ cookieLocale: "ar" })).toBe("ar")
+    })
 
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/ar/dashboard")
+    it("cookie wins over a conflicting Accept-Language header", () => {
+      expect(
+        detectLocale({ cookieLocale: "ar", acceptLanguage: "en-US,en;q=0.9" })
+      ).toBe("ar")
     })
 
     it("ignores invalid cookie locale and falls back to Accept-Language", () => {
-      const req = createRequest("/dashboard", {
-        cookies: { NEXT_LOCALE: "fr" },
-        acceptLanguage: "en-US,en;q=0.9",
-      })
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/en/dashboard")
+      expect(
+        detectLocale({ cookieLocale: "fr", acceptLanguage: "en-US,en;q=0.9" })
+      ).toBe("en")
     })
   })
 
   describe("Accept-Language header detection", () => {
-    it("redirects to en when Accept-Language prefers English", () => {
-      const req = createRequest("/dashboard", {
-        acceptLanguage: "en-US,en;q=0.9",
-      })
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/en/dashboard")
+    it("detects en when Accept-Language prefers English", () => {
+      expect(detectLocale({ acceptLanguage: "en-US,en;q=0.9" })).toBe("en")
     })
 
-    it("redirects to ar when Accept-Language prefers Arabic", () => {
-      const req = createRequest("/dashboard", {
-        acceptLanguage: "ar-SA,ar;q=0.9",
-      })
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/ar/dashboard")
+    it("detects ar when Accept-Language prefers Arabic", () => {
+      expect(detectLocale({ acceptLanguage: "ar-SA,ar;q=0.9" })).toBe("ar")
     })
 
-    it("falls back to default locale (ar) when no Accept-Language", () => {
-      const req = createRequest("/dashboard")
-      const res = localizationMiddleware(req)
+    it("reduces a regioned tag to its base language", () => {
+      expect(detectLocale({ acceptLanguage: "en-GB" })).toBe("en")
+    })
 
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/ar/dashboard")
+    it("is case-insensitive", () => {
+      expect(detectLocale({ acceptLanguage: "EN-us" })).toBe("en")
+    })
+
+    it("falls back to default (ar) for unsupported languages", () => {
+      expect(detectLocale({ acceptLanguage: "fr-FR,de;q=0.9" })).toBe("ar")
+    })
+
+    it("only considers the FIRST tag (lightweight edge parse)", () => {
+      // fr is first and unsupported — en later in the list is NOT consulted.
+      expect(detectLocale({ acceptLanguage: "fr-FR,en;q=0.9" })).toBe("ar")
     })
   })
 
-  describe("cookie setting on redirect", () => {
-    it("sets NEXT_LOCALE cookie on redirect response", () => {
-      const req = createRequest("/dashboard", {
-        acceptLanguage: "en-US",
-      })
-      const res = localizationMiddleware(req)
-
-      const cookie = res.cookies.get("NEXT_LOCALE")
-      expect(cookie).toBeDefined()
-      expect(cookie?.value).toBe("en")
-    })
-  })
-
-  describe("edge cases", () => {
-    it("handles root path /", () => {
-      const req = createRequest("/")
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      const location = res.headers.get("Location")
-      expect(location).toContain("/ar/")
+  describe("default fallback", () => {
+    it("falls back to ar with no cookie and no header", () => {
+      expect(detectLocale({})).toBe("ar")
     })
 
-    it("handles deeply nested paths", () => {
-      const req = createRequest("/s/demo/dashboard/students", {
-        acceptLanguage: "en",
-      })
-      const res = localizationMiddleware(req)
-
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain(
-        "/en/s/demo/dashboard/students"
+    it("falls back to ar with null inputs", () => {
+      expect(detectLocale({ cookieLocale: null, acceptLanguage: null })).toBe(
+        "ar"
       )
     })
+  })
+})
 
-    it("handles unsupported locale in Accept-Language gracefully", () => {
-      const req = createRequest("/dashboard", {
-        acceptLanguage: "fr-FR,de;q=0.9",
-      })
-      const res = localizationMiddleware(req)
+describe("pathnameHasLocale (live proxy logic)", () => {
+  it("true for /ar/dashboard and /en/dashboard", () => {
+    expect(pathnameHasLocale("/ar/dashboard")).toBe(true)
+    expect(pathnameHasLocale("/en/dashboard")).toBe(true)
+  })
 
-      // Falls back to default locale (ar)
-      expect(res.status).toBe(307)
-      expect(res.headers.get("Location")).toContain("/ar/dashboard")
-    })
+  it("true for bare locale paths /ar and /en", () => {
+    expect(pathnameHasLocale("/ar")).toBe(true)
+    expect(pathnameHasLocale("/en")).toBe(true)
+  })
+
+  it("false for paths without a locale segment", () => {
+    expect(pathnameHasLocale("/")).toBe(false)
+    expect(pathnameHasLocale("/dashboard")).toBe(false)
+    expect(pathnameHasLocale("/s/demo/dashboard/students")).toBe(false)
+  })
+
+  it("false for lookalike segments (/arabic, /english)", () => {
+    expect(pathnameHasLocale("/arabic/page")).toBe(false)
+    expect(pathnameHasLocale("/english")).toBe(false)
   })
 })

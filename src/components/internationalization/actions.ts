@@ -30,8 +30,9 @@ export async function setLocale(locale: Locale, pathname: string) {
   })
 
   // Extract the new path by replacing the locale segment
-  // Handles paths like: /en/... or /ar/...
-  const newPath = pathname.replace(/^\/(en|ar)(\/|$)/, `/${locale}$2`)
+  // (pattern derived from i18n.locales — single source of truth)
+  const localePattern = new RegExp(`^/(${i18n.locales.join("|")})(/|$)`)
+  const newPath = pathname.replace(localePattern, `/${locale}$2`)
 
   // Redirect to the new locale URL
   // This ensures the cookie is set BEFORE the page loads

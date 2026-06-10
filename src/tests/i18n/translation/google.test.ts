@@ -279,4 +279,76 @@ describe("translateBatch", () => {
     expect(result[0]).toBe("مرحبا")
     expect(result[1]).toBe("")
   })
+
+  // --- Batch-size guard (chunking) ---
+
+  it("splits batches over 100 items into multiple requests, order preserved", async () => {
+    const texts = Array.from({ length: 150 }, (_, i) => `word${i}`)
+    mockFetch.mockImplementation(async (url: string) => {
+      const qs = [...new URLSearchParams(String(url).split("?")[1]).entries()]
+        .filter(([k]) => k === "q")
+        .map(([, v]) => v)
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            translations: qs.map((q) => ({ translatedText: `T:${q}` })),
+          },
+        }),
+      }
+    })
+
+    const result = await translateBatch(texts, "en", "ar")
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+    expect(result).toHaveLength(150)
+    expect(result[0]).toBe("T:word0")
+    expect(result[99]).toBe("T:word99")
+    expect(result[100]).toBe("T:word100")
+    expect(result[149]).toBe("T:word149")
+  })
+
+  it("splits batches by cumulative characters (long texts)", async () => {
+    // 5 texts × 1500 chars = 7500 chars > 4000 limit → multiple chunks
+    const texts = Array.from({ length: 5 }, (_, i) => `${i}`.padEnd(1500, "x"))
+    mockFetch.mockImplementation(async (url: string) => {
+      const qs = [...new URLSearchParams(String(url).split("?")[1]).entries()]
+        .filter(([k]) => k === "q")
+        .map(([, v]) => v)
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            translations: qs.map((q) => ({
+              translatedText: `T:${q.slice(0, 1)}`,
+            })),
+          },
+        }),
+      }
+    })
+
+    const result = await translateBatch(texts, "en", "ar")
+
+    expect(mockFetch.mock.calls.length).toBeGreaterThan(1)
+    expect(result).toEqual(["T:0", "T:1", "T:2", "T:3", "T:4"])
+  })
+
+  it("keeps a small batch to exactly one request (no chunking regression)", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          translations: [
+            { translatedText: "مرحبا" },
+            { translatedText: "عالم" },
+          ],
+        },
+      }),
+    })
+
+    const result = await translateBatch(["hello", "world"], "en", "ar")
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(["مرحبا", "عالم"])
+  })
 })

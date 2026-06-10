@@ -9,6 +9,10 @@ import {
 } from "@/routes"
 
 import { i18n, type Locale } from "@/components/internationalization/config"
+import {
+  detectLocale,
+  pathnameHasLocale,
+} from "@/components/internationalization/locale-detect"
 
 // --- Custom domain routing via Upstash Redis (Edge-compatible) ---
 let _edgeRedis: import("@upstash/redis").Redis | null = null
@@ -100,27 +104,13 @@ const publicSiteRoutes = [
   "/application/status",
 ]
 
-// Lightweight locale detection
+// Lightweight locale detection — pure logic lives in locale-detect.ts so
+// the precedence rules are unit-tested against the code that actually runs.
 function getLocale(request: NextRequest): Locale {
-  const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value
-  if (cookieLocale && i18n.locales.includes(cookieLocale as Locale)) {
-    return cookieLocale as Locale
-  }
-
-  const acceptLanguage = request.headers.get("accept-language")
-  if (acceptLanguage) {
-    const lang = acceptLanguage
-      .split(",")[0]
-      .split(";")[0]
-      .split("-")[0]
-      .trim()
-      .toLowerCase()
-    if (i18n.locales.includes(lang as Locale)) {
-      return lang as Locale
-    }
-  }
-
-  return i18n.defaultLocale
+  return detectLocale({
+    cookieLocale: request.cookies.get("NEXT_LOCALE")?.value,
+    acceptLanguage: request.headers.get("accept-language"),
+  })
 }
 
 // Check if user is authenticated via session cookie
@@ -155,10 +145,7 @@ export async function proxy(req: NextRequest) {
   }
 
   // Check if pathname has locale
-  const hasLocale = i18n.locales.some(
-    (locale) =>
-      url.pathname.startsWith(`/${locale}/`) || url.pathname === `/${locale}`
-  )
+  const hasLocale = pathnameHasLocale(url.pathname)
 
   // Get current locale
   let locale: Locale

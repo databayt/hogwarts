@@ -7,11 +7,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
+  autoTranslate,
   translate,
   translateFields,
   translateText,
 } from "@/components/translation/actions"
 import { translateBatch, translateRaw } from "@/components/translation/google"
+import { memoClear } from "@/components/translation/memory-cache"
 
 vi.mock("@/auth", () => ({
   auth: vi.fn(),
@@ -42,6 +44,50 @@ describe("translate", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // The in-memory LRU persists across tests; reset so DB-hit assertions
+    // are deterministic.
+    memoClear()
+  })
+
+  it("serves a repeated short term from the in-memory LRU (no 2nd DB hit)", async () => {
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null as never)
+    vi.mocked(translateRaw).mockResolvedValue("مرحبا")
+    vi.mocked(db.translation.create).mockResolvedValue({} as never)
+
+    const first = await translate("hello", "en", "ar", schoolId)
+    expect(first).toBe("مرحبا")
+    expect(db.translation.findUnique).toHaveBeenCalledTimes(1)
+    expect(translateRaw).toHaveBeenCalledTimes(1)
+
+    const second = await translate("hello", "en", "ar", schoolId)
+    expect(second).toBe("مرحبا")
+    // Second call answered from the LRU — no extra DB or Google calls.
+    expect(db.translation.findUnique).toHaveBeenCalledTimes(1)
+    expect(translateRaw).toHaveBeenCalledTimes(1)
+  })
+
+  it("LRU population from a DB cache hit also skips the 2nd findUnique", async () => {
+    vi.mocked(db.translation.findUnique).mockResolvedValue({
+      id: "cache-1",
+      translatedText: "مرحبا",
+    } as never)
+    vi.mocked(db.translation.update).mockResolvedValue({} as never)
+
+    await translate("hello", "en", "ar", schoolId)
+    await translate("hello", "en", "ar", schoolId)
+
+    expect(db.translation.findUnique).toHaveBeenCalledTimes(1)
+  })
+
+  it("LRU is scoped by school — same text for another school still hits DB", async () => {
+    vi.mocked(db.translation.findUnique).mockResolvedValue(null as never)
+    vi.mocked(translateRaw).mockResolvedValue("مرحبا")
+    vi.mocked(db.translation.create).mockResolvedValue({} as never)
+
+    await translate("hello", "en", "ar", schoolId)
+    await translate("hello", "en", "ar", "school-OTHER")
+
+    expect(db.translation.findUnique).toHaveBeenCalledTimes(2)
   })
 
   it("returns empty string for empty text", async () => {
@@ -156,6 +202,7 @@ describe("translateText", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    memoClear()
   })
 
   it("returns error when user is not authenticated", async () => {
@@ -307,6 +354,7 @@ describe("translateFields", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    memoClear()
   })
 
   it("returns error when user is not authenticated", async () => {
@@ -475,5 +523,58 @@ describe("translateFields", () => {
       success: false,
       error: "API error",
     })
+  })
+})
+
+describe("autoTranslate", () => {
+  const schoolId = "school-123"
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    memoClear()
+  })
+
+  it("short-circuits when no translatable field has content, stamping lang", async () => {
+    // No auth/tenant calls expected — it never reaches translateFields.
+    const result = await autoTranslate(
+      { title: "", body: "   ", id: 7 },
+      ["title", "body"],
+      "ar"
+    )
+
+    expect(result).toEqual({
+      success: true,
+      data: { title: "", body: "   ", id: 7, lang: "ar" },
+    })
+    expect(translateBatch).not.toHaveBeenCalled()
+  })
+
+  it("extracts non-empty string fields, delegates to translateFields, and adds lang", async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-1" },
+    } as never)
+    vi.mocked(getTenantContext).mockResolvedValue({
+      schoolId,
+      subdomain: "test",
+      role: "ADMIN",
+      locale: "en",
+    } as never)
+    vi.mocked(translateBatch).mockResolvedValue(["مرحبا"])
+    vi.mocked(db.translation.upsert).mockResolvedValue({} as never)
+
+    // `id` is a non-string field and `subtitle` is empty — both excluded from
+    // the batch; only `title` is sent for translation.
+    const result = await autoTranslate(
+      { title: "hello", subtitle: "", id: 7 },
+      ["title", "subtitle", "id"],
+      "en"
+    )
+
+    expect(result).toEqual({
+      success: true,
+      data: { title: "hello", subtitle: "", id: 7, lang: "en" },
+      translatedFields: { title: "مرحبا" },
+    })
+    expect(translateBatch).toHaveBeenCalledWith(["hello"], "en", "ar")
   })
 })

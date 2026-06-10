@@ -129,6 +129,12 @@ export const getNotificationDictionary = makeRouteDictionary("notification", [
 /** Sales pages - school-dashboard core + sales (leads, CRM, B2B) */
 export const getSalesDictionary = makeRouteDictionary("sales", ["sales"])
 
+/** SaaS operator dashboard - core + sales + messages */
+export const getSaasDashboardDictionary = makeRouteDictionary(
+  "saas dashboard",
+  ["sales", "messages"]
+)
+
 /** Attendance pages - school-dashboard core + messages + attendance */
 export const getAttendanceDictionary = makeRouteDictionary("attendance", [
   "messages",
