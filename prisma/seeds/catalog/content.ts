@@ -25,7 +25,7 @@
  * Usage: pnpm db:seed:single content
  */
 
-import type { PrismaClient } from "@prisma/client"
+import type { Prisma, PrismaClient } from "@prisma/client"
 
 import {
   buildBloomDistribution,
@@ -121,7 +121,7 @@ function buildQuestion(
     catalogChapterId?: string
     catalogLessonId?: string
   }
-): Record<string, unknown> {
+): Prisma.QuestionCreateManyInput {
   const qType = cycleQuestionType(globalIdx)
   const bloomLevel = getBloomFromTemplate(category, globalIdx)
   const questionText = generateQuestionText(
@@ -167,7 +167,7 @@ function buildExam(
   description: string,
   seed: number,
   scopeIds: { chapterId?: string; lessonId?: string }
-): Record<string, unknown> {
+): Prisma.ExamCreateManyInput {
   const config = getExamTypeConfig(examType)
   const totalQuestions = seededRange(
     config.questionCountRange[0],
@@ -252,10 +252,10 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   console.log(`   Found ${subjects.length} subjects`)
 
   // 2. Build all records in memory
-  const materials: Record<string, unknown>[] = []
-  const exams: Record<string, unknown>[] = []
-  const questions: Record<string, unknown>[] = []
-  const assignments: Record<string, unknown>[] = []
+  const materials: Prisma.MaterialCreateManyInput[] = []
+  const exams: Prisma.ExamCreateManyInput[] = []
+  const questions: Prisma.QuestionCreateManyInput[] = []
+  const assignments: Prisma.AssignmentCreateManyInput[] = []
 
   let globalIdx = 0
 
@@ -552,35 +552,159 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     }
   }
 
-  // 3. Batch insert
-  console.log(`   Inserting ${materials.length} materials...`)
+  // 3. Idempotency filter: these tables have no business-key unique
+  // constraint, so `skipDuplicates` cannot dedupe re-runs (every row gets a
+  // fresh cuid). Seed output is deterministic, so the (scope ids + title/text)
+  // tuple is a stable identity — drop candidates that already exist.
+  const seedKey = (...parts: Array<string | null | undefined>) =>
+    parts.map((p) => p ?? "").join("|")
+
+  const [
+    existingMaterials,
+    existingExams,
+    existingQuestions,
+    existingAssignments,
+  ] = await Promise.all([
+    prisma.material.findMany({
+      select: {
+        catalogSubjectId: true,
+        catalogChapterId: true,
+        catalogLessonId: true,
+        title: true,
+      },
+    }),
+    prisma.exam.findMany({
+      select: { subjectId: true, chapterId: true, lessonId: true, title: true },
+    }),
+    prisma.question.findMany({
+      select: {
+        catalogSubjectId: true,
+        catalogChapterId: true,
+        catalogLessonId: true,
+        questionText: true,
+      },
+    }),
+    prisma.assignment.findMany({
+      select: {
+        catalogSubjectId: true,
+        catalogChapterId: true,
+        catalogLessonId: true,
+        title: true,
+      },
+    }),
+  ])
+
+  const existingMaterialKeys = new Set(
+    existingMaterials.map((m) =>
+      seedKey(
+        m.catalogSubjectId,
+        m.catalogChapterId,
+        m.catalogLessonId,
+        m.title
+      )
+    )
+  )
+  const existingExamKeys = new Set(
+    existingExams.map((e) =>
+      seedKey(e.subjectId, e.chapterId, e.lessonId, e.title)
+    )
+  )
+  const existingQuestionKeys = new Set(
+    existingQuestions.map((q) =>
+      seedKey(
+        q.catalogSubjectId,
+        q.catalogChapterId,
+        q.catalogLessonId,
+        q.questionText
+      )
+    )
+  )
+  const existingAssignmentKeys = new Set(
+    existingAssignments.map((a) =>
+      seedKey(
+        a.catalogSubjectId,
+        a.catalogChapterId,
+        a.catalogLessonId,
+        a.title
+      )
+    )
+  )
+
+  const newMaterials = materials.filter(
+    (m) =>
+      !existingMaterialKeys.has(
+        seedKey(
+          m.catalogSubjectId,
+          m.catalogChapterId,
+          m.catalogLessonId,
+          m.title
+        )
+      )
+  )
+  const newExams = exams.filter(
+    (e) =>
+      !existingExamKeys.has(
+        seedKey(e.subjectId, e.chapterId, e.lessonId, e.title)
+      )
+  )
+  const newQuestions = questions.filter(
+    (q) =>
+      !existingQuestionKeys.has(
+        seedKey(
+          q.catalogSubjectId,
+          q.catalogChapterId,
+          q.catalogLessonId,
+          q.questionText
+        )
+      )
+  )
+  const newAssignments = assignments.filter(
+    (a) =>
+      !existingAssignmentKeys.has(
+        seedKey(
+          a.catalogSubjectId,
+          a.catalogChapterId,
+          a.catalogLessonId,
+          a.title
+        )
+      )
+  )
+
+  const skipped =
+    materials.length -
+    newMaterials.length +
+    (exams.length - newExams.length) +
+    (questions.length - newQuestions.length) +
+    (assignments.length - newAssignments.length)
+  if (skipped > 0) {
+    console.log(`   Idempotent re-run: skipping ${skipped} existing records`)
+  }
+
+  // 4. Batch insert
+  console.log(`   Inserting ${newMaterials.length} materials...`)
   const materialResult = await prisma.material.createMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: materials as any,
+    data: newMaterials,
     skipDuplicates: true,
   })
   logSuccess("Materials", materialResult.count)
 
-  console.log(`   Inserting ${exams.length} exams...`)
+  console.log(`   Inserting ${newExams.length} exams...`)
   const examResult = await prisma.exam.createMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: exams as any,
+    data: newExams,
     skipDuplicates: true,
   })
   logSuccess("Exams", examResult.count)
 
-  console.log(`   Inserting ${questions.length} questions...`)
+  console.log(`   Inserting ${newQuestions.length} questions...`)
   const questionResult = await prisma.question.createMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: questions as any,
+    data: newQuestions,
     skipDuplicates: true,
   })
   logSuccess("Questions", questionResult.count)
 
-  console.log(`   Inserting ${assignments.length} assignments...`)
+  console.log(`   Inserting ${newAssignments.length} assignments...`)
   const assignmentResult = await prisma.assignment.createMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: assignments as any,
+    data: newAssignments,
     skipDuplicates: true,
   })
   logSuccess("Assignments", assignmentResult.count)
