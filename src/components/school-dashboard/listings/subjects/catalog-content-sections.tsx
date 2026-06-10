@@ -430,7 +430,7 @@ export function CatalogContentSections({
                     />
                   )}
                   {/* Count badge */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute end-3 top-3">
                     <span className="rounded-full bg-[#F4F1D0]/80 px-2 py-0.5 font-mono text-xs font-bold text-[#212222]">
                       {card?.count ?? 0}
                     </span>

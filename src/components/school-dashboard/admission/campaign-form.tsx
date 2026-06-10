@@ -207,7 +207,7 @@ export function CampaignForm({
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[calc(var(--cell-size,1.75rem)*14+1rem+1.5rem)] justify-start text-left font-normal",
+                      "w-[calc(var(--cell-size,1.75rem)*14+1rem+1.5rem)] justify-start text-start font-normal",
                       !watched.startDate && "text-muted-foreground"
                     )}
                     disabled={isPending}

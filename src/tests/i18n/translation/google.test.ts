@@ -9,27 +9,31 @@ import { translateBatch, translateRaw } from "@/components/translation/google"
 const mockFetch = vi.fn()
 vi.stubGlobal("fetch", mockFetch)
 
-// Store and restore original env
-const originalEnv = process.env.GOOGLE_TRANSLATE_API_KEY
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.stubEnv("GOOGLE_TRANSLATE_API_KEY", "test-api-key")
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.useRealTimers()
+})
+
+/** A fetch mock that rejects with an AbortError the moment its signal fires. */
+function abortableNeverResolves() {
+  return (_url: string, init: { signal: AbortSignal }) =>
+    new Promise((_resolve, reject) => {
+      init.signal.addEventListener("abort", () => {
+        reject(Object.assign(new Error("aborted"), { name: "AbortError" }))
+      })
+    })
+}
 
 describe("translateRaw", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    process.env.GOOGLE_TRANSLATE_API_KEY = "test-api-key"
-  })
-
-  afterEach(() => {
-    if (originalEnv !== undefined) {
-      process.env.GOOGLE_TRANSLATE_API_KEY = originalEnv
-    } else {
-      delete process.env.GOOGLE_TRANSLATE_API_KEY
-    }
-  })
-
   // --- Missing API key ---
 
   it("throws error when GOOGLE_TRANSLATE_API_KEY is not set", async () => {
-    delete process.env.GOOGLE_TRANSLATE_API_KEY
+    vi.stubEnv("GOOGLE_TRANSLATE_API_KEY", "")
 
     await expect(translateRaw("hello", "en", "ar")).rejects.toThrow(
       "GOOGLE_TRANSLATE_API_KEY not configured"
@@ -136,26 +140,78 @@ describe("translateRaw", () => {
     const result = await translateRaw("hello", "en", "fr")
     expect(result).toBe("bonjour")
   })
+
+  // --- Timeout ---
+
+  it("aborts and throws when the request exceeds the 2.5s timeout", async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(abortableNeverResolves())
+
+    const pending = translateRaw("hello", "en", "ar")
+    // Surface the rejection without an unhandled-rejection warning.
+    const assertion = expect(pending).rejects.toThrow(/timeout after 2500ms/)
+    await vi.advanceTimersByTimeAsync(2500)
+    await assertion
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  // --- Retry policy ---
+
+  it("retries once on 429 when retry is enabled, then succeeds", async () => {
+    vi.useFakeTimers()
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        text: async () => "Rate limit exceeded",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: { translations: [{ translatedText: "مرحبا" }] },
+        }),
+      })
+
+    const pending = translateRaw("hello", "en", "ar", { retry: true })
+    await vi.advanceTimersByTimeAsync(250) // backoff
+    const result = await pending
+
+    expect(result).toBe("مرحبا")
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it("does NOT retry by default (one fetch, throws) on 429", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      text: async () => "Rate limit exceeded",
+    })
+
+    await expect(translateRaw("hello", "en", "ar")).rejects.toThrow(
+      "Google Translate API error: 429"
+    )
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it("does NOT retry a 400 bad-request even when retry is enabled", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      text: async () => "Invalid source language",
+    })
+
+    await expect(
+      translateRaw("hello", "en", "ar", { retry: true })
+    ).rejects.toThrow("Google Translate API error: 400")
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("translateBatch", () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    process.env.GOOGLE_TRANSLATE_API_KEY = "test-api-key"
-  })
-
-  afterEach(() => {
-    if (originalEnv !== undefined) {
-      process.env.GOOGLE_TRANSLATE_API_KEY = originalEnv
-    } else {
-      delete process.env.GOOGLE_TRANSLATE_API_KEY
-    }
-  })
-
   // --- Missing API key ---
 
   it("throws error when GOOGLE_TRANSLATE_API_KEY is not set", async () => {
-    delete process.env.GOOGLE_TRANSLATE_API_KEY
+    vi.stubEnv("GOOGLE_TRANSLATE_API_KEY", "")
 
     await expect(translateBatch(["hello"], "en", "ar")).rejects.toThrow(
       "GOOGLE_TRANSLATE_API_KEY not configured"
@@ -282,8 +338,8 @@ describe("translateBatch", () => {
 
   // --- Batch-size guard (chunking) ---
 
-  it("splits batches over 100 items into multiple requests, order preserved", async () => {
-    const texts = Array.from({ length: 150 }, (_, i) => `word${i}`)
+  it("splits batches over 100 items into exactly 2 requests (100 + 51), order preserved", async () => {
+    const texts = Array.from({ length: 151 }, (_, i) => `word${i}`)
     mockFetch.mockImplementation(async (url: string) => {
       const qs = [...new URLSearchParams(String(url).split("?")[1]).entries()]
         .filter(([k]) => k === "q")
@@ -301,16 +357,23 @@ describe("translateBatch", () => {
     const result = await translateBatch(texts, "en", "ar")
 
     expect(mockFetch).toHaveBeenCalledTimes(2)
-    expect(result).toHaveLength(150)
+    // First request carries exactly 100 q params, second exactly 51.
+    const countQ = (call: unknown[]) =>
+      ((call[0] as string).match(/(?:^|&|\?)q=/g) ?? []).length
+    expect(countQ(mockFetch.mock.calls[0])).toBe(100)
+    expect(countQ(mockFetch.mock.calls[1])).toBe(51)
+    expect(result).toHaveLength(151)
     expect(result[0]).toBe("T:word0")
     expect(result[99]).toBe("T:word99")
     expect(result[100]).toBe("T:word100")
-    expect(result[149]).toBe("T:word149")
+    expect(result[150]).toBe("T:word150")
   })
 
-  it("splits batches by cumulative characters (long texts)", async () => {
-    // 5 texts × 1500 chars = 7500 chars > 4000 limit → multiple chunks
-    const texts = Array.from({ length: 5 }, (_, i) => `${i}`.padEnd(1500, "x"))
+  it("splits batches by cumulative characters (long texts), empties preserved", async () => {
+    // Non-empty texts each ~1500 chars; 5 × 1500 = 7500 > 4000 → multiple chunks.
+    // Interleave empties to assert positions still map back to "".
+    const big = (i: number) => `${i}`.padEnd(1500, "x")
+    const texts = [big(0), "", big(1), big(2), "  ", big(3), big(4)]
     mockFetch.mockImplementation(async (url: string) => {
       const qs = [...new URLSearchParams(String(url).split("?")[1]).entries()]
         .filter(([k]) => k === "q")
@@ -330,7 +393,7 @@ describe("translateBatch", () => {
     const result = await translateBatch(texts, "en", "ar")
 
     expect(mockFetch.mock.calls.length).toBeGreaterThan(1)
-    expect(result).toEqual(["T:0", "T:1", "T:2", "T:3", "T:4"])
+    expect(result).toEqual(["T:0", "", "T:1", "T:2", "", "T:3", "T:4"])
   })
 
   it("keeps a small batch to exactly one request (no chunking regression)", async () => {
@@ -350,5 +413,76 @@ describe("translateBatch", () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(result).toEqual(["مرحبا", "عالم"])
+  })
+
+  // --- Timeout ---
+
+  it("aborts and throws when a chunk request exceeds the 2.5s timeout", async () => {
+    vi.useFakeTimers()
+    mockFetch.mockImplementation(abortableNeverResolves())
+
+    const pending = translateBatch(["hello", "world"], "en", "ar")
+    const assertion = expect(pending).rejects.toThrow(/timeout after 2500ms/)
+    await vi.advanceTimersByTimeAsync(2500)
+    await assertion
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  // --- Retry policy ---
+
+  it("retries a chunk once on 429 when retry is enabled, then succeeds", async () => {
+    vi.useFakeTimers()
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        text: async () => "Rate limit exceeded",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            translations: [
+              { translatedText: "مرحبا" },
+              { translatedText: "عالم" },
+            ],
+          },
+        }),
+      })
+
+    const pending = translateBatch(["hello", "world"], "en", "ar", {
+      retry: true,
+    })
+    await vi.advanceTimersByTimeAsync(250) // backoff
+    const result = await pending
+
+    expect(result).toEqual(["مرحبا", "عالم"])
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it("does NOT retry by default (one fetch, throws) on 429", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      text: async () => "Rate limit exceeded",
+    })
+
+    await expect(translateBatch(["hello"], "en", "ar")).rejects.toThrow(
+      "Google Translate API error: 429"
+    )
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it("does NOT retry a 400 bad-request even when retry is enabled", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      text: async () => "Invalid target language",
+    })
+
+    await expect(
+      translateBatch(["hello"], "en", "ar", { retry: true })
+    ).rejects.toThrow("Google Translate API error: 400")
+    expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 })
