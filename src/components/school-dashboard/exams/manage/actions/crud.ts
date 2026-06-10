@@ -3,11 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { examCreateSchema, examUpdateSchema } from "../validation"
 import { checkExamConflicts } from "./conflict-detection"
@@ -118,6 +120,11 @@ export async function createExam(
         status: "PLANNED",
       },
     })
+
+    // Pre-translate the other language OFF the response path so the first reader
+    // hits the cache. `Exam` is the logical registry name (Prisma accessor is
+    // `schoolExam`). Non-blocking and best-effort.
+    after(() => prewarm("Exam", exam, { schoolId }))
 
     // Notify students in the class about new exam (non-blocking)
     const schoolPref = await db.school.findFirst({
@@ -280,6 +287,11 @@ export async function updateExam(
       where: { id, schoolId },
       data,
     })
+
+    // Pre-translate edited text OFF the response path. `updateMany` returns a
+    // count, not the row — prewarm reads only the registered fields from the
+    // freshly written values. Non-blocking and best-effort.
+    after(() => prewarm("Exam", { id, ...data }, { schoolId }))
 
     revalidatePath("/exams")
     return {

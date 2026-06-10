@@ -64,6 +64,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -82,6 +83,7 @@ import {
   getClassesSchema,
   type ClassTeacherCreateInput,
 } from "@/components/school-dashboard/listings/classes/validation"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { assertClassPermission, getAuthContext } from "./authorization"
 
@@ -209,6 +211,10 @@ export async function createClass(
       },
     })
 
+    // Pre-translate the other language OFF the response path so the first reader
+    // hits the cache. Non-blocking and best-effort.
+    after(() => prewarm("Class", row, { schoolId }))
+
     revalidatePath(CLASSES_PATH)
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -307,6 +313,11 @@ export async function updateClass(
     if (typeof rest.gradeId !== "undefined") data.gradeId = rest.gradeId || null
 
     await db.class.updateMany({ where: { id, schoolId }, data })
+
+    // Pre-translate edited text OFF the response path. `updateMany` returns a
+    // count, not the row — prewarm reads only the registered fields from the
+    // freshly written values. Non-blocking and best-effort.
+    after(() => prewarm("Class", { id, ...data }, { schoolId }))
 
     revalidatePath(CLASSES_PATH)
     return { success: true, data: undefined }

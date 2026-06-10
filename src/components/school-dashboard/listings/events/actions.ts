@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { type Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -21,6 +22,7 @@ import {
   getEventsSchema,
 } from "@/components/school-dashboard/listings/events/validation"
 import { getFields } from "@/components/translation/display"
+import { prewarm } from "@/components/translation/prewarm"
 
 type EventSelectResult = {
   id: string
@@ -117,6 +119,10 @@ export async function createEvent(
       },
     })
 
+    // Pre-translate the other language OFF the response path so the first reader
+    // hits the cache. Non-blocking and best-effort.
+    after(() => prewarm("Event", row, { schoolId }))
+
     revalidatePath(EVENTS_PATH)
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -198,6 +204,11 @@ export async function updateEvent(
     if (typeof rest.notes !== "undefined") data.notes = rest.notes || null
 
     await db.event.updateMany({ where: { id, schoolId }, data })
+
+    // Pre-translate edited text OFF the response path. `updateMany` returns a
+    // count, not the row — prewarm reads only the registered fields from the
+    // freshly written values. Non-blocking and best-effort.
+    after(() => prewarm("Event", { id, ...data }, { schoolId }))
 
     revalidatePath(EVENTS_PATH)
     return { success: true, data: undefined }

@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -11,6 +12,11 @@ import {
   getEvents,
   updateEvent,
 } from "@/components/school-dashboard/listings/events/actions"
+import { prewarm } from "@/components/translation/prewarm"
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -45,11 +51,27 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
 
+// Run `after()` callbacks synchronously so we can assert the prewarm side
+// effect; preserve the rest of next/server.
+vi.mock("next/server", async (orig) => ({
+  ...((await orig()) as object),
+  after: (fn: () => void) => fn(),
+}))
+
+vi.mock("@/components/translation/prewarm", () => ({
+  prewarm: vi.fn(),
+}))
+
 describe("Event Actions", () => {
   const mockSchoolId = "school-123"
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Session schoolId must match the tenant-context schoolId for the ADMIN
+    // permission check to pass.
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "admin-1", role: "ADMIN", schoolId: mockSchoolId },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",
@@ -201,6 +223,70 @@ describe("Event Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data?.rows).toHaveLength(2)
+    })
+  })
+
+  describe("translation cache prewarm", () => {
+    it("prewarms Event on successful create", async () => {
+      const mockEvent = {
+        id: "event-1",
+        title: "Annual Sports Day",
+        description: "School sports competition",
+        schoolId: mockSchoolId,
+      }
+      vi.mocked(db.event.create).mockResolvedValue(mockEvent as any)
+
+      const result = await createEvent({
+        title: "Annual Sports Day",
+        description: "School sports competition",
+        eventType: "SPORTS",
+        eventDate: new Date(Date.now() + 86400000),
+        startTime: "09:00",
+        endTime: "17:00",
+        isPublic: true,
+        registrationRequired: false,
+      })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Event",
+        expect.objectContaining({ title: "Annual Sports Day" }),
+        { schoolId: mockSchoolId }
+      )
+    })
+
+    it("prewarms Event on successful update", async () => {
+      vi.mocked(db.event.findFirst).mockResolvedValue({
+        id: "event-1",
+      } as any)
+      vi.mocked(db.event.updateMany).mockResolvedValue({ count: 1 } as any)
+
+      const result = await updateEvent({
+        id: "event-1",
+        title: "Updated Sports Day",
+      })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Event",
+        expect.objectContaining({ id: "event-1", title: "Updated Sports Day" }),
+        { schoolId: mockSchoolId }
+      )
+    })
+
+    it("does NOT prewarm when not authenticated", async () => {
+      vi.mocked(auth).mockResolvedValue(null as any)
+
+      const result = await createEvent({
+        title: "Annual Sports Day",
+        eventType: "SPORTS",
+        eventDate: new Date(Date.now() + 86400000),
+        startTime: "09:00",
+        endTime: "17:00",
+      })
+
+      expect(result.success).toBe(false)
+      expect(prewarm).not.toHaveBeenCalled()
     })
   })
 })

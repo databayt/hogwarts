@@ -15,6 +15,7 @@ import {
   getClassesExportData,
   updateClass,
 } from "@/components/school-dashboard/listings/classes/actions"
+import { prewarm } from "@/components/translation/prewarm"
 
 // ============================================================================
 // Mocks
@@ -30,6 +31,17 @@ vi.mock("@/lib/tenant-context", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}))
+
+// Run `after()` callbacks synchronously so we can assert the prewarm side
+// effect; preserve the rest of next/server.
+vi.mock("next/server", async (orig) => ({
+  ...((await orig()) as object),
+  after: (fn: () => void) => fn(),
+}))
+
+vi.mock("@/components/translation/prewarm", () => ({
+  prewarm: vi.fn(),
 }))
 
 vi.mock("@/lib/enrollment-sync", () => ({
@@ -249,7 +261,7 @@ describe("Class Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe("Class not found")
+        expect(result.error).toBe(ACTION_ERRORS.CLASS_NOT_FOUND)
       }
     })
 
@@ -293,7 +305,7 @@ describe("Class Actions", () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toBe("Class not found")
+        expect(result.error).toBe(ACTION_ERRORS.CLASS_NOT_FOUND)
       }
     })
   })
@@ -482,6 +494,62 @@ describe("Class Actions", () => {
         expect(row).not.toHaveProperty("isActive")
         expect(row).not.toHaveProperty("yearLevelName")
       }
+    })
+  })
+
+  // ==========================================================================
+  // translation cache prewarm
+  // ==========================================================================
+
+  describe("translation cache prewarm", () => {
+    it("prewarms Class on successful create", async () => {
+      setupAuth()
+      vi.mocked(db.class.count).mockResolvedValue(0)
+      vi.mocked(db.school.findFirst).mockResolvedValue({
+        maxClasses: 100,
+      } as any)
+      vi.mocked(db.classroom.findFirst).mockResolvedValue({
+        capacity: 40,
+        roomName: "Room 1",
+      } as any)
+      vi.mocked(db.class.create).mockResolvedValue({
+        id: "class-1",
+        name: "Math 101 - Section A",
+      } as any)
+
+      const result = await createClass(VALID_CREATE_INPUT)
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Class",
+        expect.objectContaining({ name: "Math 101 - Section A" }),
+        { schoolId: "school-1" }
+      )
+    })
+
+    it("prewarms Class on successful update", async () => {
+      setupAuth()
+      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "class-1" } as any)
+      vi.mocked(db.class.updateMany).mockResolvedValue({ count: 1 } as any)
+
+      const result = await updateClass({ id: "class-1", name: "Updated Name" })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Class",
+        expect.objectContaining({ id: "class-1", name: "Updated Name" }),
+        { schoolId: "school-1" }
+      )
+    })
+
+    it("does NOT prewarm when not authenticated", async () => {
+      vi.mocked(auth).mockResolvedValue(null as any)
+      vi.mocked(getTenantContext).mockResolvedValue(SCHOOL_CONTEXT as any)
+
+      const result = await createClass(VALID_CREATE_INPUT)
+
+      expect(result.success).toBe(false)
+      expect(prewarm).not.toHaveBeenCalled()
     })
   })
 })

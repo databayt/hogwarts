@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -9,7 +10,13 @@ import {
   createAnnouncement,
   deleteAnnouncement,
   toggleAnnouncementPublish,
+  updateAnnouncement,
 } from "@/components/school-dashboard/listings/announcements/actions"
+import { prewarm } from "@/components/translation/prewarm"
+
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
 
 // Mock dependencies - must be inside vi.mock factory to avoid hoisting issues
 vi.mock("@/lib/db", () => ({
@@ -37,11 +44,27 @@ vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }))
 
+// Run `after()` callbacks synchronously so we can assert the prewarm side
+// effect; preserve the rest of next/server.
+vi.mock("next/server", async (orig) => ({
+  ...((await orig()) as object),
+  after: (fn: () => void) => fn(),
+}))
+
+vi.mock("@/components/translation/prewarm", () => ({
+  prewarm: vi.fn(),
+}))
+
 describe("Announcement Actions", () => {
   const mockSchoolId = "school-123"
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Session schoolId must match the tenant-context schoolId for ADMIN
+    // permission checks to pass.
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "admin-1", role: "ADMIN", schoolId: mockSchoolId },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",
@@ -120,6 +143,44 @@ describe("Announcement Actions", () => {
           }),
         })
       )
+    })
+  })
+
+  describe("translation cache prewarm", () => {
+    it("prewarms Announcement on successful update", async () => {
+      vi.mocked(db.announcement.findFirst).mockResolvedValue({
+        id: "ann-1",
+        createdBy: "admin-1",
+        schoolId: mockSchoolId,
+        scope: "school",
+        published: false,
+      } as any)
+      vi.mocked(db.announcement.updateMany).mockResolvedValue({ count: 1 })
+
+      const result = await updateAnnouncement({
+        id: "ann-1",
+        title: "Updated Title",
+        body: "Updated body",
+      })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Announcement",
+        expect.objectContaining({ id: "ann-1", title: "Updated Title" }),
+        { schoolId: mockSchoolId }
+      )
+    })
+
+    it("does NOT prewarm when not authenticated", async () => {
+      vi.mocked(auth).mockResolvedValue(null as any)
+
+      const result = await updateAnnouncement({
+        id: "ann-1",
+        title: "Updated Title",
+      })
+
+      expect(result.success).toBe(false)
+      expect(prewarm).not.toHaveBeenCalled()
     })
   })
 })

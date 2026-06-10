@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -21,6 +22,7 @@ import {
   assignmentUpdateSchema,
   getAssignmentsSchema,
 } from "@/components/school-dashboard/listings/assignments/validation"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { assertAssignmentPermission, getAuthContext } from "./authorization"
 
@@ -85,6 +87,10 @@ export async function createAssignment(
         status: "DRAFT",
       },
     })
+
+    // Pre-translate the other language OFF the response path so the first reader
+    // hits the cache. Non-blocking and best-effort.
+    after(() => prewarm("Assignment", row, { schoolId }))
 
     // Notify students in the class about the new assignment (non-blocking)
     const schoolPref = await db.school.findFirst({
@@ -171,6 +177,11 @@ export async function updateAssignment(
       data.instructions = rest.instructions || null
 
     await assignmentModel.updateMany({ where: { id, schoolId }, data })
+
+    // Pre-translate edited text OFF the response path. `updateMany` returns a
+    // count, not the row — prewarm reads only the registered fields from the
+    // freshly written values. Non-blocking and best-effort.
+    after(() => prewarm("Assignment", { id, ...data }, { schoolId }))
 
     revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: undefined }

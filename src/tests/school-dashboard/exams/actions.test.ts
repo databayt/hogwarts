@@ -11,6 +11,7 @@ import {
   getExams,
   updateExam,
 } from "@/components/school-dashboard/exams/manage/actions"
+import { prewarm } from "@/components/translation/prewarm"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -58,6 +59,17 @@ vi.mock("@/lib/tenant-context", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}))
+
+// Run `after()` callbacks synchronously so we can assert the prewarm side
+// effect; preserve the rest of next/server.
+vi.mock("next/server", async (orig) => ({
+  ...((await orig()) as object),
+  after: (fn: () => void) => fn(),
+}))
+
+vi.mock("@/components/translation/prewarm", () => ({
+  prewarm: vi.fn(),
 }))
 
 vi.mock(
@@ -271,6 +283,99 @@ describe("Exam Actions", () => {
 
       expect(result.rows).toHaveLength(2)
       expect(result.total).toBe(2)
+    })
+  })
+
+  describe("translation cache prewarm", () => {
+    it("prewarms Exam on successful create", async () => {
+      const mockExam = {
+        id: "exam-1",
+        title: "Midterm Exam",
+        description: "Covers chapters 1-5",
+        schoolId: mockSchoolId,
+      }
+      vi.mocked(db.class.findFirst).mockResolvedValue({
+        id: "class-1",
+        schoolId: mockSchoolId,
+      } as any)
+      vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
+        id: "selection-1",
+        catalogSubjectId: "subject-1",
+        schoolId: mockSchoolId,
+        isActive: true,
+      } as any)
+      vi.mocked(db.schoolExam.create).mockResolvedValue(mockExam as any)
+
+      const result = await createExam({
+        title: "Midterm Exam",
+        description: "Covers chapters 1-5",
+        classId: "class-1",
+        subjectId: "subject-1",
+        examDate: futureDate,
+        startTime: "09:00",
+        endTime: "11:00",
+        duration: 120,
+        totalMarks: 100,
+        passingMarks: 40,
+        examType: "MIDTERM",
+      })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Exam",
+        expect.objectContaining({ title: "Midterm Exam" }),
+        { schoolId: mockSchoolId }
+      )
+    })
+
+    it("prewarms Exam on successful update", async () => {
+      vi.mocked(db.schoolExam.findFirst).mockResolvedValue({
+        id: "exam-1",
+        schoolId: mockSchoolId,
+        status: "PLANNED",
+        examDate: futureDate,
+        startTime: "09:00",
+        endTime: "11:00",
+        classId: "class-1",
+      } as any)
+      vi.mocked(db.schoolExam.updateMany).mockResolvedValue({ count: 1 } as any)
+
+      const result = await updateExam({
+        id: "exam-1",
+        title: "Updated Exam",
+      })
+
+      expect(result.success).toBe(true)
+      expect(prewarm).toHaveBeenCalledWith(
+        "Exam",
+        expect.objectContaining({ id: "exam-1", title: "Updated Exam" }),
+        { schoolId: mockSchoolId }
+      )
+    })
+
+    it("does NOT prewarm when missing school context", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: null as any,
+        subdomain: "test",
+        role: "TEACHER",
+        locale: "en",
+      })
+
+      const result = await createExam({
+        title: "Midterm Exam",
+        classId: "class-1",
+        subjectId: "subject-1",
+        examDate: futureDate,
+        startTime: "09:00",
+        endTime: "11:00",
+        duration: 120,
+        totalMarks: 100,
+        passingMarks: 40,
+        examType: "MIDTERM",
+      })
+
+      expect(result.success).toBe(false)
+      expect(prewarm).not.toHaveBeenCalled()
     })
   })
 })

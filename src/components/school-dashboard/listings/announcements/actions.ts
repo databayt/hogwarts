@@ -489,6 +489,12 @@ export async function updateAnnouncement(
       data,
     })
 
+    // Pre-translate the edited text OFF the response path so the first reader
+    // in the other language hits the cache. `updateMany` returns a count, not
+    // the row — prewarm only reads the registered fields, so pass the freshly
+    // written values. Non-blocking and best-effort.
+    after(() => prewarm("Announcement", { id, ...data }, { schoolId }))
+
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH)
     revalidateTag(`announcements-${schoolId}`, "max")
