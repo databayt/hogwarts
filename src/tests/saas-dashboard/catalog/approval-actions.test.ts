@@ -22,27 +22,30 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogQuestion: {
+    question: {
       update: vi.fn(),
     },
-    catalogMaterial: {
+    material: {
       update: vi.fn(),
     },
-    catalogAssignment: {
+    assignment: {
       update: vi.fn(),
     },
-    catalogBook: {
+    book: {
       update: vi.fn(),
     },
-    lessonVideo: {
+    video: {
       update: vi.fn(),
     },
-    schoolBookSelection: {
+    notification: {
+      create: vi.fn(),
+    },
+    bookSelection: {
       findFirst: vi.fn(),
       create: vi.fn(),
       count: vi.fn(),
     },
-    book: {
+    schoolBook: {
       create: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -164,18 +167,18 @@ describe("Approval Actions", () => {
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogBook: {
+          book: {
             update: vi
               .fn()
               .mockResolvedValueOnce(mockBook) // first update (approve)
               .mockResolvedValueOnce({} as any), // second update (usageCount)
           },
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi.fn().mockResolvedValue(null), // no existing selection
             create: vi.fn().mockResolvedValue({} as any),
             count: vi.fn().mockResolvedValue(1),
           },
-          book: {
+          schoolBook: {
             create: vi.fn().mockResolvedValue({} as any),
           },
         }
@@ -215,17 +218,17 @@ describe("Approval Actions", () => {
       let selectionCreateCalled = false
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogBook: {
+          book: {
             update: vi.fn().mockResolvedValue(mockBook),
           },
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi.fn(),
             create: vi.fn().mockImplementation(async () => {
               selectionCreateCalled = true
             }),
             count: vi.fn(),
           },
-          book: {
+          schoolBook: {
             create: vi.fn(),
           },
         }
@@ -265,17 +268,17 @@ describe("Approval Actions", () => {
       let bookCreateCalled = false
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogBook: {
+          book: {
             update: vi.fn().mockResolvedValue(mockBook),
           },
-          schoolBookSelection: {
+          bookSelection: {
             findFirst: vi.fn().mockResolvedValue({ id: "existing-sel" }), // already exists
             create: vi.fn().mockImplementation(async () => {
               selectionCreateCalled = true
             }),
             count: vi.fn(),
           },
-          book: {
+          schoolBook: {
             create: vi.fn().mockImplementation(async () => {
               bookCreateCalled = true
             }),

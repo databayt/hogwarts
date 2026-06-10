@@ -23,7 +23,7 @@ vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    lessonVideo: {
+    video: {
       create: vi.fn(),
       findMany: vi.fn(),
       findUniqueOrThrow: vi.fn(),

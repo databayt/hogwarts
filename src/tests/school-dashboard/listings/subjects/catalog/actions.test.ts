@@ -32,23 +32,29 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    schoolSubjectSelection: {
+    subjectSelection: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
     },
-    catalogSubject: {
+    subject: {
+      findFirst: vi.fn(),
       update: vi.fn(),
     },
-    schoolContentOverride: {
+    chapter: {
+      findFirst: vi.fn(),
+    },
+    contentOverride: {
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
+    $executeRawUnsafe: vi.fn(),
   },
 }))
 
@@ -96,6 +102,8 @@ describe("Catalog Subject Selection Actions", () => {
     it("adds subject selection when not exists", async () => {
       setupAuth()
       vi.mocked(db.subjectSelection.findFirst).mockResolvedValue(null)
+      // Source verifies the subject is PUBLISHED before allowing selection
+      vi.mocked(db.subject.findFirst).mockResolvedValue({ id: "cat-1" } as any)
       vi.mocked(db.subjectSelection.create).mockResolvedValue({
         id: "sel-1",
       } as any)
@@ -139,6 +147,8 @@ describe("Catalog Subject Selection Actions", () => {
     it("updates usageCount after toggle", async () => {
       setupAuth()
       vi.mocked(db.subjectSelection.findFirst).mockResolvedValue(null)
+      // Source verifies the subject is PUBLISHED before allowing selection
+      vi.mocked(db.subject.findFirst).mockResolvedValue({ id: "cat-1" } as any)
       vi.mocked(db.subjectSelection.create).mockResolvedValue({} as any)
       vi.mocked(db.subjectSelection.count).mockResolvedValue(3)
       vi.mocked(db.subject.update).mockResolvedValue({} as any)
@@ -170,7 +180,7 @@ describe("Catalog Subject Selection Actions", () => {
       const result = await toggleSubjectSelection("cat-1", "grade-1")
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("school context")
+      expect(result.error).toContain("MISSING_SCHOOL")
     })
   })
 
@@ -181,43 +191,39 @@ describe("Catalog Subject Selection Actions", () => {
   describe("bulkSelectSubjects", () => {
     it("bulk adds selections, skips existing", async () => {
       setupAuth()
-      // First subject doesn't exist, second already exists
-      vi.mocked(db.subjectSelection.findFirst)
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ id: "existing" } as any)
-      vi.mocked(db.subjectSelection.create).mockResolvedValue({} as any)
-      vi.mocked(db.subjectSelection.count).mockResolvedValue(1)
-      vi.mocked(db.subject.update).mockResolvedValue({} as any)
+      // Source batch-inserts with skipDuplicates; cat-2 is skipped as a dup,
+      // so createMany reports count: 1.
+      vi.mocked(db.subjectSelection.createMany).mockResolvedValue({
+        count: 1,
+      } as any)
+      vi.mocked(db.$executeRawUnsafe).mockResolvedValue(1 as any)
 
       const result = await bulkSelectSubjects(["cat-1", "cat-2"], "grade-1")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ added: 1 })
-      // Only one create call (cat-1), cat-2 skipped
-      expect(db.subjectSelection.create).toHaveBeenCalledTimes(1)
+      // Single batch insert with skipDuplicates (no N+1 find+create loop)
+      expect(db.subjectSelection.createMany).toHaveBeenCalledTimes(1)
+      expect(db.subjectSelection.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skipDuplicates: true })
+      )
     })
 
     it("updates usageCount for all affected subjects", async () => {
       setupAuth()
-      vi.mocked(db.subjectSelection.findFirst)
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null)
-      vi.mocked(db.subjectSelection.create).mockResolvedValue({} as any)
-      vi.mocked(db.subjectSelection.count).mockResolvedValue(1)
-      vi.mocked(db.subject.update).mockResolvedValue({} as any)
+      vi.mocked(db.subjectSelection.createMany).mockResolvedValue({
+        count: 2,
+      } as any)
+      vi.mocked(db.$executeRawUnsafe).mockResolvedValue(2 as any)
 
       await bulkSelectSubjects(["cat-1", "cat-2"], "grade-1")
 
-      // usageCount updated for both subjects
-      expect(db.subject.update).toHaveBeenCalledTimes(2)
-      expect(db.subject.update).toHaveBeenCalledWith({
-        where: { id: "cat-1" },
-        data: { usageCount: 1 },
-      })
-      expect(db.subject.update).toHaveBeenCalledWith({
-        where: { id: "cat-2" },
-        data: { usageCount: 1 },
-      })
+      // usageCount recomputed for all affected subjects via a single raw query
+      expect(db.$executeRawUnsafe).toHaveBeenCalledTimes(1)
+      expect(db.$executeRawUnsafe).toHaveBeenCalledWith(expect.any(String), [
+        "cat-1",
+        "cat-2",
+      ])
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -276,7 +282,7 @@ describe("Catalog Subject Selection Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Selection not found")
+      expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -371,7 +377,7 @@ describe("Catalog Subject Selection Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("Missing user identity")
+      expect(result.error).toContain("UNKNOWN")
     })
 
     it("requires either chapter or lesson", async () => {
@@ -382,7 +388,7 @@ describe("Catalog Subject Selection Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("chapter or lesson")
+      expect(result.error).toContain("chapter, lesson, or video")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {

@@ -22,7 +22,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogQuestion: {
+    question: {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),

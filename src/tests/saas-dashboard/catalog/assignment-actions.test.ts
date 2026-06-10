@@ -22,7 +22,7 @@ vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogAssignment: {
+    assignment: {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),

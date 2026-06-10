@@ -3,11 +3,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { db } from "@/lib/db"
 import {
   deleteCatalogImage,
   processAndUploadCatalogImage,
-} from "@/lib/catalog-image"
-import { db } from "@/lib/db"
+} from "@/components/catalog/image"
 import {
   deleteCatalogThumbnail,
   uploadCatalogThumbnail,
@@ -24,13 +24,13 @@ vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogSubject: { update: vi.fn(), findUnique: vi.fn() },
-    catalogChapter: { update: vi.fn(), findUnique: vi.fn() },
-    catalogLesson: { update: vi.fn(), findUnique: vi.fn() },
+    subject: { update: vi.fn(), findUnique: vi.fn() },
+    chapter: { update: vi.fn(), findUnique: vi.fn() },
+    lesson: { update: vi.fn(), findUnique: vi.fn() },
   },
 }))
 
-vi.mock("@/lib/catalog-image", () => ({
+vi.mock("@/components/catalog/image", () => ({
   processAndUploadCatalogImage: vi.fn(),
   deleteCatalogImage: vi.fn(),
 }))

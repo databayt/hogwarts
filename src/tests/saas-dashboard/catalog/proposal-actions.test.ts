@@ -22,34 +22,28 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogProposal: {
+    proposal: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    catalogSubject: {
+    subject: {
       findUnique: vi.fn(),
       create: vi.fn(),
     },
-    catalogChapter: {
+    chapter: {
       findFirst: vi.fn(),
       create: vi.fn(),
     },
-    catalogLesson: {
+    lesson: {
       findFirst: vi.fn(),
       create: vi.fn(),
     },
     academicGrade: {
-      findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
-    schoolSubjectSelection: {
-      create: vi.fn(),
-    },
-    department: {
-      findFirst: vi.fn(),
-    },
-    subject: {
-      create: vi.fn(),
+    subjectSelection: {
+      createMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -82,6 +76,10 @@ function mockNonDeveloperSession(role = "ADMIN") {
 describe("Proposal Actions (SaaS)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Default: $transaction runs the callback with the top-level db mock as `tx`,
+    // so tests that mock db.<model> (CHAPTER/LESSON/error paths) drive the
+    // transaction body. The SUBJECT test overrides this with a bespoke tx.
+    vi.mocked(db.$transaction).mockImplementation((cb: any) => cb(db))
   })
 
   // ==========================================================================
@@ -147,44 +145,49 @@ describe("Proposal Actions (SaaS)", () => {
     it("approves SUBJECT proposal (creates Subject + auto-bridges)", async () => {
       mockDeveloperSession()
 
-      vi.mocked(db.proposal.findUnique).mockResolvedValue({
-        id: "p-1",
-        type: "SUBJECT",
-        status: "SUBMITTED",
-        schoolId: "school-1",
-        data: { name: "Physics", department: "Science" },
-      } as any)
-
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          catalogSubject: {
-            findUnique: vi.fn().mockResolvedValue(null),
-            create: vi.fn().mockResolvedValue({ id: "cs-1" }),
-          },
-          academicGrade: {
-            findFirst: vi.fn().mockResolvedValue({ id: "grade-1" }),
-          },
-          schoolSubjectSelection: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-          department: {
-            findFirst: vi.fn().mockResolvedValue({ id: "dept-1" }),
-          },
-          subject: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        }
-        return callback(tx)
-      })
-
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      // The whole approve flow runs inside db.$transaction, so the proposal
+      // read + status update happen on `tx`, not the top-level db mock.
+      const tx = {
+        proposal: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "p-1",
+            type: "SUBJECT",
+            status: "SUBMITTED",
+            schoolId: "school-1",
+            data: { name: "Physics", department: "Science", grades: [1] },
+          }),
+          update: vi.fn().mockResolvedValue({}),
+        },
+        subject: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "cs-1" }),
+        },
+        academicGrade: {
+          findMany: vi
+            .fn()
+            .mockResolvedValue([{ id: "grade-1", gradeNumber: 1 }]),
+        },
+        subjectSelection: {
+          createMany: vi.fn().mockResolvedValue({}),
+        },
+      }
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) =>
+        callback(tx)
+      )
 
       const result = await approveProposal("p-1", "Looks good")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ catalogEntityId: "cs-1" })
       expect(db.$transaction).toHaveBeenCalledTimes(1)
-      expect(db.proposal.update).toHaveBeenCalledWith({
+      expect(tx.subject.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          name: "Physics",
+          department: "Science",
+          status: "PUBLISHED",
+        }),
+      })
+      expect(tx.proposal.update).toHaveBeenCalledWith({
         where: { id: "p-1" },
         data: expect.objectContaining({
           status: "PUBLISHED",

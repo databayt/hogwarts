@@ -25,13 +25,13 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogExam: {
+    exam: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
     },
-    catalogExamTemplate: {
+    examTemplate: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
@@ -261,7 +261,7 @@ describe("Exam Approval Actions", () => {
 
       expect(result.items).toHaveLength(1)
       expect(result.items[0].name).toBe("Midterm Template")
-      expect(result.items[0].name).toBe("Science")
+      expect(result.items[0].subjectName).toBe("Science")
       expect(result.total).toBe(1)
     })
 

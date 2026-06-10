@@ -25,7 +25,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogProposal: {
+    proposal: {
       create: vi.fn(),
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -119,7 +119,7 @@ describe("Proposal Actions (School)", () => {
     })
 
     it("requires ADMIN/DEVELOPER role", async () => {
-      mockUnauthorizedSession("TEACHER")
+      mockUnauthorizedSession("STUDENT")
 
       const result = await submitSubjectProposal({
         name: "Physics",
@@ -127,7 +127,9 @@ describe("Proposal Actions (School)", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("ADMIN or DEVELOPER role required")
+      expect(result.error).toContain(
+        "ADMIN, DEVELOPER, or TEACHER role required"
+      )
     })
   })
 
@@ -166,7 +168,9 @@ describe("Proposal Actions (School)", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("ADMIN or DEVELOPER role required")
+      expect(result.error).toContain(
+        "ADMIN, DEVELOPER, or TEACHER role required"
+      )
     })
   })
 
@@ -205,7 +209,9 @@ describe("Proposal Actions (School)", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("ADMIN or DEVELOPER role required")
+      expect(result.error).toContain(
+        "ADMIN, DEVELOPER, or TEACHER role required"
+      )
     })
   })
 
@@ -243,12 +249,14 @@ describe("Proposal Actions (School)", () => {
     })
 
     it("requires ADMIN/DEVELOPER role", async () => {
-      mockUnauthorizedSession("TEACHER")
+      mockUnauthorizedSession("STUDENT")
 
       const result = await getMyProposals()
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("ADMIN or DEVELOPER role required")
+      expect(result.error).toContain(
+        "ADMIN, DEVELOPER, or TEACHER role required"
+      )
     })
   })
 
@@ -345,7 +353,9 @@ describe("Proposal Actions (School)", () => {
       const result = await updateProposal("p-1", { name: "X" })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("ADMIN or DEVELOPER role required")
+      expect(result.error).toContain(
+        "ADMIN, DEVELOPER, or TEACHER role required"
+      )
     })
   })
 })

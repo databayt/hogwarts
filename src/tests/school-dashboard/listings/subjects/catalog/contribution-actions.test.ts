@@ -32,18 +32,18 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogQuestion: {
+    question: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
     },
-    catalogMaterial: {
+    material: {
       create: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
     },
-    catalogAssignment: {
+    assignment: {
       create: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -108,14 +108,14 @@ describe("Catalog Contribution Actions", () => {
       const mockQuestion = { id: "q-1" }
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogQuestion: {
+          question: {
             create: vi.fn().mockResolvedValue(mockQuestion),
           },
           subject: {
             findFirst: vi.fn().mockResolvedValue(null),
           },
           questionBank: {
-            create: vi.fn(),
+            create: vi.fn().mockResolvedValue({ id: "qb-1" }),
           },
           questionAnalytics: {
             create: vi.fn(),
@@ -135,9 +135,9 @@ describe("Catalog Contribution Actions", () => {
       // Re-run to inspect the create call args
       const spyCreate = vi.fn().mockResolvedValue(mockQuestion)
       await txCallback({
-        catalogQuestion: { create: spyCreate },
+        question: { create: spyCreate },
         subject: { findFirst: vi.fn().mockResolvedValue(null) },
-        questionBank: { create: vi.fn() },
+        questionBank: { create: vi.fn().mockResolvedValue({ id: "qb-1" }) },
         questionAnalytics: { create: vi.fn() },
       })
 
@@ -169,7 +169,7 @@ describe("Catalog Contribution Actions", () => {
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogQuestion: {
+          question: {
             create: vi.fn().mockResolvedValue(mockQuestion),
           },
           subject: {
@@ -197,7 +197,7 @@ describe("Catalog Contribution Actions", () => {
       expect(analyticsCreateCalled).toBe(true)
     })
 
-    it("does NOT mirror when no matching subject found", async () => {
+    it("mirrors unconditionally (subject lookup no longer gates mirroring)", async () => {
       setupAuth()
 
       const mockQuestion = { id: "q-1" }
@@ -205,7 +205,7 @@ describe("Catalog Contribution Actions", () => {
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          catalogQuestion: {
+          question: {
             create: vi.fn().mockResolvedValue(mockQuestion),
           },
           subject: {
@@ -214,6 +214,7 @@ describe("Catalog Contribution Actions", () => {
           questionBank: {
             create: vi.fn().mockImplementation(async () => {
               questionBankCreateCalled = true
+              return { id: "qb-1" }
             }),
           },
           questionAnalytics: {
@@ -226,7 +227,7 @@ describe("Catalog Contribution Actions", () => {
       const result = await submitQuestion(makeQuestionInput())
 
       expect(result.success).toBe(true)
-      expect(questionBankCreateCalled).toBe(false)
+      expect(questionBankCreateCalled).toBe(true)
     })
 
     it("returns error for missing catalogSubjectId", async () => {
@@ -325,9 +326,7 @@ describe("Catalog Contribution Actions", () => {
       setupAuth()
 
       const mockAssignment = { id: "a-1" }
-      vi.mocked(db.schoolAssignment.create).mockResolvedValue(
-        mockAssignment as any
-      )
+      vi.mocked(db.assignment.create).mockResolvedValue(mockAssignment as any)
 
       const result = await submitAssignment({
         catalogSubjectId: "subject-1",
@@ -340,7 +339,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ id: "a-1" })
-      expect(db.schoolAssignment.create).toHaveBeenCalledWith({
+      expect(db.assignment.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           catalogSubjectId: "subject-1",
           title: "Lab Report: Photosynthesis",
@@ -365,7 +364,7 @@ describe("Catalog Contribution Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Title is required")
-      expect(db.schoolAssignment.create).not.toHaveBeenCalled()
+      expect(db.assignment.create).not.toHaveBeenCalled()
     })
   })
 
@@ -467,7 +466,7 @@ describe("Catalog Contribution Actions", () => {
 
       vi.mocked(db.question.findMany).mockResolvedValue(mockQuestions as any)
       vi.mocked(db.material.findMany).mockResolvedValue(mockMaterials as any)
-      vi.mocked(db.schoolAssignment.findMany).mockResolvedValue(
+      vi.mocked(db.assignment.findMany).mockResolvedValue(
         mockAssignments as any
       )
 
@@ -490,7 +489,7 @@ describe("Catalog Contribution Actions", () => {
           orderBy: { createdAt: "desc" },
         })
       )
-      expect(db.schoolAssignment.findMany).toHaveBeenCalledWith(
+      expect(db.assignment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { contributedBy: "teacher-1" },
           orderBy: { createdAt: "desc" },

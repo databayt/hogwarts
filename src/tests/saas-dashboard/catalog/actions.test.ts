@@ -30,19 +30,19 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    catalogSubject: {
+    subject: {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
-    catalogChapter: {
+    chapter: {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
       findUniqueOrThrow: vi.fn(),
     },
-    catalogLesson: {
+    lesson: {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
