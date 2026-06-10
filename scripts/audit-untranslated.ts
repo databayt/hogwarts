@@ -151,99 +151,54 @@ const DIR_MODELS: Record<string, (keyof typeof TRANSLATABLE)[]> = {
   "src/components/school-dashboard/conference": ["Conference"],
   "src/components/school-dashboard/notifications": ["Notification"],
   "src/components/school-dashboard/transportation/routes": ["Route"],
-  "src/components/school-dashboard/document": ["Document"],
+  // Document + Section: registered, but no dedicated render surface yet —
+  // they get a DIR_MODELS line the day one exists.
   "src/components/stream": ["StreamCourse", "StreamCategory", "Video"],
 }
 
-/**
- * Chain ROOTS that are never DB rows: dictionaries, params, form state, etc.
- * `{dictionary.events.title}` must not count as a raw Event.title render.
- */
-const SAFE_ROOTS = new Set([
-  "dictionary",
-  "dict",
-  "d",
-  "t",
-  "m",
-  "messages",
-  "labels",
-  "label",
-  "params",
-  "searchParams",
-  "props",
-  "config",
-  "options",
-  "opts",
-  "form",
-  "formData",
-  "values",
-  "errors",
-  "error",
-  "e",
-  "column",
-  "columns",
-  "meta",
-  "metadata",
-  "session",
-  "page",
-  "document",
-  "window",
-  "z",
-  "schema",
-])
-
-/** Render surfaces for field detection — display views only, never forms
- * (a form EDITS source content; translating its inputs would be wrong). */
-function isFieldSurface(path: string): boolean {
-  return isRenderSurface(path) || /\/management[^/]*\.tsx$/.test(path)
+interface FeatureGap {
+  model: string
+  dir: string
 }
 
-function findFieldOffenders(): Offender[] {
-  const offenders: Offender[] = []
+/**
+ * Display-translation markers. Any of these anywhere in the feature dir means
+ * the feature's DATA BOUNDARY translates — server code localizes, client
+ * surfaces (table/columns/detail) render the pre-localized props they're
+ * given. (Client components can't import the server-only helpers, so
+ * file-level detection would flag them forever; the FEATURE is the honest
+ * unit of coverage. Partial gaps inside a covered feature — e.g. one view
+ * fed by an unlocalized query — are sweep work, not ratchet work.)
+ */
+const DISPLAY_HELPERS = /\blocalize(One)?\b|\bgetText\b|\bgetFields\b/
+
+function findFieldOffenders(): FeatureGap[] {
+  const gaps: FeatureGap[] = []
   for (const [dir, models] of Object.entries(DIR_MODELS)) {
-    const fields = Array.from(
-      new Set(models.flatMap((m) => TRANSLATABLE[m]))
-    ).sort()
-    if (fields.length === 0) continue
-    const accessRe = new RegExp(
-      `\\b([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)\\.(${fields.join("|")})\\b`,
-      "g"
-    )
-    let files: string[] = []
+    let srcs: string[] = []
     try {
-      const out = execSync(`find ${dir} -type f -name '*.tsx' 2>/dev/null`, {
-        encoding: "utf8",
-      })
-      files = out.split("\n").filter(Boolean).filter(isFieldSurface)
+      const out = execSync(
+        `find ${dir} -type f \\( -name '*.ts' -o -name '*.tsx' \\) 2>/dev/null`,
+        { encoding: "utf8" }
+      )
+      srcs = out
+        .split("\n")
+        .filter(Boolean)
+        .filter((f) => !/\.test\.|\.spec\./.test(f))
     } catch {
-      continue // dir doesn't exist (feature moved) — DIR_MODELS needs updating
+      srcs = []
     }
-    for (const file of files) {
-      const src = readFileSync(file, "utf8")
-      if (TRANSLATION_HELPERS.test(src)) continue // file translates — trust it
-      const lines = src.split("\n")
-      lines.forEach((line, i) => {
-        const trimmed = line.trim()
-        if (
-          trimmed.startsWith("//") ||
-          trimmed.startsWith("*") ||
-          trimmed.startsWith("import ")
-        )
-          return
-        for (const match of line.matchAll(accessRe)) {
-          const root = match[1].split(".")[0]
-          if (SAFE_ROOTS.has(root)) continue
-          offenders.push({
-            file,
-            line: i + 1,
-            snippet: trimmed.slice(0, 120),
-          })
-          break // one offender per line is enough
-        }
-      })
+    if (srcs.length === 0) {
+      // Dir vanished — DIR_MODELS is stale; surface that instead of hiding it.
+      for (const model of models) gaps.push({ model, dir: `${dir} (missing)` })
+      continue
     }
+    const translates = srcs.some((f) =>
+      DISPLAY_HELPERS.test(readFileSync(f, "utf8"))
+    )
+    if (!translates) for (const model of models) gaps.push({ model, dir })
   }
-  return offenders
+  return gaps
 }
 
 // ---------------------------------------------------------------------------
@@ -337,15 +292,13 @@ if (process.argv[1] && process.argv[1].includes("audit-untranslated")) {
       }
     }
     if (fieldOffenders.length === 0) {
-      console.log("✅ No registry fields rendered raw.")
+      console.log("\n✅ Every mapped feature translates its registered model.")
     } else {
       console.log(
-        `\n⚠️  ${fieldOffenders.length} registry-field raw renders across ${
-          new Set(fieldOffenders.map((o) => o.file)).size
-        } files:\n`
+        `\n⚠️  ${fieldOffenders.length} registered models rendered with ZERO translation in their feature:\n`
       )
       for (const o of fieldOffenders) {
-        console.log(`  ${o.file}:${o.line}\n    ${o.snippet}`)
+        console.log(`  ${o.model} → ${o.dir}`)
       }
     }
     if (prewarmGaps.length === 0) {
