@@ -17,22 +17,22 @@ A snapshot of what's actually built today. For requirements see [PRD](/docs/prd)
 
 ## Epics at a glance
 
-| Epic                     | Maturity       | Doc                                          |
-| ------------------------ | -------------- | -------------------------------------------- |
-| 01 — Infrastructure      | `Built+Polish` | [/docs/architecture](/docs/architecture)     |
-| 02 — Authentication      | `Built`        | [/docs/authentication](/docs/authentication) |
-| 03 — Configuration       | `Built`        | [/docs/onboarding](/docs/onboarding)         |
-| 04 — People              | `Built`        | [/docs/students](/docs/students)             |
-| 05 — Admission           | `Built`        | [/docs/admission](/docs/admission)           |
-| 06 — Attendance          | `Built+Polish` | [/docs/attendance](/docs/attendance)         |
-| 07 — Exams and grading   | `Built`        | [/docs/exams](/docs/exams)                   |
-| 08 — Timetable           | `Built`        | [/docs/timetable](/docs/timetable)           |
-| 09 — Finance and billing | `Built`        | [/docs/fees](/docs/fees)                     |
-| 10 — Communication       | `Built`        | [/docs/messages](/docs/messages)             |
-| 11 — Stream / LMS        | `Built+Polish` | [/docs/us-curriculum](/docs/us-curriculum)   |
-| 12 — Library             | `Built`        | [/docs/library](/docs/library)               |
-| 13 — Transport           | `Built`        | [/docs/fees](/docs/fees)                     |
-| 14 — Catalog             | `Built+Polish` | [/docs/catalog](/docs/catalog)               |
+| Epic                     | Maturity       | Doc                                                        |
+| ------------------------ | -------------- | ---------------------------------------------------------- |
+| 01 — Infrastructure      | `Built+Polish` | [/docs/architecture](/docs/architecture)                   |
+| 02 — Authentication      | `Built`        | [/docs/authentication](/docs/authentication)               |
+| 03 — Configuration       | `Built`        | [/docs/onboarding](/docs/onboarding)                       |
+| 04 — People              | `Built`        | [/docs/students](/docs/students)                           |
+| 05 — Admission           | `Built`        | [/docs/admission](/docs/admission)                         |
+| 06 — Attendance          | `Built+Polish` | [/docs/attendance](/docs/attendance)                       |
+| 07 — Exams and grading   | `Built`        | [/docs/exams](/docs/exams)                                 |
+| 08 — Timetable           | `Built`        | [/docs/timetable](/docs/timetable)                         |
+| 09 — Finance and billing | `Built`        | [/docs/fees](/docs/fees)                                   |
+| 10 — Communication       | `Built`        | [/docs/messages](/docs/messages)                           |
+| 11 — Stream / LMS        | `Built+Polish` | [/docs/catalog#us-curriculum](/docs/catalog#us-curriculum) |
+| 12 — Library             | `Built`        | [/docs/library](/docs/library)                             |
+| 13 — Transport           | `Built`        | [/docs/fees](/docs/fees)                                   |
+| 14 — Catalog             | `Built+Polish` | [/docs/catalog](/docs/catalog)                             |
 
 ## 01 — Infrastructure · `Built+Polish`
 
@@ -166,7 +166,7 @@ Announcements, real-time messages, notifications, WhatsApp. See [Messages](/docs
 
 ## 11 — Stream / LMS · `Built+Polish`
 
-School-scoped LMS. US cover-asset wave partial. See [US curriculum](/docs/us-curriculum).
+School-scoped LMS. US cover-asset wave partial. See [US curriculum](/docs/catalog#us-curriculum).
 
 - Models in `stream.prisma`: `StreamCourse`, `StreamCategory`, `StreamChapter`, `StreamLesson`, `StreamEnrollment`, `StreamLessonProgress`, `StreamCertificate`, `StreamAttachment`.
 - Admin course CRUD + categories; Tiptap rich-text editor.
@@ -206,7 +206,7 @@ Platform-wide educational content library. See [Catalog](/docs/catalog).
 - 4 curricula on disk: SD (Sudan, 12 grades, bilingual subjects), US, IN, FR.
 - Operator dashboard at `/[lang]/(saas-dashboard)/(catalog)/catalog/...`.
 - Community contribution workflow with `Proposal` (proposed → reviewed → approved → published).
-- US-curriculum source library: [overview](/docs/us-curriculum) — 62 subjects, 240 grade-specific catalog records, three tiers (Elementary/Middle/High).
+- US-curriculum source library: [overview](/docs/catalog#us-curriculum) — 62 subjects, 240 grade-specific catalog records, three tiers (Elementary/Middle/High).
 
 ## Not built yet
 

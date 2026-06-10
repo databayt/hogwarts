@@ -198,6 +198,27 @@ const nextConfig: NextConfig = {
         destination: "/:lang/stream/courses",
         permanent: true,
       },
+      // Catalog docs consolidation (retired pages → catalog.mdx anchors)
+      {
+        source: "/:lang/docs/curriculum-engineering",
+        destination: "/:lang/docs/catalog#curriculum-engineering",
+        permanent: true,
+      },
+      {
+        source: "/:lang/docs/us-curriculum",
+        destination: "/:lang/docs/catalog#us-curriculum",
+        permanent: true,
+      },
+      {
+        source: "/:lang/docs/sudan-curriculum",
+        destination: "/:lang/docs/catalog#sudan-curriculum",
+        permanent: true,
+      },
+      {
+        source: "/:lang/docs/concept",
+        destination: "/:lang/docs/catalog#concepts",
+        permanent: true,
+      },
     ]
   },
 }
