@@ -253,9 +253,12 @@ export function classroomWhere(
 export function subjectWhere(c: PredicateCtx): Prisma.SubjectWhereInput | null {
   // Subject is a global catalog (no schoolId). All authenticated school
   // members can search it; route to the school's selection page on click.
+  // Only PUBLISHED subjects are searchable — DRAFT/REVIEW/ARCHIVED catalog
+  // rows must never leak into school-facing search.
   if (c.role === "USER") return null
   const insensitive = Prisma.QueryMode.insensitive
   return {
+    status: "PUBLISHED",
     OR: [
       { name: { contains: c.search, mode: insensitive } },
       { department: { contains: c.search, mode: insensitive } },

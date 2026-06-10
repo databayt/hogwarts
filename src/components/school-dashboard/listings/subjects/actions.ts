@@ -461,6 +461,8 @@ export async function getSubjectsForPicker(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    // Intentionally NOT schoolId-scoped: catalog Subject is a global table
+    // (no schoolId column). PUBLISHED-only keeps drafts out of the picker.
     const where: Record<string, unknown> = { status: "PUBLISHED" }
     if (search && search.trim()) {
       where.OR = [

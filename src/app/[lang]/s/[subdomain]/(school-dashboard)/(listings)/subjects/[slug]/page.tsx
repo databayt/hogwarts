@@ -13,6 +13,7 @@ import { BreadcrumbTitle } from "@/components/saas-dashboard/breadcrumb-title"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { CatalogContentSections } from "@/components/school-dashboard/listings/subjects/catalog-content-sections"
 import { CatalogDetailContent } from "@/components/school-dashboard/listings/subjects/catalog-detail"
+import { SchoolCatalogCustomization } from "@/components/school-dashboard/listings/subjects/catalog/school-catalog-customization"
 import { getText } from "@/components/translation/display"
 import type { Lang } from "@/components/translation/types"
 
@@ -23,7 +24,10 @@ interface Props {
 export default async function SubjectDetailPage({ params }: Props) {
   const { lang, subdomain, slug } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+  // ADMIN/DEVELOPER see all content + the customize panel; other roles get
+  // the school's ContentOverride-filtered view (hidden chapters/lessons drop).
+  const canCustomize = role === "ADMIN" || role === "DEVELOPER"
   const contentLang = (l: string | null | undefined) => (l || "ar") as Lang
   const t = (
     text: string | null | undefined,
@@ -151,6 +155,27 @@ export default async function SubjectDetailPage({ params }: Props) {
     ch.lessons.map((l) => l.id)
   )
 
+  // This school's hidden chapters/lessons (ContentOverride bridge records)
+  const overrideConditions = [
+    ...(chapterIds.length > 0
+      ? [{ catalogChapterId: { in: chapterIds } }]
+      : []),
+    ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+  ]
+  const overrides =
+    schoolId && overrideConditions.length > 0
+      ? await db.contentOverride.findMany({
+          where: { schoolId, isHidden: true, OR: overrideConditions },
+          select: { catalogChapterId: true, catalogLessonId: true },
+        })
+      : []
+  const hiddenChapterIds = new Set(
+    overrides.map((o) => o.catalogChapterId).filter(Boolean)
+  )
+  const hiddenLessonIds = new Set(
+    overrides.map((o) => o.catalogLessonId).filter(Boolean)
+  )
+
   // Parallel content queries (short-circuit when no lessons/chapters)
   const [materials, exams, questionStats, assignments] = await Promise.all([
     // Materials - linked at subject, chapter, or lesson level
@@ -276,7 +301,7 @@ export default async function SubjectDetailPage({ params }: Props) {
       t(subject.department, sLang),
     ])
 
-  const chapters = await Promise.all(
+  const allChapters = await Promise.all(
     subject.chapters.map(async (ch) => ({
       id: ch.id,
       name: await t(ch.name, sLang),
@@ -284,6 +309,7 @@ export default async function SubjectDetailPage({ params }: Props) {
       description: ch.description,
       totalLessons: ch.totalLessons,
       imageUrl: getCatalogImageUrl(ch.thumbnail, "sm"),
+      isHidden: hiddenChapterIds.has(ch.id),
       lessons: await Promise.all(
         ch.lessons.map(async (l) => ({
           id: l.id,
@@ -294,25 +320,44 @@ export default async function SubjectDetailPage({ params }: Props) {
           videoCount: l.videoCount,
           resourceCount: l.resourceCount,
           imageUrl: getCatalogImageUrl(l.thumbnail, "md"),
+          isHidden: hiddenLessonIds.has(l.id),
         }))
       ),
     }))
   )
 
-  // Build video cards from ALL lessons (matches stream dashboard "More from X")
+  // Non-customizers (teachers/students/guardians) get the school's curated
+  // view — hidden chapters/lessons are dropped entirely.
+  const chapters = canCustomize
+    ? allChapters
+    : allChapters
+        .filter((ch) => !ch.isHidden)
+        .map((ch) => ({
+          ...ch,
+          lessons: ch.lessons.filter((l) => !l.isHidden),
+        }))
+
+  // Build video cards from ALL lessons (matches stream dashboard "More from X");
+  // hidden content drops for non-customizers, same as the chapter list.
   const allLessons = await Promise.all(
     subject.chapters.flatMap((ch) =>
-      ch.lessons.map(async (l) => ({
-        id: l.id,
-        title: await t(l.name, sLang),
-        thumbnailUrl: getCatalogImageUrl(l.thumbnail, "original") ?? null,
-        durationSeconds: (l.durationMinutes ?? 0) * 60,
-        viewCount: 0,
-        isFeatured: false,
-        provider: "catalog",
-        catalogLessonId: l.id,
-        color: l.color ?? ch.color ?? null,
-      }))
+      ch.lessons
+        .filter(
+          (l) =>
+            canCustomize ||
+            (!hiddenChapterIds.has(ch.id) && !hiddenLessonIds.has(l.id))
+        )
+        .map(async (l) => ({
+          id: l.id,
+          title: await t(l.name, sLang),
+          thumbnailUrl: getCatalogImageUrl(l.thumbnail, "original") ?? null,
+          durationSeconds: (l.durationMinutes ?? 0) * 60,
+          viewCount: 0,
+          isFeatured: false,
+          provider: "catalog",
+          catalogLessonId: l.id,
+          color: l.color ?? ch.color ?? null,
+        }))
     )
   )
 
@@ -371,6 +416,24 @@ export default async function SubjectDetailPage({ params }: Props) {
         chapters={chapters}
         lang={lang}
       />
+      {/* Admin-only: hide/show chapters & lessons for this school + contribute */}
+      {canCustomize && (
+        <SchoolCatalogCustomization
+          chapters={allChapters.map((ch) => ({
+            id: ch.id,
+            name: ch.name,
+            isHidden: ch.isHidden,
+            lessons: ch.lessons.map((l) => ({
+              id: l.id,
+              name: l.name,
+              isHidden: l.isHidden,
+              videoCount: l.videoCount,
+            })),
+          }))}
+          catalogSubjectId={subject.id}
+          lang={lang}
+        />
+      )}
       <CatalogContentSections
         data={contentSections}
         lang={lang}

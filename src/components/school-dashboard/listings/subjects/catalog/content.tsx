@@ -32,6 +32,8 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   // Fetch all four independent queries in parallel
   const [catalogSubjects, selections, grades, approvedProposals] =
     await Promise.all([
+      // Intentionally global — catalog Subject has no schoolId; schools browse
+      // the shared PUBLISHED catalog and bridge via SubjectSelection.
       db.subject.findMany({
         where: { status: "PUBLISHED" },
         orderBy: { sortOrder: "asc" },
