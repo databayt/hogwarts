@@ -62,7 +62,8 @@ function importsOf(content: string): string[] {
 const DICT_RE =
   /\b(getDictionary|get[A-Z]\w*Dictionary|useDictionary|DictionaryProvider|useDictionaryContext)\b/
 const DICT_PROP_RE = /\bdictionary\b/
-const DISPLAY_RE = /\b(getDisplayText|getDisplayFields)\b/
+const DISPLAY_RE =
+  /\b(getText|getFields|getName|getNames|getLabels|localize|localizeOne)\b/
 const REDIRECT_RE = /\b(redirect|notFound|permanentRedirect)\s*\(/
 const LANG_PARAM_RE = /params|\blang\b|\blocale\b/
 
@@ -106,7 +107,7 @@ function groupOf(route: string): string {
   return "misc"
 }
 
-type Row = {
+export type Row = {
   route: string
   page: string
   group: string
@@ -119,95 +120,110 @@ type Row = {
   tagHint: string
 }
 
-const allFiles = walk(APP)
-const pages = allFiles.filter((f) => /\/page\.(tsx|jsx)$/.test(f))
+export interface AuditReport {
+  total: number
+  byTag: Record<string, number>
+  byGroup: Record<string, number>
+  gaps: Row[]
+  rows: Row[]
+}
 
-const rows: Row[] = []
+/**
+ * Classify every page.tsx under src/app by i18n coverage.
+ * Exported so the vitest ratchet (src/tests/i18n/hardcoded-ratchet.test.ts)
+ * can gate the STATIC-GAP count; the CLI below just prints the JSON.
+ */
+export function auditRoutes(): AuditReport {
+  const allFiles = walk(APP)
+  const pages = allFiles.filter((f) => /\/page\.(tsx|jsx)$/.test(f)).sort()
 
-for (const page of pages) {
-  const route = routeOf(page)
-  const group = groupOf(page.includes("(") ? "/" + relative(APP, page) : route)
-  const pageContent = readFileSync(page, "utf-8")
-  const pageSig = signals(pageContent)
+  const rows: Row[] = []
 
-  // BFS closure depth 2 over LOCAL imports only
-  const visited = new Set<string>()
-  let closureDict = false
-  let closureDisplay = false
-  let frontier = importsOf(pageContent)
-    .map((s) => resolveImport(s, page))
-    .filter((f): f is string => !!f && f.includes(`${SRC}/`))
-  for (let depth = 0; depth < 2 && frontier.length; depth++) {
-    const next: string[] = []
-    for (const file of frontier) {
-      if (visited.has(file)) continue
-      visited.add(file)
-      let c: string
-      try {
-        c = readFileSync(file, "utf-8")
-      } catch {
-        continue
+  for (const page of pages) {
+    const route = routeOf(page)
+    const group = groupOf(
+      page.includes("(") ? "/" + relative(APP, page) : route
+    )
+    const pageContent = readFileSync(page, "utf-8")
+    const pageSig = signals(pageContent)
+
+    // BFS closure depth 2 over LOCAL imports only
+    const visited = new Set<string>()
+    let closureDict = false
+    let closureDisplay = false
+    let frontier = importsOf(pageContent)
+      .map((s) => resolveImport(s, page))
+      .filter((f): f is string => !!f && f.includes(`${SRC}/`))
+    for (let depth = 0; depth < 2 && frontier.length; depth++) {
+      const next: string[] = []
+      for (const file of frontier) {
+        if (visited.has(file)) continue
+        visited.add(file)
+        let c: string
+        try {
+          c = readFileSync(file, "utf-8")
+        } catch {
+          continue
+        }
+        const s = signals(c)
+        if (s.dict) closureDict = true
+        if (s.display) closureDisplay = true
+        // only recurse into component-ish local files
+        for (const spec of importsOf(c)) {
+          const r = resolveImport(spec, file)
+          if (r && r.includes(`${SRC}/`) && !visited.has(r)) next.push(r)
+        }
       }
-      const s = signals(c)
-      if (s.dict) closureDict = true
-      if (s.display) closureDisplay = true
-      // only recurse into component-ish local files
-      for (const spec of importsOf(c)) {
-        const r = resolveImport(spec, file)
-        if (r && r.includes(`${SRC}/`) && !visited.has(r)) next.push(r)
-      }
+      frontier = next
     }
-    frontier = next
+
+    const redirectOnly =
+      REDIRECT_RE.test(pageContent) &&
+      !pageSig.dict &&
+      !closureDict &&
+      pageContent.length < 1500
+    const devOnly = /\/(test|lab|wa-preview|offline|kiosk)\b/.test(route)
+
+    const hasA = pageSig.dictLoader || closureDict
+    let tagHint: string
+    if (devOnly) tagHint = "DEV-ONLY"
+    else if (redirectOnly) tagHint = "NO-UI"
+    else if (pageSig.dictLoader && (closureDict || true)) tagHint = "FULLY-I18N"
+    else if (!pageSig.dictLoader && closureDict) tagHint = "DELEGATES-OK"
+    else if (!hasA) tagHint = "STATIC-GAP?"
+    else tagHint = "FULLY-I18N"
+
+    rows.push({
+      route,
+      page: relative(ROOT, page),
+      group,
+      pageDict: pageSig.dictLoader,
+      closureDict,
+      closureDisplay,
+      redirectOnly,
+      devOnly,
+      closureFiles: visited.size,
+      tagHint,
+    })
   }
 
-  const redirectOnly =
-    REDIRECT_RE.test(pageContent) &&
-    !pageSig.dict &&
-    !closureDict &&
-    pageContent.length < 1500
-  const devOnly = /\/(test|lab|wa-preview|offline|kiosk)\b/.test(route)
+  const byTag: Record<string, number> = {}
+  const byGroup: Record<string, number> = {}
+  for (const r of rows) {
+    byTag[r.tagHint] = (byTag[r.tagHint] || 0) + 1
+    byGroup[r.group] = (byGroup[r.group] || 0) + 1
+  }
 
-  const hasA = pageSig.dictLoader || closureDict
-  let tagHint: string
-  if (devOnly) tagHint = "DEV-ONLY"
-  else if (redirectOnly) tagHint = "NO-UI"
-  else if (pageSig.dictLoader && (closureDict || true)) tagHint = "FULLY-I18N"
-  else if (!pageSig.dictLoader && closureDict) tagHint = "DELEGATES-OK"
-  else if (!hasA) tagHint = "STATIC-GAP?"
-  else tagHint = "FULLY-I18N"
-
-  rows.push({
-    route,
-    page: relative(ROOT, page),
-    group,
-    pageDict: pageSig.dictLoader,
-    closureDict,
-    closureDisplay,
-    redirectOnly,
-    devOnly,
-    closureFiles: visited.size,
-    tagHint,
-  })
+  return {
+    total: rows.length,
+    byTag,
+    byGroup,
+    gaps: rows.filter((r) => r.tagHint === "STATIC-GAP?"),
+    rows,
+  }
 }
 
-// summary
-const byTag: Record<string, number> = {}
-const byGroup: Record<string, number> = {}
-for (const r of rows) {
-  byTag[r.tagHint] = (byTag[r.tagHint] || 0) + 1
-  byGroup[r.group] = (byGroup[r.group] || 0) + 1
+// CLI: emit JSON to stdout (skipped when imported by vitest)
+if (process.argv[1]?.endsWith("i18n-audit.ts")) {
+  console.log(JSON.stringify(auditRoutes(), null, 2))
 }
-
-console.log(
-  JSON.stringify(
-    {
-      total: rows.length,
-      byTag,
-      byGroup,
-      gaps: rows.filter((r) => r.tagHint === "STATIC-GAP?"),
-      rows,
-    },
-    null,
-    2
-  )
-)

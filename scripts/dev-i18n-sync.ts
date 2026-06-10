@@ -2,303 +2,182 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Sync i18n translation keys between Arabic and English
- * Run: npx tsx scripts/dev-i18n-sync.ts [--auto-translate]
+ * Sync i18n translation keys between Arabic and English.
+ * Run: npx tsx scripts/dev-i18n-sync.ts [--check|--fix|--verify]
+ *
+ * The comparison engine lives in
+ * `src/components/internationalization/lib/parity.ts` (shared with the
+ * vitest guard `src/tests/i18n/dictionary-parity.test.ts`) — this script
+ * is just the CLI shell: pretty printing, exit codes, and --fix scaffolding.
  */
-
-import { readdirSync, readFileSync, writeFileSync } from "fs"
+import { readFileSync, writeFileSync } from "fs"
 import { join } from "path"
 import chalk from "chalk"
 import { Command } from "commander"
-import ora from "ora"
+
+import {
+  checkDictionaryParity,
+  DEFAULT_I18N_ROOT,
+  findUntranslatedPlaceholders,
+  type DictionaryPairReport,
+} from "../src/components/internationalization/lib/parity"
 
 const program = new Command()
 program
-  .option("--auto-translate", "Auto-translate missing keys (placeholder)")
   .option("--fix", "Add missing keys with placeholder text")
   .option("--verify", "Only verify, don't modify files")
-  .option(
-    "--check",
-    "CI mode: exit 1 if any missing keys found (no output diffs to stderr)"
-  )
+  .option("--check", "CI mode: exit 1 if any missing keys or placeholders")
   .parse()
 
 const options = program.opts()
 
-interface DictionaryKeys {
-  [key: string]: any
+function getNestedValue(obj: unknown, path: string): unknown {
+  return path
+    .split(".")
+    .reduce<unknown>(
+      (current, key) => (current as Record<string, unknown>)?.[key],
+      obj
+    )
 }
 
-interface MissingKey {
-  file: string
-  key: string
-  language: "ar" | "en"
-}
-
-const missingKeys: MissingKey[] = []
-
-function getAllKeys(obj: any, prefix = ""): string[] {
-  const keys: string[] = []
-
-  for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key
-
-    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      keys.push(...getAllKeys(value, fullKey))
-    } else {
-      keys.push(fullKey)
-    }
-  }
-
-  return keys
-}
-
-function getNestedValue(obj: any, path: string): any {
-  return path.split(".").reduce((current, key) => current?.[key], obj)
-}
-
-function setNestedValue(obj: any, path: string, value: any): void {
+function setNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown
+): void {
   const keys = path.split(".")
   const lastKey = keys.pop()!
   const target = keys.reduce((current, key) => {
     if (!current[key]) current[key] = {}
-    return current[key]
+    return current[key] as Record<string, unknown>
   }, obj)
   target[lastKey] = value
 }
 
-async function syncDictionaries() {
-  const spinner = ora("Scanning dictionary files...").start()
+/** Resolve the on-disk path of one side of a pair. */
+function pairPath(pair: DictionaryPairReport, lang: "ar" | "en"): string {
+  const file = lang === "ar" ? pair.arFile : pair.enFile
+  return pair.topLevel
+    ? join(DEFAULT_I18N_ROOT, file)
+    : join(DEFAULT_I18N_ROOT, "dictionaries", lang, file)
+}
 
-  try {
-    const i18nPath = join(
-      process.cwd(),
-      "src",
-      "components",
-      "internationalization"
-    )
-    const dictionariesPath = join(i18nPath, "dictionaries")
-    const arPath = join(dictionariesPath, "ar")
-    const enPath = join(dictionariesPath, "en")
+function fixPair(pair: DictionaryPairReport): number {
+  let added = 0
+  for (const missingLang of ["ar", "en"] as const) {
+    const missing =
+      missingLang === "ar" ? pair.diff.missingInAr : pair.diff.missingInEn
+    if (missing.length === 0) continue
 
-    // Check top-level dictionary pairs first
-    const topLevelPairs = [
-      { ar: "ar.json", en: "en.json", label: "General" },
-      { ar: "school-ar.json", en: "school-en.json", label: "School" },
-      { ar: "stream-ar.json", en: "stream-en.json", label: "Stream" },
-      { ar: "operator-ar.json", en: "operator-en.json", label: "Operator" },
+    const sourceLang = missingLang === "ar" ? "en" : "ar"
+    const sourceContent = JSON.parse(
+      readFileSync(pairPath(pair, sourceLang), "utf-8")
+    ) as Record<string, unknown>
+    const targetPath = pairPath(pair, missingLang)
+    const targetContent = JSON.parse(
+      readFileSync(targetPath, "utf-8")
+    ) as Record<string, unknown>
+
+    for (const key of missing) {
+      const sourceValue = getNestedValue(sourceContent, key)
+      const tag = missingLang === "ar" ? "[AR]" : "[EN]"
+      setNestedValue(targetContent, key, `${tag} ${String(sourceValue)}`)
+      added++
+    }
+
+    writeFileSync(targetPath, JSON.stringify(targetContent, null, 2) + "\n")
+  }
+  return added
+}
+
+function main() {
+  console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+  console.log(chalk.bold("📝 i18n Synchronization"))
+  console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
+
+  const report = checkDictionaryParity()
+
+  for (const pair of report.pairs) {
+    const missing = [
+      ...pair.diff.missingInAr.map((k) => ({ key: k, lang: "ar" as const })),
+      ...pair.diff.missingInEn.map((k) => ({ key: k, lang: "en" as const })),
     ]
-
-    for (const pair of topLevelPairs) {
-      try {
-        const arContent = JSON.parse(
-          readFileSync(join(i18nPath, pair.ar), "utf-8")
+    if (missing.length === 0) {
+      console.log(chalk.green(`✓ ${pair.label}: All keys synced`))
+    } else {
+      console.log(chalk.yellow(`\n${pair.label}:`))
+      for (const m of missing) {
+        console.log(
+          `  ${m.lang === "ar" ? "🇸🇦" : "🇬🇧"} Missing: ${chalk.gray(m.key)}`
         )
-        const enContent = JSON.parse(
-          readFileSync(join(i18nPath, pair.en), "utf-8")
-        )
-
-        const arKeys = getAllKeys(arContent)
-        const enKeys = getAllKeys(enContent)
-
-        for (const key of arKeys) {
-          if (!enKeys.includes(key)) {
-            missingKeys.push({
-              file: `[top-level] ${pair.en}`,
-              key,
-              language: "en",
-            })
-          }
-        }
-
-        for (const key of enKeys) {
-          if (!arKeys.includes(key)) {
-            missingKeys.push({
-              file: `[top-level] ${pair.ar}`,
-              key,
-              language: "ar",
-            })
-          }
-        }
-
-        const fileMissing = missingKeys.filter(
-          (m) => m.file.includes(pair.ar) || m.file.includes(pair.en)
-        )
-        if (fileMissing.length > 0) {
-          console.log(
-            chalk.yellow(`\n${pair.label} (${pair.ar} / ${pair.en}):`)
-          )
-          fileMissing.forEach((m) => {
-            console.log(
-              `  ${m.language === "ar" ? "🇸🇦" : "🇬🇧"} Missing: ${chalk.gray(m.key)}`
-            )
-          })
-        } else {
-          console.log(
-            chalk.green(
-              `\n✓ ${pair.label} (${pair.ar} / ${pair.en}): All keys synced`
-            )
-          )
-        }
-      } catch {
-        // Skip pairs where files don't exist
       }
     }
+  }
 
-    // Get all module dictionary files
-    const arFiles = readdirSync(arPath).filter((f) => f.endsWith(".json"))
-    const enFiles = readdirSync(enPath).filter((f) => f.endsWith(".json"))
+  if (report.filesOnlyInAr.length > 0) {
+    console.log(chalk.red("\n⚠️  Files only in Arabic:"))
+    report.filesOnlyInAr.forEach((f) => console.log(`  • ${f}`))
+  }
+  if (report.filesOnlyInEn.length > 0) {
+    console.log(chalk.red("\n⚠️  Files only in English:"))
+    report.filesOnlyInEn.forEach((f) => console.log(`  • ${f}`))
+  }
 
-    spinner.succeed(
-      chalk.green(
-        `Found ${topLevelPairs.length} top-level pairs + ${arFiles.length} module dictionaries`
-      )
-    )
+  const placeholders = findUntranslatedPlaceholders()
 
-    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-    console.log(chalk.bold("📝 i18n Synchronization"))
-    console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
+  console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+  console.log(chalk.bold("Summary"))
+  console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
+  console.log(`Dictionary pairs: ${chalk.green(report.pairs.length)}`)
+  console.log(
+    `Missing in Arabic: ${report.totalMissingInAr > 0 ? chalk.red(report.totalMissingInAr) : chalk.green("0")}`
+  )
+  console.log(
+    `Missing in English: ${report.totalMissingInEn > 0 ? chalk.red(report.totalMissingInEn) : chalk.green("0")}`
+  )
+  console.log(
+    `Untranslated placeholders: ${placeholders.length > 0 ? chalk.red(placeholders.length) : chalk.green("0")}`
+  )
 
-    // Check each file
-    for (const file of arFiles) {
-      const arFilePath = join(arPath, file)
-      const enFilePath = join(enPath, file)
+  if (report.isSynced && placeholders.length === 0) {
+    console.log(chalk.green("\n✅ All dictionaries are in sync!\n"))
+    return
+  }
 
-      const arContent = JSON.parse(readFileSync(arFilePath, "utf-8"))
-      const enContent = JSON.parse(readFileSync(enFilePath, "utf-8"))
-
-      const arKeys = getAllKeys(arContent)
-      const enKeys = getAllKeys(enContent)
-
-      // Find missing keys in English
-      for (const key of arKeys) {
-        if (!enKeys.includes(key)) {
-          missingKeys.push({
-            file,
-            key,
-            language: "en",
-          })
-        }
-      }
-
-      // Find missing keys in Arabic
-      for (const key of enKeys) {
-        if (!arKeys.includes(key)) {
-          missingKeys.push({
-            file,
-            key,
-            language: "ar",
-          })
-        }
-      }
-
-      // Report for this file
-      const fileMissing = missingKeys.filter((m) => m.file === file)
-      if (fileMissing.length > 0) {
-        console.log(chalk.yellow(`\n${file}:`))
-        fileMissing.forEach((m) => {
-          console.log(
-            `  ${m.language === "ar" ? "🇸🇦" : "🇬🇧"} Missing: ${chalk.gray(m.key)}`
-          )
-        })
-      } else {
-        console.log(chalk.green(`\n✓ ${file}: All keys synced`))
-      }
-    }
-
-    // Check for files only in one language
-    const onlyInAr = arFiles.filter((f) => !enFiles.includes(f))
-    const onlyInEn = enFiles.filter((f) => !arFiles.includes(f))
-
-    if (onlyInAr.length > 0) {
-      console.log(chalk.red("\n⚠️  Files only in Arabic:"))
-      onlyInAr.forEach((f) => console.log(`  • ${f}`))
-    }
-
-    if (onlyInEn.length > 0) {
-      console.log(chalk.red("\n⚠️  Files only in English:"))
-      onlyInEn.forEach((f) => console.log(`  • ${f}`))
-    }
-
-    // Summary
-    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-    console.log(chalk.bold("Summary"))
-    console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
-
-    const arMissing = missingKeys.filter((m) => m.language === "ar")
-    const enMissing = missingKeys.filter((m) => m.language === "en")
-
-    console.log(`Total files: ${chalk.green(arFiles.length)}`)
+  // --check mode is for CI: any drift is a hard failure.
+  if (options.check) {
     console.log(
-      `Missing in Arabic: ${arMissing.length > 0 ? chalk.red(arMissing.length) : chalk.green("0")}`
+      chalk.red(
+        `\n❌ i18n drift: ${report.totalMissingInAr} missing in AR, ${report.totalMissingInEn} missing in EN, ${placeholders.length} untranslated placeholders\n`
+      )
     )
+    if (placeholders.length > 0) {
+      placeholders
+        .slice(0, 20)
+        .forEach((p) => console.log(chalk.gray(`  ${p.file}: ${p.key}`)))
+    }
     console.log(
-      `Missing in English: ${enMissing.length > 0 ? chalk.red(enMissing.length) : chalk.green("0")}`
+      chalk.yellow(
+        "\nRun `pnpm i18n:fix` to scaffold placeholders, then translate them.\n"
+      )
     )
-
-    if (missingKeys.length === 0) {
-      console.log(chalk.green("\n✅ All dictionaries are in sync!\n"))
-      return
-    }
-
-    // --check mode is for CI: any drift is a hard failure. No --fix, no
-    // placeholders, just a non-zero exit and a one-line summary so the CI
-    // log highlights the failure without scrolling.
-    if (options.check) {
-      console.log(
-        chalk.red(
-          `\n❌ Dictionaries are out of sync: ${arMissing.length} missing in AR, ${enMissing.length} missing in EN\n`
-        )
-      )
-      console.log(
-        chalk.yellow(
-          "Run `npx tsx scripts/dev-i18n-sync.ts --fix` to add placeholders, or translate the keys above directly.\n"
-        )
-      )
-      process.exit(1)
-    }
-
-    // Fix missing keys
-    if (options.fix && !options.verify) {
-      const fixSpinner = ora("Adding missing keys...").start()
-
-      for (const missing of missingKeys) {
-        const sourceLang = missing.language === "ar" ? "en" : "ar"
-        const targetLang = missing.language
-
-        const sourcePath = join(dictionariesPath, sourceLang, missing.file)
-        const targetPath = join(dictionariesPath, targetLang, missing.file)
-
-        const sourceContent = JSON.parse(readFileSync(sourcePath, "utf-8"))
-        const targetContent = JSON.parse(readFileSync(targetPath, "utf-8"))
-
-        const sourceValue = getNestedValue(sourceContent, missing.key)
-        const placeholder =
-          targetLang === "ar" ? `[AR] ${sourceValue}` : `[EN] ${sourceValue}`
-
-        setNestedValue(targetContent, missing.key, placeholder)
-
-        writeFileSync(targetPath, JSON.stringify(targetContent, null, 2) + "\n")
-      }
-
-      fixSpinner.succeed(
-        chalk.green(`Added ${missingKeys.length} placeholder translations`)
-      )
-
-      console.log(
-        chalk.yellow("\n⚠️  Review and update placeholder translations:\n")
-      )
-      missingKeys.forEach((m) => {
-        console.log(chalk.gray(`  ${m.file}: ${m.key} (${m.language})`))
-      })
-    } else if (options.verify) {
-      console.log(chalk.yellow("\n⚠️  Run with --fix to add missing keys\n"))
-    }
-  } catch (error) {
-    spinner.fail(chalk.red("Sync failed"))
-    console.error(error)
     process.exit(1)
+  }
+
+  if (options.fix && !options.verify) {
+    let added = 0
+    for (const pair of report.pairs) {
+      added += fixPair(pair)
+    }
+    console.log(chalk.green(`\nAdded ${added} placeholder translations`))
+    console.log(
+      chalk.yellow(
+        "⚠️  Review and translate the [AR]/[EN] placeholders before committing — the parity test rejects them.\n"
+      )
+    )
+  } else if (options.verify) {
+    console.log(chalk.yellow("\n⚠️  Run with --fix to add missing keys\n"))
   }
 }
 
-syncDictionaries()
+main()

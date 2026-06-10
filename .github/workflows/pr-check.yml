@@ -110,11 +110,16 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm prisma generate
 
+      - name: i18n dictionary parity
+        # Cheap fail-fast: en/ar key drift or untranslated [AR]/[EN]
+        # placeholders. Same engine as the vitest dictionary-parity guard.
+        run: pnpm i18n:check
+
       - name: Run Tests with Coverage
-        # `pnpm tests ...` swallows `--run`/`--coverage` as pnpm options.
-        # Use the `--` separator so they reach vitest, which is what the
-        # package.json `tests` script invokes.
-        run: pnpm tests -- --run --coverage
+        # `--` separator so --run/--coverage reach vitest instead of being
+        # swallowed as pnpm options. (The script is `test`, not `tests` —
+        # the old name made this job a silent no-op.)
+        run: pnpm test -- --run --coverage
 
   build:
     name: Build Verification
