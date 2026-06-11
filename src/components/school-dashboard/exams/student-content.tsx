@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { localize } from "@/components/translation/localize"
-import { getLabels } from "@/components/translation/person"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 interface Props {
   dictionary: Dictionary
@@ -124,29 +124,6 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
       take: 10,
     }),
   ])
-
-  // ONE batched translation pass for the page: exam titles via localize,
-  // subject/class labels via deduped getLabels (replaces N×getText).
-  const [localizedUpcoming, localizedResultExams, labels] = await Promise.all([
-    localize("Exam", upcomingExams, { schoolId, lang }),
-    localize(
-      "Exam",
-      recentResults.map((r) => r.exam),
-      { schoolId, lang }
-    ),
-    getLabels(
-      [
-        ...upcomingExams.flatMap((e) => [e.subject?.name, e.class?.name]),
-        ...recentResults.map((r) => r.exam.subject?.name),
-      ],
-      lang,
-      schoolId
-    ),
-  ])
-  const results = recentResults.map((r, i) => ({
-    ...r,
-    exam: localizedResultExams[i] ?? r.exam,
-  }))
 
   const d = dictionary?.school?.exams
 
@@ -262,62 +239,76 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {localizedUpcoming.map((exam) => {
-              const daysUntil = differenceInDays(exam.examDate, today)
-              const name = exam.subject?.name
-                ? (labels.get(exam.subject.name) ?? exam.subject.name)
-                : ""
-              const className = exam.class?.name
-                ? (labels.get(exam.class.name) ?? exam.class.name)
-                : ""
+            {await Promise.all(
+              upcomingExams.map(async (exam) => {
+                const daysUntil = differenceInDays(exam.examDate, today)
+                const name = exam.subject?.name
+                  ? await getText(
+                      exam.subject.name,
+                      (exam.subject.lang || "ar") as Lang,
+                      lang,
+                      schoolId!
+                    )
+                  : ""
+                const className = exam.class?.name
+                  ? await getText(
+                      exam.class.name,
+                      (exam.class.lang || "ar") as Lang,
+                      lang,
+                      schoolId!
+                    )
+                  : ""
 
-              return (
-                <Card
-                  key={exam.id}
-                  className="transition-shadow hover:shadow-md"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">{exam.title}</CardTitle>
-                      <Badge
-                        variant={
-                          daysUntil === 0
-                            ? "destructive"
-                            : daysUntil === 1
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {daysUntil === 0
-                          ? lang === "ar"
-                            ? "اليوم"
-                            : "Today"
-                          : daysUntil === 1
+                return (
+                  <Card
+                    key={exam.id}
+                    className="transition-shadow hover:shadow-md"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-base">
+                          {exam.title}
+                        </CardTitle>
+                        <Badge
+                          variant={
+                            daysUntil === 0
+                              ? "destructive"
+                              : daysUntil === 1
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
+                          {daysUntil === 0
                             ? lang === "ar"
-                              ? "غداً"
-                              : "Tomorrow"
-                            : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
-                      </Badge>
-                    </div>
-                    <CardDescription>
-                      {name} - {className}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {format(exam.examDate, "MMM d")}
+                              ? "اليوم"
+                              : "Today"
+                            : daysUntil === 1
+                              ? lang === "ar"
+                                ? "غداً"
+                                : "Tomorrow"
+                              : `${daysUntil} ${lang === "ar" ? "أيام" : "days"}`}
+                        </Badge>
                       </div>
-                      <div className="text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {exam.startTime} ({exam.duration} min)
+                      <CardDescription>
+                        {name} - {className}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {format(exam.examDate, "MMM d")}
+                        </div>
+                        <div className="text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {exam.startTime} ({exam.duration} min)
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
           </div>
         )}
       </div>
@@ -347,48 +338,54 @@ export default async function StudentExamsContent({ dictionary, lang }: Props) {
           </Card>
         ) : (
           <div className="grid gap-3">
-            {results.map((result) => {
-              const name = result.exam.subject?.name
-                ? (labels.get(result.exam.subject.name) ??
-                  result.exam.subject.name)
-                : ""
+            {await Promise.all(
+              recentResults.map(async (result) => {
+                const name = result.exam.subject?.name
+                  ? await getText(
+                      result.exam.subject.name,
+                      (result.exam.subject.lang || "ar") as Lang,
+                      lang,
+                      schoolId!
+                    )
+                  : ""
 
-              return (
-                <Card key={result.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">{result.exam.title}</p>
-                      <p className="text-muted-foreground text-sm">
-                        {name} - {format(result.exam.examDate, "MMM d, yyyy")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-end">
-                        <p className="text-2xl font-bold">
-                          {result.percentage.toFixed(0)}%
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {result.marksObtained}/{result.exam.totalMarks}
+                return (
+                  <Card key={result.id}>
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-medium">{result.exam.title}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {name} - {format(result.exam.examDate, "MMM d, yyyy")}
                         </p>
                       </div>
-                      {result.grade && (
-                        <Badge
-                          variant={
-                            result.percentage >= 80
-                              ? "default"
-                              : result.percentage >= 50
-                                ? "secondary"
-                                : "destructive"
-                          }
-                        >
-                          {result.grade}
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                      <div className="flex items-center gap-3">
+                        <div className="text-end">
+                          <p className="text-2xl font-bold">
+                            {result.percentage.toFixed(0)}%
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {result.marksObtained}/{result.exam.totalMarks}
+                          </p>
+                        </div>
+                        {result.grade && (
+                          <Badge
+                            variant={
+                              result.percentage >= 80
+                                ? "default"
+                                : result.percentage >= 50
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                          >
+                            {result.grade}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
           </div>
         )}
       </div>

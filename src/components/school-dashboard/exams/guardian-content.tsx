@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { localize } from "@/components/translation/localize"
-import { getLabels } from "@/components/translation/person"
+import { getText } from "@/components/translation/display"
+import type { Lang } from "@/components/translation/types"
 
 interface Props {
   dictionary: Dictionary
