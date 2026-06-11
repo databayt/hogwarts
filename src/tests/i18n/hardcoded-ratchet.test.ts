@@ -22,14 +22,15 @@ import {
   type PatternName,
 } from "../../../scripts/i18n-hardcoded-ratchet"
 
-// Measured 2026-06-10 (Phase 1 of the i18n production-readiness pass).
+// Measured 2026-06-10; lowered 2026-06-11 after the onboarding/newcomers
+// error-code sweep (toast 115→110, errorReturn 1582→1528, zod 880→865).
 const BASELINE_BY_PATTERN: Record<PatternName, number> = {
   formLabel: 25,
-  toast: 115,
+  toast: 110,
   button: 35,
-  errorReturn: 1582,
+  errorReturn: 1528,
   selectLabel: 1624,
-  zodMessage: 880,
+  zodMessage: 865,
   bilingualField: 123,
   placeholder: 163,
 }
