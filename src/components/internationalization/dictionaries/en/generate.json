@@ -470,5 +470,62 @@
       "export_as": "Export as",
       "exporting": "Exporting..."
     }
+  },
+
+  "wizard": {
+    "steps": {
+      "gallery": {
+        "title": "Choose a Template",
+        "description": "Start from a regional preset or begin from scratch."
+      },
+      "subject": {
+        "title": "Subject",
+        "description": "Select the subject for this template."
+      },
+      "questionTypes": {
+        "title": "Question Types",
+        "description": "Select question types and count for each."
+      },
+      "durationMarks": {
+        "title": "Duration & Marks",
+        "description": "Set the exam duration and total marks."
+      },
+      "header": {
+        "title": "Header",
+        "description": "Choose a header design for your exam paper."
+      },
+      "studentInfo": {
+        "title": "Student Info",
+        "description": "Choose how student information appears on the paper."
+      },
+      "instructions": {
+        "title": "Instructions",
+        "description": "Choose how instructions appear on the paper."
+      },
+      "footerLayout": {
+        "title": "Footer",
+        "description": "Choose a footer design for your exam paper."
+      },
+      "answerSheet": {
+        "title": "Answer Sheet",
+        "description": "Choose an answer sheet layout."
+      },
+      "cover": {
+        "title": "Cover Page",
+        "description": "Choose a cover page design."
+      },
+      "difficulty": {
+        "title": "Difficulty",
+        "description": "Set the difficulty distribution for this question type."
+      },
+      "preview": {
+        "title": "Review & Preview",
+        "description": "Review your template settings before saving."
+      }
+    },
+    "examPreview": {
+      "title": "Preview & Generate",
+      "description": "Review the exam configuration before generating."
+    }
   }
 }

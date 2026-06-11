@@ -5,7 +5,7 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 
 import { requireContext } from "./helpers"
 
@@ -107,7 +107,6 @@ export async function getMyTransportationView(displayLang?: Locale) {
               select: {
                 name: true,
                 code: true,
-                lang: true,
                 vehicle: { select: { id: true, plateNumber: true } },
                 driver: {
                   select: {
@@ -119,7 +118,7 @@ export async function getMyTransportationView(displayLang?: Locale) {
                 },
               },
             },
-            stop: { select: { name: true, stopOrder: true, lang: true } },
+            stop: { select: { name: true, stopOrder: true } },
           },
         },
         tripBoardings: {
@@ -141,50 +140,45 @@ export async function getMyTransportationView(displayLang?: Locale) {
       },
     })
 
-    const data: MyTransportationChild[] = await Promise.all(
-      students.map(async (s) => ({
-        studentId: s.id,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        assignments: await Promise.all(
-          s.routeAssignments.map(async (a) => ({
-            id: a.id,
-            routeId: a.routeId,
-            // Route/stop names are stored in one language; translate on demand
-            // into the viewer's locale so guardians/students see them localized.
-            routeName: displayLang
-              ? await getText(
-                  a.route.name,
-                  (a.route.lang as Locale) || "ar",
-                  displayLang,
-                  schoolId
-                )
-              : a.route.name,
-            routeCode: a.route.code,
-            stopName: displayLang
-              ? await getText(
-                  a.stop.name,
-                  (a.stop.lang as Locale) || "ar",
-                  displayLang,
-                  schoolId
-                )
-              : a.stop.name,
-            stopOrder: a.stop.stopOrder,
-            direction: a.direction,
-            status: a.status,
-            vehicle: a.route.vehicle ?? null,
-            driver: a.route.driver ?? null,
-          }))
-        ),
-        recentTrips: s.tripBoardings.map((b) => ({
-          tripId: b.trip.id,
-          scheduledDate: b.trip.scheduledDate,
-          scheduledTime: b.trip.scheduledTime,
-          status: b.trip.status,
-          boardingStatus: b.status,
-        })),
-      }))
-    )
+    // Route/stop names are stored in one language; translate on demand into
+    // the viewer's locale so guardians/students see them localized. ONE
+    // batched getLabels resolution for every name across all children
+    // (dedupe + cache + source fallback) instead of per-field-per-row calls.
+    let labels = new Map<string, string>()
+    if (displayLang) {
+      const values: Array<string | null | undefined> = []
+      for (const s of students) {
+        for (const a of s.routeAssignments) {
+          values.push(a.route.name, a.stop.name)
+        }
+      }
+      labels = await getLabels(values, displayLang, schoolId)
+    }
+
+    const data: MyTransportationChild[] = students.map((s) => ({
+      studentId: s.id,
+      firstName: s.firstName,
+      lastName: s.lastName,
+      assignments: s.routeAssignments.map((a) => ({
+        id: a.id,
+        routeId: a.routeId,
+        routeName: labels.get(a.route.name) ?? a.route.name,
+        routeCode: a.route.code,
+        stopName: labels.get(a.stop.name) ?? a.stop.name,
+        stopOrder: a.stop.stopOrder,
+        direction: a.direction,
+        status: a.status,
+        vehicle: a.route.vehicle ?? null,
+        driver: a.route.driver ?? null,
+      })),
+      recentTrips: s.tripBoardings.map((b) => ({
+        tripId: b.trip.id,
+        scheduledDate: b.trip.scheduledDate,
+        scheduledTime: b.trip.scheduledTime,
+        status: b.trip.status,
+        boardingStatus: b.status,
+      })),
+    }))
 
     return { success: true as const, data }
   } catch {

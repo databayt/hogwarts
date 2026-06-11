@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ChildGradesView } from "@/components/school-dashboard/parent-portal/child-grades-view"
 
 interface Props {
@@ -10,5 +11,6 @@ interface Props {
 
 export default async function ChildGradesPage({ params }: Props) {
   const { id, lang } = await params
-  return <ChildGradesView studentId={id} lang={lang} />
+  const dictionary = await getDictionary(lang)
+  return <ChildGradesView studentId={id} lang={lang} dictionary={dictionary} />
 }

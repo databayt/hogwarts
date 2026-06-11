@@ -470,5 +470,62 @@
       "export_as": "تصدير كـ",
       "exporting": "جارٍ التصدير..."
     }
+  },
+
+  "wizard": {
+    "steps": {
+      "gallery": {
+        "title": "اختر قالبًا",
+        "description": "ابدأ من قالب إقليمي أو من الصفر."
+      },
+      "subject": {
+        "title": "المادة",
+        "description": "اختر المادة لهذا القالب."
+      },
+      "questionTypes": {
+        "title": "أنواع الأسئلة",
+        "description": "اختر أنواع الأسئلة وعددها."
+      },
+      "durationMarks": {
+        "title": "المدة والدرجات",
+        "description": "حدد مدة الاختبار والدرجات الكلية."
+      },
+      "header": {
+        "title": "الترويسة",
+        "description": "اختر تصميم ترويسة لورقة الاختبار."
+      },
+      "studentInfo": {
+        "title": "بيانات الطالب",
+        "description": "اختر طريقة عرض بيانات الطالب على الورقة."
+      },
+      "instructions": {
+        "title": "التعليمات",
+        "description": "اختر طريقة عرض التعليمات على الورقة."
+      },
+      "footerLayout": {
+        "title": "التذييل",
+        "description": "اختر تصميم تذييل لورقة الاختبار."
+      },
+      "answerSheet": {
+        "title": "ورقة الإجابة",
+        "description": "اختر تخطيط ورقة الإجابة."
+      },
+      "cover": {
+        "title": "صفحة الغلاف",
+        "description": "اختر تصميم صفحة الغلاف."
+      },
+      "difficulty": {
+        "title": "مستوى الصعوبة",
+        "description": "حدد توزيع الصعوبة لهذا النوع من الأسئلة."
+      },
+      "preview": {
+        "title": "المراجعة والمعاينة",
+        "description": "راجع إعدادات القالب قبل الحفظ."
+      }
+    },
+    "examPreview": {
+      "title": "المعاينة والإنشاء",
+      "description": "راجع إعدادات الاختبار قبل الإنشاء."
+    }
   }
 }

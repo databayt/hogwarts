@@ -1,7 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import type { Locale } from "@/components/internationalization/config"
+import { getExamDictionary } from "@/components/internationalization/dictionaries"
 import InstructionsContent from "@/components/school-dashboard/exams/wizard/template-wizard/instructions/content"
 
-export default function InstructionsPage() {
-  return <InstructionsContent />
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export default async function InstructionsPage({ params }: Props) {
+  const { lang } = await params
+  const dictionary = await getExamDictionary(lang)
+  return (
+    <InstructionsContent
+      dictionary={dictionary.generate.wizard.steps.instructions}
+    />
+  )
 }

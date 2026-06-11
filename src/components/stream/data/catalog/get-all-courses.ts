@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
 import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 /**
@@ -101,11 +102,32 @@ export async function getAllCatalogCourses(
     db.subject.count({ where }),
   ])
 
-  const rows = await Promise.all(
-    subjects.map((s) =>
-      toCourseShape(s, schoolId, displayLang, customNames.get(s.id))
-    )
-  )
+  // Batched translation: Subject name/description via localize (one
+  // findMany for the page); custom names + departments via getLabels.
+  const [localized, labels] = await Promise.all([
+    localize("Subject", subjects, { schoolId, lang: displayLang }),
+    getLabels(
+      [
+        ...subjects
+          .filter((s) => customNames.has(s.id))
+          .map((s) => customNames.get(s.id)),
+        ...subjects.map((s) => s.department),
+      ],
+      displayLang,
+      schoolId
+    ),
+  ])
+
+  const rows = localized.map((s) => {
+    const customName = customNames.get(s.id)
+    return toCourseShape(s, {
+      title: customName ? (labels.get(customName) ?? customName) : s.name,
+      description: s.description ?? "",
+      departmentName: s.department
+        ? (labels.get(s.department) ?? s.department)
+        : s.department,
+    })
+  })
 
   return { rows, count }
 }
@@ -130,8 +152,8 @@ const subjectSelect = {
   updatedAt: true,
 } as const
 
-/** Map Subject → PublicCourseType-compatible shape with translation */
-async function toCourseShape(
+/** Map Subject → PublicCourseType-compatible shape (values pre-translated) */
+function toCourseShape(
   subject: {
     id: string
     name: string
@@ -151,16 +173,9 @@ async function toCourseShape(
     createdAt: Date
     updatedAt: Date
   },
-  schoolId: string,
-  displayLang: Lang,
-  customName?: string
+  translated: { title: string; description: string; departmentName: string }
 ) {
-  const srcLang = (subject.lang || "ar") as Lang
-  const [title, description, departmentName] = await Promise.all([
-    getText(customName || subject.name, srcLang, displayLang, schoolId),
-    getText(subject.description, srcLang, displayLang, schoolId),
-    getText(subject.department, srcLang, displayLang, schoolId),
-  ])
+  const { title, description, departmentName } = translated
 
   return {
     id: subject.id,

@@ -14,7 +14,12 @@ import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { AnswerSheetForm } from "./form"
 
-export default function AnswerSheetContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function AnswerSheetContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -32,8 +37,13 @@ export default function AnswerSheetContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("answer-sheet", "title", locale)}
-          description={getStepLabel("answer-sheet", "description", locale)}
+          title={
+            dictionary?.title ?? getStepLabel("answer-sheet", "title", locale)
+          }
+          description={
+            dictionary?.description ??
+            getStepLabel("answer-sheet", "description", locale)
+          }
         />
         <AnswerSheetForm
           ref={formRef}

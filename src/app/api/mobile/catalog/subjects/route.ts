@@ -121,38 +121,52 @@ export async function GET(request: NextRequest) {
       db.subject.count({ where }),
     ])
 
-    // Translate and map to mobile DTO (snake_case)
-    const rows = await Promise.all(
-      subjects.map(async (s) => {
-        const srcLang = (s.lang || "ar") as Lang
-        const [title, description, departmentName] = await Promise.all([
-          getText(customNames.get(s.id) || s.name, srcLang, lang, schoolId),
-          getText(s.description, srcLang, lang, schoolId),
-          getText(s.department, srcLang, lang, schoolId),
-        ])
+    // Translate and map to mobile DTO (snake_case).
+    // Subject name/description go through the batched localize() (one
+    // findMany for the whole page); custom names + departments aren't
+    // registered Subject fields, so they batch through getLabels.
+    const [localized, labels] = await Promise.all([
+      localize("Subject", subjects, { schoolId, lang }),
+      getLabels(
+        [
+          ...subjects
+            .filter((s) => customNames.has(s.id))
+            .map((s) => customNames.get(s.id)),
+          ...subjects.map((s) => s.department),
+        ],
+        lang as Lang,
+        schoolId
+      ),
+    ])
 
-        return {
-          id: s.id,
-          school_id: schoolId,
-          title,
-          slug: s.slug,
-          description: description || "",
-          instructor_name: "",
-          thumbnail_url: getCatalogImageUrl(s.thumbnail, "sm"),
-          category: departmentName || s.department,
-          enrollment_count: s.usageCount,
-          lesson_count: s.totalLessons,
-          total_duration: "",
-          status: "PUBLISHED",
-          progress: 0,
-          color: s.color,
-          total_chapters: s.totalChapters,
-          average_rating: s.averageRating,
-          levels: s.levels,
-          grades: s.grades,
-        }
-      })
-    )
+    const rows = localized.map((s) => {
+      const customName = customNames.get(s.id)
+      const title = customName ? (labels.get(customName) ?? customName) : s.name
+      const departmentName = s.department
+        ? (labels.get(s.department) ?? s.department)
+        : s.department
+
+      return {
+        id: s.id,
+        school_id: schoolId,
+        title,
+        slug: s.slug,
+        description: s.description || "",
+        instructor_name: "",
+        thumbnail_url: getCatalogImageUrl(s.thumbnail, "sm"),
+        category: departmentName || s.department,
+        enrollment_count: s.usageCount,
+        lesson_count: s.totalLessons,
+        total_duration: "",
+        status: "PUBLISHED",
+        progress: 0,
+        color: s.color,
+        total_chapters: s.totalChapters,
+        average_rating: s.averageRating,
+        levels: s.levels,
+        grades: s.grades,
+      }
+    })
 
     return NextResponse.json(rows)
   } catch (error) {

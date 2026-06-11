@@ -14,7 +14,12 @@ import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { CoverForm } from "./form"
 
-export default function CoverContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function CoverContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -32,8 +37,11 @@ export default function CoverContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("cover", "title", locale)}
-          description={getStepLabel("cover", "description", locale)}
+          title={dictionary?.title ?? getStepLabel("cover", "title", locale)}
+          description={
+            dictionary?.description ??
+            getStepLabel("cover", "description", locale)
+          }
         />
         <CoverForm
           ref={formRef}

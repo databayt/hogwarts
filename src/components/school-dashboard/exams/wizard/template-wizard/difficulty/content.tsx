@@ -28,7 +28,12 @@ function enumToSlug(enumVal: string): string {
   return enumVal.toLowerCase().replace(/_/g, "-")
 }
 
-export default function DifficultyContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function DifficultyContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -88,8 +93,11 @@ export default function DifficultyContent() {
     >
       <FormLayout>
         <FormHeading
-          title={`${typeLabel} ${getStepLabel("difficulty", "title", locale)}`}
-          description={getStepLabel("difficulty", "description", locale)}
+          title={`${typeLabel} ${dictionary?.title ?? getStepLabel("difficulty", "title", locale)}`}
+          description={
+            dictionary?.description ??
+            getStepLabel("difficulty", "description", locale)
+          }
         />
         <DifficultyForm
           ref={formRef}

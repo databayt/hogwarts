@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { ParentReportCardsContent } from "@/components/school-dashboard/parent-portal/report-cards/content"
 
 interface Props {
@@ -10,5 +11,12 @@ interface Props {
 
 export default async function ChildReportCardsPage({ params }: Props) {
   const { id, lang } = await params
-  return <ParentReportCardsContent studentId={id} lang={lang} />
+  const dictionary = await getDictionary(lang)
+  return (
+    <ParentReportCardsContent
+      studentId={id}
+      lang={lang}
+      dictionary={dictionary}
+    />
+  )
 }

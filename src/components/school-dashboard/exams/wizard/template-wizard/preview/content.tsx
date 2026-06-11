@@ -19,7 +19,12 @@ import { commonLabels, getStepLabel, QUESTION_TYPE_LABELS, t } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { completeTemplateWizard } from "../wizard-actions"
 
-export default function PreviewContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function PreviewContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -113,10 +118,11 @@ export default function PreviewContent() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">
-            {getStepLabel("preview", "title", locale)}
+            {dictionary?.title ?? getStepLabel("preview", "title", locale)}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {getStepLabel("preview", "description", locale)}
+            {dictionary?.description ??
+              getStepLabel("preview", "description", locale)}
           </p>
         </div>
 

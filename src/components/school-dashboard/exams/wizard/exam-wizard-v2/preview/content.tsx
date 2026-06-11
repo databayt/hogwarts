@@ -27,7 +27,12 @@ import { getStepLabel, t } from "../labels"
 import { useExamGenerateWizard } from "../use-exam-generate-wizard"
 import { completeExamGenerateWizard } from "../wizard-actions"
 
-export default function PreviewContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function PreviewContent({ dictionary }: Props) {
   const params = useParams()
   const router = useRouter()
   const generatedExamId = params.id as string
@@ -71,8 +76,11 @@ export default function PreviewContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("preview", "title", locale)}
-          description={getStepLabel("preview", "description", locale)}
+          title={dictionary?.title ?? getStepLabel("preview", "title", locale)}
+          description={
+            dictionary?.description ??
+            getStepLabel("preview", "description", locale)
+          }
         />
         {data && (
           <div className="space-y-6">

@@ -15,7 +15,12 @@ import { useTemplateWizard } from "../use-template-wizard"
 import { getSubjectOptions } from "./actions"
 import { SubjectForm } from "./form"
 
-export default function SubjectContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function SubjectContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -56,8 +61,11 @@ export default function SubjectContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("subject", "title", locale)}
-          description={getStepLabel("subject", "description", locale)}
+          title={dictionary?.title ?? getStepLabel("subject", "title", locale)}
+          description={
+            dictionary?.description ??
+            getStepLabel("subject", "description", locale)
+          }
         />
         <SubjectForm
           ref={formRef}

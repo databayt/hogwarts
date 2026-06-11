@@ -14,7 +14,12 @@ import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { DurationMarksForm } from "./form"
 
-export default function DurationMarksContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function DurationMarksContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -39,8 +44,13 @@ export default function DurationMarksContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("duration-marks", "title", locale)}
-          description={getStepLabel("duration-marks", "description", locale)}
+          title={
+            dictionary?.title ?? getStepLabel("duration-marks", "title", locale)
+          }
+          description={
+            dictionary?.description ??
+            getStepLabel("duration-marks", "description", locale)
+          }
         />
         <DurationMarksForm
           ref={formRef}

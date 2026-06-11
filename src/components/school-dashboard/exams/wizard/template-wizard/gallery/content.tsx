@@ -15,7 +15,12 @@ import { useTemplateWizard } from "../use-template-wizard"
 import { getSchoolTemplates } from "./actions"
 import { GalleryForm } from "./form"
 
-export default function GalleryContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function GalleryContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -44,8 +49,11 @@ export default function GalleryContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("gallery", "title", locale)}
-          description={getStepLabel("gallery", "description", locale)}
+          title={dictionary?.title ?? getStepLabel("gallery", "title", locale)}
+          description={
+            dictionary?.description ??
+            getStepLabel("gallery", "description", locale)
+          }
         />
         <GalleryForm
           ref={formRef}

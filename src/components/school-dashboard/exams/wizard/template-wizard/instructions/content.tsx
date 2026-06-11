@@ -14,7 +14,12 @@ import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { InstructionsForm } from "./form"
 
-export default function InstructionsContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function InstructionsContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -32,8 +37,13 @@ export default function InstructionsContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("instructions", "title", locale)}
-          description={getStepLabel("instructions", "description", locale)}
+          title={
+            dictionary?.title ?? getStepLabel("instructions", "title", locale)
+          }
+          description={
+            dictionary?.description ??
+            getStepLabel("instructions", "description", locale)
+          }
         />
         <InstructionsForm
           ref={formRef}

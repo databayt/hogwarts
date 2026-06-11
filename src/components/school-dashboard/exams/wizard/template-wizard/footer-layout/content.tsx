@@ -14,7 +14,12 @@ import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { FooterLayoutForm } from "./form"
 
-export default function FooterLayoutContent() {
+interface Props {
+  /** Static-dictionary slice (generate.wizard.*) — falls back to local labels */
+  dictionary?: { title?: string; description?: string }
+}
+
+export default function FooterLayoutContent({ dictionary }: Props) {
   const { locale } = useLocale()
   const params = useParams()
   const templateId = params.id as string
@@ -32,8 +37,13 @@ export default function FooterLayoutContent() {
     >
       <FormLayout>
         <FormHeading
-          title={getStepLabel("footer-layout", "title", locale)}
-          description={getStepLabel("footer-layout", "description", locale)}
+          title={
+            dictionary?.title ?? getStepLabel("footer-layout", "title", locale)
+          }
+          description={
+            dictionary?.description ??
+            getStepLabel("footer-layout", "description", locale)
+          }
         />
         <FooterLayoutForm
           ref={formRef}
