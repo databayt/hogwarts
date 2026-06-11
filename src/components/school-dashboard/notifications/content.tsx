@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 
 import { NotificationCenterClient } from "./notification-center-client"
 import { getNotificationsList } from "./queries"
@@ -86,26 +86,22 @@ export async function NotificationCenterContent({
 
   const totalPages = Math.ceil(totalCount / perPage)
 
-  // Translate title+body in parallel per notification, all notifications in parallel
-  const translatedNotifications = (await Promise.all(
-    rows.map(async (n) => {
-      const contentLang = (n.lang as "ar" | "en") || "ar"
-      const [title, body] = await Promise.all([
-        getText(n.title, contentLang, locale, schoolId),
-        getText(n.body, contentLang, locale, schoolId),
-      ])
-      return {
-        ...n,
-        title,
-        body,
-        createdAt: safeSerializeDate(n.createdAt) ?? new Date().toISOString(),
-        updatedAt: safeSerializeDate(n.updatedAt) ?? new Date().toISOString(),
-        readAt: safeSerializeDate(n.readAt),
-        emailSentAt: safeSerializeDate(n.emailSentAt),
-        metadata: (n.metadata as Record<string, unknown> | null) ?? null,
-      }
-    })
-  )) as NotificationDTO[]
+  // Translate title+body — ONE batched localize() pass for the page
+  // (replaces the per-row 2×getText N+1)
+  const localizedRows = await localize("Notification", rows, {
+    schoolId,
+    lang: locale,
+  })
+  const translatedNotifications = localizedRows.map((n) => {
+    return {
+      ...n,
+      createdAt: safeSerializeDate(n.createdAt) ?? new Date().toISOString(),
+      updatedAt: safeSerializeDate(n.updatedAt) ?? new Date().toISOString(),
+      readAt: safeSerializeDate(n.readAt),
+      emailSentAt: safeSerializeDate(n.emailSentAt),
+      metadata: (n.metadata as Record<string, unknown> | null) ?? null,
+    }
+  }) as NotificationDTO[]
 
   return (
     <div className="space-y-6">

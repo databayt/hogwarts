@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { randomUUID } from "node:crypto"
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -12,6 +13,7 @@ import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
+import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
 import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
@@ -297,6 +299,15 @@ export async function createLiveClass(
       select: { id: true },
     })
 
+    // Warm the other-language cache off the response path (seamless first read)
+    after(() =>
+      prewarm(
+        "Conference",
+        { title: content.title, description: content.description },
+        { schoolId }
+      )
+    )
+
     // "Set once & reuse": persist the link as the section+subject default for
     // the active term so every weekly recurrence surfaces the same timetable
     // Join button without re-entering it. Best-effort — a default-link failure
@@ -424,6 +435,17 @@ export async function updateLiveClass(
     })
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    // Warm the other-language cache when text content changed (off response path)
+    if (updateData.title || updateData.description) {
+      after(() =>
+        prewarm(
+          "Conference",
+          { title: updateData.title, description: updateData.description },
+          { schoolId }
+        )
+      )
+    }
 
     revalidatePath("/conference")
     return { success: true, data: null }

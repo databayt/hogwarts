@@ -6,7 +6,7 @@ import { headers } from "next/headers"
 import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 import type { Lang } from "@/components/translation/types"
 
 import { getRecentNotifications, getUnreadNotificationCount } from "./queries"
@@ -63,44 +63,41 @@ export async function fetchNotificationBellData(
 
     const displayLocale = locale ?? getDisplayLocale()
 
-    // Translate notification titles and bodies to the display locale
-    const translatedRecent = await Promise.all(
-      recent.map(async (n) => {
-        const contentLang = (n.lang || "ar") as Lang
-        const [translatedTitle, translatedBody] = await Promise.all([
-          getText(n.title, contentLang, displayLocale, schoolId),
-          getText(n.body, contentLang, displayLocale, schoolId),
-        ])
-
-        return {
-          id: n.id,
-          schoolId: n.schoolId,
-          userId: n.userId,
-          type: n.type,
-          priority: n.priority,
-          title: translatedTitle,
-          body: translatedBody,
-          lang: n.lang ?? "ar",
-          metadata: n.metadata as Record<string, unknown> | null,
-          actorId: n.actorId,
-          actor: n.actor
-            ? {
-                id: n.actor.id,
-                username: n.actor.username,
-                email: n.actor.email,
-                image: n.actor.image,
-              }
-            : null,
-          read: n.read,
-          readAt: n.readAt?.toISOString() ?? null,
-          channels: n.channels,
-          emailSent: n.emailSent,
-          emailSentAt: n.emailSentAt?.toISOString() ?? null,
-          createdAt: n.createdAt.toISOString(),
-          updatedAt: n.updatedAt.toISOString(),
-        }
-      })
-    )
+    // Translate title+body — ONE batched localize() pass for the whole list
+    // (this is the polled bell endpoint; per-row getText would be N×2 lookups)
+    const localizedRecent = await localize("Notification", recent, {
+      schoolId,
+      lang: displayLocale,
+    })
+    const translatedRecent = localizedRecent.map((n) => {
+      return {
+        id: n.id,
+        schoolId: n.schoolId,
+        userId: n.userId,
+        type: n.type,
+        priority: n.priority,
+        title: n.title,
+        body: n.body,
+        lang: n.lang ?? "ar",
+        metadata: n.metadata as Record<string, unknown> | null,
+        actorId: n.actorId,
+        actor: n.actor
+          ? {
+              id: n.actor.id,
+              username: n.actor.username,
+              email: n.actor.email,
+              image: n.actor.image,
+            }
+          : null,
+        read: n.read,
+        readAt: n.readAt?.toISOString() ?? null,
+        channels: n.channels,
+        emailSent: n.emailSent,
+        emailSentAt: n.emailSentAt?.toISOString() ?? null,
+        createdAt: n.createdAt.toISOString(),
+        updatedAt: n.updatedAt.toISOString(),
+      }
+    })
 
     return {
       unreadCount,

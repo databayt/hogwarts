@@ -3,13 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { prewarm } from "@/components/translation/prewarm"
 
 import {
   createYearLevelSchema,
@@ -54,19 +56,12 @@ export async function getYearLevels(
       orderBy: { levelOrder: "asc" },
     })
 
-    // Translate levelName for display
+    // Translate levelName — ONE batched localize() pass (replaces per-row getText)
     const lang = displayLang || "ar"
-    const translatedYearLevels = await Promise.all(
-      yearLevels.map(async (level) => ({
-        ...level,
-        levelName: await getText(
-          level.levelName,
-          (level.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-      }))
-    )
+    const translatedYearLevels = await localize("YearLevel", yearLevels, {
+      schoolId,
+      lang,
+    })
 
     return {
       success: true,
@@ -138,6 +133,9 @@ export async function createYearLevel(
         levelOrder: validated.levelOrder,
       },
     })
+
+    // Warm the other-language cache off the response path (seamless first read)
+    after(() => prewarm("YearLevel", yearLevel, { schoolId }))
 
     revalidatePath("/students/year-levels")
     return {
@@ -241,6 +239,12 @@ export async function updateYearLevel(
         }),
       },
     })
+
+    if (validated.levelName) {
+      after(() =>
+        prewarm("YearLevel", { levelName: validated.levelName }, { schoolId })
+      )
+    }
 
     revalidatePath("/students/year-levels")
     return {

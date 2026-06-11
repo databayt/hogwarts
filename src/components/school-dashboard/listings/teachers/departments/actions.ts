@@ -3,10 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { prewarm } from "@/components/translation/prewarm"
 
 import type { ActionResult } from "./types"
 import {
@@ -59,34 +61,31 @@ export async function getDepartments(
       orderBy: { departmentName: "asc" },
     })
 
-    // Transform to match expected interface with on-demand translation
+    // ONE batched localize() pass for all departments (replaces per-row getText)
     const lang = displayLang || "ar"
-    const transformedDepartments = await Promise.all(
-      departments.map(async (dept) => ({
-        id: dept.id,
-        schoolId: dept.schoolId,
-        departmentName: await getText(
-          dept.departmentName,
-          (dept.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-        lang: dept.lang,
-        createdAt: dept.createdAt,
-        updatedAt: dept.updatedAt,
-        subjects: [] as { id: string; name: string }[],
-        teachers: dept.teacherDepartments.map((td) => ({
-          id: td.teacher.id,
-          firstName: td.teacher.firstName,
-          lastName: td.teacher.lastName,
-          emailAddress: td.teacher.emailAddress,
-          profilePhotoUrl: td.teacher.profilePhotoUrl,
-          isPrimary: td.isPrimary,
-          isDepartmentHead: td.isDepartmentHead,
-        })),
-        _count: { ...dept._count, subjects: 0 },
-      }))
-    )
+    const localizedDepartments = await localize("Department", departments, {
+      schoolId,
+      lang,
+    })
+    const transformedDepartments = localizedDepartments.map((dept) => ({
+      id: dept.id,
+      schoolId: dept.schoolId,
+      departmentName: dept.departmentName,
+      lang: dept.lang,
+      createdAt: dept.createdAt,
+      updatedAt: dept.updatedAt,
+      subjects: [] as { id: string; name: string }[],
+      teachers: dept.teacherDepartments.map((td) => ({
+        id: td.teacher.id,
+        firstName: td.teacher.firstName,
+        lastName: td.teacher.lastName,
+        emailAddress: td.teacher.emailAddress,
+        profilePhotoUrl: td.teacher.profilePhotoUrl,
+        isPrimary: td.isPrimary,
+        isDepartmentHead: td.isDepartmentHead,
+      })),
+      _count: { ...dept._count, subjects: 0 },
+    }))
 
     return {
       success: true,
@@ -146,6 +145,9 @@ export async function createDepartment(
         lang: validated.lang || "ar",
       },
     })
+
+    // Warm the other-language cache off the response path (seamless first read)
+    after(() => prewarm("Department", department, { schoolId }))
 
     revalidatePath("/teachers/departments")
     return {
@@ -229,6 +231,10 @@ export async function updateDepartment(
         }),
       },
     })
+
+    if (validated.departmentName) {
+      after(() => prewarm("Department", department, { schoolId }))
+    }
 
     revalidatePath("/teachers/departments")
     return {

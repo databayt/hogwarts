@@ -16,7 +16,9 @@ import {
   type LiveClassFormOptions,
 } from "@/components/school-dashboard/conference/queries"
 import { LiveClassesTable } from "@/components/school-dashboard/conference/table"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -61,24 +63,41 @@ export default async function LiveClassesContent({
       const { rows, count } = list
       formOptions = options
 
-      // Map results with on-demand title translation (single-language storage).
-      data = await Promise.all(
-        rows.map(async (r) => ({
+      // ONE batched translation pass: titles via localize, teacher names via
+      // getNames, subject/section labels via getLabels (replaces per-row getText).
+      const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+      const [localizedRows, teacherNames, labels] = await Promise.all([
+        localize("Conference", rows, { schoolId, lang: displayLang }),
+        getNames(
+          rows.filter((r) => r.teacher),
+          (r: (typeof rows)[number]) => r.teacher!,
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          rows.flatMap((r) => [r.subject?.name, r.section?.name]),
+          displayLang,
+          schoolId
+        ),
+      ])
+      data = localizedRows.map((r) => {
+        const rawTeacher = r.teacher ? fullName(r.teacher) : ""
+        return {
           id: r.id,
-          title: await getText(
-            r.title,
-            (r.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId!
-          ),
+          title: r.title,
           lang: r.lang,
           teacherId: r.teacherId,
-          teacherName:
-            `${r.teacher?.firstName ?? ""} ${r.teacher?.lastName ?? ""}`.trim(),
+          teacherName: rawTeacher
+            ? (teacherNames.get(rawTeacher) ?? rawTeacher)
+            : "",
           subjectId: r.subjectId,
-          subjectName: r.subject?.name ?? null,
+          subjectName: r.subject?.name
+            ? (labels.get(r.subject.name) ?? r.subject.name)
+            : null,
           sectionId: r.sectionId,
-          sectionName: r.section?.name ?? null,
+          sectionName: r.section?.name
+            ? (labels.get(r.section.name) ?? r.section.name)
+            : null,
           status: r.status,
           meetingUrl: r.meetingUrl,
           meetingProvider: r.meetingProvider,
@@ -91,8 +110,8 @@ export default async function LiveClassesContent({
           createdAt: r.createdAt
             ? new Date(r.createdAt).toISOString()
             : new Date().toISOString(),
-        }))
-      )
+        }
+      })
 
       total = count
     } catch (error) {
