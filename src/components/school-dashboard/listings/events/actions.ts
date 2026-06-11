@@ -21,7 +21,7 @@ import {
   eventUpdateSchema,
   getEventsSchema,
 } from "@/components/school-dashboard/listings/events/validation"
-import { getFields } from "@/components/translation/display"
+import { localize, localizeOne } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
 
 type EventSelectResult = {
@@ -343,22 +343,16 @@ export async function getEvent(input: {
       return { success: true, data: null }
     }
 
-    // On-demand translation if displayLang differs from stored lang
+    // On-demand translation if displayLang differs from stored lang —
+    // localizeOne covers all 4 registered fields (title, description, location, organizer).
     if (input.displayLang && schoolId) {
-      const translated = await getFields(
-        event,
-        ["title", "description"],
-        (event.lang as "ar" | "en") || "ar",
-        input.displayLang,
-        schoolId
-      )
+      const localized = await localizeOne("Event", event, {
+        schoolId,
+        lang: input.displayLang,
+      })
       return {
         success: true,
-        data: {
-          ...event,
-          title: translated.title || event.title,
-          description: translated.description || event.description,
-        } as EventSelectResult,
+        data: (localized ?? event) as EventSelectResult,
       }
     }
 
@@ -883,28 +877,14 @@ export async function getPreviousEvents(options?: {
       },
     })
 
-    // Translate suggestions if displayLang differs from stored lang
+    // ONE batched localize pass — replaces N×getFields in a loop.
     const displayLang = options?.displayLang
     if (displayLang) {
-      const translated = await Promise.all(
-        events.map(async (e) => {
-          const storedLang = (e.lang as "ar" | "en") || "ar"
-          if (storedLang === displayLang) return e
-          const fields = await getFields(
-            e,
-            ["title", "description"],
-            storedLang,
-            displayLang,
-            schoolId
-          )
-          return {
-            ...e,
-            title: fields.title || e.title,
-            description: fields.description || e.description,
-          }
-        })
-      )
-      return { success: true, data: translated }
+      const localized = await localize("Event", events as any[], {
+        schoolId,
+        lang: displayLang,
+      })
+      return { success: true, data: localized as typeof events }
     }
 
     return { success: true, data: events }

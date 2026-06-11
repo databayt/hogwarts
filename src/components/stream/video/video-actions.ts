@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
@@ -13,6 +14,7 @@ import {
   incrementSchoolVideoUsage,
 } from "@/components/stream/lib/quota"
 import { isValidVideoUrl } from "@/components/stream/shared/url-validators"
+import { prewarm } from "@/components/translation/prewarm"
 
 type ApiResponse = {
   status: "success" | "error"
@@ -171,6 +173,15 @@ export async function uploadVideo(
     if (fileSize > 0) {
       await incrementSchoolVideoUsage(schoolId, fileSize)
     }
+
+    // Prewarm translation cache off the response path.
+    after(() =>
+      prewarm(
+        "Video",
+        { title, description: data.description?.trim() || null },
+        { schoolId }
+      )
+    )
 
     revalidatePath(
       `/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.subject.slug}`

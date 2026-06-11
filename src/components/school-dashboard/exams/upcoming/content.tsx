@@ -26,8 +26,7 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { getLabels } from "@/components/translation/person"
 
 import type { CalendarExam } from "./calendar-view"
 import { ViewToggle } from "./view-toggle"
@@ -130,37 +129,39 @@ export default async function UpcomingExamsContent({
       take: 30,
     })
 
-    upcomingExams = await Promise.all(
-      exams.map(async (exam) => ({
-        id: exam.id,
-        title: exam.title,
-        description: exam.description,
-        examDate: exam.examDate,
-        startTime: exam.startTime,
-        endTime: exam.endTime,
-        duration: exam.duration,
-        totalMarks: exam.totalMarks,
-        examType: exam.examType,
-        status: exam.status,
-        className: exam.class?.name
-          ? await getText(
-              exam.class.name,
-              (exam.class.lang || "ar") as Lang,
-              lang,
-              schoolId!
-            )
-          : "Unknown",
-        name: exam.subject?.name
-          ? await getText(
-              exam.subject.name,
-              (exam.subject.lang || "ar") as Lang,
-              lang,
-              schoolId!
-            )
-          : "Unknown",
-        daysUntil: differenceInDays(exam.examDate, today),
-      }))
-    )
+    const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
+    const [classLabels, subjectLabels] = await Promise.all([
+      getLabels(
+        exams.map((e) => e.class?.name).filter(Boolean) as string[],
+        displayLang,
+        schoolId!
+      ),
+      getLabels(
+        exams.map((e) => e.subject?.name).filter(Boolean) as string[],
+        displayLang,
+        schoolId!
+      ),
+    ])
+
+    upcomingExams = exams.map((exam) => ({
+      id: exam.id,
+      title: exam.title,
+      description: exam.description,
+      examDate: exam.examDate,
+      startTime: exam.startTime,
+      endTime: exam.endTime,
+      duration: exam.duration,
+      totalMarks: exam.totalMarks,
+      examType: exam.examType,
+      status: exam.status,
+      className: exam.class?.name
+        ? (classLabels.get(exam.class.name) ?? exam.class.name)
+        : "Unknown",
+      name: exam.subject?.name
+        ? (subjectLabels.get(exam.subject.name) ?? exam.subject.name)
+        : "Unknown",
+      daysUntil: differenceInDays(exam.examDate, today),
+    }))
   }
 
   // Use exams dictionary

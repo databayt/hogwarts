@@ -2,10 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { after } from "next/server"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { informationSchema, type InformationFormData } from "./validation"
 
@@ -74,18 +77,18 @@ export async function updateClassInformation(
       return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
 
-    await db.class.updateMany({
-      where: { id: classId, schoolId },
-      data: {
-        name: parsed.name,
-        subjectId: parsed.subjectId,
-        teacherId: parsed.teacherId,
-        gradeId: parsed.gradeId ?? null,
-        courseCode: parsed.courseCode ?? null,
-        evaluationType: parsed.evaluationType,
-      },
-    })
+    const data = {
+      name: parsed.name,
+      subjectId: parsed.subjectId,
+      teacherId: parsed.teacherId,
+      gradeId: parsed.gradeId ?? null,
+      courseCode: parsed.courseCode ?? null,
+      evaluationType: parsed.evaluationType,
+    }
+    await db.class.updateMany({ where: { id: classId, schoolId }, data })
 
+    // prewarm reads only registered fields (name) — runs off the response path
+    after(() => prewarm("Class", { id: classId, ...data }, { schoolId }))
     return { success: true }
   } catch (error) {
     return {

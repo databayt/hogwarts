@@ -106,8 +106,9 @@ import {
   getAnnouncementsSchema,
 } from "@/components/school-dashboard/listings/announcements/validation"
 import { autoTranslate } from "@/components/translation/actions"
-import { getFields, getText } from "@/components/translation/display"
+import { localize, localizeOne } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
+import { search } from "@/components/translation/search"
 
 // ============================================================================
 // Types
@@ -796,23 +797,15 @@ export async function getAnnouncement(input: {
       }
     }
 
-    // On-demand translation if displayLang differs from stored lang
+    // On-demand translation when the caller asks for a display language.
+    // Edit forms must NOT pass displayLang — raw values only (never feed MT
+    // text back into inputs that get saved).
     if (input.displayLang && schoolId) {
-      const translated = await getFields(
-        announcement,
-        ["title", "body"],
-        (announcement.lang as "ar" | "en") || "ar",
-        input.displayLang,
-        schoolId
-      )
-      return {
-        success: true,
-        data: {
-          ...announcement,
-          title: translated.title || announcement.title,
-          body: translated.body || announcement.body,
-        },
-      }
+      const localized = await localizeOne("Announcement", announcement, {
+        schoolId,
+        lang: input.displayLang,
+      })
+      return { success: true, data: localized ?? announcement }
     }
 
     return { success: true, data: announcement }
@@ -862,13 +855,33 @@ export async function getAnnouncements(
     // Parse and validate input
     const sp = getAnnouncementsSchema.parse(input ?? {})
 
+    // Bilingual title search: match raw values AND cached translations, so a
+    // search typed in the viewer's language finds content stored in the other.
+    let titleFilter = {}
+    if (sp.title) {
+      if (sp.displayLang) {
+        const school = await db.school.findUnique({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+        const storageLang = school?.preferredLanguage || "ar"
+        const titleConditions = await search(
+          sp.title,
+          ["title"],
+          schoolId,
+          storageLang,
+          sp.displayLang
+        )
+        titleFilter = { OR: titleConditions }
+      } else {
+        titleFilter = { title: { contains: sp.title, mode: "insensitive" } }
+      }
+    }
+
     // Build where clause with proper types
-    // Search in title field
     const where: any = {
       schoolId,
-      ...(sp.title && {
-        title: { contains: sp.title, mode: "insensitive" },
-      }),
+      ...titleFilter,
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
     }
@@ -909,29 +922,25 @@ export async function getAnnouncements(
     ])
 
     // Map results with proper types - single-language fields
-    // Translate titles when displayLang differs from stored lang
-    const mapped: AnnouncementListResult[] = await Promise.all(
-      rows.map(async (a) => ({
-        id: a.id,
-        title:
-          sp.displayLang && a.lang !== sp.displayLang
-            ? await getText(
-                a.title,
-                (a.lang as "ar" | "en") || "ar",
-                sp.displayLang,
-                schoolId
-              )
-            : a.title,
-        lang: a.lang,
-        scope: a.scope,
-        published: a.published,
-        priority: a.priority,
-        pinned: a.pinned,
-        featured: a.featured,
-        createdAt: a.createdAt.toISOString(),
-        createdBy: a.createdBy,
-      }))
-    )
+    // Translate titles when displayLang differs — ONE batched localize() pass
+    const localizedRows = sp.displayLang
+      ? await localize("Announcement", rows, {
+          schoolId,
+          lang: sp.displayLang as "ar" | "en",
+        })
+      : rows
+    const mapped: AnnouncementListResult[] = localizedRows.map((a) => ({
+      id: a.id,
+      title: a.title,
+      lang: a.lang,
+      scope: a.scope,
+      published: a.published,
+      priority: a.priority,
+      pinned: a.pinned,
+      featured: a.featured,
+      createdAt: a.createdAt.toISOString(),
+      createdBy: a.createdBy,
+    }))
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {
@@ -1000,27 +1009,14 @@ export async function getPreviousAnnouncements(options?: {
       },
     })
 
-    // Translate suggestions if displayLang differs from stored lang
+    // Translate suggestions when displayLang differs — ONE batched localize()
+    // pass for the whole list (skips same-lang values by script detection)
     const displayLang = options?.displayLang
     if (displayLang) {
-      const translated = await Promise.all(
-        announcements.map(async (a) => {
-          const storedLang = (a.lang as "ar" | "en") || "ar"
-          if (storedLang === displayLang) return a
-          const fields = await getFields(
-            a,
-            ["title", "body"],
-            storedLang,
-            displayLang,
-            schoolId
-          )
-          return {
-            ...a,
-            title: fields.title || a.title,
-            body: fields.body || a.body,
-          }
-        })
-      )
+      const translated = await localize("Announcement", announcements, {
+        schoolId,
+        lang: displayLang,
+      })
       return { success: true, data: translated }
     }
 

@@ -16,10 +16,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   studentId: string
   lang: Locale
+  dictionary?: Dictionary
 }
 
 /**
@@ -29,7 +31,12 @@ interface Props {
  * is present. Phase 2b switches the link target to `/api/parent/report-cards/
  * [id]/download` (signed-URL gate) and adds a true Download button.
  */
-export async function ParentReportCardsContent({ studentId, lang }: Props) {
+export async function ParentReportCardsContent({
+  studentId,
+  lang,
+  dictionary,
+}: Props) {
+  const t = dictionary?.parentPortal?.reportCards
   const isRTL = lang === "ar"
 
   const session = await auth()
@@ -53,9 +60,10 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
   if (!link) {
     return (
       <p className="text-muted-foreground py-8 text-center text-sm">
-        {isRTL
-          ? "ليس لديك صلاحية لعرض بطاقات تقرير هذا الطالب."
-          : "You don't have access to this student's report cards."}
+        {t?.noAccess ??
+          (isRTL
+            ? "ليس لديك صلاحية لعرض بطاقات تقرير هذا الطالب."
+            : "You don't have access to this student's report cards.")}
       </p>
     )
   }
@@ -93,11 +101,14 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{isRTL ? "بطاقات التقرير" : "Report cards"}</CardTitle>
+          <CardTitle>
+            {t?.title ?? (isRTL ? "بطاقات التقرير" : "Report cards")}
+          </CardTitle>
           <CardDescription>
-            {isRTL
-              ? "لم يتم نشر أي بطاقات تقرير بعد. ستظهر هنا عند نشرها من قبل المدرسة."
-              : "No report cards published yet. They will appear here once the school publishes them."}
+            {t?.emptyDescription ??
+              (isRTL
+                ? "لم يتم نشر أي بطاقات تقرير بعد. ستظهر هنا عند نشرها من قبل المدرسة."
+                : "No report cards published yet. They will appear here once the school publishes them.")}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -107,15 +118,14 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">
-        {isRTL ? "بطاقات التقرير المنشورة" : "Published report cards"}
+        {t?.published ??
+          (isRTL ? "بطاقات التقرير المنشورة" : "Published report cards")}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {reportCards.map((rc) => {
           const termLabel = rc.term
-            ? `${isRTL ? "الفصل" : "Term"} ${rc.term.termNumber}`
-            : isRTL
-              ? "بطاقة تقرير"
-              : "Report card"
+            ? `${t?.term ?? (isRTL ? "الفصل" : "Term")} ${rc.term.termNumber}`
+            : (t?.reportCard ?? (isRTL ? "بطاقة تقرير" : "Report card"))
           return (
             <Card key={rc.id}>
               <CardHeader>
@@ -138,7 +148,7 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
                 <div className="text-muted-foreground text-sm">
                   {rc.overallGPA !== null && rc.overallGPA !== undefined ? (
                     <span>
-                      {isRTL ? "المعدل" : "GPA"}:{" "}
+                      {t?.gpa ?? (isRTL ? "المعدل" : "GPA")}:{" "}
                       <strong className="text-foreground">
                         {Number(rc.overallGPA).toFixed(2)}
                       </strong>
@@ -146,7 +156,7 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
                   ) : null}
                   {rc.rank ? (
                     <span className="ms-3">
-                      {isRTL ? "الترتيب" : "Rank"}:{" "}
+                      {t?.rank ?? (isRTL ? "الترتيب" : "Rank")}:{" "}
                       <strong className="text-foreground">
                         {rc.rank}
                         {rc.totalStudents ? ` / ${rc.totalStudents}` : ""}
@@ -162,12 +172,13 @@ export async function ParentReportCardsContent({ studentId, lang }: Props) {
                       rel="noopener noreferrer"
                     >
                       <Download className="me-1 h-4 w-4" />
-                      {isRTL ? "تنزيل" : "Download"}
+                      {t?.download ?? (isRTL ? "تنزيل" : "Download")}
                     </a>
                   </Button>
                 ) : (
                   <Badge variant="secondary">
-                    {isRTL ? "جاري التحضير" : "Preparing PDF"}
+                    {t?.preparingPdf ??
+                      (isRTL ? "جاري التحضير" : "Preparing PDF")}
                   </Badge>
                 )}
               </CardContent>

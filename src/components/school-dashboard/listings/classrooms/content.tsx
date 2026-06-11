@@ -5,7 +5,8 @@ import { db } from "@/lib/db"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 import { type ClassroomRow } from "./columns"
 import { getUIConfigForRole } from "./permissions"
@@ -44,37 +45,39 @@ export default async function ClassroomsContent({ lang, subdomain }: Props) {
       db.classroom.count({ where: { schoolId } }),
     ])
 
-    data = await Promise.all(
-      rows.map(async (r) => ({
+    const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+    // ONE batched translation pass: room names via localize, type/grade labels
+    // via deduped getLabels — replaces the per-row 3×getText N+1.
+    const [localizedRooms, typeLabels, gradeLabels] = await Promise.all([
+      localize("Classroom", rows as any[], { schoolId, lang: displayLang }),
+      getLabels(
+        rows.map((r) => r.classroomType.name),
+        displayLang,
+        schoolId
+      ),
+      getLabels(
+        rows.map((r) => r.grade?.name),
+        displayLang,
+        schoolId
+      ),
+    ])
+
+    data = localizedRooms.map((r: any) => {
+      const rawType = r.classroomType.name
+      const rawGrade = r.grade?.name ?? ""
+      return {
         id: r.id,
-        roomName: await getText(
-          r.roomName,
-          (r.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
+        roomName: r.roomName,
         capacity: r.capacity,
-        typeName: await getText(
-          r.classroomType.name,
-          (r.classroomType.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
+        typeName: typeLabels.get(rawType) ?? rawType,
         typeId: r.typeId,
-        gradeName: r.grade
-          ? await getText(
-              r.grade.name,
-              (r.grade.lang as "ar" | "en") || "ar",
-              lang,
-              schoolId!
-            )
-          : null,
+        gradeName: r.grade ? (gradeLabels.get(rawGrade) ?? rawGrade) : null,
         gradeId: r.gradeId,
         classCount: r._count.classes,
         timetableCount: r._count.timetables,
-        createdAt: r.createdAt.toISOString(),
-      }))
-    )
+        createdAt: (r.createdAt as Date).toISOString(),
+      }
+    })
     total = count
   }
 

@@ -13,6 +13,7 @@ import { useWizardValidation } from "@/components/form/template/wizard-validatio
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { fullName } from "@/components/translation/util"
 
 import { completeClassWizard } from "../actions"
 import { useClassWizard } from "../use-class-wizard"
@@ -146,11 +147,7 @@ export default function ManagementContent() {
                 />
                 <ReviewField
                   label={d?.reviewTeacher || "Teacher"}
-                  value={
-                    data.teacher
-                      ? `${data.teacher.firstName} ${data.teacher.lastName}`
-                      : null
-                  }
+                  value={data.teacher ? fullName(data.teacher) : null}
                 />
                 <ReviewField
                   label={d?.reviewGrade || "Grade"}

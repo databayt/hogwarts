@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -10,6 +11,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { assertClassroomPermission, getAuthContext } from "./authorization"
 import {
@@ -218,6 +220,7 @@ export async function createClassroom(
       },
     })
 
+    after(() => prewarm("Classroom", row, { schoolId }))
     revalidatePath(CLASSROOMS_PATH)
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -263,6 +266,8 @@ export async function updateClassroom(
 
     await db.classroom.updateMany({ where: { id, schoolId }, data })
 
+    // prewarm reads only the registered fields (roomName); pass id + updated data
+    after(() => prewarm("Classroom", { id, ...data }, { schoolId }))
     revalidatePath(CLASSROOMS_PATH)
     return { success: true, data: undefined }
   } catch (error) {

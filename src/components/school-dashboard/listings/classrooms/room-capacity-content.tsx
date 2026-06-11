@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/table"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 import { getRoomCapacityOverview } from "./actions"
 
@@ -55,34 +56,35 @@ export default async function RoomCapacityContent({ lang }: Props) {
     )
   }
 
-  // Translate room data
-  const translatedRooms = await Promise.all(
-    rooms.map(async (r) => ({
+  const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+  // ONE batched translation pass: room names via localize, type/grade labels
+  // via deduped getLabels — replaces the per-room 3×getText N+1.
+  const [localizedRooms, typeLabels, gradeLabels] = await Promise.all([
+    localize("Classroom", rooms as any[], { schoolId, lang: displayLang }),
+    getLabels(
+      rooms.map((r) => r.classroomType.name),
+      displayLang,
+      schoolId
+    ),
+    getLabels(
+      rooms.map((r) => r.grade?.name),
+      displayLang,
+      schoolId
+    ),
+  ])
+
+  const translatedRooms = localizedRooms.map((r: any) => {
+    const rawType = r.classroomType.name
+    const rawGrade = r.grade?.name ?? ""
+    return {
       id: r.id,
-      roomName: await getText(
-        r.roomName,
-        (r.lang as "ar" | "en") || "ar",
-        lang,
-        schoolId
-      ),
+      roomName: r.roomName,
       capacity: r.capacity,
-      typeName: await getText(
-        r.classroomType.name,
-        (r.classroomType.lang as "ar" | "en") || "ar",
-        lang,
-        schoolId
-      ),
-      gradeName: r.grade
-        ? await getText(
-            r.grade.name,
-            (r.grade.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          )
-        : null,
+      typeName: typeLabels.get(rawType) ?? rawType,
+      gradeName: r.grade ? (gradeLabels.get(rawGrade) ?? rawGrade) : null,
       classCount: r._count.classes,
-    }))
-  )
+    }
+  })
 
   // Calculate summary stats
   const totalRooms = translatedRooms.length

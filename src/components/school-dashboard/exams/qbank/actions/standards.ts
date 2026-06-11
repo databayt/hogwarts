@@ -3,10 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import type { CurriculumStandard } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { prewarm } from "@/components/translation/prewarm"
 
 import {
   curriculumStandardSchema,
@@ -85,6 +87,7 @@ export async function createCurriculumStandard(
       },
     })
 
+    after(() => prewarm("CurriculumStandard", standard, { schoolId }))
     revalidatePath("/exams/qbank")
     revalidatePath("/exams/standards")
 
@@ -314,6 +317,7 @@ export async function updateCurriculumStandard(
       },
     })
 
+    after(() => prewarm("CurriculumStandard", standard, { schoolId }))
     revalidatePath("/exams/qbank")
     revalidatePath("/exams/standards")
 

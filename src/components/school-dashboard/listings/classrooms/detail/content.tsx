@@ -6,6 +6,8 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getText } from "@/components/translation/display"
+import { getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 import { getRoomClasses, getRoomDetail, getRoomTimetable } from "../actions"
 import { RoomDetail } from "./room-detail"
@@ -89,6 +91,16 @@ export default async function RoomDetailContent({
   const utilization =
     totalSlots > 0 ? Math.round((usedSlots / totalSlots) * 100) : 0
 
+  const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+  // Batched teacher-name resolution for the classes list (getNames handles
+  // transliteration fallback when the Google API is unavailable).
+  const teacherNames = await getNames(
+    classes.filter((c) => c.teacher),
+    (c) => c.teacher!,
+    displayLang,
+    schoolId
+  )
+
   return (
     <RoomDetail
       lang={lang}
@@ -102,17 +114,18 @@ export default async function RoomDetailContent({
         gradeId: room.gradeId,
       }}
       timetable={timetable}
-      classes={classes.map((c) => ({
-        id: c.id,
-        name: c.name,
-        gradeName: c.grade?.name ?? null,
-        subject: c.subject?.name ?? "",
-        teacher: c.teacher
-          ? `${c.teacher.firstName} ${c.teacher.lastName}`
-          : "",
-        enrollment: c._count.studentClasses,
-        maxCapacity: c.maxCapacity ?? 0,
-      }))}
+      classes={classes.map((c) => {
+        const raw = c.teacher ? fullName(c.teacher) : ""
+        return {
+          id: c.id,
+          name: c.name,
+          gradeName: c.grade?.name ?? null,
+          subject: c.subject?.name ?? "",
+          teacher: raw ? (teacherNames.get(raw) ?? raw) : "",
+          enrollment: c._count.studentClasses,
+          maxCapacity: c.maxCapacity ?? 0,
+        }
+      })}
       utilization={{ usedSlots, totalSlots, rate: utilization }}
       hasActiveTerm={!!term}
     />

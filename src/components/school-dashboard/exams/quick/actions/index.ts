@@ -3,10 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import {
   quickAssessmentCreateSchema,
@@ -68,6 +70,7 @@ export async function createQuickAssessment(
       },
     })
 
+    after(() => prewarm("QuickAssessment", assessment, { schoolId }))
     revalidatePath("/exams/quick")
     return { success: true, data: { id: assessment.id } }
   } catch (error) {

@@ -6,6 +6,8 @@ import Link from "next/link"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
+import { localize } from "@/components/translation/localize"
+import type { Lang } from "@/components/translation/types"
 
 import BookList from "./book-list/content"
 import { CollaborateSection } from "./collaborate-section"
@@ -75,8 +77,14 @@ export default async function LibraryContent({
     },
   })
 
+  // Batched translation: one localize() call for all books.
+  const localizedCatalogBooks = await localize("Book", catalogBooks, {
+    schoolId,
+    lang: (lang || "ar") as Lang,
+  })
+
   // Map Book to the shape BookCard/BookList expects
-  const books = catalogBooks.map((cb) => ({
+  const books = localizedCatalogBooks.map((cb) => ({
     id: cb.id,
     title: cb.title,
     author: cb.author,

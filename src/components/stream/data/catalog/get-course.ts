@@ -6,6 +6,8 @@ import { notFound } from "next/navigation"
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 /**
@@ -138,53 +140,74 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
     ).catch(() => (lang === "ar" ? "هوجورتس" : "Hogwarts")),
   ])
 
-  // Translate all content names for the current locale
-  const srcLang = (subject.lang || "ar") as Lang
+  // Batched translation — one localize() call per model instead of N×M getText.
   const displayLang = (lang === "ar" ? "ar" : "en") as Lang
   const cacheSchoolId = schoolId || subject.id // fallback for cache key
-  const t = (text: string | null | undefined) =>
-    getText(text ?? "", srcLang, displayLang, cacheSchoolId)
 
-  const [title, description, departmentName] = await Promise.all([
-    t(subject.name),
-    t(subject.description),
-    t(subject.department),
-  ])
-
-  // Translate chapters and lessons in parallel
-  const translatedChapters = await Promise.all(
-    subject.chapters
-      .filter((c) => !hiddenChapterIds.has(c.id))
-      .map(async (chapter) => {
-        const [chTitle, translatedLessons] = await Promise.all([
-          t(chapter.name),
-          Promise.all(
-            chapter.lessons
-              .filter((l) => !hiddenLessonIds.has(l.id))
-              .map(async (lesson) => ({
-                id: lesson.id,
-                title: await t(lesson.name),
-                description: lesson.description,
-                position: lesson.sequenceOrder,
-                duration: lesson.durationMinutes,
-                isFree: true,
-                imageUrl: getCatalogImageUrl(lesson.thumbnail, "md"),
-              }))
-          ),
-        ])
-        return {
-          id: chapter.id,
-          title: chTitle,
-          description: chapter.description,
-          position: chapter.sequenceOrder,
-          isPublished: true,
-          isFree: true,
-          imageUrl: getCatalogImageUrl(chapter.thumbnail, "sm"),
-          color: chapter.color,
-          lessons: translatedLessons,
-        }
-      })
+  const visibleChapters = subject.chapters.filter(
+    (c) => !hiddenChapterIds.has(c.id)
   )
+  const allVisibleLessons = visibleChapters.flatMap((c) =>
+    c.lessons.filter((l) => !hiddenLessonIds.has(l.id))
+  )
+
+  // Subject, Chapters, Lessons all translated in one parallel batch.
+  const [localizedSubjects, localizedChapters, localizedLessons, deptLabels] =
+    await Promise.all([
+      localize("Subject", [subject], {
+        schoolId: cacheSchoolId,
+        lang: displayLang,
+      }),
+      localize("Chapter", visibleChapters, {
+        schoolId: cacheSchoolId,
+        lang: displayLang,
+      }),
+      localize("Lesson", allVisibleLessons, {
+        schoolId: cacheSchoolId,
+        lang: displayLang,
+      }),
+      getLabels([subject.department], displayLang, cacheSchoolId),
+    ])
+
+  const ls = localizedSubjects[0] ?? subject
+  const title = ls.name
+  const description = ls.description ?? ""
+  const departmentName = subject.department
+    ? (deptLabels.get(subject.department) ?? subject.department)
+    : subject.department
+
+  // Map localized chapter / lesson arrays back into the tree shape.
+  const lessonMap = new Map(localizedLessons.map((l) => [l.id, l]))
+  const chapterMap = new Map(localizedChapters.map((c) => [c.id, c]))
+
+  const translatedChapters = visibleChapters.map((chapter) => {
+    const lc = chapterMap.get(chapter.id) ?? chapter
+    const visibleLessons = chapter.lessons.filter(
+      (l) => !hiddenLessonIds.has(l.id)
+    )
+    return {
+      id: chapter.id,
+      title: lc.name,
+      description: chapter.description,
+      position: chapter.sequenceOrder,
+      isPublished: true,
+      isFree: true,
+      imageUrl: getCatalogImageUrl(chapter.thumbnail, "sm"),
+      color: chapter.color,
+      lessons: visibleLessons.map((lesson) => {
+        const ll = lessonMap.get(lesson.id) ?? lesson
+        return {
+          id: lesson.id,
+          title: ll.name,
+          description: lesson.description,
+          position: lesson.sequenceOrder,
+          duration: lesson.durationMinutes,
+          isFree: true,
+          imageUrl: getCatalogImageUrl(lesson.thumbnail, "md"),
+        }
+      }),
+    }
+  })
 
   // Map to Stream-compatible shape
   return {

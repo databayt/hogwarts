@@ -96,7 +96,7 @@ const { schoolId, subdomain } = await getTenantContext()
 
 1. **Generic field names only** - `title`, `body`, `name`, `description` (never `titleAr`, `nameEn`)
 2. **`lang` field** - Every content model has `lang String @default("ar")`
-3. **On-demand translation** - Use `getText()` from `@/components/translation/display`
+3. **On-demand translation** - Batched `localize(model, rows)` from `@/components/translation/localize` for lists; `getText()` for single values (NEVER in loops); `after(() => prewarm(...))` on writes
 4. **Translation** - Translated strings cached in DB
 5. **School's preferred language** - `School.preferredLanguage` determines default storage language
 6. **UI constants** - Use generic `label` with primary language value (never `labelAr`/`labelEn`)

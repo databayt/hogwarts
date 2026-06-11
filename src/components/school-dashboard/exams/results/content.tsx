@@ -16,8 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 import { BatchIssueDialog } from "../certificates/batch-issue-dialog"
 import { StudentProgress } from "../shared/student-progress"
@@ -126,57 +126,65 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       dict?.messages?.noResults ||
       (lang === "ar" ? "لا توجد نتائج بعد" : "No results yet")
 
-    // Pre-render all result cards (await must be at top level, not inside JSX .map)
-    const allResultCards = await Promise.all(
-      results.map(async (result) => {
-        const name = result.exam.subject?.name
-          ? await getText(
-              result.exam.subject.name,
-              (result.exam.subject.lang || "ar") as Lang,
-              lang,
-              schoolId!
-            )
-          : ""
+    // Batched: localize exam titles + getLabels for subject names in one pass.
+    const localizedResults = await localize(
+      "Exam",
+      results.map((r) => ({ id: r.id, title: r.exam.title })),
+      { schoolId }
+    )
+    const examTitleById = new Map(localizedResults.map((r) => [r.id, r.title]))
+    const subjectLabels = await getLabels(
+      results.map((r) => r.exam.subject?.name).filter(Boolean) as string[],
+      lang === "en" ? "en" : "ar",
+      schoolId!
+    )
 
-        return (
-          <Card key={result.id}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <p className="font-medium">{result.exam.title}</p>
-                <p className="text-muted-foreground text-sm">
-                  {role === "GUARDIAN" &&
-                    `${result.student.firstName} ${result.student.lastName} - `}
-                  {name} - {format(result.exam.examDate, "MMM d, yyyy")}
+    // Pre-render all result cards (await must be at top level, not inside JSX .map)
+    const allResultCards = results.map((result) => {
+      const name = result.exam.subject?.name
+        ? (subjectLabels.get(result.exam.subject.name) ??
+          result.exam.subject.name)
+        : ""
+      const examTitle = examTitleById.get(result.id) ?? result.exam.title
+
+      return (
+        <Card key={result.id}>
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="font-medium">{examTitle}</p>
+              <p className="text-muted-foreground text-sm">
+                {role === "GUARDIAN" &&
+                  `${result.student.firstName} ${result.student.lastName} - `}
+                {name} - {format(result.exam.examDate, "MMM d, yyyy")}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-end">
+                <p className="text-2xl font-bold">
+                  {result.percentage.toFixed(0)}%
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {result.marksObtained}/{result.exam.totalMarks}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-end">
-                  <p className="text-2xl font-bold">
-                    {result.percentage.toFixed(0)}%
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {result.marksObtained}/{result.exam.totalMarks}
-                  </p>
-                </div>
-                {result.grade && (
-                  <Badge
-                    variant={
-                      result.percentage >= 80
-                        ? "default"
-                        : result.percentage >= 50
-                          ? "secondary"
-                          : "destructive"
-                    }
-                  >
-                    {result.grade}
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })
-    )
+              {result.grade && (
+                <Badge
+                  variant={
+                    result.percentage >= 80
+                      ? "default"
+                      : result.percentage >= 50
+                        ? "secondary"
+                        : "destructive"
+                  }
+                >
+                  {result.grade}
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )
+    })
 
     // Build a map of studentId -> rendered cards for guardian child tabs
     const cardsByStudent = new Map<string, React.ReactNode[]>()
@@ -304,38 +312,48 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
       take: 20,
     })
 
-    examsWithResults = await Promise.all(
-      completedExams.map(async (exam) => {
-        const totalStudents = exam.examResults.length
-        const presentResults = exam.examResults.filter((r) => !r.isAbsent)
-        const averagePercentage =
-          presentResults.length > 0
-            ? presentResults.reduce((sum, r) => sum + r.percentage, 0) /
-              presentResults.length
-            : null
-
-        return {
-          id: exam.id,
-          title: exam.title,
-          examDate: exam.examDate,
-          className: await getText(
-            exam.class.name,
-            (exam.class.lang || "ar") as Lang,
-            lang,
-            schoolId!
-          ),
-          name: await getText(
-            exam.subject.name,
-            (exam.subject.lang || "ar") as Lang,
-            lang,
-            schoolId!
-          ),
-          totalStudents,
-          resultsGenerated: totalStudents,
-          averagePercentage,
-        }
-      })
+    // Batched label translation for class + subject names.
+    const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
+    const classLabels = await getLabels(
+      completedExams.map((e) => e.class.name).filter(Boolean) as string[],
+      displayLang,
+      schoolId!
     )
+    const subjectLabelsAdmin = await getLabels(
+      completedExams.map((e) => e.subject.name).filter(Boolean) as string[],
+      displayLang,
+      schoolId!
+    )
+    // Batched exam-title localization (Exam is CATALOG_GLOBAL — schoolId from reader).
+    const localizedExamTitles = await localize(
+      "Exam",
+      completedExams.map((e) => ({ id: e.id, title: e.title })),
+      { schoolId }
+    )
+    const examTitleByIdAdmin = new Map(
+      localizedExamTitles.map((r) => [r.id, r.title])
+    )
+
+    examsWithResults = completedExams.map((exam) => {
+      const totalStudents = exam.examResults.length
+      const presentResults = exam.examResults.filter((r) => !r.isAbsent)
+      const averagePercentage =
+        presentResults.length > 0
+          ? presentResults.reduce((sum, r) => sum + r.percentage, 0) /
+            presentResults.length
+          : null
+
+      return {
+        id: exam.id,
+        title: examTitleByIdAdmin.get(exam.id) ?? exam.title,
+        examDate: exam.examDate,
+        className: classLabels.get(exam.class.name) ?? exam.class.name,
+        name: subjectLabelsAdmin.get(exam.subject.name) ?? exam.subject.name,
+        totalStudents,
+        resultsGenerated: totalStudents,
+        averagePercentage,
+      }
+    })
   }
 
   const r = dictionary?.results

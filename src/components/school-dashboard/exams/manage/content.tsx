@@ -9,8 +9,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 import { type ExamRow } from "./columns"
 import { examsSearchParams } from "./list-params"
@@ -70,36 +70,44 @@ export default async function ExamsContent({
       db.schoolExam.count({ where }),
     ])
 
-    data = await Promise.all(
-      rows.map(async (e) => ({
-        id: e.id,
-        title: e.title,
-        className: e.class?.name
-          ? await getText(
-              e.class.name,
-              (e.class.lang || "ar") as Lang,
-              lang,
-              schoolId!
-            )
-          : "Unknown",
-        name: e.subject?.name
-          ? await getText(
-              e.subject.name,
-              (e.subject.lang || "ar") as Lang,
-              lang,
-              schoolId!
-            )
-          : "Unknown",
-        examDate: e.examDate.toISOString(),
-        startTime: e.startTime,
-        endTime: e.endTime,
-        duration: e.duration,
-        totalMarks: e.totalMarks,
-        examType: e.examType,
-        status: e.status,
-        createdAt: e.createdAt.toISOString(),
-      }))
-    )
+    const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
+    const [classLabels, subjectLabels, localizedTitles] = await Promise.all([
+      getLabels(
+        rows.map((e) => e.class?.name).filter(Boolean) as string[],
+        displayLang,
+        schoolId!
+      ),
+      getLabels(
+        rows.map((e) => e.subject?.name).filter(Boolean) as string[],
+        displayLang,
+        schoolId!
+      ),
+      localize(
+        "Exam",
+        rows.map((e) => ({ id: e.id, title: e.title })),
+        { schoolId }
+      ),
+    ])
+    const examTitleById = new Map(localizedTitles.map((r) => [r.id, r.title]))
+
+    data = rows.map((e) => ({
+      id: e.id,
+      title: examTitleById.get(e.id) ?? e.title,
+      className: e.class?.name
+        ? (classLabels.get(e.class.name) ?? e.class.name)
+        : "Unknown",
+      name: e.subject?.name
+        ? (subjectLabels.get(e.subject.name) ?? e.subject.name)
+        : "Unknown",
+      examDate: e.examDate.toISOString(),
+      startTime: e.startTime,
+      endTime: e.endTime,
+      duration: e.duration,
+      totalMarks: e.totalMarks,
+      examType: e.examType,
+      status: e.status,
+      createdAt: e.createdAt.toISOString(),
+    }))
     total = count
   }
 

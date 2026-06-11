@@ -2,10 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { after } from "next/server"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { contentSchema, type ContentFormData } from "./validation"
 
@@ -71,6 +74,14 @@ export async function updateAnnouncementContent(
         priority: parsed.priority ?? "normal",
       },
     })
+
+    after(() =>
+      prewarm(
+        "Announcement",
+        { id: announcementId, title: parsed.title, body: parsed.body },
+        { schoolId }
+      )
+    )
 
     return { success: true }
   } catch (error) {

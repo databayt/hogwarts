@@ -14,7 +14,8 @@ import { getTargetAudiences } from "@/components/school-dashboard/listings/event
 import { eventsSearchParams } from "@/components/school-dashboard/listings/events/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/events/permissions"
 import { EventsTable } from "@/components/school-dashboard/listings/events/table"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { search } from "@/components/translation/search"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -34,17 +35,37 @@ export default async function EventsContent({
   let total = 0
 
   if (schoolId) {
+    // Bilingual search: queries in either language match content stored in
+    // the other language via the translation cache — no API cost.
+    const school =
+      sp.title || sp.location
+        ? await db.school.findUnique({
+            where: { id: schoolId },
+            select: { preferredLanguage: true },
+          })
+        : null
+    const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+    const displayLang = lang === "en" ? "en" : "ar"
+
+    const [titleConditions, locationConditions] = await Promise.all([
+      sp.title
+        ? search(sp.title, ["title"], schoolId, storageLang, displayLang)
+        : Promise.resolve(null),
+      sp.location
+        ? search(sp.location, ["location"], schoolId, storageLang, displayLang)
+        : Promise.resolve(null),
+    ])
+
+    const andClauses: object[] = []
+    if (titleConditions) andClauses.push({ OR: titleConditions })
+    if (locationConditions) andClauses.push({ OR: locationConditions })
+
     const where: any = {
       schoolId,
-      ...(sp.title
-        ? { title: { contains: sp.title, mode: "insensitive" } }
-        : {}),
+      ...(andClauses.length ? { AND: andClauses } : {}),
       ...(sp.eventType ? { eventType: sp.eventType } : {}),
       ...(sp.status ? { status: sp.status } : {}),
       ...(sp.eventDate ? { eventDate: new Date(sp.eventDate) } : {}),
-      ...(sp.location
-        ? { location: { contains: sp.location, mode: "insensitive" } }
-        : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
@@ -73,30 +94,30 @@ export default async function EventsContent({
       db.event.count({ where }),
     ])
 
-    data = await Promise.all(
-      rows.map(async (e: any) => ({
-        id: e.id,
-        title: await getText(e.title, e.lang || "ar", lang, schoolId!),
-        eventType: e.eventType,
-        eventDate: (e.eventDate as Date).toISOString(),
-        startTime: e.startTime,
-        endTime: e.endTime,
-        location: e.location
-          ? await getText(e.location, e.lang || "ar", lang, schoolId!)
-          : dictionary?.events?.locationTBD || "TBD",
-        organizer: e.organizer
-          ? await getText(e.organizer, e.lang || "ar", lang, schoolId!)
-          : dictionary?.events?.organizerTBD || "TBD",
-        targetAudience: e.targetAudience
-          ? (audienceMap[e.targetAudience] ?? e.targetAudience)
-          : (dictionary?.events?.audienceTBD ?? "All"),
-        maxAttendees: e.maxAttendees,
-        currentAttendees: e.currentAttendees,
-        status: e.status,
-        isPublic: e.isPublic,
-        createdAt: (e.createdAt as Date).toISOString(),
-      }))
-    )
+    // ONE batched translation pass — replaces 3× getText per row.
+    const localizedRows = await localize("Event", rows as any[], {
+      schoolId,
+      lang: displayLang,
+    })
+
+    data = localizedRows.map((e: any) => ({
+      id: e.id,
+      title: e.title,
+      eventType: e.eventType,
+      eventDate: (e.eventDate as Date).toISOString(),
+      startTime: e.startTime,
+      endTime: e.endTime,
+      location: e.location ?? dictionary?.events?.locationTBD ?? "TBD",
+      organizer: e.organizer ?? dictionary?.events?.organizerTBD ?? "TBD",
+      targetAudience: e.targetAudience
+        ? (audienceMap[e.targetAudience] ?? e.targetAudience)
+        : (dictionary?.events?.audienceTBD ?? "All"),
+      maxAttendees: e.maxAttendees,
+      currentAttendees: e.currentAttendees,
+      status: e.status,
+      isPublic: e.isPublic,
+      createdAt: (e.createdAt as Date).toISOString(),
+    }))
     total = count as number
   }
 

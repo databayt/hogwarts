@@ -10,7 +10,8 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
-import { getText } from "@/components/translation/display"
+import { getLabels, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
 import { bulkUpdateSubjectRoomsSchema } from "./validation"
@@ -137,65 +138,86 @@ export async function getSubjectRoomAssignments(
         orderBy: [{ gradeId: "desc" }, { roomName: "asc" }],
       })
 
-      // Translate everything
-      const translatedClasses = await Promise.all(
-        classes.map(async (c) => ({
-          classId: c.id,
-          name: await getText(
-            c.subject.name,
-            (c.subject.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          ),
-          teacherName: [c.teacher.firstName, c.teacher.lastName]
-            .filter(Boolean)
-            .join(" "),
-          currentRoomId: c.classroomId,
-          currentRoomName: await getText(
-            c.classroom.roomName,
-            (c.classroom.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          ),
-          currentRoomType: await getText(
-            c.classroom.classroomType.name,
-            (c.classroom.classroomType.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          ),
-          weeklyPeriods: weeklyPeriodsMap.get(c.subject.id ?? "") ?? null,
-        }))
-      )
+      // ONE batched translation pass per grade: subject/room/type labels via
+      // deduped getLabels; teacher names via getNames — replaces 6×getText N+1.
+      const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+      const [
+        subjectLabels,
+        roomNameLabels,
+        roomTypeLabels,
+        roomNameLabels2,
+        roomTypeLabels2,
+        gradeLabels,
+        teacherNames,
+      ] = await Promise.all([
+        getLabels(
+          classes.map((c) => c.subject.name),
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          classes.map((c) => c.classroom.roomName),
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          classes.map((c) => c.classroom.classroomType.name),
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          availableRooms.map((r) => r.roomName),
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          availableRooms.map((r) => r.classroomType.name),
+          displayLang,
+          schoolId
+        ),
+        getLabels([grade.name], displayLang, schoolId),
+        getNames(
+          classes.filter((c) => c.teacher),
+          (c) => c.teacher,
+          displayLang,
+          schoolId
+        ),
+      ])
 
-      const translatedRooms = await Promise.all(
-        availableRooms.map(async (r) => ({
+      const translatedClasses = classes.map((c) => {
+        const rawSubject = c.subject.name
+        const rawRoom = c.classroom.roomName
+        const rawType = c.classroom.classroomType.name
+        const rawTeacher = fullName(c.teacher)
+        return {
+          classId: c.id,
+          name: subjectLabels.get(rawSubject) ?? rawSubject,
+          teacherName: rawTeacher
+            ? (teacherNames.get(rawTeacher) ?? rawTeacher)
+            : "",
+          currentRoomId: c.classroomId,
+          currentRoomName: roomNameLabels.get(rawRoom) ?? rawRoom,
+          currentRoomType: roomTypeLabels.get(rawType) ?? rawType,
+          weeklyPeriods: weeklyPeriodsMap.get(c.subject.id ?? "") ?? null,
+        }
+      })
+
+      const translatedRooms = availableRooms.map((r) => {
+        const rawRoom = r.roomName
+        const rawType = r.classroomType.name
+        return {
           id: r.id,
-          roomName: await getText(
-            r.roomName,
-            (r.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          ),
-          typeName: await getText(
-            r.classroomType.name,
-            (r.classroomType.lang as "ar" | "en") || "ar",
-            lang,
-            schoolId
-          ),
+          roomName: roomNameLabels2.get(rawRoom) ?? rawRoom,
+          typeName: roomTypeLabels2.get(rawType) ?? rawType,
           isShared: r.gradeId === null,
           capacity: r.capacity,
           assignedCount: r._count.classes,
-        }))
-      )
+        }
+      })
 
       result.push({
         gradeId: grade.id,
-        gradeName: await getText(
-          grade.name,
-          (grade.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId
-        ),
+        gradeName: gradeLabels.get(grade.name) ?? grade.name,
         gradeNumber: grade.gradeNumber,
         classes: translatedClasses,
         availableRooms: translatedRooms,

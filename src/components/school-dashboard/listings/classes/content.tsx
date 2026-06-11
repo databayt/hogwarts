@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -12,7 +13,10 @@ import { type ClassRow } from "@/components/school-dashboard/listings/classes/co
 import { classesSearchParams } from "@/components/school-dashboard/listings/classes/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/classes/permissions"
 import { ClassesTable } from "@/components/school-dashboard/listings/classes/table"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels, getNames } from "@/components/translation/person"
+import { search } from "@/components/translation/search"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -32,9 +36,26 @@ export default async function ClassesContent({
   let total = 0
   const classModel = getModel("class")
   if (schoolId && classModel) {
+    // Bilingual search: an English query matches Arabic-stored class names
+    // (and vice versa) via the translation cache — no API cost.
+    let nameFilter: object = {}
+    if (sp.name) {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const nameConditions = await search(
+        sp.name,
+        ["name"],
+        schoolId,
+        (school?.preferredLanguage as "ar" | "en") || "ar",
+        lang === "en" ? "en" : "ar"
+      )
+      nameFilter = { OR: nameConditions }
+    }
     const where: any = {
       schoolId,
-      ...(sp.name ? { name: { contains: sp.name, mode: "insensitive" } } : {}),
+      ...nameFilter,
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
       ...(sp.teacherId ? { teacherId: sp.teacherId } : {}),
       ...(sp.termId ? { termId: sp.termId } : {}),
@@ -85,48 +106,55 @@ export default async function ClassesContent({
       }),
       classModel.count({ where }),
     ])
-    data = await Promise.all(
-      rows.map(async (c: any) => ({
+    // ONE batched translation pass for the page: class names via localize,
+    // subject/grade labels via deduped getLabels, teacher names via getNames
+    // (replaces the per-row 4×getText N+1).
+    const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+    const [localizedRows, subjectLabels, gradeLabels, teacherNames] =
+      await Promise.all([
+        localize("Class", rows as any[], { schoolId, lang: displayLang }),
+        getLabels(
+          rows.map((c: any) => c.subject?.name),
+          displayLang,
+          schoolId
+        ),
+        getLabels(
+          rows.map((c: any) => c.grade?.name),
+          displayLang,
+          schoolId
+        ),
+        getNames(
+          rows.filter((c: any) => c.teacher),
+          (c: any) => c.teacher,
+          displayLang,
+          schoolId
+        ),
+      ])
+    data = localizedRows.map((c: any) => {
+      const rawSubject = c.subject?.name || "Unknown"
+      const rawGrade = c.grade?.name || ""
+      const rawTeacher = c.teacher ? fullName(c.teacher) : ""
+      return {
         id: c.id,
-        name: await getText(
-          c.name,
-          (c.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-        subjectName: await getText(
-          c.subject?.name || "Unknown",
-          (c.subject?.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-        teacherName: c.teacher
-          ? await getText(
-              `${c.teacher.firstName} ${c.teacher.lastName}`,
-              (c.teacher.lang as "ar" | "en") || "ar",
-              lang,
-              schoolId!
-            )
+        name: c.name,
+        subjectName: subjectLabels.get(rawSubject) ?? rawSubject,
+        teacherName: rawTeacher
+          ? (teacherNames.get(rawTeacher) ?? rawTeacher)
           : "-",
         termName: c.term?.termNumber
           ? lang === "ar"
             ? `الفصل ${c.term.termNumber}`
             : `Term ${c.term.termNumber}`
           : "-",
-        gradeName: await getText(
-          c.grade?.name || "",
-          (c.grade?.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
+        gradeName: gradeLabels.get(rawGrade) ?? rawGrade,
         courseCode: c.courseCode || null,
         credits: c.credits || null,
         evaluationType: c.evaluationType || "NORMAL",
         enrolledStudents: c._count?.studentClasses || 0,
         maxCapacity: c.maxCapacity || 50,
         createdAt: (c.createdAt as Date).toISOString(),
-      }))
-    )
+      }
+    })
     total = count as number
   }
   return (

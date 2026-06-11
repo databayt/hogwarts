@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 import type { Lang } from "@/components/translation/types"
 
 import { BookPicker } from "./book-picker"
@@ -78,23 +78,16 @@ export async function LibraryCatalogContent({ lang }: Props) {
 
   const selectionMap = new Set(selections.map((s) => s.catalogBookId))
 
-  const booksWithSelection = await Promise.all(
-    catalogBooks.map(async ({ lang: contentLang, ...b }) => {
-      const srcLang = (contentLang || "ar") as Lang
-      return {
-        ...b,
-        title: await getText(b.title, srcLang, lang, schoolId!),
-        author: b.author
-          ? await getText(b.author, srcLang, lang, schoolId!)
-          : b.author,
-        genre: b.genre
-          ? await getText(b.genre, srcLang, lang, schoolId!)
-          : b.genre,
-        description: b.description
-          ? await getText(b.description, srcLang, lang, schoolId!)
-          : b.description,
-        isSelected: selectionMap.has(b.id),
-      }
+  // Batched translation: one localize() call for all books (one DB round-trip).
+  const localizedBooks = await localize("Book", catalogBooks, {
+    schoolId,
+    lang: lang as Lang,
+  })
+
+  const booksWithSelection = localizedBooks.map(
+    ({ lang: _contentLang, ...b }) => ({
+      ...b,
+      isSelected: selectionMap.has(b.id),
     })
   )
 

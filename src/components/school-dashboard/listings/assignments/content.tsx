@@ -3,6 +3,7 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { db } from "@/lib/db"
 import { getModel } from "@/lib/prisma-guards"
 import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -14,8 +15,8 @@ import { assignmentsSearchParams } from "@/components/school-dashboard/listings/
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/assignments/permissions"
 import { AssignmentsTable } from "@/components/school-dashboard/listings/assignments/table"
 import { Shell as PageContainer } from "@/components/table/shell"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { localize } from "@/components/translation/localize"
+import { search } from "@/components/translation/search"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -35,11 +36,25 @@ export default async function AssignmentsContent({
   let total = 0
   const assignmentModel = getModel("assignment")
   if (schoolId && assignmentModel) {
+    // Bilingual title search: matches storage lang and its cached translations.
+    let titleFilter: object = {}
+    if (sp.title) {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const titleConditions = await search(
+        sp.title,
+        ["title"],
+        schoolId,
+        (school?.preferredLanguage as "ar" | "en") || "ar",
+        lang === "en" ? "en" : "ar"
+      )
+      titleFilter = { OR: titleConditions }
+    }
     const where: any = {
       schoolId,
-      ...(sp.title
-        ? { title: { contains: sp.title, mode: "insensitive" } }
-        : {}),
+      ...titleFilter,
       ...(sp.type ? { type: sp.type } : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
     }
@@ -65,21 +80,17 @@ export default async function AssignmentsContent({
       }),
       assignmentModel.count({ where }),
     ])
-    data = await Promise.all(
-      rows.map(async (a: any) => ({
-        id: a.id,
-        title: await getText(
-          a.title,
-          detectLang(a.title || ""),
-          lang,
-          schoolId!
-        ),
-        type: a.type,
-        totalPoints: a.totalPoints,
-        dueDate: (a.dueDate as Date).toISOString(),
-        createdAt: (a.createdAt as Date).toISOString(),
-      }))
-    )
+    // Batched title localization — ONE findMany for all rows.
+    const localized = await localize("Assignment", rows, { schoolId })
+    const titleById = new Map(localized.map((r: any) => [r.id, r.title]))
+    data = rows.map((a: any) => ({
+      id: a.id,
+      title: titleById.get(a.id) ?? a.title,
+      type: a.type,
+      totalPoints: a.totalPoints,
+      dueDate: (a.dueDate as Date).toISOString(),
+      createdAt: (a.createdAt as Date).toISOString(),
+    }))
     total = count as number
   }
   return (

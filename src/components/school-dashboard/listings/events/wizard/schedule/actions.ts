@@ -2,10 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { after } from "next/server"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { scheduleSchema, type ScheduleFormData } from "./validation"
 
@@ -64,6 +67,16 @@ export async function updateEventSchedule(
         location: parsed.location ?? null,
       },
     })
+
+    if (parsed.location) {
+      after(() =>
+        prewarm(
+          "Event",
+          { id: eventId, location: parsed.location! },
+          { schoolId }
+        )
+      )
+    }
 
     return { success: true }
   } catch (error) {

@@ -20,15 +20,22 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getChildGrades } from "./actions"
 
 interface Props {
   studentId: string
   lang?: Locale
+  dictionary?: Dictionary
 }
 
-export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
+export async function ChildGradesView({
+  studentId,
+  lang = "ar",
+  dictionary,
+}: Props) {
+  const t = dictionary?.parentPortal?.grades
   const { grades } = await getChildGrades({ studentId })
 
   const { examResults, classScores } = grades
@@ -37,38 +44,54 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
     <div className="space-y-6">
       <Tabs defaultValue="exams" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="exams">Exam Results</TabsTrigger>
-          <TabsTrigger value="classes">Class Scores</TabsTrigger>
+          <TabsTrigger value="exams">
+            {t?.tabExams ?? "Exam Results"}
+          </TabsTrigger>
+          <TabsTrigger value="classes">
+            {t?.tabClasses ?? "Class Scores"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="exams" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Exam Results</CardTitle>
+              <CardTitle>{t?.examResults ?? "Exam Results"}</CardTitle>
               <CardDescription>
                 {examResults.length > 0
-                  ? `Showing ${examResults.length} exam result${examResults.length !== 1 ? "s" : ""}`
-                  : "No exam results available"}
+                  ? (t?.showingExams?.replace(
+                      "{count}",
+                      String(examResults.length)
+                    ) ??
+                    `Showing ${examResults.length} exam result${examResults.length !== 1 ? "s" : ""}`)
+                  : (t?.noExamResults ?? "No exam results available")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {examResults.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center">
-                  No exam results recorded yet
+                  {t?.noExamResultsRecorded ?? "No exam results recorded yet"}
                 </p>
               ) : (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Exam Title</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="w-[120px]">Marks</TableHead>
-                        <TableHead className="w-[120px]">Percentage</TableHead>
-                        <TableHead className="w-[100px]">Grade</TableHead>
-                        <TableHead className="w-[100px]">Status</TableHead>
+                        <TableHead>{t?.colExamTitle ?? "Exam Title"}</TableHead>
+                        <TableHead>{t?.colSubject ?? "Subject"}</TableHead>
+                        <TableHead>{t?.colDate ?? "Date"}</TableHead>
+                        <TableHead>{t?.colType ?? "Type"}</TableHead>
+                        <TableHead className="w-[120px]">
+                          {t?.colMarks ?? "Marks"}
+                        </TableHead>
+                        <TableHead className="w-[120px]">
+                          {t?.colPercentage ?? "Percentage"}
+                        </TableHead>
+                        <TableHead className="w-[100px]">
+                          {t?.colGrade ?? "Grade"}
+                        </TableHead>
+                        <TableHead className="w-[100px]">
+                          {t?.colStatus ?? "Status"}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -111,13 +134,17 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
                           </TableCell>
                           <TableCell>
                             {result.isAbsent ? (
-                              <Badge variant="destructive">Absent</Badge>
+                              <Badge variant="destructive">
+                                {t?.statusAbsent ?? "Absent"}
+                              </Badge>
                             ) : result.percentage >= 50 ? (
                               <Badge variant="default" className="bg-green-600">
-                                Pass
+                                {t?.statusPass ?? "Pass"}
                               </Badge>
                             ) : (
-                              <Badge variant="destructive">Fail</Badge>
+                              <Badge variant="destructive">
+                                {t?.statusFail ?? "Fail"}
+                              </Badge>
                             )}
                           </TableCell>
                         </TableRow>
@@ -133,26 +160,32 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
         <TabsContent value="classes" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Class Scores</CardTitle>
+              <CardTitle>{t?.classScores ?? "Class Scores"}</CardTitle>
               <CardDescription>
                 {classScores.length > 0
-                  ? `Showing ${classScores.length} class${classScores.length !== 1 ? "es" : ""}`
-                  : "No class scores available"}
+                  ? (t?.showingClasses?.replace(
+                      "{count}",
+                      String(classScores.length)
+                    ) ??
+                    `Showing ${classScores.length} class${classScores.length !== 1 ? "es" : ""}`)
+                  : (t?.noClassScores ?? "No class scores available")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {classScores.length === 0 ? (
                 <p className="text-muted-foreground py-8 text-center">
-                  No class scores recorded yet
+                  {t?.noClassScoresRecorded ?? "No class scores recorded yet"}
                 </p>
               ) : (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Class Name</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead className="w-[150px]">Score</TableHead>
+                        <TableHead>{t?.colClassName ?? "Class Name"}</TableHead>
+                        <TableHead>{t?.colSubject ?? "Subject"}</TableHead>
+                        <TableHead className="w-[150px]">
+                          {t?.colScore ?? "Score"}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -167,7 +200,7 @@ export async function ChildGradesView({ studentId, lang = "ar" }: Props) {
                               <span className="font-medium">{score.score}</span>
                             ) : (
                               <span className="text-muted-foreground">
-                                Not graded
+                                {t?.notGraded ?? "Not graded"}
                               </span>
                             )}
                           </TableCell>

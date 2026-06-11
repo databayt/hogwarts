@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import type {
   AnnouncementPriority,
@@ -13,6 +14,7 @@ import type {
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 export interface TemplateInput {
   name: string
@@ -111,6 +113,10 @@ export async function createTemplate(input: TemplateInput) {
       },
     })
 
+    after(() =>
+      prewarm("AnnouncementTemplate", template, { schoolId: schoolId! })
+    )
+
     revalidatePath("/announcements")
     return { success: true, data: { id: template.id } }
   } catch (error) {
@@ -167,6 +173,20 @@ export async function updateTemplate(
         role: input.role,
       },
     })
+
+    after(() =>
+      prewarm(
+        "AnnouncementTemplate",
+        {
+          id,
+          name: input.name,
+          description: input.description,
+          title: input.title,
+          body: input.body,
+        },
+        { schoolId: schoolId! }
+      )
+    )
 
     revalidatePath("/announcements")
     return { success: true }

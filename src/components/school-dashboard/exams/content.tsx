@@ -59,8 +59,8 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { localizeOne } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 import { ExamCardFlip } from "./exam-card-flip"
 import GuardianExamsContent from "./guardian-content"
@@ -176,23 +176,24 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       },
     })
 
-    // Translate nextExam relation fields
+    // Translate exam title (localize) + relation labels (one deduped batch)
     if (nextExam) {
-      if (nextExam.subject?.name) {
-        nextExam.subject.name = await getText(
-          nextExam.subject.name,
-          (nextExam.subject.lang || "ar") as Lang,
+      const [localized, labels] = await Promise.all([
+        localizeOne("Exam", nextExam, { schoolId, lang }),
+        getLabels(
+          [nextExam.subject?.name, nextExam.class?.name],
           lang,
-          schoolId!
-        )
+          schoolId
+        ),
+      ])
+      if (localized) nextExam = localized
+      if (nextExam.subject?.name) {
+        nextExam.subject.name =
+          labels.get(nextExam.subject.name) ?? nextExam.subject.name
       }
       if (nextExam.class?.name) {
-        nextExam.class.name = await getText(
-          nextExam.class.name,
-          (nextExam.class.lang || "ar") as Lang,
-          lang,
-          schoolId!
-        )
+        nextExam.class.name =
+          labels.get(nextExam.class.name) ?? nextExam.class.name
       }
     }
   }

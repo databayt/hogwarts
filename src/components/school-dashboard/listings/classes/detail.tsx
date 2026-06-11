@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { fullName } from "@/components/translation/util"
 
 import type { ClassDetailResult, ClassTeacherRow } from "./actions"
 import { SubjectTeachers } from "./subject-teachers"
@@ -115,7 +116,7 @@ export function ClassDetailContent({
   }
 
   const teacherName = classData.teacher
-    ? `${classData.teacher.firstName} ${classData.teacher.lastName}`
+    ? fullName(classData.teacher)
     : t.unknown
 
   const name = classData.subject?.name || t.unknown

@@ -55,6 +55,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { deleteResult } from "@/components/school-dashboard/listings/grades/actions"
+import { fullName } from "@/components/translation/util"
 
 import { generateGradeCertificate } from "./certificate/actions"
 import type {
@@ -129,7 +130,7 @@ export function GradeDetailContent({
 
   // Format student name
   const studentName = grade.student
-    ? `${grade.student.firstName} ${grade.student.lastName}`
+    ? fullName(grade.student)
     : t.unknown || "Unknown"
 
   // Get initials for avatar
