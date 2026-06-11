@@ -10,8 +10,7 @@ import type { CampaignRow } from "@/components/school-dashboard/admission/campai
 import { CampaignsTable } from "@/components/school-dashboard/admission/campaigns-table"
 import { campaignsSearchParams } from "@/components/school-dashboard/admission/list-params"
 import { getCampaignsList } from "@/components/school-dashboard/admission/queries"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -42,26 +41,32 @@ export default async function CampaignsContent({
         sort: sp.sort,
       })
 
-      data = await Promise.all(
-        rows.map(async (c) => ({
-          id: c.id,
-          name: await getText(c.name, detectLang(c.name), lang, schoolId!),
-          academicYear: c.academicYear,
-          startDate: c.startDate
-            ? new Date(c.startDate).toISOString()
-            : new Date().toISOString(),
-          endDate: c.endDate
-            ? new Date(c.endDate).toISOString()
-            : new Date().toISOString(),
-          status: c.status,
-          totalSeats: c.totalSeats,
-          applicationFee: c.applicationFee?.toString() ?? null,
-          applicationsCount: c._count.applications,
-          createdAt: c.createdAt
-            ? new Date(c.createdAt).toISOString()
-            : new Date().toISOString(),
-        }))
+      // Resolve campaign names in ONE batched, deduped pass (getLabels) —
+      // replaces the per-row getText N+1.
+      const labels = await getLabels(
+        rows.map((c) => c.name),
+        lang,
+        schoolId
       )
+
+      data = rows.map((c) => ({
+        id: c.id,
+        name: labels.get(c.name) ?? c.name,
+        academicYear: c.academicYear,
+        startDate: c.startDate
+          ? new Date(c.startDate).toISOString()
+          : new Date().toISOString(),
+        endDate: c.endDate
+          ? new Date(c.endDate).toISOString()
+          : new Date().toISOString(),
+        status: c.status,
+        totalSeats: c.totalSeats,
+        applicationFee: c.applicationFee?.toString() ?? null,
+        applicationsCount: c._count.applications,
+        createdAt: c.createdAt
+          ? new Date(c.createdAt).toISOString()
+          : new Date().toISOString(),
+      }))
 
       total = count
     } catch (error) {

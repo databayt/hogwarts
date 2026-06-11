@@ -10,8 +10,7 @@ import type { ApplicationRow } from "@/components/school-dashboard/admission/app
 import { ApplicationsTable } from "@/components/school-dashboard/admission/applications-table"
 import { applicationsSearchParams } from "@/components/school-dashboard/admission/list-params"
 import { getApplicationsList } from "@/components/school-dashboard/admission/queries"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -43,16 +42,20 @@ export default async function ApplicationsContent({
         sort: sp.sort,
       })
 
-      data = await Promise.all(
-        rows.map(async (a) => ({
+      // Resolve applicant + campaign names in ONE batched, deduped pass
+      // (getLabels) — replaces the per-row 2×getText N+1.
+      const labels = await getLabels(
+        rows.flatMap((a) => [`${a.firstName} ${a.lastName}`, a.campaign.name]),
+        lang,
+        schoolId
+      )
+
+      data = rows.map((a) => {
+        const applicantName = `${a.firstName} ${a.lastName}`
+        return {
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: await getText(
-            `${a.firstName} ${a.lastName}`,
-            detectLang(`${a.firstName} ${a.lastName}`),
-            lang,
-            schoolId!
-          ),
+          applicantName: labels.get(applicantName) ?? applicantName,
           firstName: a.firstName,
           lastName: a.lastName,
           email: a.email,
@@ -62,12 +65,7 @@ export default async function ApplicationsContent({
           meritScore: a.meritScore?.toString() ?? null,
           meritRank: a.meritRank,
           applicationFeePaid: a.applicationFeePaid,
-          campaignName: await getText(
-            a.campaign.name,
-            detectLang(a.campaign.name),
-            lang,
-            schoolId!
-          ),
+          campaignName: labels.get(a.campaign.name) ?? a.campaign.name,
           campaignId: a.campaign.id,
           submittedAt: a.submittedAt
             ? new Date(a.submittedAt).toISOString()
@@ -75,8 +73,8 @@ export default async function ApplicationsContent({
           createdAt: a.createdAt
             ? new Date(a.createdAt).toISOString()
             : new Date().toISOString(),
-        }))
-      )
+        }
+      })
 
       total = count
     } catch (error) {

@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   dictionary: Dictionary
@@ -310,16 +310,17 @@ export default async function GuardianExamsContent({
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {await Promise.all(
-              upcomingExams.map(async (exam) => {
+            {await (async () => {
+              // Batched, deduped subject-name translation (no per-row N+1).
+              const subjectLabels = await getLabels(
+                upcomingExams.map((e) => e.subject?.name),
+                lang,
+                schoolId!
+              )
+              return upcomingExams.map((exam) => {
                 const daysUntil = differenceInDays(exam.examDate, today)
                 const name = exam.subject?.name
-                  ? await getText(
-                      exam.subject.name,
-                      (exam.subject.lang || "ar") as Lang,
-                      lang,
-                      schoolId!
-                    )
+                  ? (subjectLabels.get(exam.subject.name) ?? exam.subject.name)
                   : ""
 
                 return (
@@ -365,7 +366,7 @@ export default async function GuardianExamsContent({
                   </Card>
                 )
               })
-            )}
+            })()}
           </div>
         )}
       </div>
@@ -395,15 +396,17 @@ export default async function GuardianExamsContent({
           </Card>
         ) : (
           <div className="grid gap-3">
-            {await Promise.all(
-              recentResults.map(async (result) => {
+            {await (async () => {
+              // Batched, deduped subject-name translation (no per-row N+1).
+              const resultLabels = await getLabels(
+                recentResults.map((r) => r.exam.subject?.name),
+                lang,
+                schoolId!
+              )
+              return recentResults.map((result) => {
                 const name = result.exam.subject?.name
-                  ? await getText(
-                      result.exam.subject.name,
-                      (result.exam.subject.lang || "ar") as Lang,
-                      lang,
-                      schoolId!
-                    )
+                  ? (resultLabels.get(result.exam.subject.name) ??
+                    result.exam.subject.name)
                   : ""
 
                 return (
@@ -443,7 +446,7 @@ export default async function GuardianExamsContent({
                   </Card>
                 )
               })
-            )}
+            })()}
           </div>
         )}
       </div>

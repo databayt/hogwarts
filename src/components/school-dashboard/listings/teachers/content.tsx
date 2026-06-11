@@ -13,8 +13,9 @@ import { type TeacherRow } from "@/components/school-dashboard/listings/teachers
 import { teachersSearchParams } from "@/components/school-dashboard/listings/teachers/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/teachers/permissions"
 import { TeachersTable } from "@/components/school-dashboard/listings/teachers/table"
-import { getText } from "@/components/translation/display"
-import { getName } from "@/components/translation/person"
+import { localize } from "@/components/translation/localize"
+import { getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -112,45 +113,52 @@ export default async function TeachersContent({
       teacherModel.count({ where }),
     ])
 
-    // Transform to enhanced row format
-    data = await Promise.all(
-      rows.map(async (t: any) => {
-        const primaryDept = t.teacherDepartments?.[0]?.department
-        const departmentName = primaryDept
-          ? await getText(
-              primaryDept.departmentName,
-              primaryDept.lang || "ar",
-              lang,
-              schoolId!
-            )
-          : null
-
-        return {
-          id: t.id,
-          // Canonical helper: detects the actual script (robust to a null/wrong
-          // `lang` flag) and falls back to transliteration when the API is degraded.
-          name: await getName(t, lang, schoolId!),
-          firstName: t.firstName || "",
-          lastName: t.lastName || "",
-          emailAddress: t.emailAddress || "-",
-          phone: t.phoneNumbers?.[0]?.phoneNumber || null,
-          department: departmentName,
-          departmentId: primaryDept?.id || null,
-          subjectCount: t.subjectExpertise?.length || 0,
-          classCount: t.classes?.length || 0,
-          employmentStatus: t.employmentStatus || "ACTIVE",
-          employmentType: t.employmentType || "FULL_TIME",
-          hasAccount: !!t.userId,
-          userId: t.userId || null,
-          profilePhotoUrl: t.profilePhotoUrl || null,
-          joiningDate: t.joiningDate
-            ? (t.joiningDate as Date).toISOString()
-            : null,
-          wizardStep: t.wizardStep || null,
-          createdAt: (t.createdAt as Date).toISOString(),
-        }
-      })
+    // Transform to enhanced row format. ONE batched resolution per render:
+    // teacher names through getNames (compose -> detect script -> dedupe ->
+    // translate, transliterate fallback) and department names through
+    // localize() — Department is a registered model, so the whole page is a
+    // single cache findMany instead of a per-row getText/getName N+1.
+    const departments = (rows as any[])
+      .map((t: any) => t.teacherDepartments?.[0]?.department)
+      .filter(Boolean)
+    const [nameTranslations, localizedDepartments] = await Promise.all([
+      getNames(rows as any[], (t: any) => t, lang, schoolId!),
+      localize("Department", departments, { schoolId, lang }),
+    ])
+    const departmentNameById = new Map(
+      localizedDepartments.map((d: any) => [d.id, d.departmentName])
     )
+
+    data = (rows as any[]).map((t: any) => {
+      const primaryDept = t.teacherDepartments?.[0]?.department
+      const rawName = fullName(t)
+
+      return {
+        id: t.id,
+        name: nameTranslations.get(rawName) || rawName,
+        firstName: t.firstName || "",
+        lastName: t.lastName || "",
+        emailAddress: t.emailAddress || "-",
+        phone: t.phoneNumbers?.[0]?.phoneNumber || null,
+        department: primaryDept
+          ? (departmentNameById.get(primaryDept.id) ??
+            primaryDept.departmentName)
+          : null,
+        departmentId: primaryDept?.id || null,
+        subjectCount: t.subjectExpertise?.length || 0,
+        classCount: t.classes?.length || 0,
+        employmentStatus: t.employmentStatus || "ACTIVE",
+        employmentType: t.employmentType || "FULL_TIME",
+        hasAccount: !!t.userId,
+        userId: t.userId || null,
+        profilePhotoUrl: t.profilePhotoUrl || null,
+        joiningDate: t.joiningDate
+          ? (t.joiningDate as Date).toISOString()
+          : null,
+        wizardStep: t.wizardStep || null,
+        createdAt: (t.createdAt as Date).toISOString(),
+      }
+    })
     total = count as number
   }
 
