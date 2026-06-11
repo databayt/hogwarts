@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import { academicSchema, type AcademicFormData } from "./validation"
@@ -46,18 +46,19 @@ export async function getGradeOptions(
       orderBy: { gradeNumber: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(
-      schoolId,
-      locale
-    )
+    const { displayLang } = await getDisplayLocale(schoolId, locale)
 
-    const data = await Promise.all(
-      grades.map(async (g) => ({
-        value: g.id,
-        label: await getText(g.name, contentLang, displayLang, schoolId),
-        gradeNumber: g.gradeNumber,
-      }))
+    // One batched, deduped resolution for all grade names (no per-row N+1)
+    const labels = await getLabels(
+      grades.map((g) => g.name),
+      displayLang,
+      schoolId
     )
+    const data = grades.map((g) => ({
+      value: g.id,
+      label: labels.get(g.name) ?? g.name,
+      gradeNumber: g.gradeNumber,
+    }))
 
     return { success: true, data }
   } catch (error) {
@@ -82,17 +83,17 @@ export async function getStreamOptions(
       orderBy: { name: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(
-      schoolId,
-      locale
-    )
+    const { displayLang } = await getDisplayLocale(schoolId, locale)
 
-    const data = await Promise.all(
-      streams.map(async (s) => ({
-        value: s.id,
-        label: await getText(s.name, contentLang, displayLang, schoolId),
-      }))
+    const labels = await getLabels(
+      streams.map((s) => s.name),
+      displayLang,
+      schoolId
     )
+    const data = streams.map((s) => ({
+      value: s.id,
+      label: labels.get(s.name) ?? s.name,
+    }))
 
     return { success: true, data }
   } catch (error) {
@@ -117,17 +118,17 @@ export async function getSectionOptions(
       orderBy: { name: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(
-      schoolId,
-      locale
-    )
+    const { displayLang } = await getDisplayLocale(schoolId, locale)
 
-    const data = await Promise.all(
-      sections.map(async (s) => ({
-        value: s.id,
-        label: await getText(s.name, contentLang, displayLang, schoolId),
-      }))
+    const labels = await getLabels(
+      sections.map((s) => s.name),
+      displayLang,
+      schoolId
     )
+    const data = sections.map((s) => ({
+      value: s.id,
+      label: labels.get(s.name) ?? s.name,
+    }))
 
     return { success: true, data }
   } catch (error) {

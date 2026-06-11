@@ -14,7 +14,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { Shell as PageContainer } from "@/components/table/shell"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import type { BookRow } from "./book-columns"
@@ -53,23 +53,18 @@ export async function BookContent({ dictionary, lang }: Props) {
     }),
   ])
 
-  const rows: BookRow[] = await Promise.all(
-    books.map(async ({ lang: contentLang, ...b }) => ({
-      ...b,
-      title: await getText(
-        b.title,
-        (contentLang || "ar") as Lang,
-        lang,
-        "global"
-      ),
-      author: b.author
-        ? await getText(b.author, (contentLang || "ar") as Lang, lang, "global")
-        : b.author,
-      genre: b.genre
-        ? await getText(b.genre, (contentLang || "ar") as Lang, lang, "global")
-        : b.genre,
-    }))
+  // One batched, deduped resolution for titles/authors/genres (global scope)
+  const labels = await getLabels(
+    books.flatMap((b) => [b.title, b.author, b.genre]),
+    lang,
+    "global"
   )
+  const rows: BookRow[] = books.map(({ lang: _contentLang, ...b }) => ({
+    ...b,
+    title: labels.get(b.title) ?? b.title,
+    author: b.author ? (labels.get(b.author) ?? b.author) : b.author,
+    genre: b.genre ? (labels.get(b.genre) ?? b.genre) : b.genre,
+  }))
 
   return (
     <PageContainer>

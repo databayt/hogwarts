@@ -6,8 +6,7 @@ import type { Role } from "@/lib/rbac/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import { detectScript } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 import { getUIConfigForRole } from "./permissions"
 import { getStaffList } from "./queries"
@@ -71,34 +70,20 @@ export async function StaffContent({
 
   const rawData = rows.map(transformStaffToRow)
 
-  // Translate text fields for display. StaffMember has NO `lang` column, so detect
-  // each field's content language from its actual script (detectScript) rather
-  // than reading a phantom column that always resolved to "ar".
-  const data = await Promise.all(
-    rawData.map(async (row) => {
-      return {
-        ...row,
-        name: await getText(
-          row.name,
-          detectScript(row.name),
-          locale,
-          schoolId!
-        ),
-        position: await getText(
-          row.position,
-          detectScript(row.position),
-          locale,
-          schoolId!
-        ),
-        departmentName: await getText(
-          row.departmentName,
-          detectScript(row.departmentName),
-          locale,
-          schoolId!
-        ),
-      }
-    })
+  // Translate text fields for display — one batched, deduped resolution
+  // across names/positions/departments. getLabels detects each value's
+  // content language from its script (StaffMember has NO `lang` column).
+  const labels = await getLabels(
+    rawData.flatMap((row) => [row.name, row.position, row.departmentName]),
+    locale,
+    schoolId!
   )
+  const data = rawData.map((row) => ({
+    ...row,
+    name: labels.get(row.name) ?? row.name,
+    position: labels.get(row.position) ?? row.position,
+    departmentName: labels.get(row.departmentName) ?? row.departmentName,
+  }))
 
   const pageCount = Math.ceil(count / perPage)
 

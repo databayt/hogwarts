@@ -4,8 +4,7 @@
 import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { getLabels } from "@/components/translation/person"
 
 import type { SubjectRow } from "./columns"
 import { CatalogTable } from "./table"
@@ -37,27 +36,21 @@ export async function CatalogContent({ lang }: Props) {
   const totalChapters = subjects.reduce((s, sub) => s + sub.totalChapters, 0)
   const totalLessons = subjects.reduce((s, sub) => s + sub.totalLessons, 0)
 
-  const rows: SubjectRow[] = await Promise.all(
-    subjects.map(async ({ lang: contentLang, ...s }) => ({
-      ...s,
-      name: await getText(
-        s.name,
-        (contentLang || "ar") as Lang,
-        lang,
-        "global"
-      ),
-      department: s.department
-        ? await getText(
-            s.department,
-            (contentLang || "ar") as Lang,
-            lang,
-            "global"
-          )
-        : s.department,
-      levels: s.levels as string[],
-      grades: s.grades,
-    }))
+  // One batched, deduped resolution for all names/departments (global scope)
+  const labels = await getLabels(
+    subjects.flatMap((s) => [s.name, s.department]),
+    lang,
+    "global"
   )
+  const rows: SubjectRow[] = subjects.map(({ lang: _contentLang, ...s }) => ({
+    ...s,
+    name: labels.get(s.name) ?? s.name,
+    department: s.department
+      ? (labels.get(s.department) ?? s.department)
+      : s.department,
+    levels: s.levels as string[],
+    grades: s.grades,
+  }))
 
   return (
     <CatalogTable

@@ -34,8 +34,18 @@ last_audited: 2026-06-11
       Sweep per-dir, lower baselines in `src/tests/i18n/hardcoded-ratchet.test.ts` as you win.
       Many `errorReturn`/`selectLabel` hits are internal/dev surfaces — classify before translating;
       DEV-ONLY dirs (lab, atom showcase, \*-demo) may be excluded with a note here.
-- [ ] Remaining `STATIC-GAP?` rows from `pnpm i18n:audit` are heuristic false-positives
-      (dictionary arrives deeper than the depth-2 import closure) — verify each, then wire or whitelist
+- [x] ~~Remaining `STATIC-GAP?` rows~~ — driven to ZERO 2026-06-11; ratchet baseline locked at 0
+- [ ] **DataTable filter-operator labels** (`src/components/table/config.ts`, ~80 selectLabel
+      hits): "Contains"/"Is empty"/… render in every list page's filter menu but live in a
+      module-level const consumed by shared table internals + saas-dashboard/lib parsers.
+      Needs a `getDataTableConfig(dictionary)` factory threaded through the table block —
+      do it as its own PR, not in a sweep batch (shared-component blast radius).
+
+## Tier-3 sweep exemptions (dev-only, counted but not translated)
+
+- `src/components/table/_components/*` — shadcn/dice-ui tasks-table DEMO (reference impl,
+  "Do a kickflip" placeholders; not product UI)
+- `src/components/lab/`, `src/components/atom/` showcase, `*-demo.tsx` — dev surfaces
 
 ## P2 — enhancements
 

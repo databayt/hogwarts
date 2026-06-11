@@ -6,8 +6,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
 import { type Locale } from "@/components/internationalization/config"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { getLabels } from "@/components/translation/person"
 
 import { SubjectsGrid, type SubjectItem } from "./catalog-subjects-grid"
 
@@ -93,24 +92,24 @@ export default async function SubjectsContent({ lang, level }: Props) {
           return true
         })
 
-      // Each catalog subject becomes its own card (individual grade)
-      subjects = await Promise.all(
-        catalogRows.map(async (s) => ({
+      // Each catalog subject becomes its own card (individual grade).
+      // One batched, deduped resolution for names/departments (no N+1).
+      const labels = await getLabels(
+        catalogRows.flatMap((s) => [
+          customNames.get(s.id) ?? s.name,
+          s.department,
+        ]),
+        lang,
+        schoolId!
+      )
+      subjects = catalogRows.map((s) => {
+        const sourceName = customNames.get(s.id) ?? s.name
+        return {
           id: s.id,
           slug: s.slug,
-          name: await getText(
-            customNames.get(s.id) ?? s.name,
-            (s.lang || "ar") as Lang,
-            lang,
-            schoolId!
-          ),
+          name: labels.get(sourceName) ?? sourceName,
           department: s.department
-            ? await getText(
-                s.department,
-                (s.lang || "ar") as Lang,
-                lang,
-                schoolId!
-              )
+            ? (labels.get(s.department) ?? s.department)
             : "",
           level: s.levels[0] ?? "ELEMENTARY",
           levels: s.levels,
@@ -122,8 +121,8 @@ export default async function SubjectsContent({ lang, level }: Props) {
           averageRating: s.averageRating,
           usageCount: s.usageCount,
           ratingCount: s.ratingCount,
-        }))
-      )
+        }
+      })
 
       if (level) {
         subjects = subjects.filter((s) => s.levels.includes(level))

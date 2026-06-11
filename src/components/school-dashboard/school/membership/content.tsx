@@ -5,7 +5,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 
 import { canManageMembers } from "./authorization"
 import {
@@ -50,16 +50,17 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
   const canManage = userRole ? canManageMembers(userRole) : false
   const contentLang = (school?.preferredLanguage || "ar") as "ar" | "en"
 
-  // Translate names when display language differs from content language
-  const translatedMembers = await Promise.all(
-    members.map(async (m) => ({
-      ...m,
-      name: await getText(m.name, contentLang, lang, schoolId),
-      gradeName: m.gradeName
-        ? await getText(m.gradeName, contentLang, lang, schoolId)
-        : null,
-    }))
+  // Translate names — one batched, deduped resolution (no per-row N+1)
+  const labels = await getLabels(
+    members.flatMap((m) => [m.name, m.gradeName]),
+    lang,
+    schoolId
   )
+  const translatedMembers = members.map((m) => ({
+    ...m,
+    name: labels.get(m.name) ?? m.name,
+    gradeName: m.gradeName ? (labels.get(m.gradeName) ?? m.gradeName) : null,
+  }))
 
   return (
     <div className="space-y-6">

@@ -3,13 +3,16 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
+import { prewarm } from "@/components/translation/prewarm"
 
 import type { YearLevelDetail, YearLevelRow } from "./types"
 import {
@@ -74,6 +77,10 @@ export async function createYearLevel(
         levelOrder: parsed.levelOrder,
       },
     })
+
+    // Pre-translate the other language off the response path so the first
+    // cross-language reader gets a cache hit instead of a Google round-trip.
+    after(() => prewarm("YearLevel", row, { schoolId }))
 
     revalidatePath(ACADEMIC_PATH)
     return { success: true, data: { id: row.id } }
@@ -157,6 +164,12 @@ export async function updateYearLevel(
       data.levelOrder = rest.levelOrder
 
     await db.yearLevel.updateMany({ where: { id, schoolId }, data })
+
+    if (typeof data.levelName === "string") {
+      after(() =>
+        prewarm("YearLevel", { levelName: data.levelName }, { schoolId })
+      )
+    }
 
     revalidatePath(ACADEMIC_PATH)
     return { success: true, data: undefined }
@@ -320,21 +333,20 @@ export async function getYearLevels(
     ])
 
     const lang = displayLang || "ar"
-    const mapped: YearLevelRow[] = await Promise.all(
-      rows.map(async (l) => ({
-        id: l.id,
-        levelName: await getText(
-          l.levelName,
-          (l.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-        lang: l.lang,
-        levelOrder: l.levelOrder,
-        createdAt: l.createdAt.toISOString(),
-        _count: l._count,
-      }))
+    // One batched, deduped resolution for all level names (no per-row N+1)
+    const labels = await getLabels(
+      rows.map((l) => l.levelName),
+      lang,
+      schoolId!
     )
+    const mapped: YearLevelRow[] = rows.map((l) => ({
+      id: l.id,
+      levelName: labels.get(l.levelName) ?? l.levelName,
+      lang: l.lang,
+      levelOrder: l.levelOrder,
+      createdAt: l.createdAt.toISOString(),
+      _count: l._count,
+    }))
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {

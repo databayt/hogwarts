@@ -8,7 +8,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import { expertiseSchema, type ExpertiseFormData } from "./validation"
@@ -133,34 +133,36 @@ export async function getGradesAndSubjects(): Promise<
       orderBy: { gradeNumber: "asc" },
     })
 
-    const { displayLang, contentLang } = await getDisplayLocale(schoolId)
+    const { displayLang } = await getDisplayLocale(schoolId)
 
-    const data = await Promise.all(
-      grades.map(async (g) => ({
-        id: g.id,
-        name: await getText(g.name, contentLang, displayLang, schoolId),
-        gradeNumber: g.gradeNumber,
-        subjects: await Promise.all(
-          g.subjectSelections.map(async (s) => ({
-            id: s.subject.id,
-            name: await getText(
-              s.subject.name,
-              contentLang,
-              displayLang,
-              schoolId
-            ),
-            department: s.subject.department
-              ? await getText(
-                  s.subject.department,
-                  contentLang,
-                  displayLang,
-                  schoolId
-                )
-              : "",
-          }))
+    // One batched, deduped resolution across ALL grade/subject/department
+    // names (replaces the nested per-row getText N+1).
+    const labels = await getLabels(
+      [
+        ...grades.map((g) => g.name),
+        ...grades.flatMap((g) =>
+          g.subjectSelections.flatMap((s) => [
+            s.subject.name,
+            s.subject.department,
+          ])
         ),
-      }))
+      ],
+      displayLang,
+      schoolId
     )
+
+    const data = grades.map((g) => ({
+      id: g.id,
+      name: labels.get(g.name) ?? g.name,
+      gradeNumber: g.gradeNumber,
+      subjects: g.subjectSelections.map((s) => ({
+        id: s.subject.id,
+        name: labels.get(s.subject.name) ?? s.subject.name,
+        department: s.subject.department
+          ? (labels.get(s.subject.department) ?? s.subject.department)
+          : "",
+      })),
+    }))
 
     return {
       success: true,

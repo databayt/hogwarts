@@ -13,8 +13,7 @@ import {
   getEnrollmentList,
   getEnrollmentStats,
 } from "@/components/school-dashboard/admission/queries"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -56,16 +55,20 @@ export default async function EnrollmentContent({
         getEnrollmentStats(schoolId, sp.campaignId || undefined),
       ])
 
-      data = await Promise.all(
-        listResult.rows.map(async (a) => ({
+      const nameLabels = await getLabels(
+        [
+          ...listResult.rows.map((a) => `${a.firstName} ${a.lastName}`),
+          ...listResult.rows.map((a) => a.campaign.name),
+        ],
+        lang,
+        schoolId!
+      )
+      data = listResult.rows.map((a) => {
+        const fullName = `${a.firstName} ${a.lastName}`
+        return {
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: await getText(
-            `${a.firstName} ${a.lastName}`,
-            detectLang(`${a.firstName} ${a.lastName}`),
-            lang,
-            schoolId!
-          ),
+          applicantName: nameLabels.get(fullName) ?? fullName,
           firstName: a.firstName,
           lastName: a.lastName,
           applyingForClass: a.applyingForClass,
@@ -89,15 +92,10 @@ export default async function EnrollmentContent({
           hasDocuments:
             a.documents != null &&
             (Array.isArray(a.documents) ? a.documents.length > 0 : true),
-          campaignName: await getText(
-            a.campaign.name,
-            detectLang(a.campaign.name),
-            lang,
-            schoolId!
-          ),
+          campaignName: nameLabels.get(a.campaign.name) ?? a.campaign.name,
           campaignId: a.campaign.id,
-        }))
-      )
+        }
+      })
 
       total = listResult.count
       stats = statsResult

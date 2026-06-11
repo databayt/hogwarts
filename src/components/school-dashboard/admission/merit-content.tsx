@@ -13,8 +13,7 @@ import {
   getMeritList,
   getMeritStats,
 } from "@/components/school-dashboard/admission/queries"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -49,16 +48,21 @@ export default async function MeritContent({
         getMeritStats(schoolId, sp.campaignId || undefined),
       ])
 
-      data = await Promise.all(
-        listResult.rows.map(async (a) => ({
+      // One batched, deduped resolution for applicant + campaign names
+      const labels = await getLabels(
+        [
+          ...listResult.rows.map((a) => `${a.firstName} ${a.lastName}`),
+          ...listResult.rows.map((a) => a.campaign.name),
+        ],
+        lang,
+        schoolId!
+      )
+      data = listResult.rows.map((a) => {
+        const fullName = `${a.firstName} ${a.lastName}`
+        return {
           id: a.id,
           applicationNumber: a.applicationNumber,
-          applicantName: await getText(
-            `${a.firstName} ${a.lastName}`,
-            detectLang(`${a.firstName} ${a.lastName}`),
-            lang,
-            schoolId!
-          ),
+          applicantName: labels.get(fullName) ?? fullName,
           firstName: a.firstName,
           lastName: a.lastName,
           applyingForClass: a.applyingForClass,
@@ -68,15 +72,10 @@ export default async function MeritContent({
           meritRank: a.meritRank,
           entranceScore: a.entranceScore?.toString() ?? null,
           interviewScore: a.interviewScore?.toString() ?? null,
-          campaignName: await getText(
-            a.campaign.name,
-            detectLang(a.campaign.name),
-            lang,
-            schoolId!
-          ),
+          campaignName: labels.get(a.campaign.name) ?? a.campaign.name,
           campaignId: a.campaign.id,
-        }))
-      )
+        }
+      })
 
       total = listResult.count
       stats = statsResult

@@ -7,8 +7,7 @@ import { PageTitle } from "@/components/atom/page-title"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
+import { getLabels } from "@/components/translation/person"
 
 import { filterPinnedSubjectIds, getApprovedSubjectProposals } from "./queries"
 import { SubjectPicker } from "./subject-picker"
@@ -95,24 +94,24 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
   // Derive distinct curricula
   const curricula = [...new Set(catalogSubjects.map((s) => s.curriculum))]
 
-  // Translate catalog subjects
-  const translatedSubjects = await Promise.all(
-    catalogSubjects.map(async ({ lang: contentLang, ...s }) => ({
+  // Translate catalog subjects + academic grades — ONE batched, deduped
+  // resolution across all names/departments/level names (no per-row N+1).
+  const labels = await getLabels(
+    [
+      ...catalogSubjects.flatMap((s) => [s.name, s.department]),
+      ...grades.flatMap((g) => [g.name, g.level?.name]),
+    ],
+    lang,
+    schoolId
+  )
+
+  const translatedSubjects = catalogSubjects.map(
+    ({ lang: _contentLang, ...s }) => ({
       id: s.id,
-      name: await getText(
-        s.name,
-        (contentLang || "ar") as Lang,
-        lang,
-        schoolId
-      ),
+      name: labels.get(s.name) ?? s.name,
       slug: s.slug,
       department: s.department
-        ? await getText(
-            s.department,
-            (contentLang || "ar") as Lang,
-            lang,
-            schoolId
-          )
+        ? (labels.get(s.department) ?? s.department)
         : s.department,
       levels: s.levels as string[],
       color: s.color,
@@ -120,26 +119,16 @@ export async function CatalogSelectionContent({ dictionary, lang }: Props) {
       grades: s.grades as number[],
       imageUrl: getCatalogImageUrl(s.thumbnail, "sm"),
       isSelected: selectedSubjectIds.has(s.id),
-    }))
+    })
   )
 
-  // Translate academic grades
-  const translatedGrades = await Promise.all(
-    grades.map(async (g) => ({
-      id: g.id,
-      name: await getText(g.name, (g.lang || "ar") as Lang, lang, schoolId),
-      gradeNumber: g.gradeNumber,
-      levelName: g.level?.name
-        ? await getText(
-            g.level.name,
-            (g.level.lang || "ar") as Lang,
-            lang,
-            schoolId
-          )
-        : "",
-      level: (g.level?.level as string) ?? "",
-    }))
-  )
+  const translatedGrades = grades.map((g) => ({
+    id: g.id,
+    name: labels.get(g.name) ?? g.name,
+    gradeNumber: g.gradeNumber,
+    levelName: g.level?.name ? (labels.get(g.level.name) ?? g.level.name) : "",
+    level: (g.level?.level as string) ?? "",
+  }))
 
   // Derive school levels from academic grades
   const schoolLevels = Array.from(

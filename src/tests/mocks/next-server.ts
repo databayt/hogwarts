@@ -222,6 +222,18 @@ export class URLPattern {
   }
 }
 
+/**
+ * Mock of next/server's `after()` — runs the callback immediately so
+ * prewarm-style post-response work is observable in tests. Server actions
+ * wrap prewarm in after(); without this the real symbol is undefined in
+ * jsdom and every wired create/update action throws.
+ */
+export function after(task: (() => void | Promise<void>) | Promise<void>) {
+  if (typeof task === "function") {
+    void task()
+  }
+}
+
 // Re-export types that might be imported
 export type { NextRequest as NextRequestType }
 export type { NextResponse as NextResponseType }

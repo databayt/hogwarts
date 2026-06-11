@@ -14,7 +14,7 @@ import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 
 import { isStaffRole } from "../authorization"
 import {
@@ -409,25 +409,22 @@ export async function getLeaderboard(
       .slice(0, limit)
       .map((entry, index) => ({ ...entry, rank: index + 1 }))
 
-    // Translate badge names
-    const leaderboard: LeaderboardEntry[] = await Promise.all(
-      leaderboardRaw.map(async (entry) => ({
-        ...entry,
-        badges: await Promise.all(
-          entry.badges.map(async (badge) => ({
-            code: badge.code,
-            name: await getText(
-              badge.name,
-              (badge.lang as "ar" | "en") || "en",
-              lang,
-              schoolId!
-            ),
-            icon: badge.icon,
-            color: badge.color,
-          }))
-        ),
-      }))
+    // Translate badge names — one batched, deduped resolution for the
+    // whole leaderboard (replaces the nested per-badge N+1).
+    const badgeLabels = await getLabels(
+      leaderboardRaw.flatMap((entry) => entry.badges.map((b) => b.name)),
+      lang,
+      schoolId!
     )
+    const leaderboard: LeaderboardEntry[] = leaderboardRaw.map((entry) => ({
+      ...entry,
+      badges: entry.badges.map((badge) => ({
+        code: badge.code,
+        name: badgeLabels.get(badge.name) ?? badge.name,
+        icon: badge.icon,
+        color: badge.color,
+      })),
+    }))
 
     return { success: true, data: leaderboard }
   } catch (error) {
@@ -609,48 +606,39 @@ export async function getActiveCompetitions(
       },
     })
 
-    // Translate competition and class names
+    // Translate competition and class names — one batched, deduped
+    // resolution across names/descriptions/class names (no per-row N+1).
     const lang = displayLang || "ar"
-    const translatedCompetitions = await Promise.all(
-      competitions.map(async (c) => ({
-        id: c.id,
-        name: await getText(
-          c.name,
-          (c.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId!
-        ),
-        lang: c.lang,
-        description: c.description
-          ? await getText(
-              c.description,
-              (c.lang as "ar" | "en") || "ar",
-              lang,
-              schoolId!
-            )
-          : null,
-        startDate: c.startDate,
-        endDate: c.endDate,
-        winnerReward: c.winnerReward,
-        entries: await Promise.all(
-          c.entries.map(async (e, index) => ({
-            rank: index + 1,
-            classId: e.classId,
-            className: await getText(
-              e.class.name,
-              (e.class.lang as "ar" | "en") || "ar",
-              lang,
-              schoolId!
-            ),
-            classLang: e.class.lang,
-            attendanceRate: e.attendanceRate,
-            totalStudents: e.totalStudents,
-            presentDays: e.presentDays,
-            absentDays: e.absentDays,
-          }))
-        ),
-      }))
+    const labels = await getLabels(
+      competitions.flatMap((c) => [
+        c.name,
+        c.description,
+        ...c.entries.map((e) => e.class.name),
+      ]),
+      lang,
+      schoolId!
     )
+    const translatedCompetitions = competitions.map((c) => ({
+      id: c.id,
+      name: labels.get(c.name) ?? c.name,
+      lang: c.lang,
+      description: c.description
+        ? (labels.get(c.description) ?? c.description)
+        : null,
+      startDate: c.startDate,
+      endDate: c.endDate,
+      winnerReward: c.winnerReward,
+      entries: c.entries.map((e, index) => ({
+        rank: index + 1,
+        classId: e.classId,
+        className: labels.get(e.class.name) ?? e.class.name,
+        classLang: e.class.lang,
+        attendanceRate: e.attendanceRate,
+        totalStudents: e.totalStudents,
+        presentDays: e.presentDays,
+        absentDays: e.absentDays,
+      })),
+    }))
 
     return {
       success: true,
