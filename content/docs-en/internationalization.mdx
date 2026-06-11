@@ -93,6 +93,26 @@ model Announcement {
 
 ### Display with Translation
 
+**Lists — batched `localize()` (preferred).** One DB query for the whole
+page, three-tier resolution (in-memory LRU → `Translation` cache → Google):
+
+```tsx
+import { localize } from "@/components/translation/localize"
+// names / arbitrary short labels — batched + transliteration fallback
+import { getLabels, getNames } from "@/components/translation/person"
+
+// rows of a registered model (see registry.ts TRANSLATABLE map)
+const rows = await localize("Announcement", announcements, { schoolId, lang })
+
+const labels = await getLabels(
+  rows.map((r) => r.name),
+  lang,
+  schoolId
+)
+```
+
+**Single values — `getText()` (LRU-backed; never inside `.map()`):**
+
 ```tsx
 import { getText } from "@/components/translation/display"
 
@@ -103,19 +123,35 @@ const title = await getText(announcement.title, "ar", "en", schoolId)
 const title = await getText(announcement.title, "ar", "ar", schoolId)
 ```
 
+**Writes — prewarm the cache** so the first reader in the other language
+never waits:
+
+```tsx
+import { after } from "next/server"
+
+import { prewarm } from "@/components/translation/prewarm"
+
+after(() => prewarm("Announcement", created, { schoolId }))
+```
+
 ### Migration from legacy bilingual fields
 
 The migration off `titleEn`/`titleAr` patterns to single-language storage is complete. New code must use generic field names (`title`, `body`, `name`) plus a `lang` field. CLAUDE.md gotcha #12 enforces this. For the historical SQL and adoption tracker, see [Translation](/docs/translation).
 
 ### Infrastructure
 
-| File                                    | Purpose                       |
-| --------------------------------------- | ----------------------------- |
-| `src/components/translation/display.ts` | `getText()`, `getFields()`    |
-| `src/components/translation/actions.ts` | `translate()`, server actions |
-| `src/components/translation/google.ts`  | Google Translate API client   |
-| `src/components/translation/util.ts`    | `withLang`, `detectScript`    |
-| `prisma/models/translation.prisma`      | `Translation` model           |
+| File                                         | Purpose                                            |
+| -------------------------------------------- | -------------------------------------------------- |
+| `src/components/translation/localize.ts`     | Batched `localize()`/`localizeOne()` (preferred)   |
+| `src/components/translation/registry.ts`     | TRANSLATABLE map: model → translatable fields      |
+| `src/components/translation/prewarm.ts`      | `prewarm()` — cache-fill on write via `after()`    |
+| `src/components/translation/person.ts`       | `getNames()`/`getLabels()` — batched names/labels  |
+| `src/components/translation/memory-cache.ts` | Process LRU (hot short terms, zero DB round-trips) |
+| `src/components/translation/display.ts`      | `getText()`, `getFields()` — single-value path     |
+| `src/components/translation/actions.ts`      | `translate()` core (LRU → DB → Google)             |
+| `src/components/translation/google.ts`       | Google client: timeout, chunking, retry policy     |
+| `src/components/translation/util.ts`         | `withLang`, `detectScript`                         |
+| `prisma/models/translation.prisma`           | `Translation` model (per-school cache)             |
 
 ---
 
@@ -159,18 +195,38 @@ export function isRTL(locale: Locale): boolean {
 
 ### Dictionary Loaders
 
-Route-scoped dictionary loaders keep bundle size down. The full type and per-route helpers live in `src/components/internationalization/dictionaries.ts`:
+Every namespace is registered ONCE in
+`src/components/internationalization/namespaces.ts` — the server loader
+(`dictionaries.ts`) and the client loader (`get-dictionary-client.ts`) both
+derive from it, so their shapes can never drift (guarded by
+`dictionary-loader-sync.test.ts`). All loaders are wrapped in React
+`cache()`: one merge per request regardless of call-site count.
+
+Route-scoped loaders keep the RSC payload down — use them in
+`DictionaryProvider` layouts:
 
 ```ts
 import {
-  getDictionary,
-  getFinanceDictionary,
-  getMarketingDictionary,
-  getPlatformCoreDictionary,
+  getDictionary, // full merge (23 namespaces)
+  getExamDictionary, // core + marking + generate + results
+  getMessagingDictionary, // core + messages + messaging
+  getSaasDashboardDictionary, // core + sales + messages
 } from "@/components/internationalization/dictionaries"
 ```
 
 For form / select / validation / toast / server-action adoption patterns, see [Translation](/docs/translation).
+
+### Translation Guard (CI)
+
+en/ar drift cannot ship — these run in `pnpm test` and CI:
+
+| Guard                                           | Catches                                           |
+| ----------------------------------------------- | ------------------------------------------------- |
+| `src/tests/i18n/dictionary-parity.test.ts`      | Any en/ar key drift + committed `[AR]/[EN]` stubs |
+| `src/tests/i18n/dictionary-loader-sync.test.ts` | Server vs client dictionary shape divergence      |
+| `src/tests/i18n/hardcoded-ratchet.test.ts`      | NEW hardcoded English strings (8 anti-patterns)   |
+| `src/tests/i18n/rtl-physical-class.test.ts`     | Physical CSS classes (`ml-`, `text-left`…) — at 0 |
+| `pnpm i18n:check` (CI step)                     | Same parity engine, fail-fast before tests        |
 
 ---
 
@@ -398,23 +454,30 @@ arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 ```
 src/
   components/internationalization/
-    config.ts              # Locale config, types, isRTL helper
-    dictionaries.ts        # Dictionary loaders (route-specific)
-    use-locale.ts          # Client hooks: useLocale, useSwitchLocaleHref
-    use-dictionary.ts      # useDictionary hook
-    language-switcher.tsx  # Language switcher component
-    en.json                # General English translations
-    ar.json                # General Arabic translations
-    school-*.json          # School module translations
-    operator-*.json        # Operator module translations
-    helpers/index.ts       # ValidationHelper, ToastHelper, ErrorHelper
-    dictionaries/
-      en/
-      ar/
-  lib/
-    i18n-format.ts         # locale-aware number/date/currency formatting
-  styles/
-    globals.css            # Base styles with logical properties
+    config.ts                 # Locale config, types, isRTL helper
+    namespaces.ts             # SINGLE namespace registry (flat + 19 feature)
+    dictionaries.ts           # Server loaders (cache()-wrapped, route-scoped)
+    get-dictionary-client.ts  # Client loader (same registry)
+    locale-detect.ts          # detectLocale/pathnameHasLocale (live proxy logic)
+    use-locale.ts             # Client hooks: useLocale, useSwitchLocaleHref
+    use-dictionary.ts         # useDictionary hook (context-first)
+    dictionary-context.tsx    # DictionaryProvider
+    language-switcher.tsx     # Language switcher component
+    actions.ts                # setLocale server action
+    helpers/index.ts          # ValidationHelper, ToastHelper, ErrorHelper
+    lib/key-diff.ts           # Pure en/ar diff engine
+    lib/parity.ts             # Real-file parity + placeholder scanner
+    en.json / ar.json         # General translations (flat)
+    school-{en,ar}.json       # School dashboard (flat, largest pair)
+    stream-{en,ar}.json       # Stream/LMS (flat)
+    operator-{en,ar}.json     # SaaS operator (flat)
+    dictionaries/{en,ar}/     # 19 feature namespaces: admin, attendance,
+                              # banking, compliance, finance, generate, lab,
+                              # library, live-classes, marking, messages,
+                              # messaging, notifications, parentPortal,
+                              # profile, results, sales, transportation,
+                              # whatsapp
+  components/translation/     # System B: dynamic content engine (own README)
 ```
 
 ---

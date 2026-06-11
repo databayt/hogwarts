@@ -6,37 +6,37 @@
 
 ## The two systems
 
-|            | System A — Static dictionary                                                                                                           | System B — Dynamic content                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **For**    | UI chrome: labels, buttons, toasts, placeholders, validation                                                                           | user-stored DB text (announcement bodies, route names, …)                                                                                        |
-| **How**    | `getDictionary(lang)` (or a `get<X>Dictionary` partial) in the server page → `dictionary` prop → `dictionary.<ns>.<key>`               | `getDisplayText(text, contentLang, displayLang, schoolId)` / `getDisplayFields(...)` — **server-only**; Google Translate v2 + `TranslationCache` |
-| **Source** | `src/components/internationalization/{en,ar}.json`, `school-*.json`, `stream-*.json`, `operator-*.json`, `dictionaries/{en,ar}/*.json` | record `.lang` ?? `School.preferredLanguage` ?? `"ar"`; display = route locale                                                                   |
-| **Loader** | `internationalization/dictionaries.ts` (`Dictionary` type is inferred)                                                                 | `@/lib/content-display` → `components/translation/{display,actions,google}.ts`                                                                   |
+|            | System A — Static dictionary                                                                                                           | System B — Dynamic content                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **For**    | UI chrome: labels, buttons, toasts, placeholders, validation                                                                           | user-stored DB text (announcement bodies, route names, …)                                                                                                        |
+| **How**    | `getDictionary(lang)` (or a `get<X>Dictionary` partial) in the server page → `dictionary` prop → `dictionary.<ns>.<key>`               | `getText(text, contentLang, displayLang, schoolId)` / `getFields(...) — or batched localize(model, rows)` — **server-only**; Google Translate v2 + `Translation` |
+| **Source** | `src/components/internationalization/{en,ar}.json`, `school-*.json`, `stream-*.json`, `operator-*.json`, `dictionaries/{en,ar}/*.json` | record `.lang` ?? `School.preferredLanguage` ?? `"ar"`; display = route locale                                                                                   |
+| **Loader** | `internationalization/dictionaries.ts` (`Dictionary` type is inferred)                                                                 | `@/lib/content-display` → `components/translation/{display,actions,google}.ts`                                                                                   |
 
 A new dictionary namespace must be registered in 3 places: the JSON pair, the spread in `getDictionary`, and `get-dictionary-client.ts` (for client use). Some clusters (exam template/generate wizards) use an alternative **inline bilingual `labels.ts` map + `useLocale()`** instead of dictionary JSON — that is a legitimate, accepted pattern.
 
 ## Method
 
-`scripts/i18n-audit.ts` walks every `page.tsx` under `src/app`, resolves the page's local import closure (depth 2: page → content → children), and records whether any file references a dictionary (A) or `getDisplayText` (B). The 31 pages with no detectable dictionary were then verified file-by-file by agents. Pages tagged `FULLY-I18N` load a dictionary at the page level; a residual hardcoded-string scan (below) covers strings buried deeper than the page-level wiring.
+`scripts/i18n-audit.ts` walks every `page.tsx` under `src/app`, resolves the page's local import closure (depth 2: page → content → children), and records whether any file references a dictionary (A) or `getText` (B). The 31 pages with no detectable dictionary were then verified file-by-file by agents. Pages tagged `FULLY-I18N` load a dictionary at the page level; a residual hardcoded-string scan (below) covers strings buried deeper than the page-level wiring.
 
 ## Summary
 
-| Metric                                                                 | Count          |
-| ---------------------------------------------------------------------- | -------------- |
-| Total `page.tsx` routes                                                | 465            |
-| Page-level dictionary wired                                            | 352            |
-| Delegate to a dict-consuming content component (OK)                    | 48             |
-| Redirect / data-only (NO-UI)                                           | 26             |
-| Dev/test/preview (out of scope)                                        | 8              |
-| **Fully-hardcoded routes (STATIC-GAP) — verified**                     | **22**         |
-| Residual hardcoded-string hits inside otherwise-wired routes           | ~375 (63 dirs) |
-| Models with a `lang` field                                             | 30             |
-| Feature areas already routing dynamic content through `getDisplayText` | 18             |
+| Metric                                                          | Count          |
+| --------------------------------------------------------------- | -------------- |
+| Total `page.tsx` routes                                         | 465            |
+| Page-level dictionary wired                                     | 352            |
+| Delegate to a dict-consuming content component (OK)             | 48             |
+| Redirect / data-only (NO-UI)                                    | 26             |
+| Dev/test/preview (out of scope)                                 | 8              |
+| **Fully-hardcoded routes (STATIC-GAP) — verified**              | **22**         |
+| Residual hardcoded-string hits inside otherwise-wired routes    | ~375 (63 dirs) |
+| Models with a `lang` field                                      | 30             |
+| Feature areas already routing dynamic content through `getText` | 18             |
 
 ## Status after this sweep
 
 - ✅ **All 22 Tier-1 routes fixed** — every route now wires the dictionary (en+ar, verified tsc-clean, key parity green, adversarially reviewed). ~250 new keys across `parentPortal` (new namespace), `results`, `finance`, `school.configuration`, `school.exams.wizard.examWizard`, `template-wizard/labels.ts`, and top-level `en/ar.json`.
-- ✅ **Tier 2 transportation fixed** — route/stop names, origin/destination, addresses now translate on demand via `getDisplayText` across the routes list, route detail (+stops), assignments, trips, and the guardian/student `me` view.
+- ✅ **Tier 2 transportation fixed** — route/stop names, origin/destination, addresses now translate on demand via `getText` across the routes list, route detail (+stops), assignments, trips, and the guardian/student `me` view.
 - ⏳ **Tier 2 remainder + Tier 3** — documented below as a tracked backlog (quiz/curriculum/grading-scheme/whatsapp dynamic content, and the ~375-string deep long-tail). Not addressed in this pass.
 
 ## Tier 1 — Fully-hardcoded routes (STATIC-GAP) — ✅ FIXED
@@ -45,7 +45,7 @@ These routes rendered UI text that did **not** switch language at all. All now w
 
 | #     | Route                                                                                 | Content component                                          | Fix namespace                                      | Notes                                                                                                                      |
 | ----- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `/parent/announcements`                                                               | `school-dashboard/parent-portal/announcements/content.tsx` | **new** `parentPortal`                             | titles/labels hardcoded; dynamic body already via `getDisplayText`                                                         |
+| 1     | `/parent/announcements`                                                               | `school-dashboard/parent-portal/announcements/content.tsx` | **new** `parentPortal`                             | titles/labels hardcoded; dynamic body already via `getText`                                                                |
 | 2     | `/parent/events`                                                                      | `parent-portal/events/content.tsx`                         | **new** `parentPortal`                             | `EVENT_TYPE_LABELS` hardcoded                                                                                              |
 | 3     | `…/school/configuration/academic`                                                     | `school-dashboard/school/academic/content.tsx`             | `school.configuration`                             | "Academic Setup" etc.                                                                                                      |
 | 4     | `…/school/configuration/hero`                                                         | `school/configuration/config-hero-form.tsx`                | `school.configuration`                             | title/description keys exist; body hardcoded                                                                               |
@@ -67,7 +67,7 @@ These routes rendered UI text that did **not** switch language at all. All now w
 
 ## Tier 2 — Dynamic content not translated (System B)
 
-Models carry a `lang` field but their render paths do not route user text through `getDisplayText`, so content shows in its stored language regardless of the UI locale.
+Models carry a `lang` field but their render paths do not route user text through `getText`, so content shows in its stored language regardless of the UI locale.
 
 | Surface                                                                   | Status                                                                                                       | Action                               |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------ |

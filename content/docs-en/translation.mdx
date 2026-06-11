@@ -1,27 +1,32 @@
 ---
 title: Translation
-description: Two-tier i18n — dictionary JSON for static UI, getText for dynamic content. Coverage gaps and adoption patterns.
+description: Two-tier i18n — dictionary JSON for static UI, batched localize() for dynamic content. Coverage gaps and adoption patterns.
 ---
 
-Translation runs on two tiers: dictionary JSON files for static UI (synced across `ar.json`/`en.json`) and `getText()` for dynamic database content via Google Translate + DB cache. Infrastructure is solid; adoption is partial — thousands of hardcoded English strings remain across hundreds of school-dashboard files. Run `/i18n-check` for the live count.
+Translation runs on two tiers: dictionary JSON files for static UI (parity-enforced across `ar`/`en` by a CI test) and the batched `localize()` engine for dynamic database content via a three-tier cache (in-memory LRU → `Translation` table → Google Translate). Drift can no longer ship: en/ar key parity, untranslated placeholders, hardcoded-string counts, and RTL physical classes are all gated in `pnpm test` and CI. The remaining work is the hardcoded-string sweep tracked by the ratchet baselines — run `npx tsx scripts/i18n-hardcoded-ratchet.ts --by-dir` for the live count.
 
 ## Architecture
 
-| Tier          | What                                          | How                                                             |
-| ------------- | --------------------------------------------- | --------------------------------------------------------------- |
-| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`          |
-| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → `getText()` → cached Google Translate |
+| Tier          | What                                          | How                                                                                    |
+| ------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`                                 |
+| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → batched `localize()`/`getLabels()` → LRU → DB cache → Google |
 
 ## Infrastructure files
 
-| File                                                   | Purpose                                          |
-| ------------------------------------------------------ | ------------------------------------------------ |
-| `src/components/translation/display.ts`                | `getText()`, `getFields()`                       |
-| `src/components/translation/actions.ts`                | `translate()`, server actions                    |
-| `src/components/translation/google.ts`                 | Google Translate client                          |
-| `src/components/translation/util.ts`                   | `withLang`, `detectScript`                       |
-| `src/components/internationalization/helpers/index.ts` | `ValidationHelper`, `ToastHelper`, `ErrorHelper` |
-| `src/components/internationalization/dictionaries.ts`  | Route-scoped dictionary loaders                  |
+| File                                                   | Purpose                                             |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| `src/components/translation/localize.ts`               | Batched `localize()`/`localizeOne()` — preferred    |
+| `src/components/translation/registry.ts`               | TRANSLATABLE map (model → fields)                   |
+| `src/components/translation/prewarm.ts`                | Cache-fill on write via `after()`                   |
+| `src/components/translation/person.ts`                 | `getNames()`/`getLabels()` — batched names/labels   |
+| `src/components/translation/display.ts`                | `getText()`, `getFields()` — single values only     |
+| `src/components/translation/actions.ts`                | `translate()` core (LRU → DB → Google)              |
+| `src/components/translation/google.ts`                 | Google client: timeout, chunking, retry policy      |
+| `src/components/translation/util.ts`                   | `withLang`, `detectScript`                          |
+| `src/components/internationalization/helpers/index.ts` | `ValidationHelper`, `ToastHelper`, `ErrorHelper`    |
+| `src/components/internationalization/namespaces.ts`    | Single namespace registry (server + client)         |
+| `src/components/internationalization/dictionaries.ts`  | Route-scoped dictionary loaders (`cache()`-wrapped) |
 
 ## Coverage gaps
 

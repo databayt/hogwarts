@@ -23,17 +23,31 @@ For labels, buttons, headings, placeholders, error messages, toast messages, sel
 
 ### 2. Dynamic Content (On-Demand Translation)
 
-For user-generated DB content (announcements, subjects, student names, etc.):
+For user-generated DB content (announcements, subjects, student names, etc.).
+**PREFERRED — batched APIs (one DB resolution per render, never per row):**
 
-- `getText(text, contentLang, displayLang, schoolId)` from `@/components/translation/display`
-- `getFields(entity, fields, contentLang, displayLang, schoolId)` for batch (one entity, many fields)
-- **Names & labels** (`@/components/translation/person`): `getName(person, lang, schoolId)`, `getNames(rows, accessor, lang, schoolId)`, `getLabels(values, lang, schoolId)` -- all de-dup to avoid N+1 and fall back to offline transliteration when the API is down. Prefer these over `getText` for person names.
+- **Lists of a registered model** (see `registry.ts` TRANSLATABLE map):
+  `localize(model, rows, { schoolId, lang })` from `@/components/translation/localize` — ONE findMany for N rows.
+- **Single row of a registered model**: `localizeOne(model, row, { schoolId, lang })`.
+- **Person names**: `getNames(rows, accessor, lang, schoolId)` from `@/components/translation/person` — batched, transliteration fallback when the API is down.
+- **Arbitrary short strings / unregistered fields**: `getLabels(values, lang, schoolId)` — batched, deduped, returns `Map<source, translated>`.
+- **Write actions (create AND update)**: `after(() => prewarm(model, row, { schoolId }))` from `@/components/translation/prewarm` — pre-fills the cache so the first reader in the other language never waits.
+
+**Single-value only** (acceptable for one genuinely single value — NEVER inside `.map()`/loops):
+
+- `getText(text, contentLang, displayLang, schoolId)` from `@/components/translation/display` (LRU-backed)
+- `getFields(entity, fields, contentLang, displayLang, schoolId)` — one entity, many fields
+
+**Always:**
+
 - `withLang(data, lang)` when writing to DB -- adds the `lang` field. When the locale isn't trustworthy, `detectScript(text)` keys off the actual script (the right choice for names).
 - Bilingual search: `search(term, fields, schoolId, storageLang, displayLang)` from `@/components/translation/search` -- cache-only, no API cost.
-- Mobile: `POST /api/mobile/translate` reuses the same cache (whitelist: `announcement`, `assignment`).
-- `Translation` model handles caching -- same text never translated twice.
+- Mobile: `POST /api/mobile/translate` reuses the same cache.
+- `Translation` model handles caching -- same text never translated twice. Manual overrides (`provider:"manual"`) are never overwritten or pruned.
 
-> Full reference: [Translation Guide](/docs/translation-guide).
+**Fallback semantics (deliberate):** on Google failure, body text renders in its SOURCE language (logged, throttled); person names transliterate ar→Latin. Renders never block or throw.
+
+> Full reference: [Translation Guide](/docs/translation-guide) and `src/components/translation/README.md`.
 
 ## NEVER Do These
 

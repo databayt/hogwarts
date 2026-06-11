@@ -1,0 +1,484 @@
+---
+title: "التدويل"
+description: "مرجع معماري لنظام التدويل بالعربية (RTL) والإنجليزية (LTR) — اللغات، التوجيه، التخزين أحادي اللغة، أنماط RTL، وخطافات العميل."
+---
+
+## نظرة عامة
+
+هذا هو المرجع المعماري لنظام التدويل (i18n). لأنماط الاعتماد (تسميات النماذج، القوائم، التحقق، الإشعارات، أخطاء إجراءات الخادم) راجع [الترجمة](/docs/translation).
+
+يدعم التطبيق العربية (RTL، الافتراضية) والإنجليزية (LTR). يعالج النظام **ترجمات الواجهة الثابتة** عبر ملفات قواميس JSON و**المحتوى المُنشأ من المستخدم المخزّن بلغة واحدة مع ترجمة عند الطلب** عبر Google Translate مع تخزين مؤقت في قاعدة البيانات.
+
+### اللغات المدعومة
+
+| اللغة | الاسم      | الاتجاه | العلم | العملة | افتراضية |
+| ----- | ---------- | ------- | ----- | ------ | -------- |
+| `ar`  | العربية    | RTL     | SA    | SAR    | نعم      |
+| `en`  | الإنجليزية | LTR     | US    | USD    | لا       |
+
+### الخصائص الأساسية
+
+- **توجيه عبر الرابط**: `/[lang]/path` (مثل `/ar/dashboard`، `/en/dashboard`)
+- **تخزين أحادي اللغة**: حقل `lang` واحد، وترجمة عند الطلب عبر Google Translate
+- **خصائص CSS المنطقية**: `ms-`، `me-`، `ps-`، `pe-` للانعكاس التلقائي
+- **تبديل الاتجاه**: خاصية `dir` على عنصر `<html>`
+- **تراجع ذكي**: يعود إلى اللغة المتاحة إذا كانت المفضلة فارغة
+
+---
+
+## البداية السريعة
+
+### مكوّنات الخادم
+
+```tsx
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+
+export default async function Page({ params }: { params: { lang: string } }) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
+
+  return (
+    <div>
+      <h1>{dictionary.common.home}</h1>
+      <p>{dictionary.common.loading}</p>
+    </div>
+  )
+}
+```
+
+### مكوّنات العميل
+
+```tsx
+"use client"
+
+import { useLocale } from "@/components/internationalization/use-locale"
+
+export function LocaleIndicator() {
+  const { locale, isRTL, localeConfig } = useLocale()
+
+  return (
+    <span className={isRTL ? "text-end" : "text-start"}>
+      {localeConfig.flag} {localeConfig.nativeName}
+    </span>
+  )
+}
+```
+
+---
+
+## تخزين محتوى المستخدم
+
+كل المحتوى المُنشأ من المستخدم يستخدم **التخزين أحادي اللغة** مع حقل `lang`. يُخزَّن المحتوى بلغة واحدة فقط، وتحدث الترجمة عند الطلب عبر Google Translate مع تخزين مؤقت في قاعدة البيانات عبر نموذج `Translation`.
+
+### القواعد
+
+1. **أسماء حقول عامة فقط** — `title`، `body`، `name`، `description` (أبدًا `titleAr`، `nameEn`)
+2. **حقل `lang`** — كل نموذج محتوى يحمل `lang String @default("ar")` يحدد لغة التخزين
+3. **ترجمة عند الطلب** — استخدم الواجهات المُجمَّعة (`localize`) للقوائم و`getText()` للقيم المفردة
+4. **التخزين المؤقت** — السلاسل المترجمة تُحفظ في قاعدة البيانات فلا يُترجم النص نفسه مرتين
+5. **لغة المدرسة المفضلة** — `School.preferredLanguage` تحدد لغة التخزين الافتراضية
+
+### نمط المخطط
+
+```prisma
+model Announcement {
+  id       String  @id @default(cuid())
+  schoolId String
+  title    String?          // اسم حقل عام (ليس titleEn/titleAr)
+  body     String? @db.Text // اسم حقل عام (ليس bodyEn/bodyAr)
+  lang     String  @default("ar") // لغة المحتوى المخزّن
+}
+```
+
+### العرض مع الترجمة
+
+**القوائم — `localize()` المُجمَّعة (المفضّلة).** استعلام واحد لقاعدة البيانات للصفحة كاملة، وحلّ ثلاثي الطبقات (ذاكرة LRU ← مخبأ `Translation` ← Google):
+
+```tsx
+import { localize } from "@/components/translation/localize"
+// الأسماء / التسميات القصيرة — مُجمَّعة + تراجع إلى النقحرة
+import { getLabels, getNames } from "@/components/translation/person"
+
+// صفوف نموذج مسجَّل (راجع خريطة TRANSLATABLE في registry.ts)
+const rows = await localize("Announcement", announcements, { schoolId, lang })
+
+const labels = await getLabels(
+  rows.map((r) => r.name),
+  lang,
+  schoolId
+)
+```
+
+**القيم المفردة — `getText()` (مدعومة بذاكرة LRU؛ لا تستخدمها داخل `.map()` أبدًا):**
+
+```tsx
+import { getText } from "@/components/translation/display"
+
+// مخزّن بالعربية والمستخدم يعرض بالإنجليزية ← يُترجم عبر الواجهة
+const title = await getText(announcement.title, "ar", "en", schoolId)
+
+// نفس اللغة ← يُعاد مباشرة دون استدعاء
+const title = await getText(announcement.title, "ar", "ar", schoolId)
+```
+
+**الكتابة — تسخين المخبأ مسبقًا** كي لا ينتظر أول قارئ باللغة الأخرى:
+
+```tsx
+import { after } from "next/server"
+
+import { prewarm } from "@/components/translation/prewarm"
+
+after(() => prewarm("Announcement", created, { schoolId }))
+```
+
+### الترحيل من الحقول الثنائية القديمة
+
+اكتمل الترحيل من أنماط `titleEn`/`titleAr` إلى التخزين أحادي اللغة. يجب أن يستخدم الكود الجديد أسماء حقول عامة (`title`، `body`، `name`) مع حقل `lang`. للسجل التاريخي وتتبّع الاعتماد راجع [الترجمة](/docs/translation).
+
+### البنية التحتية
+
+| الملف                                        | الغرض                                                   |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `src/components/translation/localize.ts`     | `localize()`/`localizeOne()` المُجمَّعة (المفضّلة)      |
+| `src/components/translation/registry.ts`     | خريطة TRANSLATABLE: النموذج ← الحقول القابلة للترجمة    |
+| `src/components/translation/prewarm.ts`      | `prewarm()` — تعبئة المخبأ عند الكتابة عبر `after()`    |
+| `src/components/translation/person.ts`       | `getNames()`/`getLabels()` — أسماء وتسميات مُجمَّعة     |
+| `src/components/translation/memory-cache.ts` | ذاكرة LRU للمصطلحات الساخنة (صفر رحلات لقاعدة البيانات) |
+| `src/components/translation/display.ts`      | `getText()`، `getFields()` — مسار القيمة المفردة        |
+| `src/components/translation/actions.ts`      | نواة `translate()` (LRU ← قاعدة البيانات ← Google)      |
+| `src/components/translation/google.ts`       | عميل Google: مهلة، تقسيم دفعات، سياسة إعادة محاولة      |
+| `src/components/translation/util.ts`         | `withLang`، `detectScript`                              |
+| `prisma/models/translation.prisma`           | نموذج `Translation` (مخبأ لكل مدرسة)                    |
+
+---
+
+## الإعداد
+
+### إعداد اللغات
+
+الموقع: `src/components/internationalization/config.ts`
+
+```ts
+export const i18n = {
+  defaultLocale: "ar",
+  locales: ["en", "ar"],
+} as const
+
+export type Locale = (typeof i18n)["locales"][number]
+
+export const localeConfig = {
+  en: {
+    name: "English",
+    nativeName: "English",
+    dir: "ltr",
+    flag: "🇺🇸",
+    dateFormat: "MM/dd/yyyy",
+    currency: "USD",
+  },
+  ar: {
+    name: "Arabic",
+    nativeName: "العربية",
+    dir: "rtl",
+    flag: "🇸🇦",
+    dateFormat: "dd/MM/yyyy",
+    currency: "SAR",
+  },
+} as const
+
+export function isRTL(locale: Locale): boolean {
+  return localeConfig[locale]?.dir === "rtl"
+}
+```
+
+### محمّلات القواميس
+
+كل نطاق أسماء يُسجَّل مرة واحدة في
+`src/components/internationalization/namespaces.ts` — محمّل الخادم
+(`dictionaries.ts`) ومحمّل العميل (`get-dictionary-client.ts`) كلاهما يشتق
+منه، فلا يمكن أن يختلف شكلاهما أبدًا (يحرسه
+`dictionary-loader-sync.test.ts`). كل المحمّلات ملفوفة بـ React
+`cache()`: دمج واحد لكل طلب مهما تعدّدت مواضع الاستدعاء.
+
+المحمّلات المحدودة بالمسار تُبقي حمولة RSC صغيرة — استخدمها في تخطيطات
+`DictionaryProvider`:
+
+```ts
+import {
+  getDictionary, // الدمج الكامل (23 نطاقًا)
+  getExamDictionary, // النواة + marking + generate + results
+  getMessagingDictionary, // النواة + messages + messaging
+  getSaasDashboardDictionary, // النواة + sales + messages
+} from "@/components/internationalization/dictionaries"
+```
+
+لأنماط النماذج / القوائم / التحقق / الإشعارات / أخطاء إجراءات الخادم راجع [الترجمة](/docs/translation).
+
+### حارس الترجمة (CI)
+
+انحراف en/ar لا يمكن أن يصل للإنتاج — هذه تعمل ضمن `pnpm test` وضمن CI:
+
+| الحارس                                          | يلتقط                                             |
+| ----------------------------------------------- | ------------------------------------------------- |
+| `src/tests/i18n/dictionary-parity.test.ts`      | أي انحراف مفاتيح en/ar + بقايا `[AR]/[EN]`        |
+| `src/tests/i18n/dictionary-loader-sync.test.ts` | اختلاف شكل القاموس بين الخادم والعميل             |
+| `src/tests/i18n/hardcoded-ratchet.test.ts`      | سلاسل إنجليزية مكتوبة يدويًا جديدة (8 أنماط)      |
+| `src/tests/i18n/rtl-physical-class.test.ts`     | فئات CSS الفيزيائية (`ml-`، `text-left`…) — عند 0 |
+| `pnpm i18n:check` (خطوة CI)                     | محرك التطابق نفسه، فشل مبكر قبل الاختبارات        |
+
+---
+
+## دعم RTL بالخصائص المنطقية
+
+### خصائص CSS المنطقية (المفضّلة)
+
+استخدم دائمًا **الخصائص المنطقية** بدل الاتجاهات الفيزيائية — تتكيف تلقائيًا مع RTL/LTR:
+
+| فيزيائية (تجنّب) | منطقية (استخدم) | الوصف               |
+| ---------------- | --------------- | ------------------- |
+| `ml-*`           | `ms-*`          | هامش بداية السطر    |
+| `mr-*`           | `me-*`          | هامش نهاية السطر    |
+| `pl-*`           | `ps-*`          | حشو بداية السطر     |
+| `pr-*`           | `pe-*`          | حشو نهاية السطر     |
+| `left-*`         | `start-*`       | موضع البداية        |
+| `right-*`        | `end-*`         | موضع النهاية        |
+| `text-left`      | `text-start`    | محاذاة نص للبداية   |
+| `text-right`     | `text-end`      | محاذاة نص للنهاية   |
+| `border-l-*`     | `border-s-*`    | حد البداية          |
+| `border-r-*`     | `border-e-*`    | حد النهاية          |
+| `rounded-l-*`    | `rounded-s-*`   | تدوير زوايا البداية |
+| `rounded-r-*`    | `rounded-e-*`   | تدوير زوايا النهاية |
+
+**مثال:**
+
+```tsx
+// خطأ — الخصائص الفيزيائية لا تتكيف
+<div className="ml-4 pr-2 text-left border-l-2">
+
+// صحيح — الخصائص المنطقية تتكيف مع RTL/LTR
+<div className="ms-4 pe-2 text-start border-s-2">
+```
+
+### تكامل التخطيط
+
+يضبط التخطيط الجذري الاتجاه حسب اللغة (مع سكربت تصحيحي مضمَّن تُشتق قائمة لغاته من `i18n.locales`):
+
+```tsx
+// src/app/layout.tsx — يُعرض <html lang dir> من الخادم
+const locale = headerLocale || cookieLocale || i18n.defaultLocale
+const dir = isRTL(locale) ? "rtl" : "ltr"
+
+return (
+  <html lang={locale} dir={dir}>
+    <body>{children}</body>
+  </html>
+)
+```
+
+### متى تستخدم متغيرات `rtl:`
+
+فقط للحالات التي **لا** تُحل بالخصائص المنطقية:
+
+```tsx
+// عكس اتجاه flex (لا مكافئ منطقي له)
+<div className="flex flex-row rtl:flex-row-reverse">
+
+// عكس الأيقونات الاتجاهية
+<ChevronRight className="rtl:scale-x-[-1]" />
+
+// عكس المسافات في flex
+<div className="flex space-x-2 rtl:space-x-reverse">
+```
+
+---
+
+## خطافات جانب العميل
+
+### useLocale
+
+```tsx
+"use client"
+
+import { useLocale } from "@/components/internationalization/use-locale"
+
+export function MyComponent() {
+  const { locale, isRTL, localeConfig } = useLocale()
+
+  return (
+    <div dir={isRTL ? "rtl" : "ltr"}>
+      <p>الحالية: {localeConfig.nativeName}</p>
+      <p>الاتجاه: {localeConfig.dir}</p>
+    </div>
+  )
+}
+```
+
+### useDictionary
+
+```tsx
+"use client"
+
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+export function ClientComponent() {
+  const { dictionary, isLoading } = useDictionary()
+
+  if (isLoading) return <Spinner />
+
+  return <h1>{dictionary?.common.welcome}</h1>
+}
+```
+
+### useSwitchLocaleHref
+
+```tsx
+"use client"
+
+import Link from "next/link"
+
+import { useSwitchLocaleHref } from "@/components/internationalization/use-locale"
+
+export function LanguageSwitcher() {
+  const switchLocaleHref = useSwitchLocaleHref()
+
+  return (
+    <nav className="flex gap-2">
+      <Link href={switchLocaleHref("ar")}>العربية</Link>
+      <Link href={switchLocaleHref("en")}>English</Link>
+    </nav>
+  )
+}
+```
+
+---
+
+## تنسيق الأرقام والتواريخ العربية
+
+### تنسيق الأرقام
+
+```tsx
+const formatter = new Intl.NumberFormat(locale, {
+  style: "decimal",
+  maximumFractionDigits: 2,
+})
+formatter.format(1234567) // ar: "١٬٢٣٤٬٥٦٧" | en: "1,234,567"
+
+const currencyFormatter = new Intl.NumberFormat(locale, {
+  style: "currency",
+  currency: locale === "ar" ? "SAR" : "USD",
+})
+currencyFormatter.format(99.99) // ar: "٩٩٫٩٩ ر.س" | en: "$99.99"
+```
+
+### تنسيق التواريخ
+
+```tsx
+const dateFormatter = new Intl.DateTimeFormat(locale, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})
+dateFormatter.format(new Date()) // ar: "١ ديسمبر ٢٠٢٥" | en: "December 1, 2025"
+
+const relativeFormatter = new Intl.RelativeTimeFormat(locale, {
+  numeric: "auto",
+})
+relativeFormatter.format(-2, "day") // ar: "منذ يومين" | en: "2 days ago"
+```
+
+### الجمع العربي
+
+للعربية ثلاث صيغ: المفرد (1)، والمثنى (2)، والجمع (3+).
+
+```tsx
+function arabicPlural(
+  count: number,
+  singular: string,
+  dual: string,
+  plural: string
+): string {
+  if (count === 1) return singular
+  if (count === 2) return dual
+  return plural
+}
+
+// الاستخدام
+arabicPlural(count, "طالب", "طالبان", "طلاب")
+arabicPlural(count, "يوم", "يومان", "أيام")
+```
+
+---
+
+## أفضل الممارسات
+
+### إرشادات الواجهة
+
+1. **استخدم الخصائص المنطقية** — `ms-`، `me-`، `ps-`، `pe-` بدل `ml-`، `mr-` وغيرها
+2. **اعكس الأيقونات الاتجاهية** — الأسهم والشيفرونات تنقلب في RTL
+3. **اختبر اللغتين** — تحقق دائمًا من التخطيط في ar وen
+4. **الأرقام تبقى غربية** — إلا إذا طُلب توطينها صراحةً
+
+### إرشادات المحتوى
+
+1. **تجنّب وصل السلاسل** — استخدم ترجمات بجُمل كاملة
+2. **أسماء حقول عامة فقط** — `title`، `body`، `name` (أبدًا `titleEn`/`titleAr`)
+3. **تخزين أحادي اللغة** — خزّن بلغة واحدة مع حقل `lang`
+4. **ترجمة عند الطلب** — `localize()` للقوائم و`getText()` للقيم المفردة
+
+### الطباعة
+
+- **الخط العربي**: Rubik (الافتراضي)
+- **الخط الإنجليزي**: GeistSans
+- **ارتفاع السطر**: يُنصح بـ 1.8 للعربية
+- **لا تثبيت لأحجام الخط** — استخدم HTML الدلالي (h1-h6، p، small)
+
+---
+
+## بنية المجلدات
+
+```
+src/
+  components/internationalization/
+    config.ts                 # إعداد اللغات والأنواع وisRTL
+    namespaces.ts             # سجل نطاقات الأسماء الوحيد (مسطّحة + 19 ميزة)
+    dictionaries.ts           # محمّلات الخادم (cache() + محدودة بالمسار)
+    get-dictionary-client.ts  # محمّل العميل (نفس السجل)
+    locale-detect.ts          # detectLocale/pathnameHasLocale (منطق proxy الحي)
+    use-locale.ts             # خطافات العميل: useLocale، useSwitchLocaleHref
+    use-dictionary.ts         # خطاف useDictionary (السياق أولًا)
+    dictionary-context.tsx    # DictionaryProvider
+    language-switcher.tsx     # مكوّن تبديل اللغة
+    actions.ts                # إجراء setLocale
+    helpers/index.ts          # ValidationHelper، ToastHelper، ErrorHelper
+    lib/key-diff.ts           # محرك فرق المفاتيح en/ar
+    lib/parity.ts             # مطابقة الملفات الفعلية + كاشف البقايا
+    en.json / ar.json         # الترجمات العامة (مسطّحة)
+    school-{en,ar}.json       # لوحة المدرسة (مسطّحة، الأكبر حجمًا)
+    stream-{en,ar}.json       # Stream/LMS (مسطّحة)
+    operator-{en,ar}.json     # مشغّل SaaS (مسطّحة)
+    dictionaries/{en,ar}/     # 19 نطاق ميزة: admin, attendance, banking,
+                              # compliance, finance, generate, lab, library,
+                              # live-classes, marking, messages, messaging,
+                              # notifications, parentPortal, profile, results,
+                              # sales, transportation, whatsapp
+  components/translation/     # النظام ب: محرك المحتوى الديناميكي (له README خاص)
+```
+
+---
+
+## المراجع
+
+### داخلية
+
+- [دليل الترجمة](/docs/translation-guide) — دليل معمّق لترجمة محتوى قاعدة البيانات
+- [الترجمة](/docs/translation) — أنماط الاعتماد ومتتبع التغطية
+- `src/components/translation/localize.ts` — المحرك المُجمَّع
+- `src/components/translation/google.ts` — عميل Google Translate
+- `src/components/internationalization/` — التنفيذ الكامل للتدويل
+
+### خارجية
+
+- [Next.js Internationalization](https://nextjs.org/docs/app/building-your-application/routing/internationalization)
+- [Tailwind CSS Logical Properties](https://tailwindcss.com/docs/margin#using-logical-properties)
+- [MDN CSS Logical Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values)
+- [W3C Authoring HTML & CSS for RTL](https://www.w3.org/International/techniques/authoring-html)

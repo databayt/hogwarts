@@ -1,27 +1,32 @@
 ---
 title: الترجمة
-description: i18n من طبقتين — JSON قاموس للواجهة الثابتة، وgetText للمحتوى الديناميكي. فجوات التغطية وأنماط التبني.
+description: i18n من طبقتين — JSON قاموس للواجهة الثابتة، وlocalize() المُجمَّعة للمحتوى الديناميكي. فجوات التغطية وأنماط التبني.
 ---
 
-تعمل الترجمة على طبقتين: ملفات JSON القاموس للواجهة الثابتة (متزامنة بين `ar.json`/`en.json`) و`getText()` لمحتوى قاعدة البيانات الديناميكي عبر Google Translate + تخزين مؤقّت في DB. البنية التحتية متينة؛ التبنّي جزئي — آلاف السلاسل الإنجليزية المكتوبة يدوياً ما زالت موجودة عبر مئات ملفات لوحة المدرسة. شغّل `/i18n-check` للعدد الحيّ.
+تعمل الترجمة على طبقتين: ملفات JSON القاموس للواجهة الثابتة (تطابق `ar`/`en` يفرضه اختبار في CI) ومحرك `localize()` المُجمَّع لمحتوى قاعدة البيانات الديناميكي عبر مخبأ ثلاثي الطبقات (ذاكرة LRU ← جدول `Translation` ← Google Translate). لم يعد بإمكان الانحراف أن يصل للإنتاج: تطابق مفاتيح en/ar، والبقايا غير المترجمة، وعدّادات السلاسل المكتوبة يدويًا، وفئات RTL الفيزيائية كلها محروسة ضمن `pnpm test` وضمن CI. المتبقي هو مسح السلاسل اليدوية الذي تتعقبه أرقام الأساس — شغّل `npx tsx scripts/i18n-hardcoded-ratchet.ts --by-dir` للعدد الحيّ.
 
 ## البنية المعمارية
 
-| الطبقة             | المحتوى                                       | الآلية                                                   |
-| ------------------ | --------------------------------------------- | -------------------------------------------------------- |
-| 1 — واجهة ثابتة    | sidebar، رؤوس الجداول، شارات الحالة، التسميات | JSON قاموس → `getDictionary()` → `dictionary.key`        |
-| 2 — محتوى ديناميكي | إعلانات، مواد، أقسام، فعاليات                 | تخزين بلغة واحدة → `getText()` → Google Translate مع كاش |
+| الطبقة             | المحتوى                                       | الآلية                                                                        |
+| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1 — واجهة ثابتة    | sidebar، رؤوس الجداول، شارات الحالة، التسميات | JSON قاموس → `getDictionary()` → `dictionary.key`                             |
+| 2 — محتوى ديناميكي | إعلانات، مواد، أقسام، فعاليات                 | تخزين بلغة واحدة → `localize()`/`getLabels()` المُجمَّعة → LRU → كاش → Google |
 
 ## ملفات البنية التحتية
 
-| الملف                                                  | الغرض                                            |
-| ------------------------------------------------------ | ------------------------------------------------ |
-| `src/components/translation/display.ts`                | `getText()`، `getFields()`                       |
-| `src/components/translation/actions.ts`                | `translate()`، server actions                    |
-| `src/components/translation/google.ts`                 | عميل Google Translate                            |
-| `src/components/translation/util.ts`                   | `withLang`، `detectScript`                       |
-| `src/components/internationalization/helpers/index.ts` | `ValidationHelper`، `ToastHelper`، `ErrorHelper` |
-| `src/components/internationalization/dictionaries.ts`  | محمّلات قاموس بنطاق المسار                       |
+| الملف                                                  | الغرض                                              |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| `src/components/translation/localize.ts`               | `localize()`/`localizeOne()` المُجمَّعة — المفضّلة |
+| `src/components/translation/registry.ts`               | خريطة TRANSLATABLE (النموذج ← الحقول)              |
+| `src/components/translation/prewarm.ts`                | تعبئة المخبأ عند الكتابة عبر `after()`             |
+| `src/components/translation/person.ts`                 | `getNames()`/`getLabels()` — مُجمَّعة              |
+| `src/components/translation/display.ts`                | `getText()`، `getFields()` — للقيم المفردة فقط     |
+| `src/components/translation/actions.ts`                | نواة `translate()` (LRU ← كاش ← Google)            |
+| `src/components/translation/google.ts`                 | عميل Google: مهلة، تقسيم دفعات، سياسة إعادة        |
+| `src/components/translation/util.ts`                   | `withLang`، `detectScript`                         |
+| `src/components/internationalization/helpers/index.ts` | `ValidationHelper`، `ToastHelper`، `ErrorHelper`   |
+| `src/components/internationalization/namespaces.ts`    | سجل نطاقات الأسماء الوحيد (خادم + عميل)            |
+| `src/components/internationalization/dictionaries.ts`  | محمّلات قاموس بنطاق المسار (ملفوفة بـ `cache()`)   |
 
 ## فجوات التغطية
 
