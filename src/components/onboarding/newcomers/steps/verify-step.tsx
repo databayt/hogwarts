@@ -22,6 +22,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { FormStepContainer, FormStepHeader } from "@/components/form"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { resendVerificationCode, sendVerificationCode } from "../actions"
 import { NEWCOMER_STEPS } from "../config"
@@ -32,7 +33,7 @@ import { NEWCOMER_STEPS } from "../config"
  * Third step of newcomers onboarding.
  * Sends and verifies 6-digit code via email.
  */
-export function VerifyStep() {
+export function VerifyStep({ dictionary }: { dictionary?: Dictionary }) {
   const form = useFormContext()
   const stepConfig = NEWCOMER_STEPS[2]
   const [isResending, setIsResending] = React.useState(false)
@@ -56,6 +57,14 @@ export function VerifyStep() {
     }
   }, [countdown])
 
+  const v = dictionary?.onboarding?.newcomers?.verify
+  const MSG = {
+    codeSent: v?.codeSent ?? "Verification code sent to your email",
+    sendFailed: v?.sendFailed ?? "Failed to send verification code",
+    newCodeSent: v?.newCodeSent ?? "New verification code sent",
+    resendFailed: v?.resendFailed ?? "Failed to resend verification code",
+  }
+
   const handleSendCode = async () => {
     if (!email) return
 
@@ -65,12 +74,12 @@ export function VerifyStep() {
       if (result.success) {
         setCodeSent(true)
         setCountdown(60) // 60 second cooldown
-        toast.success("Verification code sent to your email")
+        toast.success(MSG.codeSent)
       } else {
-        toast.error(result.error || "Failed to send code")
+        toast.error(MSG.sendFailed)
       }
     } catch (error) {
-      toast.error("Failed to send verification code")
+      toast.error(MSG.sendFailed)
     } finally {
       setIsResending(false)
     }
@@ -84,12 +93,12 @@ export function VerifyStep() {
       const result = await resendVerificationCode(email)
       if (result.success) {
         setCountdown(60)
-        toast.success("New verification code sent")
+        toast.success(MSG.newCodeSent)
       } else {
-        toast.error(result.error || "Failed to resend code")
+        toast.error(MSG.resendFailed)
       }
     } catch (error) {
-      toast.error("Failed to resend verification code")
+      toast.error(MSG.resendFailed)
     } finally {
       setIsResending(false)
     }

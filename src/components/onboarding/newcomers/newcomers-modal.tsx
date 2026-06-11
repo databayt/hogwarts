@@ -20,6 +20,7 @@ import {
   FormStepProgress,
   useFormAnalytics,
 } from "@/components/form"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { submitNewcomerApplication, verifyEmailCode } from "./actions"
 import { NEWCOMER_CONFIG, NEWCOMER_STEPS } from "./config"
@@ -37,6 +38,7 @@ interface NewcomersModalProps {
   onOpenChange: (open: boolean) => void
   schoolId: string
   schoolName?: string
+  dictionary?: Dictionary
 }
 
 /**
@@ -54,9 +56,26 @@ export function NewcomersModal({
   onOpenChange,
   schoolId,
   schoolName,
+  dictionary,
 }: NewcomersModalProps) {
   const router = useRouter()
   const analytics = useFormAnalytics()
+
+  const d = dictionary?.onboarding?.newcomers
+  const NEWCOMER_ERROR_MAP: Record<string, string> = {
+    EMAIL_ALREADY_REGISTERED:
+      d?.errors?.emailAlreadyRegistered ?? "Email already registered",
+    EMAIL_ALREADY_REGISTERED_AT_SCHOOL:
+      d?.errors?.emailAlreadyRegisteredAtSchool ??
+      "Email already registered at this school",
+    SEND_CODE_FAILED: d?.errors?.sendCodeFailed ?? "Failed to send code",
+    INVALID_OR_EXPIRED_CODE:
+      d?.errors?.invalidOrExpiredCode ?? "Invalid or expired code",
+    VERIFICATION_FAILED: d?.errors?.verificationFailed ?? "Verification failed",
+    SCHOOL_NOT_FOUND: d?.errors?.schoolNotFound ?? "School not found",
+    SUBMIT_APPLICATION_FAILED:
+      d?.errors?.submitFailed ?? "Failed to submit application",
+  }
   const [currentStep, setCurrentStep] = React.useState(0)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isComplete, setIsComplete] = React.useState(false)
@@ -112,13 +131,15 @@ export function NewcomersModal({
         if (!result.success) {
           form.setError("verificationCode", {
             type: "manual",
-            message: result.error || "Invalid code",
+            message:
+              NEWCOMER_ERROR_MAP[result.errorCode ?? ""] ??
+              NEWCOMER_ERROR_MAP.INVALID_OR_EXPIRED_CODE,
           })
           setIsSubmitting(false)
           return
         }
       } catch {
-        toast.error("Verification failed")
+        toast.error(NEWCOMER_ERROR_MAP.VERIFICATION_FAILED)
         setIsSubmitting(false)
         return
       }
@@ -157,13 +178,16 @@ export function NewcomersModal({
         analytics.trackFlowComplete("newcomers", data)
         setIsComplete(true)
         setCurrentStep(4) // Move to welcome step
-        toast.success("Application submitted successfully!")
+        toast.success(d?.toast?.applicationSubmitted ?? "Application submitted")
       } else {
-        toast.error(result.error || "Failed to submit application")
+        toast.error(
+          NEWCOMER_ERROR_MAP[result.errorCode ?? ""] ??
+            NEWCOMER_ERROR_MAP.SUBMIT_APPLICATION_FAILED
+        )
       }
     } catch (error) {
       console.error("Submit error:", error)
-      toast.error("An error occurred. Please try again.")
+      toast.error(NEWCOMER_ERROR_MAP.SUBMIT_APPLICATION_FAILED)
     } finally {
       setIsSubmitting(false)
     }
@@ -229,7 +253,7 @@ export function NewcomersModal({
             <div className="min-h-[300px]">
               {currentStep === 0 && <RoleStep />}
               {currentStep === 1 && <InfoStep />}
-              {currentStep === 2 && <VerifyStep />}
+              {currentStep === 2 && <VerifyStep dictionary={dictionary} />}
               {currentStep === 3 && <ProfileStep />}
               {currentStep === 4 && <WelcomeStep onComplete={handleComplete} />}
             </div>

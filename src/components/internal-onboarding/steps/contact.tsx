@@ -90,9 +90,7 @@ export function ContactStep() {
     if (result.success) {
       setOtpSent(true)
     } else {
-      setOtpError(
-        result.error || (c?.failedToSendCode ?? "Failed to send code")
-      )
+      setOtpError(c?.failedToSendCode ?? "Failed to send code")
     }
   }, [form, schoolId, c])
 
@@ -108,7 +106,7 @@ export function ContactStep() {
       form.setValue("emailVerified", true)
       updateStepData("contact", { ...form.getValues(), emailVerified: true })
     } else {
-      setOtpError(result.error || (c?.invalidCode ?? "Invalid code"))
+      setOtpError(c?.invalidCode ?? "Invalid code")
     }
   }, [form, otpCode, updateStepData, c])
 

@@ -30,7 +30,7 @@ export async function sendVerificationCode(email: string, schoolId?: string) {
     if (existingUser) {
       return {
         success: false,
-        error: "This email is already registered. Please sign in instead.",
+        errorCode: "EMAIL_ALREADY_REGISTERED",
       }
     }
 
@@ -60,7 +60,7 @@ export async function sendVerificationCode(email: string, schoolId?: string) {
     console.error("[Newcomer] Failed to send verification code:", error)
     return {
       success: false,
-      error: "Failed to send verification code. Please try again.",
+      errorCode: "SEND_CODE_FAILED",
     }
   }
 }
@@ -81,7 +81,7 @@ export async function verifyEmailCode(email: string, code: string) {
     if (!token) {
       return {
         success: false,
-        error: "Invalid or expired verification code",
+        errorCode: "INVALID_OR_EXPIRED_CODE",
       }
     }
 
@@ -95,7 +95,7 @@ export async function verifyEmailCode(email: string, code: string) {
     console.error("[Newcomer] Failed to verify code:", error)
     return {
       success: false,
-      error: "Verification failed. Please try again.",
+      errorCode: "VERIFICATION_FAILED",
     }
   }
 }
@@ -115,7 +115,7 @@ export async function submitNewcomerApplication(
     })
 
     if (!school) {
-      return { success: false, error: "School not found" }
+      return { success: false, errorCode: "SCHOOL_NOT_FOUND" }
     }
 
     // Check if email is already registered in this school
@@ -126,7 +126,7 @@ export async function submitNewcomerApplication(
     if (existingUser) {
       return {
         success: false,
-        error: "This email is already registered at this school",
+        errorCode: "EMAIL_ALREADY_REGISTERED_AT_SCHOOL",
       }
     }
 
@@ -206,7 +206,7 @@ export async function submitNewcomerApplication(
     console.error("[Newcomer] Failed to submit application:", error)
     return {
       success: false,
-      error: "Failed to submit application. Please try again.",
+      errorCode: "SUBMIT_APPLICATION_FAILED",
     }
   }
 }

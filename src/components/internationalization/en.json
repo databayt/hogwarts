@@ -33,8 +33,33 @@
     "genericError": "Something went wrong. Please try again."
   },
   "certificate": {
-    "unavailableTitle": "Certificate Temporarily Unavailable",
-    "unavailableDescription": "Certificate system is under maintenance. Please try again later."
+    "verify": {
+      "verifiedTitle": "Certificate Verified",
+      "verifiedDescription": "This certificate is authentic.",
+      "statusActive": "This certificate is active.",
+      "statusRevoked": "This certificate has been revoked.",
+      "statusExpired": "This certificate has expired.",
+      "notFoundTitle": "Certificate Not Found",
+      "notFoundDescription": "The verification code is invalid or the certificate has been revoked.",
+      "recipient": "Recipient",
+      "exam": "Exam",
+      "score": "Score",
+      "grade": "Grade",
+      "examDate": "Exam Date",
+      "issued": "Issued",
+      "school": "School"
+    },
+    "share": {
+      "title": "Certificate",
+      "unavailableTitle": "Certificate Unavailable",
+      "unavailableDescription": "This certificate is no longer available or the share link has expired.",
+      "generatingTitle": "Certificate Is Being Prepared",
+      "generatingDescription": "The certificate document is being generated. Please check back in a moment.",
+      "download": "Download Certificate",
+      "issuedBy": "Issued by",
+      "recipient": "Recipient",
+      "verifyHint": "Verify authenticity with code"
+    }
   },
   "verify": {
     "unavailableTitle": "Verification Temporarily Unavailable",
@@ -440,12 +465,24 @@
       }
     },
     "types": {
-      "textbooks": { "label": "Textbooks" },
-      "exams": { "label": "Mock Exams" },
-      "qbank": { "label": "Question Bank" },
-      "videos": { "label": "Videos" },
-      "materials": { "label": "Materials" },
-      "books": { "label": "Library Books" }
+      "textbooks": {
+        "label": "Textbooks"
+      },
+      "exams": {
+        "label": "Mock Exams"
+      },
+      "qbank": {
+        "label": "Question Bank"
+      },
+      "videos": {
+        "label": "Videos"
+      },
+      "materials": {
+        "label": "Materials"
+      },
+      "books": {
+        "label": "Library Books"
+      }
     },
     "empty": {
       "title": "No resources match these filters",
@@ -588,7 +625,10 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": ["Unlimited students", "Custom integrations"]
+          "benefits": [
+            "Unlimited students",
+            "Custom integrations"
+          ]
         }
       },
       "constants": {
@@ -1591,7 +1631,11 @@
             "title": "Headmaster & Chief Warlock",
             "subject": "Transfiguration & Ancient Magic",
             "description": "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
-            "specialties": ["Ancient Magic", "Transfiguration", "Leadership"],
+            "specialties": [
+              "Ancient Magic",
+              "Transfiguration",
+              "Leadership"
+            ],
             "experience": "50+ years",
             "education": "Order of Merlin, First Class",
             "quote": "It is our choices that show what we truly are, far more than our abilities."
@@ -1601,7 +1645,11 @@
             "title": "Potions Master & Head of Slytherin",
             "subject": "Potions & Dark Arts Defense",
             "description": "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
-            "specialties": ["Potions", "Dark Arts Defense", "Occlumency"],
+            "specialties": [
+              "Potions",
+              "Dark Arts Defense",
+              "Occlumency"
+            ],
             "experience": "20+ years",
             "education": "Master of Potions, Hogwarts",
             "quote": "Attention to detail separates the exceptional from the merely adequate."
@@ -1611,7 +1659,11 @@
             "title": "Deputy & Head of Gryffindor",
             "subject": "Transfiguration",
             "description": "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
-            "specialties": ["Transfiguration", "Animagus Studies", "Quidditch"],
+            "specialties": [
+              "Transfiguration",
+              "Animagus Studies",
+              "Quidditch"
+            ],
             "experience": "40+ years",
             "education": "Transfiguration Mistress, Hogwarts",
             "quote": "We teachers are rather good at magic, you know."
@@ -1953,9 +2005,22 @@
         "WordPress",
         "Shopify"
       ],
-      "company": ["About", "Careers", "Blog", "Case Studies"],
-      "services": ["Startups", "Agencies"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
+      "company": [
+        "About",
+        "Careers",
+        "Blog",
+        "Case Studies"
+      ],
+      "services": [
+        "Startups",
+        "Agencies"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ]
     },
     "links": {
       "product": "Product",
@@ -1964,10 +2029,29 @@
       "legal": "Legal"
     },
     "sections": {
-      "product": ["Features", "Pricing", "Updates", "Roadmap"],
-      "company": ["About", "Blog", "Careers", "Partners"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
-      "legal": ["Privacy", "Terms", "License"]
+      "product": [
+        "Features",
+        "Pricing",
+        "Updates",
+        "Roadmap"
+      ],
+      "company": [
+        "About",
+        "Blog",
+        "Careers",
+        "Partners"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ],
+      "legal": [
+        "Privacy",
+        "Terms",
+        "License"
+      ]
     }
   },
   "errors": {
@@ -2086,7 +2170,6 @@
       "description": "Description",
       "location": "Location",
       "capacity": "Capacity",
-      "schedule": "Schedule",
       "branding": "Branding",
       "name-format": "Name Format",
       "join": "Join",
@@ -2302,33 +2385,26 @@
     "success": "Submitted. Thank you!",
     "error": "Something went wrong. Try again."
   },
-  "certificate": {
-    "verify": {
-      "verifiedTitle": "Certificate Verified",
-      "verifiedDescription": "This certificate is authentic.",
-      "statusActive": "This certificate is active.",
-      "statusRevoked": "This certificate has been revoked.",
-      "statusExpired": "This certificate has expired.",
-      "notFoundTitle": "Certificate Not Found",
-      "notFoundDescription": "The verification code is invalid or the certificate has been revoked.",
-      "recipient": "Recipient",
-      "exam": "Exam",
-      "score": "Score",
-      "grade": "Grade",
-      "examDate": "Exam Date",
-      "issued": "Issued",
-      "school": "School"
-    },
-    "share": {
-      "title": "Certificate",
-      "unavailableTitle": "Certificate Unavailable",
-      "unavailableDescription": "This certificate is no longer available or the share link has expired.",
-      "generatingTitle": "Certificate Is Being Prepared",
-      "generatingDescription": "The certificate document is being generated. Please check back in a moment.",
-      "download": "Download Certificate",
-      "issuedBy": "Issued by",
-      "recipient": "Recipient",
-      "verifyHint": "Verify authenticity with code"
+  "onboarding": {
+    "newcomers": {
+      "errors": {
+        "emailAlreadyRegistered": "This email is already registered. Please sign in instead.",
+        "emailAlreadyRegisteredAtSchool": "This email is already registered at this school.",
+        "sendCodeFailed": "Failed to send verification code. Please try again.",
+        "invalidOrExpiredCode": "Invalid or expired verification code",
+        "verificationFailed": "Verification failed. Please try again.",
+        "submitFailed": "Failed to submit application. Please try again.",
+        "schoolNotFound": "School not found"
+      },
+      "verify": {
+        "codeSent": "Verification code sent to your email",
+        "sendFailed": "Failed to send verification code",
+        "newCodeSent": "New verification code sent",
+        "resendFailed": "Failed to resend verification code"
+      },
+      "toast": {
+        "applicationSubmitted": "Application submitted"
+      }
     }
   }
 }
