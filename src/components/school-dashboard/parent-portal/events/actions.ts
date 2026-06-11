@@ -7,7 +7,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 
 export async function getParentEvents(displayLang?: "ar" | "en") {
   try {
@@ -66,7 +66,6 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
         id: true,
         title: true,
         description: true,
-        lang: true,
         eventType: true,
         eventDate: true,
         startTime: true,
@@ -101,32 +100,27 @@ export async function getParentEvents(displayLang?: "ar" | "en") {
       registrations.map((r) => [r.eventId, r.status])
     )
 
-    // Map events with translation
-    const mappedEvents = await Promise.all(
-      events.map(async (event) => {
-        const storedLang = (event.lang as "ar" | "en") || "ar"
-        return {
-          id: event.id,
-          title: await getText(event.title || "", storedLang, lang, schoolId),
-          description: event.description
-            ? await getText(event.description, storedLang, lang, schoolId)
-            : null,
-          eventType: event.eventType,
-          eventDate: event.eventDate.toISOString(),
-          startTime: event.startTime,
-          endTime: event.endTime,
-          location: event.location,
-          organizer: event.organizer,
-          maxAttendees: event.maxAttendees,
-          currentAttendees: event.currentAttendees,
-          isPublic: event.isPublic,
-          registrationRequired: event.registrationRequired,
-          status: event.status,
-          registrationStatus: registrationMap.get(event.id) || null,
-          createdAt: event.createdAt.toISOString(),
-        }
-      })
-    )
+    // Map events with translation — ONE batched localize() pass for the whole
+    // list (replaces N×getText; registry covers title/description/location/organizer).
+    const localized = await localize("Event", events, { schoolId, lang })
+    const mappedEvents = localized.map((event) => ({
+      id: event.id,
+      title: event.title || "",
+      description: event.description ?? null,
+      eventType: event.eventType,
+      eventDate: event.eventDate.toISOString(),
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location,
+      organizer: event.organizer,
+      maxAttendees: event.maxAttendees,
+      currentAttendees: event.currentAttendees,
+      isPublic: event.isPublic,
+      registrationRequired: event.registrationRequired,
+      status: event.status,
+      registrationStatus: registrationMap.get(event.id) || null,
+      createdAt: event.createdAt.toISOString(),
+    }))
 
     logger.info("Parent events fetched", {
       action: "parent_events_fetch",

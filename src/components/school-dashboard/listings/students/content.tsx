@@ -14,9 +14,8 @@ import { type StudentRow } from "@/components/school-dashboard/listings/students
 import { studentsSearchParams } from "@/components/school-dashboard/listings/students/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/listings/students/permissions"
 import { StudentsTable } from "@/components/school-dashboard/listings/students/table"
-import { getText } from "@/components/translation/display"
-import { getNames } from "@/components/translation/person"
-import { detectScript, fullName } from "@/components/translation/util"
+import { getLabels, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -174,41 +173,26 @@ export default async function StudentsContent({
       firstName: s.firstName,
       lastName: s.lastName,
     })
-    const classroomTranslations = new Map<string, string>()
-    const [nameTranslations] = await Promise.all([
+    // Classrooms: room codes (B102) transliterate directly; real names go
+    // through ONE batched, deduped getLabels pass (script-detected source).
+    const uniqueClassrooms = new Set<string>()
+    for (const s of rows as any[]) {
+      const room = s.section?.classroom?.roomName
+      if (room) uniqueClassrooms.add(room)
+    }
+    const roomCodes: string[] = []
+    const roomNames: string[] = []
+    for (const room of uniqueClassrooms) {
+      if (/^[A-Z]\d/.test(room)) roomCodes.push(room)
+      else roomNames.push(room)
+    }
+    const [nameTranslations, classroomTranslations] = await Promise.all([
       getNames(rows as any[], nameOf, lang, effectiveSchoolId!),
-      // Classrooms: room codes (B102) transliterate directly; real names translate.
-      (async () => {
-        const uniqueClassrooms = new Set<string>()
-        for (const s of rows as any[]) {
-          const room = s.section?.classroom?.roomName
-          if (
-            room &&
-            (detectScript(room) !== lang ||
-              (lang === "ar" && /[a-zA-Z]/.test(room)))
-          ) {
-            uniqueClassrooms.add(room)
-          }
-        }
-        await Promise.all(
-          Array.from(uniqueClassrooms).map(async (name) => {
-            if (/^[A-Z]\d/.test(name)) {
-              classroomTranslations.set(name, transliterateRoomCode(name, lang))
-            } else {
-              classroomTranslations.set(
-                name,
-                await getText(
-                  name,
-                  detectScript(name),
-                  lang,
-                  effectiveSchoolId!
-                )
-              )
-            }
-          })
-        )
-      })(),
+      getLabels(roomNames, lang, effectiveSchoolId!),
     ])
+    for (const code of roomCodes) {
+      classroomTranslations.set(code, transliterateRoomCode(code, lang))
+    }
 
     // Collect unique grade options for faceted filter
     const gradeSet = new Set<string>()

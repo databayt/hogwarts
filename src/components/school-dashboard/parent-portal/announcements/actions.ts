@@ -7,7 +7,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 
 export async function getParentAnnouncements(displayLang?: "ar" | "en") {
   try {
@@ -101,49 +101,42 @@ export async function getParentAnnouncements(displayLang?: "ar" | "en") {
       },
     })
 
-    // Map announcements with additional context and on-demand translation
+    // Map announcements with additional context and on-demand translation.
+    // ONE batched localize() pass for the whole list (replaces N×getText).
     const lang = displayLang || "ar"
     const schoolId = session.user.schoolId
-    const mappedAnnouncements = await Promise.all(
-      announcements.map(async (announcement) => ({
-        id: announcement.id,
-        title: await getText(
-          announcement.title || "",
-          (announcement.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId
-        ),
-        body: await getText(
-          announcement.body || "",
-          (announcement.lang as "ar" | "en") || "ar",
-          lang,
-          schoolId
-        ),
-        scope: announcement.scope,
-        createdAt: announcement.createdAt,
-        updatedAt: announcement.updatedAt,
-        class: announcement.class
-          ? {
-              id: announcement.class.id,
-              name: announcement.class.name,
-              subject: announcement.class.subject.name,
-              teacher: announcement.class.teacher
-                ? `${announcement.class.teacher.firstName} ${announcement.class.teacher.lastName}`
-                : "N/A",
-            }
-          : null,
-        // Mark which student this announcement is relevant for
-        relevantStudents: announcement.classId
-          ? guardian.studentGuardians
-              .filter((sg) =>
-                sg.student.studentClasses.some(
-                  (sc) => sc.classId === announcement.classId
-                )
+    const localized = await localize("Announcement", announcements, {
+      schoolId,
+      lang,
+    })
+    const mappedAnnouncements = localized.map((announcement) => ({
+      id: announcement.id,
+      title: announcement.title || "",
+      body: announcement.body || "",
+      scope: announcement.scope,
+      createdAt: announcement.createdAt,
+      updatedAt: announcement.updatedAt,
+      class: announcement.class
+        ? {
+            id: announcement.class.id,
+            name: announcement.class.name,
+            subject: announcement.class.subject.name,
+            teacher: announcement.class.teacher
+              ? `${announcement.class.teacher.firstName} ${announcement.class.teacher.lastName}`
+              : "N/A",
+          }
+        : null,
+      // Mark which student this announcement is relevant for
+      relevantStudents: announcement.classId
+        ? guardian.studentGuardians
+            .filter((sg) =>
+              sg.student.studentClasses.some(
+                (sc) => sc.classId === announcement.classId
               )
-              .map((sg) => sg.student.id)
-          : guardian.studentGuardians.map((sg) => sg.student.id),
-      }))
-    )
+            )
+            .map((sg) => sg.student.id)
+        : guardian.studentGuardians.map((sg) => sg.student.id),
+    }))
 
     logger.info("Parent announcements fetched", {
       action: "parent_announcements_fetch",

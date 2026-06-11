@@ -101,8 +101,7 @@ import {
   studentCreateSchema,
   studentUpdateSchema,
 } from "@/components/school-dashboard/listings/students/validation"
-import { getText } from "@/components/translation/display"
-import { getNames } from "@/components/translation/person"
+import { getLabels, getNames } from "@/components/translation/person"
 import { search } from "@/components/translation/search"
 import { fullName } from "@/components/translation/util"
 
@@ -1296,48 +1295,25 @@ export async function getStudents(
       firstName: s.firstName,
       lastName: s.lastName,
     })
-    const nameTranslations = await getNames(
-      rows as Array<any>,
-      nameOf,
-      displayLang,
-      schoolId
-    )
-
-    // Translate classroom names for current locale
-    const classroomTranslations = new Map<string, string>()
+    // Classrooms: room codes (B102) transliterate directly; real names go
+    // through ONE batched, deduped getLabels pass (script-detected source).
     const uniqueClassrooms = new Set<string>()
     for (const s of rows as Array<any>) {
       const roomName = s.section?.classroom?.roomName
-      if (roomName) {
-        const roomLang = s.section?.classroom?.lang
-        if (
-          roomLang !== displayLang ||
-          (displayLang === "ar" && hasLatin(roomName))
-        ) {
-          uniqueClassrooms.add(roomName)
-        }
-      }
+      if (roomName) uniqueClassrooms.add(roomName)
     }
-    if (uniqueClassrooms.size > 0) {
-      await Promise.all(
-        Array.from(uniqueClassrooms).map(async (name) => {
-          if (/^[A-Z]\d/.test(name)) {
-            classroomTranslations.set(
-              name,
-              transliterateRoomCode(name, displayLang)
-            )
-          } else {
-            const sourceLang = hasLatin(name) ? "en" : "ar"
-            const translated = await getText(
-              name,
-              sourceLang,
-              displayLang as "ar" | "en",
-              schoolId
-            )
-            classroomTranslations.set(name, translated)
-          }
-        })
-      )
+    const roomCodes: string[] = []
+    const roomNames: string[] = []
+    for (const room of uniqueClassrooms) {
+      if (/^[A-Z]\d/.test(room)) roomCodes.push(room)
+      else roomNames.push(room)
+    }
+    const [nameTranslations, classroomTranslations] = await Promise.all([
+      getNames(rows as Array<any>, nameOf, displayLang, schoolId),
+      getLabels(roomNames, displayLang, schoolId),
+    ])
+    for (const code of roomCodes) {
+      classroomTranslations.set(code, transliterateRoomCode(code, displayLang))
     }
 
     // Map results
@@ -1474,7 +1450,6 @@ export async function getStudentsCSV(
     })
 
     // Translate names for current locale
-    const csvNameTranslations = new Map<string, string>()
     const csvUniqueNames = new Map<string, string>()
     for (const s of students as Array<any>) {
       const rawName = [s.firstName, s.middleName, s.lastName]
@@ -1510,21 +1485,13 @@ export async function getStudentsCSV(
         }
       }
     }
-    if (csvUniqueNames.size > 0) {
-      await Promise.all(
-        Array.from(csvUniqueNames.entries()).map(
-          async ([name, contentLang]) => {
-            const translated = await getText(
-              name,
-              contentLang as "ar" | "en",
-              csvDisplayLang as "ar" | "en",
-              schoolId
-            )
-            csvNameTranslations.set(name, translated)
-          }
-        )
-      )
-    }
+    // ONE batched, deduped resolution for every candidate value (full names +
+    // individual parts) — replaces the per-value getText fan-out.
+    const csvNameTranslations = await getLabels(
+      Array.from(csvUniqueNames.keys()),
+      csvDisplayLang as "ar" | "en",
+      schoolId
+    )
 
     // Transform data for CSV export
     const exportData = students.map((student: any) => {

@@ -15,8 +15,7 @@ import {
   getResultsList,
 } from "@/components/school-dashboard/listings/grades/queries"
 import { ResultsTable } from "@/components/school-dashboard/listings/grades/table"
-import { getText } from "@/components/translation/display"
-import { detectLang } from "@/components/translation/util"
+import { getLabels } from "@/components/translation/person"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -50,33 +49,24 @@ export default async function GradesContent({
         sort: sp.sort,
       })
 
-      // Map results and translate text fields for display
+      // Map results, then translate ALL text columns in ONE batched, deduped
+      // pass (getLabels) — replaces the per-row 3×getText N+1.
       const rawData = rows.map((r) => formatResultRow(r))
-      data = await Promise.all(
-        rawData.map(async (row, i) => {
-          const r = rows[i]
-          const studentLang =
-            (r.student?.lang as "ar" | "en") || detectLang(row.studentName)
-          const classLang =
-            (r.class?.lang as "ar" | "en") || detectLang(row.className)
-          return {
-            ...row,
-            studentName: await getText(
-              row.studentName,
-              studentLang,
-              lang,
-              schoolId!
-            ),
-            assignmentTitle: await getText(
-              row.assignmentTitle,
-              detectLang(row.assignmentTitle),
-              lang,
-              schoolId!
-            ),
-            className: await getText(row.className, classLang, lang, schoolId!),
-          }
-        })
+      const labels = await getLabels(
+        rawData.flatMap((row) => [
+          row.studentName,
+          row.assignmentTitle,
+          row.className,
+        ]),
+        lang,
+        schoolId
       )
+      data = rawData.map((row) => ({
+        ...row,
+        studentName: labels.get(row.studentName) ?? row.studentName,
+        assignmentTitle: labels.get(row.assignmentTitle) ?? row.assignmentTitle,
+        className: labels.get(row.className) ?? row.className,
+      }))
       total = count
     } catch (error) {
       // Log error for debugging but don't crash the page

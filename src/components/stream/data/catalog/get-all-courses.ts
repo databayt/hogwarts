@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
 import type { Lang } from "@/components/translation/types"
 
 /**
