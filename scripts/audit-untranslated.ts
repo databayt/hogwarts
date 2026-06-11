@@ -95,6 +95,12 @@ function findOffenders(): Offender[] {
       // Search/filter KEYS are not display text — translating them is wrong
       // (the matcher compares against stored values). Skip them.
       if (/\.toLowerCase\(\)/.test(line)) return
+      // img alt= holding a person's name is correct untranslated (a11y text;
+      // screen readers handle the stored script natively).
+      if (/\balt=\{/.test(line)) return
+      // Object-property composition (`title: \`...\``) is a WRITE payload
+      // being stored, not a render — single-language storage stores source.
+      if (/^\s*\w+:\s*`/.test(line)) return
       if (NAME_COMPOSITION.some((re) => re.test(line))) {
         offenders.push({
           file,
@@ -170,7 +176,10 @@ interface FeatureGap {
  * unit of coverage. Partial gaps inside a covered feature — e.g. one view
  * fed by an unlocalized query — are sweep work, not ratchet work.)
  */
-const DISPLAY_HELPERS = /\blocalize(One)?\b|\bgetText\b|\bgetFields\b/
+// getLabels/getNames count too: they're the documented batched APIs for
+// names and unregistered fields (several features migrated getText → getLabels).
+const DISPLAY_HELPERS =
+  /\blocalize(One)?\b|\bgetText\b|\bgetFields\b|\bgetLabels\b|\bgetNames\b/
 
 function findFieldOffenders(): FeatureGap[] {
   const gaps: FeatureGap[] = []
