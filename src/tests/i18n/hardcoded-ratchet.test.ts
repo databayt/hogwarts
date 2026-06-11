@@ -34,8 +34,12 @@ const BASELINE_BY_PATTERN: Record<PatternName, number> = {
   placeholder: 163,
 }
 
-/** Routes whose page closure shows NO dictionary wiring (i18n-audit.ts). */
-const BASELINE_STATIC_GAP = 21
+/**
+ * Routes whose page closure shows NO dictionary wiring (i18n-audit.ts).
+ * Driven 21 → 0 on 2026-06-11 (exam wizard, parent portal, transcript
+ * verify). Every route now has dictionary wiring — keep it at zero.
+ */
+const BASELINE_STATIC_GAP = 0
 
 describe("hardcoded-string ratchet", () => {
   const report = scanHardcodedStrings()

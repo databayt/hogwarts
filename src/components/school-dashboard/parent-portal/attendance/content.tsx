@@ -5,10 +5,20 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { AttendanceView } from "./view"
 
-export async function ParentAttendanceContent() {
+interface Props {
+  lang?: Locale
+  dictionary?: Dictionary
+}
+
+export async function ParentAttendanceContent({
+  lang,
+  dictionary,
+}: Props = {}) {
   const session = await auth()
 
   if (!session?.user) {
@@ -82,7 +92,8 @@ export async function ParentAttendanceContent() {
     return (
       <div className="py-12 text-center">
         <p className="text-muted-foreground">
-          You don't have access to parent portal.
+          {dictionary?.parentPortal?.childAttendance?.noAccess ??
+            "You don't have access to parent portal."}
         </p>
       </div>
     )

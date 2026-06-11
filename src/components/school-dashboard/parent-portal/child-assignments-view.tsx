@@ -19,15 +19,22 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getChildAssignments } from "./actions"
 
 interface Props {
   studentId: string
   lang?: Locale
+  dictionary?: Dictionary
 }
 
-export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
+export async function ChildAssignmentsView({
+  studentId,
+  lang = "ar",
+  dictionary,
+}: Props) {
+  const t = dictionary?.parentPortal?.assignments
   const { assignments } = await getChildAssignments({ studentId })
 
   const getStatusBadge = (assignment: (typeof assignments)[0]) => {
@@ -35,26 +42,36 @@ export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
       const dueDate = new Date(assignment.dueDate)
       const now = new Date()
       if (dueDate < now) {
-        return <Badge variant="destructive">Missing</Badge>
+        return (
+          <Badge variant="destructive">{t?.statusMissing ?? "Missing"}</Badge>
+        )
       }
-      return <Badge variant="outline">Not Submitted</Badge>
+      return (
+        <Badge variant="outline">
+          {t?.statusNotSubmitted ?? "Not Submitted"}
+        </Badge>
+      )
     }
 
     switch (assignment.submission.status) {
       case "SUBMITTED":
-        return <Badge variant="default">Submitted</Badge>
+        return (
+          <Badge variant="default">{t?.statusSubmitted ?? "Submitted"}</Badge>
+        )
       case "GRADED":
         return (
           <Badge variant="default" className="bg-green-600">
-            Graded
+            {t?.statusGraded ?? "Graded"}
           </Badge>
         )
       case "LATE_SUBMITTED":
-        return <Badge variant="destructive">Late</Badge>
+        return <Badge variant="destructive">{t?.statusLate ?? "Late"}</Badge>
       case "DRAFT":
-        return <Badge variant="outline">Draft</Badge>
+        return <Badge variant="outline">{t?.statusDraft ?? "Draft"}</Badge>
       case "RETURNED":
-        return <Badge variant="default">Returned</Badge>
+        return (
+          <Badge variant="default">{t?.statusReturned ?? "Returned"}</Badge>
+        )
       default:
         return <Badge variant="outline">{assignment.submission.status}</Badge>
     }
@@ -64,31 +81,40 @@ export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Assignments</CardTitle>
+          <CardTitle>{t?.title ?? "Assignments"}</CardTitle>
           <CardDescription>
             {assignments.length > 0
-              ? `Showing ${assignments.length} assignment${assignments.length !== 1 ? "s" : ""}`
-              : "No assignments available"}
+              ? (t?.showing?.replace("{count}", String(assignments.length)) ??
+                `Showing ${assignments.length} assignment${assignments.length !== 1 ? "s" : ""}`)
+              : (t?.noneAvailable ?? "No assignments available")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {assignments.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">
-              No assignments assigned yet
+              {t?.noneAssigned ?? "No assignments assigned yet"}
             </p>
           ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Assigned Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="w-[120px]">Points</TableHead>
-                    <TableHead className="w-[120px]">Grade</TableHead>
-                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead>{t?.colTitle ?? "Title"}</TableHead>
+                    <TableHead>{t?.colSubject ?? "Subject"}</TableHead>
+                    <TableHead>{t?.colClass ?? "Class"}</TableHead>
+                    <TableHead>
+                      {t?.colAssignedDate ?? "Assigned Date"}
+                    </TableHead>
+                    <TableHead>{t?.colDueDate ?? "Due Date"}</TableHead>
+                    <TableHead className="w-[120px]">
+                      {t?.colPoints ?? "Points"}
+                    </TableHead>
+                    <TableHead className="w-[120px]">
+                      {t?.colGrade ?? "Grade"}
+                    </TableHead>
+                    <TableHead className="w-[120px]">
+                      {t?.colStatus ?? "Status"}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -128,7 +154,7 @@ export async function ChildAssignmentsView({ studentId, lang = "ar" }: Props) {
                         </TableCell>
                         <TableCell>
                           <span className="font-medium">
-                            {assignment.totalPoints} pts
+                            {assignment.totalPoints} {t?.points ?? "pts"}
                           </span>
                         </TableCell>
                         <TableCell>
