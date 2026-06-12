@@ -2,6 +2,10 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
 import { generateUniqueJoinCode } from "@/lib/join-code"
+import {
+  computeTermDates,
+  resolveAcademicCalendar,
+} from "@/components/school-dashboard/timetable/calendars"
 
 import {
   ensureSubjectSelections,
@@ -30,31 +34,11 @@ export async function applyTimetableStructureForNewSchool(
   schoolId: string,
   structureSlug: string
 ) {
-  // Create default school year if none exists
-  const existingYear = await db.schoolYear.findFirst({
-    where: { schoolId },
-    select: { id: true },
+  // Fetch school country for calendar resolution
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { country: true },
   })
-
-  let yearId: string
-
-  if (existingYear) {
-    yearId = existingYear.id
-  } else {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const startMonth = now.getMonth() >= 8 ? currentYear : currentYear - 1
-
-    const year = await db.schoolYear.create({
-      data: {
-        schoolId,
-        yearName: `${startMonth}/${startMonth + 1}`,
-        startDate: new Date(startMonth, 8, 1), // September 1
-        endDate: new Date(startMonth + 1, 5, 30), // June 30
-      },
-    })
-    yearId = year.id
-  }
 
   // Import and call the timetable structure applier
   // This creates Period records from the structure definition
@@ -65,6 +49,36 @@ export async function applyTimetableStructureForNewSchool(
   const structure = getStructureBySlug(slug)
   if (!structure)
     return { skipped: true, message: `Unknown structure: ${slug}` }
+
+  // Resolve calendar and compute term dates
+  const calendar = resolveAcademicCalendar(school?.country, slug)
+  const computed = computeTermDates(calendar, new Date())
+
+  // Create the CURRENT academic year if it doesn't exist. Matching by
+  // yearName (not "any year for this school") matters: reusing a stale
+  // prior-year record would link freshly computed terms to the wrong
+  // SchoolYear — and the terms/periods counts below would be scoped to the
+  // wrong year too.
+  const existingYear = await db.schoolYear.findFirst({
+    where: { schoolId, yearName: computed.yearName },
+    select: { id: true },
+  })
+
+  let yearId: string
+
+  if (existingYear) {
+    yearId = existingYear.id
+  } else {
+    const year = await db.schoolYear.create({
+      data: {
+        schoolId,
+        yearName: computed.yearName,
+        startDate: computed.yearStart,
+        endDate: computed.yearEnd,
+      },
+    })
+    yearId = year.id
+  }
 
   // Wrap creation in transaction for atomicity
   const [existingTerms, existingPeriods] = await Promise.all([
@@ -95,52 +109,43 @@ export async function applyTimetableStructureForNewSchool(
         }
       }
 
-      // Create 2 default terms within the school year
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const yearStart = now.getMonth() >= 8 ? currentYear : currentYear - 1
-
       let termId: string | undefined
 
       if (existingTerms === 0) {
-        // Determine which term should be active based on current date
-        const term1End = new Date(yearStart + 1, 0, 31) // Jan 31
-        const isNowInTerm1 = now <= term1End
-
-        const term1 = await tx.term.create({
-          data: {
-            schoolId,
-            yearId,
-            termNumber: 1,
-            startDate: new Date(yearStart, 8, 1), // Sep 1
-            endDate: term1End,
-            isActive: isNowInTerm1,
-          },
-        })
-        termId = term1.id
-
-        const term2 = await tx.term.create({
-          data: {
-            schoolId,
-            yearId,
-            termNumber: 2,
-            startDate: new Date(yearStart + 1, 1, 1), // Feb 1
-            endDate: new Date(yearStart + 1, 5, 30), // Jun 30
-            isActive: !isNowInTerm1,
-          },
-        })
-
-        // Use Term 2 id if that's the active term
-        if (!isNowInTerm1) termId = term2.id
+        // Create ALL terms from the calendar definition
+        for (const termDef of computed.terms) {
+          const created = await tx.term.create({
+            data: {
+              schoolId,
+              yearId,
+              termNumber: termDef.termNumber,
+              startDate: termDef.startDate,
+              endDate: termDef.endDate,
+              isActive: termDef.isActive,
+            },
+          })
+          if (termDef.isActive) termId = created.id
+        }
       }
 
-      // Resolve termId from existing terms if not freshly created
+      // Resolve termId from existing terms if not freshly created. Fall back
+      // to the most recent term when none is flagged active — otherwise a
+      // school whose terms are all isActive=false never gets a week config
+      // and the doctor's schedule stage can never converge to healthy.
       if (!termId) {
         const activeTerm = await tx.term.findFirst({
           where: { schoolId, yearId, isActive: true },
           select: { id: true },
         })
         termId = activeTerm?.id
+        if (!termId) {
+          const latestTerm = await tx.term.findFirst({
+            where: { schoolId, yearId },
+            orderBy: { startDate: "desc" },
+            select: { id: true },
+          })
+          termId = latestTerm?.id
+        }
       }
 
       // Persist working days from structure definition
@@ -654,6 +659,7 @@ export interface ProvisioningStatus {
     schoolYears: number
     periods: number
     terms: number
+    weekConfigs: number
     classroomTypes: number
     sections: number
     timetableSlots: number
@@ -700,6 +706,7 @@ export async function getProvisioningStatus(
     schoolYears,
     periods,
     terms,
+    weekConfigs,
     classroomTypes,
     sections,
     timetableSlots,
@@ -715,6 +722,7 @@ export async function getProvisioningStatus(
     db.schoolYear.count({ where: { schoolId } }),
     db.period.count({ where: { schoolId } }),
     db.term.count({ where: { schoolId } }),
+    db.schoolWeekConfig.count({ where: { schoolId } }),
     db.classroomType.count({ where: { schoolId } }),
     db.section.count({ where: { schoolId } }),
     db.timetable.count({ where: { schoolId } }),
@@ -727,9 +735,12 @@ export async function getProvisioningStatus(
   if (academicLevels === 0 || academicGrades === 0)
     missing.push("academicStructure")
   if (subjectSelections === 0) missing.push("subjectSelections")
-  if (school.timetableStructure && (periods === 0 || terms === 0))
+  if (
+    school.timetableStructure &&
+    (periods === 0 || terms === 0 || weekConfigs === 0)
+  )
     missing.push("schedule")
-  if (sections === 0) missing.push("sections")
+  if (sections === 0 || classroomTypes === 0) missing.push("sections")
   if (school.timetableStructure && timetableSlots === 0)
     missing.push("timetable")
   if (!school.joinCode) missing.push("joinCode")
@@ -746,6 +757,7 @@ export async function getProvisioningStatus(
       schoolYears,
       periods,
       terms,
+      weekConfigs,
       classroomTypes,
       sections,
       timetableSlots,
@@ -822,9 +834,19 @@ export async function repairProvisioning(
     if (count === 0) await ensureSubjectSelections(schoolId)
   })
 
-  await run("schedule", () =>
-    applyTimetableStructureForNewSchool(schoolId, school.timetableStructure!)
-  )
+  await run("schedule", async () => {
+    const result = await applyTimetableStructureForNewSchool(
+      schoolId,
+      school.timetableStructure!
+    )
+    // { skipped: true } means the slug was unrecognised — surface as failure
+    if (result && "skipped" in result && result.skipped) {
+      throw new Error(
+        (result as { skipped: true; message: string }).message ??
+          "unknown_structure_slug"
+      )
+    }
+  })
 
   await run("sections", async () => {
     await db.classroomType.upsert({

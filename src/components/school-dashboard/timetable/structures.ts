@@ -31,6 +31,14 @@ export interface TimetableStructure {
   schoolEnd: string
   isDefault: boolean
   sortOrder: number
+  /**
+   * Optional country/region key into ACADEMIC_CALENDARS overriding the
+   * school's own country calendar — for curricula that follow a different
+   * academic calendar than the host country (e.g. British schools in Sudan
+   * follow the UK Sep-Dec/Jan-Apr/Apr-Jul pattern, not the SD Oct-Jan/Feb-Jun
+   * pattern).
+   */
+  calendar?: string
 }
 
 export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
@@ -282,6 +290,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     schoolEnd: "14:45",
     isDefault: false,
     sortOrder: 3,
+    calendar: "GB",
   },
   {
     slug: "sd-ib",
@@ -358,6 +367,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     schoolEnd: "14:15",
     isDefault: false,
     sortOrder: 4,
+    calendar: "*",
   },
   {
     slug: "sd-half-day",

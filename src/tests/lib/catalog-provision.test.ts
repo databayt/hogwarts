@@ -31,6 +31,7 @@ vi.mock("@/lib/db", () => ({
     schoolYear: { count: vi.fn(), findFirst: vi.fn() },
     period: { count: vi.fn() },
     term: { count: vi.fn() },
+    schoolWeekConfig: { count: vi.fn() },
     classroomType: { count: vi.fn(), findFirst: vi.fn(), upsert: vi.fn() },
     section: { count: vi.fn() },
     timetable: { count: vi.fn() },
@@ -64,6 +65,7 @@ type Counts = {
   schoolYear?: number
   period?: number
   term?: number
+  weekConfig?: number
   classroomType?: number
   section?: number
   timetable?: number
@@ -85,6 +87,7 @@ function mockCounts(counts: Counts) {
   vi.mocked(db.schoolYear.count).mockResolvedValue(counts.schoolYear ?? 0)
   vi.mocked(db.period.count).mockResolvedValue(counts.period ?? 0)
   vi.mocked(db.term.count).mockResolvedValue(counts.term ?? 0)
+  vi.mocked(db.schoolWeekConfig.count).mockResolvedValue(counts.weekConfig ?? 0)
   vi.mocked(db.classroomType.count).mockResolvedValue(counts.classroomType ?? 0)
   vi.mocked(db.section.count).mockResolvedValue(counts.section ?? 0)
   vi.mocked(db.timetable.count).mockResolvedValue(counts.timetable ?? 0)
@@ -102,6 +105,7 @@ const HEALTHY_COUNTS: Counts = {
   schoolYear: 1,
   period: 8,
   term: 2,
+  weekConfig: 1,
   classroomType: 1,
   section: 24,
   timetable: 600,
@@ -284,5 +288,87 @@ describe("repairProvisioning", () => {
     await expect(repairProvisioning(schoolId)).rejects.toThrow(
       "school_not_found"
     )
+  })
+
+  it("unknown timetable slug lands in failed[] instead of repaired[]", async () => {
+    // School has a timetable structure set but it is an unknown slug
+    mockSchool({
+      timetableStructure: "unknown-slug-xyz",
+      joinCode: "JOIN99",
+    })
+    mockCounts({ ...HEALTHY_COUNTS, period: 0, term: 0, weekConfig: 0 })
+
+    const result = await repairProvisioning(schoolId)
+
+    // schedule stage should be in failed, not repaired
+    expect(result.failed.some((f) => f.stage === "schedule")).toBe(true)
+    expect(result.repaired).not.toContain("schedule")
+    const scheduleFail = result.failed.find((f) => f.stage === "schedule")
+    expect(scheduleFail?.error).toContain("unknown-slug-xyz")
+  })
+})
+
+describe("getProvisioningStatus — enhanced doctor checks", () => {
+  it("reports weekConfigs count in counts object", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, weekConfig: 3 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.counts.weekConfigs).toBe(3)
+  })
+
+  it("marks schedule missing when weekConfigs === 0 but periods and terms exist", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, weekConfig: 0 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toContain("schedule")
+  })
+
+  it("marks schedule missing when periods === 0", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, period: 0, weekConfig: 1 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toContain("schedule")
+  })
+
+  it("marks schedule missing when terms === 0", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, term: 0, weekConfig: 1 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toContain("schedule")
+  })
+
+  it("marks sections missing when classroomTypes === 0 even if sections > 0", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, classroomType: 0 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toContain("sections")
+  })
+
+  it("marks sections missing when sections === 0 even if classroomTypes > 0", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, section: 0 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toContain("sections")
+  })
+
+  it("does NOT mark sections missing when both classroomTypes > 0 and sections > 0", async () => {
+    mockSchool()
+    mockCounts(HEALTHY_COUNTS)
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).not.toContain("sections")
   })
 })

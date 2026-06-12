@@ -23,6 +23,8 @@
 - [x] Idempotency guards (skipIfExists inside transaction)
 - [x] **Provisioning doctor** (`provision.ts`): `getProvisioningStatus` + `repairProvisioning` — detects/repairs missing stages (defaults → structure → selections → schedule → sections → timetable → join code), each stage isolated; wired into onboarding `after()`, manual `publishSchool`, and the operator tenants table ("Repair Provisioning") (2026-06-12)
 - [x] `applyTimetableStructureForNewSchool` re-runs no longer duplicate periods (idempotency bug fixed 2026-06-12)
+- [x] **Terms-aware schedule stage** (2026-06-12): `applyTimetableStructureForNewSchool` now derives the school year + N terms from `ACADEMIC_CALENDARS` (timetable/calendars.ts) by country/structure/date — SA 2-semester (post-1447 revert), AE/KW/GB 3-term, IN Apr–Mar year-wrap, regional GULF/MENA fallbacks; exactly one term `isActive` by date. SchoolYear matched by `yearName` (stale prior-year records no longer adopt new terms); weekConfig `termId` falls back to latest term when none is active (repair now converges). `resolveActiveTerm` priority-4 creates the full calendar set too.
+- [x] **Doctor hardening** (2026-06-12): `weekConfigs` counted + flags `schedule`; `classroomTypes === 0` flags `sections`; unknown structure slug now FAILS the schedule stage loudly (was silently marked repaired). Docs: new `/docs/provision` (en+ar) owns the pipeline reference.
 - [x] Stream patterns are curriculum-owned (`academic-config.ts` `streamSubjectPatterns`, SD-family only) — no more global bilingual keyword matching (2026-06-12)
 
 ### Request → Approval flow (opt-in)

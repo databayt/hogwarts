@@ -1,4 +1,8 @@
 import { db } from "@/lib/db"
+import {
+  computeTermDates,
+  resolveAcademicCalendar,
+} from "@/components/school-dashboard/timetable/calendars"
 
 /**
  * Shared 3-priority term resolution.
@@ -91,39 +95,54 @@ export async function resolveActiveTerm(schoolId: string): Promise<{
     }
   }
 
-  // Priority 4: Auto-provision a default year, term, periods, and week config if none exist
+  // Priority 4: Auto-provision a default year, full term set, periods, and week
+  // config when none exist. Uses country-aware calendar logic so the term dates
+  // are correct for the school's region.
   const termCount = await db.term.count({ where: { schoolId } })
   if (termCount === 0) {
     try {
-      const currentYear = new Date().getFullYear()
-      const yearName = `${currentYear}/${currentYear + 1}`
+      const schoolRecord = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { country: true },
+      })
 
-      // Create school year
+      const now = new Date()
+      const calendar = resolveAcademicCalendar(schoolRecord?.country)
+      const computed = computeTermDates(calendar, now)
+
+      // Create or reuse school year
       let schoolYear = await db.schoolYear.findFirst({
-        where: { schoolId, yearName },
+        where: { schoolId, yearName: computed.yearName },
       })
       if (!schoolYear) {
         schoolYear = await db.schoolYear.create({
           data: {
             schoolId,
-            yearName,
-            startDate: new Date(`${currentYear}-09-01`),
-            endDate: new Date(`${currentYear + 1}-06-30`),
+            yearName: computed.yearName,
+            startDate: computed.yearStart,
+            endDate: computed.yearEnd,
           },
         })
       }
 
-      // Create default active Term 1
-      const defaultTerm = await db.term.create({
-        data: {
-          schoolId,
-          yearId: schoolYear.id,
-          termNumber: 1,
-          startDate: new Date(`${currentYear}-09-01`),
-          endDate: new Date(`${currentYear}-12-31`),
-          isActive: true,
-        },
-      })
+      // Create all terms for the calendar, capturing the active one
+      let activeTerm: (typeof computed.terms)[0] | undefined
+      for (const termDef of computed.terms) {
+        await db.term.create({
+          data: {
+            schoolId,
+            yearId: schoolYear.id,
+            termNumber: termDef.termNumber,
+            startDate: termDef.startDate,
+            endDate: termDef.endDate,
+            isActive: termDef.isActive,
+          },
+        })
+        if (termDef.isActive) activeTerm = termDef
+      }
+
+      // activeTerm is always defined (computeTermDates guarantees exactly one active)
+      if (!activeTerm) activeTerm = computed.terms[0]
 
       // Create default periods (Period 1 to 7 + Break)
       const defaultPeriods = [
@@ -152,25 +171,33 @@ export async function resolveActiveTerm(schoolId: string): Promise<{
         })
       }
 
-      // Create default school week config
-      await db.schoolWeekConfig.create({
-        data: {
-          schoolId,
-          termId: defaultTerm.id,
-          workingDays: [0, 1, 2, 3, 4], // Sun-Thu
-          defaultLunchAfterPeriod: 3,
-        },
+      // Lookup the active term id from the DB (we just created it)
+      const activeTermRecord = await db.term.findFirst({
+        where: { schoolId, yearId: schoolYear.id, isActive: true },
+        select: { id: true, termNumber: true, startDate: true, endDate: true },
       })
 
-      return {
-        term: {
-          id: defaultTerm.id,
-          termNumber: defaultTerm.termNumber,
-          startDate: defaultTerm.startDate,
-          endDate: defaultTerm.endDate,
-          yearId: schoolYear.id,
-        },
-        source: "explicit",
+      if (activeTermRecord) {
+        // Create default school week config
+        await db.schoolWeekConfig.create({
+          data: {
+            schoolId,
+            termId: activeTermRecord.id,
+            workingDays: [0, 1, 2, 3, 4], // Sun-Thu
+            defaultLunchAfterPeriod: 3,
+          },
+        })
+
+        return {
+          term: {
+            id: activeTermRecord.id,
+            termNumber: activeTermRecord.termNumber,
+            startDate: activeTermRecord.startDate,
+            endDate: activeTermRecord.endDate,
+            yearId: schoolYear.id,
+          },
+          source: "explicit" as const,
+        }
       }
     } catch (e) {
       console.error("[resolveActiveTerm] Auto-provision failed:", e)

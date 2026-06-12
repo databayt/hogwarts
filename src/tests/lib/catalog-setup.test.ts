@@ -241,6 +241,9 @@ describe("Catalog Setup", () => {
 
   describe("applyTimetableStructureForNewSchool", () => {
     it("creates school year, periods, terms, and week config for valid structure", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
       vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
       vi.mocked(db.schoolYear.create).mockResolvedValue({
         id: "year-1",
@@ -274,6 +277,9 @@ describe("Catalog Setup", () => {
     })
 
     it("reuses existing school year", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
       vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
         id: "existing-year",
       } as any)
@@ -305,6 +311,9 @@ describe("Catalog Setup", () => {
     })
 
     it("maps legacy template names via LEGACY_TEMPLATE_MAP", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
       vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
         id: "year-1",
       } as any)
@@ -336,8 +345,8 @@ describe("Catalog Setup", () => {
     })
 
     it("returns skipped when structure slug is unknown", async () => {
-      vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
-        id: "year-1",
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
       } as any)
 
       const result = await applyTimetableStructureForNewSchool(
@@ -352,6 +361,9 @@ describe("Catalog Setup", () => {
     })
 
     it("creates SchoolWeekConfig when terms already exist (Bug 6 fix)", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
       vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
         id: "year-1",
       } as any)
@@ -382,6 +394,9 @@ describe("Catalog Setup", () => {
     })
 
     it("does not duplicate periods on a re-run (manual publish after onboarding)", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
       vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
         id: "year-1",
       } as any)
@@ -412,6 +427,142 @@ describe("Catalog Setup", () => {
       expect(result.skipped).toBe(false)
       expect(result.periods).toBe(0)
       expect(periodCreate).not.toHaveBeenCalled()
+    })
+
+    it("school with country GB gets 3 terms created", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: "GB",
+      } as any)
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolYear.create).mockResolvedValue({
+        id: "year-gb",
+      } as any)
+      vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
+
+      const termCreate = vi.fn().mockResolvedValue({ id: "term-x" })
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          period: { create: vi.fn() },
+          term: { create: termCreate, findFirst: vi.fn() },
+          schoolWeekConfig: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn(),
+          },
+        }
+        return callback(tx)
+      })
+
+      await applyTimetableStructureForNewSchool(schoolId, "sd-british")
+
+      // GB calendar has 3 terms — sd-british has calendar:"GB"
+      expect(termCreate).toHaveBeenCalledTimes(3)
+    })
+
+    it("school with country AE gets 3 terms created", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: "AE",
+      } as any)
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolYear.create).mockResolvedValue({
+        id: "year-ae",
+      } as any)
+      vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
+
+      const termCreate = vi.fn().mockResolvedValue({ id: "term-x" })
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          period: { create: vi.fn() },
+          term: { create: termCreate, findFirst: vi.fn() },
+          schoolWeekConfig: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn(),
+          },
+        }
+        return callback(tx)
+      })
+
+      // gulf-standard for AE has no structure calendar override → country AE → 3 terms
+      await applyTimetableStructureForNewSchool(schoolId, "gulf-standard")
+
+      expect(termCreate).toHaveBeenCalledTimes(3)
+    })
+
+    it("DEFAULT calendar (null country) creates 2 terms", async () => {
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolYear.create).mockResolvedValue({
+        id: "year-1",
+      } as any)
+      vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
+
+      const termCreate = vi.fn().mockResolvedValue({ id: "term-x" })
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          period: { create: vi.fn() },
+          term: { create: termCreate, findFirst: vi.fn() },
+          schoolWeekConfig: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn(),
+          },
+        }
+        return callback(tx)
+      })
+
+      await applyTimetableStructureForNewSchool(schoolId, "sd-gov-default")
+
+      // DEFAULT (*) calendar has 2 terms
+      expect(termCreate).toHaveBeenCalledTimes(2)
+    })
+
+    it("active-term selection respects mocked current date", async () => {
+      // Use vi.useFakeTimers to set "now" to October 2025 (Term 1 of DEFAULT)
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date(2025, 9, 15)) // Oct 15 2025
+
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        country: null,
+      } as any)
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
+      vi.mocked(db.schoolYear.create).mockResolvedValue({ id: "year-1" } as any)
+      vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
+
+      const createdTerms: Array<{ termNumber: number; isActive: boolean }> = []
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          period: { create: vi.fn() },
+          term: {
+            create: vi.fn().mockImplementation(async (args: any) => {
+              createdTerms.push({
+                termNumber: args.data.termNumber,
+                isActive: args.data.isActive,
+              })
+              return { id: `term-${args.data.termNumber}` }
+            }),
+            findFirst: vi.fn(),
+          },
+          schoolWeekConfig: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn(),
+          },
+        }
+        return callback(tx)
+      })
+
+      await applyTimetableStructureForNewSchool(schoolId, "sd-gov-default")
+
+      vi.useRealTimers()
+
+      // Oct 15 is within Term 1 (Sep 1 – Jan 31) → Term 1 should be active
+      const term1 = createdTerms.find((t) => t.termNumber === 1)
+      const term2 = createdTerms.find((t) => t.termNumber === 2)
+      expect(term1?.isActive).toBe(true)
+      expect(term2?.isActive).toBe(false)
     })
   })
 
