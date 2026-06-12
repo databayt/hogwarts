@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server"
 
 import { db } from "@/lib/db"
 import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import { formatPhoneForWhatsApp } from "@/lib/whatsapp/evolution-client"
 
 export const dynamic = "force-dynamic"
 
@@ -207,9 +208,36 @@ export async function POST(request: NextRequest) {
                   ? "document"
                   : "text"
 
-          const senderPhone = key.remoteJid?.includes("@g.us")
-            ? null
-            : (key.remoteJid?.replace("@s.whatsapp.net", "+") ?? null)
+          // Group messages arrive with a @g.us remoteJid; the real sender is
+          // in key.participant (their personal JID). 1:1 messages carry the
+          // sender in remoteJid. Canonical digits-only form — must match
+          // formatPhoneForWhatsApp so stored-participant lookups can hit.
+          const isGroupMessage = key.remoteJid?.includes("@g.us") ?? false
+          const senderJid = isGroupMessage ? msg.participant : key.remoteJid
+          const senderPhone = senderJid
+            ? formatPhoneForWhatsApp(String(senderJid).split("@")[0])
+            : null
+
+          // Evolution delivers webhooks at-least-once — skip anything already
+          // recorded. This also covers our own outbound sends, which write
+          // their audit row at dispatch time and then echo back here as a
+          // fromMe MESSAGES_UPSERT (previously a guaranteed duplicate row).
+          const alreadyLogged = await db.whatsAppMessage.findFirst({
+            where: { schoolId: session.schoolId, waMessageId: key.id },
+            select: { id: true },
+          })
+          if (alreadyLogged) continue
+
+          // Attribute group traffic to the admin-dashboard WhatsApp group
+          const waGroup = isGroupMessage
+            ? await db.whatsAppGroup.findFirst({
+                where: {
+                  schoolId: session.schoolId,
+                  groupJid: key.remoteJid,
+                },
+                select: { id: true },
+              })
+            : null
 
           // Log to WhatsApp audit table
           await db.whatsAppMessage.create({
@@ -218,7 +246,7 @@ export async function POST(request: NextRequest) {
               sessionId: session.id,
               waMessageId: key.id,
               recipientPhone: senderPhone,
-              groupId: null,
+              groupId: waGroup?.id ?? null,
               content: content || `[${contentType}]`,
               contentType,
               direction: isFromMe ? "outgoing" : "incoming",
@@ -227,13 +255,22 @@ export async function POST(request: NextRequest) {
             },
           })
 
-          // Bridge incoming messages to in-app conversations
-          if (!isFromMe && senderPhone) {
+          // Bridge incoming 1:1 messages to in-app conversations. Group
+          // (@g.us) traffic is audit-logged above but NOT bridged: in-app
+          // group conversations fan out as individual DMs (replies come back
+          // on the 1:1 JID), and admin-dashboard WA groups have no in-app
+          // conversation mapping — bridging them into the sender's most
+          // recent DM thread would misattribute them.
+          if (!isFromMe && senderPhone && !isGroupMessage) {
             try {
-              // Find participant with this WhatsApp phone in a whatsapp-enabled conversation
+              // Find participant with this WhatsApp phone in a whatsapp-enabled
+              // conversation. Stored phones predating normalization may carry
+              // +/00 prefixes, so match all three spellings.
               const participant = await db.conversationParticipant.findFirst({
                 where: {
-                  whatsappPhone: senderPhone,
+                  whatsappPhone: {
+                    in: [senderPhone, `+${senderPhone}`, `00${senderPhone}`],
+                  },
                   isActive: true,
                   conversation: {
                     schoolId: session.schoolId,
@@ -292,27 +329,84 @@ export async function POST(request: NextRequest) {
                         msgData.documentMessage?.fileName ||
                         `wa-media-${key.id}.${mimetype.split("/")[1] || "bin"}`
 
-                      // Store as data URL for now (can be uploaded to S3 in a future step)
-                      const dataUrl = `data:${mimetype};base64,${mediaResult.base64}`
+                      const buffer = Buffer.from(mediaResult.base64, "base64")
+                      const fileSize = buffer.length
 
-                      // Estimate file size from base64 length
-                      const fileSize = Math.ceil(
-                        (mediaResult.base64.length * 3) / 4
-                      )
+                      // Upload to object storage (same provider stack as
+                      // user-uploaded message attachments). Data-URL-in-DB is
+                      // only a degraded fallback for SMALL files when the
+                      // upload fails — large blobs in a TEXT column bloat the
+                      // DB and break CDN/thumbnail paths.
+                      let fileUrl: string | null = null
+                      try {
+                        const { getProvider, selectProvider } =
+                          await import("@/components/file/providers/factory")
+                        const category =
+                          contentType === "text"
+                            ? "other"
+                            : (contentType as
+                                | "image"
+                                | "video"
+                                | "audio"
+                                | "document")
+                        const sanitizedName = fileName.replace(
+                          /[^a-zA-Z0-9._-]/g,
+                          "_"
+                        )
+                        const storagePath = `messaging/${session.schoolId}/${participant.conversation.id}/wa-${key.id}-${sanitizedName}`
+                        const provider = getProvider(
+                          selectProvider({
+                            category,
+                            size: fileSize,
+                            tier: "hot",
+                            purpose: "messaging",
+                          })
+                        )
+                        fileUrl = await provider.upload(
+                          new Blob([new Uint8Array(buffer)], {
+                            type: mimetype,
+                          }),
+                          storagePath,
+                          {
+                            contentType: mimetype,
+                            access: "private",
+                            metadata: {
+                              schoolId: session.schoolId,
+                              conversationId: participant.conversation.id,
+                              source: "whatsapp-inbound",
+                            },
+                          }
+                        )
+                      } catch (uploadError) {
+                        console.error(
+                          "[WhatsApp Webhook] Media upload failed, falling back:",
+                          uploadError
+                        )
+                        // 5MB cap on the data-URL fallback protects the DB
+                        if (fileSize <= 5 * 1024 * 1024) {
+                          fileUrl = `data:${mimetype};base64,${mediaResult.base64}`
+                        }
+                      }
 
-                      await db.messageAttachment.create({
-                        data: {
-                          messageId: bridgedMessage.id,
-                          fileName,
-                          fileUrl: dataUrl,
-                          fileSize,
-                          fileType: mimetype,
-                          width: msgData.imageMessage?.width ?? null,
-                          height: msgData.imageMessage?.height ?? null,
-                          uploaded: true,
-                          uploadedAt: new Date(),
-                        },
-                      })
+                      if (fileUrl) {
+                        await db.messageAttachment.create({
+                          data: {
+                            messageId: bridgedMessage.id,
+                            fileName,
+                            fileUrl,
+                            fileSize,
+                            fileType: mimetype,
+                            width: msgData.imageMessage?.width ?? null,
+                            height: msgData.imageMessage?.height ?? null,
+                            uploaded: true,
+                            uploadedAt: new Date(),
+                          },
+                        })
+                      } else {
+                        console.error(
+                          `[WhatsApp Webhook] Dropped inbound media ${key.id} (${fileSize}B) — upload failed and too large for inline fallback`
+                        )
+                      }
                     }
                   } catch (mediaError) {
                     console.error(
@@ -424,8 +518,27 @@ export async function POST(request: NextRequest) {
           const mappedStatus = statusMap[status]
           if (!mappedStatus) continue
 
+          // Webhooks can arrive out of order — never downgrade an already
+          // more-advanced status (sent < delivered < read).
+          const noDowngrade =
+            mappedStatus === "sent"
+              ? ["delivered", "read"]
+              : mappedStatus === "delivered"
+                ? ["read"]
+                : []
+
           await db.whatsAppMessage.updateMany({
-            where: { waMessageId, schoolId: session.schoolId },
+            where: {
+              waMessageId,
+              schoolId: session.schoolId,
+              ...(noDowngrade.length > 0
+                ? {
+                    status: {
+                      notIn: noDowngrade as ("delivered" | "read")[],
+                    },
+                  }
+                : {}),
+            },
             data: {
               status: mappedStatus as "sent" | "delivered" | "read",
               ...(mappedStatus === "delivered"
@@ -440,8 +553,26 @@ export async function POST(request: NextRequest) {
             where: {
               whatsappMessageId: waMessageId,
               conversation: { schoolId: session.schoolId },
+              ...(noDowngrade.length > 0
+                ? { whatsappStatus: { notIn: noDowngrade } }
+                : {}),
             },
             data: { whatsappStatus: mappedStatus },
+          })
+
+          // Sync per-recipient group delivery rows (1:1 uses the Message
+          // scalars above; groups track each recipient here). Without this,
+          // group recipients stay "sent" forever even after WhatsApp reports
+          // delivered/read.
+          await db.messageWhatsappDelivery.updateMany({
+            where: {
+              providerMessageId: waMessageId,
+              schoolId: session.schoolId,
+              ...(noDowngrade.length > 0
+                ? { status: { notIn: noDowngrade } }
+                : {}),
+            },
+            data: { status: mappedStatus },
           })
 
           // Emit WhatsApp status update via Socket.IO

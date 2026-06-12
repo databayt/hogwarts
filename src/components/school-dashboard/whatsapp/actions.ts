@@ -68,7 +68,13 @@ export async function connectWhatsApp(): Promise<
 
   try {
     const instanceName = `school_${schoolId.replace(/[^a-zA-Z0-9]/g, "_")}`
-    const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/whatsapp`
+    // The webhook route authenticates via `?secret=` (Evolution can't send
+    // custom auth headers) — without it every inbound webhook 401s in
+    // production and the WA→app bridge stays dark.
+    const webhookSecret = process.env.WHATSAPP_WEBHOOK_SECRET
+    const webhookUrl =
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/whatsapp` +
+      (webhookSecret ? `?secret=${encodeURIComponent(webhookSecret)}` : "")
 
     // Check if session already exists
     let dbSession = await db.whatsAppSession.findUnique({
@@ -87,6 +93,25 @@ export async function connectWhatsApp(): Promise<
           webhookUrl,
         },
       })
+    } else {
+      // Re-connect path: disconnectWhatsApp deletes the Evolution instance but
+      // keeps the DB row, so the instance may no longer exist upstream. Probe
+      // it and recreate when gone — otherwise getQRCode 404s forever.
+      try {
+        await evolution.getInstanceStatus(instanceName)
+      } catch (probeError) {
+        if (evolution.isInstanceGoneError(probeError)) {
+          await evolution.createInstance(instanceName, webhookUrl)
+        } else {
+          throw probeError
+        }
+      }
+      if (dbSession.webhookUrl !== webhookUrl) {
+        await db.whatsAppSession.update({
+          where: { schoolId },
+          data: { webhookUrl },
+        })
+      }
     }
 
     // Get QR code

@@ -46,6 +46,11 @@ vi.mock("@/lib/whatsapp/evolution-client", () => ({
   sendText: mockSendText,
   sendMedia: mockSendMedia,
   readMessages: mockReadMessages,
+  // Real normalization logic (pure function) — the bridge normalizes every
+  // phone through this before sending/storing.
+  formatPhoneForWhatsApp: (phone: string) =>
+    phone.replace(/[^\d]/g, "").replace(/^00/, ""),
+  isInstanceGoneError: () => false,
 }))
 
 const mockCheckAndConsumeRateLimit = vi.fn().mockReturnValue({ allowed: true })
@@ -165,9 +170,10 @@ describe("dispatchMessageToWhatsApp", () => {
       SENDER_USER_ID
     )
 
+    // Phone normalized to digits-only (Evolution rejects +/00 formats)
     expect(mockSendText).toHaveBeenCalledWith(
       connectedSession.instanceName,
-      "+966501234567",
+      "966501234567",
       "Hello world"
     )
     expect(mockSendMedia).not.toHaveBeenCalled()
@@ -201,7 +207,7 @@ describe("dispatchMessageToWhatsApp", () => {
 
     expect(mockSendMedia).toHaveBeenCalledWith(
       connectedSession.instanceName,
-      "+966501234567",
+      "966501234567",
       "https://cdn.example.com/photo.jpg",
       {
         mediatype: "image",
@@ -255,7 +261,7 @@ describe("dispatchMessageToWhatsApp", () => {
 
       expect(mockSendMedia).toHaveBeenCalledWith(
         connectedSession.instanceName,
-        "+966501234567",
+        "966501234567",
         "https://cdn.example.com/file",
         expect.objectContaining({ mediatype: expectedMediaType })
       )
@@ -287,7 +293,7 @@ describe("dispatchMessageToWhatsApp", () => {
       data: {
         whatsappMessageId: "wa-msg-123",
         whatsappStatus: "sent",
-        whatsappPhone: "+966501234567",
+        whatsappPhone: "966501234567",
       },
     })
   })
@@ -318,7 +324,7 @@ describe("dispatchMessageToWhatsApp", () => {
       where: { id: MESSAGE_ID },
       data: {
         whatsappStatus: "failed",
-        whatsappPhone: "+966501234567",
+        whatsappPhone: "966501234567",
       },
     })
 
@@ -350,7 +356,7 @@ describe("dispatchMessageToWhatsApp", () => {
         schoolId: SCHOOL_ID,
         sessionId: connectedSession.id,
         waMessageId: "wa-msg-123",
-        recipientPhone: "+966501234567",
+        recipientPhone: "966501234567",
         content: "Hello",
         contentType: "text",
         direction: "outgoing",
@@ -391,7 +397,7 @@ describe("dispatchMessageToWhatsApp", () => {
           schoolId: SCHOOL_ID,
           messageId: MESSAGE_ID,
           participantId: "part-1",
-          phone: "+966500000001",
+          phone: "966500000001",
           status: "sent",
           providerMessageId: "wa-msg-123",
         }),
@@ -463,7 +469,7 @@ describe("dispatchMessageToWhatsApp", () => {
     expect(db.message.update).not.toHaveBeenCalled()
     expect(db.whatsAppMessage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        recipientPhone: "+966501234567",
+        recipientPhone: "966501234567",
         status: "pending",
         triggerType: "messaging",
         triggerId: MESSAGE_ID,

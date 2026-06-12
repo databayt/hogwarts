@@ -73,9 +73,46 @@ async function resolveUserPhone(userId: string): Promise<string | null> {
   return null
 }
 
+const MAX_NOTIFICATION_ATTEMPTS = 5
+// Backoff base of one cron cycle (5 min): 5m, 10m, 20m, 40m, 80m.
+const NOTIFICATION_RETRY_BASE_MS = 5 * 60_000
+const MAX_RETRIES_MARKER = "MAX_RETRIES_EXCEEDED"
+
+type RetryMeta = { waRetryCount?: number; waLastAttempt?: string }
+
+/**
+ * Record a failed attempt. Attempt count + timestamp live in the metadata
+ * JSON (same pattern as Message.metadata.waRetryCount) so transient failures
+ * are retried with backoff instead of being dropped on the first error —
+ * once exhausted, whatsappError gets the MAX_RETRIES marker which removes
+ * the notification from the sweep query for good.
+ */
+async function recordNotificationFailure(
+  notification: { id: string; metadata: unknown },
+  errorMessage: string
+): Promise<void> {
+  const meta = ((notification.metadata as RetryMeta) ?? {}) as RetryMeta
+  const attempts = (meta.waRetryCount ?? 0) + 1
+  const exhausted = attempts >= MAX_NOTIFICATION_ATTEMPTS
+  await db.notification.update({
+    where: { id: notification.id },
+    data: {
+      whatsappError: exhausted
+        ? `${MAX_RETRIES_MARKER}: ${errorMessage}`
+        : errorMessage,
+      metadata: {
+        ...((notification.metadata as Record<string, unknown>) ?? {}),
+        waRetryCount: attempts,
+        waLastAttempt: new Date().toISOString(),
+      },
+    },
+  })
+}
+
 /**
  * Process pending WhatsApp notifications.
- * Finds notifications with whatsapp channel that haven't been sent yet.
+ * Finds notifications with whatsapp channel that haven't been sent yet,
+ * including previously-failed ones still within their retry budget.
  * Called by cron job every 5 minutes.
  */
 export async function processWhatsAppNotifications(): Promise<{
@@ -87,7 +124,9 @@ export async function processWhatsAppNotifications(): Promise<{
     where: {
       channels: { has: "whatsapp" },
       whatsappSent: false,
-      whatsappError: null,
+      // Errored notifications stay in the sweep (bounded by the retry budget
+      // below); only exhausted ones are filtered out permanently.
+      NOT: { whatsappError: { startsWith: MAX_RETRIES_MARKER } },
     },
     orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
     take: 50,
@@ -100,36 +139,61 @@ export async function processWhatsAppNotifications(): Promise<{
   let sent = 0
   let failed = 0
 
+  // One session lookup per school per run, not per notification.
+  const sessionCache = new Map<
+    string,
+    {
+      instanceName: string
+      status: string
+      id: string
+      connectedAt: Date | null
+    } | null
+  >()
+
   for (const notification of notifications) {
     const { userId, schoolId } = notification
+
+    // Respect exponential backoff between attempts
+    const meta = ((notification.metadata as RetryMeta) ?? {}) as RetryMeta
+    const attempts = meta.waRetryCount ?? 0
+    if (attempts > 0 && meta.waLastAttempt) {
+      const backoffMs = NOTIFICATION_RETRY_BASE_MS * Math.pow(2, attempts - 1)
+      if (Date.now() - new Date(meta.waLastAttempt).getTime() < backoffMs) {
+        continue
+      }
+    }
 
     // Resolve phone number from user's role profile
     const phoneNumber = await resolveUserPhone(userId)
     if (!phoneNumber) {
-      await db.notification.update({
-        where: { id: notification.id },
-        data: { whatsappError: "No phone number found for user" },
-      })
+      await recordNotificationFailure(
+        notification,
+        "No phone number found for user"
+      )
       failed++
       continue
     }
 
-    // Get WhatsApp session for this school
-    const session = await db.whatsAppSession.findUnique({
-      where: { schoolId },
-      select: {
-        instanceName: true,
-        status: true,
-        id: true,
-        connectedAt: true,
-      },
-    })
+    // Get WhatsApp session for this school (cached per run)
+    let session = sessionCache.get(schoolId)
+    if (session === undefined) {
+      session = await db.whatsAppSession.findUnique({
+        where: { schoolId },
+        select: {
+          instanceName: true,
+          status: true,
+          id: true,
+          connectedAt: true,
+        },
+      })
+      sessionCache.set(schoolId, session)
+    }
 
     if (!session || session.status !== "connected") {
-      await db.notification.update({
-        where: { id: notification.id },
-        data: { whatsappError: "WhatsApp not connected for this school" },
-      })
+      await recordNotificationFailure(
+        notification,
+        "WhatsApp not connected for this school"
+      )
       failed++
       continue
     }
@@ -170,12 +234,13 @@ export async function processWhatsAppNotifications(): Promise<{
         },
       })
 
-      // Mark as sent
+      // Mark as sent (clearing any error from earlier attempts)
       await db.notification.update({
         where: { id: notification.id },
         data: {
           whatsappSent: true,
           whatsappSentAt: new Date(),
+          whatsappError: null,
         },
       })
 
@@ -197,10 +262,16 @@ export async function processWhatsAppNotifications(): Promise<{
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error"
 
-      await db.notification.update({
-        where: { id: notification.id },
-        data: { whatsappError: errorMessage },
-      })
+      await recordNotificationFailure(notification, errorMessage)
+
+      // Dead instance: mark the session disconnected and stop sending for
+      // this school for the rest of the run (every send would fail).
+      if (evolution.isInstanceGoneError(error)) {
+        await db.whatsAppSession
+          .update({ where: { schoolId }, data: { status: "disconnected" } })
+          .catch(() => {})
+        sessionCache.set(schoolId, null)
+      }
 
       await db.notificationDeliveryLog.create({
         data: {

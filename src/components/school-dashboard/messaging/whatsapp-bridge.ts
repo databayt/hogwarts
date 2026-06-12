@@ -60,6 +60,8 @@ export async function populateParticipantPhones(
   schoolId: string,
   conversationId: string
 ): Promise<void> {
+  const { formatPhoneForWhatsApp } =
+    await import("@/lib/whatsapp/evolution-client")
   const participants = await db.conversationParticipant.findMany({
     where: { conversationId, isActive: true },
     select: { id: true, userId: true, whatsappPhone: true },
@@ -71,7 +73,9 @@ export async function populateParticipantPhones(
     if (phone) {
       await db.conversationParticipant.update({
         where: { id: p.id },
-        data: { whatsappPhone: phone },
+        // Canonical digits-only form (no +/00) — the inbound webhook resolves
+        // senders by comparing JID digits against this column.
+        data: { whatsappPhone: formatPhoneForWhatsApp(phone) },
       })
     }
   }
@@ -168,7 +172,9 @@ export async function dispatchMessageToWhatsApp(
   const isSingleRecipient = participants.length === 1
 
   for (const participant of participants) {
-    const phone = participant.whatsappPhone!
+    // Normalize at send time too — phones cached before normalization landed
+    // may still carry +/00/space formats that Evolution rejects.
+    const phone = evolution.formatPhoneForWhatsApp(participant.whatsappPhone!)
 
     // Check rate limits
     const rateCheck = await checkAndConsumeRateLimit(schoolId)
@@ -322,6 +328,20 @@ export async function dispatchMessageToWhatsApp(
         `[dispatchMessageToWhatsApp] Failed to send to ${phone}:`,
         error
       )
+      // Instance deleted / API key invalid — the session is dead, every
+      // further send this run will fail the same way. Mark it so the
+      // dashboard shows the truth and retry sweeps stop hammering Evolution.
+      if (evolution.isInstanceGoneError(error)) {
+        await db.whatsAppSession
+          .update({
+            where: { schoolId },
+            data: { status: "disconnected" },
+          })
+          .catch(() => {})
+        console.error(
+          `[dispatchMessageToWhatsApp] Evolution instance gone for school ${schoolId} — session marked disconnected`
+        )
+      }
       if (isSingleRecipient) {
         await db.message.update({
           where: { id: messageId },
@@ -570,12 +590,13 @@ export async function retryFailedMessageDispatches(): Promise<{
 
       try {
         const atts = delivery.message.attachments
+        const phone = evolution.formatPhoneForWhatsApp(delivery.phone)
         let providerMessageId: string | undefined
         if (atts.length > 0) {
           for (const a of atts) {
             const r = await evolution.sendMedia(
               session.instanceName,
-              delivery.phone,
+              phone,
               a.fileUrl,
               {
                 mediatype: mimeToMediaType(a.fileType),
@@ -588,7 +609,7 @@ export async function retryFailedMessageDispatches(): Promise<{
         } else {
           const r = await evolution.sendText(
             session.instanceName,
-            delivery.phone,
+            phone,
             delivery.message.content
           )
           providerMessageId = r.key.id
@@ -614,6 +635,17 @@ export async function retryFailedMessageDispatches(): Promise<{
           },
         })
         failed++
+        // Dead instance: mark the session and stop retrying this school's
+        // deliveries for the rest of the run.
+        if (evolution.isInstanceGoneError(error)) {
+          await db.whatsAppSession
+            .update({
+              where: { schoolId: delivery.schoolId },
+              data: { status: "disconnected" },
+            })
+            .catch(() => {})
+          sessionCache.set(delivery.schoolId, null)
+        }
       }
     }
   }

@@ -24,7 +24,6 @@ type RateWindow = {
 }
 
 // In-memory counters per school (fallback when Upstash is not configured)
-const schoolCounters = new Map<string, RateWindow>()
 const schoolDailyCounters = new Map<string, RateWindow>()
 const groupCounters = new Map<string, RateWindow>()
 const lastSendTime = new Map<string, number>()
@@ -92,24 +91,22 @@ async function checkAndConsumeRedis(
     return { allowed: false, retryAfterMs: 1000 }
   }
 
-  // 2. Daily limit — atomic INCR, expire the window on first write
+  // 2. Daily limit. SET NX EX seeds the key WITH its TTL before INCR, so a
+  // crash between the two calls can never leave a TTL-less key that would
+  // block the school forever (the INCR+EXPIRE pair was not atomic).
   const dayKey = `wa:rl:day:${schoolId}`
+  await redis.set(dayKey, "0", { nx: true, ex: DAY_MS / 1000 })
   const dailyCount = await redis.incr(dayKey)
-  if (dailyCount === 1) {
-    await redis.expire(dayKey, DAY_MS / 1000)
-  }
   if (dailyCount > dailyLimitFor(options?.connectedSince)) {
     const ttl = await redis.pttl(dayKey)
     return { allowed: false, retryAfterMs: ttl > 0 ? ttl : DAY_MS }
   }
 
-  // 3. Per-group hourly limit
+  // 3. Per-group hourly limit (same SET NX EX seeding as the daily key)
   if (options?.groupId) {
     const groupKey = `wa:rl:grp:${schoolId}:${options.groupId}`
+    await redis.set(groupKey, "0", { nx: true, ex: HOUR_MS / 1000 })
     const groupCount = await redis.incr(groupKey)
-    if (groupCount === 1) {
-      await redis.expire(groupKey, HOUR_MS / 1000)
-    }
     if (groupCount > LIMITS.perGroupHour) {
       const ttl = await redis.pttl(groupKey)
       return { allowed: false, retryAfterMs: ttl > 0 ? ttl : HOUR_MS }
@@ -239,9 +236,6 @@ export async function getRateLimitStatus(schoolId: string): Promise<{
  */
 export function cleanupStaleEntries(): void {
   const now = Date.now()
-  for (const [key, window] of schoolCounters) {
-    if (window.resetAt <= now) schoolCounters.delete(key)
-  }
   for (const [key, window] of schoolDailyCounters) {
     if (window.resetAt <= now) schoolDailyCounters.delete(key)
   }

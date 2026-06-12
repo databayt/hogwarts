@@ -317,7 +317,7 @@ export async function readMessages(
 ): Promise<void> {
   const jid = remoteJid.includes("@")
     ? remoteJid
-    : `${remoteJid.replace(/\+/g, "")}@s.whatsapp.net`
+    : `${formatPhoneForWhatsApp(remoteJid)}@s.whatsapp.net`
 
   await request(`/chat/markMessageAsRead/${instanceName}`, {
     method: "PUT",
@@ -497,11 +497,29 @@ export async function healthCheck(): Promise<boolean> {
 }
 
 /**
- * Format phone number to WhatsApp format (remove + prefix, add @s.whatsapp.net)
+ * Normalize a phone number to the canonical digits-only form Evolution
+ * expects (it appends @s.whatsapp.net itself). Strips spaces/dashes/`+`
+ * AND the international `00` dial prefix common in Sudan/MENA — `00966...`
+ * is NOT a valid WhatsApp number, `966...` is.
+ *
+ * This is the single normalization used for outbound sends, stored
+ * participant phones, and inbound JID→participant lookups. Keep them in sync.
  */
 export function formatPhoneForWhatsApp(phone: string): string {
-  const cleaned = phone.replace(/[^\d]/g, "")
-  return cleaned
+  return phone.replace(/[^\d]/g, "").replace(/^00/, "")
+}
+
+/**
+ * True when Evolution reports the instance no longer exists / credentials are
+ * invalid (deleted instance, wrong API key). These are permanent until an
+ * operator reconnects — callers should mark the session disconnected instead
+ * of retrying forever.
+ */
+export function isInstanceGoneError(err: unknown): boolean {
+  return (
+    err instanceof EvolutionAPIError &&
+    (err.status === 401 || err.status === 403 || err.status === 404)
+  )
 }
 
 /**
