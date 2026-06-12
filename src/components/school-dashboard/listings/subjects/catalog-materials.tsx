@@ -2,7 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -274,6 +280,35 @@ function MaterialTypeSection({
 }
 
 // ---------------------------------------------------------------------------
+// Card wrapper — clickable when the material has a file or external URL
+// (most seeded materials are metadata-only; cards stay inert until an
+// asset exists, then open it in a new tab)
+// ---------------------------------------------------------------------------
+
+function MaterialCardShell({
+  material,
+  className,
+  children,
+}: {
+  material: MaterialItem
+  className: string
+  children: ReactNode
+}) {
+  const href = material.externalUrl ?? material.fileUrl
+  if (!href) return <div className={className}>{children}</div>
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      {children}
+    </a>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Subject-style card (TEXTBOOK, SYLLABUS) — bordered, 56px image
 // ---------------------------------------------------------------------------
 
@@ -291,7 +326,10 @@ function SubjectStyleCard({
   const thumbColor = material.color ?? accentColor
 
   return (
-    <div className="group hover:bg-muted/50 flex items-center gap-3 rounded-lg border transition-colors">
+    <MaterialCardShell
+      material={material}
+      className="group hover:bg-muted/50 flex items-center gap-3 rounded-lg border transition-colors"
+    >
       {/* Image — rounded on outer edge, sharp on text side */}
       <div
         className="bg-muted relative h-14 w-14 shrink-0 overflow-hidden rounded-s-lg rounded-e-none"
@@ -320,7 +358,7 @@ function SubjectStyleCard({
           </p>
         )}
       </div>
-    </div>
+    </MaterialCardShell>
   )
 }
 
@@ -342,7 +380,10 @@ function LessonStyleCard({
   const thumbColor = material.color ?? accentColor
 
   return (
-    <div className="group hover:bg-muted/50 flex items-start gap-3 rounded-md transition-colors">
+    <MaterialCardShell
+      material={material}
+      className="group hover:bg-muted/50 flex items-start gap-3 rounded-md transition-colors"
+    >
       {/* Thumbnail */}
       <div
         className="relative h-18 w-18 shrink-0 overflow-hidden rounded-sm transition-[border-radius] group-hover:rounded-e-none"
@@ -373,6 +414,6 @@ function LessonStyleCard({
           </p>
         )}
       </div>
-    </div>
+    </MaterialCardShell>
   )
 }

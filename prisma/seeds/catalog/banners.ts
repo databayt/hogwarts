@@ -19,6 +19,7 @@
 
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
+import { CONCEPT_POOL } from "../../../src/components/catalog/concepts-data"
 import { logSuccess } from "../utils"
 
 // ============================================================================
@@ -55,8 +56,24 @@ const OLD_SLUG_TO_CONCEPT: Record<string, string> = {
   sociology: "sociology",
 }
 
-// Concepts without their own legacy banner — borrow from a related concept
-const BANNER_FALLBACK: Record<string, string> = {}
+/**
+ * Pick a borrowed banner source for a concept whose own legacy banner is
+ * unavailable: walk the concept's CONCEPT_POOL neighbor chain and take the
+ * first concept that did download, falling back to any downloaded concept.
+ * Guarantees every pool concept ships a banner as long as at least one
+ * legacy banner exists.
+ */
+export function resolveBannerSource(
+  concept: string,
+  downloaded: ReadonlySet<string>
+): string | null {
+  const chain = CONCEPT_POOL[concept] ?? []
+  for (const neighbor of chain) {
+    if (neighbor !== concept && downloaded.has(neighbor)) return neighbor
+  }
+  const first = [...downloaded].sort()[0]
+  return first ?? null
+}
 
 // ============================================================================
 // S3 Client (lazy singleton)
@@ -119,8 +136,32 @@ export async function seedConceptBanners(): Promise<void> {
   let uploadCount = 0
   let skipped = 0
 
+  async function uploadVariant(
+    concept: string,
+    variant: (typeof VARIANTS)[number],
+    buffer: Buffer
+  ) {
+    for (let grade = 1; grade <= MAX_GRADE; grade++) {
+      const newKey = `catalog/concepts/g${grade}-${concept}/banner-${variant}.webp`
+      await client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: newKey,
+          Body: buffer,
+          ContentType: "image/webp",
+          CacheControl: "public, max-age=31536000, immutable",
+        })
+      )
+      uploadCount++
+    }
+  }
+
+  // Phase 1: download each concept's legacy banner variants (keep the
+  // buffers — fallbacks reuse them without re-fetching) and upload to the
+  // concept-based grade paths.
+  const downloadedBuffers = new Map<string, Map<string, Buffer>>()
+
   for (const [oldSlug, concept] of entries) {
-    // Download 4 variants from old path, then upload to all 12 grade paths
     for (const variant of VARIANTS) {
       const oldUrl = `https://${cloudfrontDomain}/catalog/subjects/${oldSlug}/banner-${variant}.webp`
 
@@ -132,68 +173,52 @@ export async function seedConceptBanners(): Promise<void> {
       }
 
       const buffer = Buffer.from(await response.arrayBuffer())
-
-      for (let grade = 1; grade <= MAX_GRADE; grade++) {
-        const newKey = `catalog/concepts/g${grade}-${concept}/banner-${variant}.webp`
-        await client.send(
-          new PutObjectCommand({
-            Bucket: bucket,
-            Key: newKey,
-            Body: buffer,
-            ContentType: "image/webp",
-            CacheControl: "public, max-age=31536000, immutable",
-          })
-        )
-        uploadCount++
+      let byVariant = downloadedBuffers.get(concept)
+      if (!byVariant) {
+        byVariant = new Map()
+        downloadedBuffers.set(concept, byVariant)
       }
+      byVariant.set(variant, buffer)
+
+      await uploadVariant(concept, variant, buffer)
     }
 
-    console.log(`  Copied ${oldSlug} → ${concept} (g1–g${MAX_GRADE})`)
+    if (downloadedBuffers.has(concept)) {
+      console.log(`  Copied ${oldSlug} → ${concept} (g1–g${MAX_GRADE})`)
+    }
   }
 
   if (skipped > 0) {
     console.log(`  Skipped ${skipped} variants (fetch failures)`)
   }
 
-  // Copy banners for concepts that lack their own legacy banner
-  // by borrowing from a related concept's already-uploaded banner
-  for (const [concept, sourceConcept] of Object.entries(BANNER_FALLBACK)) {
-    for (const variant of VARIANTS) {
-      // Read from the source concept's grade-1 banner (same image for all grades)
-      const sourceUrl = `https://${cloudfrontDomain}/catalog/concepts/g1-${sourceConcept}/banner-${variant}.webp`
-      const response = await fetchWithRetry(sourceUrl)
-      if (!response) {
-        console.log(
-          `  Skipping fallback ${concept} (from ${sourceConcept})/banner-${variant}: fetch failed`
-        )
-        continue
-      }
+  // Phase 2: every pool concept without its own legacy banner borrows the
+  // nearest downloaded neighbor's (CONCEPT_POOL chain order) so no subject
+  // page ever renders a 404 banner.
+  const downloaded = new Set(downloadedBuffers.keys())
+  const poolConcepts = Object.keys(CONCEPT_POOL)
+  let borrowed = 0
 
-      const buffer = Buffer.from(await response.arrayBuffer())
+  for (const concept of poolConcepts) {
+    if (downloaded.has(concept)) continue
 
-      for (let grade = 1; grade <= MAX_GRADE; grade++) {
-        const newKey = `catalog/concepts/g${grade}-${concept}/banner-${variant}.webp`
-        await client.send(
-          new PutObjectCommand({
-            Bucket: bucket,
-            Key: newKey,
-            Body: buffer,
-            ContentType: "image/webp",
-            CacheControl: "public, max-age=31536000, immutable",
-          })
-        )
-        uploadCount++
-      }
+    const source = resolveBannerSource(concept, downloaded)
+    if (!source) {
+      console.log(`  No banner source available for ${concept} — skipping`)
+      continue
     }
 
-    console.log(
-      `  Fallback: ${concept} ← ${sourceConcept} banner (g1–g${MAX_GRADE})`
-    )
+    const byVariant = downloadedBuffers.get(source)!
+    for (const [variant, buffer] of byVariant) {
+      await uploadVariant(concept, variant as (typeof VARIANTS)[number], buffer)
+    }
+    borrowed++
+    console.log(`  Fallback: ${concept} ← ${source} banner (g1–g${MAX_GRADE})`)
   }
 
   logSuccess(
     "Banner Copy",
     uploadCount,
-    `S3 objects (${entries.length + Object.keys(BANNER_FALLBACK).length} concepts × ${VARIANTS.length} variants × ${MAX_GRADE} grades)`
+    `S3 objects (${downloaded.size} own + ${borrowed} borrowed concepts × ${VARIANTS.length} variants × ${MAX_GRADE} grades)`
   )
 }
