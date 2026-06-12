@@ -4,7 +4,7 @@
 /**
  * Fees Sub-Block Validation Schemas
  *
- * Zod schemas matching the actual Prisma models in finance-fees.prisma
+ * Zod schemas matching the actual Prisma models in fees.prisma
  */
 
 import { z } from "zod"

@@ -258,6 +258,7 @@ model AdmissionInquiry {
   @@index([schoolId])
   @@index([status])
   @@index([email, schoolId])
+  @@index([convertedToApplicationId])
 }
 
 // Tour/Interview Time Slots Configuration
@@ -380,6 +381,7 @@ model ApplicationSession {
   @@index([sessionToken])
   @@index([email, schoolId])
   @@index([campaignId])
+  @@index([convertedToApplicationId])
 }
 
 // School-level Admission Settings

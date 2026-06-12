@@ -5,6 +5,7 @@
 enum InvoiceStatus {
   PAID
   UNPAID
+  PARTIAL
   OVERDUE
   CANCELLED
 }
@@ -26,6 +27,10 @@ model UserInvoice {
   total          Decimal            @db.Decimal(10, 2)
   notes          String?            @db.Text
   status         InvoiceStatus      @default(UNPAID)
+  // Partial-payment tracking: sum of payments applied to this invoice.
+  amountPaid     Decimal            @default(0) @db.Decimal(10, 2)
+  // Audit trail: when the invoice email was last sent to the recipient.
+  sentAt         DateTime?
   userId         String
   user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   schoolId       String

@@ -462,6 +462,7 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([schoolId])
   @@map("invoices")
 }
 
