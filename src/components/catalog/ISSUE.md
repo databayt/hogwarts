@@ -1,8 +1,8 @@
 # Catalog Block — Issue Tracker
 
 **Status:** PRODUCTION READY (code paths); content/assets partial
-**Completion:** 90%
-**Last Updated:** 2026-06-10
+**Completion:** 95%
+**Last Updated:** 2026-06-12
 
 ---
 
@@ -21,6 +21,9 @@
 - [x] Progressive `findSubjects` fallback (country+curriculum → broad → `*` → US baseline)
 - [x] Per-curriculum academic structure (`academic-config.ts`) — SD byte-identical, US 5+3+4, GB key stages, CBSE, generic fallback (de-Sudanized 2026-06-10)
 - [x] Idempotency guards (skipIfExists inside transaction)
+- [x] **Provisioning doctor** (`provision.ts`): `getProvisioningStatus` + `repairProvisioning` — detects/repairs missing stages (defaults → structure → selections → schedule → sections → timetable → join code), each stage isolated; wired into onboarding `after()`, manual `publishSchool`, and the operator tenants table ("Repair Provisioning") (2026-06-12)
+- [x] `applyTimetableStructureForNewSchool` re-runs no longer duplicate periods (idempotency bug fixed 2026-06-12)
+- [x] Stream patterns are curriculum-owned (`academic-config.ts` `streamSubjectPatterns`, SD-family only) — no more global bilingual keyword matching (2026-06-12)
 
 ### Request → Approval flow (opt-in)
 
@@ -48,9 +51,10 @@
 
 ### Tests & quality
 
-- [x] Catalog suites green: 332 tests was 193-failed mock drift (fixed 2026-06-10) + new flag/pinned/config tests
+- [x] Catalog suites green: 361 tests / 21 files (2026-06-12; was 332) — adds provisioning-doctor (10), banner-fallback (5), periods-idempotency suites
 - [x] tsc 0 errors; no `as any` in catalog seeds/core
 - [x] i18n: picker namespace `school.subjects.catalog` populated (en+ar) incl. pinned/reminder keys
+- [x] Operator action errors are snake_case codes mapped at display time (`error-messages.ts` `catalogActionError`, prettify fallback) — no raw codes in toasts; approve/reject/delete flows no longer fail silently (2026-06-12)
 
 ### Docs
 
@@ -61,21 +65,21 @@
 
 ## P1 — production gaps (next)
 
-- [ ] **Live-DB seed sync** (deploy-gated): delete stale `gb-national-g*` (~156) + `ib-diploma-g*` (~114) rows; run gb/cbse/caie-igcse/ib deep + concepts/banners against prod Neon. Run ONLY after a "deploy" + Neon branch-before-touch.
-- [ ] **Asset gaps**: banners cover 10/23 concepts (13 keys 404); textbook covers never uploaded (icon fallback everywhere); textbook PDFs Sudan-only; lesson thumbnails US-only; `videos.ts` placeholder S3 keys with no backing mp4; 51 books on external OpenLibrary cover URLs; materials are metadata-only (null fileUrl).
-- [ ] **Partial-failure recovery**: provisioning is fire-and-forget at onboarding; `ensureSubjectSelections` self-heals selections only — levels/grades/streams/timetable are not retried.
+- [ ] **Live-DB seed sync** (deploy-gated): now ONE command — `pnpm tsx scripts/catalog-deploy-sync.ts` (plan-mode report by default; `--execute` deletes only UNREFERENCED stale `gb-national-g*`/`ib-diploma-g*` rows — referenced ones are listed for manual migration since SubjectSelection/Enrollment CASCADE — then seeds registry/gb/cbse/caie-igcse/ib/concepts/banners). Run ONLY after a "deploy" + Neon branch-before-touch.
+- [ ] **Asset uploads** (external; the code side is now resilient): textbook PDFs Sudan-only; lesson thumbnails US-only; real lesson mp4s missing (seed now HEAD-probes and only registers videos whose mp4 exists, removing stale rows); banner seed now guarantees 23/23 concepts by borrowing the nearest covered neighbor; book covers still on OpenLibrary until `scripts/snapshot-book-covers.ts` runs in an env with valid AWS creds; material files still null (cards are now clickable the moment a `fileUrl`/`externalUrl` lands).
+- [x] **Partial-failure recovery** — provisioning doctor shipped 2026-06-12 (see Provisioning above).
 - [ ] **Arab nationals depth**: SA/EG/AE/QA/KW/JO are subjects-only (no chapters/lessons) pending ministry TOCs; transnational deep coverage is single-grade (CAIE g10, IB g12, CBSE g10).
 
 ## P2 — tracked improvements
 
-- [ ] Extract timetable/section auto-provision out of `setup.ts` (single responsibility; ~1,700 lines)
+- [x] Extract timetable/section auto-provision out of `setup.ts` — moved to `provision.ts` with the doctor; setup.ts 1,666→1,063 lines (2026-06-12)
 - [ ] Batch national seeders (~2,850 sequential awaits; SD seed 822s) with createMany/bulk SQL
-- [ ] `getSubjectStreamType` / `getDefaultWeeklyPeriods` keyword patterns are bilingual-fragile — fold into academic-config or registry metadata
-- [ ] Seed the `Quiz` model (currently zero rows) or remove it from the schema docs
+- [x] `getSubjectStreamType` folded into academic-config as per-curriculum `streamSubjectPatterns` (SD-family only); dead `getDefaultWeeklyPeriods` deleted — live path was already `getReferenceWeeklyPeriods` (2026-06-12)
+- [x] `Quiz` model — DECIDED 2026-06-12: keep as reserved schema (zero readers/writers in app code; the course-page "quiz" stat counts PUBLISHED exams, deliberately). Docs say "Defined; not seeded". Dropping the table is a destructive migration → only with explicit approval if the quiz feature is descoped for good.
 - [ ] Sudan TOC extraction quality: grades 10-12 have ~71% of subjects with 0 lessons (garbled pdftotext)
 - [ ] Dedicated `proposal_approved` / `proposal_rejected` NotificationTypes (Postgres ALTER TYPE + 5-file fan-out) if metadata.kind proves limiting
 - [ ] Exam / question-bank purchase flow (mirror VideoPurchase) — fields already exist
-- [ ] Mock-exam typing: `Exam.examType` is a free string ("midterm" | "final" | "chapter_test" | "practice") — consider an enum
+- [x] `Exam.examType` typing — DECIDED 2026-06-12: NOT a catalog-scoped fix. Two live vocabularies coexist (school exams: `"MIDTERM"`-style uppercase ×23 call sites; catalog/templates: lowercase `"midterm"/"final"/"chapter_test"/"practice"/"custom"`). Unifying is an exams-block refactor + a data migration; tracked there.
 
 ## Deferred / out of scope (decided 2026-06-10)
 

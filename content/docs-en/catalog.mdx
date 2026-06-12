@@ -204,6 +204,25 @@ Provisioning runs fire-and-forget via Next.js `after()`. If bridge rows go
 missing, `ensureSubjectSelections` repairs them lazily on the first read, so a
 partial provisioning failure self-corrects for subject selections.
 
+### The provisioning doctor — `repairProvisioning`
+
+Selections were the only stage that self-healed; a serverless timeout could
+still leave a school without periods, sections, or timetable slots. The doctor
+in `src/components/catalog/provision.ts` closes that gap:
+
+- `getProvisioningStatus(schoolId)` — one batched round of counts across every
+  stage (defaults, academic structure, selections, schedule, sections,
+  timetable slots, join code) plus report-only extras (streams, library books).
+- `repairProvisioning(schoolId)` — runs **only the missing stages**, in
+  dependency order, each one isolated so a single failure never blocks the
+  rest. Every underlying step is idempotent — re-running on a healthy school
+  is a no-op.
+
+Three callers converge on it: onboarding's `after()` hook, the manual
+`publishSchool` fallback, and the operator tenants table (**Repair
+Provisioning** row action). `applyTimetableStructureForNewSchool` is also
+idempotent now — a re-run no longer duplicates the school's periods.
+
 ### Per-curriculum academic structure (the fixed gap)
 
 The old `setup.ts` hardcoded the **Sudanese** model — Arabic 6+3+3 levels, Arabic
@@ -738,16 +757,16 @@ catalog/subjects/{slug}/…/thumbnail-{size}.webp     # US lesson/chapter covers
 
 ### Honest asset-gap table
 
-| Asset                       | Produced by               | Status                                                                                          |
-| --------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
-| Subject thumbnails          | `concepts.ts`             | **Complete** — all 12 curricula, all 12 grades                                                  |
-| Banners                     | `banners.ts`              | **Partial** — only ~10 of 23 concepts; other `banner` keys 404                                  |
-| Textbook covers             | —                         | **Missing** — `cover` key set on every subject, object never uploaded (card falls back to icon) |
-| Textbook PDFs               | `upload-textbooks-all.ts` | **Sudan only** — 118 `textbook.pdf`; no other curriculum                                        |
-| Lesson / chapter thumbnails | `lesson-covers.ts`        | **US only** — pulled from a CDN at seed time                                                    |
-| Videos                      | `videos.ts` / contributed | **Placeholder** rows (S3 keys with no backing `.mp4`) + externally-hosted contributed links     |
-| Books                       | `books.ts`                | **External** — 51 books on `covers.openlibrary.org` URLs (not on our CDN)                       |
-| Materials                   | `content.ts`              | **Metadata-only** — `fileUrl` is null                                                           |
+| Asset                       | Produced by               | Status                                                                                                                                                              |
+| --------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Subject thumbnails          | `concepts.ts`             | **Complete** — all 12 curricula, all 12 grades                                                                                                                      |
+| Banners                     | `banners.ts`              | **Self-covering** — ~10 of 23 concepts have their own legacy banner; the seed now borrows the nearest `CONCEPT_POOL` neighbor's for the rest (23/23 after next run) |
+| Textbook covers             | —                         | **Missing** — `cover` key set on every subject, object never uploaded (card falls back to icon)                                                                     |
+| Textbook PDFs               | `upload-textbooks-all.ts` | **Sudan only** — 118 `textbook.pdf`; no other curriculum                                                                                                            |
+| Lesson / chapter thumbnails | `lesson-covers.ts`        | **US only** — reads owned sources from our S3 (`snapshot-covers.ts` populates them)                                                                                 |
+| Videos                      | `videos.ts` / contributed | **Probe-verified** — the seed HEAD-checks each `.mp4` and only registers rows whose object exists (stale seed rows removed); real uploads still pending             |
+| Books                       | `books.ts`                | **External** — 51 books on `covers.openlibrary.org`; `scripts/snapshot-book-covers.ts` localizes them to our CDN (run with prod AWS creds)                          |
+| Materials                   | `content.ts`              | **Metadata-only** — `fileUrl` null; material cards become clickable automatically once a `fileUrl`/`externalUrl` lands                                              |
 
 ## Operations
 
@@ -794,14 +813,22 @@ seeded.
 ### Deploy-pending live-DB sync
 
 Canonical codes are **live**, but the deep-curricula breadth is shipped in code
-and not yet in the live DB. At the next catalog deploy, in order:
+and not yet in the live DB. The whole runbook is now one command:
 
-1. Delete the stale subjects-only rows superseded by the deep trees:
-   `gb-national-g*` (old world GB, ~156 rows) and `ib-diploma-g*` (old world IB,
-   ~114 rows).
-2. Re-run the catalog seeds in order: `gb`, `cbse`, `caie-igcse`, `ib`, then
-   `concepts` / `banners`. (Cambridge IGCSE and CBSE have **no rows in the live DB
-   yet**.)
+```bash
+pnpm tsx scripts/catalog-deploy-sync.ts            # plan — read-only report
+pnpm tsx scripts/catalog-deploy-sync.ts --execute  # apply (deploy-gated)
+```
+
+It inventories the stale subjects-only rows superseded by the deep trees
+(`gb-national-g*` ~156, `ib-diploma-g*` ~114), deletes **only the ones no
+school references** — `SubjectSelection`/`Enrollment` cascade on subject
+delete, so referenced rows are listed for manual migration instead — then
+seeds `registry → gb → cbse → caie-igcse → ib → concepts → banners`.
+(Cambridge IGCSE and CBSE have **no rows in the live DB yet**.) Run it only
+after the code deploy is live, with a Neon branch as backup. Two asset
+follow-ups run in the same env: `scripts/snapshot-book-covers.ts` (OpenLibrary
+covers → own S3) and `scripts/snapshot-covers.ts` (US lesson cover sources).
 
 ### NEVER run the full seed
 

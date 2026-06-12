@@ -179,6 +179,12 @@ export function CatalogStructure({ className }: CatalogStructureProps) {
           description: "provisions a school onto the catalog",
         },
         {
+          name: "provision.ts",
+          type: "file",
+          description:
+            "schedule/sections/timetable/library provisioning + the repair doctor",
+        },
+        {
           name: "image.ts",
           type: "file",
           description: "Sharp pipeline + S3 upload",

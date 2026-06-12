@@ -45,6 +45,15 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
 - **Paid content**: only Question/Video/Exam carry price/currency. Video purchases are
   live (Stripe `VideoPurchase`, signed CloudFront, null-URL for unpurchased PAID). Exam /
   question purchase flow is deliberately deferred.
+- **Provisioning doctor** (`provision.ts`): `repairProvisioning` runs ONLY missing stages
+  (status check first), each stage try/caught so one failure never blocks the rest.
+  Onboarding `after()`, manual `publishSchool`, and the operator tenants "Repair
+  Provisioning" action all converge on it. Library books are REPORT-ONLY in the doctor —
+  book adoption is a school decision made in the library picker, never auto-repaired.
+- **Operator action errors are codes**: catalog actions return snake_case codes
+  (`paid_requires_price_and_currency`, …); `error-messages.ts` `catalogActionError` maps
+  them at display time with a prettify fallback. Keep new action errors snake_case and
+  add display-worthy ones to the map.
 
 ## Danger Zones
 
@@ -66,6 +75,13 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   output deterministic or re-runs will duplicate.
 - **`approveProposal` notification must never fail the approval** — dispatch happens after
   the transaction inside try/catch. Keep it that way.
+- **Every provisioning stage must stay idempotent** — `repairProvisioning` and manual
+  `publishSchool` re-run them on already-provisioned schools. The periods-duplication bug
+  (terms guarded, periods not) is exactly the class of regression to avoid; the
+  `catalog-setup` re-run test locks it.
+- **Stale catalog subjects are never blind-deleted** — `SubjectSelection`/`Enrollment`
+  CASCADE on subject delete. `scripts/catalog-deploy-sync.ts` deletes only rows with zero
+  school references and reports the rest.
 
 ## Related Blocks
 
