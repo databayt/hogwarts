@@ -4268,6 +4268,9 @@
         "cleared": "تم مسح الجدول"
       },
       "slotEditor": {
+        "section": "الشعبة",
+        "selectSection": "اختر الشعبة",
+        "sectionRequired": "الشعبة مطلوبة",
         "editTitle": "تعديل حصة الجدول",
         "addTitle": "إضافة حصة جدول",
         "description": "تكوين تفاصيل حصة الجدول",

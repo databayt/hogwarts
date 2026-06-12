@@ -17,7 +17,7 @@ last_audited: 2026-05-25
 
 The Timetable block provides school-wide weekly schedule building, conflict detection, and multi-view display. Schedules are **section-based** — each section (Grade 1-A, Grade 7-B) gets a complete weekly timetable with subjects distributed across periods. Teachers and classrooms are assigned per slot, with unassigned slots shown as "Unassigned" for later teacher assignment.
 
-**Data Model:** `Timetable` has `sectionId` (which section), `subjectId` (what subject), `classroomId` (where), `teacherId` (who, nullable). Legacy `classId` is kept for backward compatibility but new generation always uses sections.
+**Data Model:** `Timetable` has `sectionId` (which section), `subjectId` (what subject), `classroomId` (where), `teacherId` (who, nullable). Legacy `classId` survives on old rows only — as of 2026-06-12 the **manual slot lifecycle is section-first too**: `upsertTimetableSlot` requires `sectionId` + `subjectId` (editing a legacy row backfills its section fields in place), `deleteTimetableSlot` is id-based, and student/guardian reads OR `Student.sectionId` with legacy `StudentClass` classIds so section-generated schedules are visible immediately after placement. Default terms are calendar-aware via `calendars.ts` (`ACADEMIC_CALENDARS` — country/structure → N terms with date-correct active term; see /docs/provision).
 
 ### Capabilities by Role
 

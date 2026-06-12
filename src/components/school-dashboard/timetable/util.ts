@@ -84,8 +84,12 @@ export function detectConflicts(slots: TimetableSlot[]): TimetableConflict[] {
         })
       }
 
-      // Class conflict (same class scheduled twice)
-      if (slot1.classId === slot2.classId) {
+      // Cohort conflict (same section/class scheduled twice).
+      // Coalesce sectionId ?? classId — comparing bare classId would make any
+      // two section-based slots (classId undefined on both) always "conflict".
+      const cohort1 = slot1.sectionId ?? slot1.classId
+      const cohort2 = slot2.sectionId ?? slot2.classId
+      if (cohort1 && cohort2 && cohort1 === cohort2) {
         conflicts.push({
           id: `${slot1.id}-${slot2.id}-class`,
           type: "class",

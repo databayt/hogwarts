@@ -27,8 +27,8 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import {
-  getClassesForSelection,
   getRoomsForSelection,
+  getSectionsForTimetable,
   getSubjectsForSlotEditor,
   getTeachersForSelection,
   getTeachersForSlotEditor,
@@ -38,12 +38,12 @@ import {
 } from "../actions"
 import { SlotEditorDialog } from "../slot-editor-dialog"
 import type {
-  ClassInfo,
   ClassroomInfo,
   SubjectInfo,
   TeacherInfo,
   TimetableSlot,
 } from "../types"
+import type { SectionForTimetable } from "../validation"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -145,7 +145,9 @@ export default function AdminView({
   const [slotEditorClassrooms, setSlotEditorClassrooms] = useState<
     ClassroomInfo[]
   >([])
-  const [slotEditorClasses, setSlotEditorClasses] = useState<ClassInfo[]>([])
+  const [slotEditorSections, setSlotEditorSections] = useState<
+    SectionForTimetable[]
+  >([])
 
   const [isLoadingData, setIsLoadingData] = useState(false)
 
@@ -207,25 +209,16 @@ export default function AdminView({
   }
 
   const loadSlotEditorResources = async () => {
-    const [subjectsResult, teachersResult, classesResult, roomsResult] =
+    const [subjectsResult, teachersResult, sectionsResult, roomsResult] =
       await Promise.all([
         getSubjectsForSlotEditor({ termId }),
         getTeachersForSlotEditor({ termId }),
-        getClassesForSelection({ termId }),
+        getSectionsForTimetable(),
         getRoomsForSelection(),
       ])
     setSlotEditorSubjects(subjectsResult.subjects)
     setSlotEditorTeachers(teachersResult.teachers)
-    setSlotEditorClasses(
-      classesResult.classes.map((c) => ({
-        id: c.id,
-        name: c.label,
-        grade: "",
-        section: "",
-        capacity: 50,
-        currentEnrollment: 0,
-      }))
-    )
+    setSlotEditorSections(sectionsResult.sections)
     setSlotEditorClassrooms(
       roomsResult.rooms.map((r) => ({
         id: r.id,
@@ -293,10 +286,14 @@ export default function AdminView({
   const handleSlotSave = useCallback(
     async (data: Partial<TimetableSlot>) => {
       await upsertTimetableSlot({
+        // Editing an existing slot (incl. legacy classId rows) updates by id —
+        // the server backfills sectionId/subjectId, migrating the row in place.
+        ...(data.id ? { id: data.id } : {}),
         termId,
         dayOfWeek: data.dayOfWeek!,
         periodId: data.periodId!,
-        classId: data.classId!,
+        sectionId: data.sectionId!,
+        subjectId: data.subjectId!,
         teacherId: data.teacherId!,
         classroomId: data.classroomId!,
         weekOffset: data.weekOffset ?? 0,
@@ -428,9 +425,12 @@ export default function AdminView({
               <Badge variant="outline">
                 {av?.classCount?.replace(
                   "{count}",
-                  String(new Set(slots.map((s: any) => s.classId)).size)
+                  String(
+                    new Set(slots.map((s: any) => s.sectionId ?? s.classId))
+                      .size
+                  )
                 ) ??
-                  `${new Set(slots.map((s: any) => s.classId)).size} classes`}
+                  `${new Set(slots.map((s: any) => s.sectionId ?? s.classId)).size} classes`}
               </Badge>
             </div>
           )}
@@ -476,7 +476,7 @@ export default function AdminView({
         teachers={slotEditorTeachers}
         subjects={slotEditorSubjects}
         classrooms={slotEditorClassrooms}
-        classes={slotEditorClasses}
+        sections={slotEditorSections}
         existingSlots={slots}
         workingDays={workingDays}
         onSave={handleSlotSave}

@@ -109,21 +109,30 @@ export const getTeachersForSelectionSchema = z
 // ============================================================================
 
 export const upsertTimetableSlotSchema = z.object({
+  // Slot identity — prefer id when editing an existing slot
+  id: cuidSchema.optional(),
   termId: cuidSchema,
   dayOfWeek: dayOfWeekSchema,
   periodId: cuidSchema,
-  classId: cuidSchema,
+  // Section-first fields (primary path)
+  sectionId: cuidSchema,
+  subjectId: cuidSchema,
   teacherId: cuidSchema,
   classroomId: cuidSchema,
   weekOffset: weekOffsetSchema,
+  // Legacy classId kept optional for backward round-trips (exams/results history)
+  classId: cuidSchema.optional(),
 })
 
 export const deleteTimetableSlotSchema = z.object({
-  termId: cuidSchema,
-  dayOfWeek: dayOfWeekSchema,
-  periodId: cuidSchema,
-  classId: cuidSchema,
-  weekOffset: weekOffsetSchema,
+  // Prefer id-based delete (works for both section-based and legacy slots)
+  id: cuidSchema.optional(),
+  // Legacy composite key — kept for backward compat; ignored when id is present
+  termId: cuidSchema.optional(),
+  dayOfWeek: dayOfWeekSchema.optional(),
+  periodId: cuidSchema.optional(),
+  classId: cuidSchema.optional(),
+  weekOffset: weekOffsetSchema.optional(),
 })
 
 export const upsertSchoolWeekConfigSchema = z.object({
@@ -254,6 +263,20 @@ export const getTimetableStatsSchema = z.object({
 export type GetWeeklyTimetableInput = z.infer<typeof getWeeklyTimetableSchema>
 export type UpsertTimetableSlotInput = z.infer<typeof upsertTimetableSlotSchema>
 export type DeleteTimetableSlotInput = z.infer<typeof deleteTimetableSlotSchema>
+/** Section info shape returned by getSectionsForTimetable */
+export interface SectionForTimetable {
+  id: string
+  name: string
+  gradeId: string
+  gradeName: string
+}
+/** Subject-selection entry for a grade, used by slot editor to filter subjects */
+export interface SubjectForGrade {
+  gradeId: string
+  subjectId: string
+  subjectName: string
+  color?: string
+}
 export type UpsertSchoolWeekConfigInput = z.infer<
   typeof upsertSchoolWeekConfigSchema
 >

@@ -381,7 +381,12 @@ export async function validateRoomConstraints(input: {
   schoolId: string
   termId: string
   classroomId: string
-  classId: string
+  /** Legacy classId — used for student-count and subject-name when sectionId absent */
+  classId?: string
+  /** Section-based path: count students from Section.students */
+  sectionId?: string
+  /** Subject name for allowedSubjectTypes check (section-based path) */
+  subjectName?: string
   dayOfWeek: number
   periodId: string
   weekOffset?: number
@@ -415,17 +420,30 @@ export async function validateRoomConstraints(input: {
     }
   }
 
-  // Get class info (student count)
-  const classInfo = await db.class.findFirst({
-    where: { id: input.classId, schoolId: input.schoolId },
-    select: {
-      name: true,
-      subject: { select: { name: true } },
-      _count: { select: { studentClasses: true } },
-    },
-  })
+  // Resolve student count and subject name — prefer section-based path
+  let studentCount = 0
+  let subjectNameResolved = input.subjectName ?? ""
 
-  const studentCount = classInfo?._count?.studentClasses ?? 0
+  if (input.sectionId) {
+    // Section-based: count students enrolled in this section
+    studentCount = await db.student.count({
+      where: { schoolId: input.schoolId, sectionId: input.sectionId },
+    })
+    // subjectName already passed in from caller or resolved via subjectId lookup above
+  } else if (input.classId) {
+    // Legacy classId path — keep existing behaviour
+    const classInfo = await db.class.findFirst({
+      where: { id: input.classId, schoolId: input.schoolId },
+      select: {
+        name: true,
+        subject: { select: { name: true } },
+        _count: { select: { studentClasses: true } },
+      },
+    })
+    studentCount = classInfo?._count?.studentClasses ?? 0
+    if (!subjectNameResolved)
+      subjectNameResolved = classInfo?.subject?.name ?? ""
+  }
 
   // Get room constraint
   const constraint = await db.roomConstraint.findFirst({
@@ -481,23 +499,22 @@ export async function validateRoomConstraints(input: {
     constraint?.allowedSubjectTypes &&
     constraint.allowedSubjectTypes.length > 0
   ) {
-    const name = classInfo?.subject?.name?.toLowerCase() || ""
+    const name = subjectNameResolved.toLowerCase()
     const allowed = (constraint.allowedSubjectTypes as string[]).map(
       (t: string) => t.toLowerCase()
     )
 
-    // Check if the class's subject matches any allowed type
-    const isAllowed = allowed.some(
-      (t: string) => name.includes(t) || t.includes(name)
-    )
+    // Check if the subject matches any allowed type
+    const isAllowed =
+      !name || allowed.some((t: string) => name.includes(t) || t.includes(name))
 
     if (!isAllowed) {
       violations.push({
         type: "ROOM_EQUIPMENT",
         severity: "warning",
-        message: `${classInfo?.subject?.name} is not in the allowed subject types for ${room.roomName} (allowed: ${(constraint.allowedSubjectTypes as string[]).join(", ")})`,
+        message: `${subjectNameResolved} is not in the allowed subject types for ${room.roomName} (allowed: ${(constraint.allowedSubjectTypes as string[]).join(", ")})`,
         details: {
-          name: classInfo?.subject?.name,
+          name: subjectNameResolved,
           allowedTypes: constraint.allowedSubjectTypes,
           roomType: room.classroomType?.name,
         },
@@ -522,7 +539,12 @@ export async function validateSlotConstraints(input: {
   termId: string
   teacherId: string
   classroomId: string
-  classId: string
+  /** Legacy classId — optional when sectionId is present */
+  classId?: string
+  /** Section-based path for room capacity check */
+  sectionId?: string
+  /** Subject name for allowedSubjectTypes check (section-based) */
+  subjectName?: string
   dayOfWeek: number
   periodId: string
   weekOffset?: number
@@ -548,6 +570,8 @@ export async function validateSlotConstraints(input: {
       termId: input.termId,
       classroomId: input.classroomId,
       classId: input.classId,
+      sectionId: input.sectionId,
+      subjectName: input.subjectName,
       dayOfWeek: input.dayOfWeek,
       periodId: input.periodId,
       weekOffset: input.weekOffset,
@@ -869,8 +893,67 @@ export async function getTeachersForSelection(input: unknown) {
   }
 }
 
+/**
+ * Get sections for the slot editor dialog.
+ * Returns all sections for this school with grade info.
+ */
+export async function getSectionsForTimetable(input?: { termId?: string }) {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const sections = await db.section.findMany({
+    where: { schoolId },
+    orderBy: [{ grade: { name: "asc" } }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      gradeId: true,
+      grade: { select: { name: true } },
+    },
+  })
+
+  return {
+    sections: sections.map((s) => ({
+      id: s.id,
+      name: s.name,
+      gradeId: s.gradeId,
+      gradeName: s.grade?.name ?? "",
+    })),
+  }
+}
+
+/**
+ * Get subjects active for a given grade (via SubjectSelection).
+ * Used by the slot editor dialog to populate the subject picker.
+ */
+export async function getSubjectsForSection(input: { gradeId: string }) {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const selections = await db.subjectSelection.findMany({
+    where: { schoolId, gradeId: input.gradeId, isActive: true },
+    select: {
+      catalogSubjectId: true,
+      customName: true,
+      subject: {
+        select: { name: true, color: true },
+      },
+    },
+  })
+
+  return {
+    subjects: selections.map((s) => ({
+      id: s.catalogSubjectId,
+      name: s.customName || s.subject?.name || "",
+      color: s.subject?.color ?? "#6366f1",
+    })),
+  }
+}
+
 export async function upsertTimetableSlot(input: unknown) {
-  // Validate input
+  // Validate input — section-first schema (sectionId + subjectId required; classId optional)
   const validatedInput = upsertTimetableSlotSchema.parse(input)
 
   // Admin access required
@@ -879,91 +962,140 @@ export async function upsertTimetableSlot(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  // P0 FIX: Validate teacher-subject expertise before assignment
-  // Get the class's subject to check teacher qualification
-  const classInfo = await db.class.findFirst({
-    where: { id: validatedInput.classId, schoolId },
-    select: {
-      subjectId: true,
-      subject: { select: { name: true } },
+  // 1. Validate section exists and belongs to this school
+  const section = await db.section.findFirst({
+    where: { id: validatedInput.sectionId, schoolId },
+    select: { id: true, name: true, gradeId: true },
+  })
+  if (!section) throw new Error("SECTION_NOT_FOUND")
+
+  // 2. Soft-validate that the subject is in SubjectSelection for this grade.
+  //    Decision: non-blocking warning (admins may legitimately schedule subjects
+  //    not yet in the formal selection, e.g., trial periods / special programmes).
+  const subjectSelected = await db.subjectSelection.findFirst({
+    where: {
+      schoolId,
+      gradeId: section.gradeId,
+      catalogSubjectId: validatedInput.subjectId,
+      isActive: true,
     },
   })
+  // Log but do not block
+  if (!subjectSelected) {
+    console.warn(
+      `[upsertTimetableSlot] Subject ${validatedInput.subjectId} not in active SubjectSelection for grade ${section.gradeId} — allowed by admin override`
+    )
+  }
 
-  if (classInfo?.subjectId && validatedInput.teacherId) {
-    // Check if teacher has expertise in this subject
+  // 3. Teacher expertise check — uses subjectId directly (section-based)
+  if (validatedInput.teacherId) {
     const teacherExpertise = await db.teacherSubjectExpertise.findFirst({
       where: {
         schoolId,
         teacherId: validatedInput.teacherId,
-        subjectId: classInfo.subjectId,
+        subjectId: validatedInput.subjectId,
       },
     })
-
     if (!teacherExpertise) {
-      // Get teacher name for better error message
-      const teacher = await db.teacher.findFirst({
-        where: { id: validatedInput.teacherId, schoolId },
-        select: { firstName: true, lastName: true },
-      })
-      const teacherName = teacher
-        ? `${teacher.firstName} ${teacher.lastName}`
-        : "Selected teacher"
-      const name = classInfo.subject?.name || "this subject"
-
       throw new Error("TEACHER_NOT_QUALIFIED")
     }
   }
 
-  // P2 FIX: Validate teacher and room constraints before assignment
-  // This checks max periods/day, max periods/week, unavailable blocks, room capacity, etc.
+  // 4. Find existing slot at this cell BEFORE validating constraints — an
+  //    edit must exclude its own row from teacher/room conflict checks, or a
+  //    teacher already at max periods can never have their slot re-saved.
+  const existing = validatedInput.id
+    ? await db.timetable.findFirst({
+        where: { id: validatedInput.id, schoolId },
+        select: { id: true, classId: true },
+      })
+    : await db.timetable.findFirst({
+        where: {
+          schoolId,
+          termId: validatedInput.termId,
+          dayOfWeek: validatedInput.dayOfWeek,
+          periodId: validatedInput.periodId,
+          weekOffset: validatedInput.weekOffset,
+          OR: [
+            { sectionId: validatedInput.sectionId },
+            // Legacy: find a slot at this cell with a classId (non-null)
+            ...(validatedInput.classId
+              ? [
+                  {
+                    classId: validatedInput.classId,
+                  },
+                ]
+              : []),
+          ],
+        },
+        select: { id: true, classId: true },
+      })
+
+  // 5. Constraint validation (teacher availability + room capacity)
+  //    Pass sectionId; classId is optional (null → capacity from section student count)
   await validateSlotConstraints({
     schoolId,
     termId: validatedInput.termId,
     teacherId: validatedInput.teacherId,
     classroomId: validatedInput.classroomId,
-    classId: validatedInput.classId,
+    classId: validatedInput.classId ?? "",
+    sectionId: validatedInput.sectionId,
     dayOfWeek: validatedInput.dayOfWeek,
     periodId: validatedInput.periodId,
     weekOffset: validatedInput.weekOffset,
-    enforceConstraints: true, // Throw error on constraint violations
+    excludeSlotId: existing?.id,
+    enforceConstraints: true,
   })
 
-  const data = {
-    schoolId,
-    termId: validatedInput.termId,
-    dayOfWeek: validatedInput.dayOfWeek,
-    periodId: validatedInput.periodId,
-    classId: validatedInput.classId,
-    teacherId: validatedInput.teacherId,
-    classroomId: validatedInput.classroomId,
-    weekOffset: validatedInput.weekOffset,
-  }
-
-  // Upsert by unique composite (class at day/period)
   const timetableModel = getModelOrThrow("timetable")
-  const row = await timetableModel.upsert({
-    where: {
-      schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
+
+  let row: { id: string }
+
+  if (existing) {
+    // UPDATE existing row — backfill sectionId/subjectId on legacy rows, keep classId intact
+    row = await timetableModel.update({
+      where: { id: existing.id },
+      data: {
+        sectionId: validatedInput.sectionId,
+        subjectId: validatedInput.subjectId,
+        teacherId: validatedInput.teacherId,
+        classroomId: validatedInput.classroomId,
+        // Preserve existing classId (legacy exams/results history must not lose it)
+      },
+    })
+  } else {
+    // CREATE new section-based slot
+    row = await timetableModel.create({
+      data: {
         schoolId,
         termId: validatedInput.termId,
         dayOfWeek: validatedInput.dayOfWeek,
         periodId: validatedInput.periodId,
-        classId: validatedInput.classId,
+        sectionId: validatedInput.sectionId,
+        subjectId: validatedInput.subjectId,
+        teacherId: validatedInput.teacherId,
+        classroomId: validatedInput.classroomId,
         weekOffset: validatedInput.weekOffset,
+        // Include classId only when explicitly provided (legacy callers)
+        ...(validatedInput.classId ? { classId: validatedInput.classId } : {}),
       },
-    },
-    update: {
-      teacherId: validatedInput.teacherId,
-      classroomId: validatedInput.classroomId,
-    },
-    create: data,
-  })
+    })
+  }
 
-  // Log action for audit trail
   await logTimetableAction("edit", {
     entityType: "slot",
     entityId: row.id,
-    changes: data,
+    changes: {
+      schoolId,
+      termId: validatedInput.termId,
+      dayOfWeek: validatedInput.dayOfWeek,
+      periodId: validatedInput.periodId,
+      sectionId: validatedInput.sectionId,
+      subjectId: validatedInput.subjectId,
+      teacherId: validatedInput.teacherId,
+      classroomId: validatedInput.classroomId,
+      weekOffset: validatedInput.weekOffset,
+    },
   })
 
   return { id: row.id }
@@ -1415,24 +1547,32 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
       }
     }
   } else if (role === "STUDENT") {
-    // Student can only view their enrolled classes' timetable
+    // Student can only view their own timetable.
+    // Section-first: resolve sectionId from Student record and widen the
+    // where clause with an OR so both section-based and legacy class-based
+    // slots are visible.
     const session = await auth()
     const userId = session?.user?.id
     if (userId) {
-      // Resolve student record from user ID
-      const student = await db.student.findFirst({
+      const studentRecord = await db.student.findFirst({
         where: { userId, schoolId },
-        select: { id: true },
+        select: { id: true, sectionId: true },
       })
-      if (student) {
-        // Get ALL enrolled class IDs (not just one)
+      if (studentRecord) {
         const enrollments = await db.studentClass.findMany({
-          where: { studentId: student.id, schoolId },
+          where: { studentId: studentRecord.id, schoolId },
           select: { classId: true },
         })
         const classIds = enrollments.map((e) => e.classId)
-        if (classIds.length > 0) {
-          whereBase.classId = { in: classIds }
+        const sectionId = studentRecord.sectionId
+
+        // Build an OR that covers both slot types
+        const orClauses: any[] = []
+        if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
+        if (sectionId) orClauses.push({ sectionId })
+
+        if (orClauses.length > 0) {
+          whereBase.OR = orClauses
         }
       }
     }
@@ -1646,6 +1786,7 @@ export async function getTimetableByClass(input: {
 async function getTimetableByClassIds(input: {
   termId: string
   classIds: string[]
+  sectionId?: string
   weekOffset?: 0 | 1
 }) {
   const { schoolId } = await getTenantContext()
@@ -1665,12 +1806,22 @@ async function getTimetableByClassIds(input: {
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
+  const hasClassIds = input.classIds.length > 0
+  const hasSectionId = !!input.sectionId
+
   const slots = await db.timetable.findMany({
     where: {
       schoolId,
       termId: input.termId,
-      classId: { in: input.classIds },
       weekOffset: input.weekOffset ?? 0,
+      ...(hasClassIds || hasSectionId
+        ? {
+            OR: [
+              ...(hasClassIds ? [{ classId: { in: input.classIds } }] : []),
+              ...(hasSectionId ? [{ sectionId: input.sectionId }] : []),
+            ],
+          }
+        : {}),
     },
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
@@ -1682,6 +1833,8 @@ async function getTimetableByClassIds(input: {
           subject: { select: { name: true } },
         },
       },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
@@ -1705,8 +1858,9 @@ async function getTimetableByClassIds(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.name || s.class?.name || "",
+      subject: s.subject?.name || s.class?.subject?.name || s.class?.name || "",
       classId: s.classId,
+      sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
@@ -1736,6 +1890,7 @@ export async function getTimetableByStudentGrade(input: {
       id: true,
       firstName: true,
       lastName: true,
+      sectionId: true,
       studentClasses: {
         where: { schoolId },
         select: {
@@ -1824,13 +1979,24 @@ export async function getTimetableByStudentGrade(input: {
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
-  // Get all timetable slots for all classes in this grade
+  const studentSectionId = student.sectionId ?? undefined
+  const hasClassIds = classIds.length > 0
+  const hasSectionId = !!studentSectionId
+
+  // Get all timetable slots for all classes in this grade (and section-based slots)
   const slots = await db.timetable.findMany({
     where: {
       schoolId,
       termId: input.termId,
-      classId: { in: classIds },
       weekOffset: input.weekOffset ?? 0,
+      ...(hasClassIds || hasSectionId
+        ? {
+            OR: [
+              ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
+              ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
+            ],
+          }
+        : {}),
     },
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
@@ -1842,6 +2008,8 @@ export async function getTimetableByStudentGrade(input: {
           subject: { select: { name: true } },
         },
       },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
@@ -1877,9 +2045,10 @@ export async function getTimetableByStudentGrade(input: {
       teacherId: s.teacherId,
       room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.name || s.class?.name || "",
+      subject: s.subject?.name || s.class?.subject?.name || s.class?.name || "",
       className: s.class?.name || "",
       classId: s.classId,
+      sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
@@ -1915,6 +2084,22 @@ export async function getTimetableByGradeLevel(input: {
 
   const classIds = gradeClasses.map((c) => c.id)
 
+  // Section axis: sections whose grade matches the requested grade name —
+  // section-based slots carry no classId, so the class filter alone would
+  // return an empty grid for migrated schools. Grade display names vary by
+  // curriculum config, so match by extracted grade number with a name-equality
+  // fallback.
+  const { extractGradeNumber } = await import("@/lib/grade-utils")
+  const gradeNumber = extractGradeNumber(input.gradeName)
+  const gradeSections = await db.section.findMany({
+    where: {
+      schoolId,
+      grade: gradeNumber !== null ? { gradeNumber } : { name: input.gradeName },
+    },
+    select: { id: true },
+  })
+  const sectionIds = gradeSections.map((s) => s.id)
+
   // Get schedule config
   const { config } = await getScheduleConfig({ termId: input.termId })
 
@@ -1930,13 +2115,20 @@ export async function getTimetableByGradeLevel(input: {
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
-  // Get all timetable slots for all classes in this grade
+  // Get all timetable slots for this grade — both axes
   const slots = await db.timetable.findMany({
     where: {
       schoolId,
       termId: input.termId,
-      classId: { in: classIds },
       weekOffset: input.weekOffset ?? 0,
+      OR: [
+        ...(classIds.length > 0 ? [{ classId: { in: classIds } }] : []),
+        ...(sectionIds.length > 0 ? [{ sectionId: { in: sectionIds } }] : []),
+        // Neither axis resolvable → match nothing (preserves empty result)
+        ...(classIds.length === 0 && sectionIds.length === 0
+          ? [{ id: { in: [] as string[] } }]
+          : []),
+      ],
     },
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
@@ -1948,6 +2140,8 @@ export async function getTimetableByGradeLevel(input: {
           subject: { select: { name: true } },
         },
       },
+      section: { select: { id: true, name: true } },
+      subject: { select: { name: true } },
       period: {
         select: { id: true, name: true, startTime: true, endTime: true },
       },
@@ -2396,39 +2590,57 @@ export async function getTimetableAnalytics(input: { termId: string }) {
 }
 
 /**
- * Delete a timetable slot
+ * Delete a timetable slot.
+ * Section-first: accepts slot `id` (works for both section-based and legacy slots).
+ * Legacy composite-key fields kept for backward compat — ignored when id is present.
  */
 export async function deleteTimetableSlot(input: {
-  termId: string
-  dayOfWeek: number
-  periodId: string
-  classId: string
-  weekOffset: 0 | 1
+  /** Preferred: delete by primary key — works for all slot types */
+  id?: string
+  // Legacy composite key fields (used only when id is absent)
+  termId?: string
+  dayOfWeek?: number
+  periodId?: string
+  classId?: string
+  weekOffset?: 0 | 1
 }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  // Fetch slot info before deletion for notification
-  const slotToDelete = await db.timetable.findFirst({
-    where: {
-      schoolId,
-      termId: input.termId,
-      dayOfWeek: input.dayOfWeek,
-      periodId: input.periodId,
-      classId: input.classId,
-      weekOffset: input.weekOffset,
-    },
-    include: {
-      teacher: { select: { userId: true, firstName: true, lastName: true } },
-      class: { select: { name: true } },
-    },
-  })
+  // Resolve the slot — prefer id, fall back to legacy composite key
+  let slotToDelete: {
+    id: string
+    dayOfWeek: number
+    teacher: {
+      userId: string | null
+      firstName: string | null
+      lastName: string | null
+    } | null
+    class: { name: string } | null
+    section: { name: string } | null
+  } | null = null
 
-  await db.timetable.delete({
-    where: {
-      schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
+  if (input.id) {
+    slotToDelete = await db.timetable.findFirst({
+      where: { id: input.id, schoolId },
+      include: {
+        teacher: { select: { userId: true, firstName: true, lastName: true } },
+        class: { select: { name: true } },
+        section: { select: { name: true } },
+      },
+    })
+  } else if (
+    input.termId &&
+    input.dayOfWeek !== undefined &&
+    input.periodId &&
+    input.classId &&
+    input.weekOffset !== undefined
+  ) {
+    // Legacy composite-key lookup
+    slotToDelete = await db.timetable.findFirst({
+      where: {
         schoolId,
         termId: input.termId,
         dayOfWeek: input.dayOfWeek,
@@ -2436,12 +2648,24 @@ export async function deleteTimetableSlot(input: {
         classId: input.classId,
         weekOffset: input.weekOffset,
       },
-    },
-  })
+      include: {
+        teacher: { select: { userId: true, firstName: true, lastName: true } },
+        class: { select: { name: true } },
+        section: { select: { name: true } },
+      },
+    })
+  }
+
+  if (!slotToDelete) {
+    throw new Error("SLOT_NOT_FOUND")
+  }
+
+  // Delete by primary key (works for section-based and legacy slots alike)
+  await db.timetable.delete({ where: { id: slotToDelete.id } })
 
   await logTimetableAction("delete", {
     entityType: "slot",
-    metadata: input,
+    metadata: { id: slotToDelete.id, ...input },
   })
 
   // Notify teacher about removed slot (non-blocking)
@@ -2450,18 +2674,20 @@ export async function deleteTimetableSlot(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const slotLabel =
+      slotToDelete.section?.name || slotToDelete.class?.name || "الحصة"
     dispatchNotification({
       schoolId,
       userId: slotToDelete.teacher.userId,
       type: "class_cancelled",
       title: "إلغاء حصة",
-      body: `تم إلغاء حصة ${slotToDelete.class?.name || "الحصة"} من الجدول`,
+      body: `تم إلغاء حصة ${slotLabel} من الجدول`,
       lang: schoolPref2?.preferredLanguage ?? "ar",
       priority: "normal",
       channels: ["in_app"],
       metadata: {
-        dayOfWeek: input.dayOfWeek,
-        className: slotToDelete.class?.name,
+        dayOfWeek: slotToDelete.dayOfWeek,
+        slotLabel,
         url: "/timetable",
       },
     }).catch((err) =>
@@ -2966,35 +3192,48 @@ export async function getChildTimetable(input: {
 
   if (!userId) throw new Error("NOT_AUTHENTICATED")
 
-  // Verify guardian has access to this child (unless admin)
+  // Verify guardian has access to this child (unless admin). A caller with
+  // NO guardian record in this school must be denied too — skipping the
+  // check would let any authenticated user fetch any child's timetable.
   if (role !== "DEVELOPER" && role !== "ADMIN") {
     const guardian = await db.guardian.findFirst({
       where: { userId, schoolId },
       select: { id: true },
     })
 
-    if (guardian) {
-      const hasAccess = await db.studentGuardian.findFirst({
-        where: {
-          guardianId: guardian.id,
-          studentId: input.childId,
-          schoolId,
-        },
-      })
+    if (!guardian) {
+      throw new Error("ACCESS_DENIED")
+    }
 
-      if (!hasAccess) {
-        throw new Error("ACCESS_DENIED")
-      }
+    const hasAccess = await db.studentGuardian.findFirst({
+      where: {
+        guardianId: guardian.id,
+        studentId: input.childId,
+        schoolId,
+      },
+    })
+
+    if (!hasAccess) {
+      throw new Error("ACCESS_DENIED")
     }
   }
 
-  // Get ALL student's enrolled classes
+  // Get ALL student's enrolled classes (legacy axis) + section placement (primary)
   const enrollments = await db.studentClass.findMany({
     where: { studentId: input.childId, schoolId },
     select: { classId: true },
   })
 
-  if (enrollments.length === 0) {
+  const student = await db.student.findFirst({
+    where: { id: input.childId, schoolId },
+    select: { id: true, firstName: true, lastName: true, sectionId: true },
+  })
+
+  const classIds = enrollments.map((e) => e.classId)
+
+  // A child placed in a section but not yet enrolled in course classes still
+  // has a visible timetable — section-based slots cover them.
+  if (classIds.length === 0 && !student?.sectionId) {
     return {
       studentInfo: null,
       slots: [],
@@ -3004,17 +3243,10 @@ export async function getChildTimetable(input: {
     }
   }
 
-  // Get student info
-  const student = await db.student.findFirst({
-    where: { id: input.childId, schoolId },
-    select: { id: true, firstName: true, lastName: true },
-  })
-
-  // Get timetable slots for ALL enrolled classes
-  const classIds = enrollments.map((e) => e.classId)
   const timetableData = await getTimetableByClassIds({
     termId: input.termId,
     classIds,
+    sectionId: student?.sectionId ?? undefined,
     weekOffset: input.weekOffset,
   })
 
@@ -3069,7 +3301,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     role === "STUDENT"
       ? db.student.findFirst({
           where: { userId, schoolId },
-          select: { id: true },
+          select: { id: true, sectionId: true },
         })
       : Promise.resolve(null),
   ])
@@ -3082,6 +3314,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     weekOffset: number
     teacherId?: string
     classId?: string | { in: string[] }
+    OR?: Array<Record<string, unknown>>
   } = {
     schoolId,
     termId: term.id,
@@ -3098,7 +3331,11 @@ export async function getTodaySchedule(input?: { date?: Date }) {
         select: { classId: true },
       })
       const classIds = enrollments.map((e) => e.classId)
-      if (classIds.length > 0) where.classId = { in: classIds }
+      // Section-based slots (primary) + legacy class enrollments
+      const orClauses: Array<Record<string, unknown>> = []
+      if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
+      if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
+      if (orClauses.length > 0) where.OR = orClauses
     }
   }
 
@@ -3108,6 +3345,8 @@ export async function getTodaySchedule(input?: { date?: Date }) {
       class: {
         select: { name: true, subject: { select: { name: true } } },
       },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
       teacher: { select: { firstName: true, lastName: true } },
       classroom: { select: { roomName: true } },
       period: {
@@ -3122,8 +3361,9 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject: slot.class?.subject?.name || slot.class?.name || "",
-    className: slot.class?.name || "",
+    subject:
+      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
+    className: slot.class?.name || slot.section?.name || "",
     teacher: slot.teacher
       ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
       : "",

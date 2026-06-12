@@ -52,7 +52,6 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { DAYS_OF_WEEK, SUBJECT_COLORS } from "./config"
 import {
-  ClassInfo,
   ClassroomInfo,
   Period,
   SubjectInfo,
@@ -60,11 +59,13 @@ import {
   TimetableSlot,
 } from "./types"
 import { findAvailableSlots, validateSlotPlacement } from "./util"
+import type { SectionForTimetable } from "./validation"
 
 const slotSchema = z.object({
   dayOfWeek: z.number().min(0).max(6),
   periodId: z.string().min(1, "Period is required"),
-  classId: z.string().min(1, "Class is required"),
+  // Section-first: the cohort being scheduled (legacy classId no longer written)
+  sectionId: z.string().min(1, "Section is required"),
   subjectId: z.string().min(1, "Subject is required"),
   teacherId: z.string().min(1, "Teacher is required"),
   classroomId: z.string().min(1, "Classroom is required"),
@@ -87,7 +88,7 @@ interface SlotEditorDialogProps {
   teachers: TeacherInfo[]
   subjects: SubjectInfo[]
   classrooms: ClassroomInfo[]
-  classes: ClassInfo[]
+  sections: SectionForTimetable[]
   existingSlots: TimetableSlot[]
   workingDays: number[]
   onSave: (data: Partial<TimetableSlot>) => Promise<void>
@@ -104,7 +105,7 @@ export function SlotEditorDialog({
   teachers,
   subjects,
   classrooms,
-  classes,
+  sections,
   existingSlots,
   workingDays,
   onSave,
@@ -131,7 +132,7 @@ export function SlotEditorDialog({
     defaultValues: {
       dayOfWeek: slot?.dayOfWeek ?? initialDay ?? workingDays[0],
       periodId: slot?.periodId ?? initialPeriod ?? "",
-      classId: slot?.classId ?? "",
+      sectionId: slot?.sectionId ?? "",
       subjectId: slot?.subjectId ?? "",
       teacherId: slot?.teacherId ?? "",
       classroomId: slot?.classroomId ?? "",
@@ -148,7 +149,9 @@ export function SlotEditorDialog({
       form.reset({
         dayOfWeek: slot.dayOfWeek,
         periodId: slot.periodId,
-        classId: slot.classId,
+        // Legacy classId rows have no sectionId — admin picks one, migrating
+        // the row in place on save.
+        sectionId: slot.sectionId || "",
         subjectId: slot.subjectId || "",
         teacherId: slot.teacherId || "",
         classroomId: slot.classroomId || "",
@@ -385,12 +388,12 @@ export function SlotEditorDialog({
 
                 <FormField
                   control={form.control}
-                  name="classId"
+                  name="sectionId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
                         <Users className="me-2 inline h-4 w-4" />
-                        {t?.class ?? "Class"}
+                        {t?.section ?? "Section"}
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -399,18 +402,20 @@ export function SlotEditorDialog({
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue
-                              placeholder={t?.selectClass ?? "Select class"}
+                              placeholder={t?.selectSection ?? "Select section"}
                             />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {classes.map((cls) => (
-                            <SelectItem key={cls.id} value={cls.id}>
+                          {sections.map((section) => (
+                            <SelectItem key={section.id} value={section.id}>
                               <div className="flex w-full items-center justify-between">
-                                <span>{cls.name}</span>
-                                <Badge variant="secondary" className="ms-2">
-                                  {cls.currentEnrollment}/{cls.capacity}
-                                </Badge>
+                                <span>{section.name}</span>
+                                {section.gradeName && (
+                                  <Badge variant="secondary" className="ms-2">
+                                    {section.gradeName}
+                                  </Badge>
+                                )}
                               </div>
                             </SelectItem>
                           ))}

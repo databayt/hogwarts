@@ -8,14 +8,14 @@ maturity: Built+Polish
 completion: 80
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-05-25
+last_audited: 2026-06-12
 ---
 
 # Timetable -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
 **Completion:** 90%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-06-12
 
 ---
 
@@ -46,11 +46,45 @@ last_audited: 2026-05-25
 
 ## Known Issues
 
+### Recently Fixed (2026-06-12 -- section-first lifecycle + terms-aware calendars)
+
+1. **Manual slot lifecycle migrated to sections** -- `upsertTimetableSlot`
+   now requires `sectionId` + `subjectId` (slot editor has section/subject
+   pickers); editing a legacy `classId` row backfills its section fields in
+   place; `deleteTimetableSlot` is id-based (section slots were previously
+   undeletable via the legacy composite key). New slots carry NO `classId`.
+2. **Student/guardian visibility** -- `getWeeklyTimetable`, `getTodaySchedule`
+   (STUDENT), `getChildTimetable`, `getTimetableByStudentGrade`,
+   `getTimetableByGradeLevel` now OR `Student.sectionId` with legacy
+   `StudentClass` classIds; section-generated schedules render the moment a
+   student is placed (previously invisible).
+3. **Security: `getChildTimetable` access hole closed** -- a caller with no
+   guardian record in the school skipped the relationship check entirely;
+   now denied.
+4. **Edit self-conflict** -- `upsertTimetableSlot` passes `excludeSlotId` so
+   a teacher at max periods can re-save their own slot.
+5. **Client conflict false-positive** -- `detectConflicts` coalesced cohort
+   identity (`sectionId ?? classId`); two section slots no longer "conflict"
+   via `undefined === undefined`.
+6. **Terms-aware calendars** -- new `calendars.ts` (`ACADEMIC_CALENDARS`,
+   `resolveAcademicCalendar`, `computeTermDates`): country/structure + date →
+   N terms with correct boundaries + exactly-one-active; wired into
+   `applyTimetableStructureForNewSchool` and `resolveActiveTerm` fallback.
+   Structure `calendar` override (sd-british → GB). 30+ new tests.
+7. Error strings in actions.ts converted to snake-free CAPS codes
+   (`SLOT_NOT_FOUND`, `SECTION_NOT_FOUND`, …) per the i18n error-code rule.
+
+Deferred (documented legacy paths, commented in code): `importTimetableSlots`
+and `applyTemplateToTerm` still replay `classId` — section migration pending.
+
 ### P1 -- High
 
 - [ ] Role checks on mutations not fully enforced (ADMIN/OWNER only)
 - [ ] Print view needs final tuning for varied day counts (fonts/margins)
 - [ ] Integration tests for overlapping slots and weekend pattern rendering
+- [ ] `importTimetableSlots` + `applyTemplateToTerm` are classId-only (legacy
+      replay) — need a resolve step (classId → sectionId/subjectId) before
+      legacy rows can be fully retired
 
 ### P2 -- Medium
 
@@ -73,4 +107,4 @@ last_audited: 2026-05-25
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-06-12 (section-first lifecycle + calendars; 139 timetable tests green, tsc 0)

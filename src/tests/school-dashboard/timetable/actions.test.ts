@@ -37,6 +37,9 @@ const CCLASS2 = "caaaaaaaaaaaaaaaaaaa00005"
 const CTEACHER1 = "caaaaaaaaaaaaaaaaaaa00006"
 const CROOM1 = "caaaaaaaaaaaaaaaaaaa00007"
 const CROOM2 = "caaaaaaaaaaaaaaaaaaa00008"
+const CSECTION1 = "caaaaaaaaaaaaaaaaaaa00009"
+const CSUBJECT1 = "caaaaaaaaaaaaaaaaaaa00010"
+const CGRADE1 = "caaaaaaaaaaaaaaaaaaa00011"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -132,6 +135,28 @@ vi.mock("@/lib/db", () => ({
     },
     classroom: {
       findFirst: vi.fn(),
+    },
+    section: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    subjectSelection: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    teacherSubjectExpertise: {
+      findFirst: vi.fn(),
+    },
+    student: {
+      findFirst: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
+    },
+    studentClass: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    school: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
     teacherUnavailableBlock: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -281,6 +306,92 @@ describe("Timetable Actions", () => {
       expect(call?.where?.schoolId).toBe(SCHOOL_ID)
     })
 
+    it("STUDENT with only a section placement sees section-based slots", async () => {
+      // Student role — no StudentClass enrollments, only Student.sectionId
+      const { getPermissionContext } =
+        await import("@/components/school-dashboard/timetable/permissions")
+      vi.mocked(getPermissionContext).mockResolvedValueOnce({
+        userId: "user-1",
+        schoolId: SCHOOL_ID,
+        role: "STUDENT",
+        canView: true,
+        canModify: false,
+      } as any)
+
+      vi.mocked(db.schoolWeekConfig.findFirst).mockResolvedValue({
+        workingDays: [0, 1, 2, 3, 4],
+        defaultLunchAfterPeriod: 2,
+      } as any)
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        yearId: "year1",
+      } as any)
+      vi.mocked(db.period.findMany).mockResolvedValue([
+        {
+          id: CPERIOD1,
+          name: "Period 1",
+          startTime: new Date("1970-01-01T08:00:00Z"),
+          endTime: new Date("1970-01-01T08:45:00Z"),
+        },
+      ] as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "student-1",
+        sectionId: CSECTION1,
+      } as any)
+      vi.mocked(db.studentClass.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
+
+      await getWeeklyTimetable({ termId: CTERM1 })
+
+      const call = vi.mocked(db.timetable.findMany).mock.calls[0]?.[0] as any
+      // Section-based slots must be reachable for section-placed students
+      expect(call?.where?.OR).toEqual([{ sectionId: CSECTION1 }])
+    })
+
+    it("STUDENT with both enrollments and a section sees the union", async () => {
+      const { getPermissionContext } =
+        await import("@/components/school-dashboard/timetable/permissions")
+      vi.mocked(getPermissionContext).mockResolvedValueOnce({
+        userId: "user-1",
+        schoolId: SCHOOL_ID,
+        role: "STUDENT",
+        canView: true,
+        canModify: false,
+      } as any)
+
+      vi.mocked(db.schoolWeekConfig.findFirst).mockResolvedValue({
+        workingDays: [0, 1, 2, 3, 4],
+        defaultLunchAfterPeriod: 2,
+      } as any)
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        yearId: "year1",
+      } as any)
+      vi.mocked(db.period.findMany).mockResolvedValue([
+        {
+          id: CPERIOD1,
+          name: "Period 1",
+          startTime: new Date("1970-01-01T08:00:00Z"),
+          endTime: new Date("1970-01-01T08:45:00Z"),
+        },
+      ] as any)
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: "student-1",
+        sectionId: CSECTION1,
+      } as any)
+      vi.mocked(db.studentClass.findMany).mockResolvedValue([
+        { classId: CCLASS1 },
+        { classId: CCLASS2 },
+      ] as any)
+      vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
+
+      await getWeeklyTimetable({ termId: CTERM1 })
+
+      const call = vi.mocked(db.timetable.findMany).mock.calls[0]?.[0] as any
+      expect(call?.where?.OR).toEqual([
+        { classId: { in: [CCLASS1, CCLASS2] } },
+        { sectionId: CSECTION1 },
+      ])
+    })
+
     it("resolves schedule config days and lunch correctly", async () => {
       vi.mocked(db.schoolWeekConfig.findFirst).mockResolvedValue({
         workingDays: [0, 2, 4],
@@ -407,45 +518,151 @@ describe("Timetable Actions", () => {
   // =========================================================================
 
   describe("upsertTimetableSlot", () => {
-    it("scopes upsert by schoolId", async () => {
-      // Class info for teacher-subject validation (no subjectId → skips expertise check)
-      vi.mocked(db.class.findFirst).mockResolvedValue({
-        id: CCLASS1,
-        _count: { studentClasses: 0 },
+    function mockSectionUpsertHappyPath() {
+      // Section must exist in this school
+      vi.mocked(db.section.findFirst).mockResolvedValue({
+        id: CSECTION1,
+        name: "Grade 1-A",
+        gradeId: CGRADE1,
       } as any)
-      // Teacher check
+      // Subject is in the grade's active selection (no warning path)
+      vi.mocked(db.subjectSelection.findFirst).mockResolvedValue({
+        id: "sel-1",
+      } as any)
+      // Teacher is qualified for the subject
+      vi.mocked(db.teacherSubjectExpertise.findFirst).mockResolvedValue({
+        id: "exp-1",
+      } as any)
+      // Constraint validation path
       vi.mocked(db.teacher.findFirst).mockResolvedValue({
         id: CTEACHER1,
         firstName: "A",
         lastName: "B",
       } as any)
       vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue(null)
-      // Room check — classroom must exist
       vi.mocked(db.classroom.findFirst).mockResolvedValue({
         id: CROOM1,
         roomName: "Room 1",
         capacity: 30,
       } as any)
+      vi.mocked(db.student.count).mockResolvedValue(20)
       vi.mocked(db.roomConstraint.findFirst).mockResolvedValue(null)
-      // No existing conflicts
+      // No conflicting slots
       vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
-      vi.mocked(db.timetable.upsert).mockResolvedValue({ id: "tt1" } as any)
+    }
+
+    it("creates a section-based slot scoped by schoolId", async () => {
+      mockSectionUpsertHappyPath()
+      // No existing slot at this cell → create path
+      vi.mocked(db.timetable.findFirst).mockResolvedValue(null)
+      vi.mocked(db.timetable.create).mockResolvedValue({ id: "tt1" } as any)
 
       await upsertTimetableSlot({
         termId: CTERM1,
         dayOfWeek: 0,
         periodId: CPERIOD1,
-        classId: CCLASS1,
+        sectionId: CSECTION1,
+        subjectId: CSUBJECT1,
         teacherId: CTEACHER1,
         classroomId: CROOM1,
+        weekOffset: 0,
       })
 
-      expect(db.timetable.upsert).toHaveBeenCalled()
-      const call = vi.mocked(db.timetable.upsert).mock.calls[0]?.[0] as any
-      expect(
-        call?.where?.schoolId_termId_dayOfWeek_periodId_classId_weekOffset
-          ?.schoolId
-      ).toBe(SCHOOL_ID)
+      expect(db.timetable.create).toHaveBeenCalled()
+      const call = vi.mocked(db.timetable.create).mock.calls[0]?.[0] as any
+      expect(call?.data?.schoolId).toBe(SCHOOL_ID)
+      expect(call?.data?.sectionId).toBe(CSECTION1)
+      expect(call?.data?.subjectId).toBe(CSUBJECT1)
+      // No legacy classId written on new slots
+      expect(call?.data?.classId).toBeUndefined()
+    })
+
+    it("updates an existing slot in place, backfilling section fields on legacy rows", async () => {
+      mockSectionUpsertHappyPath()
+      // Existing legacy row at this cell (classId set, no sectionId)
+      vi.mocked(db.timetable.findFirst).mockResolvedValue({
+        id: "tt-legacy",
+        classId: CCLASS1,
+      } as any)
+      vi.mocked(db.timetable.update).mockResolvedValue({
+        id: "tt-legacy",
+      } as any)
+
+      await upsertTimetableSlot({
+        termId: CTERM1,
+        dayOfWeek: 0,
+        periodId: CPERIOD1,
+        sectionId: CSECTION1,
+        subjectId: CSUBJECT1,
+        teacherId: CTEACHER1,
+        classroomId: CROOM1,
+        weekOffset: 0,
+      })
+
+      expect(db.timetable.create).not.toHaveBeenCalled()
+      const call = vi.mocked(db.timetable.update).mock.calls[0]?.[0] as any
+      expect(call?.where?.id).toBe("tt-legacy")
+      expect(call?.data?.sectionId).toBe(CSECTION1)
+      expect(call?.data?.subjectId).toBe(CSUBJECT1)
+      // classId is preserved (not nulled) — exams/results history keeps its axis
+      expect(call?.data?.classId).toBeUndefined()
+    })
+
+    it("throws SECTION_NOT_FOUND when section is not in this school", async () => {
+      vi.mocked(db.section.findFirst).mockResolvedValue(null)
+
+      await expect(
+        upsertTimetableSlot({
+          termId: CTERM1,
+          dayOfWeek: 0,
+          periodId: CPERIOD1,
+          sectionId: CSECTION1,
+          subjectId: CSUBJECT1,
+          teacherId: CTEACHER1,
+          classroomId: CROOM1,
+          weekOffset: 0,
+        })
+      ).rejects.toThrow("SECTION_NOT_FOUND")
+    })
+  })
+
+  // =========================================================================
+  // deleteTimetableSlot — id-based delete works for section-based slots
+  // =========================================================================
+
+  describe("deleteTimetableSlot", () => {
+    it("deletes a section-based slot by id (no classId required)", async () => {
+      vi.mocked(db.timetable.findFirst).mockResolvedValue({
+        id: "tt-section",
+        dayOfWeek: 0,
+        teacher: null,
+        class: null,
+        section: { name: "Grade 1-A" },
+      } as any)
+      vi.mocked(db.timetable.delete).mockResolvedValue({} as any)
+
+      const { deleteTimetableSlot } =
+        await import("@/components/school-dashboard/timetable/actions")
+      await deleteTimetableSlot({ id: "tt-section" })
+
+      expect(db.timetable.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "tt-section", schoolId: SCHOOL_ID },
+        })
+      )
+      expect(db.timetable.delete).toHaveBeenCalledWith({
+        where: { id: "tt-section" },
+      })
+    })
+
+    it("throws SLOT_NOT_FOUND when id does not exist in this school", async () => {
+      vi.mocked(db.timetable.findFirst).mockResolvedValue(null)
+
+      const { deleteTimetableSlot } =
+        await import("@/components/school-dashboard/timetable/actions")
+      await expect(deleteTimetableSlot({ id: "tt-other" })).rejects.toThrow(
+        "SLOT_NOT_FOUND"
+      )
     })
   })
 
@@ -521,7 +738,7 @@ describe("Timetable Actions", () => {
           targetDayOfWeek: 1,
           targetPeriodId: CPERIOD2,
         })
-      ).rejects.toThrow("Slot not found")
+      ).rejects.toThrow("SLOT_NOT_FOUND")
     })
   })
 
@@ -552,7 +769,7 @@ describe("Timetable Actions", () => {
       mockNoSchool()
 
       await expect(setActiveTerm({ termId: "term-1" })).rejects.toThrow(
-        "Missing school context"
+        "MISSING_SCHOOL_CONTEXT"
       )
     })
   })
@@ -597,7 +814,7 @@ describe("Timetable Actions", () => {
           startDate: new Date("2026-01-01"),
           endDate: new Date("2026-06-30"),
         })
-      ).rejects.toThrow("Term not found")
+      ).rejects.toThrow("TERM_NOT_FOUND")
     })
 
     it("throws when start date >= end date", async () => {
@@ -607,7 +824,7 @@ describe("Timetable Actions", () => {
           startDate: new Date("2026-06-30"),
           endDate: new Date("2026-01-01"),
         })
-      ).rejects.toThrow("Start date must be before end date")
+      ).rejects.toThrow("INVALID_DATE_RANGE")
     })
   })
 
@@ -647,7 +864,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updatePeriod({ periodId: "period-other-school", name: "Updated" })
-      ).rejects.toThrow("Period not found")
+      ).rejects.toThrow("PERIOD_NOT_FOUND")
     })
   })
 
@@ -671,7 +888,7 @@ describe("Timetable Actions", () => {
       vi.mocked(db.timetable.count).mockResolvedValue(5)
 
       await expect(deletePeriod({ periodId: "period-1" })).rejects.toThrow(
-        "Cannot delete period"
+        "PERIOD_IN_USE"
       )
     })
   })
@@ -710,7 +927,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updateScheduleException({ id: "exc-other", title: "X" })
-      ).rejects.toThrow("Schedule exception not found")
+      ).rejects.toThrow("EXCEPTION_NOT_FOUND")
     })
   })
 
@@ -742,7 +959,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         deleteScheduleException({ id: "exc-other" })
-      ).rejects.toThrow("Schedule exception not found")
+      ).rejects.toThrow("EXCEPTION_NOT_FOUND")
     })
   })
 
@@ -872,7 +1089,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         updateTeacherAbsence({ id: "abs-other", status: "APPROVED" })
-      ).rejects.toThrow("Absence not found")
+      ).rejects.toThrow("ABSENCE_NOT_FOUND")
     })
   })
 
@@ -908,7 +1125,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         respondToSubstitution({ id: "sub-other", response: "CONFIRMED" })
-      ).rejects.toThrow("Substitution record not found")
+      ).rejects.toThrow("SUBSTITUTION_NOT_FOUND")
     })
 
     it("throws when status is not PENDING", async () => {
@@ -920,7 +1137,7 @@ describe("Timetable Actions", () => {
 
       await expect(
         respondToSubstitution({ id: "sub-1", response: "CONFIRMED" })
-      ).rejects.toThrow("Can only respond to pending substitutions")
+      ).rejects.toThrow("SUBSTITUTION_NOT_PENDING")
     })
   })
 
@@ -953,7 +1170,7 @@ describe("Timetable Actions", () => {
       vi.mocked(db.substitutionRecord.findFirst).mockResolvedValue(null)
 
       await expect(cancelSubstitution({ id: "sub-other" })).rejects.toThrow(
-        "Substitution record not found"
+        "SUBSTITUTION_NOT_FOUND"
       )
     })
 
@@ -965,7 +1182,7 @@ describe("Timetable Actions", () => {
       } as any)
 
       await expect(cancelSubstitution({ id: "sub-1" })).rejects.toThrow(
-        "Cannot cancel a completed substitution"
+        "SUBSTITUTION_ALREADY_COMPLETED"
       )
     })
   })
@@ -1001,7 +1218,7 @@ describe("Timetable Actions", () => {
           templateId: "tpl-other-school",
           targetTermId: "term-1",
         })
-      ).rejects.toThrow("Template not found")
+      ).rejects.toThrow("TEMPLATE_NOT_FOUND")
     })
   })
 })

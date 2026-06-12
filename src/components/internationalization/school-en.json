@@ -4260,6 +4260,9 @@
         "cleared": "Timetable cleared"
       },
       "slotEditor": {
+        "section": "Section",
+        "selectSection": "Select section",
+        "sectionRequired": "Section is required",
         "editTitle": "Pencil Timetable Slot",
         "addTitle": "Add Timetable Slot",
         "description": "Configure the timetable slot details",

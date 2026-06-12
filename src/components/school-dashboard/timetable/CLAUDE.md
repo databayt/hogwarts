@@ -26,15 +26,56 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Key Decisions
 
-_To be filled in — capture architectural invariants and the "why" behind non-obvious choices._
+- **Section is the slot axis** (2026-06-12): `Timetable.sectionId` + `subjectId`
+  are the operational identity of a slot; `classId` survives only on legacy
+  rows for exams/results history. `upsertTimetableSlot` requires
+  sectionId+subjectId and BACKFILLS section fields when editing a legacy row
+  (in-place migration on touch). `deleteTimetableSlot` is id-based — never
+  reintroduce composite-key deletes (they can't match section slots).
+- **Reads OR both axes**: every student/guardian read resolves
+  `Student.sectionId` ALONGSIDE `StudentClass` classIds
+  (`OR: [{ classId: { in } }, { sectionId }]`). Dropping either arm makes one
+  generation of data invisible.
+- **Timetable before people**: auto-generation emits teacher-less slots
+  (`teacherId: null`); the slot editor is where teachers get attached. Don't
+  make teacherId required anywhere in the generation path.
+- **Terms come from calendars**: `calendars.ts` (`ACADEMIC_CALENDARS` +
+  `resolveAcademicCalendar` + `computeTermDates`) derives N terms from
+  country/structure/date — `computeTermDates` guarantees exactly one
+  `isActive` term. Structures may carry a `calendar` override (sd-british →
+  GB). Consumed by `catalog/provision.ts` and `lib/term-resolver.ts`.
+- **Errors are CAPS codes** (`SLOT_NOT_FOUND`, `SECTION_NOT_FOUND`,
+  `TEACHER_NOT_QUALIFIED`) — translated client-side, never literal English.
 
 ## Danger Zones
 
-_To be filled in — places not to break, shared state, cross-tenant boundaries._
+- **`upsertTimetableSlot` ordering**: the existing-row lookup MUST precede
+  `validateSlotConstraints` so `excludeSlotId` excludes self — otherwise a
+  teacher at max periods can never re-save their own slot.
+- **`getChildTimetable` access check**: a guardian-less caller must be DENIED
+  (`!guardian → ACCESS_DENIED`); skipping when no guardian record exists is a
+  cross-family data leak (was a real hole, fixed 2026-06-12).
+- **`detectConflicts` cohort identity** (util.ts): `sectionId ?? classId` —
+  bare `classId` comparison makes any two section slots "conflict" because
+  `undefined === undefined`.
+- **Legacy replay paths**: `importTimetableSlots` + `applyTemplateToTerm`
+  still write `classId` (commented at each head). Don't copy their patterns
+  into new code.
+- **Dictionaries**: slot editor labels live in `school-en.json`/`school-ar.json`
+  under `school.timetable.slotEditor` — keep parity when adding keys.
 
 ## Related Blocks
 
-_Cross-links to neighbor `CLAUDE.md` files — call out which ones consume / are consumed by this block._
+- [Catalog](../../catalog/CLAUDE.md) — `provision.ts` consumes
+  `calendars.ts` + `structures.ts` for the schedule stage; SubjectSelection
+  feeds the generator and the slot editor's subject picker
+- [Attendance](../attendance/CLAUDE.md) — consumes slots for teacher
+  scoping, period-mode, and current-period auto-selection;
+  `markPeriodAttendance` resolves sectionId from `timetableId`
+- [Conference](../conference/CLAUDE.md) — `Conference.timetableId` starts a
+  live class from a slot
+- Admission — `placeStudentInSection` sets `Student.sectionId`, which is what
+  makes the section-based timetable visible to a student
 
 ## After You Finish
 

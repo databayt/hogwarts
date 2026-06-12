@@ -2,12 +2,12 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 export interface TimetableSlot {
-  id: string
+  id?: string
   schoolId: string
   termId: string
   dayOfWeek: number // 0 = Sun ... 6 = Sat
   periodId: string
-  classId: string
+  classId?: string
   sectionId?: string
   sectionName?: string
   subjectId?: string
