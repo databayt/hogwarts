@@ -13,6 +13,15 @@ last_audited: 2026-06-11
 
 # Internationalization — Live Work List
 
+## Done (2026-06-12 — ratchet defense)
+
+- [x] `errorReturn` ratchet breach (1544 > 1543 baseline) fixed at source:
+      the broadcast-batches cron (`bc0c2f86a`) shipped `error: "Unauthorized"`;
+      machine-facing cron 401 bodies now use lowercase codes. Baseline NOT
+      raised — the ratchet held as designed.
+- [x] `school.timetable.slotEditor.{section,selectSection,sectionRequired}`
+      added en+ar (timetable section-first editor); parity suite 250/250.
+
 ## Done (2026-06-10/11 production-readiness pass)
 
 - [x] Shared namespace registry (`namespaces.ts`) — server/client loader drift structurally impossible
