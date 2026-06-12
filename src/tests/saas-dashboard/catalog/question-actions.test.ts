@@ -141,7 +141,7 @@ describe("Question CRUD Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Invalid options JSON",
+        error: "invalid_options_json",
       })
       expect(db.question.create).not.toHaveBeenCalled()
     })
@@ -254,7 +254,7 @@ describe("Question CRUD Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Question not found",
+        error: "question_not_found",
       })
       expect(db.question.update).not.toHaveBeenCalled()
     })
@@ -282,7 +282,7 @@ describe("Question CRUD Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Invalid options JSON",
+        error: "invalid_options_json",
       })
       expect(db.question.update).not.toHaveBeenCalled()
     })
@@ -320,7 +320,7 @@ describe("Question CRUD Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Question not found",
+        error: "question_not_found",
       })
       expect(db.question.delete).not.toHaveBeenCalled()
     })

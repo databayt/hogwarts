@@ -30,6 +30,7 @@ import {
   type ContentStatus,
   type ContentVisibility,
 } from "./approval-actions"
+import { catalogActionError } from "./error-messages"
 
 type FlagContentType =
   | "Question"
@@ -125,7 +126,7 @@ export function ContentFlagsDialog({
         onOpenChange(false)
         onSaved?.()
       } else {
-        toast.error(result.error ?? m?.paidRequiresPrice ?? "Failed")
+        toast.error(catalogActionError(result.error, m))
       }
     })
   }

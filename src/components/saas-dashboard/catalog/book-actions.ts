@@ -66,7 +66,7 @@ export async function updateBook(
 
     const existing = await db.book.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Catalog book not found" }
+      return { success: false, error: "catalog_book_not_found" }
     }
 
     const raw = Object.fromEntries(data)
@@ -112,7 +112,7 @@ export async function deleteBook(id: string): Promise<ActionResponse> {
 
     const existing = await db.book.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Catalog book not found" }
+      return { success: false, error: "catalog_book_not_found" }
     }
 
     await db.book.delete({ where: { id } })

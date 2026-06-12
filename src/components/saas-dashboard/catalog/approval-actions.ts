@@ -74,7 +74,7 @@ export async function approveContent(
     ) {
       return {
         success: false,
-        error: "PAID visibility is not supported for this content type",
+        error: "paid_visibility_unsupported",
       }
     }
 
@@ -91,7 +91,7 @@ export async function approveContent(
         ) {
           return {
             success: false,
-            error: "Paid content requires a price and 3-letter currency",
+            error: "paid_requires_price_and_currency",
           }
         }
         await db.question.update({
@@ -237,7 +237,7 @@ export async function approveContent(
         ) {
           return {
             success: false,
-            error: "Paid videos require a price and 3-letter currency",
+            error: "paid_requires_price_and_currency",
           }
         }
         const updated = await db.video.update({
@@ -322,7 +322,7 @@ export async function rejectContent(
     const userId = session.user?.id
 
     if (!rejectionReason || rejectionReason.trim().length === 0) {
-      return { success: false, error: "Rejection reason is required" }
+      return { success: false, error: "rejection_reason_required" }
     }
 
     const rejectionData = {
@@ -475,19 +475,19 @@ export async function updateContentFlags(
     if (status !== undefined && !hasStatus) {
       return {
         success: false,
-        error: "Status is not supported for this content type",
+        error: "status_unsupported_for_content_type",
       }
     }
     if ((price !== undefined || currency !== undefined) && !hasPrice) {
       return {
         success: false,
-        error: "Pricing is not supported for this content type",
+        error: "pricing_unsupported_for_content_type",
       }
     }
     if (visibility === "PAID" && !hasPrice) {
       return {
         success: false,
-        error: "PAID visibility is not supported for this content type",
+        error: "paid_visibility_unsupported",
       }
     }
 
@@ -518,7 +518,7 @@ export async function updateContentFlags(
         ) {
           return {
             success: false,
-            error: "Paid content requires a price and 3-letter currency",
+            error: "paid_requires_price_and_currency",
           }
         }
         data.price = effectivePrice
@@ -536,7 +536,7 @@ export async function updateContentFlags(
     }
 
     if (Object.keys(data).length === 0) {
-      return { success: false, error: "No flags to update" }
+      return { success: false, error: "no_flags_to_update" }
     }
 
     switch (contentType) {

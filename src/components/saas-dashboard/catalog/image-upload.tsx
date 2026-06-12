@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 
+import { catalogActionError } from "./error-messages"
 import { deleteCatalogThumbnail, uploadCatalogThumbnail } from "./image-actions"
 
 interface CatalogImageUploadProps {
@@ -56,7 +57,7 @@ export function CatalogImageUpload({
           toast.success("Thumbnail uploaded")
         } else {
           setPreview(null)
-          toast.error(result.error || "Upload failed")
+          toast.error(catalogActionError(result.error))
         }
       })
     },
@@ -70,7 +71,7 @@ export function CatalogImageUpload({
         setThumbnailKey(null)
         toast.success("Thumbnail removed")
       } else {
-        toast.error(result.error || "Delete failed")
+        toast.error(catalogActionError(result.error))
       }
     })
   }, [entityType, entityId])

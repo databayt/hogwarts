@@ -173,7 +173,7 @@ describe("Image Actions", () => {
 
       expect(result).toEqual({
         status: "error",
-        error: "No file provided",
+        error: "no_file_provided",
       })
       expect(processAndUploadCatalogImage).not.toHaveBeenCalled()
     })
@@ -189,7 +189,7 @@ describe("Image Actions", () => {
 
       expect(result).toEqual({
         status: "error",
-        error: "File must be an image",
+        error: "file_must_be_image",
       })
       expect(processAndUploadCatalogImage).not.toHaveBeenCalled()
     })
@@ -203,7 +203,7 @@ describe("Image Actions", () => {
 
       expect(result).toEqual({
         status: "error",
-        error: "File too large (max 10MB)",
+        error: "file_too_large",
       })
       expect(processAndUploadCatalogImage).not.toHaveBeenCalled()
     })
@@ -216,7 +216,7 @@ describe("Image Actions", () => {
 
       expect(result).toEqual({
         status: "error",
-        error: "Unauthorized",
+        error: "unauthorized",
       })
       expect(processAndUploadCatalogImage).not.toHaveBeenCalled()
     })
@@ -372,7 +372,7 @@ describe("Image Actions", () => {
 
       expect(result).toEqual({
         status: "error",
-        error: "Unauthorized",
+        error: "unauthorized",
       })
       expect(db.subject.findUnique).not.toHaveBeenCalled()
     })

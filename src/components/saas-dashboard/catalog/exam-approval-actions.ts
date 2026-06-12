@@ -118,7 +118,7 @@ export async function approveExam(
       where: { id: catalogExamId },
     })
     if (!existing) {
-      return { success: false, error: "Exam not found" }
+      return { success: false, error: "exam_not_found" }
     }
 
     await db.exam.update({
@@ -155,14 +155,14 @@ export async function rejectExam(
     const userId = session.user?.id
 
     if (!reason || reason.trim().length === 0) {
-      return { success: false, error: "Rejection reason is required" }
+      return { success: false, error: "rejection_reason_required" }
     }
 
     const existing = await db.exam.findUnique({
       where: { id: catalogExamId },
     })
     if (!existing) {
-      return { success: false, error: "Exam not found" }
+      return { success: false, error: "exam_not_found" }
     }
 
     await db.exam.update({
@@ -276,7 +276,7 @@ export async function approveExamTemplate(id: string): Promise<ActionResponse> {
       where: { id },
     })
     if (!existing) {
-      return { success: false, error: "Template not found" }
+      return { success: false, error: "template_not_found" }
     }
 
     await db.examTemplate.update({
@@ -316,14 +316,14 @@ export async function rejectExamTemplate(
     const userId = session.user?.id
 
     if (!reason || reason.trim().length === 0) {
-      return { success: false, error: "Rejection reason is required" }
+      return { success: false, error: "rejection_reason_required" }
     }
 
     const existing = await db.examTemplate.findUnique({
       where: { id },
     })
     if (!existing) {
-      return { success: false, error: "Template not found" }
+      return { success: false, error: "template_not_found" }
     }
 
     await db.examTemplate.update({

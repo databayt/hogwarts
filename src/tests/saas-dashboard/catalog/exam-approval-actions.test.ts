@@ -154,7 +154,7 @@ describe("Exam Approval Actions", () => {
 
       const result = await approveExam("nonexistent")
 
-      expect(result).toEqual({ success: false, error: "Exam not found" })
+      expect(result).toEqual({ success: false, error: "exam_not_found" })
       expect(db.exam.update).not.toHaveBeenCalled()
     })
 
@@ -201,7 +201,7 @@ describe("Exam Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
       expect(db.exam.findUnique).not.toHaveBeenCalled()
     })
@@ -212,7 +212,7 @@ describe("Exam Approval Actions", () => {
 
       const result = await rejectExam("nonexistent", "Bad content")
 
-      expect(result).toEqual({ success: false, error: "Exam not found" })
+      expect(result).toEqual({ success: false, error: "exam_not_found" })
     })
 
     it("requires DEVELOPER role", async () => {
@@ -307,7 +307,7 @@ describe("Exam Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Template not found",
+        error: "template_not_found",
       })
     })
 
@@ -354,7 +354,7 @@ describe("Exam Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
     })
 
@@ -366,7 +366,7 @@ describe("Exam Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Template not found",
+        error: "template_not_found",
       })
     })
 

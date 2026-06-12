@@ -5,6 +5,7 @@
 import { useMemo, useState, useTransition } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Check, MoreHorizontal, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { approveContent, rejectContent } from "./approval-actions"
 import type { PendingItem } from "./approval-content"
+import { catalogActionError } from "./error-messages"
 import { VideoApproveDialog } from "./video-approve-dialog"
 
 function getContentTypeBadge(
@@ -80,16 +82,30 @@ function ApprovalActions({ item }: { item: PendingItem }) {
       return
     }
     startTransition(async () => {
-      await approveContent(item.contentType, item.id)
+      const result = await approveContent(item.contentType, item.id)
+      if (result.success) {
+        toast.success("Content approved")
+      } else {
+        toast.error(catalogActionError(result.error))
+      }
     })
   }
 
   function handleReject() {
     if (!rejectionReason.trim()) return
     startTransition(async () => {
-      await rejectContent(item.contentType, item.id, rejectionReason)
-      setRejectDialogOpen(false)
-      setRejectionReason("")
+      const result = await rejectContent(
+        item.contentType,
+        item.id,
+        rejectionReason
+      )
+      if (result.success) {
+        toast.success("Content rejected")
+        setRejectDialogOpen(false)
+        setRejectionReason("")
+      } else {
+        toast.error(catalogActionError(result.error))
+      }
     })
   }
 

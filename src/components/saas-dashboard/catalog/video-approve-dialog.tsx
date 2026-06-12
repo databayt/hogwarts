@@ -28,6 +28,7 @@ import {
 
 import { approveContent } from "./approval-actions"
 import type { PendingItem } from "./approval-content"
+import { catalogActionError } from "./error-messages"
 
 type Visibility = "PRIVATE" | "SCHOOL" | "PUBLIC" | "PAID"
 
@@ -74,7 +75,7 @@ export function VideoApproveDialog({
         onOpenChange(false)
         onApproved?.()
       } else {
-        toast.error(result.error ?? "Failed to approve")
+        toast.error(catalogActionError(result.error))
       }
     })
   }

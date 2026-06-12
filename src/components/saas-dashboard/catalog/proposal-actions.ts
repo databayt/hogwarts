@@ -119,7 +119,7 @@ export async function approveProposal(
         })
 
         if (!proposal) {
-          throw new Error("Proposal not found")
+          throw new Error("proposal_not_found")
         }
 
         if (
@@ -326,7 +326,7 @@ export async function rejectProposal(
     const userId = session.user?.id
 
     if (!rejectionReason || !rejectionReason.trim()) {
-      return { success: false, error: "Rejection reason is required" }
+      return { success: false, error: "rejection_reason_required" }
     }
 
     const proposal = await db.proposal.findUnique({
@@ -335,7 +335,7 @@ export async function rejectProposal(
     })
 
     if (!proposal) {
-      return { success: false, error: "Proposal not found" }
+      return { success: false, error: "proposal_not_found" }
     }
 
     if (proposal.status !== "SUBMITTED" && proposal.status !== "IN_REVIEW") {

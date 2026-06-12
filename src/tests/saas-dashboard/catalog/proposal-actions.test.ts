@@ -408,7 +408,7 @@ describe("Proposal Actions (SaaS)", () => {
 
       const result = await approveProposal("nonexistent")
 
-      expect(result).toEqual({ success: false, error: "Proposal not found" })
+      expect(result).toEqual({ success: false, error: "proposal_not_found" })
     })
 
     it("returns error for already-approved proposal", async () => {
@@ -551,7 +551,7 @@ describe("Proposal Actions (SaaS)", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
       expect(db.proposal.findUnique).not.toHaveBeenCalled()
     })
@@ -563,7 +563,7 @@ describe("Proposal Actions (SaaS)", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
     })
 
@@ -573,7 +573,7 @@ describe("Proposal Actions (SaaS)", () => {
 
       const result = await rejectProposal("nonexistent", "Bad content")
 
-      expect(result).toEqual({ success: false, error: "Proposal not found" })
+      expect(result).toEqual({ success: false, error: "proposal_not_found" })
     })
 
     it("requires DEVELOPER role", async () => {

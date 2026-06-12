@@ -26,7 +26,7 @@ export async function createQuestion(data: FormData): Promise<ActionResponse> {
       try {
         parsedOptions = JSON.parse(raw.options as string)
       } catch {
-        return { success: false, error: "Invalid options JSON" }
+        return { success: false, error: "invalid_options_json" }
       }
     }
 
@@ -67,7 +67,7 @@ export async function updateQuestion(
 
     const existing = await db.question.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Question not found" }
+      return { success: false, error: "question_not_found" }
     }
 
     const raw = Object.fromEntries(data)
@@ -78,7 +78,7 @@ export async function updateQuestion(
       try {
         parsedOptions = JSON.parse(raw.options as string)
       } catch {
-        return { success: false, error: "Invalid options JSON" }
+        return { success: false, error: "invalid_options_json" }
       }
     }
 
@@ -115,7 +115,7 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
 
     const existing = await db.question.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Question not found" }
+      return { success: false, error: "question_not_found" }
     }
 
     await db.question.delete({ where: { id } })

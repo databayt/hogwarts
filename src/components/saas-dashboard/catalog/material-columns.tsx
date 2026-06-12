@@ -5,6 +5,7 @@
 import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { ContentStatus, ContentVisibility } from "./approval-actions"
 import { ContentFlagsDialog } from "./content-flags-dialog"
+import { catalogActionError } from "./error-messages"
 import { deleteMaterial } from "./material-actions"
 
 export interface MaterialRow {
@@ -75,7 +77,8 @@ function MaterialRowActions({
 
   async function handleDelete() {
     if (!confirm("Are you sure you want to delete this material?")) return
-    await deleteMaterial(id)
+    const result = await deleteMaterial(id)
+    if (!result.success) toast.error(catalogActionError(result.error))
   }
 
   return (

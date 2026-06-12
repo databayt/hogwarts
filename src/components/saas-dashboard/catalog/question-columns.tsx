@@ -5,6 +5,7 @@
 import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { ContentStatus, ContentVisibility } from "./approval-actions"
 import { ContentFlagsDialog } from "./content-flags-dialog"
+import { catalogActionError } from "./error-messages"
 import { deleteQuestion } from "./question-actions"
 
 export interface QuestionRow {
@@ -86,7 +88,8 @@ function QuestionRowActions({
 
   async function handleDelete() {
     if (!confirm("Are you sure you want to delete this question?")) return
-    await deleteQuestion(row.id)
+    const result = await deleteQuestion(row.id)
+    if (!result.success) toast.error(catalogActionError(result.error))
   }
 
   return (

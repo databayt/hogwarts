@@ -195,7 +195,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "PAID visibility is not supported for this content type",
+        error: "paid_visibility_unsupported",
       })
       expect(db.material.update).not.toHaveBeenCalled()
     })
@@ -211,7 +211,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "PAID visibility is not supported for this content type",
+        error: "paid_visibility_unsupported",
       })
       expect(db.assignment.update).not.toHaveBeenCalled()
     })
@@ -227,7 +227,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "PAID visibility is not supported for this content type",
+        error: "paid_visibility_unsupported",
       })
       expect(db.$transaction).not.toHaveBeenCalled()
     })
@@ -241,7 +241,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Paid content requires a price and 3-letter currency",
+        error: "paid_requires_price_and_currency",
       })
       expect(db.question.update).not.toHaveBeenCalled()
     })
@@ -560,7 +560,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
       expect(db.question.update).not.toHaveBeenCalled()
     })
@@ -572,7 +572,7 @@ describe("Approval Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Rejection reason is required",
+        error: "rejection_reason_required",
       })
       expect(db.question.update).not.toHaveBeenCalled()
     })

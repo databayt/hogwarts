@@ -60,7 +60,7 @@ export async function updateAssignment(
 
     const existing = await db.assignment.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return { success: false, error: "assignment_not_found" }
     }
 
     const raw = Object.fromEntries(data)
@@ -98,7 +98,7 @@ export async function deleteAssignment(id: string): Promise<ActionResponse> {
 
     const existing = await db.assignment.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Assignment not found" }
+      return { success: false, error: "assignment_not_found" }
     }
 
     await db.assignment.delete({ where: { id } })

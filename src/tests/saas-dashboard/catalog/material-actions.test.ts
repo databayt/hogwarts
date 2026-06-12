@@ -218,7 +218,7 @@ describe("Material Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Material not found",
+        error: "material_not_found",
       })
       expect(db.material.update).not.toHaveBeenCalled()
     })
@@ -307,7 +307,7 @@ describe("Material Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Material not found",
+        error: "material_not_found",
       })
       expect(db.material.delete).not.toHaveBeenCalled()
     })

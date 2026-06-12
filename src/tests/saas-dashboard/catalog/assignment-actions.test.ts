@@ -223,7 +223,7 @@ describe("Assignment Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Assignment not found",
+        error: "assignment_not_found",
       })
       expect(db.assignment.update).not.toHaveBeenCalled()
     })
@@ -312,7 +312,7 @@ describe("Assignment Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Assignment not found",
+        error: "assignment_not_found",
       })
       expect(db.assignment.delete).not.toHaveBeenCalled()
     })

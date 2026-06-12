@@ -37,22 +37,22 @@ export async function uploadCatalogThumbnail(
   try {
     await requireDeveloper()
   } catch {
-    return { status: "error", error: "Unauthorized" }
+    return { status: "error", error: "unauthorized" }
   }
 
   const file = formData.get("file") as File | null
   if (!file || file.size === 0) {
-    return { status: "error", error: "No file provided" }
+    return { status: "error", error: "no_file_provided" }
   }
 
   // Validate file type
   if (!file.type.startsWith("image/")) {
-    return { status: "error", error: "File must be an image" }
+    return { status: "error", error: "file_must_be_image" }
   }
 
   // Max 10MB
   if (file.size > 10 * 1024 * 1024) {
-    return { status: "error", error: "File too large (max 10MB)" }
+    return { status: "error", error: "file_too_large" }
   }
 
   try {
@@ -101,7 +101,7 @@ export async function deleteCatalogThumbnail(
   try {
     await requireDeveloper()
   } catch {
-    return { status: "error", error: "Unauthorized" }
+    return { status: "error", error: "unauthorized" }
   }
 
   try {

@@ -229,7 +229,7 @@ describe("updateContentFlags", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Status is not supported for this content type",
+      error: "status_unsupported_for_content_type",
     })
     expect(db.video.update).not.toHaveBeenCalled()
   })
@@ -243,7 +243,7 @@ describe("updateContentFlags", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Pricing is not supported for this content type",
+      error: "pricing_unsupported_for_content_type",
     })
     expect(db.material.update).not.toHaveBeenCalled()
   })
@@ -257,7 +257,7 @@ describe("updateContentFlags", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "PAID visibility is not supported for this content type",
+      error: "paid_visibility_unsupported",
     })
     expect(db.book.update).not.toHaveBeenCalled()
   })
@@ -279,7 +279,7 @@ describe("updateContentFlags", () => {
 
     expect(result).toEqual({
       success: false,
-      error: "Paid content requires a price and 3-letter currency",
+      error: "paid_requires_price_and_currency",
     })
     expect(db.question.findUnique).toHaveBeenCalledWith({
       where: { id: "q-1" },
@@ -400,7 +400,7 @@ describe("updateContentFlags", () => {
 
     const result = await updateContentFlags("Question", "q-1", {})
 
-    expect(result).toEqual({ success: false, error: "No flags to update" })
+    expect(result).toEqual({ success: false, error: "no_flags_to_update" })
     expect(db.question.update).not.toHaveBeenCalled()
   })
 

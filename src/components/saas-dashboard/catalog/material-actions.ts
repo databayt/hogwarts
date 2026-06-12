@@ -58,7 +58,7 @@ export async function updateMaterial(
 
     const existing = await db.material.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Material not found" }
+      return { success: false, error: "material_not_found" }
     }
 
     const raw = Object.fromEntries(data)
@@ -96,7 +96,7 @@ export async function deleteMaterial(id: string): Promise<ActionResponse> {
 
     const existing = await db.material.findUnique({ where: { id } })
     if (!existing) {
-      return { success: false, error: "Material not found" }
+      return { success: false, error: "material_not_found" }
     }
 
     await db.material.delete({ where: { id } })

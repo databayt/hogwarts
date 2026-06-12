@@ -199,7 +199,7 @@ describe("Book Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Catalog book not found",
+        error: "catalog_book_not_found",
       })
       expect(db.book.update).not.toHaveBeenCalled()
     })
@@ -247,7 +247,7 @@ describe("Book Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Catalog book not found",
+        error: "catalog_book_not_found",
       })
       expect(db.book.delete).not.toHaveBeenCalled()
     })
