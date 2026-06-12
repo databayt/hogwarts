@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import socketService from "@/lib/websocket/socket-service"
 
@@ -64,8 +64,23 @@ export function usePresence(userIds: string[]) {
 
 /**
  * Get a single user's presence status — convenience wrapper.
+ * Returns a stable memoized object so consumers only re-render when this
+ * specific user's status actually changes, not on any presence map update.
  */
 export function useUserPresence(userId: string | undefined) {
   const { getPresence } = usePresence(userId ? [userId] : [])
-  return userId ? getPresence(userId) : ({ state: "unknown" } as const)
+  const rawStatus = userId
+    ? getPresence(userId)
+    : ({ state: "unknown" } as const)
+  // Memoize by the relevant scalar fields to give consumers a stable reference
+  // when nothing about this user's status has changed.
+  return useMemo(
+    () => rawStatus,
+    // PresenceStatus is a discriminated union — compare state + lastSeenAt
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      rawStatus.state,
+      (rawStatus as { state: "offline"; lastSeenAt: Date }).lastSeenAt,
+    ]
+  )
 }

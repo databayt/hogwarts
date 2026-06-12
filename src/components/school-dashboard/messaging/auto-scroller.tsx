@@ -94,10 +94,12 @@ export const AutoScroller = forwardRef<HTMLDivElement, AutoScrollerProps>(
         }
       })
 
-      // Observe changes to child list (new messages added)
+      // Observe direct children only — message items are appended at top level.
+      // subtree: true would fire on every internal DOM mutation (avatar images
+      // loading, reaction counters updating) causing spurious scroll attempts.
       observer.observe(element, {
         childList: true,
-        subtree: true,
+        subtree: false,
       })
 
       // Initial scroll to bottom
@@ -239,7 +241,11 @@ export function useIsAtBottom(
     handleScroll() // Initial check
 
     return () => element.removeEventListener("scroll", handleScroll)
-  }, [containerRef, threshold])
+    // containerRef is a stable object (same ref instance across renders) — its
+    // identity never changes, so including it would only add noise. threshold
+    // is the only meaningful dep here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threshold])
 
   return isAtBottom
 }

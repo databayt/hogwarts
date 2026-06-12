@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import {
@@ -246,6 +246,28 @@ export const MessageBubble = memo(function MessageBubble({
   const isPending = message.status === "sending"
   const dateLocale = locale === "ar" ? ar : enUS
 
+  // Memoize reaction groups — reduce over all reactions only when they change
+  const reactionGroups = useMemo(
+    () =>
+      message.reactions.reduce(
+        (acc, reaction) => {
+          if (!acc[reaction.emoji]) {
+            acc[reaction.emoji] = []
+          }
+          acc[reaction.emoji].push(reaction)
+          return acc
+        },
+        {} as Record<string, typeof message.reactions>
+      ),
+    [message.reactions]
+  )
+
+  // Memoize formatted timestamp — recompute only when createdAt or locale changes
+  const formattedTime = useMemo(
+    () => format(new Date(message.createdAt), "p", { locale: dateLocale }),
+    [message.createdAt, dateLocale]
+  )
+
   // Detect if message is media-only (image/video with no text)
   const hasMedia =
     message.attachments?.some(
@@ -273,18 +295,6 @@ export const MessageBubble = memo(function MessageBubble({
       onReact?.(message.id, emoji)
     }
   }
-
-  // Group reactions by emoji
-  const reactionGroups = message.reactions.reduce(
-    (acc, reaction) => {
-      if (!acc[reaction.emoji]) {
-        acc[reaction.emoji] = []
-      }
-      acc[reaction.emoji].push(reaction)
-      return acc
-    },
-    {} as Record<string, typeof message.reactions>
-  )
 
   const hasReactions = Object.keys(reactionGroups).length > 0
 
@@ -585,11 +595,7 @@ export const MessageBubble = memo(function MessageBubble({
                             {m?.ui?.edited || "edited"}
                           </span>
                         )}
-                        <span>
-                          {format(new Date(message.createdAt), "p", {
-                            locale: dateLocale,
-                          })}
-                        </span>
+                        <span>{formattedTime}</span>
                         {isOwnMessage && (
                           <span className="ms-0.5 flex items-center gap-0.5">
                             <ReadReceiptIcon status={message.status} />

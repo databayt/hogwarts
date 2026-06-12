@@ -454,10 +454,34 @@ export function MessagingClient({
     }
   }, [isConnected, activeConversation?.id, currentUserId])
 
-  const handleBack = () => {
+  // Keep stable refs to frequently-changing values used inside handlers so
+  // we can keep useCallback dep arrays minimal while avoiding stale closures.
+  const activeConversationRef = useRef(activeConversation)
+  useEffect(() => {
+    activeConversationRef.current = activeConversation
+  }, [activeConversation])
+
+  const messagesRef = useRef(messages)
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
+  const conversationsRef = useRef(conversations)
+  useEffect(() => {
+    conversationsRef.current = conversations
+  }, [conversations])
+
+  // Dictionary ref so handlers can read m without depending on it in dep arrays
+  const mRef = useRef(m)
+  useEffect(() => {
+    mRef.current = m
+  }, [m])
+
+  const handleBack = useCallback(() => {
     // Save scroll position before leaving
-    if (activeConversation) {
-      const cached = cacheRef.current.get(activeConversation.id)
+    const conv = activeConversationRef.current
+    if (conv) {
+      const cached = cacheRef.current.get(conv.id)
       if (cached) {
         cached.scrollPosition = -1
       }
@@ -465,146 +489,153 @@ export function MessagingClient({
     setActiveConversation(null)
     setShowInfoPanel(false)
     window.history.replaceState(null, "", `/${locale}/messages`)
-  }
+  }, [locale])
 
-  const handleSendMessage = async (
-    content: string,
-    replyToId?: string
-  ): Promise<MessageDTO | void> => {
-    if (!activeConversation) return
+  const handleSendMessage = useCallback(
+    async (content: string, replyToId?: string): Promise<MessageDTO | void> => {
+      const conv = activeConversationRef.current
+      if (!conv) return
 
-    const result = await sendMessage({
-      conversationId: activeConversation.id,
-      content,
-      contentType: "text",
-      replyToId,
-    })
+      const result = await sendMessage({
+        conversationId: conv.id,
+        content,
+        contentType: "text",
+        replyToId,
+      })
 
-    if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, m))
-    }
+      if (!result.success) {
+        throw new Error(resolveMessagingError(result.error, mRef.current))
+      }
 
-    return result.data.message as MessageDTO
-  }
+      return result.data.message as MessageDTO
+    },
+    []
+  )
 
-  const handleEditMessage = async (messageId: string, content: string) => {
-    const result = await editMessage({ messageId, content })
-    if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, m))
-    }
-  }
+  const handleEditMessage = useCallback(
+    async (messageId: string, content: string) => {
+      const result = await editMessage({ messageId, content })
+      if (!result.success) {
+        throw new Error(resolveMessagingError(result.error, mRef.current))
+      }
+    },
+    []
+  )
 
-  const handleDeleteMessage = async (messageId: string) => {
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
     const result = await deleteMessage({ messageId })
     if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, m))
+      throw new Error(resolveMessagingError(result.error, mRef.current))
     }
-  }
+  }, [])
 
-  const handleReactToMessage = async (messageId: string, emoji: string) => {
-    const result = await addReaction({ messageId, emoji })
-    if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, m))
-    }
-  }
+  const handleReactToMessage = useCallback(
+    async (messageId: string, emoji: string) => {
+      const result = await addReaction({ messageId, emoji })
+      if (!result.success) {
+        throw new Error(resolveMessagingError(result.error, mRef.current))
+      }
+    },
+    []
+  )
 
-  const handleRemoveReaction = async (reactionId: string) => {
+  const handleRemoveReaction = useCallback(async (reactionId: string) => {
     const result = await removeReaction({ reactionId })
     if (!result.success) {
-      throw new Error(resolveMessagingError(result.error, m))
+      throw new Error(resolveMessagingError(result.error, mRef.current))
     }
-  }
+  }, [])
 
-  const switchToConversation = async (conversationId: string) => {
-    // Save current conversation scroll position
-    if (activeConversation) {
-      const cached = cacheRef.current.get(activeConversation.id)
-      if (cached) {
-        // Scroll position will be saved by ChatInterface via onSaveScrollPosition
+  const switchToConversation = useCallback(
+    async (conversationId: string) => {
+      // Check cache first
+      const cached = cacheRef.current.get(conversationId)
+      if (cached && Date.now() - cached.lastFetchedAt < CACHE_TTL) {
+        // Cache hit — instant switch
+        const conv = conversationsRef.current.find(
+          (c) => c.id === conversationId
+        )
+        if (conv) {
+          setActiveConversation(conv)
+          setRenderTick((t) => t + 1)
+          window.history.replaceState(
+            null,
+            "",
+            `/${locale}/messages?conversation=${conversationId}`
+          )
+          return
+        }
       }
-    }
 
-    // Check cache first
-    const cached = cacheRef.current.get(conversationId)
-    if (cached && Date.now() - cached.lastFetchedAt < CACHE_TTL) {
-      // Cache hit — instant switch
-      const conv = conversations.find((c) => c.id === conversationId)
-      if (conv) {
-        setActiveConversation(conv)
+      // Cache miss or stale — fetch from server
+      const result = await fetchConversationData({ conversationId })
+      if (result.success) {
+        setActiveConversation(result.data.conversation)
+        cacheRef.current.set(conversationId, {
+          messages: result.data.messages,
+          hasMore: result.data.hasMore,
+          scrollPosition: -1,
+          lastFetchedAt: Date.now(),
+          lastMessageId: getLastRealMessageId(result.data.messages),
+        })
         setRenderTick((t) => t + 1)
         window.history.replaceState(
           null,
           "",
           `/${locale}/messages?conversation=${conversationId}`
         )
-        return
       }
-    }
+    },
+    [locale]
+  )
 
-    // Cache miss or stale — fetch from server
-    const result = await fetchConversationData({ conversationId })
-    if (result.success) {
-      setActiveConversation(result.data.conversation)
-      cacheRef.current.set(conversationId, {
-        messages: result.data.messages,
-        hasMore: result.data.hasMore,
-        scrollPosition: -1,
-        lastFetchedAt: Date.now(),
-        lastMessageId: getLastRealMessageId(result.data.messages),
-      })
-      setRenderTick((t) => t + 1)
-      window.history.replaceState(
-        null,
-        "",
-        `/${locale}/messages?conversation=${conversationId}`
-      )
-    }
-  }
-
-  const handleContactClick = async (userId: string) => {
-    try {
-      const result = await createConversation({
-        type: "direct",
-        participantIds: [userId],
-      })
-      if (result.success) {
-        await switchToConversation(result.data.id)
-      } else {
+  const handleContactClick = useCallback(
+    async (userId: string) => {
+      const currentM = mRef.current
+      try {
+        const result = await createConversation({
+          type: "direct",
+          participantIds: [userId],
+        })
+        if (result.success) {
+          await switchToConversation(result.data.id)
+        } else {
+          toast({
+            title: currentM?.notifications?.error || "Error",
+            description: resolveMessagingError(
+              "error" in result ? result.error : undefined,
+              currentM
+            ),
+          })
+        }
+      } catch {
         toast({
-          title: m?.notifications?.error || "Error",
-          description: resolveMessagingError(
-            "error" in result ? result.error : undefined,
-            m
-          ),
+          title: currentM?.notifications?.error || "Error",
+          description:
+            currentM?.errors?.conversation_start_failed ||
+            "Failed to start conversation",
         })
       }
-    } catch {
-      toast({
-        title: m?.notifications?.error || "Error",
-        description:
-          m?.errors?.conversation_start_failed ||
-          "Failed to start conversation",
-      })
-    }
-  }
+    },
+    [switchToConversation]
+  )
 
-  const handleLoadMoreMessages = async () => {
-    if (!activeConversation || messages.length === 0) return
-    const oldestMessage = messages[0]
+  const handleLoadMoreMessages = useCallback(async () => {
+    const conv = activeConversationRef.current
+    const currentMessages = messagesRef.current
+    if (!conv || currentMessages.length === 0) return
+    const oldestMessage = currentMessages[0]
     const result = await loadMoreMessages({
-      conversationId: activeConversation.id,
+      conversationId: conv.id,
       cursor: oldestMessage.id,
       take: 50,
       direction: "before",
     })
     if (result.success) {
-      updateCachedMessages(activeConversation.id, (prev) => [
-        ...result.data.items,
-        ...prev,
-      ])
-      updateCachedHasMore(activeConversation.id, result.data.hasMore)
+      updateCachedMessages(conv.id, (prev) => [...result.data.items, ...prev])
+      updateCachedHasMore(conv.id, result.data.hasMore)
     }
-  }
+  }, [updateCachedMessages, updateCachedHasMore])
 
   // Save scroll position from ChatInterface
   const handleSaveScrollPosition = useCallback(

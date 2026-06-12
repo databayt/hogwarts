@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
 import { ArrowLeft } from "lucide-react"
@@ -177,6 +177,13 @@ export function ChatInterface({
     }
   }, [whatsappEnabled, conversation.id, m])
 
+  // Keep a ref to messages so handleOptimisticSend can resolve replyTo
+  // without depending on the messages array in its useCallback deps.
+  const messagesRef = useRef(messages)
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
   // Direct cache optimistic send — no useOptimistic, no double render
   const handleOptimisticSend = useCallback(
     (
@@ -208,7 +215,7 @@ export function ChatInterface({
         status: "sending",
         replyToId: replyToId || null,
         replyTo: replyToId
-          ? messages.find((msg) => msg.id === replyToId) || null
+          ? messagesRef.current.find((msg) => msg.id === replyToId) || null
           : null,
         forwardedFromId: null,
         isEdited: false,
@@ -230,7 +237,7 @@ export function ChatInterface({
       onMessagesUpdate(conversation.id, (prev) => [...prev, optimisticMessage])
       return nonce
     },
-    [conversation.id, currentUserId, messages, onMessagesUpdate]
+    [conversation.id, currentUserId, onMessagesUpdate]
   )
 
   // Confirm: swap temp-{nonce} → real message in-place (only icon transitions).
@@ -518,13 +525,21 @@ export function ChatInterface({
         data.userId !== currentUserId &&
         data.conversationId === conversation.id
       ) {
-        onMessagesUpdate(conversation.id, (prev) =>
-          prev.map((msg) =>
+        onMessagesUpdate(conversation.id, (prev) => {
+          // Bail out early if no message actually needs flipping (avoids re-render)
+          if (
+            !prev.some(
+              (msg) => msg.senderId === currentUserId && msg.status !== "read"
+            )
+          ) {
+            return prev
+          }
+          return prev.map((msg) =>
             msg.senderId === currentUserId && msg.status !== "read"
               ? { ...msg, status: "read" as MessageDTO["status"] }
               : msg
           )
-        )
+        })
       }
     })
 
@@ -546,17 +561,27 @@ export function ChatInterface({
     debouncedMarkAsRead,
   ])
 
-  // Auto-remove typing indicators after 5s (only when someone is typing)
+  // Keep a ref to typingUsers so the cleanup interval can read the latest
+  // value without needing to be torn down and recreated whenever the array
+  // changes length.
+  const typingUsersRef = useRef(typingUsers)
   useEffect(() => {
-    if (typingUsers.length === 0) return
+    typingUsersRef.current = typingUsers
+  }, [typingUsers])
+
+  // Auto-remove typing indicators after 5s. Single interval, mount-once.
+  // Uses typingUsersRef to avoid stale closure; only expiry logic runs.
+  useEffect(() => {
     const interval = setInterval(() => {
-      setTypingUsers((prev) => {
-        const now = new Date().getTime()
-        return prev.filter((u) => now - new Date(u.startedAt).getTime() < 5000)
-      })
+      if (typingUsersRef.current.length === 0) return
+      const now = new Date().getTime()
+      setTypingUsers((prev) =>
+        prev.filter((u) => now - new Date(u.startedAt).getTime() < 5000)
+      )
     }, 1000)
     return () => clearInterval(interval)
-  }, [typingUsers.length])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Polling fallback — stable, ref-based cursor
   const lastMessageIdRef = useRef<string | null>(null)
@@ -690,18 +715,25 @@ export function ChatInterface({
     }
   }, [isLoadingMessages, hasMoreMessages, onLoadMoreMessages])
 
-  const handleTypingStart = () => {
+  const handleTypingStart = useCallback(() => {
     socketService.sendTypingStart(conversation.id)
-  }
+  }, [conversation.id])
 
-  const handleTypingStop = () => {
+  const handleTypingStop = useCallback(() => {
     socketService.sendTypingStop(conversation.id)
-  }
+  }, [conversation.id])
 
   const currentParticipant = conversation.participants?.find(
     (p) => p.userId === currentUserId
   )
   const canSendMessages = currentParticipant?.role !== "read_only"
+
+  // Compute avatar color once per conversation/user — getAvatarColor hashes a
+  // string, so calling it 4× per render for the same id is pure waste.
+  const avatarColor = useMemo(
+    () => getAvatarColor(otherUserId || conversation.id),
+    [otherUserId, conversation.id]
+  )
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
@@ -730,16 +762,13 @@ export function ChatInterface({
                 <AvatarFallback
                   className="flex items-center justify-center"
                   style={{
-                    backgroundColor: getAvatarColor(
-                      otherUserId || conversation.id
-                    ).bg,
+                    backgroundColor: avatarColor.bg,
                   }}
                 >
                   <UserFilledIcon
                     className="h-4 w-4"
                     style={{
-                      color: getAvatarColor(otherUserId || conversation.id)
-                        .icon,
+                      color: avatarColor.icon,
                     }}
                   />
                 </AvatarFallback>
@@ -758,16 +787,13 @@ export function ChatInterface({
                 <AvatarFallback
                   className="flex items-center justify-center"
                   style={{
-                    backgroundColor: getAvatarColor(
-                      otherUserId || conversation.id
-                    ).bg,
+                    backgroundColor: avatarColor.bg,
                   }}
                 >
                   <UserFilledIcon
                     className="h-10 w-10"
                     style={{
-                      color: getAvatarColor(otherUserId || conversation.id)
-                        .icon,
+                      color: avatarColor.icon,
                     }}
                   />
                 </AvatarFallback>

@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { format, isToday, isYesterday } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
@@ -137,16 +137,21 @@ export function MessageList({
     return groups
   }, [messages])
 
-  const getDateLabel = (dateString: string): string => {
-    const date = new Date(dateString)
-    if (isToday(date)) {
-      return m?.ui?.today || "Today"
-    }
-    if (isYesterday(date)) {
-      return m?.ui?.yesterday || "Yesterday"
-    }
-    return format(date, "PPP", { locale: dateLocale })
-  }
+  const getDateLabel = useCallback(
+    (dateString: string): string => {
+      const date = new Date(dateString)
+      if (isToday(date)) {
+        return m?.ui?.today || "Today"
+      }
+      if (isYesterday(date)) {
+        return m?.ui?.yesterday || "Yesterday"
+      }
+      return format(date, "PPP", { locale: dateLocale })
+    },
+    // dateLocale identity is stable per locale value; m?.ui strings change only
+    // when the dictionary reloads (language switch).
+    [dateLocale, m?.ui?.today, m?.ui?.yesterday]
+  )
 
   // Build flat list for virtualization
   const virtualListItems = useMemo<VirtualListItem[]>(() => {
@@ -196,7 +201,7 @@ export function MessageList({
     }
 
     return items
-  }, [messagesByDate, isLoading, hasMore, locale, unreadCount])
+  }, [messagesByDate, isLoading, hasMore, getDateLabel, unreadCount])
 
   // Virtual scrolling
   const virtualizer = useVirtualizer({
@@ -207,13 +212,14 @@ export function MessageList({
       if (item.type === "date-separator") return 40
       if (item.type === "loader") return 36
       if (item.type === "unread-divider") return 36
-      return item.messages.length * 50
+      // 80px per message: more realistic for media bubbles to reduce scroll jumps
+      return item.messages.length * 80
     },
     overscan: 5,
     enabled: enableVirtualization,
   })
 
-  const handleScrollToTop = () => {
+  const handleScrollToTop = useCallback(() => {
     const el = scrollContainerRef.current
     if (!el) return
     // Only trigger load more when scrolled near the top (within 100px)
@@ -232,7 +238,14 @@ export function MessageList({
 
       onLoadMore()
     }
-  }
+  }, [
+    hasMore,
+    isLoading,
+    onLoadMore,
+    enableVirtualization,
+    virtualizer,
+    virtualListItems.length,
+  ])
 
   // Save scroll position for conversation cache
   const handleScroll = () => {

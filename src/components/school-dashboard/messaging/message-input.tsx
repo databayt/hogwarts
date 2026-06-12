@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import {
   Crop,
@@ -375,6 +375,15 @@ export function MessageInput({
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
+
+  // Stable waveform bar heights — seeded once when recording starts so the
+  // bars don't re-randomize on every 1s duration tick.
+  const waveformHeights = useMemo(
+    () => Array.from({ length: 30 }, () => Math.random() * 20 + 4),
+    // Re-seed only when a new recording session begins (isRecording flips true).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isRecording ? 1 : 0]
+  )
   const [micDenied, setMicDenied] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -614,12 +623,12 @@ export function MessageInput({
               {formatDuration(recordingDuration)}
             </span>
             <div className="flex flex-1 items-center gap-0.5">
-              {Array.from({ length: 30 }).map((_, i) => (
+              {waveformHeights.map((h, i) => (
                 <div
                   key={i}
                   className="bg-msg-unread-badge/60 w-1 rounded-full"
                   style={{
-                    height: `${Math.random() * 20 + 4}px`,
+                    height: `${h}px`,
                     animationDelay: `${i * 50}ms`,
                   }}
                 />

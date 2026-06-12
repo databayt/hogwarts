@@ -5,6 +5,15 @@ import { ExternalLink } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+/** Safe hostname extraction — returns raw url string on malformed input. */
+function safeHostname(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
 export interface LinkPreviewData {
   url: string
   title?: string
@@ -64,7 +73,7 @@ export function LinkPreview({
         )}
         <p className="text-msg-timestamp mt-1 flex items-center gap-1 text-[11px]">
           <ExternalLink className="h-3 w-3" />
-          {new URL(url).hostname}
+          {safeHostname(url)}
         </p>
       </div>
     </a>

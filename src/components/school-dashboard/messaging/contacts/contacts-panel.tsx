@@ -121,6 +121,17 @@ export function ContactsPanel({
     [debouncedSearch]
   )
 
+  // Derive a stable primitive key from the typing Map so the heavy allContacts
+  // memo doesn't invalidate on every new Map instance produced by typing events.
+  // The Map is still read inside the memo (correctness); only the dep is stable.
+  const typingKey = useMemo(
+    () =>
+      typingConversations
+        ? Array.from(typingConversations.keys()).sort().join(",")
+        : "",
+    [typingConversations]
+  )
+
   // Flatten all contacts and enrich with conversation data
   const allContacts = useMemo(() => {
     const flat: ContactDTO[] = []
@@ -141,6 +152,7 @@ export function ContactsPanel({
           unreadCount: conv?.unreadCount ?? 0,
           isPinned: participant?.isPinned ?? false,
           isMuted: participant?.isMuted ?? false,
+          // Read from the live Map — typingKey ensures we re-run when it changes
           isTyping: conv?.id
             ? (typingConversations?.get(conv.id) ?? false)
             : false,
@@ -155,7 +167,8 @@ export function ContactsPanel({
       seen.add(c.id)
       return true
     })
-  }, [groups, convByUser, currentUserId, typingConversations])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups, convByUser, currentUserId, typingKey])
 
   // Filter contacts
   const filteredContacts = useMemo(() => {
