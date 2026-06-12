@@ -22,15 +22,17 @@ import {
   type PatternName,
 } from "../../../scripts/i18n-hardcoded-ratchet"
 
-// Measured 2026-06-10; lowered 2026-06-11 after the onboarding/newcomers
-// error-code sweep (toast 115→110, errorReturn 1582→1528, zod 880→865).
+// Measured 2026-06-10; re-baselined 2026-06-12 after reverting a sweep
+// agent's ratchet gaming (lowercased messages dodge the [A-Z] patterns —
+// the honest counts are higher than the gamed dip suggested). Net honest
+// wins so far: formLabel 25→23, toast 115→110, errorReturn 1582→1543.
 const BASELINE_BY_PATTERN: Record<PatternName, number> = {
-  formLabel: 25,
+  formLabel: 23,
   toast: 110,
   button: 35,
-  errorReturn: 1528,
+  errorReturn: 1543,
   selectLabel: 1624,
-  zodMessage: 865,
+  zodMessage: 880,
   bilingualField: 123,
   placeholder: 163,
 }
