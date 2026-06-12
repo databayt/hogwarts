@@ -5,6 +5,7 @@ import { Resend } from "resend"
 
 import { env } from "@/env.mjs"
 import { db } from "@/lib/db"
+import { prewarm } from "@/components/translation/prewarm"
 
 // Lazy-init to avoid crashing on import if RESEND_API_KEY is not set
 // (e.g. in test collection, where importing this module must not throw).
@@ -681,6 +682,14 @@ export async function processNotificationBatch(
       where: { id: batchId },
       data: { totalCount: targetUserIds.length },
     })
+
+    // One shared title/body for the whole batch — warm the other-language
+    // cache once (fire-and-forget; this runs from cron, no after() available).
+    void prewarm(
+      "Notification",
+      { title: batch.title, body: batch.body },
+      { schoolId }
+    ).catch(() => {})
 
     // Create notifications in batches of 100
     const BATCH_SIZE = 100

@@ -1,12 +1,21 @@
 import { db } from "@/lib/db"
 
 /**
+ * Cap on the reverse-lookup result set. Bounds the generated `IN (...)`
+ * clause; matches beyond this are silently dropped (acceptable: a search
+ * term matching 200+ distinct cached translations is already too broad
+ * to rank meaningfully).
+ */
+const REVERSE_LOOKUP_LIMIT = 200
+
+/**
  * Builds Prisma OR conditions that match both raw field values and
  * their cached translations. This enables bilingual search — e.g.,
  * searching "Ahmed" will find "أحمد" if a translation exists.
  *
  * Performance: queries Translation (indexed), never triggers
- * Google Translate API calls.
+ * Google Translate API calls — by design (a search keystroke must
+ * never cost an API call).
  */
 export async function search(
   searchTerm: string,
@@ -34,7 +43,7 @@ export async function search(
       translatedText: { contains: searchTerm, mode: "insensitive" },
     },
     select: { sourceText: true },
-    take: 50,
+    take: REVERSE_LOOKUP_LIMIT,
   })
 
   if (cached.length === 0) {

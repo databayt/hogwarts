@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { renderTemplate } from "@/lib/notifications/render-template"
+import { prewarm } from "@/components/translation/prewarm"
 
 // Default expiration: 30 days
 const NOTIFICATION_EXPIRATION_DAYS = 30
@@ -64,6 +65,15 @@ export async function dispatchNotification(params: {
         expiresAt,
       },
     })
+
+    // Warm the other-language cache (fire-and-forget — this lib runs from
+    // actions, crons AND webhooks, so after() isn't always available). One
+    // call per dispatch: title/body are shared across recipients.
+    void prewarm(
+      "Notification",
+      { title: params.title, body: params.body },
+      { schoolId: params.schoolId }
+    ).catch(() => {})
 
     return notification.id
   } catch (error) {
@@ -151,6 +161,13 @@ export async function dispatchNotificationsToAudience(params: {
       })),
       skipDuplicates: true,
     })
+
+    // One shared title/body for the whole audience — warm it once.
+    void prewarm(
+      "Notification",
+      { title: params.title, body: params.body },
+      { schoolId: params.schoolId }
+    ).catch(() => {})
 
     return { created: result.count }
   } catch (error) {

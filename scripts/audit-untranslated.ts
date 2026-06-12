@@ -152,7 +152,8 @@ const DIR_MODELS: Record<string, (keyof typeof TRANSLATABLE)[]> = {
     "QuickAssessment",
     "GradingScheme",
   ],
-  "src/components/school-dashboard/library": ["Book"],
+  // school-dashboard/library is an orphaned client prototype (own local Book
+  // interface, imported nowhere) — the real Book surfaces live in library/.
   "src/components/library": ["Book", "Textbook"],
   "src/components/school-dashboard/conference": ["Conference"],
   "src/components/school-dashboard/notifications": ["Notification"],
@@ -222,10 +223,40 @@ interface PrewarmGap {
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /**
+ * Write sites VERIFIED to need no prewarm — each entry names its reason.
+ * Add here only after reading the write payload; "it's annoying to wire" is
+ * not a reason. Structural categories:
+ *   - provisioning: runs at onboarding outside request scope; the backfill
+ *     script (scripts/prewarm-existing.ts) warms instead
+ *   - non-content: the write touches no registered text field
+ *   - draft scaffolding: creates rows with empty text; the content step's
+ *     action prewarm when real text lands
+ */
+const PREWARM_EXEMPT: Record<string, string> = {
+  "src/components/catalog/provision.ts":
+    "provisioning engine (onboarding, no request scope; backfill warms)",
+  "src/components/catalog/setup.ts":
+    "provisioning engine (onboarding, no request scope; backfill warms)",
+  "src/components/school-dashboard/conference/actions/tokens.ts":
+    "non-content: token/roomSid bookkeeping only",
+  "src/components/school-dashboard/conference/livekit/webhook.ts":
+    "non-content: status/timestamp transitions only",
+  "src/app/api/mobile/events/[id]/register/route.ts":
+    "non-content: currentAttendees counter only",
+  "src/components/school-dashboard/listings/announcements/wizard/actions.ts":
+    "draft scaffolding: creates with empty title/body; content step prewarm",
+  "src/components/school-dashboard/listings/events/wizard/actions.ts":
+    "draft scaffolding: creates with empty/null text; info+schedule steps prewarm",
+  "src/components/school-dashboard/listings/classrooms/subjects/actions.ts":
+    "non-content: Class.classroomId assignment only",
+}
+
+/**
  * School-scoped registered models whose create/update/upsert call sites never
  * import `prewarm` — their first cross-language reader pays the blocking
  * Google round-trip instead of a cache hit. CATALOG_GLOBAL models are exempt
- * (operator-context writes have no tenant to warm — see registry.ts).
+ * (operator-context writes have no tenant to warm — see registry.ts), as are
+ * the verified PREWARM_EXEMPT sites above.
  */
 function findPrewarmGaps(): PrewarmGap[] {
   const gaps: PrewarmGap[] = []
@@ -251,6 +282,7 @@ function findPrewarmGaps(): PrewarmGap[] {
     return gaps
   }
   for (const file of files) {
+    if (PREWARM_EXEMPT[file]) continue // verified non-content/provisioning
     const src = readFileSync(file, "utf8")
     if (/\bprewarm\b/.test(src)) continue // file prewarm — trust it
     for (const [model, accessor] of accessors) {

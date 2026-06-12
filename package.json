@@ -40,6 +40,7 @@
     "test": "vitest",
     "i18n:audit-content": "tsx scripts/audit-untranslated.ts",
     "i18n:prune": "tsx scripts/prune-translation-cache.ts",
+    "i18n:backfill": "tsx scripts/prewarm-existing.ts",
     "test:integration": "vitest --config vitest.config.integration.mts --run",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:all": "playwright test",

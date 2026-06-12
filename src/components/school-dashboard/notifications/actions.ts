@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath, revalidateTag } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
@@ -10,6 +11,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import {
   assertNotificationPermission,
@@ -117,6 +119,9 @@ export async function createNotification(
         expiresAt,
       },
     })
+
+    // Warm the other-language cache off the response path
+    after(() => prewarm("Notification", row, { schoolId }))
 
     // Revalidate cache
     revalidatePath(NOTIFICATIONS_PATH, "page")
