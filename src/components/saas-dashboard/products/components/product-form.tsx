@@ -101,7 +101,7 @@ export default function ProductForm({
               render={() => (
                 <div className="space-y-6">
                   <FormItem className="w-full">
-                    <FormLabel>Images</FormLabel>
+                    <FormLabel>{p?.images ?? "Images"}</FormLabel>
                     <FormControl>
                       <FileUploader
                         accept={ACCEPT_IMAGES}
@@ -122,7 +122,7 @@ export default function ProductForm({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel>{p?.productName ?? "Product Name"}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder={p?.enterName || "Enter product name"}

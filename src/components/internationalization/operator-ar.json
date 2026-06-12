@@ -367,7 +367,9 @@
         "beautyProducts": "منتجات التجميل",
         "homeAndGarden": "المنزل والحديقة",
         "sportsAndOutdoors": "الرياضة والهواء الطلق"
-      }
+      },
+      "images": "الصور",
+      "productName": "اسم المنتج"
     },
     "common": {
       "actions": {

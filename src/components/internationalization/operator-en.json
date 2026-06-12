@@ -367,7 +367,9 @@
         "beautyProducts": "Beauty Products",
         "homeAndGarden": "Home & Garden",
         "sportsAndOutdoors": "Sports & Outdoors"
-      }
+      },
+      "images": "Images",
+      "productName": "Product Name"
     },
     "common": {
       "actions": {
