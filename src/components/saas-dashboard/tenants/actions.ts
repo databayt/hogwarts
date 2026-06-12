@@ -8,6 +8,10 @@ import type { School } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import {
+  repairProvisioning,
+  type RepairResult,
+} from "@/components/catalog/provision"
 import { setupCatalogForSchool } from "@/components/catalog/setup"
 import {
   logOperatorAudit,
@@ -312,6 +316,47 @@ export async function fetchTenants(input: GetTenantsInput) {
     return {
       data: [],
       total: 0,
+    }
+  }
+}
+
+/**
+ * Detect and repair missing provisioning stages for a tenant (academic
+ * structure, schedule, sections, timetable slots, join code). Idempotent —
+ * a healthy school reports nothing to repair.
+ */
+export async function tenantRepairProvisioning(input: {
+  tenantId: string
+}): Promise<ActionResult<RepairResult>> {
+  try {
+    await requireOperator()
+
+    const school = await db.school.findUnique({
+      where: { id: input.tenantId },
+      select: { id: true },
+    })
+
+    if (!school) {
+      return { success: false, error: { message: "School not found" } }
+    }
+
+    const result = await repairProvisioning(input.tenantId)
+
+    if (result.repaired.length > 0) {
+      revalidatePath("/tenants")
+    }
+
+    return { success: true, data: result }
+  } catch (error) {
+    console.error("Failed to repair provisioning:", error)
+    return {
+      success: false,
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to repair provisioning",
+      },
     }
   }
 }

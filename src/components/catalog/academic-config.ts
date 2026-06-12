@@ -29,12 +29,26 @@ export interface AcademicStreamDef {
   streamType: "SCIENCE" | "ARTS"
 }
 
+/**
+ * Subject-name fragments that pin a subject to one stream in streamed
+ * grades. Curriculum-owned: only configs that define streams carry
+ * patterns, so the keyword matching never leaks into stream-less systems.
+ */
+export interface StreamSubjectPatterns {
+  science: string[]
+  arts: string[]
+  /** Fragments that must never match (e.g. "physical education" vs "physics"). */
+  exclude: string[]
+}
+
 export interface CurriculumAcademicConfig {
   levels: AcademicLevelDef[]
   gradeName: (grade: number) => string
   streams: AcademicStreamDef[]
   /** First grade that gets streams. 99 (never) when `streams` is empty. */
   streamStartGrade: number
+  /** null when the curriculum provisions no streams. */
+  streamSubjectPatterns: StreamSubjectPatterns | null
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +104,29 @@ const ARABIC_6_3_3: CurriculumAcademicConfig = {
     { name: "الأدبي", slug: "arts", streamType: "ARTS" },
   ],
   streamStartGrade: 10,
+  // Moved verbatim from setup.ts (was applied globally; now SD-family only).
+  streamSubjectPatterns: {
+    science: [
+      "physics",
+      "chemistry",
+      "biology",
+      "calculus",
+      "فيزياء",
+      "كيمياء",
+      "أحياء",
+    ],
+    arts: [
+      "philosophy",
+      "فلسفة",
+      "أدب",
+      "بلاغة",
+      "مطالعة",
+      "نحو",
+      "عربية خاصة",
+      "رياضيات أساسية",
+    ],
+    exclude: ["physical education", "تربية بدنية"],
+  },
 }
 
 /** US K-12: 5+3+4, English names, no provisioned streams. */
@@ -123,6 +160,7 @@ const US_5_3_4: CurriculumAcademicConfig = {
   gradeName: (grade) => `Grade ${grade}`,
   streams: [],
   streamStartGrade: 99,
+  streamSubjectPatterns: null,
 }
 
 /** England-style key stages mapped onto the 3-level platform model. */
@@ -156,6 +194,7 @@ const GB_KEY_STAGES: CurriculumAcademicConfig = {
   gradeName: (grade) => `Year ${grade}`,
   streams: [],
   streamStartGrade: 99,
+  streamSubjectPatterns: null,
 }
 
 /** Indian CBSE: primary 1-5, middle 6-8, secondary+senior 9-12. */
@@ -189,6 +228,7 @@ const CBSE_CLASSES: CurriculumAcademicConfig = {
   gradeName: (grade) => `Class ${grade}`,
   streams: [],
   streamStartGrade: 99,
+  streamSubjectPatterns: null,
 }
 
 /** Neutral English fallback for unknown curricula: 6+3+3, no streams. */
@@ -222,6 +262,7 @@ const GENERIC_FALLBACK: CurriculumAcademicConfig = {
   gradeName: (grade) => `Grade ${grade}`,
   streams: [],
   streamStartGrade: 99,
+  streamSubjectPatterns: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -253,6 +294,23 @@ export function getAcademicConfig(
 ): CurriculumAcademicConfig {
   if (!curriculum) return GENERIC_FALLBACK
   return CURRICULUM_ACADEMIC_CONFIG[curriculum] ?? GENERIC_FALLBACK
+}
+
+/**
+ * Resolve which stream (if any) a subject belongs to under this curriculum.
+ * Returns null for shared subjects and for curricula without streams.
+ */
+export function getStreamTypeForSubject(
+  cfg: CurriculumAcademicConfig,
+  subjectName: string
+): "SCIENCE" | "ARTS" | null {
+  const patterns = cfg.streamSubjectPatterns
+  if (!patterns || cfg.streams.length === 0) return null
+  const lower = subjectName.toLowerCase()
+  if (patterns.exclude.some((p) => lower.includes(p))) return null
+  if (patterns.science.some((p) => lower.includes(p))) return "SCIENCE"
+  if (patterns.arts.some((p) => lower.includes(p))) return "ARTS"
+  return null
 }
 
 /** Grade numbers covered by a SchoolLevel under this config (was hardcoded). */

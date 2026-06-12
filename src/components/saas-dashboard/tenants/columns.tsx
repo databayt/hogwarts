@@ -19,7 +19,7 @@ import {
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-import { tenantSetupCatalog } from "./actions"
+import { tenantRepairProvisioning, tenantSetupCatalog } from "./actions"
 import { DeleteSchoolDialog } from "./delete-dialog"
 import { TenantDetail } from "./detail"
 
@@ -304,6 +304,35 @@ function TenantActionsCell({
             }}
           >
             Setup Catalog
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={async () => {
+              try {
+                const res = await tenantRepairProvisioning({
+                  tenantId: tenant.id,
+                })
+                if (!res.success) {
+                  ErrorToast(res.error?.message || "Repair failed")
+                  return
+                }
+                const { repaired, failed } = res.data
+                if (repaired.length === 0 && failed.length === 0) {
+                  SuccessToast("Provisioning healthy — nothing to repair")
+                } else if (failed.length === 0) {
+                  SuccessToast(`Repaired: ${repaired.join(", ")}`)
+                } else {
+                  ErrorToast(
+                    `Repaired: ${repaired.join(", ") || "none"} — failed: ${failed
+                      .map((f) => f.stage)
+                      .join(", ")}`
+                  )
+                }
+              } catch (e) {
+                ErrorToast(e instanceof Error ? e.message : "Repair failed")
+              }
+            }}
+          >
+            Repair Provisioning
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <div className="px-0">

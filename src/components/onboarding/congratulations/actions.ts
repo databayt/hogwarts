@@ -9,11 +9,7 @@ import {
   type ActionResponse,
 } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import {
-  applyTimetableStructureForNewSchool,
-  autoGenerateTimetableForSchool,
-  setupCatalogForSchool,
-} from "@/components/catalog/setup"
+import { repairProvisioning } from "@/components/catalog/provision"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 
@@ -42,56 +38,23 @@ export async function publishSchool(schoolId: string): Promise<ActionResponse> {
       },
     })
 
-    // Auto-setup academic structure (grades, levels, subject selections)
-    // Non-blocking: catalog setup failure should NOT prevent publishing
+    // Run whichever provisioning stages are missing (academic structure,
+    // schedule, sections, timetable slots, join code). Idempotent — safe to
+    // re-run on an already-provisioned school; a partially provisioned one
+    // gets exactly the stages it lost. Non-blocking: provisioning failure
+    // should NOT prevent publishing.
     try {
-      await setupCatalogForSchool(schoolId, {
-        country: school.country || undefined,
-      })
-    } catch (catalogError) {
-      console.error(
-        `[publishSchool] Catalog setup failed for school ${schoolId}:`,
-        catalogError
-      )
-    }
-
-    // Auto-setup timetable structure (school year, terms, periods)
-    // Non-blocking: timetable setup failure should NOT prevent publishing
-    if (school.timetableStructure) {
-      try {
-        await applyTimetableStructureForNewSchool(
-          schoolId,
-          school.timetableStructure
-        )
-      } catch (timetableError) {
+      const repair = await repairProvisioning(schoolId)
+      if (repair.failed.length > 0) {
         console.error(
-          `[publishSchool] Timetable setup failed for school ${schoolId}:`,
-          timetableError
+          `[publishSchool] Provisioning stages failed for school ${schoolId}:`,
+          repair.failed
         )
       }
-    }
-
-    // Auto-create default ClassroomType so the Configure tab works post-onboarding
-    try {
-      await db.classroomType.upsert({
-        where: { schoolId_name: { schoolId, name: "Classroom" } },
-        create: { schoolId, name: "Classroom" },
-        update: {},
-      })
-    } catch (classroomTypeError) {
+    } catch (provisionError) {
       console.error(
-        `[publishSchool] ClassroomType creation failed for school ${schoolId}:`,
-        classroomTypeError
-      )
-    }
-
-    // Auto-generate timetable slots (non-blocking)
-    try {
-      await autoGenerateTimetableForSchool(schoolId)
-    } catch (genError) {
-      console.error(
-        `[publishSchool] Timetable generation failed for school ${schoolId}:`,
-        genError
+        `[publishSchool] Provisioning failed for school ${schoolId}:`,
+        provisionError
       )
     }
 

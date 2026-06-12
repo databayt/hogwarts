@@ -372,7 +372,8 @@ export async function syncDefaultClassrooms(): Promise<
       return actionError(ACTION_ERRORS.NO_GRADES_FOUND)
     }
 
-    const { autoProvisionSections } = await import("@/components/catalog/setup")
+    const { autoProvisionSections } =
+      await import("@/components/catalog/provision")
     const result = await autoProvisionSections(schoolId)
 
     revalidatePath(CLASSROOMS_PATH)

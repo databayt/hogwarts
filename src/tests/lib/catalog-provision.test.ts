@@ -1,0 +1,288 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { generateUniqueJoinCode } from "@/lib/join-code"
+import {
+  getProvisioningStatus,
+  repairProvisioning,
+} from "@/components/catalog/provision"
+import {
+  ensureSubjectSelections,
+  setupCatalogForSchool,
+  setupDefaultsForSchool,
+} from "@/components/catalog/setup"
+
+vi.mock("@/lib/db", () => ({
+  db: {
+    school: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    yearLevel: { count: vi.fn() },
+    department: { count: vi.fn() },
+    scoreRange: { count: vi.fn() },
+    academicLevel: { count: vi.fn() },
+    academicGrade: { count: vi.fn(), findMany: vi.fn() },
+    academicStream: { count: vi.fn() },
+    subjectSelection: { count: vi.fn() },
+    schoolYear: { count: vi.fn(), findFirst: vi.fn() },
+    period: { count: vi.fn() },
+    term: { count: vi.fn() },
+    classroomType: { count: vi.fn(), findFirst: vi.fn(), upsert: vi.fn() },
+    section: { count: vi.fn() },
+    timetable: { count: vi.fn() },
+    schoolBook: { count: vi.fn() },
+    $transaction: vi.fn(),
+  },
+}))
+
+vi.mock("@/lib/join-code", () => ({
+  generateUniqueJoinCode: vi.fn(),
+}))
+
+// Isolate the doctor from the provisioning engine — those stages are tested
+// in catalog-setup.test.ts; here we assert the doctor calls them correctly.
+vi.mock("@/components/catalog/setup", () => ({
+  ensureSubjectSelections: vi.fn(),
+  setupCatalogForSchool: vi.fn(),
+  setupDefaultsForSchool: vi.fn(),
+}))
+
+const schoolId = "school-1"
+
+type Counts = {
+  yearLevel?: number
+  department?: number
+  scoreRange?: number
+  academicLevel?: number
+  academicGrade?: number
+  academicStream?: number
+  subjectSelection?: number
+  schoolYear?: number
+  period?: number
+  term?: number
+  classroomType?: number
+  section?: number
+  timetable?: number
+  schoolBook?: number
+}
+
+function mockCounts(counts: Counts) {
+  vi.mocked(db.yearLevel.count).mockResolvedValue(counts.yearLevel ?? 0)
+  vi.mocked(db.department.count).mockResolvedValue(counts.department ?? 0)
+  vi.mocked(db.scoreRange.count).mockResolvedValue(counts.scoreRange ?? 0)
+  vi.mocked(db.academicLevel.count).mockResolvedValue(counts.academicLevel ?? 0)
+  vi.mocked(db.academicGrade.count).mockResolvedValue(counts.academicGrade ?? 0)
+  vi.mocked(db.academicStream.count).mockResolvedValue(
+    counts.academicStream ?? 0
+  )
+  vi.mocked(db.subjectSelection.count).mockResolvedValue(
+    counts.subjectSelection ?? 0
+  )
+  vi.mocked(db.schoolYear.count).mockResolvedValue(counts.schoolYear ?? 0)
+  vi.mocked(db.period.count).mockResolvedValue(counts.period ?? 0)
+  vi.mocked(db.term.count).mockResolvedValue(counts.term ?? 0)
+  vi.mocked(db.classroomType.count).mockResolvedValue(counts.classroomType ?? 0)
+  vi.mocked(db.section.count).mockResolvedValue(counts.section ?? 0)
+  vi.mocked(db.timetable.count).mockResolvedValue(counts.timetable ?? 0)
+  vi.mocked(db.schoolBook.count).mockResolvedValue(counts.schoolBook ?? 0)
+}
+
+const HEALTHY_COUNTS: Counts = {
+  yearLevel: 14,
+  department: 6,
+  scoreRange: 9,
+  academicLevel: 3,
+  academicGrade: 12,
+  academicStream: 6,
+  subjectSelection: 120,
+  schoolYear: 1,
+  period: 8,
+  term: 2,
+  classroomType: 1,
+  section: 24,
+  timetable: 600,
+  schoolBook: 51,
+}
+
+function mockSchool(
+  overrides: Partial<{
+    timetableStructure: string | null
+    joinCode: string | null
+    country: string
+    schoolType: string | null
+    schoolLevel: string
+    sectionsPerGrade: number
+    studentsPerSection: number
+  }> = {}
+) {
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    timetableStructure: "sd-gov-default",
+    joinCode: "JOIN99",
+    country: "SD",
+    schoolType: "private",
+    schoolLevel: "both",
+    sectionsPerGrade: 2,
+    studentsPerSection: 30,
+    ...overrides,
+  } as never)
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
+
+describe("getProvisioningStatus", () => {
+  it("reports a fully provisioned school as healthy", async () => {
+    mockSchool()
+    mockCounts(HEALTHY_COUNTS)
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toEqual([])
+    expect(status.healthy).toBe(true)
+    expect(status.hasJoinCode).toBe(true)
+    expect(status.counts.subjectSelections).toBe(120)
+  })
+
+  it("reports every stage missing on a fresh school with a timetable structure", async () => {
+    mockSchool({ joinCode: null })
+    mockCounts({})
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).toEqual([
+      "defaults",
+      "academicStructure",
+      "subjectSelections",
+      "schedule",
+      "sections",
+      "timetable",
+      "joinCode",
+    ])
+    expect(status.healthy).toBe(false)
+  })
+
+  it("never marks schedule/timetable missing when the school has no timetable structure", async () => {
+    mockSchool({ timetableStructure: null, joinCode: null })
+    mockCounts({})
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.missing).not.toContain("schedule")
+    expect(status.missing).not.toContain("timetable")
+  })
+
+  it("treats streams and library books as optional", async () => {
+    mockSchool()
+    mockCounts({ ...HEALTHY_COUNTS, academicStream: 0, schoolBook: 0 })
+
+    const status = await getProvisioningStatus(schoolId)
+
+    expect(status.healthy).toBe(true)
+    expect(status.counts.academicStreams).toBe(0)
+    expect(status.counts.libraryBooks).toBe(0)
+  })
+
+  it("throws school_not_found for a non-existent school", async () => {
+    vi.mocked(db.school.findUnique).mockResolvedValue(null)
+
+    await expect(getProvisioningStatus(schoolId)).rejects.toThrow(
+      "school_not_found"
+    )
+  })
+})
+
+describe("repairProvisioning", () => {
+  it("does nothing on a healthy school", async () => {
+    mockSchool()
+    mockCounts(HEALTHY_COUNTS)
+
+    const result = await repairProvisioning(schoolId)
+
+    expect(result.repaired).toEqual([])
+    expect(result.failed).toEqual([])
+    expect(result.healthy).toBe(true)
+    expect(setupDefaultsForSchool).not.toHaveBeenCalled()
+    expect(setupCatalogForSchool).not.toHaveBeenCalled()
+    expect(db.school.update).not.toHaveBeenCalled()
+  })
+
+  it("runs only the missing stages, in dependency order", async () => {
+    // Fresh school WITHOUT a timetable structure: schedule/timetable stages
+    // must be skipped; everything else runs.
+    mockSchool({ timetableStructure: null, joinCode: null })
+    mockCounts({})
+    // autoProvisionSections internals: no grades yet → graceful no-op
+    vi.mocked(db.academicGrade.findMany).mockResolvedValue([])
+    vi.mocked(db.classroomType.findFirst).mockResolvedValue(null)
+    vi.mocked(generateUniqueJoinCode).mockResolvedValue("NEW123")
+
+    const result = await repairProvisioning(schoolId)
+
+    expect(result.repaired).toEqual([
+      "defaults",
+      "academicStructure",
+      "subjectSelections",
+      "sections",
+      "joinCode",
+    ])
+    expect(result.failed).toEqual([])
+    expect(setupDefaultsForSchool).toHaveBeenCalledWith(schoolId, "both")
+    expect(setupCatalogForSchool).toHaveBeenCalledWith(schoolId, {
+      country: "SD",
+      schoolType: "private",
+    })
+    expect(ensureSubjectSelections).toHaveBeenCalledWith(schoolId)
+    expect(db.classroomType.upsert).toHaveBeenCalled()
+    expect(db.school.update).toHaveBeenCalledWith({
+      where: { id: schoolId },
+      data: { joinCode: "NEW123" },
+    })
+  })
+
+  it("skips the selections self-heal when the structure repair already created them", async () => {
+    mockSchool({ timetableStructure: null })
+    mockCounts({ ...HEALTHY_COUNTS, subjectSelection: 0 })
+    // First count (status read) sees 0; the in-stage recheck sees the rows
+    // setupCatalogForSchool just created.
+    vi.mocked(db.subjectSelection.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValue(120)
+
+    const result = await repairProvisioning(schoolId)
+
+    expect(result.repaired).toEqual(["subjectSelections"])
+    expect(ensureSubjectSelections).not.toHaveBeenCalled()
+  })
+
+  it("collects a stage failure without aborting the remaining stages", async () => {
+    mockSchool({ timetableStructure: null, joinCode: null })
+    mockCounts({ ...HEALTHY_COUNTS, section: 0 })
+    vi.mocked(db.academicGrade.findMany).mockResolvedValue([])
+    vi.mocked(db.classroomType.findFirst).mockResolvedValue(null)
+    vi.mocked(db.classroomType.upsert).mockRejectedValue(
+      new Error("db unreachable")
+    )
+    vi.mocked(generateUniqueJoinCode).mockResolvedValue("NEW123")
+
+    const result = await repairProvisioning(schoolId)
+
+    expect(result.failed).toEqual([
+      { stage: "sections", error: "db unreachable" },
+    ])
+    expect(result.repaired).toEqual(["joinCode"])
+    expect(db.school.update).toHaveBeenCalled()
+  })
+
+  it("throws school_not_found for a non-existent school", async () => {
+    vi.mocked(db.school.findUnique).mockResolvedValue(null)
+
+    await expect(repairProvisioning(schoolId)).rejects.toThrow(
+      "school_not_found"
+    )
+  })
+})

@@ -5,13 +5,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import {
-  _testing,
+  getAcademicConfig,
+  getStreamTypeForSubject,
+} from "@/components/catalog/academic-config"
+import {
   applyTimetableStructureForNewSchool,
+  setupLibraryForSchool,
+} from "@/components/catalog/provision"
+import {
+  _testing,
   getRankedVideos,
   recordVideoView,
   setupCatalogForSchool,
   setupDefaultsForSchool,
-  setupLibraryForSchool,
   teardownCatalogForSchool,
 } from "@/components/catalog/setup"
 
@@ -99,6 +105,7 @@ vi.mock("@/lib/db", () => ({
       create: vi.fn(),
     },
     period: {
+      count: vi.fn(),
       create: vi.fn(),
     },
     term: {
@@ -239,6 +246,7 @@ describe("Catalog Setup", () => {
         id: "year-1",
       } as any)
       vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
@@ -270,6 +278,7 @@ describe("Catalog Setup", () => {
         id: "existing-year",
       } as any)
       vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
@@ -300,6 +309,7 @@ describe("Catalog Setup", () => {
         id: "year-1",
       } as any)
       vi.mocked(db.term.count).mockResolvedValue(0)
+      vi.mocked(db.period.count).mockResolvedValue(0)
 
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
@@ -346,6 +356,7 @@ describe("Catalog Setup", () => {
         id: "year-1",
       } as any)
       vi.mocked(db.term.count).mockResolvedValue(2) // terms exist
+      vi.mocked(db.period.count).mockResolvedValue(8) // periods exist
 
       let weekConfigCreated = false
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
@@ -368,6 +379,39 @@ describe("Catalog Setup", () => {
       await applyTimetableStructureForNewSchool(schoolId, "sd-gov-default")
 
       expect(weekConfigCreated).toBe(true)
+    })
+
+    it("does not duplicate periods on a re-run (manual publish after onboarding)", async () => {
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
+        id: "year-1",
+      } as any)
+      vi.mocked(db.term.count).mockResolvedValue(2)
+      vi.mocked(db.period.count).mockResolvedValue(8)
+
+      const periodCreate = vi.fn()
+      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          period: { create: periodCreate },
+          term: {
+            create: vi.fn(),
+            findFirst: vi.fn().mockResolvedValue({ id: "term-1" }),
+          },
+          schoolWeekConfig: {
+            findFirst: vi.fn().mockResolvedValue({ id: "config-1" }),
+            create: vi.fn(),
+          },
+        }
+        return callback(tx)
+      })
+
+      const result = await applyTimetableStructureForNewSchool(
+        schoolId,
+        "sd-gov-default"
+      )
+
+      expect(result.skipped).toBe(false)
+      expect(result.periods).toBe(0)
+      expect(periodCreate).not.toHaveBeenCalled()
     })
   })
 
@@ -407,70 +451,38 @@ describe("Catalog Setup", () => {
     })
   })
 
-  describe("getSubjectStreamType", () => {
-    it("returns SCIENCE for physics", () => {
-      expect(_testing.getSubjectStreamType("Physics")).toBe("SCIENCE")
-      expect(_testing.getSubjectStreamType("فيزياء")).toBe("SCIENCE")
+  describe("getStreamTypeForSubject (config-driven)", () => {
+    const sd = getAcademicConfig("SD")
+    const us = getAcademicConfig("US")
+
+    it("returns SCIENCE for science-stream subjects under SD", () => {
+      expect(getStreamTypeForSubject(sd, "Physics")).toBe("SCIENCE")
+      expect(getStreamTypeForSubject(sd, "فيزياء")).toBe("SCIENCE")
+      expect(getStreamTypeForSubject(sd, "Chemistry")).toBe("SCIENCE")
+      expect(getStreamTypeForSubject(sd, "كيمياء")).toBe("SCIENCE")
+      expect(getStreamTypeForSubject(sd, "Biology")).toBe("SCIENCE")
+      expect(getStreamTypeForSubject(sd, "أحياء")).toBe("SCIENCE")
     })
 
-    it("returns SCIENCE for chemistry", () => {
-      expect(_testing.getSubjectStreamType("Chemistry")).toBe("SCIENCE")
-      expect(_testing.getSubjectStreamType("كيمياء")).toBe("SCIENCE")
-    })
-
-    it("returns SCIENCE for biology", () => {
-      expect(_testing.getSubjectStreamType("Biology")).toBe("SCIENCE")
-      expect(_testing.getSubjectStreamType("أحياء")).toBe("SCIENCE")
-    })
-
-    it("returns ARTS for philosophy", () => {
-      expect(_testing.getSubjectStreamType("Philosophy")).toBe("ARTS")
-      expect(_testing.getSubjectStreamType("فلسفة")).toBe("ARTS")
+    it("returns ARTS for arts-stream subjects under SD", () => {
+      expect(getStreamTypeForSubject(sd, "Philosophy")).toBe("ARTS")
+      expect(getStreamTypeForSubject(sd, "فلسفة")).toBe("ARTS")
     })
 
     it("returns null for shared subjects (math, arabic)", () => {
-      expect(_testing.getSubjectStreamType("Mathematics")).toBeNull()
-      expect(_testing.getSubjectStreamType("Arabic Language")).toBeNull()
-      expect(_testing.getSubjectStreamType("English")).toBeNull()
+      expect(getStreamTypeForSubject(sd, "Mathematics")).toBeNull()
+      expect(getStreamTypeForSubject(sd, "Arabic Language")).toBeNull()
+      expect(getStreamTypeForSubject(sd, "English")).toBeNull()
     })
 
     it("returns null for Physical Education (not physics)", () => {
-      expect(_testing.getSubjectStreamType("Physical Education")).toBeNull()
-      expect(_testing.getSubjectStreamType("تربية بدنية")).toBeNull()
-    })
-  })
-
-  describe("getDefaultWeeklyPeriods", () => {
-    it("returns 5 for math in elementary (grade <= 6)", () => {
-      expect(_testing.getDefaultWeeklyPeriods("Mathematics", 3)).toBe(5)
-      expect(_testing.getDefaultWeeklyPeriods("رياضيات", 6)).toBe(5)
+      expect(getStreamTypeForSubject(sd, "Physical Education")).toBeNull()
+      expect(getStreamTypeForSubject(sd, "تربية بدنية")).toBeNull()
     })
 
-    it("returns 4 for math in secondary (grade > 6)", () => {
-      expect(_testing.getDefaultWeeklyPeriods("Math", 7)).toBe(4)
-      expect(_testing.getDefaultWeeklyPeriods("Math", 12)).toBe(4)
-    })
-
-    it("returns 5 for arabic regardless of grade", () => {
-      expect(_testing.getDefaultWeeklyPeriods("Arabic", 1)).toBe(5)
-      expect(_testing.getDefaultWeeklyPeriods("عربي", 12)).toBe(5)
-    })
-
-    it("returns 4 for english in elementary, 5 in secondary", () => {
-      expect(_testing.getDefaultWeeklyPeriods("English", 3)).toBe(4)
-      expect(_testing.getDefaultWeeklyPeriods("إنجليزي", 8)).toBe(5)
-    })
-
-    it("returns 2 for PE, art, music", () => {
-      expect(_testing.getDefaultWeeklyPeriods("PE", 5)).toBe(2)
-      expect(_testing.getDefaultWeeklyPeriods("Art", 3)).toBe(2)
-      expect(_testing.getDefaultWeeklyPeriods("Music", 7)).toBe(2)
-      expect(_testing.getDefaultWeeklyPeriods("موسيقى", 4)).toBe(2)
-    })
-
-    it("returns 3 as default for unknown subjects", () => {
-      expect(_testing.getDefaultWeeklyPeriods("Geography", 5)).toBe(3)
-      expect(_testing.getDefaultWeeklyPeriods("History", 8)).toBe(3)
+    it("never assigns streams under curricula that provision none", () => {
+      expect(getStreamTypeForSubject(us, "Physics")).toBeNull()
+      expect(getStreamTypeForSubject(us, "Philosophy")).toBeNull()
     })
   })
 

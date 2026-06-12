@@ -10,16 +10,9 @@ import {
   type ActionResponse,
 } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { generateUniqueJoinCode } from "@/lib/join-code"
 import { dispatchSetupGuideNotifications } from "@/lib/setup-guide-notifications"
 import { syncStudentGrades } from "@/lib/sync-student-grades"
-import {
-  applyTimetableStructureForNewSchool,
-  autoGenerateTimetableForSchool,
-  autoProvisionSections,
-  setupCatalogForSchool,
-  setupDefaultsForSchool,
-} from "@/components/catalog/setup"
+import { repairProvisioning } from "@/components/catalog/provision"
 
 import { requireSchoolOwnership } from "../auth-helpers"
 
@@ -107,90 +100,25 @@ async function provisionSchoolDefaults(
   },
   userId: string
 ) {
-  // Step 1: Defaults MUST run first (creates YearLevels)
-  // Step 2: Catalog reads YearLevels to set AcademicGrade.yearLevelId
-  // Running in parallel caused a race condition where catalog finished first → null yearLevelId
-  const defaultsResult = await setupDefaultsForSchool(
-    schoolId,
-    school.schoolLevel || "both"
-  ).catch((err) => {
+  // Defaults → academic structure → selections → schedule → sections →
+  // timetable slots → join code. The doctor runs whichever stages are missing
+  // (all of them on a fresh school), each one idempotent, one failed stage
+  // never blocking the rest. A later re-run (manual publishSchool, operator
+  // repair) completes any stage lost to a serverless timeout here.
+  const repair = await repairProvisioning(schoolId).catch((err) => {
     console.error(
-      `[provisionSchoolDefaults] Defaults failed for ${schoolId}:`,
+      `[provisionSchoolDefaults] Provisioning failed for ${schoolId}:`,
       err
     )
     return null
   })
-
-  const catalogResult = await setupCatalogForSchool(schoolId, {
-    country: school.country || undefined,
-    schoolType: school.schoolType || undefined,
-  }).catch((err) => {
-    console.error(
-      `[provisionSchoolDefaults] Catalog failed for ${schoolId}:`,
-      err
+  if (repair) {
+    const failures = repair.failed.length
+      ? ` | failed: ${repair.failed.map((f) => `${f.stage} (${f.error})`).join(", ")}`
+      : ""
+    console.log(
+      `[provisionSchoolDefaults] ${schoolId} stages run: [${repair.repaired.join(", ")}]${failures}`
     )
-    return null
-  })
-
-  console.log(
-    `[provisionSchoolDefaults] Defaults: ${defaultsResult ? "ok" : "failed"}, Catalog: ${catalogResult ? "ok" : "failed"} for school ${schoolId}`
-  )
-
-  // Step 2: Timetable depends on catalog (grades must exist)
-  if (school.timetableStructure) {
-    await applyTimetableStructureForNewSchool(
-      schoolId,
-      school.timetableStructure
-    ).catch((err) =>
-      console.error(
-        `[provisionSchoolDefaults] Timetable failed for ${schoolId}:`,
-        err
-      )
-    )
-  }
-
-  // Step 3: ClassroomType + sections depend on grades from catalog
-  await db.classroomType
-    .upsert({
-      where: { schoolId_name: { schoolId, name: "Classroom" } },
-      create: { schoolId, name: "Classroom" },
-      update: {},
-    })
-    .catch((err) =>
-      console.error(
-        `[provisionSchoolDefaults] ClassroomType failed for ${schoolId}:`,
-        err
-      )
-    )
-
-  await autoProvisionSections(schoolId).catch((err) =>
-    console.error(
-      `[provisionSchoolDefaults] Sections failed for ${schoolId}:`,
-      err
-    )
-  )
-
-  // Step 3b: Auto-generate timetable (depends on sections, subjects, periods)
-  await autoGenerateTimetableForSchool(schoolId).catch((err) =>
-    console.error(
-      `[provisionSchoolDefaults] Timetable generation failed for ${schoolId}:`,
-      err
-    )
-  )
-
-  // Step 4: Generate join code for sharing
-  const joinCode = await generateUniqueJoinCode().catch((err) => {
-    console.error(
-      `[provisionSchoolDefaults] Join code failed for ${schoolId}:`,
-      err
-    )
-    return null
-  })
-  if (joinCode) {
-    await db.school.update({
-      where: { id: schoolId },
-      data: { joinCode },
-    })
   }
 
   // Re-resolve student grades now that AcademicGrade records exist
