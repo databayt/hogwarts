@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import { authenticate, isAuthError } from "../../lib/authenticate"
@@ -29,27 +30,32 @@ type SubjectSummary = {
 }
 
 /**
- * Translate a pair of subject summary fields (name + department) into the
- * caller's UI language. Mirrors the sibling list route so localized names
- * stay consistent across list / detail / my-subjects.
+ * Batch-translate a list of subject summaries (name + department) into the
+ * caller's UI language using one localize + one getLabels call. Mirrors the
+ * sibling list route so localized names stay consistent across list / detail
+ * / my-subjects.
  */
-async function localizeSubject(
-  subject: SubjectSummary,
+async function localizeSubjects(
+  subjects: SubjectSummary[],
   lang: Lang,
   schoolId: string
 ) {
-  const srcLang = (subject.lang || "ar") as Lang
-  const [name, department] = await Promise.all([
-    getText(subject.name, srcLang, lang, schoolId),
-    getText(subject.department, srcLang, lang, schoolId),
+  const [localizedRows, deptLabels] = await Promise.all([
+    localize("Subject", subjects, { schoolId, lang }),
+    getLabels(
+      subjects.map((s) => s.department),
+      lang,
+      schoolId
+    ),
   ])
-  return {
-    id: subject.id,
-    name,
-    slug: subject.slug,
-    department,
-    thumbnail_url: getCatalogImageUrl(subject.thumbnail, "sm"),
-  }
+  return localizedRows.map((loc, i) => ({
+    id: subjects[i].id,
+    name: loc.name as string,
+    slug: subjects[i].slug,
+    department:
+      deptLabels.get(subjects[i].department) ?? subjects[i].department,
+    thumbnail_url: getCatalogImageUrl(subjects[i].thumbnail, "sm"),
+  }))
 }
 
 /**
@@ -89,27 +95,22 @@ export async function GET(request: NextRequest) {
       })
 
       const seen = new Set<string>()
-      const data = await Promise.all(
-        studentClasses
-          .filter((sc) => {
-            if (seen.has(sc.class.subject.id)) return false
-            seen.add(sc.class.subject.id)
-            return true
-          })
-          .map(async (sc) => {
-            const base = await localizeSubject(
-              sc.class.subject,
-              lang,
-              auth.schoolId
-            )
-            return {
-              ...base,
-              teacher_name: sc.class.teacher
-                ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
-                : null,
-            }
-          })
+      const uniqueClasses = studentClasses.filter((sc) => {
+        if (seen.has(sc.class.subject.id)) return false
+        seen.add(sc.class.subject.id)
+        return true
+      })
+      const localizedBases = await localizeSubjects(
+        uniqueClasses.map((sc) => sc.class.subject),
+        lang,
+        auth.schoolId
       )
+      const data = uniqueClasses.map((sc, i) => ({
+        ...localizedBases[i],
+        teacher_name: sc.class.teacher
+          ? `${sc.class.teacher.firstName} ${sc.class.teacher.lastName}`
+          : null,
+      }))
 
       return NextResponse.json({ data })
     }
@@ -136,14 +137,18 @@ export async function GET(request: NextRequest) {
         distinct: ["subjectId"],
       })
 
-      const data = await Promise.all(
-        timetableEntries
-          .filter((e) => e.subject)
-          .map(async (e) => ({
-            ...(await localizeSubject(e.subject!, lang, auth.schoolId)),
-            teacher_name: null,
-          }))
+      const teacherSubjects = timetableEntries
+        .filter((e) => e.subject)
+        .map((e) => e.subject!)
+      const localizedTeacher = await localizeSubjects(
+        teacherSubjects,
+        lang,
+        auth.schoolId
       )
+      const data = localizedTeacher.map((base) => ({
+        ...base,
+        teacher_name: null,
+      }))
 
       return NextResponse.json({ data })
     }
@@ -157,18 +162,17 @@ export async function GET(request: NextRequest) {
     })
 
     const seen = new Set<string>()
-    const data = await Promise.all(
-      selections
-        .filter((s) => {
-          if (seen.has(s.subject.id)) return false
-          seen.add(s.subject.id)
-          return true
-        })
-        .map(async (s) => ({
-          ...(await localizeSubject(s.subject, lang, auth.schoolId)),
-          teacher_name: null,
-        }))
+    const uniqueSelections = selections.filter((s) => {
+      if (seen.has(s.subject.id)) return false
+      seen.add(s.subject.id)
+      return true
+    })
+    const localizedAdmin = await localizeSubjects(
+      uniqueSelections.map((s) => s.subject),
+      lang,
+      auth.schoolId
     )
+    const data = localizedAdmin.map((base) => ({ ...base, teacher_name: null }))
 
     return NextResponse.json({ data })
   } catch (error) {

@@ -8,9 +8,8 @@ import type { UserRole } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getContactsByRole } from "@/components/school-dashboard/messaging/contacts/queries"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
-import { detectLang } from "@/components/translation/util"
 
 export const dynamic = "force-dynamic"
 
@@ -47,45 +46,24 @@ export async function GET(request: NextRequest) {
         ? groups.filter((g) => g.category === category)
         : groups
 
-    // Translate contact names when their actual language differs from the UI locale
-    await Promise.all(
-      filtered.map(async (group) => {
-        await Promise.all(
-          group.contacts.map(async (contact) => {
-            if (
-              contact.displayName &&
-              detectLang(contact.displayName) !== locale
-            ) {
-              const detected = detectLang(contact.displayName) as Lang
-              contact.displayName = await getText(
-                contact.displayName,
-                detected,
-                locale,
-                schoolId
-              )
-            }
-            if (contact.firstName && detectLang(contact.firstName) !== locale) {
-              const detected = detectLang(contact.firstName) as Lang
-              contact.firstName = await getText(
-                contact.firstName,
-                detected,
-                locale,
-                schoolId
-              )
-            }
-            if (contact.lastName && detectLang(contact.lastName) !== locale) {
-              const detected = detectLang(contact.lastName) as Lang
-              contact.lastName = await getText(
-                contact.lastName,
-                detected,
-                locale,
-                schoolId
-              )
-            }
-          })
-        )
-      })
-    )
+    // Batch-translate all contact name parts in one getLabels call
+    const allContacts = filtered.flatMap((g) => g.contacts)
+    const namesToTranslate = [
+      ...allContacts.map((c) => c.displayName),
+      ...allContacts.map((c) => c.firstName),
+      ...allContacts.map((c) => c.lastName),
+    ].filter((v): v is string => Boolean(v))
+    const translated = await getLabels(namesToTranslate, locale, schoolId)
+    for (const contact of allContacts) {
+      if (contact.displayName)
+        contact.displayName =
+          translated.get(contact.displayName) ?? contact.displayName
+      if (contact.firstName)
+        contact.firstName =
+          translated.get(contact.firstName) ?? contact.firstName
+      if (contact.lastName)
+        contact.lastName = translated.get(contact.lastName) ?? contact.lastName
+    }
 
     return NextResponse.json({ groups: filtered })
   } catch (error) {

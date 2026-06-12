@@ -5,48 +5,70 @@ title: Translation Engine
 file_type: issue
 owner: Samia
 maturity: Production-ready
-completion: 90
+completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/326
 docs: https://ed.databayt.org/en/docs/translation
-last_audited: 2026-06-11
+last_audited: 2026-06-12
 ---
 
 # Translation Engine — Live Work List
 
-## Done (2026-06-10/11 production-readiness pass)
+## Done (2026-06-10/12 production-readiness pass)
 
 - [x] In-memory LRU on the legacy `translate()` path — all getText/getName/getLabels callers inherit zero-DB hot-term reads
 - [x] `translateBatch` chunking guard (100 q / 4k chars) + 2.5s timeout + transient-only opt-in retry
-- [x] Prewarm on create AND update: Announcement, Event, Class, Assignment, Exam
-- [x] `pnpm i18n:prune` manual cleanup (age + zero-hits keyed; spares manual overrides)
-- [x] Batched migration of legacy per-row getText loops: grades, students, transportation
-      (translate-display rewritten, +11 tests), parent-portal announcements/events,
-      mobile catalog subjects, stream catalog, exam wizard surfaces
-- [x] 46 stale engine tests repaired; registry-schema test validates TRANSLATABLE against Prisma
+- [x] **Registry schema-true** (Department→departmentName, GradingScheme description
+      dropped, YearLevel=levelName) + NEW Conference/Notification/StreamCategory/Route/
+      YearLevel; `CATALOG_GLOBAL` set pinned to schema by registry-schema.test.ts
+- [x] **Three CI ratchets**: person-names raw (0), zero-translation features,
+      prewarm gaps — with verified `PREWARM_EXEMPT` (reasons inline)
+- [x] **Prewarm everywhere school-scoped**: announcements (create/update/wizard/
+      templates), events (info+schedule wizards), classes (+wizard), classrooms,
+      conference (create/update/sessions), departments, year-levels ×2, exams quick +
+      qbank standards, stream/saas video, **dispatchNotification hub** (covers every
+      feature's notifications in one place; cron/webhook-safe void form)
+- [x] Batched migration of per-row getText loops: announcements (list/detail/
+      suggestions/search), events (list/detail/previous/search), classes (+search),
+      classrooms ×3, exams admin/student/guardian/results/manage/upcoming, grades,
+      students, teachers, admission, transportation, parent-portal (announcements/
+      events/attendance/grades/report-cards), notifications (polled bell + center),
+      conference, departments, year-levels, subjects, library, stream catalog,
+      mobile subjects/catalog/contacts routes
+- [x] `pnpm i18n:prune` (age+zero-hits keyed) + **`pnpm i18n:backfill`**
+      (scripts/prewarm-existing.ts — deploy-time corpus sweep, dry-run default,
+      create-only, cost report)
+- [x] 46 stale engine tests repaired + **32 new engine tests** (memory-cache LRU,
+      prewarm no-clobber/direction-grouping, locale chain, person fallback, search
+      shapes) — i18n suite 250 green / 19 files
+- [x] Bilingual `search()` adopted in announcements/events/classes/assignments/
+      teachers/students lists; reverse-lookup cap 50→200 (named constant)
 
 ## P1 — remaining
 
-- [ ] **Finish the batched migration** (in flight): teachers/staff/classrooms/subjects/
-      assignments listings, admission, finance, school admin/config, mobile contacts +
-      subjects routes, attendance, notifications, messaging, exams content
-      (concurrently being migrated). Grep `from "@/components/translation/display"` —
-      target: no `getText` inside any `.map()`/loop.
-- [ ] Prewarm backlog: Lesson, Chapter, Material, Quiz, Book, Document, StreamCourse,
-      GradingScheme write actions (wire `after(() => prewarm(...))` when those actions
-      gain translatable-field writes). Subject/Section: no school-scoped writes to their
-      translatable fields exist today (catalog Subject is global, no schoolId) — revisit
-      if that changes.
+- [ ] **Route feature** (transportation/routes) — only remaining zero-translation
+      feature + unwired prewarm (`transportation/actions/routes.ts`); transportation
+      is under active concurrent migration, finish there
+- [ ] Run `pnpm i18n:backfill -- --execute` at deploy (after reviewing the dry-run
+      cost report) so the existing corpus reads seamlessly from day one
+- [ ] Single-value `getText` long-tail (~20 files: layouts school-name, config
+      titles, dashboard/profile/finance single strings) — legitimate per the helper
+      rule; verify none sit in `.map()` loops as features evolve
 
 ## P2 — enhancements
 
 - [ ] Global-catalog translation tier: saas-dashboard Subject/Book have no schoolId;
       per-school cache can't serve them. Options: schoolId="**global**" cache rows, or
       accept source-language on operator surfaces (current behavior).
-- [ ] Registry candidates reported by migrations: transportation Route/Stop (currently
-      via getLabels, which works but skips the single-findMany path)
+- [ ] Transportation Stop + remaining lang-bearing transportation models as registry
+      candidates (Route is registered now)
 - [ ] `getLabels`/`getNames` internal findMany batching (currently dedupe + parallel
       per-unique-value translate; LRU makes repeats free, but a cold page with many
       unique names still fans out)
+- [ ] Placeholder-preserving template-body translation (AnnouncementTemplate/
+      NotificationTemplate bodies are deliberately unregistered — MT mangles
+      `{{placeholders}}`)
+- [ ] Degradation observability beyond the throttled log (health-check field /
+      dashboard counter for translation fallback rate)
 
 ## Known gotchas (for the record)
 

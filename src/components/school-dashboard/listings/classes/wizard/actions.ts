@@ -4,12 +4,14 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { prewarm } from "@/components/translation/prewarm"
 
 import type { ClassWizardData } from "./use-class-wizard"
 
@@ -151,6 +153,7 @@ export async function createDraftClass(): Promise<
       },
     })
 
+    after(() => prewarm("Class", cls, { schoolId }))
     return { success: true, data: { id: cls.id } }
   } catch (error) {
     return {

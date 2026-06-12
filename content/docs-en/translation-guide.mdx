@@ -137,6 +137,7 @@ model Translation {
   hitCount       Int    @default(0)
   lastAccessedAt DateTime @default(now())
   @@unique([schoolId, sourceText, sourceLanguage, targetLanguage])
+  @@index([schoolId, sourceLanguage, targetLanguage])
   @@index([lastAccessedAt])
   @@map("translation_cache")
 }
@@ -181,7 +182,7 @@ const display = names.get(fullName(row.student)) ?? fullName(row.student)
 
 ### Mobile API
 
-`POST /api/mobile/translate` lets iOS/Android reuse the same cache instead of baking a second pipeline. It's whitelist-only (`announcement`, `assignment`) and authenticated. School-owned content stays `schoolId`-scoped — an `announcement` is loaded via `findFirst({ where: { id, schoolId } })`; an `assignment` is a **global catalog template** (no `schoolId` column) so it's fetched by id. The route probes the cache to honestly report `cached: true|false`, then calls `translate`.
+`POST /api/mobile/translate` lets iOS/Android reuse the same cache instead of baking a second pipeline. It's whitelist-only (`announcement`, `assignment`, `event`, `exam`) and authenticated. School-owned content stays `schoolId`-scoped — an `announcement`/`event` is loaded via `findFirst({ where: { id, schoolId } })`; `assignment` and `exam` are **global catalog templates** (no `schoolId` column) so they're fetched by id. The route probes the cache to honestly report `cached: true|false`, then calls `translate`.
 
 ## Caching & fine-tuning
 
@@ -258,15 +259,19 @@ A cache _hit_ is one indexed lookup either way — globalizing makes _more reque
 
 ## Areas of improvement
 
-- **Burn down the adoption backlog.** The gate is now wired: `findOffenders` runs as a Vitest ratchet (`src/tests/i18n/audit-untranslated.test.ts`) so a _new_ raw-name surface fails the suite. What's left is reducing the current (small) backlog to zero and lowering the baseline each time. Caveat: CI's `pnpm tests` step currently points at a missing script name — reconcile it to `pnpm test` so the ratchet enforces on every PR.
-- **Degradation observability.** Today a failing/absent API key only emits a throttled `console.error` (`reportTranslationDegraded`). Add a public signal — a getter or a `/api/health` field — so a dashboard can _see_ when `/en` is silently falling back to source.
-- **Adopt `localize()` everywhere.** ✅ The batched engine is shipped (`localize.ts` + `registry.ts`): one `findMany` per page instead of N×M `findUnique`. Announcements is migrated; rolling the rest of the ~24 features onto `localize` (and registering their models) is the remaining adoption work. Extend the audit ratchet to flag _any_ registered field rendered raw (not just person-names).
-- **Cache lifecycle.** ✅ An in-memory LRU glossary for hot terms now fronts the DB cache (`memory-cache.ts`, 0 round-trip on hit). Still pending: TTL eviction for the `Translation` table (the `lastAccessedAt` index exists but is unused for cleanup) and exact-`sourceText` normalization.
-- **Pre-warm on write.** ✅ `prewarm()` (`prewarm.ts`) translates the other language off the response path via `after()`, so reads are cache hits — no first-view latency, no source-language flash. Wired into announcements; rolling it into the remaining create/update paths is the rest of the work.
-- **Name/proper-noun quality.** Add a glossary / do-not-translate list and consider human review for high-visibility names; lean on transliteration rather than MT for person names.
+Most of the original backlog SHIPPED in the 2026-06 production-readiness pass — kept here with ✅ so the history of the design is legible:
+
+- ✅ **Adoption.** `localize()`/`localizeOne` wired across the school dashboard (announcements, events, classes, classrooms, exams, grades, students, teachers, admission, conference, departments, year-levels, notifications, subjects, library, stream, parent-portal, mobile routes). Three Vitest ratchets enforce it: raw person-names (baseline **0**), zero-translation features, and prewarm-less write paths (`src/tests/i18n/audit-untranslated.test.ts`).
+- ✅ **Pre-warm on write.** Every school-scoped registered write path either prewarm via `after()` or is a verified `PREWARM_EXEMPT` entry (provisioning/non-content/draft scaffolding — reasons inline in `scripts/audit-untranslated.ts`). Notifications warm at the `dispatchNotification` hub. The existing corpus is covered by `pnpm i18n:backfill` (dry-run cost report; run `--execute` at deploy).
+- ✅ **Engine hardening.** 2.5s timeout (read path fails fast to source), chunked batches (100 q / 4k chars), transient-only opt-in retry (prewarm/backfill only), in-memory LRU, `pnpm i18n:prune` (age+zero-hits keyed — recency would evict the hottest rows).
+- ✅ **Registry truth.** `registry-schema.test.ts` pins every registry field to a real Prisma String column and `CATALOG_GLOBAL` to schema truth (the `Department: ["name"]` silent no-op can't recur).
+- ✅ **CI.** The test job runs the suite (script-name typo reconciled); all ratchets enforce on every push.
+- ✅ **Mobile API** extended to `announcement` / `assignment` / `event` / `exam`.
+- **Degradation observability.** Still only a throttled `console.error` (`reportTranslationDegraded`). Add a public signal — a getter or `/api/health` field — so a dashboard can _see_ when `/en` is silently falling back to source.
+- **Name/proper-noun quality.** Add a glossary / do-not-translate list and consider human review for high-visibility names; transliteration already covers person names when the API is down.
 - **Provider abstraction.** The `provider` column only ever stores `"google"` — abstract the client so a fallback/second provider is possible.
-- **Schema consistency.** Give every content model a `lang` column and stamp it correctly on write (e.g. admission persisting Latin names as `lang="ar"`), so detection becomes a safety net rather than the primary mechanism.
-- **Extend the mobile API** beyond `announcement`/`assignment` as more entities need on-device translation.
+- **Schema consistency.** Stamp `lang` correctly on every write (e.g. admission persisting Latin names as `lang="ar"`), so script detection becomes a safety net rather than the primary mechanism.
+- **Placeholder-preserving template translation.** `AnnouncementTemplate`/`NotificationTemplate` bodies are deliberately unregistered — MT mangles `{{placeholders}}`; a placeholder-aware pipeline would unlock them.
 
 ## Claude Code config & keywords
 
@@ -279,7 +284,7 @@ Most i18n automation targets the **static** dictionary system (hardcoded-string 
 | `.claude/rules/translation.md`  | The rulebook. Its **"Dynamic Content (On-Demand Translation)"** section is the authority for `getText`, `withLang`, the `lang` field, and the `Translation`.                                                                                                                               |
 | `scripts/audit-untranslated.ts` | **The** DB-content audit — finds render surfaces composing stored text (`${x.firstName} ${x.lastName}`, etc.) without a translation helper. Run `pnpm i18n:audit-content` (`--json` for the machine list). Now enforced as a Vitest ratchet (`src/tests/i18n/audit-untranslated.test.ts`). |
 | `.claude/agents/i18n.md`        | Project i18n agent (model `sonnet`) — covers both systems, including on-demand content.                                                                                                                                                                                                    |
-| `CLAUDE.md`                     | "Single-Language Storage (CRITICAL)" section + gotcha #12.                                                                                                                                                                                                                                 |
+| `CLAUDE.md`                     | "Single-Language Storage (CRITICAL)" section (rule 3 prescribes localize-first) + the "Hardcoded Strings" gotcha.                                                                                                                                                                          |
 
 The static-only tooling — `.claude/hooks/check-i18n.sh`, the `/i18n-check` skill/command, `dictionary-validator`, and `scripts/dev-i18n-sync.ts` — targets hardcoded JSX strings and `ar`/`en` key parity, **not** DB content. See [Internationalization](/docs/internationalization) for those.
 

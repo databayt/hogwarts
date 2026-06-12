@@ -3,6 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { localize } from "@/components/translation/localize"
 
 import type { QuizItem, QuizQuestionStats, QuizSubjectFilter } from "./types"
 
@@ -28,15 +30,22 @@ export async function getQuizzes(filters?: {
     where.examType = filters.examType
   }
 
-  const exams = await db.exam.findMany({
-    where,
-    include: {
-      subject: { select: { name: true, slug: true, color: true } },
-      chapter: { select: { name: true } },
-      lesson: { select: { name: true } },
-    },
-    orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
-  })
+  const [rawExams, { schoolId }] = await Promise.all([
+    db.exam.findMany({
+      where,
+      include: {
+        subject: { select: { name: true, slug: true, color: true } },
+        chapter: { select: { name: true } },
+        lesson: { select: { name: true } },
+      },
+      orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
+    }),
+    getTenantContext(),
+  ])
+
+  const exams = schoolId
+    ? await localize("Exam", rawExams, { schoolId })
+    : rawExams
 
   return exams.map((e) => ({
     id: e.id,

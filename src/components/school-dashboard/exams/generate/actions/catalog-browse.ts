@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { localize } from "@/components/translation/localize"
 
 // ============================================================================
 // Browse catalog exams available for adoption
@@ -71,7 +72,7 @@ export async function browseExams(
   const page = filters.page || 0
   const take = 20
 
-  const [exams, total] = await Promise.all([
+  const [rawExams, total] = await Promise.all([
     db.exam.findMany({
       where: where as any,
       include: {
@@ -85,6 +86,8 @@ export async function browseExams(
     }),
     db.exam.count({ where: where as any }),
   ])
+
+  const exams = await localize("Exam", rawExams, { schoolId })
 
   return {
     exams: exams.map((e) => ({
@@ -172,7 +175,7 @@ export async function browseExamTemplates(
   const page = filters.page || 0
   const take = 20
 
-  const [templates, total] = await Promise.all([
+  const [rawTemplates, total] = await Promise.all([
     db.examTemplate.findMany({
       where: where as any,
       include: {
@@ -184,6 +187,8 @@ export async function browseExamTemplates(
     }),
     db.examTemplate.count({ where: where as any }),
   ])
+
+  const templates = await localize("ExamTemplate", rawTemplates, { schoolId })
 
   return {
     templates: templates.map((t) => ({

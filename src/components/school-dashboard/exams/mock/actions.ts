@@ -5,6 +5,8 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { localize } from "@/components/translation/localize"
 
 import type { MockExamItem, MockSubjectFilter, SchoolMockItem } from "./types"
 
@@ -30,14 +32,21 @@ export async function getMockExams(filters?: {
     where.examType = filters.examType
   }
 
-  const exams = await db.exam.findMany({
-    where,
-    include: {
-      subject: { select: { name: true, slug: true, color: true } },
-      chapter: { select: { name: true } },
-    },
-    orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
-  })
+  const [rawExams, { schoolId }] = await Promise.all([
+    db.exam.findMany({
+      where,
+      include: {
+        subject: { select: { name: true, slug: true, color: true } },
+        chapter: { select: { name: true } },
+      },
+      orderBy: [{ usageCount: "desc" }, { createdAt: "desc" }],
+    }),
+    getTenantContext(),
+  ])
+
+  const exams = schoolId
+    ? await localize("Exam", rawExams, { schoolId })
+    : rawExams
 
   return exams.map((e) => ({
     id: e.id,

@@ -25,9 +25,12 @@ import {
  * the suite fails. When you FIX one, LOWER the baseline to the new count to
  * lock the win. Never raise a baseline — fix the regression instead.
  */
-const PERSON_BASELINE = 6
-const FEATURE_BASELINE = 3
-const PREWARM_BASELINE = 33
+// 2026-06-12 floors: person-names at ZERO (keep it there); the single
+// feature gap + prewarm gaps are transportation/routes — under active
+// migration in its own workstream (see translation/ISSUE.md P1).
+const PERSON_BASELINE = 0
+const FEATURE_BASELINE = 1
+const PREWARM_BASELINE = 1
 
 describe("dynamic-content translation audit (ratchets)", () => {
   it("adds no new untranslated person-name render surfaces", () => {

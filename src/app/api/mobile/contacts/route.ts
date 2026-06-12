@@ -5,9 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type { UserRole } from "@prisma/client"
 
 import { getContactsByRole } from "@/components/school-dashboard/messaging/contacts/queries"
-import { getText } from "@/components/translation/display"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
-import { detectLang } from "@/components/translation/util"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
 
@@ -41,26 +40,17 @@ export async function GET(request: NextRequest) {
         ? groups.filter((g) => g.category === category)
         : groups
 
-    await Promise.all(
-      filtered.map(async (group) => {
-        await Promise.all(
-          group.contacts.map(async (contact) => {
-            if (
-              contact.displayName &&
-              detectLang(contact.displayName) !== locale
-            ) {
-              const detected = detectLang(contact.displayName) as Lang
-              contact.displayName = await getText(
-                contact.displayName,
-                detected,
-                locale,
-                auth.schoolId
-              )
-            }
-          })
-        )
-      })
-    )
+    // Batch-translate all displayName values in one getLabels call
+    const allContacts = filtered.flatMap((g) => g.contacts)
+    const names = allContacts
+      .map((c) => c.displayName)
+      .filter((v): v is string => Boolean(v))
+    const translated = await getLabels(names, locale, auth.schoolId)
+    for (const contact of allContacts) {
+      if (contact.displayName)
+        contact.displayName =
+          translated.get(contact.displayName) ?? contact.displayName
+    }
 
     return NextResponse.json({ groups: filtered })
   } catch (error) {

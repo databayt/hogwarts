@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -22,6 +23,7 @@ import {
   type IdOnly,
   type LiveClassServerInput,
 } from "@/components/school-dashboard/conference/validation"
+import { prewarm } from "@/components/translation/prewarm"
 
 import { conferenceRevalidatePath, requireContext } from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
@@ -152,6 +154,7 @@ async function createLiveClassWithCtx(
     // Best-effort fan-out — failures here must not roll back the create.
     void notifyClassScheduled(ctx.schoolId, session.id)
 
+    after(() => prewarm("Conference", session, { schoolId: ctx.schoolId }))
     revalidatePath(conferenceRevalidatePath())
     return { success: true as const, data: session }
   } catch {

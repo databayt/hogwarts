@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
-import { getText } from "@/components/translation/display"
+import { localize } from "@/components/translation/localize"
+import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
@@ -86,45 +87,59 @@ export async function GET(request: NextRequest) {
       return true
     })
 
-    const data = await Promise.all(
-      unique
-        .filter((s) => {
-          if (department && s.subject.department !== department) return false
-          if (search) {
-            const q = search.toLowerCase()
-            if (
-              !s.subject.name.toLowerCase().includes(q) &&
-              !(s.customName || "").toLowerCase().includes(q)
-            )
-              return false
-          }
-          return true
-        })
-        .map(async (s) => {
-          const srcLang = (s.subject.lang || "ar") as Lang
-          const [name, desc, dept] = await Promise.all([
-            getText(s.customName || s.subject.name, srcLang, lang, schoolId),
-            getText(s.subject.description, srcLang, lang, schoolId),
-            getText(s.subject.department, srcLang, lang, schoolId),
-          ])
+    const filtered = unique.filter((s) => {
+      if (department && s.subject.department !== department) return false
+      if (search) {
+        const q = search.toLowerCase()
+        if (
+          !s.subject.name.toLowerCase().includes(q) &&
+          !(s.customName || "").toLowerCase().includes(q)
+        )
+          return false
+      }
+      return true
+    })
 
-          return {
-            id: s.subject.id,
-            name,
-            slug: s.subject.slug,
-            department: dept || s.subject.department,
-            description: desc,
-            thumbnail_url: getCatalogImageUrl(s.subject.thumbnail, "sm"),
-            color: s.subject.color,
-            levels: s.subject.levels,
-            grades: s.subject.grades,
-            total_chapters: s.subject.totalChapters,
-            total_lessons: s.subject.totalLessons,
-            average_rating: s.subject.averageRating,
-            rating_count: s.subject.ratingCount,
-          }
-        })
-    )
+    // Batch-translate subject name/description (one findMany + one Google call).
+    const subjectRows = filtered.map((s) => s.subject)
+    const [localizedSubjects, deptLabels, customLabels] = await Promise.all([
+      localize("Subject", subjectRows, { schoolId, lang }),
+      getLabels(
+        filtered.map((s) => s.subject.department),
+        lang,
+        schoolId
+      ),
+      getLabels(
+        filtered.map((s) => s.customName).filter(Boolean) as string[],
+        lang,
+        schoolId
+      ),
+    ])
+
+    const localizedByIndex = new Map(localizedSubjects.map((s, i) => [i, s]))
+
+    const data = filtered.map((s, i) => {
+      const loc = localizedByIndex.get(i)!
+      const effectiveName = s.customName
+        ? (customLabels.get(s.customName) ?? s.customName)
+        : (loc.name as string)
+      return {
+        id: s.subject.id,
+        name: effectiveName,
+        slug: s.subject.slug,
+        department:
+          deptLabels.get(s.subject.department) ?? s.subject.department,
+        description: (loc.description as string | null) ?? null,
+        thumbnail_url: getCatalogImageUrl(s.subject.thumbnail, "sm"),
+        color: s.subject.color,
+        levels: s.subject.levels,
+        grades: s.subject.grades,
+        total_chapters: s.subject.totalChapters,
+        total_lessons: s.subject.totalLessons,
+        average_rating: s.subject.averageRating,
+        rating_count: s.subject.ratingCount,
+      }
+    })
 
     return NextResponse.json({
       data,

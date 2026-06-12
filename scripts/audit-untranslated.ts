@@ -249,6 +249,16 @@ const PREWARM_EXEMPT: Record<string, string> = {
     "draft scaffolding: creates with empty/null text; info+schedule steps prewarm",
   "src/components/school-dashboard/listings/classrooms/subjects/actions.ts":
     "non-content: Class.classroomId assignment only",
+  "src/components/stream/settings/video-review-actions.ts":
+    "non-content: approval-field updates only, no title/description writes",
+  "src/components/stream/video/video-owner-actions.ts":
+    "non-content: visibility/approvalStatus/videoUrl only",
+  "src/components/saas-dashboard/catalog/video-actions.ts":
+    "operator catalog createVideo has schoolId:null — prewarm no-ops without a tenant",
+  "src/components/saas-dashboard/catalog/approval-actions.ts":
+    "non-content: approvalStatus/approvedBy only",
+  "src/components/school-dashboard/listings/classrooms/configure/actions.ts":
+    "writes inside db.$transaction (after() unavailable) + code-generated room/section identifiers, not user text",
 }
 
 /**

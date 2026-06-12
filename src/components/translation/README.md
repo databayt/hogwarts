@@ -5,10 +5,10 @@ title: Translation Engine
 file_type: readme
 owner: Samia
 maturity: Production-ready
-completion: 90
+completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/326
 docs: https://ed.databayt.org/en/docs/translation
-last_audited: 2026-06-11
+last_audited: 2026-06-12
 ---
 
 ## Translation — Dynamic Content Engine (System B)
@@ -85,13 +85,30 @@ code review and the per-feature batched-call tests do.
 
 ### Prewarm coverage
 
-Wired (create + update, via `after()`): Announcement, Event, Class,
-Assignment, Exam. See [ISSUE](ISSUE.md) for the not-yet-wired backlog and
-why Subject/Section have no school-scoped writes to prewarm.
+Every school-scoped registered model's write path either prewarm or is a
+VERIFIED exemption (`PREWARM_EXEMPT` in `scripts/audit-untranslated.ts` —
+provisioning engines, non-content writes, draft scaffolding; each entry
+names its reason). Notifications prewarm at the `dispatchNotification` /
+`dispatchNotificationsToAudience` hub, so every feature's notifications warm
+both languages automatically. The prewarm ratchet
+(`src/tests/i18n/audit-untranslated.test.ts`) fails the suite if a new
+write path ships without prewarm.
+
+### Backfill (existing corpus)
+
+`pnpm i18n:backfill` (`scripts/prewarm-existing.ts`) — deploy-time sweep
+that warms the cache for rows written BEFORE prewarm existed. Dry-run by
+default (reports rows/unique-strings/chars and ~cost per school×model;
+catalog-global content costs rows × schools). Run `--execute` once at
+deploy; create-only, never overwrites, batch errors skip and continue.
 
 ### Tests
 
-`src/tests/i18n/translation/` — engine suites (localize, actions, display,
-google, prune, registry-schema) + per-feature batched-call tests beside
-each migrated feature (e.g.
-`src/tests/school-dashboard/transportation/translate-display.test.ts`).
+`src/tests/i18n/translation/` — engine suites: localize, actions, display,
+google (timeout/chunk/retry), prune, registry-schema (DMMF drift gate),
+memory-cache (LRU semantics), prewarm (direction grouping, no-clobber),
+locale (ambient resolution), person (dedupe + transliteration fallback),
+search (bilingual conditions). Plus the three audit ratchets in
+`src/tests/i18n/audit-untranslated.test.ts` (person-names / zero-translation
+features / prewarm gaps) and per-feature batched-call tests beside each
+migrated feature.
