@@ -610,6 +610,91 @@ async function checkEmailPreference(
 // ============================================================================
 
 /**
+ * Sweep due notification batches (cron entry point).
+ *
+ * Picks up two kinds of stuck `pending` batches:
+ * 1. Scheduled broadcasts whose `scheduledFor` has arrived — sendBroadcast
+ *    only processes inline when unscheduled, so without this sweep a
+ *    scheduled broadcast stayed `pending` forever.
+ * 2. Unscheduled batches still `pending` after a grace period — the inline
+ *    processing crashed before claiming them (or the creator never had a
+ *    processor, like createNotificationBatch).
+ *
+ * Each batch is claimed atomically (pending → processing via updateMany) so
+ * overlapping cron runs can never double-send a broadcast.
+ */
+const STUCK_BATCH_GRACE_MS = 10 * 60_000
+const MAX_BATCHES_PER_SWEEP = 10
+
+export async function processDueNotificationBatches(): Promise<{
+  processed: number
+  completed: number
+  failed: number
+  notificationsCreated: number
+}> {
+  const now = new Date()
+  const due = await db.notificationBatch.findMany({
+    where: {
+      status: "pending",
+      OR: [
+        { scheduledFor: { lte: now } },
+        {
+          scheduledFor: null,
+          createdAt: { lte: new Date(now.getTime() - STUCK_BATCH_GRACE_MS) },
+        },
+      ],
+    },
+    select: { id: true, schoolId: true, createdBy: true },
+    orderBy: { scheduledFor: "asc" },
+    take: MAX_BATCHES_PER_SWEEP,
+  })
+
+  let completed = 0
+  let failed = 0
+  let notificationsCreated = 0
+
+  for (const batch of due) {
+    // Atomic claim — count 0 means another run got there first.
+    const claim = await db.notificationBatch.updateMany({
+      where: { id: batch.id, status: "pending" },
+      data: { status: "processing" },
+    })
+    if (claim.count === 0) continue
+
+    try {
+      const result = await processNotificationBatch(
+        batch.id,
+        batch.schoolId,
+        batch.createdBy
+      )
+      notificationsCreated += result.created
+      if (result.success) {
+        completed++
+      } else {
+        failed++
+      }
+    } catch (error) {
+      failed++
+      console.error(
+        `[processDueNotificationBatches] Batch ${batch.id} threw:`,
+        error
+      )
+      await db.notificationBatch
+        .updateMany({
+          where: { id: batch.id },
+          data: {
+            status: "failed",
+            errors: [error instanceof Error ? error.message : "Unknown error"],
+          },
+        })
+        .catch(() => {})
+    }
+  }
+
+  return { processed: due.length, completed, failed, notificationsCreated }
+}
+
+/**
  * Process a notification batch - creates individual notifications and sends emails
  */
 export async function processNotificationBatch(

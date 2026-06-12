@@ -15,7 +15,14 @@ last_audited: 2026-05-25
 
 **Status:** 🟡 IN PROGRESS
 **Completion:** 40%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-06-12
+
+> **Note (2026-06-12):** this dir (`communication/`) is the legacy mock-only
+> hub. The REAL broadcast feature lives in `school/communication/broadcast/`
+> (`sendBroadcast` → `NotificationBatch` → `processNotificationBatch`), and
+> **scheduled broadcasts now actually fire**: the new
+> `/api/cron/process-broadcast-batches` (\*/5) sweeps pending batches whose
+> `scheduledFor` has arrived — previously they stayed `pending` forever.
 
 ---
 
@@ -24,7 +31,7 @@ last_audited: 2026-05-25
 - [x] Communication hub UI (conversations, threads, file attachments)
 - [x] Route pages (hub, broadcast, templates, settings)
 - [x] Multi-channel UI (email, SMS, in-app)
-- [ ] Server actions for sending broadcasts
+- [x] Server actions for sending broadcasts — in `school/communication/broadcast/actions.ts` (immediate + scheduled via cron sweep, 2026-06-12)
 - [ ] Server actions for managing templates
 - [ ] Database queries (currently UI-only, no backend wiring)
 - [ ] Authorization layer (RBAC for communication permissions)

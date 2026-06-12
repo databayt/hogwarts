@@ -12,18 +12,24 @@
 import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { getDisplayText } from "@/lib/content-display"
 import { getTenantContext } from "@/lib/tenant-context"
 import { fetchNotificationBellData } from "@/components/school-dashboard/notifications/poll-actions"
 import {
   getRecentNotifications,
   getUnreadNotificationCount,
 } from "@/components/school-dashboard/notifications/queries"
+import { localize } from "@/components/translation/localize"
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
-vi.mock("@/lib/content-display", () => ({
-  getDisplayText: vi.fn(async (text: string) => `t(${text})`),
+vi.mock("@/components/translation/localize", () => ({
+  localize: vi.fn(async (model: string, rows: any[], opts?: any) => {
+    return rows.map((r) => ({
+      ...r,
+      title: `t(${r.title})`,
+      body: `t(${r.body})`,
+    }))
+  }),
 }))
 vi.mock("@/components/school-dashboard/notifications/queries", () => ({
   getUnreadNotificationCount: vi.fn(),
@@ -110,7 +116,10 @@ describe("fetchNotificationBellData", () => {
     expect(item.createdAt).toBe("2026-04-25T00:00:00.000Z")
     expect(typeof item.createdAt).toBe("string")
     expect(item.lang).toBe("ar")
-    expect(getDisplayText).toHaveBeenCalledWith("Hello", "ar", "en", SCHOOL)
+    expect(localize).toHaveBeenCalledWith("Notification", expect.any(Array), {
+      schoolId: SCHOOL,
+      lang: "en",
+    })
   })
 
   it("uses 'ar' as fallback when notification.lang is missing", async () => {
@@ -126,9 +135,13 @@ describe("fetchNotificationBellData", () => {
       { ...baseNotification, lang: null as any },
     ] as any)
 
-    await fetchNotificationBellData("en")
+    const data = await fetchNotificationBellData("en")
+    expect(data?.recent[0]?.lang).toBe("ar")
 
-    expect(getDisplayText).toHaveBeenCalledWith("Hello", "ar", "en", SCHOOL)
+    expect(localize).toHaveBeenCalledWith("Notification", expect.any(Array), {
+      schoolId: SCHOOL,
+      lang: "en",
+    })
   })
 
   it("returns null on error rather than throwing", async () => {

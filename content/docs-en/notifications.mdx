@@ -176,7 +176,7 @@ model Notification {
 }
 ```
 
-Supporting models — `NotificationTemplate`, `NotificationBatch`, `NotificationSubscription`, `NotificationSummary` — are schema only (no rendering pipeline, no batch processor, no digest cron). Source: `prisma/models/notifications.prisma`.
+Supporting models: `NotificationBatch` is fully wired — `sendBroadcast` (school/communication) creates one per broadcast, `processNotificationBatch` fans it out, and `/api/cron/process-broadcast-batches` (every 5 min, added 2026-06-12) sweeps scheduled batches whose `scheduledFor` has arrived plus any stuck `pending` batch past a 10-minute grace (previously a scheduled broadcast stayed `pending` forever). `NotificationTemplate`, `NotificationSubscription`, `NotificationSummary` remain schema only. Source: `prisma/models/notifications.prisma`.
 
 Enums: `NotificationType`, `NotificationPriority`, `NotificationChannel`.
 
@@ -185,6 +185,7 @@ Enums: `NotificationType`, `NotificationPriority`, `NotificationChannel`.
 | Cron route                              | Schedule    | Purpose                                  |
 | --------------------------------------- | ----------- | ---------------------------------------- |
 | `/api/cron/process-email-notifications` | hourly      | Drain pending email queue                |
+| `/api/cron/process-broadcast-batches`   | every 5 min | Fire scheduled / stuck broadcast batches |
 | `/api/cron/cleanup-notifications`       | daily 2 AM  | Delete read+expired, anything > 90 days  |
 | `/api/cron/event-reminders`             | daily 8 AM  | `event_reminder` for events in next 24 h |
 | `/api/cron/assignment-reminders`        | daily 8 AM  | `assignment_due`                         |
