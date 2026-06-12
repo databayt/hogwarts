@@ -1,0 +1,208 @@
+---
+title: Provision
+description: Auto-provisioning — everything a school gets the moment onboarding completes, the terms-aware schedule engine, the section-based timetable generator, and the doctor that detects and repairs partial runs.
+---
+
+The goal: an admin finishes onboarding and lands in a school that already works — grades, subjects, terms, periods, classrooms, sections, and a draft timetable, all derived from four onboarding answers (country, school type, level, capacity). Everything here is **default, not destiny**: every record the provisioner creates is editable through the normal admin UIs.
+
+## When provisioning runs
+
+| Trigger                 | Path                                                                  | Mode               |
+| ----------------------- | --------------------------------------------------------------------- | ------------------ |
+| Onboarding completes    | `completeOnboarding()` → `provisionSchoolDefaults()` inside `after()` | Fire-and-forget    |
+| Manual re-provision     | `publishSchool()` in `congratulations/actions.ts`                     | Inline, admin-only |
+| Operator repair         | SaaS tenants table → "Repair Provisioning" row action                 | Inline, operator   |
+| Timetable provision CTA | Empty timetable draft view → "Set up timetable" (ADMIN)               | Inline, partial    |
+
+All three full paths converge on `repairProvisioning()` in `src/components/catalog/provision.ts` — there is one provisioning engine, not three.
+
+Because the onboarding trigger runs post-response in `after()`, a serverless timeout can kill it mid-chain. That is by design tolerable: every stage is idempotent, and the doctor picks up exactly the missing stages on the next invocation.
+
+## The stages
+
+`repairProvisioning()` first calls `getProvisioningStatus()` (one batched round of counts), then runs **only the missing stages**, in dependency order. One stage failing never aborts the rest — failures are collected and reported.
+
+| #   | Stage               | Function                                | Creates                                                                   |
+| --- | ------------------- | --------------------------------------- | ------------------------------------------------------------------------- |
+| 1   | `defaults`          | `setupDefaultsForSchool()`              | `YearLevel` rows, 6 universal `Department`s, `ScoreRange`s (A+ → F)       |
+| 2   | `academicStructure` | `setupCatalogForSchool()`               | `AcademicLevel`, `AcademicGrade`, `AcademicStream` per curriculum         |
+| 3   | `subjectSelections` | `ensureSubjectSelections()` (self-heal) | `SubjectSelection` bridge rows to the global catalog                      |
+| 4   | `schedule`          | `applyTimetableStructureForNewSchool()` | `SchoolYear`, `Term` ×N (calendar-aware), `Period` ×N, `SchoolWeekConfig` |
+| 5   | `sections`          | `autoProvisionSections()`               | `ClassroomType`, `Classroom` + `Section` ×N per grade                     |
+| 6   | `timetable`         | `autoGenerateTimetableForSchool()`      | `Timetable` slots — section-based, teacher-less                           |
+| 7   | `joinCode`          | `generateUniqueJoinCode()`              | `School.joinCode`                                                         |
+
+Stages 2–3 are the catalog's territory — curriculum inference, the progressive subject-matching fallback, and per-curriculum academic configs are documented in [Catalog](/docs/catalog). The onboarding side (which wizard step feeds which field) is in [Onboarding](/docs/onboarding). This page owns stages 4–6 and the doctor.
+
+Outside the doctor, `provisionSchoolDefaults()` also fires `syncStudentGrades()`, `provisionSchoolFees()`, and the setup-guide notifications; `publishSchool()` additionally runs `initializeAccountingSystem()` (chart of accounts — a known gap: schools that never hit the manual publish path have no ledger accounts until finance setup).
+
+## Stage 4 — Terms-aware schedule
+
+The schedule stage knows three things: the school's **country**, its chosen **timetable structure** (which encodes curriculum style), and **today's date**. From those it derives the academic year, the number of terms, each term's boundaries, and which term is active right now.
+
+### Academic calendars
+
+`ACADEMIC_CALENDARS` in `src/components/school-dashboard/timetable/calendars.ts` maps country codes to default term patterns (verified against 2025–26 ministry calendars; admins can edit every date afterwards in School → Configuration → Academic):
+
+| Country | Terms | Year span     | Boundaries (defaults)                            |
+| ------- | ----- | ------------- | ------------------------------------------------ |
+| SD      | 2     | Oct – Jun     | Oct 1 – Jan 31 · Feb 1 – Jun 30                  |
+| SA      | 2     | Aug – Jun     | Aug 24 – Jan 8 · Jan 18 – Jun 25                 |
+| AE      | 3     | Aug – Jul     | Aug 25 – Dec 7 · Jan 5 – Mar 15 · Mar 30 – Jul 3 |
+| QA      | 2     | Aug – Jun     | Aug 31 – Dec 27 · Jan 12 – Jun 30                |
+| KW      | 3     | Sep – Jun     | Sep 7 – Dec 16 · Jan 5 – Apr 2 · Apr 12 – Jun 16 |
+| BH      | 2     | Sep – May     | Sep 3 – Jan 12 · Feb 1 – May 25                  |
+| OM      | 2     | Aug – Jun     | Aug 27 – Jan 14 · Jan 15 – Jun 23                |
+| EG      | 2     | Sep – Jun     | Sep 20 – Jan 22 · Feb 7 – Jun 11                 |
+| JO      | 2     | Aug – Jun     | Aug 24 – Jan 24 · Jan 25 – Jun 15                |
+| MA      | 2     | Sep – Jun     | Sep 8 – Jan 30 · Feb 2 – Jun 30                  |
+| US      | 2     | Aug – Jun     | Aug 25 – Dec 19 · Jan 5 – Jun 12                 |
+| GB      | 3     | Sep – Jul     | Sep 1 – Dec 19 · Jan 5 – Apr 9 · Apr 14 – Jul 22 |
+| IN      | 2     | **Apr – Mar** | Apr 1 – Sep 30 · Oct 1 – Mar 31 (year-wrap)      |
+| GULF    | 2     | Sep – Jun     | Regional fallback                                |
+| MENA    | 2     | Sep – Jun     | Regional fallback                                |
+| `*`     | 2     | Sep – Jun     | Sep 1 – Jan 31 · Feb 1 – Jun 30                  |
+
+Notes baked into the data:
+
+- **Saudi Arabia reverted to 2 semesters** in AY 1447 (2025–26) — the 2021 three-semester system is gone.
+- **Sudan** defaults are pre-conflict approximations (low confidence) — flag for manual verification with the school.
+- **India (CBSE)** is the only April-anchored year; `computeTermDates()` handles the calendar-year wrap.
+
+### Resolution chain
+
+```
+resolveAcademicCalendar(country, structureSlug)
+  1. structure override   — e.g. sd-british → GB calendar (a British school
+                            in Sudan follows UK terms, not Sudanese ones)
+  2. exact country match  — SD, SA, AE, …
+  3. region fallback      — SA/AE/QA/KW/BH/OM → GULF · EG/JO/LB/TN/MA/DZ → MENA
+  4. default (*)          — Sep–Jun, 2 terms
+```
+
+`computeTermDates(calendar, now)` then anchors the pattern to real dates: picks the academic base year from `now` vs `yearStartMonth`, wraps months that fall before the year-start into the next calendar year, names the year (`2026/2027`), and marks **exactly one term active** — the one containing today, or the next upcoming one between terms.
+
+### What the stage writes
+
+| Record             | Details                                                                     |
+| ------------------ | --------------------------------------------------------------------------- |
+| `SchoolYear`       | Calendar-derived span + `yearName` — skipped if one exists                  |
+| `Term` ×N          | All terms from the calendar, date-correct `isActive` — skipped if any exist |
+| `Period` ×N        | From the timetable structure (class/break/lunch) — skipped if any exist     |
+| `SchoolWeekConfig` | Working days + lunch-after-period from the structure                        |
+
+The same calendar logic backs `resolveActiveTerm()`'s last-resort auto-provision in `src/lib/term-resolver.ts`, so a school that somehow reaches the timetable with zero terms gets the full country-correct set, not a single placeholder.
+
+The ~23 timetable structures (period layouts per country/school type — `sd-gov-default`, `gulf-standard`, `us-standard`, …) and their recommendation scoring are documented in [Integration Flow](/docs/integration-flow).
+
+## Stage 5 — Classrooms and sections
+
+The capacity step of onboarding sets `School.sectionsPerGrade` (default 2) and `School.studentsPerSection` (default 30). For every `AcademicGrade`, the provisioner creates N **main classrooms** and N **sections**, paired one-to-one:
+
+```
+Grade 7  →  Classroom "Grade 7-A" (capacity 30, gradeId)  ↔  Section "Grade 7-A" (letter A)
+            Classroom "Grade 7-B" (capacity 30, gradeId)  ↔  Section "Grade 7-B" (letter B)
+```
+
+This encodes the chain the rest of the platform relies on: a **main classroom belongs to a grade**, the grade's curriculum determines **which subjects are taught in that room**, and the section is the **student cohort that lives there**. Knowing the classroom therefore means knowing its grade, its subjects, and (after stage 6) its weekly schedule.
+
+**Labs and common spaces are deliberately not auto-provisioned.** They are not grade-owned, so they are created manually under Listings → Classrooms with their own `ClassroomType` (Lab, Computer Room, Library…). The generator can then route lab-flagged subjects to them.
+
+Upserts are keyed on `(schoolId, roomName)` and `(schoolId, gradeId, letter)` — re-runs never duplicate.
+
+## Stage 6 — Timetable generation
+
+With grades, subjects, sections, periods, and terms in place, the timetable derives itself:
+
+```
+For each Section (Grade N-X):
+  subjects   = SubjectSelection rows for grade N (weeklyPeriods each)
+  room       = the section's paired classroom
+  grid       = workingDays × teaching periods (breaks/lunch excluded)
+  → distribute subjects across the grid → Timetable slots
+```
+
+Slots are written **section-based** — `sectionId` + `subjectId` + `classroomId`, with `teacherId: null`. Teachers are not required to get a schedule on the wall; they are assigned afterwards (per-subject expertise, then per-slot). Writes use `createMany({ skipDuplicates: true })` against the section-level unique constraint, so regeneration is safe.
+
+This ordering is the point of the whole pipeline:
+
+```
+timetable exists (teacher-less)
+  → place students into sections        (admission placement → Student.sectionId)
+  → assign teachers to subjects/slots   (TeacherSubjectExpertise → slot.teacherId)
+  → attendance, exams, reports flow from there
+```
+
+Nothing downstream blocks on anything upstream being "finished" — a school can run a student-visible timetable before a single teacher is assigned.
+
+### Draft-grid fallback
+
+If a school reaches the timetable page with no terms at all (structure never chosen, or provisioning lost), the grid does **not** write anything on read. It renders a synthesized draft schedule from the school's structure slug (`buildDraftSchedule()`), with a banner and an admin-only "Set up timetable" CTA that runs the real provision path.
+
+## The provisioning doctor
+
+`getProvisioningStatus(schoolId)` is a read-only health check — one batched round of counts across every stage, safe to call from operator dashboards:
+
+```ts
+const status = await getProvisioningStatus(schoolId)
+// status.counts   — yearLevels, departments, scoreRanges, academicLevels,
+//                   academicGrades, subjectSelections, periods, terms,
+//                   weekConfigs, classroomTypes, sections, timetableSlots, …
+// status.missing  — e.g. ["schedule", "timetable"]
+// status.healthy  — missing.length === 0
+```
+
+Missing-stage rules worth knowing:
+
+- `schedule` and `timetable` are only flagged when `School.timetableStructure` is set — a school that never picked a structure isn't "broken", it's pre-schedule.
+- `schedule` also flags when `SchoolWeekConfig` is absent (not just periods/terms).
+- `sections` flags when either sections **or** `ClassroomType` rows are at zero.
+- An unknown structure slug now **fails the stage loudly** (lands in `failed[]`) instead of being silently marked repaired.
+- `academicStreams` and library books are reported but never marked missing — streams exist only for curricula that define them, and book adoption is a school decision made in the library picker.
+
+`repairProvisioning(schoolId)` runs the missing stages with per-stage `try/catch`, returns `{ repaired, failed, healthy, status }`, and is safe to call on a fully healthy school (no-op).
+
+## Legacy `classId` policy
+
+The platform is converging on **Section as the operational unit**:
+
+| Domain                        | Axis                                          | Status                                                                 |
+| ----------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| Timetable                     | `sectionId` + `subjectId`                     | Primary — generation and manual editing                                |
+| Attendance                    | `sectionId` (roster from `Student.sectionId`) | Primary — `classId` on old rows is read-only history                   |
+| Student placement             | `Student.sectionId`                           | Primary (admission placement)                                          |
+| Exams / Results / Assignments | `classId` (subject-class)                     | **Kept by design** — grade-book grouping needs the subject-course axis |
+
+`Timetable.classId` remains on legacy rows for history; editing such a slot backfills `sectionId`/`subjectId`, migrating it in place. No new classId-based timetable data is created.
+
+## Failure modes
+
+| Missing                    | Effect                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------- |
+| `timetableStructure` null  | Schedule + timetable stages skipped; draft grid + CTA shown                        |
+| Catalog subjects absent    | Subject selection empty → timetable generation bails (`No sections have subjects`) |
+| Terms                      | Timetable views fall back to draft; attendance period-mode disabled                |
+| Sections                   | Timetable generation bails; attendance has no rosters                              |
+| `SchoolWeekConfig`         | Generation silently defaults to Sun–Thu — now surfaced by the doctor               |
+| Serverless timeout mid-run | Next `repairProvisioning()` completes the remainder (idempotent)                   |
+
+## Readiness check
+
+```ts
+const ready =
+  levels > 0 &&
+  grades > 0 &&
+  selections > 0 &&
+  classrooms > 0 &&
+  periods > 0 &&
+  terms > 0 &&
+  weekConfig !== null
+// teachers intentionally NOT required — the timetable provisions teacher-less
+```
+
+## See also
+
+- [Integration Flow](/docs/integration-flow) — the full layer map this pipeline bootstraps
+- [Catalog](/docs/catalog) — curriculum inference, subject fallback, per-curriculum academic configs
+- [Onboarding](/docs/onboarding) — which wizard step feeds which provisioning input
+- [Timetable](/docs/timetable) — the feature the pipeline lands in

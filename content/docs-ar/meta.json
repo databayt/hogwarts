@@ -18,6 +18,8 @@
     "offline",
     "authentication",
     "onboarding",
+    "integration-flow",
+    "provision",
     "admission",
     "attendance",
     "compliance",

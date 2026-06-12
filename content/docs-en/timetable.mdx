@@ -3,7 +3,7 @@ title: Timetable
 description: How the timetable works today — where it lives, how a schedule is built and generated, how each role sees it, and what is built but not yet wired.
 ---
 
-The timetable module builds and serves weekly school schedules. An admin picks a structure during onboarding, configures working days and periods, assigns or auto-generates weekly slots, resolves conflicts, and exports to PDF; every other role gets a read view tailored to who they are. Schedules are **section-based** — each section (Grade 1-A, Grade 7-B) gets a full week, with `Timetable` rows carrying `sectionId`, `subjectId`, `classroomId`, and a nullable `teacherId`. The legacy `classId` is kept for backward compatibility. All operations are scoped by `schoolId`.
+The timetable module builds and serves weekly school schedules. An admin picks a structure during onboarding, configures working days and periods, assigns or auto-generates weekly slots, resolves conflicts, and exports to PDF; every other role gets a read view tailored to who they are. Schedules are **section-based end-to-end** — each section (Grade 1-A, Grade 7-B) gets a full week, with `Timetable` rows carrying `sectionId`, `subjectId`, `classroomId`, and a nullable `teacherId`. The slot editor writes section + subject (no new `classId` data is created); editing a legacy `classId` row backfills its section fields, migrating it in place. Slot deletion is id-based, so section-based and legacy slots delete alike. Student and guardian reads resolve `Student.sectionId` alongside legacy `StudentClass` enrollments, so section-generated schedules are visible the moment a student is placed. Default terms are **calendar-aware** — `ACADEMIC_CALENDARS` in `calendars.ts` derives term count and boundaries from the school's country and structure (see [Provision](/docs/provision)). All operations are scoped by `schoolId`.
 
 ## Where it lives
 
@@ -65,16 +65,17 @@ Boundaries are uneven: there is a single top-level `error.tsx`, the remaining su
 
 ## Student grade resolution
 
-`getTimetableByStudentGrade` resolves a student's classes for the active term:
+`getTimetableByStudentGrade` resolves a student's schedule for the active term along both axes:
 
 ```
 User (session)
   → Student (db.student.findFirst where userId, schoolId)
-    → StudentClass (studentClasses relation, filtered to the requested termId)
-      → classIds[]  → Timetable rows
+    → Student.sectionId            → section-based Timetable rows   (primary)
+    → StudentClass (per termId)    → classIds[] → legacy Timetable rows
+      → OR of both in one query
 ```
 
-If no `StudentClass` rows match the term, it falls back to **grade-name pattern matching** — `db.class.findMany` where `name` ends with `" - {gradeName}"` — for backward compatibility with older data. The grade label comes from `Student → StudentYearLevel → YearLevel.levelName` (with `lang` for the localized name).
+A student placed in a section but not yet enrolled in course classes still gets a full schedule. If no `StudentClass` rows match the term, the legacy axis falls back to **grade-name pattern matching** — `db.class.findMany` where `name` ends with `" - {gradeName}"` — for backward compatibility with older data. The grade label comes from `Student → StudentYearLevel → YearLevel.levelName` (with `lang` for the localized name).
 
 ## Onboarding schedule step
 
