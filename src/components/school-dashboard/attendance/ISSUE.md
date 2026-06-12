@@ -142,6 +142,20 @@ _(none open)_
 4. **Browser DRY_RUN E2E** -- compliance esis-submit + absence-followup +
    attendance/excuse/QR smoke on `demo.localhost:3000`.
 
+### Recently Fixed (2026-06-12 -- section-chain alignment)
+
+1. **`markPeriodAttendance` now writes `sectionId`** -- period attendance
+   previously landed only on the legacy
+   `[schoolId, studentId, classId, date, periodId]` constraint with
+   `sectionId` omitted, contradicting the declared section-based
+   architecture. The action now resolves `sectionId` from the passed
+   `timetableId` slot (fallback: the class's timetable slot for that
+   period) and writes it on both create and update — never nulling an
+   existing value when unresolvable. 3 new tests (13/13 green in
+   `periods.test.ts`). Part of the platform-wide section-chain pass
+   (timetable manual writes went section-first the same day; see
+   [/docs/provision](https://ed.databayt.org/en/docs/provision)).
+
 ### Recently Fixed (2026-06-02 -- production-readiness pass)
 
 1. **Authorization gaps closed** -- role gates added to all gamification

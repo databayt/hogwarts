@@ -44,6 +44,11 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("@/lib/term-resolver", () => ({
+  resolveActiveTerm: vi
+    .fn()
+    .mockResolvedValue({ term: { id: "term-1" }, source: "active" }),
+}))
 
 const SCHOOL = "school-1"
 
@@ -121,6 +126,95 @@ describe("period attendance actions", () => {
       })
 
       expect(result.success).toBe(false)
+    })
+
+    it("resolves sectionId from timetableId and writes it on create", async () => {
+      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
+      vi.mocked(db.period.findFirst).mockResolvedValue({
+        id: "p1",
+        name: "Period 1",
+      } as any)
+      // timetable lookup by timetableId returns sectionId
+      vi.mocked(db.timetable.findFirst).mockResolvedValue({
+        sectionId: "sec-1",
+      } as any)
+      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
+      vi.mocked(db.attendance.create).mockResolvedValue({} as any)
+
+      const result = await markPeriodAttendance({
+        classId: "c1",
+        date: "2026-06-01",
+        periodId: "p1",
+        timetableId: "tt-1",
+        records: [{ studentId: "s1", status: "PRESENT" }],
+      })
+
+      expect(result.success).toBe(true)
+      // timetable was queried with the supplied timetableId
+      expect(vi.mocked(db.timetable.findFirst)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: "tt-1", schoolId: SCHOOL }),
+          select: { sectionId: true },
+        })
+      )
+      // sectionId was written in the create payload
+      const createCall = vi.mocked(db.attendance.create).mock.calls[0][0]
+      expect(createCall.data).toMatchObject({ sectionId: "sec-1" })
+    })
+
+    it("writes sectionId on update when resolved from timetableId", async () => {
+      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
+      vi.mocked(db.period.findFirst).mockResolvedValue({
+        id: "p1",
+        name: "Period 1",
+      } as any)
+      vi.mocked(db.timetable.findFirst).mockResolvedValue({
+        sectionId: "sec-1",
+      } as any)
+      // existing row — triggers update path
+      vi.mocked(db.attendance.findFirst).mockResolvedValue({
+        id: "att-1",
+      } as any)
+      vi.mocked(db.attendance.update).mockResolvedValue({} as any)
+
+      const result = await markPeriodAttendance({
+        classId: "c1",
+        date: "2026-06-01",
+        periodId: "p1",
+        timetableId: "tt-1",
+        records: [{ studentId: "s1", status: "ABSENT" }],
+      })
+
+      expect(result.success).toBe(true)
+      const updateCall = vi.mocked(db.attendance.update).mock.calls[0][0]
+      expect(updateCall.data).toMatchObject({ sectionId: "sec-1" })
+    })
+
+    it("writes record with null sectionId when timetableId absent and slot unresolvable", async () => {
+      vi.mocked(db.class.findFirst).mockResolvedValue({ id: "c1" } as any)
+      vi.mocked(db.period.findFirst).mockResolvedValue({
+        id: "p1",
+        name: "Period 1",
+      } as any)
+      // no timetable slot found — fallback returns null
+      vi.mocked(db.timetable.findFirst).mockResolvedValue(null)
+      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
+      vi.mocked(db.attendance.create).mockResolvedValue({} as any)
+
+      const result = await markPeriodAttendance({
+        classId: "c1",
+        date: "2026-06-01",
+        periodId: "p1",
+        // no timetableId
+        records: [{ studentId: "s1", status: "PRESENT" }],
+      })
+
+      expect(result.success).toBe(true)
+      // record is still created (no regression)
+      expect(vi.mocked(db.attendance.create)).toHaveBeenCalled()
+      // sectionId is undefined/absent (not forced to a wrong value)
+      const createCall = vi.mocked(db.attendance.create).mock.calls[0][0]
+      expect(createCall.data.sectionId).toBeUndefined()
     })
   })
 

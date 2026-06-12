@@ -386,6 +386,40 @@ export async function markPeriodAttendance(input: {
       where: { id: input.periodId, schoolId },
     })
 
+    // Resolve sectionId for section-based primary constraint
+    // Priority 1: resolve from timetableId (most precise)
+    // Priority 2: resolve from classId + periodId timetable slot (best-effort)
+    let resolvedSectionId: string | null = null
+    if (input.timetableId) {
+      const timetableSlot = await db.timetable.findFirst({
+        where: { id: input.timetableId, schoolId },
+        select: { sectionId: true },
+      })
+      resolvedSectionId = timetableSlot?.sectionId ?? null
+    } else {
+      // Best-effort: look up the timetable slot for this class/period on the
+      // attendance date, scoped to the active term — without term + day the
+      // lookup could land on a stale slot from a previous term and stamp the
+      // wrong sectionId. Resolution failures never block marking; null
+      // sectionId stays acceptable for legacy flows.
+      try {
+        const { term: lookupTerm } = await resolveActiveTerm(schoolId)
+        const timetableSlot = await db.timetable.findFirst({
+          where: {
+            schoolId,
+            classId: input.classId,
+            periodId: input.periodId,
+            ...(lookupTerm ? { termId: lookupTerm.id } : {}),
+            dayOfWeek: new Date(input.date).getDay(),
+          },
+          select: { sectionId: true },
+        })
+        resolvedSectionId = timetableSlot?.sectionId ?? null
+      } catch {
+        resolvedSectionId = null
+      }
+    }
+
     const dateObj = new Date(input.date)
     let marked = 0
     let updated = 0
@@ -403,7 +437,7 @@ export async function markPeriodAttendance(input: {
       })
 
       if (existing) {
-        // Update existing
+        // Update existing — also backfill sectionId if it was missing
         await db.attendance.update({
           where: { id: existing.id },
           data: {
@@ -414,6 +448,7 @@ export async function markPeriodAttendance(input: {
               : null,
             markedBy: session.user.id,
             markedAt: new Date(),
+            ...(resolvedSectionId !== null && { sectionId: resolvedSectionId }),
           },
         })
         updated++
@@ -430,6 +465,7 @@ export async function markPeriodAttendance(input: {
             periodId: input.periodId,
             periodName: period?.name,
             timetableId: input.timetableId,
+            sectionId: resolvedSectionId ?? undefined,
             markedBy: session.user.id,
             checkInTime: record.checkInTime
               ? new Date(record.checkInTime)
