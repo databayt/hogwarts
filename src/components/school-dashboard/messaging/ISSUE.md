@@ -15,8 +15,56 @@ last_audited: 2026-05-25
 
 **Status:** 🟢 CODE PRODUCTION-READY (incl. group WhatsApp) — remaining work is ops/env only
 **Completion:** 100% code, 0% ops
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-12
 **Ship Issue:** [#240](https://github.com/databayt/hogwarts/issues/240) is **CLOSED** — the live blocker is now [#262](https://github.com/databayt/hogwarts/issues/262) (Socket.IO → Oracle Cloud).
+
+## 2026-06-12 performance + WhatsApp-correctness pass (3 commits on main)
+
+**221/221 tests (8 files), tsc 0 repo-wide, no new eslint errors.** Indexes applied
+live on Neon + recorded in `prisma/migrations/20260612000000_messaging_perf_indexes/`.
+
+- **CRITICAL — dead raw SQL fixed:** `getUnreadMessageCount`,
+  `getUnreadCountsPerConversation`, and `fullTextSearchMessages` referenced
+  `"Message"`/`"Conversation"`/`"ConversationParticipant"` but the live tables are
+  `messages`/`conversations`/`conversation_participants` (`@@map`) — **these queries
+  could never run** (unread badge + global search silently broken). Fixed + verified
+  live on Neon. The FTS sanitizer also stripped Arabic characters (Arabic search
+  always returned empty) — fixed, and the last term now gets `:*` prefix matching
+  for search-as-you-type. `/api/messages/search` switched from un-indexable
+  ILIKE to the GIN-backed FTS.
+- **WhatsApp correctness (4 P0s):** webhook URL now carries `?secret=` (Evolution
+  sends no auth headers — inbound was 100% dark in prod even WITH the env var set);
+  MESSAGES_UPSERT dedup on `(schoolId, waMessageId)` (at-least-once delivery +
+  fromMe echoes created duplicates); group `@g.us` sender read from
+  `msg.participant` + audit row linked to its WhatsAppGroup (was silently dropped);
+  MESSAGES_UPDATE now advances `MessageWhatsappDelivery` rows too (group recipients
+  were stuck at "sent" forever) with out-of-order downgrade guards.
+- **WhatsApp robustness:** one canonical phone normalization (digits-only, strips
+  `00`) across outbound/stored/inbound-lookup (3-spelling tolerance for legacy
+  rows); inbound media uploaded to object storage (data-URL only as ≤5MB fallback);
+  notification sends get bounded retry w/ backoff via metadata counter (transient
+  failures were permanently lost); dead Evolution instance (401/403/404) auto-marks
+  the session disconnected; reconnect-after-disconnect recreates the deleted
+  instance (was a guaranteed 404 loop); rate-limiter TTL seeded atomically
+  (SET NX EX — a crash could permanently block a school).
+- **Server perf:** sendMessage −2 queries + parallelized tail; conversation-switch
+  no longer fetches messages twice; 10s message poll 3 queries → 1 (cursor-based,
+  participant-scoped, delivers tombstones); 15s list poll skips the COUNT;
+  forwardMessage 3N sequential → 3 batched; WA read-sync detached from the
+  mark-as-read response path; contacts guardians query −4 queries; content.tsx
+  ~250 per-name `getText` calls → ONE batched `getNames`; dead
+  `fetchSearchSuggestions`/`getSearchSuggestions` deleted (invalid SQL, no callers).
+- **Indexes (live + migration record):** `conversations(schoolId,isArchived,
+lastMessageAt DESC)`, `messages(conversationId,whatsappStatus)`,
+  `typing_indicators(conversationId,startedAt)`,
+  `message_whatsapp_deliveries(providerMessageId)`, GIN
+  `to_tsvector('simple', content)` on messages, and **unique**
+  `conversations_direct_pair_key` (1:1 dedup at the DB — closes the P2 race;
+  `createConversation` catches the P2002 and returns the existing conversation).
+- **Client render:** typing/socket/poll events no longer re-render the whole chat
+  (9 handler props stabilized, memoized reaction groups/timestamps/avatar colors,
+  mount-once intervals, MutationObserver scope, malformed-URL crash guard in
+  link previews, stable waveform heights, media-aware virtualizer estimates).
 
 ## 2026-06-05 production hardening pass (branch `fix/messaging-production-ready`)
 
@@ -113,10 +161,22 @@ providerMessageId, retryCount, lastError, sentAt)` model + table (additive,
 
 ### P2 — Medium
 
-- Only `direct` and `group` conversations are creatable — `class` / `department` / `announcement` exist in the `ConversationType` enum, `config.ts` RBAC table, and `authorization.ts`, but `new-conversation-dialog.tsx` exposes no creation UI for them. Either build the entry points or document them as schema-only scaffolding.
-- Student-to-teacher DM restrictions: schema supports `canStudentsDmTeachers` but there is no admin UI to toggle it, and `checkMessagingPermission` does not enforce it
+- `class` / `department` / `announcement` conversation types are **formally
+  schema-only scaffolding** (decision 2026-06-12): they exist in the
+  `ConversationType` enum, `config.ts` RBAC table, and `authorization.ts`, but
+  have no creation UI by design. Build entry points only when a concrete need
+  appears (announcement-style broadcast is already covered by the
+  announcements block + WhatsApp admin groups).
+- ~~Student-to-teacher DM restrictions: schema supports `canStudentsDmTeachers`~~
+  **Stale claim (corrected 2026-06-12): no such field exists anywhere in the
+  schema or code.** A per-school student→teacher DM toggle would be a net-new
+  feature (settings column + admin UI + `canCreateConversation` enforcement) —
+  backlog, not debt.
 - WhatsApp phone resolution does not cover plain `User` rows with no Guardian/Teacher/StaffMember profile (the `User` model has no phone field — that's the complete source set). **As of 2026-06-05 the skip is observable**: `whatsapp-bridge.ts` `console.warn`s the count + userIds of unreachable participants instead of silently dropping them.
-- 1:1 dedup is enforced in application logic only (`actions.ts:233`); no DB unique constraint, so concurrent creates can still race a duplicate direct conversation
+- [x] **1:1 dedup race — CLOSED 2026-06-12.** Unique partial index
+      `conversations_direct_pair_key` on `(schoolId, LEAST(p1,p2), GREATEST(p1,p2))
+WHERE type='direct'` (live on Neon + migration record); `createConversation`
+      catches the concurrent-duplicate P2002 and returns the existing conversation.
 
 ### i18n debt (P2)
 
@@ -159,12 +219,14 @@ Client UI is dictionary-keyed (dedicated `messaging` namespace, `dictionaries.ts
 Priority-ordered candidate work once ops blockers clear:
 
 1. **Ship #262 (deploy socket server).** Removes the polling fallback — the single biggest realtime UX gap. Then drop/keep polling as a degradation path only.
-2. **`MessageWhatsappDelivery` join table** (P0 above). Unblocks group WhatsApp retry + per-recipient delivery status. Needs migration approval.
+2. ~~`MessageWhatsappDelivery` join table~~ — ✅ **Done 2026-06-05** (live on Neon; webhook status-sync added 2026-06-12).
 3. ~~Green the test suite~~ — ✅ **Done 2026-05-22** (211/211, see Test Suite Status below).
-4. **i18n migration.** Server-action errors → codes **done 2026-05-22** (client resolves via `resolveMessagingError` → localized `m.errors.*`). Remaining: migrate `validation.ts` (30 Zod schemas) + `authorization.ts:validateMessageContent` to the `ValidationHelper` factory.
-5. **Resolve the 3 non-creatable conversation types.** Build creation UI for class/department/announcement or formally mark them schema-only.
-6. **DB-level 1:1 dedup constraint** to close the race window left by app-logic-only dedup.
-7. **Wire the modeled-but-actionless features** if needed: message pinning (`PinnedMessage`), drafts (`MessageDraft`), invites (`ConversationInvite`) — models + a query exist, but no write actions.
+4. ~~Resolve the 3 non-creatable conversation types~~ — ✅ **Decided 2026-06-12**: formally schema-only scaffolding (see P2).
+5. ~~DB-level 1:1 dedup constraint~~ — ✅ **Done 2026-06-12** (`conversations_direct_pair_key`).
+6. **Incremental list polling.** `pollConversationUpdates` still refetches the full 50-conversation list (now without the COUNT) every 15s per idle client; an `updatedSince` contract + client-side merge would make ticks near-free. Worth doing only if #262 stays blocked — the socket path makes polling a rare fallback.
+7. **Mobile API name localization.** `/api/mobile/conversations` + `/messages` return raw `username`s; the web path batches via `getNames` (content.tsx), mobile contacts already uses `getLabels` — extend the same one-call batch to the two remaining mobile routes.
+8. **Wire the modeled-but-actionless features** if needed: message pinning (`PinnedMessage`), drafts (`MessageDraft` — would also want a `schoolId` column to kill its 2-query lookup), invites (`ConversationInvite`) — models + a query exist, but no write actions.
+9. **Per-school student→teacher DM toggle** (net-new feature; the old `canStudentsDmTeachers` claim was stale — no such field exists).
 
 ### Post-MVP enhancements
 
@@ -175,18 +237,25 @@ Priority-ordered candidate work once ops blockers clear:
 
 ## Test Suite Status (GREEN)
 
-**223 passing / 223 (7 files)** as of 2026-06-05 (`pnpm exec vitest run src/components/school-dashboard/messaging`). The 2026-06-05 hardening pass added 5 tests (forward soft-deleted source, unstar conversation-scoping, mark-read participant guard ×2, group `MessageWhatsappDelivery` fan-out) on top of the 211 baseline; the prior count fell by 4 only because `rtl-verification.test.ts` generates one test per messaging file on disk and 4 dead files were deleted. tsc clean (messaging scope; 10 pre-existing repo-wide errors are livekit-not-installed + the docs `@/.source` artifact, unrelated). Broader run incl. `whatsapp` + `lib/whatsapp` = 223/223 across 8 files.
+**221 passing / 221 (8 files)** as of 2026-06-12
+(`pnpm exec vitest run src/tests/school-dashboard/messaging src/tests/lib/whatsapp`
+— tests moved to `src/tests/` in the URL-mirror reorg). The small count delta vs
+the 2026-06-05 "223" is `rtl-verification.test.ts` generating one test per
+messaging file on disk (file count shifted in the reorg), not lost coverage.
+The 2026-06-12 pass updated `whatsapp-bridge.test.ts` expectations to the
+normalized digits-only phone format and `actions.test.ts` to the batched
+`forwardMessage`. **tsc 0 errors repo-wide** (was "baseline-only" before).
 
 ## WhatsApp Activation Balance — what's left to go live
 
-**CODE (done this pass — no action needed):** group join-table dispatch+retry, durable rate limiter, phone-skip observability, constant-time emit guard, error-code i18n. Inbound webhook bridging code was already complete.
+**CODE (done — no action needed):** group join-table dispatch+retry, durable rate limiter, phone-skip observability, constant-time emit guard, error-code i18n (2026-06-05); webhook dedup + group-sender attribution + per-recipient status sync + `?secret=` webhook URL + unified phone normalization + bounded notification retry + dead-session auto-detection + reconnect fix (2026-06-12).
 
 **SCHEMA (done):** `MessageWhatsappDelivery` table is live on the Neon default branch (additive).
 
 **OPS — set by the operator on Vercel + Evolution + socket host (cannot be done from code):**
 
 - [ ] **Each school scans the WhatsApp QR** (existing admin dashboard) to create a `connected` `WhatsAppSession` — required for any outbound WA. `EVOLUTION_API_URL` + `EVOLUTION_API_KEY` are already set.
-- [ ] **Vercel: `WHATSAPP_WEBHOOK_SECRET`** + append `?secret=$WHATSAPP_WEBHOOK_SECRET` to Evolution's `WEBHOOK_GLOBAL_URL` — the webhook fails closed in prod without it (inbound WA→app bridge stays dark).
+- [ ] **Vercel: `WHATSAPP_WEBHOOK_SECRET`** — the webhook fails closed in prod without it (inbound WA→app bridge stays dark). As of 2026-06-12 the per-instance webhook URL automatically carries `?secret=` (set at QR-connect time), so schools connected BEFORE the secret existed must disconnect/reconnect once — or append `?secret=$WHATSAPP_WEBHOOK_SECRET` to Evolution's `WEBHOOK_GLOBAL_URL` if global webhooks are used.
 - [ ] **Vercel: confirm `CRON_SECRET`** is set (the `*/5` WhatsApp retry cron refuses to run without it).
 - [ ] **Vercel + socket host: `EMIT_SECRET` + `SOCKET_SECRET`** (same value both sides) — the hardened emit guard now fails closed if unset, so realtime push 401s until both are set.
 - [ ] **Vercel: `NEXT_PUBLIC_SOCKET_URL=https://socket.databayt.org`** (local `.env` is `localhost:3001`).
@@ -197,4 +266,4 @@ Priority-ordered candidate work once ops blockers clear:
 
 ---
 
-**Last Review:** 2026-06-05
+**Last Review:** 2026-06-12

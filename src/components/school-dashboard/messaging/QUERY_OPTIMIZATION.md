@@ -73,10 +73,15 @@ for (const conv of conversations) {
 }
 
 // ✅ Good: Single aggregated query
+// CRITICAL: raw SQL must use the @@map'ped table names (messages,
+// conversations, conversation_participants) — NOT the Prisma model names.
+// "User" is the exception (that model is unmapped). Queries written with
+// "Message"/"Conversation" fail at runtime with `relation does not exist`
+// (this exact bug shipped and silently broke unread counts until 2026-06-12).
 const result = await db.$queryRaw`
   SELECT COUNT(DISTINCT m.id) as count
-  FROM "Message" m
-  INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = m."conversationId"
+  FROM messages m
+  INNER JOIN conversation_participants cp ON cp."conversationId" = m."conversationId"
   WHERE cp."userId" = ${userId}
     AND m."senderId" != ${userId}
     AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
@@ -121,29 +126,37 @@ const data = serializeMessage(message) // Handles all nested dates
 
 ### 5. Database Indexes
 
-**Required indexes** (defined in Prisma schema):
+**The authoritative index list lives in `prisma/models/messages.prisma`.** Key
+entries (all live on Neon as of 2026-06-12):
 
 ```prisma
 model Message {
-  // ...fields
-
-  @@index([conversationId, createdAt]) // For chronological queries
-  @@index([conversationId, isDeleted]) // For filtering deleted
-  @@index([senderId]) // For user's messages
-  @@index([replyToId]) // For reply chains
+  @@index([conversationId, createdAt(sort: Desc)]) // main chronological query
+  @@index([senderId, createdAt])
+  @@index([replyToId])
+  @@index([conversationId, isSystem])
+  @@index([whatsappMessageId])                      // webhook status lookup
+  @@index([conversationId, whatsappStatus])         // WA read-sync + retry sweep
+  @@index([forwardedFromId])
 }
 
 model Conversation {
-  @@index([schoolId, type]) // For filtering by type
-  @@index([schoolId, isArchived]) // For active conversations
-  @@index([directParticipant1Id, directParticipant2Id]) // For direct chats
-}
-
-model ConversationParticipant {
-  @@index([userId, conversationId]) // For user's conversations
-  @@index([conversationId, role]) // For permission checks
+  @@index([schoolId, type, lastMessageAt(sort: Desc)])
+  @@index([schoolId, isArchived, lastMessageAt(sort: Desc)]) // list default filter
+  @@index([directParticipant1Id, directParticipant2Id, type])
 }
 ```
+
+**Plus two expression indexes Prisma can't model** (raw SQL — see
+`prisma/migrations/20260612000000_messaging_perf_indexes/migration.sql`;
+`prisma db push` may drop them, re-run that file if search/dedup degrades):
+
+- `messages_content_fts_gin` — GIN on `to_tsvector('simple', content)`, backs
+  `fullTextSearchMessages` (which also gives the last term `:*` prefix matching
+  and keeps Arabic characters — the old sanitizer stripped them).
+- `conversations_direct_pair_key` — UNIQUE on
+  `(schoolId, LEAST(p1,p2), GREATEST(p1,p2)) WHERE type='direct'` — DB-level 1:1
+  dedup; `createConversation` catches the P2002 on a concurrent duplicate.
 
 **Impact**: 90% faster queries on large datasets.
 

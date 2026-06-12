@@ -105,7 +105,7 @@ Phone resolution: `Guardian.guardianPhoneNumbers` → `Teacher.teacherPhoneNumbe
 
 Rate limits: 1 msg / sec / school, 500 direct / day / school. Failed dispatches retry with exponential backoff (max 5 attempts) via `cron/process-whatsapp-notifications` (every 5 minutes).
 
-> **Ops + scope caveats:** the retry cron **refuses to run in production until `CRON_SECRET` is set** (currently unset), and the webhook fails closed until `WHATSAPP_WEBHOOK_SECRET` is set. Group WhatsApp dispatch is also limited — the scalar `whatsapp*` status columns on `Message` only mirror state for **1:1** conversations; group failures are logged per-recipient in `WhatsAppMessage` but are **not** retried. A `MessageWhatsappDelivery` join table is required before enabling group WhatsApp at scale (see `ISSUE.md` P0).
+> **Ops caveats:** the retry cron **refuses to run in production until `CRON_SECRET` is set**, and the webhook fails closed until `WHATSAPP_WEBHOOK_SECRET` is set (the per-instance webhook URL carries `?secret=` automatically as of 2026-06-12 — schools connected before the secret existed must reconnect once). Group WhatsApp is fully supported: the scalar `whatsapp*` columns on `Message` mirror **1:1** state, while groups write one `MessageWhatsappDelivery` row per recipient — retried independently with backoff, and advanced to delivered/read by webhook status events. Phones are normalized to a single digits-only form (strips `+`/`00`) across outbound, storage, and inbound sender lookup.
 
 Key files: `whatsapp-bridge.ts`, `src/lib/whatsapp/evolution-client.ts`, `src/app/api/webhooks/whatsapp/route.ts`, `src/app/api/cron/process-whatsapp-notifications/route.ts`, `src/components/school-dashboard/whatsapp/`.
 
@@ -113,7 +113,7 @@ Test accounts (`pnpm db:seed:single messaging-phones`): `admin@databayt.org` (00
 
 ## Contacts sidebar
 
-WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup. Names translate on demand via `getText()`. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
+WhatsApp-style contact list grouped by role (`contacts/`). Click → `createConversation({ type: "direct", participantIds: [contactId] })`; existing direct conversations are reused via dedup (app check + a DB unique index on the direct pair, so concurrent creates can't race a duplicate). Names translate on demand via one batched `getNames()` call. The WhatsApp connect dialog (QR) is also embedded here, alongside the per-chat `W` toggle.
 
 ## Unread badge
 
@@ -131,13 +131,13 @@ Dispatched via `notification-helpers.ts` (in-app + email; mentions and participa
 
 ## Search
 
-`fullTextSearchMessages({ conversationId, query, limit, offset })` — PostgreSQL `tsvector` / `tsquery` ranked search within a conversation.
+`fullTextSearchMessages({ conversationId, query, limit, offset })` — PostgreSQL `tsvector` / `tsquery` ranked search, backed by a GIN expression index. The last term gets `:*` prefix matching (search-as-you-type), Arabic text is searchable, and `/api/messages/search` uses this path (not ILIKE).
 
 `globalSearch({ query, conversationTypes, limit })` — across every conversation the user can access.
 
 ## Server actions and queries
 
-**29 server actions** in `src/components/school-dashboard/messaging/actions.ts`:
+**28 server actions** in `src/components/school-dashboard/messaging/actions.ts`:
 
 | Category      | Actions                                                                                                                                                                           |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -147,12 +147,12 @@ Dispatched via `notification-helpers.ts` (in-app + email; mentions and participa
 | Read receipts | `markMessageAsRead`, `markConversationAsRead`                                                                                                                                     |
 | Participants  | `addParticipant`, `removeParticipant`                                                                                                                                             |
 | Stars         | `starMessage`, `unstarMessage`, `getStarredMessages`                                                                                                                              |
-| Search        | `searchMessaging`, `searchConversationMessages`, `fetchSearchSuggestions`                                                                                                         |
+| Search        | `searchMessaging`, `searchConversationMessages`                                                                                                                                   |
 | Fetch / poll  | `fetchConversationData`, `pollNewMessages`, `pollConversationUpdates`                                                                                                             |
 
 > **Modeled but not implemented as actions:** message pinning (`PinnedMessage` model + `getPinnedMessages` query exist, but no write action), drafts (`MessageDraft` model exists, no action), and invites (`ConversationInvite` model exists, no action). These are schema-level only.
 
-Queries (`queries.ts`) — 28 read functions + 5 builders: `getConversationsList` (paginated, with unread counts), `getConversation`, `getOrCreateDirectConversation`, `getMessagesList`, `getMessagesWithCursor` (infinite scroll), `getUnreadMessageCount` (raw SQL), `getUnreadCountsPerConversation`, `fullTextSearchMessages`, `globalSearch`, `getSearchSuggestions`.
+Queries (`queries.ts`) — 28 read functions + 5 builders: `getConversationsList` (paginated), `getConversationsForPoll` (count-free, for the 15s fallback), `getConversation`, `getOrCreateDirectConversation`, `getMessagesList`, `getMessagesWithCursor` (infinite scroll), `getUnreadMessageCount` (raw SQL), `getUnreadCountsPerConversation`, `fullTextSearchMessages`, `globalSearch`.
 
 ```typescript
 sendMessage(input: {

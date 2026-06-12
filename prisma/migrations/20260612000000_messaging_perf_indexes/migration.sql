@@ -26,6 +26,22 @@ CREATE INDEX IF NOT EXISTS "typing_indicators_conversationId_startedAt_idx"
 CREATE INDEX IF NOT EXISTS "message_whatsapp_deliveries_providerMessageId_idx"
   ON message_whatsapp_deliveries ("providerMessageId");
 
+-- DB-level 1:1 dedup (closes the race the app-level check can't): one direct
+-- conversation per unordered user pair per school. LEAST/GREATEST makes the
+-- pair order-insensitive since the app writes (caller, other) unordered.
+-- EXPRESSION index — not representable in the Prisma schema (see note below).
+-- createConversation catches the P2002 from a concurrent duplicate and
+-- returns the existing conversation.
+CREATE UNIQUE INDEX IF NOT EXISTS "conversations_direct_pair_key"
+  ON conversations (
+    "schoolId",
+    LEAST("directParticipant1Id", "directParticipant2Id"),
+    GREATEST("directParticipant1Id", "directParticipant2Id")
+  )
+  WHERE type = 'direct'
+    AND "directParticipant1Id" IS NOT NULL
+    AND "directParticipant2Id" IS NOT NULL;
+
 -- Full-text search backing index for fullTextSearchMessages (queries.ts).
 -- EXPRESSION index — not representable in the Prisma schema; `prisma db push`
 -- may drop it because it isn't modeled. If message search gets slow, check

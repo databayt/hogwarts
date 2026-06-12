@@ -39,7 +39,7 @@ Note: Uses standalone full-screen layout (`(school-messaging)` route group) with
 
 ```
 src/components/school-dashboard/messaging/
-├── actions.ts                      # 29 server actions (conversations, messages, reactions, search, stars, polling, WhatsApp)
+├── actions.ts                      # 28 server actions (conversations, messages, reactions, search, stars, polling, WhatsApp)
 ├── queries.ts                      # 28 read-only DB queries + 5 builders (lists, stats, unread, search, participants)
 ├── authorization.ts                # RBAC and participant-level permission checks
 ├── validation.ts                   # Zod schemas for message/conversation input
@@ -80,22 +80,19 @@ src/components/school-dashboard/messaging/
 ├── mobile/                         # iOS/WhatsApp-style mobile UI (~28 files)
 ├── CLAUDE.md                       # Block context for Claude Code
 ├── ISSUE.md                        # Production-readiness tracker
-├── QUERY_OPTIMIZATION.md           # Performance optimization guide
-└── __tests__/
-    ├── actions.test.ts             # Action unit tests
-    ├── authorization.test.ts       # Authorization tests
-    ├── multi-tenant.test.ts        # Multi-tenant isolation tests
-    ├── validation.test.ts          # Validation tests
-    ├── whatsapp-bridge.test.ts     # WhatsApp bridge tests
-    ├── link-preview.test.ts        # Link preview tests
-    └── rtl-verification.test.ts    # RTL layout verification tests
+└── QUERY_OPTIMIZATION.md           # Performance optimization guide
 ```
+
+Tests live in `src/tests/school-dashboard/messaging/` (URL-mirror convention):
+`actions`, `authorization`, `multi-tenant`, `validation`, `whatsapp-bridge`,
+`link-preview`, `rtl-verification` — plus `src/tests/lib/whatsapp/` for the
+Evolution client retry policy.
 
 ### Status
 
-**Completion:** 100% code | **Status:** 🟢 CODE PRODUCTION-READY, blocked on ops only (hardened 2026-06-05)
+**Completion:** 100% code | **Status:** 🟢 CODE PRODUCTION-READY, blocked on ops only (hardened 2026-06-05, perf+WhatsApp pass 2026-06-12)
 
-Application code is production-ready (a 2026-06-05 hardening pass added group-WhatsApp delivery+retry, a durable rate limiter, correctness fixes, and removed ~1,740 lines of dead code), but the feature is **not live end-to-end**. The Socket.IO server is not deployed (tracked in [#262](https://github.com/databayt/hogwarts/issues/262)), so realtime currently falls back to polling, and the inbound/realtime ops secrets (`WHATSAPP_WEBHOOK_SECRET`, `EMIT_SECRET`, `SOCKET_SECRET`, `NEXT_PUBLIC_SOCKET_URL`) are unset. The unit suite is **green (223/223 as of 2026-06-05)**. See `ISSUE.md` → "WhatsApp Activation Balance" for the exact remaining ops steps.
+Application code is production-ready. The 2026-06-05 pass added group-WhatsApp delivery+retry, a durable rate limiter, correctness fixes, and removed ~1,740 lines of dead code. The **2026-06-12 pass** fixed the dead raw SQL (unread counts + full-text search referenced unmapped table names and could never run), Arabic search, webhook dedup/group-sender/status-sync, unified phone normalization, bounded notification retries, added 6 DB indexes (incl. GIN FTS + a unique direct-pair dedup index), and removed the typing/socket re-render cascades client-side. The feature is **not live end-to-end** until ops completes: the Socket.IO server is not deployed (tracked in [#262](https://github.com/databayt/hogwarts/issues/262)), so realtime currently falls back to polling, and the inbound/realtime ops secrets (`WHATSAPP_WEBHOOK_SECRET`, `EMIT_SECRET`, `SOCKET_SECRET`, `NEXT_PUBLIC_SOCKET_URL`) are unset. The unit suite is **green (221/221 as of 2026-06-12)**. See `ISSUE.md` → "WhatsApp Activation Balance" for the exact remaining ops steps.
 
 ### WhatsApp Integration
 
@@ -112,9 +109,9 @@ Messages sent in-app are automatically dual-delivered to WhatsApp when the schoo
 
 1. `createConversation()` checks for active WhatsApp session -- auto-enables if connected
 2. `sendMessage()` calls `dispatchMessageToWhatsApp()` non-blocking when `conversation.whatsappEnabled`
-3. Phone numbers resolved from domain models: Guardian > Teacher > StaffMember
+3. Phone numbers resolved from domain models: Guardian > Teacher > StaffMember, then normalized to canonical digits-only form (`formatPhoneForWhatsApp` strips `+`/`00`/spaces) — the same form the inbound webhook uses to resolve senders
 4. Rate limited: 1 msg/sec, 500 DMs/day per school
-5. Failed dispatches retried with exponential backoff (max 5 attempts) -- **1:1 (Message scalars) AND group (per-recipient `MessageWhatsappDelivery` rows)** as of 2026-06-05
+5. Failed dispatches retried with exponential backoff (max 5 attempts) -- **1:1 (Message scalars) AND group (per-recipient `MessageWhatsappDelivery` rows)** as of 2026-06-05; notification-channel sends get the same bounded retry (metadata counter) as of 2026-06-12
 6. Chat header has a **W** toggle to enable/disable per conversation
 7. Message bubbles show WhatsApp delivery status (sent/delivered/read/failed)
 

@@ -261,31 +261,65 @@ export async function createConversation(
     }
 
     // Create conversation
-    const conversation = await db.conversation.create({
-      data: {
-        schoolId,
-        type: parsed.type,
-        title: parsed.title,
-        avatar: parsed.avatar,
-        whatsappEnabled: autoWhatsApp,
-        directParticipant1Id:
-          parsed.type === "direct" ? authContext.userId : undefined,
-        directParticipant2Id:
-          parsed.type === "direct" ? parsed.participantIds[0] : undefined,
-        participants: {
-          create: [
-            {
-              userId: authContext.userId,
-              role: "owner",
-            },
-            ...parsed.participantIds.map((userId) => ({
-              userId,
-              role: "member" as const,
-            })),
-          ],
+    let conversation
+    try {
+      conversation = await db.conversation.create({
+        data: {
+          schoolId,
+          type: parsed.type,
+          title: parsed.title,
+          avatar: parsed.avatar,
+          whatsappEnabled: autoWhatsApp,
+          directParticipant1Id:
+            parsed.type === "direct" ? authContext.userId : undefined,
+          directParticipant2Id:
+            parsed.type === "direct" ? parsed.participantIds[0] : undefined,
+          participants: {
+            create: [
+              {
+                userId: authContext.userId,
+                role: "owner",
+              },
+              ...parsed.participantIds.map((userId) => ({
+                userId,
+                role: "member" as const,
+              })),
+            ],
+          },
         },
-      },
-    })
+      })
+    } catch (createError) {
+      // DB unique index conversations_direct_pair_key: a concurrent request
+      // created the same direct pair between our dedup check above and this
+      // insert — reuse theirs instead of surfacing an error.
+      if (
+        parsed.type === "direct" &&
+        createError instanceof Prisma.PrismaClientKnownRequestError &&
+        createError.code === "P2002"
+      ) {
+        const existing = await db.conversation.findFirst({
+          where: {
+            schoolId,
+            type: "direct",
+            OR: [
+              {
+                directParticipant1Id: authContext.userId,
+                directParticipant2Id: parsed.participantIds[0],
+              },
+              {
+                directParticipant1Id: parsed.participantIds[0],
+                directParticipant2Id: authContext.userId,
+              },
+            ],
+          },
+          select: { id: true },
+        })
+        if (existing) {
+          return { success: true, data: { id: existing.id } }
+        }
+      }
+      throw createError
+    }
 
     // Notify all participants of new conversation via Socket.IO (non-blocking)
     const allParticipantIds = [authContext.userId, ...parsed.participantIds]
