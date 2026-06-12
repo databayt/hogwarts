@@ -39,7 +39,7 @@ function isAuthorizedCron(request: Request): boolean {
  */
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
   try {
