@@ -130,9 +130,22 @@ src/components/<feature>/
 
 Column definitions with hooks MUST be in client components. Pass dictionary as props, use `useMemo` in client component.
 
-### Block-Level Config
+### Block-Level Config — the block protocol
 
-Feature blocks have their own `CLAUDE.md` with block-specific context (key decisions, danger zones, related blocks). They load automatically when you read files in that directory. After completing work, run `/block-close` to update block docs.
+Every feature block is a keyword, registered in `.claude/blocks.json` (72 blocks under `src/components/` and `src/components/school-dashboard/`; regenerate with `node /Users/abdout/kun/.claude/scripts/generate-blocks.mjs .` after adding/renaming block dirs). When a prompt names a block — "optimize timetable", "fix attendance" — hooks activate the protocol. Skip it only for quick small tasks (typo-level, single-line, pure questions).
+
+**Before starting work on a block:**
+
+1. Read the block records: `<block>/README.md`, `<block>/ISSUE.md`, `<block>/CLAUDE.md`
+2. Check the related GitHub issue: `gh issue list --search "<block>" --state open`
+
+**Right after the work is done:**
+
+1. Update the block records to reflect what changed — status, decisions, known issues
+2. Update the block docs: `content/docs-en/<block>.mdx` (+ `content/docs-ar/` where it exists)
+3. Comment the outcome on the related GitHub issue; close it if resolved
+
+A Stop hook (`block-guard`) nudges once if 2+ code files changed in a block without a record/docs update.
 
 ---
 
