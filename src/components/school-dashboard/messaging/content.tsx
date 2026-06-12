@@ -7,9 +7,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMessagingDictionary } from "@/components/internationalization/dictionaries"
-import { getText } from "@/components/translation/display"
-import type { Lang } from "@/components/translation/types"
-import { detectLang } from "@/components/translation/util"
+import { getNames } from "@/components/translation/person"
 
 import { MessagingClient } from "./messaging-client"
 import { getConversation, getConversationsList } from "./queries"
@@ -103,58 +101,35 @@ export async function MessagingContent({
     console.error("[MessagingContent] Error fetching conversations:", error)
   }
 
-  // Translate participant names when their actual language differs from the UI locale
-  const translateIfNeeded = async (name: string | null) => {
-    if (!name) return name
-    const detected = detectLang(name) as Lang
-    if (detected === locale) return name
-    return getText(name, detected, locale, schoolId)
+  // Localize every display name in ONE batched call (getNames dedupes,
+  // skips same-script names, and transliterates ar→Latin when the API is
+  // down). The previous per-name getText inside nested .map()s fired up to
+  // ~250 individual resolutions per page load.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nameRefs: Array<{ obj: any }> = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const collect = (obj: any) => {
+    if (obj?.username) nameRefs.push({ obj })
   }
+  for (const conv of conversationsData) {
+    for (const p of conv.participants ?? []) collect(p.user)
+    collect(conv.createdBy)
+    collect(conv.lastMessage?.sender)
+  }
+  for (const p of activeConversationData?.participants ?? []) collect(p.user)
+  for (const msg of messagesData) collect(msg.sender)
 
-  // Translate participant names in all conversations
-  await Promise.all(
-    conversationsData.map(async (conv: any) => {
-      if (conv.participants) {
-        await Promise.all(
-          conv.participants.map(async (p: any) => {
-            if (p.user?.username) {
-              p.user.username = await translateIfNeeded(p.user.username)
-            }
-          })
-        )
-      }
-      if (conv.createdBy?.username) {
-        conv.createdBy.username = await translateIfNeeded(
-          conv.createdBy.username
-        )
-      }
-      if (conv.lastMessage?.sender?.username) {
-        conv.lastMessage.sender.username = await translateIfNeeded(
-          conv.lastMessage.sender.username
-        )
-      }
-    })
-  )
-
-  // Translate active conversation participant names
-  if (activeConversationData?.participants) {
-    await Promise.all(
-      activeConversationData.participants.map(async (p: any) => {
-        if (p.user?.username) {
-          p.user.username = await translateIfNeeded(p.user.username)
-        }
-      })
+  if (nameRefs.length > 0) {
+    const translated = await getNames(
+      nameRefs,
+      (r) => ({ firstName: r.obj.username as string }),
+      locale,
+      schoolId
     )
+    for (const r of nameRefs) {
+      r.obj.username = translated.get(r.obj.username) ?? r.obj.username
+    }
   }
-
-  // Translate message sender names
-  await Promise.all(
-    messagesData.map(async (msg: any) => {
-      if (msg.sender?.username) {
-        msg.sender.username = await translateIfNeeded(msg.sender.username)
-      }
-    })
-  )
 
   return (
     <MessagingClient

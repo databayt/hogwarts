@@ -47,8 +47,8 @@ import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import {
+  fullTextSearchMessages,
   isConversationParticipant,
-  searchMessages,
 } from "@/components/school-dashboard/messaging/queries"
 
 // WHY: Messages change constantly
@@ -94,25 +94,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 })
     }
 
-    // Search messages
-    const result = await searchMessages(schoolId, session.user.id, query, {
-      conversationId,
-      perPage: limit,
-    })
+    // Full-text search (GIN-indexed, relevance-ranked, word-prefix on the
+    // last term for search-as-you-type). The previous ILIKE '%term%' path
+    // could never use an index — a full table scan per keystroke.
+    const result = await fullTextSearchMessages(
+      schoolId,
+      session.user.id,
+      query,
+      { conversationId, limit }
+    )
 
     // Map to consistent format with dates as strings
-    const formattedMessages = result.rows.map((msg) => ({
+    const formattedMessages = result.results.map((msg) => ({
       id: msg.id,
       content: msg.content,
       senderId: msg.senderId,
-      sender: msg.sender,
+      sender: {
+        id: msg.senderId,
+        username: msg.senderUsername,
+        image: msg.senderImage,
+      },
       createdAt: msg.createdAt.toISOString(),
-      isDeleted: msg.isDeleted,
+      isDeleted: false, // the FTS query filters deleted rows
     }))
 
     return NextResponse.json({
       messages: formattedMessages,
-      total: result.count,
+      total: result.total,
     })
   } catch (error) {
     console.error("[messages/search] Error:", error)

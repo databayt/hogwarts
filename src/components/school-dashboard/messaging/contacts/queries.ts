@@ -472,6 +472,7 @@ const teacherSelect = {
 } as const
 
 const studentSelect = {
+  id: true,
   firstName: true,
   lastName: true,
   email: true,
@@ -696,11 +697,17 @@ async function getTeachersForGuardian(
 
 // -- Students (relationship) --
 
-async function getStudentsForTeacher(
+/**
+ * Raw student rows for the sections a teacher homerooms or teaches.
+ * Shared by getStudentsForTeacher and getGuardiansForTeacher — the latter
+ * previously re-ran this whole 3-query chain and then issued a 4th query
+ * just to convert user IDs back to student IDs (now read off `s.id`).
+ */
+async function getTeacherSectionStudents(
   schoolId: string,
   userId: string,
   search?: string
-): Promise<ContactDTO[]> {
+) {
   const teacher = await db.teacher.findFirst({
     where: { schoolId, userId },
     select: { id: true },
@@ -727,7 +734,7 @@ async function getStudentsForTeacher(
   ]
   if (sectionIds.length === 0) return []
 
-  const students = await db.student.findMany({
+  return db.student.findMany({
     where: studentWhere(schoolId, userId, search, {
       sectionId: { in: sectionIds },
     }),
@@ -735,7 +742,14 @@ async function getStudentsForTeacher(
     orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     take: MAX_CONTACTS_PER_CATEGORY,
   })
+}
 
+async function getStudentsForTeacher(
+  schoolId: string,
+  userId: string,
+  search?: string
+): Promise<ContactDTO[]> {
+  const students = await getTeacherSectionStudents(schoolId, userId, search)
   return students.filter((s) => s.user).map((s) => mapStudent(s, "my_students"))
 }
 
@@ -771,19 +785,11 @@ async function getGuardiansForTeacher(
   userId: string,
   search?: string
 ): Promise<ContactDTO[]> {
-  const myStudents = await getStudentsForTeacher(schoolId, userId)
+  const myStudents = await getTeacherSectionStudents(schoolId, userId)
   if (myStudents.length === 0) {
     return getMembersByRole(schoolId, userId, "GUARDIAN", "parents", search)
   }
-
-  const studentRecords = await db.student.findMany({
-    where: { schoolId, user: { id: { in: myStudents.map((s) => s.id) } } },
-    select: { id: true },
-  })
-  const studentIds = studentRecords.map((s) => s.id)
-  if (studentIds.length === 0) {
-    return getMembersByRole(schoolId, userId, "GUARDIAN", "parents", search)
-  }
+  const studentIds = myStudents.map((s) => s.id)
 
   const guardians = await db.guardian.findMany({
     where: guardianWhere(schoolId, userId, search, {

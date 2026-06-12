@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => ({
     conversation: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       findFirst: vi.fn(),
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -49,6 +50,7 @@ vi.mock("@/lib/db", () => ({
     conversationParticipant: {
       create: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
@@ -64,17 +66,20 @@ vi.mock("@/lib/db", () => ({
     whatsAppSession: {
       findUnique: vi.fn().mockResolvedValue(null),
     },
-    $transaction: vi.fn((callback) =>
-      callback({
-        conversation: {
-          create: vi.fn(),
-          update: vi.fn(),
-        },
-        message: {
-          create: vi.fn(),
-          update: vi.fn(),
-        },
-      })
+    // Supports both forms: $transaction([promises]) and $transaction(cb)
+    $transaction: vi.fn((arg) =>
+      Array.isArray(arg)
+        ? Promise.all(arg)
+        : arg({
+            conversation: {
+              create: vi.fn(),
+              update: vi.fn(),
+            },
+            message: {
+              create: vi.fn(),
+              update: vi.fn(),
+            },
+          })
     ),
   },
 }))
@@ -387,15 +392,18 @@ describe("Messaging Actions", () => {
       )
       // Source conversation: user IS participant
       vi.mocked(isConversationParticipant).mockResolvedValueOnce(true)
-      // Target conv-1: user is NOT participant
-      vi.mocked(isConversationParticipant).mockResolvedValueOnce(false)
-      // Target conv-2: user IS participant
-      vi.mocked(isConversationParticipant).mockResolvedValueOnce(true)
+      // Target participation is batch-verified in ONE findMany — only
+      // conv-target-2 comes back (user is not a participant of conv-target-1)
+      vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([
+        { conversationId: "conv-target-2" },
+      ] as any)
 
       vi.mocked(db.message.create).mockResolvedValue({
         id: "msg-forwarded-2",
       } as any)
-      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+      vi.mocked(db.conversation.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await forwardMessage({
         messageId: "msg-original",
@@ -415,10 +423,15 @@ describe("Messaging Actions", () => {
         mockOriginalMessage as any
       )
       vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([
+        { conversationId: "conv-target" },
+      ] as any)
       vi.mocked(db.message.create).mockResolvedValue({
         id: "msg-forwarded",
       } as any)
-      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+      vi.mocked(db.conversation.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await forwardMessage({
         messageId: "msg-original",
@@ -438,6 +451,7 @@ describe("Messaging Actions", () => {
           forwardedFromId: "msg-original",
           status: "sent",
         }),
+        select: { id: true },
       })
     })
 
@@ -460,10 +474,15 @@ describe("Messaging Actions", () => {
         messageWithAttachments as any
       )
       vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([
+        { conversationId: "conv-target" },
+      ] as any)
       vi.mocked(db.message.create).mockResolvedValue({
         id: "msg-forwarded",
       } as any)
-      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+      vi.mocked(db.conversation.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await forwardMessage({
         messageId: "msg-original",
@@ -489,6 +508,7 @@ describe("Messaging Actions", () => {
             ],
           },
         }),
+        select: { id: true },
       })
     })
 
@@ -497,18 +517,24 @@ describe("Messaging Actions", () => {
         mockOriginalMessage as any
       )
       vi.mocked(isConversationParticipant).mockResolvedValue(true)
+      vi.mocked(db.conversationParticipant.findMany).mockResolvedValue([
+        { conversationId: "conv-target" },
+      ] as any)
       vi.mocked(db.message.create).mockResolvedValue({
         id: "msg-forwarded",
       } as any)
-      vi.mocked(db.conversation.update).mockResolvedValue({} as any)
+      vi.mocked(db.conversation.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       await forwardMessage({
         messageId: "msg-original",
         targetConversationIds: ["conv-target"],
       })
 
-      expect(db.conversation.update).toHaveBeenCalledWith({
-        where: { id: "conv-target" },
+      // One updateMany for ALL verified targets (was one update per target)
+      expect(db.conversation.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ["conv-target"] } },
         data: { lastMessageAt: expect.any(Date) },
       })
     })

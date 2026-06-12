@@ -68,6 +68,7 @@ model Conversation {
 
   // Optimized indexes for performance
   @@index([schoolId, type, lastMessageAt(sort: Desc)]) // Main query pattern
+  @@index([schoolId, isArchived, lastMessageAt(sort: Desc)]) // List default filter (isArchived=false)
   @@index([schoolId, classId]) // Class conversations
   @@index([schoolId, departmentId]) // Department conversations
   @@index([directParticipant1Id, directParticipant2Id, type]) // Direct conversation lookup
@@ -175,7 +176,13 @@ model Message {
   @@index([replyToId]) // Thread lookup
   @@index([conversationId, isSystem]) // Filter system messages
   @@index([whatsappMessageId]) // WhatsApp webhook status lookup
+  @@index([conversationId, whatsappStatus]) // WA read-sync sweep + retry sweep
   @@index([forwardedFromId]) // Forwarded messages lookup
+  // NOTE: a GIN expression index `messages_content_fts_gin` on
+  // to_tsvector('simple', COALESCE(content, '')) also exists (raw SQL —
+  // Prisma can't model expression indexes). It backs fullTextSearchMessages.
+  // Recreate it if it's ever dropped: see
+  // prisma/migrations/20260612000000_messaging_perf_indexes/migration.sql
   @@map("messages")
 }
 
@@ -208,6 +215,7 @@ model MessageWhatsappDelivery {
   @@index([schoolId])
   @@index([status]) // retry sweep
   @@index([messageId])
+  @@index([providerMessageId]) // webhook MESSAGES_UPDATE status sync
   @@map("message_whatsapp_deliveries")
 }
 
@@ -307,6 +315,7 @@ model TypingIndicator {
   @@unique([conversationId, userId])
   @@index([schoolId])
   @@index([conversationId, expiresAt])
+  @@index([conversationId, startedAt]) // getTypingIndicators hot path (5s window)
   @@map("typing_indicators")
 }
 

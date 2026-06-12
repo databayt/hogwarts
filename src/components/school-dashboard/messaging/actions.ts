@@ -362,7 +362,7 @@ export async function updateConversation(
 
     const parsed = updateConversationSchema.parse(input)
 
-    // Get conversation
+    // Conversation already includes the caller's participant record
     const conversation = await getConversation(
       schoolId,
       authContext.userId,
@@ -372,11 +372,8 @@ export async function updateConversation(
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
-    // Get user's participant role
-    const participant = await getConversationParticipant(
-      schoolId,
-      parsed.conversationId,
-      authContext.userId
+    const participant = conversation.participants.find(
+      (p) => p.userId === authContext.userId
     )
 
     // Check permission
@@ -455,22 +452,17 @@ export async function archiveConversation(
 
     const parsed = archiveConversationSchema.parse(input)
 
-    // Verify user is participant
-    const isParticipant = await isConversationParticipant(
-      schoolId,
-      parsed.conversationId,
-      authContext.userId
-    )
-    if (!isParticipant) {
-      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
-    }
-
-    // Get conversation title for audit
+    // getConversation is participant-scoped (participants.some(userId)) —
+    // a null result already proves the caller isn't a participant, so the
+    // separate isConversationParticipant round-trip was redundant.
     const conversation = await getConversation(
       schoolId,
       authContext.userId,
       parsed.conversationId
     )
+    if (!conversation) {
+      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    }
 
     // Archive the conversation itself
     await db.conversation.update({
@@ -547,7 +539,8 @@ export async function sendMessage(
       }
     }
 
-    // Get conversation
+    // Get conversation (already includes the caller's participant record —
+    // no separate getConversationParticipant round-trip needed)
     const conversation = await getConversation(
       schoolId,
       authContext.userId,
@@ -557,11 +550,8 @@ export async function sendMessage(
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
-    // Get user's participant role
-    const participant = await getConversationParticipant(
-      schoolId,
-      parsed.conversationId,
-      authContext.userId
+    const participant = conversation.participants.find(
+      (p) => p.userId === authContext.userId
     )
 
     // Check permission
@@ -618,18 +608,19 @@ export async function sendMessage(
       })
     }
 
-    // Update conversation's lastMessageAt
-    await db.conversation.update({
-      where: { id: parsed.conversationId },
-      data: { lastMessageAt: new Date() },
-    })
+    // Update lastMessageAt and re-fetch the full message (with relations, for
+    // the instant client-side update) in parallel — they're independent.
+    const [, fullMessage] = await Promise.all([
+      db.conversation.update({
+        where: { id: parsed.conversationId },
+        data: { lastMessageAt: new Date() },
+      }),
+      getMessage(schoolId, message.id),
+    ])
 
-    // Get sender name for notifications
-    const sender = await db.user.findUnique({
-      where: { id: authContext.userId },
-      select: { username: true },
-    })
-    const senderName = sender?.username || "Someone"
+    // Sender is always a participant — name is already in memory, no
+    // user.findUnique round-trip.
+    const senderName = participant?.user?.username || "Someone"
 
     // Trigger notifications (non-blocking)
     // 1. Notify all participants about the new message
@@ -705,8 +696,6 @@ export async function sendMessage(
       }
     ).catch((err) => console.error("[sendMessage] Audit log error:", err))
 
-    // Re-fetch the full message with relations for instant client-side update
-    const fullMessage = await getMessage(schoolId, message.id)
     const { serializeMessage } = await import("./serialization")
     const serialized = serializeMessage(fullMessage)
 
@@ -1098,39 +1087,35 @@ export async function markConversationAsRead(
       readAt: new Date().toISOString(),
     }).catch(() => {})
 
-    // Sync read receipts to WhatsApp (non-blocking)
-    if (schoolId) {
+    // Sync read receipts to WhatsApp — fully detached from the response path.
+    // The lookup queries used to run inline and delayed every mark-as-read
+    // (which fires on every conversation focus) even when WhatsApp was off.
+    void (async () => {
       const conversation = await db.conversation.findUnique({
         where: { id: parsed.conversationId },
         select: { whatsappEnabled: true },
       })
-      if (conversation?.whatsappEnabled) {
-        // Get unread WhatsApp messages to sync
-        const unreadWaMessages = await db.message.findMany({
-          where: {
-            conversationId: parsed.conversationId,
-            whatsappMessageId: { not: null },
-            whatsappStatus: { not: "read" },
-            senderId: { not: authContext.userId },
-          },
-          select: { id: true },
-          take: 50,
-        })
-        if (unreadWaMessages.length > 0) {
-          import("./whatsapp-bridge")
-            .then(({ syncReadReceiptsToWhatsApp }) =>
-              syncReadReceiptsToWhatsApp(
-                schoolId,
-                parsed.conversationId,
-                unreadWaMessages.map((m) => m.id)
-              )
-            )
-            .catch((err) =>
-              console.error("[markConversationAsRead] WA read sync error:", err)
-            )
-        }
-      }
-    }
+      if (!conversation?.whatsappEnabled) return
+      const unreadWaMessages = await db.message.findMany({
+        where: {
+          conversationId: parsed.conversationId,
+          whatsappMessageId: { not: null },
+          whatsappStatus: { not: "read" },
+          senderId: { not: authContext.userId },
+        },
+        select: { id: true },
+        take: 50,
+      })
+      if (unreadWaMessages.length === 0) return
+      const { syncReadReceiptsToWhatsApp } = await import("./whatsapp-bridge")
+      await syncReadReceiptsToWhatsApp(
+        schoolId,
+        parsed.conversationId,
+        unreadWaMessages.map((m) => m.id)
+      )
+    })().catch((err) =>
+      console.error("[markConversationAsRead] WA read sync error:", err)
+    )
 
     revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
@@ -1164,7 +1149,7 @@ export async function addParticipant(
 
     const parsed = addParticipantSchema.parse(input)
 
-    // Get conversation
+    // Get conversation (includes the caller's participant record)
     const conversation = await getConversation(
       schoolId,
       authContext.userId,
@@ -1174,11 +1159,8 @@ export async function addParticipant(
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
-    // Get user's participant role
-    const participant = await getConversationParticipant(
-      schoolId,
-      parsed.conversationId,
-      authContext.userId
+    const participant = conversation.participants.find(
+      (p) => p.userId === authContext.userId
     )
 
     // Check permission
@@ -1204,12 +1186,8 @@ export async function addParticipant(
       console.error("[addParticipant] Socket.IO emit error:", err)
     )
 
-    // Get the adder's name for notification
-    const adder = await db.user.findUnique({
-      where: { id: authContext.userId },
-      select: { username: true },
-    })
-    const adderName = adder?.username || "Someone"
+    // Adder is a participant — name already in memory
+    const adderName = participant?.user?.username || "Someone"
 
     // Notify the added user (non-blocking)
     notifyParticipantAdded(
@@ -1421,7 +1399,12 @@ export async function removeReaction(
         userId: authContext.userId,
         message: { conversation: { schoolId } },
       },
-      include: { message: { select: { conversationId: true } } },
+      select: {
+        id: true,
+        emoji: true,
+        messageId: true,
+        message: { select: { conversationId: true } },
+      },
     })
     if (!reaction) {
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
@@ -1924,45 +1907,6 @@ export async function searchConversationMessages(input: {
 }
 
 /**
- * Get search suggestions based on user's message history
- */
-export async function fetchSearchSuggestions(input: {
-  prefix: string
-  limit?: number
-}): Promise<ActionResponse<string[]>> {
-  try {
-    const session = await auth()
-    const authContext = getAuthContext(session)
-    if (!authContext) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Import function with alias to avoid collision
-    const queries = await import("./queries")
-
-    const suggestions = await queries.getSearchSuggestions(
-      schoolId,
-      authContext.userId,
-      input.prefix,
-      input.limit ?? 5
-    )
-
-    return { success: true, data: suggestions }
-  } catch (error) {
-    console.error("[fetchSearchSuggestions] Error:", error)
-    return actionError(
-      ACTION_ERRORS.LOAD_FAILED,
-      error instanceof Error ? error.message : undefined
-    )
-  }
-}
-
-/**
  * Fetch a conversation and its messages for client-side switching.
  * Used to avoid full page reloads when switching conversations.
  */
@@ -1988,31 +1932,33 @@ export async function fetchConversationData(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const { getConversation, getMessagesList } = await import("./queries")
+    const { getConversation } = await import("./queries")
     const { serializeConversation, serializeMessages } =
       await import("./serialization")
 
-    const take = input.take ?? 50
+    const take = Math.min(input.take ?? 50, 50)
 
-    const [conversation, messagesResult] = await Promise.all([
-      getConversation(schoolId, authContext.userId, input.conversationId),
-      getMessagesList(schoolId, {
-        conversationId: input.conversationId,
-        page: 1,
-        perPage: take,
-      }),
-    ])
+    // conversationDetailSelect already loads the newest 50 messages with the
+    // full message select — reusing them halves the queries per conversation
+    // switch (the previous getMessagesList call re-fetched the same rows).
+    const conversation = await getConversation(
+      schoolId,
+      authContext.userId,
+      input.conversationId
+    )
 
     if (!conversation) {
       return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
     }
 
+    const messages = conversation.messages.slice(0, take)
+
     return {
       success: true,
       data: {
         conversation: serializeConversation(conversation),
-        messages: serializeMessages(messagesResult.rows).reverse(),
-        hasMore: messagesResult.count > take,
+        messages: serializeMessages(messages).reverse(),
+        hasMore: conversation._count.messages > messages.length,
       },
     }
   } catch (error) {
@@ -2043,60 +1989,40 @@ export async function pollNewMessages(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const isParticipant = await isConversationParticipant(
-      schoolId,
-      input.conversationId,
-      authContext.userId
-    )
-    if (!isParticipant) {
-      return actionError(ACTION_ERRORS.MESSAGE_SEND_FAILED)
+    // No cursor — return empty (initial load uses fetchConversationData)
+    if (!input.afterMessageId) {
+      return { success: true, data: { items: [] } }
     }
 
+    const { messageListSelect } = await import("./queries")
     const { serializeMessages } = await import("./serialization")
 
-    // If we have a cursor, fetch messages newer than it
-    if (input.afterMessageId) {
-      const cursorMessage = await db.message.findUnique({
-        where: { id: input.afterMessageId },
-        select: {
-          createdAt: true,
-          conversation: { select: { schoolId: true } },
+    // Single query per poll tick (this runs every 10s for every open chat):
+    // - participant scoping is folded into the where clause (was a separate
+    //   COUNT round-trip)
+    // - the cursor replaces the separate findUnique + createdAt pivot
+    // - soft-deleted rows are INCLUDED so the cursor still resolves when the
+    //   newest message gets deleted, and clients receive the tombstone
+    //   (they dedupe by id, so already-rendered messages are unaffected)
+    const newMessages = await db.message.findMany({
+      where: {
+        conversationId: input.conversationId,
+        conversation: {
+          schoolId,
+          participants: { some: { userId: authContext.userId } },
         },
-      })
+      },
+      cursor: { id: input.afterMessageId },
+      skip: 1,
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: 50,
+      select: messageListSelect,
+    })
 
-      if (cursorMessage && cursorMessage.conversation?.schoolId === schoolId) {
-        const newMessages = await db.message.findMany({
-          where: {
-            conversationId: input.conversationId,
-            conversation: { schoolId },
-            createdAt: { gt: cursorMessage.createdAt },
-            isDeleted: false,
-          },
-          include: {
-            sender: {
-              select: { id: true, username: true, email: true, image: true },
-            },
-            attachments: true,
-            reactions: {
-              include: { user: { select: { id: true, username: true } } },
-            },
-            replyTo: {
-              include: { sender: { select: { id: true, username: true } } },
-            },
-          },
-          orderBy: { createdAt: "asc" },
-          take: 50,
-        })
-
-        return {
-          success: true,
-          data: { items: serializeMessages(newMessages) },
-        }
-      }
+    return {
+      success: true,
+      data: { items: serializeMessages(newMessages) },
     }
-
-    // No cursor — return empty (initial load uses fetchConversationData)
-    return { success: true, data: { items: [] } }
   } catch (error) {
     console.error("[pollNewMessages] Error:", error)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
@@ -2121,17 +2047,16 @@ export async function pollConversationUpdates(): Promise<
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const { getConversationsList } = await import("./queries")
+    const { getConversationsForPoll } = await import("./queries")
     const { serializeConversations } = await import("./serialization")
 
-    const result = await getConversationsList(schoolId, authContext.userId, {
-      page: 1,
-      perPage: 50,
-    })
+    // Poll path skips the pagination COUNT query — the client replaces its
+    // list wholesale and never reads a total.
+    const rows = await getConversationsForPoll(schoolId, authContext.userId)
 
     return {
       success: true,
-      data: { conversations: serializeConversations(result.rows) },
+      data: { conversations: serializeConversations(rows) },
     }
   } catch (error) {
     console.error("[pollConversationUpdates] Error:", error)
@@ -2252,49 +2177,54 @@ export async function forwardMessage(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    const messageIds: string[] = []
+    // Batch: one query verifies participation in ALL targets, the creates run
+    // in a single transaction, and lastMessageAt updates in one updateMany —
+    // previously 3 sequential round-trips PER target conversation.
+    const targetParticipations = await db.conversationParticipant.findMany({
+      where: {
+        userId: authContext.userId,
+        conversationId: { in: parsed.targetConversationIds },
+        conversation: { schoolId },
+      },
+      select: { conversationId: true },
+    })
+    const verifiedIds = targetParticipations.map((p) => p.conversationId)
 
-    for (const targetConversationId of parsed.targetConversationIds) {
-      // Verify user is participant of target conversation
-      const isTargetParticipant = await isConversationParticipant(
-        schoolId,
-        targetConversationId,
-        authContext.userId
+    const forwarded = await db.$transaction(
+      verifiedIds.map((targetConversationId) =>
+        db.message.create({
+          data: {
+            conversationId: targetConversationId,
+            senderId: authContext.userId,
+            content: originalMessage.content,
+            contentType: originalMessage.contentType,
+            forwardedFromId: originalMessage.id,
+            status: "sent",
+            attachments:
+              originalMessage.attachments.length > 0
+                ? {
+                    create: originalMessage.attachments.map((a) => ({
+                      fileName: a.fileName,
+                      fileUrl: a.fileUrl,
+                      fileSize: a.fileSize,
+                      fileType: a.fileType,
+                      width: a.width,
+                      height: a.height,
+                      thumbnail: a.thumbnail,
+                      uploaded: true,
+                    })),
+                  }
+                : undefined,
+          },
+          select: { id: true },
+        })
       )
-      if (!isTargetParticipant) continue
+    )
+    const messageIds = forwarded.map((f) => f.id)
 
-      // Create forwarded message
-      const forwarded = await db.message.create({
-        data: {
-          conversationId: targetConversationId,
-          senderId: authContext.userId,
-          content: originalMessage.content,
-          contentType: originalMessage.contentType,
-          forwardedFromId: originalMessage.id,
-          status: "sent",
-          attachments:
-            originalMessage.attachments.length > 0
-              ? {
-                  create: originalMessage.attachments.map((a) => ({
-                    fileName: a.fileName,
-                    fileUrl: a.fileUrl,
-                    fileSize: a.fileSize,
-                    fileType: a.fileType,
-                    width: a.width,
-                    height: a.height,
-                    thumbnail: a.thumbnail,
-                    uploaded: true,
-                  })),
-                }
-              : undefined,
-        },
-      })
-
-      messageIds.push(forwarded.id)
-
-      // Update conversation lastMessageAt
-      await db.conversation.update({
-        where: { id: targetConversationId },
+    if (verifiedIds.length > 0) {
+      await db.conversation.updateMany({
+        where: { id: { in: verifiedIds } },
         data: { lastMessageAt: new Date() },
       })
     }

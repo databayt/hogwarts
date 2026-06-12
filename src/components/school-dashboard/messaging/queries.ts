@@ -335,6 +335,24 @@ export async function getConversationsList(
 }
 
 /**
+ * Conversation list for the 15s polling fallback. Identical shape to
+ * getConversationsList rows but skips the pagination COUNT query — the
+ * polling client replaces its list wholesale and never reads a total, so
+ * the count was pure overhead on every tick.
+ */
+export async function getConversationsForPoll(
+  schoolId: string,
+  userId: string
+) {
+  return db.conversation.findMany({
+    where: buildConversationWhere(schoolId, userId),
+    orderBy: buildConversationOrderBy(),
+    take: 50,
+    select: conversationListSelect,
+  })
+}
+
+/**
  * Get single conversation with full details
  */
 export async function getConversation(
@@ -523,40 +541,40 @@ export async function getMessageStats(schoolId: string, userId: string) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  const [total, sent, received, today, thisWeek] = await Promise.all([
-    db.message.count({ where }),
-    db.message.count({ where: { ...where, senderId: userId } }),
-    db.message.count({
-      where: {
-        ...where,
-        senderId: { not: userId },
-        conversation: {
-          schoolId,
-          participants: {
-            some: { userId },
+  const [total, sent, received, today, thisWeek, unreadMessages] =
+    await Promise.all([
+      db.message.count({ where }),
+      db.message.count({ where: { ...where, senderId: userId } }),
+      db.message.count({
+        where: {
+          ...where,
+          senderId: { not: userId },
+          conversation: {
+            schoolId,
+            participants: {
+              some: { userId },
+            },
           },
         },
-      },
-    }),
-    db.message.count({ where: { ...where, createdAt: { gte: todayStart } } }),
-    db.message.count({ where: { ...where, createdAt: { gte: weekStart } } }),
-  ])
-
-  // Get unread count (messages after user's last read in each conversation)
-  const unreadMessages = await db.message.count({
-    where: {
-      conversation: {
-        schoolId,
-        participants: {
-          some: {
-            userId,
-            lastReadAt: null,
+      }),
+      db.message.count({ where: { ...where, createdAt: { gte: todayStart } } }),
+      db.message.count({ where: { ...where, createdAt: { gte: weekStart } } }),
+      // Unread = messages after user's last read in each conversation
+      db.message.count({
+        where: {
+          conversation: {
+            schoolId,
+            participants: {
+              some: {
+                userId,
+                lastReadAt: null,
+              },
+            },
           },
+          senderId: { not: userId },
         },
-      },
-      senderId: { not: userId },
-    },
-  })
+      }),
+    ])
 
   return {
     total,
@@ -586,9 +604,9 @@ export async function getUnreadMessageCount(schoolId: string, userId: string) {
   // This aggregates all unread counts in a single database roundtrip
   const result = await db.$queryRaw<{ count: bigint }[]>`
     SELECT COUNT(DISTINCT m.id) as count
-    FROM "Message" m
-    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = m."conversationId"
-    INNER JOIN "Conversation" c ON c.id = m."conversationId"
+    FROM messages m
+    INNER JOIN conversation_participants cp ON cp."conversationId" = m."conversationId"
+    INNER JOIN conversations c ON c.id = m."conversationId"
     WHERE cp."userId" = ${userId}
       AND c."schoolId" = ${schoolId}
       AND m."senderId" != ${userId}
@@ -618,9 +636,9 @@ export async function getUnreadCountsPerConversation(
           SELECT
             cp."conversationId",
             COUNT(m.id) as count
-          FROM "ConversationParticipant" cp
-          INNER JOIN "Conversation" c ON c.id = cp."conversationId"
-          LEFT JOIN "Message" m ON
+          FROM conversation_participants cp
+          INNER JOIN conversations c ON c.id = cp."conversationId"
+          LEFT JOIN messages m ON
             m."conversationId" = cp."conversationId"
             AND m."senderId" != ${userId}
             AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
@@ -634,9 +652,9 @@ export async function getUnreadCountsPerConversation(
           SELECT
             cp."conversationId",
             COUNT(m.id) as count
-          FROM "ConversationParticipant" cp
-          INNER JOIN "Conversation" c ON c.id = cp."conversationId"
-          LEFT JOIN "Message" m ON
+          FROM conversation_participants cp
+          INNER JOIN conversations c ON c.id = cp."conversationId"
+          LEFT JOIN messages m ON
             m."conversationId" = cp."conversationId"
             AND m."senderId" != ${userId}
             AND m."createdAt" > COALESCE(cp."lastReadAt", '1970-01-01'::timestamp)
@@ -1095,17 +1113,22 @@ export async function fullTextSearchMessages(
 ): Promise<{ results: SearchResult[]; total: number }> {
   const { limit = 50, offset = 0, conversationId } = options
 
-  // Sanitize query for PostgreSQL tsquery
-  const sanitizedQuery = query
+  // Sanitize query for PostgreSQL tsquery. The LAST term gets a `:*` prefix
+  // wildcard so search-as-you-type matches partial words ("hel" → "hello");
+  // earlier terms are complete words and match exactly (AND semantics).
+  const words = query
     .trim()
-    .replace(/[^\w\s]/g, " ") // Remove special characters
+    .replace(/[^\w\s؀-ۿ]/g, " ") // Keep word chars incl. Arabic
     .split(/\s+/)
     .filter((word) => word.length > 0)
-    .join(" & ") // AND search (all words must match)
 
-  if (!sanitizedQuery) {
+  if (words.length === 0) {
     return { results: [], total: 0 }
   }
+
+  const sanitizedQuery = words
+    .map((word, i) => (i === words.length - 1 ? `${word}:*` : word))
+    .join(" & ")
 
   // Execute full-text search with ranking
   // Use separate branches to avoid SQL injection via Prisma.raw()
@@ -1126,9 +1149,9 @@ export async function fullTextSearchMessages(
             to_tsvector('simple', COALESCE(m.content, '')),
             to_tsquery('simple', ${sanitizedQuery})
           ) as rank
-        FROM "Message" m
-        INNER JOIN "Conversation" c ON c.id = m."conversationId"
-        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        FROM messages m
+        INNER JOIN conversations c ON c.id = m."conversationId"
+        INNER JOIN conversation_participants cp ON cp."conversationId" = c.id
         LEFT JOIN "User" u ON u.id = m."senderId"
         WHERE c."schoolId" = ${schoolId}
           AND cp."userId" = ${userId}
@@ -1155,9 +1178,9 @@ export async function fullTextSearchMessages(
             to_tsvector('simple', COALESCE(m.content, '')),
             to_tsquery('simple', ${sanitizedQuery})
           ) as rank
-        FROM "Message" m
-        INNER JOIN "Conversation" c ON c.id = m."conversationId"
-        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        FROM messages m
+        INNER JOIN conversations c ON c.id = m."conversationId"
+        INNER JOIN conversation_participants cp ON cp."conversationId" = c.id
         LEFT JOIN "User" u ON u.id = m."senderId"
         WHERE c."schoolId" = ${schoolId}
           AND cp."userId" = ${userId}
@@ -1172,9 +1195,9 @@ export async function fullTextSearchMessages(
   const countResult = conversationId
     ? await db.$queryRaw<{ count: bigint }[]>`
         SELECT COUNT(DISTINCT m.id) as count
-        FROM "Message" m
-        INNER JOIN "Conversation" c ON c.id = m."conversationId"
-        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        FROM messages m
+        INNER JOIN conversations c ON c.id = m."conversationId"
+        INNER JOIN conversation_participants cp ON cp."conversationId" = c.id
         WHERE c."schoolId" = ${schoolId}
           AND cp."userId" = ${userId}
           AND m."isDeleted" = false
@@ -1183,9 +1206,9 @@ export async function fullTextSearchMessages(
       `
     : await db.$queryRaw<{ count: bigint }[]>`
         SELECT COUNT(DISTINCT m.id) as count
-        FROM "Message" m
-        INNER JOIN "Conversation" c ON c.id = m."conversationId"
-        INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
+        FROM messages m
+        INNER JOIN conversations c ON c.id = m."conversationId"
+        INNER JOIN conversation_participants cp ON cp."conversationId" = c.id
         WHERE c."schoolId" = ${schoolId}
           AND cp."userId" = ${userId}
           AND m."isDeleted" = false
@@ -1242,45 +1265,6 @@ export async function globalSearch(
     totalConversations: conversationResults.count,
     totalMessages: messageResults.total,
   }
-}
-
-/**
- * Get recent search suggestions based on user's message history
- */
-export async function getSearchSuggestions(
-  schoolId: string,
-  userId: string,
-  prefix: string,
-  limit: number = 5
-): Promise<string[]> {
-  if (!prefix || prefix.length < 2) {
-    return []
-  }
-
-  // Get unique words from user's recent messages that match the prefix
-  const results = await db.$queryRaw<{ word: string }[]>`
-    SELECT DISTINCT unnest(
-      regexp_split_to_array(
-        lower(m.content),
-        '\\s+'
-      )
-    ) as word
-    FROM "Message" m
-    INNER JOIN "Conversation" c ON c.id = m."conversationId"
-    INNER JOIN "ConversationParticipant" cp ON cp."conversationId" = c.id
-    WHERE c."schoolId" = ${schoolId}
-      AND cp."userId" = ${userId}
-      AND m."isDeleted" = false
-      AND m.content IS NOT NULL
-      AND m."createdAt" > NOW() - INTERVAL '30 days'
-    HAVING unnest(regexp_split_to_array(lower(m.content), '\\s+'))
-      LIKE ${prefix.toLowerCase() + "%"}
-      AND length(unnest(regexp_split_to_array(lower(m.content), '\\s+'))) >= 3
-    ORDER BY word
-    LIMIT ${limit}
-  `
-
-  return results.map((r) => r.word)
 }
 
 /**
