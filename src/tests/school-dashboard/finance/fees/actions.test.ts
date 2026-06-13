@@ -536,3 +536,196 @@ describe("markPaymentCleared", () => {
     expect(result.error).toBe("NOT_FOUND")
   })
 })
+
+// ---------------------------------------------------------------------------
+// Level 3 — propagateFeeStructureChange (via updateFeeStructure)
+// ---------------------------------------------------------------------------
+
+describe("updateFeeStructure — Level 3 inheritance propagation", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    vi.resetModules()
+    await setupAuthAndTenant()
+  })
+
+  it("returns updated:0 skippedPaid:0 when no assignments reference the structure", async () => {
+    // After resetModules we must import db fresh to get the new mock instance
+    const { db: dbMock } = await import("@/lib/db")
+
+    // feeStructure.findFirst — structure existence check
+    ;(dbMock.feeStructure as any) = {
+      findFirst: vi.fn().mockResolvedValue({
+        id: "fs-1",
+        schoolId: SCHOOL_ID,
+        academicYear: "2026-2027",
+      }),
+      update: vi.fn().mockResolvedValue({}),
+    }
+    // feeAssignment.findMany — no assignments linked to this structure
+    ;(dbMock.feeAssignment as any) = {
+      findMany: vi.fn().mockResolvedValue([]),
+    }
+    ;(dbMock.$transaction as any) = vi
+      .fn()
+      .mockImplementation(async (fn: unknown) => {
+        if (typeof fn === "function") return fn(dbMock)
+        return fn
+      })
+
+    const formData = new FormData()
+    formData.append("name", "Grade 1 Fee")
+    formData.append("academicYear", "2026-2027")
+    formData.append("tuitionFee", "5000")
+    formData.append("totalAmount", "5000")
+    formData.append("installments", "4")
+
+    const { updateFeeStructure } =
+      await import("@/components/school-dashboard/finance/fees/actions")
+    const result = await updateFeeStructure("fs-1", formData)
+
+    expect(result.success).toBe(true)
+    expect((result as any).data?.updated).toBe(0)
+    expect((result as any).data?.skippedPaid).toBe(0)
+  })
+
+  it("skips assignments that have SUCCESS payments", async () => {
+    const { db: dbMock } = await import("@/lib/db")
+
+    ;(dbMock.feeStructure as any) = {
+      findFirst: vi.fn().mockResolvedValue({
+        id: "fs-1",
+        schoolId: SCHOOL_ID,
+        academicYear: "2026-2027",
+      }),
+      update: vi.fn().mockResolvedValue({}),
+    }
+    // Assignment with a SUCCESS payment — should be skipped
+    ;(dbMock.feeAssignment as any) = {
+      findMany: vi.fn().mockResolvedValue([
+        {
+          id: "fa-paid",
+          status: "PAID",
+          totalDiscount: 0,
+          payments: [{ id: "p1" }], // has SUCCESS payment
+          invoices: [],
+        },
+      ]),
+      update: vi.fn().mockResolvedValue({}),
+    }
+    ;(dbMock.$transaction as any) = vi
+      .fn()
+      .mockImplementation(async (fn: unknown) => {
+        if (typeof fn === "function") return fn(dbMock)
+        return fn
+      })
+
+    const formData = new FormData()
+    formData.append("name", "Grade 1 Fee")
+    formData.append("academicYear", "2026-2027")
+    formData.append("tuitionFee", "5000")
+    formData.append("totalAmount", "5500")
+    formData.append("installments", "4")
+
+    const { updateFeeStructure } =
+      await import("@/components/school-dashboard/finance/fees/actions")
+    const result = await updateFeeStructure("fs-1", formData)
+
+    expect(result.success).toBe(true)
+    expect((result as any).data?.skippedPaid).toBe(1)
+    expect((result as any).data?.updated).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Level 4 — updateFeeAssignmentDiscount
+// ---------------------------------------------------------------------------
+
+describe("updateFeeAssignmentDiscount", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    vi.resetModules()
+    await setupAuthAndTenant()
+  })
+
+  it("returns NOT_FOUND when assignment does not exist", async () => {
+    const { db: dbMock } = await import("@/lib/db")
+    ;(dbMock.feeAssignment as any) = {
+      findFirst: vi.fn().mockResolvedValue(null),
+    }
+
+    const { updateFeeAssignmentDiscount } =
+      await import("@/components/school-dashboard/finance/fees/actions")
+    const result = await updateFeeAssignmentDiscount("fa-missing", 500, "Merit")
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe("NOT_FOUND")
+  })
+
+  it("computes finalAmount = baseAmount - discount and returns it", async () => {
+    const { db: dbMock } = await import("@/lib/db")
+    ;(dbMock.feeAssignment as any) = {
+      findFirst: vi.fn().mockResolvedValue({
+        id: FEE_ASSIGNMENT_ID,
+        schoolId: SCHOOL_ID,
+        discounts: [],
+        totalDiscount: 0,
+        feeStructure: { totalAmount: 10000 },
+        invoices: [],
+      }),
+      update: vi.fn().mockResolvedValue({}),
+    }
+    ;(dbMock.userInvoice as any) = {
+      update: vi.fn().mockResolvedValue({}),
+    }
+    ;(dbMock.$transaction as any) = vi
+      .fn()
+      .mockImplementation(async (fn: unknown) => {
+        if (typeof fn === "function") return fn(dbMock)
+        return fn
+      })
+
+    const { updateFeeAssignmentDiscount } =
+      await import("@/components/school-dashboard/finance/fees/actions")
+    const result = await updateFeeAssignmentDiscount(
+      FEE_ASSIGNMENT_ID,
+      1500,
+      "Scholarship"
+    )
+
+    expect(result.success).toBe(true)
+    expect((result as any).data?.finalAmount).toBe(8500)
+  })
+
+  it("clamps negative discount to zero (finalAmount stays at base)", async () => {
+    const { db: dbMock } = await import("@/lib/db")
+    ;(dbMock.feeAssignment as any) = {
+      findFirst: vi.fn().mockResolvedValue({
+        id: FEE_ASSIGNMENT_ID,
+        schoolId: SCHOOL_ID,
+        discounts: [],
+        totalDiscount: 0,
+        feeStructure: { totalAmount: 5000 },
+        invoices: [],
+      }),
+      update: vi.fn().mockResolvedValue({}),
+    }
+    ;(dbMock.$transaction as any) = vi
+      .fn()
+      .mockImplementation(async (fn: unknown) => {
+        if (typeof fn === "function") return fn(dbMock)
+        return fn
+      })
+
+    const { updateFeeAssignmentDiscount } =
+      await import("@/components/school-dashboard/finance/fees/actions")
+    const result = await updateFeeAssignmentDiscount(
+      FEE_ASSIGNMENT_ID,
+      -200,
+      "Error"
+    )
+
+    expect(result.success).toBe(true)
+    // Negative discount clamped to 0; finalAmount = baseAmount
+    expect((result as any).data?.finalAmount).toBe(5000)
+  })
+})

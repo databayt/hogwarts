@@ -57,6 +57,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
     section: {
       findMany: vi.fn(),
@@ -100,9 +101,16 @@ vi.mock("@/lib/db", () => ({
     feeAssignment: {
       upsert: vi.fn(),
       findMany: vi.fn().mockResolvedValue([]),
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    payment: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: "pay-new" }),
+      update: vi.fn().mockResolvedValue({}),
     },
     school: {
       findFirst: vi.fn().mockResolvedValue({ preferredLanguage: "ar" }),
+      findUnique: vi.fn().mockResolvedValue(null),
     },
     guardianType: {
       upsert: vi.fn(),
@@ -230,8 +238,16 @@ describe("Admission Actions", () => {
       success: true,
       data: validCampaignData,
     } as any)
-    // Make $transaction invoke the callback with db as the tx client
-    vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(db))
+    // Handle both callback-style and array-style $transaction calls:
+    // - confirmEnrollment passes a callback (cb: TransactionClient => Promise)
+    // - generateMeritList passes an array of Prisma promises
+    vi.mocked(db.$transaction).mockImplementation(async (cbOrArray: any) => {
+      if (typeof cbOrArray === "function") return cbOrArray(db)
+      if (Array.isArray(cbOrArray)) return Promise.all(cbOrArray)
+      return cbOrArray(db)
+    })
+    // student.count is used by the new deterministic enrollmentNumber generator
+    vi.mocked(db.student.count).mockResolvedValue(0)
   })
 
   // =========================================================================
@@ -693,45 +709,105 @@ describe("Admission Actions", () => {
   // =========================================================================
 
   describe("generateMeritList", () => {
-    it("ranks eligible applications by score descending", async () => {
+    it("fetches eligible applications with score fields for weighted compute", async () => {
+      // generateMeritList now reads entranceScore + interviewScore, computes
+      // meritScore from weights, then batch-writes both meritScore and meritRank.
       const mockApplications = [
-        { id: "a-1", meritScore: 95 },
-        { id: "a-2", meritScore: 88 },
-        { id: "a-3", meritScore: 92 },
+        {
+          id: "a-1",
+          entranceScore: { toNumber: () => 80 },
+          interviewScore: { toNumber: () => 70 },
+        },
+        {
+          id: "a-2",
+          entranceScore: { toNumber: () => 90 },
+          interviewScore: { toNumber: () => 80 },
+        },
+        { id: "a-3", entranceScore: null, interviewScore: null },
       ]
       vi.mocked(db.application.findMany).mockResolvedValue(
         mockApplications as any
       )
+      // $transaction receives an array of Prisma calls — return them resolved
+      vi.mocked(db.$transaction).mockImplementation(async (cbOrArray: any) => {
+        if (Array.isArray(cbOrArray)) return cbOrArray
+        return cbOrArray(db)
+      })
       vi.mocked(db.application.update).mockResolvedValue({} as any)
 
       const result = await generateMeritList({ campaignId: "c-1" })
 
       expect(result.success).toBe(true)
+      // Query shape: only id + score fields (no orderBy by meritScore — we compute)
       expect(db.application.findMany).toHaveBeenCalledWith({
         where: {
           schoolId: SCHOOL_ID,
           campaignId: "c-1",
           status: { in: ["SHORTLISTED", "SELECTED", "WAITLISTED"] },
         },
-        orderBy: [
-          { meritScore: "desc" },
-          { entranceScore: "desc" },
-          { interviewScore: "desc" },
-        ],
+        select: {
+          id: true,
+          entranceScore: true,
+          interviewScore: true,
+        },
       })
-      // Each application gets a merit rank (1-indexed)
-      expect(db.application.update).toHaveBeenCalledTimes(3)
-      expect(db.application.update).toHaveBeenNthCalledWith(1, {
-        where: { id: "a-1", schoolId: SCHOOL_ID },
-        data: { meritRank: 1 },
+    })
+
+    it("ranks by computed meritScore descending, nulls last", async () => {
+      // Default weights: entrance 60%, interview 40%
+      // a-2: 90*0.6 + 80*0.4 = 54+32 = 86 → rank 1
+      // a-1: 80*0.6 + 70*0.4 = 48+28 = 76 → rank 2
+      // a-3: no scores → rank 3 (null meritScore)
+      const mockApplications = [
+        { id: "a-1", entranceScore: 80, interviewScore: 70 },
+        { id: "a-2", entranceScore: 90, interviewScore: 80 },
+        { id: "a-3", entranceScore: null, interviewScore: null },
+      ]
+      vi.mocked(db.application.findMany).mockResolvedValue(
+        mockApplications as any
+      )
+      vi.mocked(db.$transaction).mockImplementation(async (cbOrArray: any) => {
+        if (Array.isArray(cbOrArray)) return cbOrArray
+        return cbOrArray(db)
       })
-      expect(db.application.update).toHaveBeenNthCalledWith(2, {
-        where: { id: "a-2", schoolId: SCHOOL_ID },
-        data: { meritRank: 2 },
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await generateMeritList({ campaignId: "c-1" })
+
+      expect(result.success).toBe(true)
+      // a-2 must get rank 1, a-1 rank 2, a-3 rank 3
+      const updateCalls = vi.mocked(db.application.update).mock.calls
+      const rankById = Object.fromEntries(
+        updateCalls.map((call) => [
+          (call[0] as any).where.id,
+          (call[0] as any).data.meritRank,
+        ])
+      )
+      expect(rankById["a-2"]).toBe(1)
+      expect(rankById["a-1"]).toBe(2)
+      expect(rankById["a-3"]).toBe(3)
+    })
+
+    it("reads weights from AdmissionSettings", async () => {
+      vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+        entranceWeight: 70,
+        interviewWeight: 30,
+      } as any)
+      vi.mocked(db.application.findMany).mockResolvedValue([
+        { id: "a-1", entranceScore: 80, interviewScore: 60 },
+      ] as any)
+      vi.mocked(db.$transaction).mockImplementation(async (cbOrArray: any) => {
+        if (Array.isArray(cbOrArray)) return cbOrArray
+        return cbOrArray(db)
       })
-      expect(db.application.update).toHaveBeenNthCalledWith(3, {
-        where: { id: "a-3", schoolId: SCHOOL_ID },
-        data: { meritRank: 3 },
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await generateMeritList({ campaignId: "c-1" })
+
+      expect(result.success).toBe(true)
+      expect(db.admissionSettings.findUnique).toHaveBeenCalledWith({
+        where: { schoolId: SCHOOL_ID },
+        select: { entranceWeight: true, interviewWeight: true },
       })
     })
 

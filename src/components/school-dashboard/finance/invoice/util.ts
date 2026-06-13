@@ -178,6 +178,7 @@ export function getInvoiceStatusColor(status: InvoiceStatus | string): string {
   const colors: Record<InvoiceStatus, string> = {
     PAID: "green",
     UNPAID: "blue",
+    PARTIAL: "amber",
     OVERDUE: "red",
     CANCELLED: "gray",
   }

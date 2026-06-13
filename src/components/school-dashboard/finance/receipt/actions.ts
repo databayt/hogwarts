@@ -52,8 +52,55 @@ export async function uploadReceipt(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // 3. Extract and validate file
-    const file = formData.get("file") as File
+    // 3. Extract file reference — the FileUploader component pre-uploads to CDN
+    //    and sends back (fileId, fileUrl). We also accept a legacy raw File for
+    //    callers that still send the file directly under the "file" key.
+    const rawFile = formData.get("file") as File | null
+    const cdnFileId = formData.get("fileId") as string | null
+    const cdnFileUrl = formData.get("fileUrl") as string | null
+
+    // Pre-upload path: FileUploader already stored the file, gives us a URL.
+    if (cdnFileId && cdnFileUrl) {
+      const fileName = cdnFileId
+      logger.info("Receipt using pre-uploaded CDN file", {
+        action: "receipt_upload",
+        schoolId,
+        userId: session.user.id,
+        cdnFileId,
+      })
+
+      // 5. Create database record with pending status (file is already in CDN)
+      const receipt = await db.expenseReceipt.create({
+        data: {
+          schoolId,
+          userId: session.user.id!,
+          fileName,
+          fileUrl: cdnFileUrl,
+          fileSize: 0, // Size not available after pre-upload; non-critical
+          mimeType: "application/octet-stream",
+          status: "pending",
+        },
+      })
+
+      logger.info("Receipt database record created", {
+        action: "receipt_db_create",
+        receiptId: receipt.id,
+        schoolId,
+      })
+
+      void extractReceiptData(receipt.id, cdnFileUrl, schoolId)
+
+      // 7. Revalidate receipts list page
+      revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
+
+      return {
+        success: true,
+        data: { receiptId: receipt.id },
+      }
+    }
+
+    // Legacy direct-upload path: caller sends a File object under "file".
+    const file = rawFile
     if (!file) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
@@ -108,7 +155,7 @@ export async function uploadReceipt(
     void extractReceiptData(receipt.id, fileUrl, schoolId)
 
     // 7. Revalidate receipts list page
-    revalidatePath(`/s/[subdomain]/(platform)/receipts`)
+    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
 
     return {
       success: true,
@@ -324,7 +371,7 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
     })
 
     // 7. Revalidate receipts list page
-    revalidatePath(`/s/[subdomain]/(platform)/receipts`)
+    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
 
     return {
       success: true,
@@ -378,8 +425,8 @@ export async function retryReceiptExtraction(
     await retryExtraction(id, schoolId)
 
     // 5. Revalidate
-    revalidatePath(`/s/[subdomain]/(platform)/receipts`)
-    revalidatePath(`/s/[subdomain]/(platform)/receipts/${id}`)
+    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt`)
+    revalidatePath(`/s/[subdomain]/(school-dashboard)/finance/receipt/${id}`)
 
     return {
       success: true,

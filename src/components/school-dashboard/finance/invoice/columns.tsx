@@ -25,7 +25,7 @@ export interface InvoiceColumnCallbacks {
   onDelete?: (row: InvoiceRow) => void
 }
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string, ic?: Record<string, string>) => {
   const statusConfig = {
     PAID: {
       variant: "default" as const,
@@ -43,14 +43,26 @@ const getStatusBadge = (status: string) => {
       variant: "outline" as const,
       className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
     },
+    PARTIAL: {
+      variant: "outline" as const,
+      className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+    },
   }
 
   const config =
     statusConfig[status as keyof typeof statusConfig] || statusConfig.UNPAID
 
+  const labels: Record<string, string | undefined> = {
+    PAID: ic?.paid,
+    UNPAID: ic?.unpaid,
+    OVERDUE: ic?.overdue,
+    CANCELLED: ic?.cancelled,
+    PARTIAL: ic?.partial,
+  }
+
   return (
     <Badge variant={config.variant} className={config.className}>
-      {status}
+      {labels[status] ?? status}
     </Badge>
   )
 }
@@ -106,7 +118,7 @@ export const getInvoiceColumns = (
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={ic?.status || "Status"} />
     ),
-    cell: ({ row }) => getStatusBadge(row.original.status),
+    cell: ({ row }) => getStatusBadge(row.original.status, ic),
     meta: {
       label: ic?.status || "Status",
       variant: "select",
@@ -115,6 +127,7 @@ export const getInvoiceColumns = (
         { label: ic?.unpaid || "Unpaid", value: "UNPAID" },
         { label: ic?.overdue || "Overdue", value: "OVERDUE" },
         { label: ic?.cancelled || "Cancelled", value: "CANCELLED" },
+        { label: ic?.partial || "Partial", value: "PARTIAL" },
       ],
     },
     enableColumnFilter: true,
@@ -168,7 +181,7 @@ export const getInvoiceColumns = (
           <ActionMenuItem
             icon={Eye}
             label={ic?.view || "View"}
-            href={`/${lang}/finance/invoice/${invoice.id}`}
+            href={`/${lang}/finance/invoice/invoice/view/${invoice.id}`}
           />
           <ActionMenuItem
             icon={Pencil}

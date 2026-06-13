@@ -7,6 +7,7 @@ import type {
   AcademicStepData,
   ContactStepData,
   GuardianStepData,
+  LocationStepData,
   PersonalStepData,
 } from "@/components/school-marketing/application/types"
 import {
@@ -32,6 +33,7 @@ const validPersonal: PersonalStepData = {
   dateOfBirth: "2010-03-15",
   gender: "MALE",
   nationality: "Sudanese",
+  phone: "+249123456789",
 }
 
 const validContact: ContactStepData = {
@@ -46,6 +48,13 @@ const validContact: ContactStepData = {
 const validGuardian: GuardianStepData = {
   fatherName: "Mohamed Ahmed",
   motherName: "Fatima Ali",
+}
+
+const validLocation: LocationStepData = {
+  address: "123 Main Street",
+  city: "Khartoum",
+  state: "Khartoum",
+  country: "Sudan",
 }
 
 const validAcademic: AcademicStepData = {
@@ -71,15 +80,15 @@ describe("validatePersonalStep", () => {
     )
   })
 
-  it("returns false when gender is missing", () => {
+  it("returns true when gender is missing (gender is optional)", () => {
     expect(validatePersonalStep({ ...validPersonal, gender: "" as any })).toBe(
-      false
+      true
     )
   })
 
-  it("returns false when nationality is missing", () => {
+  it("returns true when nationality is missing (nationality is optional)", () => {
     expect(validatePersonalStep({ ...validPersonal, nationality: "" })).toBe(
-      false
+      true
     )
   })
 })
@@ -89,16 +98,16 @@ describe("validateContactStep", () => {
     expect(validateContactStep(validContact)).toBe(true)
   })
 
-  it("returns false for undefined", () => {
-    expect(validateContactStep(undefined)).toBe(false)
+  it("returns true for undefined (contact merged into personal; always valid)", () => {
+    expect(validateContactStep(undefined)).toBe(true)
   })
 
-  it("returns false when email is missing", () => {
-    expect(validateContactStep({ ...validContact, email: "" })).toBe(false)
+  it("returns true when email is missing (contact is always valid)", () => {
+    expect(validateContactStep({ ...validContact, email: "" })).toBe(true)
   })
 
-  it("returns false when country is missing", () => {
-    expect(validateContactStep({ ...validContact, country: "" })).toBe(false)
+  it("returns true when country is missing (contact is always valid)", () => {
+    expect(validateContactStep({ ...validContact, country: "" })).toBe(true)
   })
 })
 
@@ -111,9 +120,9 @@ describe("validateGuardianStep", () => {
     expect(validateGuardianStep(undefined)).toBe(false)
   })
 
-  it("returns false when motherName is missing", () => {
+  it("returns true when motherName is missing but fatherName present", () => {
     expect(validateGuardianStep({ ...validGuardian, motherName: "" })).toBe(
-      false
+      true
     )
   })
 })
@@ -140,17 +149,19 @@ describe("validateAllSteps", () => {
       validateAllSteps({
         personal: validPersonal,
         contact: validContact,
+        location: validLocation,
         guardian: validGuardian,
         academic: validAcademic,
       })
     ).toBe(true)
   })
 
-  it("returns false when any step is invalid", () => {
+  it("returns false when personal step is invalid (firstName missing)", () => {
     expect(
       validateAllSteps({
-        personal: validPersonal,
-        contact: { ...validContact, email: "" },
+        personal: { ...validPersonal, firstName: "" },
+        contact: validContact,
+        location: validLocation,
         guardian: validGuardian,
         academic: validAcademic,
       })
@@ -171,9 +182,12 @@ describe("getStepValidationStatus", () => {
       academic: validAcademic,
     })
 
+    // validateContactStep always returns true (contact merged into personal);
+    // location is undefined so validateLocationStep returns false
     expect(status).toEqual({
       personal: true,
-      contact: false,
+      contact: true,
+      location: false,
       guardian: true,
       academic: true,
     })

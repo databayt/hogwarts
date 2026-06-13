@@ -112,6 +112,12 @@ async function handleAdmissionDocument(
       confidence: result.data.confidence,
       model: "claude-3-5-sonnet-20241022",
       provider: "anthropic",
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      // Cost: claude-3-5-sonnet $3/M input + $15/M output
+      costUsd:
+        ((result.inputTokens ?? 0) / 1_000_000) * 3.0 +
+        ((result.outputTokens ?? 0) / 1_000_000) * 15.0,
     }
   } catch (error) {
     logger.error(

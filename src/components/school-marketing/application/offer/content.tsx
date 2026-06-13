@@ -3,7 +3,6 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import {
   Banknote,
   Building2,
@@ -47,11 +46,76 @@ import {
   recordRegistrationCashIntent,
 } from "./actions"
 
+// Narrow type for the school.admission.offer dictionary slice.
+// Derived from the JSON shape — string values only, all keys optional
+// since route-scoped loaders may return a partial dictionary.
+type OfferDict = Partial<{
+  declined: string
+  declinedMessage: string
+  expired: string
+  expiredMessage: string
+  paymentMethodRecorded: string
+  application: string
+  reference: string
+  amount: string
+  payAtSchool: string
+  bankAccountDetails: string
+  bank: string
+  accountName: string
+  accountNumber: string
+  notificationMessage: string
+  congratulations: string
+  paymentCancelled: string
+  paymentCancelledMessage: string
+  registrationSuccess: string
+  registrationSuccessMessage: string
+  registrationFailed: string
+  registrationFailedMessage: string
+  offerDetails: string
+  applicationNumber: string
+  class: string
+  academicYear: string
+  status: string
+  accepted: string
+  awaitingAcceptance: string
+  expiresIn: string
+  today: string
+  days: string
+  day: string
+  feeSchedule: string
+  feesForYear: string
+  item: string
+  installments: string
+  annualTotal: string
+  step1Title: string
+  step1Description: string
+  acceptOffer: string
+  decline: string
+  step2Title: string
+  step2Description: string
+  amountDue: string
+  payWithCard: string
+  payWithCardDesc: string
+  payAtSchoolLabel: string
+  payAtSchoolDesc: string
+  bankTransfer: string
+  bankTransferDesc: string
+  acceptedSuccessfully: string
+  enrollmentNotification: string
+  failedToAccept: string
+  failedToDecline: string
+  failedCheckout: string
+  failedPayment: string
+  unexpectedError: string
+}>
+
 interface OfferContentProps {
   offer: OfferDetails
   locale: string
   dictionary: Dictionary
   cancelled?: boolean
+  /** Value of the ?registration= query param: 'success' | 'cancelled' | undefined */
+  registrationParam?: string
   accessToken: string
 }
 
@@ -60,12 +124,17 @@ export default function OfferContent({
   locale,
   dictionary,
   cancelled,
+  registrationParam,
   accessToken,
 }: OfferContentProps) {
-  const router = useRouter()
-  const t = (dictionary as any)?.school?.admission?.offer as
-    | Record<string, string>
-    | undefined
+  // Use the narrow OfferDict type — no any-cast needed.
+  const t: OfferDict | undefined = (
+    dictionary as {
+      school?: {
+        admission?: { offer?: OfferDict }
+      }
+    }
+  )?.school?.admission?.offer
   const {
     application,
     school,
@@ -357,7 +426,21 @@ export default function OfferContent({
           </p>
         </div>
 
-        {cancelled && (
+        {/* Registration fee payment result banners (Stripe redirect-back) */}
+        {registrationParam === "success" && (
+          <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-800 dark:text-green-200">
+              {t?.registrationSuccess || "Registration Fee Paid"}
+            </AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-300">
+              {t?.registrationSuccessMessage ||
+                "Your registration fee payment was successful. The school will confirm your enrollment shortly."}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {(registrationParam === "cancelled" || cancelled) && (
           <Alert variant="destructive">
             <AlertTitle>
               {t?.paymentCancelled || "Payment Cancelled"}
@@ -365,6 +448,16 @@ export default function OfferContent({
             <AlertDescription>
               {t?.paymentCancelledMessage ||
                 "Payment was cancelled. You can try again."}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {registrationParam === "failed" && (
+          <Alert variant="destructive">
+            <AlertTitle>{t?.registrationFailed || "Payment Failed"}</AlertTitle>
+            <AlertDescription>
+              {t?.registrationFailedMessage ||
+                "The payment could not be processed. Please try again or choose a different payment method."}
             </AlertDescription>
           </Alert>
         )}

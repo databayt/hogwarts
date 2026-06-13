@@ -16,6 +16,7 @@ import { db } from "@/lib/db"
 import { createProcessingJob } from "@/lib/document-extraction/queue-runner"
 import { logger } from "@/lib/logger"
 
+import { assertAdmissionPermission } from "../authorization"
 import { classifyAdmissionDocument } from "./classify"
 import type {
   AdmissionDocumentType,
@@ -42,11 +43,14 @@ export async function classifyDocument(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    // RBAC: ADMIN, STAFF can classify documents (mirrors reviewApplications gate)
+    assertAdmissionPermission(session.user.role, "reviewApplications")
+
     if (!fileUrl) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    const result = await classifyAdmissionDocument(fileUrl)
+    const result = await classifyAdmissionDocument(fileUrl, schoolId)
 
     if (!result.success || !result.data) {
       logger.error(
@@ -111,8 +115,11 @@ export async function processApplicationDocument(
       return actionError(ACTION_ERRORS.APPLICATION_NOT_FOUND)
     }
 
-    // Step 1: Classify the document
-    const classifyResult = await classifyAdmissionDocument(documentUrl)
+    // Step 1: Classify the document (budget-gated, usage tracked)
+    const classifyResult = await classifyAdmissionDocument(
+      documentUrl,
+      schoolId
+    )
     const documentType: AdmissionDocumentType =
       classifyResult.success && classifyResult.data
         ? classifyResult.data.type
@@ -201,6 +208,9 @@ export async function getDocumentProcessingStatus(
     if (!schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    // RBAC: ADMIN, STAFF, ACCOUNTANT can view document processing status
+    assertAdmissionPermission(session.user.role, "viewApplications")
 
     // Verify application belongs to this school
     const application = await db.application.findFirst({

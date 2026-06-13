@@ -68,6 +68,12 @@ export default async function MyFeesPage({ params }: Props) {
     redirect(`/${lang}/finance/fees`)
   }
 
+  // Fetch school record for name + currency (needed for receipt PDF)
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { name: true, currency: true },
+  })
+
   // Fetch fee assignments for resolved students
   const assignments = await db.feeAssignment.findMany({
     where: { schoolId, studentId: { in: studentIds } },
@@ -120,6 +126,8 @@ export default async function MyFeesPage({ params }: Props) {
         studentName={childNames}
         assignments={allAssignments}
         lang={lang}
+        currency={school?.currency ?? "USD"}
+        schoolName={school?.name}
         dictionary={dictionary?.finance?.fees?.myFees}
       />
     )
@@ -151,6 +159,8 @@ export default async function MyFeesPage({ params }: Props) {
       studentName={studentName}
       assignments={data}
       lang={lang}
+      currency={school?.currency ?? "USD"}
+      schoolName={school?.name}
       dictionary={dictionary?.finance?.fees?.myFees}
     />
   )

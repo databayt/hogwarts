@@ -42,13 +42,15 @@ export const bankReceiptExtractionSchema = z.object({
     ),
   transferDate: z
     .string()
+    .optional()
     .describe(
-      "Date of the transfer in ISO 8601 format (YYYY-MM-DD). Convert Hijri dates to Gregorian if possible"
+      "Date of the transfer in ISO 8601 format (YYYY-MM-DD). Convert Hijri dates to Gregorian if possible. Omit if not clearly visible on the document"
     ),
   amount: z
     .number()
+    .optional()
     .describe(
-      "Transfer amount as a decimal number (e.g., 1500.00). Extract the numeric value only"
+      "Transfer amount as a decimal number (e.g., 1500.00). Extract the numeric value only. Omit if not clearly visible on the document"
     ),
   currency: z
     .string()

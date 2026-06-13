@@ -379,8 +379,12 @@ export async function updateInvoice(
     )
     if (!canEdit) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
+    // INV-001: privileged roles see all school invoices; others only their own.
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
     const invoice = await db.userInvoice.findFirst({
-      where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
+      where: canSeeAll
+        ? { id, schoolId: ctx.schoolId }
+        : { id, userId: ctx.userId, schoolId: ctx.schoolId },
       include: { items: true },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
@@ -575,16 +579,45 @@ export async function getInvoicesWithFilters(
   }
 }
 
-export async function getInvoiceById(id: string): Promise<ActionResponse> {
+export async function getInvoiceById(
+  id: string,
+  lang?: string
+): Promise<ActionResponse> {
   try {
     const ctx = await requireAuthAndTenant()
     if (isAuthError(ctx)) return ctx
 
+    // INV-001: privileged roles see all school invoices; others only their own.
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
+    const where = canSeeAll
+      ? { id, schoolId: ctx.schoolId }
+      : { id, userId: ctx.userId, schoolId: ctx.schoolId }
+
     const invoice = await db.userInvoice.findFirst({
-      where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
+      where,
       include: { items: true, from: true, to: true },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
+
+    // INV-007 / spec item 6: linked fee payments when feeAssignmentId is set
+    const linkedPayments = invoice.feeAssignmentId
+      ? await db.payment.findMany({
+          where: {
+            feeAssignmentId: invoice.feeAssignmentId,
+            schoolId: ctx.schoolId,
+          },
+          select: {
+            id: true,
+            paymentNumber: true,
+            amount: true,
+            currency: true,
+            paymentDate: true,
+            paymentMethod: true,
+            status: true,
+          },
+          orderBy: { paymentDate: "asc" },
+        })
+      : []
 
     return {
       success: true,
@@ -597,10 +630,16 @@ export async function getInvoiceById(id: string): Promise<ActionResponse> {
             ? Number(invoice.tax_percentage)
             : null,
         total: Number(invoice.total),
+        amountPaid: Number(invoice.amountPaid),
+        sentAt: invoice.sentAt ?? null,
         items: invoice.items.map((item) => ({
           ...item,
           price: Number(item.price),
           total: Number(item.total),
+        })),
+        linkedPayments: linkedPayments.map((p) => ({
+          ...p,
+          amount: Number(p.amount),
         })),
       },
     }
@@ -625,8 +664,12 @@ export async function deleteInvoice({
     )
     if (!canDelete) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
+    // INV-001: privileged roles see all school invoices; others only their own.
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
     const invoice = await db.userInvoice.findFirst({
-      where: { id, userId: ctx.userId, schoolId: ctx.schoolId },
+      where: canSeeAll
+        ? { id, schoolId: ctx.schoolId }
+        : { id, userId: ctx.userId, schoolId: ctx.schoolId },
       select: { id: true, fromAddressId: true, toAddressId: true },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
@@ -672,9 +715,13 @@ export async function sendInvoiceEmail(
     )
     if (!canExport) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
+    // INV-001: privileged roles see all school invoices; others only their own.
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
     const [invoice, school] = await Promise.all([
       db.userInvoice.findFirst({
-        where: { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
+        where: canSeeAll
+          ? { id: invoiceId, schoolId: ctx.schoolId }
+          : { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
         include: { items: true, from: true, to: true },
       }),
       db.school.findUnique({
@@ -696,16 +743,24 @@ export async function sendInvoiceEmail(
       currency: invoice.currency || "USD",
     }).format(Number(invoice.total))
 
+    // INV-005: link to the real invoice detail route (client-facing path, no /s/).
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
+    const invoiceURL = `${appUrl}/${lang}/finance/invoice/invoice/view/${invoice.id}`
+
     const emailContent = SendInvoiceEmail({
       firstName: invoice.to.name,
       invoiceNo: invoice.invoice_no,
       dueDate: format(invoice.due_date, "PPP", { locale: dateFnsLocale }),
       total: totalFormatted,
-      invoiceURL: `${process.env.NEXT_PUBLIC_APP_URL}/invoice/paid/${invoice.id}`,
+      invoiceURL,
     })
 
+    // INV-008: use platform sender from env, fall back to verified Resend domain.
+    const from =
+      process.env.EMAIL_FROM ?? "School Portal <noreply@school.databayt.org>"
+
     const { error } = await resend.emails.send({
-      from: "Invoice <onboarding@resend.dev>",
+      from,
       to: invoice.to.email,
       subject,
       react: emailContent,
@@ -713,6 +768,13 @@ export async function sendInvoiceEmail(
     if (error)
       return actionError(ACTION_ERRORS.EMAIL_SEND_FAILED, error.message)
 
+    // Stamp sentAt so the detail view can show "Sent <date>".
+    await db.userInvoice.update({
+      where: { id: invoiceId },
+      data: { sentAt: new Date() },
+    })
+
+    revalidatePath(`/s/${invoice.schoolId ?? ctx.schoolId}/finance/invoice`)
     return { success: true }
   } catch (error) {
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
@@ -844,11 +906,20 @@ export async function getDashboardStats(): Promise<ActionResponse> {
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
+    // INV-004: privileged roles see school-wide stats; others see only their own.
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
+    const userScope = canSeeAll ? {} : { userId: ctx.userId }
+
     const baseWhere = {
-      userId: ctx.userId,
+      ...userScope,
       schoolId: ctx.schoolId,
       invoice_date: { gte: thirtyDaysAgo },
-    } as const
+    }
+
+    const recentWhere = {
+      ...userScope,
+      schoolId: ctx.schoolId,
+    }
 
     const [
       invoices,
@@ -869,7 +940,7 @@ export async function getDashboardStats(): Promise<ActionResponse> {
         where: { ...baseWhere, status: InvoiceStatus.UNPAID },
       }),
       db.userInvoice.findMany({
-        where: { userId: ctx.userId, schoolId: ctx.schoolId },
+        where: recentWhere,
         orderBy: { createdAt: "desc" },
         take: 5,
         include: { from: true, to: true },

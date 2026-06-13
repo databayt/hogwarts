@@ -222,9 +222,10 @@ describe("dispatchNotificationsToAudience", () => {
       { id: "u2" },
       { id: "u3" },
     ] as any)
-    // u2 has disabled this type
+    // u2 has disabled in_app (the only requested channel in baseAudienceParams).
+    // BUG-5: findMany now returns per-channel rows; channel field is required.
     mockDb.notificationPreference.findMany.mockResolvedValue([
-      { userId: "u2" },
+      { userId: "u2", channel: "in_app" },
     ] as any)
     mockDb.notification.createMany.mockResolvedValue({ count: 2 })
 
@@ -303,8 +304,9 @@ describe("dispatchNotificationsToAudience", () => {
 
   it("returns 0 when all users have disabled the type", async () => {
     mockDb.user.findMany.mockResolvedValue([{ id: "u1" }] as any)
+    // BUG-5: findMany now returns per-channel rows; channel field is required.
     mockDb.notificationPreference.findMany.mockResolvedValue([
-      { userId: "u1" },
+      { userId: "u1", channel: "in_app" },
     ] as any)
 
     const result = await dispatchNotificationsToAudience(baseAudienceParams)

@@ -37,6 +37,8 @@ interface Props {
 const ALL_STATUS_OPTIONS = [
   { value: "UNDER_REVIEW", fallback: "Under Review" },
   { value: "SHORTLISTED", fallback: "Shortlisted" },
+  { value: "ENTRANCE_SCHEDULED", fallback: "Entrance Scheduled" },
+  { value: "INTERVIEW_SCHEDULED", fallback: "Interview Scheduled" },
   { value: "SELECTED", fallback: "Selected" },
   { value: "WAITLISTED", fallback: "Waitlisted" },
   { value: "REJECTED", fallback: "Rejected" },
@@ -118,10 +120,7 @@ export default function ApplicationDetailActions({
     <div className="flex flex-col gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            disabled={isPending}
-            className="h-9 w-52 bg-[#0969da] text-white hover:bg-[#0969da]/90"
-          >
+          <Button disabled={isPending} className="h-9 w-52">
             {t?.applications?.updateStatus || "Update Status"}
             <ChevronDown className="ms-1.5 h-4 w-4" />
           </Button>

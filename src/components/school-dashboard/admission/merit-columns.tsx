@@ -2,13 +2,20 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
-import { Ellipsis } from "lucide-react"
+import { Ellipsis, Pencil } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,12 +24,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-import { updateApplicationStatus } from "./actions"
+import { updateApplicationScores, updateApplicationStatus } from "./actions"
 
 export type MeritRow = {
   id: string
@@ -54,6 +63,111 @@ const getStatusVariant = (status: string) => {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Score Entry Dialog
+// ---------------------------------------------------------------------------
+
+function ScoreEntryDialog({
+  merit,
+  open,
+  onOpenChange,
+  dictionary,
+  onSaved,
+}: {
+  merit: MeritRow
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  dictionary: Dictionary["school"]["admission"]
+  onSaved: () => void
+}) {
+  const t = dictionary
+  const [isPending, startTransition] = useTransition()
+  const [entrance, setEntrance] = useState(merit.entranceScore ?? "")
+  const [interview, setInterview] = useState(merit.interviewScore ?? "")
+
+  const handleSave = () => {
+    startTransition(async () => {
+      const entranceNum = entrance !== "" ? parseFloat(entrance) : null
+      const interviewNum = interview !== "" ? parseFloat(interview) : null
+
+      const result = await updateApplicationScores({
+        id: merit.id,
+        entranceScore: entranceNum,
+        interviewScore: interviewNum,
+      })
+      if (result.success) {
+        SuccessToast(t?.meritList?.scoresUpdated || "Scores updated")
+        onOpenChange(false)
+        onSaved()
+      } else {
+        ErrorToast(result.error || "Failed to update scores")
+      }
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {t?.meritList?.editScores || "Edit Scores"} — {merit.applicantName}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="entrance-score">
+              {t?.columns?.entrance || "Entrance Score"}
+            </Label>
+            <Input
+              id="entrance-score"
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              value={entrance}
+              onChange={(e) => setEntrance(e.target.value)}
+              placeholder="0–100"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="interview-score">
+              {t?.columns?.interview || "Interview Score"}
+            </Label>
+            <Input
+              id="interview-score"
+              type="number"
+              min={0}
+              max={100}
+              step={0.1}
+              value={interview}
+              onChange={(e) => setInterview(e.target.value)}
+              placeholder="0–100"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
+            {t?.toolbar?.cancel || "Cancel"}
+          </Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending
+              ? t?.toolbar?.saving || "Saving…"
+              : t?.toolbar?.save || "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Actions cell
+// ---------------------------------------------------------------------------
+
 function MeritActionsCell({
   merit,
   dictionary,
@@ -65,6 +179,7 @@ function MeritActionsCell({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [scoreDialogOpen, setScoreDialogOpen] = useState(false)
   const t = dictionary
 
   const onView = () => {
@@ -91,35 +206,94 @@ function MeritActionsCell({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
-          <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          {t?.columns?.actions || "Actions"}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onView}>
-          {t?.meritList?.viewApplication || "View Application"}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onStatusChange("SELECTED")}>
-          {t?.meritList?.markSelected || "Mark as Selected"}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onStatusChange("WAITLISTED")}>
-          {t?.meritList?.markWaitlisted || "Mark as Waitlisted"}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive"
-          onClick={() => onStatusChange("REJECTED")}
-        >
-          {t?.meritList?.markRejected || "Mark as Rejected"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <ScoreEntryDialog
+        merit={merit}
+        open={scoreDialogOpen}
+        onOpenChange={setScoreDialogOpen}
+        dictionary={t}
+        onSaved={() => router.refresh()}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+            <Ellipsis className="h-4 w-4" />
+            <span className="sr-only">
+              {t?.toolbar?.openMenu || "Open menu"}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>
+            {t?.columns?.actions || "Actions"}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onView}>
+            {t?.meritList?.viewApplication || "View Application"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setScoreDialogOpen(true)}>
+            <Pencil className="me-2 h-4 w-4" />
+            {t?.meritList?.editScores || "Edit Scores"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onStatusChange("SELECTED")}>
+            {t?.meritList?.markSelected || "Mark as Selected"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onStatusChange("WAITLISTED")}>
+            {t?.meritList?.markWaitlisted || "Mark as Waitlisted"}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-destructive"
+            onClick={() => onStatusChange("REJECTED")}
+          >
+            {t?.meritList?.markRejected || "Mark as Rejected"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Inline score cell with click-to-edit
+// ---------------------------------------------------------------------------
+
+function EditableScoreCell({
+  merit,
+  field,
+  dictionary,
+}: {
+  merit: MeritRow
+  field: "entranceScore" | "interviewScore"
+  dictionary: Dictionary["school"]["admission"]
+}) {
+  const [open, setOpen] = useState(false)
+  const score = merit[field]
+
+  return (
+    <>
+      <ScoreEntryDialog
+        merit={merit}
+        open={open}
+        onOpenChange={setOpen}
+        dictionary={dictionary}
+        onSaved={() => {}}
+      />
+      <button
+        className="hover:bg-muted group flex items-center gap-1 rounded px-1 transition-colors"
+        onClick={() => setOpen(true)}
+        title={dictionary?.meritList?.editScores || "Edit scores"}
+      >
+        {score ? (
+          <span className="text-sm tabular-nums">
+            {parseFloat(score).toFixed(1)}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+        <Pencil className="text-muted-foreground h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
+      </button>
+    </>
   )
 }
 
@@ -168,6 +342,8 @@ export const getMeritColumns = (
         </span>
       ),
     },
+    // category column kept for display (shows school-configured category) but
+    // the India-centric General/OBC/SC/ST filter options are removed.
     {
       accessorKey: "category",
       header: ({ column }) => (
@@ -184,18 +360,8 @@ export const getMeritColumns = (
           <span className="text-muted-foreground">-</span>
         )
       },
-      meta: {
-        label: t?.columns?.category || "Category",
-        variant: "select",
-        options: [
-          { label: t?.columns?.categoryGeneral || "General", value: "General" },
-          { label: t?.columns?.categoryOBC || "OBC", value: "OBC" },
-          { label: t?.columns?.categorySC || "SC", value: "SC" },
-          { label: t?.columns?.categoryST || "ST", value: "ST" },
-        ],
-      },
-      enableColumnFilter: true,
-      filterFn: (row, id, value) => value.includes(row.getValue(id)),
+      // enableColumnFilter: false — no filter options; category is school-defined
+      enableColumnFilter: false,
     },
     {
       accessorKey: "meritScore",
@@ -224,16 +390,13 @@ export const getMeritColumns = (
           title={t?.columns?.entrance || "Entrance"}
         />
       ),
-      cell: ({ getValue }) => {
-        const score = getValue<string | null>()
-        return score ? (
-          <span className="text-sm tabular-nums">
-            {parseFloat(score).toFixed(1)}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        )
-      },
+      cell: ({ row }) => (
+        <EditableScoreCell
+          merit={row.original}
+          field="entranceScore"
+          dictionary={dictionary}
+        />
+      ),
     },
     {
       accessorKey: "interviewScore",
@@ -243,16 +406,13 @@ export const getMeritColumns = (
           title={t?.columns?.interview || "Interview"}
         />
       ),
-      cell: ({ getValue }) => {
-        const score = getValue<string | null>()
-        return score ? (
-          <span className="text-sm tabular-nums">
-            {parseFloat(score).toFixed(1)}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        )
-      },
+      cell: ({ row }) => (
+        <EditableScoreCell
+          merit={row.original}
+          field="interviewScore"
+          dictionary={dictionary}
+        />
+      ),
     },
     {
       accessorKey: "status",

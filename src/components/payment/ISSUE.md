@@ -1,8 +1,8 @@
 # Payment — Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 85% (after Aldar P0–P3 ship)
-**Last Updated:** 2026-05-28
+**Completion:** 93%
+**Last Updated:** 2026-06-13
 **Source of truth:** [hogwarts#356](https://github.com/databayt/hogwarts/issues/356) (Aldar UAE payment readiness)
 
 ---
@@ -51,18 +51,47 @@
 
 ---
 
+## Recent Work (2026-06-13 — Admission+Finance production-readiness pass)
+
+### Webhook Hardening
+
+- [x] `catch` blocks in both `api/webhooks/stripe/route.ts` and `api/webhooks/tap/route.ts` now call `releaseDedupeAndFail` — webhook retries instead of silent 200 data-loss on handler crash
+- [x] `checkout.session.expired` handler: clears stuck admission state (payment link expired → applicant can retry)
+- [x] `payment_failed` notification is now language-aware (dispatched in the school's preferred language, not hardcoded English)
+- [x] Multi-installment invoice allocation: on payment success, oldest-unpaid invoice credited first using new `UserInvoice.amountPaid` + `PARTIAL` status
+- [x] Duplicate webhook handlers removed (conflicting Tap + Stripe duplicate event registrations cleaned up)
+- [x] Tap `registration_fee` charge type now handled in the Tap webhook route
+- [x] `receiptNumber` generation is now collision-safe (unique constraint + retry logic)
+- [x] `createFeePaymentCheckout` is gateway-aware for UAE: auto-routes to Tap for AED currency schools
+
+### Receipt
+
+- [x] Receipt PDF route (`/api/payment/[paymentId]/receipt`) is now status-guarded (only PAID/CLEARED payments), i18n-ready, and includes school name + currency
+- [x] Receipt link surfaced in payment metadata and in the my-fees view
+
+### Admission — Fee Stage (PRODUCT DECISION: applying is always free)
+
+- [x] Application wizard fees step is now an informational preview only — no payment-method selection, no bankak/kashi icons; payment happens only after offer acceptance
+- [x] `payment` route in the application flow redirects appropriately; success modal label changed from "password" to "Application Tracking Code"
+- [x] `callbackUrl` now preserves the full token'd offer path through login so the registration-fee page is reachable after redirect
+- [x] Registration-fee success/fail banners shown on the offer page
+- [x] Offer payment flow is rate-limited; abandoned-checkout retry path unblocked
+
+---
+
 ## Known Issues
 
 ### P1 — High
 
 - ~~Unverified gateway implementations~~ — verified during Aldar P0 audit (see #356). Stripe + Tap + Cash + Bank Transfer + ATM Deposit + Mobile Money all real; Bankak remains an intentional stub gated for SD.
-- ~~No webhook handling~~ — Stripe + Tap webhooks both wire end-to-end with `ProcessedWebhookEvent` dedupe; Bankak stub kept for future BoK API spec.
+- ~~No webhook handling~~ — Stripe + Tap webhooks both wire end-to-end with `ProcessedWebhookEvent` dedupe + `releaseDedupeAndFail` retry; Bankak stub kept for future BoK API spec.
 
 ### P2 — Medium
 
 - **No error recovery UI**: If `initiatePayment` fails mid-flow, the user sees an alert but has no retry mechanism beyond re-selecting a gateway.
 - **Bank details / cash instructions**: Props exist (`bankDetails`, `cashInstructions`) but rendering logic needs verification for completeness.
 - **`PaymentBlock` has no live caller** for fees — replaced by `FeePaymentMethods`. Still used by admission + SaaS contexts; candidate for consolidation in a follow-up.
+- **`payment/content.tsx` dead-file cleanup** — file is unused after admission wizard refactor; deferred.
 
 ---
 
@@ -76,4 +105,4 @@
 
 ---
 
-**Last Review:** 2026-05-28
+**Last Review:** 2026-06-13

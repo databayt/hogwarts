@@ -79,6 +79,9 @@ export interface GenericExtractionResult<T = unknown> {
   error?: string
   errorCode?: string
   processingTime: number
+  /** Token counts returned by the SDK — used for usage tracking */
+  inputTokens?: number
+  outputTokens?: number
 }
 
 // Step-specific extracted data types

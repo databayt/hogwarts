@@ -31,7 +31,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
     },
     school: {
-      findUnique: vi.fn(),
+      findUnique: vi.fn().mockResolvedValue({ currency: "USD" }),
     },
     $transaction: vi.fn(),
   },
@@ -104,6 +104,7 @@ describe("ensureStudentFeeAssignments", () => {
       existing: 0,
       skipped: 1,
       assignmentIds: [],
+      warnings: [],
     })
     // No DB queries should have run.
     expect(db.schoolYear.findFirst).not.toHaveBeenCalled()
@@ -152,6 +153,7 @@ describe("ensureStudentFeeAssignments", () => {
       existing: 1,
       skipped: 0,
       assignmentIds: ["assign-fs-tuition"],
+      warnings: [],
     })
     // No transaction needed when nothing is missing.
     expect(db.$transaction).not.toHaveBeenCalled()
@@ -180,7 +182,7 @@ describe("ensureStudentFeeAssignments", () => {
     expect(result.assignmentIds).toHaveLength(3)
   })
 
-  it("returns 0/0/0 when no FeeStructure matches the grade (admin hasn't configured fees yet)", async () => {
+  it("returns 0/0/0 with a warning when no FeeStructure matches the grade (admin hasn't configured fees yet)", async () => {
     setupBaselineMocks({ structures: [] })
 
     const result = await ensureStudentFeeAssignments({
@@ -191,12 +193,13 @@ describe("ensureStudentFeeAssignments", () => {
       notify: false,
     })
 
-    expect(result).toEqual({
-      created: 0,
-      existing: 0,
-      skipped: 0,
-      assignmentIds: [],
-    })
+    expect(result.created).toBe(0)
+    expect(result.existing).toBe(0)
+    expect(result.skipped).toBe(0)
+    expect(result.assignmentIds).toHaveLength(0)
+    // B5: warns instead of silently assigning nothing
+    expect(result.warnings).toHaveLength(1)
+    expect(result.warnings[0]).toMatch(/No active FeeStructure found/)
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 

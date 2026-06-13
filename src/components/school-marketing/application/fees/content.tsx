@@ -3,8 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Banknote, CreditCard, Smartphone, Wallet } from "lucide-react"
+import { useParams } from "next/navigation"
+import { Info } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 import type { FeePreview } from "@/lib/fee-preview"
@@ -33,12 +33,6 @@ interface Props {
   dictionary?: Record<string, unknown>
 }
 
-interface PaymentMethod {
-  id: string
-  icon: React.ElementType
-  label: string
-}
-
 function resolveGradeLabel(
   applyingForClass: string | undefined,
   optionsDict: Record<string, string>,
@@ -61,7 +55,6 @@ function formatInstallmentList(counts: number[], locale: string): string {
 
 export default function FeesContent({ dictionary }: Props) {
   const params = useParams()
-  const router = useRouter()
   const { locale, isRTL } = useLocale()
   const { data: authSession } = useSession()
   const subdomain = params.subdomain as string
@@ -188,22 +181,19 @@ export default function FeesContent({ dictionary }: Props) {
 
       clearLocalDraft()
 
-      if (result.data.requiresPayment) {
-        router.push(
-          `/${locale}/application/${result.data.applicationId}/payment?number=${result.data.applicationNumber}&token=${encodeURIComponent(result.data.accessToken)}`
-        )
-      } else {
-        setSubmitResult(result.data)
-        setShowSuccessModal(true)
-        setIsSubmitting(false)
-      }
+      // Application submission is always free — show the success modal directly.
+      // The payment leg (requiresPayment / application fees) has been retired
+      // from the wizard per the 2026-06-12 product decision.
+      setSubmitResult(result.data)
+      setShowSuccessModal(true)
+      setIsSubmitting(false)
     } catch (err) {
       setError(
         err instanceof Error ? err.message : errorDict.failedToSubmit || ""
       )
       setIsSubmitting(false)
     }
-  }, [subdomain, id, errorDict, locale, router, saveSession, clearLocalDraft])
+  }, [subdomain, id, errorDict, locale, saveSession, clearLocalDraft])
 
   useEffect(() => {
     if (!isSubmitting) {
@@ -217,33 +207,6 @@ export default function FeesContent({ dictionary }: Props) {
 
   const applicantEmail =
     authSession?.user?.email ?? session.formData.contact?.email
-
-  const paymentMethods = useMemo<PaymentMethod[]>(
-    () => [
-      {
-        id: "cash",
-        icon: Banknote,
-        label: feePreviewDict.methodCash || (isRTL ? "نقداً" : "Cash"),
-      },
-      {
-        id: "bankak",
-        icon: Smartphone,
-        label: feePreviewDict.methodBankak || (isRTL ? "بنكك" : "Bankak"),
-      },
-      {
-        id: "kashi",
-        icon: Wallet,
-        label: feePreviewDict.methodKashi || (isRTL ? "كاشي" : "Kashi"),
-      },
-      {
-        id: "credit",
-        icon: CreditCard,
-        label:
-          feePreviewDict.methodCredit || (isRTL ? "بطاقة ائتمان" : "Credit"),
-      },
-    ],
-    [feePreviewDict, isRTL]
-  )
 
   const { tuitionLine, installmentLine, amountLabel } = useMemo(() => {
     if (!preview || !preview.matched) {
@@ -313,6 +276,18 @@ export default function FeesContent({ dictionary }: Props) {
             </div>
           ) : preview && preview.matched ? (
             <div className="space-y-8">
+              {/* Free-application notice */}
+              <Alert>
+                <Info className="h-4 w-4" aria-hidden="true" />
+                <AlertDescription>
+                  {feePreviewDict.freeApplicationNote ||
+                    (isRTL
+                      ? "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
+                      : "Applying is completely free. The fees below apply only after acceptance and during the registration stage.")}
+                </AlertDescription>
+              </Alert>
+
+              {/* Fee preview */}
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">{tuitionLine}</p>
                 <p className="text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
@@ -324,34 +299,28 @@ export default function FeesContent({ dictionary }: Props) {
                   </p>
                 )}
               </div>
-              <div>
-                <p className="text-muted-foreground mb-3 text-sm">
-                  {feePreviewDict.paymentMethodsHeading ||
-                    (isRTL ? "طرق الدفع المقبولة" : "Accepted payment methods")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {paymentMethods.map((method) => {
-                    const Icon = method.icon
-                    return (
-                      <span
-                        key={method.id}
-                        className="bg-muted/50 text-foreground inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm"
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        {method.label}
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
             </div>
           ) : (
-            <Alert>
-              <AlertDescription>
-                {feePreviewDict.noFeesDescription ||
-                  "Unable to load fee information. You can still submit your application."}
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-4">
+              {/* Free-application notice always shown */}
+              <Alert>
+                <Info className="h-4 w-4" aria-hidden="true" />
+                <AlertDescription>
+                  {feePreviewDict.freeApplicationNote ||
+                    (isRTL
+                      ? "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
+                      : "Applying is completely free. The fees below apply only after acceptance and during the registration stage.")}
+                </AlertDescription>
+              </Alert>
+              <Alert>
+                <AlertDescription>
+                  {feePreviewDict.noFeesDescription ||
+                    (isRTL
+                      ? "تعذّر تحميل معلومات الرسوم. يمكنك إتمام التقديم وسيُبلَّغك بالرسوم لاحقاً."
+                      : "Unable to load fee information. You can still submit your application and fees will be communicated later.")}
+                </AlertDescription>
+              </Alert>
+            </div>
           )}
         </div>
       </FormLayout>
@@ -359,7 +328,7 @@ export default function FeesContent({ dictionary }: Props) {
         <ApplicationSuccessModal
           applicationNumber={submitResult.applicationNumber}
           applicantEmail={applicantEmail}
-          password={submitResult.accessToken}
+          trackingCode={submitResult.accessToken}
           schoolUrl={`${subdomain}.databayt.org`}
           showModal={showSuccessModal}
           setShowModal={setShowSuccessModal}

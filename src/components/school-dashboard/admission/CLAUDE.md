@@ -5,17 +5,17 @@ title: Admission (school dashboard)
 file_type: claude
 owner: Abdout
 maturity: Built
-completion: 60
+completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 # Admission (Dashboard) Block
 
 ## Context
 
-School-side admission pipeline: campaigns, applications, merit lists, enrollment. Tabbed DataTable UI with RBAC-protected server actions. **Status: ~70%, NOT production-ready** despite prior "100%" claims — the 2026-05-21 audit found 3 live P0 breaks (offer flow dead, merit ranks by a never-computed score, AI pipeline never runs). Read `ISSUE.md` before assuming anything works. The feature spans 3 sides sharing one Prisma model: this dashboard block + `../../school-marketing/admission/` (public portal) + `../../school-marketing/application/` (wizard, ~68 files).
+School-side admission pipeline: campaigns, applications, merit lists, enrollment, leads. Tabbed DataTable UI with RBAC-protected server actions. **Status: ~90%, production-ready core** — the 2026-06-13 pass fixed all P0/P1 breaks; the full admit→accept→pay→enroll→fee pipeline is end-to-end verified. **PRODUCT DECISION (2026-06-12): applying is always free — no application fee at the wizard; payment only at the fee stage (registration fee on acceptance + tuition invoices).** Read `ISSUE.md` for remaining open items (server-side search, WhatsApp breadth, #269). The feature spans 3 sides sharing one Prisma model: this dashboard block + `../../school-marketing/admission/` (public portal) + `../../school-marketing/application/` (wizard, ~68 files).
 
 ## Before You Start
 
@@ -33,13 +33,14 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 
 ## Danger Zones
 
-- Enrollment `$transaction` in `actions.ts` -- ~470 lines, many interdependent creates; partial failure corrupts data. Currently has **zero executing test coverage** (test file fails to load — Resend top-level init)
-- `authorization.ts` -- RBAC gate; incorrect changes expose data across roles. Note ACCOUNTANT mismatch (server grants `viewApplications`/`recordPayment`, `permissions.ts` gives no UI)
-- Shared Prisma model with school-marketing side -- schema changes affect both blocks
-- **Merit is broken (P0-3)**: `meritScore` is never computed — the engine in `ai/merit-engine.ts` is unwired (zero callers); `generateMeritList` only assigns `meritRank` ordered by null scores. Don't trust the Merit tab
-- **Offer flow is broken (P0-1/P0-2)**: `application/offer/content.tsx` passes an empty accessToken to every mutation, and the route sits under `(auth)` (login wall). Admit→accept→pay is dead end-to-end
-- **AI subsystem is disconnected (P1-1)**: no `document-processing` cron, `ai/document-card.tsx` is never rendered, budget tracking is a no-op. Built ≠ running
-- **Error display (P1-5)**: clients show raw error CODES (`OFFER_EXPIRED`…) because `result.error` holds the code and `resolveActionError()` is never called. Route through it when touching any toast
+- Enrollment `$transaction` in `actions.ts` -- ~470 lines, many interdependent creates; partial failure corrupts data. New tests cover merit/placement/webhook paths; core enrollment coverage improved but Resend lazy-init still needed for full `confirmEnrollment` test load.
+- `authorization.ts` -- RBAC gate; incorrect changes expose data across roles. ACCOUNTANT mismatch was fixed (2026-06-13): `permissions.ts` VIEW_ROLES now includes ACCOUNTANT with read-only tabs.
+- Shared Prisma model with school-marketing side -- schema changes affect both blocks. `InvoiceStatus +PARTIAL`, `UserInvoice +amountPaid +sentAt` added (migration-of-record at `prisma/migrations/20260612200000_invoice_partial_payment_and_indexes`).
+- **Merit was broken (P0-3) — fixed 2026-06-13**: added `updateApplicationScores` server action + inline score-entry UI (entrance/interview 0-100); `generateMeritList` now computes weighted `meritScore` (entrance 60% / interview 40%), ranks by it with nulls last, batched writes. Merit tab is functional.
+- **Offer flow was broken (P0-1/P0-2) — fixed 2026-05-22 + 2026-06-13**: accessToken threaded from `offer/page.tsx` → `OfferContent` → all 5 mutations; `callbackUrl` now preserves the full token'd offer path through login; registration-fee success/fail banners; rate-limited; abandoned-checkout retry unblocked.
+- **AI subsystem was disconnected (P1-1) — fixed 2026-06-13**: `/api/cron/process-document-jobs` (\*/10) now drains the queue; `classify.ts` is budget-gated (`canUseAI`) + tracks usage; `classifyDocument`/`getDocumentProcessingStatus` are RBAC-gated; `bank-receipt-schema.ts` Zod fields made optional.
+- **Error display (P1-5) — fixed 2026-05-22**: clients now show localized messages; raw `OFFER_EXPIRED`-style codes no longer surface to users. When touching toasts, continue using the localized fallback pattern.
+- `Application.lang` field still absent (P1-6 — schema flag, deferred). Student lang derived via regex heuristic; keep until schema work is approved.
 
 ## Related Blocks
 

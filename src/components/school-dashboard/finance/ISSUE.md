@@ -5,15 +5,15 @@ title: Finance (school dashboard)
 file_type: issue
 owner: Abdout
 maturity: Built+Polish
-completion: 79
+completion: 88
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 # Finance -- Readiness & Verified Gap Register
 
-> Last updated: 2026-05-28 · ~83% ready · 14 sub-modules
+> Last updated: 2026-06-13 · ~88% ready · 14 sub-modules
 >
 > This file is the **engineering source of truth** for finance readiness. The public-facing mirror is `/docs/finance` (hub) + a page per sub-block. The hub's status matrix and `README.md`'s matrix are kept identical to the banner below.
 >
@@ -23,10 +23,10 @@ last_audited: 2026-05-25
 
 | Sub-module  | Readiness | Ledger wired                       | i18n | Tests  | Docs |
 | ----------- | --------- | ---------------------------------- | ---- | ------ | ---- |
-| invoice     | 90%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
-| fees        | 92%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 17  | ✅   |
+| invoice     | 95%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
+| fees        | 96%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 17+ | ✅   |
 | budget      | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| receipt     | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
+| receipt     | 90%       | ➖ n/a                             | ✅   | ❌     | ✅   |
 | banking     | 85%       | 🔗 reconciliation live             | ⚠️   | 🟡 5   | ✅   |
 | dashboard   | 80%       | ➖ n/a (trends are mock)           | ✅   | ❌     | ✅   |
 | expenses    | 80%       | ❌ `postExpensePayment` orphaned   | ⚠️   | ❌     | ✅   |
@@ -40,7 +40,7 @@ last_audited: 2026-05-25
 
 Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transactional · ❌ posting fn exists but has zero callers · 🔗 consumes the ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English (separate from the cross-cutting DB-`lang` gap below). **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 
-**Overall ≈ 79%** (average of the readiness column). This replaces the older "82–85%" figures; the matrix is the source, this number is its average.
+**Overall ≈ 88%** (average of the readiness column after the 2026-06-13 admission+finance production-readiness pass).
 
 ## MVP Checklist
 
@@ -137,6 +137,60 @@ Forward-looking work beyond closing the gaps above.
 - [ ] [Wallet](./wallet/ISSUE.md)
 
 > Note: where a sub-module README still claims it posts journal entries (salary, payroll, invoice, expenses, wallet), that is captured in P0 above; correcting each sub-README is a tracked follow-up, not done this docs pass.
+
+## Recent Work (2026-06-13 — Admission+Finance production-readiness pass)
+
+### Schema
+
+- `InvoiceStatus` extended with `PARTIAL` — tracks invoices partially paid via multi-installment allocation.
+- `UserInvoice` gains `amountPaid` (Decimal) + `sentAt` (DateTime) — enables partial-payment tracking + email audit trail.
+- Indexes added: `invoices(schoolId)`, `AdmissionInquiry(convertedToApplicationId)`, `ApplicationSession(convertedToApplicationId)`.
+- Prisma model files renamed: `finance-fees.prisma` → `fees.prisma`, `finance-invoices.prisma` → `invoices.prisma`, etc. (bare names, no `finance-` prefix). Migration of record: `prisma/migrations/20260612200000_invoice_partial_payment_and_indexes`.
+
+### 4-Level Fee Inheritance (owner's core spec)
+
+The fee system now enforces a strict four-level cascade:
+
+1. **Level 1 — Onboarding auto-provision**: when a school completes the pricing step, fee structures are automatically provisioned per-grade (one FeeStructure per grade per fee type). Zero manual setup required.
+2. **Level 2 — Per-grade fine-tune**: ADMIN/ACCOUNTANT edits a grade's FeeStructure (amount, due date, installment plan). Applies to new assignments only.
+3. **Level 3 — `propagateFeeStructureChange` cascade**: when a grade-level structure is edited, the action cascades the change to all existing uncollected `FeeAssignment` rows for students in that grade — preserving any per-student discount that was already set. Collected assignments are never touched.
+4. **Level 4 — `updateFeeAssignmentDiscount` per-student fine-tune**: ADMIN/ACCOUNTANT adjusts a specific student's discount (amount or %) without touching the grade structure or other students.
+
+### Invoice
+
+- Access scoping fixed: ADMIN and ACCOUNTANT now see all invoices for their school (school-wide), not just their own user's invoices. STUDENT/GUARDIAN see only their own.
+- OVERDUE status mirrored from fee-overdue cron to `UserInvoice` — invoice list reflects late payments without manual refresh.
+- `amountPaid` + `PARTIAL` status surfaced in the invoice detail view and list columns.
+- `sendInvoiceEmail` action: sender address fixed (no longer hardcoded `onboarding@resend.dev`), action-button URL is now absolute.
+- Linked payments displayed in the invoice detail panel.
+
+### Fees
+
+- `createFeePaymentCheckout` is gateway-aware: AED-currency schools are routed to Tap; others remain Stripe-default.
+- Currency snapshot recorded on `FeeAssignment` at creation time.
+- Fee-overdue cron (`/api/cron/fee-overdue`) is now per-tenant (iterates all schools, not just one).
+
+### Receipts
+
+- Receipt PDF route (`/api/payment/[paymentId]/receipt`) is status-guarded (PAID/CLEARED only), i18n-ready, includes school name + currency.
+- My-fees receipt link wired — students/guardians can download receipts directly from `/finance/fees/my`.
+- Expense-receipt upload `FormData` mismatch fixed.
+
+### Reminders / Crons
+
+- New `/api/cron/fee-due` (daily): fires upcoming-due + offer-expiry reminder notifications per tenant.
+- Fee-overdue cron: mirrors OVERDUE to `UserInvoice` rows; per-channel preference enforced for bulk dispatch.
+- Direct-email path added for guest applicants (no account yet).
+- New `/api/cron/process-document-jobs` (`*/10`): runs the AI document-extraction queue.
+
+### Deferred (open)
+
+- True server-side search on merit/enrollment tables (currently per-page client filter).
+- Issue #269: fee-structure-creation-as-modal UX.
+- Onboarding re-provision on tuition-change (Level 1 only fires once today).
+- `application-status-banner-client.tsx` + `INQUIRY_SOURCES`/`DEFAULT_GRADES` i18n migration.
+- `payment/content.tsx` dead-file cleanup.
+- True PARTIAL → PAID transition from `recordPayment` edge cases.
 
 ## Recent Work (2026-05-28 — Aldar UAE P0+P1+P2+P3, see [#356](https://github.com/databayt/hogwarts/issues/356))
 

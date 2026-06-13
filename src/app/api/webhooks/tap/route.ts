@@ -20,8 +20,13 @@
  * HMAC-SHA256 over the raw body and compare to the `tap_signature` header
  * (case-insensitive). When the secret is unset we accept (dev/sandbox
  * convenience) but log a warning so the misconfig is loud.
+ *
+ * Contexts handled:
+ *   - school_fee:        fee_payment — creates Payment, syncs invoices, ledger, notify
+ *   - registration_fee:  sets registrationFeePaid on Application, notifies
+ *   - application_fee:   legacy in-flight tolerated; sets applicationFeePaid, notifies
  */
-import crypto from "node:crypto"
+import crypto, { randomUUID } from "node:crypto"
 import { Prisma } from "@prisma/client"
 import type { PaymentMethod } from "@prisma/client"
 
@@ -42,6 +47,7 @@ interface TapChargePayload {
     feeAssignmentId?: string
     studentId?: string
     schoolId?: string
+    applicationId?: string
     type?: string
   }
 }
@@ -64,6 +70,25 @@ function mapTapMethod(raw?: string): PaymentMethod {
     default:
       return "CREDIT_CARD"
   }
+}
+
+/**
+ * Generate a collision-safe, human-scannable receipt number.
+ * crypto.randomUUID() provides 122 bits of entropy; we take the first 8 hex
+ * chars (32 bits) — sufficient for human-facing IDs while keeping strings short.
+ * Format: RCP-XXXXXXXX (uppercase).
+ */
+function generateReceiptNumber(): string {
+  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
+  return `RCP-${hex}`
+}
+
+/**
+ * Generate a collision-safe payment number. Format: PAY-XXXXXXXX.
+ */
+function generatePaymentNumber(): string {
+  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
+  return `PAY-${hex}`
 }
 
 export async function POST(req: Request) {
@@ -128,45 +153,224 @@ export async function POST(req: Request) {
     return new Response(null, { status: 200 })
   }
 
-  // Route by metadata.context — for the kingfahad pilot the only context we
-  // wire today is `school_fee` (set by createFeePaymentCheckout). Other
-  // contexts (subscriptions, course purchases) can hook in later by adding
-  // their own branches here.
-  if (charge.metadata?.context !== "school_fee") {
-    console.log(
-      `[Tap webhook] Charge ${charge.id} context=${charge.metadata?.context ?? "none"} — no handler`
-    )
+  const context = charge.metadata?.context
+
+  // ============================================================
+  // school_fee context — fee_payment (existing + INV-002 multi-
+  // installment sync)
+  // ============================================================
+  if (context === "school_fee") {
+    const feeAssignmentId = charge.metadata?.feeAssignmentId
+    if (!feeAssignmentId || !schoolId) {
+      console.error(
+        `[Tap webhook] Charge ${charge.id} school_fee context missing feeAssignmentId/schoolId`
+      )
+      return new Response(null, { status: 200 })
+    }
+
+    try {
+      await recordTapFeePayment({
+        chargeId: charge.id,
+        feeAssignmentId,
+        schoolId,
+        amount: typeof charge.amount === "number" ? charge.amount : 0,
+        currency:
+          typeof charge.currency === "string" ? charge.currency : undefined,
+        gatewayMethod: charge.source?.payment_method,
+      })
+    } catch (handlerErr) {
+      // Tap does not retry — we already deduped via ProcessedWebhookEvent.
+      // Operator must reconcile manually if this branch fires.
+      console.error(
+        `[Tap webhook] Failed to record fee payment for charge ${charge.id}:`,
+        handlerErr
+      )
+    }
+
     return new Response(null, { status: 200 })
   }
 
-  const feeAssignmentId = charge.metadata.feeAssignmentId
-  if (!feeAssignmentId || !schoolId) {
-    console.error(
-      `[Tap webhook] Charge ${charge.id} school_fee context missing feeAssignmentId/schoolId`
-    )
+  // ============================================================
+  // TAP-ADMISSION-NO-HANDLER fix: registration_fee context
+  // Mirror of Stripe's handler: set registrationFeePaid on the
+  // Application, notify. Payment materialization into Payment table
+  // happens at enrollment (not here).
+  // ============================================================
+  if (context === "registration_fee") {
+    const applicationId = charge.metadata?.applicationId
+    if (!applicationId || !schoolId) {
+      console.error(
+        `[Tap webhook] Charge ${charge.id} registration_fee context missing applicationId/schoolId`
+      )
+      return new Response(null, { status: 200 })
+    }
+
+    try {
+      // Idempotency: skip if already marked paid
+      const existing = await db.application.findFirst({
+        where: { id: applicationId, schoolId },
+        select: { registrationFeePaid: true },
+      })
+      if (existing?.registrationFeePaid) {
+        console.log(
+          `[Tap webhook] registrationFeePaid already true for ${applicationId} — skipping`
+        )
+        return new Response(null, { status: 200 })
+      }
+
+      const amountValue =
+        typeof charge.amount === "number" ? charge.amount : null
+
+      await db.application.update({
+        where: { id: applicationId, schoolId },
+        data: {
+          registrationFeePaid: true,
+          registrationFeeAmount: amountValue,
+          registrationFeeMethod: "tap",
+          registrationFeeReference: charge.id,
+          registrationFeeDate: new Date(),
+        },
+      })
+
+      console.log(
+        `[Tap webhook] Registration fee paid (Tap): applicationId=${applicationId}`
+      )
+
+      // Send payment confirmation notification (non-fatal)
+      try {
+        const app = await db.application.findFirst({
+          where: { id: applicationId, schoolId },
+          select: { userId: true, applicationNumber: true },
+        })
+        if (app?.userId) {
+          const { dispatchNotification, resolveSchoolLang } =
+            await import("@/lib/dispatch-notification")
+          const lang = await resolveSchoolLang(schoolId)
+          const isAr = lang === "ar"
+          await dispatchNotification({
+            schoolId,
+            userId: app.userId,
+            type: "fee_paid",
+            title: isAr
+              ? "تم استلام رسوم التسجيل"
+              : "Registration Fee Received",
+            body: isAr
+              ? `تم تأكيد دفع رسوم التسجيل للطلب ${app.applicationNumber} بنجاح`
+              : `Registration fee for application ${app.applicationNumber} confirmed.`,
+            lang,
+            priority: "normal",
+            channels: ["in_app", "email"],
+            metadata: {
+              applicationId,
+              paymentType: "registration_fee",
+              chargeId: charge.id,
+            },
+          })
+        }
+      } catch (notifErr) {
+        console.error(
+          "[Tap webhook] Registration fee notification failed:",
+          notifErr
+        )
+      }
+    } catch (err) {
+      console.error(
+        `[Tap webhook] Failed to record registration fee for charge ${charge.id}:`,
+        err
+      )
+    }
+
     return new Response(null, { status: 200 })
   }
 
-  try {
-    await recordTapFeePayment({
-      chargeId: charge.id,
-      feeAssignmentId,
-      schoolId,
-      amount: typeof charge.amount === "number" ? charge.amount : 0,
-      currency:
-        typeof charge.currency === "string" ? charge.currency : undefined,
-      gatewayMethod: charge.source?.payment_method,
-    })
-  } catch (handlerErr) {
-    // Acknowledge the webhook even on handler failure — Tap will not retry
-    // and we already deduped via ProcessedWebhookEvent. Operator must
-    // reconcile manually if this branch fires.
-    console.error(
-      `[Tap webhook] Failed to record fee payment for charge ${charge.id}:`,
-      handlerErr
-    )
+  // ============================================================
+  // Legacy application_fee context — tolerated for apps in flight.
+  // Minimal: set applicationFeePaid + notify.
+  // ============================================================
+  if (context === "application_fee") {
+    const applicationId = charge.metadata?.applicationId
+    if (!applicationId || !schoolId) {
+      console.error(
+        `[Tap webhook] Charge ${charge.id} application_fee context missing applicationId/schoolId`
+      )
+      return new Response(null, { status: 200 })
+    }
+
+    try {
+      // Idempotency: skip if already marked paid
+      const existing = await db.application.findFirst({
+        where: { id: applicationId, schoolId },
+        select: { applicationFeePaid: true },
+      })
+      if (existing?.applicationFeePaid) {
+        console.log(
+          `[Tap webhook] applicationFeePaid already true for ${applicationId} — skipping`
+        )
+        return new Response(null, { status: 200 })
+      }
+
+      await db.application.update({
+        where: { id: applicationId, schoolId },
+        data: {
+          applicationFeePaid: true,
+          paymentId: charge.id,
+          paymentDate: new Date(),
+        },
+      })
+
+      console.log(
+        `[Tap webhook] Application fee paid (Tap, legacy): applicationId=${applicationId}`
+      )
+
+      // Send confirmation notification (non-fatal)
+      try {
+        const app = await db.application.findFirst({
+          where: { id: applicationId, schoolId },
+          select: { userId: true, applicationNumber: true },
+        })
+        if (app?.userId) {
+          const { dispatchNotification, resolveSchoolLang } =
+            await import("@/lib/dispatch-notification")
+          const lang = await resolveSchoolLang(schoolId)
+          const isAr = lang === "ar"
+          await dispatchNotification({
+            schoolId,
+            userId: app.userId,
+            type: "fee_paid",
+            title: isAr ? "تم استلام الدفع" : "Payment Received",
+            body: isAr
+              ? `تم تأكيد دفع رسوم الطلب ${app.applicationNumber} بنجاح`
+              : `Application fee payment for ${app.applicationNumber} confirmed.`,
+            lang,
+            priority: "normal",
+            channels: ["in_app", "email"],
+            metadata: {
+              applicationId,
+              paymentType: "application_fee",
+              chargeId: charge.id,
+            },
+          })
+        }
+      } catch (notifErr) {
+        console.error(
+          "[Tap webhook] Application fee notification failed:",
+          notifErr
+        )
+      }
+    } catch (err) {
+      console.error(
+        `[Tap webhook] Failed to record application fee for charge ${charge.id}:`,
+        err
+      )
+    }
+
+    return new Response(null, { status: 200 })
   }
 
+  // Unknown / future context — log and ack
+  console.log(
+    `[Tap webhook] Charge ${charge.id} context=${context ?? "none"} — no handler`
+  )
   return new Response(null, { status: 200 })
 }
 
@@ -229,8 +433,7 @@ async function recordTapFeePayment(args: {
       schoolId: assignment.schoolId,
       feeAssignmentId,
       studentId: assignment.studentId,
-      paymentNumber:
-        `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+      paymentNumber: generatePaymentNumber(),
       amount: paymentAmount,
       // P1.1/P1.3 — snapshot currency + preserve the Tap rail. paymentMethod
       // maps to a coarse enum; gatewayMethod keeps MADA/Apple Pay/KNET fidelity.
@@ -239,8 +442,7 @@ async function recordTapFeePayment(args: {
       gatewayMethod: gatewayMethod ?? null,
       paymentDate: new Date(),
       status: "SUCCESS",
-      receiptNumber:
-        `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+      receiptNumber: generateReceiptNumber(),
       transactionId: chargeId,
     },
   })
@@ -252,16 +454,41 @@ async function recordTapFeePayment(args: {
     data: { status: newStatus },
   })
 
-  // Sync linked invoice (non-fatal)
+  // INV-002 fix: sync ALL linked UserInvoices, allocating the paid amount
+  // oldest-first (multi-installment support). Uses amountPaid field and
+  // PARTIAL status for partial coverage.
   try {
-    const linkedInvoice = await db.userInvoice.findFirst({
-      where: { feeAssignmentId, schoolId: assignment.schoolId },
+    const linkedInvoices = await db.userInvoice.findMany({
+      where: {
+        feeAssignmentId,
+        schoolId: assignment.schoolId,
+        status: { notIn: ["PAID", "CANCELLED"] },
+      },
+      orderBy: { due_date: "asc" },
     })
-    if (linkedInvoice) {
-      await db.userInvoice.update({
-        where: { id: linkedInvoice.id },
-        data: { status: newStatus === "PAID" ? "PAID" : "UNPAID" },
-      })
+
+    if (linkedInvoices.length > 0) {
+      let remaining = paymentAmount
+      for (const inv of linkedInvoices) {
+        if (remaining <= 0) break
+        const invTotal = Number(inv.total)
+        const alreadyPaid = Number(inv.amountPaid)
+        const invRemaining = invTotal - alreadyPaid
+        if (invRemaining <= 0) continue
+
+        const applying = Math.min(remaining, invRemaining)
+        const newAmountPaid = alreadyPaid + applying
+        const fullyPaid = newAmountPaid >= invTotal
+        remaining -= applying
+
+        await db.userInvoice.update({
+          where: { id: inv.id },
+          data: {
+            amountPaid: newAmountPaid,
+            status: fullyPaid ? "PAID" : "PARTIAL",
+          },
+        })
+      }
     }
   } catch (invoiceErr) {
     console.error("[Tap webhook] Invoice sync failed:", invoiceErr)
@@ -315,7 +542,7 @@ async function recordTapFeePayment(args: {
           status: newStatus,
           receiptNumber: payment.receiptNumber,
           gateway: "tap",
-          url: `/finance/fees/payments/${payment.id}`,
+          url: `/api/payment/${payment.id}/receipt`,
         },
       })
     }

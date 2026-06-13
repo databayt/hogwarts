@@ -706,7 +706,8 @@ export async function submitApplication(
       priority: "normal",
       channels: ["in_app", "email"],
       targetScope: "role",
-      targetRole: "ADMIN",
+      // BUG-7: STAFF also manage applications — notify both roles of new leads.
+      targetRoles: ["ADMIN", "STAFF"],
       metadata: {
         applicationId: application.id,
         applicationNumber,

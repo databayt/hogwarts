@@ -5,10 +5,10 @@ title: Admission (school dashboard)
 file_type: readme
 owner: Abdout
 maturity: Built
-completion: 60
+completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/314
 docs: https://ed.databayt.org/en/docs/admission
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 ## Admission (Dashboard) — School-side admission management pipeline
@@ -21,9 +21,9 @@ This is a cross-block feature. The dashboard side (this block) handles admin rev
 
 ### Capabilities by Role
 
-- **DEVELOPER / ADMIN**: Full access -- create/edit campaigns, review applications, generate merit lists, confirm enrollment, manage settings
-- **STAFF**: Review applications, update status, place students into classes
-- **ACCOUNTANT**: View applications, record admission payments
+- **DEVELOPER / ADMIN**: Full access -- create/edit campaigns, review applications, enter scores, generate merit lists, confirm enrollment, manage settings, view leads
+- **STAFF**: Review applications, update status, place students into classes, view leads
+- **ACCOUNTANT**: View applications and leads (read-only tabs), record admission payments
 - **TEACHER / STUDENT / GUARDIAN**: No admission access
 
 ### Routes
@@ -33,20 +33,20 @@ This is a cross-block feature. The dashboard side (this block) handles admin rev
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission`                   | Campaigns list     | Ready                                        |
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications`      | Applications list  | Ready                                        |
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/applications/[id]` | Application detail | Ready                                        |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/merit`             | Merit list         | Ready                                        |
-| `/{lang}/s/{subdomain}/(school-dashboard)/admission/enrollment`        | Enrollment list    | Ready                                        |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/merit`             | Merit list         | Ready (score entry + weighted ranking)       |
+| `/{lang}/s/{subdomain}/(school-dashboard)/admission/enrollment`        | Enrollment list    | Ready (PlacementDialog wired)                |
 | `/{lang}/s/{subdomain}/(school-dashboard)/admission/settings`          | Admission settings | Partial — exposes ~12 of ~30 settings fields |
-
-> Pages all render, but: **Merit** ranks by an uncomputed score (P0-3); **Enrollment** has no reachable section-placement UI (P1-7). See `ISSUE.md`.
 
 ### File Structure
 
 ```
 src/components/school-dashboard/admission/
-├── actions.ts                      # Server actions (campaigns, applications, merit, enrollment, notifications)
+├── actions.ts                      # Server actions (campaigns, applications, merit, enrollment, notifications, updateApplicationScores)
 ├── authorization.ts                # RBAC permission checks
+├── permissions.ts                  # Tab/UI config per role (ACCOUNTANT now in VIEW_ROLES)
 ├── queries.ts                      # Read-only DB queries with filters/pagination/sorting
 ├── validation.ts                   # Zod schemas (campaign, application)
+├── warning-messages.ts             # Enrollment warning message definitions
 ├── list-params.ts                  # Shared list parameter types
 ├── campaigns-content.tsx           # Campaigns tab (server component)
 ├── campaigns-columns.tsx           # Campaign DataTable column definitions
@@ -60,12 +60,17 @@ src/components/school-dashboard/admission/
 ├── merit-content.tsx               # Merit list tab (server component)
 ├── merit-columns.tsx               # Merit DataTable column definitions
 ├── merit-table.tsx                 # Merit DataTable (client)
+├── score-entry-inline.tsx          # Inline entrance/interview score entry (client) [NEW]
 ├── enrollment-content.tsx          # Enrollment tab (server component)
 ├── enrollment-columns.tsx          # Enrollment DataTable column definitions
-├── enrollment-table.tsx            # Enrollment DataTable (client)
-├── placement-dialog.tsx            # Student placement dialog (client)
+├── enrollment-table.tsx            # Enrollment DataTable (client) — PlacementDialog wired
+├── placement-dialog.tsx            # Student placement dialog with seat counts (client)
 ├── bulk-placement.tsx              # Bulk placement operations (client)
 ├── settings-content.tsx            # Admission settings (server component)
+├── leads/                          # Leads tab [NEW]
+│   ├── leads-content.tsx           # Leads tab server component (inquiries + tour bookings)
+│   ├── leads-columns.tsx           # Leads DataTable column definitions
+│   └── leads-table.tsx             # Leads DataTable with status/follow-up/convert actions
 ├── settings/
 │   ├── actions.ts                  # Settings server actions
 │   ├── validation.ts               # Settings validation schemas
@@ -74,11 +79,11 @@ src/components/school-dashboard/admission/
 │   ├── types.ts                    # AI document types (classification, extraction, merit)
 │   ├── schemas.ts                  # Zod schemas for AI structured output
 │   ├── prompts.ts                  # AI system prompts
-│   ├── classify.ts                 # Claude Vision document classification
+│   ├── classify.ts                 # Claude Vision document classification (budget-gated + RBAC)
 │   ├── completeness.ts             # Document completeness checker
 │   ├── merit-engine.ts             # Weighted merit score computation
-│   ├── actions.ts                  # AI processing server actions
-│   ├── bank-receipt-schema.ts      # Bank receipt extraction schema
+│   ├── actions.ts                  # AI processing server actions (RBAC-gated)
+│   ├── bank-receipt-schema.ts      # Bank receipt extraction schema (optional fields)
 │   ├── bank-receipt-actions.ts     # Bank receipt processing actions
 │   ├── document-review-panel.tsx   # Document review UI (client)
 │   ├── document-card.tsx           # Individual document card (client)
@@ -93,18 +98,23 @@ src/components/school-dashboard/admission/
 
 ### Status
 
-**Completion:** ~70% | **Status:** 🔴 NOT production-ready (audited 2026-05-21)
+**Completion:** ~90% | **Status:** 🟢 production-ready core (audited 2026-06-13)
 
-Core CRUD/review/enrollment work, but 3 flagship flows are broken: offer acceptance (empty accessToken + login wall), merit ranking (ranks by a never-computed score), and the AI document pipeline (built but never executes — no cron, UI unrendered). See `ISSUE.md` for the full P0/P1/P2 tracker and remediation order.
+Full admit→accept→pay→enroll→fee pipeline verified. Merit ranking (score entry + weighted 60/40), AI document cron, PlacementDialog, Leads tab, ACCOUNTANT RBAC, tour TOCTOU, OTP hardening, all public writes rate-limited, webhook retry-on-catch, multi-installment amortization all shipped. Remaining open: server-side search on merit/enrollment tables, WhatsApp breadth (BUG-10), issue #269, `Application.lang` field (schema flag). See `ISSUE.md`.
 
 ### Integration Points
 
-- `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking
-- `src/components/school-marketing/application/` -- multi-step student application wizard (5 active steps: attachments → personal → location → academic → fees; + payment, offer, success)
-- `ai/` subsystem -- Claude document classification/extraction/completeness/merit-scoring + bank-receipt OCR. **Built but disconnected** (no `document-processing` cron, `document-card.tsx` unrendered) — see ISSUE.md P1-1
+- `src/components/school-marketing/admission/` -- public-facing admission pages, inquiry forms, tour booking (oversell-safe, rate-limited, OTP hashed)
+- `src/components/school-marketing/application/` -- multi-step student application wizard (fees step is informational — applying is always free; payment only at registration-fee + tuition stages)
+- `ai/` subsystem -- Claude document classification/extraction/completeness/merit-scoring + bank-receipt OCR. Drained by `/api/cron/process-document-jobs` (\*/10 min); budget-gated + RBAC-gated.
+- `/api/cron/process-document-jobs` -- new cron (\*/10) that processes the document-extraction queue
+- `/api/cron/fee-due` -- daily cron for upcoming-due + offer-expiry reminders
+- `/api/cron/fee-overdue` -- per-tenant OVERDUE mirror to `UserInvoice`
 - `src/lib/enrollment-sync.ts` -- auto-enroll placed students into grade classes
-- `src/lib/dispatch-notification.ts` -- notification dispatch on status changes
+- `src/lib/dispatch-notification.ts` -- notification dispatch on status changes; new-lead notifications to ADMIN+STAFF
+- `src/app/api/webhooks/stripe/route.ts` + `tap/route.ts` -- retry-on-catch, multi-installment `amountPaid`/PARTIAL, `checkout.session.expired` clears stuck admission state
 - `prisma/models/admission.prisma` -- 9 models: AdmissionCampaign, Application, Communication, AdmissionInquiry, AdmissionTimeSlot, TourBooking, ApplicationSession, AdmissionSettings, AdmissionOTP
+- `prisma/models/invoices.prisma` -- `InvoiceStatus +PARTIAL`, `UserInvoice +amountPaid +sentAt`; new indexes on `AdmissionInquiry`/`ApplicationSession(convertedToApplicationId)`
 
 ### Agents & Skills
 

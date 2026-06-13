@@ -8,8 +8,10 @@ import type {
   AdmissionApplicationStatus,
   NotificationPriority,
   NotificationType,
+  PaymentMethod,
 } from "@prisma/client"
 import { nanoid } from "nanoid"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -100,6 +102,13 @@ const NOTIF = {
       en: `You have been placed in section "${sectionName}"`,
     }),
   },
+  feePaid: {
+    title: { ar: "تأكيد الدفع", en: "Payment Confirmed" },
+    body: {
+      ar: "تم تأكيد دفع رسوم التسجيل بنجاح.",
+      en: "Your registration fee payment has been confirmed.",
+    },
+  },
 } as const
 
 const t = (msg: { ar: string; en: string }, lang: string) =>
@@ -111,7 +120,9 @@ const t = (msg: { ar: string; en: string }, lang: string) =>
  */
 async function dispatchAdmissionNotification(params: {
   schoolId: string
-  userId: string
+  userId?: string
+  // Guest applicants (no userId) receive the email channel directly here.
+  directEmail?: string
   type: NotificationType
   title: string
   body: string
@@ -128,6 +139,9 @@ async function dispatchAdmissionNotification(params: {
     priority: params.priority ?? "normal",
   })
 
+  // Guest path: dispatchNotification already delivered to directEmail and
+  // returned null (no in-app row). Nothing further to do.
+  if (!params.userId) return
   if (!notificationId || !channels.includes("email")) return
 
   // Send email immediately instead of waiting for daily cron
@@ -654,10 +668,18 @@ export async function updateApplicationStatus(params: {
             import("@/lib/email-templates/admission"),
             import("@/components/school-dashboard/notifications/email-service"),
           ])
+          // BUG-6: guard against null/empty domain — skip URL when unresolvable
+          const schoolDomain = school?.domain || null
+          if (!schoolDomain) {
+            console.warn(
+              "[updateApplicationStatus] school.domain is null/empty — offer URL will be skipped"
+            )
+            throw new Error("SKIP_OFFER_EMAIL")
+          }
           const isProd = process.env.NODE_ENV === "production"
           const baseUrl = isProd
-            ? `https://${school?.domain ?? ""}.databayt.org`
-            : `http://${school?.domain ?? ""}.localhost:3000`
+            ? `https://${schoolDomain}.databayt.org`
+            : `http://${schoolDomain}.localhost:3000`
           const offerUrl = `${baseUrl}/${notifLang}/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
           const parentName =
             application.fatherName ||
@@ -744,6 +766,78 @@ export async function getMeritListData(params: {
   }
 }
 
+// Zod schema for score updates (0-100 nullable floats)
+const updateScoresSchema = z.object({
+  entranceScore: z.number().min(0).max(100).nullable().optional(),
+  interviewScore: z.number().min(0).max(100).nullable().optional(),
+})
+
+/**
+ * Update entrance/interview scores for a single application.
+ * Scores are 0-100 (nullable). meritScore is NOT recomputed here —
+ * call generateMeritList to recompute and rank the whole campaign.
+ */
+export async function updateApplicationScores(params: {
+  id: string
+  entranceScore?: number | null
+  interviewScore?: number | null
+}): Promise<ActionResponse> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    assertAdmissionPermission(session.user.role, "updateStatus")
+
+    const validated = updateScoresSchema.safeParse({
+      entranceScore: params.entranceScore,
+      interviewScore: params.interviewScore,
+    })
+    if (!validated.success) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    // Verify application belongs to this school
+    const existing = await db.application.findUnique({
+      where: { id: params.id, schoolId },
+      select: { id: true },
+    })
+    if (!existing) {
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
+    }
+
+    const updateData: Record<string, unknown> = {}
+    if (validated.data.entranceScore !== undefined) {
+      updateData.entranceScore = validated.data.entranceScore
+    }
+    if (validated.data.interviewScore !== undefined) {
+      updateData.interviewScore = validated.data.interviewScore
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, data: null }
+    }
+
+    await db.application.update({
+      where: { id: params.id, schoolId },
+      data: updateData,
+    })
+
+    revalidatePath("/admission/merit")
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[updateApplicationScores]", error)
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+  }
+}
+
+/** Default weights used when AdmissionSettings has no entranceWeight/interviewWeight */
+const DEFAULT_ENTRANCE_WEIGHT = 60
+const DEFAULT_INTERVIEW_WEIGHT = 40
+
 export async function generateMeritList(params: {
   campaignId: string
 }): Promise<ActionResponse> {
@@ -757,29 +851,93 @@ export async function generateMeritList(params: {
 
     assertAdmissionPermission(session.user.role, "generateMeritList")
 
-    // Get all applications for the campaign that are eligible for ranking
+    // Read score weights from AdmissionSettings (or use constants)
+    const settings = await db.admissionSettings.findUnique({
+      where: { schoolId },
+      select: { entranceWeight: true, interviewWeight: true },
+    })
+    // Normalize weights so they sum to 100. If only one score is configured,
+    // the entire merit comes from that score.
+    const rawEntrance = settings?.entranceWeight ?? DEFAULT_ENTRANCE_WEIGHT
+    const rawInterview = settings?.interviewWeight ?? DEFAULT_INTERVIEW_WEIGHT
+    const weightSum = rawEntrance + rawInterview
+    const entranceW = weightSum > 0 ? rawEntrance / weightSum : 0.6
+    const interviewW = weightSum > 0 ? rawInterview / weightSum : 0.4
+
+    // Fetch all eligible applications for the campaign
     const applications = await db.application.findMany({
       where: {
         schoolId,
         campaignId: params.campaignId,
         status: { in: ["SHORTLISTED", "SELECTED", "WAITLISTED"] },
       },
-      orderBy: [
-        { meritScore: "desc" },
-        { entranceScore: "desc" },
-        { interviewScore: "desc" },
-      ],
+      select: {
+        id: true,
+        entranceScore: true,
+        interviewScore: true,
+      },
     })
 
-    // Update merit ranks in parallel
-    await Promise.all(
-      applications.map((app, i) =>
-        db.application.update({
-          where: { id: app.id, schoolId },
-          data: { meritRank: i + 1 },
-        })
-      )
+    // Compute meritScore for each application that has at least one score.
+    // Applications with no scores at all get meritScore = null and rank last.
+    type ScoredApp = { id: string; meritScore: number | null }
+    const scored: ScoredApp[] = applications.map((app) => {
+      const entrance = app.entranceScore ? Number(app.entranceScore) : null
+      const interview = app.interviewScore ? Number(app.interviewScore) : null
+
+      if (entrance === null && interview === null) {
+        return { id: app.id, meritScore: null }
+      }
+
+      // Weighted combination — if only one score present, use full weight
+      const hasEntrance = entrance !== null
+      const hasInterview = interview !== null
+      let merit: number
+
+      if (hasEntrance && hasInterview) {
+        merit = entrance * entranceW + interview * interviewW
+      } else if (hasEntrance) {
+        merit = entrance
+      } else {
+        merit = interview as number
+      }
+
+      return { id: app.id, meritScore: Math.round(merit * 100) / 100 }
+    })
+
+    // Sort: scored desc first, nulls last
+    scored.sort((a, b) => {
+      if (a.meritScore === null && b.meritScore === null) return 0
+      if (a.meritScore === null) return 1
+      if (b.meritScore === null) return -1
+      return b.meritScore - a.meritScore
+    })
+
+    // Batch rank writes in a single transaction to minimize round-trips.
+    // Pre-compute the rank map so chunk.map is O(1) per item (not O(n²) indexOf).
+    const rankMap = new Map<string, number>(
+      scored.map((app, i) => [app.id, i + 1])
     )
+
+    const CHUNK_SIZE = 50
+    const chunks: ScoredApp[][] = []
+    for (let i = 0; i < scored.length; i += CHUNK_SIZE) {
+      chunks.push(scored.slice(i, i + CHUNK_SIZE))
+    }
+
+    for (const chunk of chunks) {
+      await db.$transaction(
+        chunk.map((app) =>
+          db.application.update({
+            where: { id: app.id, schoolId },
+            data: {
+              meritScore: app.meritScore,
+              meritRank: rankMap.get(app.id) ?? null,
+            },
+          })
+        )
+      )
+    }
 
     revalidatePath("/admission/merit")
     return { success: true, data: null }
@@ -854,6 +1012,7 @@ export type EnrollmentWarningCode =
   | "GUARDIAN_CREATE_FAILED"
   | "NO_FEE_STRUCTURE_MATCH"
   | "APPLICATION_FEE_UNPAID"
+  | "REGISTRATION_FEE_NO_STRUCTURE"
 
 export interface EnrollmentWarning {
   code: EnrollmentWarningCode
@@ -903,7 +1062,36 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.OFFER_EXPIRED)
     }
 
-    const enrollmentNumber = `ENR-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    // Generate collision-safe enrollmentNumber using a retry-on-unique-violation
+    // loop. We count existing students for this school to get the next seq, then
+    // retry (up to 10 times) if another concurrent enrollment claimed it first.
+    const academicYearShort = (
+      application.campaign?.academicYear ?? String(new Date().getFullYear())
+    )
+      .replace(/[^0-9]/g, "")
+      .slice(-4)
+      .slice(0, 2)
+
+    let enrollmentNumber = ""
+    const MAX_RETRIES = 10
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const existingCount = await db.student.count({ where: { schoolId } })
+      const seq = String(existingCount + 1 + attempt).padStart(4, "0")
+      const candidate = `ENR-${academicYearShort}-${seq}`
+      // Check uniqueness against Student.admissionNumber
+      const conflict = await db.student.findFirst({
+        where: { schoolId, admissionNumber: candidate },
+        select: { id: true },
+      })
+      if (!conflict) {
+        enrollmentNumber = candidate
+        break
+      }
+    }
+    if (!enrollmentNumber) {
+      // Ultimate fallback: timestamp suffix — guaranteed unique
+      enrollmentNumber = `ENR-${Date.now()}`
+    }
     let enrolledStudentId: string | null = null
     const warnings: EnrollmentWarning[] = []
 
@@ -1248,6 +1436,152 @@ export async function confirmEnrollment(params: {
             warnings.push({ code: "FEE_AUTO_ASSIGN_FAILED" })
           }
 
+          // 6b. Registration-fee materialization (ADMISSION-FEE-NO-LEDGER).
+          // If the application captured a registration-fee payment at offer
+          // time, we must create a Payment + journal entry so the books reflect
+          // the money already collected.  Idempotent: if a Payment for this
+          // student's REGISTRATION FeeAssignment already exists, skip.
+          if (
+            application.registrationFeePaid &&
+            application.registrationFeeAmount
+          ) {
+            try {
+              // Find the registration-type FeeAssignment just created by
+              // ensureStudentFeeAssignments (or a pre-existing one).
+              const regAssignment = await tx.feeAssignment.findFirst({
+                where: {
+                  schoolId,
+                  studentId: student.id,
+                  feeStructure: {
+                    OR: [
+                      {
+                        name: { contains: "registration", mode: "insensitive" },
+                      },
+                      {
+                        name: { contains: "Registration", mode: "insensitive" },
+                      },
+                      { registrationFee: { gt: 0 } },
+                    ],
+                  },
+                },
+                select: { id: true, status: true },
+              })
+
+              if (regAssignment) {
+                // Idempotency: skip if a payment for this assignment already exists
+                const existingPayment = await tx.payment.findFirst({
+                  where: {
+                    schoolId,
+                    feeAssignmentId: regAssignment.id,
+                  },
+                  select: { id: true },
+                })
+
+                if (!existingPayment) {
+                  // Map application.registrationFeeMethod string to PaymentMethod enum
+                  const methodMap: Record<string, PaymentMethod> = {
+                    cash: "CASH",
+                    stripe: "CREDIT_CARD",
+                    credit_card: "CREDIT_CARD",
+                    bank_transfer: "BANK_TRANSFER",
+                    cheque: "CHEQUE",
+                    online: "CREDIT_CARD",
+                    wallet: "WALLET",
+                    apple_pay: "APPLE_PAY",
+                    google_pay: "GOOGLE_PAY",
+                    mada: "MADA",
+                    knet: "KNET",
+                  }
+                  const rawMethod = (
+                    application.registrationFeeMethod ?? "cash"
+                  ).toLowerCase()
+                  const paymentMethod: PaymentMethod =
+                    methodMap[rawMethod] ?? "OTHER"
+
+                  // Collision-safe paymentNumber/receiptNumber
+                  const timestamp = Date.now()
+                  const suffix = nanoid(6).toUpperCase()
+                  const paymentNumber = `PAY-REG-${timestamp}-${suffix}`
+                  const receiptNumber = `REC-REG-${timestamp}-${suffix}`
+
+                  const regPaymentDate =
+                    application.registrationFeeDate ?? new Date()
+                  const regAmount = Number(application.registrationFeeAmount)
+
+                  const newPayment = await tx.payment.create({
+                    data: {
+                      schoolId,
+                      feeAssignmentId: regAssignment.id,
+                      studentId: student.id,
+                      paymentNumber,
+                      receiptNumber,
+                      amount: regAmount,
+                      paymentMethod,
+                      paymentDate: regPaymentDate,
+                      status: "SUCCESS",
+                      transactionId:
+                        application.registrationFeeReference ?? null,
+                      remarks: "Registration fee collected at offer acceptance",
+                    },
+                    select: { id: true },
+                  })
+
+                  // Mark the fee assignment as PAID
+                  await tx.feeAssignment.update({
+                    where: { id: regAssignment.id },
+                    data: { status: "PAID" },
+                  })
+
+                  // Post the ledger entry (non-blocking — failure must not
+                  // roll back enrollment; we log and continue)
+                  try {
+                    const { createFeePaymentEntry } =
+                      await import("@/components/school-dashboard/finance/lib/accounting/posting-rules")
+                    const { createJournalEntry } =
+                      await import("@/components/school-dashboard/finance/lib/accounting/utils")
+                    const entryInput = await createFeePaymentEntry(
+                      schoolId,
+                      {
+                        paymentId: newPayment.id,
+                        studentId: student.id,
+                        amount: regAmount,
+                        paymentMethod: paymentMethod,
+                        paymentDate: regPaymentDate,
+                        feeType: "registration",
+                      },
+                      tx
+                    )
+                    // Use a system actor ID ("system") for automated entries
+                    const postResult = await createJournalEntry(
+                      schoolId,
+                      entryInput,
+                      session.user?.id ?? "system"
+                    )
+                    if (postResult.success && postResult.journalEntryId) {
+                      await tx.payment.update({
+                        where: { id: newPayment.id },
+                        data: { journalEntryId: postResult.journalEntryId },
+                      })
+                    }
+                  } catch (ledgerErr) {
+                    console.warn(
+                      "[confirmEnrollment] Registration fee ledger entry failed:",
+                      ledgerErr
+                    )
+                  }
+                }
+              } else {
+                // No matching registration FeeStructure was found — warn admin
+                warnings.push({ code: "REGISTRATION_FEE_NO_STRUCTURE" })
+              }
+            } catch (regFeeErr) {
+              console.warn(
+                "[confirmEnrollment] Registration fee materialization failed:",
+                regFeeErr
+              )
+            }
+          }
+
           // 7. Create Guardian records from application parent/guardian data
           try {
             const { createOrLinkGuardian, fromFullName } =
@@ -1564,6 +1898,67 @@ export async function recordPayment(params: {
         paymentDate: new Date(),
       },
     })
+
+    // BUG-9: notify the applicant about their registration-fee payment being
+    // confirmed. Non-blocking — failure must not fail the action.
+    try {
+      const application = await db.application.findUnique({
+        where: { id: params.id, schoolId },
+        select: { userId: true, email: true, firstName: true, lastName: true },
+      })
+      if (application?.userId) {
+        const school = await db.school.findFirst({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+        const notifLang = school?.preferredLanguage ?? "ar"
+        dispatchAdmissionNotification({
+          schoolId,
+          userId: application.userId,
+          type: "fee_paid",
+          title: t(NOTIF.feePaid.title, notifLang),
+          body: t(NOTIF.feePaid.body, notifLang),
+          lang: notifLang,
+          priority: "normal",
+          channels: ["in_app", "email"],
+          metadata: {
+            applicationId: params.id,
+            paymentId: params.paymentId,
+            url: "/admission",
+          },
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error("[recordPayment] Notification error:", err)
+        )
+      } else if (application?.email) {
+        // Guest applicant (no userId): deliver the confirmation email directly.
+        const school = await db.school.findFirst({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+        const notifLang = school?.preferredLanguage ?? "ar"
+        dispatchAdmissionNotification({
+          schoolId,
+          directEmail: application.email,
+          type: "fee_paid",
+          title: t(NOTIF.feePaid.title, notifLang),
+          body: t(NOTIF.feePaid.body, notifLang),
+          lang: notifLang,
+          priority: "normal",
+          channels: ["email"],
+          metadata: {
+            applicationId: params.id,
+            paymentId: params.paymentId,
+            url: "/admission",
+          },
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error("[recordPayment] Guest notification error:", err)
+        )
+      }
+    } catch (notifErr) {
+      console.warn("[recordPayment] Notification setup failed:", notifErr)
+    }
 
     revalidatePath("/admission/enrollment")
     return { success: true, data: null }

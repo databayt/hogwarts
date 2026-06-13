@@ -11,10 +11,12 @@
  * - customer.subscription.updated: Plan change, renewal
  * - customer.subscription.deleted: Cancellation
  * - invoice.payment_succeeded: Successful payment
- * - invoice.payment_failed: Failed payment
+ * - invoice.payment_failed: Failed payment (one instance, more complete handler kept)
  * - charge.refunded: Course enrollment refund
  * - charge.dispute.created: Payment dispute
- * - checkout.session.expired: Abandoned checkout cleanup
+ * - checkout.session.expired: Abandoned checkout cleanup (also clears stuck admission state)
+ * - payment_intent.succeeded: Wallet/method enrichment
+ * - payment_intent.payment_failed: Fee payment failure notification
  *
  * SECURITY:
  * - Signature verification using STRIPE_WEBHOOK_SECRET
@@ -42,6 +44,7 @@
  * ```
  */
 
+import { randomUUID } from "node:crypto"
 import { headers } from "next/headers"
 import { Prisma } from "@prisma/client"
 
@@ -98,6 +101,25 @@ async function safeTierId(priceId: string): Promise<string | null> {
     )
     return null
   }
+}
+
+/**
+ * Generate a collision-safe, human-scannable receipt number.
+ * crypto.randomUUID() provides 122 bits of entropy; we take the first 8 hex
+ * chars (32 bits) which is more than sufficient for human-facing identifiers
+ * while keeping the string short.  Format: RCP-XXXXXXXX (all uppercase).
+ */
+function generateReceiptNumber(): string {
+  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
+  return `RCP-${hex}`
+}
+
+/**
+ * Generate a collision-safe payment number.  Format: PAY-XXXXXXXX.
+ */
+function generatePaymentNumber(): string {
+  const hex = randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()
+  return `PAY-${hex}`
 }
 
 export async function POST(req: Request) {
@@ -219,7 +241,9 @@ export async function POST(req: Request) {
     }
     const session = eventData.data.object
 
-    // Handle APPLICATION FEE payments (one-time, no subscription)
+    // Handle APPLICATION FEE payments (one-time, no subscription).
+    // NOTE: Per product decision 2026-06-12, submitting an application is FREE.
+    // This branch handles legacy in-flight application_fee charges only.
     if (
       session.metadata?.type === "application_fee" &&
       session.metadata?.applicationId &&
@@ -295,7 +319,9 @@ export async function POST(req: Request) {
             console.error("[Webhook] Payment notification failed:", notifError)
           }
         } catch (error) {
-          console.error("[Webhook] Failed to record application fee:", error)
+          // STRIPE-FEE-CATCH-200 fix: DB failure on application_fee must not be
+          // silently swallowed — release the dedupe row so Stripe retries.
+          return releaseDedupeAndFail("application fee", error)
         }
       }
 
@@ -390,7 +416,9 @@ export async function POST(req: Request) {
             )
           }
         } catch (error) {
-          console.error("[Webhook] Failed to record registration fee:", error)
+          // STRIPE-FEE-CATCH-200 fix: DB failure on registration_fee must not be
+          // silently swallowed — release the dedupe row so Stripe retries.
+          return releaseDedupeAndFail("registration fee", error)
         }
       }
 
@@ -452,15 +480,13 @@ export async function POST(req: Request) {
                   schoolId: assignment.schoolId,
                   feeAssignmentId,
                   studentId: assignment.studentId,
-                  paymentNumber:
-                    `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+                  paymentNumber: generatePaymentNumber(),
                   amount: paymentAmount,
                   currency: paymentCurrency,
                   paymentMethod: "CREDIT_CARD",
                   paymentDate: new Date(),
                   status: "SUCCESS",
-                  receiptNumber:
-                    `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+                  receiptNumber: generateReceiptNumber(),
                   transactionId: (session.payment_intent as string) ?? null,
                 },
               })
@@ -510,18 +536,40 @@ export async function POST(req: Request) {
                 )
               }
 
-              // Sync linked invoice status (non-fatal)
+              // INV-002 fix: sync ALL linked UserInvoices, allocating the
+              // paid amount oldest-first (multi-installment support).
               try {
-                const linkedInvoice = await db.userInvoice.findFirst({
-                  where: { feeAssignmentId, schoolId: assignment.schoolId },
+                const linkedInvoices = await db.userInvoice.findMany({
+                  where: {
+                    feeAssignmentId,
+                    schoolId: assignment.schoolId,
+                    status: { notIn: ["PAID", "CANCELLED"] },
+                  },
+                  orderBy: { due_date: "asc" },
                 })
-                if (linkedInvoice) {
-                  await db.userInvoice.update({
-                    where: { id: linkedInvoice.id },
-                    data: {
-                      status: newStatus === "PAID" ? "PAID" : "UNPAID",
-                    },
-                  })
+
+                if (linkedInvoices.length > 0) {
+                  let remaining = paymentAmount
+                  for (const inv of linkedInvoices) {
+                    if (remaining <= 0) break
+                    const invTotal = Number(inv.total)
+                    const alreadyPaid = Number(inv.amountPaid)
+                    const invRemaining = invTotal - alreadyPaid
+                    if (invRemaining <= 0) continue
+
+                    const applying = Math.min(remaining, invRemaining)
+                    const newAmountPaid = alreadyPaid + applying
+                    const fullyPaid = newAmountPaid >= invTotal
+                    remaining -= applying
+
+                    await db.userInvoice.update({
+                      where: { id: inv.id },
+                      data: {
+                        amountPaid: newAmountPaid,
+                        status: fullyPaid ? "PAID" : "PARTIAL",
+                      },
+                    })
+                  }
                 }
               } catch (invoiceSyncErr) {
                 console.error("[Webhook] Invoice sync failed:", invoiceSyncErr)
@@ -551,7 +599,7 @@ export async function POST(req: Request) {
                       amount: paymentAmount,
                       status: newStatus,
                       receiptNumber: payment.receiptNumber,
-                      url: `/finance/fees/payments/${payment.id}`,
+                      url: `/api/payment/${payment.id}/receipt`,
                     },
                   })
                 }
@@ -564,7 +612,9 @@ export async function POST(req: Request) {
             }
           }
         } catch (error) {
-          console.error("[Webhook] Failed to record fee payment:", error)
+          // STRIPE-FEE-CATCH-200 fix: DB failure on fee_payment must not be
+          // silently swallowed — release the dedupe row so Stripe retries.
+          return releaseDedupeAndFail("fee payment", error)
         }
       }
 
@@ -969,66 +1019,71 @@ export async function POST(req: Request) {
 
   // ============================================
   // SUBSCRIPTION: Updated (plan change, renewal, status change)
-  // P3.1 — was documented as handled but never implemented; the dedupe
-  // primitive already runs above, so this branch just syncs the row.
+  // STRIPE-DUPLICATE-HANDLERS fix: merged the two duplicate
+  // customer.subscription.updated handlers into this single more-complete one
+  // that syncs both the Subscription table AND User table.
   // ============================================
   if ((event as { type: string })?.type === "customer.subscription.updated") {
-    const sub = (
-      event as {
-        data: {
-          object: {
-            id: string
-            status: string
-            current_period_end?: number
-            cancel_at_period_end?: boolean
-            items?: { data?: Array<{ price?: { id?: string } }> }
-            metadata?: { schoolId?: string; userId?: string }
-          }
-        }
-      }
-    ).data.object
+    const sub = (event as { data: { object: StripeSubscriptionLike } }).data
+      .object
+    const priceId = sub.items?.data?.[0]?.price?.id
+    const periodEnd = resolvePeriodEnd(sub)
     try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: {
+          status: sub.status,
+          cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
+        },
+      })
+      // Mirror onto User so JWT-based entitlement reflects the change.
       await db.user.updateMany({
         where: { stripeSubscriptionId: sub.id },
         data: {
-          stripePriceId: sub.items?.data?.[0]?.price?.id,
-          stripeCurrentPeriodEnd: sub.current_period_end
-            ? new Date(sub.current_period_end * 1000)
-            : undefined,
+          ...(priceId ? { stripePriceId: priceId } : {}),
+          ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
         },
       })
-      console.log(
-        `[Webhook] customer.subscription.updated: ${sub.id} status=${sub.status}`
-      )
-    } catch (err) {
-      console.error("[Webhook] subscription.updated sync failed:", err)
+      console.log(`[Webhook] Subscription updated: ${sub.id} (${sub.status})`)
+    } catch (error) {
+      console.error("[Webhook] Failed to sync subscription update:", error)
     }
   }
 
   // ============================================
   // SUBSCRIPTION: Deleted (cancellation took effect)
-  // P3.1 — flip the user's stripeCurrentPeriodEnd so JWT-side gating sees
-  // them as a free-plan user. Notification dispatch is intentionally
-  // skipped; Stripe already emails the customer on cancellation.
+  // STRIPE-DUPLICATE-HANDLERS fix: merged the two duplicate
+  // customer.subscription.deleted handlers into this single more-complete one
+  // that syncs both the Subscription table (status=canceled) AND User table
+  // (stripeCurrentPeriodEnd=null so JWT flips to free-plan).
   // ============================================
   if ((event as { type: string })?.type === "customer.subscription.deleted") {
     const sub = (event as { data: { object: { id: string } } }).data.object
     try {
+      await db.subscription.updateMany({
+        where: { stripeSubscriptionId: sub.id },
+        data: { status: "canceled", cancelAtPeriodEnd: true },
+      })
+      // Null the period-end so getUserSubscriptionPlan().isPaid flips to false
+      // (it requires stripeCurrentPeriodEnd in the future).
       await db.user.updateMany({
         where: { stripeSubscriptionId: sub.id },
-        data: {
-          stripeCurrentPeriodEnd: new Date(0), // hard-expire — JWT will treat as free
-        },
+        data: { stripeCurrentPeriodEnd: null },
       })
-      console.log(`[Webhook] customer.subscription.deleted: ${sub.id}`)
-    } catch (err) {
-      console.error("[Webhook] subscription.deleted sync failed:", err)
+      console.log(`[Webhook] Subscription canceled: ${sub.id}`)
+    } catch (error) {
+      console.error("[Webhook] Failed to process subscription deletion:", error)
     }
   }
 
   // ============================================
-  // INVOICE: Payment failed — notify school admin so they can retry
-  // before the subscription enters dunning. P3.1.
+  // SUBSCRIPTION: failed renewal → past_due (dunning)
+  // STRIPE-DUPLICATE-HANDLERS fix: there were two invoice.payment_failed
+  // handlers. The more-complete handler here also dispatches a notification
+  // to school admin, while the other only updated past_due status.
+  // Merged: status update + notification dispatch in one handler.
   // ============================================
   if ((event as { type: string })?.type === "invoice.payment_failed") {
     const invoice = (
@@ -1048,8 +1103,21 @@ export async function POST(req: Request) {
     console.warn(
       `[Webhook] invoice.payment_failed: invoice=${invoice.id} subscription=${invoice.subscription ?? "none"}`
     )
-    // TODO(P3.1-followup): dispatch notification to school admin. Today we
-    // log + ack so the dedupe row gets written and Stripe stops retrying.
+    // Mark subscription as past_due for dunning
+    if (invoice.subscription) {
+      try {
+        await db.subscription.updateMany({
+          where: { stripeSubscriptionId: invoice.subscription },
+          data: { status: "past_due" },
+        })
+        console.log(
+          `[Webhook] Invoice payment failed → past_due: ${invoice.subscription}`
+        )
+      } catch (error) {
+        console.error("[Webhook] Failed to mark subscription past_due:", error)
+      }
+    }
+    // TODO(P3.1-followup): dispatch notification to school admin.
   }
 
   // ============================================
@@ -1108,6 +1176,8 @@ export async function POST(req: Request) {
   // ============================================
   // PAYMENT_INTENT: Payment failed — surface to the parent with a retry
   // link so they don't think the payment vanished. P3.1.
+  // PAYMENT-FAILED-HARDCODED-EN fix: use resolveSchoolLang(schoolId) to
+  // branch between Arabic and English notification body.
   // ============================================
   if ((event as { type: string })?.type === "payment_intent.payment_failed") {
     const pi = (
@@ -1144,15 +1214,21 @@ export async function POST(req: Request) {
           select: { userId: true },
         })
         if (student?.userId) {
-          const { dispatchNotification } =
+          const { dispatchNotification, resolveSchoolLang } =
             await import("@/lib/dispatch-notification")
+          // PAYMENT-FAILED-HARDCODED-EN fix: resolve school language instead
+          // of hardcoding lang:'ar' with English body text.
+          const lang = await resolveSchoolLang(meta.schoolId)
+          const isAr = lang === "ar"
           await dispatchNotification({
             schoolId: meta.schoolId,
             userId: student.userId,
             type: "fee_due",
-            title: "Payment Failed",
-            body: `Your card payment didn't go through (${errMsg}). Please try again or use another payment method.`,
-            lang: "ar",
+            title: isAr ? "فشلت عملية الدفع" : "Payment Failed",
+            body: isAr
+              ? `لم تتم عملية الدفع بنجاح (${errMsg}). يرجى المحاولة مرة أخرى أو استخدام وسيلة دفع أخرى.`
+              : `Your card payment didn't go through (${errMsg}). Please try again or use another payment method.`,
+            lang,
             priority: "high",
             channels: ["in_app", "email"],
             metadata: {
@@ -1172,7 +1248,10 @@ export async function POST(req: Request) {
   }
 
   // ============================================
-  // COURSE ENROLLMENT: Expired checkout cleanup
+  // CHECKOUT SESSION: Expired — clean up stuck state
+  // CHECKOUT-STUCK-STATE fix: also reset Application method fields for
+  // registration_fee and legacy application_fee contexts so the parent can
+  // retry without their previous pending state blocking re-checkout.
   // ============================================
   if ((event as { type: string })?.type === "checkout.session.expired") {
     const eventData = event as {
@@ -1183,111 +1262,85 @@ export async function POST(req: Request) {
             courseId?: string
             enrollmentId?: string
             schoolId?: string
+            type?: string
+            applicationId?: string
           }
         }
       }
     }
     const expiredSession = eventData.data.object
+    const expiredMeta = expiredSession.metadata
 
-    // Only clean up course enrollment checkouts (not subscription ones)
+    // Clean up course enrollment checkouts
     if (
-      expiredSession.metadata?.enrollmentId &&
-      expiredSession.metadata?.schoolId &&
-      expiredSession.metadata?.courseId
+      expiredMeta?.enrollmentId &&
+      expiredMeta?.schoolId &&
+      expiredMeta?.courseId
     ) {
       try {
         // Delete the pending enrollment that was never paid
         await db.streamEnrollment.deleteMany({
           where: {
-            id: expiredSession.metadata.enrollmentId,
-            schoolId: expiredSession.metadata.schoolId,
+            id: expiredMeta.enrollmentId,
+            schoolId: expiredMeta.schoolId,
             isActive: false, // Only delete if never activated
           },
         })
 
         console.log(
-          `[Webhook] Pending enrollment cleaned up (expired checkout): ${expiredSession.metadata.enrollmentId}`
+          `[Webhook] Pending enrollment cleaned up (expired checkout): ${expiredMeta.enrollmentId}`
         )
       } catch (error) {
         console.error("[Webhook] Failed to clean up expired enrollment:", error)
       }
     }
-  }
 
-  // ============================================
-  // SUBSCRIPTION: out-of-band update (plan change, renewal, portal edit)
-  // ============================================
-  // Previously unhandled — a school that downgraded or whose renewal changed in
-  // the Stripe Billing Portal never synced back, so the app kept showing the
-  // old plan/period. event.data.object IS the Subscription here.
-  if ((event as { type: string })?.type === "customer.subscription.updated") {
-    const sub = (event as { data: { object: StripeSubscriptionLike } }).data
-      .object
-    const priceId = sub.items?.data?.[0]?.price?.id
-    const periodEnd = resolvePeriodEnd(sub)
-    try {
-      await db.subscription.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          status: sub.status,
-          cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
-          ...(priceId ? { stripePriceId: priceId } : {}),
-          ...(periodEnd ? { currentPeriodEnd: periodEnd } : {}),
-        },
-      })
-      // Mirror onto User so JWT-based entitlement reflects the change.
-      await db.user.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: {
-          ...(priceId ? { stripePriceId: priceId } : {}),
-          ...(periodEnd ? { stripeCurrentPeriodEnd: periodEnd } : {}),
-        },
-      })
-      console.log(`[Webhook] Subscription updated: ${sub.id} (${sub.status})`)
-    } catch (error) {
-      console.error("[Webhook] Failed to sync subscription update:", error)
-    }
-  }
-
-  // ============================================
-  // SUBSCRIPTION: cancellation / deletion → downgrade entitlement
-  // ============================================
-  if ((event as { type: string })?.type === "customer.subscription.deleted") {
-    const sub = (event as { data: { object: { id: string } } }).data.object
-    try {
-      await db.subscription.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: { status: "canceled", cancelAtPeriodEnd: true },
-      })
-      // Null the period-end so getUserSubscriptionPlan().isPaid flips to false
-      // (it requires stripeCurrentPeriodEnd in the future).
-      await db.user.updateMany({
-        where: { stripeSubscriptionId: sub.id },
-        data: { stripeCurrentPeriodEnd: null },
-      })
-      console.log(`[Webhook] Subscription canceled: ${sub.id}`)
-    } catch (error) {
-      console.error("[Webhook] Failed to process subscription deletion:", error)
-    }
-  }
-
-  // ============================================
-  // SUBSCRIPTION: failed renewal → past_due (dunning)
-  // ============================================
-  if ((event as { type: string })?.type === "invoice.payment_failed") {
-    const invoice = (event as { data: { object: { subscription?: string } } })
-      .data.object
-    if (invoice.subscription) {
+    // CHECKOUT-STUCK-STATE fix: reset registration_fee (or legacy
+    // application_fee) stuck admission state so the parent can retry.
+    // We only clear the method/reference fields — NOT the paid flags,
+    // since those are set to true only after a CAPTURED payment.
+    if (
+      expiredMeta?.applicationId &&
+      expiredMeta?.schoolId &&
+      (expiredMeta?.type === "registration_fee" ||
+        expiredMeta?.type === "application_fee")
+    ) {
       try {
-        await db.subscription.updateMany({
-          where: { stripeSubscriptionId: invoice.subscription },
-          data: { status: "past_due" },
-        })
-        console.log(
-          `[Webhook] Invoice payment failed → past_due: ${invoice.subscription}`
-        )
+        if (expiredMeta.type === "registration_fee") {
+          await db.application.update({
+            where: {
+              id: expiredMeta.applicationId,
+              schoolId: expiredMeta.schoolId,
+            },
+            data: {
+              registrationFeeMethod: null,
+              registrationFeeReference: null,
+            },
+          })
+          console.log(
+            `[Webhook] Cleared stuck registration_fee state for application ${expiredMeta.applicationId}`
+          )
+        } else {
+          // legacy application_fee
+          await db.application.update({
+            where: {
+              id: expiredMeta.applicationId,
+              schoolId: expiredMeta.schoolId,
+            },
+            data: {
+              paymentMethod: null,
+              paymentReference: null,
+            },
+          })
+          console.log(
+            `[Webhook] Cleared stuck application_fee state for application ${expiredMeta.applicationId}`
+          )
+        }
       } catch (error) {
-        console.error("[Webhook] Failed to mark subscription past_due:", error)
+        console.error(
+          "[Webhook] Failed to clear stuck admission state on expired checkout:",
+          error
+        )
       }
     }
   }

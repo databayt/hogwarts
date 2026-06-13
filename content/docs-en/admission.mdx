@@ -1,37 +1,42 @@
 ---
 title: Admission
-description: Admin-side admission management — application review, enrollment confirmation, merit list, payment recording, and section placement.
+description: Admin-side admission management — application review, enrollment confirmation, merit list, section placement, and document-AI processing.
 ---
 
 The admin admission flow runs from application review through enrollment confirmation. Confirming enrollment fires a single 30-second transaction that creates the Student, Guardians, FeeAssignments, and UserInvoices in one atomic step.
 
+**Applying is always free.** The application wizard collects information only — no payment is taken at the application stage. Payment is triggered at two later points: the registration fee when the applicant accepts an offer, and tuition invoices after enrollment is confirmed.
+
 ## Pipeline
 
 ```
-Review application      → UNDER_REVIEW
-Score & rank            → Merit list
-Select applicant        → SELECTED (admissionOffered=true)
-Confirm enrollment      → ADMITTED
-                          → Student (ACTIVE)
-                          → User (role=STUDENT)
-                          → Guardians + StudentGuardian
-                          → StudentYearLevel + AcademicGrade
-                          → FeeAssignments + UserInvoices
-                          → StudentDocuments
-Place in section        → Classroom roster
-Edit in wizard          → Update details
+Applicant submits (free) → SUBMITTED
+Review application       → UNDER_REVIEW
+Score & rank             → Merit list
+Select applicant         → SELECTED (admissionOffered=true)
+  Applicant accepts offer → pays registration fee
+Confirm enrollment       → ADMITTED
+                           → Student (ACTIVE)
+                           → User (role=STUDENT)
+                           → Guardians + StudentGuardian
+                           → StudentYearLevel + AcademicGrade
+                           → FeeAssignments + UserInvoices (tuition)
+                           → StudentDocuments
+Place in section         → Classroom roster
+Edit in wizard           → Update details
 ```
 
 ## Routes
 
-| Tab          | Route                                 | Purpose                              |
-| ------------ | ------------------------------------- | ------------------------------------ |
-| Campaigns    | `/{lang}/admission`                   | Create / manage admission campaigns  |
-| Applications | `/{lang}/admission/applications`      | Review submitted applications        |
-| Merit list   | `/{lang}/admission/merit`             | Rank applications by scores          |
-| Enrollment   | `/{lang}/admission/enrollment`        | Confirm enrollment for selected apps |
-| Settings     | `/{lang}/admission/settings`          | Configure admission portal           |
-| Detail       | `/{lang}/admission/applications/{id}` | Single application view              |
+| Tab          | Route                                 | Purpose                                                |
+| ------------ | ------------------------------------- | ------------------------------------------------------ |
+| Campaigns    | `/{lang}/admission`                   | Create / manage admission campaigns                    |
+| Applications | `/{lang}/admission/applications`      | Review submitted applications                          |
+| Merit list   | `/{lang}/admission/merit`             | Rank applications by scores                            |
+| Enrollment   | `/{lang}/admission/enrollment`        | Confirm enrollment for selected apps                   |
+| Leads        | `/{lang}/admission/leads`             | Inquiries + tour bookings (ADMIN/ACCOUNTANT read-only) |
+| Settings     | `/{lang}/admission/settings`          | Configure admission portal                             |
+| Detail       | `/{lang}/admission/applications/{id}` | Single application view                                |
 
 ## Status flow
 
@@ -108,15 +113,38 @@ Enrolled students can be edited via the student wizard (Students table → Actio
 
 ## Merit list
 
-Rank shortlisted / selected / waitlisted applications by configurable weights (must sum to 100):
+Admins enter entrance and interview scores directly on the merit table (0–100 per score). `generateMeritList()` computes a weighted `meritScore` for each application:
 
-- Academic score — 40%
-- Entrance exam — 35%
-- Interview — 25%
+- Entrance exam — 60%
+- Interview — 40%
 
-## Payment recording
+Applications are ranked by `meritScore` descending; unscored applications sort last. Scores are batch-written via `updateApplicationScores()`. The merit table covers shortlisted, selected, and waitlisted applications.
 
-Admins record cash / bank transfer payments to mark application fee paid. Currently sets `Application.applicationFeePaid` only — full `Payment` model integration is tracked separately.
+## Offer → accept → pay → enroll flow
+
+Once an applicant is `SELECTED`:
+
+1. An offer is created with a configurable expiry (`offerExpiryDays`, default 14).
+2. The applicant logs in via a token'd offer URL (login preserves the full callback path).
+3. The applicant pays the **registration fee** through the school's gateway (Tap for UAE/Gulf, Stripe elsewhere). The application wizard shows an informational payment preview — no payment is collected at the application stage.
+4. On payment success, the admin sees a registration-fee paid banner and can proceed.
+5. Admin clicks "Confirm enrollment" → `confirmEnrollment()` transaction fires (see Enrollment transaction).
+6. Post-enrollment the admin uses the **Placement dialog** on the enrollment table to pick a section (seat counts shown); `placeStudentInSection()` enrols the student in all grade classes.
+
+Abandoned-checkout retry is unblocked — applicants who navigated away can return and complete payment.
+
+## Leads tab
+
+The **Leads** tab (`/{lang}/admission/leads`) surfaces:
+
+- **Inquiries** — contact form submissions with name, email, phone, interest grade, source, and follow-up status.
+- **Tour bookings** — scheduled visits with attendee count, status (`PENDING` / `CONFIRMED` / `CANCELLED`), and reschedule/cancel actions.
+
+ADMIN and STAFF roles have full action access; ACCOUNTANT has read-only access. New inquiries and bookings trigger in-app notifications to ADMIN + STAFF. Tour bookings guard against overselling (TOCTOU-safe) and honour the `enableTourBooking` campaign flag; cancel/reschedule decrements the attendee count correctly.
+
+## Document-AI processing
+
+Uploaded applicant documents (ID scans, transcripts) are processed by an extraction queue. The cron `/api/cron/process-document-jobs` runs every 10 minutes and drains pending jobs. `classifyDocument()` and `getDocumentProcessingStatus()` are RBAC-gated. AI usage is budget-checked (`canUseAI`) before each call; the bank-receipt Zod schema is optional so partial extractions do not fail the whole job.
 
 ## Settings
 
@@ -124,16 +152,15 @@ Admins record cash / bank transfer payments to mark application fee paid. Curren
 {
   allowMultipleApplications: false,
   requireDocuments: true,
-  applicationFee: 0,
+  // applicationFee removed — applying is always free
   offerExpiryDays: 14,           // 1-90
   autoEmailNotifications: true,
   enableOnlinePayment: false,
   paymentMethods: ["stripe", "cash"],
   bankDetails: { bankName, accountName, accountNumber, iban, swiftCode },
   cashPaymentInstructions: "",
-  academicWeight: 40,            // merit weights (sum=100)
-  entranceWeight: 35,
-  interviewWeight: 25,
+  entranceWeight: 60,            // merit weights (sum=100)
+  interviewWeight: 40,
 }
 ```
 
@@ -147,10 +174,11 @@ Admins record cash / bank transfer payments to mark application fee paid. Curren
 | `placeStudentInSection()`                                                       | confirmEnrollment               |
 | `getAvailableSectionsForPlacement()`                                            | confirmEnrollment               |
 | `generateMeritList()`                                                           | manageMerit                     |
-| `recordPayment()`                                                               | managePayments                  |
+| `updateApplicationScores()`                                                     | manageMerit                     |
 | `getCampaigns()` / `createCampaign()` / `updateCampaign()` / `deleteCampaign()` | viewCampaigns / manageCampaigns |
 | `getAdmissionSettings()` / `saveAdmissionSettings()`                            | manageSettings                  |
 | `fetchCampaignOptions()`                                                        | viewCampaigns                   |
+| `classifyDocument()` / `getDocumentProcessingStatus()`                          | viewApplications (RBAC-gated)   |
 
 ## Multi-tenant safety
 
@@ -163,6 +191,8 @@ All queries scoped by `schoolId`. Submit flow resolves school from subdomain via
 | Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
 | Applications surface | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
 | Enrollment / merit   | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
+| Leads tab            | `src/components/school-dashboard/admission/leads/`                                                                                                       |
+| Document AI          | `src/components/school-dashboard/admission/ai/{classify,bank-receipt-schema}.ts`                                                                         |
 | Settings             | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
 | Invoice utility      | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
 | Schema               | `prisma/models/admission.prisma`                                                                                                                         |

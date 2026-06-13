@@ -59,6 +59,9 @@ interface MyFeesDict {
   noAssignments?: string
   noAccess?: string
   signInRequired?: string
+  missingSchoolContext?: string
+  missingSchoolContextDesc?: string
+  originalPrice?: string
   methods?: MyFeesMethodDict
   status?: Record<string, string>
 }
@@ -82,12 +85,17 @@ export default async function MyFeesContent({ lang, dictionary }: Props) {
   }
 
   const { schoolId } = await getTenantContext()
+  const tEarly = ((dictionary?.school as Record<string, unknown>)?.myFees ??
+    {}) as MyFeesDict
   if (!schoolId) {
     return (
       <Alert>
-        <AlertTitle>Missing school context</AlertTitle>
+        <AlertTitle>
+          {tEarly.missingSchoolContext || "Missing school context"}
+        </AlertTitle>
         <AlertDescription>
-          You must access this page from your school&rsquo;s subdomain.
+          {tEarly.missingSchoolContextDesc ||
+            "You must access this page from your school's subdomain."}
         </AlertDescription>
       </Alert>
     )
@@ -198,6 +206,7 @@ export default async function MyFeesContent({ lang, dictionary }: Props) {
                   currency={currency}
                   locale={lang}
                   statusDict={statusDict}
+                  originalPriceLabel={t.originalPrice}
                 />
               )}
             </CardContent>
@@ -213,11 +222,13 @@ function AssignmentList({
   currency,
   locale,
   statusDict,
+  originalPriceLabel,
 }: {
   assignments: MyFeeAssignment[]
   currency: string
   locale: string
   statusDict: Record<string, string>
+  originalPriceLabel?: string
 }) {
   return (
     <dl className="space-y-4">
@@ -239,7 +250,9 @@ function AssignmentList({
               </div>
               {a.totalDiscount > 0 && (
                 <div className="text-muted-foreground text-xs tabular-nums">
-                  (was {formatMoney(a.totalAmount, currency, locale)})
+                  {originalPriceLabel
+                    ? `${originalPriceLabel} ${formatMoney(a.totalAmount, currency, locale)}`
+                    : `(was ${formatMoney(a.totalAmount, currency, locale)})`}
                 </div>
               )}
             </div>

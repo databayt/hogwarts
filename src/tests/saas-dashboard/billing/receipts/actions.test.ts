@@ -338,6 +338,7 @@ describe("Receipt Actions", () => {
       expect(result).toEqual({ success: true, receiptId: "r-new" })
       expect(db.receipt.create).toHaveBeenCalledWith({
         data: {
+          schoolId: "s1",
           invoiceId: "inv-1",
           amount: 5000,
           fileName: "receipt.pdf",

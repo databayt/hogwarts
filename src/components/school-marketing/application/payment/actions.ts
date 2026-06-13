@@ -2,6 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+//
+// @deprecated 2026-06-12 — Application-fee payment leg retired per product
+// decision: submitting a school application is ALWAYS FREE.  These actions are
+// kept so that any external import sites continue to compile, but the payment
+// route now redirects to the application overview and these functions are no
+// longer called from the wizard flow.  Do NOT remove exports until all callers
+// are confirmed gone.
 import { revalidatePath } from "next/cache"
 import { nanoid } from "nanoid"
 

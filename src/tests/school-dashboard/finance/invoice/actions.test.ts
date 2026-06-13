@@ -40,6 +40,7 @@ vi.mock("@/lib/db", () => {
     userInvoiceSignature: createMock(),
     user: createMock(),
     school: createMock(),
+    payment: createMock(),
   }
   // Default: run the callback with the full mocked db as the tx client, so
   // per-test `vi.mocked(db.<model>.<method>)` setups apply inside the
@@ -137,6 +138,9 @@ const mockInvoice = {
   discount: null,
   tax_percentage: null,
   total: { toNumber: () => 5000 },
+  amountPaid: 0,
+  sentAt: null,
+  feeAssignmentId: null,
   notes: "",
   status: "UNPAID",
   userId: MOCK_USER_ID,
@@ -167,6 +171,17 @@ const mockInvoice = {
       total: { toNumber: () => 5000 },
     },
   ],
+}
+
+// A second user (student) who does not have privileged role
+function mockAuthAsStudent() {
+  vi.mocked(auth).mockResolvedValue({
+    user: { id: "student-user", role: "STUDENT", schoolId: MOCK_SCHOOL_ID },
+  } as any)
+  vi.mocked(getTenantContext).mockResolvedValue({
+    schoolId: MOCK_SCHOOL_ID,
+    subdomain: "demo",
+  } as any)
 }
 
 // ============================================================================
@@ -423,12 +438,16 @@ describe("invoice/actions.ts", () => {
 
   describe("getInvoiceById", () => {
     it("returns invoice with Decimal-to-number conversion", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
         ...mockInvoice,
         sub_total: 5000,
         discount: null,
         tax_percentage: null,
         total: 5000,
+        amountPaid: 0,
+        sentAt: null,
+        feeAssignmentId: null,
         items: [
           {
             id: "item-1",
@@ -439,14 +458,18 @@ describe("invoice/actions.ts", () => {
           },
         ],
       } as any)
+      vi.mocked(db.payment.findMany).mockResolvedValue([])
 
       const result = await actions.getInvoiceById("inv-1")
       expect(result.success).toBe(true)
       expect(typeof result.data.sub_total).toBe("number")
       expect(typeof result.data.total).toBe("number")
+      expect(typeof result.data.amountPaid).toBe("number")
+      expect(result.data.linkedPayments).toEqual([])
     })
 
     it("returns not found for nonexistent invoice", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
 
       const result = await actions.getInvoiceById("nonexistent")
@@ -454,14 +477,130 @@ describe("invoice/actions.ts", () => {
       expect(result.error).toBe("INVOICE_NOT_FOUND")
     })
 
-    it("scopes query by userId and schoolId (tenant isolation)", async () => {
+    // INV-001: ADMIN sees all school invoices (no userId filter)
+    it("INV-001: ADMIN queries by schoolId only (no userId filter)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        sub_total: 5000,
+        total: 5000,
+        amountPaid: 0,
+        sentAt: null,
+        feeAssignmentId: null,
+        items: [],
+      } as any)
+      vi.mocked(db.payment.findMany).mockResolvedValue([])
+
+      await actions.getInvoiceById("inv-1")
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
+        })
+      )
+    })
+
+    // INV-001: ACCOUNTANT sees all school invoices (no userId filter)
+    it("INV-001: ACCOUNTANT queries by schoolId only (no userId filter)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "ACCOUNTANT",
+      } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        sub_total: 5000,
+        total: 5000,
+        amountPaid: 0,
+        sentAt: null,
+        feeAssignmentId: null,
+        items: [],
+      } as any)
+      vi.mocked(db.payment.findMany).mockResolvedValue([])
+
+      await actions.getInvoiceById("inv-1")
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
+        })
+      )
+    })
+
+    // INV-001: STUDENT (non-privileged) scoped to own userId
+    it("INV-001: STUDENT queries include userId scope", async () => {
+      mockAuthAsStudent()
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "STUDENT",
+      } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
 
       await actions.getInvoiceById("inv-1")
-      expect(db.userInvoice.findFirst).toHaveBeenCalledWith({
-        where: { id: "inv-1", userId: MOCK_USER_ID, schoolId: MOCK_SCHOOL_ID },
-        include: { items: true, from: true, to: true },
-      })
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            id: "inv-1",
+            userId: "student-user",
+            schoolId: MOCK_SCHOOL_ID,
+          },
+        })
+      )
+    })
+
+    // INV-007: linked payments included when feeAssignmentId is set
+    it("INV-007: includes linked payments when feeAssignmentId is set", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        sub_total: 5000,
+        total: 5000,
+        amountPaid: 1000,
+        sentAt: null,
+        feeAssignmentId: "fee-asgn-1",
+        items: [],
+      } as any)
+      const mockPayments = [
+        {
+          id: "pay-1",
+          paymentNumber: "PAY001",
+          amount: 1000,
+          currency: "USD",
+          paymentDate: new Date("2026-03-15"),
+          paymentMethod: "CASH",
+          status: "SUCCESS",
+        },
+      ]
+      vi.mocked(db.payment.findMany).mockResolvedValue(mockPayments as any)
+
+      const result = await actions.getInvoiceById("inv-1")
+      expect(result.success).toBe(true)
+      expect(result.data.linkedPayments).toHaveLength(1)
+      expect(result.data.linkedPayments[0].paymentNumber).toBe("PAY001")
+      expect(typeof result.data.linkedPayments[0].amount).toBe("number")
+      // payment query must be schoolId-scoped
+      expect(db.payment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            feeAssignmentId: "fee-asgn-1",
+            schoolId: MOCK_SCHOOL_ID,
+          },
+        })
+      )
+    })
+
+    // no feeAssignmentId → payment query not made, linkedPayments empty
+    it("returns empty linkedPayments when feeAssignmentId is null", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        sub_total: 5000,
+        total: 5000,
+        amountPaid: 0,
+        sentAt: null,
+        feeAssignmentId: null,
+        items: [],
+      } as any)
+
+      const result = await actions.getInvoiceById("inv-1")
+      expect(result.success).toBe(true)
+      expect(result.data.linkedPayments).toEqual([])
+      expect(db.payment.findMany).not.toHaveBeenCalled()
     })
   })
 
@@ -482,7 +621,8 @@ describe("invoice/actions.ts", () => {
       total: 1000,
     }
 
-    it("updates invoice successfully", async () => {
+    it("updates invoice successfully (ADMIN sees all)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
         ...mockInvoice,
         fromAddressId: "addr-1",
@@ -501,7 +641,41 @@ describe("invoice/actions.ts", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/finance/invoice")
     })
 
+    // INV-001: ADMIN query must NOT include userId
+    it("INV-001: ADMIN findFirst query has no userId filter", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+
+      await actions.updateInvoice("inv-1", updateData)
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
+        })
+      )
+    })
+
+    // INV-001: STUDENT (non-privileged) query must include userId
+    it("INV-001: STUDENT findFirst query includes userId scope", async () => {
+      mockAuthAsStudent()
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "STUDENT",
+      } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+
+      await actions.updateInvoice("inv-1", updateData)
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            id: "inv-1",
+            userId: "student-user",
+            schoolId: MOCK_SCHOOL_ID,
+          },
+        })
+      )
+    })
+
     it("returns error for not found invoice", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
 
       const result = await actions.updateInvoice("nonexistent", updateData)
@@ -525,7 +699,8 @@ describe("invoice/actions.ts", () => {
   // ==========================================================================
 
   describe("deleteInvoice", () => {
-    it("deletes invoice and revalidates", async () => {
+    it("deletes invoice and revalidates (ADMIN)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(mockInvoice as any)
       vi.mocked(db.userInvoice.delete).mockResolvedValue(mockInvoice as any)
 
@@ -537,7 +712,21 @@ describe("invoice/actions.ts", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/finance/invoice")
     })
 
+    // INV-001: ADMIN delete query has no userId filter
+    it("INV-001: ADMIN delete findFirst query has no userId filter", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+
+      await actions.deleteInvoice({ id: "inv-1" })
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
+        })
+      )
+    })
+
     it("returns error for not found invoice (not throw)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
 
       const result = await actions.deleteInvoice({ id: "nonexistent" })
@@ -561,18 +750,100 @@ describe("invoice/actions.ts", () => {
   // ==========================================================================
 
   describe("sendInvoiceEmail", () => {
-    it("sends email successfully", async () => {
+    it("sends email successfully and stamps sentAt", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
         ...mockInvoice,
         total: 5000,
       } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
+      vi.mocked(db.userInvoice.update).mockResolvedValue({} as any)
 
       const result = await actions.sendInvoiceEmail("inv-1", "Your Invoice")
       expect(result.success).toBe(true)
+      // sentAt must be stamped on success
+      expect(db.userInvoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1" },
+          data: expect.objectContaining({ sentAt: expect.any(Date) }),
+        })
+      )
+    })
+
+    // INV-001: ADMIN can send email for any school invoice (no userId filter)
+    it("INV-001: ADMIN findFirst for email has no userId filter", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
+
+      await actions.sendInvoiceEmail("inv-1", "Subject")
+      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
+        })
+      )
+    })
+
+    // INV-005: invoice URL must use clean /${lang}/finance path
+    it("INV-005: email contains clean /${lang}/finance/invoice/invoice/view/ URL", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        total: 5000,
+      } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
+      vi.mocked(db.userInvoice.update).mockResolvedValue({} as any)
+
+      const { SendInvoiceEmail } =
+        await import("@/components/school-dashboard/finance/invoice/send-invoice-email")
+
+      await actions.sendInvoiceEmail("inv-1", "Subject")
+
+      expect(SendInvoiceEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          invoiceURL: expect.stringContaining(
+            "/finance/invoice/invoice/view/inv-1"
+          ),
+        })
+      )
+      // must NOT contain the old broken path
+      const callArg = (vi.mocked(SendInvoiceEmail).mock.calls.at(-1) as any)[0]
+      expect(callArg.invoiceURL).not.toContain("/invoice/paid/")
+    })
+
+    // INV-008: must NOT use onboarding@resend.dev hardcoded sender
+    it("INV-008: does not use hardcoded onboarding@resend.dev sender", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        total: 5000,
+      } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
+      vi.mocked(db.userInvoice.update).mockResolvedValue({} as any)
+
+      const { resend } =
+        await import("@/components/school-dashboard/finance/invoice/email.config")
+
+      await actions.sendInvoiceEmail("inv-1", "Subject")
+
+      const sendCall = vi.mocked(resend.emails.send).mock.calls.at(-1) as any
+      expect(sendCall[0].from).not.toBe("Invoice <onboarding@resend.dev>")
     })
 
     it("returns error when invoice not found", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
 
       const result = await actions.sendInvoiceEmail("nope", "Subject")
       expect(result.success).toBe(false)
@@ -580,10 +851,14 @@ describe("invoice/actions.ts", () => {
     })
 
     it("returns error when client has no email", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
         ...mockInvoice,
         to: { ...mockInvoice.to, email: null },
         total: 5000,
+      } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
       } as any)
 
       const result = await actions.sendInvoiceEmail("inv-1", "Subject")
@@ -592,9 +867,13 @@ describe("invoice/actions.ts", () => {
     })
 
     it("returns error when Resend fails", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
         ...mockInvoice,
         total: 5000,
+      } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
       } as any)
 
       const { resend } =
@@ -606,6 +885,27 @@ describe("invoice/actions.ts", () => {
       const result = await actions.sendInvoiceEmail("inv-1", "Subject")
       expect(result.success).toBe(false)
       expect(result.error).toBe("EMAIL_SEND_FAILED")
+    })
+
+    it("does not stamp sentAt when send fails", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        ...mockInvoice,
+        total: 5000,
+      } as any)
+      vi.mocked(db.school.findUnique).mockResolvedValue({
+        preferredLanguage: "en",
+      } as any)
+
+      const { resend } =
+        await import("@/components/school-dashboard/finance/invoice/email.config")
+      vi.mocked(resend.emails.send).mockResolvedValueOnce({
+        error: { message: "Network error" },
+      } as any)
+
+      await actions.sendInvoiceEmail("inv-1", "Subject")
+      // update should NOT have been called because send failed
+      expect(db.userInvoice.update).not.toHaveBeenCalled()
     })
   })
 
@@ -658,7 +958,8 @@ describe("invoice/actions.ts", () => {
   // ==========================================================================
 
   describe("getDashboardStats", () => {
-    it("returns dashboard stats with revenue calculation", async () => {
+    it("returns dashboard stats with revenue calculation (ADMIN)", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
       vi.mocked(db.userInvoice.findMany).mockResolvedValue([
         { invoice_date: new Date(), total: 1000, status: "PAID" },
         { invoice_date: new Date(), total: 2000, status: "UNPAID" },
@@ -667,8 +968,6 @@ describe("invoice/actions.ts", () => {
         .mockResolvedValueOnce(2) // total
         .mockResolvedValueOnce(1) // paid
         .mockResolvedValueOnce(1) // unpaid
-
-      // recentInvoices
       vi.mocked(db.userInvoice.findMany).mockResolvedValueOnce([
         { invoice_date: new Date(), total: 1000, status: "PAID" },
         { invoice_date: new Date(), total: 2000, status: "UNPAID" },
@@ -678,6 +977,40 @@ describe("invoice/actions.ts", () => {
       expect(result.success).toBe(true)
       expect(result.data).toHaveProperty("totalRevenue")
       expect(result.data).toHaveProperty("chartData")
+    })
+
+    // INV-004: ADMIN query has no userId filter
+    it("INV-004: ADMIN stats query has no userId filter", async () => {
+      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
+      vi.mocked(db.userInvoice.findMany).mockResolvedValue([])
+      vi.mocked(db.userInvoice.count).mockResolvedValue(0)
+
+      await actions.getDashboardStats()
+
+      // All findMany/count calls should NOT include userId
+      const allCalls = [
+        ...vi.mocked(db.userInvoice.findMany).mock.calls,
+        ...vi.mocked(db.userInvoice.count).mock.calls,
+      ]
+      for (const [args] of allCalls) {
+        expect((args as any)?.where).not.toHaveProperty("userId")
+      }
+    })
+
+    // INV-004: STUDENT (non-privileged) query must include userId
+    it("INV-004: STUDENT stats query includes userId scope", async () => {
+      mockAuthAsStudent()
+      vi.mocked(db.user.findUnique).mockResolvedValue({
+        role: "STUDENT",
+      } as any)
+      vi.mocked(db.userInvoice.findMany).mockResolvedValue([])
+      vi.mocked(db.userInvoice.count).mockResolvedValue(0)
+
+      await actions.getDashboardStats()
+
+      const firstFindManyCall = vi.mocked(db.userInvoice.findMany).mock
+        .calls[0][0] as any
+      expect(firstFindManyCall?.where?.userId).toBe("student-user")
     })
 
     it("returns auth error when not authenticated", async () => {

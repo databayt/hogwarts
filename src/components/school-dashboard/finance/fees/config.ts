@@ -95,6 +95,8 @@ export const STATUS_COLORS = {
   APPROVED: "bg-green-500/10 text-green-500",
   REJECTED: "bg-red-500/10 text-red-500",
   CLOSED: "bg-gray-500/10 text-gray-500",
+  // P2.1 — offline payment recorded, awaiting admin confirmation
+  PENDING_VERIFICATION: "bg-amber-500/10 text-amber-500",
 } as const
 
 // Default pagination

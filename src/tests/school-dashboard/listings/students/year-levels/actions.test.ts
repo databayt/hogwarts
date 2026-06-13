@@ -148,7 +148,7 @@ describe("Year Level Actions", () => {
       const result = await getYearLevels()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Not authenticated")
+      expect(result.error).toBe("NOT_AUTHENTICATED")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -157,7 +157,7 @@ describe("Year Level Actions", () => {
       const result = await getYearLevels()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Insufficient permissions")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -212,7 +212,7 @@ describe("Year Level Actions", () => {
       const result = await createYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A year level with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
       expect(db.yearLevel.create).not.toHaveBeenCalled()
     })
 
@@ -234,7 +234,7 @@ describe("Year Level Actions", () => {
       const result = await createYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Level order 5 is already in use")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -249,7 +249,7 @@ describe("Year Level Actions", () => {
       const result = await createYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Insufficient permissions")
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -301,7 +301,7 @@ describe("Year Level Actions", () => {
       const result = await updateYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Year level not found")
+      expect(result.error).toBe("NOT_FOUND")
       expect(db.yearLevel.updateMany).not.toHaveBeenCalled()
     })
 
@@ -328,7 +328,7 @@ describe("Year Level Actions", () => {
       const result = await updateYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("A year level with this name already exists")
+      expect(result.error).toBe("ALREADY_EXISTS")
     })
   })
 
@@ -368,7 +368,7 @@ describe("Year Level Actions", () => {
       const result = await deleteYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("5 enrolled student(s)")
+      expect(result.error).toBe("HAS_DEPENDENCIES")
       expect(db.yearLevel.deleteMany).not.toHaveBeenCalled()
     })
 
@@ -384,7 +384,7 @@ describe("Year Level Actions", () => {
       const result = await deleteYearLevel(formData)
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("3 batch(es)")
+      expect(result.error).toBe("HAS_DEPENDENCIES")
       expect(db.yearLevel.deleteMany).not.toHaveBeenCalled()
     })
   })

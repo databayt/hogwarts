@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { createHash } from "crypto"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -38,6 +39,19 @@ vi.mock("@/lib/subdomain-actions", () => ({
   getSchoolBySubdomain: vi.fn(),
 }))
 
+// Rate-limit module: always allow in tests
+vi.mock("@/lib/rate-limit", () => ({
+  checkUserRateLimit: vi.fn().mockResolvedValue({
+    allowed: true,
+    remaining: 29,
+    resetTime: Date.now() + 60000,
+  }),
+  RATE_LIMITS: {
+    AUTH: { windowMs: 60000, maxRequests: 5 },
+    PUBLIC: { windowMs: 60000, maxRequests: 30 },
+  },
+}))
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -46,6 +60,8 @@ const SCHOOL_ID = "school-123"
 const SUBDOMAIN = "demo"
 const APP_NUMBER = "APP-2026-001"
 const EMAIL = "ahmed@test.com"
+const OTP_PLAINTEXT = "123456"
+const OTP_HASH = createHash("sha256").update(OTP_PLAINTEXT).digest("hex")
 
 function mockSchoolFound() {
   vi.mocked(getSchoolBySubdomain).mockResolvedValue({
@@ -71,6 +87,8 @@ describe("Status Tracking", () => {
     mockSchoolFound()
     // Remove RESEND_API_KEY to prevent actual email sending
     delete process.env.RESEND_API_KEY
+    // Ensure NODE_ENV is 'test' so dev-branch console.log path is taken
+    process.env.NODE_ENV = "test"
   })
 
   // =========================================================================
@@ -78,7 +96,7 @@ describe("Status Tracking", () => {
   // =========================================================================
 
   describe("requestStatusOTP", () => {
-    it("sends OTP for valid application", async () => {
+    it("T-01: sends OTP for valid application and stores sha256 hash (not plaintext)", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue({
         id: "app-1",
         applicationNumber: APP_NUMBER,
@@ -92,57 +110,60 @@ describe("Status Tracking", () => {
 
       const result = await requestStatusOTP(SUBDOMAIN, APP_NUMBER, EMAIL)
 
+      // Generic success response regardless of outcome (oracle-hardened)
       expect(result.success).toBe(true)
       expect(result.data?.message).toContain("Verification code sent")
 
-      // Verify OTP was saved to database
+      // OTP stored as hash — must NOT be a 6-digit plaintext string
       expect(db.admissionOTP.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           schoolId: SCHOOL_ID,
           email: EMAIL,
           applicationNumber: APP_NUMBER,
-          otp: expect.stringMatching(/^\d{6}$/),
+          // hash is 64-char hex, not 6-digit plaintext
+          otp: expect.stringMatching(/^[0-9a-f]{64}$/),
           expiresAt: expect.any(Date),
         }),
       })
     })
 
-    it("rejects when school not found", async () => {
+    it("T-02: returns generic success when school not found (enumeration oracle hardened)", async () => {
       mockSchoolNotFound()
 
       const result = await requestStatusOTP(SUBDOMAIN, APP_NUMBER, EMAIL)
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("School not found")
+      // Must return success:true — not leak "school not found"
+      expect(result.success).toBe(true)
+      expect(result.data?.message).toContain("Verification code sent")
     })
 
-    it("rejects when application not found", async () => {
+    it("T-03: returns generic success when application not found (enumeration oracle hardened)", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue(null)
 
       const result = await requestStatusOTP(SUBDOMAIN, APP_NUMBER, EMAIL)
 
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Application not found")
+      // Must NOT expose "Application not found" to caller
+      expect(result.success).toBe(true)
+      expect(result.data?.message).toContain("Verification code sent")
     })
 
-    it("rate limits after 3 requests per hour", async () => {
+    it("T-04: returns generic success when DB rate limit hit (3 OTPs per hour)", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue({
         id: "app-1",
         applicationNumber: APP_NUMBER,
         email: EMAIL,
         schoolId: SCHOOL_ID,
       } as any)
-      // Simulate 3 recent OTPs
       vi.mocked(db.admissionOTP.count).mockResolvedValue(3)
 
       const result = await requestStatusOTP(SUBDOMAIN, APP_NUMBER, EMAIL)
 
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Too many OTP requests")
+      // Generic success — do not leak rate-limit status
+      expect(result.success).toBe(true)
       expect(db.admissionOTP.create).not.toHaveBeenCalled()
     })
 
-    it("allows request when under rate limit", async () => {
+    it("T-05: allows request when under DB rate limit", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue({
         id: "app-1",
         applicationNumber: APP_NUMBER,
@@ -159,7 +180,7 @@ describe("Status Tracking", () => {
       expect(result.success).toBe(true)
     })
 
-    it("checks rate limit scoped by schoolId and email", async () => {
+    it("T-06: DB rate-limit check scoped by schoolId and email", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue({
         id: "app-1",
         applicationNumber: APP_NUMBER,
@@ -190,13 +211,18 @@ describe("Status Tracking", () => {
   // =========================================================================
 
   describe("verifyStatusOTP", () => {
-    it("verifies correct OTP and returns access token", async () => {
+    it("T-07: verifies correct OTP (hash comparison) and returns access token", async () => {
+      // existingOTP.otp must be the sha256 hash of the submitted plaintext
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
         id: "otp-1",
-        otp: "123456",
+        otp: OTP_HASH,
         verified: false,
         expiresAt: new Date(Date.now() + 600000),
         attempts: 0,
+      } as any)
+      // updateMany for atomic increment — returns count:1 (under limit)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
       } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
       vi.mocked(db.application.findFirst).mockResolvedValue({
@@ -207,27 +233,32 @@ describe("Status Tracking", () => {
       } as any)
       vi.mocked(db.application.update).mockResolvedValue({} as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "123456")
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
 
       expect(result.success).toBe(true)
       expect(result.data?.accessToken).toBeDefined()
       expect(typeof result.data?.accessToken).toBe("string")
 
       // OTP should be marked as verified
-      expect(db.admissionOTP.update).toHaveBeenCalledWith({
-        where: { id: "otp-1" },
-        data: { verified: true },
-      })
+      expect(db.admissionOTP.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "otp-1" },
+          data: { verified: true },
+        })
+      )
     })
 
-    it("reuses existing valid access token", async () => {
+    it("T-08: reuses existing valid access token", async () => {
       const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
         id: "otp-1",
-        otp: "123456",
+        otp: OTP_HASH,
         verified: false,
         expiresAt: new Date(Date.now() + 600000),
         attempts: 0,
+      } as any)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
       } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
       vi.mocked(db.application.findFirst).mockResolvedValue({
@@ -237,7 +268,7 @@ describe("Status Tracking", () => {
         accessTokenExpiry: futureDate,
       } as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "123456")
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
 
       expect(result.success).toBe(true)
       expect(result.data?.accessToken).toBe("existing-token-abc")
@@ -245,44 +276,48 @@ describe("Status Tracking", () => {
       expect(db.application.update).not.toHaveBeenCalled()
     })
 
-    it("rejects invalid OTP", async () => {
-      // First findFirst (correct OTP match) returns null
-      vi.mocked(db.admissionOTP.findFirst)
-        .mockResolvedValueOnce(null)
-        // Second findFirst (any OTP for attempts tracking) returns an OTP record
-        .mockResolvedValueOnce({
-          id: "otp-1",
-          otp: "123456",
-          verified: false,
-          expiresAt: new Date(Date.now() + 600000),
-          attempts: 1,
-        } as any)
-      vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
+    it("T-09: rejects invalid OTP (wrong hash) and increments attempts atomically", async () => {
+      vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
+        id: "otp-1",
+        otp: OTP_HASH, // stored hash for the correct OTP
+        verified: false,
+        expiresAt: new Date(Date.now() + 600000),
+        attempts: 1,
+      } as any)
+      // Atomic increment succeeds (still under limit)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
+      // Submit wrong OTP
       const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "999999")
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Invalid or expired")
 
-      // Attempts should be incremented
-      expect(db.admissionOTP.update).toHaveBeenCalledWith({
-        where: { id: "otp-1" },
-        data: { attempts: { increment: 1 } },
-      })
+      // Atomic updateMany was called — not a read-then-write
+      expect(db.admissionOTP.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: "otp-1",
+            attempts: { lt: 5 },
+          }),
+          data: { attempts: { increment: 1 } },
+        })
+      )
     })
 
-    it("locks after 5 failed attempts", async () => {
-      // First findFirst (correct OTP match) returns null
-      vi.mocked(db.admissionOTP.findFirst)
-        .mockResolvedValueOnce(null)
-        // Second findFirst (any OTP for attempts tracking)
-        .mockResolvedValueOnce({
-          id: "otp-1",
-          otp: "123456",
-          verified: false,
-          expiresAt: new Date(Date.now() + 600000),
-          attempts: 4, // Will be >= 4, triggering lockout
-        } as any)
+    it("T-10: locks after 5 failed attempts — invalidates record atomically", async () => {
+      vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
+        id: "otp-1",
+        otp: OTP_HASH,
+        verified: false,
+        expiresAt: new Date(Date.now() + 600000),
+        attempts: 4, // next increment brings it to 5 → lock
+      } as any)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
 
       const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "999999")
@@ -290,50 +325,69 @@ describe("Status Tracking", () => {
       expect(result.success).toBe(false)
       expect(result.error).toContain("Too many invalid attempts")
 
-      // OTP should be invalidated (expiresAt set to now)
+      // Record should be invalidated (expiresAt set to now)
       const updateCalls = vi.mocked(db.admissionOTP.update).mock.calls
       const invalidateCall = updateCalls.find(
         (call) =>
           (call[0] as any)?.data?.expiresAt instanceof Date &&
-          !(call[0] as any)?.data?.attempts
+          !(call[0] as any)?.data?.verified
       )
       expect(invalidateCall).toBeDefined()
     })
 
-    it("rejects expired OTP (>10 min)", async () => {
-      // findFirst with expiresAt gte: new Date() returns null because OTP is expired
-      vi.mocked(db.admissionOTP.findFirst)
-        .mockResolvedValueOnce(null)
-        // No existing OTP either (all expired)
-        .mockResolvedValueOnce(null)
+    it("T-11: returns 0 from updateMany when already at limit → locked immediately", async () => {
+      vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
+        id: "otp-1",
+        otp: OTP_HASH,
+        verified: false,
+        expiresAt: new Date(Date.now() + 600000),
+        attempts: 5, // already at limit
+      } as any)
+      // updateMany matches 0 rows because attempts is not lt 5
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 0,
+      } as any)
+      vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "123456")
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain("Too many invalid attempts")
+    })
+
+    it("T-12: rejects expired OTP (no active record found)", async () => {
+      vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce(null)
+
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Invalid or expired")
     })
 
-    it("rejects when school not found", async () => {
+    it("T-13: rejects when school not found", async () => {
       mockSchoolNotFound()
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "123456")
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("School not found")
     })
 
-    it("rejects when application not found after OTP verification", async () => {
+    it("T-14: rejects when application not found after OTP verification", async () => {
       vi.mocked(db.admissionOTP.findFirst).mockResolvedValueOnce({
         id: "otp-1",
-        otp: "123456",
+        otp: OTP_HASH,
         verified: false,
         expiresAt: new Date(Date.now() + 600000),
         attempts: 0,
       } as any)
+      vi.mocked(db.admissionOTP.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
       vi.mocked(db.admissionOTP.update).mockResolvedValue({} as any)
       vi.mocked(db.application.findFirst).mockResolvedValue(null)
 
-      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, "123456")
+      const result = await verifyStatusOTP(SUBDOMAIN, APP_NUMBER, OTP_PLAINTEXT)
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("Application not found")
@@ -363,7 +417,7 @@ describe("Status Tracking", () => {
         tourBookings: [],
       } as any)
 
-      const result = await getApplicationStatus("valid-token")
+      const result = await getApplicationStatus("demo", "valid-token")
 
       expect(result.success).toBe(true)
       expect(result.data?.applicationNumber).toBe(APP_NUMBER)
@@ -410,7 +464,7 @@ describe("Status Tracking", () => {
         tourBookings: [],
       } as any)
 
-      const result = await getApplicationStatus("valid-token")
+      const result = await getApplicationStatus("demo", "valid-token")
 
       expect(result.success).toBe(true)
       const checklist = result.data?.checklist
@@ -447,7 +501,7 @@ describe("Status Tracking", () => {
         tourBookings: [],
       } as any)
 
-      const result = await getApplicationStatus("valid-token")
+      const result = await getApplicationStatus("demo", "valid-token")
 
       expect(result.success).toBe(true)
       const checklist = result.data?.checklist
@@ -464,17 +518,16 @@ describe("Status Tracking", () => {
     it("rejects invalid access token", async () => {
       vi.mocked(db.application.findFirst).mockResolvedValue(null)
 
-      const result = await getApplicationStatus("invalid-token")
+      const result = await getApplicationStatus("demo", "invalid-token")
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("not found or access expired")
     })
 
     it("rejects expired access token", async () => {
-      // findFirst with accessTokenExpiry gte: new Date() returns null for expired tokens
       vi.mocked(db.application.findFirst).mockResolvedValue(null)
 
-      const result = await getApplicationStatus("expired-token")
+      const result = await getApplicationStatus("demo", "expired-token")
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("not found or access expired")
@@ -498,7 +551,7 @@ describe("Status Tracking", () => {
         tourBookings: [],
       } as any)
 
-      const result = await getApplicationStatus("valid-token")
+      const result = await getApplicationStatus("demo", "valid-token")
 
       expect(result.success).toBe(true)
       const timeline = result.data?.timeline
@@ -528,7 +581,7 @@ describe("Status Tracking", () => {
         tourBookings: [],
       } as any)
 
-      const result = await getApplicationStatus("valid-token")
+      const result = await getApplicationStatus("demo", "valid-token")
 
       expect(result.success).toBe(true)
       expect(result.data?.currentStep).toBeDefined()

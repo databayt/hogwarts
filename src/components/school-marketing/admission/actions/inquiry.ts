@@ -5,6 +5,8 @@
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type { ActionResult, InquiryFormData } from "../types"
@@ -38,6 +40,16 @@ export async function submitInquiry(
     const schema = createInquirySchema()
     const validated = schema.parse(data)
 
+    // Rate-limit public inquiry submissions per (subdomain, email)
+    const rlResult = await checkUserRateLimit(
+      `inquiry:${subdomain}:${validated.email}`,
+      RATE_LIMITS.PUBLIC,
+      "inquiry_submit"
+    )
+    if (!rlResult.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     // Check if settings allow inquiry form
     const settings = await db.admissionSettings.findUnique({
       where: { schoolId },
@@ -70,7 +82,7 @@ export async function submitInquiry(
     }
 
     // Create inquiry
-    await db.admissionInquiry.create({
+    const inquiry = await db.admissionInquiry.create({
       data: {
         schoolId,
         parentName: validated.parentName,
@@ -87,6 +99,40 @@ export async function submitInquiry(
         status: "NEW",
       },
     })
+
+    // Notify ADMIN + STAFF about new inquiry lead (fire-and-forget)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "استفسار جديد",
+      body: `${validated.parentName} أرسل استفساراً عبر بوابة القبول`,
+      priority: "normal",
+      channels: ["in_app"],
+      targetScope: "role",
+      targetRole: "ADMIN",
+      metadata: {
+        inquiryId: inquiry.id,
+        parentName: validated.parentName,
+        email: validated.email,
+        url: `/admission/inquiries`,
+      },
+    }).catch((err) => console.error("[submitInquiry] notification error:", err))
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "استفسار جديد",
+      body: `${validated.parentName} أرسل استفساراً عبر بوابة القبول`,
+      priority: "normal",
+      channels: ["in_app"],
+      targetScope: "role",
+      targetRole: "STAFF",
+      metadata: {
+        inquiryId: inquiry.id,
+        parentName: validated.parentName,
+        email: validated.email,
+        url: `/admission/inquiries`,
+      },
+    }).catch((err) => console.error("[submitInquiry] notification error:", err))
 
     // Send confirmation email to parent
     if (resend) {
@@ -111,10 +157,6 @@ export async function submitInquiry(
       } catch (emailError) {
         console.error("Failed to send inquiry confirmation email:", emailError)
       }
-
-      // Send notification to school (if configured)
-      // This would use school's configured notification email
-      // For now, we'll skip this as we don't have the admin email configured
     }
 
     return {

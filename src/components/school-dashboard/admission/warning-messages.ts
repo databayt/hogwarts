@@ -37,6 +37,11 @@ export function translateEnrollmentWarning(
         messages?.guardianCreateFailed ||
         "Guardian creation failed — add the guardian manually."
       )
+    case "REGISTRATION_FEE_NO_STRUCTURE":
+      return (
+        messages?.registrationFeeNoStructure ||
+        "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees."
+      )
     default:
       return ""
   }

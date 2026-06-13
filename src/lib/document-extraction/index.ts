@@ -431,6 +431,8 @@ export async function extractWithSchema<T = unknown>(
         extractedObject: claudeResult.data as T,
       },
       processingTime: Date.now() - startTime,
+      inputTokens: claudeResult.inputTokens,
+      outputTokens: claudeResult.outputTokens,
     }
   } catch (error) {
     logger.error(

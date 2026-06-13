@@ -90,6 +90,8 @@ export async function extractWithClaudeGeneric(
       success: true,
       data: result.object,
       processingTime,
+      inputTokens: result.usage?.inputTokens,
+      outputTokens: result.usage?.outputTokens,
     }
   } catch (error) {
     const processingTime = Date.now() - startTime

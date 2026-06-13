@@ -1861,7 +1861,7 @@
       "downloadExport": "Download export",
       "downloading": "Downloading...",
       "exportDone": "Export downloaded",
-      "exportFailed": "Failed to download export",
+      "exportFailed": "Export failed",
       "typeNameToConfirm": "Type the student's full name to confirm",
       "deleting": "Deleting...",
       "searchPlaceholder": "Search students...",
@@ -1885,7 +1885,6 @@
       "cannotBeUndone": "This action cannot be undone.",
       "deleteItem": "Delete item",
       "noResults": "No results.",
-      "all": "All",
       "grade": "Grade",
       "enrollmentDate": "Enrollment Date",
       "unassigned": "Unassigned",
@@ -1900,7 +1899,6 @@
       "generateCredentials": "Generate Credentials",
       "syncGrades": "Sync Grades",
       "syncGradesFailed": "Failed to sync grades",
-      "exportFailed": "Export failed",
       "failedToCreate": "Failed to create student",
       "validationFailed": "Validation failed",
       "failedToSave": "Failed to save",
@@ -7298,7 +7296,11 @@
         "paid": "Paid",
         "overdue": "Overdue",
         "cancelled": "Cancelled"
-      }
+      },
+      "missingSchoolContext": "Missing school context",
+      "missingSchoolContextDesc": "You must access this page from your school's subdomain.",
+      "originalPrice": "was",
+      "viewReceipt": "View Receipt"
     },
     "profile": {
       "title": "Profile",
@@ -8738,7 +8740,9 @@
         "applications": "Applications",
         "meritList": "Merit List",
         "enrollment": "Enrollment",
-        "settings": "Settings"
+        "settings": "Settings",
+        "leads": "Leads",
+        "merit": "Merit"
       },
       "status": {
         "DRAFT": "Draft",
@@ -9003,7 +9007,9 @@
         "markSelected": "Mark as Selected",
         "markWaitlisted": "Mark as Waitlisted",
         "markRejected": "Mark as Rejected",
-        "selectCampaign": "Please select a campaign to generate merit list"
+        "selectCampaign": "Please select a campaign to generate merit list",
+        "editScores": "Edit Scores",
+        "scoresUpdated": "Scores updated"
       },
       "enrollment": {
         "title": "Enrollment",
@@ -9034,14 +9040,22 @@
         "offerAccepted": "Offer Accepted",
         "regPaid": "Reg Paid",
         "appPaid": "App Paid",
-        "pendingPlacement": "admitted student(s) need section placement. Use the placement action on each row to assign them to a section."
+        "pendingPlacement": "admitted student(s) need section placement. Use the placement action on each row to assign them to a section.",
+        "assignSection": "Assign Section",
+        "confirmPlacement": "Confirm Placement",
+        "noSectionsAvailable": "No sections available for this year level.",
+        "placementConfirmed": "Student placed in section",
+        "seatsLeft": "seats left",
+        "sectionFull": "Full",
+        "viewFees": "View Fees"
       },
       "warnings": {
         "noFeeStructureMatch": "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees.",
         "applicationFeeUnpaid": "Application fee is unpaid. Enrollment confirmed, but consider collecting payment.",
         "feeAutoAssignFailed": "Fee auto-assignment failed — assign fees manually from Finance > Fees.",
         "invoiceGenerationFailed": "Invoice generation failed — create the invoice manually.",
-        "guardianCreateFailed": "Guardian creation failed — add the guardian manually."
+        "guardianCreateFailed": "Guardian creation failed — add the guardian manually.",
+        "registrationFeeNoStructure": "Registration fee was paid but no matching fee structure was found — record the payment manually in Finance > Fees."
       },
       "settings": {
         "title": "Admission Settings",
@@ -9244,7 +9258,8 @@
           "swiftCode": "SWIFT",
           "cashInstructions": "Cash Payment Instructions",
           "noFeesTitle": "No fees configured yet",
-          "noFeesDescription": "The school has not set up fee structures for this grade. You can continue — fees will be communicated separately."
+          "noFeesDescription": "The school has not set up fee structures for this grade. You can continue — fees will be communicated separately.",
+          "freeApplicationNote": "Applying is completely free. The fees below apply only after acceptance and during the registration stage."
         },
         "success": {
           "title": "Application Submitted!",
@@ -9294,7 +9309,8 @@
           "docs": "Docs",
           "copied": "Copied to clipboard",
           "copyDetails": "Copy details to clipboard",
-          "backToHome": "Back to Home"
+          "backToHome": "Back to Home",
+          "trackingCode": "Application Tracking Code"
         },
         "documents": {
           "photo": "Passport Photo",
@@ -9889,7 +9905,11 @@
         "failedToDecline": "Failed to decline offer",
         "failedCheckout": "Failed to create checkout",
         "failedPayment": "Failed to record payment",
-        "unexpectedError": "An unexpected error occurred"
+        "unexpectedError": "An unexpected error occurred",
+        "registrationFailed": "Payment Failed",
+        "registrationFailedMessage": "The payment could not be processed. Please try again or choose a different payment method.",
+        "registrationSuccess": "Registration Fee Paid",
+        "registrationSuccessMessage": "Your registration fee payment was successful. The school will confirm your enrollment shortly."
       },
       "ai": {
         "extractedData": "Extracted Data",
@@ -9899,6 +9919,61 @@
         "reprocess": "Retry",
         "process": "Process",
         "document": "Document"
+      },
+      "leads": {
+        "bookingStatus": {
+          "CANCELLED": "Cancelled",
+          "COMPLETED": "Completed",
+          "CONFIRMED": "Confirmed",
+          "NO_SHOW": "No Show",
+          "PENDING": "Pending",
+          "RESCHEDULED": "Rescheduled"
+        },
+        "columns": {
+          "attendees": "Attendees",
+          "booked": "Booked",
+          "bookingNumber": "Booking #",
+          "email": "Email",
+          "followUp": "Follow Up",
+          "grade": "Grade",
+          "location": "Location",
+          "parentName": "Contact",
+          "received": "Received",
+          "source": "Source",
+          "tourDate": "Tour Date"
+        },
+        "description": "Inquiries and tour bookings from prospective families",
+        "inquiryStatus": {
+          "CONTACTED": "Contacted",
+          "CONVERTED": "Converted",
+          "NEW": "New",
+          "QUALIFIED": "Qualified",
+          "UNQUALIFIED": "Unqualified"
+        },
+        "sendEmail": "Send Email",
+        "sources": {
+          "advertisement": "Advertisement",
+          "referral": "Referral",
+          "social": "Social",
+          "website": "Website"
+        },
+        "statusUpdateFailed": "Failed to update status",
+        "statusUpdated": "Status updated",
+        "tabs": {
+          "inquiries": "Inquiries",
+          "tours": "Tour Bookings"
+        },
+        "title": "Leads",
+        "toolbar": {
+          "openMenu": "Open menu"
+        },
+        "searchInquiries": "Search inquiries...",
+        "searchTours": "Search tour bookings...",
+        "export": "Export",
+        "noInquiries": "No inquiries yet",
+        "noInquiriesDescription": "Inquiries submitted via the public portal will appear here",
+        "noTourBookings": "No tour bookings yet",
+        "noTourBookingsDescription": "Tour bookings from the portal will appear here"
       }
     },
     "membership": {
@@ -10287,40 +10362,23 @@
         "assignFee": "Assign Fee"
       },
       "paymentForm": {
-        "feeAssignment": "Fee Assignment",
-        "selectFeeAssignment": "Select Fee Assignment *",
-        "selectFeeAssignmentPlaceholder": "Select a fee assignment",
-        "remaining": "remaining",
-        "totalAmount": "Total Amount",
-        "totalPaid": "Total Paid",
-        "remainingBalance": "Remaining",
-        "paymentDetails": "Payment Details",
-        "amountRequired": "Amount *",
-        "amountPlaceholder": "0.00",
-        "amountIsRequired": "Amount is required",
-        "amountMustBePositive": "Amount must be greater than 0",
-        "amountExceedsRemaining": "Amount cannot exceed remaining balance ({amount})",
-        "paymentMethod": "Payment Method *",
-        "selectMethod": "Select method",
-        "cash": "Cash",
-        "cheque": "Cheque",
-        "bankTransfer": "Bank Transfer",
-        "creditCard": "Credit Card",
-        "debitCard": "Debit Card",
-        "upi": "UPI",
-        "netBanking": "Net Banking",
-        "wallet": "Wallet",
-        "other": "Other",
-        "paymentDate": "Payment Date *",
-        "transactionId": "Transaction ID",
-        "optionalReferenceNumber": "Optional reference number",
-        "remarks": "Remarks",
-        "optionalNotes": "Optional notes",
-        "selectAssignmentFirst": "Please select a fee assignment",
-        "paymentRecordedSuccessfully": "Payment recorded successfully",
-        "failedRecordPayment": "Failed to record payment",
-        "recording": "Recording...",
-        "recordPayment": "Record Payment"
+        "atmDeposit": "ATM Deposit",
+        "applePay": "Apple Pay",
+        "googlePay": "Google Pay",
+        "mada": "mada",
+        "knet": "KNET",
+        "transferReference": "Transfer Reference *",
+        "transferReferencePlaceholder": "Bank reference / ATM receipt number",
+        "bankName": "Bank Name *",
+        "bankNamePlaceholder": "e.g. Emirates NBD",
+        "bankBranch": "Branch",
+        "bankBranchPlaceholder": "Branch name or code",
+        "depositorIban": "Sender IBAN",
+        "ibanPlaceholder": "AE07 0331 ...",
+        "chequeNumberPlaceholder": "e.g. 000123",
+        "depositSlip": "Deposit Slip URL",
+        "depositSlipPlaceholder": "https://... (upload to S3 then paste URL)",
+        "depositSlipHint": "Status will be Pending Verification until an admin reconciles against the bank statement."
       },
       "fineForm": {
         "studentLabel": "Student",
@@ -10760,30 +10818,43 @@
         "paymentPendingVerificationStudent": "Payment of {amount} recorded — pending verification. The admin will confirm receipt shortly.",
         "paymentPendingVerificationGuardian": "Payment of {amount} recorded for student — pending verification."
       },
-      "paymentForm": {
-        "atmDeposit": "ATM Deposit",
-        "applePay": "Apple Pay",
-        "googlePay": "Google Pay",
-        "mada": "mada",
-        "knet": "KNET",
-        "transferReference": "Transfer Reference *",
-        "transferReferencePlaceholder": "Bank reference / ATM receipt number",
-        "bankName": "Bank Name *",
-        "bankNamePlaceholder": "e.g. Emirates NBD",
-        "bankBranch": "Branch",
-        "bankBranchPlaceholder": "Branch name or code",
-        "depositorIban": "Sender IBAN",
-        "ibanPlaceholder": "AE07 0331 ...",
-        "chequeNumberPlaceholder": "e.g. 000123",
-        "depositSlip": "Deposit Slip URL",
-        "depositSlipPlaceholder": "https://... (upload to S3 then paste URL)",
-        "depositSlipHint": "Status will be Pending Verification until an admin reconciles against the bank statement."
-      },
       "paymentActions": {
         "markAsCleared": "Mark as Cleared",
         "clearing": "Clearing...",
         "cleared": "Payment cleared",
         "clearFailed": "Failed to clear payment"
+      },
+      "fees": {
+        "editDiscount": {
+          "label": "Edit Discount",
+          "reason": "Discount Reason"
+        },
+        "error": {
+          "ASSIGNMENT_NOT_FOUND": "Fee assignment not found.",
+          "DISCOUNT_EXCEEDS_BASE": "Discount cannot exceed the base fee amount."
+        },
+        "toast": {
+          "discountApplied": "Discount applied. New total: {finalAmount}.",
+          "feeStructureUpdated": "Fee structure updated. {updated} assignment(s) recomputed, {skippedPaid} skipped (paid)."
+        }
+      },
+      "invoice": {
+        "partial": "Partial"
+      },
+      "invoiceView": {
+        "amountDue": "Amount Due",
+        "amountPaid": "Amount Paid",
+        "linkedPayments": "Linked Payments",
+        "paymentAmount": "Amount",
+        "paymentDate": "Date",
+        "paymentMethod": "Method",
+        "paymentNumber": "Payment #",
+        "sent": "Sent",
+        "statusCancelled": "Cancelled",
+        "statusOverdue": "Overdue",
+        "statusPaid": "Paid",
+        "statusPartial": "Partial",
+        "statusUnpaid": "Unpaid"
       }
     },
     "banking": {

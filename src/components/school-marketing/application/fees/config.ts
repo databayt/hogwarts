@@ -8,6 +8,6 @@ export const FEES_STEP_CONFIG = {
   label: (isRTL: boolean) => (isRTL ? "الرسوم الدراسية" : "School Fees"),
   description: (isRTL: boolean) =>
     isRTL
-      ? "الرسوم المقدرة وطرق الدفع المتاحة حسب الصف الدراسي"
-      : "Estimated fees and available payment methods for the selected grade",
+      ? "معاينة الرسوم المتوقعة بعد القبول — التقديم مجاني تماماً"
+      : "Preview of estimated fees after acceptance — applying is completely free",
 }

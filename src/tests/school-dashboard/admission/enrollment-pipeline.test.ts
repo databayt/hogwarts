@@ -29,6 +29,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
     section: {
       findMany: vi.fn(),
@@ -67,8 +68,14 @@ vi.mock("@/lib/db", () => ({
     },
     feeAssignment: {
       findMany: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
       create: vi.fn(),
       upsert: vi.fn(),
+    },
+    payment: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: "pay-new" }),
+      update: vi.fn().mockResolvedValue({}),
     },
     guardianType: {
       upsert: vi.fn(),
@@ -207,7 +214,13 @@ const mockApplication = {
  */
 function setupDefaultMocks() {
   mockAuthenticated()
-  vi.mocked(db.$transaction).mockImplementation(async (cb: any) => cb(db))
+  // Handle both callback-style ($transaction(cb)) and array-style ($transaction([...]))
+  vi.mocked(db.$transaction).mockImplementation(async (cbOrArray: any) => {
+    if (typeof cbOrArray === "function") return cbOrArray(db)
+    if (Array.isArray(cbOrArray)) return Promise.all(cbOrArray)
+    return cbOrArray(db)
+  })
+  vi.mocked(db.student.count).mockResolvedValue(0)
   vi.mocked(db.application.findUnique).mockResolvedValue(mockApplication as any)
   vi.mocked(db.application.update).mockResolvedValue({} as any)
   vi.mocked(db.student.findUnique).mockResolvedValue(null)

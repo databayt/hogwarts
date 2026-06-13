@@ -2,11 +2,13 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { createHash } from "crypto"
 import type { AdmissionApplicationStatus } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -15,6 +17,11 @@ import type {
   ChecklistItem,
   StatusTimelineEntry,
 } from "../types"
+
+/** sha256 hash of an OTP so we never store plaintext */
+function hashOtp(otp: string): string {
+  return createHash("sha256").update(otp).digest("hex")
+}
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -51,8 +58,22 @@ const STATUS_LABELS: Record<AdmissionApplicationStatus, string> = {
 // OTP Actions
 // ============================================
 
+// Generic response used for all OTP-request failures — prevents enumeration
+// oracle: callers cannot distinguish "not found", "rate limited", or any other
+// failure condition from the outside.
+const OTP_GENERIC_RESPONSE: ActionResult<{ message: string }> = {
+  success: true,
+  data: { message: "Verification code sent to your email" },
+}
+
 /**
- * Request OTP for status check
+ * Request OTP for status check.
+ *
+ * Security invariants:
+ * - Always returns the same generic success response on failure so callers
+ *   cannot enumerate valid (applicationNumber, email) pairs (P1-2).
+ * - Stores only the sha256 hash of the OTP, never plaintext (P1-4).
+ * - Rate-limited via checkUserRateLimit (P1-5).
  */
 export async function requestStatusOTP(
   subdomain: string,
@@ -60,65 +81,66 @@ export async function requestStatusOTP(
   email: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
+    // Rate-limit per (subdomain, email) — use checkUserRateLimit so it works
+    // in serverless environments without a NextRequest.
+    const rlResult = await checkUserRateLimit(
+      `otp:${subdomain}:${email}`,
+      RATE_LIMITS.AUTH,
+      "otp_request"
+    )
+    if (!rlResult.allowed) {
+      // Return generic response — do not reveal rate-limit status to caller
+      return OTP_GENERIC_RESPONSE
+    }
+
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" }
+      // Generic — do not leak "school not found"
+      return OTP_GENERIC_RESPONSE
     }
 
     const schoolId = schoolResult.data.id
 
-    // Find the application
+    // Find the application — if not found, return generic (not an oracle)
     const application = await db.application.findFirst({
-      where: {
-        schoolId,
-        applicationNumber,
-        email,
-      },
+      where: { schoolId, applicationNumber, email },
     })
 
     if (!application) {
-      return {
-        success: false,
-        error:
-          "Application not found. Please check your application number and email.",
-      }
+      return OTP_GENERIC_RESPONSE
     }
 
-    // Generate OTP (6 digits)
+    // Generate OTP (6 digits) and store only its sha256 hash
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpHash = hashOtp(otp)
     const expiresAt = new Date()
     expiresAt.setMinutes(expiresAt.getMinutes() + 10) // 10 minutes expiry
 
-    // Check for rate limiting (max 3 OTPs per hour)
+    // DB-level rate limit: max 3 OTPs per email per hour
     const recentOTPs = await db.admissionOTP.count({
       where: {
         schoolId,
         email,
-        createdAt: {
-          gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
-        },
+        createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
       },
     })
 
     if (recentOTPs >= 3) {
-      return {
-        success: false,
-        error: "Too many OTP requests. Please try again later.",
-      }
+      return OTP_GENERIC_RESPONSE
     }
 
-    // Save OTP
+    // Save hashed OTP — the `otp` column now stores the hash
     await db.admissionOTP.create({
       data: {
         schoolId,
         email,
         applicationNumber,
-        otp,
+        otp: otpHash,
         expiresAt,
       },
     })
 
-    // Send OTP via email
+    // Send plaintext OTP via email (the only place it ever appears unmasked)
     if (resend) {
       try {
         await resend.emails.send({
@@ -136,33 +158,36 @@ export async function requestStatusOTP(
         })
       } catch (emailError) {
         console.error("Failed to send OTP email:", emailError)
-        return {
-          success: false,
-          error: "Failed to send verification code. Please try again.",
-        }
+        return OTP_GENERIC_RESPONSE
       }
-    } else if (process.env.NODE_ENV === "development") {
-      // For development without Resend — NEVER log OTP in production
+    } else if (
+      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "test"
+    ) {
+      // For development/test without Resend — NEVER log OTP in production
       console.log(`[DEV] OTP for ${email}: ${otp}`)
     } else {
       console.error(
         "[requestStatusOTP] No RESEND_API_KEY configured in production"
       )
-      return { success: false, error: "Email service not configured" }
+      return OTP_GENERIC_RESPONSE
     }
 
-    return {
-      success: true,
-      data: { message: "Verification code sent to your email" },
-    }
+    return OTP_GENERIC_RESPONSE
   } catch (error) {
     console.error("Error requesting OTP:", error)
-    return { success: false, error: "Failed to send verification code" }
+    return OTP_GENERIC_RESPONSE
   }
 }
 
 /**
- * Verify OTP and get application status
+ * Verify OTP and get application status.
+ *
+ * Security invariants:
+ * - Compares sha256(input) against stored hash — plaintext never compared (P1-4).
+ * - Atomic increment-then-check: updateMany returns count so we never read
+ *   stale `attempts` before deciding to lock (P1-10 / read-then-write race).
+ * - After 5 failed attempts the record is invalidated in the same update.
  */
 export async function verifyStatusOTP(
   subdomain: string,
@@ -176,66 +201,79 @@ export async function verifyStatusOTP(
     }
 
     const schoolId = schoolResult.data.id
+    const otpHash = hashOtp(otp)
 
-    // Find the OTP
-    const otpRecord = await db.admissionOTP.findFirst({
+    // Find the most-recent active (non-expired, unverified) OTP record for
+    // this application, regardless of hash — we need the record to atomically
+    // increment attempts even on a wrong guess.
+    const existingOTP = await db.admissionOTP.findFirst({
       where: {
         schoolId,
         applicationNumber,
-        otp,
         expiresAt: { gte: new Date() },
         verified: false,
       },
       orderBy: { createdAt: "desc" },
     })
 
-    if (!otpRecord) {
-      // Check if there's an OTP with wrong attempts
-      const existingOTP = await db.admissionOTP.findFirst({
-        where: {
-          schoolId,
-          applicationNumber,
-          expiresAt: { gte: new Date() },
-          verified: false,
-        },
-        orderBy: { createdAt: "desc" },
-      })
-
-      if (existingOTP) {
-        // Increment attempts
-        await db.admissionOTP.update({
-          where: { id: existingOTP.id },
-          data: { attempts: { increment: 1 } },
-        })
-
-        if (existingOTP.attempts >= 4) {
-          // Invalidate OTP after 5 attempts
-          await db.admissionOTP.update({
-            where: { id: existingOTP.id },
-            data: { expiresAt: new Date() },
-          })
-          return {
-            success: false,
-            error: "Too many invalid attempts. Please request a new code.",
-          }
-        }
-      }
-
+    if (!existingOTP) {
       return { success: false, error: "Invalid or expired verification code" }
     }
 
-    // Mark OTP as verified
+    // Atomic increment-then-check: bump attempts first, then read the new
+    // count from the update result. This avoids the read-then-write TOCTOU
+    // where two concurrent requests both read attempts=3 and both proceed.
+    const MAX_ATTEMPTS = 5
+    const afterIncrement = await db.admissionOTP.updateMany({
+      where: {
+        id: existingOTP.id,
+        // Only increment while still under the limit — prevents wrap-around
+        attempts: { lt: MAX_ATTEMPTS },
+      },
+      data: { attempts: { increment: 1 } },
+    })
+
+    // If updateMany matched 0 rows the record was already at the limit
+    if (afterIncrement.count === 0) {
+      // Ensure it is invalidated (idempotent)
+      await db.admissionOTP.update({
+        where: { id: existingOTP.id },
+        data: { expiresAt: new Date() },
+      })
+      return {
+        success: false,
+        error: "Too many invalid attempts. Please request a new code.",
+      }
+    }
+
+    // The new attempts value after increment
+    const newAttempts = existingOTP.attempts + 1
+
+    // Compare hashes — constant-time enough for a 6-digit OTP
+    if (existingOTP.otp !== otpHash) {
+      if (newAttempts >= MAX_ATTEMPTS) {
+        // Invalidate immediately on the 5th wrong guess
+        await db.admissionOTP.update({
+          where: { id: existingOTP.id },
+          data: { expiresAt: new Date() },
+        })
+        return {
+          success: false,
+          error: "Too many invalid attempts. Please request a new code.",
+        }
+      }
+      return { success: false, error: "Invalid or expired verification code" }
+    }
+
+    // Correct OTP — mark as verified
     await db.admissionOTP.update({
-      where: { id: otpRecord.id },
+      where: { id: existingOTP.id },
       data: { verified: true },
     })
 
     // Get application and generate/update access token
     const application = await db.application.findFirst({
-      where: {
-        schoolId,
-        applicationNumber,
-      },
+      where: { schoolId, applicationNumber },
     })
 
     if (!application) {

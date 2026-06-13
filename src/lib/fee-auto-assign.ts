@@ -48,6 +48,12 @@ export interface EnsureFeeAssignmentsResult {
   /** Combined IDs of newly-created + pre-existing assignments. Useful for
    *  invoice fan-out by the caller. */
   assignmentIds: string[]
+  /**
+   * B5 — non-fatal warnings: populated when a grade is supplied but no
+   * matching FeeStructure was found (admin hasn't provisioned fees for this
+   * grade yet). Callers can surface these to the user or log them.
+   */
+  warnings: string[]
 }
 
 export async function ensureStudentFeeAssignments(
@@ -62,7 +68,13 @@ export async function ensureStudentFeeAssignments(
   // No grade yet → nothing to assign. Caller (wizard, future grade-edit) is
   // expected to re-invoke once `Student.academicGradeId` is set.
   if (!academicGradeId) {
-    return { created: 0, existing: 0, skipped: 1, assignmentIds: [] }
+    return {
+      created: 0,
+      existing: 0,
+      skipped: 1,
+      assignmentIds: [],
+      warnings: [],
+    }
   }
 
   const academicYear =
@@ -108,8 +120,18 @@ export async function ensureStudentFeeAssignments(
     },
   })
 
+  // B5: grade is set but no FeeStructure exists for it — emit a warning so the
+  // caller can surface it instead of silently assigning nothing.
   if (matchedStructures.length === 0) {
-    return { created: 0, existing: 0, skipped: 0, assignmentIds: [] }
+    const warn = `No active FeeStructure found for grade ${academicGradeId} in year ${academicYear} — fees not assigned for student ${studentId}`
+    console.warn(`[ensureStudentFeeAssignments] ${warn}`)
+    return {
+      created: 0,
+      existing: 0,
+      skipped: 0,
+      assignmentIds: [],
+      warnings: [warn],
+    }
   }
 
   // Auto-generated structures carrying this grade's sourceSignals.gradeId form
@@ -125,8 +147,22 @@ export async function ensureStudentFeeAssignments(
   )
 
   if (feeStructures.length === 0) {
-    return { created: 0, existing: 0, skipped: 0, assignmentIds: [] }
+    return {
+      created: 0,
+      existing: 0,
+      skipped: 0,
+      assignmentIds: [],
+      warnings: [],
+    }
   }
+
+  // B7: snapshot school currency on new assignments so receipts stay correct
+  // if the school later changes School.currency.
+  const schoolRow = await (tx ?? db).school.findUnique({
+    where: { id: schoolId },
+    select: { currency: true },
+  })
+  const snapshotCurrency = schoolRow?.currency ?? null
 
   // Diff existing vs needed so we know exactly how many were *newly* created.
   // Counting via upsert would conflate new+existing and break the founder
@@ -145,6 +181,7 @@ export async function ensureStudentFeeAssignments(
       existing: existing.length,
       skipped: 0,
       assignmentIds: existing.map((a) => a.id),
+      warnings: [],
     }
   }
 
@@ -155,13 +192,13 @@ export async function ensureStudentFeeAssignments(
   const created = tx
     ? await createMissingAssignments(
         tx,
-        { schoolId, studentId, academicYear },
+        { schoolId, studentId, academicYear, currency: snapshotCurrency },
         missing
       )
     : await db.$transaction((innerTx) =>
         createMissingAssignments(
           innerTx,
-          { schoolId, studentId, academicYear },
+          { schoolId, studentId, academicYear, currency: snapshotCurrency },
           missing
         )
       )
@@ -218,6 +255,7 @@ export async function ensureStudentFeeAssignments(
     existing: existing.length,
     skipped: 0,
     assignmentIds: allAssignmentIds,
+    warnings: [],
   }
 }
 
@@ -288,10 +326,18 @@ async function selectAssignableStructures(
  * Insert the missing FeeAssignment rows on the given client (a transaction
  * client). P2002 (unique-constraint race) is treated as pre-existing and
  * skipped; any other error propagates to roll the transaction back.
+ *
+ * B7: ctx.currency is the school's currency snapshotted at create time so
+ * receipts stay correct if the school later changes School.currency.
  */
 async function createMissingAssignments(
   client: Prisma.TransactionClient,
-  ctx: { schoolId: string; studentId: string; academicYear: string },
+  ctx: {
+    schoolId: string
+    studentId: string
+    academicYear: string
+    currency?: string | null
+  },
   missing: Array<{ id: string; totalAmount: Prisma.Decimal | number }>
 ): Promise<{ id: string }[]> {
   const createdRows: { id: string }[] = []
@@ -306,6 +352,8 @@ async function createMissingAssignments(
           finalAmount: Number(structure.totalAmount),
           totalDiscount: 0,
           status: "PENDING",
+          // B7 — snapshot school currency at assignment-create time
+          ...(ctx.currency ? { currency: ctx.currency } : {}),
         },
         select: { id: true },
       })

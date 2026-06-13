@@ -252,7 +252,9 @@ export const getPaymentColumns = (
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/${lang}/finance/fees/payments/${payment.id}/receipt`}
+                  href={`/api/payment/${payment.id}/receipt`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   {col?.viewReceipt || "View Receipt"}
                 </Link>

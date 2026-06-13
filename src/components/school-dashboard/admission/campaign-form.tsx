@@ -126,9 +126,8 @@ export function CampaignForm({
             status: d.status as CampaignFormData["status"],
             description: d.description ?? "",
             totalSeats: d.totalSeats,
-            applicationFee: d.applicationFee
-              ? parseFloat(d.applicationFee)
-              : undefined,
+            // applicationFee: DEPRECATED — applying is always free (2026-06-12).
+            // The field is kept in the schema for DB compatibility but not shown in UI.
           })
         }
       })

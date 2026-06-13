@@ -1,37 +1,42 @@
 ---
 title: القبول
-description: إدارة القبول من جانب المسؤول — مراجعة الطلبات، تأكيد التسجيل، قائمة الجدارة، تسجيل المدفوعات، وتوزيع الفصول.
+description: إدارة القبول من جانب المسؤول — مراجعة الطلبات، تأكيد التسجيل، قائمة الجدارة، توزيع الفصول، ومعالجة وثائق الذكاء الاصطناعي.
 ---
 
 يمتد تدفّق القبول من جانب المسؤول من مراجعة الطلب وحتى تأكيد التسجيل. تأكيد التسجيل يُطلق معاملة واحدة بمدة 30 ثانية تُنشئ `Student` و`Guardians` و`FeeAssignments` و`UserInvoices` في خطوة ذرّية واحدة.
 
+**التقديم مجاني دائماً.** يجمع معالج الطلب المعلومات فحسب — لا تُحصَّل أي مدفوعات في مرحلة التقديم. تُستحق المدفوعات في مرحلتين لاحقتين: رسوم التسجيل عند قبول المتقدّم للعرض، وفواتير الرسوم الدراسية بعد تأكيد التسجيل.
+
 ## خط الأنابيب
 
 ```
-Review application      → UNDER_REVIEW
-Score & rank            → Merit list
-Select applicant        → SELECTED (admissionOffered=true)
-Confirm enrollment      → ADMITTED
-                          → Student (ACTIVE)
-                          → User (role=STUDENT)
-                          → Guardians + StudentGuardian
-                          → StudentYearLevel + AcademicGrade
-                          → FeeAssignments + UserInvoices
-                          → StudentDocuments
-Place in section        → Classroom roster
-Edit in wizard          → Update details
+Applicant submits (free) → SUBMITTED
+Review application       → UNDER_REVIEW
+Score & rank             → Merit list
+Select applicant         → SELECTED (admissionOffered=true)
+  Applicant accepts offer → pays registration fee
+Confirm enrollment       → ADMITTED
+                           → Student (ACTIVE)
+                           → User (role=STUDENT)
+                           → Guardians + StudentGuardian
+                           → StudentYearLevel + AcademicGrade
+                           → FeeAssignments + UserInvoices (tuition)
+                           → StudentDocuments
+Place in section         → Classroom roster
+Edit in wizard           → Update details
 ```
 
 ## المسارات
 
-| التبويب       | المسار                                | الغرض                          |
-| ------------- | ------------------------------------- | ------------------------------ |
-| الحملات       | `/{lang}/admission`                   | إنشاء / إدارة حملات القبول     |
-| الطلبات       | `/{lang}/admission/applications`      | مراجعة الطلبات المقدّمة        |
-| قائمة الجدارة | `/{lang}/admission/merit`             | ترتيب الطلبات حسب الدرجات      |
-| التسجيل       | `/{lang}/admission/enrollment`        | تأكيد التسجيل للطلبات المختارة |
-| الإعدادات     | `/{lang}/admission/settings`          | تهيئة بوّابة القبول            |
-| التفاصيل      | `/{lang}/admission/applications/{id}` | عرض طلب مفرد                   |
+| التبويب           | المسار                                | الغرض                                            |
+| ----------------- | ------------------------------------- | ------------------------------------------------ |
+| الحملات           | `/{lang}/admission`                   | إنشاء / إدارة حملات القبول                       |
+| الطلبات           | `/{lang}/admission/applications`      | مراجعة الطلبات المقدّمة                          |
+| قائمة الجدارة     | `/{lang}/admission/merit`             | ترتيب الطلبات حسب الدرجات                        |
+| التسجيل           | `/{lang}/admission/enrollment`        | تأكيد التسجيل للطلبات المختارة                   |
+| العملاء المحتملون | `/{lang}/admission/leads`             | الاستفسارات + حجوزات الجولات (قراءة فقط للمحاسب) |
+| الإعدادات         | `/{lang}/admission/settings`          | تهيئة بوّابة القبول                              |
+| التفاصيل          | `/{lang}/admission/applications/{id}` | عرض طلب مفرد                                     |
 
 ## تدفّق الحالات
 
@@ -108,15 +113,38 @@ Edit in wizard          → Update details
 
 ## قائمة الجدارة
 
-ترتيب الطلبات المُدرَجة / المُختارة / في قائمة الانتظار حسب أوزان قابلة للتهيئة (يجب أن تجمع إلى 100):
+يُدخل المسؤولون درجات امتحان القبول والمقابلة مباشرةً في جدول الجدارة (0–100 لكل درجة). تحسب `generateMeritList()` `meritScore` مرجّحاً لكل طلب:
 
-- الدرجة الأكاديمية — 40%
-- امتحان القبول — 35%
-- المقابلة — 25%
+- امتحان القبول — 60%
+- المقابلة — 40%
 
-## تسجيل المدفوعات
+تُرتَّب الطلبات تنازلياً حسب `meritScore`؛ تظهر الطلبات غير المُقيَّمة في آخر القائمة. تُكتب الدرجات دفعةً عبر `updateApplicationScores()`. يشمل الجدول الطلبات المُدرَجة والمُختارة وتلك في قائمة الانتظار.
 
-يسجّل المسؤولون مدفوعات النقد / التحويل البنكي لتعليم رسوم الطلب كمدفوعة. حالياً يضبط `Application.applicationFeePaid` فقط — يُتتبَّع التكامل الكامل مع نموذج `Payment` بشكل منفصل.
+## العرض → القبول → الدفع → التسجيل
+
+بمجرد انتقال المتقدّم إلى حالة `SELECTED`:
+
+1. يُنشأ عرض بانتهاء صلاحية قابل للتهيئة (`offerExpiryDays`، افتراضياً 14 يوماً).
+2. يسجّل المتقدّم دخوله عبر رابط العرض المُضمَّن بالرمز (يحافظ تسجيل الدخول على مسار الاستدعاء الكامل).
+3. يدفع المتقدّم **رسوم التسجيل** عبر بوّابة الدفع الخاصة بالمدرسة (Tap لدول الخليج، Stripe لسائر الدول). يعرض معالج الطلب معاينة إعلامية فقط — لا يُحصَّل أي مبلغ في مرحلة التقديم.
+4. عند نجاح الدفع، يظهر للمسؤول لافتة تأكيد دفع رسوم التسجيل ويمكنه المتابعة.
+5. ينقر المسؤول على "تأكيد التسجيل" ← تُشغَّل معاملة `confirmEnrollment()` (انظر معاملة التسجيل).
+6. بعد التسجيل يستخدم المسؤول **مربع حوار التوزيع** في جدول التسجيل لاختيار فصل (تظهر أعداد المقاعد)؛ تُسجِّل `placeStudentInSection()` الطالب في جميع فصول الصف.
+
+إعادة محاولة إتمام الدفع المُهجَّر متاحة — يمكن للمتقدّمين الذين غادروا الصفحة العودة وإكمال الدفع.
+
+## تبويب العملاء المحتملون
+
+يعرض تبويب **العملاء المحتملون** (`/{lang}/admission/leads`):
+
+- **الاستفسارات** — طلبات التواصل مع الاسم والبريد والهاتف والصف المطلوب والمصدر وحالة المتابعة.
+- **حجوزات الجولات** — الزيارات المجدولة مع عدد الحضور والحالة (`PENDING` / `CONFIRMED` / `CANCELLED`) وإجراءات إعادة الجدولة والإلغاء.
+
+يملك دورا ADMIN وSTAFF صلاحية الإجراءات الكاملة؛ يملك ACCOUNTANT صلاحية القراءة فقط. تُرسَل إشعارات داخل التطبيق إلى ADMIN وSTAFF عند كل استفسار أو حجز جديد. تحمي حجوزات الجولات من التجاوز في البيع (آمنة من TOCTOU) وتحترم علامة `enableTourBooking` للحملة؛ يُخصَّم عدد الحضور بشكل صحيح عند الإلغاء أو إعادة الجدولة.
+
+## معالجة وثائق الذكاء الاصطناعي
+
+تُعالَج وثائق المتقدّمين المُرفوعة (بطاقات الهوية، كشوف الدرجات) عبر قائمة انتظار استخراج. يعمل الـ cron `/api/cron/process-document-jobs` كل 10 دقائق ويُفرغ الوظائف المعلّقة. `classifyDocument()` و`getDocumentProcessingStatus()` محمية بنظام RBAC. يُفحص حصة استخدام الذكاء الاصطناعي (`canUseAI`) قبل كل استدعاء؛ مخطط Zod لإيصال البنك اختياري حتى لا تُفشل الاستخراجات الجزئية الوظيفة بأكملها.
 
 ## الإعدادات
 
@@ -124,16 +152,15 @@ Edit in wizard          → Update details
 {
   allowMultipleApplications: false,
   requireDocuments: true,
-  applicationFee: 0,
+  // applicationFee محذوف — التقديم مجاني دائماً
   offerExpiryDays: 14,           // 1-90
   autoEmailNotifications: true,
   enableOnlinePayment: false,
   paymentMethods: ["stripe", "cash"],
   bankDetails: { bankName, accountName, accountNumber, iban, swiftCode },
   cashPaymentInstructions: "",
-  academicWeight: 40,            // merit weights (sum=100)
-  entranceWeight: 35,
-  interviewWeight: 25,
+  entranceWeight: 60,            // أوزان الجدارة (مجموعها 100)
+  interviewWeight: 40,
 }
 ```
 
@@ -147,10 +174,11 @@ Edit in wizard          → Update details
 | `placeStudentInSection()`                                                       | confirmEnrollment               |
 | `getAvailableSectionsForPlacement()`                                            | confirmEnrollment               |
 | `generateMeritList()`                                                           | manageMerit                     |
-| `recordPayment()`                                                               | managePayments                  |
+| `updateApplicationScores()`                                                     | manageMerit                     |
 | `getCampaigns()` / `createCampaign()` / `updateCampaign()` / `deleteCampaign()` | viewCampaigns / manageCampaigns |
 | `getAdmissionSettings()` / `saveAdmissionSettings()`                            | manageSettings                  |
 | `fetchCampaignOptions()`                                                        | viewCampaigns                   |
+| `classifyDocument()` / `getDocumentProcessingStatus()`                          | viewApplications (RBAC)         |
 
 ## أمان متعدّد المستأجرين
 
@@ -158,15 +186,17 @@ Edit in wizard          → Update details
 
 ## ملفات أساسية
 
-| الغرض               | المسار                                                                                                                                                   |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| إجراءات لوحة التحكم | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
-| واجهة الطلبات       | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
-| التسجيل / الجدارة   | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
-| الإعدادات           | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
-| أداة الفاتورة       | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
-| Schema              | `prisma/models/admission.prisma`                                                                                                                         |
-| الاختبارات          | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
+| الغرض                   | المسار                                                                                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| إجراءات لوحة التحكم     | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
+| واجهة الطلبات           | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
+| التسجيل / الجدارة       | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
+| تبويب العملاء المحتملون | `src/components/school-dashboard/admission/leads/`                                                                                                       |
+| وثائق الذكاء الاصطناعي  | `src/components/school-dashboard/admission/ai/{classify,bank-receipt-schema}.ts`                                                                         |
+| الإعدادات               | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
+| أداة الفاتورة           | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
+| Schema                  | `prisma/models/admission.prisma`                                                                                                                         |
+| الاختبارات              | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
 
 ## انظر أيضاً
 

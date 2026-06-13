@@ -79,13 +79,30 @@ export async function GET(_req: Request, ctx: RouteContext) {
         },
       },
       school: {
-        select: { name: true, currency: true, logoUrl: true },
+        select: {
+          name: true,
+          currency: true,
+          logoUrl: true,
+          preferredLanguage: true,
+        },
       },
     },
   })
 
   if (!payment) {
     return jsonError(ACTION_ERRORS.NOT_FOUND, 404)
+  }
+
+  // P2.2 — Status guard: only SUCCESS (and REFUNDED for dispute receipts) may
+  // produce a PDF receipt. PENDING / PENDING_VERIFICATION / FAILED / CANCELLED
+  // must NOT generate a receipt — the payment hasn't cleared.
+  const RECEIPT_ALLOWED_STATUSES = ["SUCCESS", "REFUNDED"] as const
+  if (
+    !RECEIPT_ALLOWED_STATUSES.includes(
+      payment.status as (typeof RECEIPT_ALLOWED_STATUSES)[number]
+    )
+  ) {
+    return jsonError("RECEIPT_NOT_AVAILABLE", 409)
   }
 
   const isFinanceAdmin = await checkCurrentUserPermission(
@@ -116,6 +133,55 @@ export async function GET(_req: Request, ctx: RouteContext) {
     .filter(Boolean)
     .join(" ")
 
+  // i18n label map — resolved from school.preferredLanguage.
+  // An API route has no access to the dictionary pipeline, so we keep a
+  // minimal inline map for the labels that appear in the PDF.
+  const lang = payment.school?.preferredLanguage ?? "en"
+  const RECEIPT_LABELS: Record<string, Record<string, string>> = {
+    en: {
+      paymentReceipt: "Payment Receipt",
+      paymentDetails: "Payment Details",
+      paymentNumber: "Payment Number",
+      receiptNumber: "Receipt Number",
+      date: "Date",
+      method: "Method",
+      status: "Status",
+      transactionId: "Transaction ID",
+      studentInformation: "Student Information",
+      student: "Student",
+      feeStructure: "Fee Structure",
+      academicYear: "Academic Year",
+      amountPaid: "Amount Paid",
+      authorisedSignature: "Authorised Signature",
+      footerNote:
+        "This is a computer-generated receipt. No signature required.",
+      footerSigned: "Verified by the school's finance office.",
+      generating: "Generating...",
+      downloadReceipt: "Download Receipt",
+    },
+    ar: {
+      paymentReceipt: "إيصال دفع",
+      paymentDetails: "تفاصيل الدفعة",
+      paymentNumber: "رقم الدفعة",
+      receiptNumber: "رقم الإيصال",
+      date: "التاريخ",
+      method: "طريقة الدفع",
+      status: "الحالة",
+      transactionId: "رقم المعاملة",
+      studentInformation: "بيانات الطالب",
+      student: "الطالب",
+      feeStructure: "هيكل الرسوم",
+      academicYear: "العام الدراسي",
+      amountPaid: "المبلغ المدفوع",
+      authorisedSignature: "التوقيع المعتمد",
+      footerNote: "هذا إيصال صادر إلكترونياً. لا يتطلب توقيعاً.",
+      footerSigned: "تم التحقق من قبل قسم المالية في المدرسة.",
+      generating: "جارٍ الإنشاء...",
+      downloadReceipt: "تحميل الإيصال",
+    },
+  }
+  const t = RECEIPT_LABELS[lang] ?? RECEIPT_LABELS.en
+
   const buffer = await renderToBuffer(
     ReceiptDocument({
       data: {
@@ -131,13 +197,14 @@ export async function GET(_req: Request, ctx: RouteContext) {
         studentName: studentName || "—",
         feeStructureName: payment.feeAssignment?.feeStructure?.name ?? "—",
         academicYear: payment.feeAssignment?.academicYear ?? "—",
+        // School name + currency come from the school record, not hardcoded.
         schoolName: payment.school?.name ?? undefined,
         // P2.4 — brand the PDF with the school's own logo. Signature URL
         // isn't a first-class School field yet; once SchoolBranding gets
         // `signatureUrl`, drop it in here.
         schoolLogoUrl: payment.school?.logoUrl ?? undefined,
       },
-      t: {},
+      t,
     })
   )
 

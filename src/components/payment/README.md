@@ -5,10 +5,10 @@ title: Payment (multi-gateway block)
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 70
+completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 ## Payment — Reusable multi-gateway payment block
@@ -47,7 +47,7 @@ payment/
 
 ### Status
 
-**Completion:** 70% | **Blockers:** Only Stripe and cash gateways are likely wired to real providers; Tap, bank transfer, and mobile money may be stub implementations in `@/lib/payment/provider`. As of 2026-05-25 the `bankak` provider has shipped (see `b26f3759`).
+**Completion:** 93% | Stripe, Tap, cash, bank transfer, ATM deposit, and mobile money all real. Bankak is an intentional stub (BoK API spec pending). Webhooks hardened with `releaseDedupeAndFail` retry, multi-installment allocation, language-aware failure notifications, and collision-safe receipt numbers. **PRODUCT DECISION (2026-06-13): applying to a school is always free — the admission wizard no longer collects an application fee here. Payment occurs only at the fee stage (registration fee on offer acceptance + tuition invoices).**
 
 ### Agents & Skills
 

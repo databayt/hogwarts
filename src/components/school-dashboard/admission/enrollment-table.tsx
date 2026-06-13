@@ -66,9 +66,10 @@ export function EnrollmentTable({
 
   const filters = useMemo(() => {
     const f: Record<string, unknown> = {}
+    if (deferredSearch) f.search = deferredSearch
     if (campaignId) f.campaignId = campaignId
     return f
-  }, [campaignId])
+  }, [deferredSearch, campaignId])
 
   const {
     data,
@@ -82,8 +83,13 @@ export function EnrollmentTable({
     total,
     perPage,
     fetcher: async (params) => {
+      // search param is client-filtered (server action gains search support via deferred task)
+      const { search: _search, ...serverParams } = params as Record<
+        string,
+        unknown
+      > & { search?: string }
       const result = await getEnrollmentData({
-        ...params,
+        ...serverParams,
         campaignId: campaignId || undefined,
       })
       if (result.success && result.data) {

@@ -87,14 +87,25 @@ async function handleBankReceipt(
       }
     }
 
+    const extracted = result.data.extractedObject
+
     logger.info("Bank receipt extraction completed", {
       action: "bank_receipt_handler_success",
       jobId: context.jobId,
       confidence: result.data.confidence,
       fieldsExtracted: result.data.fields.length,
-      amount: result.data.extractedObject?.amount,
-      referenceNumber: result.data.extractedObject?.referenceNumber,
+      // amount and transferDate are optional — may be null when not visible
+      amount: extracted?.amount ?? null,
+      transferDate: extracted?.transferDate ?? null,
+      referenceNumber: extracted?.referenceNumber,
     })
+
+    // Propagate token counts so the queue-runner's trackAIUsage fires.
+    // claude-3-5-sonnet: $3/M input + $15/M output
+    const inputTokens = result.inputTokens ?? 0
+    const outputTokens = result.outputTokens ?? 0
+    const costUsd =
+      (inputTokens / 1_000_000) * 3.0 + (outputTokens / 1_000_000) * 15.0
 
     return {
       success: true,
@@ -102,6 +113,9 @@ async function handleBankReceipt(
       confidence: result.data.confidence,
       model: "claude-3-5-sonnet-20241022",
       provider: "anthropic",
+      inputTokens,
+      outputTokens,
+      costUsd,
     }
   } catch (error) {
     logger.error(

@@ -625,10 +625,7 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": [
-            "Unlimited students",
-            "Custom integrations"
-          ]
+          "benefits": ["Unlimited students", "Custom integrations"]
         }
       },
       "constants": {
@@ -1631,11 +1628,7 @@
             "title": "Headmaster & Chief Warlock",
             "subject": "Transfiguration & Ancient Magic",
             "description": "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
-            "specialties": [
-              "Ancient Magic",
-              "Transfiguration",
-              "Leadership"
-            ],
+            "specialties": ["Ancient Magic", "Transfiguration", "Leadership"],
             "experience": "50+ years",
             "education": "Order of Merlin, First Class",
             "quote": "It is our choices that show what we truly are, far more than our abilities."
@@ -1645,11 +1638,7 @@
             "title": "Potions Master & Head of Slytherin",
             "subject": "Potions & Dark Arts Defense",
             "description": "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
-            "specialties": [
-              "Potions",
-              "Dark Arts Defense",
-              "Occlumency"
-            ],
+            "specialties": ["Potions", "Dark Arts Defense", "Occlumency"],
             "experience": "20+ years",
             "education": "Master of Potions, Hogwarts",
             "quote": "Attention to detail separates the exceptional from the merely adequate."
@@ -1659,11 +1648,7 @@
             "title": "Deputy & Head of Gryffindor",
             "subject": "Transfiguration",
             "description": "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
-            "specialties": [
-              "Transfiguration",
-              "Animagus Studies",
-              "Quidditch"
-            ],
+            "specialties": ["Transfiguration", "Animagus Studies", "Quidditch"],
             "experience": "40+ years",
             "education": "Transfiguration Mistress, Hogwarts",
             "quote": "We teachers are rather good at magic, you know."
@@ -2005,22 +1990,9 @@
         "WordPress",
         "Shopify"
       ],
-      "company": [
-        "About",
-        "Careers",
-        "Blog",
-        "Case Studies"
-      ],
-      "services": [
-        "Startups",
-        "Agencies"
-      ],
-      "support": [
-        "Help Center",
-        "Contact",
-        "Documentation",
-        "Service Status"
-      ]
+      "company": ["About", "Careers", "Blog", "Case Studies"],
+      "services": ["Startups", "Agencies"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
     },
     "links": {
       "product": "Product",
@@ -2029,29 +2001,10 @@
       "legal": "Legal"
     },
     "sections": {
-      "product": [
-        "Features",
-        "Pricing",
-        "Updates",
-        "Roadmap"
-      ],
-      "company": [
-        "About",
-        "Blog",
-        "Careers",
-        "Partners"
-      ],
-      "support": [
-        "Help Center",
-        "Contact",
-        "Documentation",
-        "Service Status"
-      ],
-      "legal": [
-        "Privacy",
-        "Terms",
-        "License"
-      ]
+      "product": ["Features", "Pricing", "Updates", "Roadmap"],
+      "company": ["About", "Blog", "Careers", "Partners"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
+      "legal": ["Privacy", "Terms", "License"]
     }
   },
   "errors": {

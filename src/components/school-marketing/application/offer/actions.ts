@@ -15,6 +15,7 @@ import { extractGradeNumber } from "@/lib/grade-utils"
 import { toSmallestUnit } from "@/lib/payment/currency"
 import { createPaymentCheckout } from "@/lib/payment/provider"
 import type { PaymentCheckoutResult } from "@/lib/payment/types"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // ============================================================================
 // Types
@@ -397,6 +398,16 @@ export async function acceptOffer(
   accessToken: string
 ): Promise<ActionResponse<{ offerAcceptedAt: Date }>> {
   try {
+    // Rate limit: 5 accept attempts per minute per token (prevents retry storms)
+    const rl = await checkUserRateLimit(
+      `offer-accept:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "offer-accept"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     const result = await validateAccessToken(applicationId, accessToken)
     if ("error" in result) {
       return { success: false, error: result.error }
@@ -501,6 +512,16 @@ export async function declineOffer(
   accessToken: string
 ): Promise<ActionResponse<{ status: string }>> {
   try {
+    // Rate limit: 5 decline attempts per minute per token
+    const rl = await checkUserRateLimit(
+      `offer-decline:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "offer-decline"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     const result = await validateAccessToken(applicationId, accessToken)
     if ("error" in result) {
       return { success: false, error: result.error }
@@ -592,6 +613,17 @@ export async function createRegistrationFeeCheckout(
   locale: string
 ): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
+    // Rate limit: 5 checkout attempts per minute per token (each attempt
+    // creates a Stripe session — cap abuse and accidental retry storms).
+    const rl = await checkUserRateLimit(
+      `reg-checkout:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-checkout"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     const result = await validateAccessToken(applicationId, accessToken)
     if ("error" in result) {
       return { success: false, error: result.error }
@@ -604,14 +636,28 @@ export async function createRegistrationFeeCheckout(
       return { success: false, error: "OFFER_NOT_ACCEPTED" }
     }
 
-    // Already paid
+    // Already paid — hard block
     if (application.registrationFeePaid) {
       return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
     }
 
-    // Already has a payment method recorded (pending)
-    if (application.registrationFeeMethod) {
-      return { success: false, error: "PAYMENT_ALREADY_RECORDED" }
+    // Stale checkout state: registrationFeeMethod is set but unpaid (e.g. the
+    // parent started a Stripe checkout, abandoned it, and is retrying).
+    // Clear the stale method so a fresh checkout session can be created.
+    // The webhook-side idempotency handles any race where the old session
+    // completes concurrently (it simply marks paid on the correct reference).
+    if (application.registrationFeeMethod && !application.registrationFeePaid) {
+      await db.application.update({
+        where: { id: applicationId, schoolId: application.schoolId },
+        data: {
+          registrationFeeMethod: null,
+          registrationFeeReference: null,
+          registrationFeeAmount: null,
+        },
+      })
+      // Reflect the cleared state in our local copy so the rest of the
+      // function proceeds as if no method was ever recorded.
+      application.registrationFeeMethod = null
     }
 
     const schoolId = application.schoolId

@@ -2,10 +2,10 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
-import { Check, Clock, Ellipsis, X } from "lucide-react"
+import { Check, Clock, Ellipsis, ExternalLink, MapPin, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { confirmEnrollment, recordPayment } from "./actions"
+import { PlacementDialog } from "./placement-dialog"
 import { translateEnrollmentWarning } from "./warning-messages"
 
 export type EnrollmentRow = {
@@ -46,6 +47,8 @@ export type EnrollmentRow = {
   campaignId: string
   offerAccepted: boolean
   registrationFeePaid: boolean
+  /** studentId is set after confirmEnrollment creates the Student record */
+  studentId?: string | null
 }
 
 const getOfferBadge = (
@@ -100,7 +103,11 @@ function EnrollmentActionsCell({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [placementOpen, setPlacementOpen] = useState(false)
   const t = dictionary
+
+  const isConfirmed =
+    enrollment.admissionConfirmed || enrollment.status === "ENROLLED"
 
   const onView = () => {
     router.push(`/${locale}/admission/applications/${enrollment.id}`)
@@ -114,6 +121,7 @@ function EnrollmentActionsCell({
       })
       if (result.success) {
         SuccessToast(t?.enrollment?.paymentRecorded || "Payment recorded")
+        router.refresh()
       } else {
         ErrorToast(
           t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
@@ -133,6 +141,7 @@ function EnrollmentActionsCell({
           const message = translateEnrollmentWarning(warning, t)
           if (message) WarningToast(message)
         }
+        router.refresh()
       } else {
         ErrorToast(
           t?.applicationDetail?.statusUpdateFailed || result.error || "Failed"
@@ -146,7 +155,6 @@ function EnrollmentActionsCell({
   }
 
   const onSendReminder = () => {
-    const name = enrollment.applicantName || enrollment.firstName
     const appNum = enrollment.applicationNumber
     const subject = encodeURIComponent(
       `${t?.enrollment?.sendReminder || "Enrollment Reminder"} - ${appNum}`
@@ -154,42 +162,73 @@ function EnrollmentActionsCell({
     window.open(`mailto:?subject=${subject}`, "_blank")
   }
 
+  const onViewFinance = () => {
+    router.push(`/${locale}/finance/fees`)
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
-          <Ellipsis className="h-4 w-4" />
-          <span className="sr-only">{t?.toolbar?.openMenu || "Open menu"}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          {t?.columns?.actions || "Actions"}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onView}>
-          {t?.applications?.viewDetails || "View Details"}
-        </DropdownMenuItem>
-        {!enrollment.applicationFeePaid && (
-          <DropdownMenuItem onClick={onRecordPayment} disabled={isPending}>
-            {t?.enrollment?.recordPayment || "Record Payment"}
+    <>
+      <PlacementDialog
+        applicationId={enrollment.id}
+        applicantName={enrollment.applicantName}
+        applyingForClass={enrollment.applyingForClass}
+        open={placementOpen}
+        onOpenChange={setPlacementOpen}
+        dictionary={dictionary}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+            <Ellipsis className="h-4 w-4" />
+            <span className="sr-only">
+              {t?.toolbar?.openMenu || "Open menu"}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>
+            {t?.columns?.actions || "Actions"}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onView}>
+            {t?.applications?.viewDetails || "View Details"}
           </DropdownMenuItem>
-        )}
-        {!enrollment.hasDocuments && (
-          <DropdownMenuItem onClick={onVerifyDocuments}>
-            {t?.enrollment?.verifyDocuments || "Verify Documents"}
+          {!enrollment.hasDocuments && (
+            <DropdownMenuItem onClick={onVerifyDocuments}>
+              {t?.enrollment?.verifyDocuments || "Verify Documents"}
+            </DropdownMenuItem>
+          )}
+          {enrollment.admissionOffered && !enrollment.admissionConfirmed && (
+            <DropdownMenuItem
+              onClick={onConfirmEnrollment}
+              disabled={isPending}
+            >
+              {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
+            </DropdownMenuItem>
+          )}
+          {/* Placement: show for confirmed/enrolled rows that still need a section */}
+          {isConfirmed && (
+            <DropdownMenuItem onClick={() => setPlacementOpen(true)}>
+              <MapPin className="me-2 h-4 w-4" />
+              {t?.enrollment?.assignSection || "Assign Section"}
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={onSendReminder}>
+            {t?.enrollment?.sendReminder || "Send Reminder"}
           </DropdownMenuItem>
-        )}
-        {enrollment.admissionOffered && !enrollment.admissionConfirmed && (
-          <DropdownMenuItem onClick={onConfirmEnrollment} disabled={isPending}>
-            {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onClick={onSendReminder}>
-          {t?.enrollment?.sendReminder || "Send Reminder"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {/* Finance link for confirmed/enrolled students */}
+          {isConfirmed && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onViewFinance}>
+                <ExternalLink className="me-2 h-4 w-4" />
+                {t?.enrollment?.viewFees || "View Fees"}
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   )
 }
 
@@ -290,15 +329,18 @@ export const getEnrollmentColumns = (
       filterFn: (row, id, value) => value.includes(row.getValue(id)),
     },
     {
-      accessorKey: "applicationFeePaid",
+      // Registration fee (real money) — the applicationFee column is removed
+      // (free application decision 2026-06-12).
+      id: "regFeeStatus",
+      accessorFn: (row) => row.registrationFeePaid,
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={t?.columns?.fees || "Fees"}
+          title={t?.columns?.fees || "Reg Fee"}
         />
       ),
       cell: ({ row }) => {
-        const { registrationFeePaid, applicationFeePaid } = row.original
+        const { registrationFeePaid } = row.original
         if (registrationFeePaid) {
           return (
             <Badge variant="default">
@@ -306,21 +348,12 @@ export const getEnrollmentColumns = (
             </Badge>
           )
         }
-        if (applicationFeePaid) {
-          return (
-            <Badge variant="secondary">
-              {t?.enrollment?.appPaid || "App Paid"}
-            </Badge>
-          )
-        }
         return (
-          <Badge variant="destructive">
-            {t?.enrollment?.unpaid || "Unpaid"}
-          </Badge>
+          <Badge variant="outline">{t?.enrollment?.unpaid || "Unpaid"}</Badge>
         )
       },
       meta: {
-        label: t?.columns?.fees || "Fees",
+        label: t?.columns?.fees || "Reg Fee",
         variant: "select",
         options: [
           { label: t?.enrollment?.paid || "Paid", value: "true" },

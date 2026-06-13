@@ -2,6 +2,19 @@
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
+## Recently Completed (2026-06-13 — Admission+Finance production-readiness pass)
+
+- [x] `InvoiceStatus` extended with `PARTIAL` — webhook multi-installment allocation credits oldest-unpaid invoice first; status flips UNPAID → PARTIAL → PAID as payments arrive.
+- [x] `UserInvoice.amountPaid` (Decimal) added — tracks cumulative paid amount per invoice; used by allocation logic and surfaced in detail view + list.
+- [x] `UserInvoice.sentAt` (DateTime) added — records when `sendInvoiceEmail` last fired; shown in detail panel as email audit trail.
+- [x] Invoice access scoping fixed: ADMIN + ACCOUNTANT now see all school invoices (school-wide list); STUDENT/GUARDIAN see only their own. Prior behavior returned only the logged-in user's invoices for all roles.
+- [x] OVERDUE status mirrored from fee-overdue cron to `UserInvoice` rows — invoice list stays current without manual refresh.
+- [x] `sendInvoiceEmail` sender address fixed (was hardcoded `onboarding@resend.dev`); action-button URL is now absolute (was relative, broke email clients).
+- [x] Linked payments panel shown in invoice detail view.
+- [x] `amountPaid` + `PARTIAL` status surfaced in invoice list columns and detail view.
+- [x] Indexes added: `invoices(schoolId)` for school-wide list query performance.
+- [x] Prisma model file renamed: `finance-invoices.prisma` → `invoices.prisma`.
+
 ## Recently Completed (2026-03-21)
 
 ### Architecture Cleanup
@@ -98,10 +111,11 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ### P3: Missing Features
 
 - [ ] Recurring invoice scheduling (data model exists in util.ts `calculatePaymentSchedule`)
-- [ ] Partial payment tracking (amountPaid field exists in PDF template but not in Prisma model)
+- [x] ~~Partial payment tracking (amountPaid field exists in PDF template but not in Prisma model)~~ — `UserInvoice.amountPaid` now in Prisma schema + PARTIAL status (2026-06-13)
 - [ ] Invoice duplication (clone existing invoice)
 - [ ] Invoice preview before email send
 - [ ] Share invoice via link (generate public URL)
+- [ ] True PARTIAL → PAID transition from `recordPayment` edge cases (deferred)
 
 ### P4: UI Improvements
 

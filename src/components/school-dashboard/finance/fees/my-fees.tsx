@@ -66,6 +66,7 @@ type MyFeesDictionary = {
   date?: string
   method?: string
   receipt?: string
+  viewReceipt?: string
   payOnline?: string
   redirecting?: string
   statusLabels?: Record<string, string>
@@ -76,6 +77,8 @@ interface MyFeesProps {
   assignments: AssignmentData[]
   lang: Locale
   currency?: string
+  /** School name forwarded to the receipt PDF so it never shows "School". */
+  schoolName?: string
   dictionary?: MyFeesDictionary
 }
 
@@ -92,6 +95,7 @@ export function MyFees({
   assignments,
   lang,
   currency = "USD",
+  schoolName,
   dictionary,
 }: MyFeesProps) {
   const d = dictionary
@@ -366,23 +370,37 @@ export function MyFees({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <PaymentDetailActions
-                          receiptData={{
-                            paymentNumber: p.paymentNumber,
-                            receiptNumber: p.receiptNumber,
-                            amount: formatCurrency(p.amount, lang, currency),
-                            paymentDate: new Date(
-                              p.paymentDate
-                            ).toLocaleDateString(
-                              lang === "ar" ? "ar-SA" : "en-US"
-                            ),
-                            paymentMethod: p.paymentMethod,
-                            status: p.status,
-                            studentName,
-                            feeStructureName: p.feeStructureName,
-                            academicYear: p.academicYear,
-                          }}
-                        />
+                        <div className="flex items-center gap-2">
+                          <PaymentDetailActions
+                            receiptData={{
+                              paymentNumber: p.paymentNumber,
+                              receiptNumber: p.receiptNumber,
+                              amount: formatCurrency(p.amount, lang, currency),
+                              paymentDate: new Date(
+                                p.paymentDate
+                              ).toLocaleDateString(
+                                lang === "ar" ? "ar-SA" : "en-US"
+                              ),
+                              paymentMethod: p.paymentMethod,
+                              status: p.status,
+                              studentName,
+                              feeStructureName: p.feeStructureName,
+                              academicYear: p.academicYear,
+                              schoolName,
+                            }}
+                          />
+                          {p.status === "SUCCESS" && (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link
+                                href={`/api/payment/${p.id}/receipt`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {d?.viewReceipt || "View Receipt"}
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -5,17 +5,17 @@ title: Payment (multi-gateway block)
 file_type: claude
 owner: Abdout
 maturity: Built+Polish
-completion: 70
+completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/313
 docs: https://ed.databayt.org/en/docs/fees
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 # Payment Block
 
 ## Context
 
-Self-contained multi-gateway payment block (Stripe, Tap, cash, bank transfer, mobile money, bankak). Consumed by admission, fees, and any feature collecting money. Handles gateway selection → `initiatePayment` server action → `PaymentTransaction` record → provider checkout → confirmation. 70% complete; Stripe + cash + (now) bankak are live, the rest are stubs in `@/lib/payment/provider`.
+Self-contained multi-gateway payment block (Stripe, Tap, cash, bank transfer, mobile money, bankak). Consumed by fees and SaaS contexts for collecting money. Handles gateway selection → `initiatePayment` server action → `PaymentTransaction` record → provider checkout → confirmation. **PRODUCT DECISION (2026-06-13): applying to a school is always free — the admission wizard no longer invokes this block for an application fee. Payment is triggered only at the fee stage (registration fee on offer acceptance + tuition invoices).**
 
 ## Before You Start
 
@@ -34,10 +34,11 @@ Self-contained multi-gateway payment block (Stripe, Tap, cash, bank transfer, mo
 
 ## Danger Zones
 
-- Webhook idempotency lives in `api/webhooks/stripe/route.ts` (event ID dedupe) — don't shortcut it from this block
+- Webhook idempotency lives in `api/webhooks/stripe/route.ts` (event ID dedupe via `ProcessedWebhookEvent`) and `api/webhooks/tap/route.ts`. Catch blocks must call `releaseDedupeAndFail` — **never swallow errors with a silent 200 or retries stop**.
 - `bankak` provider is intentionally a placeholder until BoK API spec lands — `createCheckout` returns `success:false`. Treat it as expected, not a bug
 - Refunds are NOT in the `PaymentProvider` interface yet (see [finance ISSUE.md](../school-dashboard/finance/ISSUE.md) P2). Don't introduce per-gateway refund logic here without updating the interface first
 - The block does not handle webhook-based status updates — bank transfer / async gateways need their own webhook route, or the user re-checks status
+- `receiptNumber` must be generated via the collision-safe helper (unique constraint + retry) — do not generate inline
 
 ## Related Blocks
 

@@ -15,13 +15,108 @@ import { prewarm } from "@/components/translation/prewarm"
 // Default expiration: 30 days
 const NOTIFICATION_EXPIRATION_DAYS = 30
 
+// Default expiration: 30 days (already declared below — kept here for reference)
+// Base URL used when resolving absolute URLs for email action buttons.
+// Override with NEXT_PUBLIC_BASE_URL in .env if your root domain differs.
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ed.databayt.org"
+
+/**
+ * Resolve an absolute action URL for a given school and path.
+ *
+ * BUG-4 fix: metadata.url values stored as relative paths (e.g. "/finance/fees")
+ * rendered blank action buttons in emails because the email template only renders
+ * an <a> for http(s) URLs. This helper converts them to absolute URLs using:
+ *   1. school.domain (custom domain), if set
+ *   2. "${subdomain}.databayt.org" (standard subdomain routing)
+ *   3. BASE_URL (root host, for system-level notifications without a school subdomain)
+ *
+ * @param path - A relative path like "/finance/fees" or an already-absolute URL.
+ * @param schoolSubdomain - The school's subdomain slug (e.g. "demo").
+ * @param customDomain - The school's custom domain override, if any.
+ * @returns An absolute https URL.
+ */
+export function resolveActionUrl(
+  path: string,
+  schoolSubdomain?: string | null,
+  customDomain?: string | null
+): string {
+  // Already absolute — return as-is.
+  if (/^https?:\/\//i.test(path)) return path
+
+  if (customDomain && customDomain.trim()) {
+    return `https://${customDomain.trim()}${path}`
+  }
+
+  if (schoolSubdomain && schoolSubdomain.trim()) {
+    const isProd = process.env.NODE_ENV === "production"
+    const host = isProd
+      ? `${schoolSubdomain.trim()}.databayt.org`
+      : `${schoolSubdomain.trim()}.localhost:3000`
+    const protocol = isProd ? "https" : "http"
+    return `${protocol}://${host}${path}`
+  }
+
+  return `${BASE_URL}${path}`
+}
+
+/**
+ * Look up a school's subdomain + custom domain and resolve the action URL in
+ * one DB call. Cached locally per (schoolId, path) within the same request —
+ * callers dispatch many notifications per run.
+ */
+const _schoolSubdomainCache = new Map<
+  string,
+  { subdomain: string; domain: string | null }
+>()
+
+async function resolveActionUrlForSchool(
+  schoolId: string,
+  path: string
+): Promise<string> {
+  if (/^https?:\/\//i.test(path)) return path
+
+  let info = _schoolSubdomainCache.get(schoolId)
+  if (!info) {
+    // School.domain holds the subdomain label (e.g. "hogwarts"). There is no
+    // separate custom-domain column yet, so customDomain stays null.
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { domain: true },
+    })
+    info = {
+      subdomain: school?.domain ?? "",
+      domain: null,
+    }
+    _schoolSubdomainCache.set(schoolId, info)
+  }
+
+  return resolveActionUrl(path, info.subdomain, info.domain)
+}
+
+/**
+ * Patch any `url` key inside a metadata object to be an absolute URL.
+ * Returns a new object (does not mutate the original).
+ */
+async function absolutifyMetadataUrl(
+  metadata: Record<string, unknown> | undefined,
+  schoolId: string
+): Promise<Record<string, unknown> | undefined> {
+  if (!metadata) return metadata
+  const rawUrl = metadata.url
+  if (typeof rawUrl !== "string") return metadata
+  const absolute = await resolveActionUrlForSchool(schoolId, rawUrl)
+  return { ...metadata, url: absolute }
+}
+
 /**
  * System-level notification creation (no session required).
  * For use by cron jobs, internal triggers, and cross-module pipelines.
  */
 export async function dispatchNotification(params: {
   schoolId: string
-  userId: string
+  // Optional: guest applicants have no userId — pair with `directEmail` to
+  // deliver the email channel only (no in-app row is created).
+  userId?: string
   type: NotificationType
   title: string
   body: string
@@ -30,8 +125,59 @@ export async function dispatchNotification(params: {
   actorId?: string
   channels?: NotificationChannel[]
   metadata?: Record<string, unknown>
+  /**
+   * BUG-3 enabler: when the target user has no userId (e.g. a guest applicant),
+   * callers may pass the applicant's raw email address here. The in_app channel
+   * is skipped (no userId → no notification row), but the email channel is
+   * delivered directly to this address via sendRawEmail / sendNotificationEmail.
+   *
+   * The admission agent passes `directEmail: application.email` at call sites
+   * where application.userId may be null.
+   */
+  directEmail?: string
 }): Promise<string | null> {
   try {
+    // BUG-4: absolutify any relative `url` in metadata so email action buttons
+    // render correctly (the email template only renders <a> for http(s) URLs).
+    const resolvedMetadata = await absolutifyMetadataUrl(
+      params.metadata,
+      params.schoolId
+    )
+
+    // BUG-3: directEmail path — when there is no userId (guest applicant) we
+    // cannot create a Notification row (userId is non-nullable). Send the email
+    // channel directly to the provided address and return null (no row id).
+    if (!params.userId && params.directEmail) {
+      const requestedChannels = params.channels ?? ["in_app"]
+      if (requestedChannels.includes("email")) {
+        try {
+          const { sendNotificationEmail } =
+            await import("@/components/school-dashboard/notifications/email-service")
+          await sendNotificationEmail({
+            notificationId: `direct-${Date.now()}`,
+            to: params.directEmail,
+            locale: (params.lang === "en" ? "en" : "ar") as "ar" | "en",
+            type: params.type,
+            priority: params.priority ?? "normal",
+            title: params.title,
+            body: params.body,
+            metadata: resolvedMetadata as Record<string, unknown> | null,
+          })
+        } catch (emailErr) {
+          console.error(
+            "[dispatchNotification] directEmail send failed:",
+            emailErr
+          )
+        }
+      }
+      return null
+    }
+
+    // Past the directEmail branch a userId is required to create the in-app
+    // notification row. No userId and no directEmail → nothing to deliver.
+    if (!params.userId) return null
+    const userId = params.userId
+
     // Keep only the channels the user has NOT disabled for this type. Crucially
     // this is per-channel: a user who turned OFF in-app but kept email/WhatsApp
     // must still receive those — the old code gated the WHOLE notification on
@@ -40,7 +186,7 @@ export async function dispatchNotification(params: {
     const requestedChannels = params.channels ?? ["in_app"]
     const enabledChannels: NotificationChannel[] = []
     for (const ch of requestedChannels) {
-      if (await shouldSendNotification(params.userId, params.type, ch)) {
+      if (await shouldSendNotification(userId, params.type, ch)) {
         enabledChannels.push(ch)
       }
     }
@@ -52,7 +198,7 @@ export async function dispatchNotification(params: {
     const notification = await db.notification.create({
       data: {
         schoolId: params.schoolId,
-        userId: params.userId,
+        userId,
         type: params.type,
         title: params.title,
         body: params.body,
@@ -61,7 +207,7 @@ export async function dispatchNotification(params: {
         actorId: params.actorId ?? null,
         channels: enabledChannels,
         metadata:
-          (params.metadata as unknown as Prisma.InputJsonValue) ?? undefined,
+          (resolvedMetadata as unknown as Prisma.InputJsonValue) ?? undefined,
         expiresAt,
       },
     })
@@ -101,6 +247,12 @@ export async function resolveSchoolLang(
 /**
  * Bulk variant for audience targeting.
  * Resolves users based on scope and creates notifications for each.
+ *
+ * BUG-5 fix: previously only checked the `in_app` preference and applied it as
+ * an all-or-nothing gate. Now performs per-channel preference checks for each
+ * recipient (matching the single-dispatch path's behaviour). A user who disabled
+ * `in_app` but kept `email` still receives the email channel; a user who disabled
+ * all requested channels is skipped entirely.
  */
 export async function dispatchNotificationsToAudience(params: {
   schoolId: string
@@ -115,37 +267,91 @@ export async function dispatchNotificationsToAudience(params: {
   targetScope: "school" | "class" | "role"
   targetClassId?: string
   targetRole?: string
+  /** BUG-7/BUG-10 support: pass multiple roles to notify (e.g. ["ADMIN","STAFF"]). */
+  targetRoles?: string[]
 }): Promise<{ created: number }> {
   try {
-    const userIds = await resolveTargetUsers(
-      params.schoolId,
-      params.targetScope,
-      params.targetClassId,
-      params.targetRole
+    const requestedChannels = params.channels ?? ["in_app"]
+
+    // BUG-4: resolve relative URL in metadata to absolute before storing.
+    const resolvedMetadata = await absolutifyMetadataUrl(
+      params.metadata,
+      params.schoolId
     )
+
+    // Resolve target user IDs — support targetRoles (multi-role) as well as
+    // the legacy single targetRole.
+    const rolesToQuery =
+      params.targetRoles ??
+      (params.targetRole ? [params.targetRole] : undefined)
+    let userIds: string[]
+    if (rolesToQuery && rolesToQuery.length > 1) {
+      const users = await db.user.findMany({
+        where: {
+          schoolId: params.schoolId,
+          role: { in: rolesToQuery as any[] },
+        },
+        select: { id: true },
+      })
+      userIds = [...new Set(users.map((u) => u.id))]
+    } else {
+      userIds = await resolveTargetUsers(
+        params.schoolId,
+        params.targetScope,
+        params.targetClassId,
+        rolesToQuery?.[0] ?? params.targetRole
+      )
+    }
 
     if (userIds.length === 0) return { created: 0 }
 
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + NOTIFICATION_EXPIRATION_DAYS)
 
-    // Filter out users who have disabled this notification type
-    const preferences = await db.notificationPreference.findMany({
+    // BUG-5: fetch ALL disabled preferences for this type across ALL requested
+    // channels in one query, then compute per-user enabled channel lists.
+    const disabledPrefs = await db.notificationPreference.findMany({
       where: {
         userId: { in: userIds },
         type: params.type,
-        channel: "in_app",
+        channel: { in: requestedChannels },
         enabled: false,
       },
-      select: { userId: true },
+      select: { userId: true, channel: true },
     })
-    const disabledUserIds = new Set(preferences.map((p) => p.userId))
-    const eligibleUserIds = userIds.filter((id) => !disabledUserIds.has(id))
 
-    if (eligibleUserIds.length === 0) return { created: 0 }
+    // Build a Map<userId, Set<disabledChannel>>
+    const disabledByUser = new Map<string, Set<string>>()
+    for (const pref of disabledPrefs) {
+      if (!disabledByUser.has(pref.userId)) {
+        disabledByUser.set(pref.userId, new Set())
+      }
+      disabledByUser.get(pref.userId)!.add(pref.channel)
+    }
 
-    const result = await db.notification.createMany({
-      data: eligibleUserIds.map((userId) => ({
+    // For each user, compute their enabled channels (default: all requested).
+    const notificationRows: Array<{
+      schoolId: string
+      userId: string
+      type: NotificationType
+      title: string
+      body: string
+      lang: string
+      priority: NotificationPriority
+      actorId: string | null
+      channels: NotificationChannel[]
+      metadata: Prisma.InputJsonValue | undefined
+      expiresAt: Date
+    }> = []
+
+    for (const userId of userIds) {
+      const disabled = disabledByUser.get(userId) ?? new Set()
+      const enabledChannels = requestedChannels.filter(
+        (ch) => !disabled.has(ch)
+      ) as NotificationChannel[]
+      if (enabledChannels.length === 0) continue
+
+      notificationRows.push({
         schoolId: params.schoolId,
         userId,
         type: params.type,
@@ -154,11 +360,17 @@ export async function dispatchNotificationsToAudience(params: {
         lang: params.lang ?? "ar",
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
-        channels: params.channels ?? ["in_app"],
+        channels: enabledChannels,
         metadata:
-          (params.metadata as unknown as Prisma.InputJsonValue) ?? undefined,
+          (resolvedMetadata as unknown as Prisma.InputJsonValue) ?? undefined,
         expiresAt,
-      })),
+      })
+    }
+
+    if (notificationRows.length === 0) return { created: 0 }
+
+    const result = await db.notification.createMany({
+      data: notificationRows,
       skipDuplicates: true,
     })
 

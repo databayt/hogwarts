@@ -67,12 +67,13 @@ export function UploadForm({ locale = "en" }: UploadFormProps) {
     setIsProcessing(true)
 
     try {
-      // For now, we pass the fileId to the action
-      // The action will need to be updated to accept fileId instead of FormData
-      // This is a TODO for Phase 4 completion
-      const fileId = uploadedFiles[0].fileId
+      // File is already uploaded to CDN by FileUploader.
+      // Pass the CDN url + fileId so the server action can create the DB record
+      // without re-uploading.
+      const { fileId, url } = uploadedFiles[0]
       const formData = new FormData()
       formData.append("fileId", fileId)
+      formData.append("fileUrl", url)
 
       const result = await uploadReceipt(formData)
 

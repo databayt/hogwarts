@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -15,6 +16,7 @@ import { DocumentsSection } from "./ai/documents-section"
 import type { ProcessedDocument } from "./ai/types"
 import ApplicationDetailActions from "./application-detail-actions"
 import { getApplicationDetail } from "./queries"
+import { ScoreEntryInline } from "./score-entry-inline"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -222,10 +224,13 @@ export default async function ApplicationDetailContent({
         {/* Photo + Name */}
         <div>
           {application.photoUrl ? (
-            <img
+            <Image
               src={application.photoUrl}
               alt={fullName}
+              width={208}
+              height={208}
               className="h-52 w-52 rounded-full border object-cover"
+              unoptimized
             />
           ) : (
             <div className="bg-muted text-muted-foreground flex h-52 w-52 items-center justify-center rounded-full border text-4xl font-semibold">
@@ -456,15 +461,22 @@ export default async function ApplicationDetailContent({
             {t?.applicationDetail?.merit || "Merit & Scores"}
           </h2>
           <Separator className="my-3" />
-          <div className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
-            <InfoRow
-              label={t?.applicationDetail?.entranceScore || "Entrance Score"}
-              value={application.entranceScore?.toString()}
-            />
-            <InfoRow
-              label={t?.applicationDetail?.interviewScore || "Interview Score"}
-              value={application.interviewScore?.toString()}
-            />
+          {/* Editable score entry for entrance + interview */}
+          <ScoreEntryInline
+            applicationId={applicationId}
+            entranceScore={
+              application.entranceScore != null
+                ? Number(application.entranceScore)
+                : null
+            }
+            interviewScore={
+              application.interviewScore != null
+                ? Number(application.interviewScore)
+                : null
+            }
+            dictionary={dictionary.admission}
+          />
+          <div className="mt-3 grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
             <InfoRow
               label={t?.applicationDetail?.meritScore || "Merit Score"}
               value={application.meritScore?.toString()}

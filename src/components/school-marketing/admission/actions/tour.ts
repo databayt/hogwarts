@@ -7,10 +7,12 @@ import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import {
   buildTourCancelledEmail,
   buildTourRescheduledEmail,
 } from "@/lib/email-templates/admission"
+import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -157,35 +159,26 @@ export async function createTourBooking(
 
     const schoolId = schoolResult.data.id
 
+    // Rate-limit public tour booking (per email as user identifier)
+    const rlResult = await checkUserRateLimit(
+      `tour:${subdomain}:${typeof data === "object" && data !== null && "email" in data ? String(data.email) : "unknown"}`,
+      RATE_LIMITS.PUBLIC,
+      "tour_booking"
+    )
+    if (!rlResult.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     // Validate data
     const schema = createTourBookingSchema()
     const validated = schema.parse(data)
 
-    // Check slot exists and has capacity
-    const slot = await db.admissionTimeSlot.findFirst({
-      where: {
-        id: validated.slotId,
-        schoolId,
-        isActive: true,
-      },
+    // Check if AdmissionSettings.enableTourBooking is enabled
+    const settings = await db.admissionSettings.findUnique({
+      where: { schoolId },
     })
-
-    if (!slot) {
-      return {
-        success: false,
-        error: "Time slot not found or no longer available",
-      }
-    }
-
-    if (slot.currentBookings + validated.numberOfAttendees > slot.maxCapacity) {
-      const remaining = slot.maxCapacity - slot.currentBookings
-      return {
-        success: false,
-        error:
-          remaining <= 0
-            ? "This time slot is fully booked. Please select another time."
-            : `Only ${remaining} spot(s) remaining. Please reduce attendees or select another time.`,
-      }
+    if (settings && !settings.enableTourBooking) {
+      return { success: false, error: "TOUR_BOOKING_DISABLED" }
     }
 
     // Check if email already has a booking for this slot
@@ -201,7 +194,7 @@ export async function createTourBooking(
     if (existingBooking) {
       return {
         success: false,
-        error: "You already have a booking for this time slot.",
+        error: "DUPLICATE_BOOKING",
       }
     }
 
@@ -224,9 +217,37 @@ export async function createTourBooking(
       }
     }
 
-    // Create booking and update slot count in a transaction
-    const [booking] = await db.$transaction([
-      db.tourBooking.create({
+    // TOCTOU-safe atomic capacity check + booking creation in one transaction.
+    // The conditional updateMany asserts currentBookings + n <= maxCapacity
+    // atomically; if another request raced ahead the count will be 0 and we
+    // abort before creating the booking row.
+    const n = validated.numberOfAttendees
+    // Return the rows from the transaction so they are typed outside the
+    // closure (vars assigned only inside a callback don't get CFA-narrowed).
+    const txResult = await db.$transaction(async (tx) => {
+      // Fetch slot inside transaction for a consistent snapshot
+      const slot = await tx.admissionTimeSlot.findFirst({
+        where: { id: validated.slotId, schoolId, isActive: true },
+      })
+      if (!slot) throw new Error("SLOT_NOT_FOUND")
+
+      // Atomic conditional increment — only succeeds when capacity permits
+      const updated = await tx.admissionTimeSlot.updateMany({
+        where: {
+          id: validated.slotId,
+          schoolId,
+          isActive: true,
+          // Ensures currentBookings + n <= maxCapacity atomically
+          currentBookings: { lte: slot.maxCapacity - n },
+        },
+        data: { currentBookings: { increment: n } },
+      })
+
+      if (updated.count !== 1) {
+        throw new Error("SLOT_FULL")
+      }
+
+      const booking = await tx.tourBooking.create({
         data: {
           schoolId,
           slotId: validated.slotId,
@@ -237,17 +258,58 @@ export async function createTourBooking(
           studentName: validated.studentName || null,
           interestedGrade: validated.interestedGrade || null,
           specialRequests: validated.specialRequests || null,
-          numberOfAttendees: validated.numberOfAttendees,
+          numberOfAttendees: n,
           status: "CONFIRMED",
         },
-      }),
-      db.admissionTimeSlot.update({
-        where: { id: validated.slotId },
-        data: {
-          currentBookings: { increment: validated.numberOfAttendees },
-        },
-      }),
-    ])
+      })
+      return { slot, booking }
+    })
+    const { slot, booking } = txResult
+
+    if (!booking || !slot) {
+      return {
+        success: false,
+        error: "Failed to create booking. Please try again.",
+      }
+    }
+
+    // Notify ADMIN + STAFF about new tour lead (fire-and-forget)
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "حجز جولة جديد",
+      body: `${validated.parentName} حجز جولة للتعرف على المدرسة`,
+      priority: "normal",
+      channels: ["in_app"],
+      targetScope: "role",
+      targetRole: "ADMIN",
+      metadata: {
+        bookingNumber,
+        parentName: validated.parentName,
+        email: validated.email,
+        url: `/admission/tours`,
+      },
+    }).catch((err) =>
+      console.error("[createTourBooking] notification error:", err)
+    )
+    dispatchNotificationsToAudience({
+      schoolId,
+      type: "system_alert",
+      title: "حجز جولة جديد",
+      body: `${validated.parentName} حجز جولة للتعرف على المدرسة`,
+      priority: "normal",
+      channels: ["in_app"],
+      targetScope: "role",
+      targetRole: "STAFF",
+      metadata: {
+        bookingNumber,
+        parentName: validated.parentName,
+        email: validated.email,
+        url: `/admission/tours`,
+      },
+    }).catch((err) =>
+      console.error("[createTourBooking] notification error:", err)
+    )
 
     // Send confirmation email
     if (resend) {
@@ -297,7 +359,7 @@ export async function createTourBooking(
               }
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;"><strong>Attendees</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${validated.numberOfAttendees}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${n}</td>
               </tr>
             </table>
             <p>If you need to reschedule or cancel, please visit:</p>
@@ -321,17 +383,25 @@ export async function createTourBooking(
         endTime: slot.endTime.toISOString().split("T")[1].substring(0, 5),
         slotType: slot.slotType,
         location: slot.location ?? undefined,
-        availableSpots: slot.maxCapacity - slot.currentBookings - 1,
+        availableSpots: slot.maxCapacity - slot.currentBookings - n,
         maxCapacity: slot.maxCapacity,
       },
       parentName: validated.parentName,
       email: validated.email,
       studentName: validated.studentName,
-      numberOfAttendees: validated.numberOfAttendees,
+      numberOfAttendees: n,
     }
 
     return { success: true, data: confirmation }
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "SLOT_NOT_FOUND") {
+        return { success: false, error: "SLOT_NOT_FOUND" }
+      }
+      if (error.message === "SLOT_FULL") {
+        return { success: false, error: "SLOT_FULL" }
+      }
+    }
     console.error("Error creating booking:", error)
     return {
       success: false,
@@ -452,7 +522,7 @@ export async function cancelTourBooking(
       return { success: false, error: "Cannot cancel a completed booking" }
     }
 
-    // Cancel booking and decrement slot count
+    // Cancel booking and decrement slot count by the actual numberOfAttendees
     await db.$transaction([
       db.tourBooking.update({
         where: { id: booking.id },
@@ -465,7 +535,7 @@ export async function cancelTourBooking(
       db.admissionTimeSlot.update({
         where: { id: booking.slotId },
         data: {
-          currentBookings: { decrement: 1 },
+          currentBookings: { decrement: booking.numberOfAttendees },
         },
       }),
     ])
@@ -539,44 +609,43 @@ export async function rescheduleTourBooking(
       return { success: false, error: "Cannot reschedule this booking" }
     }
 
-    // Check new slot exists and has capacity
-    const newSlot = await db.admissionTimeSlot.findFirst({
-      where: {
-        id: newSlotId,
-        schoolId: booking.schoolId,
-        isActive: true,
-      },
-    })
+    const n = booking.numberOfAttendees
 
-    if (!newSlot) {
-      return { success: false, error: "Selected time slot is not available" }
-    }
+    // TOCTOU-safe reschedule: fetch new slot and atomically claim capacity
+    // inside a single transaction. Return the row so it is typed outside the
+    // closure (vars assigned only inside a callback don't get CFA-narrowed).
+    const newSlot = await db.$transaction(async (tx) => {
+      // Fetch new slot inside transaction for consistent snapshot
+      const slot = await tx.admissionTimeSlot.findFirst({
+        where: { id: newSlotId, schoolId: booking.schoolId, isActive: true },
+      })
+      if (!slot) throw new Error("SLOT_NOT_FOUND")
 
-    if (newSlot.currentBookings >= newSlot.maxCapacity) {
-      return { success: false, error: "Selected time slot is fully booked" }
-    }
-
-    // Update booking and slot counts in transaction
-    await db.$transaction([
-      // Decrement old slot
-      db.admissionTimeSlot.update({
-        where: { id: booking.slotId },
-        data: { currentBookings: { decrement: 1 } },
-      }),
-      // Increment new slot
-      db.admissionTimeSlot.update({
-        where: { id: newSlotId },
-        data: { currentBookings: { increment: 1 } },
-      }),
-      // Update booking
-      db.tourBooking.update({
-        where: { bookingNumber },
-        data: {
-          slotId: newSlotId,
-          status: "RESCHEDULED",
+      // Atomic conditional increment for new slot
+      const updated = await tx.admissionTimeSlot.updateMany({
+        where: {
+          id: newSlotId,
+          schoolId: booking.schoolId,
+          isActive: true,
+          currentBookings: { lte: slot.maxCapacity - n },
         },
-      }),
-    ])
+        data: { currentBookings: { increment: n } },
+      })
+      if (updated.count !== 1) throw new Error("SLOT_FULL")
+
+      // Decrement old slot by the booking's actual attendee count
+      await tx.admissionTimeSlot.update({
+        where: { id: booking.slotId },
+        data: { currentBookings: { decrement: n } },
+      })
+
+      // Update booking
+      await tx.tourBooking.update({
+        where: { bookingNumber },
+        data: { slotId: newSlotId, status: "RESCHEDULED" },
+      })
+      return slot
+    })
 
     // Send reschedule email
     if (resend) {
@@ -643,6 +712,14 @@ export async function rescheduleTourBooking(
 
     return { success: true, data: confirmation }
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "SLOT_NOT_FOUND") {
+        return { success: false, error: "Selected time slot is not available" }
+      }
+      if (error.message === "SLOT_FULL") {
+        return { success: false, error: "Selected time slot is fully booked" }
+      }
+    }
     console.error("Error rescheduling booking:", error)
     return { success: false, error: "Failed to reschedule booking" }
   }

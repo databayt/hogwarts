@@ -127,6 +127,14 @@ function ApplicationActionsCell({
       value: "SHORTLISTED",
       label: t?.status?.SHORTLISTED || "Shortlisted",
     },
+    {
+      value: "ENTRANCE_SCHEDULED",
+      label: t?.status?.ENTRANCE_SCHEDULED || "Entrance Scheduled",
+    },
+    {
+      value: "INTERVIEW_SCHEDULED",
+      label: t?.status?.INTERVIEW_SCHEDULED || "Interview Scheduled",
+    },
     { value: "SELECTED", label: t?.status?.SELECTED || "Selected" },
     { value: "WAITLISTED", label: t?.status?.WAITLISTED || "Waitlisted" },
     { value: "REJECTED", label: t?.status?.REJECTED || "Rejected" },
@@ -239,35 +247,8 @@ export const getApplicationColumns = (
       meta: { label: t?.columns?.class || "Class", variant: "text" },
     },
     {
-      accessorKey: "applicationFeePaid",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t?.columns?.fees || "Fees"}
-        />
-      ),
-      cell: ({ getValue }) => {
-        const paid = getValue<boolean>()
-        return (
-          <Badge variant={paid ? "default" : "outline"}>
-            {paid
-              ? t?.enrollment?.paid || "Paid"
-              : t?.enrollment?.unpaid || "Unpaid"}
-          </Badge>
-        )
-      },
-      meta: {
-        label: t?.columns?.fees || "Fees",
-        variant: "select",
-        options: [
-          { label: t?.enrollment?.paid || "Paid", value: "true" },
-          { label: t?.enrollment?.unpaid || "Unpaid", value: "false" },
-        ],
-      },
-      enableColumnFilter: true,
-      filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
-    },
-    {
+      // applicationFee column removed — applying is always free (2026-06-12 decision).
+      // Registration fee appears only on the Enrollment tab.
       accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnHeader
@@ -293,6 +274,14 @@ export const getApplicationColumns = (
           {
             label: t?.status?.SHORTLISTED || "Shortlisted",
             value: "SHORTLISTED",
+          },
+          {
+            label: t?.status?.ENTRANCE_SCHEDULED || "Entrance Scheduled",
+            value: "ENTRANCE_SCHEDULED",
+          },
+          {
+            label: t?.status?.INTERVIEW_SCHEDULED || "Interview Scheduled",
+            value: "INTERVIEW_SCHEDULED",
           },
           { label: t?.status?.SELECTED || "Selected", value: "SELECTED" },
           { label: t?.status?.WAITLISTED || "Waitlisted", value: "WAITLISTED" },

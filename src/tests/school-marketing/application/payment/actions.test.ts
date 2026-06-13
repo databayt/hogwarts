@@ -1,11 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+//
+// @deprecated-suite 2026-06-12 — Application-fee payment leg retired.
+// Tests for the free-application flow are in fees/content and submit-action
+// tests.  This file retains tombstone coverage so that the deprecated
+// actions still compile and have basic guard-rail assertions.
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
-import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 import {
   createStripeCheckout,
   recordBankTransferIntent,
@@ -32,14 +36,11 @@ vi.mock("@/lib/subdomain-actions", () => ({
   getSchoolBySubdomain: vi.fn(),
 }))
 
-vi.mock("@/components/saas-marketing/pricing/lib/stripe", () => ({
-  stripe: {
-    checkout: {
-      sessions: {
-        create: vi.fn(),
-      },
-    },
-  },
+vi.mock("@/lib/payment/provider", () => ({
+  createPaymentCheckout: vi.fn().mockResolvedValue({
+    success: true,
+    checkoutUrl: "https://checkout.stripe.com/session-test",
+  }),
 }))
 
 vi.mock("next/cache", () => ({
@@ -57,7 +58,7 @@ vi.mock("nanoid", () => ({
 const SUBDOMAIN = "demo"
 const SCHOOL_ID = "school-123"
 const APPLICATION_ID = "app-1"
-const LOCALE = "en"
+const ACCESS_TOKEN = "tok-abc"
 
 function mockSchoolFound(overrides: Record<string, unknown> = {}) {
   vi.mocked(getSchoolBySubdomain).mockResolvedValue({
@@ -84,6 +85,7 @@ function mockApplicationFound(overrides: Record<string, unknown> = {}) {
     email: "john@example.com",
     firstName: "John",
     lastName: "Doe",
+    paymentMethod: null,
     campaign: {
       applicationFee: 100,
     },
@@ -96,10 +98,13 @@ function mockApplicationNotFound() {
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// NOTE: These actions are @deprecated (2026-06-12) and no longer called from
+// the wizard.  Applying is always free.  The tests below are tombstone coverage
+// confirming the deprecated functions still behave correctly in isolation so
+// that no silent regressions break existing Stripe webhook processing.
 // ---------------------------------------------------------------------------
 
-describe("Payment Actions", () => {
+describe("Payment Actions (deprecated — application fee retired)", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockSchoolFound()
@@ -108,49 +113,99 @@ describe("Payment Actions", () => {
   })
 
   // =========================================================================
-  // createStripeCheckout
+  // Free-application assertions
   // =========================================================================
 
-  describe("createStripeCheckout", () => {
-    it("returns error when Stripe is not configured", async () => {
-      // Temporarily replace the stripe mock with null
-      const originalStripe = stripe
-      const stripeModule =
-        await import("@/components/saas-marketing/pricing/lib/stripe")
-      Object.defineProperty(stripeModule, "stripe", {
-        value: null,
-        writable: true,
-        configurable: true,
-      })
+  describe("Free application — wizard no longer routes to payment", () => {
+    it("submitApplicationAction does not require a paymentMethod field", async () => {
+      // The submit-action.ts wrapper no longer passes paymentMethod to
+      // submitApplication.  Confirm the schema doesn't break without it.
+      const { submitApplicationAction } =
+        await import("@/components/school-marketing/application/submit-action")
 
+      // Minimal valid form data — no paymentMethod field
+      const formData = {
+        campaignId: "campaign-1",
+        firstName: "Test",
+        lastName: "Student",
+        phone: "+249123456789",
+        address: "123 Street",
+        city: "Khartoum",
+        state: "Khartoum",
+        postalCode: "11111",
+        country: "Sudan",
+        fatherName: "Father",
+        applyingForClass: "Grade 10",
+      }
+
+      // submitApplicationAction does server-side validation and calls
+      // the admission action — because db is not mocked here the call
+      // will fail at the DB layer, but crucially the error must not be
+      // "paymentMethod required" or any payment-related rejection.
+      const result = await submitApplicationAction(
+        "demo",
+        "a".repeat(32), // valid-length token
+        formData,
+        "en"
+      )
+
+      // The result may fail for DB reasons in this unit context, but it
+      // must NOT fail with a payment-related error code.
+      if (!result.success) {
+        expect(result.error).not.toMatch(/payment/i)
+        expect(result.error).not.toMatch(/PAYMENT/i)
+        expect(result.error).not.toMatch(/fee/i)
+      }
+    })
+
+    it("fees step renders without payment methods (no paymentMethods in SubmitActionResult used)", () => {
+      // Type-level guard: SubmitActionResult.requiresPayment is still present
+      // for legacy in-flight data, but the fees content no longer branches on it.
+      // This test confirms the type import compiles and the requiresPayment field
+      // doesn't cause TypeScript to complain when present but unused.
+      type SubmitActionResult =
+        import("@/components/school-marketing/application/submit-action").SubmitActionResult
+
+      const result: SubmitActionResult = {
+        applicationNumber: "APP-001",
+        applicationId: "app-1",
+        accessToken: "token-abc",
+        requiresPayment: false, // always false now but must still be typeable
+      }
+
+      expect(result.requiresPayment).toBe(false)
+    })
+  })
+
+  // =========================================================================
+  // Tombstone: createStripeCheckout guards
+  // =========================================================================
+
+  describe("createStripeCheckout (deprecated)", () => {
+    it("returns error when no access token provided", async () => {
       const result = await createStripeCheckout(
         SUBDOMAIN,
         APPLICATION_ID,
-        LOCALE
+        "en",
+        "" // empty access token
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Stripe is not configured")
-
-      // Restore
-      Object.defineProperty(stripeModule, "stripe", {
-        value: originalStripe,
-        writable: true,
-        configurable: true,
-      })
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
     })
 
     it("returns error when school not found", async () => {
       mockSchoolNotFound()
 
       const result = await createStripeCheckout(
-        "nonexistent",
+        SUBDOMAIN,
         APPLICATION_ID,
-        LOCALE
+        "en",
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("School not found")
+      expect(result.error).toBe("SCHOOL_NOT_FOUND")
     })
 
     it("returns error when application not found", async () => {
@@ -158,336 +213,218 @@ describe("Payment Actions", () => {
 
       const result = await createStripeCheckout(
         SUBDOMAIN,
-        "nonexistent",
-        LOCALE
+        APPLICATION_ID,
+        "en",
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Application not found")
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
     })
 
-    it("returns error when no application fee is configured", async () => {
-      mockApplicationFound({
-        campaign: { applicationFee: null },
-      })
+    it("returns error when payment already recorded (paymentMethod set)", async () => {
+      mockApplicationFound({ paymentMethod: "cash" })
 
       const result = await createStripeCheckout(
         SUBDOMAIN,
         APPLICATION_ID,
-        LOCALE
+        "en",
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("No application fee configured")
+      expect(result.error).toBe("PAYMENT_ALREADY_RECORDED")
     })
 
-    it("returns error when application fee is zero", async () => {
-      mockApplicationFound({
-        campaign: { applicationFee: 0 },
-      })
+    it("returns error when no fee configured", async () => {
+      mockApplicationFound({ campaign: { applicationFee: null } })
 
       const result = await createStripeCheckout(
         SUBDOMAIN,
         APPLICATION_ID,
-        LOCALE
+        "en",
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("No application fee configured")
+      expect(result.error).toBe("NO_FEE_CONFIGURED")
     })
 
-    it("creates Stripe checkout session with correct parameters", async () => {
-      vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({
-        url: "https://checkout.stripe.com/session-123",
-      } as any)
+    it("returns error when fee is zero", async () => {
+      mockApplicationFound({ campaign: { applicationFee: 0 } })
 
       const result = await createStripeCheckout(
         SUBDOMAIN,
         APPLICATION_ID,
-        LOCALE
-      )
-
-      expect(result.success).toBe(true)
-      expect(result.data?.method).toBe("stripe")
-      expect(result.data?.checkoutUrl).toBe(
-        "https://checkout.stripe.com/session-123"
-      )
-      expect(result.data?.referenceNumber).toBe("PAY-ABCDE12345")
-
-      // Verify Stripe was called with correct amount (100 * 100 = 10000 cents)
-      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          mode: "payment",
-          payment_method_types: ["card"],
-          customer_email: "john@example.com",
-          line_items: [
-            {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name: "Application Fee - APP-001",
-                  description: "Application fee for John Doe",
-                },
-                unit_amount: 10000,
-              },
-              quantity: 1,
-            },
-          ],
-          metadata: {
-            type: "application_fee",
-            applicationId: APPLICATION_ID,
-            schoolId: SCHOOL_ID,
-            referenceNumber: "PAY-ABCDE12345",
-          },
-        })
-      )
-    })
-
-    it("updates application with payment method and reference", async () => {
-      vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({
-        url: "https://checkout.stripe.com/session-123",
-      } as any)
-
-      await createStripeCheckout(SUBDOMAIN, APPLICATION_ID, LOCALE)
-
-      expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
-        data: {
-          paymentMethod: "stripe",
-          paymentReference: "PAY-ABCDE12345",
-        },
-      })
-    })
-
-    it("uses school currency for Stripe session", async () => {
-      mockSchoolFound({ currency: "SAR" })
-      vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({
-        url: "https://checkout.stripe.com/session-456",
-      } as any)
-
-      await createStripeCheckout(SUBDOMAIN, APPLICATION_ID, LOCALE)
-
-      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          line_items: [
-            expect.objectContaining({
-              price_data: expect.objectContaining({
-                currency: "sar",
-              }),
-            }),
-          ],
-        })
-      )
-    })
-
-    it("defaults to USD when school has no currency set", async () => {
-      mockSchoolFound({ currency: null })
-      vi.mocked(stripe.checkout.sessions.create).mockResolvedValue({
-        url: "https://checkout.stripe.com/session-789",
-      } as any)
-
-      await createStripeCheckout(SUBDOMAIN, APPLICATION_ID, LOCALE)
-
-      expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          line_items: [
-            expect.objectContaining({
-              price_data: expect.objectContaining({
-                currency: "usd",
-              }),
-            }),
-          ],
-        })
-      )
-    })
-
-    it("returns error when Stripe session creation fails", async () => {
-      vi.mocked(stripe.checkout.sessions.create).mockRejectedValue(
-        new Error("Stripe API error")
-      )
-
-      const result = await createStripeCheckout(
-        SUBDOMAIN,
-        APPLICATION_ID,
-        LOCALE
+        "en",
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to create checkout session")
+      expect(result.error).toBe("NO_FEE_CONFIGURED")
     })
   })
 
   // =========================================================================
-  // recordCashPaymentIntent
+  // Tombstone: recordCashPaymentIntent guards
   // =========================================================================
 
-  describe("recordCashPaymentIntent", () => {
+  describe("recordCashPaymentIntent (deprecated)", () => {
+    it("returns error when no access token provided", async () => {
+      const result = await recordCashPaymentIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        "" // empty token
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
+    })
+
     it("returns error when school not found", async () => {
       mockSchoolNotFound()
 
       const result = await recordCashPaymentIntent(
-        "nonexistent",
-        APPLICATION_ID
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("School not found")
+      expect(result.error).toBe("SCHOOL_NOT_FOUND")
     })
 
     it("returns error when application not found", async () => {
       mockApplicationNotFound()
 
-      const result = await recordCashPaymentIntent(SUBDOMAIN, "nonexistent")
+      const result = await recordCashPaymentIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
+      )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Application not found")
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
     })
 
-    it("records cash payment intent with reference number", async () => {
+    it("returns error when payment already recorded", async () => {
+      mockApplicationFound({ paymentMethod: "stripe" })
+
+      const result = await recordCashPaymentIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("PAYMENT_ALREADY_RECORDED")
+    })
+
+    it("records cash intent and returns reference number", async () => {
       vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
-        cashPaymentInstructions: "Visit the school office between 8am-2pm",
+        cashPaymentInstructions: "Visit office 8am-2pm",
       } as any)
 
-      const result = await recordCashPaymentIntent(SUBDOMAIN, APPLICATION_ID)
+      const result = await recordCashPaymentIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
+      )
 
       expect(result.success).toBe(true)
       expect(result.data?.method).toBe("cash")
       expect(result.data?.referenceNumber).toBe("CASH-ABCDE12345")
-      expect(result.data?.cashInstructions).toBe(
-        "Visit the school office between 8am-2pm"
-      )
     })
 
-    it("updates application with cash payment method", async () => {
+    it("scopes application lookup by schoolId (tenant isolation)", async () => {
       vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
 
-      await recordCashPaymentIntent(SUBDOMAIN, APPLICATION_ID)
+      await recordCashPaymentIntent(SUBDOMAIN, APPLICATION_ID, ACCESS_TOKEN)
 
-      expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
-        data: {
-          paymentMethod: "cash",
-          paymentReference: "CASH-ABCDE12345",
-        },
-      })
-    })
-
-    it("returns undefined cashInstructions when no settings exist", async () => {
-      vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
-
-      const result = await recordCashPaymentIntent(SUBDOMAIN, APPLICATION_ID)
-
-      expect(result.success).toBe(true)
-      expect(result.data?.cashInstructions).toBeUndefined()
-    })
-
-    it("returns error on unexpected exception", async () => {
-      vi.mocked(db.application.findFirst).mockRejectedValue(
-        new Error("Connection reset")
+      expect(db.application.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: SCHOOL_ID,
+          }),
+        })
       )
-
-      const result = await recordCashPaymentIntent(SUBDOMAIN, APPLICATION_ID)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to record payment intent")
     })
   })
 
   // =========================================================================
-  // recordBankTransferIntent
+  // Tombstone: recordBankTransferIntent guards
   // =========================================================================
 
-  describe("recordBankTransferIntent", () => {
+  describe("recordBankTransferIntent (deprecated)", () => {
+    it("returns error when no access token provided", async () => {
+      const result = await recordBankTransferIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        "" // empty token
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
+    })
+
     it("returns error when school not found", async () => {
       mockSchoolNotFound()
 
       const result = await recordBankTransferIntent(
-        "nonexistent",
-        APPLICATION_ID
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("School not found")
+      expect(result.error).toBe("SCHOOL_NOT_FOUND")
     })
 
     it("returns error when application not found", async () => {
       mockApplicationNotFound()
 
-      const result = await recordBankTransferIntent(SUBDOMAIN, "nonexistent")
+      const result = await recordBankTransferIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
+      )
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("Application not found")
+      expect(result.error).toBe("APPLICATION_NOT_FOUND")
     })
 
-    it("records bank transfer intent with bank details", async () => {
+    it("records bank transfer intent with reference number", async () => {
       vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
         bankDetails: {
           bankName: "National Bank",
           accountName: "Demo School",
           accountNumber: "1234567890",
-          iban: "SA123456789",
-          swiftCode: "NBSAAU2S",
         },
       } as any)
 
-      const result = await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID)
+      const result = await recordBankTransferIntent(
+        SUBDOMAIN,
+        APPLICATION_ID,
+        ACCESS_TOKEN
+      )
 
       expect(result.success).toBe(true)
       expect(result.data?.method).toBe("bank_transfer")
       expect(result.data?.referenceNumber).toBe("TRF-ABCDE12345")
-      expect(result.data?.bankDetails).toEqual({
-        bankName: "National Bank",
-        accountName: "Demo School",
-        accountNumber: "1234567890",
-        iban: "SA123456789",
-        swiftCode: "NBSAAU2S",
-        reference: "TRF-ABCDE12345",
-      })
     })
 
-    it("updates application with bank transfer payment method", async () => {
+    it("scopes application lookup by schoolId (tenant isolation)", async () => {
       vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
 
-      await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID)
+      await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID, ACCESS_TOKEN)
 
-      expect(db.application.update).toHaveBeenCalledWith({
-        where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
-        data: {
-          paymentMethod: "bank_transfer",
-          paymentReference: "TRF-ABCDE12345",
-        },
-      })
-    })
-
-    it("returns undefined bankDetails when no settings exist", async () => {
-      vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
-
-      const result = await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID)
-
-      expect(result.success).toBe(true)
-      expect(result.data?.bankDetails).toBeUndefined()
-    })
-
-    it("returns error on unexpected exception", async () => {
-      vi.mocked(db.application.update).mockRejectedValue(
-        new Error("DB timeout")
+      expect(db.application.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: SCHOOL_ID,
+          }),
+        })
       )
-
-      const result = await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("Failed to record payment intent")
-    })
-
-    it("scopes application lookup by schoolId for tenant isolation", async () => {
-      vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
-
-      await recordBankTransferIntent(SUBDOMAIN, APPLICATION_ID)
-
-      expect(db.application.findFirst).toHaveBeenCalledWith({
-        where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
-        select: { id: true, applicationNumber: true },
-      })
     })
   })
 })

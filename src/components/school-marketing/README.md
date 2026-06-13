@@ -5,10 +5,10 @@ title: School Marketing
 file_type: readme
 owner: Samia
 maturity: Built+Polish
-completion: 85
+completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/327
 docs: https://databayt.org
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 ## School Marketing — Public-facing school website and admission portal
@@ -132,10 +132,12 @@ school-marketing/
 
 ### Key Patterns
 
+- **Applying is always free**: The wizard fees step is an informational preview only. No payment at application time. Payment happens post-acceptance (registration fee + tuition invoices).
 - **Campaign-based admission**: Applications are tied to AdmissionCampaign records with date windows and grade eligibility.
 - **Session-based drafts**: Applications can be saved and resumed via `saveApplicationSession` / `resumeApplicationSession`.
-- **OTP status tracking**: Applicants check status via email OTP verification (no login required).
-- **Two application flows**: `admission/` (older portal flow with steps) and `apply/` (newer per-step form with context providers).
+- **OTP status tracking**: sha256-hashed OTP with atomic attempt counter and oracle-closed design. Applicants check status via email OTP (no login required).
+- **Single application flow**: `application/` (context-based per-step form). Old `admission/steps/` was removed.
+- **Portal security**: All public writes rate-limited; tour TOCTOU-safe; new-lead notifications to ADMIN+STAFF.
 - **Multi-tenant scoped**: All actions resolve schoolId from subdomain via `getTenantContext()`.
 
 ### Tests
@@ -147,7 +149,7 @@ school-marketing/
 
 ### Status
 
-**Completion:** 85% | **Blockers:** i18n dictionary keys for admission validation messages are placeholders (hardcoded English defaults in `validation.ts`)
+**Completion:** 93% | **Open:** application-status-banner-client.tsx i18n migration; INQUIRY_SOURCES/DEFAULT_GRADES i18n migration; payment/content.tsx dead-file cleanup (see ISSUE.md)
 
 ### Agents & Skills
 

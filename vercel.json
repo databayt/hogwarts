@@ -88,6 +88,14 @@
     {
       "path": "/api/cron/expire-live-recordings",
       "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/fee-due",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/process-document-jobs",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

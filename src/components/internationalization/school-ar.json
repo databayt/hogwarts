@@ -1861,7 +1861,7 @@
       "downloadExport": "تنزيل النسخة",
       "downloading": "جاري التنزيل...",
       "exportDone": "تم تنزيل النسخة",
-      "exportFailed": "فشل تنزيل النسخة",
+      "exportFailed": "فشل التصدير",
       "typeNameToConfirm": "اكتب اسم الطالب الكامل للتأكيد",
       "deleting": "جاري الحذف...",
       "searchPlaceholder": "بحث في الطلاب...",
@@ -1885,7 +1885,6 @@
       "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
       "deleteItem": "حذف العنصر",
       "noResults": "لا توجد نتائج.",
-      "all": "الكل",
       "grade": "الصف",
       "enrollmentDate": "تاريخ التسجيل",
       "unassigned": "غير مُعيَّن",
@@ -1900,7 +1899,6 @@
       "generateCredentials": "إنشاء بيانات الدخول",
       "syncGrades": "مزامنة الدرجات",
       "syncGradesFailed": "فشل مزامنة الدرجات",
-      "exportFailed": "فشل التصدير",
       "failedToCreate": "فشل إنشاء الطالب",
       "validationFailed": "فشل التحقق",
       "failedToSave": "فشل الحفظ",
@@ -7306,7 +7304,11 @@
         "paid": "مدفوع",
         "overdue": "متأخر",
         "cancelled": "ملغى"
-      }
+      },
+      "missingSchoolContext": "سياق المدرسة مفقود",
+      "missingSchoolContextDesc": "يجب الوصول إلى هذه الصفحة من النطاق الفرعي لمدرستك.",
+      "originalPrice": "كان",
+      "viewReceipt": "عرض الإيصال"
     },
     "profile": {
       "title": "الملف الشخصي",
@@ -8746,7 +8748,9 @@
         "applications": "الطلبات",
         "meritList": "قائمة الجدارة",
         "enrollment": "التسجيل",
-        "settings": "الإعدادات"
+        "settings": "الإعدادات",
+        "leads": "العملاء المحتملون",
+        "merit": "الجدارة"
       },
       "status": {
         "DRAFT": "مسودة",
@@ -9011,7 +9015,9 @@
         "markSelected": "تحديد كمختار",
         "markWaitlisted": "تحديد في قائمة الانتظار",
         "markRejected": "تحديد كمرفوض",
-        "selectCampaign": "يرجى اختيار حملة لإنشاء قائمة الجدارة"
+        "selectCampaign": "يرجى اختيار حملة لإنشاء قائمة الجدارة",
+        "editScores": "تعديل الدرجات",
+        "scoresUpdated": "تم تحديث الدرجات"
       },
       "enrollment": {
         "title": "التسجيل",
@@ -9042,14 +9048,22 @@
         "offerAccepted": "تم قبول العرض",
         "regPaid": "رسوم التسجيل مدفوعة",
         "appPaid": "رسوم الطلب مدفوعة",
-        "pendingPlacement": "طالب/طلاب مقبولين بحاجة لتعيين شعبة. استخدم إجراء التعيين في كل صف لتخصيصهم في شعبة."
+        "pendingPlacement": "طالب/طلاب مقبولين بحاجة لتعيين شعبة. استخدم إجراء التعيين في كل صف لتخصيصهم في شعبة.",
+        "assignSection": "تعيين الفصل",
+        "confirmPlacement": "تأكيد التعيين",
+        "noSectionsAvailable": "لا توجد فصول متاحة لهذا المستوى الدراسي.",
+        "placementConfirmed": "تم تعيين الطالب في الفصل",
+        "seatsLeft": "مقاعد متاحة",
+        "sectionFull": "ممتلئ",
+        "viewFees": "عرض الرسوم"
       },
       "warnings": {
         "noFeeStructureMatch": "لا يوجد هيكل رسوم مطابق — تم تخطي الرسوم. قم بتكوين هيكل رسوم في المالية > الرسوم.",
         "applicationFeeUnpaid": "رسوم الطلب غير مدفوعة. تم تأكيد التسجيل، ولكن يُفضّل تحصيل الدفع.",
         "feeAutoAssignFailed": "فشل تخصيص الرسوم تلقائياً — قم بتخصيص الرسوم يدوياً من المالية > الرسوم.",
         "invoiceGenerationFailed": "فشل إنشاء الفاتورة — أنشئ الفاتورة يدوياً.",
-        "guardianCreateFailed": "فشل إنشاء ولي الأمر — أضف ولي الأمر يدوياً."
+        "guardianCreateFailed": "فشل إنشاء ولي الأمر — أضف ولي الأمر يدوياً.",
+        "registrationFeeNoStructure": "تم دفع رسوم التسجيل ولكن لم يُعثر على هيكل رسوم مطابق — سجّل الدفعة يدوياً في المالية > الرسوم."
       },
       "settings": {
         "title": "إعدادات القبول",
@@ -9252,7 +9266,8 @@
           "swiftCode": "سويفت",
           "cashInstructions": "تعليمات الدفع النقدي",
           "noFeesTitle": "لا توجد رسوم مُعدَّة بعد",
-          "noFeesDescription": "لم تقم المدرسة بإعداد هياكل رسوم لهذا الصف بعد. يمكنك المتابعة وسيتم إبلاغك بالرسوم لاحقاً."
+          "noFeesDescription": "لم تقم المدرسة بإعداد هياكل رسوم لهذا الصف بعد. يمكنك المتابعة وسيتم إبلاغك بالرسوم لاحقاً.",
+          "freeApplicationNote": "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
         },
         "success": {
           "title": "تم تقديم طلبك بنجاح!",
@@ -9302,7 +9317,8 @@
           "docs": "المستندات",
           "copied": "تم النسخ",
           "copyDetails": "نسخ التفاصيل",
-          "backToHome": "العودة للرئيسية"
+          "backToHome": "العودة للرئيسية",
+          "trackingCode": "رمز متابعة الطلب"
         },
         "documents": {
           "photo": "الصورة الشخصية",
@@ -9897,7 +9913,11 @@
         "failedToDecline": "فشل رفض العرض",
         "failedCheckout": "فشل إنشاء جلسة الدفع",
         "failedPayment": "فشل تسجيل الدفع",
-        "unexpectedError": "حدث خطأ غير متوقع"
+        "unexpectedError": "حدث خطأ غير متوقع",
+        "registrationFailed": "فشلت عملية الدفع",
+        "registrationFailedMessage": "تعذّر معالجة الدفع. يرجى المحاولة مرة أخرى أو اختيار طريقة دفع مختلفة.",
+        "registrationSuccess": "تم دفع رسوم التسجيل",
+        "registrationSuccessMessage": "تمت عملية دفع رسوم التسجيل بنجاح. ستقوم المدرسة بتأكيد تسجيلك قريباً."
       },
       "ai": {
         "extractedData": "البيانات المستخرجة",
@@ -9907,6 +9927,61 @@
         "reprocess": "إعادة المحاولة",
         "process": "معالجة",
         "document": "مستند"
+      },
+      "leads": {
+        "bookingStatus": {
+          "CANCELLED": "ملغى",
+          "COMPLETED": "مكتمل",
+          "CONFIRMED": "مؤكد",
+          "NO_SHOW": "لم يحضر",
+          "PENDING": "قيد الانتظار",
+          "RESCHEDULED": "أعيد جدولته"
+        },
+        "columns": {
+          "attendees": "عدد الحضور",
+          "booked": "تاريخ الحجز",
+          "bookingNumber": "رقم الحجز",
+          "email": "البريد الإلكتروني",
+          "followUp": "المتابعة",
+          "grade": "الصف",
+          "location": "الموقع",
+          "parentName": "جهة الاتصال",
+          "received": "تاريخ الاستلام",
+          "source": "المصدر",
+          "tourDate": "تاريخ الزيارة"
+        },
+        "description": "الاستفسارات وحجوزات الزيارات من الأسر المهتمة",
+        "inquiryStatus": {
+          "CONTACTED": "تم التواصل",
+          "CONVERTED": "تم التحويل",
+          "NEW": "جديد",
+          "QUALIFIED": "مؤهل",
+          "UNQUALIFIED": "غير مؤهل"
+        },
+        "sendEmail": "إرسال بريد إلكتروني",
+        "sources": {
+          "advertisement": "إعلان",
+          "referral": "إحالة",
+          "social": "وسائل التواصل الاجتماعي",
+          "website": "الموقع الإلكتروني"
+        },
+        "statusUpdateFailed": "فشل تحديث الحالة",
+        "statusUpdated": "تم تحديث الحالة",
+        "tabs": {
+          "inquiries": "الاستفسارات",
+          "tours": "حجوزات الزيارات"
+        },
+        "title": "العملاء المحتملون",
+        "toolbar": {
+          "openMenu": "فتح القائمة"
+        },
+        "searchInquiries": "البحث في الاستفسارات...",
+        "searchTours": "البحث في حجوزات الجولات...",
+        "export": "تصدير",
+        "noInquiries": "لا توجد استفسارات بعد",
+        "noInquiriesDescription": "ستظهر هنا الاستفسارات المقدمة عبر البوابة العامة",
+        "noTourBookings": "لا توجد حجوزات جولات بعد",
+        "noTourBookingsDescription": "ستظهر هنا حجوزات الجولات من البوابة"
       }
     },
     "membership": {
@@ -10295,40 +10370,23 @@
         "assignFee": "تخصيص الرسوم"
       },
       "paymentForm": {
-        "feeAssignment": "تخصيص الرسوم",
-        "selectFeeAssignment": "اختر تخصيص الرسوم *",
-        "selectFeeAssignmentPlaceholder": "اختر تخصيص رسوم",
-        "remaining": "المتبقي",
-        "totalAmount": "المبلغ الإجمالي",
-        "totalPaid": "إجمالي المدفوع",
-        "remainingBalance": "المتبقي",
-        "paymentDetails": "تفاصيل الدفع",
-        "amountRequired": "المبلغ *",
-        "amountPlaceholder": "0.00",
-        "amountIsRequired": "المبلغ مطلوب",
-        "amountMustBePositive": "يجب أن يكون المبلغ أكبر من 0",
-        "amountExceedsRemaining": "لا يمكن أن يتجاوز المبلغ الرصيد المتبقي ({amount})",
-        "paymentMethod": "طريقة الدفع *",
-        "selectMethod": "اختر الطريقة",
-        "cash": "نقداً",
-        "cheque": "شيك",
-        "bankTransfer": "تحويل بنكي",
-        "creditCard": "بطاقة ائتمان",
-        "debitCard": "بطاقة خصم",
-        "upi": "UPI",
-        "netBanking": "الخدمات المصرفية عبر الإنترنت",
-        "wallet": "محفظة",
-        "other": "أخرى",
-        "paymentDate": "تاريخ الدفع *",
-        "transactionId": "معرف المعاملة",
-        "optionalReferenceNumber": "رقم مرجعي اختياري",
-        "remarks": "ملاحظات",
-        "optionalNotes": "ملاحظات اختيارية",
-        "selectAssignmentFirst": "يرجى اختيار تخصيص رسوم",
-        "paymentRecordedSuccessfully": "تم تسجيل الدفعة بنجاح",
-        "failedRecordPayment": "فشل في تسجيل الدفعة",
-        "recording": "جاري التسجيل...",
-        "recordPayment": "تسجيل الدفعة"
+        "atmDeposit": "إيداع عبر الصراف الآلي",
+        "applePay": "آبل باي",
+        "googlePay": "جوجل باي",
+        "mada": "مدى",
+        "knet": "كي نت",
+        "transferReference": "مرجع التحويل *",
+        "transferReferencePlaceholder": "مرجع البنك / رقم إيصال الصراف الآلي",
+        "bankName": "اسم البنك *",
+        "bankNamePlaceholder": "مثلاً: بنك الإمارات دبي الوطني",
+        "bankBranch": "الفرع",
+        "bankBranchPlaceholder": "اسم الفرع أو رمزه",
+        "depositorIban": "آيبان المُحوِّل",
+        "ibanPlaceholder": "AE07 0331 ...",
+        "chequeNumberPlaceholder": "مثلاً: 000123",
+        "depositSlip": "رابط إيصال الإيداع",
+        "depositSlipPlaceholder": "https://... (ارفع الإيصال على S3 ثم الصق الرابط)",
+        "depositSlipHint": "ستبقى الحالة (بانتظار التحقق) حتى يقوم المسؤول بمطابقتها مع كشف الحساب البنكي."
       },
       "fineForm": {
         "studentLabel": "الطالب",
@@ -10768,30 +10826,43 @@
         "paymentPendingVerificationStudent": "تم تسجيل دفعة بقيمة {amount} — بانتظار التحقق. سيؤكد المسؤول الاستلام قريبًا.",
         "paymentPendingVerificationGuardian": "تم تسجيل دفعة بقيمة {amount} للطالب — بانتظار التحقق."
       },
-      "paymentForm": {
-        "atmDeposit": "إيداع عبر الصراف الآلي",
-        "applePay": "آبل باي",
-        "googlePay": "جوجل باي",
-        "mada": "مدى",
-        "knet": "كي نت",
-        "transferReference": "مرجع التحويل *",
-        "transferReferencePlaceholder": "مرجع البنك / رقم إيصال الصراف الآلي",
-        "bankName": "اسم البنك *",
-        "bankNamePlaceholder": "مثلاً: بنك الإمارات دبي الوطني",
-        "bankBranch": "الفرع",
-        "bankBranchPlaceholder": "اسم الفرع أو رمزه",
-        "depositorIban": "آيبان المُحوِّل",
-        "ibanPlaceholder": "AE07 0331 ...",
-        "chequeNumberPlaceholder": "مثلاً: 000123",
-        "depositSlip": "رابط إيصال الإيداع",
-        "depositSlipPlaceholder": "https://... (ارفع الإيصال على S3 ثم الصق الرابط)",
-        "depositSlipHint": "ستبقى الحالة (بانتظار التحقق) حتى يقوم المسؤول بمطابقتها مع كشف الحساب البنكي."
-      },
       "paymentActions": {
         "markAsCleared": "تأكيد الاستلام",
         "clearing": "جارٍ التأكيد...",
         "cleared": "تم تأكيد الدفعة",
         "clearFailed": "تعذر تأكيد الدفعة"
+      },
+      "fees": {
+        "editDiscount": {
+          "label": "تعديل الخصم",
+          "reason": "سبب الخصم"
+        },
+        "error": {
+          "ASSIGNMENT_NOT_FOUND": "لم يتم العثور على تعيين الرسوم.",
+          "DISCOUNT_EXCEEDS_BASE": "لا يمكن أن يتجاوز الخصم مبلغ الرسوم الأساسية."
+        },
+        "toast": {
+          "discountApplied": "تم تطبيق الخصم. الإجمالي الجديد: {finalAmount}.",
+          "feeStructureUpdated": "تم تحديث هيكل الرسوم. تمت إعادة حساب {updated} تعيين، تم تخطي {skippedPaid} (مدفوع)."
+        }
+      },
+      "invoice": {
+        "partial": "مدفوع جزئياً"
+      },
+      "invoiceView": {
+        "amountDue": "المبلغ المستحق",
+        "amountPaid": "المبلغ المدفوع",
+        "linkedPayments": "المدفوعات المرتبطة",
+        "paymentAmount": "المبلغ",
+        "paymentDate": "التاريخ",
+        "paymentMethod": "طريقة الدفع",
+        "paymentNumber": "رقم الدفعة",
+        "sent": "تم الإرسال",
+        "statusCancelled": "ملغى",
+        "statusOverdue": "متأخر",
+        "statusPaid": "مدفوع",
+        "statusPartial": "مدفوع جزئياً",
+        "statusUnpaid": "غير مدفوع"
       }
     },
     "banking": {

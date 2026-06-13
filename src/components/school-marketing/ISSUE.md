@@ -5,17 +5,17 @@ title: School Marketing
 file_type: issue
 owner: Samia
 maturity: Built+Polish
-completion: 85
+completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/327
 docs: https://databayt.org
-last_audited: 2026-05-25
+last_audited: 2026-06-13
 ---
 
 # School Marketing — Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 90%
-**Last Updated:** 2026-05-21
+**Completion:** 93%
+**Last Updated:** 2026-06-13
 
 ---
 
@@ -49,19 +49,23 @@ last_audited: 2026-05-25
 - [x] Enrollment closed fallback
 - [x] Continue application flow
 - [x] Application status banner
+- [x] AdmissionCTA + AdmissionDates rendered on /admissions
+- [x] New-lead notifications to ADMIN+STAFF on inquiry/tour booking
 
 ### Admission Actions
 
 - [x] Fetch active campaigns
 - [x] Save/resume application session
 - [x] Submit application
-- [x] OTP-based status tracking (request OTP, verify, get status)
-- [x] Inquiry form submission
-- [x] Tour booking actions
+- [x] OTP-based status tracking (request OTP, verify, get status) — OTP now sha256-hashed; enumeration-oracle closed; atomic attempt counter
+- [x] Inquiry form submission — new-lead notification dispatched to ADMIN+STAFF
+- [x] Tour booking actions — TOCTOU oversell fixed; cancel/reschedule decrements by attendee count; enableTourBooking flag honored; rate-limited
 
 ### Apply (Multi-Step Flow — 5 steps, auth-gated)
 
 Active step order: **attachments → personal → location → academic → fees**. Guardian is folded into Personal as Student/Father/Mother tabs; the standalone Contact step was removed (email back-filled at submit). Submission fires from the Fees step.
+
+**PRODUCT DECISION (2026-06-13):** Applying is ALWAYS FREE. The fees step is now an informational free-application preview only — no payment method selection, no Bankak/Kashi icons. Payment happens post-acceptance only: registration fee on offer acceptance + tuition invoices.
 
 - [x] Application context provider (per-user draft scoping)
 - [x] Validation context provider
@@ -71,13 +75,15 @@ Active step order: **attachments → personal → location → academic → fees
 - [x] Personal step incl. Guardian tabs (form, config, types, validation, actions)
 - [x] Location step (form, config, types, validation, actions)
 - [x] Academic step (form, config, types, validation, actions)
-- [x] Fees step (fee preview + submit)
+- [x] Fees step (informational free-application preview + submit — no payment collection at this stage)
 - [x] Payment step (content, actions)
 - [x] Offer step (accept/decline + registration fee)
-- [x] Success step
+- [x] Success step — 'password' relabeled 'Application Tracking Code'
 - [x] Application overview / draft management
 - [x] Submit action
 - [x] Cross-step validation helpers
+- [x] callbackUrl preserves full token'd offer path through login
+- [x] Registration-fee success/fail banners; rate-limited; abandoned-checkout retry unblocked
 
 ### Visit Booking
 
@@ -121,9 +127,18 @@ Active step order: **attachments → personal → location → academic → fees
 - [x] **i18n**: attachment rejection messages + aria-label now use `school.admission.apply.form.attachments.*` keys (en+ar); fixed success-modal dict path (was reading `admission` instead of `school.admission`, so the modal was always English); added `errors.rateLimited`. _Deferred: Stripe checkout line-item localization — payment path, low value/risk (brief Stripe-hosted redirect)._
 - [x] **`lang` field**: added `lang String @default("ar")` to `Application` + `ApplicationSession`; applied to DB via `ADD COLUMN IF NOT EXISTS` + migration `20260522000000_add_lang_to_application`; applicant locale threaded `fees → submitApplicationAction → submitApplication` create.
 - [ ] **Admin doc config not wired** — **DEFERRED (needs prerequisite).** `AdmissionCampaign.requiredDocuments` / `AdmissionSettings.documentRequirements` are read by `ai/completeness.ts` (`parseRequiredDocuments`) but **never written** — there is no admin UI to set them, so they are always null. Wiring the applicant attachments step to read them yields zero effect until the admin write-path exists, and the attachments form is a danger zone (S3 uploads). Prereq: build the settings/campaign UI to define required documents; then make the attachments slots config-driven (reuse `parseRequiredDocuments`) and enforce `requireDocuments`.
-- [x] **Rate limiting** added to `saveApplicationSession` (new-token + email vector) and `submitApplication` (per user/email + school, 5/hour) mirroring the `status.ts` OTP pattern; surfaced via `errors.rateLimited`.
+- [x] **Rate limiting** added to `saveApplicationSession` (new-token + email vector) and `submitApplication` (per user/email + school, 5/hour) mirroring the `status.ts` OTP pattern; surfaced via `errors.rateLimited`. All public portal writes (inquiry, tour, OTP, submit) are now rate-limited.
 - [x] **Auth callback bug**: `(auth)/layout.tsx` now redirects to the clean `/${lang}/application` (was the internal `/s/{subdomain}/` path).
 - [x] Minor: success-modal email sourced from auth session; post-submit localStorage cleanup uses the per-user `clearLocalDraft()`; `STEP_METADATA.contact` mislabel ("Payment" → "Contact") fixed. _(Dead contact/guardian nav branches kept intentionally — `STEP_NAVIGATION` is typed `Record<ApplyStep, …>`, so every union key is required.)_
+
+### Portal Hardening Pass (2026-06-13)
+
+- [x] **OTP security**: sha256-hashed; enumeration-oracle closed; atomic attempt counter prevents brute-force
+- [x] **Tour booking correctness**: TOCTOU oversell fixed; cancel/reschedule decrements by attendee count (not always 1); `enableTourBooking` flag honored on all entry points
+- [x] **Rate limiting**: all public writes rate-limited (inquiry, tour, OTP, submit, save-session)
+- [x] **New-lead notifications**: inquiry + tour booking fire in_app + email to ADMIN and STAFF roles
+- [x] **AdmissionCTA + AdmissionDates**: now rendered on /admissions landing page
+- [x] **Offer flow**: callbackUrl preserves full token'd offer path through login; registration-fee success/fail banners; abandoned-checkout retry unblocked
 
 ### P1 — High
 
@@ -135,16 +150,21 @@ Active step order: **attachments → personal → location → academic → fees
 - **No loading states on admission sections**: Landing page sections fetch data server-side but lack skeleton/suspense boundaries for streaming.
 - **Tour booking email template**: `visit/actions.ts` calls `sendEmail()` but the email template content is not visible in this block -- verify template exists in `@/lib/email`.
 
+### Open — Deferred (2026-06-13)
+
+- [ ] **application-status-banner-client.tsx i18n migration** — status banner still has hardcoded English strings; needs dictionary key migration
+- [ ] **INQUIRY_SOURCES / DEFAULT_GRADES i18n migration** — constants still hardcoded in English; needs config factory pattern (see translation rules)
+- [ ] **payment/content.tsx dead-file cleanup** — payment step file can be removed now that application is always free
+- [ ] **Leads tab i18n sweep** — `src/components/school-dashboard/admission/leads/` was added without full i18n coverage (tracked in dashboard-admission block)
+
 ---
 
 ## Enhancements (Post-MVP)
 
-- Localize all admission validation messages via dictionary
-- Consolidate `admission/steps/` and `apply/` into a single application flow
 - Add analytics tracking for funnel conversion (campaign view -> application start -> submission)
 - Add Suspense boundaries to admission landing sections for streaming SSR
 - Add rich preview cards (Open Graph) per school via `metadata.ts`
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-06-13

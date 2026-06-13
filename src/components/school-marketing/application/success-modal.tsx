@@ -19,7 +19,10 @@ import { Modal } from "@/components/atom/modal"
 interface ApplicationSuccessModalProps {
   applicationNumber: string
   applicantEmail?: string
+  /** @deprecated use trackingCode — kept for legacy in-flight data compatibility */
   password?: string
+  /** Application Tracking Code (accessToken) shown prominently to applicant */
+  trackingCode?: string
   schoolUrl?: string
   showModal: boolean
   setShowModal: Dispatch<SetStateAction<boolean>>
@@ -32,6 +35,7 @@ export default function ApplicationSuccessModal({
   applicationNumber,
   applicantEmail,
   password,
+  trackingCode,
   schoolUrl,
   showModal,
   setShowModal,
@@ -39,6 +43,9 @@ export default function ApplicationSuccessModal({
   locale = "en",
   dictionary,
 }: ApplicationSuccessModalProps) {
+  // Resolve the tracking code: prefer the explicit prop, fall back to the
+  // legacy `password` prop so in-flight data still renders correctly.
+  const resolvedTrackingCode = trackingCode ?? password
   const [copied, setCopied] = useState(false)
   const [animationData, setAnimationData] = useState<object | null>(null)
 
@@ -64,8 +71,10 @@ export default function ApplicationSuccessModal({
     if (applicantEmail) {
       lines.push(`${dict.email || "Email"}: ${applicantEmail}`)
     }
-    if (password) {
-      lines.push(`${dict.password || "Password"}: ${password}`)
+    if (resolvedTrackingCode) {
+      lines.push(
+        `${dict.trackingCode || "Application Tracking Code"}: ${resolvedTrackingCode}`
+      )
     }
     if (schoolUrl) {
       lines.push(`${dict.school || "School"}: ${schoolUrl}`)
@@ -76,7 +85,7 @@ export default function ApplicationSuccessModal({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
-  }, [applicationNumber, applicantEmail, password, schoolUrl, dict])
+  }, [applicationNumber, applicantEmail, resolvedTrackingCode, schoolUrl, dict])
 
   return (
     <Modal

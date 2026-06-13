@@ -27,12 +27,16 @@ export async function generateMetadata({
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
-  searchParams: Promise<{ token?: string; cancelled?: string }>
+  searchParams: Promise<{
+    token?: string
+    cancelled?: string
+    registration?: string
+  }>
 }
 
 export default async function OfferPage({ params, searchParams }: Props) {
   const { lang, id: applicationId } = await params
-  const { token: accessToken, cancelled } = await searchParams
+  const { token: accessToken, cancelled, registration } = await searchParams
 
   if (!accessToken) {
     notFound()
@@ -52,6 +56,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
       locale={lang}
       dictionary={dictionary}
       cancelled={cancelled === "true"}
+      registrationParam={registration}
       accessToken={accessToken}
     />
   )
