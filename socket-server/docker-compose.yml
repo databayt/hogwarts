@@ -1,0 +1,105 @@
+# Hogwarts realtime + WhatsApp stack — Oracle Cloud Always-Free VM (#262)
+#
+# Runs four services on one VM behind Nginx (TLS via Certbot):
+#   - socket-server   → socket.databayt.org      (realtime: messaging, typing, presence)
+#   - evolution-api   → evolution.databayt.org   (WhatsApp gateway, Evolution API v2)
+#   - postgres        → internal only            (Evolution metadata — NOT the app's Neon DB)
+#   - redis           → internal only            (Evolution cache + socket.io adapter)
+#
+# Secrets live in ./.env (gitignored) — see .env.example. NEVER hardcode them here.
+# All app-facing ports are bound to 127.0.0.1; only Nginx (80/443) is public.
+#
+# Deploy:  cd /opt/hogwarts/socket-server && docker compose up -d
+# Full runbook: ./DEPLOY.md
+
+services:
+  socket-server:
+    build: .
+    container_name: hogwarts-socket
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      # Comma-separated explicit allowlist; *.databayt.org is also accepted in prod.
+      CLIENT_URL: "https://ed.databayt.org,https://kingfahad.databayt.org"
+      SOCKET_SECRET: ${SOCKET_SECRET}
+      EMIT_SECRET: ${EMIT_SECRET}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  evolution-api:
+    image: atendai/evolution-api:v2.1.1
+    container_name: hogwarts-evolution
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SERVER_URL: https://evolution.databayt.org
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DEL_INSTANCE: "false"
+      # --- Database (v2 requires it) ---
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${DB_PASSWORD}@postgres:5432/evolution
+      DATABASE_CONNECTION_CLIENT_NAME: evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      # --- Cache ---
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/1
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_REDIS_SAVE_INSTANCES: "false"
+      CACHE_LOCAL_ENABLED: "false"
+      # --- Disabled integrations ---
+      RABBITMQ_ENABLED: "false"
+      S3_ENABLED: "false"
+      # Per-instance webhooks (incl. the ?secret= query) are configured by the
+      # app at QR-connect time via /instance/create — no global webhook needed.
+    volumes:
+      - evolution_instances:/evolution/instances
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: hogwarts-evolution-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hogwarts-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  evolution_instances:
+  postgres_data:
+  redis_data:

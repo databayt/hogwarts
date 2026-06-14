@@ -23,8 +23,7 @@ import { Server, Socket } from "socket.io"
 // Config
 // ---------------------------------------------------------------------------
 
-const PORT = parseInt(process.env.PORT || "3001", 10)
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000"
+const PORT = parseInt(process.env.PORT || "3000", 10)
 const IS_PRODUCTION = process.env.NODE_ENV === "production"
 // In production the dev fallback is NOT used: if SOCKET_SECRET is unset the
 // secret stays "" so the (constant-time) guard rejects every emit — fail closed.
@@ -32,6 +31,36 @@ const SOCKET_SECRET =
   process.env.SOCKET_SECRET || (IS_PRODUCTION ? "" : "dev-socket-secret")
 const REDIS_URL = process.env.REDIS_URL // ioredis connection string
 const EMIT_SECRET = process.env.EMIT_SECRET || SOCKET_SECRET // for /api/emit auth
+
+// ---------------------------------------------------------------------------
+// CORS — multi-tenant aware
+// ---------------------------------------------------------------------------
+// The app is multi-tenant: every school is served on its own subdomain
+// (kingfahad.databayt.org, demo.databayt.org, …) plus the apex ed.databayt.org.
+// A single fixed origin would only admit ONE school's browser, so we accept an
+// explicit comma-separated allowlist (CLIENT_URL) AND, in production, any
+// `*.databayt.org` host. The fallback is localhost for dev.
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000"
+const ALLOWED_ORIGINS = CLIENT_URL.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+// Matches https://databayt.org and https://<anything>.databayt.org (no ports).
+const DATABAYT_ORIGIN = /^https:\/\/([a-z0-9-]+\.)*databayt\.org$/
+
+function isAllowedOrigin(origin: string | undefined): boolean {
+  // Non-browser clients (curl, server-to-server) send no Origin — allow them;
+  // the emit routes are still protected by the constant-time secret check.
+  if (!origin) return true
+  if (ALLOWED_ORIGINS.includes(origin)) return true
+  if (IS_PRODUCTION && DATABAYT_ORIGIN.test(origin)) return true
+  return false
+}
+
+// cors + socket.io both accept this (origin, callback) signature.
+const corsOrigin = (
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void
+) => callback(null, isAllowedOrigin(origin))
 
 /**
  * Constant-time secret comparison. Rejects an empty expected secret (so an
@@ -54,7 +83,7 @@ const PRESENCE_TTL = 90
 // ---------------------------------------------------------------------------
 
 const app = express()
-app.use(cors({ origin: CLIENT_URL, credentials: true }))
+app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
 
 const httpServer = createServer(app)
@@ -65,7 +94,7 @@ const httpServer = createServer(app)
 
 const io = new Server(httpServer, {
   cors: {
-    origin: CLIENT_URL,
+    origin: corsOrigin,
     methods: ["GET", "POST"],
     credentials: true,
   },

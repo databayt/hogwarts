@@ -5,11 +5,11 @@ primary_region = "fra"
   dockerfile = "Dockerfile"
 
 [env]
-  PORT = "3001"
+  PORT = "3000"
   NODE_ENV = "production"
 
 [http_service]
-  internal_port = 3001
+  internal_port = 3000
   force_https = true
   auto_stop_machines = "suspend"
   auto_start_machines = true
