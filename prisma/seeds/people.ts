@@ -304,6 +304,13 @@ export async function seedTeacherQualifications(
   schoolId: string,
   teachers: TeacherRef[]
 ): Promise<number> {
+  const existing = await prisma.teacherQualification.count({
+    where: { schoolId },
+  })
+  if (existing > 0) {
+    logSuccess("Teacher Qualifications", existing, "already seeded — skipped")
+    return existing
+  }
   let qualificationCount = 0
 
   for (const teacher of teachers) {
@@ -413,6 +420,11 @@ export async function seedTeacherExperience(
   schoolId: string,
   teachers: TeacherRef[]
 ): Promise<number> {
+  const existing = await prisma.teacherExperience.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Teacher Experience", existing, "already seeded — skipped")
+    return existing
+  }
   let experienceCount = 0
 
   for (const teacher of teachers) {
@@ -480,6 +492,17 @@ export async function seedTeacherSubjectExpertise(
   teachers: TeacherRef[],
   subjects: SubjectRef[]
 ): Promise<number> {
+  const existing = await prisma.teacherSubjectExpertise.count({
+    where: { schoolId },
+  })
+  if (existing > 0) {
+    logSuccess(
+      "Teacher Subject Expertise",
+      existing,
+      "already seeded — skipped"
+    )
+    return existing
+  }
   let expertiseCount = 0
 
   if (subjects.length === 0) {
@@ -985,8 +1008,11 @@ export async function seedStudentDocuments(
   students: StudentRef[],
   adminUsers: UserRef[]
 ): Promise<number> {
-  // Clean existing
-  await prisma.studentDocument.deleteMany({ where: { schoolId } })
+  const existing = await prisma.studentDocument.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Student Documents", existing, "already seeded — skipped")
+    return existing
+  }
 
   const uploadedBy = adminUsers[0]?.id || null
   const docBatch: Array<{

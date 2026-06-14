@@ -2,140 +2,134 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * Auto-Recovery Seed for Demo School
+ * Default Auto-Provision Seed for the Demo School (prebuild)
  *
- * This script ensures the demo school exists on every deployment.
- * It is SAFE to run multiple times (idempotent).
+ * Runs on EVERY Vercel deployment (via the `prebuild` script) against the
+ * production demo school. It drives the FULL heavy seed (`seedMain` in
+ * ./index.ts) — the same data a real onboarded school gets, unified on the
+ * production provisioning pipeline (setupDefaultsForSchool + setupCatalogForSchool).
  *
- * Features:
- * - Runs on every Vercel deployment (via build script)
- * - Creates demo school if missing
- * - NEVER deletes any data
- * - Safe for contributors to run
+ * Optimized + build-safe:
+ *  - FAST PATH: when the demo is already fully seeded (≥500 students AND
+ *    ≥100 classes) it skips the heavy seed entirely and only re-asserts the
+ *    critical accounts — a couple of queries, a few seconds.
+ *  - SLOW PATH: an empty or partially-seeded demo runs `seedMain`, which is
+ *    fully idempotent (per-phase count-guards + upserts) so it resumes only
+ *    the missing work and never duplicates rows on re-runs.
+ *  - NEVER fails the build: every DB error (Neon quota, cold start, network)
+ *    is swallowed and the process exits 0.
  *
  * Usage:
- *   tsx prisma/seeds/ensure-demo.ts
- *
- * This script is automatically run during build:
- *   pnpm build → prisma generate → ensure-demo.ts → next build
+ *   tsx prisma/seeds/ensure-demo.ts        (automatic during `pnpm build`)
  */
+
+// dotenv first — ./index transitively imports the @/lib/db singleton, which
+// reads DATABASE_URL at import time. No-op on Vercel (env already injected).
+import "dotenv/config"
 
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
 import { DEMO_PASSWORD, DEMO_SCHOOL } from "./constants"
+import { getDemoSeedStatus, seedMain } from "./index"
 
 const prisma = new PrismaClient()
 
-async function ensureDemoSchool() {
-  console.log("🔍 Checking demo school...")
-
-  const existing = await prisma.school.findUnique({
-    where: { domain: "demo" },
-    select: { id: true, name: true, domain: true },
+/**
+ * Re-assert the accounts that MUST always exist/stay correct on the demo,
+ * even when the heavy seed is skipped. Cheap; runs only on the fast path.
+ * - admin@databayt.org must exist (school login for QA + docs).
+ * - dev@databayt.org must keep its DEVELOPER role (see .claude/rules/accounts.md
+ *   — a bulk updateMany must never strip it; this is a belt-and-suspenders guard).
+ */
+async function ensureCriticalAccounts(schoolId: string): Promise<void> {
+  const admin = await prisma.user.findFirst({
+    where: { email: "admin@databayt.org", schoolId },
+    select: { id: true },
   })
-
-  if (existing) {
-    console.log(`✅ Demo school exists: ${existing.name} (${existing.id})`)
-    return existing
-  }
-
-  console.log("⚠️ Demo school missing, creating...")
-
-  // Create the demo school with only existing schema fields
-  const school = await prisma.school.create({
-    data: {
-      name: DEMO_SCHOOL.name,
-      domain: DEMO_SCHOOL.domain,
-      email: DEMO_SCHOOL.email,
-      website: DEMO_SCHOOL.website,
-      phoneNumber: DEMO_SCHOOL.phone,
-      address: DEMO_SCHOOL.address,
-      timezone: DEMO_SCHOOL.timezone,
-      preferredLanguage: DEMO_SCHOOL.preferredLanguage,
-      planType: DEMO_SCHOOL.planType,
-      maxStudents: DEMO_SCHOOL.maxStudents,
-      maxTeachers: DEMO_SCHOOL.maxTeachers,
-      isActive: true,
-      // Weather coordinates for Khartoum, Sudan
-      latitude: 15.5007,
-      longitude: 32.5599,
-    },
-  })
-
-  console.log(`✅ Demo school created: ${school.name} (${school.id})`)
-  return school
-}
-
-async function ensureAdminUser(schoolId: string) {
-  console.log("🔍 Checking admin user...")
-
-  const existingAdmin = await prisma.user.findFirst({
-    where: {
-      email: "admin@databayt.org",
-      schoolId,
-    },
-    select: { id: true, email: true },
-  })
-
-  if (existingAdmin) {
-    console.log(`✅ Admin user exists: ${existingAdmin.email}`)
-    return existingAdmin
-  }
-
-  console.log("⚠️ Admin user missing, creating...")
-
-  const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10)
-
-  const admin = await prisma.user.upsert({
-    where: {
-      email_schoolId: {
+  if (!admin) {
+    const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10)
+    await prisma.user.upsert({
+      where: { email_schoolId: { email: "admin@databayt.org", schoolId } },
+      update: {},
+      create: {
         email: "admin@databayt.org",
+        password: hashedPassword,
+        role: "ADMIN",
+        emailVerified: new Date(),
         schoolId,
       },
-    },
-    update: {},
-    create: {
-      email: "admin@databayt.org",
-      password: hashedPassword,
-      role: "ADMIN",
-      emailVerified: new Date(),
-      schoolId,
-    },
-  })
+    })
+    console.log("✅ Admin user restored")
+  }
 
-  console.log(`✅ Admin user created: ${admin.email}`)
-  return admin
+  const dev = await prisma.user.findFirst({
+    where: { email: "dev@databayt.org" },
+    select: { id: true, role: true },
+  })
+  if (dev && dev.role !== "DEVELOPER") {
+    await prisma.user.update({
+      where: { id: dev.id },
+      data: { role: "DEVELOPER" },
+    })
+    console.warn("⚠️ dev@databayt.org DEVELOPER role was corrupted — restored")
+  }
 }
 
 async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  console.log("🌱 ENSURE DEMO - Auto-Recovery Seed")
+  console.log("🌱 ENSURE DEMO — Full Auto-Provision Seed")
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   try {
-    // Ensure demo school exists
-    const school = await ensureDemoSchool()
+    const school = await prisma.school.findUnique({
+      where: { domain: DEMO_SCHOOL.domain },
+      select: { id: true, name: true },
+    })
 
-    // Ensure admin user exists
-    await ensureAdminUser(school.id)
+    if (school) {
+      const status = await getDemoSeedStatus(prisma, school.id)
+
+      if (status.fullySeeded) {
+        // ── FAST PATH ──────────────────────────────────────────────────
+        console.log(
+          `✅ Demo already fully seeded: ${school.name} (${status.students} students, ${status.classes} classes)`
+        )
+        console.log(
+          "⏭️  Skipping heavy seed — re-asserting critical accounts only"
+        )
+        await ensureCriticalAccounts(school.id)
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        console.log("✅ Demo environment verified (fast path)")
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        return
+      }
+
+      console.log(
+        `⚠️ Demo partially seeded (${status.students} students, ${status.classes} classes) — running full seed to fill gaps`
+      )
+    } else {
+      console.log("⚠️ Demo school missing — running full seed")
+    }
+
+    // ── SLOW PATH ────────────────────────────────────────────────────────
+    // seedMain is idempotent: per-phase guards + upserts mean already-seeded
+    // phases skip cheaply and only missing work runs. Share our connection.
+    await seedMain(prisma)
 
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    console.log("✅ Demo environment verified")
-    console.log(`🌐 URL: https://demo.databayt.org`)
-    console.log(`📧 Admin: admin@databayt.org`)
-    console.log(`🔑 Password: ${DEMO_PASSWORD}`)
+    console.log("✅ Demo environment fully seeded")
+    console.log("🌐 URL: https://demo.databayt.org")
+    console.log(`📧 Admin: admin@databayt.org / ${DEMO_PASSWORD}`)
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } catch (error) {
-    // Database errors (quota exceeded, connection issues) should NOT fail the build
-    // The app can still work, just demo might not be available
+    // Database errors (quota exceeded, connection issues) must NOT fail the
+    // build. The app still works; the demo just might not be provisioned.
     console.warn(
       "⚠️ Demo seed skipped (database unavailable):",
       (error as Error).message || error
     )
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     console.log("⏭️ Continuing build without demo verification...")
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } finally {
     try {
       await prisma.$disconnect()
@@ -145,12 +139,12 @@ async function main() {
   }
 }
 
-// Handle unhandled rejections gracefully
+// Handle unhandled rejections gracefully — never crash the build.
 process.on("unhandledRejection", (reason) => {
   console.warn("⚠️ Unhandled rejection in ensure-demo (ignored):", reason)
 })
 
 main().then(() => {
-  // Force clean exit after completion
+  // Force a clean exit after completion (open connections can hang tsx).
   process.exit(0)
 })

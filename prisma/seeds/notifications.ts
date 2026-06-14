@@ -306,6 +306,12 @@ export async function seedNotifications(
   students: StudentRef[],
   adminUsers: UserRef[]
 ): Promise<number> {
+  const existing = await prisma.notification.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Notifications", existing, "already seeded – skipping")
+    return existing
+  }
+
   let notificationCount = 0
 
   // Get user IDs by role

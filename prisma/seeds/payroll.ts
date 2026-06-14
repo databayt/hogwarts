@@ -102,14 +102,14 @@ export async function seedPayroll(
   teachers: TeacherRef[],
   adminUsers: UserRef[]
 ): Promise<void> {
-  // Clean existing payroll data
-  await prisma.salarySlip.deleteMany({ where: { schoolId } })
-  await prisma.payrollRun.deleteMany({ where: { schoolId } })
-  await prisma.salaryDeduction.deleteMany({ where: { schoolId } })
-  await prisma.salaryAllowance.deleteMany({ where: { schoolId } })
-  await prisma.salaryStructure.deleteMany({ where: { schoolId } })
-  await prisma.timesheetEntry.deleteMany({ where: { schoolId } })
-  await prisma.timesheetPeriod.deleteMany({ where: { schoolId } })
+  // Idempotency guard: skip the entire block if payroll already exists for this school.
+  // Concurrent-safety (unique constraints on salaryStructure rows) is deferred to a
+  // future @@unique migration on (schoolId, teacherId, effectiveFrom).
+  const existing = await prisma.salaryStructure.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Payroll", existing, "already seeded — skipping")
+    return
+  }
 
   const processedBy = adminUsers[0]?.id || null
 

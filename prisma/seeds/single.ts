@@ -15,7 +15,16 @@
  * ~1-5 seconds vs 60-120s for full seed.
  */
 
+// dotenv first — the production provisioning pipeline (@/components/catalog/setup)
+// pulls in the @/lib/db singleton, which reads DATABASE_URL at import time.
+import "dotenv/config"
+
 import { PrismaClient } from "@prisma/client"
+
+import {
+  setupCatalogForSchool,
+  setupDefaultsForSchool,
+} from "@/components/catalog/setup"
 
 import { seedAcademicStructure } from "./academic"
 import { seedAdmission } from "./admission"
@@ -38,7 +47,6 @@ import { seedCaieIgcseCurriculum } from "./catalog/caie-igcse"
 import { seedCbseCurriculum } from "./catalog/cbse"
 import { seedConceptImages } from "./catalog/concepts"
 import { seedCatalogContent } from "./catalog/content"
-import { seedDemoSchool } from "./catalog/demo"
 import { seedEgCurriculum } from "./catalog/eg"
 import { seedExamTemplates } from "./catalog/exam-templates"
 import { seedGbCurriculum } from "./catalog/gb"
@@ -556,23 +564,18 @@ const SEEDS: Record<string, SeedEntry> = {
     },
   },
   demo: {
-    description: "Academic structure + catalog bridge",
+    description:
+      "Academic structure (levels/grades/streams/subject selections) via the production pipeline",
     run: async (prisma, schoolId) => {
-      const yearLevels = await resolveYearLevels(prisma, schoolId)
-      const catalogSubjects = await prisma.subject.findMany({
-        select: { id: true, name: true, slug: true },
-      })
       const school = await prisma.school.findUnique({
         where: { id: schoolId },
         select: { schoolLevel: true },
       })
-      await seedDemoSchool(
-        prisma,
-        schoolId,
-        yearLevels,
-        catalogSubjects,
-        school?.schoolLevel
-      )
+      // Same code path real schools get at onboarding — one source of truth.
+      // setupDefaultsForSchool ensures YearLevels/Departments/ScoreRanges;
+      // setupCatalogForSchool builds AcademicLevels/Grades/Streams/Selections.
+      await setupDefaultsForSchool(schoolId, school?.schoolLevel ?? "both")
+      await setupCatalogForSchool(schoolId, { skipIfExists: true })
     },
   },
 

@@ -33,9 +33,26 @@
  *   - 50 Health Records + 25 Disciplinary + 35 Achievements
  */
 
+// dotenv MUST load before any module that reads DATABASE_URL at import time.
+// The production provisioning pipeline (@/components/catalog/setup) pulls in
+// the @/lib/db singleton, which reads process.env.DATABASE_URL on first import.
+// On Vercel the env is already injected (no .env file) so this is a no-op there.
+import "dotenv/config"
+
 import { PrismaClient } from "@prisma/client"
 
-import { seedAcademicStructure } from "./academic"
+import {
+  setupCatalogForSchool,
+  setupDefaultsForSchool,
+} from "@/components/catalog/setup"
+
+import {
+  seedDepartments,
+  seedPeriods,
+  seedSchoolYear,
+  seedTerms,
+  seedYearLevels,
+} from "./academic"
 import { seedAdmission } from "./admission"
 import { seedAnnouncements } from "./announcements"
 import { seedAssignments, seedAssignmentSubmissions } from "./assignments"
@@ -48,7 +65,6 @@ import { seedAuditLogs } from "./audit"
 import { seedAllUsers } from "./auth"
 import { seedBanking } from "./banking"
 import { seedCatalogBooks } from "./catalog/books"
-import { seedDemoSchool } from "./catalog/demo"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
@@ -75,12 +91,39 @@ import type { SeedContext } from "./types"
 import { logHeader, logPhase, logSummary, measureDuration } from "./utils"
 
 // ============================================================================
+// SEED STATUS — the single source of truth for "is the demo fully seeded?"
+// Shared by the in-seed short-circuit (below) and ensure-demo.ts (prebuild).
+// Two metrics, not one: students prove Phase 2 (users) ran; classes prove the
+// run reached Phase 6. A partial seed (users but no classes) is NOT "full".
+// ============================================================================
+
+export const SEED_THRESHOLDS = { students: 500, classes: 100 } as const
+
+export async function getDemoSeedStatus(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<{ students: number; classes: number; fullySeeded: boolean }> {
+  const [students, classes] = await Promise.all([
+    prisma.user.count({ where: { schoolId, role: "STUDENT" } }),
+    prisma.class.count({ where: { schoolId } }),
+  ])
+  return {
+    students,
+    classes,
+    fullySeeded:
+      students >= SEED_THRESHOLDS.students &&
+      classes >= SEED_THRESHOLDS.classes,
+  }
+}
+
+// ============================================================================
 // MAIN SEED FUNCTION
 // ============================================================================
 
-async function main() {
+export async function seedMain(externalPrisma?: PrismaClient) {
   const startTime = Date.now()
-  const prisma = new PrismaClient()
+  const prisma = externalPrisma ?? new PrismaClient()
+  const ownsConnection = !externalPrisma
 
   try {
     logHeader()
@@ -110,6 +153,48 @@ async function main() {
     context.schoolId = school.id
 
     // ========================================================================
+    // SHORT-CIRCUIT — skip the heavy phases when the demo is already fully
+    // seeded. prebuild (ensure-demo.ts) runs this against the PROD demo on
+    // every Vercel deploy; the per-phase guards already prevent duplication,
+    // but this two-metric check lets a healthy demo exit in seconds instead
+    // of re-walking ~30 phases. A PARTIAL seed (users created but classes
+    // never reached) fails the classes check, falls through, and the
+    // idempotent phases resume only the missing work.
+    // ========================================================================
+    // SEED_FORCE=1 bypasses the short-circuit and re-walks every phase (which
+    // is safe — all phases are idempotent). Useful for an operator forcing a
+    // re-seed, and for verifying idempotency (run twice, assert equal counts).
+    const seedStatus = await getDemoSeedStatus(prisma, school.id)
+    if (process.env.SEED_FORCE !== "1" && seedStatus.fullySeeded) {
+      console.log(
+        `\n⚡ Demo already fully seeded (${seedStatus.students} students, ${seedStatus.classes} classes).`
+      )
+      console.log(
+        "   Running an idempotency pass on users + academic structure, then exiting early.\n"
+      )
+      await measureDuration("Users (idempotency pass)", () =>
+        seedAllUsers(prisma, school.id)
+      )
+      await measureDuration(
+        "Academic Structure (idempotency pass)",
+        async () => {
+          const yr = await seedSchoolYear(prisma, school.id)
+          await seedTerms(prisma, school.id, yr.id)
+          await seedPeriods(prisma, school.id, yr.id)
+          await seedYearLevels(prisma, school.id)
+          await seedDepartments(prisma, school.id)
+          await setupDefaultsForSchool(school.id, school.schoolLevel ?? "both")
+          await setupCatalogForSchool(school.id, { skipIfExists: true })
+        }
+      )
+      logSummary(startTime, {
+        students: seedStatus.students,
+        classes: seedStatus.classes,
+      })
+      return
+    }
+
+    // ========================================================================
     // PHASE 2: USER ACCOUNTS
     // ========================================================================
     logPhase(2, "USER ACCOUNTS", "حسابات المستخدمين")
@@ -119,27 +204,47 @@ async function main() {
     context.users = allUsers
 
     // ========================================================================
-    // PHASE 3: ACADEMIC STRUCTURE
+    // PHASE 3: ACADEMIC STRUCTURE (unified on the production provisioning
+    // pipeline — src/components/catalog/setup.ts, the same code path real
+    // schools get at onboarding). The seed owns only the temporal/operational
+    // structure (school year / terms / periods) and the demo's Arabic-named
+    // YearLevels + Departments; setup.ts owns ScoreRanges and the catalog
+    // academic structure (levels / grades / streams / subject selections).
     // ========================================================================
-    const { schoolYear, terms, periods, departments, yearLevels } =
-      await measureDuration("Academic Structure", () =>
-        seedAcademicStructure(prisma, school.id)
-      )
+    const { schoolYear, terms, periods, yearLevels, departments } =
+      await measureDuration("Academic Structure", async () => {
+        const schoolYear = await seedSchoolYear(prisma, school.id)
+        const terms = await seedTerms(prisma, school.id, schoolYear.id)
+        const periods = await seedPeriods(prisma, school.id, schoolYear.id)
+        // YearLevels + Departments keep the demo's Arabic names (levelOrder
+        // 1=KG1 … 14=Grade 12 matches YEAR_LEVEL_DEFAULTS in setup.ts, so the
+        // grade↔yearLevel mapping inside setupCatalogForSchool resolves
+        // correctly). setupDefaultsForSchool below sees them (count > 0) and
+        // only provisions ScoreRanges — no duplication, no name drift.
+        const yearLevels = await seedYearLevels(prisma, school.id)
+        const departments = await seedDepartments(prisma, school.id)
+        return { schoolYear, terms, periods, yearLevels, departments }
+      })
     context.schoolYear = schoolYear
     context.terms = terms
     context.periods = periods
-    context.departments = departments
     context.yearLevels = yearLevels
+    context.departments = departments
 
-    // Phase 3.5: Academic Structure + Catalog Bridge
-    await measureDuration("Academic Structure + Catalog Bridge", () =>
-      seedDemoSchool(
-        prisma,
-        school.id,
-        yearLevels,
-        catalogSubjects,
-        school.schoolLevel
-      )
+    // Production defaults: only ScoreRanges are created here (YearLevels +
+    // Departments already exist from above). Idempotent.
+    await measureDuration(
+      "Defaults (ScoreRanges via production pipeline)",
+      () => setupDefaultsForSchool(school.id, school.schoolLevel ?? "both")
+    )
+
+    // Phase 3.5: catalog academic structure via the PRODUCTION pipeline —
+    // replaces the retired hand-rolled catalog/demo.ts seedDemoSchool. Reads
+    // the school's country/curriculum (SD) from the DB. skipIfExists (default)
+    // makes it a fast no-op once the structure is provisioned.
+    await measureDuration(
+      "Catalog Academic Structure (production setupCatalogForSchool)",
+      () => setupCatalogForSchool(school.id, { skipIfExists: true })
     )
 
     // ========================================================================
@@ -394,20 +499,28 @@ async function main() {
     console.error("❌ Seed failed:", error)
     throw error
   } finally {
-    await prisma.$disconnect()
+    // Only close the pool we opened. When ensure-demo.ts passes its own client
+    // it owns the lifecycle, so disconnecting here would break its later work.
+    if (ownsConnection) await prisma.$disconnect()
   }
 }
 
 // ============================================================================
-// EXECUTION
+// EXECUTION (CLI: `pnpm db:seed`)
 // ============================================================================
-
-main()
-  .then(() => {
-    console.log("\n✅ Seed completed successfully!")
-    process.exit(0)
-  })
-  .catch((error) => {
-    console.error("❌ Seed failed:", error)
-    process.exit(1)
-  })
+//
+// Guarded so that `import { seedMain } from "./index"` (ensure-demo.ts) does
+// NOT trigger a full seed at import time. Only runs when this file is the
+// process entrypoint (tsx prisma/seeds/index.ts). Strict: exits non-zero on
+// failure, which is correct for an explicit manual seed.
+if (process.argv[1] && /seeds[\\/]index\.ts$/.test(process.argv[1])) {
+  seedMain()
+    .then(() => {
+      console.log("\n✅ Seed completed successfully!")
+      process.exit(0)
+    })
+    .catch((error) => {
+      console.error("❌ Seed failed:", error)
+      process.exit(1)
+    })
+}

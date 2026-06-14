@@ -661,6 +661,12 @@ export async function seedInquiries(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<number> {
+  const existing = await prisma.admissionInquiry.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Inquiries", existing, "already seeded — skipped")
+    return existing
+  }
+
   let inquiryCount = 0
 
   type InquiryConfig = {

@@ -274,6 +274,12 @@ export async function seedAuditLogs(
 ): Promise<number> {
   logPhase(16, "COMPLIANCE", "الامتثال والتدقيق")
 
+  const existing = await prisma.auditLog.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Audit Logs", existing, "already seeded – skipping")
+    return existing
+  }
+
   if (users.length === 0) {
     logSuccess("Audit Logs", 0, "no users available")
     return 0

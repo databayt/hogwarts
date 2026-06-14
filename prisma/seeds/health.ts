@@ -393,6 +393,18 @@ export async function seedHealthRecords(
     return 0
   }
 
+  const existingHealthCount = await prisma.healthRecord.count({
+    where: { schoolId },
+  })
+  if (existingHealthCount > 0) {
+    logSuccess(
+      "Health Records",
+      existingHealthCount,
+      "already seeded – skipped"
+    )
+    return existingHealthCount
+  }
+
   const targetCount = 55
   const recordsToCreate: Array<{
     studentId: string
@@ -486,6 +498,18 @@ export async function seedDisciplinaryRecords(
   if (students.length === 0 || teachers.length === 0) {
     logSuccess("Disciplinary Records", 0, "missing data")
     return 0
+  }
+
+  const existingDisciplinaryCount = await prisma.disciplinaryRecord.count({
+    where: { schoolId },
+  })
+  if (existingDisciplinaryCount > 0) {
+    logSuccess(
+      "Disciplinary Records",
+      existingDisciplinaryCount,
+      "already seeded – skipped"
+    )
+    return existingDisciplinaryCount
   }
 
   const targetCount = 25
@@ -583,6 +607,18 @@ export async function seedAchievements(
   if (students.length === 0) {
     logSuccess("Achievements", 0, "no students available")
     return 0
+  }
+
+  const existingAchievementCount = await prisma.achievement.count({
+    where: { schoolId },
+  })
+  if (existingAchievementCount > 0) {
+    logSuccess(
+      "Achievements",
+      existingAchievementCount,
+      "already seeded – skipped"
+    )
+    return existingAchievementCount
   }
 
   const targetCount = 35

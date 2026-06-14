@@ -156,8 +156,12 @@ export async function seedStreamEnrollments(
     return 0
   }
 
-  // Clean existing enrollments
-  await prisma.streamEnrollment.deleteMany({ where: { schoolId } })
+  // Idempotency guard — skip if already seeded
+  const existing = await prisma.streamEnrollment.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Stream Enrollments", existing, "already seeded")
+    return existing
+  }
 
   const enrollmentData: Array<{
     schoolId: string

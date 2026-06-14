@@ -68,7 +68,7 @@ export async function seedBankAccounts(
     try {
       // Generate unique IDs for bank integration fields
       const bankId = `bank_${account.name.toLowerCase().replace(/\s+/g, "_")}`
-      const accountId = `acc_${Date.now()}_${count}`
+      const accountId = `acc_seed_${schoolId}_${count}`
 
       await prisma.bankAccount.upsert({
         where: {
@@ -160,8 +160,12 @@ async function seedBankTransactions(
 
   if (bankAccounts.length === 0) return 0
 
-  // Clean existing transactions
-  await prisma.transaction.deleteMany({ where: { schoolId } })
+  // Non-destructive idempotency guard: skip if transactions already seeded
+  const existingCount = await prisma.transaction.count({ where: { schoolId } })
+  if (existingCount > 0) {
+    logSuccess("Transactions", existingCount, "already seeded – skipped")
+    return existingCount
+  }
 
   const operatingAccount = bankAccounts[0] // Primary account
   const transactions: Array<{

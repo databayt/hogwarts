@@ -231,8 +231,12 @@ async function seedExpenseReceipts(
   schoolId: string,
   userId: string
 ): Promise<void> {
-  // Clean existing
-  await prisma.expenseReceipt.deleteMany({ where: { schoolId } })
+  // Idempotency guard — skip if already seeded
+  const existing = await prisma.expenseReceipt.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Expense Receipts", existing, "already seeded")
+    return
+  }
 
   let count = 0
 

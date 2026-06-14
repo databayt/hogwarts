@@ -228,6 +228,29 @@ export async function seedDepartments(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<DepartmentRef[]> {
+  // Unification-safe + idempotent: if departments already exist — e.g. the
+  // production setupDefaultsForSchool created English-named ones during an
+  // earlier provisioning, or a prior seed ran — REUSE them. The upsert below
+  // keys on departmentName, so seeding the Arabic names on top of existing
+  // English departments would DOUBLE the list (6 EN + 6 AR). Reusing keeps a
+  // single source of truth and lets the i18n layer translate on display.
+  const existingDepartments = await prisma.department.findMany({
+    where: { schoolId },
+    select: { id: true, departmentName: true, lang: true },
+  })
+  if (existingDepartments.length > 0) {
+    logSuccess(
+      "Departments",
+      existingDepartments.length,
+      "already provisioned — reused (no language duplicates)"
+    )
+    return existingDepartments.map((d) => ({
+      id: d.id,
+      departmentName: d.departmentName,
+      lang: d.lang ?? "ar",
+    }))
+  }
+
   const departments: DepartmentRef[] = []
 
   for (const deptData of DEPARTMENTS) {

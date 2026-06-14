@@ -270,69 +270,93 @@ export async function seedGamification(
     "IMPROVEMENT",
   ] as const
   let rewardCount = 0
-  for (let i = 0; i < 150; i++) {
-    const student = students[i % students.length]
-    const reason = rewardReasons[i % rewardReasons.length]
-    const points =
-      reason === "MONTHLY_PERFECT"
-        ? 75
-        : reason === "WEEKLY_STREAK"
-          ? 50
-          : reason === "BADGE_EARNED"
-            ? 40
-            : reason === "IMPROVEMENT"
-              ? 25
-              : 10
+  const existingRewardCount = await prisma.attendanceReward.count({
+    where: { schoolId },
+  })
+  if (existingRewardCount === 0) {
+    for (let i = 0; i < 150; i++) {
+      const student = students[i % students.length]
+      const reason = rewardReasons[i % rewardReasons.length]
+      const points =
+        reason === "MONTHLY_PERFECT"
+          ? 75
+          : reason === "WEEKLY_STREAK"
+            ? 50
+            : reason === "BADGE_EARNED"
+              ? 40
+              : reason === "IMPROVEMENT"
+                ? 25
+                : 10
 
-    try {
-      await prisma.attendanceReward.create({
-        data: {
-          schoolId,
-          studentId: student.id,
-          points,
-          reason,
-          description: `نقاط ${reason === "DAILY_PRESENT" ? "الحضور اليومي" : reason === "WEEKLY_STREAK" ? "سلسلة الأسبوع" : "التميز"}`,
-          awardedAt: new Date(
-            now.getTime() - randomNumber(1, 60) * 24 * 60 * 60 * 1000
-          ),
-        },
-      })
-      rewardCount++
-    } catch {
-      // Skip
+      try {
+        await prisma.attendanceReward.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            points,
+            reason,
+            description: `نقاط ${reason === "DAILY_PRESENT" ? "الحضور اليومي" : reason === "WEEKLY_STREAK" ? "سلسلة الأسبوع" : "التميز"}`,
+            awardedAt: new Date(
+              now.getTime() - randomNumber(1, 60) * 24 * 60 * 60 * 1000
+            ),
+          },
+        })
+        rewardCount++
+      } catch {
+        // Skip
+      }
     }
+  } else {
+    logSuccess(
+      "Attendance Rewards",
+      existingRewardCount,
+      "already seeded – skip"
+    )
   }
   totalRecords += rewardCount
   logSuccess("Attendance Rewards", rewardCount, "point records")
 
   // 6. Create Student Badge Awards (70)
   let badgeAwardCount = 0
-  for (let i = 0; i < 70; i++) {
-    const student = students[i % students.length]
-    const badgeId = badgeIds[i % badgeIds.length]
-    const weeksAgo = randomNumber(1, 10)
-    const periodStart = new Date(
-      now.getTime() - weeksAgo * 7 * 24 * 60 * 60 * 1000
-    )
-    const periodEnd = new Date(periodStart.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const existingBadgeAwardCount = await prisma.studentBadge.count({
+    where: { schoolId },
+  })
+  if (existingBadgeAwardCount === 0) {
+    for (let i = 0; i < 70; i++) {
+      const student = students[i % students.length]
+      const badgeId = badgeIds[i % badgeIds.length]
+      const weeksAgo = randomNumber(1, 10)
+      const periodStart = new Date(
+        now.getTime() - weeksAgo * 7 * 24 * 60 * 60 * 1000
+      )
+      const periodEnd = new Date(
+        periodStart.getTime() + 7 * 24 * 60 * 60 * 1000
+      )
 
-    try {
-      await prisma.studentBadge.create({
-        data: {
-          schoolId,
-          studentId: student.id,
-          badgeId,
-          awardedAt: new Date(
-            now.getTime() - randomNumber(1, 60) * 24 * 60 * 60 * 1000
-          ),
-          periodStart,
-          periodEnd,
-        },
-      })
-      badgeAwardCount++
-    } catch {
-      // Skip duplicates (unique constraint on schoolId, studentId, badgeId, periodStart)
+      try {
+        await prisma.studentBadge.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            badgeId,
+            awardedAt: new Date(
+              now.getTime() - randomNumber(1, 60) * 24 * 60 * 60 * 1000
+            ),
+            periodStart,
+            periodEnd,
+          },
+        })
+        badgeAwardCount++
+      } catch {
+        // Skip duplicates (unique constraint on schoolId, studentId, badgeId, periodStart)
+      }
     }
+  } else {
+    logSuccess(
+      "Student Badges",
+      existingBadgeAwardCount,
+      "already seeded – skip"
+    )
   }
   totalRecords += badgeAwardCount
   logSuccess("Student Badges", badgeAwardCount, "badge awards")

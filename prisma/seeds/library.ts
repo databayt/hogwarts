@@ -990,6 +990,12 @@ export async function seedBorrowRecords(
   schoolId: string,
   students: StudentRef[]
 ): Promise<number> {
+  const existing = await prisma.borrowRecord.count({ where: { schoolId } })
+  if (existing > 0) {
+    logSuccess("Borrow Records", existing, "already seeded — skipped")
+    return existing
+  }
+
   let borrowCount = 0
 
   const books = await prisma.schoolBook.findMany({
