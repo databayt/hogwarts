@@ -2,7 +2,7 @@
 
 **Status:** :yellow_circle: IN PROGRESS
 **Completion:** 84%
-**Last Updated:** 2026-06-14
+**Last Updated:** 2026-06-14 (deploy: residual tsc errors cleared)
 
 ---
 
@@ -11,6 +11,14 @@
 An 11-area read-only audit + adversarial verification produced **181 confirmed
 findings** (6 P0, 47 P1, 101 P2, 27 P3). Full list + machine-readable copy live in
 `OPTIMIZATION_BACKLOG.md` / `.audit-findings.json`.
+
+> **Deploy follow-up (2026-06-14):** the optimization pass left 6 residual TS
+> errors in this block (`dashboard/card.tsx` `KpiCardProps.delta` required while
+> `metrics-cards.tsx` omits it; `observability/conference/queries.ts` BigInt
+> literal `0n` under a sub-ES2020 target; `tenants/actions.ts` `getTenantDetail`
+> returning nullable `email` against a `string` type). All three cleared before
+> the deploy — `delta` made optional (the card already null-guards it), `0n` → `0`,
+> owner `email` coerced `?? ""`. Block + whole-repo `tsc --noEmit` now 0 errors.
 
 **Fixed this pass (all 6 P0 + ~24 P1/P2, tsc clean):**
 
