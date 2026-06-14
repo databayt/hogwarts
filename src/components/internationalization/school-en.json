@@ -6238,7 +6238,12 @@
             "selectedCount": "{selected} of {total} selected",
             "points": "pts",
             "selectAtLeastOne": "Select at least one question",
-            "saveError": "Failed to save"
+            "saveError": "Failed to save",
+            "autoGenerate": "Auto-generate from template",
+            "autoGenerating": "Generating…",
+            "autoGenerateSuccess": "Generated {count} questions ({marks} marks)",
+            "autoGeneratePartial": "{summary} — bank short on some categories",
+            "autoGenerateError": "Auto-generation failed"
           },
           "template": {
             "empty": "No templates available. Create an exam template first.",
@@ -8434,7 +8439,17 @@
       "scorePlaceholder": "0",
       "maxScorePlaceholder": "100",
       "gradePlaceholder": "e.g. A+, B, C",
-      "optionalFeedbackForStudent": "Optional feedback for the student"
+      "optionalFeedbackForStudent": "Optional feedback for the student",
+      "share": {
+        "pageTitle": "Report Card",
+        "notFoundTitle": "Report Card Unavailable",
+        "notFoundDescription": "This report card is no longer available or the share link has expired.",
+        "subjectGrades": "Subject Grades",
+        "overallGPA": "Overall GPA",
+        "rankLabel": "Class Rank",
+        "rankOf": "of",
+        "termLabel": "Term"
+      }
     },
     "classrooms": {
       "title": "Classrooms",

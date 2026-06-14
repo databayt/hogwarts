@@ -48,20 +48,19 @@
     ],
     "ask": []
   },
-  "model": "opus",
+  "model": "claude-opus-4-8",
   "enableAllProjectMcpServers": true,
   "includeCoAuthoredBy": true,
-  "alwaysThinkingEnabled": true,
   "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "opus",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
     "PROJECT_NAME": "Hogwarts School Automation Platform",
     "PROJECT_TYPE": "nextjs-prisma-multiTenant",
     "MULTI_TENANT": "true",
     "BMAD_ENABLED": "true",
     "AUTOMATION_LEVEL": "maximum",
     "TDD_ENFORCE": "true",
-    "ORCHESTRATOR_MODEL": "opus",
-    "DEFAULT_MODEL": "opus",
+    "ORCHESTRATOR_MODEL": "claude-opus-4-8",
+    "DEFAULT_MODEL": "claude-opus-4-8",
     "COVERAGE_TARGET": "95"
   },
   "hooks": {

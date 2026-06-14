@@ -19,7 +19,7 @@ pnpm install && pnpm prisma generate && pnpm dev
 5. **Run `pnpm tsc --noEmit`** before builds (catches silent failures)
 6. **Always use port 3000** for dev server - NEVER switch to another port
 7. **Only use central `.env`** - NEVER create `.env.local`, `.env.development`, or any `.env.x` files
-8. **NEVER run `pnpm db:seed`** - Always use `pnpm db:seed:single <name>`. Full seed is manual-only.
+8. **Full seed is now idempotent + the default auto-provision** - `prebuild` runs `ensure-demo.ts`, which drives the full `seedMain` against the prod demo on every deploy (short-circuits when already seeded; never fails the build). `pnpm db:seed` is safe to re-run (per-phase count-guards prevent duplication); `SEED_FORCE=1` forces a full re-walk. Use `pnpm db:seed:single <name>` for targeted module re-seeds. See `prisma/seeds/README.md`.
 9. **Work directly on `main`** - Edit and commit in `/Users/abdout/hogwarts` on `main`. NEVER create git branches, worktrees, stashes, or snapshots, and never `git checkout`/`switch` to another branch. No "park" / "snapshot" / "integration" switching. Push to production only when the user says "deploy".
 
 ---
@@ -164,7 +164,8 @@ pnpm tsc --noEmit         # TypeScript check (CRITICAL before builds)
 ```bash
 pnpm prisma generate              # After schema changes
 pnpm prisma migrate dev            # Create migration
-pnpm db:seed:single <name>        # Seed one module (ALWAYS use this)
+pnpm db:seed                       # Full demo seed (idempotent; SEED_FORCE=1 to re-walk)
+pnpm db:seed:single <name>        # Re-seed one module against the demo
 pnpm db:seed:single --list        # List available seeds
 ```
 

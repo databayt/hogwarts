@@ -70,7 +70,11 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
 - **`ContentOverride` semantics**: `isHidden: true` row = hidden; no row = visible. The
   subject detail page filters for non-admin roles only — admins see everything plus the
   customize panel.
-- **Seeds**: NEVER run the full seed (`pnpm db:seed:single <name>` only). `content.ts` is
+- **Seeds**: the full seed (`pnpm db:seed`) is now idempotent and runs as the prebuild
+  default (via `prisma/seeds/ensure-demo.ts`); `db:seed:single <name>` is for targeted
+  module re-seeds. Academic structure is provisioned through the **production pipeline**
+  (`setupDefaultsForSchool` + `setupCatalogForSchool`) — the hand-rolled `catalog/demo.ts`
+  was retired, so the seed and onboarding share one source of truth. `content.ts` stays
   idempotent by deterministic (scope ids + title/questionText) identity — keep new seed
   output deterministic or re-runs will duplicate.
 - **`approveProposal` notification must never fail the approval** — dispatch happens after

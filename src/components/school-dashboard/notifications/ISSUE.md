@@ -50,6 +50,19 @@ last_audited: 2026-05-25
 
 _Chronological close log — appended as items ship._
 
+- **2026-06-14 — Exam automation notifications wired.**
+  Three new notification paths now call `dispatchNotification` /
+  `dispatchNotificationsToAudience` from `@/lib/dispatch-notification`:
+  1. **Results published** — `finalizeExamResults` (exams/mark/actions/finalize.ts)
+     dispatches an `exam_results_published` notification to the class audience
+     after writing all `ExamResult` + `Result` rows.
+  2. **Report card ready** — `publishReportCards` (grades/actions/report-cards.ts)
+     dispatches a `report_card_ready` notification to the class audience on publish.
+  3. **Exam reminders** — `/api/cron/exam-reminders` sweeps upcoming exams and
+     sends advance reminders to students and teachers. Runs on the existing
+     Vercel cron schedule. Guards against firing after `examDate` has passed.
+     All three are fire-and-forget (`.catch` logged, never thrown).
+
 - **2026-06-12 — Scheduled broadcasts never fired.** `sendBroadcast`
   (school/communication) only processed inline when unscheduled; a batch with
   `scheduledFor` stayed `pending` forever because no cron swept it. Added

@@ -13,6 +13,27 @@ last_audited: 2026-06-11
 
 # Internationalization — Live Work List
 
+## Done (2026-06-14 — exam+grade automation keys)
+
+- [x] Added `school.exams.wizard.examWizard.questions.autoGenerate*` (5 keys:
+      auto-generate-from-template button + toasts) and `school.grades.share.*`
+      (8 keys: public report-card share page) — en+ar in the same edit.
+      Routine additive feature-namespace change; parity + `errorReturn` ratchet
+      suites green (new server actions route errors through `ACTION_ERRORS` /
+      `code:` so the ratchet held at baseline). Owned by exams/grades blocks.
+- [ ] FOLLOW-UP: the compact grade-template builder (`grades/template/`) reads
+      `school.gradeTemplate.*` via loose access with English fallbacks. Add that
+      namespace (~35 keys: steps/header/scores/footer labels) to en+ar to localize
+      the builder UI (functional in English today).
+
+## Done (2026-06-13 — conference namespace keys)
+
+- [x] Added 7 `liveClasses.networkTest.{qualityExcellent,qualityGood,qualityPoor,qualityLost,qualityUnknown,pathUnknown,pathNotConnected}`
+      keys en+ar (the diagnostic page rendered these values as hardcoded English).
+      Routine additive feature-namespace change, parity-kept; no system change.
+      Owned by the conference block — see `school-dashboard/conference/ISSUE.md`
+      (2026-06-13 hardening pass) and hogwarts#3.
+
 ## Done (2026-06-12 — ratchet defense)
 
 - [x] `errorReturn` ratchet breach (1544 > 1543 baseline) fixed at source:

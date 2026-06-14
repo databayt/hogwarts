@@ -6246,7 +6246,12 @@
             "selectedCount": "{selected} من {total} محدد",
             "points": "نقطة",
             "selectAtLeastOne": "اختر سؤالاً واحداً على الأقل",
-            "saveError": "فشل الحفظ"
+            "saveError": "فشل الحفظ",
+            "autoGenerate": "توليد تلقائي من القالب",
+            "autoGenerating": "جارٍ التوليد…",
+            "autoGenerateSuccess": "تم توليد {count} سؤالاً ({marks} درجة)",
+            "autoGeneratePartial": "{summary} — البنك ينقصه بعض الفئات",
+            "autoGenerateError": "فشل التوليد التلقائي"
           },
           "template": {
             "empty": "لا توجد قوالب متاحة. أنشئ قالب امتحان أولاً.",
@@ -8442,7 +8447,17 @@
       "scorePlaceholder": "0",
       "maxScorePlaceholder": "100",
       "gradePlaceholder": "مثال: A+, B, C",
-      "optionalFeedbackForStudent": "ملاحظات اختيارية للطالب"
+      "optionalFeedbackForStudent": "ملاحظات اختيارية للطالب",
+      "share": {
+        "pageTitle": "بطاقة الدرجات",
+        "notFoundTitle": "بطاقة الدرجات غير متاحة",
+        "notFoundDescription": "بطاقة الدرجات هذه لم تعد متاحة أو انتهت صلاحية رابط المشاركة.",
+        "subjectGrades": "درجات المواد",
+        "overallGPA": "المعدل التراكمي",
+        "rankLabel": "الترتيب في الفصل",
+        "rankOf": "من",
+        "termLabel": "الفصل الدراسي"
+      }
     },
     "classrooms": {
       "title": "الغرف الدراسية",

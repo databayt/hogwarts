@@ -15,8 +15,8 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Overview", href: "/dashboard", icon: "pieChart" },
   { title: "Analytics", href: "/analytics", icon: "trendingUp" },
   { title: "Sales", href: "/sales", icon: "sales" },
-  { title: "Kanban", href: "/kanban", icon: "checkCircle" },
-  { title: "Products", href: "/product", icon: "file" },
+  // Kanban + Products are demo-only scaffolds — kept out of operator nav until
+  // they have real persistence/behaviour (routes still reachable by direct URL).
   { title: "Domains", href: "/domains", icon: "browser" },
   { title: "Billing", href: "/billing", icon: "pieChart" },
   { title: "Observability", href: "/observability", icon: "barChart" },

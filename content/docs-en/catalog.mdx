@@ -79,12 +79,12 @@ to `school_*`. The Prisma client accessor is the camelCase of the model name
 
 ### Bridge models (carry `schoolId`)
 
-| Model                  | Table (`@@map`)                 | Accessor                  | Purpose                                                                |
-| ---------------------- | ------------------------------- | ------------------------- | ---------------------------------------------------------------------- |
-| `SubjectSelection`     | `school_subject_selections`     | `db.subjectSelection`     | One row per adopted subject+grade; `isActive` toggles a subject on/off |
-| `ContentOverride`      | `school_content_overrides`      | `db.contentOverride`      | Per-school chapter/lesson/video override; `isHidden` hides content     |
-| `InstructorPreference` | `school_instructor_preferences` | `db.instructorPreference` | Per-school teacher/video ranking                                       |
-| `BookSelection`        | `school_book_selections`        | `db.bookSelection`        | Bridges a catalog `Book` into a school library                         |
+| Model                  | Table (`@@map`)                 | Accessor                  | Purpose                                                                                                       |
+| ---------------------- | ------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `SubjectSelection`     | `school_subject_selections`     | `db.subjectSelection`     | One row per adopted subject+grade; `isActive` toggles a subject on/off                                        |
+| `ContentOverride`      | `school_content_overrides`      | `db.contentOverride`      | Per-school chapter/lesson/video override; `isHidden` hides content, `hideQuiz` hides a lesson's practice quiz |
+| `InstructorPreference` | `school_instructor_preferences` | `db.instructorPreference` | Per-school teacher/video ranking                                                                              |
+| `BookSelection`        | `school_book_selections`        | `db.bookSelection`        | Bridges a catalog `Book` into a school library                                                                |
 
 ### School mirrors (catalog FK → `catalogXxxId`)
 
@@ -372,8 +372,20 @@ dialog enforces a per-type whitelist:
   `admin-get-course.ts` tags everything with `_isHidden` instead) **and** the
   subject detail page (`subjects/[slug]/page.tsx` filters chapters/lessons and
   the video rail for non-admin roles, while ADMIN/DEVELOPER see everything plus
-  the mounted **Customize** panel — `SchoolCatalogCustomization`, which was
-  previously orphaned).
+  the mounted **Customize** panel — `SchoolCatalogCustomization`). The Customize
+  panel (`topic-overrides.tsx`) exposes hide toggles for each chapter, lesson,
+  and **specific instructor video** (the per-video toggle now receives the
+  lesson's videos + their override state — previously the data was never passed,
+  so it never rendered).
+- **`ContentOverride.hideQuiz`** — hides a lesson's practice quiz for the school
+  while keeping the lesson visible (set via `setLessonQuizHidden`; a lesson
+  override row can carry `isHidden` and/or `hideQuiz`). Enforced in stream's
+  `get-lesson-content.ts` (returns no questions when hidden).
+- **`InstructorPreference`** — the admin's preferred video source per subject
+  (platform / school / a specific teacher); `get-lesson-with-progress.ts` ranks
+  the lesson's videos by it. Video visibility itself is owner-controlled
+  (PRIVATE owner-only, SCHOOL, PUBLIC, PAID); `removeVideoPaywall` converts a
+  PAID video back to a free audience.
 - **Global search** now filters to **PUBLISHED-only** subjects
   (`atom/generic-command-menu/server/global-search.ts`) — a prior leak of
   unpublished content is fixed.

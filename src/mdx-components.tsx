@@ -85,6 +85,7 @@ import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CodeTabs } from "@/components/docs/code-tabs"
 import { ComponentPreview } from "@/components/docs/component-preview"
 import { ComponentSource } from "@/components/docs/component-source"
+import { ConferenceStructure } from "@/components/docs/conference-structure"
 import { CopyButton } from "@/components/docs/copy-button"
 import { DependencyChain } from "@/components/docs/dependency-chain"
 import { DirectoryStructure } from "@/components/docs/directory-structure"
@@ -408,6 +409,7 @@ const mdxComponents = {
   PaymentMethodSelector,
   DependencyChain,
   CatalogStructure,
+  ConferenceStructure,
   Mermaid,
   DirectoryStructure,
   ListingStructure,

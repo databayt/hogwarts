@@ -22,8 +22,8 @@ import "dotenv/config"
 import { writeFileSync } from "node:fs"
 
 import { db } from "@/lib/db"
+import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
 import {
-  applyTimetableStructureForNewSchool,
   setupCatalogForSchool,
   teardownCatalogForSchool,
 } from "@/components/catalog/setup"

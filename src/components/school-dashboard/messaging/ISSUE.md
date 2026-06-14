@@ -14,9 +14,19 @@ last_audited: 2026-05-25
 # Messaging — Production Readiness Tracker
 
 **Status:** 🟢 CODE PRODUCTION-READY (incl. group WhatsApp) — remaining work is ops/env only
-**Completion:** 100% code, 0% ops
-**Last Updated:** 2026-06-12
-**Ship Issue:** [#240](https://github.com/databayt/hogwarts/issues/240) is **CLOSED** — the live blocker is now [#262](https://github.com/databayt/hogwarts/issues/262) (Socket.IO → Oracle Cloud).
+**Completion:** 100% code, ops in progress (Oracle VM)
+**Last Updated:** 2026-06-13
+**Ship Issue:** [#240](https://github.com/databayt/hogwarts/issues/240) is **CLOSED**; [#262](https://github.com/databayt/hogwarts/issues/262) (Socket.IO → Oracle Cloud) was auto-closed stale and is **superseded by the live runbook at [`socket-server/DEPLOY.md`](../../../../socket-server/DEPLOY.md)**. Tracked under epic [#324](https://github.com/databayt/hogwarts/issues/324).
+
+## 2026-06-13 deployment-prep pass (Oracle Cloud account created)
+
+Prepped the realtime + WhatsApp infra for the Oracle Always-Free VM (account now exists; VM/DNS/firewall are the next manual steps). All code-side blockers for going live are now closed:
+
+- **Consolidated runbook `socket-server/DEPLOY.md`** — account → live in 9 phases, marked 👤 (you: Oracle/DNS/Vercel consoles) vs 🤖 (Claude over SSH). Current port (3000), Evolution v2, `.env`-based secrets.
+- **Combined `docker-compose.yml`** (committable, no hardcoded secrets) — `socket-server` + Evolution API **v2** + Postgres + Redis. Replaces the prior untracked v1-style compose, which would have **broken the integration**: the app calls v2 endpoints (`integration: "WHATSAPP-BAILEYS"`, `{number,text}` sendText, nested per-instance webhook), and v2 **requires Postgres**. Image pinned to `atendai/evolution-api:v2.1.1` (was `atendebot/...:latest`).
+- **Secrets regenerated as URL-safe hex** into `socket-server/.env` (gitignored) + `.env.example` template. The old base64 webhook secret contained `+`/`/`/`=` — and the webhook reads `searchParams.get("secret")` which URL-decodes, so `+`→space silently broke the constant-time compare (webhook would have failed closed in prod). Same 4 app-facing values must be set on Vercel (Phase 7).
+- **Multi-tenant CORS fix in `server.ts`** — `cors.origin` was a single fixed string, so only ONE school's subdomain could connect. Now accepts a comma-separated `CLIENT_URL` allowlist **plus any `*.databayt.org`** origin in production. Adding a school subdomain needs no socket redeploy. tsc 0.
+- **Deterministic Docker build** — Dockerfile now copies `package-lock.json` + uses `npm ci` (was `npm install` without the lockfile). Verified `npm ci` lockfile-in-sync locally.
 
 ## 2026-06-12 performance + WhatsApp-correctness pass (3 commits on main)
 
@@ -149,15 +159,16 @@ providerMessageId, retryCount, lastError, sentAt)` model + table (additive,
       1:1 still uses the `Message` scalars (Part A); the two retry paths never
       overlap. `Message` scalar columns are unchanged (no last-writer-wins).
 
-### P1 — High (Ops blockers — must complete before real traffic; tracked in #262)
+### P1 — High (Ops blockers — must complete before real traffic; runbook: `socket-server/DEPLOY.md`)
 
-- [ ] Deploy the Socket.IO server (`socket-server/`) — not yet live. #262 migrates this from Railway/Fly to an Oracle Cloud Always-Free VM
-- [ ] Set `SOCKET_SECRET` on the socket host (same value must match Vercel)
-- [ ] Set `SOCKET_SECRET` + `EMIT_SECRET` on Vercel (protects `/api/emit*` routes)
-- [ ] Set `NEXT_PUBLIC_SOCKET_URL=https://socket.databayt.org` on Vercel — local `.env` currently has `http://localhost:3001` (dev-only)
-- [ ] Set `CRON_SECRET` on Vercel — currently **empty** in `.env`; required for `/api/cron/*` (WhatsApp retry + notification dispatch). Endpoint refuses to run in production when unset.
-- [ ] **Set `WHATSAPP_WEBHOOK_SECRET` on Vercel + include `?secret=$WHATSAPP_WEBHOOK_SECRET` in Evolution's `WEBHOOK_GLOBAL_URL`.** Webhook fails closed in production when unset.
-- [ ] (Optional) Set `REDIS_URL` for multi-instance presence scaling
+Secrets are pre-generated in `socket-server/.env` (gitignored). The 4 app-facing values must be set identically on Vercel — see DEPLOY.md Phase 7.
+
+- [ ] Create the Oracle VM + DNS A records (`socket`, `evolution`) + Security List 80/443/22 (DEPLOY.md Phases 1.2–3, 👤 manual)
+- [ ] Deploy the stack to `/opt/hogwarts/socket-server` (`docker compose up -d --build` — socket + Evolution v2 + Postgres + Redis) (Phases 4–5, 🤖)
+- [ ] Nginx + Let's Encrypt for `socket.databayt.org` + `evolution.databayt.org` (Phase 6, 🤖)
+- [ ] Vercel (Production): `NEXT_PUBLIC_SOCKET_URL`, `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `SOCKET_SECRET`, `EMIT_SECRET`, `WHATSAPP_WEBHOOK_SECRET` (match `.env`), confirm `CRON_SECRET` non-empty (Phase 7, 👤)
+- [ ] Each school scans the WhatsApp QR; verify session survives `docker compose restart` (Phase 8)
+- [ ] (Optional) `UPSTASH_REDIS_REST_URL` + `_TOKEN` on Vercel for the durable rate limiter / multi-instance presence (the VM Redis already backs the socket adapter)
 
 ### P2 — Medium
 
@@ -252,17 +263,15 @@ normalized digits-only phone format and `actions.test.ts` to the batched
 
 **SCHEMA (done):** `MessageWhatsappDelivery` table is live on the Neon default branch (additive).
 
-**OPS — set by the operator on Vercel + Evolution + socket host (cannot be done from code):**
+**OPS — follow `socket-server/DEPLOY.md` (cannot be done from code).** Secrets are pre-generated in `socket-server/.env`; the 4 app-facing values go on Vercel identically.
 
-- [ ] **Each school scans the WhatsApp QR** (existing admin dashboard) to create a `connected` `WhatsAppSession` — required for any outbound WA. `EVOLUTION_API_URL` + `EVOLUTION_API_KEY` are already set.
-- [ ] **Vercel: `WHATSAPP_WEBHOOK_SECRET`** — the webhook fails closed in prod without it (inbound WA→app bridge stays dark). As of 2026-06-12 the per-instance webhook URL automatically carries `?secret=` (set at QR-connect time), so schools connected BEFORE the secret existed must disconnect/reconnect once — or append `?secret=$WHATSAPP_WEBHOOK_SECRET` to Evolution's `WEBHOOK_GLOBAL_URL` if global webhooks are used.
-- [ ] **Vercel: confirm `CRON_SECRET`** is set (the `*/5` WhatsApp retry cron refuses to run without it).
-- [ ] **Vercel + socket host: `EMIT_SECRET` + `SOCKET_SECRET`** (same value both sides) — the hardened emit guard now fails closed if unset, so realtime push 401s until both are set.
-- [ ] **Vercel: `NEXT_PUBLIC_SOCKET_URL=https://socket.databayt.org`** (local `.env` is `localhost:3001`).
-- [ ] **Deploy `socket-server/`** (#262, long-lived host — not Vercel-serverless). Until live, realtime + inbound-WA push run on the polling fallback (functional, just not instant).
-- [ ] **(Optional) `UPSTASH_REDIS_REST_URL` + `_TOKEN`** — activates the durable rate limiter + multi-instance presence; otherwise the in-memory fallback applies.
+- [ ] **Oracle VM + DNS + firewall** (DEPLOY.md Phases 1.2–3). Account exists as of 2026-06-13.
+- [ ] **Deploy stack + Nginx + TLS** (Phases 4–6): socket + Evolution v2 + Postgres + Redis on the VM, `socket.databayt.org` + `evolution.databayt.org`.
+- [ ] **Each school scans the WhatsApp QR** (existing admin dashboard) → `connected` `WhatsAppSession`, required for outbound WA. The app sets each instance's webhook URL (incl. `?secret=`) at QR-connect time via `/instance/create` — **no global webhook env needed** (the compose intentionally omits `WEBHOOK_GLOBAL_URL`).
+- [ ] **Vercel (Production):** `NEXT_PUBLIC_SOCKET_URL=https://socket.databayt.org`, `EVOLUTION_API_URL=https://evolution.databayt.org`, `EVOLUTION_API_KEY`, `SOCKET_SECRET`, `EMIT_SECRET`, `WHATSAPP_WEBHOOK_SECRET` (all from `.env`); confirm `CRON_SECRET` non-empty. Webhook + emit + cron all fail closed in prod when unset.
+- [ ] **(Optional) `UPSTASH_REDIS_REST_URL` + `_TOKEN`** — durable rate limiter + multi-instance presence; otherwise in-memory fallback (the VM Redis already backs the socket.io adapter).
 
-**Net:** 1:1 outbound WhatsApp works the moment a school scans the QR. Group outbound + retry works too (join table live). Inbound + realtime light up once the 3 secrets are set and the socket server is deployed (#262).
+**Net:** 1:1 outbound WhatsApp works the moment a school scans the QR. Group outbound + retry works too (join table live). Inbound + realtime light up once the Vercel secrets are set and the VM stack is deployed (DEPLOY.md).
 
 ---
 

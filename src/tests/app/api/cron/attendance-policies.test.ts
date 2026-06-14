@@ -15,6 +15,7 @@ vi.mock("@/lib/db", () => ({
     policyTrigger: {
       findMany: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
     },
     policyExemption: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
@@ -54,6 +55,9 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
     vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
     vi.mocked(db.policyTrigger.findMany).mockResolvedValue([])
     vi.mocked(db.policyTrigger.create).mockResolvedValue({} as any)
+    vi.mocked(db.policyTrigger.createMany).mockResolvedValue({
+      count: 0,
+    } as any)
     vi.mocked(db.policyExemption.findMany).mockResolvedValue([])
     vi.mocked(db.user.findMany).mockResolvedValue([])
   })
@@ -117,16 +121,15 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
     const body = await res.json()
 
     expect(body.triggersCreated).toBe(1)
-    expect(db.policyTrigger.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          schoolId: "s1",
-          studentId: "student-1",
-          tier: 1,
-          action: "NOTIFICATION",
-        }),
-      })
-    )
+    // Triggers are now flushed as a batched createMany (array payload).
+    const createManyCall = vi.mocked(db.policyTrigger.createMany).mock
+      .calls[0]?.[0]
+    expect((createManyCall?.data as any[])[0]).toMatchObject({
+      schoolId: "s1",
+      studentId: "student-1",
+      tier: 1,
+      action: "NOTIFICATION",
+    })
   })
 
   it("creates Tier 4 trigger at 15 absences (highest threshold)", async () => {
@@ -144,9 +147,9 @@ describe("GET /api/cron/attendance-policies (nightly threshold eval)", () => {
     const body = await res.json()
 
     expect(body.triggersCreated).toBe(1)
-    const call = vi.mocked(db.policyTrigger.create).mock.calls[0]?.[0]
-    expect((call?.data as any)?.tier).toBe(4)
-    expect((call?.data as any)?.action).toBe("REFERRAL")
+    const call = vi.mocked(db.policyTrigger.createMany).mock.calls[0]?.[0]
+    expect((call?.data as any[])[0]?.tier).toBe(4)
+    expect((call?.data as any[])[0]?.action).toBe("REFERRAL")
   })
 
   it("skips exempt students", async () => {
