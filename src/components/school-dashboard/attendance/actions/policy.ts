@@ -11,6 +11,7 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { ActionResponse } from "./core"
+import { guardAttendance } from "./helpers"
 
 // ============================================================================
 // POLICY ENGINE - EVALUATION
@@ -238,10 +239,12 @@ export async function getPolicyTriggers(input?: {
   }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return { success: false, error: "Missing school context" }
-    }
+    // SECURITY: policy triggers expose student PII + enforcement actions and
+    // were reachable with only a subdomain header. Require an analytics-capable
+    // staff role.
+    const g = await guardAttendance("view_analytics")
+    if (!g.ok) return g.error
+    const { schoolId } = g
 
     const triggers = await db.policyTrigger.findMany({
       where: {

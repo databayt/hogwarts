@@ -4,7 +4,7 @@
 import { type Metadata } from "next"
 import Link from "next/link"
 import { auth } from "@/auth"
-import { Barcode, Clock, MapPin, Pencil, QrCode, Upload } from "lucide-react"
+import { Barcode, MapPin, Pencil, QrCode, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -65,13 +65,6 @@ const methods = [
     color: "bg-pink-100 text-pink-600",
     recommended: false,
   },
-  {
-    id: "realtime",
-    icon: Clock,
-    href: "",
-    color: "bg-cyan-100 text-cyan-600",
-    recommended: false,
-  },
 ]
 
 export default async function Page({ params }: Props) {
@@ -109,10 +102,6 @@ export default async function Page({ params }: Props) {
     geo: {
       title: "Geofence",
       description: "Automatic check-in when students enter school premises",
-    },
-    realtime: {
-      title: "Live Tracking",
-      description: "Real-time attendance monitoring and live updates",
     },
   }
 

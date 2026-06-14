@@ -4,14 +4,17 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { Prisma } from "@prisma/client"
+import type { Prisma, UserRole } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { isStaffRole } from "../authorization"
 import { reviewExcuseSchema, submitExcuseSchema } from "../shared/validation"
 import type { ActionResponse } from "./core"
+import { getOwnedStudentIds } from "./helpers"
 
 /**
  * Submit an excuse for an absence (called by parent/guardian)
@@ -236,24 +239,28 @@ export async function reviewExcuse(input: {
       return { success: false, error: "This excuse has already been reviewed" }
     }
 
-    // Update the excuse
-    await db.attendanceExcuse.update({
-      where: { id: excuse.id },
-      data: {
-        status: parsed.status,
-        reviewedBy: session.user.id,
-        reviewedAt: new Date(),
-        reviewNotes: parsed.reviewNotes,
-      },
-    })
-
-    // If approved, update attendance status to EXCUSED
-    if (parsed.status === "APPROVED") {
-      await db.attendance.update({
-        where: { id: excuse.attendanceId },
-        data: { status: "EXCUSED" },
+    // ATOMICITY + MULTI-TENANT: review the excuse and (when approved) flip the
+    // linked attendance row to EXCUSED inside one transaction so the two writes
+    // never diverge on partial failure. The attendance write is schoolId-scoped
+    // via updateMany (a bare-PK update could touch another school's row).
+    await db.$transaction(async (tx) => {
+      await tx.attendanceExcuse.update({
+        where: { id: excuse.id },
+        data: {
+          status: parsed.status,
+          reviewedBy: session.user.id,
+          reviewedAt: new Date(),
+          reviewNotes: parsed.reviewNotes,
+        },
       })
-    }
+
+      if (parsed.status === "APPROVED") {
+        await tx.attendance.updateMany({
+          where: { id: excuse.attendanceId, schoolId },
+          data: { status: "EXCUSED" },
+        })
+      }
+    })
 
     // Notify the guardian who submitted the excuse
     const studentName = `${excuse.attendance.student.firstName} ${excuse.attendance.student.lastName}`
@@ -606,6 +613,20 @@ export async function getExcuseById(excuseId: string): Promise<
 
     if (!excuse) {
       return { success: false, error: "Excuse not found" }
+    }
+
+    // OWNERSHIP: staff may read any excuse; a student/guardian may only read
+    // their own / their child's. Previously any authenticated tenant user could
+    // read another student's excuse (reason, attachments, notes — PII).
+    const role = session.user.role as UserRole | undefined
+    if (!role) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+    if (!isStaffRole(role)) {
+      const owned = await getOwnedStudentIds(schoolId, session.user.id, role)
+      if (!owned || !owned.includes(excuse.attendance.student.id)) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     // Get submitter and reviewer names (use username or email as fallback)

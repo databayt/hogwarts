@@ -234,30 +234,33 @@ export async function escalateIntervention(input: {
       return { success: false, error: "Intervention not found" }
     }
 
-    // Update old intervention to ESCALATED status
-    await db.attendanceIntervention.update({
-      where: { id: input.interventionId },
-      data: {
-        status: "ESCALATED",
-        completedDate: new Date(),
-      },
-    })
+    // ATOMICITY: flip the old intervention to ESCALATED and create its
+    // replacement in one transaction — a failed create must not leave the old
+    // one ESCALATED with no successor.
+    const newIntervention = await db.$transaction(async (tx) => {
+      await tx.attendanceIntervention.update({
+        where: { id: input.interventionId },
+        data: {
+          status: "ESCALATED",
+          completedDate: new Date(),
+        },
+      })
 
-    // Create new escalated intervention
-    const newIntervention = await db.attendanceIntervention.create({
-      data: {
-        schoolId,
-        studentId: existing.studentId,
-        type: input.newType,
-        title: input.title,
-        description: input.description,
-        priority: Math.min(existing.priority + 1, 4), // Increase priority, max 4
-        assignedTo: input.assignedTo,
-        initiatedBy: session.user.id,
-        escalatedFrom: existing.id,
-        status: "SCHEDULED",
-        tags: existing.tags,
-      },
+      return tx.attendanceIntervention.create({
+        data: {
+          schoolId,
+          studentId: existing.studentId,
+          type: input.newType,
+          title: input.title,
+          description: input.description,
+          priority: Math.min(existing.priority + 1, 4), // Increase priority, max 4
+          assignedTo: input.assignedTo,
+          initiatedBy: session.user.id,
+          escalatedFrom: existing.id,
+          status: "SCHEDULED",
+          tags: existing.tags,
+        },
+      })
     })
 
     return { success: true, data: { newInterventionId: newIntervention.id } }

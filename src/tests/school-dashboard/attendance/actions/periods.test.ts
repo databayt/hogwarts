@@ -14,8 +14,8 @@ import {
   markPeriodAttendance,
 } from "@/components/school-dashboard/attendance/actions/periods"
 
-vi.mock("@/lib/db", () => ({
-  db: {
+vi.mock("@/lib/db", () => {
+  const db: any = {
     attendance: {
       create: vi.fn(),
       createMany: vi.fn(),
@@ -39,8 +39,11 @@ vi.mock("@/lib/db", () => ({
     student: { findMany: vi.fn(), findFirst: vi.fn() },
     studentClass: { findMany: vi.fn() },
     user: { findMany: vi.fn() },
-  },
-}))
+  }
+  // Transaction runs its callback against the same mocked client (tx === db).
+  db.$transaction = vi.fn(async (cb: (tx: any) => unknown) => cb(db))
+  return { db }
+})
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/auth", () => ({ auth: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
@@ -138,8 +141,11 @@ describe("period attendance actions", () => {
       vi.mocked(db.timetable.findFirst).mockResolvedValue({
         sectionId: "sec-1",
       } as any)
-      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
-      vi.mocked(db.attendance.create).mockResolvedValue({} as any)
+      // submitted students belong to the school (multi-tenant validation)
+      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
+      // no existing rows → create path (prefetch is a single findMany)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await markPeriodAttendance({
         classId: "c1",
@@ -157,9 +163,9 @@ describe("period attendance actions", () => {
           select: { sectionId: true },
         })
       )
-      // sectionId was written in the create payload
-      const createCall = vi.mocked(db.attendance.create).mock.calls[0][0]
-      expect(createCall.data).toMatchObject({ sectionId: "sec-1" })
+      // sectionId was written in the batched createMany payload
+      const createCall = vi.mocked(db.attendance.createMany).mock.calls[0][0]
+      expect(createCall.data[0]).toMatchObject({ sectionId: "sec-1" })
     })
 
     it("writes sectionId on update when resolved from timetableId", async () => {
@@ -171,10 +177,11 @@ describe("period attendance actions", () => {
       vi.mocked(db.timetable.findFirst).mockResolvedValue({
         sectionId: "sec-1",
       } as any)
-      // existing row — triggers update path
-      vi.mocked(db.attendance.findFirst).mockResolvedValue({
-        id: "att-1",
-      } as any)
+      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
+      // existing row for this student — triggers update path
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        { id: "att-1", studentId: "s1" },
+      ] as any)
       vi.mocked(db.attendance.update).mockResolvedValue({} as any)
 
       const result = await markPeriodAttendance({
@@ -198,8 +205,9 @@ describe("period attendance actions", () => {
       } as any)
       // no timetable slot found — fallback returns null
       vi.mocked(db.timetable.findFirst).mockResolvedValue(null)
-      vi.mocked(db.attendance.findFirst).mockResolvedValue(null)
-      vi.mocked(db.attendance.create).mockResolvedValue({} as any)
+      vi.mocked(db.student.findMany).mockResolvedValue([{ id: "s1" }] as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.attendance.createMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await markPeriodAttendance({
         classId: "c1",
@@ -210,11 +218,11 @@ describe("period attendance actions", () => {
       })
 
       expect(result.success).toBe(true)
-      // record is still created (no regression)
-      expect(vi.mocked(db.attendance.create)).toHaveBeenCalled()
+      // record is still created via batched createMany (no regression)
+      expect(vi.mocked(db.attendance.createMany)).toHaveBeenCalled()
       // sectionId is undefined/absent (not forced to a wrong value)
-      const createCall = vi.mocked(db.attendance.create).mock.calls[0][0]
-      expect(createCall.data.sectionId).toBeUndefined()
+      const createCall = vi.mocked(db.attendance.createMany).mock.calls[0][0]
+      expect(createCall.data[0].sectionId).toBeUndefined()
     })
   })
 

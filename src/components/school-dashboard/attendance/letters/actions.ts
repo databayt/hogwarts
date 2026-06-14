@@ -234,8 +234,11 @@ export async function getStudentLetterHistory(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  // Compliance-letter data is staff-only (was readable by any authenticated
+  // tenant user, exposing any student's letter history / at-risk lists).
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -286,8 +289,11 @@ export async function getStudentsNeedingLetters(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  // Compliance-letter data is staff-only (was readable by any authenticated
+  // tenant user, exposing any student's letter history / at-risk lists).
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 

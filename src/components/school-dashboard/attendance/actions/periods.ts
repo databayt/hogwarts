@@ -4,12 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import type { Prisma } from "@prisma/client"
+import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 
+import { isStaffRole } from "../authorization"
 import type { ActionResponse } from "./core"
 
 /**
@@ -45,6 +46,12 @@ export async function getPeriodsForClass(input: {
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
+    }
+
+    // Staff-only: the period/timetable structure is a marking surface.
+    const role = session.user.role as UserRole | undefined
+    if (!role || !isStaffRole(role)) {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Get day of week from date
@@ -421,41 +428,66 @@ export async function markPeriodAttendance(input: {
     }
 
     const dateObj = new Date(input.date)
+    const studentIds = [...new Set(input.records.map((r) => r.studentId))]
+
+    // MULTI-TENANT: every submitted studentId must belong to this school —
+    // otherwise a teacher could fabricate attendance rows for foreign students.
+    const validStudents = await db.student.findMany({
+      where: { schoolId, id: { in: studentIds } },
+      select: { id: true },
+    })
+    const validIds = new Set(validStudents.map((s) => s.id))
+    if (studentIds.some((id) => !validIds.has(id))) {
+      return { success: false, error: "Student not found in this school" }
+    }
+
+    // PERF: prefetch existing rows in a single query (was a findFirst per
+    // record = N+1). Then run all writes inside one transaction so a partial
+    // failure can't leave the period half-marked.
+    const existingRows = await db.attendance.findMany({
+      where: {
+        schoolId,
+        classId: input.classId,
+        date: dateObj,
+        periodId: input.periodId,
+        studentId: { in: studentIds },
+      },
+      select: { id: true, studentId: true },
+    })
+    const existingByStudent = new Map(
+      existingRows.map((r) => [r.studentId, r.id])
+    )
+
     let marked = 0
     let updated = 0
 
-    for (const record of input.records) {
-      // Check for existing attendance
-      const existing = await db.attendance.findFirst({
-        where: {
-          schoolId,
-          studentId: record.studentId,
-          classId: input.classId,
-          date: dateObj,
-          periodId: input.periodId,
-        },
-      })
+    await db.$transaction(async (tx) => {
+      const toCreate: Prisma.AttendanceCreateManyInput[] = []
 
-      if (existing) {
-        // Update existing — also backfill sectionId if it was missing
-        await db.attendance.update({
-          where: { id: existing.id },
-          data: {
-            status: record.status,
-            notes: record.notes,
-            checkInTime: record.checkInTime
-              ? new Date(record.checkInTime)
-              : null,
-            markedBy: session.user.id,
-            markedAt: new Date(),
-            ...(resolvedSectionId !== null && { sectionId: resolvedSectionId }),
-          },
-        })
-        updated++
-      } else {
-        // Create new
-        await db.attendance.create({
-          data: {
+      for (const record of input.records) {
+        const existingId = existingByStudent.get(record.studentId)
+
+        if (existingId) {
+          // Update existing — only overwrite notes/checkInTime when explicitly
+          // supplied (a re-mark that omits them must not clear prior values).
+          await tx.attendance.update({
+            where: { id: existingId },
+            data: {
+              status: record.status,
+              ...(record.notes !== undefined && { notes: record.notes }),
+              ...(record.checkInTime && {
+                checkInTime: new Date(record.checkInTime),
+              }),
+              markedBy: session.user.id,
+              markedAt: new Date(),
+              ...(resolvedSectionId !== null && {
+                sectionId: resolvedSectionId,
+              }),
+            },
+          })
+          updated++
+        } else {
+          toCreate.push({
             schoolId,
             studentId: record.studentId,
             classId: input.classId,
@@ -471,11 +503,15 @@ export async function markPeriodAttendance(input: {
               ? new Date(record.checkInTime)
               : null,
             method: "MANUAL",
-          },
-        })
-        marked++
+          })
+          marked++
+        }
       }
-    }
+
+      if (toCreate.length > 0) {
+        await tx.attendance.createMany({ data: toCreate })
+      }
+    })
 
     revalidatePath("/attendance")
 

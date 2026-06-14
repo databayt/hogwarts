@@ -101,6 +101,11 @@ model Attendance {
   @@index([periodId])
   @@index([schoolId, date, periodId])
   @@index([schoolId, sectionId, date])
+  // Hot path for daily class attendance: markAttendance, getAttendanceList,
+  // getTodaysDashboard and bulk upload all filter by (schoolId, classId, date).
+  @@index([schoolId, classId, date])
+  // Hot path for per-student analytics (getBulkAttendanceStats, percentages).
+  @@index([schoolId, studentId, date])
   @@index([deletedAt])
   @@map("attendances")
 }

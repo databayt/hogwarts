@@ -29,12 +29,9 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  // Parallel data fetching
-  const [{ lang }, dictionary, session] = await Promise.all([
-    params,
-    getDictionary((await params).lang),
-    auth(),
-  ])
+  // Resolve params once, then fetch dictionary + session in parallel.
+  const { lang } = await params
+  const [dictionary, session] = await Promise.all([getDictionary(lang), auth()])
 
   // Check permissions - staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]

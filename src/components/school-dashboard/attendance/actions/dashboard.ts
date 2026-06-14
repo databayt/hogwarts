@@ -565,6 +565,8 @@ export async function getTodaysDashboard(): Promise<
     }
     if (teacherClassIds) attendanceWhere.classId = { in: teacherClassIds }
 
+    // PERF: stats only need ids/status — don't join student/class names for the
+    // whole day's roster (recent activity below joins names for just 10 rows).
     const todayAttendance = await db.attendance.findMany({
       where: attendanceWhere,
       select: {
@@ -573,8 +575,6 @@ export async function getTodaysDashboard(): Promise<
         studentId: true,
         status: true,
         markedAt: true,
-        student: { select: { firstName: true, lastName: true } },
-        class: { select: { name: true } },
       },
       orderBy: { markedAt: "desc" },
     })
@@ -673,8 +673,21 @@ export async function getTodaysDashboard(): Promise<
       }
     }
 
-    // Get recent activity (last 10)
-    const recentActivity = todayAttendance.slice(0, 10).map((a) => ({
+    // Get recent activity (last 10) — dedicated query so student/class names are
+    // only joined for these 10 rows, not the whole day's attendance.
+    const recentRows = await db.attendance.findMany({
+      where: attendanceWhere,
+      orderBy: { markedAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        status: true,
+        markedAt: true,
+        student: { select: { firstName: true, lastName: true } },
+        class: { select: { name: true } },
+      },
+    })
+    const recentActivity = recentRows.map((a) => ({
       id: a.id,
       studentName: `${a.student.firstName} ${a.student.lastName}`,
       className: a.class?.name ?? "",
@@ -698,9 +711,13 @@ export async function getTodaysDashboard(): Promise<
           present,
           absent,
           late,
+          // Rate counts present AND late as "attended" (a late student is still
+          // present) — was present-only, which understated the rate.
           attendanceRate:
             totalStudents > 0
-              ? Math.round((present / Math.max(uniqueStudentsMarked, 1)) * 100)
+              ? Math.round(
+                  ((present + late) / Math.max(uniqueStudentsMarked, 1)) * 100
+                )
               : 0,
         },
         unmarkedClasses: unmarkedClasses.map((c) => ({
@@ -966,11 +983,16 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       }
     }
 
-    // 2. Get pending unexcused absences
+    // 2. Get pending unexcused absences — scope to the teacher's own classes
+    // too (the absence list above is scoped; this one was not, leaking students
+    // outside the teacher's classes).
     const pendingExcuses = await db.attendanceExcuse.findMany({
       where: {
         schoolId,
         status: "PENDING",
+        ...(teacherClassIds
+          ? { attendance: { classId: { in: teacherClassIds } } }
+          : {}),
       },
       select: {
         id: true,
@@ -1264,80 +1286,99 @@ export async function getParentAttendanceSummary(): Promise<
     const termStart =
       activeTerm?.startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
 
-    // Build attendance summary for each child
-    const children = await Promise.all(
-      studentGuardians.map(async (sg) => {
-        const student = sg.student
+    // PERF: two batched queries across ALL children instead of two per child
+    // (was an N+1: one groupBy + one findMany inside a per-child Promise.all).
+    const childIds = studentGuardians.map((sg) => sg.student.id)
 
-        // Get class name from first enrolled class
-        const className = student.studentClasses[0]?.class.name || "Unassigned"
+    const [statusGroups, absenceRows] = await Promise.all([
+      db.attendance.groupBy({
+        by: ["studentId", "status"],
+        where: {
+          schoolId,
+          studentId: { in: childIds },
+          date: { gte: termStart },
+          deletedAt: null,
+          periodId: null, // Daily attendance only
+        },
+        _count: true,
+      }),
+      db.attendance.findMany({
+        where: {
+          schoolId,
+          studentId: { in: childIds },
+          status: { in: ["ABSENT", "LATE", "EXCUSED"] },
+          deletedAt: null,
+          periodId: null,
+          date: { gte: termStart },
+        },
+        include: { class: { select: { name: true } } },
+        orderBy: { date: "desc" },
+      }),
+    ])
 
-        // Count attendance by status
-        const statusCounts = await db.attendance.groupBy({
-          by: ["status"],
-          where: {
-            schoolId,
-            studentId: student.id,
-            date: { gte: termStart },
-            deletedAt: null,
-            periodId: null, // Daily attendance only
-          },
-          _count: true,
-        })
-
-        const stats = {
-          totalDays: 0,
-          present: 0,
-          absent: 0,
-          late: 0,
-          excused: 0,
-          attendanceRate: 0,
-        }
-
-        for (const sc of statusCounts) {
-          stats.totalDays += sc._count
-          if (sc.status === "PRESENT") stats.present = sc._count
-          if (sc.status === "ABSENT") stats.absent = sc._count
-          if (sc.status === "LATE") stats.late = sc._count
-          if (sc.status === "EXCUSED") stats.excused = sc._count
-        }
-
-        stats.attendanceRate =
-          stats.totalDays > 0
-            ? Math.round(
-                ((stats.present + stats.late) / stats.totalDays) * 1000
-              ) / 10
-            : 100
-
-        // Get recent absences (last 5)
-        const recentAbsences = await db.attendance.findMany({
-          where: {
-            schoolId,
-            studentId: student.id,
-            status: { in: ["ABSENT", "LATE", "EXCUSED"] },
-            deletedAt: null,
-            periodId: null,
-          },
-          include: {
-            class: { select: { name: true } },
-          },
-          orderBy: { date: "desc" },
-          take: 5,
-        })
-
-        return {
-          studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          className,
-          stats,
-          recentAbsences: recentAbsences.map((a) => ({
-            date: a.date.toISOString().split("T")[0],
-            status: a.status,
-            className: a.class?.name ?? "",
-          })),
-        }
+    type ChildStats = {
+      totalDays: number
+      present: number
+      absent: number
+      late: number
+      excused: number
+      attendanceRate: number
+    }
+    const statsByStudent = new Map<string, ChildStats>()
+    for (const id of childIds) {
+      statsByStudent.set(id, {
+        totalDays: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        excused: 0,
+        attendanceRate: 0,
       })
-    )
+    }
+    for (const g of statusGroups) {
+      const s = statsByStudent.get(g.studentId)
+      if (!s) continue
+      s.totalDays += g._count
+      if (g.status === "PRESENT") s.present = g._count
+      else if (g.status === "ABSENT") s.absent = g._count
+      else if (g.status === "LATE") s.late = g._count
+      else if (g.status === "EXCUSED") s.excused = g._count
+    }
+    for (const s of statsByStudent.values()) {
+      s.attendanceRate =
+        s.totalDays > 0
+          ? Math.round(((s.present + s.late) / s.totalDays) * 1000) / 10
+          : 100
+    }
+
+    // Recent absences (most recent 5 per child) — rows arrive date-desc.
+    const absencesByStudent = new Map<
+      string,
+      Array<{ date: string; status: string; className: string }>
+    >()
+    for (const id of childIds) absencesByStudent.set(id, [])
+    for (const a of absenceRows) {
+      const list = absencesByStudent.get(a.studentId)
+      if (list && list.length < 5) {
+        list.push({
+          date: a.date.toISOString().split("T")[0],
+          status: a.status,
+          className: a.class?.name ?? "",
+        })
+      }
+    }
+
+    const children = studentGuardians.map((sg) => {
+      const student = sg.student
+      const className = student.studentClasses[0]?.class.name || "Unassigned"
+      return {
+        studentId: student.id,
+        studentName: `${student.firstName} ${student.lastName}`,
+        className,
+        stats: statsByStudent.get(student.id)!,
+        recentAbsences: absencesByStudent.get(student.id) ?? [],
+      }
+    })
 
     return {
       success: true,

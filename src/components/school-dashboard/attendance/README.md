@@ -143,15 +143,25 @@ src/components/school-dashboard/attendance/
 
 ### Status
 
-**Completion:** ~92% | **Deploy blockers:** Vercel Pro (sub-daily compliance crons), Neon DB push, env vars — see [ISSUE.md](./ISSUE.md).
+**Completion:** ~96% (Production-Ready) | **Deploy blockers:** Vercel Pro (sub-daily compliance crons), Neon DB push (incl. 2 new attendance indexes), env vars — see [ISSUE.md](./ISSUE.md).
 
 Components, ~140 server actions, validation schemas, 23 wired auth-gated routes
 (each with `error.tsx` + `loading.tsx`), and a comprehensive Vitest suite
-(575/575 green across 45 files in the attendance + compliance + cron + webhook
-scope) are in place. The ADEK/eSIS compliance + live-classes bundle has been
-re-landed on `fix/attendance-production-ready`. Remaining work is the i18n
-long-tail (server-action error codes, Zod messages, settings mockup) and the
-deploy-time gates — all tracked in [ISSUE.md](./ISSUE.md).
+(**525/525 green across 39 files** in the attendance + cron + mobile scope) are in
+place. A 2026-06-13 production-readiness hardening pass (8-dimension audit with
+adversarial verification, 83 confirmed findings) closed every confirmed
+auth/IDOR, multi-tenant, correctness and hot-path-performance issue — see the
+"Recently Fixed (2026-06-13)" section in [ISSUE.md](./ISSUE.md). Remaining work is
+the i18n long-tail (server-action error codes, Zod messages, a few visible client
+toasts), the settings-page wiring, and the owner-action deploy gates — all tracked
+in [ISSUE.md](./ISSUE.md).
+
+**Security invariant (critical):** `getTenantContext()` resolves `schoolId` from
+the `x-subdomain` header **without** requiring a session. Every `"use server"`
+attendance action MUST therefore pass through `guardAttendance(action)`
+(`actions/helpers.ts` — `auth()` + tenant + RBAC matrix) or an equivalent
+explicit `auth()` + role/ownership check. A `schoolId`-only guard is reachable by
+unauthenticated requests to a school subdomain.
 
 ### Integration Points
 

@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
-import type { Prisma } from "@prisma/client"
+import type { Prisma, UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -36,22 +36,28 @@ export async function getAttendanceStats(input?: {
   attendanceRate: number
   lastUpdated: string
 }> {
+  const session = await auth()
   const { schoolId } = await getTenantContext()
 
-  // Return default data if no school context (e.g., during SSR or unauthenticated)
-  if (!schoolId) {
-    return {
-      total: 0,
-      present: 0,
-      absent: 0,
-      late: 0,
-      excused: 0,
-      sick: 0,
-      holiday: 0,
-      attendanceRate: 0,
-      lastUpdated: new Date().toISOString(),
-    }
+  const empty = {
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    sick: 0,
+    holiday: 0,
+    attendanceRate: 0,
+    lastUpdated: new Date().toISOString(),
   }
+
+  // Return default data if no school context (e.g., during SSR or unauthenticated)
+  if (!schoolId) return empty
+
+  // SECURITY: schoolId resolves from the subdomain header without a session, so
+  // this aggregate read must additionally require an analytics-capable role.
+  const role = session?.user?.role as UserRole | undefined
+  if (!role || !canViewSchoolAnalytics(role)) return empty
 
   const where: Prisma.AttendanceWhereInput = { schoolId, deletedAt: null }
 
@@ -64,14 +70,44 @@ export async function getAttendanceStats(input?: {
     if (input.dateTo) where.date.lte = new Date(input.dateTo)
   }
 
-  const [total, present, absent, late, excused, sick] = await Promise.all([
-    db.attendance.count({ where }),
-    db.attendance.count({ where: { ...where, status: "PRESENT" } }),
-    db.attendance.count({ where: { ...where, status: "ABSENT" } }),
-    db.attendance.count({ where: { ...where, status: "LATE" } }),
-    db.attendance.count({ where: { ...where, status: "EXCUSED" } }),
-    db.attendance.count({ where: { ...where, status: "SICK" } }),
-  ])
+  // PERF: one grouped aggregate instead of six parallel full-range COUNT scans.
+  const grouped = await db.attendance.groupBy({
+    by: ["status"],
+    where,
+    _count: { _all: true },
+  })
+
+  let total = 0
+  let present = 0
+  let absent = 0
+  let late = 0
+  let excused = 0
+  let sick = 0
+  let holiday = 0
+  for (const g of grouped) {
+    const c = g._count._all
+    total += c
+    switch (g.status) {
+      case "PRESENT":
+        present = c
+        break
+      case "ABSENT":
+        absent = c
+        break
+      case "LATE":
+        late = c
+        break
+      case "EXCUSED":
+        excused = c
+        break
+      case "SICK":
+        sick = c
+        break
+      case "HOLIDAY":
+        holiday = c
+        break
+    }
+  }
 
   const attendanceRate = total > 0 ? ((present + late) / total) * 100 : 0
 
@@ -82,7 +118,7 @@ export async function getAttendanceStats(input?: {
     late,
     excused,
     sick,
-    holiday: 0,
+    holiday,
     attendanceRate: Math.round(attendanceRate * 10) / 10,
     lastUpdated: new Date().toISOString(),
   }
@@ -726,10 +762,18 @@ export async function getRecentAttendance(input?: {
   classId?: string
   sectionId?: string
 }) {
+  const session = await auth()
   const { schoolId } = await getTenantContext()
 
   // Return empty data if no school context
   if (!schoolId) {
+    return { records: [] }
+  }
+
+  // SECURITY: this read exposes student names + records; gate on an
+  // analytics-capable staff role (schoolId alone comes from the subdomain header).
+  const role = session?.user?.role as UserRole | undefined
+  if (!role || !canViewSchoolAnalytics(role)) {
     return { records: [] }
   }
 

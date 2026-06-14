@@ -6,7 +6,8 @@ import type { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+
+import { guardAttendance } from "./actions/helpers"
 
 // Input validation schemas
 const attendanceStatsSchema = z.object({
@@ -54,13 +55,83 @@ export interface ClassAttendanceReport {
 }
 
 /**
+ * Pure attendance-percentage reducer shared by the single + bulk paths.
+ *
+ * `presentDays` is a strict PRESENT count and `lateDays` a strict LATE count —
+ * they never overlap. The percentage folds LATE into the numerator once
+ * `(present + late) / (total - excused)`, so callers can render the two counts
+ * independently without double-counting late days (the previous version added
+ * LATE into `presentDays`, inflating it).
+ */
+function computePercentageStats(
+  studentId: string,
+  records: Array<{ status: string; date: Date }>
+) {
+  const stats = records.reduce(
+    (acc, record) => {
+      acc.totalDays++
+
+      switch (record.status) {
+        case "PRESENT":
+          acc.presentDays++
+          if (!acc.lastPresent || record.date > acc.lastPresent) {
+            acc.lastPresent = record.date
+          }
+          break
+        case "ABSENT":
+          acc.absentDays++
+          break
+        case "LATE":
+          acc.lateDays++
+          break
+        case "EXCUSED":
+        case "SICK":
+        case "HOLIDAY":
+          acc.excusedDays++
+          break
+      }
+
+      return acc
+    },
+    {
+      totalDays: 0,
+      presentDays: 0,
+      absentDays: 0,
+      lateDays: 0,
+      excusedDays: 0,
+      lastPresent: null as Date | null,
+    }
+  )
+
+  // (present + late) / (total - excused) — LATE counted once, in the numerator.
+  const effectiveDays = stats.totalDays - stats.excusedDays
+  const percentage =
+    effectiveDays > 0
+      ? Math.round(((stats.presentDays + stats.lateDays) / effectiveDays) * 100)
+      : 0
+
+  return {
+    studentId,
+    totalDays: stats.totalDays,
+    presentDays: stats.presentDays,
+    absentDays: stats.absentDays,
+    lateDays: stats.lateDays,
+    excusedDays: stats.excusedDays,
+    percentage,
+    streak: calculateStreak(records),
+    lastPresent: stats.lastPresent || undefined,
+  }
+}
+
+/**
  * Calculate attendance percentage for a student
  */
 export async function calculateAttendancePercentage(
   input: z.infer<typeof attendancePercentageSchema>
 ) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
   const validated = attendancePercentageSchema.parse(input)
 
@@ -84,76 +155,10 @@ export async function calculateAttendancePercentage(
   const attendanceRecords = await db.attendance.findMany({
     where,
     orderBy: { date: "desc" },
+    select: { status: true, date: true },
   })
 
-  if (attendanceRecords.length === 0) {
-    return {
-      studentId: validated.studentId,
-      totalDays: 0,
-      presentDays: 0,
-      absentDays: 0,
-      lateDays: 0,
-      excusedDays: 0,
-      percentage: 0,
-      streak: 0,
-    }
-  }
-
-  // Calculate stats
-  const stats = attendanceRecords.reduce(
-    (acc, record) => {
-      acc.totalDays++
-
-      switch (record.status) {
-        case "PRESENT":
-          acc.presentDays++
-          if (!acc.lastPresent || record.date > acc.lastPresent) {
-            acc.lastPresent = record.date
-          }
-          break
-        case "ABSENT":
-          acc.absentDays++
-          break
-        case "LATE":
-          acc.lateDays++
-          acc.presentDays++ // Late counts as present for percentage
-          break
-        case "EXCUSED":
-        case "SICK":
-        case "HOLIDAY":
-          acc.excusedDays++
-          break
-      }
-
-      return acc
-    },
-    {
-      totalDays: 0,
-      presentDays: 0,
-      absentDays: 0,
-      lateDays: 0,
-      excusedDays: 0,
-      lastPresent: null as Date | null,
-    }
-  )
-
-  // Calculate percentage (present + late) / (total - excused)
-  const effectiveDays = stats.totalDays - stats.excusedDays
-  const percentage =
-    effectiveDays > 0
-      ? Math.round((stats.presentDays / effectiveDays) * 100)
-      : 0
-
-  // Calculate current streak
-  const streak = calculateStreak(attendanceRecords)
-
-  return {
-    studentId: validated.studentId,
-    ...stats,
-    percentage,
-    streak,
-    lastPresent: stats.lastPresent || undefined,
-  }
+  return computePercentageStats(validated.studentId, attendanceRecords)
 }
 
 /**
@@ -164,31 +169,41 @@ export async function getBulkAttendanceStats(input: {
   from?: string
   to?: string
 }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
-  const results = await Promise.all(
-    input.studentIds.map((studentId) =>
-      calculateAttendancePercentage({
-        studentId,
-        from: input.from,
-        to: input.to,
-      })
-    )
-  )
+  if (input.studentIds.length === 0) return []
 
-  // Get student names
-  const students = await db.student.findMany({
-    where: {
-      schoolId,
-      id: { in: input.studentIds },
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-    },
-  })
+  const where: Prisma.AttendanceWhereInput = {
+    schoolId,
+    studentId: { in: input.studentIds },
+  }
+  if (input.from || input.to) {
+    where.date = {}
+    if (input.from) where.date.gte = new Date(input.from)
+    if (input.to) where.date.lte = new Date(input.to)
+  }
+
+  // PERF: one findMany for ALL students (was one findMany per student via
+  // calculateAttendancePercentage — an unbounded N+1 over the whole roster).
+  const [records, students] = await Promise.all([
+    db.attendance.findMany({
+      where,
+      orderBy: { date: "desc" },
+      select: { studentId: true, status: true, date: true },
+    }),
+    db.student.findMany({
+      where: { schoolId, id: { in: input.studentIds } },
+      select: { id: true, firstName: true, lastName: true },
+    }),
+  ])
+
+  const byStudent = new Map<string, Array<{ status: string; date: Date }>>()
+  for (const id of input.studentIds) byStudent.set(id, [])
+  for (const r of records) {
+    byStudent.get(r.studentId)?.push({ status: r.status, date: r.date })
+  }
 
   const studentMap = new Map(
     students.map((s) => [
@@ -197,9 +212,9 @@ export async function getBulkAttendanceStats(input: {
     ])
   )
 
-  return results.map((stats) => ({
-    ...stats,
-    studentName: studentMap.get(stats.studentId) || "Unknown Student",
+  return input.studentIds.map((studentId) => ({
+    ...computePercentageStats(studentId, byStudent.get(studentId) || []),
+    studentName: studentMap.get(studentId) || "Unknown Student",
   }))
 }
 
@@ -210,8 +225,9 @@ export async function getClassAttendanceStats(input: {
   classId: string
   date: string
 }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
   // Get all enrolled students
   const enrollments = await db.studentClass.findMany({
@@ -258,9 +274,10 @@ export async function getClassAttendanceStats(input: {
       ? Math.round((statusCounts.present / totalStudents) * 100)
       : 0
 
-  // Get class name
-  const classData = await db.class.findUnique({
-    where: { id: input.classId },
+  // Get class name — MULTI-TENANT: scope by schoolId (was a bare findUnique by
+  // id, which let any caller read class names from another school).
+  const classData = await db.class.findFirst({
+    where: { id: input.classId, schoolId },
     select: { name: true },
   })
 
@@ -284,8 +301,9 @@ export async function getAttendanceTrends(input: {
   studentId?: string
   days?: number
 }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
   const days = input.days || 30
   const startDate = new Date()
@@ -355,8 +373,9 @@ export async function getAtRiskStudents(input: {
   threshold?: number
   days?: number
 }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
   const threshold = input.threshold || 80 // Default 80% attendance
   const days = input.days || 30
@@ -441,8 +460,9 @@ export async function getPerfectAttendance(input: {
   from?: string
   to?: string
 }) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
+  const g = await guardAttendance("view_analytics")
+  if (!g.ok) throw new Error(g.error.error)
+  const { schoolId } = g
 
   // Get all students
   let studentIds: string[]

@@ -18,6 +18,7 @@ import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { getOwnedStudentIds } from "../actions/helpers"
 import { isStaffRole } from "../authorization"
 import {
   filterIntentionsSchema,
@@ -82,6 +83,20 @@ export async function submitAbsenceIntention(
 
     if (!student) {
       return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
+
+    // OWNERSHIP: a student/guardian may only file an intention for themselves or
+    // their own children. Staff may file on anyone's behalf. Previously any
+    // authenticated tenant user could submit an absence for an arbitrary student.
+    const role = session.user.role as UserRole | undefined
+    if (!role) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+    if (!isStaffRole(role)) {
+      const owned = await getOwnedStudentIds(schoolId, session.user.id, role)
+      if (!owned || !owned.includes(validated.studentId)) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     // Check for overlapping intentions
@@ -249,6 +264,14 @@ export async function getAbsenceIntentions(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
+    // SECURITY: this returns every student's pending intentions (PII) — it is a
+    // staff review list. Was reachable with only a subdomain header (no session).
+    const session = await auth()
+    const role = session?.user?.role as UserRole | undefined
+    if (!role || !isStaffRole(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     // Build where clause
     const where: Prisma.AbsenceIntentionWhereInput = { schoolId }
 
@@ -326,6 +349,13 @@ export async function getPendingIntentionsCount(): Promise<
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+
+    // Staff-only badge count (was reachable unauthenticated via subdomain header).
+    const session = await auth()
+    const role = session?.user?.role as UserRole | undefined
+    if (!role || !isStaffRole(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const count = await db.absenceIntention.count({

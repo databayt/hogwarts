@@ -19,6 +19,16 @@ import { attendanceFilterSchema, bulkUploadSchema } from "../shared/validation"
 import { getTeacherClassIds } from "./helpers"
 
 /**
+ * Encode a single CSV cell: wrap in quotes, double internal quotes, and guard
+ * against spreadsheet formula injection by prefixing risky leading characters.
+ */
+function csvCell(value: unknown): string {
+  const s = value == null ? "" : String(value)
+  const guarded = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
+  return `"${guarded.replace(/"/g, '""')}"`
+}
+
+/**
  * Bulk upload attendance records with atomic transaction
  *
  * Process:
@@ -251,16 +261,23 @@ export async function getAttendanceReport(
     deletedAt: null,
   }
 
-  // Teacher scoping
+  // Teacher scoping — a teacher may only see their own classes.
+  let teacherClassIds: string[] | null = null
   if (session.user.role === "TEACHER") {
-    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-    if (teacherClassIds) {
-      where.classId = { in: teacherClassIds }
-    }
+    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
   }
 
-  // Apply optional filters
-  if (parsed.classId) where.classId = parsed.classId
+  // Apply optional filters. SECURITY: an explicit classId must be INTERSECTED
+  // with the teacher's owned classes — previously it OVERWROTE the restriction,
+  // letting a teacher read any class's attendance in the school.
+  if (parsed.classId) {
+    where.classId =
+      teacherClassIds && !teacherClassIds.includes(parsed.classId)
+        ? "__forbidden__"
+        : parsed.classId
+  } else if (teacherClassIds) {
+    where.classId = { in: teacherClassIds }
+  }
   if (parsed.sectionId) where.sectionId = parsed.sectionId
   if (parsed.studentId) where.studentId = parsed.studentId
 
@@ -372,15 +389,20 @@ export async function getAttendanceReportCsv(input: {
     deletedAt: null,
   }
 
-  // Teacher scoping for CSV export
+  // Teacher scoping for CSV export — intersect, never overwrite (see report).
+  let teacherClassIds: string[] | null = null
   if (session.user.role === "TEACHER") {
-    const teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
-    if (teacherClassIds) {
-      where.classId = { in: teacherClassIds }
-    }
+    teacherClassIds = await getTeacherClassIds(schoolId, session.user.id!)
   }
 
-  if (sp.classId) where.classId = sp.classId
+  if (sp.classId) {
+    where.classId =
+      teacherClassIds && !teacherClassIds.includes(sp.classId)
+        ? "__forbidden__"
+        : sp.classId
+  } else if (teacherClassIds) {
+    where.classId = { in: teacherClassIds }
+  }
   if (sp.studentId) where.studentId = sp.studentId
   if (sp.status)
     where.status = sp.status.toUpperCase() as
@@ -410,21 +432,25 @@ export async function getAttendanceReportCsv(input: {
   const header =
     "date,studentId,studentName,classId,className,status,method,checkInTime,checkOutTime,notes\n"
 
-  // CSV Body
+  // CSV Body — every cell is quoted, internal quotes are doubled, and any value
+  // beginning with =, +, -, @, tab or CR is prefixed with ' to neutralize
+  // spreadsheet formula injection (a student named "=cmd()" must not execute).
   const body = rows
     .map((r) =>
       [
         r.date.toISOString().split("T")[0],
         r.studentId,
-        `"${r.student.firstName} ${r.student.lastName}"`,
+        `${r.student.firstName} ${r.student.lastName}`,
         r.classId,
-        `"${r.class?.name ?? ""}"`,
+        r.class?.name ?? "",
         String(r.status),
         String(r.method),
         r.checkInTime?.toISOString() || "",
         r.checkOutTime?.toISOString() || "",
-        `"${r.notes || ""}"`,
-      ].join(",")
+        r.notes || "",
+      ]
+        .map(csvCell)
+        .join(",")
     )
     .join("\n")
 
@@ -485,31 +511,41 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
   })
   const classMap = new Map(classes.map((c) => [c.id, c.name]))
 
-  // Count successful records (present or late, not absent/excused/sick)
-  const uploads = await Promise.all(
-    recentUploads.map(async (upload) => {
-      const successCount = await db.attendance.count({
-        where: {
-          schoolId,
-          date: upload.date,
-          classId: upload.classId,
-          method: "BULK_UPLOAD",
-          status: { in: ["PRESENT", "LATE"] },
-        },
-      })
-
-      return {
-        date: upload.date,
-        classId: upload.classId ?? "",
-        className:
-          (upload.classId ? classMap.get(upload.classId) : null) ||
-          "Unknown Class",
-        total: upload._count._all,
-        successful: successCount,
-        failed: upload._count._all - successCount,
-      }
-    })
+  // PERF: one grouped query for success counts across all returned upload
+  // buckets (was a COUNT query per bucket inside Promise.all = N+1).
+  const successGroups = await db.attendance.groupBy({
+    by: ["date", "classId"],
+    where: {
+      schoolId,
+      method: "BULK_UPLOAD",
+      status: { in: ["PRESENT", "LATE"] },
+      date: { in: recentUploads.map((u) => u.date) },
+      classId: { in: classIds },
+    },
+    _count: { _all: true },
+  })
+  const successByKey = new Map(
+    successGroups.map((g) => [
+      `${g.date.toISOString()}|${g.classId}`,
+      g._count._all,
+    ])
   )
+
+  // Count successful records (present or late, not absent/excused/sick)
+  const uploads = recentUploads.map((upload) => {
+    const successCount =
+      successByKey.get(`${upload.date.toISOString()}|${upload.classId}`) ?? 0
+    return {
+      date: upload.date,
+      classId: upload.classId ?? "",
+      className:
+        (upload.classId ? classMap.get(upload.classId) : null) ||
+        "Unknown Class",
+      total: upload._count._all,
+      successful: successCount,
+      failed: upload._count._all - successCount,
+    }
+  })
 
   return { uploads }
 }

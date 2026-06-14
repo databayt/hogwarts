@@ -18,9 +18,10 @@ import {
   isStaffRole,
 } from "@/components/school-dashboard/attendance/authorization"
 import { markAttendanceSchema } from "@/components/school-dashboard/attendance/validation"
-import { getText } from "@/components/translation/display"
+import { getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
-import { getTeacherClassIds } from "./helpers"
+import { getTeacherClassIds, guardAttendance } from "./helpers"
 
 // ============================================================================
 // Types
@@ -565,25 +566,35 @@ export async function getAttendanceList(input: {
       }
     })
 
-    const rows = await Promise.all(
-      students.map(async (s) => {
-        const rawName = [s.firstName, s.lastName].filter(Boolean).join(" ")
+    // PERF: one batched, deduped name resolution for the whole roster (was a
+    // getText call per student inside Promise.all — N translation lookups, which
+    // the translation rules explicitly forbid in a .map()).
+    const nameMap = needsTranslation
+      ? await getNames(
+          students,
+          (s) => ({ firstName: s.firstName, lastName: s.lastName }),
+          displayLang,
+          schoolId
+        )
+      : null
 
-        const name = needsTranslation
-          ? await getText(rawName, contentLang, displayLang, schoolId)
-          : rawName
-
-        return {
-          studentId: s.id,
-          name,
-          status:
-            (statusByStudent[s.id]?.status as "present" | "absent" | "late") ||
-            "present",
-          checkInTime: statusByStudent[s.id]?.checkInTime,
-          method: statusByStudent[s.id]?.method,
-        }
+    const rows = students.map((s) => {
+      const rawName = fullName({
+        firstName: s.firstName,
+        lastName: s.lastName,
       })
-    )
+      const name = nameMap?.get(rawName) ?? rawName
+
+      return {
+        studentId: s.id,
+        name,
+        status:
+          (statusByStudent[s.id]?.status as "present" | "absent" | "late") ||
+          "present",
+        checkInTime: statusByStudent[s.id]?.checkInTime,
+        method: statusByStudent[s.id]?.method,
+      }
+    })
 
     return { success: true, data: { rows } }
   } catch (error) {
@@ -820,15 +831,12 @@ export async function quickMarkAllPresent(input: {
   }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const session = await auth()
-    if (!session?.user?.id) {
-      return { success: false, error: "Authentication required" }
-    }
+    // SECURITY: was auth()-only with no role check — any authenticated user
+    // (STUDENT/GUARDIAN) could mark a whole class present. Now requires a
+    // marking role via the RBAC matrix.
+    const guard = await guardAttendance("mark")
+    if (!guard.ok) return guard.error
+    const { schoolId, userId } = guard
 
     const date = input.date ? new Date(input.date) : new Date()
     date.setHours(0, 0, 0, 0)
@@ -883,7 +891,7 @@ export async function quickMarkAllPresent(input: {
         where: { id: { in: existingIds }, schoolId },
         data: {
           status: "PRESENT",
-          markedBy: session.user.id,
+          markedBy: userId,
           markedAt: now,
         },
       })
@@ -900,7 +908,7 @@ export async function quickMarkAllPresent(input: {
           date,
           status: "PRESENT" as const,
           method: "MANUAL" as const,
-          markedBy: session.user.id,
+          markedBy: userId,
           markedAt: now,
           checkInTime: now,
         })),
@@ -941,10 +949,11 @@ export async function checkOutStudent(input: {
   classId: string
   date: string
 }): Promise<{ success: boolean; error?: string }> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-  }
+  // SECURITY: previously had NO auth() call — reachable unauthenticated via the
+  // x-subdomain header. Now requires a marking role.
+  const guard = await guardAttendance("mark")
+  if (!guard.ok) return guard.error
+  const { schoolId } = guard
 
   const attendance = await db.attendance.findFirst({
     where: {
@@ -980,10 +989,11 @@ export async function bulkCheckOut(input: {
   classId: string
   date: string
 }): Promise<{ success: boolean; count: number }> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return { success: false, count: 0 }
-  }
+  // SECURITY: previously had NO auth() call — reachable unauthenticated via the
+  // x-subdomain header. Now requires a marking role.
+  const guard = await guardAttendance("mark")
+  if (!guard.ok) return { success: false, count: 0 }
+  const { schoolId } = guard
 
   const result = await db.attendance.updateMany({
     where: {

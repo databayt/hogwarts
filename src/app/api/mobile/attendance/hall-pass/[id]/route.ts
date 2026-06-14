@@ -60,9 +60,23 @@ export async function PUT(
       updateData.returnedAt = new Date(returned_at)
     }
 
-    const updated = await db.hallPass.update({
-      where: { id },
+    // MULTI-TENANT: scope the write by schoolId (updateMany allows a non-unique
+    // where; a bare-PK update could touch another school's row in a TOCTOU race),
+    // then re-read the scoped row for the response.
+    const writeResult = await db.hallPass.updateMany({
+      where: { id, schoolId: auth.schoolId },
       data: updateData,
+    })
+
+    if (writeResult.count === 0) {
+      return NextResponse.json(
+        { error: "Hall pass not found" },
+        { status: 404 }
+      )
+    }
+
+    const updated = await db.hallPass.findFirst({
+      where: { id, schoolId: auth.schoolId },
       select: {
         id: true,
         studentId: true,
@@ -80,6 +94,13 @@ export async function PUT(
         },
       },
     })
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Hall pass not found" },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({
       id: updated.id,

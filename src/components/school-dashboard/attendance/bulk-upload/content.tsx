@@ -307,10 +307,17 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         records: parsedRecords,
       })
 
+      // CORRECTNESS: the server returns { successful, failed, rolledBack }.
+      // A rolled-back or partially-failed import is NOT a success — don't report
+      // one or clear the form (the user needs to fix and retry).
+      const ok = !result.rolledBack && result.failed === 0
+
       setUploadResult({
-        success: true,
-        message:
-          d?.results?.success || "Attendance records processed successfully!",
+        success: ok,
+        message: ok
+          ? d?.results?.success || "Attendance records processed successfully!"
+          : d?.results?.failed ||
+            `Upload rejected — ${result.failed} record(s) failed and nothing was saved.`,
         details: {
           total: parsedRecords.length,
           successful: result.successful,
@@ -319,19 +326,26 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         },
       })
 
-      // Clear the file and records after successful upload
-      setUploadedFile(null)
-      setParsedRecords([])
-      setParseErrors([])
+      if (ok) {
+        // Clear the file and records only after a clean upload
+        setUploadedFile(null)
+        setParsedRecords([])
+        setParseErrors([])
 
-      // Refresh data
-      refreshStats?.()
+        // Refresh data
+        refreshStats?.()
 
-      // Refresh recent uploads
-      const uploadsResult = await getRecentBulkUploads(5)
-      setRecentUploads(uploadsResult.uploads)
+        // Refresh recent uploads
+        const uploadsResult = await getRecentBulkUploads(5)
+        setRecentUploads(uploadsResult.uploads)
 
-      toast.success(`Processed ${result.successful} records`)
+        toast.success(`Processed ${result.successful} records`)
+      } else {
+        toast.error(
+          d?.results?.failed ||
+            `Upload rejected: ${result.failed} record(s) failed`
+        )
+      }
     } catch (error) {
       console.error("Error processing bulk upload:", error)
       setUploadResult({

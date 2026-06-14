@@ -79,10 +79,12 @@ export async function PUT(
         },
       })
 
-      // If approved, update attendance status to EXCUSED
+      // If approved, update attendance status to EXCUSED.
+      // MULTI-TENANT: scope by schoolId (updateMany) — a bare-PK write could
+      // touch another school's attendance row.
       if (status === "APPROVED") {
-        await tx.attendance.update({
-          where: { id: existing.attendanceId },
+        await tx.attendance.updateMany({
+          where: { id: existing.attendanceId, schoolId: auth.schoolId },
           data: { status: "EXCUSED" },
         })
       }

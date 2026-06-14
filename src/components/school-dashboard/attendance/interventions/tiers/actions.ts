@@ -66,8 +66,11 @@ const actionToInterventionType: Record<string, InterventionType> = {
 export async function getStudentsByTier(): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  // MTSS tier/intervention data is staff-only — a STUDENT/GUARDIAN must not be
+  // able to read school-wide tier classifications or any student's history.
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -337,8 +340,11 @@ export async function getStudentInterventionHistory(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  // MTSS tier/intervention data is staff-only — a STUDENT/GUARDIAN must not be
+  // able to read school-wide tier classifications or any student's history.
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
@@ -439,8 +445,11 @@ export async function getMyPendingInterventions(): Promise<ActionResult> {
 export async function getMTSSStats(): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  // MTSS tier/intervention data is staff-only — a STUDENT/GUARDIAN must not be
+  // able to read school-wide tier classifications or any student's history.
+  if (!schoolId || !role || !isStaffRole(role)) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 

@@ -16,6 +16,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getLabels } from "@/components/translation/person"
 
+import { getOwnedStudentIds } from "../actions/helpers"
 import { isStaffRole } from "../authorization"
 import {
   awardBadgeSchema,
@@ -441,9 +442,20 @@ export async function getStudentGamificationStats(
 ): Promise<ActionResult> {
   const session = await auth()
   const schoolId = session?.user?.schoolId
+  const role = session?.user?.role as UserRole | undefined
 
-  if (!schoolId) {
+  if (!schoolId || !role || !session?.user?.id) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
+  }
+
+  // OWNERSHIP: students/guardians may only read their own / their child's
+  // profile; staff may read anyone. Previously any caller could pass any
+  // studentId and read that student's points, streaks and badges.
+  if (!isStaffRole(role)) {
+    const owned = await getOwnedStudentIds(schoolId, session.user.id, role)
+    if (!owned || !owned.includes(studentId)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
   }
 
   try {

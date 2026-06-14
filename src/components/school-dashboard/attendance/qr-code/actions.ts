@@ -4,11 +4,18 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import type { UserRole } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { getOwnedStudentIds } from "../actions/helpers"
+import {
+  canMarkAttendance,
+  canViewSchoolAnalytics,
+  isStaffRole,
+} from "../authorization"
 import {
   checkRateLimit,
   clearRateLimit,
@@ -34,6 +41,12 @@ export async function generateAttendanceQR(
     const session = await auth()
     if (!session?.user) {
       throw new Error("Unauthorized")
+    }
+
+    // SECURITY: only marking-capable staff may mint QR attendance sessions.
+    // Previously any authenticated tenant user could create sessions for any class.
+    if (!canMarkAttendance(session.user.role as UserRole)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const { classId, validFor = 60, includeLocation = false, secret } = data
@@ -240,18 +253,52 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       throw new Error("QR code scan limit reached")
     }
 
-    // Create attendance record
-    const attendance = await db.attendance.create({
-      data: {
+    // CORRECTNESS: normalize the attendance date to midnight (matching manual
+    // marking) so QR records collate with daily attendance and dashboards that
+    // filter on the day boundary find them. Also idempotent on re-scan: if a
+    // daily record already exists for this student/class/day, update it instead
+    // of creating a duplicate row (the [schoolId,studentId,classId,date,periodId]
+    // tuple is not DB-unique for NULL periodId in Postgres, so dedupe in code).
+    const attendanceDate = new Date()
+    attendanceDate.setHours(0, 0, 0, 0)
+    const scanNotes = `Scanned via QR_CODE at ${new Date(scannedAt).toISOString()}${location ? ` (${location.lat},${location.lon})` : ""}`
+
+    const existingDaily = await db.attendance.findFirst({
+      where: {
         schoolId,
         studentId,
         classId: qrSession.classId,
-        date: new Date(),
-        status: "PRESENT",
-        notes: `Scanned via QR_CODE at ${new Date(scannedAt).toISOString()}${location ? ` (${location.lat},${location.lon})` : ""}`,
-        markedAt: new Date(),
+        date: attendanceDate,
+        periodId: null,
+        deletedAt: null,
       },
+      select: { id: true },
     })
+
+    const attendance = existingDaily
+      ? await db.attendance.update({
+          where: { id: existingDaily.id, schoolId },
+          data: {
+            status: "PRESENT",
+            method: "QR_CODE",
+            notes: scanNotes,
+            markedBy: session.user.id,
+            markedAt: new Date(),
+          },
+        })
+      : await db.attendance.create({
+          data: {
+            schoolId,
+            studentId,
+            classId: qrSession.classId,
+            date: attendanceDate,
+            status: "PRESENT",
+            method: "QR_CODE",
+            notes: scanNotes,
+            markedBy: session.user.id,
+            markedAt: new Date(),
+          },
+        })
 
     // Update QR session
     await db.qRCodeSession.update({
@@ -372,7 +419,15 @@ export async function getActiveQRSessions(classId: string) {
       throw new Error("Unauthorized")
     }
 
+    // SECURITY: active session codes can be reused to mark attendance — staff only.
+    if (!isStaffRole(session.user.role as UserRole)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const schoolId = session.user.schoolId
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
 
     const qrSessions = await db.qRCodeSession.findMany({
       where: {
@@ -412,7 +467,15 @@ export async function invalidateQRSession(sessionId: string) {
       throw new Error("Unauthorized")
     }
 
+    // SECURITY: invalidating a session is a staff moderation action.
+    if (!isStaffRole(session.user.role as UserRole)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const schoolId = session.user.schoolId
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
 
     const qrSession = await db.qRCodeSession.findFirst({
       where: {
@@ -468,21 +531,38 @@ export async function invalidateQRSession(sessionId: string) {
 export async function getStudentQRScans(studentId?: string) {
   try {
     const session = await auth()
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new Error("Unauthorized")
     }
 
     const schoolId = session.user.schoolId
-    const targetStudentId = studentId || session.user.id
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
+    const role = session.user.role as UserRole
+    const isStaff = isStaffRole(role)
 
-    // Check permission
-    if (
-      studentId &&
-      studentId !== session.user.id &&
-      session.user.role !== "TEACHER" &&
-      session.user.role !== "ADMIN"
-    ) {
-      throw new Error("Insufficient permissions")
+    // IDOR FIX: `studentId` is a Student.id, never a User.id. Resolve the
+    // target correctly and enforce ownership for non-staff callers.
+    let targetStudentId: string
+    if (studentId) {
+      if (!isStaff) {
+        const owned = await getOwnedStudentIds(schoolId, session.user.id, role)
+        if (!owned || !owned.includes(studentId)) {
+          return actionError(ACTION_ERRORS.UNAUTHORIZED)
+        }
+      }
+      targetStudentId = studentId
+    } else {
+      // No id supplied: staff must specify one; students/guardians resolve to self/child.
+      if (isStaff) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+      const owned = await getOwnedStudentIds(schoolId, session.user.id, role)
+      if (!owned || owned.length === 0) {
+        return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+      }
+      targetStudentId = owned[0]
     }
 
     const events = await db.attendanceEvent.findMany({
@@ -538,7 +618,15 @@ export async function getQRCodeStats(
       throw new Error("Unauthorized")
     }
 
+    // SECURITY: school-wide QR statistics are analytics — staff only.
+    if (!canViewSchoolAnalytics(session.user.role as UserRole)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const schoolId = session.user.schoolId
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    }
 
     const stats = await db.attendance.groupBy({
       by: ["status"],

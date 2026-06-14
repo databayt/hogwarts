@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => ({
     },
     class: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }))
@@ -58,7 +59,7 @@ describe("attendance-stats utility", () => {
 
       await expect(
         calculateAttendancePercentage({ studentId: "s1" })
-      ).rejects.toThrow("Missing school context")
+      ).rejects.toThrow("MISSING_SCHOOL")
     })
 
     it("returns 0 percentage when no records", async () => {
@@ -93,7 +94,7 @@ describe("attendance-stats utility", () => {
       const result = await calculateAttendancePercentage({ studentId: "s1" })
 
       expect(result.lateDays).toBe(1)
-      expect(result.presentDays).toBe(2) // PRESENT + LATE
+      expect(result.presentDays).toBe(1) // strict PRESENT; LATE tracked separately
     })
 
     it("EXCUSED removes day from denominator", async () => {
@@ -155,7 +156,7 @@ describe("attendance-stats utility", () => {
 
       await expect(
         getBulkAttendanceStats({ studentIds: ["s1"] })
-      ).rejects.toThrow("Missing school context")
+      ).rejects.toThrow("MISSING_SCHOOL")
     })
 
     it("scopes by schoolId", async () => {
@@ -177,13 +178,13 @@ describe("attendance-stats utility", () => {
 
       await expect(
         getClassAttendanceStats({ classId: "c1", date: "2026-06-01" })
-      ).rejects.toThrow("Missing school context")
+      ).rejects.toThrow("MISSING_SCHOOL")
     })
 
     it("returns 0 totals when no enrollments", async () => {
       vi.mocked(db.studentClass.findMany).mockResolvedValue([])
       vi.mocked(db.attendance.findMany).mockResolvedValue([])
-      vi.mocked(db.class.findUnique).mockResolvedValue(null)
+      vi.mocked(db.class.findFirst).mockResolvedValue(null)
 
       const result = await getClassAttendanceStats({
         classId: "c1",
@@ -203,7 +204,7 @@ describe("attendance-stats utility", () => {
         { studentId: "s1", status: "PRESENT" },
         { studentId: "s2", status: "LATE" },
       ] as any)
-      vi.mocked(db.class.findUnique).mockResolvedValue({
+      vi.mocked(db.class.findFirst).mockResolvedValue({
         name: "Class 10A",
       } as any)
 
@@ -224,7 +225,7 @@ describe("attendance-stats utility", () => {
       mockContext(null)
 
       await expect(getAttendanceTrends({ days: 30 })).rejects.toThrow(
-        "Missing school context"
+        "MISSING_SCHOOL"
       )
     })
 
@@ -242,9 +243,7 @@ describe("attendance-stats utility", () => {
     it("throws on missing schoolId", async () => {
       mockContext(null)
 
-      await expect(getAtRiskStudents({})).rejects.toThrow(
-        "Missing school context"
-      )
+      await expect(getAtRiskStudents({})).rejects.toThrow("MISSING_SCHOOL")
     })
   })
 
@@ -252,9 +251,7 @@ describe("attendance-stats utility", () => {
     it("throws on missing schoolId", async () => {
       mockContext(null)
 
-      await expect(getPerfectAttendance({})).rejects.toThrow(
-        "Missing school context"
-      )
+      await expect(getPerfectAttendance({})).rejects.toThrow("MISSING_SCHOOL")
     })
   })
 })
