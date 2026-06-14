@@ -61,9 +61,14 @@ src/components/saas-dashboard/
 
 ### Status
 
-**Completion:** 80% | **Blockers:** None
+**Completion:** 84% | **Blockers:** None | **Last optimization pass:** 2026-06-14
 
-Core SaaS features are production-ready: tenants, billing, domains, observability, analytics, and dashboard. Catalog management is functional with subjects, books, materials, questions, assignments, and approvals. Kanban and product areas are demo-level. File storage integration for receipt uploads is pending.
+Core SaaS features are production-ready: tenants, billing, domains, observability, analytics, and dashboard. Catalog management is functional with subjects, books, materials, questions, assignments, and approvals. Kanban and product areas are demo-level (now hidden from operator nav). File storage integration for receipt uploads is pending.
+
+> **2026-06-14:** A full audit (181 findings) fixed all 6 P0s + ~24 P1/P2 — notably the
+> systemic `planType` case bug that zeroed MRR, and the operator dashboard's fabricated
+> data (now wired to real platform metrics). Remaining work and the canonical finding list
+> are tracked in `OPTIMIZATION_BACKLOG.md` (+ `.audit-findings.json`).
 
 ### Integration Points
 

@@ -226,15 +226,35 @@ export async function tenantStartImpersonation(input: {
       }
     }
 
-    // Set impersonation cookie
+    // Set impersonation cookie (httpOnly — used for server-side tenant resolution)
     const cookieStore = await cookies()
+    const maxAge = 60 * 60 // 1 hour
     cookieStore.set("impersonate_schoolId", validated.tenantId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60, // 1 hour
+      maxAge,
       path: "/",
     })
+    // Non-httpOnly display hints so ImpersonationBanner can render (the banner
+    // cannot read the httpOnly schoolId cookie).
+    const hintOpts = {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      maxAge,
+      path: "/",
+    }
+    cookieStore.set(
+      "impersonate_hint",
+      JSON.stringify({ name: school.name }),
+      hintOpts
+    )
+    cookieStore.set(
+      "impersonate_expires",
+      String(Date.now() + maxAge * 1000),
+      hintOpts
+    )
 
     await logOperatorAudit({
       userId: operator.userId,
@@ -273,8 +293,10 @@ export async function tenantStopImpersonation(input?: {
     const cookieStore = await cookies()
     const schoolId = cookieStore.get("impersonate_schoolId")?.value
 
-    // Clear impersonation cookie
+    // Clear impersonation cookie + display hints
     cookieStore.delete("impersonate_schoolId")
+    cookieStore.delete("impersonate_hint")
+    cookieStore.delete("impersonate_expires")
 
     if (schoolId) {
       await logOperatorAudit({
@@ -682,5 +704,87 @@ export async function tenantGetCatalogStatus(tenantId: string): Promise<{
     return { configured: levels > 0, levels, grades }
   } catch {
     return { configured: false, levels: 0, grades: 0 }
+  }
+}
+
+/**
+ * Single-round-trip data source for the tenant detail sheet.
+ * Replaces three client fetches to /operator/tenants/* (those routes never
+ * existed — the detail sheet silently showed empty owners/metrics/billing).
+ */
+export async function getTenantDetail(tenantId: string): Promise<{
+  owners: Array<{ id: string; email: string }>
+  metrics: { students: number; teachers: number; classes: number }
+  billing: {
+    planType: string
+    outstandingCents: number
+    trialEndsAt: string | null
+    nextInvoiceDate: string | null
+  }
+  invoices: Array<{
+    id: string
+    number: string
+    status: string
+    amount: number
+    createdAt: string
+  }>
+}> {
+  await requireOperator()
+
+  const [owners, students, teachers, classes, school, openInvoices, recent] =
+    await Promise.all([
+      db.user.findMany({
+        where: { schoolId: tenantId, role: "ADMIN" },
+        select: { id: true, email: true },
+      }),
+      db.student.count({ where: { schoolId: tenantId } }),
+      db.teacher.count({ where: { schoolId: tenantId } }),
+      db.class.count({ where: { schoolId: tenantId } }),
+      db.school.findUnique({
+        where: { id: tenantId },
+        select: { planType: true },
+      }),
+      // Outstanding = unpaid portion of open invoices (amountDue - amountPaid).
+      db.invoice.findMany({
+        where: { schoolId: tenantId, status: "open" },
+        select: { amountDue: true, amountPaid: true },
+      }),
+      db.invoice.findMany({
+        where: { schoolId: tenantId },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          stripeInvoiceId: true,
+          status: true,
+          amountDue: true,
+          createdAt: true,
+        },
+      }),
+    ])
+
+  const outstandingCents = openInvoices.reduce(
+    (sum, i) => sum + (i.amountDue - i.amountPaid),
+    0
+  )
+
+  return {
+    owners: owners.map((o) => ({ id: o.id, email: o.email ?? "" })),
+    metrics: { students, teachers, classes },
+    billing: {
+      planType: school?.planType ?? "basic",
+      outstandingCents,
+      trialEndsAt: null,
+      nextInvoiceDate: null,
+    },
+    // Show the invoice total (amountDue), not amountPaid — open invoices were
+    // previously displayed as $0.
+    invoices: recent.map((i) => ({
+      id: i.id,
+      number: i.stripeInvoiceId ?? i.id.slice(0, 8),
+      status: i.status,
+      amount: i.amountDue,
+      createdAt: i.createdAt?.toISOString?.() ?? String(i.createdAt),
+    })),
   }
 }

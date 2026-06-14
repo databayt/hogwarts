@@ -4,6 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // Removed custom theme hook; project uses ThemeProvider + ModeSwitcher already
+import { useTheme } from "next-themes"
+
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -55,7 +57,7 @@ const MONO_THEMES = [
 
 export function ThemeSelector() {
   // Align with global theme provider (next-themes)
-  const { theme, setTheme } = require("next-themes").useTheme()
+  const { theme, setTheme } = useTheme()
 
   return (
     <div className="flex items-center gap-2">

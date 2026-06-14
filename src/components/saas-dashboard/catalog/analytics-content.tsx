@@ -49,7 +49,7 @@ export async function AnalyticsContent({ lang }: Props) {
     db.subject.count(),
     db.question.count(),
     db.material.count(),
-    db.schoolAssignment.count(),
+    db.assignment.count(), // catalog Assignment templates, not school-scoped SchoolAssignment
     db.video.count(),
     db.subject.findMany({
       orderBy: { usageCount: "desc" },

@@ -6,7 +6,11 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
-import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
+import {
+  logOperatorAudit,
+  requireNotImpersonating,
+  requireOperator,
+} from "@/components/saas-dashboard/lib/operator-auth"
 
 import type { ReceiptRow } from "./types"
 
@@ -18,7 +22,8 @@ const reviewReceiptSchema = z.object({
 
 export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
   try {
-    await requireOperator()
+    const operator = await requireOperator()
+    await requireNotImpersonating()
     const validated = reviewReceiptSchema.parse(data)
 
     // Update receipt status
@@ -34,33 +39,36 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
           select: {
             id: true,
             schoolId: true,
+            amountDue: true,
+            amountPaid: true,
           },
         },
       },
     })
 
-    // If approved, mark the invoice as paid
+    // If approved, credit the receipt toward the invoice. Accumulate onto any
+    // prior partial payment instead of overwriting; only flip to "paid" once
+    // the full amount is covered.
     if (validated.status === "approved") {
+      const newAmountPaid = receipt.invoice.amountPaid + receipt.amount
       await db.invoice.update({
         where: { id: receipt.invoiceId },
         data: {
-          status: "paid",
-          amountPaid: receipt.amount,
+          status: newAmountPaid >= receipt.invoice.amountDue ? "paid" : "open",
+          amountPaid: newAmountPaid,
           updatedAt: new Date(), // Track when payment was processed
         },
       })
     }
 
-    // Create audit log
-    await db.auditLog.create({
-      data: {
-        action: `receipt_${validated.status}`,
-        userId: "operator", // TODO: Get actual saas-dashboard user ID
-        schoolId: receipt.invoice.schoolId,
-        reason:
-          validated.notes ||
-          `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
-      },
+    // Create audit log with the real operator identity (+ IP/UA)
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: receipt.invoice.schoolId,
+      action: `receipt_${validated.status}`,
+      reason:
+        validated.notes ||
+        `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
     })
 
     revalidatePath("/billing")
@@ -88,7 +96,8 @@ const uploadReceiptSchema = z.object({
 
 export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
   try {
-    await requireOperator()
+    const operator = await requireOperator()
+    await requireNotImpersonating()
     const validated = uploadReceiptSchema.parse(data)
 
     // Get the invoice to retrieve schoolId
@@ -112,14 +121,12 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
       },
     })
 
-    // Create audit log
-    await db.auditLog.create({
-      data: {
-        action: "receipt_uploaded",
-        userId: "operator",
-        schoolId: invoice.schoolId,
-        reason: `Receipt uploaded: ${validated.fileName} for invoice ${validated.invoiceId} - Amount: $${(validated.amount / 100).toFixed(2)}`,
-      },
+    // Create audit log with the real operator identity (+ IP/UA)
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: invoice.schoolId,
+      action: "receipt_uploaded",
+      reason: `Receipt uploaded: ${validated.fileName} for invoice ${validated.invoiceId} - Amount: $${(validated.amount / 100).toFixed(2)}`,
     })
 
     revalidatePath("/billing")

@@ -62,8 +62,13 @@ export async function getConferenceObservability(): Promise<ConferenceObservabil
       _count: { _all: true },
       _sum: { fileSizeBytes: true },
     }),
-    db.conferenceParticipant.count({ where: { hadTcpFallback: true } }),
-    db.conferenceParticipant.count(),
+    // Scope the fallback rate to participants who actually connected —
+    // hadTcpFallback can only be set on a real join, so counting invited-but-
+    // never-joined rows in the denominator would understate the true rate.
+    db.conferenceParticipant.count({
+      where: { hadTcpFallback: true, joinedAt: { not: null } },
+    }),
+    db.conferenceParticipant.count({ where: { joinedAt: { not: null } } }),
     db.conferenceEvent.findMany({
       orderBy: { occurredAt: "desc" },
       take: 20,

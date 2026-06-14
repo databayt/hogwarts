@@ -12,6 +12,14 @@ Platform operator control center (DEVELOPER role only): tenants, billing, domain
 
 ## Key Decisions
 
+- **No fabricated data (2026-06-14):** the operator dashboard must render REAL platform
+  data only. The old `Math.random`/`defaultDataByRole`/persona placeholders were removed;
+  detailed MRR/revenue/plan charts live on `/analytics`. Don't reintroduce sample data.
+- **`planType` is stored mixed-case** ("basic" via onboarding/marketing, "BASIC" via
+  operator `createTenant`). ALL planType comparisons/lookups MUST be case-insensitive.
+- **Optimization backlog:** open findings tracked in `OPTIMIZATION_BACKLOG.md` +
+  `.audit-findings.json` (181-finding audit; ~150 remain, mostly i18n + lower-priority
+  correctness/deadcode).
 - DEVELOPER role only -- auth guard at layout level, no other roles have access
 - Operates across tenants: queries intentionally lack `schoolId` filter (unique in this codebase)
 - Impersonation feature lets DEVELOPER act as school admin -- `impersonation-banner.tsx` shows active state

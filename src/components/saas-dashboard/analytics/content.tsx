@@ -240,9 +240,16 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                 </p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(
-                    mrrData.currentMRR *
-                      Math.pow(1 + mrrData.growth / 100, 12) *
-                      12,
+                    // Projected annual revenue = sum of the next 12 months' MRR
+                    // with monthly growth applied. The previous formula took
+                    // month-12's compounded MRR and multiplied by 12, which
+                    // overstated revenue by up to ~76%.
+                    Array.from(
+                      { length: 12 },
+                      (_, k) =>
+                        mrrData.currentMRR *
+                        Math.pow(1 + mrrData.growth / 100, k + 1)
+                    ).reduce((sum, m) => sum + m, 0),
                     lang,
                     "USD",
                     { minimumFractionDigits: 0, maximumFractionDigits: 0 }

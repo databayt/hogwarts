@@ -235,11 +235,22 @@ export async function getInvoicesCSV(filters?: {
     formatDate(invoice.updatedAt, "ar"),
   ])
 
-  // Combine into CSV
+  // Combine into CSV. csvCell() neutralizes spreadsheet formula injection
+  // (school name/domain are operator-untrusted) and escapes embedded quotes.
   const csv = [
-    headers.join(","),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    headers.map(csvCell).join(","),
+    ...rows.map((row) => row.map(csvCell).join(",")),
   ].join("\n")
 
   return csv
+}
+
+/**
+ * Escape a value for safe CSV output: prefix formula-trigger characters with a
+ * single quote and double any embedded quotes.
+ */
+function csvCell(value: unknown): string {
+  let s = value == null ? "" : String(value)
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
+  return `"${s.replace(/"/g, '""')}"`
 }

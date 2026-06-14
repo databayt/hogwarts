@@ -58,6 +58,11 @@ function mockOperatorForbidden() {
   vi.mocked(requireOperator).mockRejectedValue(new Error("Forbidden"))
 }
 
+// Dates used to exercise the JS createdAt-bucketing introduced when the
+// per-month queries were collapsed into a single fetch.
+const OLD_DATE = new Date("2020-01-01") // before any recent month boundary
+const NOW_DATE = new Date() // current month
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -68,26 +73,19 @@ describe("Analytics Actions", () => {
   })
 
   // ==========================================================================
-  // calculateMRR
+  // calculateMRR — single query, case-insensitive plan pricing
   // ==========================================================================
 
   describe("calculateMRR", () => {
     it("returns correct MRR with mix of BASIC/PREMIUM/ENTERPRISE schools", async () => {
       mockOperatorAccess()
 
-      // Current active schools (first call)
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([
-          { id: "s1", planType: "BASIC" },
-          { id: "s2", planType: "PREMIUM" },
-          { id: "s3", planType: "ENTERPRISE" },
-          { id: "s4", planType: "BASIC" },
-        ] as any)
-        // Last month schools (second call)
-        .mockResolvedValueOnce([
-          { planType: "BASIC" },
-          { planType: "PREMIUM" },
-        ] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "PREMIUM", createdAt: NOW_DATE },
+        { planType: "ENTERPRISE", createdAt: NOW_DATE },
+        { planType: "BASIC", createdAt: NOW_DATE },
+      ] as any)
 
       const result = await calculateMRR()
 
@@ -96,26 +94,39 @@ describe("Analytics Actions", () => {
       expect(result.totalSchools).toBe(4)
     })
 
-    it("calculates growth percentage correctly", async () => {
+    it("normalizes lowercase planType (stored mixed-case in the DB)", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([
-          { id: "s1", planType: "BASIC" },
-          { id: "s2", planType: "PREMIUM" },
-          { id: "s3", planType: "BASIC" },
-        ] as any)
-        .mockResolvedValueOnce([
-          { planType: "BASIC" },
-          { planType: "PREMIUM" },
-        ] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "basic", createdAt: NOW_DATE },
+        { planType: "premium", createdAt: NOW_DATE },
+      ] as any)
 
       const result = await calculateMRR()
 
-      // Current: 99 + 299 + 99 = 497
-      // Last month: 99 + 299 = 398
-      // Growth: ((497 - 398) / 398) * 100 = 24.8743...
-      // Rounded to 1 decimal: 24.9
+      // Previously these resolved to $0 because PLAN_PRICING is uppercase-keyed.
+      expect(result.currentMRR).toBe(398)
+      expect(result.mrrByPlan).toEqual({
+        BASIC: 99,
+        PREMIUM: 299,
+        ENTERPRISE: 0,
+      })
+    })
+
+    it("calculates growth percentage correctly", async () => {
+      mockOperatorAccess()
+
+      // Last-month MRR is derived from createdAt in the same single fetch.
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "BASIC", createdAt: OLD_DATE },
+        { planType: "PREMIUM", createdAt: OLD_DATE },
+        { planType: "BASIC", createdAt: NOW_DATE },
+      ] as any)
+
+      const result = await calculateMRR()
+
+      // Current: 99 + 299 + 99 = 497; last month (created before last month): 398
+      // Growth: ((497 - 398) / 398) * 100 = 24.87 → 24.9
       expect(result.currentMRR).toBe(497)
       expect(result.lastMonthMRR).toBe(398)
       expect(result.growth).toBe(24.9)
@@ -124,9 +135,9 @@ describe("Analytics Actions", () => {
     it("returns 0 growth when no previous month data", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([{ id: "s1", planType: "BASIC" }] as any)
-        .mockResolvedValueOnce([] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "BASIC", createdAt: NOW_DATE },
+      ] as any)
 
       const result = await calculateMRR()
 
@@ -138,14 +149,12 @@ describe("Analytics Actions", () => {
     it("returns mrrByPlan breakdown", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([
-          { id: "s1", planType: "BASIC" },
-          { id: "s2", planType: "BASIC" },
-          { id: "s3", planType: "PREMIUM" },
-          { id: "s4", planType: "ENTERPRISE" },
-        ] as any)
-        .mockResolvedValueOnce([] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "PREMIUM", createdAt: NOW_DATE },
+        { planType: "ENTERPRISE", createdAt: NOW_DATE },
+      ] as any)
 
       const result = await calculateMRR()
 
@@ -159,9 +168,7 @@ describe("Analytics Actions", () => {
     it("returns empty breakdown when no active schools", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
 
       const result = await calculateMRR()
 
@@ -194,12 +201,10 @@ describe("Analytics Actions", () => {
     it("handles unknown plan types gracefully (defaults to 0)", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([
-          { id: "s1", planType: "BASIC" },
-          { id: "s2", planType: "UNKNOWN_PLAN" },
-        ] as any)
-        .mockResolvedValueOnce([] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([
+        { planType: "BASIC", createdAt: NOW_DATE },
+        { planType: "UNKNOWN_PLAN", createdAt: NOW_DATE },
+      ] as any)
 
       const result = await calculateMRR()
 
@@ -207,79 +212,63 @@ describe("Analytics Actions", () => {
       expect(result.currentMRR).toBe(99)
     })
 
-    it("calls db.school.findMany with correct filters for active non-trial schools", async () => {
+    it("fetches active non-trial schools in a single query", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.school.findMany)
-        .mockResolvedValueOnce([] as any)
-        .mockResolvedValueOnce([] as any)
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
 
       await calculateMRR()
 
+      expect(db.school.findMany).toHaveBeenCalledTimes(1)
       expect(db.school.findMany).toHaveBeenCalledWith({
         where: {
           isActive: true,
-          planType: { not: "TRIAL" },
+          planType: { notIn: ["TRIAL", "trial"] },
         },
         select: {
-          id: true,
           planType: true,
+          createdAt: true,
         },
       })
     })
   })
 
   // ==========================================================================
-  // getMRRHistory
+  // getMRRHistory — single query + JS bucketing
   // ==========================================================================
 
   describe("getMRRHistory", () => {
-    it("returns 6 months of history", async () => {
+    it("returns 6 months of history from a single query", async () => {
       mockOperatorAccess()
 
-      // Mock 6 calls to db.school.findMany (one per month)
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
-      }
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getMRRHistory()
 
       expect(result).toHaveLength(6)
-      expect(db.school.findMany).toHaveBeenCalledTimes(6)
+      expect(db.school.findMany).toHaveBeenCalledTimes(1)
     })
 
-    it("each month has mrr and schools count", async () => {
+    it("buckets schools cumulatively by createdAt", async () => {
       mockOperatorAccess()
 
-      // Month 1-5: empty
-      for (let i = 0; i < 5; i++) {
-        vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
-      }
-      // Month 6 (current): two schools
+      // Both created long ago → present in every month bucket.
       vi.mocked(db.school.findMany).mockResolvedValueOnce([
-        { planType: "BASIC" },
-        { planType: "PREMIUM" },
+        { planType: "BASIC", createdAt: OLD_DATE },
+        { planType: "PREMIUM", createdAt: OLD_DATE },
       ] as any)
 
       const result = await getMRRHistory()
 
-      // First 5 months empty
-      for (let i = 0; i < 5; i++) {
-        expect(result[i].mrr).toBe(0)
-        expect(result[i].schools).toBe(0)
-      }
-
-      // Last month has data
-      expect(result[5].mrr).toBe(398) // 99 + 299
+      expect(result[0].mrr).toBe(398) // 99 + 299
+      expect(result[5].mrr).toBe(398)
       expect(result[5].schools).toBe(2)
     })
 
     it("each entry has a month label string", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
-      }
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getMRRHistory()
 
@@ -290,25 +279,20 @@ describe("Analytics Actions", () => {
       }
     })
 
-    it("filters out TRIAL schools in each month query", async () => {
+    it("excludes TRIAL schools (case-insensitive) in the query", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
-      }
+      vi.mocked(db.school.findMany).mockResolvedValueOnce([] as any)
 
       await getMRRHistory()
 
-      // Every call should exclude TRIAL
-      for (const call of vi.mocked(db.school.findMany).mock.calls) {
-        expect(call[0]).toEqual(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              planType: { not: "TRIAL" },
-            }),
-          })
-        )
-      }
+      expect(db.school.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            planType: { notIn: ["TRIAL", "trial"] },
+          }),
+        })
+      )
     })
 
     it("rejects non-DEVELOPER users", async () => {
@@ -330,7 +314,7 @@ describe("Analytics Actions", () => {
   })
 
   // ==========================================================================
-  // calculateChurnRate
+  // calculateChurnRate (unchanged behaviour)
   // ==========================================================================
 
   describe("calculateChurnRate", () => {
@@ -424,8 +408,7 @@ describe("Analytics Actions", () => {
 
       const result = await calculateChurnRate("30d")
 
-      // (7 / 300) * 100 = 2.3333...
-      // Rounded to 1 decimal: 2.3
+      // (7 / 300) * 100 = 2.3333... → 2.3
       expect(result.churnRate).toBe(2.3)
     })
 
@@ -438,7 +421,6 @@ describe("Analytics Actions", () => {
 
       await calculateChurnRate("30d")
 
-      // First call: schoolsAtStart
       const firstCall = vi.mocked(db.school.count).mock.calls[0][0]
       expect(firstCall).toEqual({
         where: {
@@ -448,7 +430,6 @@ describe("Analytics Actions", () => {
         },
       })
 
-      // Second call: churned schools
       const secondCall = vi.mocked(db.school.count).mock.calls[1][0]
       expect(secondCall).toEqual({
         where: {
@@ -482,7 +463,7 @@ describe("Analytics Actions", () => {
   })
 
   // ==========================================================================
-  // getAtRiskSchools
+  // getAtRiskSchools (unchanged behaviour)
   // ==========================================================================
 
   describe("getAtRiskSchools", () => {
@@ -628,57 +609,42 @@ describe("Analytics Actions", () => {
   })
 
   // ==========================================================================
-  // getRevenueTrends
+  // getRevenueTrends — single query + JS bucketing
   // ==========================================================================
 
   describe("getRevenueTrends", () => {
-    it("returns 6 months of revenue data", async () => {
+    it("returns 6 months of revenue data from a single query", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: 10000 },
-          _count: 5,
-        } as any)
-      }
+      vi.mocked(db.invoice.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getRevenueTrends()
 
       expect(result).toHaveLength(6)
-      expect(db.invoice.aggregate).toHaveBeenCalledTimes(6)
+      expect(db.invoice.findMany).toHaveBeenCalledTimes(1)
     })
 
-    it("converts cents to dollars", async () => {
+    it("converts cents to dollars and buckets by month", async () => {
       mockOperatorAccess()
 
-      // First 5 months: empty
-      for (let i = 0; i < 5; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: 0 },
-          _count: 0,
-        } as any)
-      }
-      // Last month: $150.50 (15050 cents)
-      vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-        _sum: { amountPaid: 15050 },
-        _count: 3,
-      } as any)
+      const mid = new Date(NOW_DATE.getFullYear(), NOW_DATE.getMonth(), 15)
+      vi.mocked(db.invoice.findMany).mockResolvedValueOnce([
+        { amountPaid: 15050, createdAt: mid },
+        { amountPaid: 0, createdAt: mid },
+        { amountPaid: 0, createdAt: mid },
+      ] as any)
 
       const result = await getRevenueTrends()
 
+      // Index 5 is the current month.
       expect(result[5].revenue).toBe(150.5)
       expect(result[5].invoices).toBe(3)
     })
 
-    it("handles null amountPaid sum as zero", async () => {
+    it("handles empty result as zero", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: null },
-          _count: 0,
-        } as any)
-      }
+      vi.mocked(db.invoice.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getRevenueTrends()
 
@@ -691,12 +657,7 @@ describe("Analytics Actions", () => {
     it("each entry has month, revenue, and invoices fields", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: 50000 },
-          _count: 10,
-        } as any)
-      }
+      vi.mocked(db.invoice.findMany).mockResolvedValueOnce([] as any)
 
       const result = await getRevenueTrends()
 
@@ -710,68 +671,36 @@ describe("Analytics Actions", () => {
       }
     })
 
-    it("queries only paid invoices", async () => {
+    it("queries only paid invoices with a single windowed fetch", async () => {
       mockOperatorAccess()
 
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: 0 },
-          _count: 0,
-        } as any)
-      }
+      vi.mocked(db.invoice.findMany).mockResolvedValueOnce([] as any)
 
       await getRevenueTrends()
 
-      // Every aggregate call should filter by status: "paid"
-      for (const call of vi.mocked(db.invoice.aggregate).mock.calls) {
-        expect(call[0]).toEqual(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              status: "paid",
-            }),
-          })
-        )
-      }
-    })
-
-    it("uses _sum.amountPaid and _count in aggregate query", async () => {
-      mockOperatorAccess()
-
-      for (let i = 0; i < 6; i++) {
-        vi.mocked(db.invoice.aggregate).mockResolvedValueOnce({
-          _sum: { amountPaid: 0 },
-          _count: 0,
-        } as any)
-      }
-
-      await getRevenueTrends()
-
-      // Each call should request _sum and _count
-      for (const call of vi.mocked(db.invoice.aggregate).mock.calls) {
-        expect(call[0]).toEqual(
-          expect.objectContaining({
-            _sum: { amountPaid: true },
-            _count: true,
-          })
-        )
-      }
+      expect(db.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: "paid" }),
+          select: { amountPaid: true, createdAt: true },
+        })
+      )
     })
 
     it("rejects non-DEVELOPER users", async () => {
       mockOperatorForbidden()
 
       await expect(getRevenueTrends()).rejects.toThrow("Forbidden")
-      expect(db.invoice.aggregate).not.toHaveBeenCalled()
+      expect(db.invoice.findMany).not.toHaveBeenCalled()
     })
 
     it("propagates database errors", async () => {
       mockOperatorAccess()
 
-      vi.mocked(db.invoice.aggregate).mockRejectedValue(
-        new Error("Aggregate failed")
+      vi.mocked(db.invoice.findMany).mockRejectedValue(
+        new Error("Query failed")
       )
 
-      await expect(getRevenueTrends()).rejects.toThrow("Aggregate failed")
+      await expect(getRevenueTrends()).rejects.toThrow("Query failed")
     })
   })
 })

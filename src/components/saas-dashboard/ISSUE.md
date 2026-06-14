@@ -1,8 +1,43 @@
 # SaaS Dashboard — Production Readiness Tracker
 
 **Status:** :yellow_circle: IN PROGRESS
-**Completion:** 80%
-**Last Updated:** 2026-03-19
+**Completion:** 84%
+**Last Updated:** 2026-06-14
+
+---
+
+## 2026-06-14 — Optimization pass (audit + partial fix)
+
+An 11-area read-only audit + adversarial verification produced **181 confirmed
+findings** (6 P0, 47 P1, 101 P2, 27 P3). Full list + machine-readable copy live in
+`OPTIMIZATION_BACKLOG.md` / `.audit-findings.json`.
+
+**Fixed this pass (all 6 P0 + ~24 P1/P2, tsc clean):**
+
+- **P0 data integrity:** `planType` case mismatch zeroed all MRR + plan-distribution
+  cards (DB stores mixed case; lookups were uppercase-only) → all reads now
+  case-insensitive. Tenant "Outstanding" always $0 (read nonexistent `Invoice.amount`)
+  → `amountDue − amountPaid`. Tenant detail sheet fetched dead `/operator/...` routes
+  (always empty) → one `getTenantDetail` action; 4 dead API routes deleted.
+- **P0 security:** receipt actions logged literal `"operator"` as userId → real
+  operator identity (+IP/UA); added missing `requireNotImpersonating()`.
+- **Perf:** collapsed 6→1 (MRR history, revenue trends), 5→1/3 (domain stats, billing
+  stats), 10→4 (tenant analysis) via groupBy/JS-bucketing.
+- **Fabricated data:** the operator dashboard rendered largely fake data
+  (`Math.random` charts, static `defaultDataByRole`, fictional sales personas,
+  hardcoded "upcoming" counts) — **all removed and wired to real platform data**;
+  8 dead files deleted; detailed charts now live only on `/analytics` (already real).
+- **Other:** CSV formula-injection escaping (billing export), partial-payment
+  accumulation, projected-12-month formula, impersonation banner visibility,
+  dead `operator-auth-guard` (PII log) removed, `theme-selector` `require()` fix,
+  Kanban/Products removed from operator nav.
+
+**Remaining (~150, see `OPTIMIZATION_BACKLOG.md`):** catalog TOCTOU/transaction
+guards, observability pagination + dead-layer cleanup, sales TOCTOU + CSV-import
+batching, domains TOCTOU/FSM, tenant N+1 translation + caching, and the cross-cutting
+**i18n sweep (~48)**. The parallel fix-agent wave was rate-limited mid-run — resume by
+re-bucketing `.audit-findings.json` by file path. Schema indexes
+(School.isActive/planType, Lead.nextFollowUpAt) are deploy-time `db push` items.
 
 ---
 
@@ -50,6 +85,11 @@
 - [ ] Payment automation via Stripe webhooks
 
 ## Known Issues
+
+> 2026-06-13: `observability/conference/queries.ts` TURN-fallback rate scoped to
+> joined participants + `0n` BigInt fallback (metric-correctness only). Owned by
+> the conference block — see `school-dashboard/conference/ISSUE.md` (hardening
+> pass) and hogwarts#3. No dashboard-level change.
 
 ### P0 -- Critical
 

@@ -106,22 +106,25 @@ async function getInvoicesData(searchParams: Props["searchParams"]) {
 }
 
 async function getBillingStats() {
-  const [
-    totalInvoices,
-    paidInvoices,
-    openInvoices,
-    totalRevenue,
-    pendingReceipts,
-  ] = await Promise.all([
-    db.invoice.count(),
-    db.invoice.count({ where: { status: "paid" } }),
-    db.invoice.count({ where: { status: "open" } }),
+  // One groupBy replaces 3 separate counts.
+  const [statusGroups, totalRevenue, pendingReceipts] = await Promise.all([
+    db.invoice.groupBy({ by: ["status"], _count: true }),
     db.invoice.aggregate({
       where: { status: "paid" },
       _sum: { amountPaid: true },
     }),
     db.receipt.count({ where: { status: "pending" } }),
   ])
+
+  const countByStatus = Object.fromEntries(
+    statusGroups.map((g) => [g.status, g._count])
+  )
+  const totalInvoices = statusGroups.reduce((sum, g) => sum + g._count, 0)
+  const paidInvoices = countByStatus["paid"] ?? 0
+  const openInvoices = countByStatus["open"] ?? 0
+  // Payment rate measures collectible invoices only — exclude
+  // void/draft/uncollectible from the denominator (they were never payable).
+  const collectible = paidInvoices + openInvoices
 
   return {
     totalInvoices,
@@ -130,7 +133,7 @@ async function getBillingStats() {
     totalRevenue: (totalRevenue._sum?.amountPaid || 0) / 100,
     pendingReceipts,
     paymentRate:
-      totalInvoices > 0 ? Math.round((paidInvoices / totalInvoices) * 100) : 0,
+      collectible > 0 ? Math.round((paidInvoices / collectible) * 100) : 0,
   }
 }
 

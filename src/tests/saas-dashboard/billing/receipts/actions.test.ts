@@ -10,7 +10,11 @@ import {
   reviewReceipt,
   uploadReceipt,
 } from "@/components/saas-dashboard/billing/receipts/actions"
-import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
+import {
+  logOperatorAudit,
+  requireNotImpersonating,
+  requireOperator,
+} from "@/components/saas-dashboard/lib/operator-auth"
 
 // ============================================================================
 // Mocks
@@ -18,6 +22,8 @@ import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
 vi.mock("@/components/saas-dashboard/lib/operator-auth", () => ({
   requireOperator: vi.fn(),
+  requireNotImpersonating: vi.fn(),
+  logOperatorAudit: vi.fn(),
 }))
 
 vi.mock("@/lib/db", () => ({
@@ -32,9 +38,6 @@ vi.mock("@/lib/db", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    auditLog: {
-      create: vi.fn(),
-    },
   },
 }))
 
@@ -48,6 +51,7 @@ vi.mock("next/cache", () => ({
 
 function mockOperator() {
   vi.mocked(requireOperator).mockResolvedValue({ userId: "dev-1" })
+  vi.mocked(requireNotImpersonating).mockResolvedValue(undefined as any)
 }
 
 function mockOperatorForbidden() {
@@ -62,7 +66,7 @@ function makeApprovedReceipt(overrides = {}) {
     status: "approved",
     reviewedAt: new Date(),
     notes: null,
-    invoice: { id: "inv-1", schoolId: "s1" },
+    invoice: { id: "inv-1", schoolId: "s1", amountDue: 5000, amountPaid: 0 },
     ...overrides,
   }
 }
@@ -75,7 +79,7 @@ function makeRejectedReceipt(overrides = {}) {
     status: "rejected",
     reviewedAt: new Date(),
     notes: "Invalid receipt",
-    invoice: { id: "inv-1", schoolId: "s1" },
+    invoice: { id: "inv-1", schoolId: "s1", amountDue: 5000, amountPaid: 0 },
     ...overrides,
   }
 }
@@ -114,12 +118,11 @@ describe("Receipt Actions", () => {
   // ==========================================================================
 
   describe("reviewReceipt", () => {
-    it("approves receipt and marks invoice as paid", async () => {
+    it("approves receipt and marks invoice as paid when fully covered", async () => {
       mockOperator()
       const receipt = makeApprovedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
       vi.mocked(db.invoice.update).mockResolvedValue({} as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       const result = await reviewReceipt({
         receiptId: "r1",
@@ -135,7 +138,12 @@ describe("Receipt Actions", () => {
         }),
         include: {
           invoice: {
-            select: { id: true, schoolId: true },
+            select: {
+              id: true,
+              schoolId: true,
+              amountDue: true,
+              amountPaid: true,
+            },
           },
         },
       })
@@ -149,11 +157,36 @@ describe("Receipt Actions", () => {
       })
     })
 
+    it("accumulates onto prior partial payment and stays open if not fully covered", async () => {
+      mockOperator()
+      const receipt = makeApprovedReceipt({
+        amount: 3000,
+        invoice: {
+          id: "inv-1",
+          schoolId: "s1",
+          amountDue: 5000,
+          amountPaid: 1000,
+        },
+      })
+      vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
+      vi.mocked(db.invoice.update).mockResolvedValue({} as any)
+
+      await reviewReceipt({ receiptId: "r1", status: "approved" })
+
+      // 1000 (prior) + 3000 (receipt) = 4000 < 5000 due → still "open"
+      expect(db.invoice.update).toHaveBeenCalledWith({
+        where: { id: "inv-1" },
+        data: expect.objectContaining({
+          status: "open",
+          amountPaid: 4000,
+        }),
+      })
+    })
+
     it("rejects receipt without marking invoice as paid", async () => {
       mockOperator()
       const receipt = makeRejectedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       const result = await reviewReceipt({
         receiptId: "r1",
@@ -173,29 +206,27 @@ describe("Receipt Actions", () => {
       expect(db.invoice.update).not.toHaveBeenCalled()
     })
 
-    it("creates audit log with receipt_approved action", async () => {
+    it("writes an audit log with the real operator id (not a literal string)", async () => {
       mockOperator()
       const receipt = makeApprovedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
       vi.mocked(db.invoice.update).mockResolvedValue({} as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await reviewReceipt({ receiptId: "r1", status: "approved" })
 
-      expect(db.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(logOperatorAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
           action: "receipt_approved",
-          userId: "operator",
+          userId: "dev-1",
           schoolId: "s1",
-        }),
-      })
+        })
+      )
     })
 
-    it("creates audit log with receipt_rejected action", async () => {
+    it("creates audit log with receipt_rejected action and reason", async () => {
       mockOperator()
       const receipt = makeRejectedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await reviewReceipt({
         receiptId: "r1",
@@ -203,14 +234,14 @@ describe("Receipt Actions", () => {
         notes: "Blurry image",
       })
 
-      expect(db.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(logOperatorAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
           action: "receipt_rejected",
-          userId: "operator",
+          userId: "dev-1",
           schoolId: "s1",
           reason: "Blurry image",
-        }),
-      })
+        })
+      )
     })
 
     it("uses default reason when notes are not provided", async () => {
@@ -218,15 +249,32 @@ describe("Receipt Actions", () => {
       const receipt = makeApprovedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
       vi.mocked(db.invoice.update).mockResolvedValue({} as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await reviewReceipt({ receiptId: "r1", status: "approved" })
 
-      expect(db.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(logOperatorAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
           reason: "Receipt approved for invoice inv-1",
-        }),
+        })
+      )
+    })
+
+    it("blocks review while impersonating", async () => {
+      vi.mocked(requireOperator).mockResolvedValue({ userId: "dev-1" })
+      vi.mocked(requireNotImpersonating).mockRejectedValue(
+        new Error("Action disabled during impersonation")
+      )
+
+      const result = await reviewReceipt({
+        receiptId: "r1",
+        status: "approved",
       })
+
+      expect(result).toEqual({
+        success: false,
+        error: { message: "Action disabled during impersonation" },
+      })
+      expect(db.receipt.update).not.toHaveBeenCalled()
     })
 
     it("returns error when receipt not found (db throws)", async () => {
@@ -245,7 +293,7 @@ describe("Receipt Actions", () => {
         error: { message: "Record not found" },
       })
       expect(db.invoice.update).not.toHaveBeenCalled()
-      expect(db.auditLog.create).not.toHaveBeenCalled()
+      expect(logOperatorAudit).not.toHaveBeenCalled()
     })
 
     it("returns error on auth failure", async () => {
@@ -294,7 +342,6 @@ describe("Receipt Actions", () => {
       const receipt = makeApprovedReceipt()
       vi.mocked(db.receipt.update).mockResolvedValue(receipt as any)
       vi.mocked(db.invoice.update).mockResolvedValue({} as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await reviewReceipt({ receiptId: "r1", status: "approved" })
 
@@ -331,7 +378,6 @@ describe("Receipt Actions", () => {
       vi.mocked(db.receipt.create).mockResolvedValue({
         id: "r-new",
       } as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       const result = await uploadReceipt(validUpload)
 
@@ -361,7 +407,7 @@ describe("Receipt Actions", () => {
       expect(db.receipt.create).not.toHaveBeenCalled()
     })
 
-    it("creates audit log with correct data", async () => {
+    it("creates audit log with the real operator id", async () => {
       mockOperator()
       vi.mocked(db.invoice.findUnique).mockResolvedValue({
         schoolId: "s1",
@@ -369,18 +415,17 @@ describe("Receipt Actions", () => {
       vi.mocked(db.receipt.create).mockResolvedValue({
         id: "r-new",
       } as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await uploadReceipt(validUpload)
 
-      expect(db.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(logOperatorAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
           action: "receipt_uploaded",
-          userId: "operator",
+          userId: "dev-1",
           schoolId: "s1",
           reason: expect.stringContaining("receipt.pdf"),
-        }),
-      })
+        })
+      )
     })
 
     it("includes formatted amount in audit log reason", async () => {
@@ -391,12 +436,26 @@ describe("Receipt Actions", () => {
       vi.mocked(db.receipt.create).mockResolvedValue({
         id: "r-new",
       } as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await uploadReceipt(validUpload)
 
-      const auditCall = vi.mocked(db.auditLog.create).mock.calls[0][0]
-      expect(auditCall.data.reason).toContain("$50.00")
+      const auditCall = vi.mocked(logOperatorAudit).mock.calls[0][0]
+      expect(auditCall.reason).toContain("$50.00")
+    })
+
+    it("blocks upload while impersonating", async () => {
+      vi.mocked(requireOperator).mockResolvedValue({ userId: "dev-1" })
+      vi.mocked(requireNotImpersonating).mockRejectedValue(
+        new Error("Action disabled during impersonation")
+      )
+
+      const result = await uploadReceipt(validUpload)
+
+      expect(result).toEqual({
+        success: false,
+        error: { message: "Action disabled during impersonation" },
+      })
+      expect(db.invoice.findUnique).not.toHaveBeenCalled()
     })
 
     it("returns error on auth failure", async () => {
@@ -458,7 +517,6 @@ describe("Receipt Actions", () => {
       vi.mocked(db.receipt.create).mockResolvedValue({
         id: "r-new",
       } as any)
-      vi.mocked(db.auditLog.create).mockResolvedValue({} as any)
 
       await uploadReceipt(validUpload)
 

@@ -6,6 +6,15 @@ import { db } from "@/lib/db"
 import { PLAN_PRICING } from "@/components/saas-dashboard/billing/config"
 import { requireOperator } from "@/components/saas-dashboard/lib/operator-auth"
 
+// School.planType is stored inconsistently (lowercase "basic" via onboarding/marketing,
+// uppercase "BASIC" via the operator createTenant path). PLAN_PRICING is keyed uppercase,
+// so all lookups MUST normalize case or every plan resolves to $0. Centralize it here.
+const TRIAL_PLAN_VALUES = ["TRIAL", "trial"] as const
+
+function planPrice(planType: string): number {
+  return PLAN_PRICING[planType.toUpperCase() as keyof typeof PLAN_PRICING] || 0
+}
+
 /**
  * Calculate Monthly Recurring Revenue (MRR)
  * MRR = Sum of monthly subscription fees for all active schools (excluding trials)
@@ -15,68 +24,42 @@ export async function calculateMRR() {
 
   const now = new Date()
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1)
 
-  // Current MRR
+  // Single fetch: current paying schools with createdAt so last-month MRR is
+  // derived in JS instead of a second round-trip.
   const activeSchools = await db.school.findMany({
     where: {
       isActive: true,
-      planType: {
-        not: "TRIAL",
-      },
+      planType: { notIn: [...TRIAL_PLAN_VALUES] },
     },
-    select: {
-      id: true,
-      planType: true,
-    },
+    select: { planType: true, createdAt: true },
   })
 
-  const currentMRR = activeSchools.reduce((sum, school) => {
-    return (
-      sum + (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
-    )
-  }, 0)
+  const currentMRR = activeSchools.reduce(
+    (sum, school) => sum + planPrice(school.planType),
+    0
+  )
 
-  // Last month MRR for growth calculation
-  const lastMonthSchools = await db.school.findMany({
-    where: {
-      isActive: true,
-      planType: {
-        not: "TRIAL",
-      },
-      createdAt: {
-        lt: lastMonth,
-      },
-    },
-    select: {
-      planType: true,
-    },
-  })
+  const lastMonthMRR = activeSchools
+    .filter((school) => school.createdAt < lastMonth)
+    .reduce((sum, school) => sum + planPrice(school.planType), 0)
 
-  const lastMonthMRR = lastMonthSchools.reduce((sum, school) => {
-    return (
-      sum + (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
-    )
-  }, 0)
-
-  // Calculate growth
   const growth =
     lastMonthMRR > 0 ? ((currentMRR - lastMonthMRR) / lastMonthMRR) * 100 : 0
 
-  // MRR by plan type
+  // MRR by plan type (keys are uppercase to match PLAN_PRICING)
   const mrrByPlan = {
     BASIC: 0,
     PREMIUM: 0,
     ENTERPRISE: 0,
   }
 
-  activeSchools.forEach((school) => {
-    const planType = school.planType as keyof typeof mrrByPlan
-    if (planType in mrrByPlan) {
-      mrrByPlan[planType] +=
-        PLAN_PRICING[planType as keyof typeof PLAN_PRICING] || 0
+  for (const school of activeSchools) {
+    const key = school.planType.toUpperCase() as keyof typeof mrrByPlan
+    if (key in mrrByPlan) {
+      mrrByPlan[key] += planPrice(school.planType)
     }
-  })
+  }
 
   return {
     currentMRR,
@@ -94,7 +77,7 @@ export async function getMRRHistory() {
   await requireOperator()
 
   const now = new Date()
-  const months = []
+  const months: Array<{ month: string; nextMonth: Date }> = []
 
   // Generate last 6 months
   for (let i = 5; i >= 0; i--) {
@@ -104,45 +87,31 @@ export async function getMRRHistory() {
         month: "short",
         year: "numeric",
       }),
-      date: date,
+      nextMonth: new Date(date.getFullYear(), date.getMonth() + 1, 1),
     })
   }
 
-  const history = await Promise.all(
-    months.map(async ({ month, date }) => {
-      const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
+  // Each month's query was a strict superset of the previous one. Fetch the
+  // full set once and bucket by createdAt in JS (1 query instead of 6).
+  // NOTE: uses CURRENT isActive state — without a deactivatedAt column we
+  // cannot reconstruct historical churn, so churned schools are excluded from
+  // every month. Tracked as a schema follow-up in ISSUE.md.
+  const schools = await db.school.findMany({
+    where: {
+      isActive: true,
+      planType: { notIn: [...TRIAL_PLAN_VALUES] },
+    },
+    select: { planType: true, createdAt: true },
+  })
 
-      const schools = await db.school.findMany({
-        where: {
-          isActive: true,
-          planType: {
-            not: "TRIAL",
-          },
-          createdAt: {
-            lt: nextMonth,
-          },
-        },
-        select: {
-          planType: true,
-        },
-      })
-
-      const mrr = schools.reduce((sum, school) => {
-        return (
-          sum +
-          (PLAN_PRICING[school.planType as keyof typeof PLAN_PRICING] || 0)
-        )
-      }, 0)
-
-      return {
-        month,
-        mrr,
-        schools: schools.length,
-      }
-    })
-  )
-
-  return history
+  return months.map(({ month, nextMonth }) => {
+    const inMonth = schools.filter((school) => school.createdAt < nextMonth)
+    return {
+      month,
+      mrr: inMonth.reduce((sum, school) => sum + planPrice(school.planType), 0),
+      schools: inMonth.length,
+    }
+  })
 }
 
 /**
@@ -245,12 +214,13 @@ export async function getRevenueTrends() {
   await requireOperator()
 
   const now = new Date()
-  const months = []
+  const months: Array<{ month: string; startDate: Date; endDate: Date }> = []
 
-  // Generate last 6 months
+  // Generate last 6 months. endDate is the EXCLUSIVE start of the next month so
+  // invoices created in the final hours of a month are no longer dropped.
   for (let i = 5; i >= 0; i--) {
     const startDate = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
+    const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
     months.push({
       month: startDate.toLocaleDateString("en-US", {
         month: "short",
@@ -261,29 +231,26 @@ export async function getRevenueTrends() {
     })
   }
 
-  const trends = await Promise.all(
-    months.map(async ({ month, startDate, endDate }) => {
-      const result = await db.invoice.aggregate({
-        where: {
-          status: "paid",
-          createdAt: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        _sum: {
-          amountPaid: true,
-        },
-        _count: true,
-      })
+  // Fetch the whole 6-month window once and bucket in JS (1 query instead of 6).
+  const windowStart = months[0].startDate
+  const windowEnd = months[months.length - 1].endDate
+  const invoices = await db.invoice.findMany({
+    where: {
+      status: "paid",
+      createdAt: { gte: windowStart, lt: windowEnd },
+    },
+    select: { amountPaid: true, createdAt: true },
+  })
 
-      return {
-        month,
-        revenue: (result._sum.amountPaid || 0) / 100, // Convert cents to dollars
-        invoices: result._count,
-      }
-    })
-  )
-
-  return trends
+  return months.map(({ month, startDate, endDate }) => {
+    const inMonth = invoices.filter(
+      (inv) => inv.createdAt >= startDate && inv.createdAt < endDate
+    )
+    return {
+      month,
+      revenue:
+        inMonth.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0) / 100, // cents → dollars
+      invoices: inMonth.length,
+    }
+  })
 }

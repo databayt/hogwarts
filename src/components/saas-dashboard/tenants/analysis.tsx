@@ -23,44 +23,39 @@ interface Props {
 }
 
 async function getTenantStats() {
-  const [
-    totalTenants,
-    activeTenants,
-    inactiveTenants,
-    trialTenants,
-    basicTenants,
-    premiumTenants,
-    enterpriseTenants,
-    totalStudents,
-    totalTeachers,
-  ] = await Promise.all([
-    db.school.count(),
-    db.school.count({ where: { isActive: true } }),
-    db.school.count({ where: { isActive: false } }),
-    db.school.count({ where: { planType: "TRIAL" } }),
-    db.school.count({ where: { planType: "BASIC" } }),
-    db.school.count({ where: { planType: "PREMIUM" } }),
-    db.school.count({ where: { planType: "ENTERPRISE" } }),
-    db.student.count(),
-    db.teacher.count(),
-  ])
+  const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30))
 
-  const recentSignups = await db.school.count({
-    where: {
-      createdAt: {
-        gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-      },
-    },
-  })
+  // One groupBy returns the plan × active matrix, replacing 7 separate counts.
+  // planType is stored with inconsistent casing, so normalize to lowercase here
+  // (uppercase string literals would silently match 0 rows).
+  const [planGroups, recentSignups, totalStudents, totalTeachers] =
+    await Promise.all([
+      db.school.groupBy({ by: ["planType", "isActive"], _count: true }),
+      db.school.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+      db.student.count(),
+      db.teacher.count(),
+    ])
+
+  let totalTenants = 0
+  let activeTenants = 0
+  const planCounts = { trial: 0, basic: 0, premium: 0, enterprise: 0 }
+  for (const group of planGroups) {
+    const n = group._count
+    totalTenants += n
+    if (group.isActive) activeTenants += n
+    const key = group.planType.toLowerCase()
+    if (key in planCounts) planCounts[key as keyof typeof planCounts] += n
+  }
+  const inactiveTenants = totalTenants - activeTenants
 
   return {
     totalTenants,
     activeTenants,
     inactiveTenants,
-    trialTenants,
-    basicTenants,
-    premiumTenants,
-    enterpriseTenants,
+    trialTenants: planCounts.trial,
+    basicTenants: planCounts.basic,
+    premiumTenants: planCounts.premium,
+    enterpriseTenants: planCounts.enterprise,
     totalStudents,
     totalTeachers,
     recentSignups,

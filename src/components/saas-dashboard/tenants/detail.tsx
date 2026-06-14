@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sheet"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import {
+  getTenantDetail,
   tenantChangePlan,
   tenantEndTrial,
   tenantStartImpersonation,
@@ -68,24 +69,25 @@ export function TenantDetail({
   >([])
   React.useEffect(() => {
     if (!open) return
-    void fetch(`/operator/tenants/${tenantId}/summary`)
-      .then((r) => r.json())
-      .then((json) => {
-        setOwners(json.owners ?? [])
-        setMetrics(json.metrics ?? null)
+    let cancelled = false
+    void getTenantDetail(tenantId)
+      .then((detail) => {
+        if (cancelled) return
+        setOwners(detail.owners ?? [])
+        setMetrics(detail.metrics ?? null)
+        setBilling(detail.billing ?? null)
+        setInvoices(detail.invoices ?? [])
       })
       .catch(() => {
+        if (cancelled) return
         setOwners([])
         setMetrics(null)
+        setBilling(null)
+        setInvoices([])
       })
-    void fetch(`/operator/tenants/${tenantId}/billing`)
-      .then((r) => r.json())
-      .then((json) => setBilling(json))
-      .catch(() => setBilling(null))
-    void fetch(`/operator/tenants/${tenantId}/invoices`)
-      .then((r) => r.json())
-      .then((json) => setInvoices(json.invoices ?? []))
-      .catch(() => setInvoices([]))
+    return () => {
+      cancelled = true
+    }
   }, [open, tenantId])
   const onImpersonate = async () => {
     const reason = prompt(`Reason to impersonate ${name}?`) || ""

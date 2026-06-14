@@ -136,9 +136,10 @@ export async function updateOperatorLead(
       return { success: false, error: "Lead not found" }
     }
 
-    // Update the lead
-    const lead = await db.lead.update({
-      where: { id },
+    // Update the lead — scope the write by schoolId via updateMany so the row
+    // cannot be reassigned between the find and the write (TOCTOU).
+    const updated = await db.lead.updateMany({
+      where: { id, schoolId: PLATFORM_SCHOOL_ID },
       data: {
         ...(validated.name && { name: validated.name }),
         ...(validated.email !== undefined && {
@@ -191,10 +192,14 @@ export async function updateOperatorLead(
       },
     })
 
+    if (updated.count === 0) {
+      return { success: false, error: "Lead not found" }
+    }
+
     revalidatePath(SALES_PATH)
     revalidatePath(`${SALES_PATH}/${id}`)
 
-    return { success: true, data: { id: lead.id } }
+    return { success: true, data: { id } }
   } catch (error) {
     console.error("[updateOperatorLead] Error:", error)
 

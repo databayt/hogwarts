@@ -21,7 +21,7 @@ export type TrendDirection = "up" | "down"
 export interface KpiCardProps {
   title: string
   value: number
-  delta: number | null | undefined
+  delta?: number | null
   trend: TrendDirection
   supportingText: string
   footerHint?: string

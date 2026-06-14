@@ -27,6 +27,7 @@ vi.mock("@/lib/db", () => ({
     lead: {
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -302,19 +303,17 @@ describe("Sales Actions", () => {
   // ==========================================================================
 
   describe("updateOperatorLead", () => {
-    it("updates existing lead", async () => {
+    it("updates existing lead via schoolId-scoped updateMany", async () => {
       mockDeveloperSession()
       vi.mocked(db.lead.findFirst).mockResolvedValue(makeMockLead() as any)
-      vi.mocked(db.lead.update).mockResolvedValue(
-        makeMockLead({ name: "Updated School" }) as any
-      )
+      vi.mocked(db.lead.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const input = { name: "Updated School" }
       const result = await updateOperatorLead("lead-1", input as any)
 
       expect(result).toEqual({ success: true, data: { id: "lead-1" } })
-      expect(db.lead.update).toHaveBeenCalledWith({
-        where: { id: "lead-1" },
+      expect(db.lead.updateMany).toHaveBeenCalledWith({
+        where: { id: "lead-1", schoolId: PLATFORM_SCHOOL_ID },
         data: expect.objectContaining({ name: "Updated School" }),
       })
     })
@@ -363,7 +362,7 @@ describe("Sales Actions", () => {
     it("revalidates both list and detail paths", async () => {
       mockDeveloperSession()
       vi.mocked(db.lead.findFirst).mockResolvedValue(makeMockLead() as any)
-      vi.mocked(db.lead.update).mockResolvedValue(makeMockLead() as any)
+      vi.mocked(db.lead.updateMany).mockResolvedValue({ count: 1 } as any)
 
       await updateOperatorLead("lead-1", { name: "Test" } as any)
 
@@ -374,7 +373,7 @@ describe("Sales Actions", () => {
     it("handles database error on update", async () => {
       mockDeveloperSession()
       vi.mocked(db.lead.findFirst).mockResolvedValue(makeMockLead() as any)
-      vi.mocked(db.lead.update).mockRejectedValue(
+      vi.mocked(db.lead.updateMany).mockRejectedValue(
         new Error("Database connection lost")
       )
 

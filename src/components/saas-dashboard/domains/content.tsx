@@ -95,19 +95,19 @@ async function getDomainRequestsData(searchParams: Props["searchParams"]) {
 }
 
 async function getDomainStats() {
-  const [
-    totalRequests,
-    pendingRequests,
-    approvedRequests,
-    verifiedRequests,
-    rejectedRequests,
-  ] = await Promise.all([
-    db.domainRequest.count(),
-    db.domainRequest.count({ where: { status: "pending" } }),
-    db.domainRequest.count({ where: { status: "approved" } }),
-    db.domainRequest.count({ where: { status: "verified" } }),
-    db.domainRequest.count({ where: { status: "rejected" } }),
-  ])
+  // One groupBy replaces 5 separate COUNT queries.
+  const statusGroups = await db.domainRequest.groupBy({
+    by: ["status"],
+    _count: true,
+  })
+  const countByStatus = Object.fromEntries(
+    statusGroups.map((g) => [g.status, g._count])
+  )
+  const totalRequests = statusGroups.reduce((sum, g) => sum + g._count, 0)
+  const pendingRequests = countByStatus["pending"] ?? 0
+  const approvedRequests = countByStatus["approved"] ?? 0
+  const verifiedRequests = countByStatus["verified"] ?? 0
+  const rejectedRequests = countByStatus["rejected"] ?? 0
 
   return {
     totalRequests,
