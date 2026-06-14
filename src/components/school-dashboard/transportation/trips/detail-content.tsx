@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getName } from "@/components/translation/person"
+import { getLabels, getName } from "@/components/translation/person"
 
 import { getTrip } from "../actions/trips"
 import { TransportationEmptyState } from "../empty-state"
@@ -51,8 +51,18 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
 
   const trip = result.data
   const { schoolId } = await getTenantContext()
-  const driverName = trip.driver
-    ? await getName(trip.driver, locale, schoolId!)
+  // Driver name (transliterated) + route place-name (translated) resolve in the
+  // viewer's locale; both fall back to source on miss.
+  const [driverName, routeLabels] = await Promise.all([
+    trip.driver
+      ? getName(trip.driver, locale, schoolId!)
+      : Promise.resolve("—"),
+    trip.route?.name
+      ? getLabels([trip.route.name], locale, schoolId!)
+      : Promise.resolve(new Map<string, string>()),
+  ])
+  const routeName = trip.route?.name
+    ? (routeLabels.get(trip.route.name) ?? trip.route.name)
     : "—"
 
   return (
@@ -60,7 +70,7 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
       <header className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold">
-            {trip.route?.name ?? "—"} ·{" "}
+            {routeName} ·{" "}
             {t.routes.directions[
               trip.direction as keyof typeof t.routes.directions
             ] ?? trip.direction}

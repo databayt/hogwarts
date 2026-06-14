@@ -2,7 +2,7 @@
 
 ## Context
 
-School transportation: fleet inventory (vehicles), drivers with licenses, named routes with ordered stops, student-route assignments, daily trip runs with boarding records, settings, fees view, STUDENT/GUARDIAN view, and a service-account geofence-boarding webhook. Multi-tenant; every model is `schoolId`-scoped. **Production-ready** — all 9 transportation tables live in production Postgres (`br-small-tooth-adscsfmb`), 300/300 unit tests green across 14 files.
+School transportation: fleet inventory (vehicles), drivers with licenses, named routes with ordered stops, student-route assignments, daily trip runs with boarding records, settings, fees view, STUDENT/GUARDIAN view, and a service-account geofence-boarding webhook. Multi-tenant; every model is `schoolId`-scoped. **Production-ready** — all 9 transportation tables live in production Postgres (`br-small-tooth-adscsfmb`), 313/313 unit tests green across 15 files (tests live under `src/tests/school-dashboard/transportation/`).
 
 ## Before You Start
 
@@ -36,6 +36,18 @@ School transportation: fleet inventory (vehicles), drivers with licenses, named 
 - **Service-account webhook**: `POST /api/transportation/geofence-boarding` accepts a Bearer token from `school_api_tokens` (bcrypt-hashed; plaintext shape is `<8-char-prefix>.<32-hex-secret>`). Token's `schoolId` IS the tenant — never read from request body. Rate limit: 120/min/IP.
 - **Trip-event notifications honor school's preferredLanguage** — guardian notifications render in `en` or `ar` based on `school.preferredLanguage`. Per-event opt-out flags in `TransportationSettings`.
 - **Settings model is one-row-per-school** (`@@unique([schoolId])`); `getSettings()` returns defaults if no row exists. `updateSettings()` upserts.
+
+### 2026-06-14 optimization pass (security / correctness / perf) — invariants to preserve
+
+- **Tenant-scoped writes use `updateMany` with `schoolId` IN the predicate**, not `findFirst`-then-`update({where:{id}})`. `revokeApiToken` was an IDOR (scoped read, unscoped write) — keep `schoolId` in every mutating WHERE.
+- **`getAssignmentForStudent` was DELETED** — it was a dead IDOR (gated only on `read_own`, accepted an arbitrary `studentId` with no `StudentGuardian` ownership check). Student/guardian access goes through `getMyTransportationView` only. Don't reintroduce a per-student read without an ownership check.
+- **`deleteStop` blocks on historical `TripBoarding` too**, not just active assignments — `RouteStop`→`TripBoarding` is `onDelete: Cascade`, so a hard delete would wipe trip history. Returns `HAS_DEPENDENCIES`.
+- **Trip end/cancel resolve stranded PENDING boardings**: `finishTrip` → `MISSED` (student never boarded), `cancelTrip` → `EXCUSED` (trip didn't run, not the student's fault). These `updateMany`s are silent (no notification).
+- **`updateAssignment` re-activation runs the single-active guard** (same as create/restore) when `data.status === "ACTIVE"` → `ROUTE_ASSIGNMENT_OVERLAP`.
+- **Webhook rate limit is `checkRateLimitAsync` (Redis-authoritative)**, not the sync in-memory `rateLimit()` (which resets per serverless instance). Keep it async; it also blunts the P3-6 bcrypt prefix-scan DoS.
+- **`getTripStats` uses `db.trip.groupBy`** (not row-fetch + JS tally). `notifyGuardiansOfTripEvent` reads settings up front and short-circuits the opt-out BEFORE the guardian fan-out.
+- **`StopEditor` is keyed on the stop-id set** in `routes/detail-content.tsx` — required because the editor seeds local optimistic `stops` state once and `router.refresh()` doesn't remount client components (add/delete would otherwise not show). Reorder keeps the same set → optimistic order survives.
+- **Deploy-pending indexes** staged in `transportation.prisma` (NOT pushed): `Trip @@index([schoolId, status, actualEndTime])`, `Route @@index([schoolId, geofenceId])`. Apply via the Neon protocol at deploy.
 
 ## Danger Zones
 

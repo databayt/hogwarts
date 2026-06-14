@@ -93,14 +93,11 @@ export async function revokeApiToken(id: string) {
   const { schoolId } = ctx
 
   try {
-    const current = await db.schoolApiToken.findFirst({
+    // schoolId lives IN the write predicate (not a separate findFirst-then-update)
+    // so the soft-delete can never touch another school's token. updateMany is
+    // side-effect-free when no row matches → idempotent for already-gone tokens.
+    await db.schoolApiToken.updateMany({
       where: { id, schoolId, deletedAt: null },
-      select: { id: true },
-    })
-    if (!current) return { success: true as const, data: { id } } // already gone — idempotent
-
-    await db.schoolApiToken.update({
-      where: { id },
       data: { deletedAt: new Date() },
     })
 

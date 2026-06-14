@@ -14,9 +14,15 @@ interface Props {
   dictionary: Dictionary
 }
 
-/** Escape a value for a CSV cell (RFC 4180). */
+/**
+ * Escape a value for a CSV cell (RFC 4180) and neutralize spreadsheet formula
+ * injection. A student/route name beginning with =, +, -, @ (or a tab) is
+ * evaluated as a formula by Excel/LibreOffice on open; prefixing a tab keeps the
+ * cell inert while staying invisible to readers.
+ */
 function csvCell(value: string): string {
-  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+  const safe = /^[=+\-@\t]/.test(value) ? `\t${value}` : value
+  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
 }
 
 /**

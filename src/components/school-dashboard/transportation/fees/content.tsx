@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getLabels } from "@/components/translation/person"
 
 import { previewTransportFees } from "../actions/fees"
 import { TransportationEmptyState } from "../empty-state"
@@ -36,7 +38,26 @@ export async function TransportationFeesContent({ locale, dictionary }: Props) {
     )
   }
 
-  const { fees, totalActiveAssignments, totalMonthlyRevenue } = result.data
+  const { totalActiveAssignments, totalMonthlyRevenue } = result.data
+
+  // Localize route place-names (ONE batched resolution over every route across
+  // all rows; source fallback on miss). This also localizes the CSV export,
+  // which consumes the same `fees` array.
+  const { schoolId } = await getTenantContext()
+  const allRouteNames = result.data.fees.flatMap((f) =>
+    f.routes.map((r) => r.routeName)
+  )
+  const routeLabels =
+    allRouteNames.length > 0 && schoolId
+      ? await getLabels(allRouteNames, locale, schoolId)
+      : new Map<string, string>()
+  const fees = result.data.fees.map((f) => ({
+    ...f,
+    routes: f.routes.map((r) => ({
+      ...r,
+      routeName: routeLabels.get(r.routeName) ?? r.routeName,
+    })),
+  }))
   const currency = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", {
     style: "decimal",
     maximumFractionDigits: 2,

@@ -169,6 +169,14 @@ export async function finishTrip(input: TripFinishInput) {
       },
     })
 
+    // Students whose boarding was never recorded by trip end were not on the
+    // bus → mark the stranded PENDING rows MISSED so history isn't left in an
+    // ambiguous PENDING state forever.
+    await db.tripBoarding.updateMany({
+      where: { schoolId, tripId: id, status: "PENDING" },
+      data: { status: "MISSED" },
+    })
+
     revalidatePath(transportationRevalidatePath("trips"))
     revalidatePath(transportationRevalidatePath(`trips/${id}`))
 
@@ -212,6 +220,14 @@ export async function cancelTrip(input: TripCancelInput) {
         status: "CANCELLED",
         notes: reason ?? undefined,
       },
+    })
+
+    // The trip didn't run — un-recorded boardings are EXCUSED (not the
+    // student's fault), never left dangling as PENDING. No-op on a SCHEDULED
+    // trip that never created boardings.
+    await db.tripBoarding.updateMany({
+      where: { schoolId, tripId: id, status: "PENDING" },
+      data: { status: "EXCUSED" },
     })
 
     revalidatePath(transportationRevalidatePath("trips"))

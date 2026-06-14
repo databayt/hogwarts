@@ -6,7 +6,7 @@
 //
 // The real POST handler is imported and driven with a NextRequest-like object.
 // We mock only the route's three collaborators:
-//   - @/lib/rate-limit (rateLimit → null = allowed; Response = limited)
+//   - @/lib/rate-limit (checkRateLimitAsync → {allowed} ; createRateLimitResponse)
 //   - @/lib/api-tokens (verifyApiToken — controls 401/403 + resolved schoolId)
 //   - the geofence-internal bridge (controls success / ack / 500 mapping)
 //
@@ -16,12 +16,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { verifyApiToken } from "@/lib/api-tokens"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimitAsync, createRateLimitResponse } from "@/lib/rate-limit"
 import { recordBoardingFromGeofenceInternal } from "@/components/school-dashboard/transportation/actions/geofence-internal"
 import { POST } from "@/app/api/transportation/geofence-boarding/route"
 
 vi.mock("@/lib/rate-limit", () => ({
-  rateLimit: vi.fn(),
+  checkRateLimitAsync: vi.fn(),
+  createRateLimitResponse: vi.fn(),
   RATE_LIMITS: { GEOFENCE_WEBHOOK: { windowMs: 60_000, maxRequests: 120 } },
 }))
 vi.mock("@/lib/api-tokens", () => ({ verifyApiToken: vi.fn() }))
@@ -63,8 +64,12 @@ const validBody = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  // Default: not rate-limited.
-  vi.mocked(rateLimit).mockResolvedValue(null)
+  // Default: not rate-limited (Redis-authoritative async check allows).
+  vi.mocked(checkRateLimitAsync).mockResolvedValue({
+    allowed: true,
+    remaining: 119,
+    resetTime: 0,
+  })
   // Default: valid token resolving to TOKEN_SCHOOL.
   vi.mocked(verifyApiToken).mockResolvedValue({
     ok: true,
@@ -73,6 +78,26 @@ beforeEach(() => {
 })
 
 describe("POST /api/transportation/geofence-boarding", () => {
+  it("returns the 429 rate-limit response (and skips token verify) when over the limit", async () => {
+    vi.mocked(checkRateLimitAsync).mockResolvedValue({
+      allowed: false,
+      remaining: 0,
+      resetTime: 12345,
+    })
+    const limited = new Response(null, { status: 429 })
+    vi.mocked(createRateLimitResponse).mockReturnValue(limited)
+
+    const res = await POST(
+      makeRequest({ authorization: "Bearer abcd.secret", body: validBody })
+    )
+
+    expect(res).toBe(limited)
+    expect(createRateLimitResponse).toHaveBeenCalledWith(12345)
+    // Rate limit gates BEFORE auth + bridge — neither should run.
+    expect(verifyApiToken).not.toHaveBeenCalled()
+    expect(recordBoardingFromGeofenceInternal).not.toHaveBeenCalled()
+  })
+
   it("returns 401 MISSING_API_TOKEN when no Bearer header is present", async () => {
     const res = await POST(makeRequest({ body: validBody }))
     expect(res.status).toBe(401)

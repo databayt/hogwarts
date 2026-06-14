@@ -119,6 +119,14 @@ export async function RouteDetailContent({
       </div>
 
       <StopEditor
+        // Key on the stop-id set: adding/deleting a stop changes the set and
+        // remounts the editor with fresh server data (router.refresh alone does
+        // NOT resync the editor's internal optimistic state), while a reorder
+        // keeps the same set so the optimistic order survives.
+        key={[...route.stops]
+          .map((s) => s.id)
+          .sort()
+          .join(",")}
         routeId={route.id}
         initialStops={route.stops}
         dictionary={dictionary}

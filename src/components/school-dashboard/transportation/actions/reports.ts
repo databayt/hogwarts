@@ -151,27 +151,25 @@ export async function getTripStats(days = 30) {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
   try {
-    const trips = await db.trip.findMany({
+    // Count per status in Postgres (covered by @@index([schoolId, scheduledDate, status]))
+    // instead of transferring every trip row to tally in JS.
+    const grouped = await db.trip.groupBy({
+      by: ["status"],
       where: {
         schoolId,
         deletedAt: null,
         scheduledDate: { gte: cutoff },
       },
-      select: { status: true },
+      _count: { status: true },
     })
 
+    const counts = new Map(grouped.map((g) => [g.status, g._count.status]))
     const stats = {
-      totalScheduled: 0,
-      totalInProgress: 0,
-      totalCompleted: 0,
-      totalCancelled: 0,
+      totalScheduled: counts.get("SCHEDULED") ?? 0,
+      totalInProgress: counts.get("IN_PROGRESS") ?? 0,
+      totalCompleted: counts.get("COMPLETED") ?? 0,
+      totalCancelled: counts.get("CANCELLED") ?? 0,
       completionRate: 0,
-    }
-    for (const t of trips) {
-      if (t.status === "SCHEDULED") stats.totalScheduled += 1
-      else if (t.status === "IN_PROGRESS") stats.totalInProgress += 1
-      else if (t.status === "COMPLETED") stats.totalCompleted += 1
-      else if (t.status === "CANCELLED") stats.totalCancelled += 1
     }
     const decided = stats.totalCompleted + stats.totalCancelled
     stats.completionRate =

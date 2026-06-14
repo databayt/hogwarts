@@ -36,36 +36,39 @@ export async function recordBoardingFromGeofenceInternal(
     })
     if (!route) return actionError(ACTION_ERRORS.ROUTE_NOT_FOUND)
 
-    const assignment = await db.routeAssignment.findFirst({
-      where: {
-        schoolId,
-        studentId,
-        routeId: route.id,
-        status: "ACTIVE",
-        deletedAt: null,
-      },
-      select: { stopId: true },
-    })
-    if (!assignment) {
-      return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_NOT_FOUND)
-    }
-
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
     const endOfDay = new Date(startOfDay)
     endOfDay.setHours(23, 59, 59, 999)
 
-    const trip = await db.trip.findFirst({
-      where: {
-        schoolId,
-        routeId: route.id,
-        status: "IN_PROGRESS",
-        scheduledDate: { gte: startOfDay, lte: endOfDay },
-        deletedAt: null,
-      },
-      select: { id: true },
-      orderBy: { scheduledTime: "asc" },
-    })
+    // Assignment and trip both key off route.id only (not each other) → run
+    // them concurrently to shave a round-trip off this hot webhook path.
+    const [assignment, trip] = await Promise.all([
+      db.routeAssignment.findFirst({
+        where: {
+          schoolId,
+          studentId,
+          routeId: route.id,
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+        select: { stopId: true },
+      }),
+      db.trip.findFirst({
+        where: {
+          schoolId,
+          routeId: route.id,
+          status: "IN_PROGRESS",
+          scheduledDate: { gte: startOfDay, lte: endOfDay },
+          deletedAt: null,
+        },
+        select: { id: true },
+        orderBy: { scheduledTime: "asc" },
+      }),
+    ])
+    if (!assignment) {
+      return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_NOT_FOUND)
+    }
     if (!trip) return actionError(ACTION_ERRORS.TRIP_INVALID_STATE)
 
     const at = timestamp ? new Date(timestamp) : new Date()

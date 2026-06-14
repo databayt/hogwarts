@@ -1,8 +1,12 @@
 ## Transportation — Fleet, Routes, Drivers, Trips, Boarding
 
 > **Status:** ✅ Production-ready. All 9 tables live in production Postgres
-> (`br-small-tooth-adscsfmb`); **300/300 unit tests green across 14 files**. The polish/hardening
-> backlog is closed — see [`ISSUE.md`](./ISSUE.md). Last audited 2026-05-29.
+> (`br-small-tooth-adscsfmb`); **313/313 unit tests green across 15 files**. The polish/hardening
+> backlog is closed — see [`ISSUE.md`](./ISSUE.md). Last audited 2026-06-14 (security/correctness/perf
+> optimization pass: token-IDOR write fix, deleteStop boarding-history guard, stranded-boarding cleanup,
+> CSV-injection defence, Redis-authoritative webhook rate limit, `getTripStats` groupBy, StopEditor
+> refresh-desync fix, `/me` status i18n; 2 additive indexes staged deploy-pending). Tests last counted
+> 2026-06-14; `__tests__/` paths below are historical — tests now live under `src/tests/school-dashboard/transportation/`.
 
 ### Overview
 
@@ -169,7 +173,7 @@ Located in `prisma/migrations/` — **all applied to production**:
 
 ### Tests
 
-`__tests__/` — run `pnpm vitest run src/components/school-dashboard/transportation`. **300/300 green across 14 files** (verified 2026-05-29):
+Tests live at `src/tests/school-dashboard/transportation/` — run `pnpm vitest run src/tests/school-dashboard/transportation`. **313/313 green across 15 files** (verified 2026-06-14; +2 vs 2026-05-29: `stops` deleteStop boarding-history guard, `geofence-webhook-route` 429 rate-limit case):
 
 - `authorization.test.ts` (31) — full (role × action) RBAC matrix
 - `validation.test.ts` (56) — every raw Zod schema (entity + update + trip + settings), valid/invalid parses

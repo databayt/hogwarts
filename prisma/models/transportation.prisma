@@ -159,6 +159,9 @@ model Route {
   @@unique([schoolId, name])
   @@index([schoolId, status])
   @@index([schoolId, direction])
+  // Geofence-boarding webhook resolves the route by (schoolId, geofenceId) on
+  // every ENTER/EXIT event — index the lookup key for that hot path.
+  @@index([schoolId, geofenceId])
   @@index([deletedAt])
   @@map("transportation_routes")
 }
@@ -248,6 +251,9 @@ model Trip {
   @@unique([schoolId, routeId, scheduledDate, direction])
   @@index([schoolId, scheduledDate, status])
   @@index([schoolId, driverId, scheduledDate])
+  // Driver-hours report range-scans COMPLETED trips by actualEndTime; this index
+  // serves it without a full per-school trip scan.
+  @@index([schoolId, status, actualEndTime])
   @@index([deletedAt])
   @@map("transportation_trips")
 }

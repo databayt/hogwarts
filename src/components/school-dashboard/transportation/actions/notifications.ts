@@ -84,8 +84,11 @@ export async function notifyGuardiansOfTripEvent(
   const { schoolId, tripId, routeId, kind, studentIds, reason } = input
 
   try {
-    // Resolve school language for localized title/body
-    const [school, route] = await Promise.all([
+    // Resolve school language + route name + opt-out settings up front, in one
+    // round. Reading settings here lets us honor a per-event opt-out BEFORE the
+    // expensive assignment→guardian fan-out below (previously settings were read
+    // last, after that work was already done and then thrown away).
+    const [school, route, settings] = await Promise.all([
       db.school
         .findUnique({
           where: { id: schoolId },
@@ -98,7 +101,29 @@ export async function notifyGuardiansOfTripEvent(
           select: { name: true },
         })
         .catch(() => null),
+      db.transportationSettings
+        .findUnique({
+          where: { schoolId },
+          select: {
+            notifyGuardiansOnTripStart: true,
+            notifyGuardiansOnTripFinish: true,
+            notifyGuardiansOnTripCancel: true,
+          },
+        })
+        .catch(() => null),
     ])
+
+    // Per-event opt-outs (defaults: all true) — short-circuit before any
+    // assignment/guardian queries.
+    if (settings) {
+      if (kind === "trip_started" && !settings.notifyGuardiansOnTripStart)
+        return { created: 0 }
+      if (kind === "trip_finished" && !settings.notifyGuardiansOnTripFinish)
+        return { created: 0 }
+      if (kind === "trip_cancelled" && !settings.notifyGuardiansOnTripCancel)
+        return { created: 0 }
+    }
+
     const dict = pickDict(school?.preferredLanguage)
     const routeName = route?.name ?? ""
     const { title, body } = renderEvent(
@@ -149,27 +174,6 @@ export async function notifyGuardiansOfTripEvent(
     )
 
     if (userIds.length === 0) return { created: 0 }
-
-    // Read settings to honor per-event opt-outs (defaults: all true)
-    const settings = await db.transportationSettings
-      .findUnique({
-        where: { schoolId },
-        select: {
-          notifyGuardiansOnTripStart: true,
-          notifyGuardiansOnTripFinish: true,
-          notifyGuardiansOnTripCancel: true,
-        },
-      })
-      .catch(() => null)
-
-    if (settings) {
-      if (kind === "trip_started" && !settings.notifyGuardiansOnTripStart)
-        return { created: 0 }
-      if (kind === "trip_finished" && !settings.notifyGuardiansOnTripFinish)
-        return { created: 0 }
-      if (kind === "trip_cancelled" && !settings.notifyGuardiansOnTripCancel)
-        return { created: 0 }
-    }
 
     try {
       await db.notification.createMany({

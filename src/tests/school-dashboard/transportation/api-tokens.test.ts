@@ -23,6 +23,7 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }))
@@ -249,13 +250,10 @@ describe("createApiToken", () => {
 // revokeApiToken
 // ----------------------------------------------------------------------------
 describe("revokeApiToken", () => {
-  it("soft-deletes via deletedAt after an ownership lookup scoped by id + schoolId + deletedAt:null", async () => {
+  it("soft-deletes via a single updateMany scoped by id + schoolId + deletedAt:null", async () => {
     mockUser("ADMIN", SCHOOL_A)
-    vi.mocked(db.schoolApiToken.findFirst).mockResolvedValue({
-      id: "tok-1",
-    } as never)
-    vi.mocked(db.schoolApiToken.update).mockResolvedValue({
-      id: "tok-1",
+    vi.mocked(db.schoolApiToken.updateMany).mockResolvedValue({
+      count: 1,
     } as never)
 
     const result = await revokeApiToken("tok-1")
@@ -263,46 +261,46 @@ describe("revokeApiToken", () => {
     expect(result.success).toBe(true)
     if (result.success) expect(result.data).toEqual({ id: "tok-1" })
 
-    // Ownership guard: lookup must be scoped by the tenant, not just the id.
-    expect(db.schoolApiToken.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "tok-1", schoolId: SCHOOL_A, deletedAt: null },
-        select: { id: true },
-      })
-    )
-
-    // Soft-delete: stamps deletedAt rather than hard-deleting the row.
-    const updateArg = vi.mocked(db.schoolApiToken.update).mock.calls[0][0]
-    expect(updateArg.where).toEqual({ id: "tok-1" })
-    expect(updateArg.data.deletedAt).toBeInstanceOf(Date)
+    // schoolId lives IN the write predicate (no separate findFirst-then-update),
+    // so the soft-delete can never touch another school's token.
+    const arg = vi.mocked(db.schoolApiToken.updateMany).mock.calls[0][0]
+    expect(arg.where).toEqual({
+      id: "tok-1",
+      schoolId: SCHOOL_A,
+      deletedAt: null,
+    })
+    expect((arg.data as { deletedAt: Date }).deletedAt).toBeInstanceOf(Date)
+    expect(db.schoolApiToken.findFirst).not.toHaveBeenCalled()
   })
 
-  it("is idempotent: returns success without updating when the token is already gone", async () => {
+  it("is idempotent: returns success even when the token is already gone (updateMany count 0)", async () => {
     mockUser("ADMIN", SCHOOL_A)
-    vi.mocked(db.schoolApiToken.findFirst).mockResolvedValue(null as never)
+    vi.mocked(db.schoolApiToken.updateMany).mockResolvedValue({
+      count: 0,
+    } as never)
 
     const result = await revokeApiToken("missing-or-other-tenant")
 
     expect(result.success).toBe(true)
     if (result.success)
       expect(result.data).toEqual({ id: "missing-or-other-tenant" })
-    expect(db.schoolApiToken.update).not.toHaveBeenCalled()
   })
 
-  it("cannot revoke a token from another tenant (lookup scoped, so it reads as already gone)", async () => {
+  it("cannot revoke a token from another tenant (schoolId in the write predicate → 0 rows touched)", async () => {
     mockUser("ADMIN", SCHOOL_A)
-    // Token belongs to SCHOOL_B → scoped findFirst returns null.
-    vi.mocked(db.schoolApiToken.findFirst).mockResolvedValue(null as never)
+    // Token belongs to SCHOOL_B → the schoolId-scoped updateMany matches nothing.
+    vi.mocked(db.schoolApiToken.updateMany).mockResolvedValue({
+      count: 0,
+    } as never)
 
     const result = await revokeApiToken("tok-of-B")
 
     expect(result.success).toBe(true)
-    expect(db.schoolApiToken.findFirst).toHaveBeenCalledWith(
+    expect(db.schoolApiToken.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ schoolId: SCHOOL_A }),
       })
     )
-    expect(db.schoolApiToken.update).not.toHaveBeenCalled()
   })
 
   it("returns UNAUTHORIZED for STAFF (manage_settings gate) and does not touch the db", async () => {
@@ -312,16 +310,14 @@ describe("revokeApiToken", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
-    expect(db.schoolApiToken.findFirst).not.toHaveBeenCalled()
-    expect(db.schoolApiToken.update).not.toHaveBeenCalled()
+    expect(db.schoolApiToken.updateMany).not.toHaveBeenCalled()
   })
 
-  it("returns API_TOKEN_REVOKE_FAILED when the soft-delete update throws", async () => {
+  it("returns API_TOKEN_REVOKE_FAILED when the soft-delete write throws", async () => {
     mockUser("ADMIN", SCHOOL_A)
-    vi.mocked(db.schoolApiToken.findFirst).mockResolvedValue({
-      id: "tok-1",
-    } as never)
-    vi.mocked(db.schoolApiToken.update).mockRejectedValue(new Error("db error"))
+    vi.mocked(db.schoolApiToken.updateMany).mockRejectedValue(
+      new Error("db error")
+    )
 
     const result = await revokeApiToken("tok-1")
 
@@ -342,6 +338,6 @@ describe("revokeApiToken", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toBe("NOT_AUTHENTICATED")
-    expect(db.schoolApiToken.findFirst).not.toHaveBeenCalled()
+    expect(db.schoolApiToken.updateMany).not.toHaveBeenCalled()
   })
 })

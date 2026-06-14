@@ -1,10 +1,68 @@
 # Transportation — Gap / Blocker / Improvement Tracker
 
 **Status:** 🟢 Production-ready — core flows work end-to-end, all 9 tables are live in production, and the polish/hardening backlog is closed.
-**Real completion:** ~99% — the 2026-05-22 and 2026-05-29 remediation passes resolved the audited backlog. Two consciously-deferred items remain (P3-3 page-gate de-dup, P3-6 token prefix-scan), both no-risk.
-**Last audited:** 2026-05-29.
-**Tests:** **300/300 unit tests green across 14 files** (verified 2026-05-29) — full inventory in [`README.md`](./README.md#tests). Up from 79 after the 2026-05-29 coverage pass closed P3-1.
+**Real completion:** ~99% — the 2026-05-22, 2026-05-29, and 2026-06-14 passes resolved the audited backlog. Remaining items are consciously-deferred (P3-3 page-gate de-dup; the i18n raw-name sweep O-7).
+**Last audited:** 2026-06-14 (6-dimension adversarially-verified workflow audit: 45 findings → 26 confirmed).
+**Tests:** **313/313 unit tests green across 15 files** (verified 2026-06-14) — full inventory in [`README.md`](./README.md#tests). Up from 300 after the 2026-06-14 optimization pass added the deleteStop boarding-history guard test + the webhook 429 rate-limit test.
 **Plans:** original feature `invoke-feature-workflow-to-toasty-crystal.md`; production sweep `read-transportation-feature-to-elegant-walrus.md`; coverage + cleanup pass `read-transportation-block-imperative-pancake.md`.
+
+## Resolution Log — 2026-06-14 (optimization pass — security / correctness / perf)
+
+Ran a 6-dimension adversarially-verified audit workflow (perf-db, dead-code, correctness/tenant,
+react-render, security, i18n). Implemented the confirmed high-value, low-risk, code-only findings;
+schema-index findings are staged in the model as **deploy-pending** (CLAUDE.md Neon protocol).
+
+**Security / correctness — landed:**
+
+- **revokeApiToken IDOR (write path)** ✅ — the soft-delete used `update({ where: { id } })` after a
+  scoped `findFirst`; the write had no tenant boundary. Collapsed to one
+  `updateMany({ where: { id, schoolId, deletedAt: null }, … })` — schoolId now lives in the write predicate.
+- **getAssignmentForStudent IDOR** ✅ **(deleted)** — dead export (zero callers) gated only on `read_own`
+  that accepted any caller-supplied `studentId` with no `StudentGuardian` ownership check (leaked
+  route/driver/phone). Removed; all student/guardian access goes through the ownership-verified
+  `getMyTransportationView`.
+- **deleteStop wiped boarding history** ✅ — hard-delete cascades to `TripBoarding` (onDelete: Cascade);
+  the only guard was active-assignment count. Added a `tripBoarding.count` guard → `HAS_DEPENDENCIES`
+  when any boarding ever referenced the stop.
+- **finishTrip / cancelTrip stranded PENDING boardings** ✅ — finish now marks un-recorded boardings
+  `MISSED`; cancel marks them `EXCUSED` (trip didn't run → not the student's fault). No more dangling PENDING.
+- **updateAssignment re-activation conflict** ✅ — re-activating a PAUSED/ENDED assignment now runs the
+  same single-active-per-(student,route) guard as create/restore (`ROUTE_ASSIGNMENT_OVERLAP`).
+- **CSV formula injection** ✅ — fee-export `csvCell` now tab-prefixes values starting with `=,+,-,@`
+  before RFC-4180 quoting (Excel/LibreOffice formula-injection defence).
+- **Geofence webhook rate limit** ✅ — swapped sync `rateLimit()` (in-memory Map, resets per serverless
+  instance) for `checkRateLimitAsync()` (Redis-authoritative when Upstash is configured). Also mitigates
+  the P3-6 bcrypt prefix-scan DoS amplifier without a schema change.
+
+**Performance — landed:**
+
+- **getTripStats** ✅ — replaced full-row-fetch + JS tally with `db.trip.groupBy({ by: ['status'], _count })`
+  (served by `@@index([schoolId, scheduledDate, status])`).
+- **geofence-internal webhook** ✅ — the assignment + trip lookups (both keyed off `route.id` only) now
+  run via `Promise.all` instead of sequentially — one fewer round-trip on the hot ENTER/EXIT path.
+- **notifyGuardiansOfTripEvent** ✅ — settings (opt-out flags) are now read up front in the initial
+  `Promise.all` and the per-event opt-out short-circuits **before** the assignment→guardian fan-out
+  (previously that work ran, then was thrown away on an opted-out event).
+- **listStudentsForAssignment** ✅ — added `take: 500` so a large school can't transfer thousands of
+  student rows into the `<Select>` on every assignments-page load (search-combobox is the follow-up).
+
+**UX / i18n — landed:**
+
+- **StopEditor refresh-desync** ✅ — the editor seeds `stops` once via `useState(() => …initialStops)` with
+  no resync, and `router.refresh()` doesn't remount client components, so adding/deleting a stop appeared
+  to do nothing until navigation. Keyed `<StopEditor>` on the stop-id set: add/delete remounts with fresh
+  data; reorder (same set) keeps the optimistic order.
+- **/me status labels** ✅ — trip + boarding status badges in the guardian/student view rendered raw enum
+  values (`SCHEDULED`, `BOARDED`); now localized via the existing dict keys.
+- **Route place-name localization (O-7 high-value slice)** ✅ — overview recent-assignments,
+  `trips/detail-content` (live boarding roster), and `fees/content` (+ its CSV export) now batch-localize route
+  names via `getLabels` (one resolution per render, source-fallback). Remaining admin-table surfaces + person-name
+  transliteration are documented as deferred under O-7.
+
+**Deploy-pending (schema staged in `transportation.prisma`, NOT yet pushed — apply via Neon protocol at deploy):**
+
+- `@@index([schoolId, status, actualEndTime])` on `Trip` — serves the driver-hours report range scan.
+- `@@index([schoolId, geofenceId])` on `Route` — serves the geofence-webhook route lookup.
 
 ## Resolution Log — 2026-05-29 (coverage + cleanup pass)
 
@@ -70,39 +128,60 @@ Worked the remediation order; **landed:**
 
 ## Open Items
 
-All P1/P2 items and P3-1/P3-2/P3-4/P3-5 are **resolved** (see Resolution Logs). The remaining backlog is
-two no-risk deferrals — neither blocks production:
+All P0/P1 confirmed findings from the 2026-06-14 audit are **resolved** (see the 2026-06-14 Resolution Log).
+The remaining backlog is consciously deferred — none blocks production:
+
+- **O-7 — i18n raw-name sweep across admin/list surfaces.** [partially landed — remainder deferred]
+  The audit confirmed (P2) that route/driver/student/stop **names** render raw on several surfaces.
+  **Landed 2026-06-14:** route place-names are now batch-localized (`getLabels`, source-fallback) on the three
+  surfaces a non-admin / mixed-locale viewer actually sees — `content.tsx` (overview recent-assignments),
+  `trips/detail-content` (the live boarding roster), and `fees/content` (which also localizes the CSV export).
+  Plus the `/me` trip/boarding status-label fix. **Remaining (low-value, deferred):** route/stop names on the
+  pure-admin surfaces `assignments/detail-content`, `drivers/detail-content`, `assignments-client`,
+  `trips-client`; and **person-name** (student) transliteration everywhere except where driver names already use
+  `getName`. These are ADMIN-only CRUD views where names are usually already in the reader's language — genuine
+  diminishing returns. The established pattern (`shared/translate-display` + `getLabels`/`getNames`) applies when
+  picked up; the client tables additionally need the names translated in their server `content.tsx` wrapper.
+
+- **O-8 — Trip state-machine TOCTOU (start/finish/cancel).** [deferred — low impact]
+  The status assertion is a check-then-act outside the write predicate; two concurrent calls can both pass.
+  Real-world impact is low (the UI disables the action button while `pending`, and `startTrip`'s `createMany`
+  uses `skipDuplicates`) — worst case is a duplicate best-effort notification, not data corruption. The clean
+  fix (atomic `updateMany({ where: { id, schoolId, status }, … })` + count check inside the existing
+  `$transaction`) is test-coupled (30 state-machine tests) — deferred to avoid a rushed rewrite.
+
+- **O-9 — `prewarm` on write actions.** [deferred — P3] `createRoute`/`updateRoute`/`createDriver`/… don't
+  `after(() => prewarm(...))`, so the first reader in the other language pays the translate latency once.
 
 - **P3-3 — Page role gates duplicate the RBAC matrix.** [deferred]
   Each `page.tsx` hardcodes an `ALLOWED_ROLES` array that must track `authorization.ts` `PERMISSION_MATRIX`.
-  Drift risks an over-permissive page or a dead route. **Mitigated:** server actions always re-check via
-  `requireContext`, so a too-loose page cannot leak data. _Improvement:_ derive the page gate from the matrix
-  (13-file churn — low value).
+  **Mitigated:** server actions always re-check via `requireContext`, so a too-loose page cannot leak data.
 
-- **P3-6 — Token verify bcrypt-compares all same-prefix candidates.** [accepted]
-  `verifyApiToken` loads every non-deleted token with the 8-char prefix and `bcrypt.compare`s each (~80ms each).
-  Fine at current volume; a prefix collision across schools would multiply latency. Mitigated by the 120/min
-  rate limit. _Improvement:_ unique prefixes, or an HMAC lookup key.
+- **P3-6 — Token verify bcrypt-compares all same-prefix candidates.** [accepted — now further mitigated]
+  An 8-hex-char prefix (4-byte space) makes a cross-school prefix collision astronomically unlikely, so the
+  candidate set is ~1 row in practice. The 2026-06-14 swap to Redis-authoritative rate limiting removed the
+  serverless DoS-amplification path. A true fix (unique prefix / HMAC lookup key) needs a schema change.
+
+- **Rejected by verification (for the record):** `getExpiringDocuments` returning already-expired docs is
+  **desirable** (an expired license is more urgent, not less) — not a bug. The demo-seed token `console.log`
+  is the intentional show-once delivery mechanism for a randomly-generated, hash-only-persisted token.
 
 ---
 
 ## Improvements & Optimizations (non-defect)
 
-- **Aggregate in SQL, not JS — [accepted, no action].** `previewTransportFees` and `reports.getDriverHours`/
-  `getTripStats` pull row sets and reduce in memory. Correct at school scale (~150 assignments); `getDriverHours`
-  computes per-trip durations a single Prisma `groupBy` cannot express. Revisit only if a tenant scales to
-  thousands of students.
+- **`getDriverHours` / `previewTransportFees` reduce in JS — [accepted, no action].** Both build nested
+  per-driver / per-student shapes a single `groupBy` cannot express. `getTripStats` (flat counts) WAS converted
+  to `groupBy` (2026-06-14). The deploy-pending `@@index([schoolId, status, actualEndTime])` keeps
+  `getDriverHours` off a full scan.
 - **`exhaustive-deps` suppressions — [accepted, no action].** The 5 `eslint-disable react-hooks/exhaustive-deps`
-  sit on `useMemo` column definitions (the idiomatic tanstack-table pattern used block-wide), not data-load
-  effects — removing them risks stale closures for no benefit.
-- **Cache settings + school language per trip event.** `notifyGuardiansOfTripEvent` issues several sequential
-  queries (school → assignments → guardians → settings) per start/finish/cancel. Fire-and-forget, so not
-  latency-critical, but it's N queries per trip transition.
-- **Single root `error.tsx`** already covers all nested segments (Next.js boundary propagation) — the plan's
-  "error.tsx per directory" is unnecessary; keep the one root file.
+  sit on `useMemo` column definitions (idiomatic tanstack-table), not data-load effects.
+- **`notifyGuardiansOfTripEvent` — improved (2026-06-14).** Settings now read up front in the initial
+  `Promise.all`; the per-event opt-out short-circuits before the assignment→guardian fan-out.
+- **Single root `error.tsx`** already covers all nested segments (Next.js boundary propagation) — keep the one file.
 - **DRY the fee-preview UI.** `/reports` and `/fees` render fee data independently — extract a shared
   `<FeePreviewSection>` if they diverge.
 
 ---
 
-**Last review:** 2026-05-29
+**Last review:** 2026-06-14

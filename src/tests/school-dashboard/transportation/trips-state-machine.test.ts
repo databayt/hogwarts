@@ -36,6 +36,7 @@ vi.mock("@/lib/db", () => ({
     tripBoarding: {
       createMany: vi.fn(),
       upsert: vi.fn(),
+      updateMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },

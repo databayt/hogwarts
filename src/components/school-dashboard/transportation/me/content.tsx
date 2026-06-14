@@ -147,12 +147,14 @@ export async function MyTransportationContent({
                             {trip.scheduledTime}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{trip.status}</Badge>
+                            <Badge variant="outline">
+                              {tripStatusLabel(trip.status, t)}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             {trip.boardingStatus ? (
                               <Badge variant="outline">
-                                {trip.boardingStatus}
+                                {boardingStatusLabel(trip.boardingStatus, t)}
                               </Badge>
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -184,4 +186,31 @@ function directionLabel(
     default:
       return meDict.directionRoundTrip
   }
+}
+
+function tripStatusLabel(
+  status: string,
+  t: Dictionary["transportation"]
+): string {
+  const s = t.reports.tripStats
+  switch (status) {
+    case "SCHEDULED":
+      return s.scheduled
+    case "IN_PROGRESS":
+      return s.inProgress
+    case "COMPLETED":
+      return s.completed
+    case "CANCELLED":
+      return s.cancelled
+    default:
+      return status
+  }
+}
+
+function boardingStatusLabel(
+  status: string,
+  t: Dictionary["transportation"]
+): string {
+  const map = t.trips.boardingStatuses as Record<string, string>
+  return map[status] ?? status
 }

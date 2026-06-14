@@ -33,6 +33,7 @@ vi.mock("@/lib/db", () => ({
     },
     trip: {
       findMany: vi.fn(),
+      groupBy: vi.fn(),
     },
   },
 }))
@@ -311,21 +312,13 @@ describe("getDriverHours", () => {
 describe("getTripStats", () => {
   it("counts statuses and computes completionRate = completed / (completed + cancelled)", async () => {
     mockUser("ADMIN")
-    // 6 completed, 2 cancelled → 6 / 8 = 75%.
-    const trips = [
-      { status: "SCHEDULED" },
-      { status: "SCHEDULED" },
-      { status: "IN_PROGRESS" },
-      { status: "COMPLETED" },
-      { status: "COMPLETED" },
-      { status: "COMPLETED" },
-      { status: "COMPLETED" },
-      { status: "COMPLETED" },
-      { status: "COMPLETED" },
-      { status: "CANCELLED" },
-      { status: "CANCELLED" },
-    ]
-    vi.mocked(db.trip.findMany).mockResolvedValue(trips as never)
+    // 6 completed, 2 cancelled → 6 / 8 = 75%. groupBy returns per-status counts.
+    vi.mocked(db.trip.groupBy).mockResolvedValue([
+      { status: "SCHEDULED", _count: { status: 2 } },
+      { status: "IN_PROGRESS", _count: { status: 1 } },
+      { status: "COMPLETED", _count: { status: 6 } },
+      { status: "CANCELLED", _count: { status: 2 } },
+    ] as never)
 
     const result = await getTripStats()
 
@@ -343,8 +336,11 @@ describe("getTripStats", () => {
 
   it("returns completionRate 0 when there are no decided (completed+cancelled) trips", async () => {
     mockUser("ADMIN")
-    const trips = [{ status: "SCHEDULED" }, { status: "IN_PROGRESS" }]
-    vi.mocked(db.trip.findMany).mockResolvedValue(trips as never)
+    // Only undecided statuses present; COMPLETED/CANCELLED groups absent.
+    vi.mocked(db.trip.groupBy).mockResolvedValue([
+      { status: "SCHEDULED", _count: { status: 1 } },
+      { status: "IN_PROGRESS", _count: { status: 1 } },
+    ] as never)
 
     const result = await getTripStats()
 
@@ -365,12 +361,12 @@ describe("getTripStats", () => {
     const expectedCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
     mockUser("ADMIN")
-    vi.mocked(db.trip.findMany).mockResolvedValue([] as never)
+    vi.mocked(db.trip.groupBy).mockResolvedValue([] as never)
 
     await getTripStats()
 
-    expect(db.trip.findMany).toHaveBeenCalledTimes(1)
-    const args = vi.mocked(db.trip.findMany).mock.calls[0][0] as Record<
+    expect(db.trip.groupBy).toHaveBeenCalledTimes(1)
+    const args = vi.mocked(db.trip.groupBy).mock.calls[0][0] as Record<
       string,
       unknown
     >
@@ -379,7 +375,8 @@ describe("getTripStats", () => {
       deletedAt: null,
       scheduledDate: { gte: expectedCutoff },
     })
-    expect(args.select).toEqual({ status: true })
+    expect(args.by).toEqual(["status"])
+    expect(args._count).toEqual({ status: true })
   })
 
   it("enforces the read_school gate (TEACHER lacks it) before querying", async () => {
@@ -389,7 +386,7 @@ describe("getTripStats", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
-    expect(db.trip.findMany).not.toHaveBeenCalled()
+    expect(db.trip.groupBy).not.toHaveBeenCalled()
   })
 
   it("returns NOT_AUTHENTICATED when there is no session", async () => {
@@ -405,6 +402,6 @@ describe("getTripStats", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toBe("NOT_AUTHENTICATED")
-    expect(db.trip.findMany).not.toHaveBeenCalled()
+    expect(db.trip.groupBy).not.toHaveBeenCalled()
   })
 })

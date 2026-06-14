@@ -3,10 +3,12 @@
 
 import Link from "next/link"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getLabels } from "@/components/translation/person"
 
 import {
   getExpiringDocuments,
@@ -55,6 +57,18 @@ export async function TransportationOverviewContent({
   const stats = statsResult.data
   const expiring = expiringResult.success ? expiringResult.data : null
   const recent = recentResult.success ? recentResult.data : []
+
+  // Localize route place-names in the recent-assignments widget (ONE batched
+  // resolution; source fallback on miss).
+  const { schoolId } = await getTenantContext()
+  const routeLabels =
+    recent.length > 0 && schoolId
+      ? await getLabels(
+          recent.map((a) => a.route?.name),
+          locale,
+          schoolId
+        )
+      : new Map<string, string>()
 
   const tiles = [
     { label: overview.totalVehicles, value: stats.totalVehicles },
@@ -175,7 +189,9 @@ export async function TransportationOverviewContent({
                   >
                     <span>
                       {a.student?.firstName} {a.student?.lastName} →{" "}
-                      {a.route?.name}
+                      {a.route?.name
+                        ? (routeLabels.get(a.route.name) ?? a.route.name)
+                        : ""}
                     </span>
                     <span className="text-muted-foreground">
                       {formatDate(a.createdAt, locale)}

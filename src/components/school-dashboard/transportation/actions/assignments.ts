@@ -103,7 +103,7 @@ export async function updateAssignment(input: RouteAssignmentUpdateInput) {
   try {
     const current = await db.routeAssignment.findFirst({
       where: { id, schoolId, deletedAt: null },
-      select: { id: true, routeId: true },
+      select: { id: true, routeId: true, studentId: true },
     })
     if (!current) return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_NOT_FOUND)
 
@@ -113,6 +113,24 @@ export async function updateAssignment(input: RouteAssignmentUpdateInput) {
         select: { id: true },
       })
       if (!stop) return actionError(ACTION_ERRORS.STOP_NOT_FOUND)
+    }
+
+    // Re-activating a PAUSED/ENDED assignment must respect the same
+    // single-active-per-(student,route) rule as create/restore — otherwise a
+    // status flip can produce two simultaneous ACTIVE assignments.
+    if (data.status === "ACTIVE") {
+      const conflict = await db.routeAssignment.findFirst({
+        where: {
+          schoolId,
+          studentId: current.studentId,
+          routeId: current.routeId,
+          status: "ACTIVE",
+          deletedAt: null,
+          NOT: { id },
+        },
+        select: { id: true },
+      })
+      if (conflict) return actionError(ACTION_ERRORS.ROUTE_ASSIGNMENT_OVERLAP)
     }
 
     const updated = await db.routeAssignment.update({
@@ -218,45 +236,12 @@ export async function getAssignment(id: string) {
   }
 }
 
-/**
- * Get the active assignment for a student. Used by guardian/student views
- * to surface "your bus" without exposing other students' data.
- */
-export async function getAssignmentForStudent(studentId: string) {
-  const ctx = await requireContext("read_own")
-  if (!ctx.ok) return ctx.response
-  const { schoolId } = ctx
-
-  try {
-    const assignment = await db.routeAssignment.findFirst({
-      where: {
-        schoolId,
-        studentId,
-        status: "ACTIVE",
-        deletedAt: null,
-      },
-      include: {
-        route: {
-          include: {
-            vehicle: { select: { id: true, plateNumber: true } },
-            driver: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
-          },
-        },
-        stop: true,
-      },
-    })
-    return { success: true as const, data: assignment }
-  } catch {
-    return actionError(ACTION_ERRORS.LOAD_FAILED)
-  }
-}
+// NOTE: `getAssignmentForStudent(studentId)` was removed (2026-06-14). It was a
+// dead export (zero callers) that gated only on `read_own` and accepted an
+// arbitrary caller-supplied studentId with no StudentGuardian ownership check —
+// an IDOR letting any guardian read another student's route/driver/phone. All
+// guardian/student access flows through the ownership-verified
+// `getMyTransportationView` in actions/me.ts instead.
 
 export async function restoreAssignment(id: string) {
   const ctx = await requireContext("manage_assignment")
@@ -317,6 +302,10 @@ export async function listStudentsForAssignment() {
         admissionNumber: true,
       },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      // Worst-case cap: a large school must not transfer thousands of rows into
+      // a <Select> on every assignments-page load. Picker shows the first 500;
+      // a search-backed combobox is the follow-up for very large schools.
+      take: 500,
     })
     return { success: true as const, data: students }
   } catch {

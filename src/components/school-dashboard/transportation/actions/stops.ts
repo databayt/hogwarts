@@ -180,6 +180,16 @@ export async function deleteStop(id: string) {
       return actionError(ACTION_ERRORS.HAS_DEPENDENCIES)
     }
 
+    // RouteStop hard-delete cascades to TripBoarding (onDelete: Cascade), so a
+    // stop referenced by historical boardings would silently wipe that trip
+    // history. Block the delete if any boarding ever referenced this stop.
+    const usedInBoardings = await db.tripBoarding.count({
+      where: { schoolId, stopId: id },
+    })
+    if (usedInBoardings > 0) {
+      return actionError(ACTION_ERRORS.HAS_DEPENDENCIES)
+    }
+
     await db.routeStop.delete({ where: { id } })
 
     revalidatePath(transportationRevalidatePath(`routes/${current.routeId}`))

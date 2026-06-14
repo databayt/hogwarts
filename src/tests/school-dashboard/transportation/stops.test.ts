@@ -31,6 +31,9 @@ vi.mock("@/lib/db", () => ({
     routeAssignment: {
       count: vi.fn(),
     },
+    tripBoarding: {
+      count: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -435,6 +438,7 @@ describe("deleteStop", () => {
       routeId: "route-1",
     } as never)
     vi.mocked(db.routeAssignment.count).mockResolvedValue(0 as never)
+    vi.mocked(db.tripBoarding.count).mockResolvedValue(0 as never)
     vi.mocked(db.routeStop.delete).mockResolvedValue({ id: "stop-1" } as never)
 
     const result = await deleteStop("stop-1")
@@ -444,6 +448,24 @@ describe("deleteStop", () => {
     expect(db.routeStop.delete).toHaveBeenCalledWith({
       where: { id: "stop-1" },
     })
+  })
+
+  it("blocks delete (HAS_DEPENDENCIES) when historical boardings reference the stop", async () => {
+    mockUser("ADMIN", SCHOOL_A)
+    vi.mocked(db.routeStop.findFirst).mockResolvedValue({
+      id: "stop-1",
+      routeId: "route-1",
+    } as never)
+    // No active assignments, but completed trips left boarding rows that a
+    // hard-delete would cascade-wipe.
+    vi.mocked(db.routeAssignment.count).mockResolvedValue(0 as never)
+    vi.mocked(db.tripBoarding.count).mockResolvedValue(3 as never)
+
+    const result = await deleteStop("stop-1")
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toBe("HAS_DEPENDENCIES")
+    expect(db.routeStop.delete).not.toHaveBeenCalled()
   })
 
   it("returns MISSING_SCHOOL when there is no tenant schoolId", async () => {

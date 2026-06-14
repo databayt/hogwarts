@@ -415,8 +415,10 @@ describe("notifyGuardiansOfTripEvent", () => {
 
       expect(result).toEqual({ created: 0 })
       expect(db.notification.createMany).not.toHaveBeenCalled()
-      // userIds empty → settings is never read.
-      expect(db.transportationSettings.findUnique).not.toHaveBeenCalled()
+      // Settings are read up front now (in the initial Promise.all) so a
+      // per-event opt-out can short-circuit BEFORE the assignment/guardian
+      // fan-out; here it's all-on, so we fall through to the empty-userIds exit.
+      expect(db.transportationSettings.findUnique).toHaveBeenCalled()
     })
   })
 

@@ -22,7 +22,11 @@ import { NextResponse, type NextRequest } from "next/server"
 import { z } from "zod"
 
 import { verifyApiToken } from "@/lib/api-tokens"
-import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import {
+  checkRateLimitAsync,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/rate-limit"
 import { recordBoardingFromGeofenceInternal } from "@/components/school-dashboard/transportation/actions/geofence-internal"
 
 export const dynamic = "force-dynamic"
@@ -38,12 +42,16 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  const rl = await rateLimit(
+  // Redis-authoritative rate limit. The sync rateLimit() enforces via an
+  // in-memory Map that resets per serverless instance, so a burst spread across
+  // cold Vercel instances bypasses it; checkRateLimitAsync counts in Upstash
+  // when configured (and falls back to in-memory only when Redis is absent).
+  const rl = await checkRateLimitAsync(
     request,
     RATE_LIMITS.GEOFENCE_WEBHOOK,
     "geofence-boarding"
   )
-  if (rl) return rl
+  if (!rl.allowed) return createRateLimitResponse(rl.resetTime)
 
   // Bearer token
   const authHeader = request.headers.get("authorization") ?? ""

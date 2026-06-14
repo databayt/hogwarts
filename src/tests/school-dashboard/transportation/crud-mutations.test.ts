@@ -847,7 +847,8 @@ describe("updateAssignment", () => {
     if (!result.success) expect(result.error).toBe("ROUTE_ASSIGNMENT_NOT_FOUND")
     expect(db.routeAssignment.findFirst).toHaveBeenCalledWith({
       where: { id: "asg-x", schoolId: SCHOOL_A, deletedAt: null },
-      select: { id: true, routeId: true },
+      // studentId is selected so re-activation can run the active-conflict guard.
+      select: { id: true, routeId: true, studentId: true },
     })
     expect(db.routeAssignment.update).not.toHaveBeenCalled()
   })
