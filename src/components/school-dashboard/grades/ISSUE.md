@@ -5,17 +5,17 @@ title: Grades
 file_type: issue
 owner: Abdout
 maturity: Built+Polish
-completion: 70
+completion: 94
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-05-25
+last_audited: 2026-06-14
 ---
 
 # Grades — Production Readiness Tracker
 
-**Status:** 🟢 CERTIFICATES PRODUCTION-READY (report-card PDF deferred)
-**Completion:** ~92%
-**Last Updated:** 2026-05-30
+**Status:** BUILT — gradebook spine live, report-card PDF deferred
+**Completion:** ~94%
+**Last Updated:** 2026-06-14
 
 ---
 
@@ -23,6 +23,8 @@ last_audited: 2026-05-25
 
 - [x] Report card generation (per term, per class, per student)
 - [x] Report card listing and publishing
+- [x] **Report card publish notification** — `publishReportCards` dispatches a `report_card_ready` notification to the class audience via `dispatchNotificationsToAudience`
+- [x] **Report card dedup** — `generateReportCards` deduplicates by `examId` so re-running finalize never creates duplicate report-card rows
 - [x] Transcript generation with QR verification
 - [x] Certificate PDF generation (single + batch)
 - [x] Composable certificate template system
@@ -40,6 +42,7 @@ last_audited: 2026-05-25
 - [x] **Async certificate-PDF cron** (`/api/cron/process-certificate-pdfs`) — decouples React-PDF render from the request
 - [x] **Signature image upload** in the certificate config form
 - [x] **Test coverage** for the cert engine + Block B (was ZERO) — see "Testing"
+- [x] **Gradebook spine** (`grades/lib/gradebook.ts`) — shared write path for all scoring surfaces (exams, quick assessments, stream quizzes): `toPercentage`, `letterGradeFor`, `upsertExamResult`, `upsertGradebookResult`, `resolveStudentClassForSubject`
 - [ ] Custom grade boundary configuration per school
 - [ ] **Report-card PDF render → `reportCard.pdfUrl`** — DEFERRED (see below)
 
@@ -53,6 +56,11 @@ report-cards,transcripts,promotion,notifications}.test.ts`,
 `api/certificates/[id]/download/__tests__/route.test.ts`,
 `api/cron/process-certificate-pdfs/__tests__/route.test.ts`.
 Grade/cert suites: **215 green**. 0 new `tsc` errors.
+
+Added 2026-06-14: `src/tests/school-dashboard/exams/gradebook.test.ts` — pure
+unit tests for `toPercentage` (8 cases: rounding, zero-guard, negative-guard)
+and `letterGradeFor` (21 cases: default fallback scale + custom boundaries +
+gap handling). No DB required.
 
 ## Known Issues
 
@@ -101,4 +109,16 @@ Grade/cert suites: **215 green**. 0 new `tsc` errors.
 
 ---
 
-**Last Review:** 2026-03-19
+## Resolved Issues (2026-06-14)
+
+- **Gradebook spine shipped.** `grades/lib/gradebook.ts` provides the single
+  write path for all scoring surfaces. `toPercentage` rounds to 2 dp;
+  `letterGradeFor` delegates to `calculateGrade` with custom or default
+  boundaries; `upsertExamResult` and `upsertGradebookResult` are idempotent;
+  `resolveStudentClassForSubject` is best-effort (returns null when class can't
+  be determined, caller skips the write). NOT "use server" — plain helpers.
+- **Report card dedup + publish-notify.** `generateReportCards` deduplicates by
+  `examId`; `publishReportCards` dispatches a `report_card_ready` notification to
+  the class audience.
+
+**Last Review:** 2026-06-14

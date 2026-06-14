@@ -11,6 +11,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
+import { localize } from "@/components/translation/localize"
 
 import type { ExamTemplateRow } from "./columns"
 import { templateSearchParams } from "./list-params"
@@ -87,9 +88,16 @@ export default async function TemplatesContent({
       getSchoolSubjectOptions(schoolId!),
     ])
 
+    const localizedTemplates = await localize("ExamTemplate", rows, {
+      schoolId,
+    })
+    const templateNameById = new Map(
+      localizedTemplates.map((r) => [r.id, r.name])
+    )
+
     data = rows.map((t) => ({
       id: t.id,
-      name: t.name,
+      name: templateNameById.get(t.id) ?? t.name,
       subjectName: t.subject?.name ?? "Unknown",
       duration: t.duration,
       totalMarks: Number(t.totalMarks),

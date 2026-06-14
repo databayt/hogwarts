@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { sendBatchGradeNotifications } from "./notifications"
@@ -156,25 +157,45 @@ export async function generateReportCards(input: {
             studentId: student.id,
             exam: { classId: cls.id },
           },
-          select: { marksObtained: true, totalMarks: true, percentage: true },
+          select: {
+            examId: true,
+            marksObtained: true,
+            totalMarks: true,
+            percentage: true,
+          },
         })
 
-        // Fetch standalone results
+        // Fetch standalone results (including those that originated from an
+        // auto-marked exam and therefore carry an examId).
         const standaloneResults = await db.result.findMany({
           where: {
             schoolId,
             studentId: student.id,
             classId: cls.id,
           },
-          select: { score: true, maxScore: true },
+          select: { examId: true, score: true, maxScore: true },
         })
 
-        // Combine scores -- simple average for now
+        // Build a set of examIds already covered by a Result row so that we
+        // avoid counting those exams twice (once via ExamResult, once via
+        // Result). When both rows exist, the Result row wins — it may carry
+        // richer weighting data written by upsertGradebookResult.
+        const resultExamIds = new Set(
+          standaloneResults
+            .map((r) => r.examId)
+            .filter((id): id is string => id !== null && id !== undefined)
+        )
+
+        // Combine scores -- simple average for now.
+        // Filter out any ExamResult whose examId is already represented by a
+        // Result row so each exam contributes exactly once.
         const allScores = [
-          ...examResults.map((r) => ({
-            score: r.marksObtained,
-            maxScore: r.totalMarks || 100,
-          })),
+          ...examResults
+            .filter((r) => !resultExamIds.has(r.examId))
+            .map((r) => ({
+              score: r.marksObtained,
+              maxScore: r.totalMarks || 100,
+            })),
           ...standaloneResults.map((r) => ({
             score: Number(r.score),
             maxScore: Number(r.maxScore),
@@ -395,11 +416,76 @@ export async function publishReportCards(input: {
     // (which is the common entry point).
     revalidatePath("/parent")
 
-    // Fire-and-forget notification dispatch. If it errors (template
-    // missing, transient DB hiccup) the publish itself still succeeds —
-    // notifications are explicitly best-effort. Errors are logged inside
-    // sendBatchGradeNotifications.
+    // Per-student direct notification — fires for every student userId so
+    // the in-app bell and email channel are triggered immediately on publish.
+    // One findMany covers all just-published cards; fire-and-forget per card.
     if (result.count > 0) {
+      const publishedWhere: Record<string, unknown> = {
+        schoolId,
+        termId: input.termId,
+        isPublished: true,
+      }
+      if (input.gradeId) {
+        publishedWhere.student = { academicGradeId: input.gradeId }
+      }
+
+      db.reportCard
+        .findMany({
+          where: publishedWhere,
+          select: {
+            id: true,
+            student: { select: { userId: true } },
+          },
+        })
+        .then(async (publishedCards) => {
+          // Fetch the school's preferred language so notifications are
+          // authored in the school's content language.
+          const school = await db.school
+            .findUnique({
+              where: { id: schoolId },
+              select: { preferredLanguage: true },
+            })
+            .catch(() => null)
+          const lang = school?.preferredLanguage ?? "ar"
+
+          const isAr = lang === "ar"
+          const title = isAr ? "تقرير بطاقة الدرجات جاهز" : "Report Card Ready"
+          const body = isAr
+            ? "تم نشر بطاقة درجاتك. يمكنك الاطلاع عليها الآن."
+            : "Your report card has been published. You can view it now."
+
+          await Promise.all(
+            publishedCards
+              .filter((rc) => !!rc.student.userId)
+              .map((rc) =>
+                dispatchNotification({
+                  schoolId,
+                  userId: rc.student.userId!,
+                  type: "report_ready",
+                  title,
+                  body,
+                  lang,
+                  channels: ["in_app", "email"],
+                  metadata: {
+                    entityType: "report_card",
+                    entityId: rc.id,
+                    url: "/grades/report-cards",
+                  },
+                }).catch((err: unknown) => {
+                  console.error("[publishReportCards] notify error:", err)
+                })
+              )
+          )
+        })
+        .catch((err: unknown) => {
+          console.error(
+            "[publishReportCards] post-publish notify fetch error:",
+            err
+          )
+        })
+
+      // Also run the template-based batch (notifies guardians + richer
+      // channels like WhatsApp). Both paths are best-effort.
       void sendBatchGradeNotifications({
         type: "report_ready",
         termId: input.termId,

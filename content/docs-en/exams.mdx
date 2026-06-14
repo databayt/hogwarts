@@ -223,6 +223,44 @@ pnpm db:seed:single exam-blueprints          # regional structures (SD, SA, …)
 | Proctor guard inactive      | Production HTTPS required                                                                              |
 | Certificate QR doesn't scan | `QR_CODE_SECRET` missing; certificate revoked; verify route blocked                                    |
 
+## Automation pipeline
+
+The full scoring loop runs without manual intervention once questions are loaded into the bank.
+
+```
+1. Configure a template
+   └─ set question distribution per type/difficulty + Bloom balance
+
+2. Auto-generate from the bank  (wizard → "Auto-generate" button)
+   └─ autoGenerateExamQuestions() selects questions, assigns per-question
+      point values, writes GeneratedExamQuestion rows, drops stale answer key
+
+3. Students submit
+   └─ submitExamSession() instant-grades fully-objective exams;
+      exams with subjective questions queue for manual/AI marking
+
+4. Finalize  (mark/actions/finalize.ts)
+   └─ finalizeExamResults() aggregates MarkingResult rows
+      → ExamResult (exam analytics, certificates)
+      → Result (unified gradebook — grades UI + report cards)
+      → dispatchNotificationsToAudience("exam_results_published", class)
+
+5. Report cards auto-generate  (grades/actions/report-cards.ts)
+   └─ generateReportCards() deduplicates by examId; no duplicate rows on re-runs
+
+6. Publish report cards
+   └─ publishReportCards() → dispatchNotificationsToAudience("report_card_ready", class)
+
+7. Printable PDF + shareable link
+   └─ certificate cron renders PDF out-of-band → S3 → pdfUrl
+   └─ /[lang]/certificate/[shareToken] — public share page (no React-PDF in bundle)
+
+8. Reminders  (/api/cron/exam-reminders)
+   └─ sweeps upcoming exams, dispatches advance notifications to students + teachers
+```
+
+Key invariant: `grades/lib/gradebook.ts` is the single write path for ALL automated scoring surfaces (exams, quick assessments, stream lesson quizzes). It is not `"use server"` — import it from server actions.
+
 ## See also
 
 - [Exam wizard](/docs/exam-wizard) — template + generation + cert wizards

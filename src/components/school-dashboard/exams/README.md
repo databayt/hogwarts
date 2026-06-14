@@ -5,10 +5,10 @@ title: Exams
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 65
+completion: 78
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-05-25
+last_audited: 2026-06-14
 ---
 
 ## Exams -- Examination Management System
@@ -73,9 +73,27 @@ src/components/school-dashboard/exams/
 
 ### Status
 
-**Completion:** 65% | **Blockers:** Route pages not created in app directory
+**Completion:** 78% | **Blockers:** Route pages not created in app directory
 
-All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration. The main gap is that no `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` to wire the components to routes.
+All 5 sub-blocks have complete component code, server actions, validation schemas, types, and configuration. The automation pipeline (auto-generate → auto-mark → finalize → notify) is wired end-to-end. The main remaining gap is that no `page.tsx` files exist under `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` to wire the components to routes.
+
+### Automation Pipeline (2026-06-14)
+
+```
+Template (distribution) → Auto-Generate (wizard button)
+  → Student submits exam session
+  → submitExamSession: instant-grade if fully objective
+  → finalizeExamResults: aggregate MarkingResult → ExamResult + unified Result
+  → dispatchNotification: results-published to class audience
+  → Exam-reminders cron: notify students/teachers N hours before exam
+```
+
+Key files:
+
+- `wizard/exam-wizard-v2/questions/auto-generate.ts` — server action: select questions from bank per template distribution; drops stale answer key on re-generate
+- `mark/actions/finalize.ts` — `finalizeExamResults` / `finalizeStudentExam`
+- `grades/lib/gradebook.ts` — shared write path (toPercentage, letterGradeFor, upsertExamResult, upsertGradebookResult)
+- `/api/cron/exam-reminders` — scheduled reminders cron
 
 ### Integration Points
 
@@ -83,8 +101,8 @@ All 5 sub-blocks have complete component code, server actions, validation schema
 - **Subjects**: Questions and exams organized by subject
 - **Timetable**: Conflict detection with scheduled classes
 - **Students**: Results linked to student profiles
-- **Grades**: Exam results feed into gradebook (planned)
-- **Notifications**: Exam reminders for students (planned)
+- **Grades**: Exam results now write to unified `Result` table via `grades/lib/gradebook.ts`
+- **Notifications**: Results-published + exam-reminders now dispatched via `dispatchNotification`
 
 ### Agents & Skills
 

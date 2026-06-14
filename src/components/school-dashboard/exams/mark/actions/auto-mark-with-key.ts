@@ -77,14 +77,19 @@ export async function getOrCreateAnswerKey(
       }
     }
 
-    // Generate answer key from generated exam questions
+    // Generate answer key from the ordered generated-exam questions.
+    // (Previously read a non-existent `questionIds` field → empty key → no
+    // auto-marking. Read the GeneratedExamQuestion relation instead.)
     const generatedExam = await db.generatedExam.findFirst({
       where: {
         id: generatedExamId,
         schoolId,
       },
       include: {
-        exam: true,
+        questions: {
+          orderBy: { order: "asc" },
+          include: { question: true },
+        },
       },
     })
 
@@ -92,81 +97,63 @@ export async function getOrCreateAnswerKey(
       return { success: false, error: "Exam not found", code: "NOT_FOUND" }
     }
 
-    // Get question IDs from the generated exam
-    const questionIds = ((generatedExam as any).questionIds as string[]) || []
-
-    // Fetch questions with their correct answers
-    const questions = await db.questionBank.findMany({
-      where: {
-        id: { in: questionIds },
-        schoolId,
-      },
-    })
-
     // Build answer key entries
-    const answers: AnswerKeyEntry[] = questionIds.map((qId, index) => {
-      const question = questions.find((q) => q.id === qId)
-      if (!question) {
+    const answers: AnswerKeyEntry[] = generatedExam.questions.map(
+      (gq, index) => {
+        const question = gq.question
+        const points = Number(gq.points) || Number(question.points)
+        const options = parseQuestionOptions(question.options)
+
+        let correctAnswer: string | string[] = ""
+        let correctOptionIndices: number[] = []
+        let acceptedAnswers: string[] | undefined
+
+        switch (question.questionType) {
+          case "MULTIPLE_CHOICE":
+            correctOptionIndices = options
+              .map((opt, idx) => (opt.isCorrect ? idx : -1))
+              .filter((idx) => idx >= 0)
+            correctAnswer = correctOptionIndices.map(String)
+            break
+
+          case "TRUE_FALSE":
+            const correctOption = options.find((opt) => opt.isCorrect)
+            correctAnswer = correctOption?.text === "True" ? "true" : "false"
+            correctOptionIndices = correctOption
+              ? [options.indexOf(correctOption)]
+              : []
+            break
+
+          case "FILL_BLANK":
+            const fillOptions = question.options as {
+              acceptedAnswers?: string[]
+              caseSensitive?: boolean
+            } | null
+            acceptedAnswers = fillOptions?.acceptedAnswers || []
+            correctAnswer = acceptedAnswers[0] || ""
+            break
+
+          case "SHORT_ANSWER":
+          case "ESSAY":
+            // These require manual/AI grading
+            correctAnswer = ""
+            break
+        }
+
         return {
-          questionId: qId,
-          order: index + 1,
-          questionType: "UNKNOWN",
-          correctAnswer: "",
-          points: 0,
+          questionId: question.id,
+          order: gq.order ?? index + 1,
+          questionType: question.questionType,
+          correctAnswer,
+          correctOptionIndices,
+          acceptedAnswers,
+          caseSensitive:
+            (question.options as { caseSensitive?: boolean } | null)
+              ?.caseSensitive ?? false,
+          points,
         }
       }
-
-      const options = parseQuestionOptions(question.options)
-
-      let correctAnswer: string | string[] = ""
-      let correctOptionIndices: number[] = []
-      let acceptedAnswers: string[] | undefined
-
-      switch (question.questionType) {
-        case "MULTIPLE_CHOICE":
-          correctOptionIndices = options
-            .map((opt, idx) => (opt.isCorrect ? idx : -1))
-            .filter((idx) => idx >= 0)
-          correctAnswer = correctOptionIndices.map(String)
-          break
-
-        case "TRUE_FALSE":
-          const correctOption = options.find((opt) => opt.isCorrect)
-          correctAnswer = correctOption?.text === "True" ? "true" : "false"
-          correctOptionIndices = correctOption
-            ? [options.indexOf(correctOption)]
-            : []
-          break
-
-        case "FILL_BLANK":
-          const fillOptions = question.options as {
-            acceptedAnswers?: string[]
-            caseSensitive?: boolean
-          } | null
-          acceptedAnswers = fillOptions?.acceptedAnswers || []
-          correctAnswer = acceptedAnswers[0] || ""
-          break
-
-        case "SHORT_ANSWER":
-        case "ESSAY":
-          // These require manual/AI grading
-          correctAnswer = ""
-          break
-      }
-
-      return {
-        questionId: qId,
-        order: index + 1,
-        questionType: question.questionType,
-        correctAnswer,
-        correctOptionIndices,
-        acceptedAnswers,
-        caseSensitive:
-          (question.options as { caseSensitive?: boolean } | null)
-            ?.caseSensitive ?? false,
-        points: Number(question.points),
-      }
-    })
+    )
 
     // Save the answer key
     await db.examAnswerKey.create({

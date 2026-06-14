@@ -5,17 +5,17 @@ title: Exams
 file_type: issue
 owner: Abdout
 maturity: Built+Polish
-completion: 65
+completion: 78
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-05-25
+last_audited: 2026-06-14
 ---
 
 # Exams -- Production Readiness Tracker
 
 **Status:** IN PROGRESS
-**Completion:** 65%
-**Last Updated:** 2026-03-19
+**Completion:** 78%
+**Last Updated:** 2026-06-14
 
 ---
 
@@ -99,6 +99,13 @@ last_audited: 2026-05-25
 - [x] TypeScript types for all data models
 - [x] i18n dictionary keys (150+ keys, EN/AR)
 - [x] RTL support for Arabic
+- [x] **Gradebook spine** — all scoring surfaces write to the unified `Result` table via `grades/lib/gradebook.ts`
+- [x] **Auto-generate from template** — one-click question selection wired into the exam-generate wizard (`wizard/exam-wizard-v2/questions/auto-generate.ts`)
+- [x] **Answer-key bug fixed** — `getOrCreateAnswerKey` now reads `GeneratedExamQuestion` relation instead of a non-existent `questionIds` field; empty answer keys no longer produced
+- [x] **Finalize loop** — `exams/mark/actions/finalize.ts`: `finalizeExamResults` aggregates `MarkingResult` → `ExamResult` + unified `Result`, dispatches publish notifications
+- [x] **Instant-grade on submit** — `submitExamSession` auto-marks fully-objective exams and writes the result immediately
+- [x] **Exam reminders cron** — `/api/cron/exam-reminders` notifies students/teachers ahead of scheduled exams
+- [x] **Unit tests** — `src/tests/school-dashboard/exams/gradebook.test.ts` (pure helpers) + `auto-generate-coverage.test.ts` (type shapes + coverage logic)
 - [ ] Route pages wired for all sub-blocks (BLOCKER)
 - [ ] Sidebar navigation entries added
 
@@ -112,9 +119,8 @@ last_audited: 2026-05-25
 
 ### P1 -- High
 
-1. **Gradebook integration** -- Exam results do not sync to gradebook module
-2. **OCR dependency** -- AI-assisted marking requires OpenAI API key configuration
-3. **AI generation costs** -- No budget controls or cost tracking in production
+1. **OCR dependency** -- AI-assisted marking requires OpenAI API key configuration
+2. **AI generation costs** -- No budget controls or cost tracking in production
 
 ### P2 -- Medium
 
@@ -140,4 +146,16 @@ last_audited: 2026-05-25
 
 ---
 
-**Last Review:** 2026-03-19
+---
+
+## Resolved Issues
+
+- **2026-06-14 — Automation pass.** Auto-generate wired into wizard (one-click
+  template → question selection); answer-key empty-key bug fixed (was reading
+  non-existent `questionIds` field, now reads `GeneratedExamQuestion` relation);
+  finalize loop (`finalizeExamResults` / `finalizeStudentExam`) writes both
+  `ExamResult` and unified `Result`, dispatches results-published notification;
+  instant-grade on submit for objective-only exams; exam-reminders cron added.
+  Gradebook integration P1 resolved via `grades/lib/gradebook.ts` spine.
+
+**Last Review:** 2026-06-14

@@ -10,16 +10,18 @@ import React, {
   useState,
   useTransition,
 } from "react"
-import { FileQuestion } from "lucide-react"
+import { FileQuestion, Wand2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ErrorToast } from "@/components/atom/toast"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getAvailableQuestions, updateSelectedQuestions } from "./actions"
+import { autoGenerateExamQuestions } from "./auto-generate"
 
 interface QuestionOption {
   id: string
@@ -65,6 +67,39 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
     const [selectedIds, setSelectedIds] = useState<Set<string>>(
       new Set(initialQuestionIds || [])
     )
+    const [isAutoGenerating, setIsAutoGenerating] = useState(false)
+
+    const handleAutoGenerate = useCallback(() => {
+      setIsAutoGenerating(true)
+      autoGenerateExamQuestions(generatedExamId)
+        .then((result) => {
+          if (!result.success || !result.data) {
+            ErrorToast(
+              result.error ?? t?.autoGenerateError ?? "Auto-generation failed"
+            )
+            return
+          }
+          setSelectedIds(new Set(result.data.selectedQuestionIds))
+          const { totalQuestions, totalMarks, distributionMet } = result.data
+          const summary = (
+            t?.autoGenerateSuccess ??
+            "Generated {count} questions ({marks} marks)"
+          )
+            .replace("{count}", String(totalQuestions))
+            .replace("{marks}", String(totalMarks))
+          if (distributionMet) {
+            SuccessToast(summary)
+          } else {
+            ErrorToast(
+              (
+                t?.autoGeneratePartial ??
+                "{summary} — bank short on some categories"
+              ).replace("{summary}", summary)
+            )
+          }
+        })
+        .finally(() => setIsAutoGenerating(false))
+    }, [generatedExamId, t])
 
     // Load questions
     useEffect(() => {
@@ -162,6 +197,18 @@ export const QuestionsForm = forwardRef<WizardFormRef, QuestionsFormProps>(
                   .replace("{total}", String(questions.length))
               : `${selectedIds.size} of ${questions.length} selected`}
           </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAutoGenerate}
+            disabled={isAutoGenerating || isPending}
+          >
+            <Wand2 className="size-4" />
+            {isAutoGenerating
+              ? (t?.autoGenerating ?? "Generating…")
+              : (t?.autoGenerate ?? "Auto-generate from template")}
+          </Button>
         </div>
         <div className="space-y-2">
           {questions.map((q) => (

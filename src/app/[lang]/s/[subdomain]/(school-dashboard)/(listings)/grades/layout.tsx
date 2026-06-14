@@ -21,6 +21,12 @@ export default async function GradesLayout({ children, params }: Props) {
     { name: d?.navAll || "All", href: `/${lang}/grades` },
     { name: d?.navGenerate || "Generate", href: `/${lang}/grades/generate` },
     { name: d?.navReports || "Reports", href: `/${lang}/grades/reports` },
+    {
+      name:
+        (d as unknown as Record<string, string> | undefined)?.navTemplates ||
+        "Templates",
+      href: `/${lang}/grades/templates`,
+    },
     { name: d?.navPromotion || "Promotion", href: `/${lang}/grades/promotion` },
     {
       name: d?.navTranscripts || "Transcripts",

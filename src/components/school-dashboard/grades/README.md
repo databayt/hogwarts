@@ -5,10 +5,10 @@ title: Grades
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 70
+completion: 94
 tracker: https://github.com/databayt/hogwarts/issues/321
 docs: https://ed.databayt.org/en/docs/exams
-last_audited: 2026-05-25
+last_audited: 2026-06-14
 ---
 
 ## Grades — Report cards, transcripts, certificates, and student promotion
@@ -41,12 +41,16 @@ Comprehensive grading system covering report card generation, transcript managem
 
 ```
 src/components/school-dashboard/grades/
+├── lib/
+│   └── gradebook.ts          # Shared write path (toPercentage, letterGradeFor,
+│                             #   upsertExamResult, upsertGradebookResult,
+│                             #   resolveStudentClassForSubject). NOT "use server".
 ├── actions/
 │   ├── index.ts              # Re-exports all actions
 │   ├── certificate-pdf.ts    # PDF generation (single + batch)
 │   ├── notifications.ts      # Grade notification dispatch
 │   ├── promotion.ts          # Promotion candidates, policies, batch approval
-│   ├── report-cards.ts       # Report card generation, fetch, publish
+│   ├── report-cards.ts       # Report card generation, fetch, publish (+ dedup + notify)
 │   └── transcripts.ts        # Transcript generation and verification
 ├── promotion/
 │   ├── content.tsx           # Server component (fetches batches, years, grades)
@@ -79,14 +83,15 @@ src/components/school-dashboard/grades/
 
 ### Status
 
-**Completion:** 85% | **Blockers:** None
+**Completion:** 94% | **Blockers:** None (report-card PDF render deferred — see ISSUE.md)
 
 ### Integration Points
 
-- `src/components/file/generate/report-card.tsx` -- React-PDF report card template
-- `src/components/file/providers/factory.ts` -- File storage provider for PDF uploads
-- `src/app/api/grades/[id]/route.ts` -- REST API for grade data
-- Prisma models: Grade, ReportCard, Transcript, PromotionBatch, PromotionPolicy
+- `grades/lib/gradebook.ts` — shared write path consumed by exams (`finalizeExamResults`), quick assessments, and stream lesson quizzes
+- `src/components/file/generate/report-card.tsx` — React-PDF report card template
+- `src/components/file/providers/factory.ts` — File storage provider for PDF uploads
+- `src/app/api/grades/[id]/route.ts` — REST API for grade data
+- Prisma models: Grade, ReportCard, Transcript, PromotionBatch, PromotionPolicy, Result, ExamResult
 
 ### Agents & Skills
 

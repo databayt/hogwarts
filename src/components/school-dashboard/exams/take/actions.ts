@@ -21,6 +21,7 @@ import type { ProctorMode, SecurityFlag } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { finalizeStudentExam } from "../mark/actions/finalize"
 import {
   autoSaveAnswersSchema,
   reportSecurityFlagSchema,
@@ -459,6 +460,34 @@ export async function submitExamSession(input: SubmitExamAnswersInput) {
         },
       })
     })
+
+    // Instant-grade fully-objective exams so the student sees their score now.
+    // Subjective exams stay pending for teacher review.
+    try {
+      const gen = await db.generatedExam.findFirst({
+        where: { examId, schoolId },
+        select: {
+          questions: {
+            select: { question: { select: { questionType: true } } },
+          },
+        },
+      })
+      const allObjective =
+        !!gen &&
+        gen.questions.length > 0 &&
+        gen.questions.every((q) =>
+          ["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_BLANK"].includes(
+            q.question.questionType
+          )
+        )
+      if (allObjective) {
+        await finalizeStudentExam(examId, examSession.studentId, {
+          notify: true,
+        })
+      }
+    } catch (err) {
+      console.error("Auto-finalize on submit error:", err)
+    }
 
     revalidatePath(`/exams/${examId}`)
     revalidatePath(`/exams/${examId}/take`)

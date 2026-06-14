@@ -258,6 +258,11 @@ model SchoolGradingConfig {
   cgpaWeighting    Json?
   customBoundaries Json?
 
+  // Report-card / grade template (compact-wizard authored layout + composition)
+  reportCardTemplate     Json?
+  reportCardStyle        String?
+  reportCardRegionPreset String?
+
   retakePolicy         String @default("best")
   maxRetakes           Int    @default(2)
   retakePenaltyPercent Int    @default(0)
@@ -718,6 +723,12 @@ model ReportCard {
 
   pdfUrl       String?
   thumbnailUrl String?
+
+  // Shareable public link (mirrors ExamCertificate share pattern)
+  shareToken  String?   @unique
+  shareExpiry DateTime?
+  isPublic    Boolean   @default(false)
+  viewCount   Int       @default(0)
 
   isPublished Boolean   @default(false)
   publishedAt DateTime?

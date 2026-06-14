@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { upsertGradebookResult } from "@/components/school-dashboard/grades/lib/gradebook"
 import { prewarm } from "@/components/translation/prewarm"
 
 import {
@@ -290,6 +291,36 @@ export async function submitQuickResponse(
         completedAt: new Date(),
       },
     })
+
+    // Write to unified gradebook for non-anonymous, identified students.
+    if (studentId && !assessment.isAnonymous) {
+      try {
+        const responses = parsed.responses as Array<{
+          questionId: string
+          answer: unknown
+          isCorrect?: boolean
+        }>
+        // Only grade if at least one response carries an isCorrect flag.
+        const hasCorrectFlags = responses.some((r) => r.isCorrect !== undefined)
+        const max = responses.length
+        if (hasCorrectFlags && max > 0) {
+          const correct = responses.filter((r) => r.isCorrect === true).length
+          await upsertGradebookResult({
+            schoolId,
+            studentId,
+            classId: assessment.classId,
+            subjectId: assessment.subjectId,
+            score: correct,
+            maxScore: max,
+            title: assessment.title,
+            gradedBy: session?.user?.id ?? undefined,
+          })
+        }
+      } catch (gbErr) {
+        console.error("[submitQuickResponse] gradebook write failed:", gbErr)
+        // Gradebook failure must not break the response submission.
+      }
+    }
 
     revalidatePath("/exams/quick")
     return { success: true }

@@ -17,6 +17,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { BulkAutoGradeDialog } from "./bulk-auto-grade-dialog"
 import { CSVImportDialog } from "./csv-import-dialog"
+import { FinalizeResultsButton } from "./finalize-button"
 import { MarkingTable } from "./table"
 
 export async function MarkingContent({
@@ -116,6 +117,28 @@ export async function MarkingContent({
             />
           )}
           {canManage && examId && <CSVImportDialog examId={examId} />}
+          {canManage && examId && (
+            <FinalizeResultsButton
+              examId={examId}
+              label={
+                (dict.buttons as unknown as Record<string, string>)
+                  .publishResults ?? "Auto-mark & publish"
+              }
+              publishingLabel={
+                (dict.buttons as unknown as Record<string, string>)
+                  .publishing ?? "Publishing…"
+              }
+              successTemplate={
+                (dict.messages as unknown as Record<string, string>)
+                  .resultsPublished ??
+                "Graded {count} students • results published"
+              }
+              errorLabel={
+                (dict.messages as unknown as Record<string, string>)
+                  .publishFailed ?? "Failed to publish results"
+              }
+            />
+          )}
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
