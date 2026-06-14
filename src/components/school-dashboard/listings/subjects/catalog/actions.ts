@@ -292,8 +292,16 @@ export async function toggleContentOverride(input: {
 
     if (existing) {
       if (!validated.isHidden) {
-        // Remove override (unhide)
-        await db.contentOverride.delete({ where: { id: existing.id } })
+        // Unhide. Keep the row if it still carries a quiz override; otherwise
+        // remove it entirely.
+        if (existing.hideQuiz) {
+          await db.contentOverride.update({
+            where: { id: existing.id },
+            data: { isHidden: false, overriddenBy: userId },
+          })
+        } else {
+          await db.contentOverride.delete({ where: { id: existing.id } })
+        }
       } else {
         // Update override
         await db.contentOverride.update({
@@ -330,6 +338,87 @@ export async function toggleContentOverride(input: {
         error instanceof Error
           ? error.message
           : "Failed to toggle content override",
+    }
+  }
+}
+
+/**
+ * Hide/show the practice quiz for a single lesson, per school. Stored as a
+ * `hideQuiz` flag on the lesson-level ContentOverride row (shared with the
+ * lesson hide flag). Enforced in stream's getLessonContent.
+ */
+export async function setLessonQuizHidden(input: {
+  catalogLessonId: string
+  hideQuiz: boolean
+}): Promise<ActionResponse> {
+  try {
+    const authResult = await requireSchoolAdmin()
+    if (!authResult.ok) return { success: false, error: authResult.error }
+    const { session, schoolId } = authResult
+    const userId = session?.user?.id
+    if (!userId) return actionError(ACTION_ERRORS.UNKNOWN)
+
+    const { catalogLessonId, hideQuiz } = input
+    if (!catalogLessonId) {
+      return { success: false, error: "Must specify a lesson" }
+    }
+
+    // Verify the school has selected the parent subject.
+    const lesson = await db.lesson.findFirst({
+      where: { id: catalogLessonId },
+      select: { chapter: { select: { subjectId: true } } },
+    })
+    if (lesson) {
+      const hasSelection = await db.subjectSelection.findFirst({
+        where: { schoolId, catalogSubjectId: lesson.chapter.subjectId },
+        select: { id: true },
+      })
+      if (!hasSelection) {
+        return { success: false, error: "School has not selected this subject" }
+      }
+    }
+
+    const existing = await db.contentOverride.findFirst({
+      where: {
+        schoolId,
+        catalogChapterId: null,
+        catalogLessonId,
+        lessonVideoId: null,
+      },
+    })
+
+    if (existing) {
+      // Drop the row only if neither the lesson nor its quiz remains overridden.
+      if (!hideQuiz && !existing.isHidden) {
+        await db.contentOverride.delete({ where: { id: existing.id } })
+      } else {
+        await db.contentOverride.update({
+          where: { id: existing.id },
+          data: { hideQuiz, overriddenBy: userId },
+        })
+      }
+    } else if (hideQuiz) {
+      await db.contentOverride.create({
+        data: {
+          schoolId,
+          catalogLessonId,
+          isHidden: false,
+          hideQuiz: true,
+          overriddenBy: userId,
+        },
+      })
+    }
+
+    revalidatePath("/", "layout")
+    return { success: true }
+  } catch (error) {
+    console.error("[setLessonQuizHidden] Error:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update quiz visibility",
     }
   }
 }

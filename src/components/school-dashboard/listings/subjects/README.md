@@ -6,10 +6,29 @@ The Subjects block manages the school's academic subject catalog. Admins can cre
 
 ### Capabilities by Role
 
-- **Admin**: CRUD subjects, assign to departments, manage catalog, configure prerequisites
+- **Admin**: CRUD subjects, assign to departments, manage catalog, configure prerequisites; **customize the platform catalog per school** via the `catalog/` controls — hide chapters / lessons / a specific instructor's video, hide a lesson's practice quiz, set the preferred instructor source, and contribute the school's own lesson videos
 - **Teacher**: View assigned subjects, contribute materials and assignments
 - **Student**: Browse subject catalog, view subject details and materials
 - **Guardian**: View subject information for child's classes
+
+### School Catalog Customization (`catalog/`)
+
+The subject detail page (`[slug]`) renders `SchoolCatalogCustomization` for
+admins. It is the school-side control surface for the platform-global catalog and
+the **stream (LMS)** block. All overrides are per-school `ContentOverride` rows
+and are enforced in the stream read paths.
+
+- `school-catalog-customization.tsx` — admin "Customize Content" panel wrapper
+- `topic-overrides.tsx` — per chapter / lesson / **instructor video** hide
+  toggles + a per-lesson **quiz** hide toggle + a contribute-video entry point
+- `lesson-contributions.tsx` — dialog to contribute a school video to a lesson
+- `actions.ts` — `toggleContentOverride` (chapter/lesson/video hide),
+  `setLessonQuizHidden` (quiz hide via `ContentOverride.hideQuiz`),
+  `setInstructorPreference` (preferred source per subject)
+
+> Enforced in `src/components/stream/data/catalog/*` (`get-course`,
+> `get-course-sidebar-data`, `get-lesson-with-progress`, `get-lesson-content`).
+> Tracked under the LMS/Stream epic (#323).
 
 ### Routes
 

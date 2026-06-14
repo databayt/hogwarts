@@ -2,7 +2,7 @@
 
 **Status:** 🟢 READY
 **Completion:** 90%
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-06-14
 
 ---
 
@@ -35,7 +35,20 @@
 - [ ] Subject grouping (electives, core, etc.)
 - [ ] Grade-level subject configuration
 - [ ] Subject-wise performance analytics
+- [ ] Bulk "hide all videos from instructor X" (today the instructor preference
+      only re-sorts; per-video hide is manual via the catalog controls)
+
+## Resolved
+
+- **2026-06-14 — School catalog customization controls** (part of the
+  LMS/Stream flow pass, tracked under #323): wired the previously-dead per-video
+  / per-instructor hide toggle (the page now fetches each lesson's videos +
+  override state); added a per-lesson **quiz hide** control
+  (`ContentOverride.hideQuiz` + `setLessonQuizHidden`, enforced in stream's
+  `getLessonContent`); `toggleContentOverride` now preserves the override row
+  while a quiz override remains. tsc clean, 54 catalog + 259 stream tests green.
+  Schema (`ContentOverride.hideQuiz`) is deploy-pending (`prisma db push`).
 
 ---
 
-**Last Review:** 2026-03-19
+**Last Review:** 2026-06-14

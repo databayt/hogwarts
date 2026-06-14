@@ -17,11 +17,21 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { LessonContributionDialog } from "./lesson-contributions"
 import { TopicOverrides } from "./topic-overrides"
 
+interface Video {
+  id: string
+  title: string
+  instructorName: string
+  source: "own-school" | "featured" | "other-school"
+  isHidden: boolean
+}
+
 interface Lesson {
   id: string
   name: string
   isHidden: boolean
   videoCount?: number
+  videos?: Video[]
+  quizHidden?: boolean
 }
 
 interface Chapter {

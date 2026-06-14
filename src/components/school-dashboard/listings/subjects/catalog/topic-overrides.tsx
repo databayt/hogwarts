@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  ListChecks,
   Loader2,
   Video,
 } from "lucide-react"
@@ -36,7 +37,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { uploadVideo } from "@/components/stream/video/video-actions"
 
-import { toggleContentOverride } from "./actions"
+import { setLessonQuizHidden, toggleContentOverride } from "./actions"
 
 interface Video {
   id: string
@@ -52,6 +53,7 @@ interface Lesson {
   isHidden: boolean
   videoCount?: number
   videos?: Video[]
+  quizHidden?: boolean
 }
 
 interface Chapter {
@@ -111,6 +113,15 @@ export function TopicOverrides({ chapters, lang }: Props) {
       await toggleContentOverride({
         lessonVideoId: videoId,
         isHidden: !currentlyHidden,
+      })
+    })
+  }
+
+  function handleToggleQuiz(lessonId: string, currentlyHidden: boolean) {
+    startTransition(async () => {
+      await setLessonQuizHidden({
+        catalogLessonId: lessonId,
+        hideQuiz: !currentlyHidden,
       })
     })
   }
@@ -176,6 +187,7 @@ export function TopicOverrides({ chapters, lang }: Props) {
             onToggleChapter={handleToggleChapter}
             onToggleLesson={handleToggleLesson}
             onToggleVideo={handleToggleVideo}
+            onToggleQuiz={handleToggleQuiz}
             onUploadVideo={handleOpenVideoUpload}
             isPending={isPending}
           />
@@ -236,6 +248,7 @@ function ChapterRow({
   onToggleChapter,
   onToggleLesson,
   onToggleVideo,
+  onToggleQuiz,
   onUploadVideo,
   isPending,
 }: {
@@ -244,6 +257,7 @@ function ChapterRow({
   onToggleChapter: (id: string, hidden: boolean) => void
   onToggleLesson: (id: string, hidden: boolean) => void
   onToggleVideo: (videoId: string, hidden: boolean) => void
+  onToggleQuiz: (lessonId: string, hidden: boolean) => void
   onUploadVideo: (lessonId: string, lessonName: string) => void
   isPending: boolean
 }) {
@@ -323,9 +337,25 @@ function ChapterRow({
                   <Button
                     variant="ghost"
                     size="sm"
+                    className={cn(
+                      "h-6 w-6 p-0",
+                      lesson.quizHidden && "text-muted-foreground/50"
+                    )}
+                    disabled={isPending}
+                    onClick={() =>
+                      onToggleQuiz(lesson.id, lesson.quizHidden ?? false)
+                    }
+                    title={lesson.quizHidden ? "Show quiz" : "Hide quiz"}
+                  >
+                    <ListChecks className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-6 w-6 p-0"
                     disabled={isPending}
                     onClick={() => onToggleLesson(lesson.id, lesson.isHidden)}
+                    title={lesson.isHidden ? "Show lesson" : "Hide lesson"}
                   >
                     {lesson.isHidden ? (
                       <Eye className="h-3.5 w-3.5" />
