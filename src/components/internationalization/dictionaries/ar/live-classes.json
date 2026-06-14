@@ -135,7 +135,14 @@
     "tcpFallback": "تم استخدام احتياطي TCP",
     "details": "تفاصيل التشخيص",
     "missingEnv": "إعدادات ناقصة:",
-    "seeRunbook": "راجع دليل التهيئة لخطوات الإعداد."
+    "seeRunbook": "راجع دليل التهيئة لخطوات الإعداد.",
+    "qualityExcellent": "ممتاز",
+    "qualityGood": "جيد",
+    "qualityPoor": "ضعيف",
+    "qualityLost": "مفقود",
+    "qualityUnknown": "غير معروف",
+    "pathUnknown": "غير معروف",
+    "pathNotConnected": "غير متصل"
   },
   "empty": {
     "title": "لا توجد فصول مباشرة بعد",

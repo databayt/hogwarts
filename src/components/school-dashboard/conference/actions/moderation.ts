@@ -41,10 +41,18 @@ export async function kickParticipant(sessionId: string, userId: string) {
     }
   }
 
+  // Only kick an actual enrolled participant of THIS session/school — never
+  // forward an arbitrary identity string straight to the SFU eviction call.
+  const participant = await db.conferenceParticipant.findFirst({
+    where: { sessionId, userId, schoolId: ctx.schoolId },
+    select: { id: true },
+  })
+  if (!participant) return actionError(ACTION_ERRORS.NOT_FOUND)
+
   try {
     await removeParticipant(session.roomName, userId)
     await db.conferenceParticipant.updateMany({
-      where: { sessionId, userId },
+      where: { sessionId, userId, schoolId: ctx.schoolId },
       data: { status: "removed", leftAt: new Date() },
     })
   } catch {

@@ -27,8 +27,21 @@ interface Props {
     error: string
     yes: string
     no: string
+    /** Connection-quality value labels, keyed by qualityName() output. */
+    qualityValues: {
+      excellent: string
+      good: string
+      poor: string
+      lost: string
+      unknown: string
+    }
+    /** ICE-path value fallbacks (the classified path itself is a technical id). */
+    pathUnknown: string
+    pathNotConnected: string
   }
 }
+
+type QualityKey = "excellent" | "good" | "poor" | "lost" | "unknown"
 
 type TestResult = {
   connected: boolean
@@ -94,8 +107,23 @@ export function NetworkTestClient({ wsUrl, token, labels }: Props) {
             value={result.connected ? labels.yes : labels.no}
           />
           <Row label={labels.setupTime} value={`${result.durationMs} ms`} />
-          <Row label={labels.quality} value={result.quality} />
-          <Row label={labels.path} value={result.protocol} />
+          <Row
+            label={labels.quality}
+            value={
+              labels.qualityValues[result.quality as QualityKey] ??
+              result.quality
+            }
+          />
+          <Row
+            label={labels.path}
+            value={
+              result.protocol === "unknown"
+                ? labels.pathUnknown
+                : result.protocol === "not-connected"
+                  ? labels.pathNotConnected
+                  : result.protocol
+            }
+          />
           {result.error && (
             <Row
               label={labels.error}
@@ -126,7 +154,9 @@ function Row({
   )
 }
 
-function qualityName(q: ConnectionQuality): string {
+// Returns a stable KEY (not display text) that the render maps to a translated
+// label via labels.qualityValues — keeps this diagnostic component i18n-clean.
+function qualityName(q: ConnectionQuality): QualityKey {
   switch (q) {
     case ConnectionQuality.Excellent:
       return "excellent"
@@ -142,7 +172,9 @@ function qualityName(q: ConnectionQuality): string {
 }
 
 async function inferProtocol(room: Room): Promise<string> {
-  if (room.state !== ConnectionState.Connected) return "—"
+  // "not-connected"/"unknown" are sentinel keys mapped to translated text in the
+  // render; a successful classify returns a technical id (direct-udp/turn-tcp-443).
+  if (room.state !== ConnectionState.Connected) return "not-connected"
   // Reach the connected ICE transport via the SDK's public engine surface.
   // Subscriber-primary completes ICE on join even with autoSubscribe off; fall
   // back to the publisher transport.

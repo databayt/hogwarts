@@ -4,6 +4,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -55,12 +56,18 @@ export default async function Page({ params }: Props) {
     )
   }
   const { wsUrl } = getLiveKitConfig()
+  // Use the real tenant + a PARTICIPANT-grant token (publish+subscribe is enough
+  // to measure connectivity — no roomAdmin/roomCreate/roomRecord needed). The
+  // room name deliberately avoids the `sch-{schoolId}-lc-{sessionId}` format so
+  // parseRoomName() won't treat a stray webhook for it as a real session.
+  const { schoolId } = await getTenantContext()
+  const diagSchoolId = schoolId ?? "diagnostic"
   const token = await issueAccessToken({
-    schoolId: "diagnostic",
+    schoolId: diagSchoolId,
     sessionId: "diagnostic",
     userId,
-    role: "HOST",
-    roomName: `sch-diagnostic-lc-${userId}`,
+    role: "PARTICIPANT",
+    roomName: `diag-${diagSchoolId}-${userId}`,
     ttlSec: 120,
   })
   return (
@@ -81,6 +88,15 @@ export default async function Page({ params }: Props) {
         error: t?.networkTest?.failed ?? "Error",
         yes: t?.networkTest?.yes ?? "yes",
         no: t?.networkTest?.no ?? "no",
+        qualityValues: {
+          excellent: t?.networkTest?.qualityExcellent ?? "Excellent",
+          good: t?.networkTest?.qualityGood ?? "Good",
+          poor: t?.networkTest?.qualityPoor ?? "Poor",
+          lost: t?.networkTest?.qualityLost ?? "Lost",
+          unknown: t?.networkTest?.qualityUnknown ?? "Unknown",
+        },
+        pathUnknown: t?.networkTest?.pathUnknown ?? "Unknown",
+        pathNotConnected: t?.networkTest?.pathNotConnected ?? "Not connected",
       }}
     />
   )

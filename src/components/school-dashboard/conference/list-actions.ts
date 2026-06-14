@@ -16,6 +16,7 @@ import { resolveActiveTerm } from "@/lib/term-resolver"
 import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
+import { conferenceRevalidatePath } from "./actions/helpers"
 import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
 import {
   liveClassSchema,
@@ -24,7 +25,11 @@ import {
   type UpdateLiveClassData,
 } from "./list-validation"
 import { getProviderAdapter, type ProviderId } from "./providers"
-import { getLiveClassDetail, getLiveClassesList } from "./queries"
+import {
+  getLiveClassDetail,
+  getLiveClassesList,
+  resolveViewerSectionScope,
+} from "./queries"
 
 // ============================================================================
 // Helpers
@@ -69,11 +74,23 @@ export async function getLiveClasses(params: {
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     if (!role) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
+    // Role-scope rows: STUDENT/GUARDIAN only see their own section's sessions
+    // (and never another section's meetingUrl); staff see the whole school.
+    const scope = await resolveViewerSectionScope(
+      schoolId,
+      session.user.id,
+      role
+    )
+    if (scope === "none") {
+      return { success: true, data: { rows: [], total: 0 } }
+    }
+
     const { rows, count } = await getLiveClassesList(schoolId, {
       title: params.title,
       status: params.status,
       page: params.page,
       perPage: params.perPage,
+      sectionIds: scope === "all" ? undefined : scope.sectionIds,
     })
 
     return {
@@ -124,12 +141,30 @@ export async function getLiveClass(params: { id: string }): Promise<
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()
+    const role = session?.user?.role as Role | undefined
 
     if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
 
     const liveClass = await getLiveClassDetail(schoolId, params.id)
     if (!liveClass) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    // Enrollment-level access: STUDENT/GUARDIAN may only read a session in a
+    // section they (or their ward) belong to. Return NOT_FOUND (not UNAUTHORIZED)
+    // so the existence of other sections' sessions isn't revealed.
+    const scope = await resolveViewerSectionScope(
+      schoolId,
+      session.user.id,
+      role
+    )
+    if (
+      scope === "none" ||
+      (scope !== "all" &&
+        (!liveClass.sectionId ||
+          !scope.sectionIds.includes(liveClass.sectionId)))
+    ) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
 
     return {
       success: true,
@@ -168,9 +203,15 @@ export async function getLiveClassFormData(): Promise<
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()
+    const role = session?.user?.role as Role | undefined
 
     if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    // Form rosters (teachers/subjects/sections) are management data — only
+    // roles that can create/edit a class may load them.
+    if (!canManageLiveClasses(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const [teachers, subjects, sections] = await Promise.all([
       db.teacher.findMany({
@@ -245,6 +286,24 @@ export async function createLiveClass(
     })
     if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
 
+    // Honor the school recording default AND the per-section opt-out (mirrors
+    // actions/sessions.ts) so a section flagged "never record" stays off.
+    const [schoolCfg, sectionCfg] = await Promise.all([
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { conferenceRecordingDefault: true },
+      }),
+      d.sectionId
+        ? db.section.findFirst({
+            where: { id: d.sectionId, schoolId },
+            select: { conferenceRecordingOptOut: true },
+          })
+        : Promise.resolve(null),
+    ])
+    const recordingEnabled =
+      (schoolCfg?.conferenceRecordingDefault ?? true) &&
+      !(sectionCfg?.conferenceRecordingOptOut ?? false)
+
     const scheduledStart = combineDateAndTime(d.startDate, d.startTime)
     const scheduledEnd = combineDateAndTime(d.endDate, d.endTime)
 
@@ -253,6 +312,11 @@ export async function createLiveClass(
       { title: d.title, description: d.description ?? null },
       detectLang(d.title)
     )
+
+    // Stable id reused as the SFU-less roomName AND the provider idempotency
+    // key (sessionId), so a provider retry returns the same meeting instead of
+    // colliding with another class at the same start time.
+    const sessionRef = randomUUID()
 
     // When a native provider (Meet/Zoom/Teams) is configured, auto-generate a
     // fresh meeting link via its API; otherwise keep the pasted URL. Ships dark
@@ -269,10 +333,17 @@ export async function createLiveClass(
             scheduledStart,
             scheduledEnd,
             hostUserId: session.user.id ?? "",
+            sessionId: sessionRef,
           })
           meetingUrl = meeting.joinUrl
         } catch (err) {
           console.error("[createLiveClass] provider createMeeting failed:", err)
+          // Only fall back silently when the user supplied a manual URL as a
+          // safety net; otherwise surface the failure instead of creating a
+          // class with no working join link.
+          if (!d.meetingUrl) {
+            return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+          }
         }
       }
     }
@@ -285,13 +356,14 @@ export async function createLiveClass(
         sectionId: d.sectionId || null,
         provider: "external",
         // External sessions have no SFU room; roomName is a required @unique
-        // column, so generate a synthetic, non-colliding value.
-        roomName: `ext-${randomUUID()}`,
+        // column, so reuse the synthetic, non-colliding session ref.
+        roomName: `ext-${sessionRef}`,
         meetingUrl,
         meetingProvider: d.meetingProvider || null,
         scheduledStart,
         scheduledEnd,
         status: d.status ?? "scheduled",
+        recordingEnabled,
         title: content.title,
         description: content.description,
         lang: content.lang,
@@ -346,8 +418,8 @@ export async function createLiveClass(
       }
     }
 
-    revalidatePath("/conference")
-    revalidatePath("/timetable")
+    revalidatePath(conferenceRevalidatePath())
+    revalidatePath("/[lang]/s/[subdomain]/timetable")
     return { success: true, data: { id: created.id } }
   } catch (error) {
     console.error("[createLiveClass]", error)
@@ -447,7 +519,7 @@ export async function updateLiveClass(
       )
     }
 
-    revalidatePath("/conference")
+    revalidatePath(conferenceRevalidatePath())
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateLiveClass]", error)
@@ -477,7 +549,7 @@ export async function deleteLiveClass(params: {
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
 
-    revalidatePath("/conference")
+    revalidatePath(conferenceRevalidatePath())
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteLiveClass]", error)

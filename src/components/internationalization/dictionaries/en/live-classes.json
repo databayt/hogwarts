@@ -135,7 +135,14 @@
     "tcpFallback": "TCP fallback used",
     "details": "Diagnostic details",
     "missingEnv": "Missing configuration:",
-    "seeRunbook": "See the provisioning runbook for setup steps."
+    "seeRunbook": "See the provisioning runbook for setup steps.",
+    "qualityExcellent": "Excellent",
+    "qualityGood": "Good",
+    "qualityPoor": "Poor",
+    "qualityLost": "Lost",
+    "qualityUnknown": "Unknown",
+    "pathUnknown": "Unknown",
+    "pathNotConnected": "Not connected"
   },
   "empty": {
     "title": "No live classes yet",

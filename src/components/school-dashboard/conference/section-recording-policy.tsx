@@ -41,11 +41,14 @@ export function SectionRecordingPolicy({
   const [, startTransition] = useTransition()
 
   function toggle(id: string, optOut: boolean) {
+    // Capture the value BEFORE the optimistic write so revert restores the true
+    // pre-toggle state — `!optOut` would diverge under a rapid double-toggle.
+    const previous = state.get(id) ?? false
     setState((prev) => new Map(prev).set(id, optOut))
     startTransition(async () => {
       const res = await setSectionRecordingOptOut(id, optOut)
       if (!("success" in res) || !res.success) {
-        setState((prev) => new Map(prev).set(id, !optOut))
+        setState((prev) => new Map(prev).set(id, previous))
         ErrorToast(labels.error)
       }
     })

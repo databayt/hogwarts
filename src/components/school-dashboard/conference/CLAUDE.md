@@ -1,25 +1,40 @@
-# Live-Classes Block
+# Conference Block
 
 ## Context
 
-LiveKit-based video conferencing for school live classes. Built for the
-Aldar UAE pilot (Epic 03 — kun.databayt.org/en/docs/aldar). Self-hosted SFU
-on G42 Cloud with TURN-over-443-TCP fallback for UAE VoIP throttling.
-Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
+Video conferencing for schools — one self-contained block at
+`src/components/school-dashboard/conference/`, mirrored 1:1 to `/conference`.
+Three meeting back-ends behind one UI: **external pasted-link** (live
+everywhere, zero infra), **LiveKit SFU** (in-app rooms + recording — fully
+coded, dormant until infra), and **native Meet / Zoom / Teams** (`createMeeting`
+wired per vendor API, dark until OAuth creds). Originally built for the Aldar
+UAE pilot (Epic 03 — kun.databayt.org/en/docs/aldar): self-hosted SFU on G42
+Cloud with TURN-over-443-TCP fallback for UAE VoIP throttling; recordings to
+AWS S3 `me-central-1` with PDPL-configurable retention.
+
+> The folder was renamed `live-classes/` → `conference/` and the models
+> `LiveClass*` → `Conference*` (DB tables/columns/enums preserved via
+> `@@map`/`@map` — zero-change migration). Code symbols and dictionary keys
+> still use the `liveClass` / `live_class_*` spelling; the route, block, and
+> models use `conference`. The legacy `/docs/live-classes` pages were deleted.
 
 ## Before You Start
 
 1. Read `README.md` here for file inventory + routes
 2. Read `ISSUE.md` for the open backlog
-3. The 4 Prisma models live in `prisma/models/live-class.prisma`:
-   - `Conference` — scheduled or ad-hoc class
-   - `ConferenceParticipant` — one row per invited user (host / student / observer)
-   - `ConferenceRecording` — composite Egress recording metadata
-   - `ConferenceEvent` — webhook audit log + idempotency
+3. The Prisma models live in `prisma/models/conference.prisma` (renamed from
+   `live-class.prisma`; `Conference*` model names, DB tables preserved via `@@map`):
+   - `Conference` — scheduled or ad-hoc session (`provider`, `meetingUrl?`, `meetingProvider?`)
+   - `ConferenceParticipant` — one row per invited user (host / student / observer) + telemetry
+   - `ConferenceRecording` — composite Egress recording metadata + S3 location + `expiresAt`
+   - `ConferenceEvent` — webhook audit log + `eventId @unique` idempotency
+   - `ConferenceLink` — set-once recurring link `[schoolId, subjectId, sectionId, termId]`
 4. LiveKit lib wrappers in `livekit/`:
-   - `client.ts` (singletons), `token.ts` (JWT), `rooms.ts`, `egress.ts`,
-     `recording-urls.ts`, `webhook.ts`, `room-naming.ts`
-5. The plan: `~/.claude/plans/read-https-kun-databayt-org-en-docs-alda-swift-mango.md`
+   - `client.ts` (singletons + `isLiveKitConfigured`/`getLiveKitReadiness`), `token.ts` (JWT),
+     `rooms.ts`, `egress.ts`, `recording-urls.ts`, `webhook.ts`, `room-naming.ts`
+5. Link-provider adapters in `providers/` (`types`, `external` live, `google-meet`/`zoom`/`teams`
+   wired-but-dark, `token-cache`, `index` registry).
+6. The plan: `~/.claude/plans/read-https-kun-databayt-org-en-docs-alda-swift-mango.md`
 
 ## Key Decisions
 
@@ -28,7 +43,7 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
   schools and the webhook handler recovers `schoolId` from the room name
   alone via `parseRoomName()` (`livekit/room-naming.ts`).
 - **Token TTL is 5 minutes** with client-side refresh ~60s before expiry
-  (see `room/room-client.tsx`). Refresh re-runs the eligibility check, so
+  (see `room.tsx`). Refresh re-runs the eligibility check, so
   revoked access takes effect at the **next refresh boundary** — revocation
   latency = TTL (≤5 min), NOT instant. LiveKit JWTs are stateless; there is
   no server-side invalidation of an already-issued token (no `removeParticipant`
@@ -59,6 +74,24 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
 - **Bare room layout**: full-screen LiveKit UI lives under
   `src/app/[lang]/s/[subdomain]/(live-room)/` (NOT under
   `(school-dashboard)`) so it can use a minimal layout without sidebar.
+- **Two permission/validation layers, on purpose**: the _rich sessions layer_
+  (`authorization.ts` · `permissions.ts` · `validation.ts`) is the strict
+  runtime gate for the LiveKit room flow (join / token / start / end); the
+  _list layer_ (`list-permissions.ts` · `list-validation.ts` · `list-actions.ts`)
+  is the CRUD gate for the dashboard table + external-link sessions. They diverge
+  deliberately (list `WRITE_ROLES` is broader). Don't collapse them.
+- **Provider abstraction**: link providers live in `providers/` behind a single
+  `ConferenceProviderAdapter`. `external` is the floor; natives create real
+  meetings via vendor APIs but persist as `provider="external"` +
+  `meetingProvider="<id>"` → **no enum migration**. LiveKit's SFU lifecycle is
+  intentionally OUTSIDE this layer (room-based, not link-based).
+- **Per-section recording opt-out**: `setSectionRecordingOptOut` (`actions/settings.ts`)
+  overrides the school-wide `conferenceRecordingDefault` per section.
+- **Docs structure is component-driven**: the `## Structure` section of
+  `content/docs-{en,ar}/conference.mdx` renders `<ConferenceStructure />` from
+  `src/components/docs/conference-structure.tsx` (registered in `src/mdx-components.tsx`).
+  When you add/rename block files, update that component's node tree — NOT a code
+  fence in the mdx.
 
 ## Danger Zones
 
@@ -88,6 +121,19 @@ Recordings to AWS S3 `me-central-1` with PDPL-configurable retention.
   LiveKit SFU process to PUT objects. The Next.js app reads recordings
   with `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` via the existing
   S3 signer. Do not conflate.
+- **List-layer reads must role-scope** (added 2026-06-13): `list-actions.ts`
+  `getLiveClasses`/`getLiveClass` and the `content.tsx` SSR path MUST run rows
+  through `resolveViewerSectionScope()` — STUDENT/GUARDIAN see only their own
+  section's sessions (a session row carries `meetingUrl`). `getLiveClassFormData`
+  is staff-only. The list-layer permission files gate writes, NOT reads — don't
+  assume a role check upstream covers a new read.
+- **Concurrent cap goes through `concurrentCapError()`** (helpers.ts): both
+  `startLiveClass` (sessions.ts) and the HOST auto-start branch of `joinLiveClass`
+  (tokens.ts) call it. A missing school row is a hard error — never `if (school && …)`
+  (that silently bypasses the cap). Any new "start a room" path must call it too.
+- **Webhook writes are status-guarded `updateMany`** scoped by `{ id, schoolId, status }`
+  — never a bare `update({ where: { id } })`. A late/retried event must be a no-op,
+  not a state resurrection.
 
 ## Related Blocks
 
@@ -118,8 +164,10 @@ Required env vars (set in `.env`):
 ## After You Finish
 
 1. Update `ISSUE.md` and `README.md` here
-2. Run `pnpm tsc --noEmit` to verify no regressions
-3. `pnpm vitest run src/components/school-dashboard/conference`
-   — should stay green (45 tests at last count)
-4. **Before any Prisma changes**: create a Neon branch via
+2. Update the docs if user-facing: `content/docs-{en,ar}/conference.mdx`
+   (Structure section is `<ConferenceStructure />` — edit the component)
+3. Run `pnpm tsc --noEmit` to verify no regressions
+4. Run the conference specs under `src/tests/` (tests were moved out of an
+   in-block `__tests__/` folder in the URL-mirror reorg) — should stay green
+5. **Before any Prisma changes**: create a Neon branch via
    `mcp__Neon__create_branch`, test on the branch, then promote

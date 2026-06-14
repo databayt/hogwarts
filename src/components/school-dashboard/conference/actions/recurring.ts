@@ -22,6 +22,22 @@ export async function carryForwardConferenceLinks(
     return actionError(ACTION_ERRORS.VALIDATION_ERROR)
   }
 
+  // ConferenceLink.termId has no FK relation, so the DB won't reject a
+  // cross-tenant termId. Verify both terms belong to this school before we
+  // stamp links with toTermId (otherwise an admin could write rows keyed to
+  // another school's term id).
+  const [fromTerm, toTerm] = await Promise.all([
+    db.term.findFirst({
+      where: { id: fromTermId, schoolId: ctx.schoolId },
+      select: { id: true },
+    }),
+    db.term.findFirst({
+      where: { id: toTermId, schoolId: ctx.schoolId },
+      select: { id: true },
+    }),
+  ])
+  if (!fromTerm || !toTerm) return actionError(ACTION_ERRORS.NOT_FOUND)
+
   const [source, existing] = await Promise.all([
     db.conferenceLink.findMany({
       where: { schoolId: ctx.schoolId, termId: fromTermId },

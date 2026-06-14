@@ -20,9 +20,10 @@ vi.mock("@/lib/db", () => ({
   db: {
     school: { findUnique: vi.fn(), update: vi.fn() },
     conference: { findFirst: vi.fn() },
-    conferenceParticipant: { updateMany: vi.fn() },
+    conferenceParticipant: { findFirst: vi.fn(), updateMany: vi.fn() },
     conferenceLink: { findMany: vi.fn(), create: vi.fn() },
     teacher: { findFirst: vi.fn() },
+    term: { findFirst: vi.fn() },
   },
 }))
 const removeParticipant = vi.fn(async () => undefined)
@@ -89,6 +90,9 @@ describe("kickParticipant", () => {
       roomName: "sch-sch1-lc-s1",
       teacherId: "t9",
     } as never)
+    vi.mocked(db.conferenceParticipant.findFirst).mockResolvedValue({
+      id: "p1",
+    } as never)
     vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue(
       {} as never
     )
@@ -128,6 +132,8 @@ describe("kickParticipant", () => {
 describe("carryForwardConferenceLinks", () => {
   it("clones links to the next term, skipping ones that already exist", async () => {
     asRole("ADMIN")
+    // Both terms must resolve to this school before the clone proceeds.
+    vi.mocked(db.term.findFirst).mockResolvedValue({ id: "term-x" } as never)
     vi.mocked(db.conferenceLink.findMany)
       .mockResolvedValueOnce([
         {

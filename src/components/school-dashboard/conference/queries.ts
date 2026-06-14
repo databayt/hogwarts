@@ -22,6 +22,9 @@ import { db } from "@/lib/db"
 export type LiveClassListFilters = {
   title?: string // Searches title field
   status?: string
+  // Role-scoped row restriction: when set, only sessions in these sections are
+  // returned (STUDENT/GUARDIAN). Omit for staff (whole-school) views.
+  sectionIds?: string[]
 }
 
 export type PaginationParams = {
@@ -74,7 +77,66 @@ export function buildLiveClassWhere(
     where.status = filters.status as Prisma.ConferenceWhereInput["status"]
   }
 
+  if (filters.sectionIds) {
+    where.sectionId = { in: filters.sectionIds }
+  }
+
   return where
+}
+
+/**
+ * What sessions a viewer may see in the list/detail reads. Staff
+ * (DEVELOPER/ADMIN/TEACHER/STAFF/ACCOUNTANT — the `read_school_dashboard`
+ * set) see the whole school; STUDENT/GUARDIAN are scoped to the sections they
+ * (or their wards) are enrolled in; everyone else sees nothing. Mirrors
+ * `canAccessSession` in actions/helpers.ts.
+ */
+export type ViewerSectionScope = "all" | "none" | { sectionIds: string[] }
+
+const LIST_STAFF_ROLES = [
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STAFF",
+  "ACCOUNTANT",
+]
+
+export async function resolveViewerSectionScope(
+  schoolId: string,
+  userId: string | undefined | null,
+  role: string | null | undefined
+): Promise<ViewerSectionScope> {
+  if (!userId || !role) return "none"
+  if (LIST_STAFF_ROLES.includes(role)) return "all"
+  if (role === "STUDENT") {
+    const students = await db.student.findMany({
+      where: { schoolId, userId },
+      select: { sectionId: true },
+    })
+    const ids = students
+      .map((s) => s.sectionId)
+      .filter((x): x is string => Boolean(x))
+    return ids.length ? { sectionIds: ids } : "none"
+  }
+  if (role === "GUARDIAN") {
+    const guardians = await db.guardian.findMany({
+      where: { schoolId, userId },
+      select: {
+        studentGuardians: {
+          select: { student: { select: { sectionId: true } } },
+        },
+      },
+    })
+    const ids = [
+      ...new Set(
+        guardians
+          .flatMap((g) => g.studentGuardians.map((sg) => sg.student?.sectionId))
+          .filter((x): x is string => Boolean(x))
+      ),
+    ]
+    return ids.length ? { sectionIds: ids } : "none"
+  }
+  return "none"
 }
 
 export function buildLiveClassOrderBy(

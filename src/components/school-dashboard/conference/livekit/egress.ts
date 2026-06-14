@@ -3,6 +3,7 @@
 
 import "server-only"
 
+import { randomUUID } from "node:crypto"
 import { EncodedFileType, type EncodedFileOutput } from "livekit-server-sdk"
 
 import { getEgressClient, getLiveKitConfig } from "./client"
@@ -25,7 +26,11 @@ export interface StartRecordingResult {
 /**
  * Start a LiveKit composite (room) recording. Pushes a single MP4 to
  * S3 me-central-1 at:
- *   schools/{schoolId}/live-class/{sessionId}/{timestamp}-{egressId}.mp4
+ *   schools/{schoolId}/live-class/{sessionId}/{timestamp}-{rand}.mp4
+ *
+ * The egressId isn't known until the egress call returns, so the key uses a
+ * timestamp + random suffix instead — this guarantees a unique object even if
+ * two egress jobs start for the same session within the same millisecond.
  *
  * Authentication: the SFU needs IAM credentials with `s3:PutObject` on the
  * recording bucket — these are configured on the SFU host, NOT in Node
@@ -38,7 +43,7 @@ export async function startCompositeEgress(
   const egress = getEgressClient()
 
   const timestamp = Date.now()
-  const filepath = `schools/${input.schoolId}/live-class/${input.sessionId}/${timestamp}.mp4`
+  const filepath = `schools/${input.schoolId}/live-class/${input.sessionId}/${timestamp}-${randomUUID().slice(0, 8)}.mp4`
 
   // LiveKit Egress S3 output. AWS creds left blank — SFU uses host IAM role.
   const fileOutput: EncodedFileOutput = {

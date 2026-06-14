@@ -20,10 +20,14 @@ import {
 } from "./types"
 
 function configured(): boolean {
+  // AZURE_ORGANIZER_ID is required: app-only Graph cannot use `/me`, and
+  // falling back to the app's userId (a Prisma cuid, not an AAD object id)
+  // makes Graph reject every create with 404/403. Treat it as mandatory.
   return Boolean(
     process.env.AZURE_TENANT_ID &&
     process.env.AZURE_CLIENT_ID &&
-    process.env.AZURE_CLIENT_SECRET
+    process.env.AZURE_CLIENT_SECRET &&
+    process.env.AZURE_ORGANIZER_ID
   )
 }
 

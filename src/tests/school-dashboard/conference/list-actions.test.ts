@@ -20,6 +20,8 @@ vi.mock("@/components/school-dashboard/conference/list-permissions", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     teacher: { findFirst: vi.fn() },
+    school: { findUnique: vi.fn() },
+    section: { findFirst: vi.fn() },
     conference: { create: vi.fn() },
     conferenceLink: { upsert: vi.fn() },
   },
@@ -52,6 +54,12 @@ beforeEach(() => {
     term: { id: "term-1" },
   } as never)
   vi.mocked(db.teacher.findFirst).mockResolvedValue({ id: "t-1" } as never)
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    conferenceRecordingDefault: true,
+  } as never)
+  vi.mocked(db.section.findFirst).mockResolvedValue({
+    conferenceRecordingOptOut: false,
+  } as never)
   vi.mocked(db.conference.create).mockResolvedValue({
     id: "lcs-1",
   } as never)

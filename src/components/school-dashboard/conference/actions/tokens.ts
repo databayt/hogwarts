@@ -13,6 +13,8 @@ import { ensureRoom } from "@/components/school-dashboard/conference/livekit/roo
 import { issueAccessToken } from "@/components/school-dashboard/conference/livekit/token"
 import type { RoomJoinTicket } from "@/components/school-dashboard/conference/types"
 
+import { concurrentCapError } from "./helpers"
+
 /**
  * Decide a user's role within a given session based on their UserRole and
  * relationship to the section. Returns `null` if the user is not eligible.
@@ -123,6 +125,10 @@ export async function joinLiveClass(
     return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
   }
   if (liveClass.status === "scheduled" && participantRole === "HOST") {
+    // Joining as HOST auto-starts the room, so it must respect the same
+    // per-school concurrent-room cap that startLiveClass enforces.
+    const capError = await concurrentCapError(schoolId)
+    if (capError) return capError
     try {
       await ensureRoom({
         roomName: liveClass.roomName,

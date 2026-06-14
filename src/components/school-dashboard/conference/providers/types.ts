@@ -19,6 +19,13 @@ export interface CreateMeetingInput {
   scheduledStart: Date
   scheduledEnd: Date
   hostUserId: string
+  /**
+   * Stable per-session disambiguator (e.g. the Conference id or a pre-generated
+   * UUID). Providers that use an idempotency key (Google Meet's
+   * `conferenceData.createRequest.requestId`) MUST include it so two concurrent
+   * classes at the same school + start time don't collapse onto one meeting.
+   */
+  sessionId?: string
   /** Generic `external` provider only: the user-supplied URL to wrap. */
   meetingUrl?: string
 }

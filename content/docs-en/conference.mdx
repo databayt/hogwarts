@@ -1,116 +1,130 @@
 ---
 title: Conference
-description: Video conferencing — one standardized block at src/components/school-dashboard/conference, served at /conference. External pasted-link live, LiveKit SFU dormant, native Meet/Zoom/Teams adapters scaffolded.
+description: Video conferencing — one self-contained block at src/components/school-dashboard/conference, mirrored 1:1 to the /conference route. External pasted-link is live; LiveKit SFU is coded-but-dormant; native Meet/Zoom/Teams adapters are wired but dark.
 ---
 
 One self-contained block at `src/components/school-dashboard/conference/`, mirrored 1:1 to the
-`/conference` route. External pasted-link is live; LiveKit SFU is coded-but-dormant; native
-Meet/Zoom/Teams are adapter-scaffolded.
+`/conference` route. It runs three meeting back-ends behind a single UI: the **external
+pasted-link** provider is live everywhere; the **LiveKit SFU** (in-app rooms + recording) is fully
+coded but dormant until infra is provisioned; the **native Meet / Zoom / Teams** adapters create
+real meetings via each vendor's API but ship dark until OAuth credentials land.
 
 ## Structure
 
-```
-src/components/school-dashboard/conference/
-├── content.tsx           server list (DataTable index)
-├── actions.ts            barrel
-├── actions/              sessions · tokens · recordings · notifications · settings · moderation · recurring · helpers
-├── queries.ts            DataTable reads
-├── authorization.ts      RBAC permission matrix
-├── permissions.ts        UI gating (rich)
-├── list-permissions.ts   UI gating (listings)
-├── validation.ts         Zod (sessions)
-├── list-validation.ts    Zod (listings)
-├── columns.tsx           DataTable columns
-├── table.tsx             DataTable
-├── form.tsx              create form
-├── list-params.ts        nuqs URL cache
-├── detail.tsx            single-conference detail
-├── room.tsx              in-app LiveKit room
-├── recordings.tsx        recordings list
-├── recording-player.tsx  player
-├── network-test.tsx      LiveKit RTT/TURN + readiness diagnostic
-├── schedule-form.tsx     scheduler
-├── settings-form.tsx     admin config form
-├── empty-state.tsx · loading-skeleton.tsx
-├── types.ts · error-map.ts · list-actions.ts
-├── livekit/              SFU server lib
-├── providers/            link-provider adapters
-├── RUNBOOK.md            LiveKit 6-gate provisioning
-└── __tests__/ · README.md · ISSUE.md
-```
+<ConferenceStructure />
+
+Routes mirror this block (see [Routes](#routes)). The 4 Prisma models + 1 recurring-link model live
+in `prisma/models/conference.prisma`. Tests live under `src/tests/` (URL-mirror reorg), not in a
+`__tests__/` folder inside the block.
 
 ## Components
 
-| File                                                                  | Purpose                                                                                                                                                               |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `content.tsx`                                                         | Server component — fetches + renders the conference DataTable index.                                                                                                  |
-| `actions.ts` + `actions/`                                             | Server actions: `sessions` (lifecycle), `tokens` (join), `recordings`, `notifications`, `settings`, `moderation` (kick), `recurring` (link carry-forward), `helpers`. |
-| `queries.ts`                                                          | Read-only DataTable queries.                                                                                                                                          |
-| `authorization.ts`                                                    | `PERMISSION_MATRIX` — RBAC per action.                                                                                                                                |
-| `permissions.ts` · `list-permissions.ts`                              | UI gating (tabs / show-hide per role).                                                                                                                                |
-| `validation.ts` · `list-validation.ts`                                | Zod schemas + inferred types.                                                                                                                                         |
-| `columns.tsx` · `table.tsx` · `form.tsx` · `list-params.ts`           | DataTable client surface.                                                                                                                                             |
-| `detail.tsx` · `room.tsx` · `recordings.tsx` · `recording-player.tsx` | LiveKit detail / in-app room / playback.                                                                                                                              |
-| `network-test.tsx`                                                    | LiveKit connectivity + `getLiveKitReadiness()` diagnostic (DEV/ADMIN).                                                                                                |
-| `schedule-form.tsx` · `settings-form.tsx`                             | Scheduler + admin settings client forms.                                                                                                                              |
-| `types.ts` · `error-map.ts`                                           | Domain types + error-code → string mapping.                                                                                                                           |
-| `livekit/`                                                            | SFU SDK wrappers: `client` (config + readiness), `token`, `rooms`, `egress`, `recording-urls`, `room-naming`, `webhook`.                                              |
-| `providers/`                                                          | Link-provider adapters: `types`, `external` (live), `google-meet`/`zoom`/`teams` (stubs), `index` registry.                                                           |
+Two permission/validation layers coexist on purpose: the **rich sessions layer**
+(`authorization.ts` · `permissions.ts` · `validation.ts`) is the strict runtime gate for the LiveKit
+room flow (join / token / start / end), while the **list layer** (`list-*.ts`) is the CRUD gate for
+the dashboard table and external-link sessions.
+
+| File                                                                              | Purpose                                                                                                                                                               |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content.tsx`                                                                     | Server — fetches list + form options in one parallel pass, batched translation, renders the table.                                                                    |
+| `actions.ts` + `actions/`                                                         | Server actions: `sessions` (lifecycle), `tokens` (join), `recordings`, `notifications`, `settings`, `moderation` (kick), `recurring` (link carry-forward), `helpers`. |
+| `list-actions.ts` · `queries.ts`                                                  | List-layer CRUD (`create`/`update`/`delete`/`list`) + read-only query builders.                                                                                       |
+| `authorization.ts`                                                                | `PERMISSION_MATRIX` — 10 action verbs → allowed `UserRole[]`; `assert`/`check` guards.                                                                                |
+| `permissions.ts` · `list-permissions.ts`                                          | UI gating (tabs + show/hide flags per role) for the rich + list layers.                                                                                               |
+| `validation.ts` · `list-validation.ts`                                            | Zod schemas + inferred types (rich sessions / table forms).                                                                                                           |
+| `columns.tsx` · `table.tsx` · `form.tsx` · `schedule-form.tsx` · `list-params.ts` | DataTable + grid client surface and the two create forms (modal + standalone page).                                                                                   |
+| `detail.tsx` · `room.tsx` · `participants-panel.tsx`                              | Session detail · in-app LiveKit room · HOST/CO_HOST moderation overlay (kick).                                                                                        |
+| `recordings.tsx` · `recording-player.tsx` · `section-recording-policy.tsx`        | Recordings list · lazy signed-URL player · per-section recording opt-out.                                                                                             |
+| `settings-form.tsx`                                                               | Admin school-policy form (retention / max-concurrent / max-duration / default recording) + term carry-forward.                                                        |
+| `network-test.tsx` · `network-protocol.ts`                                        | LiveKit connectivity diagnostic + pure ICE-path classifier (`getLiveKitReadiness()` / `classifyFromStats`).                                                           |
+| `types.ts` · `error-map.ts`                                                       | Domain types + RoomJoinTicket · error-code → translated string.                                                                                                       |
+| `livekit/`                                                                        | SFU SDK wrappers: `client` (config + readiness), `token`, `rooms`, `egress`, `recording-urls`, `room-naming`, `webhook`.                                              |
+| `providers/`                                                                      | Link-provider adapters: `types`, `external` (live), `google-meet`/`zoom`/`teams` (dark), `token-cache`, `index` registry.                                             |
+
+## Data flow
+
+```
+index (/conference)            content.tsx (server) → table.tsx (client) → form.tsx (modal create)
+   └─ row Join / detail
+detail (/conference/[id])      detail.tsx → Join (live/scheduled) | Recordings (ended)
+   └─ Join
+room  (/conference/[id]/room)  joinLiveClass → eligibility → 5-min JWT → room.tsx (LiveKit prebuilt)
+                                              ↑ refreshLiveClassToken every ~60s re-runs eligibility
+recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S3 URL, re-signed/4min)
+```
+
+- **Session state machine** (`actions/sessions.ts`): `scheduled → live → ended`, plus `cancelled`
+  and `failed`. `startLiveClass` provisions the SFU room (checks `conferenceMaxConcurrent`);
+  `endLiveClass` is idempotent. The **webhook is the authoritative writer** for `live`
+  (`room_started`) and `ended` (`room_finished`).
+- **Eligibility** is resolved lazily per join (`actions/tokens.ts`): TEACHER→HOST (own session) /
+  CO_HOST, STUDENT→PARTICIPANT (section match), GUARDIAN→OBSERVER (child in section), ADMIN→CO_HOST,
+  DEVELOPER→HOST. Kicked users (`status="removed"`) are blocked at the next token refresh.
+- **Recordings** (`pending → processing → ready → expired`): LiveKit Egress → S3 `me-central-1`;
+  per-school retention enforced by the daily cron.
 
 ## Routes
 
-| Route                         | Layout           | Renders                  |
-| ----------------------------- | ---------------- | ------------------------ |
-| `/conference`                 | school-dashboard | DataTable index          |
-| `/conference/[id]`            | school-dashboard | `detail.tsx`             |
-| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`         |
-| `/conference/schedule`        | school-dashboard | `schedule-form.tsx`      |
-| `/conference/settings`        | school-dashboard | `settings-form.tsx`      |
-| `/conference/network-test`    | school-dashboard | `network-test.tsx`       |
-| `/conference/[id]/room`       | (live-room)      | `room.tsx`               |
-| `/live-classes/*`             | —                | redirect → `/conference` |
+| Route                         | Layout           | Renders                                              | Roles                                         |
+| ----------------------------- | ---------------- | ---------------------------------------------------- | --------------------------------------------- |
+| `/conference`                 | school-dashboard | DataTable index                                      | all 7 school roles                            |
+| `/conference/[id]`            | school-dashboard | `detail.tsx`                                         | all 7 school roles                            |
+| `/conference/[id]/recordings` | school-dashboard | `recordings.tsx`                                     | all except ACCOUNTANT (academic, not finance) |
+| `/conference/schedule`        | school-dashboard | `schedule-form.tsx`                                  | DEVELOPER · ADMIN · TEACHER                   |
+| `/conference/settings`        | school-dashboard | `settings-form.tsx` + `section-recording-policy.tsx` | DEVELOPER · ADMIN                             |
+| `/conference/network-test`    | school-dashboard | `network-test.tsx`                                   | DEVELOPER · ADMIN (env-gated)                 |
+| `/conference/[id]/room`       | **(live-room)**  | `room.tsx`                                           | any authenticated session participant         |
+| `/live-classes/*`             | —                | redirect → `/conference`                             | legacy compatibility shim (pre-rename links)  |
 
-API (external/scheduler-invoked → stay routes): `api/webhooks/livekit`, `api/cron/{live-class-reminders, expire-live-recordings}`.
+The room route lives under a separate **`(live-room)`** group with a bare full-viewport layout (no
+sidebar / dashboard chrome) so the SFU stream owns the screen; it is `force-dynamic` for OOM-safe
+builds. API (external / scheduler-invoked → stay routes, not server actions): `api/webhooks/livekit`
+(HMAC), `api/cron/live-class-reminders` (every 5 min), `api/cron/expire-live-recordings` (daily).
 
 ## Schema — `prisma/models/conference.prisma`
 
-`LiveClass*` → `Conference*`; every DB table/column/enum-type name preserved via `@@map`/`@map` →
-**zero-change migration** (byte-identical `migrate diff` vs baseline).
+`LiveClass*` → `Conference*`; every DB table / column / enum-type name preserved via `@@map`/`@map`
+→ **zero-change migration** (byte-identical `migrate diff` vs baseline).
 
-| Model                   | Purpose                                                                         |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| `Conference`            | A class. `provider` (`livekit`\|`external`), `meetingUrl?`, `meetingProvider?`. |
-| `ConferenceParticipant` | One row per invited user + connection telemetry.                                |
-| `ConferenceRecording`   | Egress metadata + S3 location.                                                  |
-| `ConferenceEvent`       | Webhook audit log + idempotency.                                                |
-| `ConferenceLink`        | Set-once recurring link `[schoolId, subjectId, sectionId, termId]`.             |
+| Model                   | Purpose                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `Conference`            | A session. `provider` (`livekit`\|`external`), `meetingUrl?`, `meetingProvider?`. |
+| `ConferenceParticipant` | One row per invited user + connection telemetry (RTT, TCP-fallback flag).         |
+| `ConferenceRecording`   | Egress metadata + S3 location + retention `expiresAt`.                            |
+| `ConferenceEvent`       | Webhook audit log + `eventId @unique` idempotency.                                |
+| `ConferenceLink`        | Set-once recurring link `[schoolId, subjectId, sectionId, termId]`.               |
 
 Enums `ConferenceProvider` · `ConferenceStatus` · `ConferenceRecordingStatus` ·
-`ConferenceParticipantRole` · `ConferenceParticipantStatus`; 4 `School.conference*` config columns.
+`ConferenceParticipantRole` · `ConferenceParticipantStatus`; 4 `School.conference*` config columns
+(`conferenceRetentionDays` 90 · `conferenceMaxConcurrent` 50 · `conferenceMaxDuration` 120 ·
+`conferenceRecordingDefault` true).
 
 ## Providers
 
-| Provider        | Status                | Missing                                   |
-| --------------- | --------------------- | ----------------------------------------- |
-| External link   | ✅ Live               | — (universal zero-infra default)          |
-| LiveKit SFU     | 🟡 Coded, dormant     | 6 infra gates → `conference/RUNBOOK.md`   |
-| Google Meet API | 🟦 Adapter scaffolded | Google Cloud OAuth + `createMeeting` impl |
-| Zoom API        | 🟦 Adapter scaffolded | Server-to-Server OAuth + impl             |
-| Microsoft Teams | 🟦 Adapter scaffolded | Azure AD (Graph `OnlineMeetings`) + impl  |
+| Provider        | Status                         | Missing                                          |
+| --------------- | ------------------------------ | ------------------------------------------------ |
+| External link   | ✅ Live                        | — (universal zero-infra default)                 |
+| LiveKit SFU     | 🟡 Coded, dormant              | 6 infra gates → `conference/RUNBOOK.md`          |
+| Google Meet     | 🟡 `createMeeting` wired, dark | Google Cloud OAuth creds (`GOOGLE_MEET_*`)       |
+| Zoom            | 🟡 `createMeeting` wired, dark | Server-to-Server OAuth creds (`ZOOM_*`)          |
+| Microsoft Teams | 🟡 `createMeeting` wired, dark | Azure AD creds (`AZURE_*`, Graph OnlineMeetings) |
 
-Natives persist as `provider="external"` + `meetingProvider="<id>"` → no enum migration to ship.
+Each native adapter creates a real meeting through the vendor API (`createMeeting`), gated by
+`isConfigured()`; `getRecording`/`getAttendance` still throw `ProviderNotImplementedError`. Natives
+persist as `provider="external"` + `meetingProvider="<id>"` → **no enum migration** to ship.
 
 ## Decisions
 
 - **One block, one provider abstraction.** External is the floor every school gets; LiveKit is the
   opt-in premium ceiling, gated by `isLiveKitConfigured()`. LiveKit's SFU lifecycle stays out of the
-  `providers/` adapter layer (it's not link-based).
-- **Rename is DB-transparent.** `@@map`/`@map` keep every table/column/enum-type name.
-- **Webhook + crons stay API routes** — external/scheduler-invoked; a server action can't receive them.
-- **Pending (non-code):** LiveKit infra provisioning (runbook ready), native OAuth credentials, the
-  in-room kick button (LiveKit prebuilt has no slot).
+  `providers/` adapter layer (it's room-based, not link-based).
+- **Rename is DB-transparent.** `@@map`/`@map` keep every table / column / enum-type name.
+- **Webhook + crons stay API routes** — external / scheduler-invoked; a server action can't receive them.
+- **Token TTL = 5 min, client-refreshed.** LiveKit JWTs are stateless, so access revocation takes
+  effect at the next refresh boundary (≤5 min), not instantly; kicks are enforced via the
+  `status="removed"` gate at join.
+- **Pending (non-code):** LiveKit infra provisioning (runbook ready), native OAuth credentials.
 
 ## Related
 
-- [Architecture](/docs/architecture) · [Pattern](/docs/pattern) · [Timetable](/docs/timetable) · [Notifications](/docs/notifications)
-- [Live Classes](/docs/live-classes) — older reference, pre-rename
+- [Architecture](/docs/architecture) · [Pattern](/docs/pattern) · [Timetable](/docs/timetable) — `Conference.timetableId` anchors the timetable Start / Join buttons · [Notifications](/docs/notifications) — 5 `live_class_*` types

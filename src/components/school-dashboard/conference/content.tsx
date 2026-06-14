@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { SearchParams } from "nuqs/server"
 
 import type { Role } from "@/lib/rbac/types"
@@ -13,6 +14,7 @@ import { getUIConfigForRole } from "@/components/school-dashboard/conference/lis
 import {
   getLiveClassesList,
   getLiveClassFormOptions,
+  resolveViewerSectionScope,
   type LiveClassFormOptions,
 } from "@/components/school-dashboard/conference/queries"
 import { LiveClassesTable } from "@/components/school-dashboard/conference/table"
@@ -50,70 +52,81 @@ export default async function LiveClassesContent({
 
   if (schoolId) {
     try {
-      const [list, options] = await Promise.all([
-        getLiveClassesList(schoolId, {
-          title: sp.title,
-          status: sp.status,
-          page: sp.page,
-          perPage: sp.perPage,
-          sort: sp.sort,
-        }),
-        getLiveClassFormOptions(schoolId),
-      ])
-      const { rows, count } = list
-      formOptions = options
+      // Role-scope rows: STUDENT/GUARDIAN only see their own section's sessions
+      // (and never the meetingUrl of others); staff see the whole school.
+      const session = await auth()
+      const scope = await resolveViewerSectionScope(
+        schoolId,
+        session?.user?.id,
+        role
+      )
+      if (scope !== "none") {
+        const [list, options] = await Promise.all([
+          getLiveClassesList(schoolId, {
+            title: sp.title,
+            status: sp.status,
+            page: sp.page,
+            perPage: sp.perPage,
+            sort: sp.sort,
+            sectionIds: scope === "all" ? undefined : scope.sectionIds,
+          }),
+          getLiveClassFormOptions(schoolId),
+        ])
+        const { rows, count } = list
+        formOptions = options
 
-      // ONE batched translation pass: titles via localize, teacher names via
-      // getNames, subject/section labels via getLabels (replaces per-row getText).
-      const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
-      const [localizedRows, teacherNames, labels] = await Promise.all([
-        localize("Conference", rows, { schoolId, lang: displayLang }),
-        getNames(
-          rows.filter((r) => r.teacher),
-          (r: (typeof rows)[number]) => r.teacher!,
-          displayLang,
-          schoolId
-        ),
-        getLabels(
-          rows.flatMap((r) => [r.subject?.name, r.section?.name]),
-          displayLang,
-          schoolId
-        ),
-      ])
-      data = localizedRows.map((r) => {
-        const rawTeacher = r.teacher ? fullName(r.teacher) : ""
-        return {
-          id: r.id,
-          title: r.title,
-          lang: r.lang,
-          teacherId: r.teacherId,
-          teacherName: rawTeacher
-            ? (teacherNames.get(rawTeacher) ?? rawTeacher)
-            : "",
-          subjectId: r.subjectId,
-          subjectName: r.subject?.name
-            ? (labels.get(r.subject.name) ?? r.subject.name)
-            : null,
-          sectionId: r.sectionId,
-          sectionName: r.section?.name
-            ? (labels.get(r.section.name) ?? r.section.name)
-            : null,
-          status: r.status,
-          meetingUrl: r.meetingUrl,
-          meetingProvider: r.meetingProvider,
-          scheduledStart: r.scheduledStart
-            ? new Date(r.scheduledStart).toISOString()
-            : new Date().toISOString(),
-          scheduledEnd: r.scheduledEnd
-            ? new Date(r.scheduledEnd).toISOString()
-            : new Date().toISOString(),
-          createdAt: r.createdAt
-            ? new Date(r.createdAt).toISOString()
-            : new Date().toISOString(),
-        }
-      })
+        // ONE batched translation pass: titles via localize, teacher names via
+        // getNames, subject/section labels via getLabels (replaces per-row getText).
+        const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+        const [localizedRows, teacherNames, labels] = await Promise.all([
+          localize("Conference", rows, { schoolId, lang: displayLang }),
+          getNames(
+            rows.filter((r) => r.teacher),
+            (r: (typeof rows)[number]) => r.teacher!,
+            displayLang,
+            schoolId
+          ),
+          getLabels(
+            rows.flatMap((r) => [r.subject?.name, r.section?.name]),
+            displayLang,
+            schoolId
+          ),
+        ])
+        data = localizedRows.map((r) => {
+          const rawTeacher = r.teacher ? fullName(r.teacher) : ""
+          return {
+            id: r.id,
+            title: r.title,
+            lang: r.lang,
+            teacherId: r.teacherId,
+            teacherName: rawTeacher
+              ? (teacherNames.get(rawTeacher) ?? rawTeacher)
+              : "",
+            subjectId: r.subjectId,
+            subjectName: r.subject?.name
+              ? (labels.get(r.subject.name) ?? r.subject.name)
+              : null,
+            sectionId: r.sectionId,
+            sectionName: r.section?.name
+              ? (labels.get(r.section.name) ?? r.section.name)
+              : null,
+            status: r.status,
+            meetingUrl: r.meetingUrl,
+            meetingProvider: r.meetingProvider,
+            scheduledStart: r.scheduledStart
+              ? new Date(r.scheduledStart).toISOString()
+              : new Date().toISOString(),
+            scheduledEnd: r.scheduledEnd
+              ? new Date(r.scheduledEnd).toISOString()
+              : new Date().toISOString(),
+            createdAt: r.createdAt
+              ? new Date(r.createdAt).toISOString()
+              : new Date().toISOString(),
+          }
+        })
 
-      total = count
+        total = count
+      }
     } catch (error) {
       console.error("[LiveClassesContent] Error fetching live classes:", error)
       data = []

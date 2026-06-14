@@ -1,8 +1,16 @@
-# Live-Classes — Open Issues
+# Conference — Open Issues
 
 > Tracker: [databayt/hogwarts#3](https://github.com/databayt/hogwarts/issues/3) · Aldar Epic 03 anchor.
+> Block renamed `live-classes/` → `conference/` (models `LiveClass*` → `Conference*`, DB preserved
+> via `@@map`). Code symbols + dictionary keys still use `liveClass` / `live_class_*`.
 
 ## P0 — Pre-signature gates (Aldar)
+
+> **All P0 items below are INFRA / OPS, not code** — provisioning + credentials +
+> an in-school network test. The application side (SFU wrappers, readiness
+> diagnostic, webhook, crons, egress) is complete and gated by
+> `isLiveKitConfigured()`; it activates the moment these env vars + infra land.
+> See `RUNBOOK.md` for the 6-gate sequence.
 
 - [ ] **Provision G42 Cloud SFU** in UAE region. Single binary
       `livekit-server`. UDP 50000-60000, TCP 7881, TCP 443.
@@ -20,8 +28,9 @@
 - [ ] **Meeting-3 network test** from inside Aldar school WiFi.
       `/conference/network-test` is the surface — run as
       `admin@kingfahad.databayt.org`. **Block on TURN/443 failure.**
-- [x] **Docs**: `content/docs-en/conference.mdx` written. Arabic mirror
-      (`content/docs-ar/conference.mdx`) still pending.
+- [x] **Docs**: `content/docs-en/conference.mdx` + Arabic mirror
+      (`content/docs-ar/conference.mdx`) both written and rendering
+      (Structure-first, post-rename, providers marked wired/dark).
 
 ## P1 — Phase 2 (Scheduling + reminders)
 
@@ -39,8 +48,12 @@
       Phase 1 has no automatic recording start. Either (a) call
       `startCompositeEgress()` from the webhook on `room_started`, or
       (b) configure LiveKit auto-egress on the SFU side.
-- [ ] **Per-section / per-grade recording opt-out** — currently only
-      a per-class boolean.
+- [x] **Per-section / per-grade recording opt-out** — DONE.
+      `Section.conferenceRecordingOptOut` + `setSectionRecordingOptOut`
+      (`actions/settings.ts`) + `section-recording-policy.tsx` UI on
+      `/conference/settings`. Applied at create in BOTH paths
+      (`actions/sessions.ts` and `list-actions.ts` — the latter gap was closed
+      in the 2026-06-13 hardening pass).
 
 ## P2 — Phase 4 (Settings + ops)
 
@@ -48,9 +61,13 @@
       `conferenceMaxDuration`, `conferenceRecordingDefault`,
       `conferenceMaxConcurrent`. Should live under
       `/settings/school` and only be writable by ADMIN/DEV.
-- [ ] **Capacity dashboard** in SaaS dashboard
-      (`/observability/conference`) — concurrent rooms per school,
-      egress queue depth, TCP fallback rate. Wave-2 ops visibility.
+- [x] **Capacity dashboard** in SaaS dashboard — DONE.
+      `/observability/conference` (DEVELOPER-only via the saas-dashboard
+      layout) shows live rooms + live-by-school, scheduled-today, recordings
+      ready + storage, and the TURN/TCP-fallback rate
+      (`saas-dashboard/observability/conference/{queries,content}.tsx`). The
+      fallback rate is now scoped to actually-joined participants (2026-06-13).
+      Egress queue depth is SFU-internal → remains "requires SFU".
 - [x] **Kick participant** — DONE. `ParticipantsPanel` (HOST/CO_HOST-only
       overlay in `participants-panel.tsx`, rendered by `room.tsx` beside the
       prebuilt `<VideoConference/>`) lists remote participants via
@@ -82,16 +99,76 @@
       allowed-vs-blocked routes + ar RTL rendering. 103 test rows
       across browser projects.
 - [ ] **3-node SFU + LB** for Wave-2 capacity (~5K concurrent →
-      ~15K). Sticky room routing.
+      ~15K). Sticky room routing. _(INFRA — not code.)_
 - [ ] **MinIO on-prem fallback** for recordings if Aldar procurement
-      requires it. Storage abstraction already supports per-school
-      `s3Bucket`/`s3Region` columns.
+      requires it. _(INFRA — the code side is ready: storage abstraction
+      already supports per-school `s3Bucket`/`s3Region`, and the S3 client is
+      now cached per-region.)_
 - [x] **Type the `Dictionary` namespace** to include `liveClasses` so
       we can drop the `as unknown as { liveClasses?: ... }` casts in
       content components. (Dropped from all 8 call sites; type already
       inferred from JSON imports.)
 
 ## Done
+
+### Hardening pass — adversarial review fixes (2026-06-13)
+
+24 confirmed findings from a multi-agent adversarial review, all fixed
+(tsc 0; 211/211 conference unit tests green). i18n "always-English" findings
+on detail/recordings/empty-state/schedule-form were FALSE POSITIVES — the real
+dictionary source is `dictionaries/{en,ar}/live-classes.json` (not school-\*.json)
+and already has every key.
+
+- **RBAC (P1):** `list-actions.ts` `getLiveClasses`/`getLiveClass`/`getLiveClassFormData`
+  exposed every session (incl. `meetingUrl`) + rosters to STUDENT/GUARDIAN.
+  Added `resolveViewerSectionScope` (queries.ts) — STUDENT/GUARDIAN now see only
+  their own section's sessions; form rosters are staff-only. Same scope applied
+  to the SSR path in `content.tsx`.
+- **Concurrent cap (P1):** `startLiveClass` silently bypassed the cap when the
+  school row was missing; the `joinLiveClass` HOST auto-start path skipped it
+  entirely. Extracted `concurrentCapError()` helper, used by both.
+- **Tenant scoping (P1/P3):** added `schoolId` to webhook `egress_ended` +
+  participant updates + a cross-tenant pre-check on `egress_started`;
+  `kickParticipant` now scopes the update + verifies the participant row;
+  `carryForwardConferenceLinks` validates both terms belong to the school.
+- **State guards (P2):** webhook `room_started`/`room_finished` are now
+  status-guarded `updateMany`s (no resurrecting ended/cancelled rows, no
+  duplicate notify/egress); `endLiveClass` rejects scheduled/failed.
+- **Recording (P1/P3):** `list-actions.createLiveClass` now honors the section
+  opt-out; webhook creates a `pending` recording row on room_started to close
+  the early-end egress race; direct BigInt for file size; per-region S3 client
+  cache (the old region-compare singleton never held).
+- **Providers (P1/P2/P3):** Teams `isConfigured()` now requires
+  `AZURE_ORGANIZER_ID`; Google Meet `requestId` carries a per-session id (no
+  idempotency-key collision); a configured-provider `createMeeting` failure
+  surfaces an error instead of silently faking success; token-cache dedups
+  in-flight exchanges.
+- **i18n / UX (P2):** network-test quality/path values now translate;
+  schedule-form renders a translated error (not the raw `UNAUTHORIZED` code);
+  section opt-out optimistic-revert restores the true pre-toggle value;
+  network-test page issues a PARTICIPANT (not HOST) diagnostic token with the
+  real schoolId and a non-parseable room name.
+- **Observability (P3):** TURN-fallback rate scoped to joined participants;
+  `0n` BigInt fallback. **Capacity dashboard** + **per-section opt-out** closed
+  above.
+
+Decision left as-is (documented, not a bug): a non-owning TEACHER joins as
+CO_HOST (publish) — intentional co-teaching per the role model; revisit if
+stricter per-section teacher scoping is wanted.
+
+### Docs pass (2026-06-13)
+
+- [x] Rewrote `content/docs-{en,ar}/conference.mdx` to match the real code
+      (Structure-first; added `participants-panel`, `section-recording-policy`,
+      `network-protocol`, `token-cache`; providers relabeled wired/dark; two-layer
+      permission model + data-flow documented).
+- [x] Structure section now renders `<ConferenceStructure />` (registered the
+      component in `src/mdx-components.tsx`; refreshed its node tree in
+      `src/components/docs/conference-structure.tsx`).
+- [x] Deleted the stale pre-rename docs `content/docs-{en,ar}/live-classes.mdx`
+      and de-registered them from both `meta.json` + regenerated `.source`.
+- [x] Rewrote `README.md` (was still titled "Live Classes" with a nested layout
+      that no longer exists); fixed `CLAUDE.md` stale facts.
 
 ### Maturity pass (2026-06-06)
 

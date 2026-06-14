@@ -9,6 +9,8 @@
 // GOOGLE_MEET_CLIENT_SECRET, GOOGLE_MEET_REFRESH_TOKEN. createMeeting is wired;
 // getRecording/getAttendance stay deferred (Workspace Enterprise scopes).
 
+import { randomUUID } from "node:crypto"
+
 import { getCachedToken } from "./token-cache"
 import {
   ProviderNotConfiguredError,
@@ -61,8 +63,13 @@ export const googleMeetAdapter: ConferenceProviderAdapter = {
     if (!configured()) throw new ProviderNotConfiguredError("google_meet")
     const token = await getAccessToken()
 
-    // Deterministic requestId so a retry returns the same conference.
-    const requestId = `lc-${input.schoolId}-${input.scheduledStart.getTime()}`
+    // Idempotency key: stable per session so a retry returns the same
+    // conference, but unique across sessions so two classes at the same school +
+    // start time don't collapse onto one Meet link. Falls back to a random
+    // suffix when no sessionId is threaded through.
+    const requestId = `lc-${input.schoolId}-${
+      input.sessionId ?? randomUUID().slice(0, 8)
+    }-${input.scheduledStart.getTime()}`
     const res = await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1",
       {

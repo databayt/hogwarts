@@ -101,33 +101,63 @@ export async function handleWebhookEvent(
   })
 
   switch (event.event) {
-    case "room_started":
-      await db.conference.update({
-        where: { id: sessionId },
+    case "room_started": {
+      // Guard on the source status so a late/retried room_started can't
+      // resurrect an already ended/cancelled session or re-fire notifications.
+      const { count } = await db.conference.updateMany({
+        where: { id: sessionId, schoolId, status: "scheduled" },
         data: {
           status: "live",
           actualStart: new Date(),
           roomSid: event.room?.sid ?? null,
         },
       })
-      // Best-effort fan-out to enrolled students + guardians + teacher.
-      void notifyClassStarted(schoolId, sessionId)
-      // Auto-start recording when the session opted in. The SFU emits
-      // `egress_started` back to this webhook, which creates the
-      // ConferenceRecording row — so we only kick off egress here. Best-effort:
-      // an egress failure must never roll back the room going live.
-      if (session.recordingEnabled && isLiveKitConfigured()) {
-        try {
-          await startCompositeEgress({ roomName, schoolId, sessionId })
-        } catch (err) {
-          console.error("[webhook] auto-egress start failed:", err)
+      if (count > 0) {
+        // Best-effort fan-out to enrolled students + guardians + teacher.
+        void notifyClassStarted(schoolId, sessionId)
+        // Auto-start recording when the session opted in. Create the recording
+        // row immediately (status "pending") from the egress result so an early
+        // endLiveClass can find + stop the in-flight egress before the SFU's
+        // egress_started webhook lands (which flips it to "processing").
+        // Best-effort: an egress failure must never roll back the room going live.
+        if (session.recordingEnabled && isLiveKitConfigured()) {
+          try {
+            const eg = await startCompositeEgress({
+              roomName,
+              schoolId,
+              sessionId,
+            })
+            await db.conferenceRecording.upsert({
+              where: { egressId: eg.egressId },
+              create: {
+                schoolId,
+                sessionId,
+                egressId: eg.egressId,
+                s3Bucket: eg.s3Bucket,
+                s3Region: eg.s3Region,
+                s3Key: "",
+                status: "pending",
+                startedAt: new Date(),
+              },
+              update: {},
+            })
+          } catch (err) {
+            console.error("[webhook] auto-egress start failed:", err)
+          }
         }
       }
       break
+    }
 
     case "room_finished":
-      await db.conference.update({
-        where: { id: sessionId },
+      // Only act on a session still in a pre-finished state — never clobber a
+      // cancelled/ended row (which would corrupt audit + jitter actualEnd).
+      await db.conference.updateMany({
+        where: {
+          id: sessionId,
+          schoolId,
+          status: { in: ["scheduled", "live"] },
+        },
         data: { status: "ended", actualEnd: new Date() },
       })
       break
@@ -136,7 +166,7 @@ export async function handleWebhookEvent(
       const identity = event.participant?.identity
       if (identity) {
         await db.conferenceParticipant.updateMany({
-          where: { sessionId, userId: identity },
+          where: { sessionId, userId: identity, schoolId },
           data: { joinedAt: new Date(), status: "joined" },
         })
       }
@@ -147,7 +177,7 @@ export async function handleWebhookEvent(
       const identity = event.participant?.identity
       if (identity) {
         const existing = await db.conferenceParticipant.findFirst({
-          where: { sessionId, userId: identity },
+          where: { sessionId, userId: identity, schoolId },
           select: { id: true, joinedAt: true },
         })
         if (existing) {
@@ -172,6 +202,14 @@ export async function handleWebhookEvent(
     case "egress_started": {
       const egressId = event.egressInfo?.egressId
       if (egressId) {
+        // Defense-in-depth: drop the event if this egressId is already owned by
+        // a different tenant (the upsert key is the global egressId unique
+        // index, so we can't scope the upsert itself by schoolId).
+        const conflict = await db.conferenceRecording.findFirst({
+          where: { egressId, NOT: { schoolId } },
+          select: { id: true },
+        })
+        if (conflict) return true
         // Populate s3Bucket + s3Region from config so playback can sign
         // URLs immediately on egress_ended without a separate update.
         // s3Key stays blank until egress_ended carries the final filename.
@@ -219,7 +257,10 @@ export async function handleWebhookEvent(
         const info = event.egressInfo as any
         const fileInfo = info?.fileResults?.[0] ?? info?.file
         const filename = fileInfo?.filename ?? ""
-        const size = fileInfo?.size ? Number(fileInfo.size) : null
+        // size is an int64 (bigint) in the LiveKit SDK — convert directly to
+        // BigInt; the Number() round-trip was lossy above 2^53 bytes.
+        const fileSizeBytes =
+          fileInfo?.size != null ? BigInt(fileInfo.size) : null
         const duration =
           info?.endedAt && info?.startedAt
             ? Math.max(
@@ -235,11 +276,11 @@ export async function handleWebhookEvent(
         // No file → keep prior status (processing) + record metadata only.
         const hasFile = filename.length > 0
         await db.conferenceRecording.updateMany({
-          where: { egressId },
+          where: { egressId, schoolId },
           data: {
             ...(hasFile ? { status: "ready", s3Key: filename, expiresAt } : {}),
             completedAt: new Date(),
-            fileSizeBytes: size ? BigInt(size) : null,
+            fileSizeBytes,
             durationSeconds: duration,
           },
         })

@@ -24,11 +24,13 @@ vi.mock("@/lib/db", () => ({
     conference: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      count: vi.fn(),
     },
     conferenceParticipant: {
       upsert: vi.fn(),
       findUnique: vi.fn(),
     },
+    school: { findUnique: vi.fn() },
     student: { findFirst: vi.fn() },
     guardian: { findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
@@ -81,6 +83,11 @@ beforeEach(() => {
   vi.mocked(db.conferenceParticipant.findUnique).mockResolvedValue(
     null as never
   )
+  // Concurrent-cap check on the HOST auto-start path (scheduled → live).
+  vi.mocked(db.school.findUnique).mockResolvedValue({
+    conferenceMaxConcurrent: 50,
+  } as never)
+  vi.mocked(db.conference.count).mockResolvedValue(0 as never)
   vi.mocked(db.user.findUnique).mockResolvedValue({
     username: "Test User",
     email: "test@x.test",

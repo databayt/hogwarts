@@ -25,7 +25,11 @@ import {
 } from "@/components/school-dashboard/conference/validation"
 import { prewarm } from "@/components/translation/prewarm"
 
-import { conferenceRevalidatePath, requireContext } from "./helpers"
+import {
+  concurrentCapError,
+  conferenceRevalidatePath,
+  requireContext,
+} from "./helpers"
 import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 
 /**
@@ -36,7 +40,10 @@ import { notifyClassCancelled, notifyClassScheduled } from "./notifications"
 export async function createLiveClass(input: LiveClassServerInput) {
   const ctx = await requireContext("manage_live_class")
   if (!ctx.ok) {
-    // Teachers can create their own — fall back to start_live_class permission.
+    // Only fall back to the teacher (start_live_class) path on a permission
+    // denial — surface NOT_AUTHENTICATED / MISSING_SCHOOL as-is instead of
+    // masking the real cause with a redundant second attempt.
+    if (ctx.response.error !== ACTION_ERRORS.UNAUTHORIZED) return ctx.response
     const teacherCtx = await requireContext("start_live_class")
     if (!teacherCtx.ok) return teacherCtx.response
     return createLiveClassAsTeacher(input, teacherCtx)
@@ -326,18 +333,9 @@ export async function startLiveClass(input: IdOnly) {
     }
 
     // Enforce the per-school concurrent-room cap before provisioning.
-    const [school, liveCount] = await Promise.all([
-      db.school.findUnique({
-        where: { id: ctx.schoolId },
-        select: { conferenceMaxConcurrent: true },
-      }),
-      db.conference.count({
-        where: { schoolId: ctx.schoolId, status: "live", deletedAt: null },
-      }),
-    ])
-    if (school && liveCount >= school.conferenceMaxConcurrent) {
-      return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_CONCURRENT)
-    }
+    // A missing school row is a hard error (never silently bypass the cap).
+    const capError = await concurrentCapError(ctx.schoolId)
+    if (capError) return capError
 
     try {
       await ensureRoom({
@@ -393,6 +391,11 @@ export async function endLiveClass(input: IdOnly) {
     }
     if (session.status === "ended" || session.status === "cancelled") {
       return { success: true as const, data: { id: session.id } }
+    }
+    // Only a live session can be ended — reject scheduled/failed so we never
+    // stamp actualEnd on a class that never started or tear down a phantom room.
+    if (session.status !== "live") {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_INVALID_STATE)
     }
 
     // Stop any in-flight recording so the MP4 flushes promptly. Best-effort:

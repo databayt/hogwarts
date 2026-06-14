@@ -6,14 +6,17 @@ auto-generating links and syncing recordings/attendance from native provider API
 
 ## Status
 
-| Provider        | id            | State              | Env it needs                                                                      |
-| --------------- | ------------- | ------------------ | --------------------------------------------------------------------------------- |
-| External link   | `external`    | ✅ functional      | — (host pastes any URL)                                                           |
-| Google Meet     | `google_meet` | 🟡 scaffold (stub) | `GOOGLE_MEET_CLIENT_ID`, `GOOGLE_MEET_CLIENT_SECRET`, `GOOGLE_MEET_REFRESH_TOKEN` |
-| Zoom            | `zoom`        | 🟡 scaffold (stub) | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                         |
-| Microsoft Teams | `teams`       | 🟡 scaffold (stub) | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`                       |
+| Provider        | id            | State          | Env it needs                                                                      |
+| --------------- | ------------- | -------------- | --------------------------------------------------------------------------------- |
+| External link   | `external`    | ✅ functional  | — (host pastes any URL)                                                           |
+| Google Meet     | `google_meet` | 🟡 wired, dark | `GOOGLE_MEET_CLIENT_ID`, `GOOGLE_MEET_CLIENT_SECRET`, `GOOGLE_MEET_REFRESH_TOKEN` |
+| Zoom            | `zoom`        | 🟡 wired, dark | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`                         |
+| Microsoft Teams | `teams`       | 🟡 wired, dark | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_ORGANIZER_ID` |
 
-The stubs throw `ProviderNotImplementedError` until credentials land. `isConfigured()` already reflects
+`createMeeting` is fully wired for all three natives (they create a real meeting via the vendor API);
+only `getRecording`/`getAttendance` throw `ProviderNotImplementedError` until further scopes land.
+They ship **dark** — `isConfigured()` returns false until the env vars are present, so the create flow
+falls back to the pasted external URL. `isConfigured()` already reflects
 whether each provider's env is present, so the UI can show/hide a provider without code changes.
 
 ## The interface (`types.ts`)

@@ -92,6 +92,32 @@ export async function requireContext(
 }
 
 /**
+ * Per-school concurrent live-room cap. Shared by `startLiveClass` (sessions.ts)
+ * and the HOST auto-start path in `joinLiveClass` (tokens.ts) so the two cannot
+ * diverge. Returns an actionError response when the school row is missing
+ * (hard error — never silently bypass the cap) or the cap is reached;
+ * otherwise `null` (ok to proceed).
+ */
+export async function concurrentCapError(
+  schoolId: string
+): Promise<ReturnType<typeof actionError> | null> {
+  const [school, liveCount] = await Promise.all([
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { conferenceMaxConcurrent: true },
+    }),
+    db.conference.count({
+      where: { schoolId, status: "live", deletedAt: null },
+    }),
+  ])
+  if (!school) return actionError(ACTION_ERRORS.SCHOOL_NOT_FOUND)
+  if (liveCount >= school.conferenceMaxConcurrent) {
+    return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_CONCURRENT)
+  }
+  return null
+}
+
+/**
  * Path used by `revalidatePath` after a live-class mutation.
  * Includes `/s/[subdomain]` because revalidatePath references the
  * internal file-system route, not the client-facing URL.

@@ -44,7 +44,10 @@ describe("startCompositeEgress", () => {
     expect(r.egressId).toBe("EG_1")
     expect(r.s3Bucket).toBe("rec-bucket")
     expect(r.s3Region).toBe("me-central-1")
-    expect(r.s3Key).toMatch(/^schools\/s1\/live-class\/lcs1\/\d+\.mp4$/)
+    // timestamp + short random suffix (collision-resistant within the same ms)
+    expect(r.s3Key).toMatch(
+      /^schools\/s1\/live-class\/lcs1\/\d+-[0-9a-f]{8}\.mp4$/
+    )
     expect(startRoomCompositeEgress).toHaveBeenCalledWith(
       "room",
       expect.anything(),

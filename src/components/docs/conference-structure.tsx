@@ -25,83 +25,128 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
         {
           name: "content.tsx",
           type: "file",
-          description: "server list (DataTable index)",
-        },
-        { name: "actions.ts", type: "file", description: "barrel" },
-        {
-          name: "actions/",
-          type: "directory",
-          description: "server actions",
-          children: [
-            { name: "sessions.ts", type: "file", description: "lifecycle" },
-            { name: "tokens.ts", type: "file", description: "join tokens" },
-            { name: "recordings.ts", type: "file", description: "recordings" },
-            {
-              name: "notifications.ts",
-              type: "file",
-              description: "notifications",
-            },
-            { name: "settings.ts", type: "file", description: "settings" },
-            { name: "moderation.ts", type: "file", description: "kick" },
-            {
-              name: "recurring.ts",
-              type: "file",
-              description: "link carry-forward",
-            },
-            { name: "helpers.ts", type: "file", description: "shared helpers" },
-          ],
+          description: "server list (fetch + batched translate → table)",
         },
         {
           name: "queries.ts",
           type: "file",
-          description: "DataTable reads",
+          description: "read-only Prisma builders",
+        },
+        {
+          name: "actions.ts",
+          type: "file",
+          description: "server-action barrel",
+        },
+        {
+          name: "list-actions.ts",
+          type: "file",
+          description: "list-layer CRUD (create/update/delete/list)",
+        },
+        {
+          name: "actions/",
+          type: "directory",
+          description: "rich sessions-layer server actions",
+          children: [
+            {
+              name: "helpers.ts",
+              type: "file",
+              description: "requireContext · canAccessSession",
+            },
+            {
+              name: "sessions.ts",
+              type: "file",
+              description: "lifecycle state machine",
+            },
+            {
+              name: "tokens.ts",
+              type: "file",
+              description: "join → 5-min JWT",
+            },
+            {
+              name: "recordings.ts",
+              type: "file",
+              description: "list / signed-URL / delete",
+            },
+            {
+              name: "notifications.ts",
+              type: "file",
+              description: "best-effort dispatch (5 events)",
+            },
+            {
+              name: "settings.ts",
+              type: "file",
+              description: "capacity + recording opt-out",
+            },
+            {
+              name: "moderation.ts",
+              type: "file",
+              description: "kickParticipant",
+            },
+            {
+              name: "recurring.ts",
+              type: "file",
+              description: "link carry-forward across terms",
+            },
+          ],
         },
         {
           name: "authorization.ts",
           type: "file",
-          description: "RBAC permission matrix",
+          description: "PERMISSION_MATRIX (strict RBAC)",
         },
         {
           name: "permissions.ts",
           type: "file",
-          description: "UI gating (rich)",
+          description: "UI gating (rich layer)",
         },
         {
           name: "list-permissions.ts",
           type: "file",
-          description: "UI gating (listings)",
+          description: "UI gating + CRUD guards (list layer)",
         },
-        {
-          name: "validation.ts",
-          type: "file",
-          description: "Zod (sessions)",
-        },
+        { name: "validation.ts", type: "file", description: "Zod (sessions)" },
         {
           name: "list-validation.ts",
           type: "file",
-          description: "Zod (listings)",
+          description: "Zod (table)",
         },
+        { name: "list-params.ts", type: "file", description: "nuqs URL cache" },
+        { name: "table.tsx", type: "file", description: "DataTable + grid" },
         {
           name: "columns.tsx",
           type: "file",
-          description: "DataTable columns",
+          description: "column defs + action menu",
         },
-        { name: "table.tsx", type: "file", description: "DataTable" },
-        { name: "form.tsx", type: "file", description: "create form" },
         {
-          name: "list-params.ts",
+          name: "form.tsx",
           type: "file",
-          description: "nuqs URL cache",
+          description: "create/edit modal form",
+        },
+        {
+          name: "schedule-form.tsx",
+          type: "file",
+          description: "standalone scheduler",
+        },
+        {
+          name: "settings-form.tsx",
+          type: "file",
+          description: "admin school-policy form",
+        },
+        {
+          name: "section-recording-policy.tsx",
+          type: "file",
+          description: "per-section recording opt-out",
         },
         {
           name: "detail.tsx",
           type: "file",
-          description: "single-conference detail",
+          description: "single-session detail",
         },
+        { name: "room.tsx", type: "file", description: "in-app LiveKit room" },
         {
-          name: "room.tsx",
+          name: "participants-panel.tsx",
           type: "file",
-          description: "in-app LiveKit room",
+          description: "HOST/CO_HOST in-room kick UI",
         },
         {
           name: "recordings.tsx",
@@ -111,22 +156,12 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
         {
           name: "recording-player.tsx",
           type: "file",
-          description: "player",
+          description: "lazy signed-URL player",
         },
         {
           name: "network-test.tsx",
           type: "file",
-          description: "LiveKit RTT/TURN + readiness diagnostic",
-        },
-        {
-          name: "schedule-form.tsx",
-          type: "file",
-          description: "scheduler",
-        },
-        {
-          name: "settings-form.tsx",
-          type: "file",
-          description: "admin config form",
+          description: "LiveKit RTT/ICE diagnostic",
         },
         { name: "empty-state.tsx", type: "file", description: "empty state" },
         {
@@ -134,28 +169,36 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           type: "file",
           description: "loading skeleton",
         },
-        { name: "types.ts", type: "file", description: "domain types" },
+        {
+          name: "types.ts",
+          type: "file",
+          description: "domain types + RoomJoinTicket",
+        },
         {
           name: "error-map.ts",
           type: "file",
           description: "error-code → string",
         },
         {
-          name: "list-actions.ts",
+          name: "network-protocol.ts",
           type: "file",
-          description: "listing actions",
+          description: "pure ICE-path classifier",
         },
         {
           name: "livekit/",
           type: "directory",
-          description: "SFU server lib",
+          description: "SFU server SDK wrappers",
           children: [
             {
               name: "client.ts",
               type: "file",
-              description: "config + readiness",
+              description: "singletons + readiness",
             },
-            { name: "token.ts", type: "file", description: "access tokens" },
+            {
+              name: "token.ts",
+              type: "file",
+              description: "role → VideoGrant",
+            },
             { name: "rooms.ts", type: "file", description: "room lifecycle" },
             {
               name: "egress.ts",
@@ -170,17 +213,12 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
             {
               name: "room-naming.ts",
               type: "file",
-              description: "deterministic room IDs",
+              description: "sch-{schoolId}-lc-{id}",
             },
             {
               name: "webhook.ts",
               type: "file",
-              description: "event verification",
-            },
-            {
-              name: "__tests__/",
-              type: "directory",
-              description: "SFU lib tests",
+              description: "HMAC verify + idempotent router",
             },
           ],
         },
@@ -189,11 +227,7 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           type: "directory",
           description: "link-provider adapters",
           children: [
-            {
-              name: "types.ts",
-              type: "file",
-              description: "adapter contract",
-            },
+            { name: "types.ts", type: "file", description: "adapter contract" },
             {
               name: "external.ts",
               type: "file",
@@ -202,12 +236,21 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
             {
               name: "google-meet.ts",
               type: "file",
-              description: "stub",
+              description: "wired, dark",
             },
-            { name: "zoom.ts", type: "file", description: "stub" },
-            { name: "teams.ts", type: "file", description: "stub" },
+            { name: "zoom.ts", type: "file", description: "wired, dark" },
+            { name: "teams.ts", type: "file", description: "wired, dark" },
+            {
+              name: "token-cache.ts",
+              type: "file",
+              description: "OAuth token cache",
+            },
             { name: "index.ts", type: "file", description: "registry" },
-            { name: "README.md", type: "file" },
+            {
+              name: "README.md",
+              type: "file",
+              description: "provisioning reference",
+            },
           ],
         },
         {
@@ -216,19 +259,14 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
           description: "LiveKit 6-gate provisioning",
         },
         {
-          name: "__tests__/",
-          type: "directory",
-          description: "block tests",
-        },
-        {
           name: "README.md",
           type: "file",
-          description: "feature purpose, APIs, decisions",
+          description: "feature purpose, routes, status",
         },
         {
           name: "ISSUE.md",
           type: "file",
-          description: "known issues and follow-ups",
+          description: "open backlog and follow-ups",
         },
         {
           name: "CLAUDE.md",

@@ -17,6 +17,7 @@ vi.mock("@/lib/db", () => ({
     conference: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     conferenceParticipant: {
       findFirst: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("@/lib/db", () => ({
       updateMany: vi.fn(),
     },
     conferenceRecording: {
+      findFirst: vi.fn(),
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -89,6 +91,8 @@ beforeEach(() => {
   vi.mocked(db.conferenceEvent.findUnique).mockResolvedValue(null as never)
   vi.mocked(db.conferenceEvent.create).mockResolvedValue({} as never)
   vi.mocked(db.conference.update).mockResolvedValue({} as never)
+  vi.mocked(db.conference.updateMany).mockResolvedValue({ count: 1 } as never)
+  vi.mocked(db.conferenceRecording.findFirst).mockResolvedValue(null as never)
   vi.mocked(db.conferenceRecording.upsert).mockResolvedValue({} as never)
   vi.mocked(db.conferenceRecording.updateMany).mockResolvedValue({} as never)
   vi.mocked(db.conferenceParticipant.updateMany).mockResolvedValue({} as never)
@@ -114,9 +118,10 @@ describe("handleWebhookEvent — room lifecycle", () => {
   it("room_started → status=live, actualStart set, roomSid captured, notifyClassStarted fired", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(true)
-    expect(db.conference.update).toHaveBeenCalledWith(
+    // Status-guarded, tenant-scoped updateMany (only flips a `scheduled` row).
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: SESSION_ID },
+        where: { id: SESSION_ID, schoolId: SCHOOL_ID, status: "scheduled" },
         data: expect.objectContaining({
           status: "live",
           roomSid: "sid-1",
@@ -130,8 +135,13 @@ describe("handleWebhookEvent — room lifecycle", () => {
   it("room_finished → status=ended, actualEnd set", async () => {
     const ok = await handleWebhookEvent(evt({ event: "room_finished" }))
     expect(ok).toBe(true)
-    expect(db.conference.update).toHaveBeenCalledWith(
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          id: SESSION_ID,
+          schoolId: SCHOOL_ID,
+          status: { in: ["scheduled", "live"] },
+        },
         data: expect.objectContaining({
           status: "ended",
           actualEnd: expect.any(Date),
@@ -150,7 +160,11 @@ describe("handleWebhookEvent — room lifecycle", () => {
     expect(ok).toBe(true)
     expect(db.conferenceParticipant.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { sessionId: SESSION_ID, userId: "u-stu-1" },
+        where: {
+          sessionId: SESSION_ID,
+          userId: "u-stu-1",
+          schoolId: SCHOOL_ID,
+        },
         data: expect.objectContaining({ status: "joined" }),
       })
     )
@@ -215,7 +229,7 @@ describe("handleWebhookEvent — auto-recording on room_started", () => {
     )
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(true)
-    expect(db.conference.update).toHaveBeenCalledWith(
+    expect(db.conference.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "live" }),
       })
@@ -285,7 +299,7 @@ describe("handleWebhookEvent — egress / recording", () => {
     expect(ok).toBe(true)
     expect(db.conferenceRecording.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { egressId: "egr-1" },
+        where: { egressId: "egr-1", schoolId: SCHOOL_ID },
         data: expect.objectContaining({
           status: "ready",
           completedAt: expect.any(Date),
@@ -330,7 +344,7 @@ describe("handleWebhookEvent — idempotency + safety", () => {
       evt({ event: "room_started", id: "evt-dup" })
     )
     expect(ok).toBe(false)
-    expect(db.conference.update).not.toHaveBeenCalled()
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
     expect(notifyClassStarted).not.toHaveBeenCalled()
   })
 
@@ -342,14 +356,14 @@ describe("handleWebhookEvent — idempotency + safety", () => {
       })
     )
     expect(ok).toBe(false)
-    expect(db.conference.update).not.toHaveBeenCalled()
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
   })
 
   it("room name parses to a session that does not belong to this tenant → drops", async () => {
     vi.mocked(db.conference.findFirst).mockResolvedValueOnce(null as never)
     const ok = await handleWebhookEvent(evt({ event: "room_started" }))
     expect(ok).toBe(false)
-    expect(db.conference.update).not.toHaveBeenCalled()
+    expect(db.conference.updateMany).not.toHaveBeenCalled()
   })
 
   it("every dispatched event writes a ConferenceEvent audit row", async () => {

@@ -7,20 +7,27 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import type { ConferenceRecording } from "@prisma/client"
 
-let s3: S3Client | null = null
+// One client per region. The previous single-var cache compared
+// `s3.config.region` (a `Provider<string>` resolver function) to a string,
+// which is always false — so it rebuilt the client on every call and the
+// region guard never held. A Map keyed by the region string fixes both.
+const s3Clients = new Map<string, S3Client>()
 
 function getS3Client(region: string): S3Client {
-  if (s3 && s3.config.region === region) return s3
-  s3 = new S3Client({
-    region,
-    credentials: process.env.AWS_ACCESS_KEY_ID
-      ? {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
-        }
-      : undefined,
-  })
-  return s3
+  let client = s3Clients.get(region)
+  if (!client) {
+    client = new S3Client({
+      region,
+      credentials: process.env.AWS_ACCESS_KEY_ID
+        ? {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
+          }
+        : undefined,
+    })
+    s3Clients.set(region, client)
+  }
+  return client
 }
 
 /**

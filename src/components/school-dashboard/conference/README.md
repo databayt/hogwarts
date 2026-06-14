@@ -1,137 +1,90 @@
-# Live Classes
+# Conference
 
-LiveKit video conferencing for scheduled and ad-hoc live classes.
+Video conferencing for schools — one self-contained block mirrored 1:1 to the `/conference` route.
+Three meeting back-ends behind a single UI:
 
-**Status**: Phase 1 — feature code complete, awaiting SFU provisioning
-and `LIVEKIT_*` env config before E2E test.
+- **External pasted-link** — live everywhere, zero infra (the default every school gets).
+- **LiveKit SFU** — in-app rooms + recording, fully coded but **dormant** until infra is provisioned
+  (see `RUNBOOK.md`, gated by `isLiveKitConfigured()`).
+- **Native Meet / Zoom / Teams** — `createMeeting` wired through each vendor API, but **dark** until
+  OAuth credentials land (gated by each adapter's `isConfigured()`).
+
+> Full reference: [content/docs-en/conference.mdx](../../../../content/docs-en/conference.mdx) ·
+> Arabic: [content/docs-ar/conference.mdx](../../../../content/docs-ar/conference.mdx). Those docs'
+> **Structure** section renders `<ConferenceStructure />` from
+> `src/components/docs/conference-structure.tsx` — when you add/rename files below, update that
+> component's node tree (not a code fence). The legacy `/docs/live-classes` pages were deleted.
+
+## File Structure (flat block)
+
+```
+conference/
+├── content.tsx · queries.ts · actions.ts · list-actions.ts   server entry + reads + barrels
+├── actions/                                                   rich sessions-layer server actions
+│   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
+│   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
+│   ├── tokens.ts         joinLiveClass / refreshLiveClassToken (eligibility → 5-min JWT)
+│   ├── recordings.ts     list / signed-URL / delete
+│   ├── notifications.ts  best-effort dispatch for 5 live_class_* events (not a server action)
+│   ├── settings.ts       school capacity knobs + per-section recording opt-out
+│   ├── moderation.ts     kickParticipant (SFU evict + DB status="removed")
+│   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
+├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
+├── list-permissions.ts · list-validation.ts · list-params.ts list layer (CRUD gate)
+├── table.tsx · columns.tsx · form.tsx · schedule-form.tsx    DataTable + the two create forms
+├── detail.tsx · room.tsx · participants-panel.tsx            session detail · in-app room · kick UI
+├── recordings.tsx · recording-player.tsx                     recordings list · signed-URL player
+├── settings-form.tsx · section-recording-policy.tsx          admin policy + per-section opt-out
+├── network-test.tsx · network-protocol.ts                    LiveKit diagnostic + ICE-path classifier
+├── empty-state.tsx · loading-skeleton.tsx
+├── types.ts · error-map.ts                                   domain types · error-code → string
+├── livekit/   client · token · rooms · egress · recording-urls · room-naming · webhook
+├── providers/ types · external(live) · google-meet/zoom/teams(dark) · token-cache · index · README.md
+└── CLAUDE.md · README.md · ISSUE.md · RUNBOOK.md
+```
+
+Tests live under `src/tests/` (URL-mirror reorg), **not** in a `__tests__/` folder here.
+The Prisma models are in `prisma/models/conference.prisma`.
 
 ## Routes
 
-| Path                          | Layout           | Roles                                                     |
-| ----------------------------- | ---------------- | --------------------------------------------------------- |
-| `/conference`                 | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF, ACCOUNTANT |
-| `/conference/[id]`            | school-dashboard | same                                                      |
-| `/conference/[id]/recordings` | school-dashboard | DEV, ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             |
-| `/conference/schedule`        | school-dashboard | DEV, ADMIN, TEACHER                                       |
-| `/conference/network-test`    | school-dashboard | DEV, ADMIN                                                |
-| `/conference/[id]/room`       | **(live-room)**  | session participants                                      |
+| Path                          | Layout           | Roles                                              |
+| ----------------------------- | ---------------- | -------------------------------------------------- |
+| `/conference`                 | school-dashboard | all 7 school roles                                 |
+| `/conference/[id]`            | school-dashboard | all 7 school roles                                 |
+| `/conference/[id]/recordings` | school-dashboard | all except ACCOUNTANT                              |
+| `/conference/schedule`        | school-dashboard | DEVELOPER · ADMIN · TEACHER                        |
+| `/conference/settings`        | school-dashboard | DEVELOPER · ADMIN                                  |
+| `/conference/network-test`    | school-dashboard | DEVELOPER · ADMIN (env-gated)                      |
+| `/conference/[id]/room`       | **(live-room)**  | session participants (bare full-screen layout)     |
+| `/live-classes/*`             | —                | legacy redirect → `/conference` (pre-rename links) |
 
 ## API
 
-| Path                               | Method | Purpose                              |
-| ---------------------------------- | ------ | ------------------------------------ |
-| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC)       |
-| `/api/cron/live-class-reminders`   | GET    | 10-min start reminders (every 5 min) |
-| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily)   |
+| Path                               | Method | Purpose                                     |
+| ---------------------------------- | ------ | ------------------------------------------- |
+| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)  |
+| `/api/cron/live-class-reminders`   | GET    | 5–10-min start reminders (runs every 5 min) |
+| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500) |
 
-## File Structure
+## Status
 
-```
-src/components/school-dashboard/conference/
-├── CLAUDE.md                  — block context + danger zones
-├── README.md                  — this file
-├── ISSUE.md                   — open backlog
-├── authorization.ts           — PERMISSION_MATRIX (10 actions)
-├── permissions.ts             — FeaturePermissionsModule (tabs + UI gating)
-├── validation.ts              — Zod schemas + i18n factories
-├── types.ts                   — UI types + RoomJoinTicket
-├── content.tsx                — overview list
-├── empty-state.tsx
-├── loading-skeleton.tsx
-├── error-map.ts               — code → translated string
-├── actions.ts                 — barrel
-├── actions/
-│   ├── helpers.ts             — requireContext + conferenceRevalidatePath
-│   ├── sessions.ts            — create / cancel / start / end / list / get
-│   ├── tokens.ts              — joinLiveClass / refreshLiveClassToken
-│   ├── notifications.ts       — lang-aware dispatch (internal helper)
-│   └── recordings.ts          — list / signed URL / delete
-├── detail/detail-content.tsx
-├── schedule/schedule-form.tsx
-├── room/room-client.tsx       — LiveKitRoom + VideoConference
-├── recordings/
-│   ├── recordings-content.tsx
-│   └── recording-player.tsx
-├── network-test/network-test-client.tsx
-└── __tests__/
-    ├── authorization.test.ts  (26)
-    ├── validation.test.ts     (11)
-    ├── sessions.test.ts       (26)  — server actions + state machine
-    ├── eligibility.test.ts    (17)  — joinLiveClass role resolution
-    ├── recordings.test.ts     (7)   — list / signed URL / delete
-    ├── multi-tenant.test.ts   (5)   — cross-tenant isolation
-    ├── permissions.test.ts    (13)  — FeaturePermissionsModule
-    └── error-map.test.ts      (17)  — server code → translated string
-```
+| Capability                                  | Status                             |
+| ------------------------------------------- | ---------------------------------- |
+| Prisma models (`Conference*` + link) + Neon | ✅ live                            |
+| External pasted-link provider               | ✅ live                            |
+| List CRUD + detail + schedule + settings UI | ✅ live                            |
+| Per-section recording opt-out               | ✅ live                            |
+| In-room HOST moderation (kick)              | ✅ live                            |
+| Timetable Start / Join buttons              | ✅ live (`Conference.timetableId`) |
+| Native Meet/Zoom/Teams `createMeeting`      | 🟡 wired, dark until OAuth creds   |
+| LiveKit SFU rooms + Egress recording        | 🟡 coded, dormant until infra      |
+| Capacity dashboard (`/observability/conf.`) | ⏸️ backlog                         |
 
-Lib (shared, lives outside the block):
-
-```
-livekit/
-├── client.ts                  — RoomServiceClient + EgressClient singletons
-├── token.ts                   — issueAccessToken (role → grants)
-├── rooms.ts                   — ensureRoom / endRoom / kick
-├── egress.ts                  — startCompositeEgress / stopEgress
-├── recording-urls.ts          — signed S3 playback URL + delete
-├── webhook.ts                 — verify + handle SFU events
-├── room-naming.ts             — sch-{schoolId}-lc-{sessionId}
-└── __tests__/
-    ├── room-naming.test.ts    (8)
-    ├── token.test.ts          (9)   — JWT grant shape per role
-    └── webhook.test.ts        (12)  — dispatch + idempotency + tenant
-```
-
-Playwright E2E (`tests/e2e/conference/`):
-
-```
-feature-pages-load.spec.ts     — 5 smoke tests per browser project
-rbac.spec.ts                   — 11 RBAC matrix tests per browser
-                                 (103 total rows × 5 projects)
-```
-
-## Status Matrix
-
-| Capability                             | Status                                        |
-| -------------------------------------- | --------------------------------------------- |
-| Prisma models + migration              | ✅ live                                       |
-| LiveKit lib wrappers                   | ✅                                            |
-| Server actions (create/start/end/join) | ✅                                            |
-| Overview + detail + schedule UI        | ✅                                            |
-| Full-screen room UI (LiveKit prebuilt) | ✅                                            |
-| Recordings list + signed playback      | ✅                                            |
-| Webhook handler (room + egress events) | ✅                                            |
-| Reminder + retention crons             | ✅                                            |
-| RBAC (`/conference/*`)                 | ✅                                            |
-| Sidebar + dictionaries (en+ar)         | ✅                                            |
-| Notification type sync (5 sync points) | ✅                                            |
-| Network test page                      | ✅ (env-gated)                                |
-| Unit tests (Vitest)                    | ✅ 151/151                                    |
-| E2E tests (Playwright)                 | ✅ 103 specs ready (CLI run needs dev server) |
-| SFU provisioning (G42 + coturn)        | ⏸️ infra                                      |
-| AWS S3 me-central-1 bucket + IAM       | ⏸️ infra                                      |
-| Webhook URL registration in LiveKit    | ⏸️ infra                                      |
-| Aldar Meeting-3 network test           | ⏸️ pre-signature gate                         |
-| Timetable "Start live class" button    | ⏸️ Phase 3                                    |
-| Settings UI for retention / max-dur    | ⏸️ Phase 4                                    |
-
-## Integration Points
-
-- **Notifications**: 5 new `NotificationType` values
-  (`live_class_scheduled`, `live_class_starting_soon`,
-  `live_class_started`, `live_class_cancelled`,
-  `live_class_recording_ready`). All five sync points wired (see
-  `CLAUDE.md > Danger Zones`).
-- **Timetable**: `Conference.timetableId?` is the join key for
-  Phase 3 "Start live class" buttons on the timetable slot detail page.
-- **Section / Subject / Teacher**: optional back-relations on each.
-- **School**: 4 new columns —
-  `conferenceRetentionDays` (default 90),
-  `conferenceMaxConcurrent` (default 50),
-  `conferenceMaxDuration` (default 120),
-  `conferenceRecordingDefault` (default true).
+See `ISSUE.md` for the open backlog and `RUNBOOK.md` for the 6-gate LiveKit provisioning sequence.
 
 ## Testing
 
 ```bash
-pnpm vitest run src/components/school-dashboard/conference
+pnpm vitest run src/tests --dir conference   # or target the conference specs directly
 ```

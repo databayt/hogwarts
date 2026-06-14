@@ -51,7 +51,7 @@ export function ScheduleLiveClassForm({
       onSubmit={(e) => {
         e.preventDefault()
         if (!teacherId) {
-          setError("UNAUTHORIZED")
+          setError(resolveLiveClassError(dictionary, "UNAUTHORIZED"))
           return
         }
         startTransition(async () => {
