@@ -38,6 +38,7 @@ import { Separator } from "@/components/ui/separator"
 
 import {
   deleteOwnVideo,
+  removeVideoPaywall,
   revokeVideoAccess,
   updateVideoVisibility,
 } from "../video/video-owner-actions"
@@ -85,6 +86,23 @@ export function VideoSettingsDialog({
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [visibility, setVisibility] = useState(video.visibility)
+  const [paywallTarget, setPaywallTarget] = useState<
+    "PRIVATE" | "SCHOOL" | "PUBLIC"
+  >("SCHOOL")
+  const isPaid = visibility === "PAID"
+
+  function handleRemovePaywall() {
+    startTransition(async () => {
+      const result = await removeVideoPaywall(video.id, paywallTarget)
+      if (result.status === "success") {
+        toast.success(result.message)
+        setVisibility(paywallTarget)
+        onUpdate?.()
+      } else {
+        toast.error(result.message)
+      }
+    })
+  }
 
   function handleVisibilityChange(newVisibility: string) {
     setVisibility(newVisibility)
@@ -168,34 +186,79 @@ export function VideoSettingsDialog({
           <Separator />
 
           {/* Visibility Control */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Visibility</label>
-            <Select
-              value={visibility}
-              onValueChange={handleVisibilityChange}
-              disabled={isPending}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {VISIBILITY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <div className="flex items-center gap-2">
-                      <opt.icon className="size-4" />
-                      <span>{opt.label}</span>
-                      <span className="text-muted-foreground text-xs">
-                        — {opt.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-muted-foreground text-xs">
-              You can change visibility at any time. Your video, your choice.
-            </p>
-          </div>
+          {isPaid ? (
+            // PAID can't be represented by the free-audience Select, and the
+            // generic toggle refuses to un-paywall. Offer an explicit
+            // "remove paywall → free audience" path instead.
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Paywall</label>
+              <Badge variant="secondary">Paid</Badge>
+              <p className="text-muted-foreground text-xs">
+                This is a paid video. Removing the paywall makes it free at the
+                audience you choose. Existing buyers are not refunded.
+              </p>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={paywallTarget}
+                  onValueChange={(v) =>
+                    setPaywallTarget(v as "PRIVATE" | "SCHOOL" | "PUBLIC")
+                  }
+                  disabled={isPending}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VISIBILITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        <div className="flex items-center gap-2">
+                          <opt.icon className="size-4" />
+                          <span>{opt.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemovePaywall}
+                  disabled={isPending}
+                >
+                  Remove paywall
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Visibility</label>
+              <Select
+                value={visibility}
+                onValueChange={handleVisibilityChange}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VISIBILITY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <div className="flex items-center gap-2">
+                        <opt.icon className="size-4" />
+                        <span>{opt.label}</span>
+                        <span className="text-muted-foreground text-xs">
+                          — {opt.description}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                You can change visibility at any time. Your video, your choice.
+              </p>
+            </div>
+          )}
 
           <Separator />
 

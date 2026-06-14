@@ -35,77 +35,76 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 async function getCatalogAdminStats(schoolId: string) {
-  const [totalSubjects, totalEnrollments, totalVideos, recentEnrollments] =
-    await Promise.all([
-      db.subjectSelection.count({
-        where: { schoolId, isActive: true },
-      }),
-      db.enrollment.count({
-        where: {
-          isActive: true,
-          OR: [{ schoolId }, { schoolId: null }],
-        },
-      }),
-      db.video.count({
-        where: { schoolId },
-      }),
-      (async () => {
-        const now = new Date()
-        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-        const lastMonthStart = new Date(
-          now.getFullYear(),
-          now.getMonth() - 1,
-          1
-        )
+  const [
+    totalSubjects,
+    totalEnrollments,
+    totalVideos,
+    recentEnrollments,
+    recentSubjectSelections,
+  ] = await Promise.all([
+    db.subjectSelection.count({
+      where: { schoolId, isActive: true },
+    }),
+    db.enrollment.count({
+      where: {
+        isActive: true,
+        OR: [{ schoolId }, { schoolId: null }],
+      },
+    }),
+    db.video.count({
+      where: { schoolId },
+    }),
+    (async () => {
+      const now = new Date()
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-        const [thisMonth, lastMonth] = await Promise.all([
-          db.enrollment.count({
-            where: {
-              isActive: true,
-              OR: [{ schoolId }, { schoolId: null }],
-              createdAt: { gte: thisMonthStart },
-            },
-          }),
-          db.enrollment.count({
-            where: {
-              isActive: true,
-              OR: [{ schoolId }, { schoolId: null }],
-              createdAt: { gte: lastMonthStart, lt: thisMonthStart },
-            },
-          }),
-        ])
+      const [thisMonth, lastMonth] = await Promise.all([
+        db.enrollment.count({
+          where: {
+            isActive: true,
+            OR: [{ schoolId }, { schoolId: null }],
+            createdAt: { gte: thisMonthStart },
+          },
+        }),
+        db.enrollment.count({
+          where: {
+            isActive: true,
+            OR: [{ schoolId }, { schoolId: null }],
+            createdAt: { gte: lastMonthStart, lt: thisMonthStart },
+          },
+        }),
+      ])
 
-        let growthPercent = 0
-        if (lastMonth > 0) {
-          growthPercent = Math.round(
-            ((thisMonth - lastMonth) / lastMonth) * 100
-          )
-        } else if (thisMonth > 0) {
-          growthPercent = 100
-        }
+      let growthPercent = 0
+      if (lastMonth > 0) {
+        growthPercent = Math.round(((thisMonth - lastMonth) / lastMonth) * 100)
+      } else if (thisMonth > 0) {
+        growthPercent = 100
+      }
 
-        return { growthPercent }
-      })(),
-    ])
-
-  const recentSubjectSelections = await db.subjectSelection.findMany({
-    where: { schoolId, isActive: true },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-    include: {
-      subject: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          status: true,
-          totalChapters: true,
-          totalLessons: true,
-          createdAt: true,
+      return { growthPercent }
+    })(),
+    // Independent of the four counts above (keys only on schoolId).
+    db.subjectSelection.findMany({
+      where: { schoolId, isActive: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: {
+        subject: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            status: true,
+            totalChapters: true,
+            totalLessons: true,
+            createdAt: true,
+          },
         },
       },
-    },
-  })
+    }),
+  ])
 
   const subjectIds = recentSubjectSelections
     .map((s) => s.catalogSubjectId)

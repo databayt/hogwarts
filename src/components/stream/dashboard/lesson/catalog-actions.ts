@@ -73,25 +73,8 @@ export async function markLessonComplete(
       session.user.role || ""
     )
 
-    if (!isAdmin) {
-      const enrollment = await db.enrollment.findFirst({
-        where: {
-          userId: session.user.id,
-          catalogSubjectId: subjectId,
-          isActive: true,
-        },
-        select: { id: true },
-      })
-
-      if (!enrollment) {
-        return {
-          status: "error",
-          message: "You must be enrolled to track progress",
-        }
-      }
-    }
-
-    // Get enrollment for linking
+    // Single enrollment lookup serves both the permission gate and the FK
+    // link (was two identical findFirst round-trips on the same unique row).
     const enrollment = await db.enrollment.findFirst({
       where: {
         userId: session.user.id,
@@ -101,42 +84,52 @@ export async function markLessonComplete(
       select: { id: true, schoolId: true },
     })
 
-    // Upsert lesson progress — skip if no enrollment (admin/teacher without enrollment)
+    if (!isAdmin && !enrollment) {
+      return {
+        status: "error",
+        message: "You must be enrolled to track progress",
+      }
+    }
+
+    // Admin/teacher can view but we can't track progress without a valid
+    // enrollment FK.
     if (!enrollment) {
-      // Admin/teacher can view but we can't track progress without a valid enrollment FK
       return { status: "success", message: "Progress noted (no enrollment)" }
     }
 
-    await db.lessonProgress.upsert({
-      where: {
-        userId_catalogLessonId: {
+    // The upsert and the subject's lesson list are independent — run them
+    // together. The completion count below still depends on both.
+    const [, allLessons] = await Promise.all([
+      db.lessonProgress.upsert({
+        where: {
+          userId_catalogLessonId: {
+            userId: session.user.id,
+            catalogLessonId: lessonId,
+          },
+        },
+        update: {
+          isCompleted: true,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        },
+        create: {
           userId: session.user.id,
           catalogLessonId: lessonId,
+          enrollmentId: enrollment.id,
+          isCompleted: true,
+          completedAt: new Date(),
+          lastWatchedAt: new Date(),
         },
-      },
-      update: {
-        isCompleted: true,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      },
-      create: {
-        userId: session.user.id,
-        catalogLessonId: lessonId,
-        enrollmentId: enrollment.id,
-        isCompleted: true,
-        completedAt: new Date(),
-        lastWatchedAt: new Date(),
-      },
-    })
-
-    // Check if all lessons in the subject are completed
-    const allLessons = await db.lesson.findMany({
-      where: {
-        chapter: { subjectId },
-        status: "PUBLISHED",
-      },
-      select: { id: true },
-    })
+      }),
+      // All published lessons in the subject (for the all-complete check).
+      db.lesson.findMany({
+        where: {
+          chapter: { subjectId },
+          status: "PUBLISHED",
+        },
+        select: { id: true },
+      }),
+    ])
 
     const completedLessons = await db.lessonProgress.count({
       where: {

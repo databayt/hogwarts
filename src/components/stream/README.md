@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 80
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-05-25
+last_audited: 2026-06-14
 ---
 
 ## Stream — Learning Management System (LMS)
@@ -78,7 +78,6 @@ src/components/stream/
 │       └── catalog-enrollment-button.tsx
 ├── dashboard/
 │   ├── content.tsx                 # Student dashboard main
-│   ├── certificate-card.tsx        # Certificate view/download/share
 │   ├── lesson/
 │   │   ├── content.tsx             # Lesson viewer
 │   │   ├── actions.ts              # Lesson progress actions
@@ -113,16 +112,10 @@ src/components/stream/
 │   ├── completion-email.tsx        # Course completion email template
 │   └── enrollment-email.tsx        # Enrollment confirmation email template
 ├── shared/
-│   ├── rich-text-editor.tsx        # Tiptap WYSIWYG editor
-│   ├── sortable-list.tsx           # DND Kit drag-and-drop
-│   ├── file-upload.tsx             # File upload with progress
-│   ├── slug-utils.ts              # Auto-slug generation
-│   ├── duration-utils.ts          # Duration formatting (i18n)
 │   ├── url-validators.ts          # URL validation (video, image, document)
 │   ├── email-service.ts           # Resend email integration
-│   └── video-player/              # Enterprise video player (2,000+ lines)
-│       ├── video-player.tsx        # Main player component
-│       ├── video-controls.tsx      # Playback controls
+│   └── video-player/              # Enterprise video player (~1,800 lines)
+│       ├── video-player.tsx        # Main player component (inline controls)
 │       ├── video-progress-bar.tsx  # Seek bar
 │       ├── video-overlay.tsx       # Loading/pause overlay
 │       ├── video-up-next.tsx       # Auto-play next lesson
@@ -136,7 +129,6 @@ src/components/stream/
 │   ├── get-lesson-content.ts       # Lesson content + attachments
 │   ├── get-lesson-with-progress.ts # Lesson + user progress
 │   ├── get-continue-watching.ts    # Resume watching list
-│   ├── get-certificates.ts         # User certificates
 │   ├── get-dashboard-data.ts       # Dashboard aggregate data
 │   ├── check-enrollment.ts         # Enrollment status check
 │   ├── admin-get-course.ts         # Admin course detail
@@ -152,12 +144,18 @@ src/components/stream/
 
 ### Status
 
-**Catalog runtime path: production-hardened (2026-05-29).** P0 paywall + payment
-webhook, the P1 integrity cluster, critical-path tests, the lesson hot-path perf
-work, and P2 video hardening are done and tested (see `ISSUES.md` →
-"Production-Readiness Pass"). Deferred: a Float→Decimal money-type migration +
-two composite indexes (schema), and the server-action / teacher-dashboard /
-search-bar i18n consumption layer. Do **not** assume "100%" — check `ISSUES.md`.
+**Catalog runtime path: production-hardened (2026-05-29) + optimized
+(2026-06-14).** P0 paywall + payment webhook, the P1 integrity cluster,
+critical-path tests, the lesson hot-path perf work, and P2 video hardening are
+done and tested. The 2026-06-14 optimization pass removed ~1,870 lines of dead
+code (incl. the only `@tiptap` importer), parallelized serial DB waterfalls,
+collapsed count queries into `groupBy`/`_count`, killed ~4Hz video-player
+listener churn, demoted the home page to a Server Component, lazy-loaded the
+lottie animation, and added 3 composite indexes (deploy-pending). See `ISSUES.md`
+→ "Optimization Pass — 2026-06-14". The admin Review tab (a merge regression
+that left it unwired) was re-wired the same day. Deferred: a Float→Decimal
+money-type migration, and the server-action / search-bar i18n consumption layer.
+Do **not** assume "100%" — check `ISSUES.md`.
 
 ### Data Architecture
 

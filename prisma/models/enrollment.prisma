@@ -39,6 +39,8 @@ model Enrollment {
   @@index([userId])
   @@index([catalogSubjectId])
   @@index([schoolId])
+  // Course-detail enrollment count: WHERE catalogSubjectId = ? AND isActive
+  @@index([catalogSubjectId, isActive])
   @@map("enrollments")
 }
 
@@ -69,6 +71,8 @@ model LessonProgress {
   @@index([userId])
   @@index([catalogLessonId])
   @@index([lastWatchedAt])
+  // "Continue Watching": WHERE userId = ? AND isCompleted = false ORDER BY updatedAt DESC
+  @@index([userId, isCompleted, updatedAt])
   @@map("lesson_progress")
 }
 

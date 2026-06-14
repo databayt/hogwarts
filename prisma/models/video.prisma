@@ -56,6 +56,8 @@ model Video {
   @@index([catalogLessonId, approvalStatus, visibility])
   @@index([userId])
   @@index([schoolId])
+  // Admin review queue: WHERE schoolId = ? AND approvalStatus = 'PENDING'
+  @@index([schoolId, approvalStatus])
   @@index([viewCount])
   @@map("lesson_videos")
 }

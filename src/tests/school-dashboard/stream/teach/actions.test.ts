@@ -15,7 +15,7 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     video: {
-      count: vi.fn(),
+      groupBy: vi.fn(),
       aggregate: vi.fn(),
       findMany: vi.fn(),
     },
@@ -24,14 +24,14 @@ vi.mock("@/lib/db", () => ({
 
 const mockAuth = auth as unknown as ReturnType<typeof vi.fn>
 const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
-const mockCount = db.video.count as ReturnType<typeof vi.fn>
+const mockGroupBy = db.video.groupBy as ReturnType<typeof vi.fn>
 const mockAggregate = db.video.aggregate as ReturnType<typeof vi.fn>
 const mockFindMany = db.video.findMany as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
-  mockCount.mockResolvedValue(0)
+  mockGroupBy.mockResolvedValue([])
   mockAggregate.mockResolvedValue({ _sum: { viewCount: 0 } })
   mockFindMany.mockResolvedValue([])
 })
@@ -46,7 +46,7 @@ describe("getTeacherStats — guards", () => {
       approvedVideos: 0,
       totalViews: 0,
     })
-    expect(mockCount).not.toHaveBeenCalled()
+    expect(mockGroupBy).not.toHaveBeenCalled()
   })
 
   it("returns zeros without school context", async () => {
@@ -54,7 +54,7 @@ describe("getTeacherStats — guards", () => {
     mockTenant.mockResolvedValueOnce({ schoolId: null, subdomain: null })
     const result = await getTeacherStats()
     expect(result.totalVideos).toBe(0)
-    expect(mockCount).not.toHaveBeenCalled()
+    expect(mockGroupBy).not.toHaveBeenCalled()
   })
 })
 
@@ -63,14 +63,19 @@ describe("getTeacherStats — query", () => {
     mockAuth.mockResolvedValue({ user: { id: "t-9", role: "TEACHER" } })
   })
 
-  it("scopes every count by current userId AND schoolId", async () => {
+  it("scopes the groupBy + aggregate by current userId AND schoolId", async () => {
     await getTeacherStats()
-    for (const call of mockCount.mock.calls) {
-      const where = (call[0] as { where: { userId: string; schoolId: string } })
-        .where
-      expect(where.userId).toBe("t-9")
-      expect(where.schoolId).toBe("school-1")
-    }
+    expect(mockGroupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        by: ["approvalStatus"],
+        where: { userId: "t-9", schoolId: "school-1" },
+      })
+    )
+    expect(mockAggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: "t-9", schoolId: "school-1" },
+      })
+    )
   })
 
   it("aggregates viewCount sum scoped by userId+schoolId", async () => {
@@ -81,11 +86,12 @@ describe("getTeacherStats — query", () => {
     })
   })
 
-  it("returns counts and view sum from queries", async () => {
-    mockCount
-      .mockResolvedValueOnce(5)
-      .mockResolvedValueOnce(2)
-      .mockResolvedValueOnce(3)
+  it("derives totals from the approvalStatus groupBy + view sum", async () => {
+    // total = sum of all group counts (2 PENDING + 3 APPROVED = 5)
+    mockGroupBy.mockResolvedValueOnce([
+      { approvalStatus: "PENDING", _count: 2 },
+      { approvalStatus: "APPROVED", _count: 3 },
+    ])
     mockAggregate.mockResolvedValueOnce({ _sum: { viewCount: 999 } })
     const result = await getTeacherStats()
     expect(result).toEqual({

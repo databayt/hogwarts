@@ -13,6 +13,8 @@ import { getSchoolEnrollments } from "@/components/stream/settings/enrollments/a
 import { EnrollmentsContent } from "@/components/stream/settings/enrollments/content"
 import { InstructorSettingsContent } from "@/components/stream/settings/instructor-settings"
 import { StreamAdminDashboardContent } from "@/components/stream/settings/overview"
+import { getPendingVideos } from "@/components/stream/settings/video-review-actions"
+import { VideoReviewContent } from "@/components/stream/settings/video-review-content"
 import { getMyVideos } from "@/components/stream/teach/actions"
 import { TeachVideosContent } from "@/components/stream/teach/videos-content"
 
@@ -55,25 +57,28 @@ async function getSubjectsWithInstructors(schoolId: string) {
   }
 
   const subjectIds = Array.from(uniqueSubjects.keys())
-  const videos = await db.video.findMany({
-    where: {
-      lesson: { chapter: { subjectId: { in: subjectIds } } },
-      approvalStatus: "APPROVED",
-      OR: [{ schoolId }, { visibility: "PUBLIC" }],
-    },
-    select: {
-      schoolId: true,
-      isFeatured: true,
-      viewCount: true,
-      lesson: { select: { chapter: { select: { subjectId: true } } } },
-      school: { select: { id: true, name: true } },
-      user: { select: { id: true, username: true } },
-    },
-  })
-
-  const preferences = await db.instructorPreference.findMany({
-    where: { schoolId, catalogSubjectId: { in: subjectIds } },
-  })
+  // Videos + instructor preferences both depend only on subjectIds and are
+  // independent of each other — collapse two serial round-trips into one.
+  const [videos, preferences] = await Promise.all([
+    db.video.findMany({
+      where: {
+        lesson: { chapter: { subjectId: { in: subjectIds } } },
+        approvalStatus: "APPROVED",
+        OR: [{ schoolId }, { visibility: "PUBLIC" }],
+      },
+      select: {
+        schoolId: true,
+        isFeatured: true,
+        viewCount: true,
+        lesson: { select: { chapter: { select: { subjectId: true } } } },
+        school: { select: { id: true, name: true } },
+        user: { select: { id: true, username: true } },
+      },
+    }),
+    db.instructorPreference.findMany({
+      where: { schoolId, catalogSubjectId: { in: subjectIds } },
+    }),
+  ])
   const prefMap = new Map(preferences.map((p) => [p.catalogSubjectId, p]))
 
   type InstructorSource = {
@@ -218,14 +223,17 @@ export default async function StreamSettingsPage({
   }
 
   // Fetch data based on role
-  const [enrollments, subjects, videos, overviewStats] = await Promise.all([
-    isAdmin ? getSchoolEnrollments() : Promise.resolve([]),
-    isAdmin && schoolId
-      ? getSubjectsWithInstructors(schoolId)
-      : Promise.resolve([]),
-    getMyVideos(),
-    isAdmin && schoolId ? getOverviewStats(schoolId) : Promise.resolve(null),
-  ])
+  const [enrollments, subjects, videos, overviewStats, pendingVideos] =
+    await Promise.all([
+      isAdmin ? getSchoolEnrollments() : Promise.resolve([]),
+      isAdmin && schoolId
+        ? getSubjectsWithInstructors(schoolId)
+        : Promise.resolve([]),
+      getMyVideos(),
+      isAdmin && schoolId ? getOverviewStats(schoolId) : Promise.resolve(null),
+      // Admin video-review queue (getPendingVideos self-guards role + school).
+      isAdmin ? getPendingVideos() : Promise.resolve([]),
+    ])
 
   return (
     <StreamSettingsContent
@@ -264,6 +272,8 @@ export default async function StreamSettingsPage({
           subdomain={subdomain}
         />
       }
+      reviewContent={<VideoReviewContent videos={pendingVideos} />}
+      pendingReviewCount={pendingVideos.length}
     />
   )
 }

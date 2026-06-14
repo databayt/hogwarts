@@ -8,7 +8,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   Bookmark,
-  BookOpen,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -602,6 +601,10 @@ export function StreamLessonContent({
           </>
         ) : currentVideoUrl ? (
           <VideoPlayer
+            // Remount on instructor switch — a <video> won't reload just from a
+            // changed `src` attribute (it needs .load()), so keying on the
+            // active video id gives the new instructor's source a fresh element.
+            key={activeVideoId ?? "default"}
             url={currentVideoUrl}
             title={lesson.title}
             lessonId={lesson.id}

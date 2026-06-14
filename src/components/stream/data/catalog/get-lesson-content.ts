@@ -25,6 +25,16 @@ export async function getLessonContent(
   const { schoolId } = await getTenantContext()
 
   try {
+    // Per-school quiz hide: a school admin can hide a lesson's practice quiz
+    // (hideQuiz on the lesson-level ContentOverride) while keeping the lesson.
+    if (schoolId) {
+      const quizHidden = await db.contentOverride.findFirst({
+        where: { schoolId, catalogLessonId, hideQuiz: true },
+        select: { id: true },
+      })
+      if (quizHidden) return { questions: [] }
+    }
+
     // Fetch approved questions for this lesson
     const questions = await db.question.findMany({
       where: {

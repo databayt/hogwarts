@@ -115,25 +115,27 @@ export async function reviewVideo(
   }
 
   try {
-    const video = await db.video.findFirst({
+    // Single tenant-scoped write: schoolId is in the WHERE, so a video from
+    // another school can't be mutated even if its id is guessed. count === 0
+    // means "not found in this school" (404).
+    const result = await db.video.updateMany({
       where: { id: videoId, schoolId },
-      select: { id: true },
-    })
-
-    if (!video) {
-      return { status: "error", message: "Video not found" }
-    }
-
-    await db.video.update({
-      where: { id: videoId },
       data: {
         approvalStatus: decision,
         approvedBy: decision === "APPROVED" ? session.user.id : null,
         approvedAt: decision === "APPROVED" ? new Date() : null,
-        rejectionReason: decision === "REJECTED" ? rejectionReason : null,
+        rejectionReason:
+          decision === "REJECTED" ? (rejectionReason ?? null) : null,
       },
     })
 
+    if (result.count === 0) {
+      return { status: "error", message: "Video not found" }
+    }
+
+    // Refresh the review queue (settings) and the catalog/lesson views where an
+    // approved video now surfaces.
+    revalidatePath("/[lang]/s/[subdomain]/stream/settings")
     revalidatePath("/[lang]/s/[subdomain]/stream")
     return {
       status: "success",

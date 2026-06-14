@@ -48,35 +48,37 @@ export async function adminGetLesson(
     notFound()
   }
 
-  // Get all videos for this lesson (admin sees all, not just approved)
-  const videos = await db.video.findMany({
-    where: {
-      catalogLessonId: lessonId,
-      ...(schoolId ? { OR: [{ schoolId }, { visibility: "PUBLIC" }] } : {}),
-    },
-    include: {
-      user: {
-        select: { username: true, email: true },
+  // Videos + attachments are independent (both keyed only on lessonId) —
+  // run them in one round-trip instead of two serial ones.
+  const [videos, attachments] = await Promise.all([
+    // All videos for this lesson (admin sees all, not just approved)
+    db.video.findMany({
+      where: {
+        catalogLessonId: lessonId,
+        ...(schoolId ? { OR: [{ schoolId }, { visibility: "PUBLIC" }] } : {}),
       },
-    },
-    orderBy: [
-      { isFeatured: "desc" },
-      { approvalStatus: "asc" },
-      { viewCount: "desc" },
-    ],
-  })
-
-  // Get attachments
-  const attachments = await db.attachment.findMany({
-    where: { catalogLessonId: lessonId },
-    select: {
-      id: true,
-      name: true,
-      url: true,
-      fileType: true,
-      fileSize: true,
-    },
-  })
+      include: {
+        user: {
+          select: { username: true, email: true },
+        },
+      },
+      orderBy: [
+        { isFeatured: "desc" },
+        { approvalStatus: "asc" },
+        { viewCount: "desc" },
+      ],
+    }),
+    db.attachment.findMany({
+      where: { catalogLessonId: lessonId },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        fileType: true,
+        fileSize: true,
+      },
+    }),
+  ])
 
   // Return Stream-compatible shape
   return {

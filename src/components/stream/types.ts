@@ -250,33 +250,8 @@ export interface StreamSearchProps {
   }
 }
 
-// Catalog-backed course types (Subject viewed as course)
-export interface CatalogCourseType {
-  id: string
-  title: string
-  slug: string
-  description: string | null
-  imageUrl: string | null
-  price: number | null
-  category: { name: string } | null
-  chaptersCount: number
-  lessonsCount: number
-  enrollmentsCount: number
-}
-
-export interface CatalogIndividualCourseType extends CatalogCourseType {
-  objectives: string[]
-  prerequisites: string | null
-  targetAudience: string | null
-  chapters: Array<{
-    id: string
-    name: string
-    slug: string
-    lessons: Array<{
-      id: string
-      name: string
-      slug: string
-      description: string | null
-    }>
-  }>
-}
+// NOTE: the live CatalogCourseType / CatalogIndividualCourseType are the
+// inferred return types exported from data/catalog/get-all-courses.ts and
+// data/catalog/get-course.ts. The hand-written duplicates that used to live
+// here were unused (every importer pulls them from the data files) and were
+// removed to avoid drift.

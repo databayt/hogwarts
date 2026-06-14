@@ -84,7 +84,11 @@ export function VideoWatermark({
       ? `${userId.slice(0, 4)}...${userId.slice(-4)}`
       : ""
 
-  const timestamp = new Date().toISOString().slice(0, 16).replace("T", " ")
+  // Capture once at mount — the watermark records when viewing started, and
+  // recomputing per render churned the string on every timeupdate tick.
+  const [timestamp] = useState(() =>
+    new Date().toISOString().slice(0, 16).replace("T", " ")
+  )
 
   return (
     <div

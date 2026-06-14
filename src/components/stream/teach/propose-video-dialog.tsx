@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useState, useTransition } from "react"
+import { useCallback, useMemo, useState, useTransition } from "react"
 import {
   ArrowLeft,
   ArrowRight,
@@ -147,15 +147,20 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
     pricing === "FREE" || (Number(price) > 0 && currency.trim().length === 3)
   const canProceedFromVideo = !!videoUrl.trim() && !!title.trim() && isPaidValid
 
-  // Group lessons by subject for easier browsing
-  const lessonsBySubject = lessons.reduce(
-    (acc, lesson) => {
-      const key = lesson.subjectName
-      if (!acc[key]) acc[key] = []
-      acc[key].push(lesson)
-      return acc
-    },
-    {} as Record<string, LessonOption[]>
+  // Group lessons by subject for easier browsing (memoized so typing in the
+  // step-2 inputs doesn't re-run the grouping on every keystroke).
+  const lessonsBySubject = useMemo(
+    () =>
+      lessons.reduce(
+        (acc, lesson) => {
+          const key = lesson.subjectName
+          if (!acc[key]) acc[key] = []
+          acc[key].push(lesson)
+          return acc
+        },
+        {} as Record<string, LessonOption[]>
+      ),
+    [lessons]
   )
 
   return (

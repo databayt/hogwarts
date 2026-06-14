@@ -26,46 +26,53 @@ export async function adminGetCatalogCourse(
     notFound()
   }
 
-  const subject = await db.subject.findFirst({
-    where: {
-      id: subjectId,
-      status: { not: "ARCHIVED" },
-    },
-    include: {
-      chapters: {
-        include: {
-          lessons: {
-            orderBy: { sequenceOrder: "asc" },
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              sequenceOrder: true,
-              durationMinutes: true,
-              status: true,
-              description: true,
+  // Subject tree + school overrides are independent (overrides key only on
+  // schoolId) — fetch both in one round-trip, then guard notFound.
+  const [subject, overrides] = await Promise.all([
+    db.subject.findFirst({
+      where: {
+        id: subjectId,
+        status: { not: "ARCHIVED" },
+      },
+      include: {
+        chapters: {
+          include: {
+            lessons: {
+              orderBy: { sequenceOrder: "asc" },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                sequenceOrder: true,
+                durationMinutes: true,
+                status: true,
+                description: true,
+              },
             },
           },
+          orderBy: { sequenceOrder: "asc" },
         },
-        orderBy: { sequenceOrder: "asc" },
       },
-    },
-  })
+    }),
+    schoolId
+      ? db.contentOverride.findMany({
+          where: { schoolId, isHidden: true },
+          select: {
+            catalogChapterId: true,
+            catalogLessonId: true,
+          },
+        })
+      : Promise.resolve(
+          [] as {
+            catalogChapterId: string | null
+            catalogLessonId: string | null
+          }[]
+        ),
+  ])
 
   if (!subject) {
     notFound()
   }
-
-  // Get school-specific overrides if schoolId provided
-  const overrides = schoolId
-    ? await db.contentOverride.findMany({
-        where: { schoolId, isHidden: true },
-        select: {
-          catalogChapterId: true,
-          catalogLessonId: true,
-        },
-      })
-    : []
 
   const hiddenChapterIds = new Set(
     overrides.filter((o) => o.catalogChapterId).map((o) => o.catalogChapterId!)

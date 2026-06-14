@@ -1,7 +1,7 @@
-"use client"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+// Server component: pure prop composition with no client hooks/handlers, so
+// it stays out of the client bundle and only its interactive leaves hydrate.
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
@@ -104,17 +104,7 @@ export function StreamHomeContent({
                 {dictionary?.home?.exploreCourses || "Explore Courses"}
               </Link>
 
-              {isAdmin ? (
-                <Link
-                  className={buttonVariants({
-                    size: "lg",
-                    variant: "ghost",
-                  })}
-                  href={`/${lang}/stream/dashboard`}
-                >
-                  {dictionary?.header?.myLearning ?? "My Learning"}
-                </Link>
-              ) : isAuthenticated ? (
+              {isAdmin || isAuthenticated ? (
                 <Link
                   className={buttonVariants({
                     size: "lg",

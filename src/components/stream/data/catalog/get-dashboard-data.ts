@@ -15,30 +15,38 @@ import { getCatalogImageUrl } from "@/components/catalog/image-url"
  */
 export const getCatalogDashboardData = cache(
   async function getCatalogDashboardData(userId: string, schoolId: string) {
-    // Fetch active enrollments in catalog subjects
-    const enrollments = await db.enrollment.findMany({
-      where: {
-        userId,
-        isActive: true,
-        OR: [{ schoolId }, { schoolId: null }],
-      },
-      include: {
-        subject: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            thumbnail: true,
-            color: true,
-            totalChapters: true,
-            totalLessons: true,
-            department: true,
+    // Active enrollments + the school's subject selections are independent
+    // (enrollments key on userId, selections on schoolId) — fetch both in one
+    // round-trip instead of leaving selections for a later serial await.
+    const [enrollments, selections] = await Promise.all([
+      db.enrollment.findMany({
+        where: {
+          userId,
+          isActive: true,
+          OR: [{ schoolId }, { schoolId: null }],
+        },
+        include: {
+          subject: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              thumbnail: true,
+              color: true,
+              totalChapters: true,
+              totalLessons: true,
+              department: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    })
+        orderBy: { createdAt: "desc" },
+      }),
+      db.subjectSelection.findMany({
+        where: { schoolId, isActive: true },
+        select: { catalogSubjectId: true },
+      }),
+    ])
 
     // Get lesson progress for enrolled subjects
     const enrolledSubjectIds = enrollments.map((e) => e.catalogSubjectId)
@@ -106,11 +114,8 @@ export const getCatalogDashboardData = cache(
       }
     })
 
-    // Fetch school's subject selections to scope available courses
-    const selections = await db.subjectSelection.findMany({
-      where: { schoolId, isActive: true },
-      select: { catalogSubjectId: true },
-    })
+    // Scope available courses to the school's curriculum (selections fetched
+    // above, in parallel with enrollments).
     const selectedIds = selections.map((s) => s.catalogSubjectId)
     const enrolledSet = new Set(enrolledSubjectIds)
     const availableIds = selectedIds.filter((id) => !enrolledSet.has(id))

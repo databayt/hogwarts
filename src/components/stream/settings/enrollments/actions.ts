@@ -46,15 +46,17 @@ export async function getSchoolEnrollments(): Promise<EnrollmentRecord[]> {
       subject: {
         select: { name: true, slug: true },
       },
-      progress: {
-        where: { isCompleted: true },
-        select: { id: true },
+      // Count completed lessons in SQL (COUNT subquery) instead of pulling
+      // every completed-progress row into Node just to read `.length`.
+      _count: {
+        select: {
+          progress: { where: { isCompleted: true } },
+        },
       },
     },
     orderBy: { createdAt: "desc" },
-    // Safety cap to bound the payload (whole-table read + per-row progress
-    // join). A future iteration should paginate the admin DataTable server-side
-    // and replace the progress include with a _count projection.
+    // Safety cap to bound the payload. A future iteration should paginate the
+    // admin DataTable server-side.
     take: 500,
   })
 
@@ -66,7 +68,7 @@ export async function getSchoolEnrollments(): Promise<EnrollmentRecord[]> {
     subjectSlug: e.subject.slug,
     isActive: e.isActive,
     status: e.status,
-    completedLessons: e.progress.length,
+    completedLessons: e._count.progress,
     createdAt: e.createdAt,
   }))
 }
@@ -154,7 +156,10 @@ export async function bulkEnrollStudents(data: {
     })),
   })
 
-  revalidatePath("/stream/admin/enrollments")
+  // Settings page (where getSchoolEnrollments is consumed) — the old
+  // "/stream/admin/enrollments" path matched no route, so the list never
+  // refreshed after a bulk enroll.
+  revalidatePath("/[lang]/s/[subdomain]/stream/settings")
 
   return {
     success: true,

@@ -230,3 +230,29 @@ describe("getLessonWithProgress — PAID paywall (the P0)", () => {
     expect(free.videoUrl).toBe("unsigned:s3://v.mp4")
   })
 })
+
+describe("getLessonWithProgress — visibility scoping (PRIVATE isolation)", () => {
+  it("only surfaces the viewer's own video plus non-private school/public/paid", async () => {
+    // The query must NOT match other people's PRIVATE videos via a bare
+    // { schoolId } arm (the old leak + revoke-paywall-bypass). Assert the
+    // exact OR shape the fix produces.
+    await getLessonWithProgress("lesson-1")
+    const call = mVideos.mock.calls[0][0] as {
+      where: { OR: Array<Record<string, unknown>> }
+    }
+    expect(call.where.OR).toEqual([
+      { userId: "student-1" },
+      {
+        schoolId: "school-1",
+        visibility: { in: ["SCHOOL", "PUBLIC", "PAID"] },
+      },
+      { visibility: "PUBLIC" },
+      { visibility: "PAID" },
+    ])
+    // No arm matches a PRIVATE video that isn't the viewer's own.
+    const leaksPrivate = call.where.OR.some(
+      (arm) => "schoolId" in arm && !("visibility" in arm) && !("userId" in arm)
+    )
+    expect(leaksPrivate).toBe(false)
+  })
+})

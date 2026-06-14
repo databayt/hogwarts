@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -107,10 +108,13 @@ describe("getSchoolEnrollments — query", () => {
 
   it("only counts COMPLETED progress entries (not in-flight)", async () => {
     await getSchoolEnrollments()
+    // Counted via a filtered _count projection (SQL COUNT), not by pulling rows.
     const call = mockEnrollFindMany.mock.calls[0][0] as {
-      include: { progress: { where: { isCompleted: boolean } } }
+      include: {
+        _count: { select: { progress: { where: { isCompleted: boolean } } } }
+      }
     }
-    expect(call.include.progress.where.isCompleted).toBe(true)
+    expect(call.include._count.select.progress.where.isCompleted).toBe(true)
   })
 
   it("flattens user/subject and counts completed lessons", async () => {
@@ -122,7 +126,7 @@ describe("getSchoolEnrollments — query", () => {
         createdAt: new Date(),
         user: { username: "harry", email: "h@x.com" },
         subject: { name: "Math", slug: "math" },
-        progress: [{ id: "p1" }, { id: "p2" }],
+        _count: { progress: 2 },
       },
     ])
     const result = await getSchoolEnrollments()
@@ -234,6 +238,13 @@ describe("bulkEnrollStudents — flow", () => {
     const result = await bulkEnrollStudents(input)
     expect(result.success).toBe(true)
     expect(result.enrolled).toBe(3)
+  })
+
+  it("revalidates the settings page (the route that renders the list)", async () => {
+    await bulkEnrollStudents(input)
+    expect(revalidatePath).toHaveBeenCalledWith(
+      "/[lang]/s/[subdomain]/stream/settings"
+    )
   })
 })
 

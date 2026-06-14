@@ -103,6 +103,44 @@ export async function updateVideoVisibility(
 }
 
 /**
+ * Remove a video's paywall — convert a PAID video to a free audience
+ * (PRIVATE | SCHOOL | PUBLIC), clearing price/currency in the same write.
+ * This is the deliberate counterpart that `updateVideoVisibility` refuses to
+ * do for PAID videos. There is no refund path, so the client warns the owner
+ * when prior purchases exist before calling this.
+ */
+export async function removeVideoPaywall(
+  videoId: string,
+  newVisibility: "PRIVATE" | "SCHOOL" | "PUBLIC"
+): Promise<ActionResponse> {
+  const result = await assertOwnership(videoId)
+  if (!("video" in result)) {
+    return { status: "error", message: result.error }
+  }
+
+  const video = result.video!
+  if (video.visibility !== "PAID") {
+    return { status: "error", message: "This video is not paywalled" }
+  }
+
+  try {
+    await db.video.update({
+      where: { id: videoId },
+      data: { visibility: newVisibility, price: null, currency: null },
+    })
+
+    revalidatePath("/[lang]/s/[subdomain]/stream")
+    return {
+      status: "success",
+      message: `Paywall removed — video is now ${newVisibility.toLowerCase()}`,
+    }
+  } catch (error) {
+    console.error("Failed to remove paywall:", error)
+    return { status: "error", message: "Failed to remove paywall" }
+  }
+}
+
+/**
  * Delete a video. Owner can delete at any time.
  * This also invalidates any CloudFront cached copies.
  */

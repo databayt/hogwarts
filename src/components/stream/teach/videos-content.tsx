@@ -59,12 +59,16 @@ export function TeachVideosContent({ dictionary, lang, videos }: Props) {
     REJECTED: d.statusRejected ?? "Rejected",
   }
 
-  const dateFmt = (date: Date | string) =>
-    new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
+  // Build the formatter once per lang (was constructing a new
+  // Intl.DateTimeFormat per row inside the render loop).
+  const dateFmt = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    }).format(new Date(date))
+    })
+    return (date: Date | string) => fmt.format(new Date(date))
+  }, [lang])
 
   const filteredVideos = useMemo(
     () =>

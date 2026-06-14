@@ -201,10 +201,20 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
         where: {
           catalogLessonId: lessonId,
           approvalStatus: "APPROVED",
+          // Visibility gate. PRIVATE is owner-only — the bare `{ schoolId }`
+          // arm used to leak every PRIVATE video to all school members (and
+          // turned `revokeVideoAccess` → PRIVATE into a free-for-the-school
+          // paywall bypass). Now: owner sees their own (any visibility);
+          // school members see the school's SCHOOL/PUBLIC/PAID videos; everyone
+          // sees PUBLIC/PAID.
           ...(schoolId
             ? {
                 OR: [
-                  { schoolId },
+                  { userId: session.user.id },
+                  {
+                    schoolId,
+                    visibility: { in: ["SCHOOL", "PUBLIC", "PAID"] },
+                  },
                   { visibility: "PUBLIC" },
                   { visibility: "PAID" },
                 ],
@@ -212,7 +222,13 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
                   overrides: { some: { schoolId, isHidden: true } },
                 },
               }
-            : { OR: [{ visibility: "PUBLIC" }, { visibility: "PAID" }] }),
+            : {
+                OR: [
+                  { userId: session.user.id },
+                  { visibility: "PUBLIC" },
+                  { visibility: "PAID" },
+                ],
+              }),
         },
         orderBy: [{ isFeatured: "desc" }, { viewCount: "desc" }],
         select: {
@@ -358,11 +374,13 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
         ? getVideoUrl(video.videoUrl, { isFree: !defaultRequiresPayment })
         : null
 
-    // Map available videos with source labels
+    // Map available videos with source labels. Own-school takes priority over
+    // "featured" so a school's own featured video reads as "own-school", not
+    // the platform "featured" badge.
     const availableVideos: AvailableVideo[] = videos.map((v) => {
       let source: AvailableVideo["source"] = "other-school"
-      if (v.isFeatured) source = "featured"
-      else if (schoolId && v.schoolId === schoolId) source = "own-school"
+      if (schoolId && v.schoolId === schoolId) source = "own-school"
+      else if (v.isFeatured) source = "featured"
 
       const requiresPayment = v.visibility === "PAID"
       // Owned = free video, or paid video the user has a SUCCESS purchase for.

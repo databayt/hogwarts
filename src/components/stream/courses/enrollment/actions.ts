@@ -2,8 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { cookies, headers } from "next/headers"
-import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import Stripe from "stripe"
 
@@ -12,10 +11,6 @@ import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 import { getTenantContext } from "@/lib/tenant-context"
 import { i18n, type Locale } from "@/components/internationalization/config"
-import {
-  assertStreamPermission,
-  getAuthContext,
-} from "@/components/stream/authorization"
 import { sendEnrollmentEmail } from "@/components/stream/shared/email-service"
 
 /** Resolve the user's locale from cookie or accept-language header */
@@ -26,276 +21,6 @@ async function resolveLocale(): Promise<Locale> {
     return localeCookie as Locale
   }
   return i18n.defaultLocale
-}
-
-/**
- * @deprecated Use catalog-actions.ts enrollInSubject() instead.
- * Legacy action targeting StreamEnrollment model. Kept only because
- * verifyPaymentAndActivateEnrollment() below is still used by the
- * payment success page for legacy Stripe checkout sessions.
- */
-export async function enrollInCourseAction(courseId: string) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  const headersList = await headers()
-  const host = headersList.get("host") || ""
-  const subdomain = host.split(".")[0]
-  const locale = await resolveLocale()
-
-  // Check authentication and enroll permission
-  const authCtx = getAuthContext(session)
-  if (!authCtx || !session?.user) throw new Error("Authentication required")
-  authCtx.schoolId = schoolId
-  assertStreamPermission(authCtx, "enroll")
-
-  if (!schoolId) {
-    throw new Error("School context required")
-  }
-
-  if (!stripe) {
-    throw new Error("Stripe is not configured")
-  }
-
-  let checkoutUrl: string
-
-  try {
-    // Find course WITH schoolId scope
-    const course = await db.streamCourse.findFirst({
-      where: {
-        id: courseId,
-        schoolId, // IMPORTANT: Multi-tenant scope
-        isPublished: true,
-      },
-      select: {
-        id: true,
-        title: true,
-        price: true,
-        slug: true,
-      },
-    })
-
-    if (!course) {
-      throw new Error("Course not found or not available")
-    }
-
-    // Handle Stripe customer
-    let stripeCustomerId: string
-    const userWithStripeCustomerId = await db.user.findUnique({
-      where: {
-        id: session.user.id,
-      },
-      select: {
-        stripeCustomerId: true,
-      },
-    })
-
-    if (userWithStripeCustomerId?.stripeCustomerId) {
-      stripeCustomerId = userWithStripeCustomerId.stripeCustomerId
-    } else {
-      const customer = await stripe.customers.create({
-        email: session.user.email || undefined,
-        name: session.user.name || undefined,
-        metadata: {
-          userId: session.user.id,
-          schoolId, // Add school context to Stripe
-        },
-      })
-
-      stripeCustomerId = customer.id
-
-      await db.user.update({
-        where: {
-          id: session.user.id,
-        },
-        data: {
-          stripeCustomerId: stripeCustomerId,
-        },
-      })
-    }
-
-    // Handle enrollment with transaction
-    const result = await db.$transaction(async (tx) => {
-      // Check existing enrollment WITH schoolId scope
-      const existingEnrollment = await tx.streamEnrollment.findFirst({
-        where: {
-          userId: session.user.id,
-          courseId: courseId,
-          schoolId, // IMPORTANT: Multi-tenant scope
-        },
-      })
-
-      if (existingEnrollment?.isActive) {
-        throw new Error("You are already enrolled in this course")
-      }
-
-      // Create or update enrollment
-      let enrollment
-      if (existingEnrollment) {
-        enrollment = await tx.streamEnrollment.update({
-          where: {
-            id: existingEnrollment.id,
-          },
-          data: {
-            isActive: false, // Reset to pending
-            updatedAt: new Date(),
-          },
-        })
-      } else {
-        enrollment = await tx.streamEnrollment.create({
-          data: {
-            userId: session.user.id,
-            courseId: course.id,
-            schoolId, // IMPORTANT: Multi-tenant scope
-            isActive: false, // Will be activated after payment
-          },
-        })
-      }
-
-      // Handle free courses
-      if (!course.price || course.price === 0) {
-        // Immediately activate for free courses
-        await tx.streamEnrollment.update({
-          where: { id: enrollment.id },
-          data: { isActive: true },
-        })
-
-        // Get school name for email
-        const school = await tx.school.findUnique({
-          where: { id: schoolId },
-          select: { name: true },
-        })
-
-        // Send enrollment confirmation email (fire and forget)
-        if (session.user.email) {
-          sendEnrollmentEmail({
-            to: session.user.email,
-            studentName: session.user.name || "Student",
-            courseTitle: course.title,
-            courseUrl: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${course.slug}`,
-            schoolName: school?.name || "School",
-          }).catch((err) =>
-            console.error("Failed to send enrollment email:", err)
-          )
-        }
-
-        return {
-          enrollment,
-          checkoutUrl: null,
-        }
-      }
-
-      // Reuse existing Stripe price from prior enrollments to avoid duplication
-      const existingWithPrice = await tx.streamEnrollment.findFirst({
-        where: {
-          courseId: course.id,
-          schoolId,
-          stripePriceId: { not: null },
-        },
-        select: { stripePriceId: true },
-      })
-
-      let usePriceId = existingWithPrice?.stripePriceId ?? null
-
-      if (!usePriceId) {
-        // First paid enrollment — create Stripe product + price once
-        const stripeProduct = await stripe!.products.create({
-          name: course.title,
-          metadata: {
-            courseId: course.id,
-            schoolId,
-          },
-        })
-
-        const stripePrice = await stripe!.prices.create({
-          product: stripeProduct.id,
-          unit_amount: Math.round(course.price * 100), // Convert to cents
-          currency: "usd",
-        })
-
-        usePriceId = stripePrice.id
-      }
-
-      // Create checkout session
-      const checkoutSession = await stripe!.checkout.sessions.create({
-        customer: stripeCustomerId,
-        line_items: [
-          {
-            price: usePriceId,
-            quantity: 1,
-          },
-        ],
-        mode: "payment",
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/payment/cancel`,
-        metadata: {
-          userId: session.user.id,
-          courseId: course.id,
-          enrollmentId: enrollment.id,
-          schoolId, // IMPORTANT: Multi-tenant scope
-        },
-      })
-
-      // Store checkout session ID and price reference
-      await tx.streamEnrollment.update({
-        where: { id: enrollment.id },
-        data: {
-          stripeCheckoutSessionId: checkoutSession.id,
-          stripePriceId: usePriceId,
-        },
-      })
-
-      return {
-        enrollment,
-        checkoutUrl: checkoutSession.url,
-      }
-    })
-
-    // Handle redirection
-    if (result.checkoutUrl) {
-      checkoutUrl = result.checkoutUrl
-    } else {
-      // Free course - redirect to course page
-      redirect(`/${locale}/stream/courses/${course.slug}`)
-    }
-  } catch (error) {
-    console.error("Enrollment error:", error)
-
-    if (error instanceof Stripe.errors.StripeError) {
-      throw new Error("Payment system error. Please try again later.")
-    }
-
-    throw error instanceof Error
-      ? error
-      : new Error("Failed to enroll in course")
-  }
-
-  redirect(checkoutUrl)
-}
-
-/**
- * @deprecated Use catalog-actions.ts checkCatalogEnrollmentStatus() instead.
- */
-export async function checkEnrollmentStatus(courseId: string) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-
-  if (!session?.user || !schoolId) {
-    return { enrolled: false }
-  }
-
-  const enrollment = await db.streamEnrollment.findFirst({
-    where: {
-      userId: session.user.id,
-      courseId,
-      schoolId,
-      isActive: true,
-    },
-  })
-
-  return {
-    enrolled: !!enrollment,
-    enrollmentId: enrollment?.id,
-  }
 }
 
 /**
@@ -384,16 +109,17 @@ export async function verifyPaymentAndActivateEnrollment(sessionId: string) {
       },
     })
 
-    // Get user email and school name for enrollment email
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { email: true, username: true },
-    })
-
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: { name: true },
-    })
+    // User email + school name (for the enrollment email) are independent.
+    const [user, school] = await Promise.all([
+      db.user.findUnique({
+        where: { id: session.user.id },
+        select: { email: true, username: true },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { name: true },
+      }),
+    ])
 
     // Send enrollment confirmation email (fire and forget)
     if (user?.email) {

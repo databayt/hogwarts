@@ -23,8 +23,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     video: {
       findMany: vi.fn(),
-      findFirst: vi.fn(),
-      update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }))
@@ -32,15 +31,13 @@ vi.mock("@/lib/db", () => ({
 const mockAuth = auth as unknown as ReturnType<typeof vi.fn>
 const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockFindMany = db.video.findMany as ReturnType<typeof vi.fn>
-const mockFindFirst = db.video.findFirst as ReturnType<typeof vi.fn>
-const mockUpdate = db.video.update as ReturnType<typeof vi.fn>
+const mockUpdateMany = db.video.updateMany as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
   mockFindMany.mockResolvedValue([])
-  mockFindFirst.mockResolvedValue({ id: "v-1" })
-  mockUpdate.mockResolvedValue({ id: "v-1" })
+  mockUpdateMany.mockResolvedValue({ count: 1 })
 })
 
 describe("getPendingVideos — auth", () => {
@@ -105,7 +102,7 @@ describe("reviewVideo — auth", () => {
       mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role } })
       const result = await reviewVideo("v-1", "APPROVED")
       expect(result.status).toBe("error")
-      expect(mockUpdate).not.toHaveBeenCalled()
+      expect(mockUpdateMany).not.toHaveBeenCalled()
     }
   )
 
@@ -114,14 +111,14 @@ describe("reviewVideo — auth", () => {
     mockTenant.mockResolvedValueOnce({ schoolId: null, subdomain: null })
     const result = await reviewVideo("v-1", "APPROVED")
     expect(result.status).toBe("error")
+    expect(mockUpdateMany).not.toHaveBeenCalled()
   })
 
-  it("rejects when video not in current school", async () => {
+  it("returns error when the tenant-scoped write matches 0 rows", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role: "ADMIN" } })
-    mockFindFirst.mockResolvedValueOnce(null)
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 })
     const result = await reviewVideo("v-1", "APPROVED")
     expect(result.status).toBe("error")
-    expect(mockUpdate).not.toHaveBeenCalled()
   })
 })
 
@@ -130,19 +127,19 @@ describe("reviewVideo — APPROVED path", () => {
     mockAuth.mockResolvedValue({ user: { id: "admin-7", role: "ADMIN" } })
   })
 
-  it("scopes findFirst by id AND schoolId", async () => {
+  it("tenant-scopes the write by id AND schoolId (no cross-tenant update)", async () => {
     await reviewVideo("v-1", "APPROVED")
-    expect(mockFindFirst).toHaveBeenCalledWith({
-      where: { id: "v-1", schoolId: "school-1" },
-      select: { id: true },
-    })
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "v-1", schoolId: "school-1" },
+      })
+    )
   })
 
   it("sets approvedBy + approvedAt + nulls rejectionReason", async () => {
     await reviewVideo("v-1", "APPROVED")
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "v-1" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           approvedBy: "admin-7",
@@ -160,7 +157,7 @@ describe("reviewVideo — REJECTED path", () => {
 
   it("clears approvedBy/approvedAt and stores rejectionReason", async () => {
     await reviewVideo("v-1", "REJECTED", "Audio quality too low")
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           approvalStatus: "REJECTED",

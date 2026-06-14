@@ -48,6 +48,12 @@ export function useVideoProgress({
   useEffect(() => {
     currentTimeRef.current = currentTime
   }, [currentTime])
+  // Same mirror for duration — keeps the beforeunload handler off the
+  // currentTime/duration deps (which tick ~4×/sec during playback).
+  const durationRef = useRef<number>(duration)
+  useEffect(() => {
+    durationRef.current = duration
+  }, [duration])
 
   // Save progress to localStorage
   const saveToLocal = useCallback(
@@ -187,17 +193,19 @@ export function useVideoProgress({
       document.removeEventListener("visibilitychange", handleVisibilityChange)
   }, [flushProgress])
 
-  // Save on beforeunload
+  // Save on beforeunload — reads position/duration from refs so the listener
+  // is installed once per lesson, not re-bound on every timeupdate tick.
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (currentTime > 0 && duration > 0) {
-        // Use sendBeacon for reliable delivery
+      const t = currentTimeRef.current
+      const d = durationRef.current
+      if (t > 0 && d > 0) {
         const data: ProgressData = {
           lessonId,
-          position: Math.floor(currentTime),
-          duration: Math.floor(duration),
+          position: Math.floor(t),
+          duration: Math.floor(d),
           updatedAt: Date.now(),
-          completed: currentTime >= duration - END_THRESHOLD,
+          completed: t >= d - END_THRESHOLD,
         }
 
         // Save to localStorage as backup
@@ -211,7 +219,7 @@ export function useVideoProgress({
 
     window.addEventListener("beforeunload", handleBeforeUnload)
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
-  }, [lessonId, currentTime, duration])
+  }, [lessonId])
 
   // Cleanup timeout on unmount
   useEffect(() => {

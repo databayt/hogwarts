@@ -65,6 +65,160 @@
   was deleted) but left in `courses/enrollment/actions.ts` because the live
   `verifyPaymentAndActivateEnrollment` shares the file. Extract the live fn and
   delete the rest when the legacy payment-success path is migrated.
+  **(2026-06-14: DONE — both dead functions + their now-unused imports removed.)**
+
+---
+
+## Optimization Pass — 2026-06-14
+
+A 6-dimension multi-agent audit (db-queries, server-actions, react-perf,
+bundle, schema-indexes, dead-code) + adversarial verification produced 67
+confirmed findings. The high-value, low-risk subset was implemented. tsc clean
+(stream), 250/250 stream unit tests green.
+
+**Dead code removed (10 files, ~1,600 lines):**
+
+- `shared/rich-text-editor.tsx` (the **only** `@tiptap` importer in the repo —
+  `@tiptap/*` is now removable from `package.json`), `shared/sortable-list.tsx`
+  (`@dnd-kit`), `shared/file-upload.tsx`, `dashboard/certificate-card.tsx`
+  (canvas), `data/catalog/get-certificates.ts`, `shared/duration-utils.ts`,
+  `shared/slug-utils.ts`, `shared/video-player/video-controls.tsx` — all had
+  **zero importers** (triple-verified by repo-wide grep). Tests for the two
+  deleted utils were removed with them.
+- Deleted the dead legacy `enrollInCourseAction` + `checkEnrollmentStatus`
+  (~270 lines) from `courses/enrollment/actions.ts` + their now-unused imports.
+- Removed the dead duplicate `CatalogCourseType`/`CatalogIndividualCourseType`
+  interfaces from `types.ts` (the live types are the inferred return types of
+  the data fetchers), an unused `BookOpen` import, the dead `chapters` alias +
+  double `mapChapter` in `get-course-sidebar-data.ts`, and a dead
+  `isAdmin/isAuthenticated` duplicate JSX branch on the home page.
+
+**Query / waterfall (fewer Neon round-trips):**
+
+- Parallelized independent serial awaits: `get-dashboard-data` (selections ∥
+  enrollments), `admin-get-lesson` (videos ∥ attachments), `admin-get-course`
+  (subject ∥ overrides), settings `getSubjectsWithInstructors` (videos ∥
+  preferences), admin dashboard `getCatalogAdminStats` (folded selections into
+  the Promise.all), `verifyPaymentAndActivateEnrollment` (user ∥ school),
+  `markLessonComplete` (upsert ∥ lesson list).
+- `getTeacherStats`: 3 `count()` → 1 `groupBy` (4 queries → 2).
+- `getSchoolEnrollments`: pulled completed-progress rows just to `.length` them
+  → filtered `_count` projection (SQL COUNT).
+- `markLessonComplete`: removed a redundant duplicate enrollment lookup.
+- `get-course-sidebar-data`: narrowed a bare chapter `include` to a `select`
+  (drops `@db.Text description` + ~10 unused columns off the wire).
+- **Fixed** `bulkEnrollStudents` `revalidatePath` (`/stream/admin/enrollments`
+  matched no route → list never refreshed; now the settings route).
+
+**React render perf (video player hot path):**
+
+- `useVideoPlayer` now returns a `useMemo`-stable `actions` object — previously
+  a fresh object every render tore down + re-attached the player's event
+  listeners ~4×/sec during playback. Same root cause fixed for the
+  `beforeunload` handler (now ref-based, deps `[lessonId]`), the media-session
+  position effect (throttled to ~1Hz), the watermark timestamp (captured once
+  at mount), and the player's `onSaveProgress` adapter (now a `useCallback`).
+- `propose-video-dialog` memoized the `lessonsBySubject` grouping;
+  `videos-content` builds one `Intl.DateTimeFormat` per render instead of per
+  row; `CourseCard` is now `memo()`'d (courses-grid hover no longer re-renders
+  all N cards).
+
+**Bundle / code-split (home page):**
+
+- `home/content.tsx` + 5 static sub-sections (`ai-fluency`, `curriculum`,
+  `teaching-hero`, `reasons`, `hot-releases`) demoted from `"use client"` to
+  Server Components — they had no hooks/handlers, so they no longer ship JS.
+- `EducationAnimation` lazy-loads `lottie-react` via `next/dynamic` (defers the
+  large lottie-web parse off the home page's initial bundle).
+
+**Schema indexes added (deploy-pending — materialize via `prisma db push`):**
+
+- `LessonProgress @@index([userId, isCompleted, updatedAt])` — Continue Watching.
+- `Question @@index([catalogLessonId, approvalStatus, visibility])` — lesson quiz.
+- `Enrollment @@index([catalogSubjectId, isActive])` — course-detail enroll count.
+
+**Discovered + FIXED (2026-06-14, follow-up):**
+
+- ✅ **The admin "Review" tab was unwired — now re-wired.** `settings/page.tsx`
+  had stopped passing `reviewContent` (a merge regression), so
+  `settings/video-review-content.tsx` + `settings/video-review-actions.ts`
+  (`getPendingVideos`/`reviewVideo`) had zero importers and the Review tab
+  rendered an empty panel — the files were kept, not deleted. Fix: `settings/page.tsx`
+  now calls `getPendingVideos()` (admin-gated, folded into the existing
+  `Promise.all`) and passes `reviewContent={<VideoReviewContent .../>}` +
+  `pendingReviewCount`. The two optimizations that were gated on this being live
+  were also applied: `reviewVideo` is now a single tenant-scoped `updateMany`
+  (`schoolId` on the write, `count === 0` ⇒ 404) revalidating both the settings
+  and stream routes, and `Video @@index([schoolId, approvalStatus])` was added
+  (deploy-pending). Tests updated (`findFirst+update` → `updateMany` assertions).
+
+**Deferred (documented, lower value / higher risk):**
+
+- `Video.price`/`VideoPurchase.amount` Float→Decimal (full-table rewrite on a
+  shared Neon DB — needs a Neon branch + atomic patch of ~13 read sites).
+- `framer-motion`→CSS for the courses-grid hover, and `next/image` for the
+  static home thumbnails (the Coursera CDN URLs are already resized/compressed,
+  so next/image would double-proxy — `loading="lazy"` is the only real win).
+
+---
+
+## Control-Flow Verification & Fixes — 2026-06-14
+
+A 4-flow end-to-end trace (video request → review → surface; public/private +
+free/paid; instructor preference + multi-instructor switching; hiding
+lessons/instructors/quizzes) + adversarial verification. All four flows were
+"partial". Fixed the high-severity bugs + the missing controls. tsc clean,
+259 stream unit tests green (+9 new).
+
+**Security / correctness bugs fixed:**
+
+- 🔴 **PRIVATE-video leak + revoke paywall-bypass** (`get-lesson-with-progress.ts`):
+  the lesson video query's bare `{ schoolId }` OR-arm returned _every_ school
+  video — including other teachers' PRIVATE videos — to all school members, and
+  turned `revokeVideoAccess` → PRIVATE into a free-for-the-school unlock. Fixed:
+  `OR: [{ userId: me }, { schoolId, visibility: { in: [SCHOOL,PUBLIC,PAID] } },
+{ PUBLIC }, { PAID }]` (PRIVATE is owner-only). Regression test added.
+- 🔴 **Instructor switch didn't reload the video**: `<video src>` doesn't reload
+  on attribute change, so switching instructors changed nothing. Fixed by keying
+  `VideoPlayer` on the active video id (remount with the new source).
+- 🟡 **own-school featured mislabel**: a school's own featured video read as
+  "featured" (platform) instead of "own-school". Reordered the source check.
+
+**Controls completed (your explicit asks):**
+
+- **Hide a specific instructor's video per school** — the backend (ContentOverride
+  `lessonVideoId` + `toggleContentOverride` + `handleToggleVideo` + enforcement)
+  existed but the UI never rendered because `subjects/[slug]/page.tsx` never
+  fetched/passed `lesson.videos`. Now it fetches the school-visible videos +
+  their per-school hidden state and passes them through
+  `SchoolCatalogCustomization` → `TopicOverrides`, so the per-video eye-toggle
+  renders.
+- **Hide a lesson's quiz material per school** — new `ContentOverride.hideQuiz`
+  flag (lesson-level, coexists with `isHidden`), `setLessonQuizHidden` action,
+  enforcement in `getLessonContent` (returns no questions when hidden), and a
+  per-lesson quiz toggle in `TopicOverrides`. `toggleContentOverride` keeps the
+  row alive when only `hideQuiz` remains. (DB column is deploy-pending — applies
+  via `prisma db push`.)
+- **Free/paid control** — added `removeVideoPaywall` (PAID → free audience,
+  clears price) + a "Remove paywall" panel in `VideoSettingsDialog` (PAID videos
+  previously showed an empty Select with no downgrade path).
+- **Request-flow tenant scope** — `getProposableLessons` now scopes to the
+  school's selected subjects (a teacher could previously propose for subjects the
+  school never offers); DEVELOPER still enumerates the global catalog.
+
+**Verified working (no change needed):** propose-video wizard → `uploadVideo`
+(PENDING) → admin review queue → `reviewVideo` (tenant-scoped) → APPROVED
+surfaces on the lesson; the PAID paywall (null URL unowned / signed owned);
+`purchaseVideo` → Stripe → webhook → SUCCESS unlock; the InstructorSwitcher
+(multi-instructor pills + per-video unlock); `setInstructorPreference` default
+sort; chapter/lesson hide.
+
+**Deferred (verified, lower value):** teacher email/in-app notification on
+review; ProposeVideoDialog "Upload" tab stub; bulk "hide all videos from
+instructor X" (preference only re-sorts, doesn't suppress); CloudFront
+unsigned-URL fallback when signing keys are unset (purchased self-hosted only);
+Stripe refund/dispute handler for `video_purchase`; the redundant instructor
+card panel below the switcher.
 
 ---
 

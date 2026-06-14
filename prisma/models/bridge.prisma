@@ -41,6 +41,10 @@ model ContentOverride {
   lessonVideoId    String?
 
   isHidden     Boolean @default(true)
+  // Lesson-level only: hide the practice quiz for this lesson while keeping the
+  // lesson itself visible. A lesson override row can carry isHidden and/or
+  // hideQuiz; the row is kept while either is true.
+  hideQuiz     Boolean @default(false)
   reason       String?
   overriddenBy String // userId who made the override
 

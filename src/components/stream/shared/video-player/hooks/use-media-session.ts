@@ -1,7 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { useEffect, type RefObject } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 
 import { SKIP_BACKWARD, SKIP_FORWARD } from "../constants"
 
@@ -56,15 +56,21 @@ export function useMediaSession({
     navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused"
   }, [isPlaying])
 
-  // Update position state
+  // Update position state — throttled to ~1Hz. setPositionState is a
+  // cross-process IPC to the OS media service and only feeds the lock-screen /
+  // PiP scrubber, where sub-second resolution is imperceptible; the effect
+  // otherwise fires ~4×/sec as currentTime ticks.
+  const lastPositionUpdateRef = useRef(0)
   useEffect(() => {
     if (!("mediaSession" in navigator)) return
-    if (duration > 0 && currentTime <= duration) {
-      navigator.mediaSession.setPositionState({
-        duration,
-        playbackRate,
-        position: currentTime,
-      })
-    }
+    if (duration <= 0 || currentTime > duration) return
+    const now = Date.now()
+    if (now - lastPositionUpdateRef.current < 1000) return
+    lastPositionUpdateRef.current = now
+    navigator.mediaSession.setPositionState({
+      duration,
+      playbackRate,
+      position: currentTime,
+    })
   }, [currentTime, duration, playbackRate])
 }

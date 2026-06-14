@@ -219,22 +219,29 @@ export function VideoPlayer({
     hideControls: actions.hideControls,
   })
 
+  // Stable adapter so the progress hook's syncToServer/flushProgress (which
+  // list onSaveProgress in their deps) aren't recreated every render. onProgress
+  // is itself a useCallback from the parent, so this stays stable per lesson.
+  const handleSaveProgress = useCallback(
+    (watchedSeconds: number, totalSeconds: number) => {
+      if (!onProgress) return
+      onProgress({
+        currentTime: watchedSeconds,
+        duration: totalSeconds,
+        percentage: (watchedSeconds / totalSeconds) * 100,
+        watchedSeconds,
+      })
+    },
+    [onProgress]
+  )
+
   // Progress tracking (resume functionality)
   const { getResumePosition, onPause } = useVideoProgress({
     lessonId,
     duration: state.duration,
     currentTime: state.currentTime,
     isPlaying: state.isPlaying,
-    onSaveProgress: onProgress
-      ? (watchedSeconds, totalSeconds) => {
-          onProgress({
-            currentTime: watchedSeconds,
-            duration: totalSeconds,
-            percentage: (watchedSeconds / totalSeconds) * 100,
-            watchedSeconds,
-          })
-        }
-      : undefined,
+    onSaveProgress: onProgress ? handleSaveProgress : undefined,
   })
 
   // Media Session API (PiP controls: skip, progress bar)

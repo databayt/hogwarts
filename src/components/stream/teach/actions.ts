@@ -27,35 +27,26 @@ export async function getTeacherStats(): Promise<TeacherStats> {
     }
   }
 
-  const [totalVideos, pendingVideos, approvedVideos, viewsResult] =
-    await Promise.all([
-      db.video.count({
-        where: { userId: session.user.id, schoolId },
-      }),
-      db.video.count({
-        where: {
-          userId: session.user.id,
-          schoolId,
-          approvalStatus: "PENDING",
-        },
-      }),
-      db.video.count({
-        where: {
-          userId: session.user.id,
-          schoolId,
-          approvalStatus: "APPROVED",
-        },
-      }),
-      db.video.aggregate({
-        where: { userId: session.user.id, schoolId },
-        _sum: { viewCount: true },
-      }),
-    ])
+  // One groupBy over approvalStatus replaces three separate count() queries;
+  // the view-sum stays as a parallel aggregate. (2 queries instead of 4.)
+  const [groups, viewsResult] = await Promise.all([
+    db.video.groupBy({
+      by: ["approvalStatus"],
+      where: { userId: session.user.id, schoolId },
+      _count: true,
+    }),
+    db.video.aggregate({
+      where: { userId: session.user.id, schoolId },
+      _sum: { viewCount: true },
+    }),
+  ])
+
+  const countByStatus = new Map(groups.map((g) => [g.approvalStatus, g._count]))
 
   return {
-    totalVideos,
-    pendingVideos,
-    approvedVideos,
+    totalVideos: groups.reduce((sum, g) => sum + g._count, 0),
+    pendingVideos: countByStatus.get("PENDING") ?? 0,
+    approvedVideos: countByStatus.get("APPROVED") ?? 0,
     totalViews: viewsResult._sum.viewCount ?? 0,
   }
 }

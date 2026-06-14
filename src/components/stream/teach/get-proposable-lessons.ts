@@ -3,8 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 const PROPOSER_ROLES = ["DEVELOPER", "ADMIN", "TEACHER"] as const
 
@@ -20,8 +22,9 @@ export type ProposableLesson = {
  * Fetch lessons that a teacher can propose videos for.
  * Returns a flat list of lessons with their chapter and subject context.
  *
- * Catalog (Lesson/Chapter/Subject) is platform-global — no schoolId scope —
- * but only authenticated proposer roles may enumerate it.
+ * Catalog (Lesson/Chapter/Subject) is platform-global, but school roles may
+ * only propose for subjects their school has actually SELECTED (active
+ * SubjectSelection). DEVELOPER (platform, no school) may enumerate everything.
  */
 export async function getProposableLessons(): Promise<ProposableLesson[]> {
   const session = await auth()
@@ -31,10 +34,25 @@ export async function getProposableLessons(): Promise<ProposableLesson[]> {
     return []
   }
 
+  // Scope to the school's selected subjects for non-platform roles, so a
+  // teacher can't propose videos for subjects the school never offers.
+  let subjectWhere: Prisma.SubjectWhereInput = { status: "PUBLISHED" }
+  if (role !== "DEVELOPER") {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return []
+    const selections = await db.subjectSelection.findMany({
+      where: { schoolId, isActive: true },
+      select: { catalogSubjectId: true },
+    })
+    const selectedIds = selections.map((s) => s.catalogSubjectId)
+    if (selectedIds.length === 0) return []
+    subjectWhere = { status: "PUBLISHED", id: { in: selectedIds } }
+  }
+
   const lessons = await db.lesson.findMany({
     where: {
       chapter: {
-        subject: { status: "PUBLISHED" },
+        subject: subjectWhere,
       },
     },
     select: {

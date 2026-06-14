@@ -32,7 +32,15 @@ export async function getCatalogCourseSidebarData(
               }
             : {}),
         },
-        include: {
+        // Narrow select — mapChapter only reads id/name/sequenceOrder/
+        // thumbnail/color, so we skip the Chapter row's @db.Text description
+        // and ~10 other unused columns over the wire.
+        select: {
+          id: true,
+          name: true,
+          sequenceOrder: true,
+          thumbnail: true,
+          color: true,
           lessons: {
             where: {
               status: "PUBLISHED",
@@ -83,6 +91,10 @@ export async function getCatalogCourseSidebarData(
     })),
   })
 
+  // Map once (was mapped twice for a `chapters`/`chapter` alias pair; the
+  // only consumer reads `.chapter`, so we drop the dead `chapters` key).
+  const mappedChapters = subject.chapters.map(mapChapter)
+
   // Map to Stream-compatible shape
   return {
     course: {
@@ -96,9 +108,7 @@ export async function getCatalogCourseSidebarData(
       ),
       isPublished: true,
       schoolId: null as string | null,
-      chapters: subject.chapters.map(mapChapter),
-      // Backward compatibility alias
-      chapter: subject.chapters.map(mapChapter),
+      chapter: mappedChapters,
     },
   }
 }

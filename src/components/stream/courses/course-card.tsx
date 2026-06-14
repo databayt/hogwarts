@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState } from "react"
+import { memo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Star } from "lucide-react"
@@ -31,7 +31,7 @@ interface CourseCardProps {
   dictionary?: Record<string, any>
 }
 
-export function CourseCard({ course, lang, dictionary }: CourseCardProps) {
+function CourseCardImpl({ course, lang, dictionary }: CourseCardProps) {
   const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
   const levelLabel = course._catalog?.levels?.[0]
@@ -102,6 +102,11 @@ export function CourseCard({ course, lang, dictionary }: CourseCardProps) {
     </Link>
   )
 }
+
+// Memoized — hovering the courses grid churns the parent's hover state; with
+// memo, only the hovered wrapper re-renders, not all N cards. Props are stable
+// per item (course/lang/dictionary).
+export const CourseCard = memo(CourseCardImpl)
 
 export function CourseCardSkeleton() {
   return (

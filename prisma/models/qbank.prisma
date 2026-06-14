@@ -58,6 +58,8 @@ model Question {
   @@index([catalogChapterId])
   @@index([catalogLessonId])
   @@index([approvalStatus, visibility])
+  // Lesson-player quiz fetch: WHERE catalogLessonId = ? AND approvalStatus = ? (+ visibility)
+  @@index([catalogLessonId, approvalStatus, visibility])
   @@index([questionType, difficulty])
   @@index([contributedBy])
   @@index([contributedSchoolId])

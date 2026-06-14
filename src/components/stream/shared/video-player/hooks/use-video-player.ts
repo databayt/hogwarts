@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useReducer, type RefObject } from "react"
+import { useCallback, useMemo, useReducer, type RefObject } from "react"
 
 import {
   PLAYBACK_SPEEDS,
@@ -293,9 +293,13 @@ export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
     []
   )
 
-  return {
-    state,
-    actions: {
+  // Stable `actions` identity: every callback below is a useCallback([]) and
+  // never changes, so memoizing the container makes `actions` referentially
+  // stable across renders. Consumers list `actions` in effect deps; without
+  // this the effects (e.g. the video event-listener bind) tear down and
+  // re-attach ~4×/second as `currentTime` ticks. The dep list is exhaustive.
+  const actions = useMemo(
+    () => ({
       play,
       pause,
       togglePlay,
@@ -327,6 +331,41 @@ export function useVideoPlayer(videoRef: RefObject<HTMLVideoElement | null>) {
       hideUpNext,
       decrementCountdown,
       cancelUpNext,
-    },
-  }
+    }),
+    [
+      play,
+      pause,
+      togglePlay,
+      seek,
+      skip,
+      skipForward,
+      skipBackward,
+      skipForwardSmall,
+      skipBackwardSmall,
+      seekToPercent,
+      setVolume,
+      toggleMute,
+      volumeUp,
+      volumeDown,
+      setPlaybackRate,
+      toggleFullscreen,
+      showControls,
+      hideControls,
+      toggleSettings,
+      startSeeking,
+      updateSeekPosition,
+      endSeeking,
+      updateTime,
+      updateDuration,
+      updateBuffered,
+      setLoading,
+      onVideoEnded,
+      showUpNext,
+      hideUpNext,
+      decrementCountdown,
+      cancelUpNext,
+    ]
+  )
+
+  return { state, actions }
 }

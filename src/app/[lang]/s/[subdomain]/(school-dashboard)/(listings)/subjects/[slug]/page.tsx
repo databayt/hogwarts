@@ -155,26 +155,113 @@ export default async function SubjectDetailPage({ params }: Props) {
     ch.lessons.map((l) => l.id)
   )
 
-  // This school's hidden chapters/lessons (ContentOverride bridge records)
+  // Videos that surface to this school per lesson (only needed for the admin
+  // customization UI, which exposes a per-video / per-instructor hide toggle).
+  const lessonVideos =
+    canCustomize && schoolId && lessonIds.length > 0
+      ? await db.video.findMany({
+          where: {
+            catalogLessonId: { in: lessonIds },
+            approvalStatus: "APPROVED",
+            OR: [
+              { schoolId, visibility: { in: ["SCHOOL", "PUBLIC", "PAID"] } },
+              { visibility: "PUBLIC" },
+              { visibility: "PAID" },
+            ],
+          },
+          select: {
+            id: true,
+            title: true,
+            catalogLessonId: true,
+            schoolId: true,
+            isFeatured: true,
+            user: { select: { username: true } },
+          },
+        })
+      : []
+  const videoIds = lessonVideos.map((v) => v.id)
+
+  // This school's hidden chapters/lessons/videos (ContentOverride bridge records)
   const overrideConditions = [
     ...(chapterIds.length > 0
       ? [{ catalogChapterId: { in: chapterIds } }]
       : []),
     ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+    ...(videoIds.length > 0 ? [{ lessonVideoId: { in: videoIds } }] : []),
   ]
+  // Fetch all override rows for this scope (a row may set isHidden and/or
+  // hideQuiz — so we can't filter on isHidden=true here, or quiz-only rows
+  // would be missed).
   const overrides =
     schoolId && overrideConditions.length > 0
       ? await db.contentOverride.findMany({
-          where: { schoolId, isHidden: true, OR: overrideConditions },
-          select: { catalogChapterId: true, catalogLessonId: true },
+          where: { schoolId, OR: overrideConditions },
+          select: {
+            catalogChapterId: true,
+            catalogLessonId: true,
+            lessonVideoId: true,
+            isHidden: true,
+            hideQuiz: true,
+          },
         })
       : []
   const hiddenChapterIds = new Set(
-    overrides.map((o) => o.catalogChapterId).filter(Boolean)
+    overrides
+      .filter((o) => o.isHidden)
+      .map((o) => o.catalogChapterId)
+      .filter(Boolean)
   )
   const hiddenLessonIds = new Set(
-    overrides.map((o) => o.catalogLessonId).filter(Boolean)
+    overrides
+      .filter((o) => o.isHidden)
+      .map((o) => o.catalogLessonId)
+      .filter(Boolean)
   )
+  const hiddenVideoIds = new Set(
+    overrides
+      .filter((o) => o.isHidden)
+      .map((o) => o.lessonVideoId)
+      .filter(Boolean)
+  )
+  const quizHiddenLessonIds = new Set(
+    overrides
+      .filter((o) => o.hideQuiz)
+      .map((o) => o.catalogLessonId)
+      .filter(Boolean)
+  )
+
+  // Per-lesson video list for the hide UI (id, title, instructor label, source).
+  const videosByLesson = new Map<
+    string,
+    Array<{
+      id: string
+      title: string
+      instructorName: string
+      source: "own-school" | "featured" | "other-school"
+      isHidden: boolean
+    }>
+  >()
+  for (const v of lessonVideos) {
+    const source: "own-school" | "featured" | "other-school" =
+      schoolId && v.schoolId === schoolId
+        ? "own-school"
+        : v.isFeatured
+          ? "featured"
+          : "other-school"
+    const instructorName =
+      v.isFeatured && !v.schoolId
+        ? "Hogwarts"
+        : (v.user?.username ?? "Instructor")
+    const list = videosByLesson.get(v.catalogLessonId) ?? []
+    list.push({
+      id: v.id,
+      title: v.title,
+      instructorName,
+      source,
+      isHidden: hiddenVideoIds.has(v.id),
+    })
+    videosByLesson.set(v.catalogLessonId, list)
+  }
 
   // Parallel content queries (short-circuit when no lessons/chapters)
   const [materials, exams, questionStats, assignments] = await Promise.all([
@@ -428,6 +515,8 @@ export default async function SubjectDetailPage({ params }: Props) {
               name: l.name,
               isHidden: l.isHidden,
               videoCount: l.videoCount,
+              videos: videosByLesson.get(l.id) ?? [],
+              quizHidden: quizHiddenLessonIds.has(l.id),
             })),
           }))}
           catalogSubjectId={subject.id}
