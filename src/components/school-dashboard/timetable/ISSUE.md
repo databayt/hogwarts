@@ -4,18 +4,18 @@ sprint: Q3-2026
 title: Timetable (LMS scheduling)
 file_type: issue
 owner: Abdout
-maturity: Built+Polish
-completion: 80
+maturity: Production-Ready
+completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-06-12
+last_audited: 2026-06-13
 ---
 
 # Timetable -- Production Readiness Tracker
 
-**Status:** IN PROGRESS
-**Completion:** 90%
-**Last Updated:** 2026-06-12
+**Status:** PRODUCTION-READY
+**Completion:** 95%
+**Last Updated:** 2026-06-13
 
 ---
 
@@ -45,6 +45,94 @@ last_audited: 2026-06-12
 - [ ] ARIA grid pattern for accessibility
 
 ## Known Issues
+
+### Recently Fixed (2026-06-13 -- production-readiness pass: security, correctness, validation, perf, a11y)
+
+Driven by a 9-dimension adversarial audit (tenant / authz / validation /
+correctness / perf / i18n / types / a11y / structure). 180 timetable tests
+green, tsc 0.
+
+**Security / tenant (P1):**
+
+1. `validateTeacherConstraints` / `validateRoomConstraints` /
+   `validateSlotConstraints` were exported in a `"use server"` file → directly
+   HTTP-callable with a **caller-supplied `schoolId`**, leaking another tenant's
+   teacher/room/constraint data. They are now **un-exported internal helpers**
+   (only `upsertTimetableSlot` / `moveTimetableSlot` call them, passing the
+   context schoolId). The HTTP surface is gone.
+2. `upsertTeacherConstraints` and `addTeacherUnavailableBlock` now verify the
+   teacher / parent-constraint belongs to the caller's school before writing
+   (global-CUID FKs don't enforce tenancy → was cross-tenant corruption).
+3. `filterTimetableByRole` now **throws** on a null schoolId instead of silently
+   dropping the tenant filter (was a cross-family guardian leak risk), and is
+   generically typed (`TimetableRowMinimal`) instead of `any`.
+4. Permission guards (`requirePermission`/`requireAdminAccess`/
+   `requireReadAccess`) now distinguish unauthenticated (`NOT_AUTHENTICATED`)
+   from unauthorized.
+
+**Correctness (P1):**
+
+5. `detectTimetableConflicts` no longer crashes on **section-based slots**
+   (`classId`/`class` null) — it dereferenced `a.class.id`. Cohort identity now
+   falls back section → class, and the per-conflict detail fetch was collapsed
+   from **N+M serial queries to 2 batched queries**.
+6. `moveTimetableSlot` now detects a **section double-book**
+   (`SECTION_DOUBLE_BOOKED`) on the target cell, passes `sectionId` to capacity
+   validation, and builds the conflict `OR` conditionally (a null
+   teacher/room/section no longer matches every unassigned slot).
+7. `applyTemplateToTerm` clear+insert is now a single `$transaction`
+   (`deleteMany` + `createMany({ skipDuplicates })`) — a partial failure can no
+   longer destroy a term's slots while leaving an incomplete replacement.
+8. `setActiveTerm` verifies the term belongs to the school, then flips
+   active/inactive atomically in one `$transaction` (a crash mid-flip could
+   leave every term inactive).
+
+**Validation / perf / a11y:**
+
+9. Zod parsing added to ~12 previously-unvalidated mutations (move, delete,
+   applyGenerated, applyTemplate, createTemplate, createPeriod, addUnavailable
+   Block, setActiveTerm, upsertTeacherConstraints, getSubstitutionRecords,
+   importTimetableSlots) with bounds on numbers/arrays/strings.
+10. `getTimetableAnalytics` room utilization is O(slots) (Map) instead of
+    O(rooms × slots); removed dead `withPermission/withAdminAccess/withAudit`
+    wrappers and the unsafe `any` casts they carried; `logTimetableAction`
+    now emits in all environments (production trail).
+11. Server-side notifications (move/delete/assign/respond) were **hardcoded
+    Arabic** regardless of the school's language — now localized by
+    `School.preferredLanguage`.
+12. a11y: removed invalid heading nesting in the slot-editor dialog
+    (`h4` inside `DialogTitle`, `h5` inside `AlertTitle`); decorative settings
+    timeline `aria-hidden`; fixed duplicate `htmlFor` on the preview Switch
+    (now an `aria-label`); conflict indicator no longer colour-only (icon +
+    `sr-only` text); guardian avatar `alt`; decorative combobox chevrons
+    `aria-hidden`.
+
+### Deferred (tracked follow-ups, not blockers)
+
+- [ ] **`actions.ts` split** — 6.5k-line file mixing read queries + write
+      actions + helpers; split into `queries.ts` / `actions.ts` (constants must
+      stay out of the `"use server"` file). Mechanical but large.
+- [ ] **Full ARIA grid pattern + keyboard nav** in `views/simple-grid.tsx`
+      (`role=grid/row/gridcell`, roving tabindex, arrow keys, editable cells as
+      buttons). The conflict-indicator + heading fixes landed; the grid
+      interaction model is the remaining chunk.
+- [ ] **Content-file i18n long-tail** (~80 strings in `generate/`,
+      `settings/`, `conflicts/`, `slot-editor-dialog`, and the
+      `getActiveTerm`/`getTodaySchedule`/`getTimetableAnalytics` returned
+      labels) — should go through the dictionary workflow (en+ar parity). The
+      objectively-broken notifications are already fixed.
+- [ ] **Consolidate `permissions.ts` + `permissions-config.ts`** into
+      `authorization.ts` per the school-dashboard convention.
+- [ ] **`logTimetableAction` → dedicated audit table** (currently a structured
+      console sink; fine for now, but no queryable history).
+- [ ] **`respondToSubstitution` is admin-only** — if a teacher-facing
+      substitution-response UI is added, relax the guard to allow the assigned
+      substitute teacher to confirm/decline their own record.
+- [ ] **Remaining perf** (lower priority): `getTimetableByClass` `include`→
+      `select`; dedupe redundant `getTenantContext` in `getTodaySchedule`/
+      `getWeeklyTimetable`; `importTimetableSlots` upsert-loop→`createMany`
+      (loses per-row error attribution — needs a pre-validation pass);
+      `algorithm.optimizeSchedule` O(slots²) delta-scoring.
 
 ### Recently Fixed (2026-06-12 -- section-first lifecycle + terms-aware calendars)
 
@@ -79,7 +167,9 @@ and `applyTemplateToTerm` still replay `classId` — section migration pending.
 
 ### P1 -- High
 
-- [ ] Role checks on mutations not fully enforced (ADMIN/OWNER only)
+- [x] Role checks on mutations enforced (every mutation calls
+      `requireAdminAccess`/`requirePermission`; the unauthenticated `validate*`
+      HTTP surface was removed) — 2026-06-13
 - [ ] Print view needs final tuning for varied day counts (fonts/margins)
 - [ ] Integration tests for overlapping slots and weekend pattern rendering
 - [ ] `importTimetableSlots` + `applyTemplateToTerm` are classId-only (legacy
@@ -88,11 +178,14 @@ and `applyTemplateToTerm` still replay `classId` — section migration pending.
 
 ### P2 -- Medium
 
-- [ ] React.memo not applied to TimetableCell (performance at scale)
+- [ ] React.memo not applied to grid cells (performance at scale)
 - [ ] No virtual scrolling for large timetables
-- [ ] Conflict detection algorithm could be optimized for bulk operations
-- [ ] No keyboard navigation (arrow keys) in grid cells
-- [ ] Screen reader announcements missing
+- [x] Conflict detection N+M serial queries → 2 batched queries — 2026-06-13
+- [ ] No keyboard navigation (arrow keys) in grid cells (part of the full ARIA
+      grid follow-up above)
+- [x] Conflict indicator no longer colour-only; decorative elements hidden from
+      AT; invalid heading nesting removed — 2026-06-13 (full grid SR pattern
+      still pending)
 
 ## Enhancements (Post-MVP)
 
@@ -107,4 +200,10 @@ and `applyTemplateToTerm` still replay `classId` — section migration pending.
 
 ---
 
-**Last Review:** 2026-06-12 (section-first lifecycle + calendars; 139 timetable tests green, tsc 0)
+> **Tracker note:** the frontmatter `tracker: #323` is stale — #323 is the
+> "[Epic] LMS / Stream — asset-download wave" epic, unrelated to timetable.
+> There is no open timetable issue (the timetable reports #364/#365 are closed;
+> the i18n one #365 is addressed by the notification + deferred content-i18n
+> work here). No GitHub comment was posted for this pass.
+
+**Last Review:** 2026-06-13 (production-readiness pass: security/correctness/validation/perf/a11y from a 9-dimension adversarial audit; 180 timetable tests green, tsc 0)

@@ -325,7 +325,10 @@ export default function GuardianView({
           <CardContent className="pt-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={selectedChildData.photoUrl || undefined} />
+                <AvatarImage
+                  src={selectedChildData.photoUrl || undefined}
+                  alt={selectedChildData.name}
+                />
                 <AvatarFallback className="text-lg">
                   {getInitials(selectedChildData.name)}
                 </AvatarFallback>

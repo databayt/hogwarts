@@ -40,6 +40,9 @@ const CROOM2 = "caaaaaaaaaaaaaaaaaaa00008"
 const CSECTION1 = "caaaaaaaaaaaaaaaaaaa00009"
 const CSUBJECT1 = "caaaaaaaaaaaaaaaaaaa00010"
 const CGRADE1 = "caaaaaaaaaaaaaaaaaaa00011"
+const CSLOT1 = "caaaaaaaaaaaaaaaaaaa00012"
+const CSLOT2 = "caaaaaaaaaaaaaaaaaaa00013"
+const CTPL1 = "caaaaaaaaaaaaaaaaaaa00014"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -67,6 +70,7 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
     },
     term: {
       findFirst: vi.fn(),
@@ -162,6 +166,13 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn().mockResolvedValue([]),
     },
     $queryRaw: vi.fn().mockResolvedValue([]),
+    // Array form runs the ops (already invoked when building the array) and
+    // resolves them together; callback form is unused by the timetable actions.
+    $transaction: vi
+      .fn()
+      .mockImplementation((arg: unknown) =>
+        Array.isArray(arg) ? Promise.all(arg) : Promise.resolve(arg)
+      ),
   },
 }))
 
@@ -511,6 +522,50 @@ describe("Timetable Actions", () => {
 
       expect(res.conflicts.some((c: any) => c.type === "TEACHER")).toBe(true)
     })
+
+    it("does not crash on section-based slots (classId/class null) and uses section names", async () => {
+      vi.mocked(db.$queryRaw)
+        .mockResolvedValueOnce([
+          { dayOfWeek: 0, periodId: CPERIOD1, teacherId: CTEACHER1 },
+        ])
+        .mockResolvedValueOnce([])
+
+      // Section-based slots have classId = null and class = null — the old
+      // a.class.id dereference threw here. cohortOf must fall back to section.
+      vi.mocked(db.timetable.findMany).mockResolvedValueOnce([
+        {
+          dayOfWeek: 0,
+          periodId: CPERIOD1,
+          classId: null,
+          sectionId: CSECTION1,
+          class: null,
+          section: { id: CSECTION1, name: "Grade 1-A" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "A", lastName: "B" },
+          classroomId: CROOM1,
+          classroom: { roomName: "R1" },
+        },
+        {
+          dayOfWeek: 0,
+          periodId: CPERIOD1,
+          classId: null,
+          sectionId: CSECTION1,
+          class: null,
+          section: { id: CSECTION1, name: "Grade 1-A" },
+          teacherId: CTEACHER1,
+          teacher: { firstName: "A", lastName: "B" },
+          classroomId: CROOM2,
+          classroom: { roomName: "R2" },
+        },
+      ] as any)
+
+      const res = await detectTimetableConflicts({ termId: CTERM1 })
+      const teacherConflict = res.conflicts.find(
+        (c: any) => c.type === "TEACHER"
+      )
+      expect(teacherConflict).toBeDefined()
+      expect(teacherConflict?.classA.name).toBe("Grade 1-A")
+    })
   })
 
   // =========================================================================
@@ -633,7 +688,7 @@ describe("Timetable Actions", () => {
   describe("deleteTimetableSlot", () => {
     it("deletes a section-based slot by id (no classId required)", async () => {
       vi.mocked(db.timetable.findFirst).mockResolvedValue({
-        id: "tt-section",
+        id: CSLOT1,
         dayOfWeek: 0,
         teacher: null,
         class: null,
@@ -643,15 +698,15 @@ describe("Timetable Actions", () => {
 
       const { deleteTimetableSlot } =
         await import("@/components/school-dashboard/timetable/actions")
-      await deleteTimetableSlot({ id: "tt-section" })
+      await deleteTimetableSlot({ id: CSLOT1 })
 
       expect(db.timetable.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "tt-section", schoolId: SCHOOL_ID },
+          where: { id: CSLOT1, schoolId: SCHOOL_ID },
         })
       )
       expect(db.timetable.delete).toHaveBeenCalledWith({
-        where: { id: "tt-section" },
+        where: { id: CSLOT1 },
       })
     })
 
@@ -660,7 +715,7 @@ describe("Timetable Actions", () => {
 
       const { deleteTimetableSlot } =
         await import("@/components/school-dashboard/timetable/actions")
-      await expect(deleteTimetableSlot({ id: "tt-other" })).rejects.toThrow(
+      await expect(deleteTimetableSlot({ id: CSLOT2 })).rejects.toThrow(
         "SLOT_NOT_FOUND"
       )
     })
@@ -675,7 +730,7 @@ describe("Timetable Actions", () => {
       // First findFirst: lookup existing slot
       vi.mocked(db.timetable.findFirst)
         .mockResolvedValueOnce({
-          id: "slot-1",
+          id: CSLOT1,
           schoolId: SCHOOL_ID,
           termId: CTERM1,
           dayOfWeek: 0,
@@ -683,6 +738,7 @@ describe("Timetable Actions", () => {
           classroomId: CROOM1,
           teacherId: CTEACHER1,
           classId: CCLASS1,
+          sectionId: null,
           weekOffset: 0,
           class: { id: CCLASS1, name: "Math" },
           teacher: { id: CTEACHER1, firstName: "A", lastName: "B" },
@@ -713,15 +769,15 @@ describe("Timetable Actions", () => {
       vi.mocked(db.roomConstraint.findFirst).mockResolvedValue(null)
 
       const result = await moveTimetableSlot({
-        slotId: "slot-1",
+        slotId: CSLOT1,
         targetDayOfWeek: 1,
         targetPeriodId: CPERIOD2,
       })
 
       expect(result.success).toBe(true)
-      expect(result.slotId).toBe("slot-1")
+      expect(result.slotId).toBe(CSLOT1)
       expect(db.timetable.updateMany).toHaveBeenCalledWith({
-        where: { id: "slot-1", schoolId: SCHOOL_ID },
+        where: { id: CSLOT1, schoolId: SCHOOL_ID },
         data: expect.objectContaining({
           dayOfWeek: 1,
           periodId: CPERIOD2,
@@ -734,11 +790,73 @@ describe("Timetable Actions", () => {
 
       await expect(
         moveTimetableSlot({
-          slotId: "slot-other-school",
+          slotId: CSLOT2,
           targetDayOfWeek: 1,
           targetPeriodId: CPERIOD2,
         })
       ).rejects.toThrow("SLOT_NOT_FOUND")
+    })
+
+    it("blocks a move that double-books the section (SECTION_DOUBLE_BOOKED)", async () => {
+      vi.mocked(db.timetable.findFirst)
+        // existing slot — section-based (no teacher, no classId)
+        .mockResolvedValueOnce({
+          id: CSLOT1,
+          schoolId: SCHOOL_ID,
+          termId: CTERM1,
+          dayOfWeek: 0,
+          periodId: CPERIOD1,
+          classroomId: CROOM1,
+          teacherId: null,
+          classId: null,
+          sectionId: CSECTION1,
+          weekOffset: 0,
+          class: null,
+          section: { id: CSECTION1, name: "Grade 1-A" },
+          teacher: null,
+          classroom: { id: CROOM1, roomName: "Room 1" },
+        } as any)
+        // conflict check at target → another lesson for the SAME section
+        .mockResolvedValueOnce({
+          id: CSLOT2,
+          teacherId: null,
+          classroomId: CROOM2,
+          sectionId: CSECTION1,
+          class: null,
+          section: { name: "Grade 1-A" },
+        } as any)
+      vi.mocked(db.timetable.findMany).mockResolvedValue([] as any)
+      vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
+      vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue(null)
+      vi.mocked(db.class.findFirst).mockResolvedValue(null)
+      vi.mocked(db.classroom.findFirst).mockResolvedValue({
+        id: CROOM1,
+        roomName: "Room 1",
+        capacity: 30,
+      } as any)
+      vi.mocked(db.roomConstraint.findFirst).mockResolvedValue(null)
+
+      const result = await moveTimetableSlot({
+        slotId: CSLOT1,
+        targetDayOfWeek: 1,
+        targetPeriodId: CPERIOD2,
+      })
+
+      expect(result.success).toBe(false)
+      expect(
+        result.errors.some((e) => e.type === "SECTION_DOUBLE_BOOKED")
+      ).toBe(true)
+      expect(db.timetable.updateMany).not.toHaveBeenCalled()
+    })
+
+    it("rejects an out-of-range targetDayOfWeek (Zod)", async () => {
+      await expect(
+        moveTimetableSlot({
+          slotId: CSLOT1,
+          targetDayOfWeek: 99,
+          targetPeriodId: CPERIOD2,
+        })
+      ).rejects.toThrow()
     })
   })
 
@@ -748,9 +866,14 @@ describe("Timetable Actions", () => {
 
   describe("setActiveTerm", () => {
     it("deactivates all terms then activates target with schoolId scope", async () => {
+      // Term ownership is verified before the atomic flip.
+      vi.mocked(db.term.findFirst).mockResolvedValue({
+        id: CTERM1,
+        schoolId: SCHOOL_ID,
+      } as any)
       vi.mocked(db.term.updateMany).mockResolvedValue({ count: 1 })
 
-      const result = await setActiveTerm({ termId: "term-1" })
+      const result = await setActiveTerm({ termId: CTERM1 })
 
       expect(result.success).toBe(true)
       // First call: deactivate all
@@ -760,15 +883,25 @@ describe("Timetable Actions", () => {
       })
       // Second call: activate target with schoolId
       expect(db.term.updateMany).toHaveBeenCalledWith({
-        where: { id: "term-1", schoolId: SCHOOL_ID },
+        where: { id: CTERM1, schoolId: SCHOOL_ID },
         data: { isActive: true },
       })
+      // The two writes run inside one transaction (atomic flip).
+      expect(db.$transaction).toHaveBeenCalled()
+    })
+
+    it("throws TERM_NOT_FOUND when term is not in this school", async () => {
+      vi.mocked(db.term.findFirst).mockResolvedValue(null)
+
+      await expect(setActiveTerm({ termId: CTERM1 })).rejects.toThrow(
+        "TERM_NOT_FOUND"
+      )
     })
 
     it("throws when no school context", async () => {
       mockNoSchool()
 
-      await expect(setActiveTerm({ termId: "term-1" })).rejects.toThrow(
+      await expect(setActiveTerm({ termId: CTERM1 })).rejects.toThrow(
         "MISSING_SCHOOL_CONTEXT"
       )
     })
@@ -969,13 +1102,16 @@ describe("Timetable Actions", () => {
 
   describe("upsertTeacherConstraints", () => {
     it("creates new constraint with schoolId", async () => {
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({
+        id: CTEACHER1,
+      } as any)
       vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue(null)
       vi.mocked(db.teacherConstraint.create).mockResolvedValue({
         id: "tc-new",
       } as any)
 
       const result = await upsertTeacherConstraints({
-        teacherId: "teacher-1",
+        teacherId: CTEACHER1,
         maxPeriodsPerDay: 6,
       })
 
@@ -983,12 +1119,15 @@ describe("Timetable Actions", () => {
       expect(db.teacherConstraint.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           schoolId: SCHOOL_ID,
-          teacherId: "teacher-1",
+          teacherId: CTEACHER1,
         }),
       })
     })
 
     it("updates existing with schoolId-scoped updateMany", async () => {
+      vi.mocked(db.teacher.findFirst).mockResolvedValue({
+        id: CTEACHER1,
+      } as any)
       vi.mocked(db.teacherConstraint.findFirst).mockResolvedValue({
         id: "tc-existing",
         schoolId: SCHOOL_ID,
@@ -998,7 +1137,7 @@ describe("Timetable Actions", () => {
       })
 
       const result = await upsertTeacherConstraints({
-        teacherId: "teacher-1",
+        teacherId: CTEACHER1,
         maxPeriodsPerDay: 5,
       })
 
@@ -1007,9 +1146,19 @@ describe("Timetable Actions", () => {
         where: { id: "tc-existing", schoolId: SCHOOL_ID },
         data: expect.objectContaining({
           schoolId: SCHOOL_ID,
-          teacherId: "teacher-1",
+          teacherId: CTEACHER1,
         }),
       })
+    })
+
+    it("throws TEACHER_NOT_FOUND when teacher is in another school", async () => {
+      // Cross-tenant guard: teacher not in this school → no constraint write.
+      vi.mocked(db.teacher.findFirst).mockResolvedValue(null)
+
+      await expect(
+        upsertTeacherConstraints({ teacherId: CTEACHER1, maxPeriodsPerDay: 6 })
+      ).rejects.toThrow("TEACHER_NOT_FOUND")
+      expect(db.teacherConstraint.create).not.toHaveBeenCalled()
     })
   })
 
@@ -1197,17 +1346,20 @@ describe("Timetable Actions", () => {
         slotPatterns: [],
         workingDays: [0, 1, 2, 3, 4],
       } as any)
+      vi.mocked(db.timetable.createMany).mockResolvedValue({ count: 0 })
       vi.mocked(db.templateApplication.create).mockResolvedValue({} as any)
 
       await applyTemplateToTerm({
-        templateId: "tpl-1",
-        targetTermId: "term-1",
+        templateId: CTPL1,
+        targetTermId: CTERM1,
       })
 
       expect(db.timetableTemplate.findFirst).toHaveBeenCalledWith({
-        where: { id: "tpl-1", schoolId: SCHOOL_ID },
+        where: { id: CTPL1, schoolId: SCHOOL_ID },
         select: { slotPatterns: true, workingDays: true },
       })
+      // Replacement runs inside one transaction (atomic clear + insert).
+      expect(db.$transaction).toHaveBeenCalled()
     })
 
     it("throws when template not found", async () => {
@@ -1215,8 +1367,8 @@ describe("Timetable Actions", () => {
 
       await expect(
         applyTemplateToTerm({
-          templateId: "tpl-other-school",
-          targetTermId: "term-1",
+          templateId: CTPL1,
+          targetTermId: CTERM1,
         })
       ).rejects.toThrow("TEMPLATE_NOT_FOUND")
     })

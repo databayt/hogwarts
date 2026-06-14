@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useMemo } from "react"
-import { Clock } from "lucide-react"
+import { Clock, TriangleAlert } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -57,6 +57,7 @@ interface SimpleGridProps {
     lunch?: string
     lunchBreak?: string
     days?: string[]
+    conflict?: string
   }
 }
 
@@ -290,6 +291,19 @@ export default function SimpleGrid({
                     >
                       {slot && display ? (
                         <>
+                          {/* Conflict is not signalled by colour alone (the red
+                              ring) — surface an icon + screen-reader text too. */}
+                          {isConflicted && (
+                            <>
+                              <TriangleAlert
+                                className="mb-0.5 h-3 w-3 text-red-600 dark:text-red-400"
+                                aria-hidden="true"
+                              />
+                              <span className="sr-only">
+                                {dictionary?.conflict ?? "Conflict"}:{" "}
+                              </span>
+                            </>
+                          )}
                           <span className="text-center text-xs font-medium text-neutral-800 sm:text-sm dark:text-neutral-100 print:text-xs">
                             {display.primary}
                           </span>

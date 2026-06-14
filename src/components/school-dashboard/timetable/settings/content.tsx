@@ -856,8 +856,13 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Timeline visualization */}
-                  <div className="bg-muted/50 relative h-16 overflow-hidden rounded-lg">
+                  {/* Timeline visualization — decorative; the same period data
+                      is listed textually below, so hide the positioned bars
+                      from assistive tech to avoid a meaningless reading. */}
+                  <div
+                    aria-hidden="true"
+                    className="bg-muted/50 relative h-16 overflow-hidden rounded-lg"
+                  >
                     {periods.map((period) => {
                       const start = new Date(period.startTime)
                       const end = new Date(period.endTime)

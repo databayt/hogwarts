@@ -314,7 +314,7 @@ export default function AdminView({
               {selectedClassroom
                 ? rooms.find((r) => r.id === selectedClassroom)?.label
                 : (av?.selectClassroom ?? "Select classroom")}
-              <ChevronsUpDown className="opacity-50" />
+              <ChevronsUpDown className="opacity-50" aria-hidden="true" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">
@@ -355,7 +355,7 @@ export default function AdminView({
               {selectedId
                 ? teachers.find((t) => t.id === selectedId)?.label
                 : (av?.selectTeacher ?? "Select teacher")}
-              <ChevronsUpDown className="opacity-50" />
+              <ChevronsUpDown className="opacity-50" aria-hidden="true" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[180px] p-0">

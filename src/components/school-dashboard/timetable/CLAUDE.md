@@ -4,11 +4,11 @@ sprint: Q3-2026
 title: Timetable (LMS scheduling)
 file_type: claude
 owner: Abdout
-maturity: Built+Polish
-completion: 80
+maturity: Production-Ready
+completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
-docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-05-25
+docs: https://ed.databayt.org/en/docs/timetable
+last_audited: 2026-06-13
 ---
 
 # Timetable (LMS scheduling) Block
@@ -49,6 +49,28 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Danger Zones
 
+- **`validate*Constraints` are INTERNAL, not exported** (2026-06-13): in a
+  `"use server"` file, every `export` is an HTTP endpoint.
+  `validateTeacherConstraints`/`validateRoomConstraints`/`validateSlotConstraints`
+  take a `schoolId` parameter — exporting them let any caller probe another
+  tenant's data with a forged schoolId. Keep them unexported; only
+  `upsertTimetableSlot`/`moveTimetableSlot` call them, passing the
+  `getTenantContext()` schoolId. The same rule applies to any new
+  schoolId-taking helper.
+- **`moveTimetableSlot` conflict `OR` must be conditional** (2026-06-13): a null
+  `teacherId`/`classroomId`/`sectionId` must NOT become `{ field: null }` in the
+  OR — that matches every unassigned slot in the cell and reports phantom
+  conflicts. Push each conflict error only when the corresponding id is truthy
+  AND equal. The `sectionId` arm is what catches a section double-book.
+- **`detectTimetableConflicts` must not deref `slot.class`**: section-based
+  slots have `classId`/`class` = null. Use the section→class cohort fallback
+  (`cohortOf`); a bare `a.class.id` crashes the whole detector. Detail fetches
+  are batched (2 queries), not per-conflict.
+- **Cross-tenant writes via global-CUID FKs**: `teacherId`/`teacherConstraintId`
+  are globally unique, so the FK alone does not enforce tenancy. Verify the
+  referenced row belongs to the caller's `schoolId` before any write that
+  trusts a caller-supplied id (`upsertTeacherConstraints`,
+  `addTeacherUnavailableBlock` do this).
 - **`upsertTimetableSlot` ordering**: the existing-row lookup MUST precede
   `validateSlotConstraints` so `excludeSlotId` excludes self — otherwise a
   teacher at max periods can never re-save their own slot.

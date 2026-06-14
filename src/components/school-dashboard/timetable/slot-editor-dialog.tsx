@@ -261,11 +261,9 @@ export function SlotEditorDialog({
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            <h4>
-              {slot
-                ? (t?.editTitle ?? "Edit Timetable Slot")
-                : (t?.addTitle ?? "Add Timetable Slot")}
-            </h4>
+            {slot
+              ? (t?.editTitle ?? "Edit Timetable Slot")
+              : (t?.addTitle ?? "Add Timetable Slot")}
           </DialogTitle>
           <DialogDescription>
             <p className="muted">
@@ -283,7 +281,7 @@ export function SlotEditorDialog({
               <Alert variant="destructive">
                 <CircleAlert className="h-4 w-4" />
                 <AlertTitle>
-                  <h5>{t?.validationError ?? "Validation Error"}</h5>
+                  {t?.validationError ?? "Validation Error"}
                 </AlertTitle>
                 <AlertDescription>
                   <ul className="list-disc ps-5">

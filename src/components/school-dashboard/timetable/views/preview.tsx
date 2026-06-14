@@ -7,7 +7,6 @@ import { GraduationCap, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { type Locale } from "@/components/internationalization/config"
@@ -166,23 +165,27 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
             </div>
 
             <div className="flex items-center gap-4">
-              <Label
-                htmlFor="view-toggle"
+              {/* Flanking words are visual only — two <Label htmlFor> pointing
+                  at one Switch makes AT announce just the last one. The Switch
+                  carries its own accessible name instead. */}
+              <span
+                aria-hidden="true"
                 className="text-muted-foreground text-sm"
               >
                 {pv?.student ?? "Student"}
-              </Label>
+              </span>
               <Switch
                 id="view-toggle"
                 checked={isTeacherView}
                 onCheckedChange={setIsTeacherView}
+                aria-label={`${pv?.student ?? "Student"} / ${pv?.teacher ?? "Teacher"}`}
               />
-              <Label
-                htmlFor="view-toggle"
+              <span
+                aria-hidden="true"
                 className="text-muted-foreground text-sm"
               >
                 {pv?.teacher ?? "Teacher"}
-              </Label>
+              </span>
             </div>
           </div>
 

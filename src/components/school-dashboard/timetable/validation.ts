@@ -171,6 +171,120 @@ export const bulkUpsertTimetableSlotsSchema = z.object({
   clearExisting: z.boolean().default(false),
 })
 
+// HH:MM 24-hour time, e.g. "08:30", "14:05"
+export const timeOfDaySchema = z
+  .string()
+  .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "INVALID_TIME_FORMAT")
+
+export const setActiveTermSchema = z.object({ termId: cuidSchema })
+
+export const moveTimetableSlotSchema = z.object({
+  slotId: cuidSchema,
+  targetDayOfWeek: dayOfWeekSchema,
+  targetPeriodId: cuidSchema,
+  targetClassroomId: cuidSchema.optional(),
+  validateOnly: z.boolean().optional(),
+})
+
+export const createTemplateFromTermSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  sourceTermId: cuidSchema,
+})
+
+export const applyTemplateToTermSchema = z.object({
+  templateId: cuidSchema,
+  targetTermId: cuidSchema,
+  clearExisting: z.boolean().optional(),
+  teacherMapping: z.record(z.string(), cuidSchema).optional(),
+  roomMapping: z.record(z.string(), cuidSchema).optional(),
+})
+
+export const createPeriodSchema = z.object({
+  yearId: cuidSchema,
+  name: z.string().min(1).max(50),
+  startTime: timeOfDaySchema,
+  endTime: timeOfDaySchema,
+})
+
+export const addTeacherUnavailableBlockSchema = z.object({
+  teacherConstraintId: cuidSchema,
+  dayOfWeek: dayOfWeekSchema,
+  periodId: cuidSchema,
+  reason: z.string().max(500).optional(),
+  isRecurring: z.boolean().optional(),
+  specificDate: z.coerce.date().optional(),
+})
+
+export const upsertTeacherConstraintsSchema = z.object({
+  teacherId: cuidSchema,
+  termId: cuidSchema.nullable().optional(),
+  maxPeriodsPerDay: z.number().int().min(1).max(15).optional(),
+  maxPeriodsPerWeek: z.number().int().min(1).max(50).optional(),
+  minFreePeriods: z.number().int().min(0).max(10).optional(),
+  maxConsecutivePeriods: z.number().int().min(1).max(8).optional(),
+  dayPreferences: z.record(z.string(), z.string()).optional(),
+  periodPreferences: z.record(z.string(), z.string()).optional(),
+  enforceSubjectMatch: z.boolean().optional(),
+  lunchBreakRequired: z.boolean().optional(),
+  notes: z.string().max(1000).nullable().optional(),
+})
+
+export const getSubstitutionRecordsSchema = z.object({
+  absenceId: cuidSchema.optional(),
+  substituteTeacherId: cuidSchema.optional(),
+  originalTeacherId: cuidSchema.optional(),
+  status: z
+    .enum(["PENDING", "CONFIRMED", "DECLINED", "COMPLETED", "CANCELLED"])
+    .optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  limit: z.number().int().min(1).max(200).optional(),
+  offset: z.number().int().min(0).optional(),
+})
+
+/**
+ * One AI-generated slot. The id fields stay permissive (z.string()) because the
+ * generator emits empty classId for section-based slots and null teacherId for
+ * unassigned slots; the security-critical guards are termId (the delete scope),
+ * a bounded array length, and the dayOfWeek/periodId formats.
+ */
+export const generatedSlotSchema = z.object({
+  dayOfWeek: dayOfWeekSchema,
+  periodId: cuidSchema,
+  sectionId: z.string(),
+  subjectId: z.string(),
+  classId: z.string(),
+  teacherId: z.string().nullable(),
+  classroomId: z.string(),
+  score: z.number(),
+  violations: z.array(z.string()),
+})
+
+export const applyGeneratedTimetableSchema = z.object({
+  termId: cuidSchema,
+  slots: z.array(generatedSlotSchema).max(5000),
+  clearExisting: z.boolean().optional(),
+})
+
+export const importSlotSchema = z.object({
+  dayOfWeek: dayOfWeekSchema,
+  periodId: cuidSchema,
+  classId: cuidSchema,
+  teacherId: cuidSchema,
+  classroomId: cuidSchema,
+  weekOffset: weekOffsetSchema.optional(),
+})
+
+export const importTimetableSlotsSchema = z.object({
+  termId: cuidSchema,
+  slots: z.array(importSlotSchema).max(2000),
+  options: z.object({
+    overwrite: z.boolean(),
+    validateOnly: z.boolean(),
+  }),
+})
+
 // ============================================================================
 // Import/Export Schemas
 // ============================================================================

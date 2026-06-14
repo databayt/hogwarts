@@ -93,7 +93,6 @@ import {
 } from "./generate/algorithm"
 import { attachLiveClasses } from "./live-class-join"
 import {
-  filterTimetableByRole,
   getPermissionContext,
   logTimetableAction,
   requireAdminAccess,
@@ -110,13 +109,24 @@ import type {
   TeacherConstraintCheck,
 } from "./types"
 import {
+  addTeacherUnavailableBlockSchema,
+  applyGeneratedTimetableSchema,
+  applyTemplateToTermSchema,
+  createPeriodSchema,
+  createTemplateFromTermSchema,
+  deleteTimetableSlotSchema,
   detectTimetableConflictsSchema,
   getClassesForSelectionSchema,
   getScheduleConfigSchema,
+  getSubstitutionRecordsSchema,
   getTeachersForSelectionSchema,
   getWeeklyTimetableSchema,
+  importTimetableSlotsSchema,
+  moveTimetableSlotSchema,
+  setActiveTermSchema,
   suggestFreeSlotsSchema,
   upsertSchoolWeekConfigSchema,
+  upsertTeacherConstraintsSchema,
   upsertTimetableSlotSchema,
   type GetWeeklyTimetableInput as GetWeeklyTimetableValidated,
 } from "./validation"
@@ -131,8 +141,13 @@ import {
 /**
  * Validate teacher constraints for a proposed slot assignment
  * Returns violations (errors block assignment, warnings are advisory)
+ *
+ * INTERNAL helper — deliberately NOT exported, so it is not reachable as a
+ * server action over HTTP. Its only caller (validateSlotConstraints) supplies
+ * the tenant-resolved schoolId from getTenantContext(); never re-expose this
+ * with a caller-supplied schoolId (that was a cross-tenant read hole).
  */
-export async function validateTeacherConstraints(input: {
+async function validateTeacherConstraints(input: {
   schoolId: string
   termId: string
   teacherId: string
@@ -376,8 +391,10 @@ export async function validateTeacherConstraints(input: {
 
 /**
  * Validate room constraints for a proposed slot assignment
+ *
+ * INTERNAL helper — deliberately NOT exported (see validateTeacherConstraints).
  */
-export async function validateRoomConstraints(input: {
+async function validateRoomConstraints(input: {
   schoolId: string
   termId: string
   classroomId: string
@@ -533,8 +550,12 @@ export async function validateRoomConstraints(input: {
 /**
  * Validate all constraints for a slot (teacher + room)
  * Use this before creating or updating a timetable slot
+ *
+ * INTERNAL helper — deliberately NOT exported. Callers (upsertTimetableSlot,
+ * moveTimetableSlot) authenticate + resolve schoolId via getTenantContext()
+ * BEFORE invoking this and pass that schoolId in; it is not an HTTP surface.
  */
-export async function validateSlotConstraints(input: {
+async function validateSlotConstraints(input: {
   schoolId: string
   termId: string
   teacherId: string
@@ -664,34 +685,66 @@ export async function detectTimetableConflicts(input?: unknown) {
       HAVING COUNT(*) > 1
     `
 
-    // Step 3: Fetch details for conflicting slots (only the ones we need)
-    // This is O(conflicts) not O(all slots)
-    for (const tc of teacherConflicts) {
-      const conflictSlots = await timetableModel.findMany({
+    // Step 3: Batch-fetch details for ALL conflicting slots in 2 queries (not
+    // N+M). Each group's slots are matched via a single OR clause, then grouped
+    // in memory. Cohort identity falls back section → class (section-based
+    // slots have classId = null, so `slot.class` is null and must NOT be
+    // dereferenced directly — doing so previously crashed the whole detector).
+    const conflictSlotSelect = {
+      dayOfWeek: true,
+      periodId: true,
+      classId: true,
+      sectionId: true,
+      teacherId: true,
+      classroomId: true,
+      class: { select: { id: true, name: true } },
+      section: { select: { id: true, name: true } },
+      teacher: { select: { firstName: true, lastName: true } },
+      classroom: { select: { roomName: true } },
+    } as const
+
+    // Cohort identity for a slot — prefer class (legacy), else section.
+    const cohortOf = (s: {
+      class?: { id: string; name: string } | null
+      section?: { id: string; name: string } | null
+      classId?: string | null
+      sectionId?: string | null
+    }) => ({
+      id: s.class?.id ?? s.section?.id ?? s.classId ?? s.sectionId ?? "",
+      name: s.class?.name ?? s.section?.name ?? "",
+    })
+
+    if (teacherConflicts.length > 0) {
+      const teacherSlots = await timetableModel.findMany({
         where: {
           schoolId,
-          dayOfWeek: tc.dayOfWeek,
-          periodId: tc.periodId,
-          teacherId: tc.teacherId,
           ...(validatedInput?.termId && { termId: validatedInput.termId }),
+          OR: teacherConflicts.map((tc) => ({
+            dayOfWeek: tc.dayOfWeek,
+            periodId: tc.periodId,
+            teacherId: tc.teacherId,
+          })),
         },
-        select: {
-          classId: true,
-          teacherId: true,
-          class: { select: { id: true, name: true } },
-          teacher: { select: { firstName: true, lastName: true } },
-        },
-        take: 2, // We only need 2 to show conflict
+        select: conflictSlotSelect,
       })
 
-      if (conflictSlots.length >= 2) {
-        const [a, b] = conflictSlots
+      const grouped = new Map<string, typeof teacherSlots>()
+      for (const s of teacherSlots) {
+        const key = `${s.dayOfWeek}|${s.periodId}|${s.teacherId}`
+        const arr = grouped.get(key) ?? []
+        if (arr.length < 2) arr.push(s)
+        grouped.set(key, arr)
+      }
+
+      for (const slots of grouped.values()) {
+        if (slots.length < 2) continue
+        const [a, b] = slots
         conflicts.push({
           type: "TEACHER",
-          classA: { id: a.class.id, name: a.class.name },
-          classB: { id: b.class.id, name: b.class.name },
+          classA: cohortOf(a),
+          classB: cohortOf(b),
           teacher: {
-            id: a.teacherId,
+            id: a.teacherId ?? "",
             name: [a.teacher?.firstName, a.teacher?.lastName]
               .filter(Boolean)
               .join(" "),
@@ -701,34 +754,39 @@ export async function detectTimetableConflicts(input?: unknown) {
       }
     }
 
-    for (const rc of roomConflicts) {
-      const conflictSlots = await timetableModel.findMany({
+    if (roomConflicts.length > 0) {
+      const roomSlots = await timetableModel.findMany({
         where: {
           schoolId,
-          dayOfWeek: rc.dayOfWeek,
-          periodId: rc.periodId,
-          classroomId: rc.classroomId,
           ...(validatedInput?.termId && { termId: validatedInput.termId }),
+          OR: roomConflicts.map((rc) => ({
+            dayOfWeek: rc.dayOfWeek,
+            periodId: rc.periodId,
+            classroomId: rc.classroomId,
+          })),
         },
-        select: {
-          classId: true,
-          classroomId: true,
-          class: { select: { id: true, name: true } },
-          classroom: { select: { roomName: true } },
-        },
-        take: 2,
+        select: conflictSlotSelect,
       })
 
-      if (conflictSlots.length >= 2) {
-        const [a, b] = conflictSlots
+      const grouped = new Map<string, typeof roomSlots>()
+      for (const s of roomSlots) {
+        const key = `${s.dayOfWeek}|${s.periodId}|${s.classroomId}`
+        const arr = grouped.get(key) ?? []
+        if (arr.length < 2) arr.push(s)
+        grouped.set(key, arr)
+      }
+
+      for (const slots of grouped.values()) {
+        if (slots.length < 2) continue
+        const [a, b] = slots
         conflicts.push({
           type: "ROOM",
-          classA: { id: a.class.id, name: a.class.name },
-          classB: { id: b.class.id, name: b.class.name },
+          classA: cohortOf(a),
+          classB: cohortOf(b),
           teacher: null,
           room: {
-            id: a.classroomId,
-            name: a.classroom?.roomName ?? a.classroomId,
+            id: a.classroomId ?? "",
+            name: a.classroom?.roomName ?? a.classroomId ?? "",
           },
         })
       }
@@ -1145,7 +1203,7 @@ export async function upsertSchoolWeekConfig(input: unknown) {
  * Move a timetable slot to a new position with constraint validation
  * Used for drag-and-drop scheduling
  */
-export async function moveTimetableSlot(input: {
+export async function moveTimetableSlot(rawInput: {
   slotId: string
   targetDayOfWeek: number
   targetPeriodId: string
@@ -1158,6 +1216,7 @@ export async function moveTimetableSlot(input: {
   errors: ConstraintViolation[]
 }> {
   await requireAdminAccess()
+  const input = moveTimetableSlotSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -1178,13 +1237,16 @@ export async function moveTimetableSlot(input: {
 
   const targetClassroomId = input.targetClassroomId ?? existingSlot.classroomId
 
-  // Validate constraints at the new position
+  // Validate constraints at the new position. Pass sectionId so room-capacity
+  // checks can count the section's students (section-based slots have
+  // classId = null; without sectionId the room can be silently over-booked).
   const validation = await validateSlotConstraints({
     schoolId,
     termId: existingSlot.termId,
     teacherId: existingSlot.teacherId ?? "",
     classroomId: targetClassroomId ?? "",
     classId: existingSlot.classId ?? "",
+    sectionId: existingSlot.sectionId ?? undefined,
     dayOfWeek: input.targetDayOfWeek,
     periodId: input.targetPeriodId,
     weekOffset: existingSlot.weekOffset,
@@ -1204,40 +1266,71 @@ export async function moveTimetableSlot(input: {
     ...validation.roomCheck.violations.filter((v) => v.severity === "warning"),
   ]
 
-  // Check for conflicts at target position
-  const conflictingSlot = await db.timetable.findFirst({
-    where: {
-      schoolId,
-      termId: existingSlot.termId,
-      dayOfWeek: input.targetDayOfWeek,
-      periodId: input.targetPeriodId,
-      weekOffset: existingSlot.weekOffset,
-      OR: [
-        { teacherId: existingSlot.teacherId },
-        { classroomId: targetClassroomId },
-      ],
-      id: { not: input.slotId },
-    },
-    include: {
-      class: { select: { name: true } },
-      teacher: { select: { firstName: true, lastName: true } },
-    },
-  })
+  // Check for conflicts at target position. Build the OR conditionally — a
+  // null teacherId / classroomId / sectionId must NOT become `{ field: null }`,
+  // which would match every unassigned slot in the cell and report phantom
+  // conflicts. The sectionId arm catches a section double-book (two lessons for
+  // the same cohort in one day+period) which teacher/room arms alone miss.
+  const conflictOr: Prisma.TimetableWhereInput[] = []
+  if (existingSlot.teacherId)
+    conflictOr.push({ teacherId: existingSlot.teacherId })
+  if (targetClassroomId) conflictOr.push({ classroomId: targetClassroomId })
+  if (existingSlot.sectionId)
+    conflictOr.push({ sectionId: existingSlot.sectionId })
+
+  const conflictingSlot =
+    conflictOr.length > 0
+      ? await db.timetable.findFirst({
+          where: {
+            schoolId,
+            termId: existingSlot.termId,
+            dayOfWeek: input.targetDayOfWeek,
+            periodId: input.targetPeriodId,
+            weekOffset: existingSlot.weekOffset,
+            OR: conflictOr,
+            id: { not: input.slotId },
+          },
+          include: {
+            class: { select: { name: true } },
+            section: { select: { name: true } },
+            teacher: { select: { firstName: true, lastName: true } },
+          },
+        })
+      : null
 
   if (conflictingSlot) {
-    if (conflictingSlot.teacherId === existingSlot.teacherId) {
+    const cohortName =
+      conflictingSlot.class?.name ?? conflictingSlot.section?.name ?? ""
+    if (
+      existingSlot.teacherId &&
+      conflictingSlot.teacherId === existingSlot.teacherId
+    ) {
       errors.push({
         type: "UNAVAILABLE_BLOCK",
         severity: "error",
-        message: `Teacher is already scheduled for ${conflictingSlot.class?.name} at this time`,
+        message: `Teacher is already scheduled for ${cohortName} at this time`,
         details: { conflictingSlotId: conflictingSlot.id },
       })
     }
-    if (conflictingSlot.classroomId === targetClassroomId) {
+    if (
+      targetClassroomId &&
+      conflictingSlot.classroomId === targetClassroomId
+    ) {
       errors.push({
         type: "ROOM_RESERVED",
         severity: "error",
-        message: `Room is already booked for ${conflictingSlot.class?.name} at this time`,
+        message: `Room is already booked for ${cohortName} at this time`,
+        details: { conflictingSlotId: conflictingSlot.id },
+      })
+    }
+    if (
+      existingSlot.sectionId &&
+      conflictingSlot.sectionId === existingSlot.sectionId
+    ) {
+      errors.push({
+        type: "SECTION_DOUBLE_BOOKED",
+        severity: "error",
+        message: `This section already has a lesson (${cohortName}) at this time`,
         details: { conflictingSlotId: conflictingSlot.id },
       })
     }
@@ -1282,13 +1375,19 @@ export async function moveTimetableSlot(input: {
         where: { id: schoolId },
         select: { preferredLanguage: true },
       })
+      const notifLang = schoolPref?.preferredLanguage ?? "ar"
+      const cohort =
+        existingSlot.class?.name ?? (notifLang === "ar" ? "الحصة" : "the class")
       dispatchNotification({
         schoolId,
         userId: teacherUser.userId,
         type: "class_rescheduled",
-        title: "تغيير في الجدول",
-        body: `تم نقل حصة ${existingSlot.class?.name || "الحصة"} إلى يوم ووقت جديد`,
-        lang: schoolPref?.preferredLanguage ?? "ar",
+        title: notifLang === "ar" ? "تغيير في الجدول" : "Schedule change",
+        body:
+          notifLang === "ar"
+            ? `تم نقل حصة ${cohort} إلى يوم ووقت جديد`
+            : `${cohort} has been moved to a new day and time`,
+        lang: notifLang,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -2523,17 +2622,29 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   )
   const maxSlotsPerRoom = config.workingDays.length * teachingPeriods.length
 
+  // Count used slots per room in ONE pass over the slots (already in memory)
+  // instead of re-filtering the whole slots array for every room — the latter
+  // is O(rooms × slots) (e.g. 30 × 840 ≈ 25k comparisons on the albayan seed).
+  const slotsPerRoom = new Map<string, number>()
+  for (const s of slots) {
+    if (s.classroomId)
+      slotsPerRoom.set(
+        s.classroomId,
+        (slotsPerRoom.get(s.classroomId) ?? 0) + 1
+      )
+  }
+
   const roomUtilization = rooms.map((room) => {
-    const roomSlots = slots.filter((s) => s.classroomId === room.id)
+    const usedSlots = slotsPerRoom.get(room.id) ?? 0
     return {
       id: room.id,
       name: room.roomName,
       capacity: room.capacity,
-      usedSlots: roomSlots.length,
+      usedSlots,
       totalSlots: maxSlotsPerRoom,
       utilizationRate:
         maxSlotsPerRoom > 0
-          ? Math.round((roomSlots.length / maxSlotsPerRoom) * 100)
+          ? Math.round((usedSlots / maxSlotsPerRoom) * 100)
           : 0,
     }
   })
@@ -2594,7 +2705,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
  * Section-first: accepts slot `id` (works for both section-based and legacy slots).
  * Legacy composite-key fields kept for backward compat — ignored when id is present.
  */
-export async function deleteTimetableSlot(input: {
+export async function deleteTimetableSlot(rawInput: {
   /** Preferred: delete by primary key — works for all slot types */
   id?: string
   // Legacy composite key fields (used only when id is absent)
@@ -2605,6 +2716,7 @@ export async function deleteTimetableSlot(input: {
   weekOffset?: 0 | 1
 }) {
   await requireAdminAccess()
+  const input = deleteTimetableSlotSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -2674,15 +2786,21 @@ export async function deleteTimetableSlot(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const notifLang2 = schoolPref2?.preferredLanguage ?? "ar"
     const slotLabel =
-      slotToDelete.section?.name || slotToDelete.class?.name || "الحصة"
+      slotToDelete.section?.name ||
+      slotToDelete.class?.name ||
+      (notifLang2 === "ar" ? "الحصة" : "the class")
     dispatchNotification({
       schoolId,
       userId: slotToDelete.teacher.userId,
       type: "class_cancelled",
-      title: "إلغاء حصة",
-      body: `تم إلغاء حصة ${slotLabel} من الجدول`,
-      lang: schoolPref2?.preferredLanguage ?? "ar",
+      title: notifLang2 === "ar" ? "إلغاء حصة" : "Class cancelled",
+      body:
+        notifLang2 === "ar"
+          ? `تم إلغاء حصة ${slotLabel} من الجدول`
+          : `${slotLabel} has been removed from the schedule`,
+      lang: notifLang2,
       priority: "normal",
       channels: ["in_app"],
       metadata: {
@@ -2841,24 +2959,33 @@ export async function getActiveTerm() {
 export async function setActiveTerm(input: { termId: string }) {
   await requireAdminAccess()
 
+  const { termId } = setActiveTermSchema.parse(input)
+
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  // Deactivate all terms for this school
-  await db.term.updateMany({
-    where: { schoolId },
-    data: { isActive: false },
+  // Verify the term belongs to this school BEFORE deactivating anything —
+  // otherwise a foreign/invalid termId would deactivate all of this school's
+  // terms and activate none (leaving zero active terms).
+  const term = await db.term.findFirst({
+    where: { id: termId, schoolId },
+    select: { id: true },
   })
+  if (!term) throw new Error("TERM_NOT_FOUND")
 
-  // Activate the selected term (defense-in-depth: scope by schoolId)
-  await db.term.updateMany({
-    where: { id: input.termId, schoolId },
-    data: { isActive: true },
-  })
+  // Atomic flip: deactivate all, activate the target — in one transaction so a
+  // crash between the two writes can never leave every term inactive.
+  await db.$transaction([
+    db.term.updateMany({ where: { schoolId }, data: { isActive: false } }),
+    db.term.updateMany({
+      where: { id: termId, schoolId },
+      data: { isActive: true },
+    }),
+  ])
 
   await logTimetableAction("configure_settings", {
     entityType: "term",
-    entityId: input.termId,
+    entityId: termId,
     changes: { isActive: true },
   })
 
@@ -3480,7 +3607,7 @@ export async function getTeacherConstraints(input: {
 /**
  * Upsert teacher constraints (admin only)
  */
-export async function upsertTeacherConstraints(input: {
+export async function upsertTeacherConstraints(rawInput: {
   teacherId: string
   termId?: string | null
   maxPeriodsPerDay?: number
@@ -3494,9 +3621,22 @@ export async function upsertTeacherConstraints(input: {
   notes?: string | null
 }) {
   await requireAdminAccess()
+  // Zod bounds the numeric fields (e.g. maxPeriodsPerDay 1..15) so an
+  // unrealistic value can't be written and later disable conflict detection.
+  const input = upsertTeacherConstraintsSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  // Teacher IDs are globally-unique CUIDs, so the FK alone does not enforce
+  // tenancy. Verify the teacher belongs to THIS school before writing a
+  // constraint, otherwise an admin of school A could create/overwrite a
+  // constraint for a teacher in school B (cross-tenant corruption).
+  const teacherInSchool = await db.teacher.findFirst({
+    where: { id: input.teacherId, schoolId },
+    select: { id: true },
+  })
+  if (!teacherInSchool) throw new Error("TEACHER_NOT_FOUND")
 
   const data = {
     schoolId,
@@ -3547,7 +3687,7 @@ export async function upsertTeacherConstraints(input: {
 /**
  * Add unavailable block for a teacher
  */
-export async function addTeacherUnavailableBlock(input: {
+export async function addTeacherUnavailableBlock(rawInput: {
   teacherConstraintId: string
   dayOfWeek: number
   periodId: string
@@ -3556,9 +3696,19 @@ export async function addTeacherUnavailableBlock(input: {
   specificDate?: Date
 }) {
   await requireAdminAccess()
+  const input = addTeacherUnavailableBlockSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  // Verify the parent constraint belongs to this school before attaching a
+  // block to it (teacherConstraintId is a global CUID — the FK alone does not
+  // enforce tenancy).
+  const parentConstraint = await db.teacherConstraint.findFirst({
+    where: { id: input.teacherConstraintId, schoolId },
+    select: { id: true },
+  })
+  if (!parentConstraint) throw new Error("TEACHER_CONSTRAINT_NOT_FOUND")
 
   const block = await db.teacherUnavailableBlock.create({
     data: {
@@ -3783,12 +3933,13 @@ export async function listTimetableTemplates() {
 /**
  * Create a template from an existing term's timetable
  */
-export async function createTemplateFromTerm(input: {
+export async function createTemplateFromTerm(rawInput: {
   name: string
   description?: string
   sourceTermId: string
 }) {
   await requireAdminAccess()
+  const input = createTemplateFromTermSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -3863,7 +4014,7 @@ export async function createTemplateFromTerm(input: {
 /**
  * Apply a template to a target term
  */
-export async function applyTemplateToTerm(input: {
+export async function applyTemplateToTerm(rawInput: {
   templateId: string
   targetTermId: string
   clearExisting?: boolean
@@ -3871,6 +4022,7 @@ export async function applyTemplateToTerm(input: {
   roomMapping?: Record<string, string>
 }) {
   await requireAdminAccess()
+  const input = applyTemplateToTermSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -3886,13 +4038,6 @@ export async function applyTemplateToTerm(input: {
 
   if (!template) throw new Error("TEMPLATE_NOT_FOUND")
 
-  // Clear existing slots if requested
-  if (input.clearExisting) {
-    await db.timetable.deleteMany({
-      where: { schoolId, termId: input.targetTermId },
-    })
-  }
-
   const slotPatterns = template.slotPatterns as Array<{
     dayOfWeek: number
     periodId: string
@@ -3902,36 +4047,39 @@ export async function applyTemplateToTerm(input: {
     rotationWeek: number
   }>
 
-  // Apply slots with optional mapping
-  let slotsCreated = 0
-  let conflictsFound = 0
+  // LEGACY REPLAY: templates store classId-based patterns only, so the replayed
+  // rows carry no sectionId and section-based student/guardian reads cannot see
+  // them until templates capture sectionId/subjectId (tracked in ISSUE.md).
+  const rows = slotPatterns.map((pattern) => ({
+    schoolId,
+    termId: input.targetTermId,
+    dayOfWeek: pattern.dayOfWeek,
+    periodId: pattern.periodId,
+    classId: pattern.classId,
+    teacherId: input.teacherMapping?.[pattern.teacherId] || pattern.teacherId,
+    classroomId:
+      input.roomMapping?.[pattern.classroomId] || pattern.classroomId,
+    weekOffset: 0,
+    rotationWeek: pattern.rotationWeek,
+  }))
 
-  for (const pattern of slotPatterns) {
-    const teacherId =
-      input.teacherMapping?.[pattern.teacherId] || pattern.teacherId
-    const classroomId =
-      input.roomMapping?.[pattern.classroomId] || pattern.classroomId
-
-    try {
-      await db.timetable.create({
-        data: {
-          schoolId,
-          termId: input.targetTermId,
-          dayOfWeek: pattern.dayOfWeek,
-          periodId: pattern.periodId,
-          classId: pattern.classId,
-          teacherId,
-          classroomId,
-          weekOffset: 0,
-          rotationWeek: pattern.rotationWeek,
-        },
+  // Atomic replace: clear (if requested) + bulk insert in ONE transaction so a
+  // partial failure can never destroy the term's existing slots while leaving
+  // an incomplete replacement. createMany({ skipDuplicates }) lets the unique
+  // index drop conflicting patterns instead of aborting (and replaces the old
+  // N create round-trips with a single insert).
+  const ops: Prisma.PrismaPromise<Prisma.BatchPayload>[] = []
+  if (input.clearExisting) {
+    ops.push(
+      db.timetable.deleteMany({
+        where: { schoolId, termId: input.targetTermId },
       })
-      slotsCreated++
-    } catch {
-      // Likely a conflict
-      conflictsFound++
-    }
+    )
   }
+  ops.push(db.timetable.createMany({ data: rows, skipDuplicates: true }))
+  const results = await db.$transaction(ops)
+  const slotsCreated = results[results.length - 1].count
+  const conflictsFound = rows.length - slotsCreated
 
   // Record application
   await db.templateApplication.create({
@@ -4336,12 +4484,13 @@ export async function generateTimetablePreview(input: {
 /**
  * Apply generated timetable preview to the database
  */
-export async function applyGeneratedTimetable(input: {
+export async function applyGeneratedTimetable(rawInput: {
   termId: string
   slots: GeneratedSlot[]
   clearExisting?: boolean
 }): Promise<{ success: boolean; createdCount: number; errors: string[] }> {
   await requireAdminAccess()
+  const input = applyGeneratedTimetableSchema.parse(rawInput) as typeof rawInput
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -4403,7 +4552,7 @@ export async function applyGeneratedTimetable(input: {
  * Bulk import timetable slots with validation
  * Supports Excel, CSV, JSON formats
  */
-export async function importTimetableSlots(input: {
+export async function importTimetableSlots(rawInput: {
   termId: string
   slots: ImportSlot[]
   options: {
@@ -4412,6 +4561,9 @@ export async function importTimetableSlots(input: {
   }
 }): Promise<ImportResult> {
   await requireAdminAccess()
+  // Bounds the slot array (max 2000) and validates each row's id/day formats
+  // before the function's own membership checks run.
+  const input = importTimetableSlotsSchema.parse(rawInput) as typeof rawInput
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
@@ -4647,22 +4799,19 @@ export async function importTimetableSlots(input: {
 /**
  * Create a new period for a school year
  */
-export async function createPeriod(input: {
+export async function createPeriod(rawInput: {
   yearId: string
   name: string
   startTime: string // HH:MM format
   endTime: string // HH:MM format
 }): Promise<{ id: string }> {
   await requireAdminAccess()
+  // Zod enforces yearId CUID, name length, and HH:MM time format (throws
+  // INVALID_TIME_FORMAT via the regex message on bad times).
+  const input = createPeriodSchema.parse(rawInput)
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
-
-  // Validate time format
-  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
-  if (!timeRegex.test(input.startTime) || !timeRegex.test(input.endTime)) {
-    throw new Error("INVALID_TIME_FORMAT")
-  }
 
   // Parse times to Date objects (using UTC for consistency)
   const [startHour, startMin] = input.startTime.split(":").map(Number)
@@ -5936,13 +6085,23 @@ export async function assignSubstitute(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const notifLang3 = schoolPref3?.preferredLanguage ?? "ar"
+    const origTeacher = [
+      originalSlot.teacher?.firstName,
+      originalSlot.teacher?.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ")
     dispatchNotification({
       schoolId,
       userId: subTeacherUser.userId,
       type: "system_alert",
-      title: "تعيين بديل",
-      body: `تم تعيينك كبديل لـ ${originalSlot.teacher?.firstName} ${originalSlot.teacher?.lastName} في ${originalSlot.class?.name} (${originalSlot.period?.name})`,
-      lang: schoolPref3?.preferredLanguage ?? "ar",
+      title: notifLang3 === "ar" ? "تعيين بديل" : "Substitute assigned",
+      body:
+        notifLang3 === "ar"
+          ? `تم تعيينك كبديل لـ ${origTeacher} في ${originalSlot.class?.name} (${originalSlot.period?.name})`
+          : `You have been assigned as a substitute for ${origTeacher} in ${originalSlot.class?.name} (${originalSlot.period?.name})`,
+      lang: notifLang3,
       priority: "high",
       channels: ["in_app", "email"],
       metadata: {
@@ -6012,6 +6171,7 @@ export async function respondToSubstitution(input: {
       where: { id: schoolId },
       select: { preferredLanguage: true },
     })
+    const notifLang4 = schoolPref4?.preferredLanguage ?? "ar"
     const admins = await db.user.findMany({
       where: { schoolId, role: "ADMIN" },
       select: { id: true },
@@ -6021,9 +6181,12 @@ export async function respondToSubstitution(input: {
         schoolId,
         userId: admin.id,
         type: "system_alert",
-        title: "رفض البدالة",
-        body: `رفض المعلم البديل التعيين${input.declineReason ? `: ${input.declineReason}` : ""}`,
-        lang: schoolPref4?.preferredLanguage ?? "ar",
+        title: notifLang4 === "ar" ? "رفض البدالة" : "Substitution declined",
+        body:
+          notifLang4 === "ar"
+            ? `رفض المعلم البديل التعيين${input.declineReason ? `: ${input.declineReason}` : ""}`
+            : `The substitute teacher declined the assignment${input.declineReason ? `: ${input.declineReason}` : ""}`,
+        lang: notifLang4,
         priority: "high",
         channels: ["in_app"],
         metadata: {
@@ -6042,7 +6205,7 @@ export async function respondToSubstitution(input: {
 /**
  * Get substitution records with filters
  */
-export async function getSubstitutionRecords(input: {
+export async function getSubstitutionRecords(rawInput: {
   absenceId?: string
   substituteTeacherId?: string
   originalTeacherId?: string
@@ -6053,6 +6216,7 @@ export async function getSubstitutionRecords(input: {
   offset?: number
 }) {
   await requireReadAccess()
+  const input = getSubstitutionRecordsSchema.parse(rawInput ?? {})
 
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")

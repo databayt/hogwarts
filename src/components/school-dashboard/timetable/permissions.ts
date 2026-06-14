@@ -40,7 +40,10 @@ export async function requirePermission(
   action: TimetableAction
 ): Promise<void> {
   const session = await auth()
-  const role = session?.user?.role as TimetableRole | undefined
+  // Distinguish "not signed in" from "signed in but unauthorized" so callers
+  // (and the client error mapping) can react correctly to each.
+  if (!session?.user?.id) throw new Error("NOT_AUTHENTICATED")
+  const role = session.user.role as TimetableRole | undefined
 
   if (!hasPermission(role, action)) {
     throw new Error(`Permission denied: ${action} requires higher privileges`)
@@ -52,7 +55,8 @@ export async function requirePermission(
  */
 export async function requireAdminAccess(): Promise<void> {
   const session = await auth()
-  const role = session?.user?.role as TimetableRole | undefined
+  if (!session?.user?.id) throw new Error("NOT_AUTHENTICATED")
+  const role = session.user.role as TimetableRole | undefined
 
   if (!canModifyTimetable(role)) {
     throw new Error("Permission denied: Admin access required")
@@ -64,7 +68,8 @@ export async function requireAdminAccess(): Promise<void> {
  */
 export async function requireReadAccess(): Promise<void> {
   const session = await auth()
-  const role = session?.user?.role as TimetableRole | undefined
+  if (!session?.user?.id) throw new Error("NOT_AUTHENTICATED")
+  const role = session.user.role as TimetableRole | undefined
 
   if (!canViewTimetable(role)) {
     throw new Error(
@@ -104,19 +109,30 @@ export async function getPermissionContext() {
 // ============================================================================
 
 /**
+ * Minimal shape a timetable row needs for role-based visibility filtering.
+ * Typed (not `any`) so a rename of these fields in the Prisma model surfaces
+ * as a compile error here instead of silently breaking the filter.
+ */
+export interface TimetableRowMinimal {
+  teacherId?: string | null
+  classId?: string | null
+  sectionId?: string | null
+}
+
+/**
  * Filter timetable data based on user role
  * Used to restrict what data a user can see
  */
-export async function filterTimetableByRole(
-  timetableData: any,
+export async function filterTimetableByRole<T extends TimetableRowMinimal>(
+  timetableData: T[],
   options?: {
     teacherId?: string
     studentId?: string
     classId?: string
     childIds?: string[]
   }
-) {
-  const { role, userId } = await getPermissionContext()
+): Promise<T[]> {
+  const { role } = await getPermissionContext()
 
   switch (role) {
     case "DEVELOPER":
@@ -131,7 +147,7 @@ export async function filterTimetableByRole(
       if (options?.teacherId) {
         // Filter to show only teacher's classes
         return timetableData.filter(
-          (item: any) => item.teacherId === options.teacherId
+          (item) => item.teacherId === options.teacherId
         )
       }
       return timetableData
@@ -139,9 +155,7 @@ export async function filterTimetableByRole(
     case "STUDENT":
       // Can only see their class timetable
       if (options?.classId) {
-        return timetableData.filter(
-          (item: any) => item.classId === options.classId
-        )
+        return timetableData.filter((item) => item.classId === options.classId)
       }
       return []
 
@@ -150,16 +164,19 @@ export async function filterTimetableByRole(
       // childIds are student IDs — resolve to class IDs via StudentClass
       if (options?.childIds && options.childIds.length > 0) {
         const { schoolId } = await getPermissionContext()
+        // Never run the cross-family query without a tenant filter — a null
+        // schoolId would match StudentClass rows across ALL schools.
+        if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
         const enrollments = await db.studentClass.findMany({
           where: {
             studentId: { in: options.childIds },
-            ...(schoolId ? { schoolId } : {}),
+            schoolId,
           },
           select: { classId: true },
         })
         const childClassIds = new Set(enrollments.map((e) => e.classId))
-        return timetableData.filter((item: any) =>
-          childClassIds.has(item.classId)
+        return timetableData.filter(
+          (item) => item.classId != null && childClassIds.has(item.classId)
         )
       }
       return []
@@ -214,60 +231,16 @@ export async function logTimetableAction(
     ...details,
   }
 
-  // In production, this would write to an audit log table or service
-  if (process.env.NODE_ENV === "development") {
-    console.log("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
-  }
-
-  // You could also send to monitoring service like Sentry
-  // Sentry.captureMessage('Timetable Action', { extra: auditLog })
+  // Structured audit line, emitted in ALL environments so production keeps a
+  // trail via the platform log drain (Vercel). A dedicated audit table is the
+  // tracked follow-up (see ISSUE.md); until then this console sink is the only
+  // record, so it must not be gated behind NODE_ENV.
+  console.info("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
 
   return auditLog
 }
 
-// ============================================================================
-// Middleware Functions
-// ============================================================================
-
-/**
- * Wrap server actions with permission checks
- * Example usage:
- * export const myAction = withPermission('edit', async (input) => { ... })
- */
-export function withPermission<T extends (...args: any[]) => any>(
-  requiredAction: TimetableAction,
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    await requirePermission(requiredAction)
-    return handler(...args)
-  }) as T
-}
-
-/**
- * Wrap server actions with admin checks
- */
-export function withAdminAccess<T extends (...args: any[]) => any>(
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    await requireAdminAccess()
-    return handler(...args)
-  }) as T
-}
-
-/**
- * Wrap server actions with audit logging
- */
-export function withAudit<T extends (...args: any[]) => any>(
-  action: TimetableAction,
-  handler: T
-): T {
-  return (async (...args: Parameters<T>) => {
-    const result = await handler(...args)
-    await logTimetableAction(action, {
-      metadata: { args: args[0], result: result?.id || result },
-    })
-    return result
-  }) as T
-}
+// Note: the previous withPermission / withAdminAccess / withAudit higher-order
+// wrappers were removed — they were unused dead code and relied on unsafe
+// `(...args: any[]) => any` + `as T` casts. Server actions call requireAdmin
+// Access() / requirePermission() / logTimetableAction() directly instead.

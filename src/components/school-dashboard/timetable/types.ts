@@ -281,6 +281,9 @@ export type ConstraintViolation = {
     | "ROOM_CAPACITY"
     | "ROOM_RESERVED"
     | "ROOM_EQUIPMENT"
+    // A section cannot have two lessons in the same day+period (cohort
+    // double-booking). Checked on move/upsert for section-based slots.
+    | "SECTION_DOUBLE_BOOKED"
   severity: "error" | "warning"
   message: string
   details?: Record<string, unknown>

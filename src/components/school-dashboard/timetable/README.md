@@ -4,11 +4,11 @@ sprint: Q3-2026
 title: Timetable (LMS scheduling)
 file_type: readme
 owner: Abdout
-maturity: Built+Polish
-completion: 80
+maturity: Production-Ready
+completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
-docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-05-25
+docs: https://ed.databayt.org/en/docs/timetable
+last_audited: 2026-06-13
 ---
 
 ## Timetable -- Weekly Schedule Management
@@ -28,94 +28,62 @@ The Timetable block provides school-wide weekly schedule building, conflict dete
 
 ### Routes
 
-| Route                                                           | Page                | Status |
-| --------------------------------------------------------------- | ------------------- | ------ |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable`            | Schedule Builder    | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/by-class`   | Class View          | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/by-teacher` | Teacher View        | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/by-room`    | Room View           | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/conflicts`  | Conflict Resolution | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/settings`   | Schedule Config     | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/generate`   | Auto-Generate       | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/templates`  | Templates           | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/analytics`  | Analytics           | Ready  |
-| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/full`       | Full View           | Ready  |
+The class / teacher / room views are not separate routes — they are tabs/view
+switches inside the role-routed builder (`views/role-router.tsx`). The actual
+route segments are:
+
+| Route                                                          | Page                                          | Status |
+| -------------------------------------------------------------- | --------------------------------------------- | ------ |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable`           | Schedule Builder (role-routed)                | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/full`      | Full-week view                                | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/conflicts` | Conflict Resolution                           | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/settings`  | Schedule Config (days, lunch, periods, terms) | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/generate`  | Auto-Generate                                 | Ready  |
+| `/{lang}/s/{subdomain}/(school-dashboard)/timetable/analytics` | Analytics                                     | Ready  |
+
+(`layout.tsx` provides the sub-nav; each route has `loading.tsx`, and the root
+has `error.tsx`.)
 
 ### File Structure
 
 ```
 src/components/school-dashboard/timetable/
-  actions.ts                  # Server actions (CRUD, conflict detection)
-  content.tsx                 # Main server component
-  content-production.tsx      # Production data loader
-  types.ts                    # TypeScript interfaces
-  validation.ts               # Zod schemas
-  structures.ts               # Data structure helpers
-  constants.ts                # Day/period constants
-  config.ts                   # Runtime configuration
-  config.json                 # Static configuration
-  permissions.ts              # Role-based access control
-  permissions-config.ts       # Permission definitions
-  use-timetable-permissions.ts # Permission hook
-  timetable.ts                # Store / state management
-  timetable-grid.tsx          # Grid display component
-  timetable-grid-enhanced.tsx # Enhanced grid with DnD
-  timetable-cell.tsx          # Individual cell component
-  timetable-header.tsx        # Header with term/view selectors
-  timetable-mobile.tsx        # Mobile-optimized view
-  slot-editor.tsx             # Slot assignment editor
-  slot-editor-dialog.tsx      # Dialog wrapper for editor
-  subject-selector.tsx        # Subject picker
-  conflicts-drawer.tsx        # Conflicts panel
-  schedule-settings-dialog.tsx # Working days / lunch config
-  config-dialog.tsx           # General config dialog
-  import-export.tsx           # CSV/JSON import/export
-  visual-builder.tsx          # Visual schedule builder
-  analytics-reports.tsx       # Usage analytics
-  teacher-info-popup.tsx      # Teacher detail hover card
-  about-hover-card.tsx        # Info hover card
-  nav.tsx                     # Timetable sub-navigation
-  print.css                   # A4 print styles
-  fallback-data.ts            # Demo/fallback data
-  seed-utils.ts               # Seed data utilities
-  utils.ts                    # General utilities
-  use-mobile.tsx              # Mobile detection hook
-  use-media-query.ts          # Media query hook
-  use-toast.ts                # Toast notification hook
-  theme-provider.tsx          # Theme context
-  by-class/content.tsx        # Class view page
-  by-teacher/content.tsx      # Teacher view page
-  by-room/content.tsx         # Room view page
-  conflicts/content.tsx       # Conflicts page
-  settings/content.tsx        # Settings page
-  generate/content.tsx        # Auto-generate page
-  generate/algorithm.ts       # Scheduling algorithm
-  templates/content.tsx       # Templates page
-  templates/create-template-dialog.tsx
-  templates/apply-template-dialog.tsx
-  analytics/content.tsx       # Analytics page
-  substitutions/content.tsx   # Substitution management
-  substitutions/absence-form.tsx
-  substitutions/substitute-finder.tsx
-  substitutions/substitution-list.tsx
-  export/timetable-pdf.tsx    # PDF export
-  export/use-timetable-export.ts
-  views/admin-view.tsx        # Admin role view
-  views/teacher-view.tsx      # Teacher role view
-  views/student-view.tsx      # Student role view
-  views/guardian-view.tsx     # Guardian role view
-  views/role-router.tsx       # Routes to correct view by role
-  views/preview.tsx           # Preview mode
-  views/simple-grid.tsx       # Simplified grid
-  __tests__/actions.test.ts
-  __tests__/structures.test.ts
-  __tests__/validation.test.ts
-  __tests__/production-readiness.test.ts
+  actions.ts            # All server actions ("use server"): reads, mutations,
+                        #   conflict detection, substitutions, templates, periods
+  content.tsx           # Client entry — wraps RoleRouter in a SessionProvider
+  types.ts              # TypeScript interfaces (Conflict, ConstraintViolation, …)
+  validation.ts         # Zod schemas + validation helpers
+  structures.ts         # Timetable structure presets (by country/curriculum)
+  calendars.ts          # ACADEMIC_CALENDARS — country/structure → terms
+  config.ts             # Runtime config (DRAFT_TERM_ID, day labels, colours)
+  util.ts               # Pure helpers (detectConflicts cohort identity, etc.)
+  permissions.ts        # Server-side guards (requireAdminAccess/…), audit log
+  permissions-config.ts # Client-safe permission matrix + role→view mapping
+  live-class-join.ts    # attachLiveClasses resolver (timetable ↔ conference)
+  slot-editor-dialog.tsx# Slot add/edit dialog (section + subject pickers)
+  print.css             # A4 print styles
+  analytics/content.tsx     # Analytics page
+  conflicts/content.tsx     # Conflict-resolution page
+  generate/content.tsx      # Auto-generate page
+  generate/algorithm.ts     # Scheduling algorithm (generateSectionTimetable)
+  settings/content.tsx      # Days / lunch / periods / terms config
+  substitutions/            # Absence + substitute-finder + records list
+    content.tsx, absence-form.tsx, substitute-finder.tsx, substitution-list.tsx
+  export/                   # PDF export
+    timetable-pdf.tsx, use-timetable-export.ts, index.ts
+  views/                    # Role-based rendering
+    role-router.tsx         #   loads active term + personalized data, routes by role
+    admin-view.tsx, teacher-view.tsx, student-view.tsx, guardian-view.tsx
+    simple-grid.tsx         #   the weekly grid primitive
+    preview.tsx, live-join-button.tsx, start-live-class-button.tsx, index.ts
 ```
+
+Tests live under `src/tests/school-dashboard/timetable/` and
+`src/tests/lib/timetable-calendars.test.ts` (NOT a local `__tests__/` dir).
 
 ### Status
 
-**Completion:** 90% | **Blockers:** None
+**Completion:** 95% | **Maturity:** Production-Ready | **Blockers:** None
 
 ### Architecture: Section-Based Scheduling
 

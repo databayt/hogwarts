@@ -139,7 +139,19 @@ The substitution subsystem is fully built in the data and action layers — the 
 
 **Built but not surfaced:** the substitution subsystem (above). The template _actions_ (`createTemplateFromTerm`, `applyTemplateToTerm`, …) also remain in `actions.ts` with no UI, after the unreached standalone `templates` route (and the `by-class` / `by-teacher` / `by-room` routes) were removed and folded into the role-routed view + filter.
 
-**Open** (from the block's `ISSUE.md`): drag-and-drop slot editing (currently click-based), mobile-view polish, ARIA grid pattern + keyboard navigation, fuller role enforcement on mutations, and print tuning for varied day counts.
+**Open** (from the block's `ISSUE.md`): drag-and-drop slot editing (currently click-based), mobile-view polish, the **full** ARIA grid pattern + keyboard navigation (the conflict indicator and heading-nesting fixes have landed; the grid interaction model has not), splitting the 6.5k-line `actions.ts` into `queries.ts`/`actions.ts`, the content-file i18n long-tail, and print tuning for varied day counts.
+
+## Production-readiness hardening (2026-06-13)
+
+A 9-dimension adversarial audit drove a security/correctness pass:
+
+- **Tenant isolation** — the `validate*Constraints` helpers were exported from a `"use server"` file with a caller-supplied `schoolId` (a cross-tenant read surface); they are now internal-only. Constraint writes verify the teacher/parent-constraint belongs to the school first, and `filterTimetableByRole` throws rather than silently dropping the tenant filter.
+- **Correctness** — `detectTimetableConflicts` no longer crashes on section-based slots (it dereferenced a null `class`) and batches its detail fetch into two queries; `moveTimetableSlot` blocks a **section double-book** at the target cell; `applyTemplateToTerm` and `setActiveTerm` are now atomic (`$transaction`).
+- **Validation** — ~12 previously-unvalidated mutations now Zod-parse their input with bounds.
+- **i18n** — server-side substitution/move/delete notifications are localized by `School.preferredLanguage` (they were hardcoded Arabic).
+- **a11y** — invalid heading nesting removed, decorative elements hidden from assistive tech, and conflicts signalled with an icon + screen-reader text rather than colour alone.
+
+All mutations are admin-gated and `schoolId`-scoped; 180 timetable tests pass and the block is `tsc`-clean.
 
 ## See also
 
