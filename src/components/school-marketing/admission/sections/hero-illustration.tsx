@@ -5,9 +5,8 @@
 import { useEffect, useState } from "react"
 import Lottie from "lottie-react"
 
-// Same animation as Claude API page
-const ANIMATION_URL =
-  "https://cdn.prod.website-files.com/6889473510b50328dbb70ae6/68c00420bab94b062559518b_API.json"
+// Same animation as Claude API page — served from the unified asset CDN
+const ANIMATION_URL = `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/anthropic/api.json`
 
 export function AdmissionHeroIllustration() {
   const [animationData, setAnimationData] = useState<unknown>(null)

@@ -767,15 +767,6 @@ export function CatalogDetail({ subject, lang }: Props) {
         </div>
       </div>
 
-      {/* Banner Image Upload */}
-      <div className="mb-6">
-        <CatalogImageUpload
-          entityType="subject"
-          entityId={subject.id}
-          currentThumbnailKey={subject.thumbnail}
-        />
-      </div>
-
       {/* Stats */}
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card>
@@ -807,13 +798,13 @@ export function CatalogDetail({ subject, lang }: Props) {
         </Card>
       </div>
 
-      {/* Thumbnail Upload */}
+      {/* Concept art (auto-assigned, read-only) */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Thumbnail</CardTitle>
+          <CardTitle>Concept Art</CardTitle>
           <CardDescription>
-            Upload a high-quality image for this subject. Processed into WebP
-            variants and served via CDN.
+            Auto-assigned from the subject&apos;s nearest concept and served from
+            cdn.databayt.org/clickview. Not editable per entity.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -9,7 +9,8 @@ export function HeroIllustration() {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch("/animations/anthropic-hero.json")
+    const cdn = process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"
+    fetch(`https://${cdn}/anthropic/hero.json`)
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

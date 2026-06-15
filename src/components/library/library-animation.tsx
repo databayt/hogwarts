@@ -14,7 +14,7 @@ export function LibraryAnimation({ className }: LibraryAnimationProps) {
 
   useEffect(() => {
     fetch(
-      "https://cdn.prod.website-files.com/6889473510b50328dbb70ae6/6931c5426a3fbb9a2be31b1e_Claude_for_Excel.json"
+      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/anthropic/claude-for-excel.json`
     )
       .then((res) => res.json())
       .then((data) => setAnimationData(data))

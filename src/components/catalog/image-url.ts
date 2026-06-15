@@ -8,6 +8,7 @@
  */
 
 import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront-url"
+import { legacyConceptToClickview } from "./clickview-key"
 
 export type CatalogImageSize = "sm" | "md" | "lg" | "original"
 
@@ -15,6 +16,19 @@ export type CatalogImageSize = "sm" | "md" | "lg" | "original"
  *  `clickview/...` art) — served as-is. A bare prefix gets the `-size.webp` variant
  *  suffix (the legacy `catalog/concepts/...` pipeline). */
 const HAS_IMAGE_EXT = /\.(jpe?g|png|webp|avif|gif)$/i
+
+/**
+ * Normalize a stored thumbnail value to the actual CDN object key:
+ *   1. already a single file (clickview/... .jpg, owned uploads) → as-is
+ *   2. legacy concept prefix → flat clickview/ key (cdn.databayt.org/clickview/…)
+ *   3. any other bare prefix → legacy `-{size}.webp` variant (back-compat)
+ */
+function resolveKey(thumbnail: string, size: CatalogImageSize): string {
+  if (HAS_IMAGE_EXT.test(thumbnail)) return thumbnail
+  const clickview = legacyConceptToClickview(thumbnail)
+  if (clickview) return clickview
+  return `${thumbnail}-${size}.webp`
+}
 
 /**
  * Resolve the CDN image URL for a catalog entity.
@@ -25,8 +39,7 @@ export function getCatalogImageUrl(
   size: CatalogImageSize = "original"
 ): string | null {
   if (!thumbnail || !isCloudFrontConfigured()) return null
-  if (HAS_IMAGE_EXT.test(thumbnail)) return getCloudFrontUrl(thumbnail)
-  return getCloudFrontUrl(`${thumbnail}-${size}.webp`)
+  return getCloudFrontUrl(resolveKey(thumbnail, size))
 }
 
 /**
@@ -37,8 +50,10 @@ export function getCatalogImageSrcSet(
   thumbnail: string | null | undefined
 ): string | undefined {
   if (!thumbnail || !isCloudFrontConfigured()) return undefined
-  // Single-file keys (clickview/...) have no responsive variants.
+  // Single-file keys (clickview/... directly, or a legacy concept prefix that
+  // maps to one) have no responsive variants.
   if (HAS_IMAGE_EXT.test(thumbnail)) return undefined
+  if (legacyConceptToClickview(thumbnail)) return undefined
 
   return [
     `${getCloudFrontUrl(`${thumbnail}-sm.webp`)} 200w`,
