@@ -24,11 +24,22 @@ import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
 import {
+  clickviewConceptKey,
+  gradeToLevel as cvGradeToLevel,
+} from "../../../src/components/catalog/clickview-key"
+import {
   nearestConcept,
   SUBJECT_CONCEPT_BY_SLUG as SUBJECT_CONCEPT_MAP,
   CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
 } from "../../../src/components/catalog/concepts-data"
 import { logPhase, logSuccess } from "../utils"
+
+/**
+ * Flag-gated cutover to the flat `clickview/` CDN key scheme (default OFF keeps
+ * the legacy `catalog/concepts/g{grade}-{concept}/...` keys). Flip with CLICKVIEW_KEYS=1.
+ */
+const USE_CLICKVIEW =
+  process.env.CLICKVIEW_KEYS === "1" || process.env.CLICKVIEW_KEYS === "true"
 
 const CURRICULUM_DIR = path.resolve(__dirname, "../../../curriculum/sd")
 const CURRICULUM_JSON = path.join(CURRICULUM_DIR, "curriculum.json")
@@ -400,6 +411,17 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       const gradeConceptPrefix = concept
         ? `catalog/concepts/g${entry.gradeNum}-${concept}`
         : null
+      const cvLevel = cvGradeToLevel(entry.gradeNum)
+      const subjThumb = USE_CLICKVIEW
+        ? clickviewConceptKey(cvLevel, concept, "thumbnail")
+        : gradeConceptPrefix
+          ? `${gradeConceptPrefix}/thumbnail`
+          : null
+      const subjBanner = USE_CLICKVIEW
+        ? clickviewConceptKey(cvLevel, concept, "banner")
+        : gradeConceptPrefix
+          ? `${gradeConceptPrefix}/banner`
+          : null
 
       // Check if textbook.pdf exists locally
       const textbookPath = path.join(
@@ -427,10 +449,8 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
           curriculumId: sdCurriculum?.id,
           concept,
           color: null,
-          thumbnail: gradeConceptPrefix
-            ? `${gradeConceptPrefix}/thumbnail`
-            : null,
-          banner: gradeConceptPrefix ? `${gradeConceptPrefix}/banner` : null,
+          thumbnail: subjThumb,
+          banner: subjBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           pdf: pdfKey,
           sortOrder: sortIdx++,
@@ -587,9 +607,15 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
             pool.length > 0
               ? pool[(ch.sequenceOrder - 1) % pool.length]
               : subjectConcept
-          const chapterThumbnail = chapterConcept
-            ? `catalog/concepts/g${gradeNum}-${chapterConcept}/thumbnail`
-            : null
+          const chapterThumbnail = USE_CLICKVIEW
+            ? clickviewConceptKey(
+                cvGradeToLevel(gradeNum),
+                chapterConcept,
+                "thumbnail"
+              )
+            : chapterConcept
+              ? `catalog/concepts/g${gradeNum}-${chapterConcept}/thumbnail`
+              : null
 
           const structLessonMap = new Map(
             (structChapter?.lessons ?? []).map((l) => [l.slug, l.title])
@@ -620,9 +646,15 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
                   LESSON_TYPE_CONCEPT[lessonType] ??
                   chapterConcept ??
                   subjectConcept
-                const lessonThumbnail = lessonConcept
-                  ? `catalog/concepts/g${gradeNum}-${lessonConcept}/thumbnail`
-                  : null
+                const lessonThumbnail = USE_CLICKVIEW
+                  ? clickviewConceptKey(
+                      cvGradeToLevel(gradeNum),
+                      lessonConcept,
+                      "thumbnail"
+                    )
+                  : lessonConcept
+                    ? `catalog/concepts/g${gradeNum}-${lessonConcept}/thumbnail`
+                    : null
 
                 return {
                   chapterId: chapter.id,

@@ -22,11 +22,24 @@ import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
 import {
+  clickviewConceptKey,
+  clickviewCoverKey,
+  gradeToLevel,
+} from "../../../src/components/catalog/clickview-key"
+import {
   SUBJECT_CONCEPT_BY_NAME as NAME_TO_CONCEPT,
   nearestConcept,
   CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
 } from "../../../src/components/catalog/concepts-data"
 import { logSuccess } from "../utils"
+
+/**
+ * Flag-gated cutover to the flat `clickview/` CDN key scheme. Default OFF keeps the
+ * legacy `catalog/concepts/g{grade}-{concept}/...` keys, so reseeding stays safe until
+ * the ClickView art is synced to databayt-cdn. Flip on with CLICKVIEW_KEYS=1.
+ */
+const USE_CLICKVIEW =
+  process.env.CLICKVIEW_KEYS === "1" || process.env.CLICKVIEW_KEYS === "true"
 
 // ============================================================================
 // Types for us-inventory.json
@@ -1076,6 +1089,17 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
       const gradeConceptPrefix = concept
         ? `catalog/concepts/g${grade}-${concept}`
         : null
+      const level = gradeToLevel(grade)
+      const subjectThumbnail = USE_CLICKVIEW
+        ? clickviewConceptKey(level, concept, "thumbnail")
+        : gradeConceptPrefix
+          ? `${gradeConceptPrefix}/thumbnail`
+          : null
+      const subjectBanner = USE_CLICKVIEW
+        ? clickviewConceptKey(level, concept, "banner")
+        : gradeConceptPrefix
+          ? `${gradeConceptPrefix}/banner`
+          : null
 
       const subject = await prisma.subject.upsert({
         where: { slug: gradeSlug },
@@ -1092,10 +1116,8 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
           sourceUrl: entry.url ?? null,
           color,
           concept,
-          thumbnail: gradeConceptPrefix
-            ? `${gradeConceptPrefix}/thumbnail`
-            : null,
-          banner: gradeConceptPrefix ? `${gradeConceptPrefix}/banner` : null,
+          thumbnail: subjectThumbnail,
+          banner: subjectBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           ...(usCurriculum ? { curriculumId: usCurriculum.id } : {}),
           sortOrder: currentSort,
@@ -1119,10 +1141,8 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
           sourceUrl: entry.url ?? null,
           color,
           concept,
-          thumbnail: gradeConceptPrefix
-            ? `${gradeConceptPrefix}/thumbnail`
-            : null,
-          banner: gradeConceptPrefix ? `${gradeConceptPrefix}/banner` : null,
+          thumbnail: subjectThumbnail,
+          banner: subjectBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           sortOrder: currentSort,
           status: "PUBLISHED",
@@ -1149,9 +1169,11 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
 
         // Rotate chapter concept through the pool by sequenceOrder
         const chapterConcept = pool.length > 0 ? pool[g % pool.length] : concept
-        const chapterThumbnail = chapterConcept
-          ? `catalog/concepts/g${grade}-${chapterConcept}/thumbnail`
-          : null
+        const chapterThumbnail = USE_CLICKVIEW
+          ? clickviewConceptKey(level, chapterConcept, "thumbnail")
+          : chapterConcept
+            ? `catalog/concepts/g${grade}-${chapterConcept}/thumbnail`
+            : null
 
         const chapter = await prisma.chapter.upsert({
           where: {
@@ -1195,9 +1217,14 @@ export async function seedUsCurriculum(prisma: PrismaClient): Promise<void> {
 
           // Lessons inherit chapter concept (US curriculum has unique names, no repeating types)
           const lessonConcept = chapterConcept ?? concept
-          const lessonThumbnail = lessonConcept
-            ? `catalog/concepts/g${grade}-${lessonConcept}/thumbnail`
-            : null
+          const lessonThumbnail = USE_CLICKVIEW
+            ? // per-topic ClickView cover when available, else the concept art
+              coverId
+              ? clickviewCoverKey(level, topic.slug)
+              : clickviewConceptKey(level, lessonConcept, "thumbnail")
+            : lessonConcept
+              ? `catalog/concepts/g${grade}-${lessonConcept}/thumbnail`
+              : null
 
           await prisma.lesson.upsert({
             where: {

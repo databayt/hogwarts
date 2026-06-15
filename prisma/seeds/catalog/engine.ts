@@ -22,12 +22,23 @@ import path from "path"
 import type { PrismaClient, SchoolLevel } from "@prisma/client"
 
 import {
+  clickviewConceptKey,
+  gradeToLevel as cvGradeToLevel,
+} from "../../../src/components/catalog/clickview-key"
+import {
   colorFor,
   nearestConcept,
   SUBJECT_CONCEPT_BY_SLUG as SUBJECT_CONCEPT,
   CONCEPT_POOL as SUBJECT_CONCEPT_POOL,
 } from "../../../src/components/catalog/concepts-data"
 import { logPhase, logSuccess } from "../utils"
+
+/**
+ * Flag-gated cutover to the flat `clickview/` CDN key scheme (default OFF keeps
+ * the legacy `catalog/concepts/g{grade}-{concept}/...` keys). Flip with CLICKVIEW_KEYS=1.
+ */
+const USE_CLICKVIEW =
+  process.env.CLICKVIEW_KEYS === "1" || process.env.CLICKVIEW_KEYS === "true"
 
 // Re-exported so the national source files keep importing `colorFor` from here.
 export { colorFor }
@@ -179,6 +190,17 @@ export async function syncCurriculumTree(
       const conceptPrefix = concept
         ? `catalog/concepts/g${grade}-${concept}`
         : null
+      const cvLevel = cvGradeToLevel(grade)
+      const subjThumb = USE_CLICKVIEW
+        ? clickviewConceptKey(cvLevel, concept, "thumbnail")
+        : conceptPrefix
+          ? `${conceptPrefix}/thumbnail`
+          : null
+      const subjBanner = USE_CLICKVIEW
+        ? clickviewConceptKey(cvLevel, concept, "banner")
+        : conceptPrefix
+          ? `${conceptPrefix}/banner`
+          : null
       const hasTextbook = fs.existsSync(
         path.join(gradePath, subjectDir, "textbook.pdf")
       )
@@ -199,8 +221,8 @@ export async function syncCurriculumTree(
           country: config.country,
           curriculum: config.code,
           concept,
-          thumbnail: conceptPrefix ? `${conceptPrefix}/thumbnail` : null,
-          banner: conceptPrefix ? `${conceptPrefix}/banner` : null,
+          thumbnail: subjThumb,
+          banner: subjBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           pdf: hasTextbook ? `catalog/textbooks/${slug}/textbook.pdf` : null,
           sortOrder: sortIdx++,
@@ -210,8 +232,8 @@ export async function syncCurriculumTree(
           name,
           department,
           concept,
-          thumbnail: conceptPrefix ? `${conceptPrefix}/thumbnail` : null,
-          banner: conceptPrefix ? `${conceptPrefix}/banner` : null,
+          thumbnail: subjThumb,
+          banner: subjBanner,
           cover: concept ? `catalog/concepts/${concept}/cover` : null,
           pdf: hasTextbook ? `catalog/textbooks/${slug}/textbook.pdf` : null,
         },
@@ -231,9 +253,11 @@ export async function syncCurriculumTree(
         const lessons = ch.lessons ?? []
         const chapterConcept =
           pool.length > 0 ? pool[chIdx % pool.length] : concept
-        const chapterThumb = chapterConcept
-          ? `catalog/concepts/g${grade}-${chapterConcept}/thumbnail`
-          : null
+        const chapterThumb = USE_CLICKVIEW
+          ? clickviewConceptKey(cvLevel, chapterConcept, "thumbnail")
+          : chapterConcept
+            ? `catalog/concepts/g${grade}-${chapterConcept}/thumbnail`
+            : null
 
         const chapter = await prisma.chapter.create({
           data: {
@@ -369,6 +393,7 @@ export async function seedSubjectsOnly(
       }
 
       const prefix = `catalog/concepts/g${grade}-${subj.concept}`
+      const cvLevel = cvGradeToLevel(grade)
       await prisma.subject.create({
         data: {
           name: subj.name,
@@ -381,8 +406,12 @@ export async function seedSubjectsOnly(
           color: subj.color,
           levels: [gradeToLevel(grade)],
           grades: [grade],
-          thumbnail: `${prefix}/thumbnail`,
-          banner: `${prefix}/banner`,
+          thumbnail: USE_CLICKVIEW
+            ? clickviewConceptKey(cvLevel, subj.concept, "thumbnail")
+            : `${prefix}/thumbnail`,
+          banner: USE_CLICKVIEW
+            ? clickviewConceptKey(cvLevel, subj.concept, "banner")
+            : `${prefix}/banner`,
           cover: `catalog/concepts/${subj.concept}/cover`,
           status: "PUBLISHED",
           sortOrder: sortIdx++,
