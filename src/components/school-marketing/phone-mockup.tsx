@@ -31,12 +31,12 @@ const ROW_1: Pill[] = [
   {
     kind: "textIcon",
     labelKey: "activities",
-    icon: "/icons/services/basketball.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/basketball.webp",
   },
   {
     kind: "textIcon",
     labelKey: "transport",
-    icon: "/icons/services/transport.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/transport.webp",
   },
 ]
 
@@ -44,48 +44,48 @@ const ROW_2: Pill[] = [
   {
     kind: "textIcon",
     labelKey: "uniform",
-    icon: "/icons/services/uniform.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/palette.webp",
   },
   {
     kind: "iconOnly",
-    icon: "/icons/services/activities-goggles.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/activities-goggles.webp",
     alt: "",
   },
   {
     kind: "textIcon",
     labelKey: "supplies",
-    icon: "/icons/services/supplies.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/graduation.webp",
   },
-  { kind: "iconOnly", icon: "/icons/services/bread.webp", alt: "" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/bread.webp", alt: "" },
   { kind: "textOnly", labelKey: "security" },
 ]
 
 const ROW_3: Pill[] = [
-  { kind: "iconOnly", icon: "/icons/services/juice.webp", alt: "" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/juice.webp", alt: "" },
   {
     kind: "textIcon",
     labelKey: "notebooks",
-    icon: "/icons/services/textbooks.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/notebooks.webp",
   },
-  { kind: "iconOnly", icon: "/icons/services/clock.webp", alt: "" },
-  { kind: "iconOnly", icon: "/icons/services/activities-paint.png", alt: "" },
-  { kind: "textIcon", labelKey: "fees", icon: "/icons/services/fee.svg" },
-  { kind: "iconOnly", icon: "/icons/services/frame.webp", alt: "" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/clock.webp", alt: "" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/activities-paint.png", alt: "" },
+  { kind: "textIcon", labelKey: "fees", icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/backpack.webp", alt: "" },
 ]
 
 const ROW_4: Pill[] = [
   {
     kind: "textIcon",
     labelKey: "laboratoryEquipment",
-    icon: "/icons/services/frame.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/backpack.webp",
   },
-  { kind: "iconOnly", icon: "/icons/services/palette.webp", alt: "" },
-  { kind: "iconOnly", icon: "/icons/services/fees.svg", alt: "" },
-  { kind: "textIcon", labelKey: "events", icon: "/icons/services/events.webp" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/palette.webp", alt: "" },
+  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg", alt: "" },
+  { kind: "textIcon", labelKey: "events", icon: "https://cdn.databayt.org/hogwarts/icons/services/events.webp" },
   {
     kind: "textIcon",
     labelKey: "tripsAndTours",
-    icon: "/icons/services/trips.webp",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/graduation.webp",
   },
 ]
 
@@ -139,7 +139,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
         {/* Mobile: phone only (pill grid hidden on small screens) */}
         <div className="flex items-center justify-center md:hidden">
           <Image
-            src="/images/phone-mockup.webp"
+            src="https://cdn.databayt.org/hogwarts/images/phone-mockup.webp"
             alt={phoneAlt}
             width={320}
             height={640}
@@ -184,7 +184,7 @@ export function PhoneMockup({ dictionary, lang }: PhoneMockupProps) {
           <div className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2">
             <div className="relative">
               <Image
-                src="/images/phone-mockup.webp"
+                src="https://cdn.databayt.org/hogwarts/images/phone-mockup.webp"
                 alt={phoneAlt}
                 width={320}
                 height={640}
@@ -305,7 +305,7 @@ function StaticPhoneScreen() {
         }}
       >
         <Image
-          src="/icons/services/backpack.webp"
+          src="https://cdn.databayt.org/hogwarts/icons/services/backpack.webp"
           alt=""
           width={96}
           height={96}
@@ -325,7 +325,7 @@ function StaticPhoneScreen() {
         }}
       >
         <Image
-          src="/icons/services/activities-trophy.png"
+          src="https://cdn.databayt.org/hogwarts/icons/services/activities-paint.png"
           alt=""
           width={72}
           height={72}

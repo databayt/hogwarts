@@ -29,10 +29,10 @@ type Feature = {
 // SVG feature icons hosted on CloudFront — shared with the Android app.
 // Source files live in public/icons/ and are uploaded via scripts/migrate-assets-to-s3.ts.
 const featureIconUrls = [
-  asset("/icons/stream-curated-courses.svg"),
-  asset("/icons/stream-interactive-learning.svg"),
-  asset("/icons/stream-progress-tracking.svg"),
-  asset("/icons/stream-community.svg"),
+  asset("https://cdn.databayt.org/anthropic/stream-curated-courses.svg"),
+  asset("https://cdn.databayt.org/anthropic/stream-interactive-learning.svg"),
+  asset("https://cdn.databayt.org/anthropic/stream-progress-tracking.svg"),
+  asset("https://cdn.databayt.org/anthropic/stream-community.svg"),
 ]
 
 interface StreamHomeProps extends StreamContentProps {

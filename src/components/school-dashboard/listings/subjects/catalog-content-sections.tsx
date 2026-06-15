@@ -143,42 +143,42 @@ const QUESTION_TYPE_CONFIG: Record<
   { svg: string; description: string; color: string }
 > = {
   MULTIPLE_CHOICE: {
-    svg: "/multiple-choice.svg",
+    svg: "https://cdn.databayt.org/hogwarts/multiple-choice.svg",
     description: "Pick the best answer from multiple options provided",
     color: "#4B976A",
   },
   TRUE_FALSE: {
-    svg: "/true-false.svg",
+    svg: "https://cdn.databayt.org/hogwarts/true-false.svg",
     description: "Decide whether each given statement is true or false",
     color: "#CF6E30",
   },
   SHORT_ANSWER: {
-    svg: "/short-answer.svg",
+    svg: "https://cdn.databayt.org/hogwarts/short-answer.svg",
     description: "Write a brief response in one or two sentences",
     color: "#D25E8C",
   },
   ESSAY: {
-    svg: "/essay.svg",
+    svg: "https://cdn.databayt.org/hogwarts/essay.svg",
     description: "Compose a detailed long-form answer with full explanation",
     color: "#2C70B2",
   },
   FILL_BLANK: {
-    svg: "/fill-in-blank.svg",
+    svg: "https://cdn.databayt.org/hogwarts/fill-in-blank.svg",
     description: "Complete the sentence by filling in the missing words",
     color: "#825BA3",
   },
   MATCHING: {
-    svg: "/matching.svg",
+    svg: "https://cdn.databayt.org/hogwarts/matching.svg",
     description: "Connect related items by pairing them from two columns",
     color: "#57908C",
   },
   ORDERING: {
-    svg: "/ordering.svg",
+    svg: "https://cdn.databayt.org/hogwarts/ordering.svg",
     description: "Arrange the given items into their correct logical sequence",
     color: "#D85E4C",
   },
   MULTI_SELECT: {
-    svg: "/multi-select.svg",
+    svg: "https://cdn.databayt.org/hogwarts/multi-select.svg",
     description: "Choose all the correct answers from the options given",
     color: "#A14B46",
   },

@@ -62,7 +62,7 @@ export const features: FeatureLdg[] = [
       "Streamline applications, reviews, and approvals from a single dashboard.",
     link: "/",
     icon: "user",
-    image: "/features/admission.png",
+    image: "https://cdn.databayt.org/hogwarts/features/admission.png",
   },
   {
     title: "LMS",
@@ -70,7 +70,7 @@ export const features: FeatureLdg[] = [
       "Deliver lessons, assignments, and grades with a modern learning experience.",
     link: "/",
     icon: "laptop",
-    image: "/features/lms.png",
+    image: "https://cdn.databayt.org/hogwarts/features/lms.png",
   },
   {
     title: "Accounting",
@@ -78,7 +78,7 @@ export const features: FeatureLdg[] = [
       "Track fees, invoices, and payments with built-in double-entry accounting.",
     link: "/",
     icon: "copy",
-    image: "/features/accounting.png",
+    image: "https://cdn.databayt.org/hogwarts/features/accounting.png",
   },
   {
     title: "Library",
@@ -86,7 +86,7 @@ export const features: FeatureLdg[] = [
       "Catalog books, manage loans, and keep your school library organized.",
     link: "/",
     icon: "gitHub",
-    image: "/features/library.png",
+    image: "https://cdn.databayt.org/hogwarts/features/library.png",
   },
   {
     title: "Events",
@@ -94,7 +94,7 @@ export const features: FeatureLdg[] = [
       "Plan, publish, and manage school events your community can rally around.",
     link: "/",
     icon: "google",
-    image: "/features/events.png",
+    image: "https://cdn.databayt.org/hogwarts/features/events.png",
   },
   {
     title: "Transport",
@@ -102,7 +102,7 @@ export const features: FeatureLdg[] = [
       "Manage routes, vehicles, and student pickups with real-time visibility.",
     link: "/",
     icon: "nextjs",
-    image: "/features/transport.png",
+    image: "https://cdn.databayt.org/hogwarts/features/transport.png",
   },
 ]
 

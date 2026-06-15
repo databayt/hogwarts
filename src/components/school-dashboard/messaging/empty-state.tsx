@@ -49,7 +49,7 @@ export function NoActiveConversation({
         className="mb-14 flex items-center gap-1 text-xs font-medium"
         style={{ color: "#8B8C8C" }}
       >
-        <img src="/lock.svg" alt="" className="h-3 w-3" aria-hidden="true" />
+        <img src="https://cdn.databayt.org/hogwarts/lock.svg" alt="" className="h-3 w-3" aria-hidden="true" />
         {m?.ui?.end_to_end_encrypted || "End-to-end encrypted"}
       </p>
     </div>
@@ -110,7 +110,7 @@ export function ChatEmpty({ locale = "en" }: { locale?: "ar" | "en" }) {
         style={{ backgroundColor: "#D9FDD3", color: "#0A2618" }}
       >
         <img
-          src="/lock.svg"
+          src="https://cdn.databayt.org/hogwarts/lock.svg"
           alt=""
           className="mb-0.5 inline h-3 w-3"
           aria-hidden="true"

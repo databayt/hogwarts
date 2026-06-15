@@ -72,12 +72,12 @@ const tags: Tag[] = [
 
 // Per-tag images (add more as they become available)
 const tagImages: Record<string, string> = {
-  admission: asset("/features/admission.png"),
-  lms: asset("/features/lms.png"),
-  accounting: asset("/features/accounting.png"),
-  "digital-library": asset("/features/library.png"),
-  events: asset("/features/events.png"),
-  transportation: asset("/features/transport.png"),
+  admission: asset("https://cdn.databayt.org/hogwarts/features/admission.png"),
+  lms: asset("https://cdn.databayt.org/hogwarts/features/lms.png"),
+  accounting: asset("https://cdn.databayt.org/hogwarts/features/accounting.png"),
+  "digital-library": asset("https://cdn.databayt.org/hogwarts/features/library.png"),
+  events: asset("https://cdn.databayt.org/hogwarts/features/events.png"),
+  transportation: asset("https://cdn.databayt.org/hogwarts/features/transport.png"),
 }
 
 const categoryCards = [

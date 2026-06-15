@@ -683,7 +683,7 @@ export function MessageInput({
                       label: m?.ui?.file || "File",
                       icon: (
                         <img
-                          src="/folder.png"
+                          src="https://cdn.databayt.org/hogwarts/folder.png"
                           alt=""
                           className="h-5 w-5 object-contain"
                         />
@@ -697,7 +697,7 @@ export function MessageInput({
                       label: m?.ui?.photos_videos || "Photos and videos",
                       icon: (
                         <img
-                          src="/photo.png"
+                          src="https://cdn.databayt.org/hogwarts/photo.png"
                           alt=""
                           className="h-6 w-6 object-contain"
                         />
@@ -711,7 +711,7 @@ export function MessageInput({
                       label: m?.ui?.contact || "Contact",
                       icon: (
                         <img
-                          src="/account.png"
+                          src="https://cdn.databayt.org/hogwarts/account.png"
                           alt=""
                           className="h-6 w-6 object-contain"
                         />
@@ -722,7 +722,7 @@ export function MessageInput({
                       label: m?.ui?.poll || "Poll",
                       icon: (
                         <img
-                          src="/poll.png"
+                          src="https://cdn.databayt.org/hogwarts/poll.png"
                           alt=""
                           className="h-5 w-5 object-contain"
                         />
@@ -733,7 +733,7 @@ export function MessageInput({
                       label: m?.ui?.event || "Event",
                       icon: (
                         <img
-                          src="/calendar.png"
+                          src="https://cdn.databayt.org/hogwarts/calendar.png"
                           alt=""
                           className="h-5 w-5 object-contain"
                         />
@@ -1042,7 +1042,7 @@ function EmojiPickerButton({
         className="h-7 w-7 rounded-full"
       >
         <img
-          src="/smiley.svg"
+          src="https://cdn.databayt.org/hogwarts/smiley.svg"
           alt=""
           className="h-5 w-5"
           style={{
