@@ -58,7 +58,9 @@ export default function ApplicationSuccessModal({
   }, [dictionary])
 
   useEffect(() => {
-    fetch("/animations/confetti.json")
+    fetch(
+      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/confetti.json`
+    )
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

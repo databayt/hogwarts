@@ -18,7 +18,9 @@ export function EducationAnimation({ className }: EducationAnimationProps) {
   const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
-    fetch("/animations/education.json")
+    fetch(
+      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/education.json`
+    )
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
       .catch(console.error)

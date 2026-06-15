@@ -63,7 +63,9 @@ export function HandLock({ className }: HandLockProps) {
 
   useEffect(() => {
     let cancelled = false
-    fetch("/animations/hand-lock.json")
+    fetch(
+      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/hand-lock.json`
+    )
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setAnimationData(data)
