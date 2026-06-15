@@ -10,7 +10,7 @@ import { getContributionData } from "@/components/school-dashboard/profile/actio
 
 vi.mock("@/lib/db", () => ({
   db: {
-    user: { findUnique: vi.fn() },
+    user: { findFirst: vi.fn() },
     student: { findFirst: vi.fn() },
     teacher: { findFirst: vi.fn() },
     attendance: { findMany: vi.fn() },
@@ -105,7 +105,7 @@ describe("getContributionData", () => {
 
   it("returns NOT_FOUND when the user does not exist", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue(null)
+    vi.mocked(db.user.findFirst).mockResolvedValue(null)
     const res = await getContributionData({ userId: "missing" })
     expect(res.success).toBe(false)
     if (!res.success) expect(res.error).toBe("NOT_FOUND")
@@ -113,7 +113,7 @@ describe("getContributionData", () => {
 
   it("returns UNKNOWN when the role is not mappable to a profile role", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({ role: "USER" } as never)
+    vi.mocked(db.user.findFirst).mockResolvedValue({ role: "USER" } as never)
     const res = await getContributionData({ userId: USER_ID })
     expect(res.success).toBe(false)
     if (!res.success) expect(res.error).toBe("UNKNOWN")
@@ -121,7 +121,7 @@ describe("getContributionData", () => {
 
   it("returns a 365-or-366 day contribution map for the requested year", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
@@ -139,7 +139,7 @@ describe("getContributionData", () => {
 
   it("includes 366 days for leap years", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
@@ -152,7 +152,7 @@ describe("getContributionData", () => {
 
   it("aggregates student attendance/submissions/results into the map", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
@@ -186,7 +186,7 @@ describe("getContributionData", () => {
 
   it("computes summary streaks correctly", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
@@ -208,7 +208,7 @@ describe("getContributionData", () => {
 
   it("returns an empty contribution map when the role record is missing", async () => {
     asAuthed("STUDENT")
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue(null)
@@ -222,7 +222,7 @@ describe("getContributionData", () => {
 
   it("uses the current year when none is supplied", async () => {
     asAuthed()
-    vi.mocked(db.user.findUnique).mockResolvedValue({
+    vi.mocked(db.user.findFirst).mockResolvedValue({
       role: "STUDENT",
     } as never)
     vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)

@@ -29,12 +29,32 @@ export function getPermissionLevel(context: ProfileContext): PermissionLevel {
     return "OWNER"
   }
 
-  // Platform admin or school admin
-  if (viewerRole === "DEVELOPER" || viewerRole === "ADMIN") {
+  // Platform admin — the only role with intentional cross-school access.
+  if (viewerRole === "DEVELOPER") {
     return "ADMIN"
   }
 
-  // Staff members
+  // Everyone else must be in the SAME school as the profile before they get
+  // any elevated visibility. Without this guard a school-A admin/teacher who
+  // reached a school-B profile would receive elevated field access (the
+  // cross-tenant field-disclosure bug). The DB fetch is already tenant-scoped,
+  // but this is defense-in-depth at the masking layer.
+  const sameSchool = !!(
+    viewerSchoolId &&
+    profileSchoolId &&
+    viewerSchoolId === profileSchoolId
+  )
+
+  if (!sameSchool) {
+    return "PUBLIC"
+  }
+
+  // School admin (same school)
+  if (viewerRole === "ADMIN") {
+    return "ADMIN"
+  }
+
+  // Staff members (same school)
   if (
     viewerRole === "TEACHER" ||
     viewerRole === "STAFF" ||
@@ -43,13 +63,8 @@ export function getPermissionLevel(context: ProfileContext): PermissionLevel {
     return "STAFF"
   }
 
-  // Same school (for students/guardians viewing others in same school)
-  if (viewerSchoolId && viewerSchoolId === profileSchoolId) {
-    return "RELATED"
-  }
-
-  // Default to public
-  return "PUBLIC"
+  // Same school students/guardians viewing others
+  return "RELATED"
 }
 
 /**

@@ -8,10 +8,8 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { getText } from "@/components/translation/display"
 
-import { getPermissionLevel } from "./detail/permissions"
-import type { PermissionLevel, ProfileContext } from "./detail/types"
+import { recomputeProfileBadges } from "./badges"
 import type {
   ActivityType,
   ContributionDataPoint,
@@ -22,264 +20,25 @@ import type {
   ProfileRole,
 } from "./types"
 import { ACTIVITY_LABELS } from "./types"
-import {
-  pinnedItemSchema,
-  updateBioSchema,
-  updateGitHubProfileSchema,
-  updateProfileSchema,
-  updateSettingsSchema,
-} from "./validation"
+import { pinnedItemSchema, updateGitHubProfileSchema } from "./validation"
 
 /**
- * Compute the viewer's permission level for a given profile.
- * Used by getProfileBasicData so the UI can mask sensitive fields
- * (emailAddress, employeeId, joiningDate) for non-owners and non-admins.
- *
- * The strict admin user-detail-page filter lives in detail/actions.ts.
+ * Map UserRole to ProfileRole. null for roles that have no profile view.
  */
-function computeViewerPermission(args: {
-  viewerId: string | null
-  viewerRole: string | null | undefined
-  viewerSchoolId: string | null
-  profileUserId: string
-  profileSchoolId: string | null
-}): PermissionLevel {
-  const ctx: ProfileContext = {
-    viewerId: args.viewerId,
-    viewerRole: (args.viewerRole as ProfileContext["viewerRole"]) ?? null,
-    viewerSchoolId: args.viewerSchoolId,
-    profileUserId: args.profileUserId,
-    profileSchoolId: args.profileSchoolId,
-    profileType: "USER",
-  }
-  return getPermissionLevel(ctx)
-}
-
-// ============================================================================
-// Profile Fetching Actions
-// ============================================================================
-
-export async function getStudentProfile(studentId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Use provided ID or current user's ID
-    const targetId = studentId || session.user.id
-
-    const student = await db.student.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        application: {
-          select: {
-            applicationNumber: true,
-            campaignId: true,
-            status: true,
-            submittedAt: true,
-            confirmationDate: true,
-            meritRank: true,
-            meritScore: true,
-            campaign: { select: { name: true, academicYear: true } },
-          },
-        },
-        studentYearLevels: {
-          include: {
-            yearLevel: true,
-          },
-        },
-        studentClasses: {
-          include: {
-            class: {
-              include: {
-                subject: true,
-                teacher: {
-                  include: {
-                    user: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        studentGuardians: {
-          include: {
-            guardian: {
-              include: {
-                user: true,
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!student) {
-      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
-    }
-
-    return { success: true as const, data: student }
-  } catch (error) {
-    console.error("Error fetching student profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getTeacherProfile(teacherId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = teacherId || session.user.id
-
-    const teacher = await db.teacher.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        teacherDepartments: {
-          include: {
-            department: true,
-          },
-        },
-        classes: {
-          include: {
-            subject: true,
-            studentClasses: {
-              include: {
-                student: {
-                  include: {
-                    user: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!teacher) {
-      return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
-    }
-
-    return { success: true as const, data: teacher }
-  } catch (error) {
-    console.error("Error fetching teacher profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getParentProfile(parentId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = parentId || session.user.id
-
-    const parent = await db.guardian.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-      },
-      include: {
-        user: true,
-        studentGuardians: {
-          include: {
-            student: {
-              include: {
-                user: true,
-                studentYearLevels: {
-                  include: {
-                    yearLevel: true,
-                  },
-                },
-                studentClasses: {
-                  include: {
-                    class: {
-                      include: {
-                        subject: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!parent) {
-      return actionError(ACTION_ERRORS.PARENT_NOT_FOUND)
-    }
-
-    return { success: true as const, data: parent }
-  } catch (error) {
-    console.error("Error fetching parent profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-export async function getStaffProfile(staffId?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const targetId = staffId || session.user.id
-
-    // For staff, we fetch the user directly with school context
-    const user = await db.user.findFirst({
-      where: {
-        id: targetId,
-        schoolId,
-        role: {
-          in: ["STAFF", "ACCOUNTANT", "ADMIN", "DEVELOPER"],
-        },
-      },
-    })
-
-    if (!user) {
-      return actionError(ACTION_ERRORS.STAFF_NOT_FOUND)
-    }
-
-    return { success: true as const, data: user }
-  } catch (error) {
-    console.error("Error fetching staff profile:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
+function mapUserRoleToProfileRole(role: string): ProfileRole | null {
+  switch (role) {
+    case "STUDENT":
+      return "student"
+    case "TEACHER":
+      return "teacher"
+    case "GUARDIAN":
+      return "parent"
+    case "STAFF":
+    case "ADMIN":
+    case "ACCOUNTANT":
+      return "staff"
+    default:
+      return null
   }
 }
 
@@ -287,8 +46,8 @@ export async function getStaffProfile(staffId?: string) {
 // Profile Update Actions
 // ============================================================================
 
-export async function updateProfile(
-  input: z.infer<typeof updateProfileSchema>
+export async function updateGitHubProfile(
+  input: z.infer<typeof updateGitHubProfileSchema>
 ) {
   try {
     const session = await auth()
@@ -296,71 +55,29 @@ export async function updateProfile(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
-    const parsed = updateProfileSchema.parse(input)
+    const parsed = updateGitHubProfileSchema.parse(input)
 
     await db.user.update({
       where: { id: session.user.id },
       data: {
-        username: parsed.displayName,
-        image: parsed.avatarUrl || null,
-      },
-    })
-
-    revalidatePath("/profile")
-    return { success: true as const }
-  } catch (error) {
-    console.error("Error updating profile:", error)
-    if (error instanceof z.ZodError) {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    }
-    return actionError(ACTION_ERRORS.UPDATE_FAILED)
-  }
-}
-
-export async function updateProfileBio(input: z.infer<typeof updateBioSchema>) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const parsed = updateBioSchema.parse(input)
-
-    await db.user.update({
-      where: { id: session.user.id },
-      data: {
+        ...(parsed.displayName !== undefined && {
+          username: parsed.displayName,
+        }),
         bio: parsed.bio || null,
+        website: parsed.website || null,
+        timezone: parsed.timezone || null,
+        statusEmoji: parsed.statusEmoji || null,
+        statusMessage: parsed.statusMessage || null,
+        pronouns: parsed.pronouns || null,
+        socialLinks: (parsed.socialLinks as Prisma.InputJsonValue) ?? undefined,
       },
     })
 
     revalidatePath("/profile")
+    revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
     return { success: true as const }
   } catch (error) {
-    console.error("Error updating bio:", error)
-    if (error instanceof z.ZodError) {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    }
-    return actionError(ACTION_ERRORS.UPDATE_FAILED)
-  }
-}
-
-export async function updateProfileSettings(
-  input: z.infer<typeof updateSettingsSchema>
-) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    updateSettingsSchema.parse(input)
-
-    // The User schema does not yet have settings columns (theme, notification
-    // prefs, allowMessages). Returning NOT_IMPLEMENTED so the UI can render a
-    // proper translated message instead of a misleading success toast.
-    return actionError(ACTION_ERRORS.NOT_IMPLEMENTED)
-  } catch (error) {
-    console.error("Error updating settings:", error)
+    console.error("Error updating GitHub profile:", error)
     if (error instanceof z.ZodError) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
@@ -397,7 +114,7 @@ export async function uploadProfileAvatar(formData: FormData) {
     }
 
     // Hand off to the shared file/upload pipeline (auth + tenant + S3 + DB).
-    // Imported lazily so that tests mocks and tree-shaking are unaffected.
+    // Imported lazily so that test mocks and tree-shaking are unaffected.
     const { uploadFile } = await import("@/components/file/upload/actions")
 
     const fd = new FormData()
@@ -412,332 +129,44 @@ export async function uploadProfileAvatar(formData: FormData) {
       return actionError(ACTION_ERRORS.UPLOAD_FAILED)
     }
 
-    await db.user.update({
+    const url = result.url
+
+    // Update the User.image AND the role entity's profilePhotoUrl, since the
+    // profile views prefer the role entity's photo over User.image. Without
+    // this the uploaded avatar would not appear for students/teachers/staff.
+    const user = await db.user.update({
       where: { id: session.user.id },
-      data: { image: result.url },
+      data: { image: url },
+      select: {
+        student: { select: { id: true } },
+        teacher: { select: { id: true } },
+        staffMember: { select: { id: true } },
+      },
     })
 
+    if (user.student) {
+      await db.student.update({
+        where: { id: user.student.id },
+        data: { profilePhotoUrl: url },
+      })
+    } else if (user.teacher) {
+      await db.teacher.update({
+        where: { id: user.teacher.id },
+        data: { profilePhotoUrl: url },
+      })
+    } else if (user.staffMember) {
+      await db.staffMember.update({
+        where: { id: user.staffMember.id },
+        data: { profilePhotoUrl: url },
+      })
+    }
+
     revalidatePath("/profile")
-    return { success: true as const, data: { url: result.url } }
+    revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
+    return { success: true as const, data: { url } }
   } catch (error) {
     console.error("Error uploading avatar:", error)
     return actionError(ACTION_ERRORS.UPLOAD_FAILED)
-  }
-}
-
-// ============================================================================
-// Profile Basic Data (for GitHub-style profile sidebar)
-// ============================================================================
-
-export async function getProfileBasicData(userId: string, lang?: string) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Fetch user with role-specific relations
-    const user = await db.user.findFirst({
-      where: { id: userId, schoolId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        image: true,
-        role: true,
-        bio: true,
-        website: true,
-        timezone: true,
-        pronouns: true,
-        socialLinks: true,
-        statusEmoji: true,
-        statusMessage: true,
-        createdAt: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            grNumber: true,
-            city: true,
-            enrollmentDate: true,
-            email: true,
-            application: {
-              select: {
-                applicationNumber: true,
-                campaignId: true,
-                status: true,
-                submittedAt: true,
-                confirmationDate: true,
-                meritRank: true,
-                meritScore: true,
-                campaign: { select: { name: true, academicYear: true } },
-              },
-            },
-          },
-        },
-        teacher: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            employeeId: true,
-            emailAddress: true,
-            joiningDate: true,
-          },
-        },
-        guardian: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            emailAddress: true,
-          },
-        },
-        staffMember: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            employeeId: true,
-            emailAddress: true,
-            joiningDate: true,
-            city: true,
-          },
-        },
-      },
-    })
-
-    if (!user) {
-      // Fallback: try looking up as a student ID (students created via wizard may not have a User)
-      const student = await db.student.findFirst({
-        where: { id: userId, schoolId },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          profilePhotoUrl: true,
-          grNumber: true,
-          city: true,
-          enrollmentDate: true,
-          email: true,
-          createdAt: true,
-        },
-      })
-      if (student) {
-        const data: Record<string, unknown> = {
-          id: student.id,
-          firstName: student.firstName || "",
-          lastName: student.lastName || "",
-          profilePhotoUrl: student.profilePhotoUrl || null,
-          emailAddress: student.email || "",
-          createdAt: student.createdAt.toISOString(),
-          bio: null,
-          grNumber: student.grNumber,
-          city: student.city,
-          enrollmentDate: student.enrollmentDate?.toISOString(),
-          role: "STUDENT",
-          viewerPermission: computeViewerPermission({
-            viewerId: session.user.id,
-            viewerRole: session.user.role,
-            viewerSchoolId: session.user.schoolId ?? null,
-            // Wizard-created students have no User row, so the viewer can
-            // never be the "owner" — treat them as a peer/admin viewer.
-            profileUserId: student.id,
-            profileSchoolId: schoolId,
-          }),
-        }
-
-        if (lang && lang !== "ar" && schoolId && data.firstName) {
-          const translated = await getText(
-            data.firstName as string,
-            "ar",
-            lang as "en",
-            schoolId
-          )
-          if (translated) data.firstName = translated
-        }
-
-        return { success: true as const, data }
-      }
-
-      // Fallback: try looking up as a teacher ID (teachers created via wizard may not have a User)
-      const teacher = await db.teacher.findFirst({
-        where: { id: userId, schoolId },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          profilePhotoUrl: true,
-          employeeId: true,
-          emailAddress: true,
-          joiningDate: true,
-          createdAt: true,
-        },
-      })
-      if (teacher) {
-        const data: Record<string, unknown> = {
-          id: teacher.id,
-          firstName: teacher.firstName || "",
-          lastName: teacher.lastName || "",
-          profilePhotoUrl: teacher.profilePhotoUrl || null,
-          emailAddress: teacher.emailAddress || "",
-          createdAt: teacher.createdAt.toISOString(),
-          bio: null,
-          employeeId: teacher.employeeId,
-          joiningDate: teacher.joiningDate?.toISOString(),
-          role: "TEACHER",
-          viewerPermission: computeViewerPermission({
-            viewerId: session.user.id,
-            viewerRole: session.user.role,
-            viewerSchoolId: session.user.schoolId ?? null,
-            profileUserId: teacher.id,
-            profileSchoolId: schoolId,
-          }),
-        }
-
-        if (lang && lang !== "ar" && schoolId && data.firstName) {
-          const translated = await getText(
-            data.firstName as string,
-            "ar",
-            lang as "en",
-            schoolId
-          )
-          if (translated) data.firstName = translated
-        }
-
-        return { success: true as const, data }
-      }
-
-      return actionError(ACTION_ERRORS.NOT_FOUND)
-    }
-
-    // Build flat data object matching what sidebar's getRoleConfig expects
-    const roleRecord =
-      user.student || user.teacher || user.guardian || user.staffMember
-    const data: Record<string, unknown> = {
-      id: roleRecord?.id || user.id,
-      firstName: roleRecord?.firstName || user.username || "",
-      lastName: roleRecord?.lastName || "",
-      profilePhotoUrl:
-        (user.student?.profilePhotoUrl ??
-          user.teacher?.profilePhotoUrl ??
-          user.staffMember?.profilePhotoUrl ??
-          user.image) ||
-        null,
-      emailAddress:
-        user.student?.email ??
-        user.teacher?.emailAddress ??
-        user.guardian?.emailAddress ??
-        user.staffMember?.emailAddress ??
-        user.email ??
-        "",
-      createdAt: user.createdAt.toISOString(),
-      bio: user.bio || null,
-      // Role-specific fields
-      grNumber: user.student?.grNumber,
-      city: user.student?.city ?? user.staffMember?.city,
-      enrollmentDate: user.student?.enrollmentDate?.toISOString(),
-      employeeId: user.teacher?.employeeId ?? user.staffMember?.employeeId,
-      joiningDate: (
-        user.teacher?.joiningDate ?? user.staffMember?.joiningDate
-      )?.toISOString(),
-      // GitHub-style fields
-      website: user.website,
-      timezone: user.timezone,
-      pronouns: user.pronouns,
-      socialLinks: user.socialLinks,
-      statusEmoji: user.statusEmoji,
-      statusMessage: user.statusMessage,
-      role: user.role,
-      // Viewer permission level — lets the UI choose whether to show
-      // contact details (emailAddress, employeeId, etc.) or hide them.
-      // See detail/permissions.ts for the strict admin-detail-page filter.
-      viewerPermission: computeViewerPermission({
-        viewerId: session.user.id,
-        viewerRole: session.user.role,
-        viewerSchoolId: session.user.schoolId ?? null,
-        profileUserId: user.id,
-        // user was found via `where: { id, schoolId }` so schoolId is the
-        // tenant we already resolved.
-        profileSchoolId: schoolId,
-      }),
-    }
-
-    // Translate name and bio if viewing in a different language
-    const displayLang = lang || "ar"
-    if (displayLang !== "ar" && schoolId) {
-      const [translatedName, translatedBio] = await Promise.all([
-        data.firstName
-          ? getText(
-              data.firstName as string,
-              "ar",
-              displayLang as "en",
-              schoolId
-            )
-          : Promise.resolve(null),
-        data.bio
-          ? getText(data.bio as string, "ar", displayLang as "en", schoolId)
-          : Promise.resolve(null),
-      ])
-      if (translatedName) data.firstName = translatedName
-      if (translatedBio) data.bio = translatedBio
-    }
-
-    return { success: true as const, data }
-  } catch (error) {
-    console.error("Error fetching profile basic data:", error)
-    return actionError(ACTION_ERRORS.SAVE_FAILED)
-  }
-}
-
-// ============================================================================
-// GitHub-Style Profile Actions
-// ============================================================================
-
-export async function updateGitHubProfile(
-  input: z.infer<typeof updateGitHubProfileSchema>
-) {
-  try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const parsed = updateGitHubProfileSchema.parse(input)
-
-    await db.user.update({
-      where: { id: session.user.id },
-      data: {
-        ...(parsed.displayName !== undefined && {
-          username: parsed.displayName,
-        }),
-        bio: parsed.bio || null,
-        website: parsed.website || null,
-        timezone: parsed.timezone || null,
-        statusEmoji: parsed.statusEmoji || null,
-        statusMessage: parsed.statusMessage || null,
-        pronouns: parsed.pronouns || null,
-        socialLinks: (parsed.socialLinks as Prisma.InputJsonValue) ?? undefined,
-      },
-    })
-
-    revalidatePath("/profile")
-    return { success: true as const }
-  } catch (error) {
-    console.error("Error updating GitHub profile:", error)
-    if (error instanceof z.ZodError) {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    }
-    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -763,7 +192,7 @@ export async function getPinnedItems(userId?: string) {
       where: {
         schoolId,
         userId: targetUserId,
-        // Only show public items if viewing someone else's profile
+        // Only show public items when viewing someone else's profile
         ...(targetUserId !== session.user.id && { isPublic: true }),
       },
       orderBy: { order: "asc" },
@@ -790,38 +219,36 @@ export async function updatePinnedItems(
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    // Validate max 6 pinned items
+    // Max 6 pinned items
     if (items.length > 6) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR, "MAX_PINNED_EXCEEDED")
     }
 
-    // Parse all items
     const parsedItems = items.map((item) => pinnedItemSchema.parse(item))
 
-    // Delete existing pinned items
-    await db.pinnedItem.deleteMany({
-      where: {
-        schoolId,
-        userId: session.user.id,
-      },
-    })
-
-    // Create new pinned items
-    await db.pinnedItem.createMany({
-      data: parsedItems.map((item, index) => ({
-        schoolId,
-        userId: session.user.id,
-        itemType: item.itemType,
-        itemId: item.itemId,
-        title: item.title,
-        description: item.description ?? undefined,
-        metadata: (item.metadata as Prisma.InputJsonValue) ?? undefined,
-        isPublic: item.isPublic,
-        order: index,
-      })),
-    })
+    // Replace the user's own pinned set (scoped to self — a user can only edit
+    // their own pins).
+    await db.$transaction([
+      db.pinnedItem.deleteMany({
+        where: { schoolId, userId: session.user.id },
+      }),
+      db.pinnedItem.createMany({
+        data: parsedItems.map((item, index) => ({
+          schoolId,
+          userId: session.user.id,
+          itemType: item.itemType,
+          itemId: item.itemId,
+          title: item.title,
+          description: item.description ?? undefined,
+          metadata: (item.metadata as Prisma.InputJsonValue) ?? undefined,
+          isPublic: item.isPublic,
+          order: index,
+        })),
+      }),
+    ])
 
     revalidatePath("/profile")
+    revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
     return { success: true as const }
   } catch (error) {
     console.error("Error updating pinned items:", error)
@@ -832,29 +259,13 @@ export async function updatePinnedItems(
   }
 }
 
-/**
- * Map UserRole to ProfileRole
- */
-function mapUserRoleToProfileRole(role: string): ProfileRole | null {
-  switch (role) {
-    case "STUDENT":
-      return "student"
-    case "TEACHER":
-      return "teacher"
-    case "GUARDIAN":
-      return "parent"
-    case "STAFF":
-    case "ADMIN":
-    case "ACCOUNTANT":
-      return "staff"
-    default:
-      return null
-  }
-}
+// ============================================================================
+// Contribution Graph
+// ============================================================================
 
 // Use UTC throughout the contribution map so the boundaries are stable
 // regardless of the server's local timezone (Vercel runs UTC, but devs
-// in MENA / Asia were getting Dec 31 → Jan 1 drift).
+// in MENA / Asia were getting Dec 31 -> Jan 1 drift).
 function getYearDateRange(year: number): { startDate: Date; endDate: Date } {
   const startDate = new Date(Date.UTC(year, 0, 1))
   const endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999))
@@ -973,7 +384,7 @@ function calculateSummary(
   }
 
   const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
-  const averagePerDay = activeDays > 0 ? totalActivities / totalDays : 0
+  const averagePerDay = totalDays > 0 ? totalActivities / totalDays : 0
 
   const peakDay = contributions.reduce(
     (max, c) => (c.count > (max?.count || 0) ? c : max),
@@ -990,14 +401,14 @@ function calculateSummary(
 }
 
 async function fetchStudentActivities(
-  studentId: string,
+  studentUserId: string,
   schoolId: string,
   startDate: Date,
   endDate: Date,
   map: Map<string, ContributionDataPoint>
 ): Promise<void> {
   const student = await db.student.findFirst({
-    where: { userId: studentId, schoolId },
+    where: { userId: studentUserId, schoolId },
     select: { id: true },
   })
 
@@ -1033,7 +444,7 @@ async function fetchStudentActivities(
     db.borrowRecord.findMany({
       where: {
         schoolId,
-        userId: studentId,
+        userId: studentUserId,
         borrowDate: { gte: startDate, lte: endDate },
       },
       select: { borrowDate: true },
@@ -1044,7 +455,9 @@ async function fetchStudentActivities(
   submissions.forEach((s) => {
     if (s.submittedAt) addActivity(map, s.submittedAt, "assignment_submitted")
   })
-  results.forEach((r) => addActivity(map, r.gradedAt, "exam_completed"))
+  results.forEach((r) => {
+    if (r.gradedAt) addActivity(map, r.gradedAt, "exam_completed")
+  })
   borrowRecords.forEach((b) => addActivity(map, b.borrowDate, "library_visit"))
 }
 
@@ -1081,9 +494,9 @@ async function fetchTeacherActivities(
     }),
   ])
 
-  attendanceMarked.forEach((a: { markedAt: Date }) =>
-    addActivity(map, a.markedAt, "attendance_taken")
-  )
+  attendanceMarked.forEach((a: { markedAt: Date | null }) => {
+    if (a.markedAt) addActivity(map, a.markedAt, "attendance_taken")
+  })
   gradesPublished.forEach((g: { gradedAt: Date | null }) => {
     if (g.gradedAt) addActivity(map, g.gradedAt, "grade_published")
   })
@@ -1096,29 +509,19 @@ async function fetchParentActivities(
   endDate: Date,
   map: Map<string, ContributionDataPoint>
 ): Promise<void> {
-  const [payments, messages] = await Promise.all([
-    db.payment
-      .findMany({
-        where: {
-          schoolId,
-          paymentDate: { gte: startDate, lte: endDate },
-        },
-        select: { paymentDate: true },
-        take: 0,
-      })
-      .catch(() => []),
-    db.message
-      .findMany({
-        where: {
-          senderId: guardianUserId,
-          createdAt: { gte: startDate, lte: endDate },
-        },
-        select: { createdAt: true },
-      })
-      .catch(() => []),
-  ])
+  // NOTE: payments are not yet attributable to a guardian user (the Payment
+  // model has no payer-user FK), so they are intentionally omitted here rather
+  // than fetched unscoped. Re-add once Payment gains a paidByUserId field.
+  const messages = await db.message
+    .findMany({
+      where: {
+        senderId: guardianUserId,
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      select: { createdAt: true },
+    })
+    .catch(() => [])
 
-  payments.forEach((p) => addActivity(map, p.paymentDate, "payment_made"))
   messages.forEach((m) => addActivity(map, m.createdAt, "message_sent"))
 }
 
@@ -1129,34 +532,22 @@ async function fetchStaffActivities(
   endDate: Date,
   map: Map<string, ContributionDataPoint>
 ): Promise<void> {
-  const [timesheetEntries, expenses] = await Promise.all([
-    db.timesheetEntry
-      .findMany({
-        where: {
-          schoolId,
-          teacherId: staffUserId,
-          entryDate: { gte: startDate, lte: endDate },
-        },
-        select: { entryDate: true },
-      })
-      .catch(() => []),
-    db.expense
-      .findMany({
-        where: {
-          schoolId,
-          approvedBy: staffUserId,
-          approvedAt: { gte: startDate, lte: endDate },
-        },
-        select: { approvedAt: true },
-      })
-      .catch(() => []),
-  ])
+  // Surface real staff signals: expenses they approved and any logged
+  // UserActivity rows. (timesheetEntry.teacherId expects a Teacher id, not a
+  // User id, so it is omitted to avoid a silent always-empty query.)
+  const expenses = await db.expense
+    .findMany({
+      where: {
+        schoolId,
+        approvedBy: staffUserId,
+        approvedAt: { gte: startDate, lte: endDate },
+      },
+      select: { approvedAt: true },
+    })
+    .catch(() => [])
 
-  timesheetEntries.forEach((t) =>
-    addActivity(map, t.entryDate, "task_completed")
-  )
   expenses.forEach((e) => {
-    if (e.approvedAt) addActivity(map, e.approvedAt, "expense_processed")
+    if (e.approvedAt) addActivity(map, e.approvedAt, "task_completed")
   })
 }
 
@@ -1227,8 +618,10 @@ export async function getContributionData(
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
+    // Scope the role lookup by schoolId — prevents cross-tenant user-existence /
+    // role enumeration via an arbitrary userId.
+    const user = await db.user.findFirst({
+      where: { id: userId, schoolId },
       select: { role: true },
     })
 
@@ -1246,43 +639,12 @@ export async function getContributionData(
     return { success: true, data }
   } catch (error) {
     console.error("Error fetching contribution data:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch contribution data",
-    }
-  }
-}
-
-/**
- * Determine profile role for a user
- */
-export async function getUserProfileRole(
-  userId?: string
-): Promise<ProfileRole | null> {
-  try {
-    const session = await auth()
-    const targetUserId = userId || session?.user?.id
-
-    if (!targetUserId) return null
-
-    const user = await db.user.findUnique({
-      where: { id: targetUserId },
-      select: { role: true },
-    })
-
-    if (!user) return null
-
-    return mapUserRoleToProfileRole(user.role)
-  } catch {
-    return null
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
 // ============================================================================
-// Recent Activity Actions
+// Recent Activity
 // ============================================================================
 
 export async function getRecentActivity(userId?: string, limit = 20) {
@@ -1299,13 +661,22 @@ export async function getRecentActivity(userId?: string, limit = 20) {
 
     const targetUserId = userId || session.user.id
 
+    // AUTHZ: only the owner or a privileged role may read another user's
+    // activity feed. Without this, any student could read a teacher's feed.
+    if (targetUserId !== session.user.id) {
+      const viewerRole = (session.user.role as string) ?? ""
+      if (!["ADMIN", "DEVELOPER", "STAFF"].includes(viewerRole)) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
+
     const activities = await db.userActivity.findMany({
       where: {
         schoolId,
         userId: targetUserId,
       },
       orderBy: { createdAt: "desc" },
-      take: limit,
+      take: Math.min(Math.max(limit, 1), 50),
     })
 
     return { success: true as const, data: activities }
@@ -1371,10 +742,14 @@ export async function logUserActivity(input: {
 }
 
 // ============================================================================
-// Get User Profile with GitHub-style Fields
+// Badge recompute (self-heal / manual refresh)
 // ============================================================================
 
-export async function getUserProfileWithGitHubFields(userId?: string) {
+/**
+ * Recompute the calling user's earned badges from real signals. Idempotent.
+ * Returns the number of badges currently held.
+ */
+export async function recomputeMyBadges() {
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -1386,103 +761,21 @@ export async function getUserProfileWithGitHubFields(userId?: string) {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
-    const targetUserId = userId || session.user.id
-
-    const user = await db.user.findFirst({
-      where: {
-        id: targetUserId,
-        schoolId,
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        image: true,
-        role: true,
-        bio: true,
-        website: true,
-        timezone: true,
-        statusEmoji: true,
-        statusMessage: true,
-        pronouns: true,
-        socialLinks: true,
-        createdAt: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            middleName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            grNumber: true,
-            city: true,
-            enrollmentDate: true,
-          },
-        },
-        teacher: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            profilePhotoUrl: true,
-            employeeId: true,
-            emailAddress: true,
-            joiningDate: true,
-          },
-        },
-        guardian: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            emailAddress: true,
-          },
-        },
-        pinnedItems: {
-          where: {
-            ...(targetUserId !== session.user.id && { isPublic: true }),
-          },
-          orderBy: { order: "asc" },
-          take: 6,
-        },
-        userActivities: {
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-      },
-    })
-
-    if (!user) {
-      return actionError(ACTION_ERRORS.NOT_FOUND)
+    const role = mapUserRoleToProfileRole((session.user.role as string) ?? "")
+    if (!role) {
+      return actionError(ACTION_ERRORS.UNKNOWN)
     }
 
-    // Get name based on role
-    let displayName = user.username || ""
-    let profilePhoto = user.image
-    if (user.student) {
-      displayName =
-        `${user.student.firstName || ""} ${user.student.lastName || ""}`.trim()
-      profilePhoto = user.student.profilePhotoUrl || user.image
-    } else if (user.teacher) {
-      displayName =
-        `${user.teacher.firstName || ""} ${user.teacher.lastName || ""}`.trim()
-      profilePhoto = user.teacher.profilePhotoUrl || user.image
-    } else if (user.guardian) {
-      displayName =
-        `${user.guardian.firstName || ""} ${user.guardian.lastName || ""}`.trim()
-    }
+    const { awarded } = await recomputeProfileBadges(
+      session.user.id,
+      schoolId,
+      role
+    )
 
-    return {
-      success: true as const,
-      data: {
-        ...user,
-        displayName,
-        profilePhoto,
-        isOwner: targetUserId === session.user.id,
-      },
-    }
+    revalidatePath("/[lang]/s/[subdomain]/(school-dashboard)/profile", "page")
+    return { success: true as const, data: { awarded } }
   } catch (error) {
-    console.error("Error fetching user profile:", error)
+    console.error("Error recomputing badges:", error)
     return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

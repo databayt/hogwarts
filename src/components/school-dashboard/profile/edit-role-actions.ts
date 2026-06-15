@@ -8,13 +8,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-// Steps the user can edit on their own profile (not admin-only fields)
-const SELF_EDITABLE_STEPS = {
-  teacher: ["contact", "qualifications", "experience"],
-  student: ["contact"],
-} as const
-
-type EntityType = keyof typeof SELF_EDITABLE_STEPS
+type EntityType = "teacher" | "student"
 
 /** Get the entity (teacher/student) linked to the current user */
 export async function getOwnEntity(
@@ -60,43 +54,23 @@ export async function getOwnEntity(
       }
     }
 
-    if (entityType === "student") {
-      const student = await db.student.findFirst({
-        where: { userId: session.user.id, schoolId },
-      })
+    const student = await db.student.findFirst({
+      where: { userId: session.user.id, schoolId },
+    })
 
-      if (!student) {
-        return { success: false, error: "STUDENT_NOT_FOUND" }
-      }
-
-      return {
-        success: true,
-        data: {
-          entityId: student.id,
-          data: student as unknown as Record<string, unknown>,
-        },
-      }
+    if (!student) {
+      return { success: false, error: "STUDENT_NOT_FOUND" }
     }
 
-    return { success: false, error: "VALIDATION_ERROR" }
+    return {
+      success: true,
+      data: {
+        entityId: student.id,
+        data: student as unknown as Record<string, unknown>,
+      },
+    }
   } catch (error) {
     console.error("Error loading profile entity:", error)
     return { success: false, error: "LOAD_FAILED" }
   }
-}
-
-/** Check if a step is self-editable for the given entity type */
-export async function canSelfEdit(
-  entityType: EntityType,
-  step: string
-): Promise<boolean> {
-  const allowed = SELF_EDITABLE_STEPS[entityType]
-  return (allowed as readonly string[]).includes(step)
-}
-
-/** Get list of self-editable steps for an entity type */
-export async function getSelfEditableSteps(
-  entityType: EntityType
-): Promise<string[]> {
-  return [...SELF_EDITABLE_STEPS[entityType]]
 }

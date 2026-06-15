@@ -1,293 +1,136 @@
 ---
 title: Profile
-description: GitHub-inspired multi-role profile — contribution graphs, pinned items, role-specific tabs, achievement badges, and permission-based filtering.
+description: GitHub-inspired multi-role profile — real contribution graph, earned badges, organizations, pinned items, activity feed, and cross-tenant-safe permission masking.
 ---
 
-The profile system gives every school user a GitHub-style profile: left sidebar (avatar, bio, stats) + right content (tabs, contribution graph, pinned items, activity timeline). One **optional catch-all route** handles both own-profile and view-by-ID.
+Every school user (student, teacher, parent, staff) gets a GitHub-style profile:
+a left sidebar (avatar, name, real stat counts, earned badges, organizations) and
+right content (role tabs, a real contribution graph, pinned items, and an activity
+feed). One **optional catch-all route** handles both own-profile and view-by-id.
+
+> **Everything on the page is real and tenant-scoped.** The block was rebuilt
+> (2026-06-15) to remove the previous prototype's fabricated data — hardcoded
+> stats, `Math.random()` activity, mock "Student of the Year" achievements, and
+> "Chess Club" organizations. When a real source is missing, an honest empty
+> state is shown.
 
 ## Routes
 
-| Route                | Page                         | Behaviour                    |
-| -------------------- | ---------------------------- | ---------------------------- |
-| `/profile`           | `profile/[[...id]]/page.tsx` | Own profile (`isOwner=true`) |
-| `/profile/<user-id>` | `profile/[[...id]]/page.tsx` | View by ID (`isOwner=false`) |
+| Route           | Page                         | Behaviour                           |
+| --------------- | ---------------------------- | ----------------------------------- |
+| `/profile`      | `profile/[[...id]]/page.tsx` | Own profile (`isOwner=true`)        |
+| `/profile/<id>` | `profile/[[...id]]/page.tsx` | View by id (User, or wizard entity) |
 
-Path: `src/app/[lang]/s/[subdomain]/(school-dashboard)/profile/[[...id]]/`.
+Path: `src/app/[lang]/s/[subdomain]/(school-dashboard)/profile/[[...id]]/`. The
+route has `loading.tsx` (layout-matched skeleton) and `error.tsx` (locale-aware
+boundary). `id` may be a `User` id, or a wizard-created `Student`/`Teacher` id
+that has no `User` row (handled by a fallback path).
 
-## Component architecture
+## Architecture
 
-Mirror pattern with all components in a single directory:
-
-```
-Route page.tsx
-  → school-dashboard/profile/detail/content.tsx (ProfileDetailContent)
-    → school-dashboard/profile/client.tsx (main layout)
-      → graph.tsx | activity.tsx | pinned.tsx | sidebar.tsx
-      → student.tsx | teacher.tsx | parent.tsx | staff.tsx
-```
-
-Directory `src/components/school-dashboard/profile/`:
+The page calls a single typed read and passes the result down to pure presenter
+components — no client component fetches or fabricates data.
 
 ```
-actions.ts               # Server actions (CRUD, GitHub fields, contributions)
-validation.ts            # Zod schemas
-types.ts                 # Visual + system types
-client.tsx               # Main layout (sidebar + tabs + content)
-graph.tsx                # Contribution heatmap (real data via SWR)
-activity.tsx             # Activity timeline below graph
-pinned.tsx               # Pinned items grid
-sidebar.tsx              # Avatar, bio, stats, links
-form.tsx                 # Profile edit form
-student.tsx | teacher.tsx | parent.tsx | staff.tsx   # Role dashboards
-__tests__/actions.test.ts
-detail/
-  actions.ts             # getProfileById with permission filtering
-  content.tsx            # ProfileDetailContent (entry from route)
-  permissions.ts         # Permission resolution + data filtering
-  types.ts               # ProfileData, PermissionLevel, ProfileContext
+page.tsx ──> getProfileView(targetId, lang)            // queries.ts (typed, permission-masked)
+   │            └─ real stats · badges · organizations · pinned · activity · roleDetail
+   └─> ProfileDetailContent ──> ProfileContent (client.tsx)
+            ├─ ProfileSidebar   (avatar, stats, badges, organizations, edit entry)
+            ├─ PinnedItems      (real pins; owner reorder/remove, persisted)
+            ├─ ContributionGraph(SWR → getContributionData; empty grid when none)
+            ├─ ContributionActivity (real UserActivity grouped by month)
+            └─ Student/Teacher/Parent/Staff dashboards (real subjects/classes/children/orgs)
 ```
 
-~60 dead / legacy files were deleted after verifying zero live imports — old `theme-provider.tsx`, header / sidebar shells, reference GitHub implementation, role dirs (each with content + directory + 6 tabs). The SaaS profile route (`(saas-dashboard)/profile/`) and its 7 files were also removed.
+`queries.ts` is intentionally **not** `"use server"` so callers can wrap it in
+`cache()`. Client-callable mutations live in `actions.ts` (`"use server"`).
 
 ## Data model
 
-### User as identity hub
+| Model                    | Table                      | Purpose                               |
+| ------------------------ | -------------------------- | ------------------------------------- |
+| `UserActivity`           | `user_activities`          | Activity feed + contribution graph    |
+| `PinnedItem`             | `pinned_items`             | Up to 6 pinned items per user         |
+| `ProfileBadge`           | `profile_badges`           | Earned badges (awarded by the engine) |
+| `Organization`           | `organizations`            | School clubs / committees / teams     |
+| `OrganizationMembership` | `organization_memberships` | User ↔ organization, with role        |
+| `Achievement` (existing) | `achievements`             | Student achievement records → badges  |
 
-```
-User
-├── Student?      (1:1 via userId)
-├── Teacher?      (1:1 via userId)
-├── Guardian?     (1:1 via userId)
-└── StaffMember?  (1:1 via userId)
-```
+GitHub-style fields (`bio`, `website`, `timezone`, `pronouns`, `statusEmoji`,
+`statusMessage`, `socialLinks`) live on `User`.
 
-### GitHub-style fields on User
+> **Deploy note:** `profile_badges`, `organizations`, and
+> `organization_memberships` are **deploy-pending**. Apply the additive
+> migration-of-record
+> `prisma/migrations/20260615000000_add_profile_badges_organizations/` to the
+> prod default branch (idempotent `CREATE TABLE IF NOT EXISTS` + guarded enums,
+> validated on a Neon branch), then run `pnpm db:seed:single profile-extras`.
 
-| Field           | Type      | Purpose                         |
-| --------------- | --------- | ------------------------------- |
-| `bio`           | `String?` | Short biography (max 500 chars) |
-| `website`       | `String?` | Personal website URL            |
-| `timezone`      | `String?` | User timezone                   |
-| `statusEmoji`   | `String?` | Status emoji (max 10 chars)     |
-| `statusMessage` | `String?` | Status message (max 100 chars)  |
-| `pronouns`      | `String?` | User pronouns (max 50 chars)    |
-| `socialLinks`   | `Json?`   | GitHub, Twitter, LinkedIn URLs  |
+## Badge earning engine
 
-### UserActivity — 16 types
+`badges.ts → recomputeProfileBadges(userId, schoolId, role)` derives badges from
+**real signals** and reconciles the user's auto-managed badge rows idempotently:
 
-| Category       | Types                                                                           |
-| -------------- | ------------------------------------------------------------------------------- |
-| Academic       | `ASSIGNMENT_SUBMITTED`, `GRADE_RECEIVED`, `COURSE_ENROLLED`, `COURSE_COMPLETED` |
-| Achievement    | `ACHIEVEMENT_EARNED`, `CERTIFICATE_EARNED`                                      |
-| Library        | `LIBRARY_CHECKOUT`, `LIBRARY_RETURN`                                            |
-| Events         | `EVENT_ATTENDED`, `CLUB_JOINED`                                                 |
-| Projects       | `PROJECT_CREATED`, `PROJECT_UPDATED`                                            |
-| Administrative | `ATTENDANCE_MARKED`, `EXAM_COMPLETED`, `PROFILE_UPDATED`, `OTHER`               |
+- `perfect_attendance` — student with zero absences this year (or a teacher who
+  marked attendance consistently)
+- `top_of_class` / `honor_roll` — student merit rank 1 / top 3
+- `diligent_educator` — teacher who graded/marked ≥ 20 items this year
+- `active_contributor` — ≥ 20 logged activities this year
+- `community_member` — belongs to ≥ 1 organization
+- a student's own `Achievement` records → one badge each (icon by category, level
+  by scope)
 
-### PinnedItem — up to 6, 10 types
+Manually-awarded badges (keys outside the catalog / `achievement_` prefix) are
+never touched. Trigger a refresh with the `recomputeMyBadges` server action.
 
-`COURSE`, `SUBJECT`, `PROJECT`, `ACHIEVEMENT`, `CERTIFICATE`, `CLASS`, `CHILD`, `DEPARTMENT`, `PUBLICATION`, `TASK`. Each has `title`, `description`, `metadata` (JSON), `isPublic`, `order`.
+## Permissions (cross-tenant-safe)
 
-## Permissions
+`getPermissionLevel` (`detail/permissions.ts`) returns
+`OWNER | ADMIN | STAFF | RELATED | PUBLIC`. Elevation rules:
 
-5 levels: `OWNER > ADMIN > STAFF > RELATED > PUBLIC`.
+- **DEVELOPER** is the only role with cross-school access.
+- **ADMIN / TEACHER / STAFF / ACCOUNTANT** are elevated **only** when
+  `viewerSchoolId === profileSchoolId` — otherwise `PUBLIC`.
+- Same-school students/guardians get `RELATED`.
 
-```typescript
-// detail/permissions.ts
-function getPermissionLevel(context: ProfileContext): PermissionLevel {
-  if (!viewerId)                          → "PUBLIC"
-  if (viewerId === profileUserId)         → "OWNER"
-  if (role is DEVELOPER or ADMIN)         → "ADMIN"
-  if (role is TEACHER, STAFF, ACCOUNTANT) → "STAFF"
-  if (same schoolId)                      → "RELATED"
-  default                                 → "PUBLIC"
-}
-```
+`getProfileView` masks sensitive fields (email, ids) for non-privileged viewers
+on top of the always-tenant-scoped DB query.
 
-| Level   | Sees                                                                                                          |
-| ------- | ------------------------------------------------------------------------------------------------------------- |
-| OWNER   | Everything (full profile, private pinned items, settings)                                                     |
-| ADMIN   | Everything (admin purposes)                                                                                   |
-| STAFF   | Name, email, photo, school data, year levels, classes, guardians, medical info, phone numbers, qualifications |
-| RELATED | Name, photo, student ID, enrollment date, year levels, teacher email, classes                                 |
-| PUBLIC  | Name and photo only                                                                                           |
+## Server actions (`actions.ts`)
 
-`filterProfileData()` applies per-level filtering. Each role model (student, teacher, guardian) has its own filter that strips sensitive fields based on viewer permission.
+| Action                              | Purpose                                                  |
+| ----------------------------------- | -------------------------------------------------------- |
+| `updateGitHubProfile(input)`        | Persist name/bio/website/timezone/pronouns/status/social |
+| `uploadProfileAvatar(formData)`     | Avatar → `User.image` **and** role `profilePhotoUrl`     |
+| `getPinnedItems(userId?)`           | Read pins (public-only for other users)                  |
+| `updatePinnedItems(items)`          | Replace own pins (max 6) in a transaction                |
+| `getContributionData(params)`       | Heatmap data (role lookup `schoolId`-scoped)             |
+| `getRecentActivity(userId?, limit)` | Activity feed (viewer-permission gated)                  |
+| `logUserActivity(input)`            | Append a `UserActivity` row                              |
+| `recomputeMyBadges()`               | Re-run the earning engine for the caller                 |
 
-## Server actions
+Reads are in `queries.ts` (`getProfileView`); self-edit entity data in
+`edit-role-actions.ts` (`getOwnEntity`).
 
-### Main (`actions.ts`)
+## Real data, no mock
 
-| Action                                    | Purpose                                                       |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `getStudentProfile(id?)`                  | Student with classes, year levels, guardians                  |
-| `getTeacherProfile(id?)`                  | Teacher with departments, classes, students                   |
-| `getParentProfile(id?)`                   | Guardian with children and their classes                      |
-| `getStaffProfile(id?)`                    | Staff user by role                                            |
-| `updateProfile(input)`                    | Display name, avatar, locale                                  |
-| `updateProfileBio(input)`                 | Bio (max 500 chars)                                           |
-| `updateProfileSettings(input)`            | Theme, language, notifications                                |
-| `uploadProfileAvatar(formData)`           | Avatar upload (placeholder)                                   |
-| `getProfileBasicData(userId, lang?)`      | Flat data for sidebar with translation                        |
-| `updateGitHubProfile(input)`              | Bio, website, timezone, status, pronouns, social links        |
-| `getPinnedItems(userId?)`                 | Pinned items (public-only for other users)                    |
-| `updatePinnedItems(items[])`              | Replace all pinned items (max 6)                              |
-| `getContributionData(userId?, year?)`     | Heatmap from UserActivity + Attendance + AssignmentSubmission |
-| `getRecentActivity(userId?, limit?)`      | Recent UserActivity entries                                   |
-| `logUserActivity(input)`                  | Create UserActivity row                                       |
-| `getUserProfileWithGitHubFields(userId?)` | Full user with GitHub fields, pinned items, activities        |
+Every surface is DB-backed:
 
-### Detail (`detail/actions.ts`)
-
-| Action                   | Purpose                                                      |
-| ------------------------ | ------------------------------------------------------------ |
-| `getProfileById(userId)` | Fetch profile with all relations, apply permission filtering |
-| `canViewProfile(userId)` | Boolean — same school or DEVELOPER role                      |
-
-### Contribution data
-
-```typescript
-// getContributionData()
-// 1. UserActivity grouped by date
-// 2. Attendance records (status: PRESENT)
-// 3. AssignmentSubmission records
-// Merged into a day-by-day map with intensity:
-//   0 contributions → level 0
-//   1-2             → level 1
-//   3-4             → level 2
-//   5-6             → level 3
-//   7+              → level 4
-```
-
-### Standard pattern
-
-```typescript
-export async function getProfileBasicData(userId: string, lang?: string) {
-  const session = await auth()
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" }
-
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return { success: false, error: "School context not found" }
-
-  const user = await db.user.findFirst({
-    where: { id: userId, schoolId },
-    select: {
-      /* role-specific fields */
-    },
-  })
-
-  return { success: true, data }
-}
-```
-
-## Tabs by role
-
-| Role    | Tabs                                              |
-| ------- | ------------------------------------------------- |
-| Student | Overview, Courses, Projects, Achievements, Awards |
-| Teacher | Overview, Classes, Schedule, Awards, Resources    |
-| Parent  | Overview, Children, Events, Messages              |
-| Staff   | Overview, Tasks, Department, Reports              |
-
-The Overview tab always includes contribution graph, pinned items, and activity timeline. Other tabs render the role dashboard.
-
-| File          | Role    | Content                                               |
-| ------------- | ------- | ----------------------------------------------------- |
-| `student.tsx` | Student | Academic performance, course list, assignment tracker |
-| `teacher.tsx` | Teacher | Class overview, student counts, schedule summary      |
-| `parent.tsx`  | Parent  | Children overview, upcoming events, payment summary   |
-| `staff.tsx`   | Staff   | Task dashboard, department info, report access        |
-
-## Achievements
-
-Sidebar displays GitHub-style PNG badges from `/github/{badge-name}.png`. Click opens a popover (badge title, description, earned date, context).
-
-```typescript
-interface Achievement {
-  id: string
-  title: string
-  description: string
-  icon: string // Maps to /github/{icon}.png
-  earnedAt?: Date | string
-  level?: "bronze" | "silver" | "gold" | "platinum"
-  context?: string // e.g. "Term 1, 2025-2026 · Grade 10 Mathematics"
-}
-```
-
-Badge names: `starstruck`, `galaxy-brain`, `pull-shark`, `yolo`, `pair-extraordinaire`, `quickdraw`, `public-sponsor`.
-
-| Role    | Achievements (badge)                                                                                                                                                                                                |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Student | Student of the Year (`starstruck`), First / Second of Class (`galaxy-brain`), Best Football Player (`yolo`), Perfect Attendance (`quickdraw`), Science Fair Winner (`galaxy-brain`), Math Olympiad (`galaxy-brain`) |
-| Teacher | Teacher of the Year (`starstruck`), Best Curriculum Design (`pull-shark`), Student Favorite (`starstruck`), Department Leader (`pull-shark`), Perfect Attendance (`quickdraw`), Innovation Award (`starstruck`)     |
-| Parent  | Most Engaged Parent (`pair-extraordinaire`), Community Champion (`pair-extraordinaire`), Volunteer of the Year (`public-sponsor`)                                                                                   |
-| Staff   | Employee of the Year (`starstruck`), Best Team Player (`pair-extraordinaire`), Perfect Attendance (`quickdraw`), Service Excellence (`pull-shark`), Outstanding Support (`galaxy-brain`)                            |
-
-`AchievementPopover` (in `sidebar.tsx`):
-
-- **Trigger** — `size-16` (64 px) badge PNG via `<img>`, no hover scale
-- **Content** — `w-[360px]`, `p-0`, `overflow-hidden`, `side="top"`
-  - Header — per-badge gradient PNG from `achievementDetailBg`, badge centred at `size-[140px]`
-  - Title `<h3>` `text-base font-bold`, description `text-sm text-muted-foreground`
-  - `<hr className="mx-4 mt-3">`
-  - History — `OcticonTrophy` (muted) + `"Unlocked on {date}"` + bullet + context
-
-```typescript
-const achievementDetailBg: Record<string, string> = {
-  starstruck: "/github/starstruck-detail.png",
-  "galaxy-brain": "/github/galaxy-brain-detail.png",
-  "pull-shark": "/github/pull-shark-detail.png",
-  yolo: "/github/yolo-detail.png",
-  "pair-extraordinaire": "/github/pair-extraordinaire-detail.png",
-  quickdraw: "/github/quickdraw-detail.png",
-  "public-sponsor": "/github/public-sponsor-detail.png",
-}
-```
-
-Sidebar Octicons: `OcticonBook`, `OcticonClock`, `OcticonOrganization`, `OcticonPeople`, `OcticonRepo`, `OcticonSmiley`, `OcticonTable`, `OcticonTrophy`.
-
-## Contribution graph colors
-
-Custom CSS properties for GitHub-authentic colors — intentional exception to the semantic-token rule because data viz needs exact colors.
-
-```css
-/* Light */
---contribution-level-0: #ebedf0;
---contribution-level-1: #9be9a8;
---contribution-level-2: #40c463;
---contribution-level-3: #30a14e;
---contribution-level-4: #216e39;
-
-/* Dark */
---contribution-level-0: #161b22;
---contribution-level-1: #0e4429;
---contribution-level-2: #006d32;
---contribution-level-3: #26a641;
---contribution-level-4: #39d353;
-```
-
-## Real vs mock data
-
-| Component                                            | Source                                                                                   |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `graph.tsx`                                          | Real Prisma data (Attendance, AssignmentSubmission, UserActivity)                        |
-| Role dashboards (student / teacher / parent / staff) | Hardcoded mock                                                                           |
-| Achievement badges                                   | Role-specific hardcoded data with GitHub-style per-badge background PNGs (click popover) |
-| Pinned items display                                 | Hardcoded mock                                                                           |
-| Tab badge counts                                     | Hardcoded numbers (e.g. Courses: 8, Tasks: 24)                                           |
+- **Stats** — counts of the user's subjects / classes / students / children
+- **Activity** — real `UserActivity` rows (no `Math.random()`)
+- **Badges** — earned via the engine from real attendance/results/merit
+- **Organizations** — real memberships (+ a teacher's primary department)
+- **Pinned items** — real `PinnedItem` rows; empty state when none
 
 ## Known issues
 
-- Directory routes removed (`/profile/students`, `/teachers`, `/parents`, `/staff`) and ~60 component files deleted.
-- Parent contribution payments query disabled — `take: 0` returns nothing.
-- Hardcoded tab badge counts in `ROLE_TABS`.
-- No SWR hooks — old `hooks.ts` referenced non-existent `/api/profile/*` routes; only server actions remain.
-- `uploadProfileAvatar()` has no actual file upload implementation.
-- `updateProfileSettings()` has empty `data` object in Prisma update.
+- DB tables deploy-pending (see Deploy note).
+- Adding a new pinned item from the UI is not yet wired (display + reorder +
+  remove are).
+- `profile-flows.spec.ts` predates the rebuild — selectors + a cross-school
+  isolation case are a follow-up.
 
 ## See also
 
-- [Multi-tenancy](/docs/multi-tenancy) — RBAC + tenant scoping
-- [Pattern](/docs/pattern) — mirror pattern, file conventions
-- [Students](/docs/students) — self-edit consumer
-- [Teachers](/docs/teachers) — self-edit consumer
+- Tests: `src/tests/school-dashboard/profile/`
+- Block records: `src/components/school-dashboard/profile/{README,ISSUE,CLAUDE}.md`

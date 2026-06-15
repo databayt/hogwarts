@@ -2,10 +2,18 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
 import { db } from "@/lib/db"
 
 import { authenticate, isAuthError } from "../lib/authenticate"
+
+// Mirrors the web `updateGitHubProfileSchema` length guards. The mobile contract
+// keys are `username` / `bio` (not `displayName`), so this is a dedicated schema.
+const mobileProfileUpdateSchema = z.object({
+  username: z.string().trim().min(1).max(100).optional(),
+  bio: z.string().max(500).optional(),
+})
 
 /**
  * Mobile Profile API
@@ -140,8 +148,15 @@ export async function PUT(request: NextRequest) {
     const auth = await authenticate(request)
     if (isAuthError(auth)) return auth
 
-    const body = await request.json()
-    const { username, bio } = body
+    const body = await request.json().catch(() => null)
+    const parsed = mobileProfileUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: parsed.error.issues },
+        { status: 400 }
+      )
+    }
+    const { username, bio } = parsed.data
 
     const user = await db.user.update({
       where: { id: auth.userId },

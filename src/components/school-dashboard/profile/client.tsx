@@ -7,13 +7,9 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   OcticonBook,
-  OcticonClose,
-  OcticonIssueOpened,
   OcticonPackage,
   OcticonRepo,
-  OcticonStar,
   OcticonTable,
-  OcticonTriangleDown,
 } from "@/components/atom/icons"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -21,167 +17,91 @@ import ContributionActivity from "./activity"
 import ContributionGraph from "./graph"
 import ParentDashboard from "./parent"
 import PinnedItems from "./pinned"
+import type { ProfileViewData } from "./queries"
 import ProfileSidebar from "./sidebar"
 import StaffDashboard from "./staff"
 import StudentDashboard from "./student"
 import TeacherDashboard from "./teacher"
-import type { ProfileRole, ProfileTab } from "./types"
 
 interface Props {
-  role: ProfileRole
-  data: Record<string, unknown>
-  dictionary?: Record<string, unknown>
+  data: ProfileViewData
+  dictionary?: Record<string, any>
   lang?: Locale
-  isOwner?: boolean
-  userId?: string
 }
 
-// Tab configurations per role
-const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
-  student: [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: <OcticonBook className="size-4" />,
-    },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 8,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      count: 12,
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "achievements",
-      label: "Achievements",
-      count: 5,
-      icon: <OcticonPackage className="size-4" />,
-    },
-    {
-      id: "awards",
-      label: "Awards",
-      count: 2,
-      icon: <OcticonStar className="size-4" />,
-    },
-  ],
-  teacher: [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: <OcticonBook className="size-4" />,
-    },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 6,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "schedule",
-      label: "Schedule",
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "achievements",
-      label: "Awards",
-      count: 4,
-      icon: <OcticonPackage className="size-4" />,
-    },
-    {
-      id: "resources",
-      label: "Resources",
-      count: 15,
-      icon: <OcticonStar className="size-4" />,
-    },
-  ],
-  parent: [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: <OcticonBook className="size-4" />,
-    },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 3,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "events",
-      label: "Events",
-      count: 5,
-      icon: <OcticonTable className="size-4" />,
-    },
-    {
-      id: "communications",
-      label: "Messages",
-      count: 8,
-      icon: <OcticonPackage className="size-4" />,
-    },
-  ],
-  staff: [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: <OcticonBook className="size-4" />,
-    },
-    {
-      id: "repositories",
-      label: "Repositories",
-      count: 12,
-      icon: <OcticonRepo className="size-4" />,
-    },
-    {
-      id: "issues",
-      label: "Issues",
-      count: 24,
-      icon: <OcticonIssueOpened className="size-4" />,
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      count: 8,
-      icon: <OcticonPackage className="size-4" />,
-    },
-  ],
+interface TabDef {
+  id: string
+  count?: number
+  icon: React.ReactNode
 }
 
-export default function ProfileContent({
-  role,
-  data,
-  dictionary,
-  lang,
-  isOwner = false,
-  userId,
-}: Props) {
+function buildTabs(data: ProfileViewData): TabDef[] {
+  const tabs: TabDef[] = [
+    { id: "overview", icon: <OcticonBook className="size-4" /> },
+  ]
+  switch (data.role) {
+    case "student":
+      tabs.push({
+        id: "subjects",
+        count: data.roleDetail.subjects.length,
+        icon: <OcticonRepo className="size-4" />,
+      })
+      tabs.push({
+        id: "achievements",
+        count: data.badges.length,
+        icon: <OcticonPackage className="size-4" />,
+      })
+      break
+    case "teacher":
+      tabs.push({
+        id: "classes",
+        count: data.roleDetail.classes.length,
+        icon: <OcticonTable className="size-4" />,
+      })
+      tabs.push({
+        id: "achievements",
+        count: data.badges.length,
+        icon: <OcticonPackage className="size-4" />,
+      })
+      break
+    case "parent":
+      tabs.push({
+        id: "children",
+        count: data.roleDetail.children.length,
+        icon: <OcticonTable className="size-4" />,
+      })
+      break
+    case "staff":
+      tabs.push({
+        id: "achievements",
+        count: data.badges.length,
+        icon: <OcticonPackage className="size-4" />,
+      })
+      break
+  }
+  return tabs
+}
+
+export default function ProfileContent({ data, dictionary, lang }: Props) {
   const { isMobile } = useSidebar()
   const [activeTab, setActiveTab] = useState("overview")
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const [showBanner, setShowBanner] = useState(true)
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
 
-  const p = (dictionary as any)?.profile
+  const p = dictionary
+  const role = data.role
+  const isOwner = data.isOwner
 
-  const years = Array.from(
-    { length: 11 },
-    (_, i) => new Date().getFullYear() - i
-  )
-
-  // Determine layout: stacked on mobile or when sidebar is expanded
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - i)
   const useMobileLayout = isMobile
+  const tabs = buildTabs(data)
 
-  const tabs = ROLE_TABS[role] || ROLE_TABS.student
-
-  const getRoleDashboard = () => {
+  const roleDashboard = () => {
     switch (role) {
       case "student":
-        return <StudentDashboard data={data} isOwner={isOwner} dictionary={p} />
+        return <StudentDashboard data={data} dictionary={p} />
       case "teacher":
-        return <TeacherDashboard data={data} isOwner={isOwner} dictionary={p} />
+        return <TeacherDashboard data={data} dictionary={p} />
       case "staff":
         return <StaffDashboard data={data} dictionary={p} />
       case "parent":
@@ -193,7 +113,6 @@ export default function ProfileContent({
 
   const MainContent = () => (
     <div className="space-y-6">
-      {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="border-border border-b">
           <TabsList className="h-auto gap-6 bg-transparent p-0">
@@ -201,11 +120,11 @@ export default function ProfileContent({
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="text-muted-foreground data-[state=active]:text-foreground hover:text-foreground data-[state=active]:border-b-primary relative gap-2 !rounded-none !border-0 !border-b-2 border-transparent px-1 py-3 text-[13px] font-medium !shadow-none !ring-0 transition-colors !outline-none focus-visible:!border-transparent focus-visible:!ring-0 focus-visible:!outline-none data-[state=active]:!border-0 data-[state=active]:!border-b-2 data-[state=active]:!bg-transparent data-[state=active]:!shadow-none"
+                className="text-muted-foreground data-[state=active]:text-foreground hover:text-foreground data-[state=active]:border-b-primary relative gap-2 !rounded-none !border-0 !border-b-2 border-transparent px-1 py-3 text-[13px] font-medium !shadow-none transition-colors data-[state=active]:!border-0 data-[state=active]:!border-b-2 data-[state=active]:!bg-transparent data-[state=active]:!shadow-none"
               >
                 {tab.icon}
                 <span className="hidden sm:inline">
-                  {p?.tabs?.[tab.id] ?? tab.label}
+                  {p?.tabs?.[tab.id] ?? tab.id}
                 </span>
                 {tab.count !== undefined && (
                   <Badge
@@ -220,79 +139,48 @@ export default function ProfileContent({
           </TabsList>
         </div>
 
-        {/* Overview Tab Content */}
+        {/* Overview */}
         <TabsContent value="overview" className="mt-6 space-y-6">
-          {/* Notification Banner */}
-          {isOwner && showBanner && (
-            <div className="flex items-start gap-3 rounded border border-[#54aeff]/40 bg-[#ddf4ff] px-3 py-4 dark:border-blue-800/40 dark:bg-blue-950/30">
-              <p className="text-foreground flex-1 text-xs">
-                {p?.overview?.bannerText ??
-                  "You unlocked new Achievements with private contributions! Show them off by including private contributions in your Profile in"}{" "}
-                <a href="#" className="text-[#0969da] hover:underline">
-                  {p?.overview?.settings ?? "settings"}
-                </a>
-                .
-              </p>
-              <button
-                onClick={() => setShowBanner(false)}
-                className="shrink-0 p-0.5 text-[#0969da] transition-colors hover:text-[#0969da]/80"
-              >
-                <OcticonClose className="size-3.5" />
-              </button>
-            </div>
-          )}
+          <PinnedItems items={data.pinned} isOwner={isOwner} dictionary={p} />
 
-          {/* Pinned Section */}
-          <PinnedItems role={role} data={data} dictionary={p} />
-
-          {/* Content + Year Column */}
           <div className="flex gap-4">
             <div className="min-w-0 flex-1 space-y-6">
-              {/* Contribution Graph */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-foreground text-sm font-medium">
-                    {(
-                      p?.overview?.contributionsIn ??
-                      "1,086 contributions in {year}"
-                    )
-                      .replace("{count}", "1,086")
-                      .replace("{year}", String(new Date().getFullYear()))}
-                  </h3>
-                  <button className="text-muted-foreground flex items-center gap-0.5 text-xs transition-colors hover:text-[#0969da] hover:underline">
-                    {p?.overview?.contributionSettings ??
-                      "Contribution settings"}
-                    <OcticonTriangleDown className="size-4" />
-                  </button>
-                </div>
+                <h3 className="text-foreground text-sm font-medium">
+                  {(p?.overview?.contributionsTitle ?? "Activity").replace(
+                    "{year}",
+                    String(selectedYear)
+                  )}
+                </h3>
                 <div className="border-border rounded-md border p-3">
                   <ContributionGraph
                     role={role}
-                    userId={userId}
-                    isOwner={isOwner}
+                    userId={data.userId ?? undefined}
+                    year={selectedYear}
                     dictionary={p}
                     lang={lang}
                   />
                 </div>
               </div>
 
-              {/* Contribution Activity */}
               <ContributionActivity
-                role={role}
-                data={data}
-                selectedYear={selectedYear}
-                onYearChange={setSelectedYear}
+                items={data.recentActivity}
                 dictionary={p}
+                lang={lang}
               />
             </div>
+
+            {/* Year rail */}
             <div className="hidden w-24 flex-col gap-1.5 pt-2 sm:flex">
               {years.map((year) => (
                 <button
                   key={year}
+                  type="button"
                   onClick={() => setSelectedYear(year)}
+                  aria-pressed={selectedYear === year}
                   className={`rounded px-3 py-1.5 text-start text-[11px] transition-colors ${
                     selectedYear === year
-                      ? "bg-[#0969da] font-medium text-white"
+                      ? "bg-primary text-primary-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -303,23 +191,13 @@ export default function ProfileContent({
           </div>
         </TabsContent>
 
-        {/* Other Tabs - Show Role Dashboard */}
+        {/* Role tabs */}
         {tabs.slice(1).map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-6">
-            {getRoleDashboard()}
+            {roleDashboard()}
           </TabsContent>
         ))}
       </Tabs>
-
-      {/* Footer Help Link */}
-      <p className="text-muted-foreground pb-6 text-center text-sm">
-        {p?.overview?.footerHelp ??
-          "Need help navigating the system? Check out the"}{" "}
-        <a href="#" className="text-primary hover:underline">
-          {p?.overview?.portalGuide ?? "school portal guide"}
-        </a>
-        .
-      </p>
     </div>
   )
 
@@ -327,37 +205,19 @@ export default function ProfileContent({
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl">
         {useMobileLayout ? (
-          // Mobile layout: Stack vertically
           <div className="flex flex-col gap-6 px-4 pb-6">
-            {/* Profile Sidebar - Left-aligned when stacked */}
             <div className="flex justify-start">
-              <ProfileSidebar
-                role={role}
-                data={data}
-                isOwner={isOwner}
-                dictionary={p}
-              />
+              <ProfileSidebar data={data} dictionary={p} lang={lang} />
             </div>
-
-            {/* Main Content - Full width below */}
             <div className="w-full">
               <MainContent />
             </div>
           </div>
         ) : (
-          // Desktop layout: Side by side
           <div className="grid grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-4 lg:px-0">
-            {/* Left Sidebar */}
             <div className="min-w-0 lg:col-span-1">
-              <ProfileSidebar
-                role={role}
-                data={data}
-                isOwner={isOwner}
-                dictionary={p}
-              />
+              <ProfileSidebar data={data} dictionary={p} lang={lang} />
             </div>
-
-            {/* Main Content */}
             <div className="min-w-0 lg:col-span-3">
               <MainContent />
             </div>

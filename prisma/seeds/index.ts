@@ -81,6 +81,7 @@ import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
+import { seedProfileExtras } from "./profile-extras"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
 import { seedStaffMembers } from "./staff-members"
@@ -449,6 +450,11 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // Gamification (badges, streaks, competitions)
     await measureDuration("Gamification", () =>
       seedGamification(prisma, school.id, students, classes)
+    )
+
+    // Profile extras (organizations, memberships, earned badges)
+    await measureDuration("Profile extras", () =>
+      seedProfileExtras(prisma, school.id)
     )
 
     // ========================================================================

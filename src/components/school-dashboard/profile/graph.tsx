@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useMemo } from "react"
 import useSWR from "swr"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -18,32 +18,17 @@ import type {
   ProfileRole,
 } from "./types"
 
-// ============================================================================
-// Props
-// ============================================================================
-
 interface ActivityGraphProps {
   role: ProfileRole
   userId?: string
-  isOwner?: boolean
-  initialData?: ContributionGraphData
+  year: number
   dictionary?: Record<string, any>
   lang?: string
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /**
- * GitHub-inspired Contribution Graph Colors
- *
- * EXCEPTION: This component uses exact GitHub colors for data visualization
- * authenticity. The colors are defined as CSS custom properties in globals.css
- * and are documented in .claude/skills/ui-validator.md under "Exceptions".
- *
- * Light mode: #ebedf0 -> #9be9a8 -> #40c463 -> #30a14e -> #216e39
- * Dark mode:  #161b22 -> #0e4429 -> #006d32 -> #26a641 -> #39d353
+ * GitHub-inspired contribution colors. EXCEPTION: exact GitHub palette for data
+ * visualization authenticity, defined as CSS custom properties in globals.css.
  */
 const LEVEL_STYLES: Record<number, React.CSSProperties> = {
   0: { backgroundColor: "var(--contribution-level-0)" },
@@ -60,69 +45,29 @@ const ROLE_LABEL_KEYS: Record<ProfileRole, string> = {
   staff: "tasks",
 }
 
-// ============================================================================
-// Mock Data Generator (Fallback)
-// ============================================================================
-
-function generateMockData(
-  role: ProfileRole,
-  year: number
-): ContributionGraphData {
+/** An empty (all-zero) year grid — shown honestly when there is no activity. */
+function emptyYearData(role: ProfileRole, year: number): ContributionGraphData {
   const startDate = new Date(year, 0, 1)
   const endDate = new Date(year, 11, 31)
   const contributions: ContributionDataPoint[] = []
   const current = new Date(startDate)
-
-  // Adjust start to Sunday of that week
-  const startDayOfWeek = current.getDay()
-  current.setDate(current.getDate() - startDayOfWeek)
-
+  current.setDate(current.getDate() - current.getDay())
   while (current <= endDate) {
-    const dayOfWeek = current.getDay()
-    const month = current.getMonth()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    const isSchoolMonth = month >= 8 || month <= 5
-    const isVacation = month === 6 || month === 7
-
-    let baseIntensity = Math.random()
-
-    // Adjust intensity based on realistic patterns
-    if (isWeekend) baseIntensity *= 0.3
-    if (!isSchoolMonth || isVacation) baseIntensity *= 0.2
-
-    // Role-specific patterns
-    if (role === "teacher" && dayOfWeek >= 1 && dayOfWeek <= 5)
-      baseIntensity *= 1.2
-    if (role === "parent" && dayOfWeek === 3) baseIntensity *= 0.8
-    if (role === "student" && dayOfWeek === 2) baseIntensity *= 1.3
-
-    let level: 0 | 1 | 2 | 3 | 4 = 0
-    if (baseIntensity > 0.8) level = 4
-    else if (baseIntensity > 0.6) level = 3
-    else if (baseIntensity > 0.4) level = 2
-    else if (baseIntensity > 0.15) level = 1
-
-    const count = Math.floor(baseIntensity * 10)
-
     contributions.push({
       date: current.toISOString().split("T")[0],
-      level,
-      count,
+      level: 0,
+      count: 0,
       activities: [],
     })
-
     current.setDate(current.getDate() + 1)
   }
-
-  const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
-
   return {
     contributions,
-    totalActivities,
+    totalActivities: 0,
     year,
     role,
     summary: {
-      activeDays: contributions.filter((c) => c.count > 0).length,
+      activeDays: 0,
       longestStreak: 0,
       currentStreak: 0,
       averagePerDay: 0,
@@ -131,38 +76,20 @@ function generateMockData(
   }
 }
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatDate(dateStr: string, locale: string = "en"): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
+function formatDate(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleDateString(
+    locale === "ar" ? "ar-SA" : "en-US",
+    { weekday: "long", month: "short", day: "numeric", year: "numeric" }
+  )
 }
-
-function getDateMonth(dateStr: string): number {
-  return new Date(dateStr).getMonth()
-}
-
-// ============================================================================
-// Component
-// ============================================================================
 
 export default function ActivityGraph({
   role = "student",
   userId,
-  isOwner = false,
-  initialData,
+  year,
   dictionary,
   lang,
 }: ActivityGraphProps) {
-  const currentYear = new Date().getFullYear()
-  const [selectedYear, setSelectedYear] = useState(currentYear.toString())
   const locale = lang === "ar" ? "ar" : "en"
   const p = dictionary
 
@@ -179,41 +106,28 @@ export default function ActivityGraph({
     return [getDay(0), "", getDay(1), "", getDay(3), "", getDay(5), ""]
   }, [locale])
 
-  const roleLabel = p?.graph?.[ROLE_LABEL_KEYS[role]] ?? ROLE_LABEL_KEYS[role]
+  const roleLabel = p?.graph?.[ROLE_LABEL_KEYS[role]] ?? ""
 
-  // Fetch real data with SWR
   const {
     data: fetchedData,
     error,
     isLoading,
   } = useSWR(
-    userId ? ["contribution-data", userId, selectedYear] : null,
+    userId ? ["contribution-data", userId, year] : null,
     async () => {
-      const result = await getContributionData({
-        userId,
-        year: parseInt(selectedYear),
-      })
+      const result = await getContributionData({ userId, year })
       if (!result.success) throw new Error(result.error)
       return result.data
     },
-    {
-      fallbackData: initialData,
-      revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute
-    }
+    { revalidateOnFocus: false, dedupingInterval: 60000 }
   )
 
-  // Use fetched data, fallback to mock
-  const graphData = useMemo(() => {
-    if (fetchedData) return fetchedData
-    return generateMockData(role, parseInt(selectedYear))
-  }, [fetchedData, role, selectedYear])
+  // Real data when available; otherwise an honest empty grid (never random mock).
+  const graphData = fetchedData ?? emptyYearData(role, year)
 
-  // Group data into weeks (columns)
   const weeks = useMemo(() => {
     const result: ContributionDataPoint[][] = []
     let currentWeek: ContributionDataPoint[] = []
-
     graphData.contributions.forEach((day) => {
       currentWeek.push(day)
       if (currentWeek.length === 7) {
@@ -221,12 +135,10 @@ export default function ActivityGraph({
         currentWeek = []
       }
     })
-
     if (currentWeek.length > 0) {
-      // Pad the last week with empty slots
       while (currentWeek.length < 7) {
         currentWeek.push({
-          date: new Date().toISOString().split("T")[0],
+          date: "",
           level: 0,
           count: 0,
           activities: [],
@@ -234,44 +146,28 @@ export default function ActivityGraph({
       }
       result.push(currentWeek)
     }
-
     return result
   }, [graphData.contributions])
 
-  // Calculate month positions for labels
   const monthPositions = useMemo(() => {
     const positions: { month: string; position: number }[] = []
     let lastMonth = -1
-
     weeks.forEach((week, weekIdx) => {
-      const firstDayWithData = week.find((d) => d.count >= 0)
-      if (firstDayWithData) {
-        const month = getDateMonth(firstDayWithData.date)
+      const firstWithDate = week.find((d) => d.date)
+      if (firstWithDate) {
+        const month = new Date(firstWithDate.date).getMonth()
         if (month !== lastMonth) {
-          positions.push({
-            month: months[month],
-            position: weekIdx,
-          })
+          positions.push({ month: months[month], position: weekIdx })
           lastMonth = month
         }
       }
     })
-
     return positions
   }, [weeks, months])
 
-  const years = Array.from({ length: 5 }, (_, i) =>
-    (currentYear - i).toString()
-  )
-
-  // Loading state
-  if (isLoading && !graphData) {
+  if (isLoading && !fetchedData) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-8 w-24" />
-        </div>
         <Skeleton className="h-[140px] w-full" />
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-32" />
@@ -284,10 +180,13 @@ export default function ActivityGraph({
   return (
     <TooltipProvider>
       <div>
-        {/* Graph Container */}
+        {error && (
+          <p className="text-muted-foreground mb-2 text-xs">
+            {p?.graph?.loadError ?? ""}
+          </p>
+        )}
         <div className="overflow-x-auto pb-2">
           <div className="min-w-max">
-            {/* Month labels */}
             <div className="ms-10 mb-1 flex">
               {monthPositions.map(({ month, position }, idx) => (
                 <span
@@ -306,9 +205,7 @@ export default function ActivityGraph({
               ))}
             </div>
 
-            {/* Graph Grid */}
             <div className="flex">
-              {/* Weekday labels */}
               <div className="text-muted-foreground me-2 flex flex-col gap-[3px] text-[10px]">
                 {weekdays.map((day: string, idx: number) => (
                   <span key={idx} className="h-[10px] leading-[10px]">
@@ -317,44 +214,66 @@ export default function ActivityGraph({
                 ))}
               </div>
 
-              {/* Contribution grid */}
-              <div className="flex gap-[3px]">
+              <div
+                className="flex gap-[3px]"
+                role="img"
+                aria-label={(p?.graph?.heatmapLabel ?? "{year}").replace(
+                  "{year}",
+                  String(year)
+                )}
+              >
                 {weeks.map((week, weekIdx) => (
                   <div key={weekIdx} className="flex flex-col gap-[3px]">
-                    {week.map((day, dayIdx) => (
-                      <Tooltip key={`${weekIdx}-${dayIdx}`}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="hover:ring-foreground/20 size-[11px] cursor-pointer rounded-[3px] transition-all hover:ring-1"
-                            style={LEVEL_STYLES[day.level]}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <div className="text-sm">
-                            <p className="font-semibold">
-                              {day.count > 0
-                                ? `${day.count} ${roleLabel}`
-                                : `No ${roleLabel}`}
-                            </p>
-                            <p className="text-muted-foreground">
-                              {formatDate(day.date, locale)}
-                            </p>
-                            {day.activities && day.activities.length > 0 && (
-                              <div className="border-border mt-1 border-t pt-1">
-                                {day.activities.map((activity, i) => (
-                                  <p
-                                    key={i}
-                                    className="text-muted-foreground text-xs"
-                                  >
-                                    • {activity.label} ({activity.count})
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
+                    {week.map((day, dayIdx) =>
+                      day.date ? (
+                        <Tooltip key={`${weekIdx}-${dayIdx}`}>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`${
+                                day.count > 0
+                                  ? `${day.count} ${roleLabel}`
+                                  : roleLabel
+                                    ? `${p?.graph?.no ?? ""} ${roleLabel}`.trim()
+                                    : ""
+                              } — ${formatDate(day.date, locale)}`}
+                              className="hover:ring-foreground/20 focus-visible:ring-ring size-[11px] cursor-pointer rounded-[3px] transition-all hover:ring-1 focus-visible:ring-2 focus-visible:outline-none"
+                              style={LEVEL_STYLES[day.level]}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="text-sm">
+                              <p className="font-semibold">
+                                {day.count > 0
+                                  ? `${day.count} ${roleLabel}`
+                                  : `${p?.graph?.no ?? ""} ${roleLabel}`.trim()}
+                              </p>
+                              <p className="text-muted-foreground">
+                                {formatDate(day.date, locale)}
+                              </p>
+                              {day.activities && day.activities.length > 0 && (
+                                <div className="border-border mt-1 border-t pt-1">
+                                  {day.activities.map((activity, i) => (
+                                    <p
+                                      key={i}
+                                      className="text-muted-foreground text-xs"
+                                    >
+                                      • {activity.label} ({activity.count})
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <div
+                          key={`${weekIdx}-${dayIdx}`}
+                          aria-hidden="true"
+                          className="size-[11px] rounded-[3px] opacity-0"
+                        />
+                      )
+                    )}
                   </div>
                 ))}
               </div>
@@ -363,14 +282,10 @@ export default function ActivityGraph({
         </div>
 
         {/* Legend */}
-        <div className="text-muted-foreground ms-8 flex items-center justify-between text-xs">
-          <a href="#" className="hover:text-primary transition-colors">
-            {p?.overview?.learnContributions ??
-              "Learn how we count contributions"}
-          </a>
+        <div className="text-muted-foreground ms-8 mt-2 flex items-center justify-end text-xs">
           <div className="flex items-center gap-1">
-            <span>{p?.overview?.less ?? "Less"}</span>
-            <div className="flex gap-[2px]">
+            <span>{p?.overview?.less ?? ""}</span>
+            <div className="flex gap-[2px]" aria-hidden="true">
               {[0, 1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
@@ -379,7 +294,7 @@ export default function ActivityGraph({
                 />
               ))}
             </div>
-            <span>{p?.overview?.more ?? "More"}</span>
+            <span>{p?.overview?.more ?? ""}</span>
           </div>
         </div>
       </div>

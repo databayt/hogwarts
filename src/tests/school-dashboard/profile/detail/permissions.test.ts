@@ -100,6 +100,38 @@ describe("getPermissionLevel", () => {
     })
     expect(level).toBe("PUBLIC")
   })
+
+  it("returns PUBLIC for a school ADMIN from a DIFFERENT school (cross-tenant guard)", () => {
+    const level = getPermissionLevel({
+      ...baseContext,
+      viewerId: "admin-2",
+      viewerRole: "ADMIN" as never,
+      viewerSchoolId: "school-other",
+    })
+    expect(level).toBe("PUBLIC")
+  })
+
+  it("returns PUBLIC for a TEACHER/STAFF/ACCOUNTANT from a different school", () => {
+    for (const role of ["TEACHER", "STAFF", "ACCOUNTANT"] as const) {
+      const level = getPermissionLevel({
+        ...baseContext,
+        viewerId: "staff-2",
+        viewerRole: role as never,
+        viewerSchoolId: "school-other",
+      })
+      expect(level).toBe("PUBLIC")
+    }
+  })
+
+  it("still returns ADMIN for a platform DEVELOPER across schools", () => {
+    const level = getPermissionLevel({
+      ...baseContext,
+      viewerId: "dev-1",
+      viewerRole: "DEVELOPER" as never,
+      viewerSchoolId: "school-other",
+    })
+    expect(level).toBe("ADMIN")
+  })
 })
 
 describe("filterProfileData", () => {

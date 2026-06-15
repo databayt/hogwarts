@@ -152,8 +152,10 @@ model User {
   auditLogs AuditLog[] @relation("AuditPerformer")
 
   // Profile relations (GitHub-style)
-  userActivities UserActivity[]
-  pinnedItems    PinnedItem[]
+  userActivities          UserActivity[]
+  pinnedItems             PinnedItem[]
+  profileBadges           ProfileBadge[]
+  organizationMemberships OrganizationMembership[]
 
   // Catalog Enrollment relations
   catalogEnrollments    Enrollment[]

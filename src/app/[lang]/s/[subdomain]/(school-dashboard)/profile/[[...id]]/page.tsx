@@ -3,22 +3,8 @@ import { auth } from "@/auth"
 
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getProfileBasicData } from "@/components/school-dashboard/profile/actions"
 import { ProfileDetailContent } from "@/components/school-dashboard/profile/detail/content"
-import type { ProfileRole } from "@/components/school-dashboard/profile/types"
-
-function toProfileRole(role?: string): ProfileRole {
-  switch (role) {
-    case "STUDENT":
-      return "student"
-    case "TEACHER":
-      return "teacher"
-    case "GUARDIAN":
-      return "parent"
-    default:
-      return "staff"
-  }
-}
+import { getProfileView } from "@/components/school-dashboard/profile/queries"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id?: string[] }>
@@ -41,41 +27,29 @@ export default async function Page({ params }: Props) {
     return (
       <ProfileDetailContent
         profileData={null}
-        role="staff"
-        isOwner={false}
-        userId=""
-        error="Not authenticated"
+        errorCode="NOT_AUTHENTICATED"
         dictionary={dictionary}
         lang={lang}
       />
     )
   }
 
-  const isOwner = session?.user?.id === targetId
-  const result = await getProfileBasicData(targetId, lang)
+  const result = await getProfileView(targetId, lang)
 
   if (!result.success) {
     return (
       <ProfileDetailContent
         profileData={null}
-        role="staff"
-        isOwner={false}
-        userId={targetId}
-        error={result.error}
+        errorCode={result.errorCode}
         dictionary={dictionary}
         lang={lang}
       />
     )
   }
 
-  const role = toProfileRole(result.data.role as string)
-
   return (
     <ProfileDetailContent
       profileData={result.data}
-      role={role}
-      isOwner={isOwner}
-      userId={targetId}
       dictionary={dictionary}
       lang={lang}
     />

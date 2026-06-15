@@ -79,3 +79,87 @@ model PinnedItem {
   @@index([schoolId, userId, order])
   @@map("pinned_items")
 }
+
+// Badge intensity tier (rendered as a coloured illustration in the sidebar)
+enum ProfileBadgeLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+// Profile badges (the "Achievements" wall on a profile). These are awarded by
+// the deterministic earning engine (recomputeProfileBadges) from REAL school
+// signals — attendance streaks, exam results, merit rank, contribution streaks,
+// and a student's own Achievement records. Idempotent per (school, user, key).
+model ProfileBadge {
+  id          String            @id @default(cuid())
+  schoolId    String
+  userId      String
+  key         String // stable identifier of the badge type, e.g. "perfect_attendance"
+  title       String
+  description String?
+  icon        String // illustration key: starstruck, galaxy-brain, pull-shark, quickdraw, yolo, ...
+  level       ProfileBadgeLevel @default(BRONZE)
+  context     String? // human context, e.g. "Academic Year 2024-2025"
+  earnedAt    DateTime          @default(now())
+  isPublic    Boolean           @default(true)
+  lang        String            @default("ar")
+  metadata    Json?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId, key])
+  @@index([schoolId, userId])
+  @@index([schoolId, userId, isPublic])
+  @@map("profile_badges")
+}
+
+// Kinds of school groups a user can belong to
+enum OrganizationType {
+  CLUB
+  COMMITTEE
+  DEPARTMENT
+  TEAM
+  ASSOCIATION
+}
+
+// School organizations / clubs (the "Organizations" row on a profile). Real,
+// tenant-scoped, editable — replaces the previously hardcoded "Chess Club" mock.
+model Organization {
+  id          String           @id @default(cuid())
+  schoolId    String
+  name        String
+  type        OrganizationType @default(CLUB)
+  description String?
+  avatarUrl   String?
+  lang        String           @default("ar")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  school      School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  memberships OrganizationMembership[]
+
+  @@index([schoolId])
+  @@map("organizations")
+}
+
+// Membership of a user in a school organization, with their role in that group.
+model OrganizationMembership {
+  id             String   @id @default(cuid())
+  schoolId       String
+  organizationId String
+  userId         String
+  role           String   @default("member") // role within the org (e.g. "president", "secretary", "member")
+  joinedAt       DateTime @default(now())
+
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([schoolId, userId])
+  @@index([organizationId])
+  @@map("organization_memberships")
+}
