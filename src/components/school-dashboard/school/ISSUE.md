@@ -16,6 +16,20 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Assign roles (Owner/Admin/Teacher/Student/Parent/Accountant)
   - Server: Zod-validated action; audit optional; `revalidatePath`
   - Acceptance: role updates persist; correct authorization enforced
+- [x] **Admin credential generation for non-students (2026-06-15)** —
+      `membership/resetMemberPassword` mints a crypto-random temp password
+      (`@/lib/credentials`) for teachers/staff/accountants/guardians, sets
+      `mustChangePassword`, delivers via `deliverCredentials`, and returns the
+      plaintext for ad-hoc sharing. School-scoped so the platform DEVELOPER account
+      (no `schoolId`) can never be targeted. Complements `forcePasswordReset`
+      (which only flips the must-change flag). Closes the student-only parity gap.
+- [x] **Bulk import returns a credentials sheet (2026-06-15)** — `bulk` CSV
+      import now mints crypto-random, unguessable temp passwords (was guessable
+      `student<id>`/`teacher<id>` and a shared static `parent123`) and login-valid
+      usernames (CSV names with spaces/Arabic were rejected by the login schema, so
+      those users couldn't sign in). `bulkSmartImport` surfaces
+      `credentials[]` → key-icon download in `bulk/content.tsx` (CSV-injection
+      guarded). See `auth/ISSUE.md` for the full hardening pass.
 
 ### 3) School Settings
 

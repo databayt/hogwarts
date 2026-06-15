@@ -6,6 +6,12 @@ import { NextRequest, NextResponse } from "next/server"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
+import {
+  checkRateLimitAsync,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/rate-limit"
+import { sendPasswordResetCodeEmail } from "@/components/auth/mail"
 import { getUserByEmail } from "@/components/auth/user"
 
 /**
@@ -31,6 +37,16 @@ function generateOTP(): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit by client IP — caps reset-request spam and enumeration.
+    const rl = await checkRateLimitAsync(
+      request,
+      RATE_LIMITS.AUTH,
+      "mobile-reset"
+    )
+    if (!rl.allowed) {
+      return createRateLimitResponse(rl.resetTime)
+    }
+
     const body = await request.json()
 
     // Validate input
@@ -75,8 +91,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // TODO: Send email in production
-      // await sendPasswordResetEmail(normalizedEmail, otp)
+      // Deliver the code by email (fire-and-forget — failures are logged inside
+      // the helper; the response stays neutral to avoid enumeration).
+      await sendPasswordResetCodeEmail(normalizedEmail, otp)
     }
 
     // Always return success to prevent email enumeration

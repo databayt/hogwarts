@@ -14,6 +14,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Import modules AFTER mocking
+import { hashToken } from "@/lib/credentials"
 import { db } from "@/lib/db"
 import { getPasswordResetTokenByEmail } from "@/components/auth/password/token"
 import {
@@ -195,23 +196,28 @@ describe("generatePasswordResetToken", () => {
     vi.clearAllMocks()
   })
 
-  it("should generate a UUID token", async () => {
+  it("should persist the HASHED token (not the raw token)", async () => {
     mockedGetPasswordResetTokenByEmail.mockResolvedValue(null)
     mockedDb.passwordResetToken.create.mockResolvedValue({
       id: "token-id",
       email: "test@example.com",
-      token: "mock-uuid-token",
+      token: hashToken("mock-uuid-token"),
       expires: new Date(),
     })
 
     await generatePasswordResetToken("test@example.com")
 
+    // The raw uuid travels in the email; only its SHA-256 hash is stored.
     expect(mockedDb.passwordResetToken.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         email: "test@example.com",
-        token: "mock-uuid-token",
+        token: hashToken("mock-uuid-token"),
       }),
     })
+    const stored =
+      mockedDb.passwordResetToken.create.mock.calls[0][0].data.token
+    expect(stored).not.toBe("mock-uuid-token")
+    expect(stored).toMatch(/^[a-f0-9]{64}$/)
   })
 
   it("should set expiration to 1 hour from now", async () => {
@@ -262,19 +268,21 @@ describe("generatePasswordResetToken", () => {
     })
   })
 
-  it("should return the created token", async () => {
-    const createdToken = {
+  it("should return the RAW token (for the email link), not the stored hash", async () => {
+    mockedGetPasswordResetTokenByEmail.mockResolvedValue(null)
+    mockedDb.passwordResetToken.create.mockResolvedValue({
       id: "token-id",
       email: "test@example.com",
-      token: "mock-uuid-token",
+      token: hashToken("mock-uuid-token"),
       expires: new Date(),
-    }
-    mockedGetPasswordResetTokenByEmail.mockResolvedValue(null)
-    mockedDb.passwordResetToken.create.mockResolvedValue(createdToken)
+    })
 
     const result = await generatePasswordResetToken("test@example.com")
 
-    expect(result).toEqual(createdToken)
+    // Caller emails result.token; lookup hashes it back to match the DB row.
+    expect(result.email).toBe("test@example.com")
+    expect(result.token).toBe("mock-uuid-token")
+    expect(result.expires).toBeInstanceOf(Date)
   })
 })
 

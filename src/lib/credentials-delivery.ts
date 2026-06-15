@@ -4,18 +4,18 @@
 /**
  * Credentials Delivery
  *
- * Sends a freshly-minted student/guardian login over the platform's
- * notification channels (email + WhatsApp + in-app) so admins on
- * `kingfahad.databayt.org/en/students` don't have to copy/paste from the
- * dialog into a separate WhatsApp chat. The dialog still works for ad-hoc
- * sharing — this helper covers the "automate it" case the founder asked for.
+ * Sends a freshly-minted login (any role — student, teacher, staff, guardian)
+ * over the platform's notification channels (email + WhatsApp + in-app) so
+ * admins don't have to copy/paste from a dialog into a separate chat. The
+ * per-student dialog and per-member reset still show the credentials for
+ * ad-hoc sharing — this helper covers the "automate it" case.
  *
  * Tradeoff: `Notification.body` carries the temp password (because the
  * notification email/WhatsApp pipeline renders body verbatim, and there is
  * no metadata-aware template yet). This is acceptable because:
  *
- * 1. Notifications are gated to the recipient's own user — only the student
- *    can read their own in-app notification panel.
+ * 1. Notifications are gated to the recipient's own user — only they can read
+ *    their own in-app notification panel.
  * 2. `mustChangePassword: true` is set on the User, so the password is
  *    single-use and invalidated on first login.
  * 3. A future enhancement can render password from `metadata.tempPassword`
@@ -26,10 +26,11 @@ import { dispatchNotification } from "@/lib/dispatch-notification"
 
 interface DeliverCredentialsInput {
   schoolId: string
-  studentUserId: string
+  /** The User who owns these credentials (student/teacher/staff/guardian). */
+  userId: string
   username: string
-  /** Plaintext temp password. Pass `null` for self-onboarded students who
-   *  set their own password — we only confirm the account exists. */
+  /** Plaintext temp password. Pass `null` for self-onboarded users who set
+   *  their own password — we only confirm the account exists. */
   tempPassword: string | null
   /** True on first User creation; false on resets. Drives copy. */
   isFirstTime: boolean
@@ -40,10 +41,10 @@ interface DeliverCredentialsResult {
   reason?: string
 }
 
-export async function deliverStudentCredentials(
+export async function deliverCredentials(
   input: DeliverCredentialsInput
 ): Promise<DeliverCredentialsResult> {
-  const { schoolId, studentUserId, username, tempPassword, isFirstTime } = input
+  const { schoolId, userId, username, tempPassword, isFirstTime } = input
 
   const [school, user] = await Promise.all([
     db.school.findUnique({
@@ -51,7 +52,7 @@ export async function deliverStudentCredentials(
       select: { preferredLanguage: true, name: true, domain: true },
     }),
     db.user.findUnique({
-      where: { id: studentUserId },
+      where: { id: userId },
       select: { email: true },
     }),
   ])
@@ -70,10 +71,10 @@ export async function deliverStudentCredentials(
 
   const title = isAr
     ? isFirstTime
-      ? `تم إنشاء حساب الطالب لدى ${school.name}`
+      ? `تم إنشاء حسابك لدى ${school.name}`
       : `تم إعادة تعيين كلمة المرور لدى ${school.name}`
     : isFirstTime
-      ? `Your ${school.name} student account is ready`
+      ? `Your ${school.name} account is ready`
       : `Your ${school.name} password was reset`
 
   const body = buildBody({
@@ -87,7 +88,7 @@ export async function deliverStudentCredentials(
 
   await dispatchNotification({
     schoolId,
-    userId: studentUserId,
+    userId,
     type: "account_created",
     title,
     body,
@@ -107,6 +108,26 @@ export async function deliverStudentCredentials(
   })
 
   return { notified: true }
+}
+
+/**
+ * Back-compat alias for the student-credentials call sites. Identical to
+ * {@link deliverCredentials} — kept so existing imports don't churn.
+ */
+export async function deliverStudentCredentials(input: {
+  schoolId: string
+  studentUserId: string
+  username: string
+  tempPassword: string | null
+  isFirstTime: boolean
+}): Promise<DeliverCredentialsResult> {
+  return deliverCredentials({
+    schoolId: input.schoolId,
+    userId: input.studentUserId,
+    username: input.username,
+    tempPassword: input.tempPassword,
+    isFirstTime: input.isFirstTime,
+  })
 }
 
 function buildBody(args: {

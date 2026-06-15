@@ -53,7 +53,7 @@ export const ResetForm = (props: Props) => {
     setSuccess("")
 
     startTransition(() => {
-      reset(values).then((data) => {
+      reset(values, lang).then((data) => {
         setError(data?.error)
         setSuccess(data?.success)
       })

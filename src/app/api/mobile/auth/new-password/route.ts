@@ -6,6 +6,11 @@ import bcrypt from "bcryptjs"
 import * as z from "zod"
 
 import { db } from "@/lib/db"
+import {
+  checkRateLimitAsync,
+  createRateLimitResponse,
+  RATE_LIMITS,
+} from "@/lib/rate-limit"
 import { getUserByEmail } from "@/components/auth/user"
 
 /**
@@ -35,6 +40,17 @@ const PROTECTED_EMAIL = "dev@databayt.org"
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit by client IP — without this a 6-digit OTP (1M combinations)
+    // could be brute-forced within its 10-minute window.
+    const rl = await checkRateLimitAsync(
+      request,
+      RATE_LIMITS.AUTH,
+      "mobile-new-password"
+    )
+    if (!rl.allowed) {
+      return createRateLimitResponse(rl.resetTime)
+    }
+
     const body = await request.json()
 
     // Validate input
@@ -99,6 +115,7 @@ export async function POST(request: NextRequest) {
       data: {
         password: hashedPassword,
         passwordChangedAt: new Date(),
+        mustChangePassword: false,
       },
     })
 

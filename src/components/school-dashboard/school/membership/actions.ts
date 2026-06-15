@@ -6,6 +6,8 @@ import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
+import { mintTempPassword } from "@/lib/credentials"
+import { deliverCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
@@ -30,6 +32,7 @@ import {
   rejectMemberRequestSchema,
   removeMemberSchema,
   resendInvitationSchema,
+  resetMemberPasswordSchema,
   suspendMemberSchema,
 } from "./validation"
 
@@ -1223,5 +1226,101 @@ export async function forcePasswordReset(
           ? error.message
           : "Failed to force password reset",
     }
+  }
+}
+
+// --- Generate / Reset Member Credentials (any role) ---
+/**
+ * Mint a fresh temporary password for ANY school member (teacher, staff,
+ * accountant, guardian, admin) and deliver it over the member's notification
+ * channels. This is the non-student counterpart to `resetStudentPassword` —
+ * it closes the credential-generation parity gap so admins can hand out (or
+ * re-issue) logins for everyone, not just students.
+ *
+ * Returns the plaintext password so the caller can also show it in the UI for
+ * ad-hoc sharing. `mustChangePassword` is set so the temp password is
+ * single-use. School-scoped lookup means the platform DEVELOPER account (no
+ * schoolId) can never be targeted here.
+ */
+export async function resetMemberPassword(
+  input: z.infer<typeof resetMemberPasswordSchema>
+): Promise<
+  ActionResponse<{
+    username: string
+    tempPassword: string
+    email: string | null
+  }>
+> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    try {
+      assertMembershipPermission(authContext, "suspend", schoolId)
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const parsed = resetMemberPasswordSchema.parse(input)
+
+    // Admins reset their own password through the normal settings/forgot flow.
+    if (parsed.userId === authContext.userId) {
+      return actionError(ACTION_ERRORS.UNKNOWN)
+    }
+
+    const targetUser = await db.user.findFirst({
+      where: { id: parsed.userId, schoolId },
+      select: { id: true, email: true, username: true },
+    })
+    if (!targetUser) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    const { plain, hashed } = await mintTempPassword()
+
+    await db.user.update({
+      where: { id: targetUser.id },
+      data: { password: hashed, mustChangePassword: true },
+    })
+
+    // Push the new credentials to the member (in-app + email + WhatsApp).
+    // Non-fatal — the plaintext is still returned for manual sharing.
+    try {
+      await deliverCredentials({
+        schoolId,
+        userId: targetUser.id,
+        username: targetUser.username ?? targetUser.email ?? "",
+        tempPassword: plain,
+        isFirstTime: false,
+      })
+    } catch (deliveryErr) {
+      console.error(
+        "[resetMemberPassword] credentials delivery failed:",
+        deliveryErr
+      )
+    }
+
+    revalidatePath("/school/membership")
+    return {
+      success: true,
+      data: {
+        username: targetUser.username ?? targetUser.email ?? "",
+        tempPassword: plain,
+        email: targetUser.email,
+      },
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        error.issues.map((e) => e.message).join(", ")
+      )
+    }
+    return actionError(
+      ACTION_ERRORS.UPDATE_FAILED,
+      error instanceof Error ? error.message : undefined
+    )
   }
 }

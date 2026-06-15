@@ -3,26 +3,33 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import bcrypt from "bcryptjs"
-import * as z from "zod"
 
 import { db } from "@/lib/db"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getUserByEmail } from "../user"
-import { NewPasswordSchema } from "../validation"
+import { createNewPasswordSchema } from "../validation"
 import { getPasswordResetTokenByToken } from "./token"
 
 export const newPassword = async (
-  values: z.infer<typeof NewPasswordSchema>,
-  token?: string | null
+  values: { password: string },
+  token?: string | null,
+  locale: Locale = "en"
 ) => {
+  const dictionary = await getDictionary(locale)
+  const a = dictionary.auth
+
   if (!token) {
-    return { error: "Missing token!" }
+    return { error: a?.missingToken ?? "Missing reset token." }
   }
 
-  const validatedFields = NewPasswordSchema.safeParse(values)
+  const validatedFields = createNewPasswordSchema(dictionary).safeParse(values)
 
   if (!validatedFields.success) {
-    return { error: "Invalid fields!" }
+    return {
+      error: a?.invalidPassword ?? "Password must be at least 6 characters.",
+    }
   }
 
   const { password } = validatedFields.data
@@ -30,19 +37,25 @@ export const newPassword = async (
   const existingToken = await getPasswordResetTokenByToken(token)
 
   if (!existingToken) {
-    return { error: "Invalid token!" }
+    return { error: a?.invalidToken ?? "This reset link is invalid." }
   }
 
   const hasExpired = new Date(existingToken.expires) < new Date()
 
   if (hasExpired) {
-    return { error: "Token has expired!" }
+    // Burn the expired token so it can't linger.
+    await db.passwordResetToken.delete({ where: { id: existingToken.id } })
+    return {
+      error:
+        a?.tokenExpired ??
+        "This reset link has expired. Please request a new one.",
+    }
   }
 
   const existingUser = await getUserByEmail(existingToken.email)
 
   if (!existingUser) {
-    return { error: "Email does not exist!" }
+    return { error: a?.invalidToken ?? "This reset link is invalid." }
   }
 
   const hashedPassword = await bcrypt.hash(password, 10)
@@ -56,9 +69,12 @@ export const newPassword = async (
     },
   })
 
+  // Single-use: consume the token immediately after a successful reset.
   await db.passwordResetToken.delete({
     where: { id: existingToken.id },
   })
 
-  return { success: "Password updated!" }
+  return {
+    success: a?.passwordUpdated ?? "Password updated! You can now sign in.",
+  }
 }

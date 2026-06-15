@@ -112,6 +112,17 @@ interface SmartImportResult {
   failed: number
   skipped: number
   errors: Array<{ row: number; error: string; details?: string }>
+  // Plaintext temp credentials minted for the imported users. Passwords are
+  // crypto-random + single-use (mustChangePassword), so this is the only place
+  // the admin can read them to distribute.
+  credentials?: Array<{
+    row: number
+    name: string
+    username: string
+    email: string | null
+    role: string
+    password: string
+  }>
 }
 
 /**
@@ -212,6 +223,7 @@ export async function bulkSmartImport(
     failed: result.failed,
     skipped: result.skipped,
     errors: result.errors,
+    credentials: result.credentials,
   }
 }
 

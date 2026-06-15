@@ -118,6 +118,18 @@ ${emailButton(link, "Reset Password")}
     resetText: (link: string) =>
       `Reset your password\n\nUse the link below to set a new password:\n${link}\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
 
+    resetCodeSubject: "Your password reset code",
+    resetCodeBody: (code: string) =>
+      emailLayout(
+        `<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:600;color:#18181b;line-height:32px;">Reset your password</h1>
+<p style="margin:0 0 4px 0;font-size:16px;color:#52525b;line-height:24px;">Enter this code in the app to set a new password.</p>
+${emailCode(code)}
+<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">This code expires in 10 minutes. If you didn&rsquo;t request this, you can safely ignore this email.</p>`,
+        "en"
+      ),
+    resetCodeText: (code: string) =>
+      `Reset your password\n\nYour password reset code: ${code}\n\nEnter this code in the app to set a new password.\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+
     verifySubject: "Confirm your email",
     verifyBody: (code: string) =>
       emailLayout(
@@ -154,6 +166,18 @@ ${emailButton(link, "إعادة التعيين")}
       ),
     resetText: (link: string) =>
       `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+
+    resetCodeSubject: "رمز إعادة تعيين كلمة المرور",
+    resetCodeBody: (code: string) =>
+      emailLayout(
+        `<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:600;color:#18181b;line-height:32px;">إعادة تعيين كلمة المرور</h1>
+<p style="margin:0 0 4px 0;font-size:16px;color:#52525b;line-height:24px;">أدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.</p>
+${emailCode(code)}
+<p style="margin:0;font-size:14px;color:#a1a1aa;line-height:20px;">ينتهي صلاحية هذا الرمز خلال 10 دقائق. إذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.</p>`,
+        "ar"
+      ),
+    resetCodeText: (code: string) =>
+      `إعادة تعيين كلمة المرور\n\nرمز إعادة التعيين: ${code}\n\nأدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
 
     verifySubject: "تأكيد بريدك الإلكتروني",
     verifyBody: (code: string) =>
@@ -253,6 +277,43 @@ export const sendPasswordResetEmail = async (
     return true
   } catch (error) {
     console.error("Error sending password reset email:", error)
+    return false
+  }
+}
+
+// Mobile password reset uses a 6-digit OTP (not a magic link) — this delivers
+// that code. Web reset continues to use `sendPasswordResetEmail` (link-based).
+export const sendPasswordResetCodeEmail = async (
+  email: string,
+  code: string,
+  locale = "en"
+): Promise<boolean> => {
+  const t = getStrings(locale)
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Hogwarts <noreply@databayt.org>",
+      to: email,
+      subject: t.resetCodeSubject,
+      html: t.resetCodeBody(code),
+      text: t.resetCodeText(code),
+      headers: baseHeaders(email),
+    })
+
+    if (error) {
+      console.error("[mail] Resend password-reset-code error:", {
+        email,
+        name: error.name,
+        message: error.message,
+      })
+      return false
+    }
+
+    if (isDev)
+      console.log("Password reset code email sent successfully, id:", data?.id)
+    return true
+  } catch (error) {
+    console.error("Error sending password reset code email:", error)
     return false
   }
 }

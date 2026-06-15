@@ -54,7 +54,7 @@ export const NewPasswordForm = (props: Props) => {
     setSuccess("")
 
     startTransition(() => {
-      newPassword(values, token).then((data) => {
+      newPassword(values, token, lang).then((data) => {
         setError(data?.error)
         setSuccess(data?.success)
       })

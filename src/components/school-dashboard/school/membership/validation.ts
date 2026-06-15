@@ -70,3 +70,7 @@ export const bulkActivateSchema = z.object({
 export const forcePasswordResetSchema = z.object({
   userId: z.string().min(1),
 })
+
+export const resetMemberPasswordSchema = z.object({
+  userId: z.string().min(1),
+})

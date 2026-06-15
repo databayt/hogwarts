@@ -15,6 +15,7 @@ import {
   Download,
   FileText,
   GraduationCap,
+  KeyRound,
   Layers,
   Loader2,
   Shield,
@@ -132,6 +133,14 @@ interface ImportResult {
   failed: number
   skipped: number
   errors: Array<{ row: number; error: string; details?: string }>
+  credentials?: Array<{
+    row: number
+    name: string
+    username: string
+    email: string | null
+    role: string
+    password: string
+  }>
 }
 
 interface SectionState {
@@ -180,6 +189,33 @@ function downloadTemplate(content: string, filename: string) {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+// Escape a CSV cell (quote + double inner quotes; guard against formula
+// injection by prefixing leading =,+,-,@).
+function csvCell(value: string): string {
+  const v = value ?? ""
+  const guarded = /^[=+\-@]/.test(v) ? `'${v}` : v
+  return `"${guarded.replace(/"/g, '""')}"`
+}
+
+// Build + download the minted-credentials sheet so the admin can distribute
+// logins (passwords are crypto-random + single-use, so this is the only place
+// to read them).
+function downloadCredentials(
+  credentials: NonNullable<ImportResult["credentials"]>,
+  type: ImportType
+) {
+  const header = ["name", "username", "email", "role", "password"]
+  const lines = [
+    header.join(","),
+    ...credentials.map((c) =>
+      [c.name, c.username, c.email ?? "", c.role, c.password]
+        .map((cell) => csvCell(String(cell)))
+        .join(",")
+    ),
+  ]
+  downloadTemplate(lines.join("\n"), `${type}-logins.csv`)
 }
 
 // One-click upload card. Click anywhere → file picker; drag a file onto it →
@@ -253,6 +289,20 @@ function UploadCard({
           <CheckCircle2 className="h-4 w-4 text-green-600" />
         )}
         {!busy && failed && <AlertCircle className="h-4 w-4 text-red-600" />}
+        {!busy && !!state.result?.credentials?.length && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              downloadCredentials(state.result!.credentials!, config.type)
+            }}
+            className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+            title={t.downloadCredentials ?? "Download logins"}
+            aria-label={t.downloadCredentials ?? "Download logins"}
+          >
+            <KeyRound className="h-4 w-4" />
+          </button>
+        )}
         <button
           type="button"
           onClick={(e) => {

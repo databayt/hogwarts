@@ -22,6 +22,7 @@ import { hash } from "bcryptjs"
 import { parse } from "csv-parse/sync"
 import { z, ZodError } from "zod"
 
+import { generateTempPassword, makeUniqueUsername } from "@/lib/credentials"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
 import { generateStudentUsername } from "@/lib/student-username"
@@ -105,6 +106,18 @@ interface ImportResult {
     studentId: string
     code: string
     expiresAt: string
+  }>
+  // Plaintext temp credentials minted for each created user, returned so the
+  // admin can distribute them (passwords are now crypto-random and unguessable,
+  // so the only place to learn them is here). Each user must change theirs on
+  // first login (mustChangePassword).
+  credentials?: Array<{
+    row: number
+    name: string
+    username: string
+    email: string | null
+    role: string
+    password: string
   }>
 }
 
@@ -208,6 +221,7 @@ class CsvImportService {
       skipped: 0,
       errors: [],
       warnings: [],
+      credentials: [],
     }
 
     try {
@@ -221,7 +235,7 @@ class CsvImportService {
         }),
         db.user.findMany({
           where: { schoolId },
-          select: { email: true },
+          select: { email: true, username: true },
         }),
       ])
       const existingStudentIds = new Set(
@@ -229,6 +243,11 @@ class CsvImportService {
       )
       const existingEmails = new Set(
         existingUsers.map((u) => u.email).filter(Boolean)
+      )
+      // Username set for guardians created during this import (students use the
+      // unique studentId code; guardians derive a handle from their name).
+      const takenUsernames = new Set<string>(
+        existingUsers.map((u) => u.username).filter(Boolean) as string[]
       )
 
       // Phase 1: Validate all rows and collect valid ones
@@ -417,11 +436,14 @@ class CsvImportService {
           }
         }
 
-        // Parallel bcrypt hashing for the chunk (uses the now-assigned code)
+        // Crypto-random temp password per student. NEVER derive it from the
+        // student code — that code is the public username, so a derived
+        // password (`student<code>`) was guessable and let anyone log in as
+        // the student before they did. Plaintext is collected into
+        // result.credentials for the admin to distribute.
+        const plains = chunk.map(() => generateTempPassword())
         const hashes = await Promise.all(
-          chunk.map((r) =>
-            hash(`student${r.validated.studentId}`, this.BCRYPT_ROUNDS)
-          )
+          plains.map((p) => hash(p, this.BCRYPT_ROUNDS))
         )
 
         // Generate UUIDs client-side for createMany
@@ -499,19 +521,38 @@ class CsvImportService {
           result.imported += chunk.length
           createdStudentUserIds.push(...userIds)
 
+          for (let idx = 0; idx < chunk.length; idx++) {
+            const r = chunk[idx]
+            result.credentials?.push({
+              row: r.rowNumber,
+              name: r.validated.name,
+              username: r.validated.studentId!,
+              email: r.email,
+              role: "STUDENT",
+              password: plains[idx],
+            })
+          }
+
           // Handle guardians sequentially after the batch (they have complex find-or-create logic)
           for (let idx = 0; idx < chunk.length; idx++) {
             const r = chunk[idx]
             if (r.validated.guardianName && r.validated.guardianEmail) {
               try {
-                await this.createGuardianLink(
+                const guardianCred = await this.createGuardianLink(
                   schoolId,
                   userIds[idx],
                   r.validated.guardianName,
                   r.validated.guardianEmail,
                   r.validated.guardianPhone,
-                  detectedLang
+                  detectedLang,
+                  takenUsernames
                 )
+                if (guardianCred) {
+                  result.credentials?.push({
+                    row: r.rowNumber,
+                    ...guardianCred,
+                  })
+                }
               } catch {
                 // Guardian creation failure shouldn't fail the student import
                 result.warnings?.push({
@@ -651,24 +692,50 @@ class CsvImportService {
     guardianName: string,
     guardianEmail: string,
     guardianPhone?: string,
-    lang: "ar" | "en" = "ar"
-  ) {
+    lang: "ar" | "en" = "ar",
+    takenUsernames?: Set<string>
+  ): Promise<{
+    name: string
+    username: string
+    email: string | null
+    role: string
+    password: string
+  } | null> {
     // Find the student record by userId
     const student = await db.student.findFirst({
       where: { userId: studentUserId, schoolId },
     })
-    if (!student) return
+    if (!student) return null
 
     // Check if guardian already exists
     let guardian = await db.guardian.findFirst({
       where: { schoolId, user: { email: guardianEmail } },
     })
 
+    let createdCred: {
+      name: string
+      username: string
+      email: string | null
+      role: string
+      password: string
+    } | null = null
+
     if (!guardian) {
-      const guardianPassword = await hash("parent123", this.BCRYPT_ROUNDS)
+      // Login-valid unique username + crypto-random temp password (the shared
+      // static "parent123" let anyone log into every imported guardian).
+      const guardianUsername = makeUniqueUsername(
+        guardianName,
+        takenUsernames ?? new Set<string>(),
+        "g"
+      )
+      const plainGuardianPassword = generateTempPassword()
+      const guardianPassword = await hash(
+        plainGuardianPassword,
+        this.BCRYPT_ROUNDS
+      )
       const guardianUser = await db.user.create({
         data: {
-          username: guardianName,
+          username: guardianUsername,
           email: guardianEmail,
           password: guardianPassword,
           role: "GUARDIAN",
@@ -676,6 +743,13 @@ class CsvImportService {
           mustChangePassword: true,
         },
       })
+      createdCred = {
+        name: guardianName,
+        username: guardianUsername,
+        email: guardianEmail,
+        role: "GUARDIAN",
+        password: plainGuardianPassword,
+      }
 
       const parts = guardianName.trim().split(/\s+/)
       guardian = await db.guardian.create({
@@ -720,6 +794,8 @@ class CsvImportService {
         isPrimary: true,
       },
     })
+
+    return createdCred
   }
 
   /**
@@ -736,6 +812,7 @@ class CsvImportService {
       skipped: 0,
       errors: [],
       warnings: [],
+      credentials: [],
     }
 
     try {
@@ -860,15 +937,33 @@ class CsvImportService {
       })
       const deptMap = new Map(departments.map((d) => [d.departmentName, d.id]))
 
+      // Existing usernames in this school — keep generated handles unique
+      // (no DB unique on username, so a collision makes login ambiguous).
+      const existingUsernameRows = await db.user.findMany({
+        where: { schoolId, username: { not: null } },
+        select: { username: true },
+      })
+      const takenUsernames = new Set<string>(
+        existingUsernameRows.map((u) => u.username!).filter(Boolean)
+      )
+
       // Phase 2: Process in chunks
       for (let c = 0; c < validRows.length; c += this.CHUNK_SIZE) {
         const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
 
-        // Parallel bcrypt hashing
-        const hashes = await Promise.all(
-          chunk.map((r) =>
-            hash(`teacher${r.validated.employeeId}`, this.BCRYPT_ROUNDS)
+        // Login-valid, unique usernames (a CSV "name" has spaces / Arabic that
+        // the login schema rejects — such teachers previously could not sign in
+        // at all) + crypto-random temp passwords (never derived from employeeId).
+        const usernames = chunk.map((r) =>
+          makeUniqueUsername(
+            r.validated.employeeId || r.validated.name,
+            takenUsernames,
+            "t"
           )
+        )
+        const plains = chunk.map(() => generateTempPassword())
+        const hashes = await Promise.all(
+          plains.map((p) => hash(p, this.BCRYPT_ROUNDS))
         )
 
         const userIds = chunk.map(() => crypto.randomUUID())
@@ -880,7 +975,7 @@ class CsvImportService {
             await tx.user.createMany({
               data: chunk.map((r, idx) => ({
                 id: userIds[idx],
-                username: r.validated.name,
+                username: usernames[idx],
                 email: r.validated.email,
                 // Bulk import: admin vouches for these teachers, so skip the
                 // login email-verification gate.
@@ -973,6 +1068,18 @@ class CsvImportService {
           })
 
           result.imported += chunk.length
+
+          for (let idx = 0; idx < chunk.length; idx++) {
+            const r = chunk[idx]
+            result.credentials?.push({
+              row: r.rowNumber,
+              name: r.validated.name,
+              username: usernames[idx],
+              email: r.validated.email ?? null,
+              role: "TEACHER",
+              password: plains[idx],
+            })
+          }
         } catch (error) {
           for (const r of chunk) {
             result.errors.push({
@@ -1066,10 +1173,20 @@ class CsvImportService {
       skipped: 0,
       errors: [],
       warnings: [],
+      credentials: [],
     }
 
     try {
       const rows = this.parseCSV(csvContent)
+
+      // Existing usernames in this school — keep generated handles unique.
+      const existingUsernameRows = await db.user.findMany({
+        where: { schoolId, username: { not: null } },
+        select: { username: true },
+      })
+      const takenUsernames = new Set<string>(
+        existingUsernameRows.map((u) => u.username!).filter(Boolean)
+      )
 
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2
@@ -1127,14 +1244,19 @@ class CsvImportService {
             }
           }
 
-          // Create user account
-          const defaultPassword = await hash(
-            `staff${validated.employeeId || validated.emailAddress}`,
-            10
+          // Create user account — login-valid unique username + crypto-random
+          // temp password (the old `staff<employeeId>` value was guessable).
+          const staffUsername = makeUniqueUsername(
+            validated.employeeId ||
+              `${validated.firstName} ${validated.lastName}`,
+            takenUsernames,
+            "s"
           )
+          const staffPassword = generateTempPassword()
+          const defaultPassword = await hash(staffPassword, this.BCRYPT_ROUNDS)
           const user = await db.user.create({
             data: {
-              username: `${validated.firstName} ${validated.lastName}`,
+              username: staffUsername,
               email: validated.emailAddress,
               password: defaultPassword,
               role: "STAFF",
@@ -1183,6 +1305,15 @@ class CsvImportService {
           }
 
           result.imported++
+
+          result.credentials?.push({
+            row: rowNumber,
+            name: `${validated.firstName} ${validated.lastName}`.trim(),
+            username: staffUsername,
+            email: validated.emailAddress ?? null,
+            role: "STAFF",
+            password: staffPassword,
+          })
 
           logger.info("Staff member imported successfully", {
             action: "staff_import",
@@ -1238,6 +1369,7 @@ class CsvImportService {
       skipped: 0,
       errors: [],
       warnings: [],
+      credentials: [],
     }
 
     try {
@@ -1251,6 +1383,15 @@ class CsvImportService {
       const detectedLang = sampleNames.length
         ? detectLang(sampleNames.join(" "))
         : ("ar" as const)
+
+      // Existing usernames in this school — keep generated handles unique.
+      const existingUsernameRows = await db.user.findMany({
+        where: { schoolId, username: { not: null } },
+        select: { username: true },
+      })
+      const takenUsernames = new Set<string>(
+        existingUsernameRows.map((u) => u.username!).filter(Boolean)
+      )
 
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2
@@ -1297,11 +1438,22 @@ class CsvImportService {
 
           // Create user account. Guardians without an email log in with
           // username + password — don't fabricate a `@school.local` address
-          // that nobody can verify.
-          const defaultPassword = await hash("parent123", 10)
+          // that nobody can verify. Login-valid unique username + crypto-random
+          // temp password (the shared static "parent123" let anyone log into
+          // every imported guardian account).
+          const guardianUsername = makeUniqueUsername(
+            `${validated.firstName} ${validated.lastName}`,
+            takenUsernames,
+            "g"
+          )
+          const guardianPassword = generateTempPassword()
+          const defaultPassword = await hash(
+            guardianPassword,
+            this.BCRYPT_ROUNDS
+          )
           const user = await db.user.create({
             data: {
-              username: `${validated.firstName} ${validated.lastName}`,
+              username: guardianUsername,
               email: validated.emailAddress ?? null,
               emailVerified: new Date(),
               password: defaultPassword,
@@ -1371,6 +1523,15 @@ class CsvImportService {
           }
 
           result.imported++
+
+          result.credentials?.push({
+            row: rowNumber,
+            name: `${validated.firstName} ${validated.lastName}`.trim(),
+            username: guardianUsername,
+            email: validated.emailAddress ?? null,
+            role: "GUARDIAN",
+            password: guardianPassword,
+          })
 
           logger.info("Guardian imported successfully", {
             action: "guardian_import",

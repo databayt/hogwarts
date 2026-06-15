@@ -63,6 +63,14 @@ last_audited: 2026-05-25
 
 ## Resolved Issues
 
+- [x] **Credential generation + password reset hardening (2026-06-15)** — shared crypto-secure mint in `@/lib/credentials` (`generateTempPassword`/`mintTempPassword`/`sanitizeUsername`/`makeUniqueUsername`/`hashToken`) now backs every path:
+  - Student/CSV/member temp passwords are crypto-random (was `Math.random()` for students, and **guessable/static** for bulk import: `student<id>`, `teacher<id>`, shared `parent123`). `mustChangePassword` unchanged.
+  - CSV-imported teachers/staff/guardians now get login-valid usernames (names with spaces/Arabic were rejected by the login schema → those users couldn't sign in). Bulk import returns a downloadable credentials sheet (`bulk/content.tsx` key icon).
+  - **Web reset no longer enumerates users** (`reset/action.ts` always returns a neutral success), is IP rate-limited (`RATE_LIMITS.AUTH`), threads `lang` (was always English), and is fully i18n'd via dictionary keys (removed hardcoded strings incl. the `"Invalid emaiL!"` typo).
+  - Reset tokens are **stored hashed** (sha256); the raw token only travels in the email. Verification code uses `crypto.randomInt`.
+  - Mobile reset: IP rate-limited (OTP was brute-forceable), prod email delivery wired (`sendPasswordResetCodeEmail`), clears `mustChangePassword`.
+  - Credential parity for **non-students**: `membership/resetMemberPassword` mints + delivers a temp password for teachers/staff/guardians/accountants.
+  - Deleted dead pbkdf2 `auth/password.ts` (bcrypt is the only login scheme). No DB migration (reset token reuses its `String` column; existing in-flight reset links invalidate — expire in 1h).
 - [x] Prisma client initialization error on Vercel (added `binaryTargets`)
 - [x] Facebook OAuth 500 error (fixed callback URLs and error handling)
 - [x] Conflicting Facebook credentials (environment validation added)

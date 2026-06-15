@@ -82,6 +82,7 @@ import { z } from "zod"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { withArchiveScope } from "@/lib/archive-scope"
+import { mintTempPassword } from "@/lib/credentials"
 import { deliverStudentCredentials } from "@/lib/credentials-delivery"
 import { db } from "@/lib/db"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
@@ -2482,16 +2483,19 @@ type StudentContext = {
   applicationId: string | null
 }
 
-/** Build a memorable plaintext password: first 3 chars of name + 4 random digits. */
-async function mintPlainPassword(
-  firstName: string | null | undefined
-): Promise<{ plain: string; hashed: string }> {
-  const { hash } = await import("bcryptjs")
-  const namePrefix = (firstName || "std").slice(0, 3).toLowerCase()
-  const randomDigits = Math.floor(1000 + Math.random() * 9000).toString()
-  const plain = `${namePrefix}${randomDigits}`
-  const hashed = await hash(plain, 10)
-  return { plain, hashed }
+/**
+ * Mint a fresh temp password for a student User. Delegates to the shared
+ * crypto-secure generator (`@/lib/credentials`) — the previous
+ * name-prefix + 4-digit `Math.random()` scheme was only ~13 bits and the
+ * name prefix is public, so a temp password could be guessed before the
+ * student first logged in (and `mustChangePassword` means whoever logs in
+ * first wins). Kept as a thin wrapper so the two call sites stay readable.
+ */
+async function mintPlainPassword(): Promise<{
+  plain: string
+  hashed: string
+}> {
+  return mintTempPassword()
 }
 
 async function loadStudentForCredentials(
@@ -2617,7 +2621,7 @@ export async function getStudentCredentials(input: {
     // if the student record carries a real one (self-onboarded or CSV import
     // with email column); otherwise leave User.email null so login isn't
     // gated by unverifiable fake addresses.
-    const { plain, hashed } = await mintPlainPassword(student.firstName)
+    const { plain, hashed } = await mintPlainPassword()
     const email = student.email ?? null
 
     const newUser = await db.user.create({
@@ -2716,7 +2720,7 @@ export async function resetStudentPassword(input: {
 
     const studentCode = await ensureStudentCode(student, schoolId)
     const isSelfOnboarded = deriveIsSelfOnboarded(student)
-    const { plain, hashed } = await mintPlainPassword(student.firstName)
+    const { plain, hashed } = await mintPlainPassword()
 
     await db.user.update({
       where: { id: student.userId },

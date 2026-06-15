@@ -4,6 +4,7 @@
 import crypto from "crypto"
 import { v4 as uuidv4 } from "uuid"
 
+import { hashToken } from "@/lib/credentials"
 import { db } from "@/lib/db"
 import { getPasswordResetTokenByEmail } from "@/components/auth/password/token"
 import { getTwoFactorTokenByEmail } from "@/components/auth/verification/2f-token"
@@ -35,7 +36,10 @@ export const generateTwoFactorToken = async (email: string) => {
 }
 
 export const generatePasswordResetToken = async (email: string) => {
-  const token = uuidv4()
+  // Raw token travels in the email link; only its SHA-256 hash is persisted,
+  // so a DB read can't replay a live reset token. Lookup hashes the incoming
+  // token the same way (see password/token.ts).
+  const rawToken = uuidv4()
   const expires = new Date(new Date().getTime() + 3600 * 1000)
 
   const existingToken = await getPasswordResetTokenByEmail(email)
@@ -46,20 +50,20 @@ export const generatePasswordResetToken = async (email: string) => {
     })
   }
 
-  const passwordResetToken = await db.passwordResetToken.create({
+  await db.passwordResetToken.create({
     data: {
       email,
-      token,
+      token: hashToken(rawToken),
       expires,
     },
   })
 
-  return passwordResetToken
+  return { email, token: rawToken, expires }
 }
 
 export const generateVerificationToken = async (email: string) => {
   const token = uuidv4()
-  const code = Math.floor(1000 + Math.random() * 9000).toString()
+  const code = crypto.randomInt(1000, 10000).toString()
   const expires = new Date(new Date().getTime() + 24 * 3600 * 1000)
 
   const existingToken = await getVerificationTokenByEmail(email)
