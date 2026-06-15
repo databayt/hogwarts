@@ -531,7 +531,15 @@
     "resendCode": "Resend code",
     "resendIn": "Resend in",
     "wrongEmail": "Wrong email?",
-    "canReturnToOriginalTab": "You can return to your original tab — it will detect verification automatically."
+    "canReturnToOriginalTab": "You can return to your original tab — it will detect verification automatically.",
+    "resetLinkSent": "If an account exists for that email, we've sent a password reset link.",
+    "tooManyRequests": "Too many requests. Please try again in a minute.",
+    "invalidEmail": "Please enter a valid email address.",
+    "passwordUpdated": "Password updated! You can now sign in.",
+    "invalidToken": "This reset link is invalid.",
+    "tokenExpired": "This reset link has expired. Please request a new one.",
+    "missingToken": "Missing reset token.",
+    "invalidPassword": "Password must be at least 6 characters."
   },
   "marketing": {
     "phoneMockup": {

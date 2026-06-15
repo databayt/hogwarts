@@ -7364,7 +7364,124 @@
         "pinned": "المثبتة",
         "customizePins": "تخصيص المثبتات",
         "public": "عام",
-        "private": "خاص"
+        "private": "خاص",
+        "noPins": "لم تقم بتثبيت أي عنصر بعد.",
+        "removePin": "إزالة",
+        "reorder": "إعادة ترتيب",
+        "contributionsTitle": "النشاط في {year}",
+        "contributionActivity": "النشاط",
+        "noActivityYet": "لا يوجد نشاط مسجّل بعد.",
+        "less": "أقل",
+        "more": "أكثر"
+      },
+      "errors": {
+        "error": "خطأ",
+        "failedToLoad": "تعذّر تحميل الملف الشخصي.",
+        "notAuthenticated": "يجب تسجيل الدخول لعرض هذا الملف الشخصي.",
+        "missingSchool": "لا يوجد سياق مدرسة.",
+        "notFound": "الملف الشخصي غير موجود.",
+        "goBack": "العودة"
+      },
+      "roles": {
+        "student": "طالب",
+        "teacher": "معلّم",
+        "parent": "ولي أمر",
+        "staff": "موظف"
+      },
+      "tabs": {
+        "overview": "نظرة عامة",
+        "subjects": "المواد",
+        "achievements": "الإنجازات",
+        "classes": "الفصول",
+        "children": "الأبناء"
+      },
+      "stats": {
+        "subjects": "مادة",
+        "classmates": "زميل",
+        "classes": "فصل",
+        "students": "طالب",
+        "children": "ابن"
+      },
+      "orgRoles": {
+        "member": "عضو",
+        "president": "رئيس",
+        "secretary": "أمين",
+        "coordinator": "منسّق"
+      },
+      "graph": {
+        "activities": "نشاط",
+        "interactions": "تفاعل",
+        "tasks": "مهمة",
+        "no": "لا يوجد",
+        "loadError": "تعذّر تحميل بيانات النشاط.",
+        "heatmapLabel": "نشاط المساهمات لعام {year}"
+      },
+      "form": {
+        "name": "الاسم",
+        "namePlaceholder": "الاسم",
+        "bio": "نبذة",
+        "bioPlaceholder": "أخبرنا عن نفسك",
+        "bioHint": "وصف موجز يظهر في ملفك الشخصي.",
+        "pronouns": "الضمائر",
+        "dontSpecify": "عدم التحديد",
+        "custom": "مخصص",
+        "customPronouns": "ضمائر مخصصة",
+        "company": "الحالة",
+        "companyPlaceholder": "ماذا يحدث؟",
+        "displayLocalTime": "عرض التوقيت المحلي الحالي",
+        "selectTimezone": "اختر المنطقة الزمنية",
+        "email": "البريد الإلكتروني",
+        "website": "الموقع الإلكتروني",
+        "websitePlaceholder": "https://example.com",
+        "socialAccounts": "حسابات التواصل",
+        "changePhoto": "تغيير الصورة",
+        "uploading": "جارٍ الرفع…",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ…",
+        "cancel": "إلغاء",
+        "failedToSave": "فشل الحفظ.",
+        "errors": {
+          "validation": "يرجى التحقق من النموذج والمحاولة مرة أخرى.",
+          "auth": "يجب تسجيل الدخول.",
+          "save": "فشل الحفظ. يرجى المحاولة مرة أخرى.",
+          "upload": "فشل الرفع. يرجى المحاولة مرة أخرى.",
+          "fileType": "نوع الصورة غير مدعوم."
+        }
+      },
+      "editRole": {
+        "contactInformation": "معلومات الاتصال",
+        "contactAndEmergency": "الاتصال والطوارئ",
+        "personalInformation": "المعلومات الشخصية",
+        "qualifications": "المؤهلات",
+        "experience": "الخبرة",
+        "save": "حفظ",
+        "cancel": "إلغاء"
+      },
+      "student": {
+        "editTitle": "تعديل معلوماتك",
+        "editDescription": "حدّث بيانات الاتصال وجهات الاتصال في الطوارئ.",
+        "subjects": "المواد",
+        "subjectsDescription": "المواد المسجّل بها.",
+        "noSubjects": "لا توجد مواد بعد."
+      },
+      "teacher": {
+        "editTitle": "تعديل معلوماتك",
+        "editDescription": "حدّث بيانات الاتصال والمؤهلات والخبرة.",
+        "classes": "الفصول",
+        "students": "الطلاب",
+        "myClasses": "فصولي",
+        "myClassesDescription": "الفصول التي تدرّسها.",
+        "noClasses": "لا توجد فصول مسندة بعد."
+      },
+      "parent": {
+        "children": "الأبناء",
+        "childrenDescription": "أبناؤك في هذه المدرسة.",
+        "noChildren": "لا يوجد أبناء مرتبطون بعد."
+      },
+      "staff": {
+        "organizations": "المنظمات",
+        "organizationsDescription": "المجموعات التي تنتمي إليها.",
+        "noOrganizations": "لا توجد منظمات بعد."
       }
     },
     "onboarding": {
