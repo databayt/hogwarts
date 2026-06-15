@@ -4,32 +4,42 @@
 /**
  * CDN asset URL resolver.
  *
- * Maps asset paths to CloudFront CDN URLs.
- * Uses NEXT_PUBLIC_CDN_DOMAIN so it works in both server and client components.
+ * Maps hogwarts asset paths to the unified asset CDN
+ * (cdn.databayt.org). Uses NEXT_PUBLIC_CDN_DOMAIN so it works in both server and
+ * client components.
  *
- * S3 directory structure (all flat, no nesting):
+ * Layout: ungrouped hogwarts assets live under the `hogwarts/` namespace
+ * (cdn.databayt.org/hogwarts/…), mirroring this app's `public/` tree:
  *   /icons/          - Small, simple, functional (SVG or PNG)
  *   /illustrations/  - Art, decorative, complex
  *   /animations/     - Lottie JSON files
  *   /media/          - Video and audio
  *   /photos/         - Real photographs
+ * As assets get fine-grouped into their own namespaces (anthropic/, fill/, …),
+ * their call sites move to a full CDN URL; everything else defaults here.
  */
 
 const CDN = process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim()
   ? `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN.trim()}`
   : ""
 
+/** The default namespace for not-yet-grouped hogwarts assets. */
+const NS = "/hogwarts"
+
 /**
- * Resolve an asset path to its CDN URL.
+ * Resolve an asset path to its CDN URL, FLAT under the hogwarts/ namespace.
+ * Only the file name is used — any source subdir (/icons, /illustrations, …) is
+ * dropped, since ungrouped assets live flat at cdn.databayt.org/hogwarts/<file>
+ * until they're fine-grouped into a dedicated namespace.
  *
  * @example
- * asset("/icons/logo.png")
- * asset("/illustrations/hands-build.svg")
- * asset("/photos/abdout.jpg")
- * asset("/animations/confetti.json")
- * asset("/media/story.mp4")
+ * asset("/icons/logo.png")      // → https://cdn.databayt.org/hogwarts/logo.png
+ * asset("/illustrations/x.svg") // → https://cdn.databayt.org/hogwarts/x.svg
+ *
+ * An absolute URL is returned untouched (already-grouped, full CDN URL).
  */
 export function asset(path: string): string {
-  const clean = path.startsWith("/") ? path : `/${path}`
-  return `${CDN}${clean}`
+  if (/^https?:\/\//.test(path)) return path
+  const file = path.split("/").filter(Boolean).pop() ?? ""
+  return `${CDN}${NS}/${file}`
 }
