@@ -25,6 +25,7 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   GridCard,
   GridContainer,
@@ -34,6 +35,7 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import { deleteParent, getParents, getParentsCSV } from "./actions"
 import { getParentColumns, type ParentRow } from "./columns"
 import { LinkChildDialog } from "./link-child-dialog"
@@ -57,6 +59,16 @@ function ParentsTableInner({
   permissions = FULL_UI_PERMISSIONS,
 }: ParentsTableProps) {
   const router = useRouter()
+  const { dictionary: fullDict } = useDictionary()
+  const credentialsLabels = (fullDict?.school?.students as any)?.credentials as
+    | Record<string, string>
+    | undefined
+  const handleGenerateCredentials = useCallback(
+    (parentId: string, parentName: string, badge?: string) => {
+      openCredentialsDialog("guardian", parentId, parentName, badge)
+    },
+    []
+  )
 
   // Translations with fallbacks
   const t = {
@@ -155,9 +167,10 @@ function ParentsTableInner({
     () =>
       getParentColumns(dictionary, lang, {
         onDelete: handleDelete,
+        onGenerateCredentials: handleGenerateCredentials,
         permissions,
       }),
-    [dictionary, lang, handleDelete, permissions]
+    [dictionary, lang, handleDelete, handleGenerateCredentials, permissions]
   )
 
   // Table instance
@@ -335,6 +348,11 @@ function ParentsTableInner({
           )}
         </>
       )}
+
+      <CredentialsDialog
+        labels={credentialsLabels}
+        onClosed={() => refresh()}
+      />
 
       <LinkChildDialog
         open={linkChildOpen}

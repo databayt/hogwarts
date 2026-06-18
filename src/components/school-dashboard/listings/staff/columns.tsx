@@ -30,6 +30,11 @@ export type StaffColumnActions = {
   onView?: (staff: StaffRow) => void
   onEdit?: (staff: StaffRow) => void
   onDelete?: (staff: StaffRow) => void
+  onGenerateCredentials?: (
+    staffId: string,
+    staffName: string,
+    badge?: string
+  ) => void
   permissions?: UIPermissions
 }
 
@@ -58,6 +63,7 @@ export function getStaffColumns(
     selectAll: col?.selectAll || "Select all",
     selectRow: col?.selectRow || "Select row",
     openMenu: col?.openMenu || "Open menu",
+    generateCredentials: col?.generateCredentials || "Generate Credentials",
   }
 
   const statusLabels = getStatusLabels(staffDict)
@@ -202,6 +208,20 @@ export function getStaffColumns(
             {actions?.onEdit && permissions.showEditAction && (
               <DropdownMenuItem onClick={() => actions.onEdit?.(staff)}>
                 {t.edit}
+              </DropdownMenuItem>
+            )}
+            {actions?.onGenerateCredentials && permissions.showAddButton && (
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  actions.onGenerateCredentials?.(
+                    staff.id,
+                    staff.name,
+                    staff.position || undefined
+                  )
+                }}
+              >
+                {t.generateCredentials}
               </DropdownMenuItem>
             )}
             {actions?.onDelete && permissions.showDeleteAction && (

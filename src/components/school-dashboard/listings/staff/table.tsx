@@ -14,6 +14,7 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import { deleteStaff } from "./actions"
 import { getStaffColumns } from "./columns"
 import { formatStaffName } from "./queries"
@@ -37,6 +38,8 @@ export function StaffTable({
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.staffListing as Record<string, any> | undefined
   const tbl = d?.table as Record<string, string> | undefined
+  const credentialsLabels = (dictionary?.school?.students as any)
+    ?.credentials as Record<string, string> | undefined
 
   const columns = React.useMemo(
     () =>
@@ -59,6 +62,8 @@ export function StaffTable({
               await deleteStaff(staff.id)
             }
           },
+          onGenerateCredentials: (id, name, badge) =>
+            openCredentialsDialog("staff", id, name, badge),
           permissions,
         },
         locale,
@@ -74,7 +79,15 @@ export function StaffTable({
     enableRowSelection: true,
   })
 
-  return <DataTable table={table} />
+  return (
+    <>
+      <DataTable table={table} />
+      <CredentialsDialog
+        labels={credentialsLabels}
+        onClosed={() => router.refresh()}
+      />
+    </>
+  )
 }
 
 // Transform database row to table row

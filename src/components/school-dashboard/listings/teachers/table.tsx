@@ -23,6 +23,7 @@ import {
 } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   GridCard,
   GridContainer,
@@ -32,6 +33,7 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import {
   deleteTeacher,
   getTeachers,
@@ -59,6 +61,16 @@ function TeachersTableInner({
   permissions = FULL_UI_PERMISSIONS,
 }: TeachersTableProps) {
   const router = useRouter()
+  const { dictionary: fullDict } = useDictionary()
+  const credentialsLabels = (fullDict?.school?.students as any)?.credentials as
+    | Record<string, string>
+    | undefined
+  const handleGenerateCredentials = useCallback(
+    (teacherId: string, teacherName: string, badge?: string) => {
+      openCredentialsDialog("teacher", teacherId, teacherName, badge)
+    },
+    []
+  )
   // Translations with fallbacks
   const t = {
     fullName: dictionary?.fullName || "Name",
@@ -265,6 +277,7 @@ function TeachersTableInner({
         onEdit: handleEdit,
         onDelete: handleDelete,
         onToggleStatus: handleToggleStatus,
+        onGenerateCredentials: handleGenerateCredentials,
         permissions,
       }),
     [
@@ -273,6 +286,7 @@ function TeachersTableInner({
       handleEdit,
       handleDelete,
       handleToggleStatus,
+      handleGenerateCredentials,
       permissions,
     ]
   )
@@ -440,6 +454,11 @@ function TeachersTableInner({
           )}
         </>
       )}
+
+      <CredentialsDialog
+        labels={credentialsLabels}
+        onClosed={() => refresh()}
+      />
     </>
   )
 }

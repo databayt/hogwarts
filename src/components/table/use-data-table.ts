@@ -94,6 +94,8 @@ interface UseDataTableProps<TData>
   enableAdvancedFilter?: boolean
   /** Enable client-side column filtering (default: false, uses server-side) */
   enableClientFiltering?: boolean
+  /** Enable client-side column sorting of loaded rows (default: false, uses server-side) */
+  enableClientSorting?: boolean
   scroll?: boolean
   shallow?: boolean
   startTransition?: React.TransitionStartFunction
@@ -110,6 +112,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     clearOnDefault = false,
     enableAdvancedFilter = false,
     enableClientFiltering = false,
+    enableClientSorting = false,
     scroll = false,
     shallow = true,
     startTransition,
@@ -326,7 +329,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     manualPagination: true,
-    manualSorting: true,
+    manualSorting: !enableClientSorting,
     manualFiltering: !enableClientFiltering,
   })
 

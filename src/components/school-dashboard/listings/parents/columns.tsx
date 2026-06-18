@@ -29,6 +29,11 @@ export type ParentRow = {
 
 export interface ParentColumnCallbacks {
   onDelete?: (row: ParentRow) => void
+  onGenerateCredentials?: (
+    parentId: string,
+    parentName: string,
+    badge?: string
+  ) => void
   permissions?: UIPermissions
 }
 
@@ -49,6 +54,8 @@ export const getParentColumns = (
     delete: dictionary?.delete || "Delete",
     active: dictionary?.active || "Active",
     inactive: dictionary?.inactive || "Inactive",
+    generateCredentials:
+      (dictionary as any)?.generateCredentials || "Generate Credentials",
   }
 
   return [
@@ -121,6 +128,18 @@ export const getParentColumns = (
             />
             {permissions.showEditAction && (
               <ActionMenuItem label={t.edit} onClick={onEdit} />
+            )}
+            {permissions.showAddButton && callbacks?.onGenerateCredentials && (
+              <ActionMenuItem
+                label={t.generateCredentials}
+                onClick={() =>
+                  callbacks.onGenerateCredentials?.(
+                    parent.id,
+                    parent.name,
+                    dictionary?.guardian || "Guardian"
+                  )
+                }
+              />
             )}
             {permissions.showDeleteAction && (
               <ActionMenuItem label={t.delete} onClick={onDelete} />

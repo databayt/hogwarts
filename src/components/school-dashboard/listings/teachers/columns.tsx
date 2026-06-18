@@ -49,6 +49,11 @@ export interface TeacherColumnCallbacks {
   onEdit?: (row: TeacherRow) => void
   onDelete?: (row: TeacherRow) => void
   onToggleStatus?: (row: TeacherRow) => void
+  onGenerateCredentials?: (
+    teacherId: string,
+    teacherName: string,
+    badge?: string
+  ) => void
   permissions?: UIPermissions
 }
 
@@ -87,6 +92,8 @@ export const getTeacherColumns = (
     noDepartment: dictionary?.noDepartment || "Unassigned",
     incomplete: (dictionary as any)?.incomplete || "Incomplete",
     completeProfile: (dictionary as any)?.completeProfile || "Complete Profile",
+    generateCredentials:
+      (dictionary as any)?.generateCredentials || "Generate Credentials",
   }
 
   const getInitials = (name: string) => {
@@ -374,6 +381,22 @@ export const getTeacherColumns = (
                   {t.edit}
                 </DropdownMenuItem>
               ))}
+
+            {permissions.showAddButton && callbacks?.onGenerateCredentials && (
+              <DropdownMenuItem
+                className="text-foreground/70"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  callbacks.onGenerateCredentials?.(
+                    teacher.id,
+                    teacher.name,
+                    teacher.department ?? undefined
+                  )
+                }}
+              >
+                {t.generateCredentials}
+              </DropdownMenuItem>
+            )}
 
             {permissions.showToggleStatus && (
               <>
