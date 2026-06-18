@@ -45,20 +45,16 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   typing: "Typing...",
   send: "Send",
   retry: "Retry",
-  chooseQuestion: "Choose a question or type your message",
+  chooseQuestion: "A great journey is about to begin.",
   sendMessage: "Send message",
   voiceInput: "Voice input",
   speechNotSupported: "Speech recognition is not supported in your browser.",
   speechError: "Speech recognition error. Please try again.",
-  ttsEnabled: "Text-to-speech enabled",
-  ttsDisabled: "Text-to-speech disabled",
   listening: "Listening...",
 
   // Welcomes
-  welcomeSaas:
-    "Hi! I'm the Databayt assistant — ask about features, pricing, or how to get started.",
-  welcomeSchoolTemplate:
-    "Hi! I'm the {name} assistant — ask about admissions, fees, scholarships, or events.",
+  welcomeSaas: "Welcome to Hogwarts.",
+  welcomeSchoolTemplate: "Hi! I'm the {name} assistant",
 
   // CTA chip labels
   ctaTryFree: "Try free",

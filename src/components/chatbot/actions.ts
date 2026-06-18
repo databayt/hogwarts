@@ -230,10 +230,20 @@ export async function sendMessage(
 
     const groq = createGroq({ apiKey })
 
+    // Keep only the most recent turns. The system prompt already carries the
+    // full knowledge base (live pricing, features, or school data), so older
+    // small-talk adds little — trimming keeps the model on-task and bounds
+    // latency/cost.
+    const recentMessages = messages.slice(-10)
+
     const result = await generateText({
       model: groq("llama-3.1-8b-instant"),
-      messages,
+      messages: recentMessages,
       system: systemPrompt,
+      // Low temperature → factual, on-script answers (never invent prices).
+      temperature: 0.3,
+      // Caps replies at ~2–3 sentences or a short list — tight and snappy.
+      maxOutputTokens: 400,
     })
 
     return {

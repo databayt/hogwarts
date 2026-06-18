@@ -11,16 +11,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { CHAT_WINDOW_POSITIONS, CHAT_WINDOW_SIZE } from "./constant"
-import {
-  InfoIcon,
-  PriceIcon,
-  SendIcon,
-  ServicesIcon,
-  TimeIcon,
-  VoiceIcon,
-  VolumeIcon,
-  VolumeOffIcon,
-} from "./icons"
+import { InfoIcon, PriceIcon, SendIcon, ServicesIcon, TimeIcon } from "./icons"
 import type { ChatWindowProps, CtaChip } from "./type"
 
 export const ChatWindow = memo(function ChatWindow({
@@ -36,17 +27,11 @@ export const ChatWindow = memo(function ChatWindow({
   schoolContext,
 }: ChatWindowProps) {
   const [input, setInput] = useState("")
-  const [isListening, setIsListening] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
-  const [transcript, setTranscript] = useState("")
-  const [ttsEnabled, setTtsEnabled] = useState(false)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const chatWindowRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null)
-  const prevMessagesLengthRef = useRef(messages.length)
   const isRTL = locale === "ar"
 
   const quickAskButtons = useMemo(() => {
@@ -188,109 +173,6 @@ export const ChatWindow = memo(function ChatWindow({
         : schoolContext.schoolName
       : "AI"
 
-  // Initialize SpeechRecognition once, re-init on locale change
-  useEffect(() => {
-    if (
-      !("webkitSpeechRecognition" in window) &&
-      !("SpeechRecognition" in window)
-    ) {
-      return
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognition =
-      (window as unknown as any).webkitSpeechRecognition ||
-      (window as unknown as any).SpeechRecognition
-    const recognition = new SpeechRecognition()
-
-    recognition.lang = locale === "ar" ? "ar-SA" : "en-US"
-    recognition.interimResults = true
-    recognition.continuous = false
-    recognition.maxAlternatives = 1
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
-      let interimTranscript = ""
-      let finalTranscript = ""
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i]
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript
-        } else {
-          interimTranscript += result[0].transcript
-        }
-      }
-
-      if (finalTranscript) {
-        setTranscript("")
-        setIsListening(false)
-        onSendMessage(finalTranscript.trim())
-      } else if (interimTranscript) {
-        setTranscript(interimTranscript)
-      }
-    }
-
-    recognition.onerror = () => {
-      setIsListening(false)
-      setTranscript("")
-    }
-
-    recognition.onend = () => {
-      setIsListening(false)
-      setTranscript("")
-    }
-
-    recognitionRef.current = recognition
-
-    return () => {
-      try {
-        recognition.stop()
-      } catch {
-        // ignore if not started
-      }
-      recognitionRef.current = null
-    }
-  }, [locale, onSendMessage])
-
-  // Speak new assistant messages when TTS is enabled
-  useEffect(() => {
-    if (
-      !ttsEnabled ||
-      messages.length <= prevMessagesLengthRef.current ||
-      !("speechSynthesis" in window)
-    ) {
-      prevMessagesLengthRef.current = messages.length
-      return
-    }
-
-    const lastMessage = messages[messages.length - 1]
-    if (lastMessage?.role === "assistant" && lastMessage.content) {
-      const utterance = new SpeechSynthesisUtterance(lastMessage.content)
-      utterance.lang = locale === "ar" ? "ar-SA" : "en-US"
-
-      // Try to find a matching voice
-      const voices = window.speechSynthesis.getVoices()
-      const langPrefix = locale === "ar" ? "ar" : "en"
-      const matchingVoice = voices.find((v) => v.lang.startsWith(langPrefix))
-      if (matchingVoice) {
-        utterance.voice = matchingVoice
-      }
-
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(utterance)
-    }
-
-    prevMessagesLengthRef.current = messages.length
-  }, [messages, ttsEnabled, locale])
-
-  // Cancel TTS when disabled
-  useEffect(() => {
-    if (!ttsEnabled && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel()
-    }
-  }, [ttsEnabled])
-
   // Auto focus input when chat opens on desktop
   useEffect(() => {
     if (isOpen && !isMobile && inputRef.current) {
@@ -311,7 +193,7 @@ export const ChatWindow = memo(function ChatWindow({
   useEffect(() => {
     if (!isMobile) return
 
-    let initialViewportHeight =
+    const initialViewportHeight =
       window.visualViewport?.height || window.innerHeight
 
     const handleViewportChange = () => {
@@ -402,38 +284,6 @@ export const ChatWindow = memo(function ChatWindow({
     [input, isLoading, onSendMessage]
   )
 
-  const handleVoiceInput = useCallback(() => {
-    if (!recognitionRef.current) {
-      alert(dictionary.speechNotSupported)
-      return
-    }
-
-    if (isLoading) return
-
-    if (isListening) {
-      try {
-        recognitionRef.current.stop()
-      } catch {
-        // ignore
-      }
-      setIsListening(false)
-      setTranscript("")
-      return
-    }
-
-    try {
-      recognitionRef.current.start()
-      setIsListening(true)
-    } catch {
-      setIsListening(false)
-      setTranscript("")
-    }
-  }, [isListening, isLoading, dictionary.speechNotSupported])
-
-  const handleTtsToggle = useCallback(() => {
-    setTtsEnabled((prev) => !prev)
-  }, [])
-
   return (
     <div
       ref={chatWindowRef}
@@ -506,7 +356,7 @@ export const ChatWindow = memo(function ChatWindow({
           {messages.length === 0 ? (
             <div className="flex h-full flex-col">
               {isMobile ? (
-                <div className="flex flex-1 flex-col items-center justify-center">
+                <div className="flex flex-1 flex-col items-center justify-end pb-8">
                   <p className="mb-2 text-center text-sm font-medium">
                     {welcomeText}
                   </p>
@@ -529,7 +379,7 @@ export const ChatWindow = memo(function ChatWindow({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                <div className="flex flex-1 flex-col items-center justify-end px-4 pb-8 text-center">
                   <p className="mb-1 text-sm font-medium">{welcomeText}</p>
                   <p className="text-muted-foreground text-xs">
                     {dictionary.chooseQuestion}
@@ -608,13 +458,6 @@ export const ChatWindow = memo(function ChatWindow({
         </div>
       </ScrollArea>
 
-      {/* Interim transcript display */}
-      {transcript && (
-        <div className="text-muted-foreground bg-muted/50 px-4 py-2 text-sm italic">
-          {transcript}
-        </div>
-      )}
-
       {error && (
         <div className="bg-destructive/10 text-destructive px-4 py-2 text-sm">
           {error}
@@ -659,10 +502,12 @@ export const ChatWindow = memo(function ChatWindow({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <form onSubmit={handleSubmit}>
+          {/* Single rounded pill — input with inline mic + send, concise */}
           <div
             className={cn(
-              "border-muted-foreground bg-background relative flex flex-1 items-center rounded-lg border px-3"
+              "border-muted-foreground bg-background flex items-center gap-1 rounded-full border",
+              isMobile ? "py-1.5 ps-4 pe-1.5" : "py-1 ps-4 pe-1"
             )}
           >
             <input
@@ -671,10 +516,10 @@ export const ChatWindow = memo(function ChatWindow({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}
-              placeholder={isMobile ? "" : ""}
+              placeholder={dictionary.placeholder}
               className={cn(
-                "w-full border-none bg-transparent outline-none",
-                isMobile ? "h-10 py-2 text-[16px]" : "h-8 py-2 text-sm"
+                "placeholder:text-muted-foreground/60 min-w-0 flex-1 border-none bg-transparent outline-none",
+                isMobile ? "h-9 text-[16px]" : "h-7 text-sm"
               )}
               dir={isRTL ? "rtl" : "ltr"}
               autoComplete="off"
@@ -682,55 +527,22 @@ export const ChatWindow = memo(function ChatWindow({
               autoCapitalize="off"
               inputMode="text"
             />
-          </div>
 
-          <div className="flex shrink-0 items-center gap-1">
+            {/* Send — primary filled command button */}
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={cn(
-                "shrink-0 transition-transform hover:scale-110 disabled:opacity-50 disabled:hover:scale-100",
-                isMobile ? "h-12 w-12" : "h-10 w-10"
-              )}
+              aria-label={dictionary.sendMessage}
               title={dictionary.sendMessage}
+              className={cn(
+                "bg-primary text-primary-foreground flex shrink-0 items-center justify-center rounded-full transition-transform hover:scale-105 disabled:opacity-40 disabled:hover:scale-100",
+                isMobile ? "h-9 w-9" : "h-7 w-7"
+              )}
             >
               <SendIcon
-                size={isMobile ? 32 : 20}
+                size={isMobile ? 18 : 15}
                 className={cn(isRTL && "scale-x-[-1]")}
               />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleVoiceInput}
-              disabled={isLoading}
-              className={cn(
-                "shrink-0 transition-transform hover:scale-110 disabled:opacity-50",
-                isMobile ? "h-12 w-12" : "h-10 w-10",
-                isListening && "animate-pulse text-red-500"
-              )}
-              title={isListening ? dictionary.listening : dictionary.voiceInput}
-            >
-              <VoiceIcon size={isMobile ? 32 : 20} />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleTtsToggle}
-              className={cn(
-                "shrink-0 transition-transform hover:scale-110",
-                isMobile ? "h-12 w-12" : "h-10 w-10",
-                ttsEnabled && "text-primary"
-              )}
-              title={
-                ttsEnabled ? dictionary.ttsEnabled : dictionary.ttsDisabled
-              }
-            >
-              {ttsEnabled ? (
-                <VolumeIcon size={isMobile ? 32 : 20} />
-              ) : (
-                <VolumeOffIcon size={isMobile ? 32 : 20} />
-              )}
             </button>
           </div>
         </form>

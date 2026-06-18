@@ -60,8 +60,6 @@ export interface ChatbotDictionary {
   voiceInput: string
   speechNotSupported: string
   speechError: string
-  ttsEnabled: string
-  ttsDisabled: string
   listening: string
 
   // Welcomes (mode-specific)
