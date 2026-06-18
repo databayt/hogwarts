@@ -13,6 +13,19 @@ last_audited: 2026-06-12
 
 # Translation Engine — Live Work List
 
+## Done (2026-06-17 read-path degradation polish)
+
+- [x] **403 rate-limit now classified transient** — Google returns
+      `userRateLimitExceeded` / `rateLimitExceeded` as **403** (not 429); the retry
+      policy used to treat all 403 as permanent, so prewarm never retried a throttle.
+      Now 403-with-`rateLimitExceeded` is retryable; a 403 bad-key (no rateLimit
+      reason) stays permanent. (+2 google.test.ts cases.)
+- [x] **Read-path fallback log downgraded to `console.warn`** (`localize.ts`) — the
+      per-render catch logged the raw Error via `console.error`, which tripped the
+      Next dev error overlay on every render under quota exhaustion and spammed logs.
+      The loud, throttled production signal still lives in google.ts's
+      `reportTranslationDegraded`. Fallback-to-source behavior unchanged.
+
 ## Done (2026-06-10/12 production-readiness pass)
 
 - [x] In-memory LRU on the legacy `translate()` path — all getText/getName/getLabels callers inherit zero-DB hot-term reads

@@ -147,8 +147,16 @@ export async function localize<T extends Record<string, unknown>>(
         )
         .catch(() => {})
     } catch (err) {
-      // Google down / no key → fall back to source string (handled below).
-      console.error("[localize] translate fallback failed:", err)
+      // Google down / rate-limited / no key → fall back to source string
+      // (built in step 4). This is an EXPECTED, fully-handled degradation, so
+      // log it at warn with just the message: passing the raw Error to
+      // console.error per-render trips the Next dev error overlay and spams
+      // logs. The loud, throttled production signal lives in google.ts's
+      // reportTranslationDegraded.
+      console.warn(
+        "[localize] translate fallback to source:",
+        err instanceof Error ? err.message : err
+      )
     }
   }
 

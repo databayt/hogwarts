@@ -107,8 +107,14 @@ async function requestTranslate(
     reportTranslationDegraded(
       `Google Translate API ${response.status}: ${error.slice(0, 200)}`
     )
-    // Retry only 429 (rate limit) and 5xx (server). Other 4xx are permanent.
-    const transient = response.status === 429 || response.status >= 500
+    // Retry 429, 5xx, and 403 rate-limit throttles. Google returns
+    // "userRateLimitExceeded" / "rateLimitExceeded" as 403 — a throttle, not a
+    // permanent client error (a bad key/permission is also 403 but carries no
+    // rateLimit reason), so it must stay retryable. Other 4xx are permanent.
+    const isRateLimit403 =
+      response.status === 403 && /rateLimitExceeded/i.test(error)
+    const transient =
+      response.status === 429 || response.status >= 500 || isRateLimit403
     throw new GoogleTranslateError(
       `Google Translate API error: ${response.status} - ${error}`,
       { status: response.status, transient }

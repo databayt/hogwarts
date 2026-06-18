@@ -96,7 +96,7 @@
     "typing": "Typing...",
     "send": "Send",
     "retry": "Retry",
-    "chooseQuestion": "Choose a question or type your message",
+    "chooseQuestion": "A great journey is about to begin.",
     "grades": "Grades",
     "gradesQuestion": "How do I check grades?",
     "attendance": "Attendance",
@@ -109,8 +109,6 @@
     "voiceInput": "Voice input",
     "speechNotSupported": "Speech recognition is not supported in your browser.",
     "speechError": "Speech recognition error. Please try again.",
-    "ttsEnabled": "Text-to-speech enabled",
-    "ttsDisabled": "Text-to-speech disabled",
     "listening": "Listening...",
     "saasFeatures": "Features",
     "saasFeaturesQuestion": "What features does Databayt offer?",
@@ -132,8 +130,8 @@
     "schoolScholarshipsQuestion": "What scholarships are available?",
     "schoolEvents": "Events",
     "schoolEventsQuestion": "What upcoming events does the school have?",
-    "welcomeSaas": "Hi! I'm the Databayt assistant — ask about features, pricing, or how to get started.",
-    "welcomeSchoolTemplate": "Hi! I'm the {name} assistant — ask about admissions, fees, scholarships, or events.",
+    "welcomeSaas": "Welcome to Hogwarts.",
+    "welcomeSchoolTemplate": "Hi! I'm the {name} assistant",
     "ctaTryFree": "Try free",
     "ctaSeePricing": "See pricing",
     "ctaViewFeatures": "View features",
@@ -146,9 +144,9 @@
     "ctaOpenDocs": "Read the docs",
     "pricingNudgeTitle": "Comparing plans?",
     "pricingNudgeBody": "I can help you pick the right plan in seconds.",
-    "saasPromptTemplate": "You are the Databayt assistant. You help school administrators, owners, and educators evaluate Databayt — an open-source, multi-tenant school automation platform. Always respond in English. Keep answers SHORT and practical (2–3 sentences, under 50 words). Use the live data below; never invent numbers or features.\n\n## About Databayt\n- Open-source school management and automation, self-hostable or cloud-hosted.\n- Mission: automate school operations so educators focus on teaching.\n- Production at https://ed.databayt.org. Source at github.com/databayt.\n\n## Live Pricing (read this exactly)\n{pricing}\n\n## Feature Capabilities (10 categories, 85+ features)\n{features}\n\n## Onboarding\n- Setup wizard takes ~10–15 minutes (about-school, branding, capacity, subdomain, finish).\n- Bilingual: Arabic (RTL) and English (LTR) out of the box.\n- Multi-tenant: every school gets its own subdomain (school.databayt.org).\n\n## Impact\n- ~80% admin time saved, ~60% cost reduction, ~25% admission boost.\n\n## Contact\n- Email: {contactEmail}\n- GitHub: github.com/databayt\n- Live demo: demo.databayt.org\n\n## Response Rules\n1. Keep answers under 50 words.\n2. Quote specific numbers from the live pricing/feature list above — never invent.\n3. When asked \"how do I start\", say it's free on the Hobby plan and the visitor can sign up directly; the user-facing UI will show CTA buttons below your answer.\n4. Mention open-source / self-hostable when relevant.\n5. If you do not have the information, say so honestly and suggest contacting {contactEmail}.\n6. Do NOT include markdown links or HTML in answers — the UI renders CTA buttons separately.",
-    "schoolPromptIntroTemplate": "You are the helpful assistant for {schoolName}. Always respond in English. You help prospective parents and students learn about this school. Be welcoming, accurate, and concise (2–3 sentences, under 60 words). Use only the school's actual data below — never invent facts.",
-    "schoolPromptRules": "## Response Rules\n1. Keep answers under 60 words.\n2. Use the school's actual data above — never invent facts, names, dates, or amounts.\n3. For admissions, give the current status (open / coming soon / closed) and let the UI surface the Apply CTA.\n4. Mention scholarships when discussing fees if any are listed above.\n5. Mention upcoming events when relevant.\n6. If you do not have the specific information, say so honestly and suggest contacting the school directly using the Contact details above.\n7. When asked about programs or grades, reference the Academic Structure above.\n8. Do NOT include markdown links or HTML — the UI renders CTA buttons separately.",
+    "saasPromptTemplate": "You are the Databayt assistant on the marketing site. You help school owners, administrators, and educators decide whether Databayt — an open-source, multi-tenant school-management platform — fits their school. Always reply in English. Be concise and practical: 2–3 short sentences (under 50 words), or a tight bullet list when comparing plans or listing capabilities. Use ONLY the live data below; never invent prices, features, or numbers.\n\n## What Databayt is\n- Open-source school management + automation; run it self-hosted or fully cloud-hosted by us.\n- One platform for admissions, students, attendance, timetables, grades, fees, messaging, and parent communication.\n- Bilingual out of the box — Arabic (RTL) and English (LTR).\n- Multi-tenant: every school gets its own branded subdomain (yourschool.databayt.org).\n\n## Live pricing — quote exactly, never round\n{pricing}\n\n## Capabilities (10 categories, 85+ features)\n{features}\n\n## Getting started\n- Free on the Hobby plan, no credit card. Sign-up + setup wizard takes ~10–15 minutes (school details, branding, capacity, subdomain).\n- Paid plans add capacity and advanced modules; schools can upgrade anytime.\n\n## How to answer\n1. Answer the actual question first in one line, then add at most one helpful detail.\n2. For pricing, name the plan, its price, and 1–2 things it unlocks — straight from the list above.\n3. For \"can it do X\", say yes or no based on the capabilities above and name the relevant feature.\n4. For \"how do I start\", say it's free on Hobby and they can sign up now; the UI shows action buttons under your reply.\n5. Mention open-source / self-hosting when it's relevant to the question.\n6. If the data above doesn't cover it, say so plainly and point them to {contactEmail}. Never guess.\n7. No markdown links or HTML — the UI renders buttons separately.",
+    "schoolPromptIntroTemplate": "You are the friendly virtual assistant for {schoolName}, helping prospective parents and students on the school's website. Always reply in English. Be warm, accurate, and concise: 2–3 short sentences (under 60 words), or a short bullet list for fees, dates, or programs. Use ONLY the school's real data below — never invent facts, names, dates, or amounts.",
+    "schoolPromptRules": "## How to answer\n1. Answer the question first in one line, then add the single most useful detail.\n2. Use only the school's data above — never invent names, dates, fees, or seat counts.\n3. Admissions: state the current status (open / coming soon / closed); if open, give the deadline and note they can apply online. The UI shows the Apply button.\n4. Fees: give the amount and currency, mention installments if available, and point to any scholarships listed above.\n5. Surface upcoming events or announcements when they're relevant to the question.\n6. If the data above doesn't answer it, say so honestly and suggest contacting the school using the Contact details above.\n7. Programs or grades questions: reference the Academic Structure above.\n8. No markdown links or HTML — the UI renders action buttons separately.",
     "schoolHeaderAcademic": "Academic Structure",
     "schoolHeaderAdmissionOpen": "Admission — OPEN NOW",
     "schoolHeaderAdmissionSoon": "Admission — Coming Soon",
@@ -435,9 +433,14 @@
     "brandName": "Hogwarts"
   },
   "community": {
-    "title": "Community",
+    "title": "The Room of Requirement",
     "subtitle": "Free, open educational resources for educators and students.",
-    "lead": "Browse textbooks, mock exams, question banks, videos, and learning materials. No account required.",
+    "lead": "Every textbook, mock exam, and lesson you need — open to all, no account required.",
+    "hero": {
+      "pill": "New mock exam is here",
+      "browse": "Browse Subjects",
+      "request": "Request a Resource"
+    },
     "filters": {
       "label": "Filters",
       "curriculum": "Curriculum",
@@ -582,9 +585,9 @@
       "services": "GitHub"
     },
     "features": {
-      "badge": "48 Features, 14 Categories",
-      "title": "Automate the boarding",
-      "subtitle": "A set of beautifully designed components that you can customize, extend, and build on. Start here then make it your own. Open Source. Open Code.",
+      "badge": "Conference: live virtual classrooms",
+      "title": "Automate the boring",
+      "subtitle": "Wave goodbye to busywork. Every spell your school needs — automated admissions, attendance, fees, exams, and live classes — in one enchanted platform. Open Source. Open Code.",
       "searchPlaceholder": "Search features...",
       "allCategories": "All",
       "noResults": "No features match your search. Try a different keyword.",
@@ -2052,7 +2055,7 @@
       "Timetable": "Timetable",
       "Library": "Library",
       "Stream": "Stream",
-      "Live Classes": "Live Classes",
+      "Conference": "Conference",
       "Profile": "Profile",
       "School": "School",
       "Sales": "Sales",
@@ -2066,7 +2069,7 @@
       "My transportation": "My transportation",
       "Trips": "Trips",
       "Compliance": "Compliance",
-      "LiveClasses": "Live classes"
+      "LiveClasses": "Conference"
     },
     "breadcrumb": {
       "dashboard": "Dashboard",
@@ -2279,13 +2282,12 @@
     "subtitle": "Discover features you love",
     "tags": {
       "admission": "Admission",
-      "course": "Courses",
       "exam": "Exams",
       "gradebook": "Gradebook",
       "assignment": "Assignments",
-      "lms": "LMS",
+      "e-learning": "E-Learning",
       "timetable": "Timetable",
-      "quiz": "Quizzes",
+      "qbank": "Qbank",
       "digital-library": "Digital Library",
       "student": "Students",
       "faculty": "Faculty",
@@ -2303,7 +2305,7 @@
       "expense": "Expenses",
       "dashboard": "Dashboard",
       "multi-organization": "Multi-Campus",
-      "open-source": "Open Source",
+      "announcement": "Announcement",
       "ai-powered": "AI Powered",
       "mobile-application": "Mobile App",
       "biometric": "Biometric",
@@ -2317,7 +2319,7 @@
     "subtitle": "Everything you need to run a modern school",
     "academic": {
       "title": "Academic",
-      "description": "Courses, exams, gradebook, assignments, and LMS — the core of teaching and learning"
+      "description": "Exams, gradebook, assignments, and E-Learning — the core of teaching and learning"
     },
     "admin": {
       "title": "Administration",
