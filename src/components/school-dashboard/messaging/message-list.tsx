@@ -312,7 +312,8 @@ export function MessageList({
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
-            backgroundImage: "url('/whatsapp-bg.png')",
+            backgroundImage:
+              "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
             backgroundSize: "60%",
             backgroundRepeat: "repeat",
           }}
@@ -329,7 +330,8 @@ export function MessageList({
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
-            backgroundImage: "url('/whatsapp-bg.png')",
+            backgroundImage:
+              "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
             backgroundSize: "60%",
             backgroundRepeat: "repeat",
           }}
@@ -451,7 +453,8 @@ export function MessageList({
       <div
         className="pointer-events-none absolute inset-0 opacity-60"
         style={{
-          backgroundImage: "url('/whatsapp-bg.png')",
+          backgroundImage:
+            "url('https://cdn.databayt.org/hogwarts/whatsapp-bg.png')",
           backgroundSize: "60%",
           backgroundRepeat: "repeat",
         }}

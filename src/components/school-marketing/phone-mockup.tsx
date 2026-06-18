@@ -56,21 +56,45 @@ const ROW_2: Pill[] = [
     labelKey: "supplies",
     icon: "https://cdn.databayt.org/hogwarts/icons/services/graduation.webp",
   },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/bread.webp", alt: "" },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/bread.webp",
+    alt: "",
+  },
   { kind: "textOnly", labelKey: "security" },
 ]
 
 const ROW_3: Pill[] = [
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/juice.webp", alt: "" },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/juice.webp",
+    alt: "",
+  },
   {
     kind: "textIcon",
     labelKey: "notebooks",
     icon: "https://cdn.databayt.org/hogwarts/icons/services/notebooks.webp",
   },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/clock.webp", alt: "" },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/activities-paint.png", alt: "" },
-  { kind: "textIcon", labelKey: "fees", icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg" },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/backpack.webp", alt: "" },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/clock.webp",
+    alt: "",
+  },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/activities-paint.png",
+    alt: "",
+  },
+  {
+    kind: "textIcon",
+    labelKey: "fees",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg",
+  },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/backpack.webp",
+    alt: "",
+  },
 ]
 
 const ROW_4: Pill[] = [
@@ -79,9 +103,21 @@ const ROW_4: Pill[] = [
     labelKey: "laboratoryEquipment",
     icon: "https://cdn.databayt.org/hogwarts/icons/services/backpack.webp",
   },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/palette.webp", alt: "" },
-  { kind: "iconOnly", icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg", alt: "" },
-  { kind: "textIcon", labelKey: "events", icon: "https://cdn.databayt.org/hogwarts/icons/services/events.webp" },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/palette.webp",
+    alt: "",
+  },
+  {
+    kind: "iconOnly",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/fee.svg",
+    alt: "",
+  },
+  {
+    kind: "textIcon",
+    labelKey: "events",
+    icon: "https://cdn.databayt.org/hogwarts/icons/services/events.webp",
+  },
   {
     kind: "textIcon",
     labelKey: "tripsAndTours",

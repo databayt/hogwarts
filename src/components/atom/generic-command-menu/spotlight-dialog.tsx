@@ -80,8 +80,7 @@ export function buildSpotlightCategories(
 /*  Glass effect                                                       */
 /* ------------------------------------------------------------------ */
 
-export const GLASS =
-  "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-[180%] border border-black/10 dark:border-white/10 shadow-2xl"
+export const GLASS = "bg-muted border border-muted-foreground/20 shadow-2xl"
 
 /* ------------------------------------------------------------------ */
 /*  SpotlightDialog – Radix Dialog root with spring animations         */
@@ -102,7 +101,7 @@ function SpotlightDialog({
           {open && (
             <DialogPrimitive.Overlay key="spotlight-overlay" forceMount asChild>
               <motion.div
-                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                className="fixed inset-0 z-50"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

@@ -4,18 +4,23 @@
 import Image from "next/image"
 
 import { asset } from "@/lib/asset-url"
+import { Icons } from "@/components/atom/icons"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const paymentMethods = [
-  { name: "Visa", icon: asset("/icons/visa.svg") },
-  { name: "Mastercard", icon: asset("/icons/mastercard.svg") },
-  { name: "Amex", icon: asset("/icons/amex.svg") },
-  { name: "Apple Pay", icon: asset("/icons/apple-pay.svg") },
-  { name: "Google Pay", icon: asset("/icons/google-pay.svg") },
-  { name: "PayPal", icon: asset("/icons/paypal.svg") },
-  { name: "Mada", icon: asset("/icons/mada.svg") },
-  { name: "STCPay", icon: asset("/icons/stcpay.svg") },
-  { name: "Fawry", icon: asset("/icons/fawry.svg") },
+  { name: "Visa", icon: Icons.visa },
+  { name: "Mastercard", icon: Icons.mastercard },
+  { name: "Amex", icon: Icons.americanExpress },
+  { name: "Apple Pay", icon: Icons.applePay },
+  { name: "Google Pay", icon: Icons.googlePay },
+  { name: "PayPal", icon: Icons.paypal },
+  { name: "Bitcoin", icon: Icons.bitcoin },
+  { name: "STCPay", icon: Icons.stcpay },
+  { name: "Fawry", icon: Icons.fawry },
+  { name: "Bankak", icon: Icons.bankak },
+  { name: "Mada", icon: Icons.mada },
+  { name: "Tabby", icon: Icons.tabby },
+  { name: "Tamara", icon: Icons.tamara },
 ]
 
 interface SecurePaymentProps {
@@ -26,16 +31,16 @@ export function SecurePayment({ dictionary }: SecurePaymentProps) {
   const securePayment = dictionary?.marketing?.pricing?.securePayment
 
   return (
-    <section className="w-full py-16">
-      <div className="flex flex-col items-center gap-8 md:flex-row">
+    <section className="bg-muted my-8 w-[90%] max-w-5xl rounded-3xl p-8 md:p-12">
+      <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
         {/* Left side - Icon with blue bg */}
         <div className="flex w-full justify-center md:w-[30%]">
-          <div className="flex h-56 w-56 items-center justify-center rounded-3xl bg-[#6A9BCC]">
+          <div className="flex h-52 w-52 items-center justify-center rounded-3xl bg-[#6A9BCC]">
             <Image
               src={asset("/illustrations/category-08.svg")}
               alt={securePayment?.title || "Secure Payment"}
-              width={180}
-              height={180}
+              width={168}
+              height={168}
               className="object-contain"
             />
           </div>
@@ -54,21 +59,33 @@ export function SecurePayment({ dictionary }: SecurePaymentProps) {
           </div>
 
           {/* Payment Icons Row */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {paymentMethods.map((method) => (
-              <div
-                key={method.name}
-                className="bg-muted flex h-9 w-14 items-center justify-center rounded-md p-2"
-              >
-                <Image
-                  src={method.icon}
-                  alt={method.name}
-                  width={36}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-            ))}
+          <div className="mt-1 -mb-[12px] -ml-[13px] flex flex-wrap items-center">
+            {paymentMethods.map((method) => {
+              const Icon = method.icon
+              const isInline = typeof Icon !== "string"
+              return (
+                <div
+                  key={method.name}
+                  className={
+                    isInline
+                      ? "-mr-[16px] -mb-[4px] flex h-14 w-20 items-center justify-center overflow-visible"
+                      : "bg-muted flex h-9 w-14 items-center justify-center rounded-md p-2"
+                  }
+                >
+                  {typeof Icon === "string" ? (
+                    <Image
+                      src={Icon}
+                      alt={method.name}
+                      width={36}
+                      height={24}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <Icon className="h-full w-full" />
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Powered by Stripe */}

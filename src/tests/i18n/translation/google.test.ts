@@ -205,6 +205,43 @@ describe("translateRaw", () => {
     ).rejects.toThrow("Google Translate API error: 400")
     expect(mockFetch).toHaveBeenCalledTimes(1)
   })
+
+  it("retries a 403 rate-limit (userRateLimitExceeded) when retry is enabled", async () => {
+    vi.useFakeTimers()
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        text: async () =>
+          '{"error":{"code":403,"message":"User Rate Limit Exceeded","errors":[{"reason":"userRateLimitExceeded"}]}}',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: { translations: [{ translatedText: "مرحبا" }] },
+        }),
+      })
+
+    const pending = translateRaw("hello", "en", "ar", { retry: true })
+    await vi.advanceTimersByTimeAsync(250) // backoff
+    const result = await pending
+
+    expect(result).toBe("مرحبا")
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it("does NOT retry a 403 bad-key (no rateLimit reason) even with retry", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      text: async () => "Forbidden - invalid API key",
+    })
+
+    await expect(
+      translateRaw("hello", "en", "ar", { retry: true })
+    ).rejects.toThrow("Google Translate API error: 403")
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("translateBatch", () => {

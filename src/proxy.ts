@@ -191,6 +191,7 @@ export async function proxy(req: NextRequest) {
   const isPublic =
     publicRoutes.includes(pathWithoutLocale) ||
     pathWithoutLocale.startsWith("/docs") ||
+    pathWithoutLocale.startsWith("/features") ||
     pathWithoutLocale.startsWith("/stream") ||
     pathWithoutLocale.startsWith("/community") ||
     pathWithoutLocale.startsWith("/wa-preview")

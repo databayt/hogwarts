@@ -6,7 +6,9 @@ type Props = {
 }
 
 /**
- * WhatsApp-style chat wallpaper. Uses the existing /whatsapp-bg.png at public/.
+ * WhatsApp-style chat wallpaper.
+ * TODO(cdn): still served from a third-party CloudFront. Re-host on
+ * cdn.databayt.org (the desktop list uses cdn.databayt.org/hogwarts/whatsapp-bg.png).
  */
 const WA_CHAT_BG =
   "https://d1dlwtcfl0db67.cloudfront.net/wallpapers/wp-wa-chat-bg.svg"

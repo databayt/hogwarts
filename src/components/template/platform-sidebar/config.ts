@@ -208,7 +208,7 @@ export const platformNav: PlatformNavItem[] = [
   },
   {
     key: "liveClasses",
-    title: "Live Classes",
+    title: "Conference",
     href: "/conference",
     icon: "monitorPlay",
     roles: ALL_ROLES,

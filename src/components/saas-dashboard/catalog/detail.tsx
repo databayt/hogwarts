@@ -803,8 +803,8 @@ export function CatalogDetail({ subject, lang }: Props) {
         <CardHeader>
           <CardTitle>Concept Art</CardTitle>
           <CardDescription>
-            Auto-assigned from the subject&apos;s nearest concept and served from
-            cdn.databayt.org/clickview. Not editable per entity.
+            Auto-assigned from the subject&apos;s nearest concept and served
+            from cdn.databayt.org/clickview. Not editable per entity.
           </CardDescription>
         </CardHeader>
         <CardContent>

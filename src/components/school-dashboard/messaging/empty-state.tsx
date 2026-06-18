@@ -49,7 +49,12 @@ export function NoActiveConversation({
         className="mb-14 flex items-center gap-1 text-xs font-medium"
         style={{ color: "#8B8C8C" }}
       >
-        <img src="https://cdn.databayt.org/hogwarts/lock.svg" alt="" className="h-3 w-3" aria-hidden="true" />
+        <img
+          src="https://cdn.databayt.org/hogwarts/lock.svg"
+          alt=""
+          className="h-3 w-3"
+          aria-hidden="true"
+        />
         {m?.ui?.end_to_end_encrypted || "End-to-end encrypted"}
       </p>
     </div>

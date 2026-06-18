@@ -65,7 +65,7 @@ export const features: FeatureLdg[] = [
     image: "https://cdn.databayt.org/hogwarts/features/admission.png",
   },
   {
-    title: "LMS",
+    title: "E-Learning",
     description:
       "Deliver lessons, assignments, and grades with a modern learning experience.",
     link: "/",

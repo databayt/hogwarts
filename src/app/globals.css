@@ -685,10 +685,11 @@ body {
 
 /* WhatsApp doodle wallpaper pattern */
 .wa-doodle-bg {
-  background: url("/whatsapp-bg.png") center / cover no-repeat;
+  background: url("https://cdn.databayt.org/hogwarts/whatsapp-bg.png") center /
+    cover no-repeat;
 }
 .dark .wa-doodle-bg {
-  background-image: url("/whatsapp-bg.png");
+  background-image: url("https://cdn.databayt.org/hogwarts/whatsapp-bg.png");
 }
 
 /* WhatsApp-style curved message bubble tails */
