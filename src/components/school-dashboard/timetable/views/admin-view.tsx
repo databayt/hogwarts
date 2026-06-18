@@ -459,6 +459,11 @@ export default function AdminView({
         slot={selectedSlot}
         initialDay={selectedDay}
         initialPeriod={selectedPeriod}
+        // Auto-detect room (classroom view) / teacher (teacher view) from context
+        initialClassroom={
+          viewMode === "classroom" ? selectedClassroom : undefined
+        }
+        initialTeacher={viewMode === "teacher" ? selectedId : undefined}
         periods={periods.map((p) => ({
           id: p.id,
           name: p.name,

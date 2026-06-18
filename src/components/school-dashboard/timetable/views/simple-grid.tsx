@@ -252,7 +252,10 @@ export default function SimpleGrid({
                 <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800 print:py-3">
                   <span className="text-sm font-medium text-neutral-700 sm:text-base dark:text-neutral-300 print:text-sm">
                     {(dictionary?.period ?? "Period") + " "}
-                    {period.name}
+                    {/* Period names are stored as the full "Period 1"; strip the
+                        redundant prefix so the dictionary label isn't doubled
+                        ("Period Period 1" → "Period 1" / "الحصة 1"). */}
+                    {period.name.replace(/^period\s+/i, "")}
                   </span>
                   <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                     ({formatTime(period.startTime)})

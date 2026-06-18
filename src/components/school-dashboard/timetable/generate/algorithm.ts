@@ -352,19 +352,27 @@ function placeSectionSubject(
   for (const day of daysToUse) {
     if (placedCount >= targetHours) break
 
-    for (const periodId of config.periodsPerDay) {
-      if (placedCount >= targetHours) break
+    // Place AT MOST ONE period of this subject per day. Real timetables spread
+    // a subject across different days (Maths Sun/Tue/Thu), never stack it into
+    // several periods of the same day. `selectDaysForSubject` returns enough
+    // distinct days to cover `targetHours`.
+    //
+    // Within the day, PREFER a period where the section, a room, AND a
+    // qualified teacher are all free — then fall back to a teacher-less period
+    // only if no qualified teacher is free anywhere that day. (The old logic
+    // took the section's first free period and left the slot teacher-less
+    // whenever the teacher happened to be busy there, wasting teacher capacity.)
+    let bestWithTeacher: {
+      periodId: string
+      teacher: TeacherAvailability
+      room: RoomAvailability
+    } | null = null
+    let fallbackNoTeacher: { periodId: string; room: RoomAvailability } | null =
+      null
 
+    for (const periodId of config.periodsPerDay) {
       // Section can't be double-booked
       if (isSectionScheduled(section.sectionId, day, periodId, state)) continue
-
-      // Try to find a teacher
-      let assignedTeacher: TeacherAvailability | null = null
-      for (const teacher of qualifiedTeachers) {
-        if (!isTeacherAvailable(teacher, day, periodId, state, config)) continue
-        assignedTeacher = teacher
-        break
-      }
 
       // Find an available room
       let assignedRoom: RoomAvailability | null = null
@@ -373,26 +381,49 @@ function placeSectionSubject(
         assignedRoom = room
         break
       }
-
       if (!assignedRoom) continue
 
-      const slot: GeneratedSlot = {
-        dayOfWeek: day,
-        periodId,
-        sectionId: section.sectionId,
-        subjectId: subject.subjectId,
-        classId: "", // Section-based, no legacy classId
-        teacherId: assignedTeacher?.teacherId ?? null,
-        classroomId: assignedRoom.roomId,
-        score: assignedTeacher
-          ? calculateSlotScore(day, periodId, subject, assignedTeacher, config)
-          : 30,
-        violations: assignedTeacher ? [] : ["unassigned_teacher"],
+      // Find a free qualified teacher
+      let assignedTeacher: TeacherAvailability | null = null
+      for (const teacher of qualifiedTeachers) {
+        if (!isTeacherAvailable(teacher, day, periodId, state, config)) continue
+        assignedTeacher = teacher
+        break
       }
 
-      addSlot(slot, state)
-      placedCount++
+      if (assignedTeacher) {
+        bestWithTeacher = {
+          periodId,
+          teacher: assignedTeacher,
+          room: assignedRoom,
+        }
+        break
+      }
+      if (!fallbackNoTeacher) {
+        fallbackNoTeacher = { periodId, room: assignedRoom }
+      }
     }
+
+    const pick = bestWithTeacher ?? fallbackNoTeacher
+    if (!pick) continue
+
+    const teacher: TeacherAvailability | null = bestWithTeacher?.teacher ?? null
+    const slot: GeneratedSlot = {
+      dayOfWeek: day,
+      periodId: pick.periodId,
+      sectionId: section.sectionId,
+      subjectId: subject.subjectId,
+      classId: "", // Section-based, no legacy classId
+      teacherId: teacher?.teacherId ?? null,
+      classroomId: pick.room.roomId,
+      score: teacher
+        ? calculateSlotScore(day, pick.periodId, subject, teacher, config)
+        : 30,
+      violations: teacher ? [] : ["unassigned_teacher"],
+    }
+
+    addSlot(slot, state)
+    placedCount++
   }
 
   return placedCount

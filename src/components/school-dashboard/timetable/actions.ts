@@ -72,6 +72,9 @@ import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
+import { getDisplayLang } from "@/components/translation/locale"
+import { getLabels, getNames } from "@/components/translation/person"
+import { fullName } from "@/components/translation/util"
 
 // Constants imported from ./constants.ts to avoid "use server" export restrictions
 import { ABSENCE_TYPES, DRAFT_TERM_ID, SUBSTITUTION_STATUS } from "./config"
@@ -558,7 +561,11 @@ async function validateRoomConstraints(input: {
 async function validateSlotConstraints(input: {
   schoolId: string
   termId: string
-  teacherId: string
+  // Optional: a slot may be teacher-less (teacher attached later). When absent
+  // the teacher-availability check is skipped — passing an undefined id to
+  // `validateTeacherConstraints` would match a random teacher and report
+  // phantom conflicts.
+  teacherId?: string
   classroomId: string
   /** Legacy classId — optional when sectionId is present */
   classId?: string
@@ -577,15 +584,22 @@ async function validateSlotConstraints(input: {
   roomCheck: RoomConstraintCheck
 }> {
   const [teacherCheck, roomCheck] = await Promise.all([
-    validateTeacherConstraints({
-      schoolId: input.schoolId,
-      termId: input.termId,
-      teacherId: input.teacherId,
-      dayOfWeek: input.dayOfWeek,
-      periodId: input.periodId,
-      weekOffset: input.weekOffset,
-      excludeSlotId: input.excludeSlotId,
-    }),
+    input.teacherId
+      ? validateTeacherConstraints({
+          schoolId: input.schoolId,
+          termId: input.termId,
+          teacherId: input.teacherId,
+          dayOfWeek: input.dayOfWeek,
+          periodId: input.periodId,
+          weekOffset: input.weekOffset,
+          excludeSlotId: input.excludeSlotId,
+        })
+      : Promise.resolve<TeacherConstraintCheck>({
+          isValid: true,
+          violations: [],
+          teacherId: "",
+          teacherName: "",
+        }),
     validateRoomConstraints({
       schoolId: input.schoolId,
       termId: input.termId,
@@ -967,6 +981,7 @@ export async function getSectionsForTimetable(input?: { termId?: string }) {
       id: true,
       name: true,
       gradeId: true,
+      classroomId: true,
       grade: { select: { name: true } },
     },
   })
@@ -977,6 +992,7 @@ export async function getSectionsForTimetable(input?: { termId?: string }) {
       name: s.name,
       gradeId: s.gradeId,
       gradeName: s.grade?.name ?? "",
+      classroomId: s.classroomId,
     })),
   }
 }
@@ -1575,6 +1591,34 @@ export async function getScheduleConfig(
   const defaultLunchAfterPeriod = cfg?.defaultLunchAfterPeriod ?? null
 
   return { config: { workingDays, defaultLunchAfterPeriod } }
+}
+
+/**
+ * School classification (country / type / level) for the schedule configurator's
+ * recommended-structure default. Mirrors the data the onboarding schedule step
+ * reads, but scoped to the current tenant.
+ */
+export async function getSchoolClassification(): Promise<{
+  country: string | null
+  schoolType: string | null
+  schoolLevel: string | null
+}> {
+  await requireReadAccess()
+  const { schoolId } = await getTenantContext()
+  // No tenant context → return an empty classification; the configurator just
+  // falls back to the first preset (no school-specific recommendation).
+  if (!schoolId) return { country: null, schoolType: null, schoolLevel: null }
+
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { country: true, schoolType: true, schoolLevel: true },
+  })
+
+  return {
+    country: school?.country ?? null,
+    schoolType: school?.schoolType ?? null,
+    schoolLevel: school?.schoolLevel ?? null,
+  }
 }
 
 type TimetableCell = {
@@ -2410,11 +2454,29 @@ export async function getTimetableByTeacher(input: {
   const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
   const totalPeriods = slots.length
 
+  // Localize subject names to the app language (catalog names are stored in one
+  // language; e.g. show "Geography" on /en and its Arabic on /ar). Batched.
+  const lang = await getDisplayLang()
+  const rawSubject = (s: (typeof slots)[number]) =>
+    s.class?.subject?.name || s.subject?.name || s.class?.name || ""
+  const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
+  const teacherDisplayName = teacherInfo
+    ? (
+        await getNames(
+          [teacherInfo],
+          (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+          lang,
+          schoolId
+        )
+      ).get(`${teacherInfo.firstName} ${teacherInfo.lastName}`.trim()) ||
+      `${teacherInfo.firstName} ${teacherInfo.lastName}`
+    : ""
+
   return {
     teacherInfo: teacherInfo
       ? {
           id: teacherInfo.id,
-          name: `${teacherInfo.firstName} ${teacherInfo.lastName}`,
+          name: teacherDisplayName,
           email: teacherInfo.emailAddress,
         }
       : null,
@@ -2425,18 +2487,21 @@ export async function getTimetableByTeacher(input: {
       startTime: p.startTime,
       endTime: p.endTime,
     })),
-    slots: slots.map((s) => ({
-      id: s.id,
-      dayOfWeek: s.dayOfWeek,
-      periodId: s.periodId,
-      periodName: s.period.name,
-      className: s.class?.name || s.section?.name || "",
-      classId: s.classId,
-      sectionId: s.sectionId,
-      room: s.classroom?.roomName || "",
-      roomId: s.classroomId,
-      subject: s.class?.subject?.name || s.subject?.name || s.class?.name || "",
-    })),
+    slots: slots.map((s) => {
+      const subject = rawSubject(s)
+      return {
+        id: s.id,
+        dayOfWeek: s.dayOfWeek,
+        periodId: s.periodId,
+        periodName: s.period.name,
+        className: s.class?.name || s.section?.name || "",
+        classId: s.classId,
+        sectionId: s.sectionId,
+        room: s.classroom?.roomName || "",
+        roomId: s.classroomId,
+        subject: subjectLabels.get(subject) || subject,
+      }
+    }),
     workload: {
       daysPerWeek: uniqueDays.size,
       periodsPerWeek: totalPeriods,
@@ -2511,6 +2576,19 @@ export async function getTimetableByRoom(input: {
   const utilizationRate =
     totalPossibleSlots > 0 ? (slots.length / totalPossibleSlots) * 100 : 0
 
+  // Localize teacher and subject names to the app language (stored names may be
+  // Arabic; the grid must read e.g. "Mariam Ibrahim" / "Geography" on /en).
+  const lang = await getDisplayLang()
+  const rawSubject = (s: (typeof slots)[number]) =>
+    s.class?.subject?.name || s.subject?.name || s.class?.name || ""
+  const subjectLabels = await getLabels(slots.map(rawSubject), lang, schoolId)
+  const teacherNames = await getNames(
+    slots.filter((s) => s.teacher).map((s) => s.teacher!),
+    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    lang,
+    schoolId
+  )
+
   return {
     roomInfo: roomInfo
       ? {
@@ -2526,18 +2604,24 @@ export async function getTimetableByRoom(input: {
       startTime: p.startTime,
       endTime: p.endTime,
     })),
-    slots: slots.map((s) => ({
-      id: s.id,
-      dayOfWeek: s.dayOfWeek,
-      periodId: s.periodId,
-      periodName: s.period.name,
-      className: s.class?.name || s.section?.name || "",
-      classId: s.classId,
-      sectionId: s.sectionId,
-      teacher: s.teacher ? `${s.teacher.firstName} ${s.teacher.lastName}` : "",
-      teacherId: s.teacherId,
-      subject: s.class?.subject?.name || s.subject?.name || s.class?.name || "",
-    })),
+    slots: slots.map((s) => {
+      const subject = rawSubject(s)
+      const rawTeacher = s.teacher
+        ? `${s.teacher.firstName} ${s.teacher.lastName}`.trim()
+        : ""
+      return {
+        id: s.id,
+        dayOfWeek: s.dayOfWeek,
+        periodId: s.periodId,
+        periodName: s.period.name,
+        className: s.class?.name || s.section?.name || "",
+        classId: s.classId,
+        sectionId: s.sectionId,
+        teacher: rawTeacher ? teacherNames.get(rawTeacher) || rawTeacher : "",
+        teacherId: s.teacherId,
+        subject: subjectLabels.get(subject) || subject,
+      }
+    }),
     utilization: {
       usedSlots: slots.length,
       totalSlots: totalPossibleSlots,
@@ -6571,25 +6655,48 @@ export async function getSlotsNeedingSubstitutes(input: {
  * Get subjects available for the slot editor dialog.
  * Returns SubjectInfo[] derived from classes in the given term.
  */
-export async function getSubjectsForSlotEditor(input: { termId: string }) {
+export async function getSubjectsForSlotEditor(_input?: { termId?: string }) {
   await requireReadAccess()
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
-  const classes = await db.class.findMany({
-    where: { schoolId, termId: input.termId },
+  // Read the school's active catalog subjects from SubjectSelection — this is
+  // term-INDEPENDENT. (The old query read Class rows scoped by the active
+  // termId, which returned nothing when the school's classes lived under a
+  // different term than the resolved active one — the empty-picker bug.)
+  const selections = await db.subjectSelection.findMany({
+    where: { schoolId, isActive: true },
     select: {
-      subjectId: true,
-      subject: {
-        select: {
-          id: true,
-          name: true,
-          department: true,
-        },
-      },
+      catalogSubjectId: true,
+      gradeId: true,
+      subject: { select: { id: true, name: true, department: true } },
     },
-    distinct: ["subjectId"],
   })
+
+  // Group by subject, collecting the grades each subject is selected for so the
+  // slot editor can filter the picker to the clicked room's grade. (The old
+  // query collapsed grades with distinct: ["catalogSubjectId"], which made
+  // grade-aware filtering impossible.)
+  const bySubject = new Map<
+    string,
+    {
+      subject: { id: string; name: string; department: string | null }
+      gradeIds: string[]
+    }
+  >()
+  for (const s of selections) {
+    if (!s.subject) continue
+    const entry = bySubject.get(s.subject.id)
+    if (entry) {
+      if (!entry.gradeIds.includes(s.gradeId)) entry.gradeIds.push(s.gradeId)
+    } else {
+      bySubject.set(s.subject.id, { subject: s.subject, gradeIds: [s.gradeId] })
+    }
+  }
+
+  const classes = Array.from(bySubject.values()).sort((a, b) =>
+    a.subject.name > b.subject.name ? 1 : -1
+  )
 
   const SLOT_EDITOR_COLORS = [
     "#3B82F6",
@@ -6610,17 +6717,16 @@ export async function getSubjectsForSlotEditor(input: { termId: string }) {
   ]
 
   return {
-    subjects: classes
-      .filter((c) => c.subject)
-      .map((c, idx) => ({
-        id: c.subject!.id,
-        name: c.subject!.name,
-        code: c.subject!.name.slice(0, 4).toUpperCase(),
-        color: SLOT_EDITOR_COLORS[idx % SLOT_EDITOR_COLORS.length],
-        department: c.subject!.department,
-        hoursPerWeek: 3,
-        isCore: true,
-      })),
+    subjects: classes.map((c, idx) => ({
+      id: c.subject.id,
+      name: c.subject.name,
+      code: c.subject.name.slice(0, 4).toUpperCase(),
+      color: SLOT_EDITOR_COLORS[idx % SLOT_EDITOR_COLORS.length],
+      department: c.subject.department ?? undefined,
+      hoursPerWeek: 3,
+      isCore: true,
+      gradeIds: c.gradeIds,
+    })),
   }
 }
 
@@ -6652,15 +6758,45 @@ export async function getTeachersForSlotEditor(input: { termId: string }) {
     },
   })
 
-  return {
-    teachers: teachers.map((t) => ({
+  // Localize names to the app language (stored names may be Arabic; the picker
+  // must read "Minerva McGonagall" on /en). Then dedupe by display name — the
+  // demo seed reuses a small name pool across many teacher rows, so the raw list
+  // shows the same name several times.
+  const lang = await getDisplayLang()
+  const nameMap = await getNames(
+    teachers,
+    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    lang,
+    schoolId
+  )
+
+  const seen = new Set<string>()
+  const out: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    name: string
+    email: string
+    photoUrl?: string
+    department?: string
+    subjects: string[]
+  }> = []
+  for (const t of teachers) {
+    const raw = fullName({ firstName: t.firstName, lastName: t.lastName })
+    const name = nameMap.get(raw) || raw
+    if (seen.has(name)) continue
+    seen.add(name)
+    out.push({
       id: t.id,
       firstName: t.firstName || "",
       lastName: t.lastName || "",
+      name,
       email: t.user?.email || "",
       photoUrl: t.user?.image || undefined,
       department: t.teacherDepartments[0]?.department?.departmentName,
       subjects: t.subjectExpertise.map((e) => e.subjectId),
-    })),
+    })
   }
+
+  return { teachers: out }
 }

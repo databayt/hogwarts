@@ -46,6 +46,8 @@ export interface TeacherInfo {
   id: string
   firstName: string
   lastName: string
+  /** Localized display name (app language); falls back to firstName+lastName. */
+  name?: string
   email: string
   phone?: string
   department?: string
@@ -69,6 +71,10 @@ export interface SubjectInfo {
   department?: string
   hoursPerWeek: number
   isCore: boolean
+  /** Grades this subject is selected for (SubjectSelection.gradeId). Empty/absent
+   *  means "applies to any grade" — the slot editor uses it to show only the
+   *  subjects relevant to the clicked room's grade. */
+  gradeIds?: string[]
 }
 
 export interface ClassroomInfo {

@@ -26,6 +26,63 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Key Decisions
 
+- **Timetable auto-provisions for EVERY school, zero clicks** (2026-06-17):
+  `getProvisioningStatus` flags the `schedule`/`timetable` stages missing
+  whenever counts are 0 (no longer gated on a pre-chosen
+  `School.timetableStructure`); `repairProvisioning` resolves an effective
+  structure slug via `resolveEffectiveStructureSlug` (explicit choice → country
+  default) and persists it. `autoGenerateTimetableForSchool` resolves the term
+  through `resolveActiveTerm` (NOT a bare `findFirst`) so generation and the grid
+  agree on the term — critical when legacy data has duplicate active terms.
+- **Generation realism** (2026-06-17): `placeSectionSubject` places a subject
+  AT MOST ONCE per day (spread across days), and per day PREFERS a period where
+  the section, a room, AND a qualified teacher are all free before falling back
+  to a teacher-less period. `autoGenerateTimetableForSchool` wires real teachers
+  - `subjectExpertise` (its `subjectId` == SubjectSelection `catalogSubjectId`) so
+    slots get a conflict-free qualified teacher; the persist step must NOT hardcode
+    `teacherId: undefined` (that silently discarded every assignment — a real bug).
+    Generation still emits teacher-LESS slots where no qualified teacher is free;
+    coverage is bounded by how well `TeacherSubjectExpertise` covers the school's
+    `SubjectSelection`.
+- **Slot-editor pickers are term-independent + localized** (2026-06-17):
+  `getSubjectsForSlotEditor` reads `SubjectSelection` (NOT `Class` by termId —
+  classes can live under a different term → empty picker).
+  `getTeachersForSlotEditor` localizes names via `getNames` (app language) and
+  dedupes by display name. The dialog renders the auto-detected day/period/
+  classroom/section as ONE icon-less row of VALUES ONLY (dot-separated, no
+  labels): period carries its start time (`Period 1 (8:00)`) and the section is
+  shown as its GRADE (`Grade 1`), which is what the room maps to. Title is
+  terse (`Add slot`/`Edit slot`), no description.
+- **Slot-editor subjects are grade-aware** (2026-06-17):
+  `getSubjectsForSlotEditor` returns `gradeIds: string[]` per subject (grouped
+  from `SubjectSelection`, no longer `distinct` by `catalogSubjectId`). The
+  dialog filters the subject picker to the resolved section's `gradeId` (room
+  A01 → Grade 1 → only Grade 1 subjects); falls back to the full list when the
+  grade can't be resolved or no subject carries grade metadata.
+- **Room/teacher grid names are localized** (2026-06-17):
+  `getTimetableByRoom`/`getTimetableByTeacher` run subject names through
+  `getLabels` and teacher names through `getNames` (app language) before
+  returning slots — stored Arabic teacher names no longer leak onto `/en`.
+- **Year match is date-range, not yearName-string** (2026-06-17):
+  `applyTimetableStructureForNewSchool` reuses a year by `yearName` OR date-range
+  overlap with the current academic window. The seed names years `"2025-2026"`
+  (hyphen) and `computeTermDates` `"2025/2026"` (slash) — a string-only match
+  created duplicate SchoolYears (the demo's 2-year/2-active-term bug). Do NOT
+  "fix" this by changing the seed's yearName format — that orphans existing
+  hyphen-year rows on re-seed. The overlap arm stays scoped to the current window
+  so it never reuses a stale prior year.
+- **Slot editor is a flat, context-aware form** (2026-06-17): day/period (click
+  context), classroom (room view), and section (homeroom `Section.classroomId`
+  match) render READ-ONLY; the only inputs are subject (required) + teacher
+  (optional). `teacherId` is optional in `upsertTimetableSlotSchema`;
+  `validateSlotConstraints` SKIPS the teacher check when it's absent (passing an
+  `undefined` id to `validateTeacherConstraints` matches a random teacher →
+  phantom conflicts). No "Options" tab — substitute/recurring/notes were never
+  persisted.
+- **`StructurePreview` is shared** (2026-06-17): lives at
+  `timetable/structure-preview.tsx`; the onboarding schedule step re-exports it.
+  Settings `schedule-configurator.tsx` reuses it so onboarding + dashboard share
+  one schedule UI (preset Select + live preview + quick-config knobs).
 - **Section is the slot axis** (2026-06-12): `Timetable.sectionId` + `subjectId`
   are the operational identity of a slot; `classId` survives only on legacy
   rows for exams/results history. `upsertTimetableSlot` requires

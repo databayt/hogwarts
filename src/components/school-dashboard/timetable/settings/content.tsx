@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState, useTransition } from "react"
 import {
-  AlertCircle,
   Calendar,
   Check,
   Clock,
@@ -66,7 +65,7 @@ import {
   updatePeriod,
   upsertSchoolWeekConfig,
 } from "../actions"
-import { formatWorkingDays, TIMETABLE_STRUCTURES } from "../structures"
+import { ScheduleConfigurator } from "./schedule-configurator"
 
 const DAY_LABELS = [
   { value: 0, label: "Sunday" },
@@ -138,7 +137,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
   })
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false)
   const [copyTargetYearId, setCopyTargetYearId] = useState<string>("")
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [isApplyingStructure, setIsApplyingStructure] = useState(false)
 
   // Load terms and years on mount
   useEffect(() => {
@@ -372,6 +371,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
       return
     }
 
+    setIsApplyingStructure(true)
     try {
       const result = await applyTimetableStructure({
         yearId: selectedYearId,
@@ -383,7 +383,6 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
         title: d?.settings?.structureApplied || "Structure Applied",
         description: `Created ${result.createdCount} periods`,
       })
-      setIsTemplateDialogOpen(false)
       loadConfig()
     } catch (err) {
       toast({
@@ -392,6 +391,8 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
           err instanceof Error ? err.message : (s?.error ?? "Failed to apply"),
         variant: "destructive",
       })
+    } finally {
+      setIsApplyingStructure(false)
     }
   }
 
@@ -493,6 +494,38 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
           <Skeleton className="h-32 w-full rounded-lg" />
           <Skeleton className="h-64 w-full rounded-lg" />
         </div>
+      )}
+
+      {/* Schedule preset configurator — same UI as the onboarding schedule step */}
+      {!isPending && selectedTerm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5" />
+              {d?.settings?.scheduleTitle || "Schedule"}
+            </CardTitle>
+            <CardDescription>
+              {d?.settings?.scheduleDescription ||
+                "Pick a preset and fine-tune it, then fine-tune individual periods below."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedYearId ? (
+              <ScheduleConfigurator
+                yearId={selectedYearId}
+                applying={isApplyingStructure}
+                dictionary={d?.settings}
+                lang={lang}
+                onApply={handleApplyStructure}
+              />
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {d?.settings?.selectSchoolYearFirst ||
+                  "Please select a school year first"}
+              </p>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Settings Content */}
@@ -611,75 +644,8 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  {/* Template Dialog */}
-                  <Dialog
-                    open={isTemplateDialogOpen}
-                    onOpenChange={setIsTemplateDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!selectedYearId}
-                      >
-                        <Clock className="me-2 h-4 w-4" />
-                        {d?.settings?.useTemplate || "Use Template"}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {d?.settings?.createFromTemplate ||
-                            "Create from Template"}
-                        </DialogTitle>
-                        <DialogDescription>
-                          {d?.settings?.chooseTemplate ||
-                            "Choose a template to create standard periods"}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        {periods.length > 0 && (
-                          <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>{s?.warning ?? "Warning"}</AlertTitle>
-                            <AlertDescription>
-                              {d?.settings?.replaceWarning ||
-                                "This will replace all existing periods for this year."}
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        <div className="grid gap-3">
-                          {TIMETABLE_STRUCTURES.map((structure) => (
-                            <Button
-                              key={structure.slug}
-                              variant="outline"
-                              className="h-auto justify-start py-3"
-                              onClick={() =>
-                                handleApplyStructure(structure.slug)
-                              }
-                            >
-                              <div className="text-start">
-                                <div className="flex items-center gap-2">
-                                  <strong>{structure.nameEn}</strong>
-                                  {structure.isDefault && (
-                                    <Badge variant="secondary">
-                                      {d?.settings?.default || "Default"}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <span className="text-muted-foreground text-xs">
-                                  {structure.periodsPerDay} periods &middot;{" "}
-                                  {structure.schoolStart} -{" "}
-                                  {structure.schoolEnd} &middot;{" "}
-                                  {formatWorkingDays(structure.workingDays)}
-                                </span>
-                              </div>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  {/* Preset selection moved to the Schedule configurator card
+                      above (mirrors the onboarding schedule step). */}
 
                   {/* Copy Dialog */}
                   <Dialog

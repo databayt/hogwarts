@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return {
-    title: dictionary?.school?.liveClasses?.title || "Live Classes",
+    title: dictionary?.school?.liveClasses?.title || "Conference",
   }
 }
 
@@ -56,7 +56,7 @@ export default async function Page({ params, searchParams }: Props) {
   // [id]/schedule/network-test sub-routes keep their own LiveKit UI).
   return (
     <div className="space-y-6">
-      <PageHeadingSetter title={d?.title || "Live Classes"} />
+      <PageHeadingSetter title={d?.title || "Conference"} />
       <PageNav pages={pages} />
       <LiveClassesContent
         searchParams={searchParams}

@@ -117,7 +117,9 @@ export const upsertTimetableSlotSchema = z.object({
   // Section-first fields (primary path)
   sectionId: cuidSchema,
   subjectId: cuidSchema,
-  teacherId: cuidSchema,
+  // Teacher is optional: auto-generated and manually-created slots may be
+  // teacher-less; the teacher is attached later and renders once assigned.
+  teacherId: cuidSchema.optional(),
   classroomId: cuidSchema,
   weekOffset: weekOffsetSchema,
   // Legacy classId kept optional for backward round-trips (exams/results history)
@@ -383,6 +385,9 @@ export interface SectionForTimetable {
   name: string
   gradeId: string
   gradeName: string
+  /** Homeroom classroom — lets the slot editor auto-detect the section from
+   *  the selected room in the classroom-based admin view. */
+  classroomId: string | null
 }
 /** Subject-selection entry for a grade, used by slot editor to filter subjects */
 export interface SubjectForGrade {

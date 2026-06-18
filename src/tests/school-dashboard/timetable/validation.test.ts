@@ -4,6 +4,8 @@
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
+import { upsertTimetableSlotSchema } from "@/components/school-dashboard/timetable/validation"
+
 // Timetable validation schema tests
 describe("Timetable Validation Schemas", () => {
   const dayOfWeekEnum = z.enum([
@@ -333,5 +335,59 @@ describe("Timetable Validation Schemas", () => {
       const result = conflictCheckSchema.safeParse(withExclude)
       expect(result.success).toBe(true)
     })
+  })
+})
+
+// Real upsert schema — teacher-less slots must be accepted (teacher attached
+// later; auto-generation also emits teacher-less slots).
+describe("upsertTimetableSlotSchema (real schema)", () => {
+  // Valid CUIDs: ^c[a-z0-9]{24}$
+  const CUID_A = "cmp2lczd50000hzb69tss758i"
+  const CUID_B = "cmq0ucydz0001k004ypok0gso"
+  const CUID_C = "cmq0ucyi1000nk004m88hta1z"
+  const CUID_D = "cmqe26k2m04suggamkc325oof"
+
+  const base = {
+    termId: CUID_A,
+    dayOfWeek: 1,
+    periodId: CUID_B,
+    sectionId: CUID_C,
+    subjectId: CUID_D,
+    classroomId: CUID_A,
+    weekOffset: 0,
+  }
+
+  it("accepts a slot with no teacher", () => {
+    const result = upsertTimetableSlotSchema.safeParse(base)
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts a slot with a teacher", () => {
+    const result = upsertTimetableSlotSchema.safeParse({
+      ...base,
+      teacherId: CUID_B,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("still requires section and subject", () => {
+    const { sectionId: _omit, ...noSection } = base
+    expect(upsertTimetableSlotSchema.safeParse(noSection).success).toBe(false)
+  })
+})
+
+// Period labels are stored as the full "Period N"; the grid strips the
+// redundant prefix before re-applying the localized "Period" label.
+describe("period label de-duplication", () => {
+  const strip = (name: string) => name.replace(/^period\s+/i, "")
+
+  it("strips the leading 'Period ' so the dictionary prefix isn't doubled", () => {
+    expect(strip("Period 1")).toBe("1")
+    expect(strip("Period 12")).toBe("12")
+  })
+
+  it("leaves break/lunch labels untouched", () => {
+    expect(strip("Break")).toBe("Break")
+    expect(strip("Lunch")).toBe("Lunch")
   })
 })

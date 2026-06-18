@@ -46,6 +46,80 @@ last_audited: 2026-06-13
 
 ## Known Issues
 
+### Recently Fixed (2026-06-17 -- zero-click auto-provision, schedule configurator, slot-editor simplification)
+
+Driven by "why no subjects render on `/en/timetable`": the demo had **0 timetable
+slots** (and 2 duplicate school years / 2 active terms). Root causes + fixes:
+
+**Auto-provision (every school, zero clicks):**
+
+1. `getProvisioningStatus` no longer gates the `schedule`/`timetable` stages on a
+   pre-selected `School.timetableStructure` — they're flagged missing whenever the
+   counts are 0, so every school auto-generates a timetable. `repairProvisioning`
+   resolves an effective structure slug (explicit choice, else
+   `resolveEffectiveStructureSlug` → country-recommended default) and persists it.
+2. **Duplicate-year root cause**: `applyTimetableStructureForNewSchool` matched the
+   year by `yearName` only, but the seed writes `"2025-2026"` (hyphen) while
+   `computeTermDates` writes `"2025/2026"` (slash) — never reconciled → a 2nd
+   SchoolYear. Now matches by yearName **OR date-range overlap** with the current
+   academic window (format-agnostic, still scoped to the current year). Changing the
+   seed's format was rejected — it would orphan existing hyphen-year rows on re-seed.
+3. **Term-from-date**: `seedTerms` derived `isActive` from today's date instead of
+   hardcoding Term 1; `resolveActiveTerm` Priority 1 now prefers the active term whose
+   range contains today (defensive against legacy duplicate-active data);
+   `autoGenerateTimetableForSchool` resolves the term via `resolveActiveTerm` (not a
+   bare `findFirst`) so generation and the grid always agree on the term.
+4. Demo seed (`DEMO_SCHOOL`) now sets `timetableStructure: "sd-private"`.
+
+**"Period Period 1"**: `simple-grid.tsx` prepended the localized "Period" label to a
+name already stored as `"Period 1"`. Now strips a leading `Period ` from the name.
+
+**Slot-editor simplification**: collapsed the 3-tab dialog to a flat form; day/period
+(click context) + classroom (room view) + section (homeroom mapping) are shown as
+read-only context, not pickers; removed the "Options" tab (substitute/recurring/notes
+were never persisted); `teacherId` is now optional (`upsertTimetableSlotSchema` +
+`validateSlotConstraints` skip the teacher check when absent) so subject-only slots can
+be created and the teacher attached later.
+
+**Schedule configurator**: timetable Settings now mirrors the onboarding schedule step
+— a preset `<Select>` + quick-config knobs (weekend/periods/duration/start) driving a
+shared `StructurePreview` (lifted to the timetable block), applied via
+`applyTimetableStructure`; the per-period editor remains for manual fine-tuning. The old
+"Use Template" dialog was removed (superseded).
+
+**Realistic generation** (round 2): three generator fixes in `generate/algorithm.ts` +
+`autoGenerateTimetableForSchool`:
+
+- `placeSectionSubject` placed a subject in MANY periods of one day (inner period loop never
+  broke). Now ≤1 period per subject per day, spread across `selectDaysForSubject`'s days.
+- Generation passed `[]` teachers + empty `preferredTeacherIds` → every slot teacher-less.
+  Now wires active teachers + their `subjectExpertise` (subjectId == SubjectSelection
+  `catalogSubjectId`) and assigns a qualified, conflict-free teacher.
+- Slot persistence hardcoded `teacherId: undefined`, discarding every assignment → now
+  persists `slot.teacherId`.
+- Teacher matching is no longer opportunistic: per day it PREFERS a period where section +
+  room + a qualified teacher are all free, falling back to teacher-less only if none.
+
+**Slot-editor pickers**: `getSubjectsForSlotEditor` read `Class` rows by the active termId
+(empty when classes live under a different term — the empty-subject-picker bug); now reads
+term-independent `SubjectSelection`. `getTeachersForSlotEditor` localizes names to the app
+language (`getNames`) and dedupes by display name (the seed reuses ~31 names across 100
+teacher rows). Dialog v2: removed all icons + avatars; the 4 auto-detected facts (day /
+period / classroom / section) render in one compact row; section shows its name only (app
+language, no stored grade label).
+
+**Demo data** (prod Neon, additive + reversible): regenerated to 840 slots (24/24 sections,
+full 7×5 grids), **max 1 same-subject-per-day**, **0 teacher double-bookings**, 121 slots
+teacher-assigned. Deactivated the stale Sept–Dec active term (one active term remains).
+Known data limits (NOT code): the demo over-selects subjects per grade (322 "placed 0/N"
+overflow) and has sparse teacher expertise (only 262/480 section-subjects have any qualified
+teacher → ~14% teacher coverage). Realistic coverage needs curated SubjectSelection +
+expertise seeding. The duplicate SchoolYear row is left in place (harmless).
+
+tsc 0; 197 timetable + 21 catalog-provision tests green; i18n parity green. (The repo-wide
+`rtl-physical-class` + `errorReturn` ratchets are red from **other** uncommitted branch
+work — `admission/leads/content.tsx` — not this change.)
+
 ### Recently Fixed (2026-06-13 -- production-readiness pass: security, correctness, validation, perf, a11y)
 
 Driven by a 9-dimension adversarial audit (tenant / authz / validation /

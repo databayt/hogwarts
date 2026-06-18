@@ -33,11 +33,24 @@ export async function resolveActiveTerm(schoolId: string): Promise<{
     schoolYear: { select: { id: true } },
   } as const
 
-  // Priority 1: Explicitly marked as active
-  const activeTerm = await db.term.findFirst({
-    where: { schoolId, isActive: true },
-    select: termSelect,
-  })
+  // Priority 1: Explicitly marked as active. When more than one term is
+  // flagged active (legacy duplicate-provisioning data), prefer the one whose
+  // date range contains today so period/timetable lookups resolve to the right
+  // academic window; fall back to any active term.
+  const activeTerm =
+    (await db.term.findFirst({
+      where: {
+        schoolId,
+        isActive: true,
+        startDate: { lte: today },
+        endDate: { gte: today },
+      },
+      select: termSelect,
+    })) ??
+    (await db.term.findFirst({
+      where: { schoolId, isActive: true },
+      select: termSelect,
+    }))
 
   if (activeTerm) {
     return {

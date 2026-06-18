@@ -118,12 +118,18 @@ await applyTimetableStructure({
 
 It validates admin + tenant, looks up the structure (resolving legacy names), optionally deletes existing periods (`replaceExisting`), creates a `Period` row per entry (class / break / lunch), upserts `SchoolWeekConfig` with the working days + lunch position, and logs an audit entry.
 
+In **Settings**, the schedule configurator mirrors the onboarding schedule step: a preset `<Select>` (defaulted to the country-recommended structure) drives a live `StructurePreview`, with quick-config knobs — weekend, periods/day, duration, start — for fine-tuning. Applying writes the periods; the per-period editor below handles row-level manual tweaks. The `StructurePreview` is shared between onboarding and Settings so both surfaces look identical.
+
 ## Generating a timetable
 
 The **Generate** tab is a two-step, preview-then-commit flow:
 
 1. `generateTimetablePreview()` runs `generateSectionTimetable()` (`generate/algorithm.ts`) over every section. For each section it fills the week from the grade's subject allocations, assigns a teacher from that teacher's subject expertise (left **Unassigned** when none is free), routes regular subjects to the section's homeroom and lab subjects to a lab/common room, and prevents a section from being double-booked in the same period.
 2. `applyGeneratedTimetable()` commits the preview into `Timetable` rows.
+
+### Zero-click auto-provision
+
+You don't have to press **Generate** to get a timetable. Every school auto-provisions one as part of the provisioning doctor (`repairProvisioning` → `autoGenerateTimetableForSchool`), which runs at onboarding completion, on publish, and via the operator "Repair Provisioning" action. Curriculum (the grade → subject allocations) plus the schedule (periods + working days) is enough to fill the grid with teacher-less slots; teacher names appear once teachers are assigned, and students see their schedule the moment they're placed in a section. The active term is detected from today's date, and generation targets the same term the grid reads (`resolveActiveTerm`) so the two never disagree. A school that never picked a schedule structure still provisions — the doctor derives a country-recommended default and saves it.
 
 `detectTimetableConflicts()` backs the **Conflicts** tab — teacher, room, and section double-booking — and `suggestFreeSlots()` powers the slot editor's free-period suggestions. `getTimetableAnalytics()` backs the **Analytics** tab.
 
