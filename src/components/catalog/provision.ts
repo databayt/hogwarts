@@ -7,6 +7,7 @@ import {
   resolveAcademicCalendar,
 } from "@/components/school-dashboard/timetable/calendars"
 
+import { defaultRoomName } from "./room-naming"
 import {
   ensureSubjectSelections,
   setupCatalogForSchool,
@@ -18,6 +19,29 @@ import {
 // slots, and library books — plus the provisioning doctor that detects and
 // repairs partially provisioned schools (onboarding runs fire-and-forget,
 // so any stage can be lost to a serverless timeout).
+
+/**
+ * Resolve the timetable structure slug to provision a school with. Prefers the
+ * school's explicitly chosen `timetableStructure`; otherwise derives a sensible
+ * default from its country / type / level so timetable provisioning is
+ * zero-click even when the onboarding schedule step was skipped.
+ */
+export async function resolveEffectiveStructureSlug(school: {
+  country: string | null
+  schoolType?: string | null
+  schoolLevel?: string | null
+  timetableStructure?: string | null
+}): Promise<string> {
+  if (school.timetableStructure) return school.timetableStructure
+  const { getRecommendedStructures } =
+    await import("@/components/school-dashboard/timetable/structures")
+  const { autoSelect, recommended } = getRecommendedStructures(
+    school.country,
+    school.schoolType ?? null,
+    school.schoolLevel ?? null
+  )
+  return autoSelect?.slug ?? recommended[0]?.slug ?? "intl-default"
+}
 
 // ============================================================================
 // applyTimetableStructureForNewSchool — School year, periods, terms
@@ -54,13 +78,26 @@ export async function applyTimetableStructureForNewSchool(
   const calendar = resolveAcademicCalendar(school?.country, slug)
   const computed = computeTermDates(calendar, new Date())
 
-  // Create the CURRENT academic year if it doesn't exist. Matching by
-  // yearName (not "any year for this school") matters: reusing a stale
-  // prior-year record would link freshly computed terms to the wrong
-  // SchoolYear — and the terms/periods counts below would be scoped to the
-  // wrong year too.
+  // Reuse the CURRENT academic year if it already exists, else create it.
+  // We match by yearName OR by date-range overlap with the computed academic
+  // window. The date-range arm is what prevents DUPLICATE years: the seed path
+  // (`seedSchoolYear`) names years "2025-2026" (hyphen) while `computeTermDates`
+  // names them "2025/2026" (slash) — a pure yearName match never reconciles the
+  // two and creates a second SchoolYear (the bug behind the demo's 2 years / 2
+  // active terms). Overlap matching is still scoped to the current window, so it
+  // never reuses a stale prior year (the original concern).
   const existingYear = await db.schoolYear.findFirst({
-    where: { schoolId, yearName: computed.yearName },
+    where: {
+      schoolId,
+      OR: [
+        { yearName: computed.yearName },
+        {
+          startDate: { lte: computed.yearEnd },
+          endDate: { gte: computed.yearStart },
+        },
+      ],
+    },
+    orderBy: { startDate: "desc" },
     select: { id: true },
   })
 
@@ -217,7 +254,10 @@ export async function autoProvisionSections(schoolId: string) {
 
         for (let i = 0; i < sectionsPerGrade; i++) {
           const letter = letters[i]
-          const roomName = `Grade ${grade.gradeNumber}-${letter}`
+          // e.g. Grade 1 → A01 (section A), B01 (section B); Grade 12 → A12, B12.
+          // Grade-assigned (not shared) so each grade owns its homeroom classrooms.
+          const roomName = defaultRoomName(letter, grade.gradeNumber)
+          const sectionName = `Grade ${grade.gradeNumber}-${letter}`
 
           const classroom = await tx.classroom.upsert({
             where: { schoolId_roomName: { schoolId, roomName } },
@@ -239,7 +279,7 @@ export async function autoProvisionSections(schoolId: string) {
             create: {
               schoolId,
               gradeId: grade.id,
-              name: roomName,
+              name: sectionName,
               letter,
               classroomId: classroom.id,
               maxCapacity: studentsPerSection,
@@ -281,11 +321,16 @@ export async function autoGenerateTimetableForSchool(
 
   const tag = `[autoGenerateTimetable:${schoolId.slice(-6)}]`
 
-  // 1. Find active term
-  const activeTerm = await db.term.findFirst({
-    where: { schoolId, isActive: true },
-    select: { id: true, yearId: true },
-  })
+  // 1. Resolve the active term via the SHARED resolver (term-resolver) so
+  //    generation targets the exact term the timetable grid reads. Using a bare
+  //    `findFirst({ isActive: true })` here could pick a different active term
+  //    than the grid when legacy data has duplicates (the demo's 2 active
+  //    terms), generating slots under a year the grid never displays.
+  const { resolveActiveTerm } = await import("@/lib/term-resolver")
+  const resolved = await resolveActiveTerm(schoolId)
+  const activeTerm = resolved.term
+    ? { id: resolved.term.id, yearId: resolved.term.yearId }
+    : null
   if (!activeTerm) {
     console.warn(`${tag} BAIL: No active term`)
     return { success: false, slotsCreated: 0, warnings: ["No active term"] }
@@ -367,6 +412,42 @@ export async function autoGenerateTimetableForSchool(
     gradeSubjectsMap.set(sel.gradeId, list)
   }
 
+  // 5b. Teachers + their subject expertise → assign a qualified teacher to each
+  //     slot (was teacher-less). Build subjectId → [teacherId] so the algorithm
+  //     can pick an available qualified teacher; teachers with no expertise for
+  //     a subject are never offered it.
+  const teacherRows = await db.teacher.findMany({
+    where: { schoolId, employmentStatus: "ACTIVE" },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      subjectExpertise: { where: { schoolId }, select: { subjectId: true } },
+    },
+  })
+  const subjectTeachers = new Map<string, string[]>()
+  for (const t of teacherRows) {
+    for (const e of t.subjectExpertise) {
+      const list = subjectTeachers.get(e.subjectId) ?? []
+      list.push(t.id)
+      subjectTeachers.set(e.subjectId, list)
+    }
+  }
+  const teacherAvailability = teacherRows.map((t) => ({
+    teacherId: t.id,
+    teacherName: `${t.firstName ?? ""} ${t.lastName ?? ""}`.trim(),
+    maxPeriodsPerDay: 6,
+    maxPeriodsPerWeek: 25,
+    maxConsecutive: 3,
+    subjectExpertise: t.subjectExpertise.map((e) => e.subjectId),
+    unavailableBlocks: [] as Array<{ dayOfWeek: number; periodId: string }>,
+    preferredPeriods: [] as Array<{ dayOfWeek: number; periodId: string }>,
+    avoidedPeriods: [] as Array<{ dayOfWeek: number; periodId: string }>,
+  }))
+  console.log(
+    `${tag} Teachers: ${teacherAvailability.length}, subjects with a qualified teacher: ${subjectTeachers.size}`
+  )
+
   // 6. Build SectionRequirement[]
   const sectionRequirements = sectionsData.map((s) => {
     const gradeSubjects = gradeSubjectsMap.get(s.gradeId) || []
@@ -381,7 +462,7 @@ export async function autoGenerateTimetableForSchool(
         subjectName: gs.subjectName,
         hoursPerWeek: gs.hoursPerWeek,
         requiresLab: gs.subjectName.toLowerCase().includes("lab"),
-        preferredTeacherIds: [] as string[],
+        preferredTeacherIds: subjectTeachers.get(gs.subjectId) ?? [],
       })),
     }
   })
@@ -429,7 +510,7 @@ export async function autoGenerateTimetableForSchool(
   )
   const result = generateSectionTimetable(
     sectionRequirements,
-    [], // No teachers yet
+    teacherAvailability,
     rooms,
     {
       schoolId,
@@ -458,7 +539,7 @@ export async function autoGenerateTimetableForSchool(
   )
 
   console.log(
-    `${tag} Algorithm result: ${result.slots.length} slots, ${result.warnings.length} warnings, ${result.errors.length} errors`
+    `${tag} Algorithm result: ${result.slots.length} slots, ${result.slots.filter((s) => s.teacherId).length} with teacher, ${result.warnings.length} warnings, ${result.errors.length} errors`
   )
   if (result.errors.length > 0) {
     console.error(`${tag} Algorithm errors:`, result.errors)
@@ -485,7 +566,9 @@ export async function autoGenerateTimetableForSchool(
       sectionId: slot.sectionId || undefined,
       subjectId: slot.subjectId || undefined,
       classId: slot.classId || undefined,
-      teacherId: undefined,
+      // Persist the teacher the algorithm assigned (was hardcoded undefined,
+      // which discarded every assignment); stays null where none was free.
+      teacherId: slot.teacherId ?? undefined,
       classroomId: slot.classroomId,
       weekOffset: 0,
       constraintViolations: slot.violations,
@@ -735,14 +818,14 @@ export async function getProvisioningStatus(
   if (academicLevels === 0 || academicGrades === 0)
     missing.push("academicStructure")
   if (subjectSelections === 0) missing.push("subjectSelections")
-  if (
-    school.timetableStructure &&
-    (periods === 0 || terms === 0 || weekConfigs === 0)
-  )
+  // Schedule + timetable are no longer gated on a pre-selected
+  // `timetableStructure`: every school auto-provisions a timetable with zero
+  // clicks. When the school never picked a structure, the schedule stage
+  // resolves a country-recommended default (see `repairProvisioning`).
+  if (periods === 0 || terms === 0 || weekConfigs === 0)
     missing.push("schedule")
   if (sections === 0 || classroomTypes === 0) missing.push("sections")
-  if (school.timetableStructure && timetableSlots === 0)
-    missing.push("timetable")
+  if (timetableSlots === 0) missing.push("timetable")
   if (!school.joinCode) missing.push("joinCode")
 
   return {
@@ -796,6 +879,20 @@ export async function repairProvisioning(
   })
   if (!school) throw new Error("school_not_found")
 
+  // Resolve the structure slug once (explicit choice or country default) and
+  // persist it so future status checks + manual flows stay stable.
+  const effectiveSlug = await resolveEffectiveStructureSlug(school)
+  if (!school.timetableStructure) {
+    try {
+      await db.school.update({
+        where: { id: schoolId },
+        data: { timetableStructure: effectiveSlug },
+      })
+    } catch {
+      // Non-fatal: provisioning can still proceed with the resolved slug.
+    }
+  }
+
   const repaired: ProvisioningStage[] = []
   const failed: Array<{ stage: ProvisioningStage; error: string }> = []
 
@@ -837,7 +934,7 @@ export async function repairProvisioning(
   await run("schedule", async () => {
     const result = await applyTimetableStructureForNewSchool(
       schoolId,
-      school.timetableStructure!
+      effectiveSlug
     )
     // { skipped: true } means the slug was unrecognised — surface as failure
     if (result && "skipped" in result && result.skipped) {

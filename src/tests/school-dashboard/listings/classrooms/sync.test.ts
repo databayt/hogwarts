@@ -19,7 +19,7 @@ vi.mock("@/lib/db", () => ({
 }))
 
 const provisionMock = vi.fn()
-vi.mock("@/components/catalog/setup", () => ({
+vi.mock("@/components/catalog/provision", () => ({
   autoProvisionSections: (...args: unknown[]) => provisionMock(...args),
 }))
 

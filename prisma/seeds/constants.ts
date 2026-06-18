@@ -48,6 +48,9 @@ export const DEMO_SCHOOL = {
   // Classification
   schoolType: "private",
   schoolLevel: "both",
+  // Timetable structure — set so the provisioning doctor flags the demo's
+  // schedule/timetable stages and auto-generates a timetable (zero-click).
+  timetableStructure: "sd-private",
   description:
     "A leading educational institution in Khartoum dedicated to academic excellence and holistic student development.",
 

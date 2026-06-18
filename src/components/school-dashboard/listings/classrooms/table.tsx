@@ -13,7 +13,6 @@ import {
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
-import Modal from "@/components/atom/modal/modal"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -38,6 +37,8 @@ interface ClassroomsTableProps {
   subdomain: string
   perPage?: number
   permissions?: UIPermissions
+  types: { id: string; name: string }[]
+  grades: { id: string; name: string }[]
 }
 
 function ClassroomsTableInner({
@@ -47,9 +48,11 @@ function ClassroomsTableInner({
   subdomain,
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
+  types,
+  grades,
 }: ClassroomsTableProps) {
   const router = useRouter()
-  const { openModal } = useModal()
+  const { openModal, modal } = useModal()
   const [isPending, startTransition] = useTransition()
   const [searchValue, setSearchValue] = useState("")
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -102,6 +105,20 @@ function ClassroomsTableInner({
 
   const handleEdit = useCallback((id: string) => openModal(id), [openModal])
 
+  // Source the edit form's values from the rows already loaded in the table,
+  // so the dialog opens fully populated without an on-open fetch.
+  const editValues = useMemo(() => {
+    if (!modal.id) return null
+    const row = data.find((r) => r.id === modal.id)
+    if (!row) return null
+    return {
+      roomName: row.roomName,
+      typeId: row.typeId,
+      capacity: row.capacity,
+      gradeId: row.gradeId ?? undefined,
+    }
+  }, [modal.id, data])
+
   const columns = useMemo(
     () =>
       getClassroomColumns(
@@ -117,7 +134,9 @@ function ClassroomsTableInner({
     data,
     columns,
     pageCount: 1,
+    enableClientSorting: true,
     initialState: {
+      sorting: [{ id: "gradeNumber", desc: false }],
       pagination: { pageIndex: 0, pageSize: data.length || perPage },
     },
   })
@@ -159,7 +178,12 @@ function ClassroomsTableInner({
         onLoadMore={loadMore}
       />
 
-      <Modal content={<ClassroomForm onSuccess={refresh} />} />
+      <ClassroomForm
+        onSuccess={refresh}
+        types={types}
+        grades={grades}
+        editValues={editValues}
+      />
     </>
   )
 }

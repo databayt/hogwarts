@@ -91,6 +91,16 @@ export async function seedTerms(
   const { term1, term2 } = getTermDates(yearStart)
   const terms: TermRef[] = []
 
+  // Derive the active term from TODAY's date instead of hardcoding Term 1.
+  // During Term 2 months (Jan–Jun) a hardcoded Term-1-active flag makes
+  // `resolveActiveTerm` (Priority 1) return the wrong term, which then scopes
+  // period/timetable lookups to the wrong window. Default to Term 1 outside
+  // both windows (e.g. the summer break) so exactly one term is always active.
+  const now = new Date()
+  const inTerm2 = now >= term2.start && now <= term2.end
+  const term1Active = !inTerm2
+  const term2Active = inTerm2
+
   // Term 1
   const t1 = await prisma.term.upsert({
     where: {
@@ -103,7 +113,7 @@ export async function seedTerms(
     update: {
       startDate: term1.start,
       endDate: term1.end,
-      isActive: true,
+      isActive: term1Active,
     },
     create: {
       schoolId,
@@ -111,7 +121,7 @@ export async function seedTerms(
       termNumber: 1,
       startDate: term1.start,
       endDate: term1.end,
-      isActive: true,
+      isActive: term1Active,
     },
   })
 
@@ -134,7 +144,7 @@ export async function seedTerms(
     update: {
       startDate: term2.start,
       endDate: term2.end,
-      isActive: false,
+      isActive: term2Active,
     },
     create: {
       schoolId,
@@ -142,7 +152,7 @@ export async function seedTerms(
       termNumber: 2,
       startDate: term2.start,
       endDate: term2.end,
-      isActive: false,
+      isActive: term2Active,
     },
   })
 

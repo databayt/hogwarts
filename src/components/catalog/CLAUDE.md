@@ -50,10 +50,29 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
   Onboarding `after()`, manual `publishSchool`, and the operator tenants "Repair
   Provisioning" action all converge on it. Library books are REPORT-ONLY in the doctor —
   book adoption is a school decision made in the library picker, never auto-repaired.
+- **Schedule/timetable are zero-click for every school** (2026-06-17):
+  `getProvisioningStatus` no longer gates the `schedule`/`timetable` stages on a
+  pre-selected `School.timetableStructure` — they're flagged missing on 0 counts, so the
+  doctor always builds a timetable. `repairProvisioning` resolves an effective slug via
+  `resolveEffectiveStructureSlug` (explicit choice → `getRecommendedStructures` country
+  default → `intl-default`) and persists it. `applyTimetableStructureForNewSchool` reuses
+  the academic year by `yearName` **OR date-range overlap** — a string-only match created
+  duplicate SchoolYears because the seed (`"2025-2026"`) and `computeTermDates`
+  (`"2025/2026"`) disagree on format; do NOT change the seed format (orphans existing
+  rows on re-seed). `autoGenerateTimetableForSchool` wires real teachers +
+  `subjectExpertise` (assigns a qualified, conflict-free teacher) and must persist
+  `slot.teacherId` in the `createMany` — the old `teacherId: undefined` silently dropped
+  every assignment. Generation-quality details (one-subject-per-day, teacher-preferred
+  placement) live in the **timetable** block CLAUDE.md / `generate/algorithm.ts`.
 - **Operator action errors are codes**: catalog actions return snake_case codes
   (`paid_requires_price_and_currency`, …); `error-messages.ts` `catalogActionError` maps
   them at display time with a prettify fallback. Keep new action errors snake_case and
   add display-worthy ones to the map.
+- **Default room naming is centralized** (2026-06-17): the homeroom name formula
+  (`<letter><2-digit grade>` → A01/B01…A12/B12) lives once in `room-naming.ts`
+  (`defaultRoomName`), shared by `autoProvisionSections` (the classrooms "Sync defaults"
+  button) and the classrooms Configure tab's `generateSections`. It was previously
+  copy-pasted in both; do not re-inline it — change the helper so both stay in lockstep.
 
 ## Danger Zones
 

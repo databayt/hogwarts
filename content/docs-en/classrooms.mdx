@@ -5,27 +5,28 @@ description: Physical room management — types, capacity, grade affinity, secti
 
 The classrooms module manages physical rooms across a school campus. Each classroom has a type, capacity, optional grade affinity, and integrates with sections for homeroom grouping. DEVELOPER and ADMIN have full CRUD; TEACHER and STAFF read-only.
 
-Schema, seed data, CRUD, room detail, section generation, capacity overview, and timetable integration are production. The schedule tab shows class timetables (not room schedules), the subjects tab is a placeholder, and the facility page remains static.
+Schema, seed data, CRUD, room detail, section generation, capacity stats, and timetable integration are production. The area is two tabs — **Rooms** (list + add/edit + Sync defaults, with capacity summary stats folded into the header) and **Configure** (the per-grade rooms → sections → classes → enrollment wizard). A class's room is assigned in the **Classes** add/edit form and per-period in the **Timetable**; the per-room weekly schedule lives on the **room detail page** (`/classrooms/[id]`).
+
+> **Rationalized 2026-06-17.** Three redundant tabs were removed to keep the area clean and practical: **Subjects** (a bulk `Class.classroomId` editor — the same field is required in the Classes form and overridden per-period by the Timetable), **Schedule** (a read-only section view duplicating the Timetable feature; the real per-room view is on the room detail page), and **Capacity** (its summary cards moved into the Rooms page; per-room data already lived in the rooms table). Provisioning logic (Sync defaults ↔ Configure) now shares one room-name helper (`catalog/room-naming.ts`).
 
 ## Status
 
-| Feature               | Status      | Notes                                                             |
-| --------------------- | ----------- | ----------------------------------------------------------------- |
-| Classroom schema      | Production  | Full model with type, capacity, grade affinity, lang              |
-| Section model         | Production  | Homeroom groups within grades, linked to classrooms               |
-| Classroom types       | Production  | 8 types: classroom, lab, library, art, music, hall, sports, admin |
-| Seed data             | Production  | 28 rooms across 5 buildings (A-E)                                 |
-| Configure tab         | Production  | Bulk section + room generation per grade                          |
-| Room detail           | Production  | Detail page with timetable grid, class list, utilization          |
-| Capacity overview     | Production  | Summary stats + per-room utilization table                        |
-| Tab navigation        | Production  | 5 tabs: Rooms, Configure, Capacity, Subjects, Schedule            |
-| Authorization         | Production  | RBAC — DEVELOPER / ADMIN write, TEACHER / STAFF read              |
-| Timetable integration | Production  | Slot assignment with 3 unique constraints                         |
-| Room constraints      | Production  | Scheduling rules, accessibility, maintenance blocks               |
-| Dropdown API          | Production  | `GET /api/classrooms`                                             |
-| CRUD UI               | Production  | DataTable with create / edit / delete                             |
-| Schedule tab          | Partial     | Shows class timetables, not room schedules                        |
-| Subjects tab          | Placeholder | Reuses classes module content                                     |
+| Feature               | Status     | Notes                                                              |
+| --------------------- | ---------- | ------------------------------------------------------------------ |
+| Classroom schema      | Production | Full model with type, capacity, grade affinity, lang               |
+| Section model         | Production | Homeroom groups within grades, linked to classrooms                |
+| Classroom types       | Production | 8 types: classroom, lab, library, art, music, hall, sports, admin  |
+| Seed data             | Production | 28 rooms across 5 buildings (A-E)                                  |
+| Configure tab         | Production | Bulk section + room generation per grade                           |
+| Room detail           | Production | Detail page with per-room timetable grid, class list, utilization  |
+| Capacity stats        | Production | Summary cards folded into the Rooms page header                    |
+| Tab navigation        | Production | 2 tabs: Rooms, Configure                                           |
+| Authorization         | Production | RBAC — DEVELOPER / ADMIN write, TEACHER / STAFF read               |
+| Timetable integration | Production | Slot assignment with 3 unique constraints                          |
+| Room constraints      | Production | Scheduling rules, accessibility, maintenance blocks                |
+| Dropdown API          | Production | `GET /api/classrooms`                                              |
+| CRUD UI               | Production | DataTable with create / edit / delete                              |
+| Room ↔ class          | Production | Set in the Classes add/edit form (`Class.classroomId`) + Timetable |
 
 ## Models
 
@@ -173,6 +174,15 @@ The third constraint ensures no room is in two classes in the same period.
 ### Section
 
 `AcademicGrade → Section → Classroom` (via `classroomId`). `Student → Section → Classroom` (via `sectionId → classroomId`). Sections are created via the Configure tab's `generateSections()` action, which creates Section + Classroom atomically.
+
+**Default naming convention.** New schools (`autoProvisionSections`) and the Configure wizard generate **2 grade-assigned main classrooms per grade**, named `{section letter}{2-digit grade number}` — Grade 1 → `A01` (section A) / `B01` (section B), Grade 12 → `A12` / `B12`, etc. These rooms carry a `gradeId` (homeroom classrooms, shown with their grade rather than the **Shared** badge). The section keeps its own label (`Grade 1-A`). Rooms without a `gradeId` (labs, halls, gym, seeded demo rooms) render as **Shared**.
+
+**List display (locale-correct without the translation API).** The rooms table resolves two columns client-side so they read correctly in any language regardless of how the data was stored:
+
+- **Grade** — derived as `"{Grade} {gradeNumber}"` from the structured grade number (e.g. `Grade 1` / `الصف 1`), not the stored grade name. The column sorts by grade number and defaults to ascending; `Shared` (no grade) rows sort last.
+- **Type** — mapped through the `school.classrooms.roomTypes` dictionary (keyed by the lowercased type slug: `classroom`, `lab`, `hall`, `admin`, `art`, `music`, `library`, `sports`). Unknown/custom type names fall back to their raw stored value. This is deterministic (config-like), so it does not depend on the on-demand translation cache.
+
+The Add/Edit room form opens as a compact shadcn `Dialog` (not the legacy full-screen modal), laid out as two rows — **room name + grade**, then **type + capacity**. It is fed synchronously: the type/grade option lists are fetched once on the server (in `content.tsx`) and the edited row's current values come from the already-loaded table data (React Hook Form `values`), so opening an existing room does **not** trigger an on-open `getClassroom` fetch. This keeps the dialog stable on open — no blank→filled flash and no height re-center.
 
 ### Class
 

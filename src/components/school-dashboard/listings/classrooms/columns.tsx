@@ -12,6 +12,7 @@ import {
 } from "@/lib/rbac/ui-permissions"
 import { Badge } from "@/components/ui/badge"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type ClassroomRow = {
   id: string
@@ -20,6 +21,7 @@ export type ClassroomRow = {
   typeName: string
   typeId: string
   gradeName: string | null
+  gradeNumber: number | null
   gradeId: string | null
   classCount: number
   timetableCount: number
@@ -38,7 +40,7 @@ export function getClassroomColumns(
 ): ColumnDef<ClassroomRow>[] {
   const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
   const t = {
-    roomName: dictionary?.roomName || "Room",
+    roomName: dictionary?.room || "Room",
     type: dictionary?.type || "Type",
     grade: dictionary?.grade || "Grade",
     capacity: dictionary?.capacity || "Capacity",
@@ -47,6 +49,12 @@ export function getClassroomColumns(
     edit: dictionary?.edit || "Edit",
     delete: dictionary?.delete || "Delete",
   }
+  // Deterministic, locale-correct labels for the standard room types (config-like,
+  // so mapped via dictionary rather than the translation API). Unknown/custom
+  // type names fall back to their raw stored value.
+  const roomTypes =
+    (dictionary as { roomTypes?: Record<string, string> } | undefined)
+      ?.roomTypes ?? {}
 
   return [
     {
@@ -64,16 +72,24 @@ export function getClassroomColumns(
     {
       accessorKey: "typeName",
       header: t.type,
+      cell: ({ row }) => {
+        const raw = row.original.typeName
+        return roomTypes[raw?.toLowerCase()] ?? raw
+      },
     },
     {
-      accessorKey: "gradeName",
-      header: t.grade,
+      accessorKey: "gradeNumber",
+      id: "gradeNumber",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t.grade} />
+      ),
       cell: ({ row }) =>
-        row.original.gradeName ? (
-          <span>{row.original.gradeName}</span>
+        row.original.gradeNumber != null ? (
+          <span>{`${t.grade} ${row.original.gradeNumber}`}</span>
         ) : (
           <Badge variant="secondary">{t.shared}</Badge>
         ),
+      enableSorting: true,
     },
     {
       accessorKey: "capacity",

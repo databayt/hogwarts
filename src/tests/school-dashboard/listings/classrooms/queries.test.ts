@@ -8,7 +8,6 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   getGrades,
-  getRoomCapacityOverview,
   getRoomClasses,
   getRoomDetail,
   getRoomTimetable,
@@ -244,44 +243,5 @@ describe("getRoomClasses", () => {
     } as any)
     expect(await getRoomClasses({ roomId: "r1" })).toEqual([])
     expect(vi.mocked(db.class.findMany)).not.toHaveBeenCalled()
-  })
-})
-
-describe("getRoomCapacityOverview", () => {
-  it("returns rooms scoped by schoolId, ordered by name", async () => {
-    vi.mocked(db.classroom.findMany).mockResolvedValue([
-      {
-        id: "r1",
-        roomName: "A101",
-        capacity: 30,
-        lang: "en",
-        classroomType: { name: "Classroom", lang: "en" },
-        grade: null,
-        _count: { classes: 4 },
-      },
-    ] as any)
-
-    const rooms = await getRoomCapacityOverview()
-
-    expect(rooms).toHaveLength(1)
-    expect(vi.mocked(db.classroom.findMany).mock.calls[0][0]?.where).toEqual({
-      schoolId: SCHOOL,
-    })
-    expect(vi.mocked(db.classroom.findMany).mock.calls[0][0]?.orderBy).toEqual({
-      roomName: "asc",
-    })
-  })
-
-  it("returns null without school context", async () => {
-    asTenantless()
-    expect(await getRoomCapacityOverview()).toBeNull()
-  })
-
-  it("returns null when role is unauthorized", async () => {
-    vi.mocked(auth).mockResolvedValue({
-      user: { id: "u1", role: "STUDENT", schoolId: SCHOOL },
-    } as any)
-    expect(await getRoomCapacityOverview()).toBeNull()
-    expect(vi.mocked(db.classroom.findMany)).not.toHaveBeenCalled()
   })
 })

@@ -52,7 +52,11 @@ export type StudentRow = {
 interface ColumnOptions {
   onDeleteSuccess?: (id: string) => void
   onGenerateAccessCode?: (studentId: string, studentName: string) => void
-  onGenerateCredentials?: (studentId: string, studentName: string) => void
+  onGenerateCredentials?: (
+    studentId: string,
+    studentName: string,
+    badge?: string
+  ) => void
   onPurge?: (studentId: string, studentName: string) => void
   gradeOptions?: Array<{ label: string; value: string }>
   scope?: ArchiveScope
@@ -413,7 +417,11 @@ export const getStudentColumns = (
                   className="text-foreground/70"
                   onSelect={(e) => {
                     e.preventDefault()
-                    options?.onGenerateCredentials?.(student.id, student.name)
+                    options?.onGenerateCredentials?.(
+                      student.id,
+                      student.name,
+                      student.gradeName ?? undefined
+                    )
                   }}
                 >
                   {t.generateCredentials}

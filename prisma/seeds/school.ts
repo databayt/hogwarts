@@ -41,6 +41,7 @@ export async function seedSchool(prisma: PrismaClient): Promise<SchoolRef> {
     // New onboarding fields
     schoolType: DEMO_SCHOOL.schoolType,
     schoolLevel: DEMO_SCHOOL.schoolLevel,
+    timetableStructure: DEMO_SCHOOL.timetableStructure,
     description: DEMO_SCHOOL.description,
     city: DEMO_SCHOOL.city,
     state: DEMO_SCHOOL.state,

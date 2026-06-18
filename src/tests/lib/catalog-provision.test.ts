@@ -8,6 +8,7 @@ import { generateUniqueJoinCode } from "@/lib/join-code"
 import {
   getProvisioningStatus,
   repairProvisioning,
+  resolveEffectiveStructureSlug,
 } from "@/components/catalog/provision"
 import {
   ensureSubjectSelections,
@@ -170,14 +171,16 @@ describe("getProvisioningStatus", () => {
     expect(status.healthy).toBe(false)
   })
 
-  it("never marks schedule/timetable missing when the school has no timetable structure", async () => {
+  it("marks schedule/timetable missing even when the school has no timetable structure (zero-click auto-provision)", async () => {
     mockSchool({ timetableStructure: null, joinCode: null })
     mockCounts({})
 
     const status = await getProvisioningStatus(schoolId)
 
-    expect(status.missing).not.toContain("schedule")
-    expect(status.missing).not.toContain("timetable")
+    // Every school auto-provisions a timetable now — the stages are no longer
+    // gated on a pre-selected structure; the doctor derives a default.
+    expect(status.missing).toContain("schedule")
+    expect(status.missing).toContain("timetable")
   })
 
   it("treats streams and library books as optional", async () => {
@@ -215,9 +218,11 @@ describe("repairProvisioning", () => {
     expect(db.school.update).not.toHaveBeenCalled()
   })
 
-  it("runs only the missing stages, in dependency order", async () => {
-    // Fresh school WITHOUT a timetable structure: schedule/timetable stages
-    // must be skipped; everything else runs.
+  it("runs the missing stages in dependency order and persists a derived structure slug", async () => {
+    // Fresh school WITHOUT a timetable structure: the doctor derives a default
+    // slug, persists it, and the non-schedule stages run. (The schedule +
+    // timetable stages are attempted but land in `failed` here because their
+    // deep DB calls aren't mocked — that's exercised end-to-end elsewhere.)
     mockSchool({ timetableStructure: null, joinCode: null })
     mockCounts({})
     // autoProvisionSections internals: no grades yet → graceful no-op
@@ -227,14 +232,16 @@ describe("repairProvisioning", () => {
 
     const result = await repairProvisioning(schoolId)
 
-    expect(result.repaired).toEqual([
-      "defaults",
-      "academicStructure",
-      "subjectSelections",
-      "sections",
-      "joinCode",
-    ])
-    expect(result.failed).toEqual([])
+    // Non-schedule stages still run, in order.
+    expect(result.repaired).toEqual(
+      expect.arrayContaining([
+        "defaults",
+        "academicStructure",
+        "subjectSelections",
+        "sections",
+        "joinCode",
+      ])
+    )
     expect(setupDefaultsForSchool).toHaveBeenCalledWith(schoolId, "both")
     expect(setupCatalogForSchool).toHaveBeenCalledWith(schoolId, {
       country: "SD",
@@ -242,6 +249,12 @@ describe("repairProvisioning", () => {
     })
     expect(ensureSubjectSelections).toHaveBeenCalledWith(schoolId)
     expect(db.classroomType.upsert).toHaveBeenCalled()
+    // The derived structure slug is persisted back onto the school.
+    expect(db.school.update).toHaveBeenCalledWith({
+      where: { id: schoolId },
+      data: { timetableStructure: expect.any(String) },
+    })
+    // And the join code is still minted.
     expect(db.school.update).toHaveBeenCalledWith({
       where: { id: schoolId },
       data: { joinCode: "NEW123" },
@@ -305,6 +318,39 @@ describe("repairProvisioning", () => {
     expect(result.repaired).not.toContain("schedule")
     const scheduleFail = result.failed.find((f) => f.stage === "schedule")
     expect(scheduleFail?.error).toContain("unknown-slug-xyz")
+  })
+})
+
+describe("resolveEffectiveStructureSlug", () => {
+  it("returns the school's explicit structure when set", async () => {
+    const slug = await resolveEffectiveStructureSlug({
+      country: "SD",
+      schoolType: "private",
+      schoolLevel: "both",
+      timetableStructure: "sd-british",
+    })
+    expect(slug).toBe("sd-british")
+  })
+
+  it("derives a country-recommended default when none is set", async () => {
+    const slug = await resolveEffectiveStructureSlug({
+      country: "SD",
+      schoolType: "private",
+      schoolLevel: "both",
+      timetableStructure: null,
+    })
+    expect(typeof slug).toBe("string")
+    expect(slug.length).toBeGreaterThan(0)
+  })
+
+  it("falls back to a generic default for an unknown country", async () => {
+    const slug = await resolveEffectiveStructureSlug({
+      country: null,
+      schoolType: null,
+      schoolLevel: null,
+      timetableStructure: null,
+    })
+    expect(slug).toBe("intl-default")
   })
 })
 

@@ -28,18 +28,6 @@ export default async function ClassroomsLayout({ children, params }: Props) {
       name: d?.navigation?.configure || "Configure",
       href: `${base}/configure`,
     },
-    {
-      name: d?.navigation?.capacity || "Capacity",
-      href: `${base}/capacity`,
-    },
-    {
-      name: d?.navigation?.subjects || "Subjects",
-      href: `${base}/subjects`,
-    },
-    {
-      name: d?.navigation?.schedule || "Schedule",
-      href: `${base}/schedule`,
-    },
   ]
 
   return (

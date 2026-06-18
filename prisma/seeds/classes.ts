@@ -150,43 +150,53 @@ export async function seedSections(
 
   if (grades.length === 0) return
 
-  // Only use regular classrooms for homeroom sections (not labs, sports, admin)
-  const regularClassrooms = await prisma.classroom.findMany({
-    where: {
-      schoolId,
-      classroomType: { name: "classroom" },
-    },
-    select: { id: true, roomName: true, capacity: true },
-    orderBy: { roomName: "asc" },
+  // Each grade gets 2 sections (A, B), and each section owns a dedicated
+  // grade-assigned main classroom (homeroom) named <letter><2-digit grade> —
+  // e.g. Grade 1 → A01 / B01, Grade 12 → A12 / B12. These carry a gradeId
+  // so they render with their grade (not the "Shared" badge); labs/halls/admin
+  // rooms stay shared. Mirrors autoProvisionSections (the new-school default).
+  let classroomType = await prisma.classroomType.findFirst({
+    where: { schoolId, name: "classroom" },
+    select: { id: true },
   })
-  const homeroomRooms =
-    regularClassrooms.length > 0
-      ? regularClassrooms.map((c) => ({
-          id: c.id,
-          name: c.roomName,
-          capacity: c.capacity,
-        }))
-      : classrooms // fallback to all if no type filter matches
+  if (!classroomType) {
+    classroomType = await prisma.classroomType.upsert({
+      where: { schoolId_name: { schoolId, name: "classroom" } },
+      update: {},
+      create: { schoolId, name: "classroom" },
+      select: { id: true },
+    })
+  }
 
+  const SECTION_LETTERS = ["A", "B"]
   let teacherIdx = 0
-  let classroomIdx = 0
   let created = 0
 
   for (const grade of grades) {
-    const sectionsPerGrade = 3 // A, B, C
-    for (let i = 0; i < sectionsPerGrade; i++) {
-      const letter = String.fromCharCode(65 + i) // A, B, C
+    for (const letter of SECTION_LETTERS) {
       const name = `Grade ${grade.gradeNumber}-${letter}`
+      const roomName = `${letter}${String(grade.gradeNumber).padStart(2, "0")}`
+      const capacity = grade.maxStudents || 30
       const teacher = teachers[teacherIdx % teachers.length]
-      const classroom = homeroomRooms[classroomIdx % homeroomRooms.length]
       teacherIdx++
-      classroomIdx++
 
       try {
+        const room = await prisma.classroom.upsert({
+          where: { schoolId_roomName: { schoolId, roomName } },
+          update: { gradeId: grade.id, typeId: classroomType.id },
+          create: {
+            schoolId,
+            roomName,
+            capacity,
+            typeId: classroomType.id,
+            gradeId: grade.id,
+          },
+        })
+
         await prisma.section.upsert({
           where: { schoolId_name: { schoolId, name } },
           update: {
-            classroomId: classroom.id,
+            classroomId: room.id,
             homeroomTeacherId: teacher.id,
           },
           create: {
@@ -196,8 +206,8 @@ export async function seedSections(
             letter,
             lang: "en",
             homeroomTeacherId: teacher.id,
-            classroomId: classroom.id,
-            maxCapacity: grade.maxStudents || 30,
+            classroomId: room.id,
+            maxCapacity: capacity,
           },
         })
         created++
@@ -207,7 +217,11 @@ export async function seedSections(
     }
   }
 
-  logSuccess("Sections", created, "homeroom sections (A/B/C per grade)")
+  logSuccess(
+    "Sections",
+    created,
+    "homeroom sections (A/B per grade, grade-assigned rooms)"
+  )
 }
 
 // ============================================================================

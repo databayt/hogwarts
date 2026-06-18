@@ -71,7 +71,7 @@ export async function getClassrooms(
         typeId: true,
         gradeId: true,
         classroomType: { select: { id: true, name: true } },
-        grade: { select: { id: true, name: true } },
+        grade: { select: { id: true, name: true, gradeNumber: true } },
         _count: { select: { classes: true, timetables: true } },
         createdAt: true,
       },
@@ -79,6 +79,9 @@ export async function getClassrooms(
     db.classroom.count({ where }),
   ])
 
+  // Room-type label (localized via the `roomTypes` dictionary in the column) and
+  // grade label (derived from gradeNumber in the column) are both resolved
+  // client-side, so the query returns the raw stored values.
   return {
     success: true as const,
     data: rows.map((r) => ({
@@ -88,6 +91,7 @@ export async function getClassrooms(
       typeName: r.classroomType.name,
       typeId: r.typeId,
       gradeName: r.grade?.name ?? null,
+      gradeNumber: r.grade?.gradeNumber ?? null,
       gradeId: r.gradeId,
       classCount: r._count.classes,
       timetableCount: r._count.timetables,
@@ -531,38 +535,4 @@ export async function getRoomClasses(input: { roomId: string }) {
     },
     orderBy: { name: "asc" },
   })
-}
-
-// ============================================================================
-// Room Capacity Overview
-// ============================================================================
-
-export async function getRoomCapacityOverview() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return null
-
-  const session = await auth()
-  const authContext = getAuthContext(session)
-  if (!authContext) return null
-  try {
-    assertClassroomPermission(authContext, "read", { schoolId })
-  } catch {
-    return null
-  }
-
-  const rooms = await db.classroom.findMany({
-    where: { schoolId },
-    select: {
-      id: true,
-      roomName: true,
-      capacity: true,
-      lang: true,
-      classroomType: { select: { name: true, lang: true } },
-      grade: { select: { name: true, lang: true } },
-      _count: { select: { classes: true } },
-    },
-    orderBy: { roomName: "asc" },
-  })
-
-  return rooms
 }

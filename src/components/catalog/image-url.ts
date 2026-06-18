@@ -8,6 +8,7 @@
  */
 
 import { getCloudFrontUrl, isCloudFrontConfigured } from "@/lib/cloudfront-url"
+
 import { legacyConceptToClickview } from "./clickview-key"
 
 export type CatalogImageSize = "sm" | "md" | "lg" | "original"

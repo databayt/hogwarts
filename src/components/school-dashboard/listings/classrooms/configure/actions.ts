@@ -10,6 +10,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { defaultRoomName } from "@/components/catalog/room-naming"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
 import {
@@ -243,7 +244,8 @@ export async function generateSections(
           const letter = SECTION_LETTERS[i]
           if (usedLetters.has(letter)) continue
 
-          const roomName = `Grade ${grade.gradeNumber} - Room ${letter}`
+          // e.g. Grade 1 → A01 (section A), B01 (section B); Grade 12 → A12, B12.
+          const roomName = defaultRoomName(letter, grade.gradeNumber)
 
           // Upsert classroom for the section
           const room = await tx.classroom.upsert({

@@ -32,10 +32,10 @@ import {
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
+import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import { AccessCodeDialog } from "./access-code-dialog"
 import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
-import { CredentialsDialog, openCredentialsDialog } from "./credentials-dialog"
 import { PurgeDialog } from "./purge-dialog"
 import { createDraftStudent } from "./wizard/actions"
 
@@ -145,8 +145,8 @@ function StudentsTableInner({
   // the StudentsTable remount triggered by Next.js server-action revalidation
   // inside `getStudentCredentials`.
   const handleGenerateCredentials = useCallback(
-    (studentId: string, studentName: string) => {
-      openCredentialsDialog(studentId, studentName)
+    (studentId: string, studentName: string, badge?: string) => {
+      openCredentialsDialog("student", studentId, studentName, badge)
     },
     []
   )
@@ -438,7 +438,10 @@ function StudentsTableInner({
         studentNames={accessCodeStudentNames}
       />
 
-      <CredentialsDialog dictionary={dictionary} />
+      <CredentialsDialog
+        labels={dictionary?.credentials as Record<string, string> | undefined}
+        onClosed={() => router.refresh()}
+      />
 
       <PurgeDialog
         open={purgeOpen}
