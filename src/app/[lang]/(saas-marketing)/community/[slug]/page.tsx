@@ -17,15 +17,14 @@ import { CatalogDetailContent } from "@/components/school-dashboard/listings/sub
 // Reuses the same client components (CatalogDetailContent + CatalogContentSections)
 // — they take plain data props and consume the dictionary via DictionaryProvider
 // (already wired by the (saas-marketing) layout). No schoolId is required; we
-// skip the school-side translation pipeline and serve subjects whose `lang`
-// matches the visitor's locale.
+// skip the school-side translation pipeline.
 //
-// Known limitation (MVP): "See all" / grade-sibling deep links inside the
-// reused components hardcode `/[lang]/subjects/...` and `/[lang]/exams/...`
-// paths — those routes only exist behind the school-dashboard auth gate, so
-// clicking them will 404 on the public domain. The inline content (chapter
-// scroller, video tiles, material/exam pipelines, qbank type cards,
-// assignments) is what carries this view.
+// Every "see all" / grade-sibling deep link is now routed to a PUBLIC
+// /community sub-route via the components' href props (grade pills →
+// CatalogHero.gradeHref in the layout; materials/qbank/videos below). Chapters
+// resolve through the relative `${slug}/chapters` link to the public
+// /community/[slug]/chapters route. Exams have no public destination yet, so
+// their "see all" link is suppressed (examsHref="").
 export const dynamic = "force-dynamic"
 
 interface Props {
@@ -132,6 +131,14 @@ export default async function CommunitySubjectDetailPage({ params }: Props) {
         textbookCoverUrl={
           subject.cover ? getCloudFrontUrl(subject.cover) : null
         }
+        // Public community deep links — override the school-dashboard defaults.
+        // Videos have no public player, so they route to the chapters page
+        // (where the lessons live). Exams have no public destination → "".
+        materialsHref={`/${lang}/community/${subject.slug}/materials`}
+        qbankHref={`/${lang}/community/${subject.slug}/qbank`}
+        examsHref=""
+        videosHref={`/${lang}/community/${subject.slug}/chapters`}
+        videoTileBasePath=""
       />
     </>
   )

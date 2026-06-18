@@ -59,6 +59,7 @@ export default async function CommunitySubjectLayout({
         }}
         gradeSiblings={gradeSiblings}
         lang={lang}
+        gradeBasePath={`/${lang}/community`}
       />
       {children}
     </div>

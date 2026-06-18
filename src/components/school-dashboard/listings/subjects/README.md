@@ -81,6 +81,25 @@ src/components/school-dashboard/listings/subjects/
 
 **Completion:** 90% | **Blockers:** None
 
+### Reused by the public Community hub
+
+`catalog-hero.tsx`, `catalog-content-sections.tsx`, `catalog-detail.tsx`,
+`catalog-chapters.tsx`, and `catalog-materials.tsx` are rendered **verbatim** by
+the anonymous `/[lang]/community` surface (`src/components/saas-marketing/community`).
+They are `"use client"` components, so any path customization must use
+**plain-string** props — never functions (a function prop can't cross the RSC
+server→client boundary and silently fails to render). The deep-link props default
+to the school-dashboard paths and are overridden by the community surface to public
+`/community/[slug]/...` paths:
+
+- `CatalogHero` → `gradeBasePath` (default `/${lang}/subjects`)
+- `CatalogContentSections` → `materialsHref`, `qbankHref`, `examsHref` (`""` hides the
+  "see all" link), `videosHref`, `videoTileBasePath` (`""` → tiles fall back to `videosHref`)
+
+When adding a new deep link to any of these shared components, give it a prop with
+a school default — don't hardcode a `/subjects//exams//stream/` path. See
+`saas-marketing/community/CLAUDE.md`.
+
 ### Integration Points
 
 - **Classes**: Subjects linked to classes
@@ -88,3 +107,4 @@ src/components/school-dashboard/listings/subjects/
 - **Departments**: Subject-department relationship
 - **Grades**: Subject-wise performance tracking
 - **Curriculum**: Chapter and materials management
+- **Community hub**: catalog components reused on the public anonymous surface (see above)

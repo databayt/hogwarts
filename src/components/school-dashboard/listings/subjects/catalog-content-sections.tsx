@@ -101,6 +101,25 @@ interface Props {
   catalogSubjectId: string
   textbookPdfUrl: string | null
   textbookCoverUrl: string | null
+  /**
+   * Section "see all" / per-video deep links. Default to the school-dashboard
+   * routes (live behind auth on a school subdomain); the public /community
+   * surface overrides them with community-scoped, public paths. Pass an empty
+   * string to suppress a section's "see all" link (e.g. community exams, which
+   * have no public destination).
+   */
+  materialsHref?: string
+  qbankHref?: string
+  examsHref?: string
+  videosHref?: string
+  /**
+   * Base path for a per-video tile link; `/${lessonId}` is appended. Empty
+   * string → tiles fall back to `videosHref` (the community surface has no
+   * per-lesson player, so every tile points at the chapters page). Plain
+   * string only — this is a client component (no function props across the
+   * server/client boundary).
+   */
+  videoTileBasePath?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +217,11 @@ export function CatalogContentSections({
   catalogSubjectId,
   textbookPdfUrl,
   textbookCoverUrl,
+  materialsHref = `/${lang}/subjects/${subjectSlug}/materials`,
+  qbankHref = `/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`,
+  examsHref = `/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`,
+  videosHref = `/${lang}/stream/dashboard/${subjectSlug}`,
+  videoTileBasePath = `/${lang}/stream/dashboard/${subjectSlug}`,
 }: Props) {
   // This component needs dictionary passed as prop - for now use useDictionary
   // since it's a client component that doesn't receive dictionary prop
@@ -304,14 +328,18 @@ export function CatalogContentSections({
         <ContentSection
           title={t.videos}
           accentColor={accentColor}
-          actionHref={`/${lang}/stream/dashboard/${subjectSlug}`}
+          actionHref={videosHref}
           actionLabel={t.continueWatching}
         >
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
             {data.videos.map((video) => (
               <Link
                 key={video.id}
-                href={`/${lang}/stream/dashboard/${subjectSlug}/${video.catalogLessonId}`}
+                href={
+                  videoTileBasePath
+                    ? `${videoTileBasePath}/${video.catalogLessonId}`
+                    : videosHref
+                }
                 className="group relative w-60 shrink-0 overflow-hidden rounded-lg"
               >
                 <div
@@ -367,7 +395,7 @@ export function CatalogContentSections({
       <ContentSection
         title={t.materials}
         accentColor={accentColor}
-        actionHref={`/${lang}/subjects/${subjectSlug}/materials`}
+        actionHref={materialsHref}
         actionLabel={t.seeAll}
       >
         <MaterialTypePipeline
@@ -382,7 +410,7 @@ export function CatalogContentSections({
       <ContentSection
         title={t.exams}
         accentColor={accentColor}
-        actionHref={`/${lang}/exams/upcoming?catalogSubjectId=${catalogSubjectId}`}
+        actionHref={examsHref}
         actionLabel={t.seeAll}
       >
         <ExamTypePipeline exams={data.exams} accentColor={accentColor} t={t} />
@@ -391,7 +419,7 @@ export function CatalogContentSections({
       <ContentSection
         title={t.qbank}
         accentColor={accentColor}
-        actionHref={`/${lang}/exams/qbank?catalogSubjectId=${catalogSubjectId}`}
+        actionHref={qbankHref}
         actionLabel={t.exploreQBank}
       >
         <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">

@@ -56,6 +56,11 @@ export async function getCommunityFilterOptions(): Promise<CommunityFilterOption
   return { curricula }
 }
 
+/** Total published subjects across all curricula — drives the hero stat pill. */
+export async function getCommunitySubjectCount(): Promise<number> {
+  return db.subject.count({ where: { status: "PUBLISHED" } })
+}
+
 // ============================================================================
 // Subject queries — drive the hub grid + slug detail page
 // ============================================================================
@@ -63,10 +68,15 @@ export async function getCommunityFilterOptions(): Promise<CommunityFilterOption
 export async function getCommunitySubjects(
   filters: CommunityFilters
 ): Promise<CommunitySubjectCard[]> {
+  // NOTE: intentionally NOT filtering by `lang`. Catalog subjects are stored
+  // single-language (US/GB/IB-DP → en; the national curricula → ar). Gating on
+  // the page locale hid 7 of the 12 curricula on /en (and 3 on /ar). The hub is
+  // a cross-curriculum directory, so we surface every curriculum's subject cards
+  // regardless of locale; names render in their source language until catalog
+  // translation is wired.
   const where: Record<string, unknown> = { status: "PUBLISHED" }
   if (filters.curriculum) where.curriculum = filters.curriculum
   if (filters.grade) where.grades = { has: filters.grade }
-  if (filters.lang) where.lang = filters.lang
 
   const rows = await db.subject.findMany({
     where,
@@ -300,6 +310,116 @@ export async function getCommunitySubjectResources(args: {
       totalPoints: a.totalPoints ? Number(a.totalPoints) : null,
     })),
   }
+}
+
+/**
+ * Public question rows for /community/[slug]/qbank — grouped by type in the
+ * component. Uses the SAME proven gate as the questionStats aggregate above
+ * (approvalStatus + visibility + hierarchy OR), NOT the `status:"PUBLISHED"`
+ * variant in questionWhere() — catalog questions don't carry a PUBLISHED
+ * status, so that filter returns 0. Capped at 500 (per-subject counts are
+ * small; the cap is just a runaway guard).
+ */
+export async function getCommunitySubjectQuestions(args: {
+  subjectId: string
+  chapterIds: string[]
+  lessonIds: string[]
+}) {
+  const { subjectId, chapterIds, lessonIds } = args
+  const hierarchyOR = [
+    { catalogSubjectId: subjectId },
+    ...(chapterIds.length > 0
+      ? [{ catalogChapterId: { in: chapterIds } }]
+      : []),
+    ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+  ]
+
+  return db.question.findMany({
+    where: {
+      approvalStatus: "APPROVED",
+      visibility: "PUBLIC",
+      OR: hierarchyOR,
+    },
+    orderBy: [{ questionType: "asc" }, { difficulty: "asc" }],
+    take: 500,
+    select: {
+      id: true,
+      questionText: true,
+      questionType: true,
+      difficulty: true,
+      bloomLevel: true,
+    },
+  })
+}
+
+/**
+ * Full material rows (files + resolved thumbnails) for /community/[slug]/materials.
+ * Mirrors the school materials page query but adds the public gate
+ * (approvalStatus + visibility). Thumbnail/color falls back lesson → chapter →
+ * subject, same as the school page.
+ */
+export async function getCommunitySubjectMaterials(args: {
+  subjectId: string
+  chapterIds: string[]
+  lessonIds: string[]
+}) {
+  const { subjectId, chapterIds, lessonIds } = args
+  const hierarchyOR = [
+    { catalogSubjectId: subjectId },
+    ...(chapterIds.length > 0
+      ? [{ catalogChapterId: { in: chapterIds } }]
+      : []),
+    ...(lessonIds.length > 0 ? [{ catalogLessonId: { in: lessonIds } }] : []),
+  ]
+
+  const materials = await db.material.findMany({
+    where: {
+      status: "PUBLISHED",
+      approvalStatus: "APPROVED",
+      visibility: "PUBLIC",
+      OR: hierarchyOR,
+    },
+    orderBy: { downloadCount: "desc" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      type: true,
+      fileUrl: true,
+      externalUrl: true,
+      pageCount: true,
+      mimeType: true,
+      tags: true,
+      catalogLesson: { select: { thumbnail: true, color: true } },
+      catalogChapter: { select: { thumbnail: true, color: true } },
+      catalogSubject: { select: { thumbnail: true, color: true } },
+    },
+  })
+
+  return materials.map((m) => {
+    const sources = [m.catalogLesson, m.catalogChapter, m.catalogSubject]
+    let imageUrl: string | null = null
+    let color: string | null = null
+    for (const src of sources) {
+      if (!src) continue
+      if (!imageUrl) imageUrl = getCatalogImageUrl(src.thumbnail, "sm")
+      if (!color && src.color) color = src.color
+      if (imageUrl && color) break
+    }
+    return {
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      type: m.type,
+      fileUrl: m.fileUrl,
+      externalUrl: m.externalUrl,
+      pageCount: m.pageCount,
+      mimeType: m.mimeType,
+      tags: m.tags,
+      imageUrl,
+      color,
+    }
+  })
 }
 
 // ============================================================================

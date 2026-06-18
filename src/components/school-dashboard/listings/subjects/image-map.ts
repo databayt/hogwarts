@@ -11,10 +11,14 @@
 // Direct slug to image path mapping
 export const SUBJECT_IMAGE_MAP: Record<string, string> = {
   // Sciences
-  "biological-sciences": "https://cdn.databayt.org/hogwarts/subjects/biological-sciences.png",
-  "chemical-sciences": "https://cdn.databayt.org/hogwarts/subjects/chemical-sciences.png",
-  "physical-sciences": "https://cdn.databayt.org/hogwarts/subjects/physical-sciences.png",
-  "earth-space-sciences": "https://cdn.databayt.org/hogwarts/subjects/earth-space-sciences.png",
+  "biological-sciences":
+    "https://cdn.databayt.org/hogwarts/subjects/biological-sciences.png",
+  "chemical-sciences":
+    "https://cdn.databayt.org/hogwarts/subjects/chemical-sciences.png",
+  "physical-sciences":
+    "https://cdn.databayt.org/hogwarts/subjects/physical-sciences.png",
+  "earth-space-sciences":
+    "https://cdn.databayt.org/hogwarts/subjects/earth-space-sciences.png",
 
   // Core subjects
   mathematics: "https://cdn.databayt.org/hogwarts/subjects/mathematics.png",
@@ -24,13 +28,18 @@ export const SUBJECT_IMAGE_MAP: Record<string, string> = {
   geography: "https://cdn.databayt.org/hogwarts/subjects/geography.png",
 
   // Social studies
-  "civics-citizenship": "https://cdn.databayt.org/hogwarts/subjects/civics-citizenship.png",
-  "economics-business": "https://cdn.databayt.org/hogwarts/subjects/economics-business.png",
-  "religion-philosophy": "https://cdn.databayt.org/hogwarts/subjects/religion-philosophy.png",
+  "civics-citizenship":
+    "https://cdn.databayt.org/hogwarts/subjects/civics-citizenship.png",
+  "economics-business":
+    "https://cdn.databayt.org/hogwarts/subjects/economics-business.png",
+  "religion-philosophy":
+    "https://cdn.databayt.org/hogwarts/subjects/religion-philosophy.png",
 
   // Health & PE
-  "personal-development-health": "https://cdn.databayt.org/hogwarts/subjects/personal-development-health.png",
-  "physical-education": "https://cdn.databayt.org/hogwarts/subjects/physical-education.png",
+  "personal-development-health":
+    "https://cdn.databayt.org/hogwarts/subjects/personal-development-health.png",
+  "physical-education":
+    "https://cdn.databayt.org/hogwarts/subjects/physical-education.png",
 
   // Other
   technologies: "https://cdn.databayt.org/hogwarts/subjects/technologies.png",
@@ -38,7 +47,8 @@ export const SUBJECT_IMAGE_MAP: Record<string, string> = {
 }
 
 // Default fallback image
-export const DEFAULT_SUBJECT_IMAGE = "https://cdn.databayt.org/hogwarts/subjects/default.png"
+export const DEFAULT_SUBJECT_IMAGE =
+  "https://cdn.databayt.org/hogwarts/subjects/default.png"
 
 // Keywords for fuzzy matching subject names to images
 const SUBJECT_KEYWORDS: Record<string, string[]> = {
@@ -156,8 +166,10 @@ export function getSubjectImage(name: string): string {
   // Common variations - try partial matches
   const partialMatches: Record<string, string> = {
     science: "https://cdn.databayt.org/hogwarts/subjects/physical-sciences.png",
-    studies: "https://cdn.databayt.org/hogwarts/subjects/economics-business.png",
-    education: "https://cdn.databayt.org/hogwarts/subjects/physical-education.png",
+    studies:
+      "https://cdn.databayt.org/hogwarts/subjects/economics-business.png",
+    education:
+      "https://cdn.databayt.org/hogwarts/subjects/physical-education.png",
   }
 
   for (const [partial, image] of Object.entries(partialMatches)) {

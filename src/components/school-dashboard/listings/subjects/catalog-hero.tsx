@@ -30,9 +30,22 @@ interface Props {
   subject: SubjectSummary
   gradeSiblings?: { grade: number; slug: string }[]
   lang: Locale
+  /**
+   * Base path for grade-sibling pill links; the sibling slug is appended.
+   * Defaults to the school-dashboard subjects route; the public /community
+   * surface passes `/${lang}/community` so grade switching stays public. Must
+   * be a plain string — this is a client component, so a function prop can't
+   * cross the server/client boundary.
+   */
+  gradeBasePath?: string
 }
 
-export function CatalogHero({ subject, gradeSiblings = [], lang }: Props) {
+export function CatalogHero({
+  subject,
+  gradeSiblings = [],
+  lang,
+  gradeBasePath = `/${lang}/subjects`,
+}: Props) {
   const { dictionary } = useDictionary()
   const cat = dictionary?.school?.subjects?.catalog as
     | Record<string, string>
@@ -105,7 +118,7 @@ export function CatalogHero({ subject, gradeSiblings = [], lang }: Props) {
                 {gradeLabel(grade, langCode)}
               </Badge>
             ) : (
-              <Link key={grade} href={`/${lang}/subjects/${siblingSlug}`}>
+              <Link key={grade} href={`${gradeBasePath}/${siblingSlug}`}>
                 <Badge
                   variant="secondary"
                   className="hover:bg-muted cursor-pointer"
