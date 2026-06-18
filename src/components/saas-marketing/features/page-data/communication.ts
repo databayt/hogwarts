@@ -65,7 +65,7 @@ export const communicationPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["discussion", "blog", "lms"],
+    relatedFeatures: ["discussion", "blog", "e-learning"],
   },
 
   grievance: {
@@ -246,7 +246,50 @@ export const communicationPageData: Record<string, FeaturePageData> = {
     relatedFeatures: ["survey", "discussion", "forum"],
   },
 
-  "secure-transcript": {
+  announcement: {
+    sections: [
+      {
+        type: "hero",
+        heading: "School Announcement and Notification System",
+        description:
+          "Keep your entire school community informed with instant broadcasts, scheduled newsletters, and targeted notifications.",
+      },
+      {
+        type: "feature-cards",
+        heading: "Announcement Features",
+        cards: [
+          {
+            title: "Multi-Channel Broadcast",
+            description:
+              "Deliver announcements via email, SMS, and mobile push notifications simultaneously.",
+          },
+          {
+            title: "Targeted Audience Groups",
+            description:
+              "Target specific audiences by department, grade, class, or user role (students, parents, staff).",
+          },
+          {
+            title: "Scheduled Publishing",
+            description:
+              "Draft announcements and schedule them to be published automatically at a future date and time.",
+          },
+        ],
+      },
+      {
+        type: "checklist",
+        heading: "Benefits of Automated Announcements",
+        items: [
+          { text: "Reach everyone instantly in case of emergencies" },
+          { text: "Reduce communication costs by optimizing channels" },
+          { text: "Improve parent engagement with timely updates" },
+          { text: "Keep a digital history of all sent communications" },
+        ],
+      },
+    ],
+    relatedFeatures: ["notice-board", "events", "discussion"],
+  },
+
+  transcript: {
     sections: [
       {
         type: "hero",

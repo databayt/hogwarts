@@ -6,10 +6,10 @@ import { advancePageData } from "./advance"
 import { aiPageData } from "./ai"
 import { communicationPageData } from "./communication"
 import { corePageData } from "./core"
+import { eLearningPageData } from "./e-learning"
 import { erpPageData } from "./erp"
 import { essentialPageData } from "./essential"
 import { integrationPageData } from "./integration"
-import { lmsPageData } from "./lms"
 import { managementPageData } from "./management"
 import { technicalPageData } from "./technical"
 
@@ -20,7 +20,7 @@ export const FEATURE_PAGE_DATA: Record<string, FeaturePageData> = {
   ...erpPageData,
   ...managementPageData,
   ...communicationPageData,
-  ...lmsPageData,
+  ...eLearningPageData,
   ...technicalPageData,
   ...integrationPageData,
   ...aiPageData,

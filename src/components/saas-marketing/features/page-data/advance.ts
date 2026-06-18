@@ -4,117 +4,6 @@
 import type { FeaturePageData } from "../types"
 
 export const advancePageData: Record<string, FeaturePageData> = {
-  "advance-accounting": {
-    sections: [
-      {
-        type: "hero",
-        heading: "Quick, Accurate and Cost Effective Cloud-Based Accounting",
-        description:
-          "An easy-to-use accounting system with all good practices built-in. Create invoices, track expenses, accept payments and handle taxes with ease.",
-      },
-      {
-        type: "feature-cards",
-        heading: "Core Accounting Features",
-        cards: [
-          {
-            title: "Tax Management",
-            description:
-              "Powerful tool for income tax calculation and preparation that creates invoices and derives preliminary tax data.",
-          },
-          {
-            title: "Easily Scalable",
-            description:
-              "Scalable accounting software that adapts to the changing needs of your institution.",
-          },
-          {
-            title: "Simplified Reporting",
-            description:
-              "Monitor and analyze critical business metrics in real-time instead of waiting months.",
-          },
-        ],
-      },
-      {
-        type: "alternating-blocks",
-        heading: "Faster Invoicing and Fees Reminders",
-        blocks: [
-          {
-            heading: "Impressive Invoicing",
-            description:
-              "Create professional invoices and send them with one click. Set up automated follow-ups and reconcile multiple payments.",
-          },
-          {
-            heading: "Multi-Currency and Global Payments",
-            description:
-              "Receive payments from international students in a wide variety of currencies with advanced payment processing.",
-          },
-          {
-            heading: "Smart Vendor Payments",
-            description:
-              "Cloud-based solution to make payments to suppliers, process batch payments, and automate getting paid.",
-          },
-          {
-            heading: "Legal Statements",
-            description:
-              "Automatically generated P&Ls, Cash Flow statements, General Ledger, country-specific tax reports, and balance sheets.",
-          },
-        ],
-      },
-      {
-        type: "alternating-blocks",
-        heading: "Complete Accounting Solution",
-        blocks: [
-          {
-            heading: "Easy Reconciliation",
-            description:
-              "Eliminate manual accounting processes and tackle complex accounting tasks with an elegant user interface.",
-          },
-          {
-            heading: "Smart Payables and Receivables",
-            description:
-              "Manage expenses with features like mileage tracking and expense reporting.",
-          },
-          {
-            heading: "Built for Global and Local Leaders",
-            description:
-              "Single integrated solution to manage assets, transact, and record transactions in real time.",
-          },
-          {
-            heading: "Schedule and Automate",
-            description:
-              "Track recurring payments, recurring expenses, and pay bills with just a few clicks.",
-          },
-        ],
-      },
-      {
-        type: "feature-cards",
-        heading: "Advanced Reporting and Analytics",
-        cards: [
-          {
-            title: "Customizable Reports",
-            description:
-              "Easy-to-use dashboards for performance analysis with customizable KPIs and shareable annotated figures.",
-          },
-          {
-            title: "Optimize Business Operations",
-            description:
-              "Analytics platform to analyze key metrics and optimize your business to improve revenues.",
-          },
-          {
-            title: "Data-Driven Decisions",
-            description:
-              "Combine business intuition with insights to improve margins and reduce costs.",
-          },
-          {
-            title: "Intelligent Reporting",
-            description:
-              "Fully-integrated solution to manage all business activities from a single dashboard.",
-          },
-        ],
-      },
-    ],
-    relatedFeatures: ["accounting", "financial", "expense"],
-  },
-
   "assignment-annotation": {
     sections: [
       {
@@ -145,7 +34,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["assignment", "gradebook", "lms"],
+    relatedFeatures: ["assignment", "gradebook", "e-learning"],
   },
 
   "automated-marketing": {
@@ -296,7 +185,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["kpi-dashboard", "reporting", "accounting"],
+    relatedFeatures: ["reporting", "accounting"],
   },
 
   "digital-library": {
@@ -343,7 +232,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["library", "lms", "course"],
+    relatedFeatures: ["library", "e-learning"],
   },
 
   documents: {
@@ -385,7 +274,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["e-sign", "admission", "secure-transcript"],
+    relatedFeatures: ["e-sign", "admission", "transcript"],
   },
 
   events: {
@@ -444,7 +333,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["documents", "admission", "secure-transcript"],
+    relatedFeatures: ["documents", "admission", "transcript"],
   },
 
   "face-recognition": {
@@ -480,53 +369,6 @@ export const advancePageData: Record<string, FeaturePageData> = {
       },
     ],
     relatedFeatures: ["biometric", "attendance", "dashboard"],
-  },
-
-  "kpi-dashboard": {
-    sections: [
-      {
-        type: "hero",
-        heading: "KPI Dashboard",
-        description:
-          "Monitor all your departments from a real-time Dashboard. A comprehensive overview of the health of the business or organization.",
-      },
-      {
-        type: "feature-cards",
-        heading: "Dashboard Capabilities",
-        cards: [
-          {
-            title: "Data Visualization",
-            description:
-              "Eight chart types: line, bar, pie, doughnut, area, polar area, and list views with target overlays.",
-          },
-          {
-            title: "Track KPI Metrics",
-            description:
-              "Identify new opportunities and improve sales and marketing performance through KPI monitoring.",
-          },
-          {
-            title: "Responsive Design",
-            description: "Adapts to Desktop, Tablet, and Mobile Phones.",
-          },
-          {
-            title: "Predefined Templates",
-            description:
-              "Multiple template styles with customizable color schemes.",
-          },
-          {
-            title: "Export/Import",
-            description:
-              "Export charts to Excel, PDF, PNG and transfer data between databases.",
-          },
-          {
-            title: "Automatic Refresh",
-            description:
-              "Data refreshes at configurable intervals with date filter options.",
-          },
-        ],
-      },
-    ],
-    relatedFeatures: ["dashboard", "reporting", "advance-accounting"],
   },
 
   library: {
@@ -570,7 +412,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["digital-library", "course", "student"],
+    relatedFeatures: ["digital-library", "student"],
   },
 
   "live-classroom": {
@@ -619,7 +461,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
     sections: [
       {
         type: "hero",
-        heading: "Mobile Application",
+        heading: "Mobile app",
         description:
           "Let students easily access information about their assignments, classes, and events using dedicated mobile apps for students, parents, and faculty.",
       },
@@ -714,7 +556,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["customizable", "modular", "reporting"],
+    relatedFeatures: ["customizable", "reporting"],
   },
 
   omr: {
@@ -748,43 +590,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["exam", "quiz", "gradebook"],
-  },
-
-  "quiz-anti-cheating": {
-    sections: [
-      {
-        type: "hero",
-        heading: "Quiz Anti Cheating",
-        description:
-          "Quiz Anti Cheating mode will keep the examination like a tough and tight invigilator. Whether students seriously participated or not can be detected.",
-      },
-      {
-        type: "feature-cards",
-        heading: "Anti-Cheating Features",
-        cards: [
-          {
-            title: "Browser Lockdown",
-            description:
-              "Prevents switching tabs or opening new windows during exams.",
-          },
-          {
-            title: "Activity Monitoring",
-            description: "Tracks student behavior during the exam session.",
-          },
-          {
-            title: "Time Tracking",
-            description: "Monitors time spent on each question.",
-          },
-          {
-            title: "Integrity Reports",
-            description:
-              "Detailed reports on student behavior during assessments.",
-          },
-        ],
-      },
-    ],
-    relatedFeatures: ["quiz", "exam", "lms"],
+    relatedFeatures: ["exam", "qbank", "gradebook"],
   },
 
   reporting: {
@@ -808,7 +614,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["dashboard", "kpi-dashboard", "advance-accounting"],
+    relatedFeatures: ["dashboard"],
   },
 
   thesis: {
@@ -851,7 +657,7 @@ export const advancePageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["course", "gradebook", "documents"],
+    relatedFeatures: ["gradebook", "documents"],
   },
 
   convocation: {

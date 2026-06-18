@@ -33,13 +33,12 @@ interface Tag {
 const tags: Tag[] = [
   // Academic (core + essential + lms)
   { id: "admission", categories: ["academic"] },
-  { id: "course", categories: ["academic"] },
   { id: "exam", categories: ["academic"] },
   { id: "gradebook", categories: ["academic"] },
   { id: "assignment", categories: ["academic"] },
-  { id: "lms", categories: ["academic"] },
+  { id: "e-learning", categories: ["academic"] },
   { id: "timetable", categories: ["academic"] },
-  { id: "quiz", categories: ["academic"] },
+  { id: "qbank", categories: ["academic"] },
   { id: "digital-library", categories: ["academic"] },
   // Admin (core + essential + management + communication)
   { id: "student", categories: ["admin"] },
@@ -51,6 +50,7 @@ const tags: Tag[] = [
   { id: "helpdesk", categories: ["admin"] },
   { id: "parent-login", categories: ["admin"] },
   { id: "leave-request", categories: ["admin"] },
+  { id: "announcement", categories: ["admin"] },
   // Finance (core + erp)
   { id: "financial", categories: ["finance"] },
   { id: "payment", categories: ["finance"] },
@@ -60,7 +60,6 @@ const tags: Tag[] = [
   // Tech (advance + technical + integration + ai)
   { id: "dashboard", categories: ["tech"] },
   { id: "multi-organization", categories: ["tech"] },
-  { id: "open-source", categories: ["tech"] },
   { id: "ai-powered", categories: ["tech"] },
   { id: "mobile-application", categories: ["tech"] },
   { id: "biometric", categories: ["tech"] },
@@ -73,11 +72,17 @@ const tags: Tag[] = [
 // Per-tag images (add more as they become available)
 const tagImages: Record<string, string> = {
   admission: asset("https://cdn.databayt.org/hogwarts/features/admission.png"),
-  lms: asset("https://cdn.databayt.org/hogwarts/features/lms.png"),
-  accounting: asset("https://cdn.databayt.org/hogwarts/features/accounting.png"),
-  "digital-library": asset("https://cdn.databayt.org/hogwarts/features/library.png"),
+  "e-learning": asset("https://cdn.databayt.org/hogwarts/features/lms.png"),
+  accounting: asset(
+    "https://cdn.databayt.org/hogwarts/features/accounting.png"
+  ),
+  "digital-library": asset(
+    "https://cdn.databayt.org/hogwarts/features/library.png"
+  ),
   events: asset("https://cdn.databayt.org/hogwarts/features/events.png"),
-  transportation: asset("https://cdn.databayt.org/hogwarts/features/transport.png"),
+  transportation: asset(
+    "https://cdn.databayt.org/hogwarts/features/transport.png"
+  ),
 }
 
 const categoryCards = [

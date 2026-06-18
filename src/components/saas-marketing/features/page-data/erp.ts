@@ -26,7 +26,7 @@ export const erpPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["advance-accounting", "financial", "expense"],
+    relatedFeatures: ["financial", "expense"],
   },
 
   appraisals: {
@@ -183,7 +183,7 @@ export const erpPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["accounting", "advance-accounting", "financial"],
+    relatedFeatures: ["accounting", "financial"],
   },
 
   payroll: {

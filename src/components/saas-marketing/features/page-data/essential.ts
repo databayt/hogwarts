@@ -100,7 +100,7 @@ export const essentialPageData: Record<string, FeaturePageData> = {
           "Ready to transform your assignment management process? Contact us to learn more.",
       },
     ],
-    relatedFeatures: ["gradebook", "classroom", "course"],
+    relatedFeatures: ["gradebook", "classroom"],
   },
 
   attendance: {
@@ -357,7 +357,7 @@ export const essentialPageData: Record<string, FeaturePageData> = {
           "Take control of your grades and academic success with our Gradebook Management System. Try it today!",
       },
     ],
-    relatedFeatures: ["exam", "course", "reporting"],
+    relatedFeatures: ["exam", "reporting"],
   },
 
   "leave-request": {
@@ -486,7 +486,7 @@ export const essentialPageData: Record<string, FeaturePageData> = {
           "Revolutionize your scheduling process. Contact us today to see how our solution can transform your institution.",
       },
     ],
-    relatedFeatures: ["classroom", "timesheet", "course"],
+    relatedFeatures: ["classroom", "timesheet"],
   },
 
   timesheet: {

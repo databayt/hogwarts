@@ -118,91 +118,6 @@ export const corePageData: Record<string, FeaturePageData> = {
     relatedFeatures: ["application", "financial", "crm"],
   },
 
-  course: {
-    sections: [
-      {
-        type: "hero",
-        heading: "Course Management System",
-        description:
-          "Course management system software connects educators and learners, enriching the educational journey, aiding institutions in the digital age, and fostering a dynamic learning environment for modern world success.",
-      },
-      {
-        type: "benefits-grid",
-        heading: "Benefits Of Course Management System In Education",
-        description:
-          "Essential tools for managing the complexity of modern classrooms. They enhance the learning experience and improve the efficiency of course management.",
-        items: [
-          {
-            title: "Online Course Creation",
-            description:
-              "Facilitate the creation of online courses with ease. Instructors can design courses with rich, interactive content accessible from anywhere.",
-          },
-          {
-            title: "Assessment and Progress Tracking",
-            description:
-              "Incorporate assessment tools for quizzes, tests, and assignments. Track student progress and performance with detailed insights.",
-          },
-          {
-            title: "Centralized Course Delivery",
-            description:
-              "All course materials, assignments, assessments, and resources are stored in one centralized platform for easy access.",
-          },
-          {
-            title: "Streamlined Communication",
-            description:
-              "Discussion forums, messaging systems, and email notifications make it simple for instructors and students to communicate and collaborate.",
-          },
-          {
-            title: "Efficient Assessment and Grading",
-            description:
-              "Create and administer quizzes and assignments within the system. Automated grading and feedback distribution saves time for educators.",
-          },
-          {
-            title: "Analytics and Reporting",
-            description:
-              "Leverage analytics tools to gain insights into learner engagement and course effectiveness for data-driven decisions.",
-          },
-          {
-            title: "Resource Management",
-            description:
-              "Organize, store, and share digital resources such as lecture notes, presentations, videos, and readings in a structured manner.",
-          },
-          {
-            title: "Increased Engagement",
-            description:
-              "Online discussion forums, chat rooms, and collaborative tools encourage student interaction and engagement.",
-          },
-          {
-            title: "Security and Privacy",
-            description:
-              "Prioritize security and privacy to protect sensitive educational data and user information with strong security measures.",
-          },
-          {
-            title: "Scalability",
-            description:
-              "Easily scalable, accommodating the needs of both small and large educational institutions.",
-          },
-          {
-            title: "Syllabus Management",
-            description:
-              "Organize and structure course content, making it easy for instructors to plan their lessons.",
-          },
-          {
-            title: "Enhanced Accessibility",
-            description:
-              "Students can access course materials and resources from anywhere with an internet connection.",
-          },
-        ],
-      },
-      {
-        type: "cta-banner",
-        heading:
-          "Are You Ready To Embrace The Future Of Education And Training? Get Started On The Journey To Educational Excellence.",
-      },
-    ],
-    relatedFeatures: ["timetable", "assignment", "gradebook"],
-  },
-
   exam: {
     sections: [
       {
@@ -270,7 +185,7 @@ export const corePageData: Record<string, FeaturePageData> = {
           "Experience The Future Of Education With Our Examination Management Software -- Unlock Efficiency and Excellence Today!",
       },
     ],
-    relatedFeatures: ["gradebook", "omr", "quiz"],
+    relatedFeatures: ["gradebook", "omr"],
   },
 
   faculty: {

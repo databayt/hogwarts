@@ -49,21 +49,15 @@ export default function Content({ dictionary, params }: ContentProps) {
       </section>
 
       {/* CTA */}
-      <section className="bg-muted/50 mb-16 flex flex-col items-center gap-6 rounded-2xl p-8 text-center md:p-16">
+      <section className="mb-16 flex flex-col items-center gap-6 p-8 text-center md:p-16">
         <h2 className="text-3xl font-semibold tracking-tight">{t.ctaTitle}</h2>
         <p className="text-muted-foreground max-w-lg">{t.ctaSubtitle}</p>
         <div className="flex gap-4">
           <Link
-            href={`/${params.lang}/features`}
-            className={cn(buttonVariants({ size: "lg" }))}
-          >
-            Browse Features
-          </Link>
-          <Link
             href={`/${params.lang}/contact`}
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            Request Feature
+            {params.lang === "ar" ? "تحدث مع المبيعات" : "Talk to Sales"}
           </Link>
         </div>
       </section>

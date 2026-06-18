@@ -55,8 +55,8 @@ export const CATEGORIES: FeatureCategoryInfo[] = [
     color: "text-orange-600",
   },
   {
-    id: "lms",
-    label: "LMS",
+    id: "e-learning",
+    label: "E-Learning",
     description: "Learning management system",
     icon: "Monitor",
     color: "text-violet-600",
@@ -95,14 +95,6 @@ export const FEATURES: Feature[] = [
     description:
       "Quick, transparent registration for easy and streamlined enrollment.",
     icon: "UserPlus",
-    category: "core",
-  },
-  {
-    id: "course",
-    title: "Course",
-    description:
-      "Manage courses, subjects, and all academic sessions institution-wide.",
-    icon: "BookOpen",
     category: "core",
   },
   {
@@ -214,14 +206,6 @@ export const FEATURES: Feature[] = [
 
   // ─── Advance (21) ───
   {
-    id: "advance-accounting",
-    title: "Advance Accounting",
-    description:
-      "Cloud-based accounting software built for schools and higher education.",
-    icon: "Calculator",
-    category: "advance",
-  },
-  {
     id: "assignment-annotation",
     title: "Assignment Annotation",
     description:
@@ -231,7 +215,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "automated-marketing",
-    title: "Automated Marketing",
+    title: "Marketing",
     description:
       "Integrate email campaigns with CRM analytics to grow enrollment rates.",
     icon: "Megaphone",
@@ -294,14 +278,6 @@ export const FEATURES: Feature[] = [
     category: "advance",
   },
   {
-    id: "kpi-dashboard",
-    title: "KPI Dashboard",
-    description:
-      "Monitor all departmental metrics in real time with a health overview.",
-    icon: "BarChart3",
-    category: "advance",
-  },
-  {
     id: "library",
     title: "Library",
     description:
@@ -311,7 +287,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "live-classroom",
-    title: "Live Classroom",
+    title: "Conference",
     description:
       "Virtual classes with live attendance tracking and proctored assignments.",
     icon: "Video",
@@ -319,7 +295,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "mobile-application",
-    title: "Mobile Application",
+    title: "Mobile app",
     description:
       "Mobile access to classes, assignments, and events for every user role.",
     icon: "Smartphone",
@@ -347,14 +323,6 @@ export const FEATURES: Feature[] = [
     description:
       "Conduct MCQ exams with OMR answer sheets from mobile, PC, or tablet.",
     icon: "ScanLine",
-    category: "advance",
-  },
-  {
-    id: "quiz-anti-cheating",
-    title: "Quiz Anti Cheating",
-    description:
-      "Automated proctoring detects any suspicious quiz behavior in real time.",
-    icon: "ShieldAlert",
     category: "advance",
   },
   {
@@ -388,6 +356,14 @@ export const FEATURES: Feature[] = [
     title: "Accounting",
     description:
       "Handle invoicing, receipts, payments, and all balances in one system.",
+    icon: "Receipt",
+    category: "erp",
+  },
+  {
+    id: "invoice",
+    title: "Invoice",
+    description:
+      "Generate, send, and track invoices and receipts for every fee and charge.",
     icon: "Receipt",
     category: "erp",
   },
@@ -532,6 +508,14 @@ export const FEATURES: Feature[] = [
 
   // ─── Communication (11) ───
   {
+    id: "announcement",
+    title: "Announcement",
+    description:
+      "Broadcast news, circulars, and instant alerts to the entire school community.",
+    icon: "Megaphone",
+    category: "communication",
+  },
+  {
     id: "blog",
     title: "Blog",
     description:
@@ -541,7 +525,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "discussion",
-    title: "Discussion",
+    title: "Message",
     description:
       "Open discussion channels for coordinating and debating any school topic.",
     icon: "MessageSquare",
@@ -589,7 +573,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "online-appointment",
-    title: "Online Appointment",
+    title: "Appointment",
     description:
       "Students book and manage all tutor appointments with live schedules.",
     icon: "CalendarCheck",
@@ -604,8 +588,8 @@ export const FEATURES: Feature[] = [
     category: "communication",
   },
   {
-    id: "secure-transcript",
-    title: "Secure Transcript",
+    id: "transcript",
+    title: "Transcript",
     description:
       "Verifiable student transcripts and marksheets with QR code validation.",
     icon: "ShieldCheck",
@@ -620,22 +604,22 @@ export const FEATURES: Feature[] = [
     category: "communication",
   },
 
-  // ─── LMS (2) ───
+  // ─── E-Learning (2) ───
   {
-    id: "lms",
-    title: "LMS",
+    id: "e-learning",
+    title: "E-Learning",
     description:
-      "Unified learning portal for students and faculty with full course tools.",
+      "Unified learning portal for students and faculty with full learning tools.",
     icon: "MonitorPlay",
-    category: "lms",
+    category: "e-learning",
   },
   {
-    id: "quiz",
-    title: "Quiz",
+    id: "qbank",
+    title: "Question Bank",
     description:
-      "Foster student practice and tests preparation with engaging quiz tools.",
-    icon: "HelpCircle",
-    category: "lms",
+      "Create, categorize, and manage a central repository of questions for assessments.",
+    icon: "Database",
+    category: "e-learning",
   },
 
   // ─── Technical (11) ───
@@ -661,14 +645,6 @@ export const FEATURES: Feature[] = [
     description:
       "Deploy on the cloud or on-premise based on your organization's needs.",
     icon: "Globe",
-    category: "technical",
-  },
-  {
-    id: "modular",
-    title: "Modular",
-    description:
-      "Add new feature modules on the fly with zero downtime or disruptions.",
-    icon: "Blocks",
     category: "technical",
   },
   {
@@ -701,14 +677,6 @@ export const FEATURES: Feature[] = [
     description:
       "Flexible deployment: cloud-hosted or self-hosted on your own servers.",
     icon: "Cloud",
-    category: "technical",
-  },
-  {
-    id: "open-source",
-    title: "Open Source",
-    description:
-      "Open source license: full freedom to inspect, modify, and extend code.",
-    icon: "Code",
     category: "technical",
   },
   {
@@ -763,7 +731,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "whatsapp-integration",
-    title: "WhatsApp Integration",
+    title: "WhatsApp",
     description:
       "Real-time messaging with parents and students for key announcements.",
     icon: "Phone",
@@ -788,6 +756,156 @@ export const FEATURES: Feature[] = [
     category: "ai",
   },
 ]
+
+/**
+ * Feature ids that are not yet built (no real route / server-action / block).
+ * They stay in FEATURES so curated detail pages and `relatedFeatures` links
+ * still resolve, but are hidden from the public showcase grid so the page
+ * only advertises what actually ships. Audit: 2026-06-16.
+ */
+export const PLANNED_FEATURE_IDS = new Set<string>([
+  "assignment-annotation",
+  "biometric",
+  "face-recognition",
+  "no-code-studio",
+  "omr",
+  "thesis",
+  "convocation",
+  "multi-approvals",
+  "appraisals",
+  "assets-request",
+  "crm",
+  "e-commerce",
+  "email-integration",
+  "email-marketing",
+  "purchase",
+  "recruitment",
+  "stock",
+  "blog",
+  "forum",
+  "grievance",
+  "helpdesk",
+  "news-portal",
+  "poll",
+  "survey",
+  "social-media-marketing",
+  "customizable",
+  "data-import-export",
+  "e-sign",
+  // Hidden per product curation (2026-06-16): duplicate of `library`, plus
+  // abstract platform attributes pulled out of the discrete-feature grid.
+  "digital-library",
+  "full-web-based",
+  "multi-currency",
+  "multi-lingual",
+  "multi-organization",
+  "on-cloud-on-premise",
+  "secure",
+  "web-service-enabled",
+  "bigbluebutton",
+  // Merged into `announcement` (same broadcast purpose).
+  "notice-board",
+  // Removed per request — its fee/finance scope is covered by payment + invoice.
+  "financial",
+])
+
+/**
+ * Consolidated, client-facing groups for the public grid — fewer and broader
+ * than the fine-grained `category` field (which still drives detail pages).
+ * Order = importance to clients; each group lists its feature ids in display
+ * order. This is the SINGLE source of truth for the grid's tabs, grouping, and
+ * ordering. Detail pages keep using `feature.category`.
+ */
+export const FEATURE_GROUPS: { id: string; label: string; ids: string[] }[] = [
+  {
+    id: "academics",
+    label: "Academics",
+    ids: [
+      "student",
+      "admission",
+      "application",
+      "attendance",
+      "exam",
+      "gradebook",
+      "timetable",
+      "classroom",
+      "assignment",
+    ],
+  },
+  {
+    id: "learning",
+    label: "Learning",
+    ids: [
+      "e-learning",
+      "qbank",
+      "library",
+      "live-classroom",
+      "google-meet",
+      "zoom",
+      "microsoft-teams",
+    ],
+  },
+  {
+    id: "finance",
+    label: "Finance",
+    ids: ["payment", "accounting", "invoice", "payroll", "expense", "sales"],
+  },
+  {
+    id: "communication",
+    label: "Communication",
+    ids: [
+      "announcement",
+      "discussion",
+      "online-appointment",
+      "whatsapp-integration",
+      "parent-login",
+      "transcript",
+      "automated-marketing",
+    ],
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    ids: [
+      "faculty",
+      "transportation",
+      "canteen",
+      "campus",
+      "placement",
+      "leave-request",
+      "timesheet",
+      "documents",
+      "events",
+      "mobile-application",
+    ],
+  },
+  {
+    id: "insights",
+    label: "Insights & AI",
+    ids: ["dashboard", "reporting", "ai-powered"],
+  },
+]
+
+/** feature id → group id, derived from FEATURE_GROUPS. */
+export const GROUP_OF: Record<string, string> = Object.fromEntries(
+  FEATURE_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.id]))
+)
+
+const GROUP_RANK = new Map<string, number>(
+  FEATURE_GROUPS.flatMap((g, gi) => g.ids.map((id, ii) => [id, gi * 1000 + ii]))
+)
+
+/**
+ * Features advertised on the public /features grid — built + partially-built
+ * modules only, ordered by group importance then in-group rank.
+ */
+export const SHOWN_FEATURES: Feature[] = FEATURES.filter(
+  (f) => !PLANNED_FEATURE_IDS.has(f.id)
+).sort(
+  (a, b) =>
+    (GROUP_RANK.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+    (GROUP_RANK.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+)
 
 /**
  * Extended feature details for individual feature pages
@@ -818,30 +936,6 @@ export const FEATURE_DETAILS: Record<
     ],
     relatedFeatures: ["application", "financial", "crm"],
   },
-  course: {
-    longDescription:
-      "Course management system software connects educators and learners, enriching the educational journey and aiding institutions in the digital age. Create, deliver, and manage courses with rich interactive content, assessments, and analytics — all from a centralized platform that fosters a dynamic learning environment.",
-    benefits: [
-      "Online course creation with rich, interactive content accessible from anywhere",
-      "Assessment and progress tracking with quizzes, tests, and assignment tools",
-      "Centralized course delivery with all materials in one unified platform",
-      "Streamlined communication via discussion forums and messaging systems",
-      "Efficient assessment and grading with automated feedback distribution",
-      "Analytics and reporting for learner engagement and course effectiveness",
-      "Resource management for lecture notes, presentations, and videos",
-      "Increased engagement through collaborative tools and discussions",
-      "Security and privacy protection for sensitive educational data",
-      "Scalability accommodating small and large educational institutions",
-      "Syllabus management for simplified lesson planning",
-      "Enhanced accessibility for students from anywhere with internet",
-    ],
-    useCases: [
-      "Designing and delivering semester-long courses with multimedia content",
-      "Tracking student performance across multiple assessments and assignments",
-      "Collaborative curriculum planning with shared resource libraries",
-    ],
-    relatedFeatures: ["timetable", "assignment", "gradebook"],
-  },
   exam: {
     longDescription:
       "A unified platform that manages the entire examination process, from conducting and proctoring exams to evaluating them, using an end-to-end automated Examination Management System. Schedule exams using CCE, CPA, and more with just a few clicks while maintaining security and accuracy throughout.",
@@ -861,7 +955,7 @@ export const FEATURE_DETAILS: Record<
       "Continuous assessment with weekly online quizzes and instant grading",
       "National exam preparation with mock tests and performance analytics",
     ],
-    relatedFeatures: ["gradebook", "omr", "quiz"],
+    relatedFeatures: ["gradebook", "omr", "qbank"],
   },
   faculty: {
     longDescription:
@@ -1122,29 +1216,6 @@ export const FEATURE_DETAILS: Record<
   },
 
   // ─── Advance (21) ───
-  "advance-accounting": {
-    longDescription:
-      "Quick, accurate, and cost-effective cloud-based accounting software designed for schools, universities, and educational institutes. With built-in best practices for managing invoices, expenses, payments, and taxes, it provides a comprehensive financial management solution accessible from anywhere.",
-    benefits: [
-      "Powerful income tax calculation and preparation tools",
-      "Automated invoice creation with professional templates",
-      "Automated follow-ups and payment reminders for overdue fees",
-      "Multiple invoice reconciliation and payment terms support",
-      "Auto-generated draft invoices for recurring charges",
-      "Customizable dashboards for financial performance analysis",
-      "Key performance indicators with custom formula support",
-      "Fully-integrated financial statements including P&L and balance sheets",
-      "Cash flow statements and general ledger management",
-      "Country-specific tax report generation",
-      "Data-driven decision-making through intelligent analytics",
-    ],
-    useCases: [
-      "End-of-month financial closing with automated report generation",
-      "Tax preparation with country-specific compliance reports",
-      "Budget planning with real-time expense tracking and forecasting",
-    ],
-    relatedFeatures: ["accounting", "financial", "expense"],
-  },
   "assignment-annotation": {
     longDescription:
       "Assignment annotation enhances understanding, critical thinking, and work quality by enabling educators to add notes, comments, and markup digitally. Teachers can provide detailed inline feedback on student submissions, highlight areas for improvement, and track revision history.",
@@ -1161,7 +1232,7 @@ export const FEATURE_DETAILS: Record<
       "Code review for programming assignments with line-level feedback",
       "Art and design project critique with visual markup tools",
     ],
-    relatedFeatures: ["assignment", "gradebook", "lms"],
+    relatedFeatures: ["assignment", "gradebook", "e-learning"],
   },
   "automated-marketing": {
     longDescription:
@@ -1223,7 +1294,7 @@ export const FEATURE_DETAILS: Record<
       "Accountant monitoring fee collection progress and outstanding balances",
       "Teacher tracking class assignment completion rates and grade distributions",
     ],
-    relatedFeatures: ["kpi-dashboard", "reporting", "accounting"],
+    relatedFeatures: ["reporting", "accounting"],
   },
   "digital-library": {
     longDescription:
@@ -1243,7 +1314,7 @@ export const FEATURE_DETAILS: Record<
       "Teacher resource sharing across departments and campuses",
       "Remote learning support with 24/7 digital library access",
     ],
-    relatedFeatures: ["library", "lms", "course"],
+    relatedFeatures: ["library", "e-learning"],
   },
   documents: {
     longDescription:
@@ -1263,7 +1334,7 @@ export const FEATURE_DETAILS: Record<
       "Faculty contract management with version tracking and e-signatures",
       "Accreditation document preparation with organized evidence portfolios",
     ],
-    relatedFeatures: ["e-sign", "admission", "secure-transcript"],
+    relatedFeatures: ["e-sign", "admission", "transcript"],
   },
   events: {
     longDescription:
@@ -1325,26 +1396,6 @@ export const FEATURE_DETAILS: Record<
     ],
     relatedFeatures: ["biometric", "attendance", "secure"],
   },
-  "kpi-dashboard": {
-    longDescription:
-      "Monitor all your departments from a real-time dashboard. A simple yet attractive and effective tool that allows users a comprehensive overview of the health of the business or organization with 8 types of graphical displays, customizable templates, and flexible export options.",
-    benefits: [
-      "Eight types of graphical displays: line, bar, pie, doughnut, area, and more",
-      "Configurable target lines and bars within visualizations",
-      "Various template styles with customizable colors and layouts",
-      "Export to Excel, PDF, and PNG formats",
-      "Auto-refresh at configurable intervals for live monitoring",
-      "Date filtering with 7-day, 30-day, 90-day, and custom ranges",
-      "Responsive design optimized for desktop, tablet, and mobile",
-      "Custom KPI formulas for department-specific metrics",
-    ],
-    useCases: [
-      "Principal monitoring school-wide KPIs with auto-refreshing dashboards",
-      "Finance department tracking revenue and expense trends with visual charts",
-      "Board presentation with exported PDF reports and visualizations",
-    ],
-    relatedFeatures: ["dashboard", "reporting", "advance-accounting"],
-  },
   library: {
     longDescription:
       "Easily manage your school's library with a comprehensive Library Management System. Streamline book tracking, cataloging, and lending processes to keep your library organized and accessible to students, teachers, and faculty with barcode integration and real-time inventory updates.",
@@ -1384,7 +1435,7 @@ export const FEATURE_DETAILS: Record<
       "Proctored online exams with real-time monitoring and anti-cheating",
       "Hybrid learning sessions combining in-person and remote students",
     ],
-    relatedFeatures: ["zoom", "google-meet", "lms"],
+    relatedFeatures: ["zoom", "google-meet", "e-learning"],
   },
   "mobile-application": {
     longDescription:
@@ -1465,27 +1516,7 @@ export const FEATURE_DETAILS: Record<
       "Competitive exam preparation with practice OMR sheets",
       "Survey data collection using pre-designed OMR answer forms",
     ],
-    relatedFeatures: ["exam", "quiz", "reporting"],
-  },
-  "quiz-anti-cheating": {
-    longDescription:
-      "Quiz Anti-Cheating mode acts as a strict invigilator during online examinations, detecting whether students are seriously participating or attempting to cheat. Monitor tab switches, screen activity, and engagement levels to ensure assessment integrity in remote and hybrid learning environments.",
-    benefits: [
-      "Tab-switch detection alerting when students leave the exam window",
-      "Screen activity monitoring for suspicious behavior patterns",
-      "Engagement-level tracking measuring active participation",
-      "Automated flagging of potential cheating incidents for review",
-      "Configurable strictness levels for different exam types",
-      "Post-exam integrity reports for instructor review",
-      "Browser lockdown mode preventing access to other applications",
-      "Webcam proctoring integration for visual verification",
-    ],
-    useCases: [
-      "High-stakes final exams with full anti-cheating mode enabled",
-      "Remote quiz administration with browser lockdown for integrity",
-      "Post-exam review of flagged incidents for academic honesty decisions",
-    ],
-    relatedFeatures: ["quiz", "exam", "live-classroom"],
+    relatedFeatures: ["exam", "qbank", "reporting"],
   },
   reporting: {
     longDescription:
@@ -1505,7 +1536,7 @@ export const FEATURE_DETAILS: Record<
       "Accreditation reporting with pre-built compliance templates",
       "Monthly financial summary generation for school administration",
     ],
-    relatedFeatures: ["dashboard", "kpi-dashboard", "advance-accounting"],
+    relatedFeatures: ["dashboard"],
   },
   thesis: {
     longDescription:
@@ -1525,7 +1556,7 @@ export const FEATURE_DETAILS: Record<
       "Supervisor workload management with automated student matching",
       "Plagiarism screening before final thesis submission and approval",
     ],
-    relatedFeatures: ["documents", "assignment", "lms"],
+    relatedFeatures: ["documents", "assignment", "e-learning"],
   },
   convocation: {
     longDescription:
@@ -1545,7 +1576,7 @@ export const FEATURE_DETAILS: Record<
       "Convocation pass distribution with QR code verification at entry",
       "Multi-campus convocation coordination with centralized planning",
     ],
-    relatedFeatures: ["events", "secure-transcript", "payment"],
+    relatedFeatures: ["events", "transcript", "payment"],
   },
 
   // ─── ERP (13) ───
@@ -1567,7 +1598,7 @@ export const FEATURE_DETAILS: Record<
       "Year-end financial statement preparation for auditing",
       "Vendor payment processing with multi-level approval workflows",
     ],
-    relatedFeatures: ["advance-accounting", "financial", "expense"],
+    relatedFeatures: ["financial", "expense"],
   },
   appraisals: {
     longDescription:
@@ -1707,7 +1738,7 @@ export const FEATURE_DETAILS: Record<
       "Department budget tracking with real-time spending visibility",
       "Field trip expense management with advance request and settlement",
     ],
-    relatedFeatures: ["accounting", "advance-accounting", "financial"],
+    relatedFeatures: ["accounting", "financial"],
   },
   payroll: {
     longDescription:
@@ -1971,7 +2002,7 @@ export const FEATURE_DETAILS: Record<
       "Faculty professional development discussions with expert responses",
       "School-wide feedback forum for policy and improvement suggestions",
     ],
-    relatedFeatures: ["discussion", "blog", "lms"],
+    relatedFeatures: ["discussion", "blog", "e-learning"],
   },
   grievance: {
     longDescription:
@@ -2034,6 +2065,23 @@ export const FEATURE_DETAILS: Record<
     ],
     relatedFeatures: ["blog", "notice-board", "discussion"],
   },
+  announcement: {
+    longDescription:
+      "Broadcast news, circulars, and instant alerts to the entire school community. An automated notification system ensures critical information is communicated instantly via email, SMS, and push notifications, keeping students, parents, and staff connected and informed.",
+    benefits: [
+      "Instant school-wide announcements and emergency alerts",
+      "Multi-channel delivery (email, SMS, and in-app notifications)",
+      "Targeted broadcasts by grade, class, or user role",
+      "Scheduled announcements for future events or updates",
+      "Read status tracking to verify message delivery",
+    ],
+    useCases: [
+      "Publishing monthly school newsletters and circulars",
+      "Sending urgent alerts about school closures or schedule changes",
+      "Scheduling reminders for parent-teacher conferences and fee deadlines",
+    ],
+    relatedFeatures: ["notice-board", "events", "discussion"],
+  },
   "notice-board": {
     longDescription:
       "Students can get information regarding upcoming tests and assignments from teachers and administration before the due date. Share circulars, advance notifications, and event announcements via email and SMS to ensure everyone stays informed.",
@@ -2094,7 +2142,7 @@ export const FEATURE_DETAILS: Record<
     ],
     relatedFeatures: ["survey", "discussion", "notice-board"],
   },
-  "secure-transcript": {
+  transcript: {
     longDescription:
       "Get secure and tamper-proof results and transcripts with instantly verifiable QR codes. Create custom digital certificates and IDs, share verified credentials, and access information-rich reports — all with low maintenance, cost-effective solutions that build trust and prevent counterfeiting.",
     benefits: [
@@ -2135,10 +2183,10 @@ export const FEATURE_DETAILS: Record<
     relatedFeatures: ["poll", "grievance", "reporting"],
   },
 
-  // ─── LMS (2) ───
-  lms: {
+  // ─── E-Learning (2) ───
+  "e-learning": {
     longDescription:
-      "Elevate the educational experience at your institution with an LMS that offers seamless integration and limitless possibilities. From customizable learning paths and easy course management to virtual classrooms and gamification, built-in tools help students, faculty, and IT departments alike.",
+      "Elevate the educational experience at your institution with an E-Learning platform that offers seamless integration and limitless possibilities. From customizable learning paths and easy course management to virtual classrooms and gamification, built-in tools help students, faculty, and IT departments alike.",
     benefits: [
       "Customizable learning paths tailored for diverse learners",
       "Easy course management with interactive creation tools",
@@ -2156,28 +2204,24 @@ export const FEATURE_DETAILS: Record<
       "Self-paced summer courses for credit recovery with progress tracking",
       "Professional development course library for teacher continuing education",
     ],
-    relatedFeatures: ["quiz", "live-classroom", "digital-library"],
+    relatedFeatures: ["qbank", "live-classroom", "digital-library"],
   },
-  quiz: {
+  qbank: {
     longDescription:
-      "Engaging classroom quiz activities for fun and collaboration. Offers enhancements for practice and tests preparation with a focus on equity, standards-based reports, data-driven instruction, and universal access across campuses — supporting 8 different question types for diverse assessment needs.",
+      "Build a comprehensive question library to streamline exam and quiz creation. Supports multiple question types (multiple choice, fill-in-the-blanks, descriptive) with tagging by subject, topic, difficulty level, and cognitive domain to create balanced assessments easily.",
     benefits: [
-      "Assessment and practice tools with equity-focused design",
-      "Data-driven insights through standards-based reporting",
-      "Universal access ensuring alignment for teachers across campuses",
-      "Fill in the blank questions for recall assessment",
-      "Optional and descriptive question types for varied evaluation",
-      "Drag into text and match following for interactive assessment",
-      "Numeric and sort-the-paragraphs for analytical testing",
-      "Match the images for visual learning assessment",
-      "Anti-cheating mode for secure online examination",
+      "Centralized repository for all assessment questions",
+      "Support for diverse question types and cognitive levels",
+      "Tagging and categorization by subject and difficulty",
+      "Automated random test generation from the bank",
+      "Easy sharing of question banks among subject teachers",
     ],
     useCases: [
-      "Weekly class quizzes with instant grading and performance analytics",
-      "Standardized tests preparation with timed practice sessions",
-      "Interactive study review sessions with gamified quiz activities",
+      "Creating a unified chemistry question bank for high school grades",
+      "Generating randomized mock exams for term finals",
+      "Analyzing question difficulty based on student response statistics",
     ],
-    relatedFeatures: ["exam", "quiz-anti-cheating", "lms"],
+    relatedFeatures: ["exam", "e-learning", "assignment"],
   },
 
   // ─── Technical (11) ───
@@ -2199,7 +2243,7 @@ export const FEATURE_DETAILS: Record<
       "Tailored approval workflows matching administrative processes",
       "Custom dashboard creation for department-specific KPI monitoring",
     ],
-    relatedFeatures: ["no-code-studio", "modular", "web-service-enabled"],
+    relatedFeatures: ["no-code-studio", "web-service-enabled"],
   },
   "data-import-export": {
     longDescription:
@@ -2240,26 +2284,6 @@ export const FEATURE_DETAILS: Record<
       "Administrator platform access from any location during school events",
     ],
     relatedFeatures: ["on-cloud-on-premise", "mobile-application", "secure"],
-  },
-  modular: {
-    longDescription:
-      "A flexible modular-based system making it easy to add new features on the fly without having downtime. Implement specific components based on requirements rather than adopting the entire system at once, allowing gradual expansion as needs grow.",
-    benefits: [
-      "Pick-and-choose module selection based on current needs",
-      "Add new modules without system downtime",
-      "Independent module updates and maintenance",
-      "Reduced initial investment with phased implementation",
-      "Inter-module integration for seamless data flow",
-      "Module-level configuration without affecting others",
-      "Scalable architecture growing with institutional needs",
-      "Simplified training by introducing modules progressively",
-    ],
-    useCases: [
-      "Starting with core modules and adding advanced features over time",
-      "Enabling specific modules for different campus locations",
-      "Pilot testing new modules with select departments before full rollout",
-    ],
-    relatedFeatures: ["customizable", "on-cloud-on-premise", "open-source"],
   },
   "multi-currency": {
     longDescription:
@@ -2341,26 +2365,6 @@ export const FEATURE_DETAILS: Record<
     ],
     relatedFeatures: ["full-web-based", "secure", "multi-organization"],
   },
-  "open-source": {
-    longDescription:
-      "The source code available under the most adaptable open-source license gives the freedom to modify the system as you like. Well-structured and technically robust, the open-source nature ensures transparency, community support, and unlimited customization potential.",
-    benefits: [
-      "Full source code access for complete transparency",
-      "Freedom to modify and extend functionality",
-      "Active community contributing improvements and plugins",
-      "No vendor lock-in with portable data and code",
-      "Cost-effective with no per-user licensing fees",
-      "Security through transparency with community code review",
-      "Integration flexibility with any third-party system",
-      "Self-hosted option for complete infrastructure control",
-    ],
-    useCases: [
-      "Custom module development for institution-specific requirements",
-      "Community contribution to shared features benefiting all users",
-      "Internal IT team maintaining and extending the platform independently",
-    ],
-    relatedFeatures: ["customizable", "modular", "web-service-enabled"],
-  },
   secure: {
     longDescription:
       "Incorporated with security features like granular-level data access ensuring that your data is secure from unauthorized access. Comprehensive security measures protect institutional and student information with role-based permissions, encryption, and audit logging.",
@@ -2403,7 +2407,7 @@ export const FEATURE_DETAILS: Record<
       "Integration with third-party payment gateways for fee collection",
       "Custom mobile app development using platform APIs",
     ],
-    relatedFeatures: ["data-import-export", "customizable", "open-source"],
+    relatedFeatures: ["data-import-export", "customizable"],
   },
 
   // ─── Integration (6) ───
@@ -2418,7 +2422,7 @@ export const FEATURE_DETAILS: Record<
       "Whiteboard and annotation tools for interactive teaching",
       "Recording capabilities for session replay",
       "Breakout rooms for small group activities",
-      "Integration with LMS for seamless class management",
+      "Integration with E-Learning for seamless class management",
     ],
     useCases: [
       "Daily virtual classes with screen sharing and interactive whiteboard",
@@ -2550,7 +2554,7 @@ export const FEATURE_DETAILS: Record<
       "Early warning system identifying struggling students through predictive analytics",
       "Automated quiz generation from uploaded curriculum materials and textbooks",
     ],
-    relatedFeatures: ["lms", "quiz", "dashboard"],
+    relatedFeatures: ["e-learning", "qbank", "dashboard"],
   },
 }
 

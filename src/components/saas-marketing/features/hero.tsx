@@ -1,8 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, GraduationCap } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { PageHeader } from "@/components/atom/page-header"
 import { TwoButtons } from "@/components/atom/two-buttons"
@@ -21,10 +22,16 @@ export default function Hero({ dictionary, params }: HeroProps) {
     <PageHeader
       announcement={
         <Link
-          href={`/${params.lang}/pricing`}
+          href={`/${params.lang}/features/live-classroom`}
           className="group mb-2 inline-flex items-center gap-2 px-0.5 text-sm font-medium"
         >
-          <GraduationCap className="h-4 w-4" />
+          <Image
+            src="/feature/streaming.png"
+            alt=""
+            width={16}
+            height={16}
+            className="h-4 w-4 dark:invert"
+          />
           <span className="underline-offset-4 group-hover:underline">
             {t.badge}
           </span>

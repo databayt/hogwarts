@@ -96,6 +96,6 @@ export const aiPageData: Record<string, FeaturePageData> = {
           "Ready to experience the transformative power of AI in education?",
       },
     ],
-    relatedFeatures: ["dashboard", "reporting", "lms"],
+    relatedFeatures: ["dashboard", "reporting", "e-learning"],
   },
 }

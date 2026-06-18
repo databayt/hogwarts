@@ -42,11 +42,12 @@ src/components/saas-marketing/
 │   ├── content.tsx                 # Feature page renderer
 │   ├── hero.tsx                    # Feature hero
 │   ├── details.tsx                 # Feature details
-│   ├── constants.tsx               # Feature constants
+│   ├── constants.tsx               # FEATURES (85) + PLANNED_FEATURE_IDS + SHOWN_FEATURES (built+partial)
+│   ├── feature-tabs.tsx            # Category-tabbed grid: SHOWN_FEATURES + FEATURE_IMAGES (local public/feature/*.png) → category fallback
 │   ├── types.ts                    # Feature types
 │   ├── util.ts                     # Feature utilities
-│   ├── feature-icons.tsx           # Feature icon set
-│   ├── icon-map.tsx                # Icon mapping
+│   ├── feature-icons.tsx           # Category fallback icon set (getCategoryIcon)
+│   ├── icon-map.tsx                # Lucide name→component map (UNUSED — feature.icon not wired to grid)
 │   ├── sections/                   # Reusable section renderers
 │   │   ├── section-renderer.tsx
 │   │   ├── hero-section.tsx

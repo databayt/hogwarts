@@ -28,7 +28,7 @@ export type FeatureCategory =
   | "erp"
   | "management"
   | "communication"
-  | "lms"
+  | "e-learning"
   | "technical"
   | "integration"
   | "ai"

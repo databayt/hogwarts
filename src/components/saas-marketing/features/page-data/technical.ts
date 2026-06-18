@@ -32,7 +32,7 @@ export const technicalPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["no-code-studio", "modular", "web-service-enabled"],
+    relatedFeatures: ["no-code-studio", "web-service-enabled"],
   },
 
   "data-import-export": {
@@ -94,36 +94,6 @@ export const technicalPageData: Record<string, FeaturePageData> = {
       },
     ],
     relatedFeatures: ["on-cloud-on-premise", "mobile-application", "secure"],
-  },
-
-  modular: {
-    sections: [
-      {
-        type: "hero",
-        heading: "Modular Architecture",
-        description:
-          "A flexible modular based system, making it easy to add new features on the fly without having a downtime.",
-      },
-      {
-        type: "feature-cards",
-        heading: "Modular Benefits",
-        cards: [
-          {
-            title: "Pick and Choose",
-            description: "Install only the modules you need.",
-          },
-          {
-            title: "Zero Downtime",
-            description: "Add new features without system interruption.",
-          },
-          {
-            title: "Independent Updates",
-            description: "Update modules independently for minimal disruption.",
-          },
-        ],
-      },
-    ],
-    relatedFeatures: ["customizable", "open-source", "web-service-enabled"],
   },
 
   "multi-currency": {
@@ -245,37 +215,7 @@ export const technicalPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["full-web-based", "secure", "modular"],
-  },
-
-  "open-source": {
-    sections: [
-      {
-        type: "hero",
-        heading: "Open Source",
-        description:
-          "The source code available under most adaptable open source license gives the freedom to modify the system as you like.",
-      },
-      {
-        type: "feature-cards",
-        heading: "Open Source Benefits",
-        cards: [
-          {
-            title: "Full Access",
-            description: "Complete source code access for customization.",
-          },
-          {
-            title: "Community",
-            description: "Active community of developers and contributors.",
-          },
-          {
-            title: "No Vendor Lock-in",
-            description: "Freedom to modify, extend, and deploy as needed.",
-          },
-        ],
-      },
-    ],
-    relatedFeatures: ["customizable", "modular", "web-service-enabled"],
+    relatedFeatures: ["full-web-based", "secure"],
   },
 
   secure: {
@@ -335,6 +275,6 @@ export const technicalPageData: Record<string, FeaturePageData> = {
         ],
       },
     ],
-    relatedFeatures: ["data-import-export", "open-source", "modular"],
+    relatedFeatures: ["data-import-export"],
   },
 }

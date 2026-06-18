@@ -32,19 +32,25 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
   const cards = [
     {
       title: dict.studentSuccess,
-      icon: asset("https://cdn.databayt.org/anthropic/67ed7bd686b6d20bb1cd568c_Hands-Build.svg"),
+      icon: asset(
+        "https://cdn.databayt.org/anthropic/67ed7bd686b6d20bb1cd568c_Hands-Build.svg"
+      ),
       href: "/about",
       bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
     },
     {
       title: dict.schoolOperations,
-      icon: asset("https://cdn.databayt.org/anthropic/67ed7bd72914c76f710d86fc_Hands-Stack.svg"),
+      icon: asset(
+        "https://cdn.databayt.org/anthropic/67ed7bd72914c76f710d86fc_Hands-Stack.svg"
+      ),
       href: "/features",
       bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
     },
     {
       title: dict.openAcademy,
-      icon: asset("https://cdn.databayt.org/anthropic/67ed7b8d86b6d20bb1cd1292_Objects-Puzzle.svg"),
+      icon: asset(
+        "https://cdn.databayt.org/anthropic/67ed7b8d86b6d20bb1cd1292_Objects-Puzzle.svg"
+      ),
       href: "/docs",
       bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
     },
