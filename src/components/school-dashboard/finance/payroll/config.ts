@@ -43,14 +43,34 @@ export const STATUS_COLORS = {
   CANCELLED: "bg-red-500/10 text-red-500",
 } as const
 
-// Tax brackets (progressive tax system - can be customized per school)
+// Tax brackets — progressive & marginal, customizable per school. Thresholds are
+// in WHOLE currency units (the same unit as SalaryStructure.baseSalary / gross),
+// NOT cents. Defaults sized for the monthly-salary scale (e.g. SDG 80k–350k).
 export const TAX_BRACKETS = [
-  { from: 0, to: 20000, rate: 0 }, // Tax-free up to $200
-  { from: 20000, to: 50000, rate: 10 }, // 10% for $200 - $500
-  { from: 50000, to: 100000, rate: 15 }, // 15% for $500 - $1000
-  { from: 100000, to: 200000, rate: 20 }, // 20% for $1000 - $2000
-  { from: 200000, to: null, rate: 25 }, // 25% for above $2000
+  { from: 0, to: 20000, rate: 0 }, // tax-free up to 20,000
+  { from: 20000, to: 50000, rate: 10 }, // 10% on 20,000–50,000
+  { from: 50000, to: 100000, rate: 15 }, // 15% on 50,000–100,000
+  { from: 100000, to: 200000, rate: 20 }, // 20% on 100,000–200,000
+  { from: 200000, to: null, rate: 25 }, // 25% above 200,000
 ] as const
+
+/**
+ * Progressive (marginal) income tax for one pay period. Each bracket's rate
+ * applies only to the portion of `grossAmount` that falls inside it. `grossAmount`
+ * and the bracket thresholds share the same WHOLE currency unit. Replaces the old
+ * flat 15% used in payroll + salary calculations.
+ */
+export function calculateProgressiveTax(grossAmount: number): number {
+  let tax = 0
+  for (const bracket of TAX_BRACKETS) {
+    if (grossAmount <= bracket.from) break
+    const upper =
+      bracket.to === null ? grossAmount : Math.min(grossAmount, bracket.to)
+    const portion = upper - bracket.from
+    if (portion > 0) tax += portion * (bracket.rate / 100)
+  }
+  return tax
+}
 
 // Social security rates
 export const SOCIAL_SECURITY_RATE = 7 // 7%

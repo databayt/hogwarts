@@ -19,6 +19,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { calculateProgressiveTax } from "./config"
 import {
   payrollApprovalSchema,
   payrollDisbursementSchema,
@@ -283,7 +284,7 @@ export async function generateSalarySlips(
       // Calculate gross, tax, and net
       const baseSalary = Number(activeSalaryStructure.baseSalary)
       const grossSalary = baseSalary + totalAllowances
-      const taxAmount = grossSalary * 0.15 // Simplified 15% tax rate
+      const taxAmount = calculateProgressiveTax(grossSalary)
       const netSalary = grossSalary - taxAmount - totalDeductionsAmount
 
       // Generate slip number

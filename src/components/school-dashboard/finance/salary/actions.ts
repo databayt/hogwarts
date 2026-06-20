@@ -16,6 +16,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { calculateProgressiveTax } from "../payroll/config"
 import {
   salaryAllowanceSchema,
   salaryCalculatorSchema,
@@ -551,8 +552,8 @@ export async function calculateSalary(
       .reduce((sum, a) => sum + Number(a.amount), 0)
     const taxableIncome = baseSalary + taxableAllowances
 
-    // Calculate tax (15% simplified rate)
-    const taxAmount = taxableIncome * 0.15
+    // Progressive marginal tax on taxable income (see payroll/config TAX_BRACKETS)
+    const taxAmount = calculateProgressiveTax(taxableIncome)
 
     // Calculate total deductions
     const totalDeductions = salaryStructure.deductions.reduce(
