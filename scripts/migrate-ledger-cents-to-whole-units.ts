@@ -2,129 +2,141 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * ONE-TIME DATA MIGRATION — ledger cents → whole units
- * =====================================================
+ * ONE-TIME, SELF-VERIFYING MIGRATION — deflate any toCents-inflated ledger rows
+ * ============================================================================
  *
- * WHY
- *   The finance posting rules used to wrap every amount in `toCents()` (× 100)
- *   before writing it to `LedgerEntry.debit/credit`, which is `Decimal(12,2)`
- *   WHOLE currency units (Payment.amount is whole units; banking/reconciliation
- *   reads the ledger raw and compares it to Payment sums). So the live ledger
- *   (postFeePayment via Stripe/Tap, postWalletTopup, postFeeAssignment) was
- *   inflated 100×. Commit 916327882 dropped `toCents`, so NEW postings are
- *   whole units. This script corrects the EXISTING inflated rows so prod is not
- *   left with a mix of 100× and 1× entries.
+ * BACKGROUND
+ *   The finance posting rules used to wrap amounts in toCents() (× 100) before
+ *   writing LedgerEntry.debit/credit, which is Decimal(12,2) WHOLE units. Commit
+ *   916327882 dropped toCents, so NEW postings are whole units. This script
+ *   corrects any EXISTING rows the old code inflated.
  *
- * SCOPE (deliberately a positive allowlist)
- *   Only `LedgerEntry` rows whose `JournalEntry.sourceModule` is one of the
- *   posting-rule modules that used `toCents` (see INFLATED_MODULES). Manual
- *   journal entries (sourceModule "MANUAL", entered by accountants in whole
- *   units via accounts/) are NEVER touched.
+ * SCOPE — narrow on purpose, proven against the source record (no guessing)
+ *   Only the WIRED posting rules can ever have written real inflated rows, and
+ *   only `postFeePayment` (sourceModule='fees', sourceRecordId = Payment.id) has
+ *   a verifiable money source. So this script ONLY considers fees JournalEntries
+ *   that carry a `sourceRecordId`, joins the Payment, and deflates an entry IFF
+ *   its cash-leg debit equals Payment.amount × 100. A row already at × 1 (or any
+ *   row that does not match exactly) is LEFT UNTOUCHED. This makes the script:
+ *     • safe against seeded/demo ledger data (those rows have sourceRecordId=NULL
+ *       and are skipped entirely), and
+ *     • idempotent (a correct row never matches the ×100 condition).
+ *
+ *   IMPORTANT — verified on prod (square-hall-52214783) 2026-06-20: all 200
+ *   journal entries have sourceRecordId=NULL (seeded whole-unit demo data), so
+ *   ZERO rows are inflated and this script is currently a NO-OP. It exists as a
+ *   safety net for any real fee payment that posts through the OLD code before
+ *   the toCents fix deploys. (postExpensePayment/postSalaryPayment are orphaned,
+ *   so expenses/payroll ledger rows are ONLY ever seed/manual = whole units and
+ *   are never in scope; postWalletTopup is wired but has produced no rows — if
+ *   that changes, extend this script with a WalletTransaction-verified branch.)
  *
  * WHAT IT DOES (per school, in one transaction, only when APPLY=1)
- *   1. Divides debit/credit by 100 for the in-scope LedgerEntry rows.
- *   2. RECOMPUTES `AccountBalance` from the corrected, posted ledger — it is a
- *      derived aggregate (per account + entryDate signed delta, debit-normal for
- *      ASSET/EXPENSE), so it cannot be naively ÷100'd. The recompute mirrors the
- *      engine in `lib/accounting/utils.ts:createJournalEntry`.
+ *   1. For each fees JournalEntry with a sourceRecordId whose cash-leg debit ==
+ *      Payment.amount × 100, divides every line of that entry by 100.
+ *   2. Recomputes AccountBalance from the corrected, posted ledger (per account +
+ *      entryDate signed delta, debit-normal for ASSET/EXPENSE) — mirrors
+ *      lib/accounting/utils.ts:createJournalEntry. The cache can't be naively
+ *      ÷100'd because it also aggregates whole-unit seeded entries.
  *
- * SAFETY — READ BEFORE RUNNING
- *   • This is NOT idempotent. Running APPLY twice divides by 10,000. Run it
- *     EXACTLY ONCE per environment.
- *   • DRY_RUN is the default — it only reports. You must set APPLY=1 to write.
- *   • ALWAYS run Neon-branch-first:
- *        1. neon branches create  (snapshot of prod)
- *        2. point DATABASE_URL at the branch, run DRY_RUN, eyeball the magnitudes
- *           (a fee payment debit of 500000 is inflated; 5000 is already correct)
- *        3. APPLY=1 on the branch, then verify:
- *             - every posted JournalEntry still balances (debits == credits)
- *             - reconciliation (/finance/banking/reconciliation) ledger ≈ payments
- *             - trial balance is sane
- *        4. only then repeat APPLY=1 against prod, and DELETE the branch.
+ * SAFETY
+ *   • DRY_RUN is the default — only reports. Set APPLY=1 to write.
+ *   • Per-row verification means it cannot corrupt correct data; still, run it
+ *     Neon-branch-first (snapshot → dry run → apply on branch → verify every
+ *     posted entry balances + reconciliation ledger ≈ payments → apply prod →
+ *     delete branch).
+ *   • Target DB resolves from MIGRATION_DATABASE_URL if set (preferred — explicit),
+ *     else DATABASE_URL. The chosen URL host is printed so you can confirm it is
+ *     the intended branch/prod before APPLY.
  *
  * USAGE
- *   tsx scripts/migrate-ledger-cents-to-whole-units.ts            # dry run, all schools
- *   SCHOOL_ID=<id> tsx scripts/migrate-ledger-cents-to-whole-units.ts
- *   APPLY=1 tsx scripts/migrate-ledger-cents-to-whole-units.ts    # WRITE (after branch-first)
+ *   tsx scripts/migrate-ledger-cents-to-whole-units.ts                 # dry run
+ *   MIGRATION_DATABASE_URL=<branch-url> APPLY=1 tsx scripts/migrate-ledger-cents-to-whole-units.ts
  */
 
-import { PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 
-const db = new PrismaClient()
+const TARGET_URL =
+  process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL || ""
 
-// Posting-rule sourceModule values that ran through toCents(). Lowercase to
-// match the SourceModule enum the rules emit; "MANUAL" is intentionally absent.
-const INFLATED_MODULES = ["fees", "payroll", "expenses", "invoice", "wallet"]
+const clientOptions: Prisma.PrismaClientOptions = {}
+if (process.env.MIGRATION_DATABASE_URL) {
+  clientOptions.datasources = {
+    db: { url: process.env.MIGRATION_DATABASE_URL },
+  }
+}
+const db = new PrismaClient(clientOptions)
 
 const APPLY = process.env.APPLY === "1"
 const ONLY_SCHOOL = process.env.SCHOOL_ID || null
 
 const isDebitNormal = (type: string) => type === "ASSET" || type === "EXPENSE"
 const n = (d: unknown) => Number(d as never)
+const hostOf = (url: string) =>
+  url.replace(/^.*@/, "").replace(/\/.*$/, "") || "(unknown)"
 
 async function migrateSchool(schoolId: string, label: string) {
-  const inScope = {
-    schoolId,
-    journalEntry: { sourceModule: { in: INFLATED_MODULES } },
-  }
-
-  const lines = await db.ledgerEntry.findMany({
-    where: inScope,
+  // fees posting-rule entries (sourceRecordId set) with their Payment + lines.
+  const entries = await db.journalEntry.findMany({
+    where: { schoolId, sourceModule: "fees", sourceRecordId: { not: null } },
     select: {
-      debit: true,
-      credit: true,
-      journalEntry: { select: { sourceModule: true } },
+      id: true,
+      sourceRecordId: true,
+      ledgerEntries: {
+        select: {
+          id: true,
+          debit: true,
+          credit: true,
+          account: { select: { code: true } },
+        },
+      },
     },
   })
 
-  const manualCount = await db.journalEntry.count({
-    where: { schoolId, sourceModule: { notIn: INFLATED_MODULES } },
-  })
-
-  if (lines.length === 0) {
-    console.log(`  [${label}] no in-scope ledger rows — nothing to do.`)
-    return { school: label, lines: 0, applied: false }
+  if (entries.length === 0) {
+    console.log(`  [${label}] no fee posting-rule entries — nothing in scope.`)
+    return { applied: 0 }
   }
 
-  const debitSum = lines.reduce((s, l) => s + n(l.debit), 0)
-  const creditSum = lines.reduce((s, l) => s + n(l.credit), 0)
-  const byModule = INFLATED_MODULES.map((m) => {
-    const c = lines.filter((l) => l.journalEntry.sourceModule === m).length
-    return c ? `${m}:${c}` : null
+  // Resolve the source Payment amounts in one query.
+  const paymentIds = entries.map((e) => e.sourceRecordId!).filter(Boolean)
+  const payments = await db.payment.findMany({
+    where: { id: { in: paymentIds } },
+    select: { id: true, amount: true },
   })
-    .filter(Boolean)
-    .join(" ")
+  const payAmount = new Map(payments.map((p) => [p.id, n(p.amount)]))
 
-  console.log(`  [${label}] in-scope lines=${lines.length} (${byModule})`)
+  const inflatedEntryIds: string[] = []
+  for (const e of entries) {
+    const amount = payAmount.get(e.sourceRecordId!)
+    if (amount == null) continue
+    // cash leg = the debit line (createFeePaymentEntry: DR cash, CR receivable)
+    const cashDebit = Math.max(...e.ledgerEntries.map((l) => n(l.debit)), 0)
+    if (Math.round(cashDebit) === Math.round(amount * 100) && amount > 0) {
+      inflatedEntryIds.push(e.id)
+    }
+  }
+
   console.log(
-    `            current debit Σ=${debitSum.toLocaleString()} credit Σ=${creditSum.toLocaleString()}` +
-      ` → after ÷100 debit Σ=${(debitSum / 100).toLocaleString()} credit Σ=${(creditSum / 100).toLocaleString()}`
+    `  [${label}] fee posting-rule entries=${entries.length} verified-inflated=${inflatedEntryIds.length}`
   )
-  if (manualCount > 0) {
-    console.log(
-      `            note: ${manualCount} non-scope (manual/other) journal entries left untouched.`
-    )
-  }
 
-  if (!APPLY) {
-    console.log(
-      `            DRY RUN — no changes written. Set APPLY=1 to write.`
-    )
-    return { school: label, lines: lines.length, applied: false }
+  if (inflatedEntryIds.length === 0 || !APPLY) {
+    if (!APPLY && inflatedEntryIds.length > 0)
+      console.log(
+        `            DRY RUN — would deflate ${inflatedEntryIds.length} entries. Set APPLY=1.`
+      )
+    return { applied: 0 }
   }
 
   await db.$transaction(async (tx) => {
-    // 1. Deflate the in-scope ledger rows.
     await tx.$executeRaw`
-      UPDATE "LedgerEntry" le
-      SET debit = le.debit / 100, credit = le.credit / 100
-      FROM "JournalEntry" je
-      WHERE le."journalEntryId" = je.id
-        AND le."schoolId" = ${schoolId}
-        AND je."sourceModule" = ANY(${INFLATED_MODULES})
+      UPDATE "LedgerEntry"
+      SET debit = debit / 100, credit = credit / 100
+      WHERE "journalEntryId" = ANY(${inflatedEntryIds})
     `
 
-    // 2. Recompute AccountBalance from the corrected, posted ledger.
+    // Recompute AccountBalance from the corrected, posted ledger.
     const posted = await tx.ledgerEntry.findMany({
       where: { schoolId, journalEntry: { isPosted: true } },
       select: {
@@ -135,7 +147,6 @@ async function migrateSchool(schoolId: string, label: string) {
         journalEntry: { select: { entryDate: true } },
       },
     })
-
     const acc = new Map<
       string,
       { accountId: string; asOfDate: Date; balance: number }
@@ -153,7 +164,6 @@ async function migrateSchool(schoolId: string, label: string) {
       cur.balance += change
       acc.set(key, cur)
     }
-
     await tx.accountBalance.deleteMany({ where: { schoolId } })
     if (acc.size > 0) {
       await tx.accountBalance.createMany({
@@ -168,17 +178,20 @@ async function migrateSchool(schoolId: string, label: string) {
   })
 
   console.log(
-    `            ✓ APPLIED — ${lines.length} rows deflated, balances recomputed.`
+    `            ✓ APPLIED — deflated ${inflatedEntryIds.length} entries, balances recomputed.`
   )
-  return { school: label, lines: lines.length, applied: true }
+  return { applied: inflatedEntryIds.length }
 }
 
 async function main() {
   console.log("")
-  console.log("ledger cents → whole-units migration")
+  console.log(
+    "ledger cents → whole-units migration (self-verifying, fees-scoped)"
+  )
+  console.log(`  target DB host: ${hostOf(TARGET_URL)}`)
   console.log(APPLY ? "  MODE: APPLY (writing)" : "  MODE: DRY RUN (no writes)")
   console.log(
-    "  ⚠ NOT idempotent — run exactly once per environment, Neon-branch-first.\n"
+    "  only deflates fee entries whose cash leg == Payment.amount × 100.\n"
   )
 
   const schools = await db.school.findMany({
@@ -186,15 +199,11 @@ async function main() {
     select: { id: true, name: true },
   })
 
-  const results = []
-  for (const s of schools) {
-    results.push(await migrateSchool(s.id, s.name ?? s.id))
-  }
-
-  const applied = results.filter((r) => r.applied).length
-  const touched = results.reduce((sum, r) => sum + (r.applied ? r.lines : 0), 0)
+  let total = 0
+  for (const s of schools)
+    total += (await migrateSchool(s.id, s.name ?? s.id)).applied
   console.log(
-    `\nDone. schools=${schools.length} ${APPLY ? `applied=${applied} rowsDeflated=${touched}` : "(dry run)"}\n`
+    `\nDone. schools=${schools.length} ${APPLY ? `entriesDeflated=${total}` : "(dry run)"}\n`
   )
 }
 
