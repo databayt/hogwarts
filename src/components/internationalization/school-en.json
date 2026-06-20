@@ -5090,6 +5090,7 @@
       "description": "Comprehensive exam management system with question banks, auto-generation, marking, and results",
       "nav": {
         "overview": "Overview",
+        "manage": "Manage",
         "qbank": "Qbank",
         "generate": "Generate",
         "mark": "Mark",

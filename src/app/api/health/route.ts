@@ -148,7 +148,10 @@ function checkCircuitBreaker(): HealthCheckResult {
 }
 
 function checkDependencies(): HealthCheckResult {
-  const requiredEnvVars = ["DATABASE_URL", "AUTH_SECRET", "STRIPE_API_KEY"]
+  // Only env vars the app cannot run without belong here. STRIPE_API_KEY is
+  // optional — it gates SaaS subscription billing, not school operation — so a
+  // school-only deployment without it is healthy, not "unhealthy".
+  const requiredEnvVars = ["DATABASE_URL", "AUTH_SECRET"]
 
   const missingVars = requiredEnvVars.filter((varName) => !process.env[varName])
 

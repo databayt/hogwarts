@@ -1,0 +1,40 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+import type { SearchParams } from "nuqs/server"
+
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ManageExamsContent from "@/components/school-dashboard/exams/manage/content"
+
+interface PageProps {
+  params: Promise<{
+    lang: Locale
+    subdomain: string
+  }>
+  searchParams: Promise<SearchParams>
+}
+
+export default async function ManageExamsPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { lang } = await params
+
+  const session = await auth()
+  if (["STUDENT", "GUARDIAN"].includes(session?.user?.role || "")) {
+    redirect(`/${lang}/exams`)
+  }
+
+  const dictionary = await getDictionary(lang)
+
+  return (
+    <ManageExamsContent
+      searchParams={searchParams}
+      dictionary={dictionary}
+      lang={lang}
+    />
+  )
+}

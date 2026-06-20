@@ -646,6 +646,7 @@ export function getExamTabsForRole(
 
   const tabs = {
     overview: { name: d.overview || "Overview", href: `/${lang}/exams` },
+    manage: { name: d.manage || "Manage", href: `/${lang}/exams/manage` },
     qbank: { name: d.qbank || "QBank", href: `/${lang}/exams/qbank` },
     practice: { name: d.practice || "Practice", href: `/${lang}/exams/qbank` },
     generate: {
@@ -667,6 +668,7 @@ export function getExamTabsForRole(
     case "ADMIN":
       return [
         tabs.overview,
+        tabs.manage,
         tabs.qbank,
         tabs.generate,
         tabs.mark,
@@ -678,6 +680,7 @@ export function getExamTabsForRole(
     case "TEACHER":
       return [
         tabs.overview,
+        tabs.manage,
         tabs.qbank,
         tabs.generate,
         tabs.mark,
