@@ -8,6 +8,8 @@
 // rendered in the school's preferred language so guardians see their own
 // language regardless of who triggered the trip event.
 
+import { NotificationChannel } from "@prisma/client"
+
 import { db } from "@/lib/db"
 import arDict from "@/components/internationalization/dictionaries/ar/transportation.json"
 import enDict from "@/components/internationalization/dictionaries/en/transportation.json"
@@ -17,6 +19,10 @@ type TripEventKind =
   | "trip_finished"
   | "trip_cancelled"
   | "boarding_missed"
+  | "student_boarded"
+  | "student_alighted"
+  | "bus_approaching"
+  | "route_changed"
 
 interface TripEventInput {
   schoolId: string
@@ -68,6 +74,26 @@ function renderEvent(
       return {
         title: notifications.boardingMissed.title,
         body: fill(notifications.boardingMissed.body),
+      }
+    case "student_boarded":
+      return {
+        title: notifications.studentBoarded.title,
+        body: fill(notifications.studentBoarded.body),
+      }
+    case "student_alighted":
+      return {
+        title: notifications.studentAlighted.title,
+        body: fill(notifications.studentAlighted.body),
+      }
+    case "bus_approaching":
+      return {
+        title: notifications.busApproaching.title,
+        body: fill(notifications.busApproaching.body),
+      }
+    case "route_changed":
+      return {
+        title: notifications.routeChanged.title,
+        body: fill(notifications.routeChanged.body),
       }
   }
 }
@@ -182,9 +208,15 @@ export async function notifyGuardiansOfTripEvent(
           userId,
           type: "system_alert" as const,
           priority:
-            kind === "trip_cancelled" || kind === "boarding_missed"
+            kind === "trip_cancelled" ||
+            kind === "boarding_missed" ||
+            kind === "route_changed"
               ? ("high" as const)
               : ("normal" as const),
+          // Deliver in-app AND via WhatsApp — the process-whatsapp-notifications
+          // cron sweeps rows whose channels include "whatsapp" and resolves the
+          // guardian's phone. Guardians without a phone simply get in-app only.
+          channels: [NotificationChannel.in_app, NotificationChannel.whatsapp],
           title,
           body,
           metadata: {

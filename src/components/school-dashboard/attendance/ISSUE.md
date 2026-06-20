@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 96
 tracker: https://github.com/databayt/hogwarts/issues/322
 docs: https://ed.databayt.org/en/docs/attendance
-last_audited: 2026-06-13
+last_audited: 2026-06-19
 ---
 
 # Attendance -- Production Readiness Tracker
@@ -164,6 +164,48 @@ EXISTS` on the default branch (never `migrate deploy`); Neon-branch-first.
 4. **Browser DRY_RUN E2E** -- compliance esis-submit + absence-followup +
    attendance/excuse/QR smoke on `demo.localhost:3000`.
 
+### Recently Fixed (2026-06-19 -- soft-delete read/write consistency)
+
+A competitor pass (vs OpenEduCat / PowerSchool / Skyward) plus a full audit of
+every `db.attendance` read found the soft-delete feature (`deleteAttendance` /
+`bulkDeleteAttendance` / `restoreAttendance`, admin-reachable via
+`core/attendance-context.tsx`) was **half-wired**: delete/restore set
+`deletedAt`, but a swath of reads ignored it, so an admin-removed record still
+counted everywhere — wrong student percentages, wrong dashboard "marked" counts,
+removed absences still demanding excuses, and (worst) a re-mark after delete that
+silently failed to revive. **Closed across the whole attendance surface (block
+actions + mobile API + crons). tsc 0, 611/611 tests green incl. new regression
+tests in `attendance-stats.test.ts` + `actions.test.ts`.**
+
+**Read side — aggregate/display reads now filter `deletedAt: null`:**
+
+1. `attendance-stats.ts` (per-student percentage engine) — all four reads:
+   `calculateAttendancePercentage`, `getBulkAttendanceStats`,
+   `getClassAttendanceStats`, `getAttendanceTrends`. A removed record no longer
+   skews a student's %, the at-risk list or perfect-attendance awards.
+2. `dashboard.ts` — the per-class "isMarked / markedCount" groupBys (admin +
+   teacher views) and the period-based unmarked-classes detector.
+3. `bulk.ts` — `getRecentBulkUploads` total + success groupBys (kept consistent).
+4. `excuses.ts` — `submitExcuse` lookup + the guardian "absences needing excuse" list.
+5. `periods.ts` — period-marked detection, `getPeriodAttendanceStats`, student day view.
+6. `qr-code/actions.ts` `getQRCodeStats`; `core.ts` `checkOutStudent` lookup.
+7. Mobile `mobile/dashboard` student attendance ratio; cron `teacher-reminders`
+   no longer treats a deleted record as "attendance taken" (so the reminder fires).
+
+**Write side — re-marking now revives a soft-deleted row.** The unique tuple
+`(schoolId, studentId, section|class, date, periodId)` still reserves a deleted
+row's key, so filtering the lookup would collide on create. Instead the update
+paths set `deletedAt: null`: `markAttendance`, `markSingleAttendance`,
+`quickMarkAllPresent`, `markPeriodAttendance`, QR scan (block + mobile), kiosk
+check-in. `geofencee/geo-service.ts` + `barcode/actions.ts` branch on the found
+row's `deletedAt` to revive instead of crashing on the constraint. Barcode now
+also records `method: "BARCODE"` (it previously defaulted to MANUAL, corrupting
+by-method analytics).
+
+**Already-correct (verified, untouched):** the main analytics groupBy, the ADEK
+compliance CSV groupBys, the report/CSV-export reads, and the student/guardian
+mobile attendance lists already filtered `deletedAt: null`.
+
 ### Recently Fixed (2026-06-13 -- production-readiness hardening pass)
 
 A full 8-dimension audit (multi-tenant, auth/RBAC, correctness, performance,
@@ -301,12 +343,26 @@ on `schoolId` was reachable unauthenticated. Closed:**
 
 ## Enhancements (Post-MVP)
 
-- Biometric attendance (fingerprint/face recognition)
-- Automated PDF compliance reports
+- **Attendance-sheet finalize/lock workflow** (top competitor-parity gap — every
+  major SIS has it: OpenEduCat "Draft/Start/Finalized" sheets, PowerSchool /
+  Skyward sheet submission). Today any marking-role user can silently overwrite a
+  marked record and there is no per-section/day "submit → lock" state, so admins
+  can't distinguish a _finalized_ roster from a merely _touched_ one, and there's
+  no immutability (or audited unlock) after submission. The `getUnmarkedClasses`
+  / dashboard "N classes not marked" view already covers _completeness_; this adds
+  _finality_. Needs an `Attendance.sheetStatus` (or a per-section/day lock model)
+  - UI + RBAC for unlock. Schema-gated; deliberately deferred from the 2026-06-19
+    pass so it doesn't expand the pending deploy surface.
+- Biometric attendance (fingerprint/face recognition) — schema enums + device
+  models exist (`BiometricTemplate`, `AccessCard`); needs device integration.
+- Automated PDF compliance reports (see P2.7 — CSV ships today)
 - Attendance policy enforcement rules
 - Real-time WebSocket updates
-- Soft delete support for attendance records
-- HMAC signature on QR code payloads
+- Soft delete support for attendance records — **shipped + read/write-consistent
+  as of 2026-06-19** (see Recently Fixed). Remaining nicety: a UI surface for
+  the admin restore (`restoreAttendance`) path.
+- HMAC signature on QR code payloads (helpers exist in `security.ts` but are
+  still dead code — QR uses randomBytes sessions)
 - ADEK Phase 5 -- Official API connector (awaits ADEK developer access)
 - ADEK Phase 4 -- RPA worker live selectors (awaits Aldar piggyback access)
 

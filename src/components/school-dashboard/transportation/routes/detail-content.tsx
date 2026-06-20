@@ -13,7 +13,7 @@ import { getName } from "@/components/translation/person"
 import { getRoute } from "../actions/routes"
 import { TransportationEmptyState } from "../empty-state"
 import { translateRoute, translateStops } from "../shared/translate-display"
-import { StopEditor } from "./stop-editor"
+import { StopEditor, type EditorStop } from "./stop-editor"
 
 interface Props {
   routeId: string
@@ -50,6 +50,18 @@ export async function RouteDetailContent({
     ...(await translateRoute(result.data, locale)),
     stops: await translateStops(result.data.stops, locale),
   }
+  // Serialize stops for the client editor — Prisma Decimal (lat/lng) cannot
+  // cross the server→client boundary, so coerce to plain numbers here.
+  const editorStops: EditorStop[] = route.stops.map((s) => ({
+    id: s.id,
+    name: s.name,
+    address: s.address,
+    latitude: s.latitude == null ? null : Number(s.latitude),
+    longitude: s.longitude == null ? null : Number(s.longitude),
+    stopOrder: s.stopOrder,
+    pickupTime: s.pickupTime,
+    dropoffTime: s.dropoffTime,
+  }))
   const driverName = route.driver
     ? await getName(route.driver, locale, schoolId!)
     : "—"
@@ -123,12 +135,12 @@ export async function RouteDetailContent({
         // remounts the editor with fresh server data (router.refresh alone does
         // NOT resync the editor's internal optimistic state), while a reorder
         // keeps the same set so the optimistic order survives.
-        key={[...route.stops]
+        key={[...editorStops]
           .map((s) => s.id)
           .sort()
           .join(",")}
         routeId={route.id}
-        initialStops={route.stops}
+        initialStops={editorStops}
         dictionary={dictionary}
       />
     </div>

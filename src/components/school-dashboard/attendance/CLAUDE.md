@@ -44,6 +44,18 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
 - **`presentDays` is strict PRESENT; LATE is separate.** `calculateAttendancePercentage`
   reports them independently and folds LATE into the percentage numerator only —
   never add `presentDays + lateDays` for a count.
+- **Soft-delete is two-sided.** `deleteAttendance` / `bulkDeleteAttendance` set
+  `Attendance.deletedAt` (admin-reachable via `core/attendance-context.tsx`).
+  Every read that **aggregates or displays** attendance MUST filter
+  `deletedAt: null` — stats, analytics, dashboard counts, period stats, CSV /
+  bulk-upload history, the excuse worklist, the mobile API and the
+  teacher-reminder cron all do. Upsert **lookups** must NOT filter `deletedAt`:
+  the `(schoolId, studentId, section|class, date, periodId)` unique tuple still
+  reserves a soft-deleted row's key, so a filtered lookup falls through to a
+  colliding `create`/`createMany({skipDuplicates})` that throws or silently
+  drops the mark. Instead the update path writes `deletedAt: null` to **revive**
+  the row on re-mark; the scan paths (geofence/barcode) branch on the found
+  row's `deletedAt` to revive rather than crash on the constraint.
 - **Error contract:** server actions return `actionError(ACTION_ERRORS.*)` codes,
   not English. `guardAttendance` already returns coded errors.
 
@@ -65,11 +77,23 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   (`csvCell` in `bulk.ts`).
 - **`markPeriodAttendance` / `bulkUpload` writes are batched + transactional** —
   don't reintroduce per-record `findFirst`+`create` loops (N+1 + non-atomic).
+- **A soft-deleted row still occupies the unique key.** Never "fix" an upsert by
+  adding `deletedAt: null` to its existing-record lookup — the colliding
+  `createMany({ skipDuplicates })` then silently drops the re-mark (or a bare
+  `create` throws). Revive in the update path instead. Conversely, never add a
+  new aggregate/display read of `db.attendance` without `deletedAt: null`, or
+  admin-removed records leak back into stats, exports and compliance CSVs.
 
 ## Related Blocks
 
 - [Timetable](../timetable/CLAUDE.md) — period/section structure consumed by
   `markPeriodAttendance` + `getCurrentPeriod`.
+- [Conference](../conference/CLAUDE.md) — `AttendanceMethod.VIRTUAL` (added
+  2026-06-20) is written by conference `actions/attendance-sync.ts`
+  (`syncConferenceAttendance`) when a live class ends: section students present
+  in the room → PRESENT/LATE, roster non-joiners → ABSENT. System context
+  (`markedBy: null`), section unique key, same revive-on-update upsert as
+  `markPeriodAttendance`. Opt-in (`School.conferenceAttendanceSync`) + LiveKit-only.
 - [Compliance](../compliance/README.md) — ADEK eSIS submission + 2h parent-contact
   SLA cron consume attendance ABSENT marks.
 - [Students](../listings/CLAUDE.md) — `Student.sectionId` / `StudentClass` /

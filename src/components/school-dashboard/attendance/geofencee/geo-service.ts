@@ -319,7 +319,7 @@ export async function processGeofenceEvents(
                 date: today,
                 periodId: null,
               },
-              select: { id: true },
+              select: { id: true, deletedAt: true },
             })
 
             if (!existingDaily) {
@@ -337,10 +337,25 @@ export async function processGeofenceEvents(
                   notes: `Auto-marked via geofence: ${result.geofenceName}`,
                 },
               })
+            } else if (existingDaily.deletedAt) {
+              // The soft-deleted row still reserves the unique key, so a plain
+              // create() would collide and the geofence check-in would be
+              // silently dropped. Revive the record instead.
+              await db.attendance.updateMany({
+                where: { id: existingDaily.id, schoolId },
+                data: {
+                  status: "PRESENT",
+                  method: "GEOFENCE",
+                  checkInTime: now,
+                  location: { lat: location.lat, lon: location.lon },
+                  notes: `Auto-marked via geofence: ${result.geofenceName}`,
+                  deletedAt: null,
+                },
+              })
             }
-            // If a record already exists, keep its status — manual marks
-            // (ABSENT, EXCUSED, etc.) always win over an automatic geofence
-            // PRESENT, matching the original "keep existing status" intent.
+            // If a non-deleted record already exists, keep its status — manual
+            // marks (ABSENT, EXCUSED, etc.) always win over an automatic
+            // geofence PRESENT, matching the original "keep existing status" intent.
           }
         } catch (attendanceError) {
           // Log error but don't fail the geofence event

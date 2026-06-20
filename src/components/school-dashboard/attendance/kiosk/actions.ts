@@ -275,13 +275,14 @@ export async function processKioskCheck(
 
     if (action === "CHECK_IN") {
       if (attendance) {
-        // Update existing with check-in time
+        // Update existing with check-in time (revive if it had been soft-deleted)
         attendance = await db.attendance.update({
           where: { id: attendance.id },
           data: {
             status,
             checkInTime: now,
             method: "KIOSK",
+            deletedAt: null,
             notes: reasonNote
               ? `${attendance.notes || ""}\nKiosk: ${reasonNote}`.trim()
               : attendance.notes,

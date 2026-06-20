@@ -20,6 +20,8 @@ const DEFAULTS = {
   notifyGuardiansOnTripFinish: true,
   notifyGuardiansOnTripCancel: true,
   lateThresholdMinutes: 15,
+  enableRouteOptimization: false,
+  approachAlertMeters: 500,
 }
 
 export async function getSettings() {
@@ -46,6 +48,8 @@ export async function getSettings() {
           notifyGuardiansOnTripFinish: settings.notifyGuardiansOnTripFinish,
           notifyGuardiansOnTripCancel: settings.notifyGuardiansOnTripCancel,
           lateThresholdMinutes: settings.lateThresholdMinutes,
+          enableRouteOptimization: settings.enableRouteOptimization,
+          approachAlertMeters: settings.approachAlertMeters,
         },
       }
     }
@@ -76,6 +80,8 @@ export async function updateSettings(input: TransportationSettingsInput) {
         notifyGuardiansOnTripFinish: data.notifyGuardiansOnTripFinish,
         notifyGuardiansOnTripCancel: data.notifyGuardiansOnTripCancel,
         lateThresholdMinutes: data.lateThresholdMinutes,
+        enableRouteOptimization: data.enableRouteOptimization,
+        approachAlertMeters: data.approachAlertMeters,
       },
       create: {
         schoolId,
@@ -85,6 +91,8 @@ export async function updateSettings(input: TransportationSettingsInput) {
         notifyGuardiansOnTripFinish: data.notifyGuardiansOnTripFinish,
         notifyGuardiansOnTripCancel: data.notifyGuardiansOnTripCancel,
         lateThresholdMinutes: data.lateThresholdMinutes,
+        enableRouteOptimization: data.enableRouteOptimization,
+        approachAlertMeters: data.approachAlertMeters,
       },
     })
 
@@ -100,6 +108,8 @@ export async function updateSettings(input: TransportationSettingsInput) {
         notifyGuardiansOnTripFinish: settings.notifyGuardiansOnTripFinish,
         notifyGuardiansOnTripCancel: settings.notifyGuardiansOnTripCancel,
         lateThresholdMinutes: settings.lateThresholdMinutes,
+        enableRouteOptimization: settings.enableRouteOptimization,
+        approachAlertMeters: settings.approachAlertMeters,
       },
     }
   } catch {

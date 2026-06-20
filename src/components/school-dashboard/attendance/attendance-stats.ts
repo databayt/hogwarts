@@ -135,10 +135,12 @@ export async function calculateAttendancePercentage(
 
   const validated = attendancePercentageSchema.parse(input)
 
-  // Build query filters
+  // Build query filters. `deletedAt: null` excludes soft-deleted records so a
+  // record an admin removed never counts toward the student's percentage.
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     studentId: validated.studentId,
+    deletedAt: null,
   }
 
   if (validated.classId) {
@@ -178,6 +180,7 @@ export async function getBulkAttendanceStats(input: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     studentId: { in: input.studentIds },
+    deletedAt: null,
   }
   if (input.from || input.to) {
     where.date = {}
@@ -247,6 +250,7 @@ export async function getClassAttendanceStats(input: {
       classId: input.classId,
       date: new Date(input.date),
       studentId: { in: studentIds },
+      deletedAt: null,
     },
   })
 
@@ -312,6 +316,7 @@ export async function getAttendanceTrends(input: {
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
     date: { gte: startDate },
+    deletedAt: null,
   }
 
   if (input.classId) where.classId = input.classId

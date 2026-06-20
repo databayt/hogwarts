@@ -11,7 +11,9 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getName } from "@/components/translation/person"
 
 import { getAssignment } from "../actions/assignments"
+import { getTransportProfile } from "../actions/profile"
 import { TransportationEmptyState } from "../empty-state"
+import { TransportProfileForm } from "../profile/profile-form"
 
 interface Props {
   assignmentId: string
@@ -55,6 +57,9 @@ export async function AssignmentDetailContent({
   const a = result.data
   const { schoolId } = await getTenantContext()
   const studentName = await getName(a.student, locale, schoolId!)
+  const profileRes = await getTransportProfile(a.student.id)
+  const initialProfile =
+    profileRes.success && "data" in profileRes ? profileRes.data : null
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -143,6 +148,12 @@ export async function AssignmentDetailContent({
           </CardContent>
         </Card>
       ) : null}
+
+      <TransportProfileForm
+        studentId={a.student.id}
+        initialProfile={initialProfile}
+        dictionary={dictionary}
+      />
     </div>
   )
 }

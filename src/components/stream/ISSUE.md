@@ -61,6 +61,14 @@ canonical for code-side context (read by the `/report` agent)._
 
 _Chronological close log — appended as items ship._
 
+- **2026-06-19 — No-video lesson fallback to marketing clip.** The lesson
+  player (`dashboard/lesson/content.tsx`) now plays the public SaaS marketing
+  "story" video (`asset("/media/story.mp4")`) when a lesson has no videos
+  (`availableVideos.length === 0`), instead of a disabled play button + empty
+  player. Gated by `isFallbackVideo` so it never records watch-progress or
+  auto-completes the lesson, and never replaces a paywalled (paid+unpurchased)
+  video's locked UX. tsc clean.
+
 - **2026-06-14 — Optimization pass.** Removed ~1,870 lines of dead code (incl.
   the only `@tiptap` importer, plus `@dnd-kit`/canvas/util dead files),
   parallelized serial DB waterfalls across 7 fetchers/actions, collapsed

@@ -416,8 +416,11 @@ model School {
   routeAssignments       RouteAssignment[]
   trips                  Trip[]
   tripBoardings          TripBoarding[]
-  transportationSettings TransportationSettings?
-  apiTokens              SchoolApiToken[]
+  transportationSettings   TransportationSettings?
+  apiTokens                SchoolApiToken[]
+  studentTransportProfiles StudentTransportProfile[]
+  tripLocations            TripLocation[]
+  roadHazards              RoadHazard[]
 
   // Conference relations
   conferences          Conference[]

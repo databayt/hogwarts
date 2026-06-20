@@ -147,14 +147,19 @@ src/components/school-dashboard/attendance/
 
 Components, ~140 server actions, validation schemas, 23 wired auth-gated routes
 (each with `error.tsx` + `loading.tsx`), and a comprehensive Vitest suite
-(**525/525 green across 39 files** in the attendance + cron + mobile scope) are in
+(**530/530 green across 39 files** in the attendance + cron + mobile scope) are in
 place. A 2026-06-13 production-readiness hardening pass (8-dimension audit with
 adversarial verification, 83 confirmed findings) closed every confirmed
-auth/IDOR, multi-tenant, correctness and hot-path-performance issue — see the
-"Recently Fixed (2026-06-13)" section in [ISSUE.md](./ISSUE.md). Remaining work is
-the i18n long-tail (server-action error codes, Zod messages, a few visible client
-toasts), the settings-page wiring, and the owner-action deploy gates — all tracked
-in [ISSUE.md](./ISSUE.md).
+auth/IDOR, multi-tenant, correctness and hot-path-performance issue. A 2026-06-19
+pass (competitor review + a full `db.attendance` read/write audit) then closed the
+**soft-delete consistency** gap end-to-end — every aggregate/display read now
+filters `deletedAt: null` and every re-mark path revives a soft-deleted row, so an
+admin-removed record can no longer skew a student's percentage, dashboard counts,
+exports, the mobile app or compliance CSVs (see the "Recently Fixed" sections in
+[ISSUE.md](./ISSUE.md)). Remaining work is the i18n long-tail (server-action error
+codes, Zod messages, a few visible client toasts), the settings-page wiring, the
+owner-action deploy gates, and the competitor-parity finalize/lock workflow — all
+tracked in [ISSUE.md](./ISSUE.md).
 
 **Security invariant (critical):** `getTenantContext()` resolves `schoolId` from
 the `x-subdomain` header **without** requiring a session. Every `"use server"`

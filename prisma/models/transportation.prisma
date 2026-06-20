@@ -236,6 +236,14 @@ model Trip {
   actualEndTime   DateTime?
   status          TripStatus     @default(SCHEDULED)
   notes           String?        @db.Text
+
+  // Route-optimization snapshot (Phase 2) — computed at schedule/start time and
+  // frozen per-trip so editing the route later doesn't rewrite history.
+  optimizedStopOrder Json? // [{ stopId, eta:"HH:mm", distanceFromPrevKm }]
+  polylineEncoded    String?   @db.Text
+  planGeneratedAt    DateTime?
+  planSource         String? // mapbox_optimization | mapbox_matrix | haversine
+
   lang            String         @default("ar")
 
   school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -243,6 +251,7 @@ model Trip {
   vehicle   Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   driver    Driver?        @relation(fields: [driverId], references: [id], onDelete: SetNull)
   boardings TripBoarding[]
+  locations TripLocation[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -296,6 +305,8 @@ model TransportationSettings {
   notifyGuardiansOnTripFinish Boolean  @default(true)
   notifyGuardiansOnTripCancel Boolean  @default(true)
   lateThresholdMinutes        Int      @default(15)
+  enableRouteOptimization     Boolean  @default(false)
+  approachAlertMeters         Int      @default(500)
   lang                        String   @default("ar")
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -326,4 +337,84 @@ model SchoolApiToken {
   @@index([schoolId, deletedAt])
   @@index([tokenPrefix])
   @@map("school_api_tokens")
+}
+
+// Per-student canonical pickup/drop-off point for door-to-door routing. Set at
+// student registration (independent of any route). When a student is assigned to
+// a route, a RouteStop is materialized at this point and the optimizer orders it.
+// Coordinates are geocoded from the student's address via Mapbox; kept here (not
+// on Student) to keep transport concerns isolated — mirrors Driver-as-own-model.
+model StudentTransportProfile {
+  id               String    @id @default(cuid())
+  schoolId         String
+  studentId        String    @unique
+  pickupAddress    String?   @db.Text
+  pickupLat        Decimal?  @db.Decimal(10, 8)
+  pickupLng        Decimal?  @db.Decimal(11, 8)
+  dropoffAddress   String?   @db.Text // optional — only if different from pickup
+  dropoffLat       Decimal?  @db.Decimal(10, 8)
+  dropoffLng       Decimal?  @db.Decimal(11, 8)
+  specialNeeds     String?   @db.Text // wheelchair, assistant, etc. (safety)
+  pickupGeocodedAt DateTime?
+  lang             String    @default("ar")
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId])
+  @@map("student_transport_profiles")
+}
+
+// Live GPS breadcrumb for an in-progress trip (driver phone or vehicle tracker).
+// Separate from attendance's student-scoped LocationTrace. High write volume —
+// pruned by the cleanup-trip-locations cron (Phase 5).
+model TripLocation {
+  id        String   @id @default(cuid())
+  schoolId  String
+  tripId    String
+  driverId  String?
+  vehicleId String?
+  lat       Decimal  @db.Decimal(10, 8)
+  lng       Decimal  @db.Decimal(11, 8)
+  accuracy  Float?
+  heading   Float? // 0-360 degrees of travel
+  speed     Float? // metres/second
+  battery   Int? // 0-100
+  timestamp DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, tripId, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("transportation_trip_locations")
+}
+
+// Admin-reported road hazard (closure, accident, flooding, construction). The
+// route optimizer's Haversine tier penalizes legs that pass within radiusMeters,
+// and creating an active hazard near a route's stops alerts affected guardians.
+model RoadHazard {
+  id           String    @id @default(cuid())
+  schoolId     String
+  name         String
+  description  String?   @db.Text
+  type         String    @default("other") // road_closure|accident|flooding|construction|other
+  lat          Decimal   @db.Decimal(10, 8)
+  lng          Decimal   @db.Decimal(11, 8)
+  radiusMeters Int       @default(200)
+  isActive     Boolean   @default(true)
+  reportedBy   String // userId
+  expiresAt    DateTime?
+  lang         String    @default("ar")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, isActive])
+  @@map("transportation_road_hazards")
 }

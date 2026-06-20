@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
+import { routeDistanceKm } from "@/lib/haversine"
 import {
   reorderStopsSchema,
   routeStopSchema,
@@ -16,6 +17,39 @@ import {
 } from "@/components/school-dashboard/transportation/validation"
 
 import { requireContext, transportationRevalidatePath } from "./helpers"
+
+/**
+ * Recompute Route.distanceKm from the ordered stop coordinates (Haversine).
+ * Only runs when every stop has lat/lng — otherwise the route distance stays
+ * whatever it was (manual or unset). Best-effort: never throws to the caller.
+ */
+async function recomputeRouteDistance(
+  schoolId: string,
+  routeId: string
+): Promise<void> {
+  try {
+    const stops = await db.routeStop.findMany({
+      where: { schoolId, routeId },
+      orderBy: { stopOrder: "asc" },
+      select: { latitude: true, longitude: true },
+    })
+    if (
+      stops.length < 2 ||
+      stops.some((s) => s.latitude == null || s.longitude == null)
+    ) {
+      return
+    }
+    const km = routeDistanceKm(
+      stops.map((s) => ({ lat: Number(s.latitude), lng: Number(s.longitude) }))
+    )
+    await db.route.updateMany({
+      where: { id: routeId, schoolId },
+      data: { distanceKm: Math.round(km * 100) / 100 },
+    })
+  } catch {
+    // Distance is a derived convenience value — never fail the stop mutation.
+  }
+}
 
 export async function addRouteStop(input: RouteStopServerInput) {
   const ctx = await requireContext("manage_stop")
@@ -52,6 +86,7 @@ export async function addRouteStop(input: RouteStopServerInput) {
       },
     })
 
+    await recomputeRouteDistance(schoolId, data.routeId)
     revalidatePath(transportationRevalidatePath(`routes/${data.routeId}`))
     return { success: true as const, data: stop }
   } catch {
@@ -98,6 +133,7 @@ export async function updateRouteStop(input: RouteStopUpdateInput) {
       data,
     })
 
+    await recomputeRouteDistance(schoolId, current.routeId)
     revalidatePath(transportationRevalidatePath(`routes/${current.routeId}`))
     return { success: true as const, data: stop }
   } catch {
@@ -154,6 +190,7 @@ export async function reorderStops(input: ReorderStopsServerInput) {
       }
     })
 
+    await recomputeRouteDistance(schoolId, routeId)
     revalidatePath(transportationRevalidatePath(`routes/${routeId}`))
     return { success: true as const, data: { routeId } }
   } catch {
@@ -192,6 +229,7 @@ export async function deleteStop(id: string) {
 
     await db.routeStop.delete({ where: { id } })
 
+    await recomputeRouteDistance(schoolId, current.routeId)
     revalidatePath(transportationRevalidatePath(`routes/${current.routeId}`))
     return { success: true as const, data: { id } }
   } catch {

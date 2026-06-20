@@ -273,6 +273,8 @@ model AbsenceIntention {
   @@index([dateFrom])
   @@index([dateTo])
   @@index([schoolId, status])
+  // Nightly transport trip-builder range-scans approved absences covering a date.
+  @@index([schoolId, status, dateFrom])
   @@map("absence_intentions")
 }
 

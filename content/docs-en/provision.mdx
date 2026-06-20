@@ -104,9 +104,9 @@ Grade 7  →  Classroom "Grade 7-A" (capacity 30, gradeId)  ↔  Section "Grade 
             Classroom "Grade 7-B" (capacity 30, gradeId)  ↔  Section "Grade 7-B" (letter B)
 ```
 
-This encodes the chain the rest of the platform relies on: a **main classroom belongs to a grade**, the grade's curriculum determines **which subjects are taught in that room**, and the section is the **student cohort that lives there**. Knowing the classroom therefore means knowing its grade, its subjects, and (after stage 6) its weekly schedule.
+This encodes the chain the rest of the platform relies on: a **main classroom belongs to a grade**, the grade's curriculum determines **which subjects are taught in that room**, and the section is the **student cohort that lives there**. Knowing the classroom therefore means knowing its grade, its subjects, and (after stage 6) its weekly schedule. The pairing is **1:1 by design** — `Section.classroomId` is a single FK, so a section has exactly one main classroom, and room **type governs** (the main room is the `classroom`-type homeroom). See [Classrooms › Integration](/docs/classrooms#integration).
 
-**Labs and common spaces are deliberately not auto-provisioned.** They are not grade-owned, so they are created manually under Listings → Classrooms with their own `ClassroomType` (Lab, Computer Room, Library…). The generator can then route lab-flagged subjects to them.
+**Labs and common spaces are deliberately not auto-provisioned.** They are not grade-owned and are never a section's main classroom, so they are created manually under Listings → Classrooms with their own `ClassroomType` (Lab, Computer Room, Library…) and reached **per-period through the timetable**. The generator can then route lab-flagged subjects to them.
 
 Upserts are keyed on `(schoolId, roomName)` and `(schoolId, gradeId, letter)` — re-runs never duplicate.
 

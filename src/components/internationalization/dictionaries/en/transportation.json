@@ -205,7 +205,15 @@
       "duplicate": "A trip already exists for this route + date + direction",
       "invalidState": "Trip is not in a valid state for this action"
     },
-    "empty": "No trips yet"
+    "empty": "No trips yet",
+    "skipApprovals": {
+      "title": "Pending pickup-skip requests",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Skip approved",
+      "rejected": "Skip rejected",
+      "failed": "Could not update request"
+    }
   },
   "reports": {
     "title": "Transportation reports",
@@ -251,6 +259,12 @@
     "saveButton": "Save settings",
     "savedToast": "Settings saved",
     "saveFailedToast": "Could not save settings",
+    "optimizationTitle": "Route optimization",
+    "optimizationSubtitle": "Real-time, traffic-aware route ordering and arrival estimates",
+    "enableRouteOptimization": "Enable route optimization",
+    "enableRouteOptimizationHelp": "When on, starting a trip computes the most efficient stop order and per-stop ETAs (uses live Mapbox traffic when a server token is configured).",
+    "approachAlertMeters": "\"Bus approaching\" radius (meters)",
+    "approachAlertMetersHelp": "Notify guardians when the live bus comes within this distance of their stop.",
     "tokens": {
       "title": "Service API tokens",
       "subtitle": "Bearer tokens for the geofence-boarding webhook",
@@ -294,7 +308,8 @@
     "stopDeleted": "Stop deleted",
     "assignmentCreated": "Student assigned to route",
     "assignmentUpdated": "Assignment updated",
-    "assignmentEnded": "Assignment ended"
+    "assignmentEnded": "Assignment ended",
+    "profileSaved": "Pickup location saved"
   },
   "empty": {
     "noVehicles": "No vehicles yet",
@@ -332,6 +347,22 @@
     "boardingMissed": {
       "title": "Missed boarding",
       "body": "Your child did not board the bus on {route}."
+    },
+    "studentBoarded": {
+      "title": "Boarded the bus",
+      "body": "Your child has boarded the bus on {route}."
+    },
+    "studentAlighted": {
+      "title": "Arrived safely",
+      "body": "Your child has gotten off the bus on {route}."
+    },
+    "busApproaching": {
+      "title": "Bus approaching",
+      "body": "The bus on {route} is approaching your child's stop."
+    },
+    "routeChanged": {
+      "title": "Route updated",
+      "body": "Your child's bus route ({route}) has been updated."
     }
   },
   "common": {
@@ -346,6 +377,70 @@
     "update": "Update",
     "loading": "Loading…",
     "dragHandle": "Drag handle"
+  },
+  "profile": {
+    "title": "Pickup location",
+    "description": "Set the student's door-to-door pickup point for route planning.",
+    "pickupLocation": "Pickup location",
+    "dropoffLocation": "Drop-off location",
+    "useSeparateDropoff": "Use a different drop-off location",
+    "specialNeeds": "Special needs / notes",
+    "specialNeedsPlaceholder": "Wheelchair, assistant required, etc.",
+    "searchAddress": "Search for an address…",
+    "noLocation": "No pickup location set yet",
+    "coordinates": "Coordinates",
+    "save": "Save pickup location"
+  },
+  "optimize": {
+    "button": "Optimize route",
+    "optimizing": "Optimizing…",
+    "optimized": "Route optimized",
+    "failed": "Couldn't optimize — make sure stops have map locations and the school location is set.",
+    "regenerate": "Regenerate plan",
+    "planTitle": "Optimized plan",
+    "eta": "ETA",
+    "noPlan": "No optimized plan yet",
+    "source": {
+      "mapbox_optimization": "Live traffic",
+      "mapbox_matrix": "Live traffic",
+      "haversine": "Estimated"
+    }
+  },
+  "tracking": {
+    "title": "Live location",
+    "description": "Share this device's location with the school while the trip is in progress.",
+    "start": "Start sharing",
+    "stop": "Stop sharing",
+    "statusOk": "Sharing",
+    "statusError": "Error",
+    "statusIdle": "Off",
+    "speed": "Speed",
+    "mapTitle": "Live bus map",
+    "noLocation": "Waiting for the bus location…",
+    "busLabel": "Bus",
+    "approaching": "Bus approaching"
+  },
+  "hazards": {
+    "title": "Road hazards",
+    "description": "Pin closures or hazards so routes are planned around them and affected families are alerted.",
+    "name": "Name",
+    "type": "Type",
+    "types": {
+      "road_closure": "Road closure",
+      "accident": "Accident",
+      "flooding": "Flooding",
+      "construction": "Construction",
+      "other": "Other"
+    },
+    "location": "Location",
+    "searchAddress": "Search for a location…",
+    "radius": "Radius (meters)",
+    "save": "Add hazard",
+    "remove": "Remove",
+    "none": "No active hazards",
+    "created": "Hazard added",
+    "removed": "Hazard removed",
+    "failed": "Could not update hazard"
   },
   "me": {
     "title": "My transportation",
@@ -362,7 +457,23 @@
     "studentLabel": "Student",
     "directionRoundTrip": "Round trip",
     "directionPickup": "Pickup only",
-    "directionDropoff": "Drop-off only"
+    "directionDropoff": "Drop-off only",
+    "skip": {
+      "heading": "Skip pickup",
+      "description": "Request to skip the bus on a day. An admin confirms it before the seat is released.",
+      "dateLabel": "Date",
+      "request": "Request skip",
+      "none": "No upcoming skip requests",
+      "cancel": "Cancel",
+      "requested": "Skip request submitted",
+      "cancelled": "Skip request withdrawn",
+      "failed": "Couldn't submit request",
+      "status": {
+        "PENDING": "Pending approval",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      }
+    }
   },
   "fees": {
     "title": "Transport fees",

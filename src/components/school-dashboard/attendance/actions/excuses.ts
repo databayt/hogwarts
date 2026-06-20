@@ -46,11 +46,12 @@ export async function submitExcuse(input: {
     // Validate input
     const parsed = submitExcuseSchema.parse(input)
 
-    // Get the attendance record
+    // Get the attendance record (never excuse a soft-deleted record)
     const attendance = await db.attendance.findFirst({
       where: {
         id: parsed.attendanceId,
         schoolId,
+        deletedAt: null,
       },
       include: {
         student: {
@@ -760,6 +761,7 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<
         studentId: { in: studentIds },
         status: "ABSENT",
         excuse: null, // No excuse submitted yet
+        deletedAt: null, // exclude soft-deleted absences
       },
       include: {
         student: {

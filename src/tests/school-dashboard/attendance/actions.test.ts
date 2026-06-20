@@ -148,6 +148,30 @@ describe("Attendance Actions", () => {
         })
       )
     })
+
+    it("revives a soft-deleted record on re-mark (deletedAt: null in update)", async () => {
+      // The existing-record lookup intentionally finds soft-deleted rows (the
+      // unique tuple still reserves their key); re-marking must clear deletedAt
+      // so the record reappears in stats instead of staying hidden.
+      vi.mocked(db.absenceIntention.findMany).mockResolvedValue([])
+      vi.mocked(db.attendance.findMany).mockResolvedValue([
+        { id: "soft-deleted-att", studentId: "a" },
+      ] as any)
+      vi.mocked(db.attendance.updateMany).mockResolvedValue({ count: 1 })
+
+      const result = await markAttendance({
+        classId: "c1",
+        date: new Date().toISOString(),
+        records: [{ studentId: "a", status: "present" }],
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.attendance.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ deletedAt: null }),
+        })
+      )
+    })
   })
 
   describe("getAttendanceReportCsv", () => {
@@ -265,6 +289,12 @@ describe("Attendance Actions", () => {
       })
 
       expect(result.success).toBe(true)
+      // The check-in lookup must exclude soft-deleted records.
+      expect(db.attendance.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deletedAt: null }),
+        })
+      )
       expect(db.attendance.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "att-003", schoolId: mockSchoolId },

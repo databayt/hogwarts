@@ -100,6 +100,7 @@ export async function GET(request: Request) {
             classId: entry.classId,
             periodId: entry.periodId,
             date: todayDate,
+            deletedAt: null, // deleted records must not suppress the reminder
           },
         })
 

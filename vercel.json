@@ -104,6 +104,14 @@
     {
       "path": "/api/cron/exam-reminders",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/build-tomorrow-trips",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-trip-locations",
+      "schedule": "0 3 * * *"
     }
   ]
 }

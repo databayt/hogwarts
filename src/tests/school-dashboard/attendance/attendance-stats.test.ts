@@ -254,4 +254,50 @@ describe("attendance-stats utility", () => {
       await expect(getPerfectAttendance({})).rejects.toThrow("MISSING_SCHOOL")
     })
   })
+
+  // Regression guard: soft-deleted attendance (deletedAt != null) must never be
+  // counted in any analytics read, or an admin-removed record would still skew a
+  // student's percentage, the at-risk list and perfect-attendance awards.
+  describe("soft-delete exclusion (deletedAt: null)", () => {
+    it("calculateAttendancePercentage filters deletedAt: null", async () => {
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
+
+      await calculateAttendancePercentage({ studentId: "s1" })
+
+      const call = vi.mocked(db.attendance.findMany).mock.calls[0]?.[0]
+      expect((call?.where as any)?.deletedAt).toBeNull()
+    })
+
+    it("getBulkAttendanceStats filters deletedAt: null", async () => {
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
+      vi.mocked(db.student.findMany).mockResolvedValue([])
+
+      await getBulkAttendanceStats({ studentIds: ["s1"] })
+
+      const call = vi.mocked(db.attendance.findMany).mock.calls[0]?.[0]
+      expect((call?.where as any)?.deletedAt).toBeNull()
+    })
+
+    it("getClassAttendanceStats filters deletedAt: null", async () => {
+      vi.mocked(db.studentClass.findMany).mockResolvedValue([
+        { studentId: "s1" },
+      ] as any)
+      vi.mocked(db.attendance.findMany).mockResolvedValue([])
+      vi.mocked(db.class.findFirst).mockResolvedValue({ name: "C" } as any)
+
+      await getClassAttendanceStats({ classId: "c1", date: "2026-06-01" })
+
+      const call = vi.mocked(db.attendance.findMany).mock.calls[0]?.[0]
+      expect((call?.where as any)?.deletedAt).toBeNull()
+    })
+
+    it("getAttendanceTrends filters deletedAt: null", async () => {
+      vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
+
+      await getAttendanceTrends({ days: 30 })
+
+      const call = vi.mocked(db.attendance.groupBy).mock.calls[0]?.[0]
+      expect((call?.where as any)?.deletedAt).toBeNull()
+    })
+  })
 })

@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import {
   closestCenter,
@@ -21,9 +22,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import type { RouteStop } from "@prisma/client"
+import { MapPin } from "lucide-react"
 import { toast } from "sonner"
 
+import { type LocationResult } from "@/lib/mapbox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,15 +47,44 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { optimizeRouteDefault } from "../actions/optimize"
 import { addRouteStop, deleteStop, reorderStops } from "../actions/stops"
 import { TransportationEmptyState } from "../empty-state"
 import { resolveTransportationError } from "../error-map"
 
+// Plain, serialized stop shape — lat/lng are numbers (Prisma Decimal does not
+// cross the server→client boundary), so detail-content maps RouteStop rows to
+// this before passing them in.
+export interface EditorStop {
+  id: string
+  name: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  stopOrder: number
+  pickupTime: string | null
+  dropoffTime: string | null
+}
+
+const MapboxLocationPicker = dynamic(
+  () =>
+    import("@/components/atom/mapbox-location-picker").then(
+      (mod) => mod.MapboxLocationPicker
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[320px] w-full rounded-xl" />,
+  }
+)
+
 interface FormState {
   name: string
   address: string
+  latitude: number | undefined
+  longitude: number | undefined
   pickupTime: string
   dropoffTime: string
 }
@@ -61,13 +92,15 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   name: "",
   address: "",
+  latitude: undefined,
+  longitude: undefined,
   pickupTime: "",
   dropoffTime: "",
 }
 
 interface Props {
   routeId: string
-  initialStops: RouteStop[]
+  initialStops: EditorStop[]
   dictionary: Dictionary
 }
 
@@ -79,7 +112,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   // Local optimistic order — survives until the server returns
-  const [stops, setStops] = useState<RouteStop[]>(() =>
+  const [stops, setStops] = useState<EditorStop[]>(() =>
     [...initialStops].sort((a, b) => a.stopOrder - b.stopOrder)
   )
 
@@ -92,7 +125,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
     })
   )
 
-  function persistOrder(nextOrder: RouteStop[]) {
+  function persistOrder(nextOrder: EditorStop[]) {
     startTransition(async () => {
       const result = await reorderStops({
         routeId,
@@ -133,6 +166,8 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
         routeId,
         name: form.name.trim(),
         address: form.address.trim() || undefined,
+        latitude: form.latitude,
+        longitude: form.longitude,
         stopOrder: nextOrder,
         pickupTime: form.pickupTime || undefined,
         dropoffTime: form.dropoffTime || undefined,
@@ -149,6 +184,18 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
             "error" in result ? result.error : undefined
           )
         )
+      }
+    })
+  }
+
+  function handleOptimize() {
+    startTransition(async () => {
+      const result = await optimizeRouteDefault(routeId)
+      if (result.success) {
+        toast.success(t.optimize.optimized)
+        router.refresh()
+      } else {
+        toast.error(t.optimize.failed)
       }
     })
   }
@@ -177,14 +224,25 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-base">{t.stops.title}</CardTitle>
-        <Button
-          size="sm"
-          onClick={() => setOpen(true)}
-          disabled={pending}
-          type="button"
-        >
-          {t.stops.addButton}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleOptimize}
+            disabled={pending || stops.length < 2}
+            type="button"
+          >
+            {t.optimize.button}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setOpen(true)}
+            disabled={pending}
+            type="button"
+          >
+            {t.stops.addButton}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {stops.length === 0 ? (
@@ -234,13 +292,31 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="stopAddress">{t.stops.fields.address}</Label>
-                <Input
-                  id="stopAddress"
-                  value={form.address}
-                  onChange={(e) =>
-                    setForm({ ...form, address: e.target.value })
+                <Label>{t.stops.fields.address}</Label>
+                <MapboxLocationPicker
+                  value={
+                    form.latitude !== undefined && form.longitude !== undefined
+                      ? {
+                          address: form.address,
+                          city: "",
+                          state: "",
+                          country: "",
+                          postalCode: "",
+                          latitude: form.latitude,
+                          longitude: form.longitude,
+                        }
+                      : null
                   }
+                  onChange={(r: LocationResult) =>
+                    setForm({
+                      ...form,
+                      address: r.address,
+                      latitude: r.latitude,
+                      longitude: r.longitude,
+                    })
+                  }
+                  placeholder={t.profile.searchAddress}
+                  mapHeight={240}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -313,7 +389,7 @@ export function StopEditor({ routeId, initialStops, dictionary }: Props) {
 }
 
 interface ItemProps {
-  stop: RouteStop
+  stop: EditorStop
   pending: boolean
   deleteLabel: string
   dragHandleLabel: string
@@ -342,6 +418,8 @@ function SortableStopItem({
     opacity: isDragging ? 0.6 : 1,
   }
 
+  const hasCoords = stop.latitude !== null && stop.longitude !== null
+
   return (
     <li
       ref={setNodeRef}
@@ -362,7 +440,12 @@ function SortableStopItem({
           #{stop.stopOrder}
         </span>
         <div>
-          <p className="text-sm font-medium">{stop.name}</p>
+          <p className="flex items-center gap-1 text-sm font-medium">
+            {stop.name}
+            {hasCoords ? (
+              <MapPin className="text-primary size-3.5 shrink-0" />
+            ) : null}
+          </p>
           {stop.address ? (
             <p className="text-muted-foreground text-xs">{stop.address}</p>
           ) : null}

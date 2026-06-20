@@ -39,37 +39,12 @@ async function getSchoolDefaults() {
   }
 }
 
-async function getActiveTerms() {
-  try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return []
-
-    const terms = await db.term.findMany({
-      where: { schoolId, isActive: true },
-      select: {
-        id: true,
-        termNumber: true,
-        schoolYear: { select: { yearName: true } },
-      },
-      orderBy: { startDate: "desc" },
-    })
-
-    return terms.map((t) => ({
-      id: t.id,
-      label: `${t.schoolYear.yearName} - Term ${t.termNumber}`,
-    }))
-  } catch {
-    return []
-  }
-}
-
 export async function ConfigureContent({ dictionary, lang }: Props) {
   const d = dictionary?.classrooms?.configure
 
-  const [result, schoolDefaults, activeTerms] = await Promise.all([
+  const [result, schoolDefaults] = await Promise.all([
     getGradeConfiguration(),
     getSchoolDefaults(),
-    getActiveTerms(),
   ])
 
   if (!result.success) {
@@ -102,14 +77,13 @@ export async function ConfigureContent({ dictionary, lang }: Props) {
         </h3>
         <p className="text-muted-foreground text-sm">
           {d?.description ||
-            "Configure how many sections each grade should have. Generating sections automatically creates both the class section and its assigned room. Generated sections use placeholder teacher and subject assignments — reassign them in the Classes view after generation."}
+            "Set how many sections each grade has and their capacity. Generating a section also creates its main classroom."}
         </p>
       </div>
       <ConfigureForm
         grades={grades}
         roomTypes={roomTypes}
         schoolDefaults={schoolDefaults}
-        activeTerms={activeTerms}
       />
     </div>
   )

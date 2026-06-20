@@ -60,10 +60,15 @@ export async function GET(request: NextRequest) {
           timetableToday,
         ] = await Promise.all([
           db.attendance.count({
-            where: { schoolId, studentId: student.id },
+            where: { schoolId, studentId: student.id, deletedAt: null },
           }),
           db.attendance.count({
-            where: { schoolId, studentId: student.id, status: "PRESENT" },
+            where: {
+              schoolId,
+              studentId: student.id,
+              status: "PRESENT",
+              deletedAt: null,
+            },
           }),
           db.schoolExam.count({
             where: {

@@ -119,6 +119,7 @@ export async function getPeriodsForClass(input: {
         classId: input.classId,
         date: dateObj,
         periodId: { not: null },
+        deletedAt: null,
       },
       select: { periodId: true },
     })
@@ -480,6 +481,7 @@ export async function markPeriodAttendance(input: {
               }),
               markedBy: session.user.id,
               markedAt: new Date(),
+              deletedAt: null, // revive a soft-deleted record on re-mark
               ...(resolvedSectionId !== null && {
                 sectionId: resolvedSectionId,
               }),
@@ -580,6 +582,7 @@ export async function getPeriodAttendanceAnalytics(input?: {
 
     const where: Prisma.AttendanceWhereInput = {
       schoolId,
+      deletedAt: null,
       date: {
         gte: dateFrom,
         lte: dateTo,
@@ -814,6 +817,7 @@ export async function getStudentDayAttendance(input: {
         schoolId,
         studentId: input.studentId,
         date: dateObj,
+        deletedAt: null,
       },
       include: {
         class: {

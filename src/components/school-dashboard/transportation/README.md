@@ -1,12 +1,38 @@
 ## Transportation — Fleet, Routes, Drivers, Trips, Boarding
 
-> **Status:** ✅ Production-ready. All 9 tables live in production Postgres
-> (`br-small-tooth-adscsfmb`); **313/313 unit tests green across 15 files**. The polish/hardening
-> backlog is closed — see [`ISSUE.md`](./ISSUE.md). Last audited 2026-06-14 (security/correctness/perf
-> optimization pass: token-IDOR write fix, deleteStop boarding-history guard, stranded-boarding cleanup,
-> CSV-injection defence, Redis-authoritative webhook rate limit, `getTripStats` groupBy, StopEditor
-> refresh-desync fix, `/me` status i18n; 2 additive indexes staged deploy-pending). Tests last counted
-> 2026-06-14; `__tests__/` paths below are historical — tests now live under `src/tests/school-dashboard/transportation/`.
+> **Status:** ✅ Production-ready. **2026-06-18 advanced door-to-door upgrade** layered real intelligence
+> on top of the M1/M2 base — see the [Advanced upgrade](#advanced-door-to-door-upgrade-2026-06-18) section.
+> Now **12 models** (was 9: +`StudentTransportProfile`, +`TripLocation`, +`RoadHazard`) and **331 unit
+> tests green** (`pnpm vitest run src/tests/school-dashboard/transportation`). tsc 0 project-wide.
+> **DB deploy-pending** (Neon-branch-first): 3 new tables + Trip columns
+> (`optimizedStopOrder`/`polylineEncoded`/`planGeneratedAt`/`planSource`) + Settings columns
+> (`enableRouteOptimization`/`approachAlertMeters`) + `AbsenceIntention @@index([schoolId,status,dateFrom])`
+>
+> - the 2 previously-staged indexes. **New env (optional):** `MAPBOX_SERVER_TOKEN` (traffic-aware optimizer;
+>   falls back to public token → Haversine). **New crons:** `build-tomorrow-trips` (`0 20 * * *`),
+>   `cleanup-trip-locations` (`0 3 * * *`).
+>
+> Prior base last audited 2026-06-14 (security/correctness/perf pass). Tests now live under
+> `src/tests/school-dashboard/transportation/`; `__tests__/` paths below are historical.
+
+### Advanced door-to-door upgrade (2026-06-18)
+
+Five-phase upgrade turning storage into _planning_:
+
+1. **Geocoded pickup foundation** — `StudentTransportProfile` (canonical pickup/drop point); the reused
+   `MapboxLocationPicker` now collects stop **and** student lat/lng; `Route.distanceKm` auto-computed
+   (`src/lib/haversine.ts`). Profile editor on the assignment detail page.
+2. **Route optimization + bell-time ETA** — `lib/optimize.ts` (Mapbox Optimization → Matrix+2-opt →
+   Haversine), `lib/eta.ts` (bell-time backward calc), `lib/plan.ts` (per-trip frozen plan). "Optimize"
+   button on routes, plan + ETAs + "Regenerate" on trip detail, settings toggle.
+3. **Absence-aware dynamic re-routing** — `lib/absence.ts`, guardian "skip pickup" (`/me`) + admin
+   approvals (trips), nightly `build-tomorrow-trips` cron (drops absentees/empty stops, re-optimizes).
+4. **Real-time live tracking** — `TripLocation`, `/api/transportation/location` ingest (+ `/latest`
+   polling), `driver-tracker.tsx` (GPS streamer), `trip-live-map.tsx` (react-leaflet), guardian live map,
+   "bus approaching" alerts; socket events via the `/api/emit` bridge (polling fallback when socket is down).
+5. **Notifications + traffic + hazards** — guardian alerts now go **in-app + WhatsApp**; `driving-traffic`
+   profile gives traffic-aware ETAs free; `RoadHazard` admin pins (settings) + Haversine-tier avoidance +
+   `route_changed` alerts. (Weather deferred — needs `OPENWEATHER_API_KEY`.)
 
 ### Overview
 

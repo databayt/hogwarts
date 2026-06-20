@@ -26,8 +26,6 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { resolveClassroomError } from "../errors"
 import {
-  bulkEnrollStudentsInClasses,
-  generateClassesForGrade,
   generateSections,
   type GradeConfig,
   type RoomTypeOption,
@@ -38,16 +36,10 @@ interface SchoolDefaults {
   studentsPerSection: number
 }
 
-interface TermOption {
-  id: string
-  label: string
-}
-
 interface ConfigureFormProps {
   grades: GradeConfig[]
   roomTypes: RoomTypeOption[]
   schoolDefaults?: SchoolDefaults
-  activeTerms?: TermOption[]
 }
 
 type GradeRow = {
@@ -64,7 +56,6 @@ export function ConfigureForm({
   grades,
   roomTypes,
   schoolDefaults,
-  activeTerms = [],
 }: ConfigureFormProps) {
   const { dictionary } = useDictionary()
   const t = dictionary?.messages?.toast
@@ -93,14 +84,10 @@ export function ConfigureForm({
     }))
   )
 
-  const [selectedTermId, setSelectedTermId] = useState(activeTerms[0]?.id ?? "")
-  const [isGeneratingClasses, startClassTransition] = useTransition()
-  const [isEnrolling, startEnrollTransition] = useTransition()
-
-  const [defaultSections, setDefaultSections] = useState(
+  const [bulkSections, setBulkSections] = useState(
     schoolDefaults?.sectionsPerGrade ?? 2
   )
-  const [defaultCapacity, setDefaultCapacity] = useState(
+  const [bulkCapacity, setBulkCapacity] = useState(
     schoolDefaults?.studentsPerSection ?? 30
   )
 
@@ -114,12 +101,12 @@ export function ConfigureForm({
     )
   }
 
-  const applyDefaults = () => {
+  const applyToAll = () => {
     setRows((prev) =>
       prev.map((r) => ({
         ...r,
-        sections: Math.max(r.existingSections, defaultSections),
-        capacityPerSection: defaultCapacity,
+        sections: Math.max(r.existingSections, bulkSections),
+        capacityPerSection: bulkCapacity,
       }))
     )
   }
@@ -179,74 +166,16 @@ export function ConfigureForm({
 
   const needsGeneration = (row: GradeRow) => row.sections > row.existingSections
 
-  const handleGenerateClasses = () => {
-    if (!selectedTermId) {
-      toast.error(
-        (d as { selectTermFirst?: string } | undefined)?.selectTermFirst ??
-          d?.selectTerm ??
-          "Select an active term first"
-      )
-      return
-    }
-
-    startClassTransition(async () => {
-      const result = await generateClassesForGrade({
-        gradeIds: rows.map((r) => r.gradeId),
-        termId: selectedTermId,
-      })
-
-      if (result.success && result.data) {
-        toast.success(
-          `Created ${result.data.created} class${result.data.created !== 1 ? "es" : ""}`
-        )
-        result.data.details.forEach((detail) => toast.info(detail))
-      } else {
-        toast.error(
-          resolveClassroomError(
-            result.error,
-            (result as { details?: string }).details,
-            errorsDict,
-            t?.error?.serverError ?? "Action failed"
-          )
-        )
-      }
-    })
-  }
-
-  const handleEnrollStudents = () => {
-    startEnrollTransition(async () => {
-      const result = await bulkEnrollStudentsInClasses({
-        gradeIds: rows.map((r) => r.gradeId),
-      })
-
-      if (result.success && result.data) {
-        toast.success(
-          `Created ${result.data.enrolled} enrollment${result.data.enrolled !== 1 ? "s" : ""}`
-        )
-        result.data.details.forEach((detail) => toast.info(detail))
-      } else {
-        toast.error(
-          resolveClassroomError(
-            result.error,
-            (result as { details?: string }).details,
-            errorsDict,
-            t?.error?.serverError ?? "Action failed"
-          )
-        )
-      }
-    })
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex w-full flex-wrap items-center gap-2 p-1">
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground text-sm">
-            {d?.defaultSections || "Default sections"}
+            {d?.sections || "Sections"}
           </span>
           <NumberStepper
-            value={defaultSections}
-            onChange={setDefaultSections}
+            value={bulkSections}
+            onChange={setBulkSections}
             min={1}
             max={10}
           />
@@ -254,19 +183,19 @@ export function ConfigureForm({
 
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground text-sm">
-            {d?.defaultCapacity || "Default capacity"}
+            {dictionary?.school?.classrooms?.capacity || "Capacity"}
           </span>
           <NumberStepper
-            value={defaultCapacity}
-            onChange={setDefaultCapacity}
+            value={bulkCapacity}
+            onChange={setBulkCapacity}
             min={1}
             max={500}
             step={5}
           />
         </div>
 
-        <Button variant="outline" size="sm" onClick={applyDefaults}>
-          {d?.applyDefaults || "Apply Defaults"}
+        <Button variant="outline" size="sm" onClick={applyToAll}>
+          {d?.applyToAll || "Apply to all"}
         </Button>
 
         <div className="flex-1" />
@@ -282,7 +211,7 @@ export function ConfigureForm({
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
@@ -385,72 +314,6 @@ export function ConfigureForm({
           </TableBody>
         </Table>
       </div>
-
-      {/* Generate Classes Section */}
-      {activeTerms.length > 0 && grades.length > 0 && (
-        <div className="border-t pt-6">
-          <h3 className="mb-2 font-medium">
-            {d?.generateClasses || "Generate Classes from Catalog"}
-          </h3>
-          <p className="text-muted-foreground mb-4 text-sm">
-            {d?.generateClassesDescription ||
-              "Create class records for each grade based on catalog subject selections. Requires active subject selections and a term."}
-          </p>
-          <div className="flex items-end gap-4">
-            <div className="space-y-1">
-              <label className="text-muted-foreground text-sm">
-                {d?.term || "Term"}
-              </label>
-              <Select value={selectedTermId} onValueChange={setSelectedTermId}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder={d?.selectTerm || "Select term"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeTerms.map((term) => (
-                    <SelectItem key={term.id} value={term.id}>
-                      {term.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGenerateClasses}
-              disabled={isGeneratingClasses || !selectedTermId}
-            >
-              {isGeneratingClasses
-                ? d?.generatingClasses || "Generating..."
-                : d?.generateClassesBtn || "Generate Classes for All Grades"}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Enroll Students Section */}
-      {grades.length > 0 && (
-        <div className="border-t pt-6">
-          <h3 className="mb-2 font-medium">
-            {(d as any)?.enrollStudents || "Enroll Students in Classes"}
-          </h3>
-          <p className="text-muted-foreground mb-4 text-sm">
-            {(d as any)?.enrollStudentsDescription ||
-              "Auto-enroll all students into their grade's classes. Students must be assigned to a grade first. Safe to run multiple times (idempotent)."}
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleEnrollStudents}
-            disabled={isEnrolling}
-          >
-            {isEnrolling
-              ? (d as any)?.enrolling || "Enrolling..."
-              : (d as any)?.enrollStudentsBtn ||
-                "Enroll Students for All Grades"}
-          </Button>
-        </div>
-      )}
     </div>
   )
 }

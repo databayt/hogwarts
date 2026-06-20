@@ -124,6 +124,7 @@ model Student {
   // Transportation relations
   routeAssignments RouteAssignment[]
   tripBoardings    TripBoarding[]
+  transportProfile StudentTransportProfile?
 
   // Geo-Attendance relations
   locationTraces      LocationTrace[]

@@ -72,6 +72,13 @@ const SOURCE_LABELS: Record<AvailableVideo["source"], string> = {
   "other-school": "Community",
 }
 
+// When a lesson has no playable video of its own (no approved lesson video, or
+// the selected instructor video is paid+unpurchased), fall back to the
+// marketing "story" video so the player surface is never empty. This is the
+// same clip shown on the public SaaS marketing page (saas-marketing/
+// story-section.tsx) and the docs story video.
+const FALLBACK_VIDEO_URL = asset("/media/story.mp4")
+
 export function StreamLessonContent({
   dictionary,
   lang,
@@ -113,8 +120,15 @@ export function StreamLessonContent({
     [lesson.availableVideos, activeVideoId]
   )
 
-  // Resolve the current video URL — prefer selected instructor video, fallback to lesson default
-  const currentVideoUrl = activeVideo?.videoUrl ?? lesson.videoUrl
+  // Resolve the current video URL — prefer the selected instructor video, then
+  // the lesson default. When the lesson has NO videos at all, fall back to the
+  // marketing story clip so the surface is never empty. We deliberately do NOT
+  // fall back when videos exist but are paywalled (paid + unpurchased) — that
+  // must keep the existing locked/purchase UX, not play a marketing clip.
+  const lessonVideoUrl = activeVideo?.videoUrl ?? lesson.videoUrl
+  const isFallbackVideo = lesson.availableVideos.length === 0
+  const currentVideoUrl =
+    lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null)
 
   const baseUrl = `/${lang}/stream/courses/${lesson.chapter.course.slug}`
 
@@ -150,21 +164,27 @@ export function StreamLessonContent({
     })
   }
 
-  // Save video progress for resume functionality
+  // Save video progress for resume functionality. Skip when playing the
+  // marketing fallback — it isn't this lesson's content, so it must not write
+  // watch progress.
   const handleProgress = useCallback(
     (progress: VideoProgress) => {
+      if (isFallbackVideo) return
       updateLessonProgress({
         lessonId: lesson.id,
         watchedSeconds: Math.floor(progress.watchedSeconds),
         totalSeconds: Math.floor(progress.duration),
       })
     },
-    [lesson.id]
+    [lesson.id, isFallbackVideo]
   )
 
   // Auto-mark complete when video finishes
   const handleVideoComplete = useCallback(() => {
     if (isCompleted) return
+    // The marketing fallback clip must not auto-complete a real lesson; the
+    // student can still mark it complete manually.
+    if (isFallbackVideo) return
 
     startTransition(async () => {
       try {
@@ -182,7 +202,7 @@ export function StreamLessonContent({
         toast.error(d?.failedToComplete || "Failed to mark lesson as complete")
       }
     })
-  }, [isCompleted, lesson.id, lesson.chapter.course.slug])
+  }, [isCompleted, isFallbackVideo, lesson.id, lesson.chapter.course.slug])
 
   // Handle auto-play next lesson
   const handleNextLesson = useCallback(() => {

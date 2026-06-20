@@ -489,6 +489,7 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
     where: {
       schoolId,
       method: "BULK_UPLOAD",
+      deletedAt: null,
     },
     _count: {
       _all: true,
@@ -521,6 +522,7 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
       status: { in: ["PRESENT", "LATE"] },
       date: { in: recentUploads.map((u) => u.date) },
       classId: { in: classIds },
+      deletedAt: null,
     },
     _count: { _all: true },
   })

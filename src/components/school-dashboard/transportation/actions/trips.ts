@@ -19,6 +19,7 @@ import {
   type TripStartInput,
 } from "@/components/school-dashboard/transportation/validation"
 
+import { generateAndStoreTripPlan } from "../lib/plan"
 import { requireContext, transportationRevalidatePath } from "./helpers"
 import { notifyGuardiansOfTripEvent } from "./notifications"
 
@@ -86,7 +87,7 @@ export async function startTrip(input: TripStartInput) {
   try {
     const current = await db.trip.findFirst({
       where: { id, schoolId, deletedAt: null },
-      select: { id: true, status: true, routeId: true },
+      select: { id: true, status: true, routeId: true, direction: true },
     })
     if (!current) return actionError(ACTION_ERRORS.TRIP_NOT_FOUND)
     if (current.status !== "SCHEDULED") {
@@ -122,6 +123,23 @@ export async function startTrip(input: TripStartInput) {
         })
       }
     })
+
+    // Best-effort optimized plan + ETAs when the school opted in. Frozen onto
+    // the trip so editing the route later doesn't rewrite this run's history.
+    const settings = await db.transportationSettings
+      .findUnique({
+        where: { schoolId },
+        select: { enableRouteOptimization: true },
+      })
+      .catch(() => null)
+    if (settings?.enableRouteOptimization) {
+      await generateAndStoreTripPlan({
+        schoolId,
+        tripId: id,
+        routeId: current.routeId,
+        direction: current.direction,
+      })
+    }
 
     revalidatePath(transportationRevalidatePath("trips"))
     revalidatePath(transportationRevalidatePath(`trips/${id}`))
@@ -266,7 +284,7 @@ export async function recordBoarding(input: BoardingUpsertInput) {
         deletedAt: null,
         status: "IN_PROGRESS",
       },
-      select: { id: true },
+      select: { id: true, routeId: true },
     })
     if (!trip) return actionError(ACTION_ERRORS.TRIP_INVALID_STATE)
 
@@ -298,6 +316,19 @@ export async function recordBoarding(input: BoardingUpsertInput) {
         alightedAt: data.status === "ALIGHTED" ? now : undefined,
       },
     })
+
+    // Per-student boarded/alighted alert to that child's guardians (in-app +
+    // WhatsApp). Best-effort, never blocks the boarding write.
+    if (data.status === "BOARDED" || data.status === "ALIGHTED") {
+      void notifyGuardiansOfTripEvent({
+        schoolId,
+        tripId: data.tripId,
+        routeId: trip.routeId,
+        kind:
+          data.status === "BOARDED" ? "student_boarded" : "student_alighted",
+        studentIds: [data.studentId],
+      })
+    }
 
     revalidatePath(transportationRevalidatePath(`trips/${data.tripId}`))
     return { success: true as const, data: boarding }

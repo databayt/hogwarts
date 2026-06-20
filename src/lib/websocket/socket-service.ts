@@ -62,6 +62,21 @@ export interface SocketEvents {
   "geofence:enter": (data: { studentId: string; geofenceId: string }) => void
   "geofence:exit": (data: { studentId: string; geofenceId: string }) => void
 
+  // Transportation live-tracking events (room: trip:<id>)
+  "trip:location": (data: {
+    tripId: string
+    lat: number
+    lng: number
+    heading?: number
+    speed?: number
+    timestamp: string
+  }) => void
+  "trip:approaching": (data: {
+    tripId: string
+    stopId: string
+    etaMinutes: number
+  }) => void
+
   // Device events
   "device:scan": (data: {
     deviceId: string
@@ -400,6 +415,16 @@ class SocketService {
     this.send("leave:room", { room })
   }
 
+  /** Subscribe to a trip's live-location room. */
+  subscribeToTrip(tripId: string): void {
+    this.joinRoom(`trip:${tripId}`)
+  }
+
+  /** Unsubscribe from a trip's live-location room. */
+  unsubscribeFromTrip(tripId: string): void {
+    this.leaveRoom(`trip:${tripId}`)
+  }
+
   /**
    * Setup event listeners for incoming events
    */
@@ -434,6 +459,15 @@ class SocketService {
 
     this.socket.on("geofence:exit", (data) => {
       this.emit("geofence:exit", data)
+    })
+
+    // Transportation live-tracking events
+    this.socket.on("trip:location", (data) => {
+      this.emit("trip:location", data)
+    })
+
+    this.socket.on("trip:approaching", (data) => {
+      this.emit("trip:approaching", data)
     })
 
     // Device events

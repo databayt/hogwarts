@@ -27,9 +27,11 @@ vi.mock("@/lib/db", () => ({
     studentBadge: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      create: vi.fn(),
     },
     attendanceBadge: {
       findFirst: vi.fn(),
+      create: vi.fn(),
     },
   },
 }))
@@ -61,6 +63,14 @@ describe("Gamification Actions - schoolId scoping", () => {
         role: "TEACHER",
       },
     } as any)
+    // Badge templates auto-create when missing — give the streak-driven badge
+    // grant inside processAttendancePoints a clean path so it doesn't throw
+    // (previously the mock omitted these, masking the badge-award path).
+    vi.mocked(db.attendanceBadge.create).mockResolvedValue({
+      id: "badge-1",
+      pointValue: 0,
+    } as any)
+    vi.mocked(db.studentBadge.create).mockResolvedValue({ id: "sb-1" } as any)
   })
 
   describe("processAttendancePoints", () => {
@@ -224,7 +234,7 @@ describe("Gamification Actions - schoolId scoping", () => {
     const validAward = {
       studentId: mockStudentId,
       points: 10,
-      reason: "PERFECT_ATTENDANCE",
+      reason: "MONTHLY_PERFECT", // must be a valid AttendanceRewardReason enum value
     }
 
     it("awardPoints denies a STUDENT role (cannot self-award)", async () => {
@@ -250,15 +260,26 @@ describe("Gamification Actions - schoolId scoping", () => {
       expect(result.error).toBe("UNAUTHORIZED")
     })
 
-    it("awardPoints passes the staff gate for a TEACHER (not UNAUTHORIZED)", async () => {
-      // beforeEach already sets role TEACHER.
+    it("awardPoints succeeds for a TEACHER and persists the reward (schoolId-scoped)", async () => {
+      // beforeEach already sets role TEACHER. Previously this used an invalid
+      // `reason`, so it passed only because the swallowed ZodError happened not
+      // to equal "UNAUTHORIZED" — it never exercised the create path.
       vi.mocked(db.attendanceReward.create).mockResolvedValue({
         id: "reward-1",
       } as any)
 
       const result = await awardPoints(validAward as any)
 
-      expect(result.error).not.toBe("UNAUTHORIZED")
+      expect(result.success).toBe(true)
+      expect(db.attendanceReward.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: mockSchoolId,
+            studentId: mockStudentId,
+            reason: "MONTHLY_PERFECT",
+          }),
+        })
+      )
     })
   })
 })

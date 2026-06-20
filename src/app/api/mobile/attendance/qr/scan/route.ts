@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
             method: "QR_CODE",
             markedBy: auth.userId,
             markedAt: new Date(),
+            deletedAt: null, // revive if the row had been soft-deleted
           },
         })
       } else {

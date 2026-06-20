@@ -205,7 +205,15 @@
       "duplicate": "توجد رحلة بالفعل لهذا المسار + التاريخ + الاتجاه",
       "invalidState": "الرحلة ليست في حالة صالحة لهذا الإجراء"
     },
-    "empty": "لا توجد رحلات بعد"
+    "empty": "لا توجد رحلات بعد",
+    "skipApprovals": {
+      "title": "طلبات تخطّي الاصطحاب المعلّقة",
+      "approve": "موافقة",
+      "reject": "رفض",
+      "approved": "تمت الموافقة على التخطّي",
+      "rejected": "تم رفض التخطّي",
+      "failed": "تعذّر تحديث الطلب"
+    }
   },
   "reports": {
     "title": "تقارير النقل",
@@ -251,6 +259,12 @@
     "saveButton": "حفظ الإعدادات",
     "savedToast": "تم حفظ الإعدادات",
     "saveFailedToast": "تعذر حفظ الإعدادات",
+    "optimizationTitle": "تحسين المسار",
+    "optimizationSubtitle": "ترتيب المسار وتقدير أوقات الوصول آنيًا مع مراعاة حركة المرور",
+    "enableRouteOptimization": "تفعيل تحسين المسار",
+    "enableRouteOptimizationHelp": "عند التفعيل، يحسب بدء الرحلة أكفأ ترتيب للمحطات وأوقات الوصول لكل محطة (يستخدم بيانات حركة مرور Mapbox عند ضبط رمز الخادم).",
+    "approachAlertMeters": "نطاق «اقتراب الحافلة» (بالأمتار)",
+    "approachAlertMetersHelp": "إشعار أولياء الأمور عند اقتراب الحافلة المباشرة من محطتهم ضمن هذه المسافة.",
     "tokens": {
       "title": "رموز واجهة الخدمة",
       "subtitle": "رموز Bearer لخطاف تسجيل الركوب عبر السياج الجغرافي",
@@ -294,7 +308,8 @@
     "stopDeleted": "تم حذف المحطة",
     "assignmentCreated": "تم تعيين الطالب على المسار",
     "assignmentUpdated": "تم تحديث التعيين",
-    "assignmentEnded": "تم إنهاء التعيين"
+    "assignmentEnded": "تم إنهاء التعيين",
+    "profileSaved": "تم حفظ موقع الاصطحاب"
   },
   "empty": {
     "noVehicles": "لا توجد مركبات بعد",
@@ -332,6 +347,22 @@
     "boardingMissed": {
       "title": "تفويت الركوب",
       "body": "لم يصعد طفلك إلى الحافلة على {route}."
+    },
+    "studentBoarded": {
+      "title": "صعد إلى الحافلة",
+      "body": "صعد طفلك إلى الحافلة على {route}."
+    },
+    "studentAlighted": {
+      "title": "وصل بأمان",
+      "body": "نزل طفلك من الحافلة على {route}."
+    },
+    "busApproaching": {
+      "title": "الحافلة تقترب",
+      "body": "تقترب الحافلة على {route} من محطة طفلك."
+    },
+    "routeChanged": {
+      "title": "تم تحديث المسار",
+      "body": "تم تحديث مسار حافلة طفلك ({route})."
     }
   },
   "common": {
@@ -346,6 +377,70 @@
     "update": "تحديث",
     "loading": "جارٍ التحميل…",
     "dragHandle": "مقبض السحب"
+  },
+  "profile": {
+    "title": "موقع الاصطحاب",
+    "description": "حدّد نقطة اصطحاب الطالب من الباب إلى الباب لتخطيط المسار.",
+    "pickupLocation": "موقع الاصطحاب",
+    "dropoffLocation": "موقع التوصيل",
+    "useSeparateDropoff": "استخدام موقع توصيل مختلف",
+    "specialNeeds": "احتياجات خاصة / ملاحظات",
+    "specialNeedsPlaceholder": "كرسي متحرك، يلزم مرافق، إلخ.",
+    "searchAddress": "ابحث عن عنوان…",
+    "noLocation": "لم يتم تحديد موقع الاصطحاب بعد",
+    "coordinates": "الإحداثيات",
+    "save": "حفظ موقع الاصطحاب"
+  },
+  "optimize": {
+    "button": "تحسين المسار",
+    "optimizing": "جارٍ التحسين…",
+    "optimized": "تم تحسين المسار",
+    "failed": "تعذّر التحسين — تأكد من تحديد مواقع المحطات على الخريطة وموقع المدرسة.",
+    "regenerate": "إعادة إنشاء الخطة",
+    "planTitle": "الخطة المُحسَّنة",
+    "eta": "الوصول المتوقع",
+    "noPlan": "لا توجد خطة مُحسَّنة بعد",
+    "source": {
+      "mapbox_optimization": "حركة المرور المباشرة",
+      "mapbox_matrix": "حركة المرور المباشرة",
+      "haversine": "تقديري"
+    }
+  },
+  "tracking": {
+    "title": "الموقع المباشر",
+    "description": "شارك موقع هذا الجهاز مع المدرسة أثناء سير الرحلة.",
+    "start": "بدء المشاركة",
+    "stop": "إيقاف المشاركة",
+    "statusOk": "تتم المشاركة",
+    "statusError": "خطأ",
+    "statusIdle": "متوقف",
+    "speed": "السرعة",
+    "mapTitle": "خريطة الحافلة المباشرة",
+    "noLocation": "في انتظار موقع الحافلة…",
+    "busLabel": "الحافلة",
+    "approaching": "الحافلة تقترب"
+  },
+  "hazards": {
+    "title": "مخاطر الطريق",
+    "description": "حدّد الإغلاقات أو المخاطر ليُخطَّط للمسارات بتجنّبها وتُنبَّه الأسر المتأثرة.",
+    "name": "الاسم",
+    "type": "النوع",
+    "types": {
+      "road_closure": "إغلاق طريق",
+      "accident": "حادث",
+      "flooding": "فيضان",
+      "construction": "أعمال إنشاء",
+      "other": "أخرى"
+    },
+    "location": "الموقع",
+    "searchAddress": "ابحث عن موقع…",
+    "radius": "النطاق (بالأمتار)",
+    "save": "إضافة خطر",
+    "remove": "إزالة",
+    "none": "لا توجد مخاطر نشطة",
+    "created": "تمت إضافة الخطر",
+    "removed": "تمت إزالة الخطر",
+    "failed": "تعذّر تحديث الخطر"
   },
   "me": {
     "title": "نقلي",
@@ -362,7 +457,23 @@
     "studentLabel": "الطالب",
     "directionRoundTrip": "ذهاب وإياب",
     "directionPickup": "ركوب فقط",
-    "directionDropoff": "نزول فقط"
+    "directionDropoff": "نزول فقط",
+    "skip": {
+      "heading": "تخطّي الاصطحاب",
+      "description": "اطلب تخطّي الحافلة في يوم محدّد. يؤكّد المشرف الطلب قبل إخلاء المقعد.",
+      "dateLabel": "التاريخ",
+      "request": "طلب التخطّي",
+      "none": "لا توجد طلبات تخطّي قادمة",
+      "cancel": "إلغاء",
+      "requested": "تم إرسال طلب التخطّي",
+      "cancelled": "تم سحب طلب التخطّي",
+      "failed": "تعذّر إرسال الطلب",
+      "status": {
+        "PENDING": "بانتظار الموافقة",
+        "APPROVED": "موافَق عليه",
+        "REJECTED": "مرفوض"
+      }
+    }
   },
   "fees": {
     "title": "رسوم النقل",

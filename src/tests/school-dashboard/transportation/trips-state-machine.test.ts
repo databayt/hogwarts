@@ -38,6 +38,11 @@ vi.mock("@/lib/db", () => ({
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
+    transportationSettings: {
+      // startTrip reads this to decide whether to build an optimized plan.
+      // Default OFF so the state-machine assertions stay focused.
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -52,6 +57,11 @@ vi.mock(
     notifyGuardiansOfTripEvent: vi.fn(),
   })
 )
+// startTrip best-effort calls into the plan builder when optimization is on —
+// stub it so these tests stay hermetic.
+vi.mock("@/components/school-dashboard/transportation/lib/plan", () => ({
+  generateAndStoreTripPlan: vi.fn().mockResolvedValue(false),
+}))
 
 const SCHOOL_A = "school-A"
 const SCHOOL_B = "school-B"
@@ -249,7 +259,7 @@ describe("startTrip", () => {
     // Lookup is schoolId + deletedAt scoped
     expect(db.trip.findFirst).toHaveBeenCalledWith({
       where: { id: "missing", schoolId: SCHOOL_A, deletedAt: null },
-      select: { id: true, status: true, routeId: true },
+      select: { id: true, status: true, routeId: true, direction: true },
     })
   })
 
@@ -557,7 +567,7 @@ describe("recordBoarding", () => {
         deletedAt: null,
         status: "IN_PROGRESS",
       },
-      select: { id: true },
+      select: { id: true, routeId: true },
     })
     // Upsert keyed by the composite unique, scoped by schoolId
     expect(db.tripBoarding.upsert).toHaveBeenCalledWith(

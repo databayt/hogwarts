@@ -12,7 +12,12 @@ import { getLabels, getName } from "@/components/translation/person"
 
 import { getTrip } from "../actions/trips"
 import { TransportationEmptyState } from "../empty-state"
+import type { PlanStop } from "../lib/plan"
+import { decodePolyline } from "../lib/polyline"
+import { DriverTracker } from "./driver-tracker"
 import { TripBoardingControls } from "./trip-boarding-controls"
+import { TripLiveMap } from "./trip-live-map"
+import { RegenerateTripPlanButton } from "./trip-plan-actions"
 
 interface Props {
   tripId: string
@@ -64,6 +69,39 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
   const routeName = trip.route?.name
     ? (routeLabels.get(trip.route.name) ?? trip.route.name)
     : "—"
+
+  // Optimized plan (Phase 2) — ordered stops + ETAs, frozen on the trip.
+  const planStops: PlanStop[] = Array.isArray(trip.optimizedStopOrder)
+    ? (trip.optimizedStopOrder as unknown as PlanStop[])
+    : []
+  const stopNameLabels =
+    trip.route?.stops && trip.route.stops.length > 0
+      ? await getLabels(
+          trip.route.stops.map((s) => s.name),
+          locale,
+          schoolId!
+        )
+      : new Map<string, string>()
+  const stopNameById = new Map(
+    (trip.route?.stops ?? []).map((s) => [
+      s.id,
+      stopNameLabels.get(s.name) ?? s.name,
+    ])
+  )
+
+  // Live-tracking inputs (only meaningful while the trip is in progress).
+  const isLive = trip.status === "IN_PROGRESS"
+  const mapStops = (trip.route?.stops ?? [])
+    .filter((s) => s.latitude != null && s.longitude != null)
+    .map((s) => ({
+      id: s.id,
+      name: stopNameById.get(s.id) ?? s.name,
+      lat: Number(s.latitude),
+      lng: Number(s.longitude),
+    }))
+  const routePath = trip.polylineEncoded
+    ? decodePolyline(trip.polylineEncoded)
+    : undefined
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -159,6 +197,58 @@ export async function TripDetailContent({ tripId, locale, dictionary }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">{t.optimize.planTitle}</CardTitle>
+          <RegenerateTripPlanButton tripId={trip.id} dictionary={dictionary} />
+        </CardHeader>
+        <CardContent>
+          {planStops.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t.optimize.noPlan}</p>
+          ) : (
+            <>
+              {trip.planSource ? (
+                <p className="text-muted-foreground mb-2 text-xs">
+                  {t.optimize.source[
+                    trip.planSource as keyof typeof t.optimize.source
+                  ] ?? trip.planSource}
+                </p>
+              ) : null}
+              <ol className="space-y-1 text-sm">
+                {planStops.map((p, i) => (
+                  <li
+                    key={p.stopId}
+                    className="flex justify-between border-b py-1.5 last:border-b-0"
+                  >
+                    <span>
+                      {i + 1}. {stopNameById.get(p.stopId) ?? p.stopId}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {p.eta ? `${t.optimize.eta} ${p.eta}` : ""}
+                      {p.distanceFromPrevKm
+                        ? `  ·  ${p.distanceFromPrevKm} km`
+                        : ""}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {isLive ? (
+        <>
+          <DriverTracker tripId={trip.id} dictionary={dictionary} />
+          <TripLiveMap
+            tripId={trip.id}
+            stops={mapStops}
+            routePath={routePath}
+            dictionary={dictionary}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

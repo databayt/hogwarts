@@ -124,8 +124,10 @@ In **Settings**, the schedule configurator mirrors the onboarding schedule step:
 
 The **Generate** tab is a two-step, preview-then-commit flow:
 
-1. `generateTimetablePreview()` runs `generateSectionTimetable()` (`generate/algorithm.ts`) over every section. For each section it fills the week from the grade's subject allocations, assigns a teacher from that teacher's subject expertise (left **Unassigned** when none is free), routes regular subjects to the section's homeroom and lab subjects to a lab/common room, and prevents a section from being double-booked in the same period.
+1. `generateTimetablePreview()` runs `generateSectionTimetable()` (`generate/algorithm.ts`) over every section. For each section it fills the week from the grade's subject allocations, assigns a teacher from that teacher's subject expertise (left **Unassigned** when none is free), routes regular subjects to the section's homeroom (the room coupled to the section via `Section.classroomId` — a 1:1 nullable FK, never more than one) and assigns lab/hall/field rooms per-period via `Timetable.classroomId` (these shared rooms are NOT owned by the section), and prevents a section from being double-booked in the same period. Three unique constraints enforce double-booking prevention: teacher, room, and section cannot appear more than once in the same period.
 2. `applyGeneratedTimetable()` commits the preview into `Timetable` rows.
+
+See [Classrooms › Integration](/docs/classrooms#integration).
 
 ### Zero-click auto-provision
 

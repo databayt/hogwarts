@@ -49,23 +49,24 @@ export function SyncClassroomsButton() {
     })
   }, [router, d])
 
+  const label = isPending
+    ? (d?.syncing ?? "Syncing…")
+    : (d?.syncDefaults ?? "Sync defaults")
+
   return (
     <Button
       variant="outline"
-      size="sm"
+      size="icon"
       onClick={run}
       disabled={isPending}
       type="button"
+      aria-label={label}
+      title={label}
     >
       <RefreshCw
         className={`h-4 w-4 ${isPending ? "animate-spin" : ""}`}
         aria-hidden="true"
       />
-      <span className="mx-2">
-        {isPending
-          ? (d?.syncing ?? "Syncing…")
-          : (d?.syncDefaults ?? "Sync defaults")}
-      </span>
     </Button>
   )
 }

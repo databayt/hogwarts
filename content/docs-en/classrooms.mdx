@@ -5,9 +5,38 @@ description: Physical room management — types, capacity, grade affinity, secti
 
 The classrooms module manages physical rooms across a school campus. Each classroom has a type, capacity, optional grade affinity, and integrates with sections for homeroom grouping. DEVELOPER and ADMIN have full CRUD; TEACHER and STAFF read-only.
 
-Schema, seed data, CRUD, room detail, section generation, capacity stats, and timetable integration are production. The area is two tabs — **Rooms** (list + add/edit + Sync defaults, with capacity summary stats folded into the header) and **Configure** (the per-grade rooms → sections → classes → enrollment wizard). A class's room is assigned in the **Classes** add/edit form and per-period in the **Timetable**; the per-room weekly schedule lives on the **room detail page** (`/classrooms/[id]`).
+Schema, seed data, CRUD, room detail, section generation, capacity stats, and timetable integration are production. The area is two tabs — **Rooms** (list + add/edit + Sync defaults, with capacity summary stats folded into the header) and **Configure** (sets sections-per-grade + capacity and generates each section's one main classroom). A class's room is assigned in the **Classes** add/edit form and per-period in the **Timetable**; the per-room weekly schedule lives on the **room detail page** (`/classrooms/[id]`).
 
-> **Rationalized 2026-06-17.** Three redundant tabs were removed to keep the area clean and practical: **Subjects** (a bulk `Class.classroomId` editor — the same field is required in the Classes form and overridden per-period by the Timetable), **Schedule** (a read-only section view duplicating the Timetable feature; the real per-room view is on the room detail page), and **Capacity** (its summary cards moved into the Rooms page; per-room data already lived in the rooms table). Provisioning logic (Sync defaults ↔ Configure) now shares one room-name helper (`catalog/room-naming.ts`).
+> **Rationalized 2026-06-17 / 2026-06-18.** Three redundant tabs were removed to keep the area clean: **Subjects** (a bulk `Class.classroomId` editor — the same field is required in the Classes form and overridden per-period by the Timetable), **Schedule** (a read-only section view duplicating the Timetable feature; the real per-room view is on the room detail page), and **Capacity** (its summary cards moved into the Rooms page). The **Configure** tab was then trimmed to the lean domain — sections-per-grade + capacity + each section's main classroom; its _Generate Classes from Catalog_ and _Enroll Students in Classes_ blocks were removed (subjects bind to grades at catalog-bridge time; students are placed into grades/sections elsewhere). Provisioning logic (Sync defaults ↔ Configure) shares one room-name helper (`catalog/room-naming.ts`).
+
+## Integration
+
+Classrooms is a **lean, upstream** block: it owns only **grades → sections → one main classroom each**. It deliberately does **not** know students or teachers — every other block couples _to_ it.
+
+| Couples with                   | Link                                                       | Direction  | What it means                                                                                                                                                                                                                    |
+| ------------------------------ | ---------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Academic structure / Grade** | `AcademicGrade` ← `Section.gradeId`, `Classroom.gradeId`   | upstream   | A section belongs to a grade; rooms carry an optional grade affinity. The grade is the hinge — it implies the subjects (via the catalog bridge).                                                                                 |
+| **Catalog / Subjects**         | grade ⇒ subjects at **bridge time**                        | upstream   | School picks country/type/level → we bridge to the right curriculum. Knowing the grade means knowing the subjects, so classrooms **never** generates classes from catalog.                                                       |
+| **Timetable**                  | `Timetable.classroomId` (required)                         | downstream | Every slot books a room. The section's **main classroom** is the homeroom the generator prefers; labs/halls/fields are reached **per-period here**, not coupled to the section. Three unique constraints prevent double-booking. |
+| **Students**                   | `Student.sectionId` → `Section` → main classroom           | downstream | Students are placed into a grade + section **elsewhere**; their homeroom is the section's main classroom. Classrooms doesn't own students.                                                                                       |
+| **Attendance**                 | `Section.students`, period-aware via timetable             | downstream | The section (with its homeroom) is the roster unit; attendance is taken per period/room through timetable slots.                                                                                                                 |
+| **Classes (gradebook axis)**   | `Class.classroomId` (required)                             | downstream | `Class` is the de-emphasized per-subject gradebook/course axis; its room is set in the Classes form, not here.                                                                                                                   |
+| **Teachers**                   | `Section.homeroomTeacherId`; teachers ↔ subjects elsewhere | downstream | A section may have a homeroom teacher; subject-teaching assignments live in their own flow. Classrooms doesn't own teachers.                                                                                                     |
+| **Conference**                 | `Section.conferenceRecordingOptOut`                        | downstream | Per-section live-class recording preference.                                                                                                                                                                                     |
+
+**Master classroom rule.** Each section couples to **exactly one** main classroom — `Section.classroomId` is a single FK, so a section can never have more than one. Room **type governs**: the main room is the `classroom`-type homeroom; labs, halls, and fields are shared and reached through the timetable, never owned by the section. Provisioning mints a unique `A0x/B0x` room per section (`defaultRoomName`), keeping the pairing 1:1.
+
+**The flow** (full chain in [Integration flow](/docs/integration-flow)):
+
+```text
+School: country + type + level
+  → bridge to catalog / curriculum        (grade ⇒ subjects)
+  → sections-per-grade + capacity
+  → each section ↔ one main classroom     ← classrooms stops here
+  → timetable (section × subject × period × room, teacher-less)
+  → students into sections · teachers onto subjects
+  → attendance · exams · grades · reports
+```
 
 ## Status
 
@@ -152,7 +181,9 @@ model RoomConstraint {
 
 Seed uses `upsert` — safe to run multiple times.
 
-## Integrations
+## Integration details
+
+Per-module specifics behind the [Integration](#integration) map above.
 
 ### Timetable
 

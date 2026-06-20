@@ -1,10 +1,24 @@
 # Transportation — Gap / Blocker / Improvement Tracker
 
-**Status:** 🟢 Production-ready — core flows work end-to-end, all 9 tables are live in production, and the polish/hardening backlog is closed.
-**Real completion:** ~99% — the 2026-05-22, 2026-05-29, and 2026-06-14 passes resolved the audited backlog. Remaining items are consciously-deferred (P3-3 page-gate de-dup; the i18n raw-name sweep O-7).
-**Last audited:** 2026-06-14 (6-dimension adversarially-verified workflow audit: 45 findings → 26 confirmed).
-**Tests:** **313/313 unit tests green across 15 files** (verified 2026-06-14) — full inventory in [`README.md`](./README.md#tests). Up from 300 after the 2026-06-14 optimization pass added the deleteStop boarding-history guard test + the webhook 429 rate-limit test.
-**Plans:** original feature `invoke-feature-workflow-to-toasty-crystal.md`; production sweep `read-transportation-feature-to-elegant-walrus.md`; coverage + cleanup pass `read-transportation-block-imperative-pancake.md`.
+**Status:** 🟢 Production-ready + **2026-06-18 advanced door-to-door upgrade** (code complete, DB deploy-pending).
+**Real completion:** base ~99%; the upgrade adds geocoded door-to-door routing, real-time optimization, absence-aware re-routing, live GPS tracking, and WhatsApp guardian alerts. Weather deferred (needs `OPENWEATHER_API_KEY`).
+**Last audited:** 2026-06-14 (base). Upgrade built phase-by-phase with tsc 0 + green tests at each phase.
+**Tests:** **331/331 unit tests green across 19 files** — added `optimize.test.ts` (ETA + Haversine tiers), `absence.test.ts` (absentee union), `polyline.test.ts` (decoder); updated `settings`/`trips-state-machine` for new fields.
+**Plans:** advanced upgrade `~/.claude/plans/let-s-boost-the-transportation-happy-papert.md`; base plans below.
+
+## Resolution Log — 2026-06-18 (advanced door-to-door upgrade)
+
+Five independently-shippable phases (full plan in the plan file). All additive — no drops, no breaking changes.
+
+- **Phase 1 — geocoded pickup foundation** ✅ — `StudentTransportProfile` model; `MapboxLocationPicker` wired into the stop editor (collects lat/lng, with a coord badge) and a new transport-profile editor on the assignment detail page; `src/lib/haversine.ts` + auto-computed `Route.distanceKm`. Fixed the Decimal→client serialization (`EditorStop`).
+- **Phase 2 — optimization + bell-time ETA** ✅ — `lib/optimize.ts` (Mapbox Optimization/Matrix + Haversine NN/2-opt fallback, `driving-traffic`), `lib/eta.ts` (bell-time backward calc), `lib/plan.ts` (frozen per-trip plan). Wired into `startTrip`; manual "Optimize route" + "Regenerate plan" buttons; settings toggle. `Trip` + `Settings` columns added.
+- **Phase 3 — absence-aware re-routing** ✅ — `lib/absence.ts`; guardian "skip pickup" (PENDING `AbsenceIntention`) + admin approvals; nightly `build-tomorrow-trips` cron (drops absentees/empty stops, re-optimizes, pre-sets EXCUSED/PENDING boardings). `AbsenceIntention` index added.
+- **Phase 4 — live tracking** ✅ — `TripLocation` model; `/api/transportation/location` ingest (token-or-session, schoolId-from-token, rate-limited) + `/latest` polling; `socket-service.ts` `trip:location`/`trip:approaching` + subscribe helpers; `driver-tracker.tsx`, `trip-live-map.tsx`, guardian live map; "bus approaching" alerts.
+- **Phase 5 — notifications + traffic + hazards** ✅ — guardian alerts now in-app **+ WhatsApp** (channels on the existing notify; no enum migration); boarded/alighted/approaching/route_changed kinds; traffic-aware ETAs (driving-traffic); `RoadHazard` model + admin pins (settings) + Haversine-tier avoidance; `cleanup-trip-locations` cron.
+
+**Deploy checklist (Neon-branch-first):** new tables `student_transport_profiles`, `transportation_trip_locations`, `transportation_road_hazards`; `transportation_trips` +4 cols; `transportation_settings` +2 cols; `absence_intentions` +1 index; + the 2 previously-staged indexes (`Trip [schoolId,status,actualEndTime]`, `Route [schoolId,geofenceId]`). Set `MAPBOX_SERVER_TOKEN` (optional) for paid traffic-aware tiers; register the 2 new crons (already in `vercel.json`).
+
+**Known / deferred:** (1) **Weather** — designed, not built (no `OPENWEATHER_API_KEY` per the chosen API scope). (2) Real-time push needs the socket server (`#262`); live map runs on the polling fallback until then. (3) Repo-wide i18n `errorReturn`/`rtl-physical-class` ratchets are red from **pre-existing** working-tree state (the `rtl` hit is committed `admission/leads/content.tsx`; my feature UI is fully dictionary-keyed — dictionary-parity green); my only additions are machine-readable API error codes matching the geofence-webhook precedent. Baselines intentionally NOT raised.
 
 ## Resolution Log — 2026-06-14 (optimization pass — security / correctness / perf)
 

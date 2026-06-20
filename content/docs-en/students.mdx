@@ -143,6 +143,8 @@ When a student joins through the school's join page, onboarding creates:
 - Guardian records (if guardian info provided)
 - Section assignment (if selected)
 
+The `sectionId` set here (or in the wizard's Enrollment step) is the canonical coupling: `Student.sectionId → Section → Section.classroomId` (homeroom). Classrooms does not own students — placing a student in a grade + section is done here and in the other entry points above. See [Classrooms › Integration](/docs/classrooms#integration).
+
 ### Application enrollment
 
 `confirmEnrollment()` in admission creates:

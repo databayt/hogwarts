@@ -800,7 +800,7 @@ export async function getTeacherClassesToday(): Promise<
       // Get today's attendance counts per class
       const attendanceCounts = await db.attendance.groupBy({
         by: ["classId"],
-        where: { schoolId, date: today },
+        where: { schoolId, date: today, deletedAt: null },
         _count: true,
       })
 
@@ -829,7 +829,12 @@ export async function getTeacherClassesToday(): Promise<
     const classIds = teacherClasses.map((c) => c.id)
     const attendanceCounts = await db.attendance.groupBy({
       by: ["classId"],
-      where: { schoolId, date: today, classId: { in: classIds } },
+      where: {
+        schoolId,
+        date: today,
+        classId: { in: classIds },
+        deletedAt: null,
+      },
       _count: true,
     })
 
@@ -1155,6 +1160,7 @@ export async function getUnmarkedClasses(): Promise<
         schoolId,
         date: today,
         periodId: { not: null },
+        deletedAt: null,
       },
       select: {
         periodId: true,

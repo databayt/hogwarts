@@ -180,6 +180,54 @@ export type RouteAssignmentUpdateInput = z.infer<
 export type EndAssignmentInput = z.infer<typeof endAssignmentSchema>
 
 // ============================================================================
+// Student transport profile (door-to-door pickup point)
+// ============================================================================
+
+export const studentTransportProfileSchema = z.object({
+  studentId: idSchema,
+  pickupAddress: z.string().max(500).optional(),
+  pickupLat: z.number().min(-90).max(90).optional(),
+  pickupLng: z.number().min(-180).max(180).optional(),
+  dropoffAddress: z.string().max(500).optional(),
+  dropoffLat: z.number().min(-90).max(90).optional(),
+  dropoffLng: z.number().min(-180).max(180).optional(),
+  specialNeeds: z.string().max(2000).optional(),
+})
+export type StudentTransportProfileInput = z.infer<
+  typeof studentTransportProfileSchema
+>
+
+// Guardian/student "skip pickup" request → an AbsenceIntention(reason=TRANSPORTATION).
+export const transportSkipSchema = z.object({
+  studentId: idSchema,
+  dateFrom: z.coerce.date(),
+  dateTo: z.coerce.date().optional(),
+  notes: z.string().max(500).optional(),
+})
+export type TransportSkipInput = z.infer<typeof transportSkipSchema>
+
+// Admin review of a pending transport skip.
+export const reviewTransportSkipSchema = z.object({
+  id: idSchema,
+  decision: z.enum(["APPROVED", "REJECTED"]),
+})
+export type ReviewTransportSkipInput = z.infer<typeof reviewTransportSkipSchema>
+
+// Admin-reported road hazard.
+export const roadHazardSchema = z.object({
+  name: z.string().min(1).max(128),
+  description: z.string().max(2000).optional(),
+  type: z
+    .enum(["road_closure", "accident", "flooding", "construction", "other"])
+    .default("other"),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  radiusMeters: z.number().int().min(10).max(20000).default(200),
+  expiresAt: z.coerce.date().optional(),
+})
+export type RoadHazardInput = z.infer<typeof roadHazardSchema>
+
+// ============================================================================
 // Trip + TripBoarding (M2)
 // ============================================================================
 
@@ -245,6 +293,8 @@ export const transportationSettingsSchema = z.object({
   notifyGuardiansOnTripFinish: z.boolean(),
   notifyGuardiansOnTripCancel: z.boolean(),
   lateThresholdMinutes: z.number().int().min(0).max(240),
+  enableRouteOptimization: z.boolean().default(false),
+  approachAlertMeters: z.number().int().min(0).max(20000).default(500),
 })
 export type TransportationSettingsInput = z.infer<
   typeof transportationSettingsSchema

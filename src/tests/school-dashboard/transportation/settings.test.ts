@@ -43,6 +43,8 @@ const DEFAULTS = {
   notifyGuardiansOnTripFinish: true,
   notifyGuardiansOnTripCancel: true,
   lateThresholdMinutes: 15,
+  enableRouteOptimization: false,
+  approachAlertMeters: 500,
 }
 
 // A complete, schema-valid input for updateSettings.
@@ -108,6 +110,8 @@ describe("transportation getSettings", () => {
       notifyGuardiansOnTripFinish: false,
       notifyGuardiansOnTripCancel: true,
       lateThresholdMinutes: 25,
+      enableRouteOptimization: true,
+      approachAlertMeters: 750,
     } as never)
 
     const result = await getSettings()
@@ -121,6 +125,8 @@ describe("transportation getSettings", () => {
         notifyGuardiansOnTripFinish: false,
         notifyGuardiansOnTripCancel: true,
         lateThresholdMinutes: 25,
+        enableRouteOptimization: true,
+        approachAlertMeters: 750,
       })
       // Decimal was coerced to a JS number, not the raw Decimal object.
       expect(typeof result.data.defaultMonthlyFee).toBe("number")
@@ -184,6 +190,8 @@ describe("transportation updateSettings", () => {
       notifyGuardiansOnTripFinish: true,
       notifyGuardiansOnTripCancel: false,
       lateThresholdMinutes: 30,
+      enableRouteOptimization: false,
+      approachAlertMeters: 500,
     } as never)
 
     const result = await updateSettings(VALID_INPUT)
@@ -197,6 +205,8 @@ describe("transportation updateSettings", () => {
         notifyGuardiansOnTripFinish: true,
         notifyGuardiansOnTripCancel: false,
         lateThresholdMinutes: 30,
+        enableRouteOptimization: false,
+        approachAlertMeters: 500,
       })
     }
 

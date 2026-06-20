@@ -1,0 +1,76 @@
+---
+title: Transportation
+description: Door-to-door school transport — fleet, drivers, geocoded routes with real-time optimization, bell-time ETAs, absence-aware re-routing, live GPS tracking, and WhatsApp parent alerts.
+---
+
+The transportation module runs a school's bus operation end to end: vehicles and drivers, geocoded routes with map-based stops, student assignments, daily trips with boarding records, fees, and a self-service view for students and guardians. The 2026 upgrade adds **intelligence** — efficient route calculation, bell-time arrival estimates, automatic re-routing when a student is away, live bus tracking, and door-to-door parent alerts.
+
+## Roles
+
+| Role                   | Can do                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| **Admin / Developer**  | Everything — fleet, routes, stops, drivers, assignments, trips, settings, hazards |
+| **Staff**              | Assignments, trips, boarding, skip approvals (read-only fleet/routes)             |
+| **Teacher**            | View trips, record boarding                                                       |
+| **Accountant**         | Fee preview                                                                       |
+| **Student / Guardian** | Own/children's routes, live bus map, "skip pickup" requests                       |
+
+## Core concepts
+
+- **Fleet** — vehicles (bus / van / minibus / car) with capacity and registration / insurance / inspection tracking.
+- **Drivers** — license records (class + expiry), optional links to a staff member and a user account.
+- **Routes** — named routes (PICKUP / DROPOFF / ROUND_TRIP) with ordered, map-pinned stops. Route distance is computed automatically once every stop has coordinates.
+- **Pickup points (door-to-door)** — each student has a geocoded pickup (and optional separate drop-off) point on their transport profile. When you assign a student to a route, their pickup point becomes a stop the optimizer orders.
+- **Trips** — one run per route + date + direction, state-machine guarded (Scheduled → In progress → Completed / Cancelled). Starting a trip auto-creates a boarding row per active rider.
+- **Boarding** — per-student Pending / Boarded / Alighted / Missed / Excused, recorded by the driver/staff or a geofence device.
+
+## Route optimization & ETAs
+
+Turn on **Settings → Route optimization** to compute the most efficient stop order and per-stop arrival times.
+
+- **Efficient ordering** — the optimizer minimizes travel time between stops and the school. With a Mapbox server token it uses live **traffic-aware** road times (Optimization API for ≤11 stops, Matrix + 2-opt up to 24); otherwise it falls back to a geometric (Haversine) ordering. It never blocks a trip.
+- **Bell-time ETAs** — pickup runs are timed to arrive at school just before the first period (minus the pickup buffer); drop-off runs depart after the last period. ETAs appear per stop on the trip detail page.
+- **Optimize a route** — the "Optimize route" button on a route reorders its stops; the per-trip plan (order + ETAs + map polyline) is frozen on each trip so later route edits don't rewrite history. "Regenerate plan" re-runs it for one trip.
+
+## Absence-aware re-routing
+
+When a student is out of the equation, the next run is recalculated without them.
+
+- **Guardian "skip pickup"** — from the self-service view, a guardian requests a day off the bus. It stays **pending** until an admin approves it (in the Trips screen) — a safety gate so a seat is never dropped by accident.
+- **Nightly trip builder** — a cron builds the next working day's trips (respecting the school week and holidays), excludes students marked absent (attendance) or on an approved skip, drops any now-empty stops, and re-optimizes the reduced route.
+
+## Live tracking
+
+While a trip is in progress:
+
+- **Driver** — opens the trip and taps **Start sharing**; the device streams its GPS location.
+- **Admin & guardians** — see the bus move on a live map alongside the ordered stops and route line. Guardians see only their child's trip.
+- **"Bus approaching"** — when the bus comes within the configured radius of a stop, waiting families get an alert.
+
+Live updates use the realtime server when available and fall back to ~10-second polling otherwise.
+
+## Notifications
+
+Trip events (departed, arrived, cancelled, missed, boarded, alighted, approaching) are sent to guardians **in-app and over WhatsApp** (when a guardian phone is on file), rendered in the school's language. Per-event opt-outs live in Settings.
+
+## Road hazards
+
+Admins can pin closures, accidents, flooding, or construction (Settings → Road hazards) with a radius. The optimizer's fallback tier routes around active hazards, and creating one alerts guardians on affected routes.
+
+## Geofence boarding webhook
+
+External GPS / RFID collectors can record boarding via `POST /api/transportation/geofence-boarding` using a school API token (mint one in Settings). The token's school is the tenant — it's never read from the request body.
+
+## Setup checklist
+
+1. Add vehicles and drivers.
+2. Create routes; pin stops on the map (and set students' pickup points on their assignment).
+3. (Optional) Set `MAPBOX_SERVER_TOKEN` for traffic-aware optimization, and turn on Route optimization in Settings.
+4. Assign students to routes; schedule trips (or let the nightly cron build them).
+5. (Optional) Drivers install the device/PWA for live tracking; mint an API token for geofence/GPS hardware.
+
+## Notes & limits
+
+- **Weather-aware delays** are designed but not enabled — they require a weather API key.
+- **Real-time push** needs the realtime server to be deployed; until then the live map polls.
+- All map features require `NEXT_PUBLIC_MAPBOX_TOKEN`; without it, addresses can still be entered manually.

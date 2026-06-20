@@ -263,6 +263,9 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     attendanceDate.setHours(0, 0, 0, 0)
     const scanNotes = `Scanned via QR_CODE at ${new Date(scannedAt).toISOString()}${location ? ` (${location.lat},${location.lon})` : ""}`
 
+    // Upsert lookup must find soft-deleted rows too: the unique tuple still
+    // reserves their key, so filtering `deletedAt: null` here would fall through
+    // to create() and hit a unique-constraint error. Instead we revive on update.
     const existingDaily = await db.attendance.findFirst({
       where: {
         schoolId,
@@ -270,7 +273,6 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
         classId: qrSession.classId,
         date: attendanceDate,
         periodId: null,
-        deletedAt: null,
       },
       select: { id: true },
     })
@@ -284,6 +286,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
             notes: scanNotes,
             markedBy: session.user.id,
             markedAt: new Date(),
+            deletedAt: null, // revive if the row had been soft-deleted
           },
         })
       : await db.attendance.create({
@@ -637,6 +640,7 @@ export async function getQRCodeStats(
           gte: dateFrom || new Date(new Date().setHours(0, 0, 0, 0)),
           lte: dateTo || new Date(new Date().setHours(23, 59, 59, 999)),
         },
+        deletedAt: null,
       },
       _count: {
         id: true,

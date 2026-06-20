@@ -5,10 +5,12 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { listApiTokens } from "../actions/api-tokens"
+import { listRoadHazards } from "../actions/hazards"
 import { getSettings } from "../actions/settings"
 import { TransportationEmptyState } from "../empty-state"
 import { TransportationApiTokensSection } from "./api-tokens-section"
 import { TransportationSettingsForm } from "./form"
+import { HazardsSection } from "./hazards-section"
 
 interface Props {
   locale: Locale
@@ -18,9 +20,10 @@ interface Props {
 
 export async function TransportationSettingsContent({ dictionary }: Props) {
   const t = dictionary.transportation
-  const [result, tokensResult] = await Promise.all([
+  const [result, tokensResult, hazardsResult] = await Promise.all([
     getSettings(),
     listApiTokens(),
+    listRoadHazards(),
   ])
 
   if (!result.success) {
@@ -52,6 +55,8 @@ export async function TransportationSettingsContent({ dictionary }: Props) {
           notifyGuardiansOnTripCancel:
             result.data.notifyGuardiansOnTripCancel ?? true,
           lateThresholdMinutes: result.data.lateThresholdMinutes ?? 15,
+          enableRouteOptimization: result.data.enableRouteOptimization ?? false,
+          approachAlertMeters: result.data.approachAlertMeters ?? 500,
         }}
       />
 
@@ -60,6 +65,13 @@ export async function TransportationSettingsContent({ dictionary }: Props) {
       <TransportationApiTokensSection
         dictionary={dictionary}
         tokens={tokensResult.success ? tokensResult.data : []}
+      />
+
+      <hr className="border-border" />
+
+      <HazardsSection
+        dictionary={dictionary}
+        hazards={hazardsResult.success ? hazardsResult.data : []}
       />
     </div>
   )

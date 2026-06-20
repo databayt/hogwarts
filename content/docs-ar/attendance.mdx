@@ -162,6 +162,8 @@ model Attendance {
 }
 ```
 
+**دلالات الحذف الناعم.** الحقل `deletedAt` علامة حذف (tombstone) وليس حذفًا نهائيًا. يُستبعَد السجل المحذوف من كل قراءات التحليلات ولوحة المعلومات والتصدير والامتثال التنظيمي، ومن عروض الطالب وولي الأمر على الجوال — مع الاحتفاظ بالصف للتدقيق وإمكانية استعادته من قِبل المسؤول (`restoreAttendance`). وبما أن قيد `@@unique` لا يزال يحجز مفتاح الصف المحذوف، فإن إعادة تسجيل الطالب لنفس اليوم/الحصة **تُحيي** السجل الأصلي (تمسح `deletedAt`) بدلًا من إنشاء نسخة مكررة — وينطبق ذلك على التسجيل اليدوي والحصص ورمز QR والباركود والسياج الجغرافي والكشك.
+
 نماذج داعمة: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`, `StudentIdentifier`, `AbsenceIntention`, `PolicyTrigger`, `PolicyExemption`, `MasterAttendance`, `HallPass`, `KioskLog`, `AttendanceReward`, `StudentBadge`, `AttendanceStreak`.
 
 ## Seed

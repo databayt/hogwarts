@@ -14,8 +14,14 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getMyTransportationView } from "../actions/me"
+import {
+  getMyTransportationView,
+  getMyTransportSkips,
+  type MyTransportSkip,
+} from "../actions/me"
 import { TransportationEmptyState } from "../empty-state"
+import { GuardianTripMap } from "./guardian-trip-map"
+import { TransportSkipControl } from "./skip-control"
 
 interface Props {
   locale: Locale
@@ -31,6 +37,15 @@ export async function MyTransportationContent({
 }: Props) {
   const t = dictionary.transportation
   const result = await getMyTransportationView(locale)
+  const skipsResult = await getMyTransportSkips()
+  const skipsByStudent = new Map<string, MyTransportSkip[]>()
+  if (skipsResult.success) {
+    for (const s of skipsResult.data) {
+      const arr = skipsByStudent.get(s.studentId) ?? []
+      arr.push(s)
+      skipsByStudent.set(s.studentId, arr)
+    }
+  }
 
   if (!result.success || result.data.length === 0) {
     return (
@@ -118,6 +133,23 @@ export async function MyTransportationContent({
                   </div>
                 )}
               </section>
+
+              {child.recentTrips.find((tr) => tr.status === "IN_PROGRESS") ? (
+                <GuardianTripMap
+                  tripId={
+                    child.recentTrips.find((tr) => tr.status === "IN_PROGRESS")!
+                      .tripId
+                  }
+                  dictionary={dictionary}
+                />
+              ) : null}
+
+              <TransportSkipControl
+                studentId={child.studentId}
+                skips={skipsByStudent.get(child.studentId) ?? []}
+                locale={locale}
+                dictionary={dictionary}
+              />
 
               <section>
                 <h3 className="mb-3 text-sm font-medium">

@@ -312,7 +312,16 @@ export async function markAttendance(
       Array.from(updatesByStatus.entries()).map(([status, ids]) =>
         db.attendance.updateMany({
           where: { id: { in: ids }, schoolId },
-          data: { status, markedBy: session?.user?.id, markedAt: now },
+          // `deletedAt: null` revives a soft-deleted record on re-mark — the
+          // existing-record lookup above intentionally finds deleted rows (the
+          // unique constraint still reserves their key), so without this a
+          // re-mark would update a row that stays hidden from every stat read.
+          data: {
+            status,
+            markedBy: session?.user?.id,
+            markedAt: now,
+            deletedAt: null,
+          },
         })
       )
     )
@@ -404,6 +413,8 @@ export async function markSingleAttendance(input: {
             ? new Date(input.checkOutTime)
             : undefined,
           notes: input.notes,
+          // Revive a soft-deleted record when it is re-marked (see markAttendance).
+          deletedAt: null,
         },
       })
     } else {
@@ -893,6 +904,8 @@ export async function quickMarkAllPresent(input: {
           status: "PRESENT",
           markedBy: userId,
           markedAt: now,
+          // Revive a soft-deleted record on re-mark (see markAttendance).
+          deletedAt: null,
         },
       })
     }
@@ -962,6 +975,7 @@ export async function checkOutStudent(input: {
       classId: input.classId,
       date: new Date(input.date),
       periodId: null,
+      deletedAt: null, // never check out a soft-deleted record
     },
   })
 

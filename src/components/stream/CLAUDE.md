@@ -38,6 +38,15 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~80% complete.
 - **The real paywall is the `null` videoUrl from the server** (see
   `get-lesson-with-progress.ts`), not client lock UI. Never emit a playable URL
   for an unowned PAID video.
+- **No-video lessons fall back to the marketing "story" clip.** When a lesson
+  has zero videos (`lesson.availableVideos.length === 0`), the lesson player
+  (`dashboard/lesson/content.tsx`) plays `asset("/media/story.mp4")` — the same
+  clip on the public SaaS marketing page — so the surface is never empty.
+  `isFallbackVideo` gates `onProgress`/`onComplete` so the placeholder clip
+  NEVER writes lesson watch-progress or auto-completes a lesson (the manual
+  "Mark as Complete" button still works). Critically, the fallback is keyed on
+  _no videos at all_, NOT on a `null` URL — a paywalled (paid + unpurchased)
+  video keeps its locked/purchase UX and must never be replaced by the clip.
 - **Money fields are `Float`** (`Video.price`, `VideoPurchase.amount`); go
   through `Number()` before arithmetic. Float→Decimal is deferred (ripples into
   ~13 read sites + a shared-DB table rewrite).

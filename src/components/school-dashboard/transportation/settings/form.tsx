@@ -21,6 +21,8 @@ export interface TransportationSettingsValues {
   notifyGuardiansOnTripFinish: boolean
   notifyGuardiansOnTripCancel: boolean
   lateThresholdMinutes: number
+  enableRouteOptimization: boolean
+  approachAlertMeters: number
 }
 
 interface Props {
@@ -144,6 +146,42 @@ export function TransportationSettingsForm({ dictionary, initial }: Props) {
             checked={values.notifyGuardiansOnTripCancel}
             onChange={(v) => setField("notifyGuardiansOnTripCancel", v)}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t.optimizationTitle}</CardTitle>
+          <p className="text-muted-foreground text-sm">
+            {t.optimizationSubtitle}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ToggleRow
+            id="enableRouteOptimization"
+            label={t.enableRouteOptimization}
+            checked={values.enableRouteOptimization}
+            onChange={(v) => setField("enableRouteOptimization", v)}
+          />
+          <p className="text-muted-foreground text-xs">
+            {t.enableRouteOptimizationHelp}
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="approachAlertMeters">{t.approachAlertMeters}</Label>
+            <Input
+              id="approachAlertMeters"
+              type="number"
+              min={0}
+              max={20000}
+              value={values.approachAlertMeters}
+              onChange={(e) =>
+                setField("approachAlertMeters", Number(e.target.value) || 0)
+              }
+            />
+            <p className="text-muted-foreground text-xs">
+              {t.approachAlertMetersHelp}
+            </p>
+          </div>
         </CardContent>
       </Card>
 

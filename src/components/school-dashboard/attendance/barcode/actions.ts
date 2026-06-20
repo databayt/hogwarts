@@ -133,32 +133,53 @@ export async function processBarcodeScan(
       throw new Error("Card has expired")
     }
 
-    // Check if attendance already marked
+    // Check if attendance already marked today. Find soft-deleted rows too: the
+    // unique tuple still reserves their key, so a create() would collide — we
+    // revive the row instead of falsely reporting "already marked".
+    const today = new Date(new Date().toDateString()) // midnight, no time
     const existingAttendance = await db.attendance.findFirst({
       where: {
         schoolId,
         studentId: studentIdentifier.studentId,
         classId,
-        date: new Date(new Date().toDateString()), // Today's date without time
+        date: today,
       },
+      select: { id: true, deletedAt: true },
     })
 
-    if (existingAttendance) {
+    if (existingAttendance && existingAttendance.deletedAt === null) {
       throw new Error("Attendance already marked for this student today")
     }
 
-    // Mark attendance
-    const attendance = await db.attendance.create({
-      data: {
-        schoolId,
-        studentId: studentIdentifier.studentId,
-        classId,
-        date: new Date(),
-        status: "PRESENT",
-        notes: `Scanned via BARCODE at ${new Date(scannedAt).toISOString()}`,
-        markedAt: new Date(),
-      },
-    })
+    const scanNotes = `Scanned via BARCODE at ${new Date(scannedAt).toISOString()}`
+
+    // Revive a soft-deleted record, otherwise create a fresh one. Record the
+    // BARCODE method (the old create omitted it, so scans logged as MANUAL).
+    const attendance = existingAttendance
+      ? await db.attendance.update({
+          where: { id: existingAttendance.id, schoolId },
+          data: {
+            status: "PRESENT",
+            method: "BARCODE",
+            notes: scanNotes,
+            markedAt: new Date(),
+            checkInTime: new Date(),
+            deletedAt: null,
+          },
+        })
+      : await db.attendance.create({
+          data: {
+            schoolId,
+            studentId: studentIdentifier.studentId,
+            classId,
+            date: today,
+            status: "PRESENT",
+            method: "BARCODE",
+            notes: scanNotes,
+            markedAt: new Date(),
+            checkInTime: new Date(),
+          },
+        })
 
     // Update identifier usage
     await db.studentIdentifier.update({

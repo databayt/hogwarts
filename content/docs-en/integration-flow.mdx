@@ -99,18 +99,18 @@ What gets created: one `SchoolYear`, N `Term`s with a date-correct `isActive`, a
 
 ## Layer 6 — Classrooms & sections
 
-Capacity settings drive N **main classrooms** + N **sections** per grade, paired one-to-one (`Grade 7-A` room ↔ `Grade 7-A` section). The chain this encodes:
+Capacity settings (sections-per-grade + capacity) drive N **sections** per grade, each paired one-to-one with **exactly one main classroom** — `Section.classroomId` is a single nullable FK, so a section can never have more than one. Room **type governs**: the main room is the `classroom`-type homeroom (`Grade 7-A` room ↔ `Grade 7-A` section). The chain this encodes:
 
 ```
 Classroom (main) → belongs to a grade → grade + curriculum → subjects taught here
 Section          → the student cohort that occupies that classroom
 ```
 
-**Labs and common spaces are a different thing** — not grade-owned, created manually with their own `ClassroomType` (Lab, Computer Room, Library), available to the generator for lab-flagged subjects.
+**Labs and common spaces are a different thing** — not grade-owned, never set as a section's main classroom; created with their own `ClassroomType` (Lab, Computer Room, Library) and reached **per-period through the timetable** (`Timetable.classroomId`), available to the generator for lab-flagged subjects.
 
 ### The course axis (`Class` records)
 
-Separate from sections, a `Class` is one **subject-course** (`Math – Grade 7`, per term) — the grouping axis the grade-book needs. Generated via Configure → "Generate Classes" (1 per subject × grade × term), enrolled via `StudentClass`. The timetable no longer requires `Class` records; exams, results, and assignments still do (by design — see the [legacy classId policy](/docs/provision#legacy-classid-policy)).
+Separate from sections, a `Class` is one **subject-course** (`Math – Grade 7`, per term) — the de-emphasized grouping axis the grade-book needs. The standalone "Generate Classes from Catalog" / "Enroll Students" actions were **removed from Classrooms › Configure** (2026-06-18): classrooms stays lean (grades → sections → one main classroom), and because the grade + curriculum already imply the subjects, `Class`/`StudentClass` are maintained in the Classes module rather than provisioned from the rooms page. The timetable no longer requires `Class` records; exams, results, and assignments still do (by design — see the [legacy classId policy](/docs/provision#legacy-classid-policy)).
 
 ## Layer 7 — Timetable
 

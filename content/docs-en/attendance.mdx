@@ -53,6 +53,8 @@ Grade filter: actions accept `gradeId` to filter via `Class.gradeId → Academic
 
 Flat inline toolbar (`PlatformToolbar`): class selector, date picker, bulk status buttons, Save. `getCurrentPeriod()` auto-selects the class matching the current timetable period; names translate on demand via `getText()`. Keyboard: `P` / `A` / `L` for present / absent / late, `Cmd/Ctrl+S` save. Absent-student guardians are auto-notified on save; an approved `AbsenceIntention` converts ABSENT → EXCUSED.
 
+The **roster unit is the section** — `Section.students` defines who is in the class. Each section has exactly one main classroom (homeroom) via `Section.classroomId`; non-homeroom rooms (labs, halls, fields) are reached per-period through the timetable slot (`Timetable.classroomId`), which is also what `getCurrentPeriod()` resolves for period-aware attendance. See [Classrooms › Integration](/docs/classrooms#integration).
+
 ## Capture methods
 
 | Method      | Route                  | Notes                                                            |
@@ -161,6 +163,15 @@ model Attendance {
   @@index([schoolId, date, periodId])
 }
 ```
+
+**Soft-delete semantics.** `deletedAt` is a tombstone, not a hard delete. A
+removed record is excluded from every analytics, dashboard, export and
+regulator-compliance read, and from the student / guardian mobile views — yet the
+row is retained for audit and an admin can restore it (`restoreAttendance`).
+Because the `@@unique` tuple still reserves a deleted row's key, re-marking a
+student for the same day/period **revives** the original record (clears
+`deletedAt`) instead of creating a duplicate — this holds across manual, period,
+QR, barcode, geofence and kiosk capture.
 
 Supporting models: `AttendanceExcuse`, `AttendanceIntervention`, `QRCodeSession`, `StudentIdentifier`, `AbsenceIntention`, `PolicyTrigger`, `PolicyExemption`, `MasterAttendance`, `HallPass`, `KioskLog`, `AttendanceReward`, `StudentBadge`, `AttendanceStreak`.
 

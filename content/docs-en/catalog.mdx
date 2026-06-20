@@ -196,7 +196,12 @@ country + type at runtime. `findSubjects()` then resolves subjects through a
 | 4    | `US` (baseline fallback)               |
 
 Grade-specific subjects produce a 1:1 mapping — "Math Grade 3" maps directly to
-the school's Grade 3.
+the school's Grade 3. **Knowing the grade + curriculum means knowing the subjects** —
+subjects are bound to the grade at bridge time, so a section's grade already implies
+its subjects. The classrooms block is lean (grades → sections → one main classroom
+each) and never generates classes from catalog; `Class` records are the
+per-subject gradebook axis, not something provisioned from the Classrooms Configure
+page. See [Classrooms › Integration](/docs/classrooms#integration).
 
 ### `ensureSubjectSelections` — lazy self-heal
 
