@@ -1,0 +1,137 @@
+---
+title: Launch Sprint
+description: The 4-week plan to take hogwarts from feature-complete to launched across King Fahad, public SaaS, and Aldar. Updated 2026-06-20.
+---
+
+The [MVP](/docs/mvp) doc records what is shipped; the [Roadmap](/docs/roadmap) records the quarter direction. This doc is narrower and time-boxed: the **single sprint that ends with launch**. Anchor date: 2026-06-20, HEAD `febb7da3b`.
+
+The thesis is simple. After the June deploys — transportation Phase 2–5, the conference notification/attendance integration, the public features + community hubs, exam-and-grade automation, the stream/LMS optimize pass, the saas-dashboard de-fabrication, timetable production-readiness, and demo-seed auto-provision — almost every epic is **code-complete**. What stands between here and launch is no longer feature-building. It is four things: making the last few correctness fixes, confirming the database, turning on the ops and credentials, and running a QA pass that actually proves it. This sprint does exactly that, for all three launch audiences at once: the **King Fahad** pilot (Sudan, Sept 2026), the **public SaaS** at `ed.databayt.org`, and the **Aldar** enterprise pilot (UAE).
+
+For requirements see [PRD](/docs/prd). For the pilot context see [Pilot](/docs/pilot).
+
+## Where we are
+
+State verified against block records and `git log` at HEAD `febb7da3b`. The "old status" column is the last roadmap reconcile (2026-05/06-15); the gap is real because a lot shipped since.
+
+| Epic                           | Old status            | Now (verified)                                                                                                                     | Remaining to launch                                                          |
+| ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Transportation                 | `Built+Polish`        | Phase 2–5 **deployed** (`febb7da3b`); route optimization, live GPS, hazards; 331 tests; additive DB applied to Neon prod at deploy | Optional `MAPBOX_SERVER_TOKEN`; weather routing deferred                     |
+| Conference                     | `Built` (link only)   | Notification P0 fixed, guardian Join, attendance-from-presence **deployed** (`9059bf77c`); enum + column live on Neon; 227 tests   | LiveKit SFU infra (Aldar); native OAuth creds                                |
+| Exams + grades                 | `Built+Audit` (14 P0) | Grade automation **deployed**; gradebook spine, finalize → Result + notify, certificates; block reachable (~13 routes)             | schema `lang` cleanup, RBAC/calculator tests, `manage/`+`paper/` index pages |
+| Attendance                     | `Phase 2 in progress` | Section-centric **shipped & DB-migrated**; soft-delete consistency fixed; 611 tests, ~96%                                          | e2e specs all `test.skip`; confirm hot-path indexes on prod                  |
+| Stream / LMS / Catalog         | `Built+Polish`        | Optimize pass **deployed** (−1,870 dead LOC, perf); 250 tests                                                                      | content depth (creds-gated); confirm 3 indexes on prod                       |
+| Messaging                      | `Built` (ops-gated)   | 100% code-complete; FTS + WhatsApp bridge; 221 tests                                                                               | Oracle VM not yet stood up                                                   |
+| Finance                        | `Built+Polish` (~88%) | Aldar UAE P0/P1/P2 shipped; dashboard trends **de-faked** (empty series, not random)                                               | 4 of 6 ledger posters orphaned; invoice PDF/email; payroll progressive tax   |
+| SaaS dashboard                 | —                     | De-fabricated, real data (`b50a8f046`)                                                                                             | ~150 backlog items (dead Kanban/Products pages, i18n)                        |
+| Community / Features / Profile | —                     | Public hub + features grid + profile **deployed** (2026-06-18)                                                                     | —                                                                            |
+
+## The launch gap
+
+Three buckets. Bucket A is small and surgical, bucket B is mostly confirmation, bucket C is where the real lead time sits.
+
+### A — Surgical code (critical path)
+
+| Item                                | Evidence                                                                                                                                                 | Why it matters                                                                                                                       |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Playwright CI is a silent no-op     | `.github/workflows/playwright.yml:52` runs `playwright tests` (trailing `s`)                                                                             | e2e has never actually run in CI; the proof pass depends on fixing this first                                                        |
+| `/api/health` false-unhealthy       | `requiredEnvVars` includes `STRIPE_API_KEY` (`route.ts:151`)                                                                                             | a school-only deploy without Stripe reports `unhealthy` to the load balancer                                                         |
+| Finance ledger — 4 orphaned posters | `postInvoicePayment` / `postExpensePayment` / `postSalaryPayment` / `postFeeAssignment` have no callers (`postFeePayment` + `postWalletTopup` are wired) | invoice/expense/salary/assignment events never reach the double-entry ledger; trial balance is incomplete                            |
+| `postFeePayment` is fire-and-forget | `finance/lib/accounting/actions.ts`                                                                                                                      | a failed post is logged but the payment is not rolled back → ledger can diverge; needs a transaction + a debit=credit invariant test |
+| Payroll hardcoded 15% tax           | `payroll/actions.ts:286` (`grossSalary * 0.15`)                                                                                                          | the progressive brackets in `config.ts` are unused                                                                                   |
+| Invoice PDF/email unwired           | `mapInvoiceToGenerateData()` referenced only in docs; infra exists at `file/generate/invoice.tsx`                                                        | Download/Print buttons, school logo/signature, Arabic RTL email all missing                                                          |
+| Exams polish                        | `manage/` + `paper/` lack `page.tsx`; `exams/PRODUCTION-AUDIT.md`                                                                                        | block IS reachable; remaining is index pages + schema `lang`/`Result`↔`ExamResult` reconcile + RBAC/calculator tests                 |
+
+### B — Database (audit + apply, Neon-branch-first)
+
+Transportation and Conference additive DB landed on Neon prod at their 2026-06-20 deploys. The task is **confirmation, not migration**: audit Neon prod against the Prisma schema and apply any remaining additive drift (attendance hot-path indexes, stream composite indexes, saas-dashboard `School.isActive/planType` + `Lead.nextFollowUpAt`) on a Neon branch first, then promote. No destructive operations — additive only.
+
+### C — Ops / env / infra (the real lead time)
+
+| Gate                  | What's needed                                                                                                   | Audience                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Sentry                | `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_DSN` in Vercel                                                               | all — prod errors are invisible until set                        |
+| Upstash Redis         | `UPSTASH_REDIS_REST_URL` + `_TOKEN`                                                                             | all — rate limiting is per-instance without it                   |
+| Tap (AED)             | `TAP_SECRET_KEY` + `TAP_WEBHOOK_SECRET`                                                                         | UAE fees (Aldar, public SaaS UAE)                                |
+| FCM push              | `FIREBASE_PROJECT_ID` + `_CLIENT_EMAIL` + `_PRIVATE_KEY`                                                        | all — push silently skipped otherwise                            |
+| Oracle VM + Evolution | `socket-server/DEPLOY.md` (9 phases) + 6 env vars + per-school QR                                               | all — real-time + WhatsApp; falls back to 15s polling without it |
+| LiveKit SFU           | `conference/RUNBOOK.md` (6 gates): G42 SFU + TURN/443 + S3 `me-central-1` + 8 env vars + in-school network test | Aldar — external link works without it                           |
+| ADEK eSIS             | file inquiry + request piggyback creds via Aldar compliance                                                     | Aldar — DRY_RUN runs daily until then                            |
+
+## The 4-week sprint
+
+Five tracks run in parallel across all four weeks: **A** Code, **B** Data, **C** Ops/Infra, **D** QA/Proof, **E** Polish. Each week has a theme and an exit gate.
+
+| Week | Theme                | Exit gate                                                                                      |
+| ---- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| 1    | Reachable & Truthful | Every shipped feature has a URL, CI runs e2e, prod has error visibility, DB confirmed          |
+| 2    | Money & Messaging    | Every financial event posts a balanced ledger entry; real-time + WhatsApp live for all tenants |
+| 3    | Conference & Proof   | LiveKit live (network-test scheduled), e2e green in CI, Arabic RTL clean                       |
+| 4    | Harden & Launch      | Launch gate green for all three audiences                                                      |
+
+**Week 1 — Reachable & Truthful**
+
+- A · Fix the Playwright CI command (`tests` → `test`) so e2e runs · make `STRIPE_API_KEY` optional in `/api/health` · add the `manage/` + `paper/` exam index pages and confirm sidebar surfacing.
+- B · Audit Neon prod vs Prisma; apply any additive drift on a Neon branch, then promote.
+- C · Set Sentry + Upstash env in Vercel (immediate observability + correct rate limiting).
+
+**Week 2 — Money & Messaging**
+
+- A · Wire the 4 orphaned ledger posters into their mutation paths · make `postFeePayment` transactional with rollback · add a debit=credit invariant test · replace the payroll 15% constant with the `config.ts` brackets · wire invoice PDF (`mapInvoiceToGenerateData`) + branded RTL email.
+- C · Stand up Oracle VM + Evolution API (6 env vars; per-school QR for King Fahad + Albayan) · set Tap + FCM env · **file the ADEK inquiry now** (longest external lead time).
+
+**Week 3 — Conference & Proof**
+
+- C · LiveKit 6-gate provisioning; schedule gate-6 in-school network test to a King Fahad / Aldar site visit.
+- D · Real e2e pass now that CI runs: triage the `test.skip` backlog, un-skip what runs headless, add a named section-grid attendance case, give the assertion-less specs real `expect()`s · i18n RTL Arabic pass on the swept surfaces + parent-portal dictionary-key migration.
+- E · Exams schema cleanup (bilingual → `lang`, reconcile `Result`/`ExamResult`, harden the `ExamCertificate` cascade chain).
+
+**Week 4 — Harden & Launch**
+
+- E · Drain the highest-value SaaS-dashboard backlog (delete the dead Kanban/Products route pages, add the invoice state-machine guard, close catalog TOCTOU windows, i18n sweep) · exams RBAC + calculator test coverage + AI cost cap.
+- D · Per-pilot smoke on King Fahad + Albayan · load + rate-limit verification (now Redis-backed) · final `secure` pass · wire the hardcoded-string ratchet into the PR gate.
+- Run the launch gate.
+
+## Launch gate
+
+The sprint ends when this is green. Items that are audience-specific are tagged.
+
+- [ ] All bucket-A code merged to `main`
+- [ ] Neon prod schema confirmed against Prisma (no additive drift)
+- [ ] Sentry + Upstash + FCM env set; Sentry receiving events
+- [ ] `playwright test` green in CI (no longer a no-op)
+- [ ] Finance debit=credit invariant test passes; all 6 posters wired
+- [ ] King Fahad + Albayan tenants smoke-clean end-to-end
+- [ ] Oracle VM live; WhatsApp QR scanned per pilot school
+- [ ] Tap keys set — _UAE / Aldar_
+- [ ] LiveKit network-test passes inside school WiFi — _Aldar_
+- [ ] ADEK eSIS status acceptable (DRY*RUN is fine for King Fahad / SaaS; live submission only gates Aldar compliance go-live) — \_Aldar*
+
+## External blockers
+
+These sit outside the team's keyboard and are called out so launch is not falsely gated on them.
+
+| Blocker                               | Owner                                  | Acceptable launch posture                                                     |
+| ------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| ADEK eSIS API / piggyback credentials | Aldar compliance team                  | DRY_RUN for King Fahad + SaaS; hard gate only for Aldar attendance-compliance |
+| LiveKit in-school network test        | needs physical King Fahad / Aldar WiFi | external pasted-link conferencing works meanwhile                             |
+| Per-school WhatsApp QR scan           | each school admin                      | in-app + email messaging works meanwhile                                      |
+
+## Deferred (post-launch)
+
+Explicit non-goals this sprint, listed so no speculative work starts.
+
+| Item                                                                          | Reason                             |
+| ----------------------------------------------------------------------------- | ---------------------------------- |
+| Hostel / Cafeteria / Clinic / Facility modules                                | not built; no near-term demand     |
+| Bankak gateway                                                                | pending Bank of Khartoum API spec  |
+| Weather-aware routing, voice messages, recurring exams                        | post-MVP backlog                   |
+| Native iOS / Android                                                          | Epic 10/11 stalled; separate track |
+| Catalog content depth (Arab-nationals chapters/lessons, real mp4/PDF uploads) | AWS-creds-gated content, not code  |
+| On-prem (Epic 05) merge to `main`                                             | Aldar Wave-2, post-pilot           |
+
+## See also
+
+- [MVP](/docs/mvp) — shipped state across the epics with maturity badges
+- [Roadmap](/docs/roadmap) — quarter outlook and active initiatives
+- [PRD](/docs/prd) — requirements, role model, NFRs
+- [Pilot](/docs/pilot) — the pilot programme and success criteria
