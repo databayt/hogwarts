@@ -16,6 +16,8 @@ export interface InvoiceForPdf {
   tax_percentage?: number | string | null
   total: number | string
   notes?: string | null
+  /** Owner's invoice logo (UserInvoiceSettings.invoiceLogo), threaded for the PDF header. */
+  schoolLogo?: string | null
   from?: { name?: string | null; email?: string | null } | null
   to?: { name?: string | null; email?: string | null } | null
   items?: Array<{
@@ -55,6 +57,7 @@ export function mapInvoiceToInvoiceData(
   return {
     // DocumentMetadata — the "from" address is the school's billing identity.
     schoolName: invoice.from?.name ?? "",
+    schoolLogo: invoice.schoolLogo ?? undefined,
     schoolEmail: invoice.from?.email ?? undefined,
     issueDate: new Date(invoice.invoice_date),
     locale: lang === "ar" ? "ar" : "en",

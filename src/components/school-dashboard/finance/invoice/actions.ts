@@ -599,6 +599,13 @@ export async function getInvoiceById(
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
+    // Branding for the PDF: the invoice owner's logo (UserInvoiceSettings is
+    // per-user). The PDF template renders data.schoolLogo when present.
+    const settings = await db.userInvoiceSettings.findUnique({
+      where: { userId: invoice.userId },
+      select: { invoiceLogo: true },
+    })
+
     // INV-007 / spec item 6: linked fee payments when feeAssignmentId is set
     const linkedPayments = invoice.feeAssignmentId
       ? await db.payment.findMany({
@@ -632,6 +639,7 @@ export async function getInvoiceById(
         total: Number(invoice.total),
         amountPaid: Number(invoice.amountPaid),
         sentAt: invoice.sentAt ?? null,
+        schoolLogo: settings?.invoiceLogo ?? null,
         items: invoice.items.map((item) => ({
           ...item,
           price: Number(item.price),
@@ -737,22 +745,49 @@ export async function sendInvoiceEmail(
     const lang = school?.preferredLanguage === "ar" ? "ar" : "en"
     const bcp47 = lang === "ar" ? "ar-SA" : "en-US"
     const dateFnsLocale = lang === "ar" ? ar : enUS
+    const currency = invoice.currency || "USD"
+    const fmt = (n: number) =>
+      new Intl.NumberFormat(bcp47, { style: "currency", currency }).format(n)
 
-    const totalFormatted = new Intl.NumberFormat(bcp47, {
-      style: "currency",
-      currency: invoice.currency || "USD",
-    }).format(Number(invoice.total))
+    // Branding: the invoice owner's logo + signature (UserInvoiceSettings is
+    // per-user, keyed by userId, with a one-to-one signature relation).
+    const settings = await db.userInvoiceSettings.findUnique({
+      where: { userId: invoice.userId },
+      include: { signature: true },
+    })
+
+    const subTotal = Number(invoice.sub_total)
+    const taxPct =
+      invoice.tax_percentage != null ? Number(invoice.tax_percentage) : 0
+    const discountAmt = invoice.discount != null ? Number(invoice.discount) : 0
+    const amountPaid = Number(invoice.amountPaid ?? 0)
+    const due = Number(invoice.total) - amountPaid
 
     // INV-005: link to the real invoice detail route (client-facing path, no /s/).
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
     const invoiceURL = `${appUrl}/${lang}/finance/invoice/invoice/view/${invoice.id}`
 
     const emailContent = SendInvoiceEmail({
-      firstName: invoice.to.name,
+      lang,
+      schoolName: invoice.from?.name ?? "",
+      logoUrl: settings?.invoiceLogo,
+      recipientName: invoice.to.name,
       invoiceNo: invoice.invoice_no,
       dueDate: format(invoice.due_date, "PPP", { locale: dateFnsLocale }),
-      total: totalFormatted,
+      items: invoice.items.map((it) => ({
+        name: it.item_name,
+        quantity: it.quantity,
+        price: fmt(Number(it.price)),
+        total: fmt(it.quantity * Number(it.price)),
+      })),
+      subtotal: fmt(subTotal),
+      discount: discountAmt > 0 ? fmt(discountAmt) : undefined,
+      tax: taxPct > 0 ? fmt((subTotal * taxPct) / 100) : undefined,
+      total: fmt(Number(invoice.total)),
+      amountDue: amountPaid > 0 && due > 0 ? fmt(due) : undefined,
       invoiceURL,
+      signatureName: settings?.signature?.name,
+      signatureImage: settings?.signature?.image,
     })
 
     // INV-008: use platform sender from env, fall back to verified Resend domain.
