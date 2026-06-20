@@ -30,7 +30,7 @@ import { AreaChartStacked } from "@/components/school-dashboard/dashboard/chart-
 import { InteractiveBarChart } from "@/components/school-dashboard/dashboard/chart-interactive-bar"
 import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-radial-text"
 
-import { formatCurrency } from "./lib/format"
+import { formatMoney } from "./lib/format"
 
 interface Props {
   dictionary: Dictionary
@@ -184,7 +184,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatCurrency(totalRevenue, currency, lang)}
+                {formatMoney(totalRevenue, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.fromCompletedPayments || "Completed"}
@@ -201,7 +201,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatCurrency(totalExpenses, currency, lang)}
+                {formatMoney(totalExpenses, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.approvedExpenses || "Approved"}
@@ -218,7 +218,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatCurrency(pendingPayments, currency, lang)}
+                {formatMoney(pendingPayments, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.awaitingProcessing || "Awaiting"}

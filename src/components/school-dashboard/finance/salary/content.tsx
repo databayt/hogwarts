@@ -26,7 +26,7 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { formatCurrency } from "../lib/format"
+import { formatMoney } from "../lib/format"
 import { checkCurrentUserPermission } from "../lib/permissions"
 
 interface Props {
@@ -144,7 +144,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(totalMonthlySalary, currency, lang)}
+              {formatMoney(totalMonthlySalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.totalBasicSalary || "Total basic salary"}
@@ -177,7 +177,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(averageSalary, currency, lang)}
+              {formatMoney(averageSalary, currency, lang)}
             </div>
             <p className="text-muted-foreground text-xs">
               {sp?.perStaffMember || "Per staff member"}
