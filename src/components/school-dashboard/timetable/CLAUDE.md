@@ -152,7 +152,12 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
   scoping, period-mode, and current-period auto-selection;
   `markPeriodAttendance` resolves sectionId from `timetableId`
 - [Conference](../conference/CLAUDE.md) — `Conference.timetableId` starts a
-  live class from a slot
+  live class from a slot; `attachLiveClasses` (`live-class-join.ts`) resolves the
+  Join target for the teacher/student/guardian today-cards. Guardian uses
+  `getChildTodaySchedule` (mirrors the STUDENT branch of `getTodaySchedule`
+  behind the guardian-access gate) so `<LiveJoinButton>` can render on
+  `guardian-view.tsx`. Attendance can be auto-marked from a slot's live-class
+  presence (conference `attendance-sync.ts`, opt-in).
 - Admission — `placeStudentInSection` sets `Student.sectionId`, which is what
   makes the section-based timetable visible to a student
 

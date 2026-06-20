@@ -216,6 +216,47 @@ describe("dispatchNotificationsToAudience", () => {
     })
   })
 
+  it("uses an explicit targetUserIds list verbatim, skipping scope resolution", async () => {
+    // Caller (e.g. the conference block) resolves its own audience.
+    mockDb.notificationPreference.findMany.mockResolvedValue([])
+    mockDb.notification.createMany.mockResolvedValue({ count: 2 })
+
+    const result = await dispatchNotificationsToAudience({
+      schoolId: "school-1",
+      type: "live_class_scheduled" as const,
+      title: "Live class scheduled",
+      body: "Algebra with Ms. Khan",
+      channels: ["in_app", "email"],
+      targetUserIds: ["teacher-1", "student-1"],
+    })
+
+    expect(result.created).toBe(2)
+    // No scope/role lookups happened — the list was used directly.
+    expect(mockDb.user.findMany).not.toHaveBeenCalled()
+    expect(mockDb.notification.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          userId: "teacher-1",
+          channels: ["in_app", "email"],
+        }),
+        expect.objectContaining({ userId: "student-1" }),
+      ]),
+      skipDuplicates: true,
+    })
+  })
+
+  it("returns created:0 when neither targetUserIds nor a scope is given", async () => {
+    const result = await dispatchNotificationsToAudience({
+      schoolId: "school-1",
+      type: "announcement" as const,
+      title: "x",
+      body: "y",
+    })
+    expect(result.created).toBe(0)
+    expect(mockDb.user.findMany).not.toHaveBeenCalled()
+    expect(mockDb.notification.createMany).not.toHaveBeenCalled()
+  })
+
   it("filters out users who disabled the notification type", async () => {
     mockDb.user.findMany.mockResolvedValue([
       { id: "u1" },

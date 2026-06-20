@@ -62,6 +62,15 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
   المستخدمون المطرودون (`status="removed"`) يُحجبون عند تحديث الرمز التالي.
 - **التسجيلات** (`pending → processing → ready → expired`): LiveKit Egress → S3 `me-central-1`؛
   الاحتفاظ لكل مدرسة تفرضه المهمة المجدولة اليومية.
+- **الإشعارات** (`actions/notifications.ts`): جميع أحداث `live_class_*` الخمسة تحدّد جمهورها (المعلّم +
+  طلاب الشعبة + أولياء الأمور) وتُرسَل عبر الموزّع المشترك (`dispatchNotificationsToAudience`)، فتصل إلى
+  **جرس التطبيق والبريد الإلكتروني**، وتحترم تفضيلات القنوات لكل مستخدم، وتحمل رابطاً مطلقاً. يُرسِل كلا
+  المسارين: غرفة التطبيق (`sessions.ts`) ومسار الرابط الخارجي (`list-actions.ts` إنشاء / تعديل / إلغاء).
+- **الحضور** (`actions/attendance-sync.ts`، اختياري عبر `School.conferenceAttendanceSync`): عند انتهاء
+  الجلسة (Webhook `room_finished` أو مهمة الجلسات المعلّقة)، يسجّل `syncConferenceAttendance` كل طالب في
+  الشعبة حاضراً/متأخراً حسب وجوده في الغرفة، وغائباً لمن لم ينضمّ، بكتابة سجلات `Attendance` بالطريقة
+  `VIRTUAL`. يتطلّب `sectionId` + `timetableId`؛ **LiveKit فقط** — الروابط الخارجية لا تحمل بيانات حضور.
+  عديم التأثير عند التكرار (مفتاح الشعبة الفريد، إحياء عند التحديث).
 
 ## المسارات
 
@@ -79,7 +88,8 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 تقع غرفة المسار تحت مجموعة **`(live-room)`** منفصلة بتخطيط عارٍ بملء الشاشة (بلا شريط جانبي / زخارف
 لوحة التحكّم) كي يمتلك بثّ الـ SFU الشاشة؛ وهي `force-dynamic` لبناءات آمنة من نفاد الذاكرة. واجهات
 API (مُستدعاة خارجياً / عبر المجدول → تبقى مسارات، لا إجراءات خادمية): `api/webhooks/livekit` (HMAC)،
-`api/cron/live-class-reminders` (كل 5 دقائق)، `api/cron/expire-live-recordings` (يومياً).
+`api/cron/live-class-reminders` (كل 5 دقائق)، `api/cron/end-stale-live-classes` (كل 15 دقيقة — يُنهي
+الجلسات العالقة في حالة `live` بعد وقتها ويشغّل مزامنة الحضور)، `api/cron/expire-live-recordings` (يومياً).
 
 ## المخطّط — `prisma/models/conference.prisma`
 

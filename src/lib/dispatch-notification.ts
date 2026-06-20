@@ -264,11 +264,20 @@ export async function dispatchNotificationsToAudience(params: {
   actorId?: string
   channels?: NotificationChannel[]
   metadata?: Record<string, unknown>
-  targetScope: "school" | "class" | "role"
+  targetScope?: "school" | "class" | "role"
   targetClassId?: string
   targetRole?: string
   /** BUG-7/BUG-10 support: pass multiple roles to notify (e.g. ["ADMIN","STAFF"]). */
   targetRoles?: string[]
+  /**
+   * Explicit recipient list. When provided (non-empty), scope/role resolution
+   * is skipped and these userIds are used directly — every other guarantee of
+   * this function still applies (per-user channel-preference filtering,
+   * `channels` + `expiresAt`, absolute `metadata.url`, batched insert, one
+   * `prewarm`). Use this for blocks that resolve their own audience (e.g. the
+   * conference block fans out by section roster + guardians).
+   */
+  targetUserIds?: string[]
 }): Promise<{ created: number }> {
   try {
     const requestedChannels = params.channels ?? ["in_app"]
@@ -279,28 +288,36 @@ export async function dispatchNotificationsToAudience(params: {
       params.schoolId
     )
 
-    // Resolve target user IDs — support targetRoles (multi-role) as well as
-    // the legacy single targetRole.
-    const rolesToQuery =
-      params.targetRoles ??
-      (params.targetRole ? [params.targetRole] : undefined)
+    // Resolve target user IDs. An explicit `targetUserIds` list short-circuits
+    // scope/role resolution (the caller already knows its audience); otherwise
+    // support targetRoles (multi-role) as well as the legacy single targetRole.
     let userIds: string[]
-    if (rolesToQuery && rolesToQuery.length > 1) {
-      const users = await db.user.findMany({
-        where: {
-          schoolId: params.schoolId,
-          role: { in: rolesToQuery as any[] },
-        },
-        select: { id: true },
-      })
-      userIds = [...new Set(users.map((u) => u.id))]
+    if (params.targetUserIds && params.targetUserIds.length > 0) {
+      userIds = [...new Set(params.targetUserIds)]
+    } else if (!params.targetScope) {
+      // No explicit recipients and no scope — nothing to resolve.
+      return { created: 0 }
     } else {
-      userIds = await resolveTargetUsers(
-        params.schoolId,
-        params.targetScope,
-        params.targetClassId,
-        rolesToQuery?.[0] ?? params.targetRole
-      )
+      const rolesToQuery =
+        params.targetRoles ??
+        (params.targetRole ? [params.targetRole] : undefined)
+      if (rolesToQuery && rolesToQuery.length > 1) {
+        const users = await db.user.findMany({
+          where: {
+            schoolId: params.schoolId,
+            role: { in: rolesToQuery as any[] },
+          },
+          select: { id: true },
+        })
+        userIds = [...new Set(users.map((u) => u.id))]
+      } else {
+        userIds = await resolveTargetUsers(
+          params.schoolId,
+          params.targetScope,
+          params.targetClassId,
+          rolesToQuery?.[0] ?? params.targetRole
+        )
+      }
     }
 
     if (userIds.length === 0) return { created: 0 }

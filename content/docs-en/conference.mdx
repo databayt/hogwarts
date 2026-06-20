@@ -62,6 +62,16 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
   DEVELOPER→HOST. Kicked users (`status="removed"`) are blocked at the next token refresh.
 - **Recordings** (`pending → processing → ready → expired`): LiveKit Egress → S3 `me-central-1`;
   per-school retention enforced by the daily cron.
+- **Notifications** (`actions/notifications.ts`): all 5 `live_class_*` events resolve their audience
+  (teacher + section roster + guardians) and dispatch through the shared hub
+  (`dispatchNotificationsToAudience`), so they reach the **in-app bell and email**, honour per-user
+  channel preferences, and carry an absolute action URL. Both the in-app room path (`sessions.ts`) and
+  the external pasted-link path (`list-actions.ts` create / reschedule / cancel) fan out.
+- **Attendance** (`actions/attendance-sync.ts`, opt-in via `School.conferenceAttendanceSync`): when a
+  session ends (webhook `room_finished` or the stale-session cron), `syncConferenceAttendance` marks
+  each section student PRESENT/LATE from their in-room presence and ABSENT for roster non-joiners,
+  writing `Attendance` rows with method `VIRTUAL`. Requires a `sectionId` + `timetableId`; **LiveKit
+  only** — external links carry no presence data. Idempotent (section unique key, revive-on-update).
 
 ## Routes
 
@@ -79,7 +89,8 @@ recordings (/[id]/recordings)  recordings.tsx → recording-player.tsx (signed S
 The room route lives under a separate **`(live-room)`** group with a bare full-viewport layout (no
 sidebar / dashboard chrome) so the SFU stream owns the screen; it is `force-dynamic` for OOM-safe
 builds. API (external / scheduler-invoked → stay routes, not server actions): `api/webhooks/livekit`
-(HMAC), `api/cron/live-class-reminders` (every 5 min), `api/cron/expire-live-recordings` (daily).
+(HMAC), `api/cron/live-class-reminders` (every 5 min), `api/cron/end-stale-live-classes` (every 15 min
+— closes sessions stuck `live` past their end + runs the attendance sync), `api/cron/expire-live-recordings` (daily).
 
 ## Schema — `prisma/models/conference.prisma`
 
@@ -127,4 +138,4 @@ persist as `provider="external"` + `meetingProvider="<id>"` → **no enum migrat
 
 ## Related
 
-- [Architecture](/docs/architecture) · [Pattern](/docs/pattern) · [Timetable](/docs/timetable) — `Conference.timetableId` anchors the timetable Start / Join buttons · [Notifications](/docs/notifications) — 5 `live_class_*` types
+- [Architecture](/docs/architecture) · [Pattern](/docs/pattern) · [Timetable](/docs/timetable) — `Conference.timetableId` anchors the teacher/student/guardian Start / Join buttons · [Notifications](/docs/notifications) — 5 `live_class_*` types via the shared hub (in-app + email) · [Attendance](/docs/attendance) — opt-in `VIRTUAL` marks from in-room presence

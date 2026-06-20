@@ -155,6 +155,8 @@
     "maxConcurrent": "Max concurrent rooms",
     "maxDuration": "Max duration (minutes)",
     "recordingDefault": "Record by default",
+    "attendanceSync": "Auto-mark attendance",
+    "attendanceSyncHint": "Mark attendance from live-class presence when a session ends (in-app rooms only).",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",

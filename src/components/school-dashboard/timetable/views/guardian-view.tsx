@@ -21,7 +21,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getChildTimetable, getGuardianChildren } from "../actions"
+import {
+  getChildTimetable,
+  getChildTodaySchedule,
+  getGuardianChildren,
+} from "../actions"
+import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -90,7 +95,6 @@ export default function GuardianView({
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
-  const currentDay = new Date().getDay()
 
   // Load children on mount
   useEffect(() => {
@@ -136,51 +140,16 @@ export default function GuardianView({
     setError(null)
 
     try {
-      const result = await getChildTimetable({ termId, childId: selectedChild })
+      // Weekly grid + today's schedule (server-resolved, with live-class Join
+      // targets attached) in parallel — mirrors the student view.
+      const [result, today] = await Promise.all([
+        getChildTimetable({ termId, childId: selectedChild }),
+        getChildTodaySchedule({ childId: selectedChild }),
+      ])
       setSlots(result.slots)
       setStudentInfo(result.studentInfo)
       setClassInfo((result as { classInfo?: any }).classInfo || null)
-
-      // Build today's schedule from slots
-      const todaySlots = result.slots
-        .filter((s: any) => s.dayOfWeek === currentDay)
-        .map((s: any) => ({
-          ...s,
-          startTime: result.periods.find((p: any) => p.id === s.periodId)
-            ?.startTime,
-          endTime: result.periods.find((p: any) => p.id === s.periodId)
-            ?.endTime,
-        }))
-        .sort(
-          (a: any, b: any) =>
-            new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-        )
-
-      // Fill in with breaks
-      const fullSchedule = result.periods.map((period: any) => {
-        const slot = todaySlots.find((s: any) => s.periodId === period.id)
-        if (slot) {
-          return {
-            ...slot,
-            periodName: period.name,
-            startTime: period.startTime,
-            endTime: period.endTime,
-            isBreak: period.isBreak,
-          }
-        }
-        return {
-          periodId: period.id,
-          periodName: period.name,
-          startTime: period.startTime,
-          endTime: period.endTime,
-          isBreak: period.isBreak,
-          subject: period.isBreak ? period.name : "",
-          teacher: "",
-          room: "",
-        }
-      })
-
-      setTodaySchedule(fullSchedule)
+      setTodaySchedule(today.schedule)
     } catch (err) {
       setError(
         err instanceof Error
@@ -414,6 +383,19 @@ export default function GuardianView({
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
+              {isLiveJoinable(
+                currentClassInfo.type as "current" | "next",
+                currentClassInfo.item.startTime
+              ) && (
+                <LiveJoinButton
+                  liveClass={currentClassInfo.item.liveClass}
+                  lang={lang}
+                  label={
+                    (dictionary as any)?.liveClasses?.join ??
+                    (isRTL ? "انضمام" : "Join")
+                  }
+                />
+              )}
             </div>
           </CardContent>
         </Card>

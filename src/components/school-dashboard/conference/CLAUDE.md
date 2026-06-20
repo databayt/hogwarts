@@ -137,12 +137,28 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
 
 ## Related Blocks
 
-- [Notifications](../notifications/CLAUDE.md) — dispatches 5 new
-  `live_class_*` notification types
+- [Notifications](../notifications/CLAUDE.md) — `actions/notifications.ts`
+  resolves its own audience (teacher + section roster + guardians via
+  `loadSession`) then dispatches through the shared hub
+  (`dispatchNotificationsToAudience({ targetUserIds })` in
+  `src/lib/dispatch-notification.ts`). Do NOT go back to a direct
+  `db.notification.createMany` — that bypasses the email channel, per-user
+  preference filtering, `expiresAt`, `prewarm`, and URL absolutification (all 4
+  were silently missing before 2026-06-20). All 4 mutating paths fan out:
+  `sessions.ts` (LiveKit) AND `list-actions.ts` create/update/delete (external).
 - [Timetable](../timetable/) — anchors scheduled sessions
-  (`Conference.timetableId` is optional)
+  (`Conference.timetableId` is optional); `attachLiveClasses` resolves the Join
+  target for teacher/student/guardian today-cards (guardian via
+  `getChildTodaySchedule`).
+- [Attendance](../attendance/CLAUDE.md) — `actions/attendance-sync.ts`
+  `syncConferenceAttendance` writes `Attendance` (method `VIRTUAL`) from
+  participant presence on `room_finished` + the `end-stale-live-classes` cron.
+  **Opt-in** per-school (`School.conferenceAttendanceSync`), **LiveKit-only**
+  (external links carry no presence), requires `sectionId` + `timetableId`,
+  idempotent on the section unique key (revive-on-update, never filter
+  `deletedAt` in the lookup — see attendance CLAUDE.md).
 - [Sections](../listings/students/) — `Section.students` is the
-  enrollment source for student-join eligibility
+  enrollment source for student-join eligibility AND the attendance roster.
 
 ## Demo / Test
 

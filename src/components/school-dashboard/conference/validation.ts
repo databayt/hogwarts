@@ -137,6 +137,8 @@ export const liveClassSettingsSchema = z.object({
   conferenceMaxConcurrent: z.number().int().min(1).max(500),
   conferenceMaxDuration: z.number().int().min(15).max(MAX_DURATION_MIN),
   conferenceRecordingDefault: z.boolean(),
+  // Opt-in: auto-mark attendance from live-class presence (LiveKit only).
+  conferenceAttendanceSync: z.boolean().optional(),
 })
 export type LiveClassSettingsInput = z.infer<typeof liveClassSettingsSchema>
 

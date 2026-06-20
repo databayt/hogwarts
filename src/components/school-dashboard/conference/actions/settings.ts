@@ -19,6 +19,7 @@ const SETTINGS_SELECT = {
   conferenceMaxConcurrent: true,
   conferenceMaxDuration: true,
   conferenceRecordingDefault: true,
+  conferenceAttendanceSync: true,
 } as const
 
 export async function getConferenceSettings() {

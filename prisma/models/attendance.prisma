@@ -21,6 +21,7 @@ enum AttendanceMethod {
   BLUETOOTH
   BULK_UPLOAD
   KIOSK // Self-service kiosk check-in/out
+  VIRTUAL // Auto-marked from live-class (conference) presence
 }
 
 // Hall pass destination types

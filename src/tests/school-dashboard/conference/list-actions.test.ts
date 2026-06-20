@@ -26,6 +26,15 @@ vi.mock("@/lib/db", () => ({
     conferenceLink: { upsert: vi.fn() },
   },
 }))
+// create/update/delete fire best-effort `void` notifications — stub them so the
+// real fan-out doesn't touch the db mock (it would log a caught error).
+vi.mock(
+  "@/components/school-dashboard/conference/actions/notifications",
+  () => ({
+    notifyClassScheduled: vi.fn(async () => ({ created: 0 })),
+    notifyClassCancelled: vi.fn(async () => ({ created: 0 })),
+  })
+)
 
 const SCHOOL = "school-1"
 

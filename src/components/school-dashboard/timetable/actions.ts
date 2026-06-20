@@ -3473,6 +3473,149 @@ export async function getChildTimetable(input: {
 }
 
 /**
+ * Today's schedule for a guardian's selected child, with live-class Join
+ * targets attached. Mirrors the STUDENT branch of getTodaySchedule but resolves
+ * the child by id behind the same guardian-access gate as getChildTimetable —
+ * so the guardian timetable can surface a Join button (guardians join as
+ * OBSERVER; external links open the meeting URL directly).
+ */
+export async function getChildTodaySchedule(input: {
+  childId: string
+  date?: Date
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
+
+  const session = await auth()
+  const userId = session?.user?.id
+  const role = session?.user?.role
+  if (!userId) throw new Error("NOT_AUTHENTICATED")
+
+  // Same guardian-access gate as getChildTimetable: a caller with no guardian
+  // record (and not ADMIN/DEV) is denied; a guardian must own the child.
+  if (role !== "DEVELOPER" && role !== "ADMIN") {
+    const guardian = await db.guardian.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+    if (!guardian) throw new Error("ACCESS_DENIED")
+    const hasAccess = await db.studentGuardian.findFirst({
+      where: { guardianId: guardian.id, studentId: input.childId, schoolId },
+      select: { id: true },
+    })
+    if (!hasAccess) throw new Error("ACCESS_DENIED")
+  }
+
+  const targetDate = input.date || new Date()
+  const dayOfWeek = targetDate.getDay()
+
+  const { term } = await getActiveTerm()
+  if (!term) return { schedule: [], dayOfWeek, message: "No active term" }
+
+  const [periods, student] = await Promise.all([
+    db.period.findMany({
+      where: { schoolId, yearId: term.yearId },
+      orderBy: { startTime: "asc" },
+      select: { id: true, name: true, startTime: true, endTime: true },
+    }),
+    db.student.findFirst({
+      where: { id: input.childId, schoolId },
+      select: { id: true, sectionId: true },
+    }),
+  ])
+
+  if (!student) return { schedule: [], dayOfWeek }
+
+  // Section-based slots (primary) + legacy class enrollments — same OR axis as
+  // the STUDENT branch of getTodaySchedule.
+  const enrollments = await db.studentClass.findMany({
+    where: { studentId: student.id, schoolId },
+    select: { classId: true },
+  })
+  const classIds = enrollments.map((e) => e.classId)
+  const orClauses: Array<Record<string, unknown>> = []
+  if (classIds.length > 0) orClauses.push({ classId: { in: classIds } })
+  if (student.sectionId) orClauses.push({ sectionId: student.sectionId })
+  if (orClauses.length === 0) return { schedule: [], dayOfWeek }
+
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: term.id,
+      dayOfWeek,
+      weekOffset: 0,
+      OR: orClauses,
+    },
+    include: {
+      class: { select: { name: true, subject: { select: { name: true } } } },
+      section: { select: { name: true } },
+      subject: { select: { name: true } },
+      teacher: { select: { firstName: true, lastName: true } },
+      classroom: { select: { roomName: true } },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
+    orderBy: { period: { startTime: "asc" } },
+  })
+
+  const schedule = slots.map((slot) => ({
+    periodId: slot.periodId,
+    periodName: slot.period.name,
+    startTime: slot.period.startTime,
+    endTime: slot.period.endTime,
+    subject:
+      slot.subject?.name || slot.class?.subject?.name || slot.class?.name || "",
+    className: slot.class?.name || slot.section?.name || "",
+    teacher: slot.teacher
+      ? `${slot.teacher.firstName} ${slot.teacher.lastName}`
+      : "",
+    room: slot.classroom?.roomName || "",
+    sectionId: slot.sectionId,
+    subjectId: slot.subjectId,
+    timetableId: slot.id,
+    isBreak: false,
+  }))
+
+  const fullSchedule = periods.map((period) => {
+    const existing = schedule.find((s) => s.periodId === period.id)
+    if (existing) return existing
+    const isBreak =
+      period.name.toLowerCase().includes("break") ||
+      period.name.toLowerCase().includes("lunch")
+    return {
+      periodId: period.id,
+      periodName: period.name,
+      startTime: period.startTime,
+      endTime: period.endTime,
+      subject: isBreak ? period.name : "",
+      className: "",
+      teacher: "",
+      room: "",
+      sectionId: null,
+      subjectId: null,
+      timetableId: null,
+      isBreak,
+    }
+  })
+
+  const scheduleWithLiveClasses = await attachLiveClasses(
+    schoolId,
+    term.id,
+    targetDate,
+    fullSchedule
+  )
+
+  return {
+    schedule: scheduleWithLiveClasses,
+    dayOfWeek,
+    date: targetDate.toISOString(),
+  }
+}
+
+/**
  * Get today's schedule for the authenticated user
  */
 export async function getTodaySchedule(input?: { date?: Date }) {

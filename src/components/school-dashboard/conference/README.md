@@ -25,8 +25,9 @@ conference/
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
 │   ├── tokens.ts         joinLiveClass / refreshLiveClassToken (eligibility → 5-min JWT)
 │   ├── recordings.ts     list / signed-URL / delete
-│   ├── notifications.ts  best-effort dispatch for 5 live_class_* events (not a server action)
-│   ├── settings.ts       school capacity knobs + per-section recording opt-out
+│   ├── notifications.ts  5 live_class_* events → notification hub (in-app + email, not a server action)
+│   ├── attendance-sync.ts presence → Attendance (opt-in, LiveKit-only; not a server action)
+│   ├── settings.ts       school capacity knobs + recording opt-out + attendance-sync toggle
 │   ├── moderation.ts     kickParticipant (SFU evict + DB status="removed")
 │   └── recurring.ts      carry-forward ConferenceLink across terms + listConferenceTerms
 ├── authorization.ts · permissions.ts · validation.ts         rich sessions layer (strict gate)
@@ -61,25 +62,28 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## API
 
-| Path                               | Method | Purpose                                     |
-| ---------------------------------- | ------ | ------------------------------------------- |
-| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)  |
-| `/api/cron/live-class-reminders`   | GET    | 5–10-min start reminders (runs every 5 min) |
-| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500) |
+| Path                               | Method | Purpose                                                               |
+| ---------------------------------- | ------ | --------------------------------------------------------------------- |
+| `/api/webhooks/livekit`            | POST   | LiveKit event ingestion (HMAC, idempotent)                            |
+| `/api/cron/live-class-reminders`   | GET    | 5–10-min start reminders (runs every 5 min)                           |
+| `/api/cron/end-stale-live-classes` | GET    | Close sessions stuck `live` past end + attendance sync (every 15 min) |
+| `/api/cron/expire-live-recordings` | GET    | Per-school retention purge (daily, cap 500)                           |
 
 ## Status
 
-| Capability                                  | Status                             |
-| ------------------------------------------- | ---------------------------------- |
-| Prisma models (`Conference*` + link) + Neon | ✅ live                            |
-| External pasted-link provider               | ✅ live                            |
-| List CRUD + detail + schedule + settings UI | ✅ live                            |
-| Per-section recording opt-out               | ✅ live                            |
-| In-room HOST moderation (kick)              | ✅ live                            |
-| Timetable Start / Join buttons              | ✅ live (`Conference.timetableId`) |
-| Native Meet/Zoom/Teams `createMeeting`      | 🟡 wired, dark until OAuth creds   |
-| LiveKit SFU rooms + Egress recording        | 🟡 coded, dormant until infra      |
-| Capacity dashboard (`/observability/conf.`) | ⏸️ backlog                         |
+| Capability                                        | Status                                     |
+| ------------------------------------------------- | ------------------------------------------ |
+| Prisma models (`Conference*` + link) + Neon       | ✅ live                                    |
+| External pasted-link provider                     | ✅ live                                    |
+| List CRUD + detail + schedule + settings UI       | ✅ live                                    |
+| Per-section recording opt-out                     | ✅ live                                    |
+| In-room HOST moderation (kick)                    | ✅ live                                    |
+| Timetable Start / Join (teacher+student+guardian) | ✅ live (`Conference.timetableId`)         |
+| Notifications → hub (in-app + email)              | ✅ live (all 4 mutating paths fan out)     |
+| Attendance-from-presence (opt-in)                 | 🟡 coded, LiveKit-only + DB deploy-pending |
+| Native Meet/Zoom/Teams `createMeeting`            | 🟡 wired, dark until OAuth creds           |
+| LiveKit SFU rooms + Egress recording              | 🟡 coded, dormant until infra              |
+| Capacity dashboard (`/observability/conf.`)       | ⏸️ backlog                                 |
 
 See `ISSUE.md` for the open backlog and `RUNBOOK.md` for the 6-gate LiveKit provisioning sequence.
 

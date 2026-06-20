@@ -73,6 +73,10 @@ export default async function Page({ params }: Props) {
           maxConcurrent: t?.maxConcurrent ?? "Max concurrent rooms",
           maxDuration: t?.maxDuration ?? "Max duration (minutes)",
           recordingDefault: t?.recordingDefault ?? "Record by default",
+          attendanceSync: t?.attendanceSync ?? "Auto-mark attendance",
+          attendanceSyncHint:
+            t?.attendanceSyncHint ??
+            "Mark attendance from live-class presence when a session ends (in-app rooms only).",
           save: t?.save ?? "Save",
           saving: t?.saving ?? "Saving…",
           saved: t?.saved ?? "Saved",

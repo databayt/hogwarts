@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client"
 import { WebhookReceiver, type WebhookEvent } from "livekit-server-sdk"
 
 import { db } from "@/lib/db"
+import { syncConferenceAttendance } from "@/components/school-dashboard/conference/actions/attendance-sync"
 import {
   notifyClassRecordingReady,
   notifyClassStarted,
@@ -149,10 +150,10 @@ export async function handleWebhookEvent(
       break
     }
 
-    case "room_finished":
+    case "room_finished": {
       // Only act on a session still in a pre-finished state — never clobber a
       // cancelled/ended row (which would corrupt audit + jitter actualEnd).
-      await db.conference.updateMany({
+      const { count } = await db.conference.updateMany({
         where: {
           id: sessionId,
           schoolId,
@@ -160,7 +161,14 @@ export async function handleWebhookEvent(
         },
         data: { status: "ended", actualEnd: new Date() },
       })
+      if (count > 0) {
+        // Best-effort: auto-mark attendance from participant presence (opt-in
+        // per-school, LiveKit-only). An attendance failure must never affect
+        // the webhook's at-least-once delivery semantics.
+        void syncConferenceAttendance(schoolId, sessionId)
+      }
       break
+    }
 
     case "participant_joined": {
       const identity = event.participant?.identity

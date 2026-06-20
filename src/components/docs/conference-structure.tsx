@@ -70,12 +70,17 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
             {
               name: "notifications.ts",
               type: "file",
-              description: "best-effort dispatch (5 events)",
+              description: "5 events → notification hub (in-app + email)",
+            },
+            {
+              name: "attendance-sync.ts",
+              type: "file",
+              description: "presence → attendance (opt-in, LiveKit-only)",
             },
             {
               name: "settings.ts",
               type: "file",
-              description: "capacity + recording opt-out",
+              description: "capacity + recording + attendance-sync opt-in",
             },
             {
               name: "moderation.ts",

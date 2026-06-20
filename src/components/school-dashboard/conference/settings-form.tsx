@@ -16,6 +16,7 @@ export interface ConferenceSettingsValues {
   conferenceMaxConcurrent: number
   conferenceMaxDuration: number
   conferenceRecordingDefault: boolean
+  conferenceAttendanceSync: boolean
 }
 
 export interface ConferenceTerm {
@@ -33,6 +34,8 @@ interface Props {
     maxConcurrent: string
     maxDuration: string
     recordingDefault: string
+    attendanceSync: string
+    attendanceSyncHint: string
     save: string
     saving: string
     saved: string
@@ -146,6 +149,23 @@ export function ConferenceSettingsForm({ initial, terms, labels }: Props) {
           onCheckedChange={(checked) => {
             setStatus("idle")
             setValues((v) => ({ ...v, conferenceRecordingDefault: checked }))
+          }}
+        />
+      </div>
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="attendance-sync">{labels.attendanceSync}</Label>
+          <p className="text-muted-foreground text-xs">
+            {labels.attendanceSyncHint}
+          </p>
+        </div>
+        <Switch
+          id="attendance-sync"
+          checked={values.conferenceAttendanceSync}
+          onCheckedChange={(checked) => {
+            setStatus("idle")
+            setValues((v) => ({ ...v, conferenceAttendanceSync: checked }))
           }}
         />
       </div>

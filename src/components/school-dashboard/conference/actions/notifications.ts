@@ -7,6 +7,7 @@
 // webhook handler. Best-effort: failures are logged but never thrown.
 
 import { db } from "@/lib/db"
+import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 
 type ConferenceEventKind =
   | "scheduled"
@@ -186,38 +187,30 @@ async function dispatch(
     }
     const title = render(template.title, vars)
     const body = render(template.body, vars)
-    try {
-      await db.notification.createMany({
-        data: userIds.map((userId) => ({
-          schoolId,
-          userId,
-          type,
-          priority:
-            kind === "started" || kind === "startingSoon"
-              ? ("high" as const)
-              : ("normal" as const),
-          title,
-          body,
-          lang,
-          metadata: {
-            kind,
-            sessionId,
-            sectionId: session.sectionId,
-            route: session.routePath,
-          },
-        })),
-        skipDuplicates: true,
-      })
-      return { created: userIds.length }
-    } catch (err) {
-      console.error("[live-class] notification createMany failed", {
-        schoolId,
-        sessionId,
+    // Route through the shared notification hub so live-class notifications get
+    // per-user channel-preference filtering, the email channel, `expiresAt`,
+    // translation `prewarm`, and an ABSOLUTE `metadata.url` (so email action
+    // buttons render). The hub resolves nothing here — we pass our own audience
+    // (teacher + section roster + guardians) via `targetUserIds`. The metadata
+    // key MUST be `url` (not `route`) for the hub's absolutifier to find it.
+    const { created } = await dispatchNotificationsToAudience({
+      schoolId,
+      type,
+      title,
+      body,
+      lang,
+      priority:
+        kind === "started" || kind === "startingSoon" ? "high" : "normal",
+      channels: ["in_app", "email"],
+      metadata: {
         kind,
-        err: err instanceof Error ? err.message : err,
-      })
-      return { created: 0 }
-    }
+        sessionId,
+        sectionId: session.sectionId,
+        url: session.routePath,
+      },
+      targetUserIds: userIds,
+    })
+    return { created }
   } catch (err) {
     console.error("[live-class] notifyClass failed", {
       schoolId,

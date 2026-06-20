@@ -111,6 +111,45 @@
 
 ## Done
 
+### Integration optimization pass (2026-06-20)
+
+Closed the integration seams with notifications, timetable, and attendance.
+tsc 0; conference + timetable-join + cron + i18n suites green (227 conference-area
+tests, 6 new for the attendance sync).
+
+- **Notifications now actually deliver (P0):** the external-link path
+  (`list-actions.ts` — the only live backend until LiveKit lands) fired NO
+  notifications on create/update/delete. Wired `notifyClassScheduled` into
+  `createLiveClass`, a re-notify (or `notifyClassCancelled` on status→cancelled)
+  into `updateLiveClass`, and `notifyClassCancelled` into `deleteLiveClass`.
+- **Consolidated onto the notification hub:** `actions/notifications.ts dispatch()`
+  no longer writes `db.notification.createMany` directly. It keeps its
+  section-roster + guardian fan-out (`loadSession`) and renders the inline
+  TEMPLATES, then calls `dispatchNotificationsToAudience({ …, targetUserIds })`.
+  Net: the email channel now fires (was dead — no `channels` field), per-user
+  channel preferences are honored, `expiresAt` is set, the title/body is
+  `prewarm`ed, and the email action button resolves (metadata `route`→`url`,
+  absolutified by the hub). Added a `targetUserIds?: string[]` short-circuit to
+  `dispatchNotificationsToAudience` (`src/lib/dispatch-notification.ts`) — any
+  block with a custom audience can reuse it.
+- **Guardian Join button (timetable):** new `getChildTodaySchedule` action
+  (mirrors the STUDENT branch of `getTodaySchedule` behind the guardian-access
+  gate, attaches `liveClass` via `attachLiveClasses`); `guardian-view.tsx` now
+  loads it in parallel and renders `<LiveJoinButton>` on the Current/Next card.
+- **Attendance-from-conference (new, opt-in, LiveKit-only):**
+  `actions/attendance-sync.ts syncConferenceAttendance` marks each section
+  student PRESENT/LATE from participant presence and ABSENT for roster
+  non-joiners when a session ends. Called from the webhook `room_finished`
+  (count-guarded) and a new `/api/cron/end-stale-live-classes` (`*/15`) backstop
+  that also closes sessions stuck `live` past `scheduledEnd`+30m. Gated per-school
+  by `School.conferenceAttendanceSync` (new toggle on `/conference/settings`).
+  New `AttendanceMethod.VIRTUAL`. **DB additive deploy-pending** (enum value +
+  `School.liveClassAttendanceSync` column) — Neon branch-first, then promote.
+  Idempotent + soft-delete-revive on the section unique key.
+- **Note:** the create-from-timetable double-create race is already mitigated
+  client-side (`StartLiveClassButton` `useTransition`/`disabled`); the residual
+  concurrent-millisecond race is accepted (no Prisma-expressible partial unique).
+
 ### Hardening pass — adversarial review fixes (2026-06-13)
 
 24 confirmed findings from a multi-agent adversarial review, all fixed

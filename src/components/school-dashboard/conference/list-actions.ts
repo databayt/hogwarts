@@ -17,6 +17,10 @@ import { prewarm } from "@/components/translation/prewarm"
 import { detectLang, withLang } from "@/components/translation/util"
 
 import { conferenceRevalidatePath } from "./actions/helpers"
+import {
+  notifyClassCancelled,
+  notifyClassScheduled,
+} from "./actions/notifications"
 import { canDeleteLiveClasses, canManageLiveClasses } from "./list-permissions"
 import {
   liveClassSchema,
@@ -418,6 +422,12 @@ export async function createLiveClass(
       }
     }
 
+    // Best-effort fan-out to the section roster + guardians + teacher. The
+    // external-link path is the only live backend until LiveKit lands, so
+    // without this a scheduled class would notify nobody. Failures here must
+    // never fail the create.
+    void notifyClassScheduled(schoolId, created.id)
+
     revalidatePath(conferenceRevalidatePath())
     revalidatePath("/[lang]/s/[subdomain]/timetable")
     return { success: true, data: { id: created.id } }
@@ -519,6 +529,16 @@ export async function updateLiveClass(
       )
     }
 
+    // Re-notify enrolled students/guardians when the class moved or its status
+    // changed. A status flip to "cancelled" sends the cancel notice; any other
+    // schedule/status change re-sends the scheduled notice (carrying the new
+    // time). Best-effort — never fail the update.
+    if (d.status === "cancelled") {
+      void notifyClassCancelled(schoolId, d.id)
+    } else if (needsStart || needsEnd || d.status !== undefined) {
+      void notifyClassScheduled(schoolId, d.id)
+    }
+
     revalidatePath(conferenceRevalidatePath())
     return { success: true, data: null }
   } catch (error) {
@@ -548,6 +568,10 @@ export async function deleteLiveClass(params: {
     })
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    // Tell the section the class is off. loadSession resolves the row by
+    // {id, schoolId} without a deletedAt filter, so it still works post-delete.
+    void notifyClassCancelled(schoolId, params.id)
 
     revalidatePath(conferenceRevalidatePath())
     return { success: true, data: null }

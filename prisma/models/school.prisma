@@ -54,6 +54,9 @@ model School {
   conferenceMaxConcurrent    Int     @default(50) @map("liveClassMaxConcurrentPerSchool")
   conferenceMaxDuration      Int     @default(120) @map("liveClassMaxDurationMinutes")
   conferenceRecordingDefault Boolean @default(true) @map("liveClassRecordingDefault")
+  // Opt-in: when a live class ends, auto-mark attendance from participant
+  // presence (LiveKit sessions only — external links carry no presence data).
+  conferenceAttendanceSync   Boolean @default(false) @map("liveClassAttendanceSync")
 
   // Join code for users to self-enroll (6-char alphanumeric, regeneratable)
   joinCode String? @unique
