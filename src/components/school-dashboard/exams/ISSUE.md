@@ -115,7 +115,13 @@ last_audited: 2026-06-14
 
 ### P0 -- Critical
 
-1. **No route pages exist** -- The entire `src/app/[lang]/s/[subdomain]/(school-dashboard)/exams/` directory is missing. All components are built but not accessible via URL.
+_None open._ (Historical: this said "no route pages exist." That was stale — the
+route tree is present and reachable: top-level `page.tsx` plus `qbank`, `generate`,
+`mark`, `result`, `quiz`, `mock`, `upcoming`, `new`, `[id]`, `certificates`,
+`report-cards`, `paper/[generatedExamId]`. The one real gap — `manage/content.tsx`
+(the schoolId-scoped exam-list table) had no route or nav tab — was fixed
+2026-06-20: added `exams/manage/page.tsx` + a `manage` tab in `getExamTabsForRole`
+for DEVELOPER/ADMIN/TEACHER + the `nav.manage` dictionary key (en/ar).)
 
 ### P1 -- High
 
