@@ -22,7 +22,7 @@
 - [ ] Ledger posting not wired -- `postSalaryPayment` has zero callers, so disbursement posts nothing (umbrella ISSUE.md P0)
 - [ ] No payslip PDF -- staff has no document to download
 - [ ] Disbursement is single-step "PAID"; no actual bank file export
-- [ ] Withholding tax is a hardcoded flat 15% (`actions.ts:286`); `config.ts` ships unused progressive brackets
+- [x] Withholding tax now progressive — marginal `calculateProgressiveTax` over `config.TAX_BRACKETS` (was flat 15%); unit-tested (2026-06-20 `e637129ee`)
 
 ### P2
 

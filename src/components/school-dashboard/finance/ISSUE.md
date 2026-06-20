@@ -77,7 +77,7 @@ The block-level "P0: none" of prior cycles was inaccurate. These are silent-data
 ### P1 -- functional / misleading
 
 - **Dashboard trend charts are `Math.random()` mock data** (`dashboard/actions.ts:278-288` — `generateTrend()` for revenues/expenses/profit/collection). KPI totals are real DB aggregations; only the sparkline trends are fabricated.
-- **Payroll tax is a hardcoded flat 15%** (`payroll/actions.ts:286` — `grossSalary * 0.15 // Simplified 15% tax rate`). No brackets, no per-country rules. (Prior doc claimed 0% — corrected.)
+- ✅ **Payroll tax now uses progressive brackets** (2026-06-20 `e637129ee`) — a marginal `calculateProgressiveTax` over `payroll/config.TAX_BRACKETS` replaces the flat 15% in both `payroll/actions.ts` and `salary/actions.ts`; unit-tested. Follow-up: payroll taxes gross incl. non-taxable allowances (salary correctly taxes taxableIncome); `SOCIAL_SECURITY_RATE` still unused.
 - **Invoice PDF not wired.** Infrastructure exists at `src/components/file/generate/invoice.tsx` but nothing in `finance/invoice/**` imports it. Contrast: the **fees receipt PDF is real** (`fees/receipt-pdf.tsx`, `@react-pdf/renderer`).
 - **No finance Prisma model has a `lang` field.** DB-stored, user-facing finance text (`Fine.reason`, `Scholarship` name/description, `ExpenseCategory`, `ChartOfAccount` account names, `FeeStructure` name/description) renders English-only on the Arabic side. The rest of the platform uses the `lang` + `getText` convention; finance can't.
 - **Test coverage: 11 of 14 sub-modules have zero tests** (see table below).
