@@ -21,22 +21,22 @@ last_audited: 2026-06-13
 
 ## Status banner
 
-| Sub-module  | Readiness | Ledger wired                       | i18n | Tests  | Docs |
-| ----------- | --------- | ---------------------------------- | ---- | ------ | ---- |
-| invoice     | 95%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
-| fees        | 96%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 17+ | ✅   |
-| budget      | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| receipt     | 90%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| banking     | 85%       | 🔗 reconciliation live             | ⚠️   | 🟡 5   | ✅   |
-| dashboard   | 80%       | ➖ n/a (trends are mock)           | ✅   | ❌     | ✅   |
-| expenses    | 80%       | ❌ `postExpensePayment` orphaned   | ⚠️   | ❌     | ✅   |
-| accounts    | 75%       | 🟢 engine home (fee payments only) | ⚠️   | 🟡 10  | ✅   |
-| permissions | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
-| reports     | 75%       | 🔗 reads ledger (fee-only data)    | ⚠️   | ❌     | ✅   |
-| salary      | 75%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| timesheet   | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
-| wallet      | 75%       | ❌ `postWalletTopup` orphaned      | ⚠️   | ❌     | ✅   |
-| payroll     | 65%       | ❌ `postSalaryPayment` orphaned    | ✅   | ❌     | ✅   |
+| Sub-module  | Readiness | Ledger wired                             | i18n | Tests  | Docs |
+| ----------- | --------- | ---------------------------------------- | ---- | ------ | ---- |
+| invoice     | 95%       | ❌ `postInvoicePayment` orphaned         | ⚠️   | 🟢 131 | ✅   |
+| fees        | 96%       | 🟢 payments + assignments (no rollback)  | ✅   | 🟡 17+ | ✅   |
+| budget      | 85%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
+| receipt     | 90%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
+| banking     | 85%       | 🔗 reconciliation live                   | ⚠️   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (trends are mock)                 | ✅   | ❌     | ✅   |
+| expenses    | 80%       | ❌ `postExpensePayment` orphaned         | ⚠️   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home (fee payments only)       | ⚠️   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                                   | ⚠️   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (fee-only data)          | ⚠️   | ❌     | ✅   |
+| salary      | 75%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                                   | ⚠️   | ❌     | ✅   |
+| wallet      | 75%       | 🟡 `postWalletTopup` wired (no rollback) | ⚠️   | ❌     | ✅   |
+| payroll     | 65%       | ❌ `postSalaryPayment` orphaned          | ✅   | ❌     | ✅   |
 
 Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transactional · ❌ posting fn exists but has zero callers · 🔗 consumes the ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English (separate from the cross-cutting DB-`lang` gap below). **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 
@@ -50,9 +50,9 @@ Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transact
 - [x] Notification dispatch uses `finance.notifications.*` keys (no bilingual ternaries)
 - [x] Locale-aware formatters in `lib/format.ts`
 - [x] Public docs: hub + per-sub-block pages (`/docs/finance`, EN) — 2026-05-21
-- [ ] Wire (or honestly retire) the 5 orphaned posting functions
-- [ ] `postFeePayment` made transactional with rollback
-- [ ] `debit = credit` invariant test on actual posting
+- [~] Wire the orphaned posting functions — `postFeeAssignment` (assignFee + bulkAssignFees) and `postWalletTopup` now wired; `postInvoicePayment` / `postExpensePayment` blocked on missing payment-recording flows, `postSalaryPayment` on the unbalanced rule (see P0)
+- [ ] `postFeePayment` made transactional with rollback — deliberately deferred (fire-and-forget by design; shared with the reconciliation story)
+- [x] `debit = credit` invariant test on actual posting — `lib/accounting/posting-rules.test.ts` (currently RED: flags the `toCents` ×100 bug — see P0)
 - [ ] `lang` field on user-facing finance models + `getText` routing
 - [ ] 11 `validation.ts` factories wired to `ValidationHelper` in consumers
 - [ ] Test coverage for the 11 untested sub-modules
@@ -68,9 +68,10 @@ All items below were verified against live code on 2026-05-21 (file:line cited).
 
 The block-level "P0: none" of prior cycles was inaccurate. These are silent-data-integrity issues:
 
-- **5 of 6 domain posting functions are orphaned.** `finance/lib/accounting/actions.ts` exports `postFeePayment`, `postFeeAssignment`, `postSalaryPayment`, `postExpensePayment`, `postInvoicePayment`, `postWalletTopup`. Only `postFeePayment` has callers (9 references: `fees/actions.ts`, `api/webhooks/stripe/route.ts`, `api/webhooks/tap/route.ts`). The other **five have zero callers** — so salary disbursement, expense payment, invoice payment, fee assignment, and wallet top-ups never reach the general ledger. Several sub-module READMEs claim they post journal entries; that claim is false today. **Fix: wire them, or stop claiming it.**
-- **`postFeePayment` is fire-and-forget with no rollback.** `fees/actions.ts:1010-1023` posts inside a try/catch that, on failure, logs but does **not** roll back the recorded payment ("Non-fatal: log but don't roll back the payment if posting fails"). The comment itself warns the trial balance "diverges by the cash-only amounts." **Fix: post inside the payment `db.$transaction`, or add a reconciliation/repair job.**
-- **No `debit = credit` invariant test.** `finance/lib/accounting/__tests__/` has only 10 utility tests (`validateDoubleEntry`, currency, format). No test asserts balanced posting on an actual posting-rule run, and no per-school trial-balance test exists.
+- **3 of 6 domain posting functions are now wired; the other 3 are blocked on more than wiring.** Wired: `postFeePayment` (fees + Stripe/Tap webhooks), `postWalletTopup` (wallet top-up), and — 2026-06-20 — `postFeeAssignment` (`assignFee` + `bulkAssignFees`). Wiring assignment was a **correctness fix, not just coverage**: the accrual model recognizes revenue at assignment (DR Receivable / CR Revenue) and the payment post only clears the receivable (DR Cash / CR Receivable), so with payment wired but assignment not, the receivable was credited without ever being debited (driven negative) and revenue was never recognized. Still unwired, each blocked beyond wiring: **`postInvoicePayment`** — `UserInvoice` has no record-payment action (only the generic edit form + a `sentAt` stamp), so there is no payment event to hook; **`postExpensePayment`** — `approveExpense` only accepts `APPROVED`/`REJECTED` (never `PAID`), so no expense ever reaches a payment state; **`postSalaryPayment`** — the rule itself is unbalanced (below).
+- **`createSalaryPaymentEntry` does not balance when tax > 0 (NEW P0).** It debits `gross + payroll-tax-expense` but credits only `net + tax-payable + ss-payable` (= gross), so debits exceed credits by the tax amount and `validateDoubleEntry` rejects it; it also has no line for generic "other deductions". This is why `postSalaryPayment` cannot simply be wired — the withholding model needs correcting and all payroll deductions mapped to contra/payable lines. (`posting-rules.test.ts` asserts only the no-withholding case for this reason.)
+- **`toCents` inflates every ledger amount 100× (NEW P0, cross-cutting, affects LIVE postings).** `LedgerEntry.debit/credit` is `Decimal(12,2)` (whole units, 2 decimals), but all six posting rules store `toCents(amount)` (× 100) — a $5,000 payment posts `500000.00`. `posting-rules.test.ts` correctly asserts whole units and is currently **RED** for this reason. It is pre-existing and affects the already-live `postFeePayment` (Stripe/Tap), so the production ledger is likely inflated 100×. **Fix needs a decision: drop `toCents` in the posting rules (whole units, matching the column + readers), or commit to integer-cents storage and ÷100 on every read — verify how trial-balance/reports consume the column first. Do not change silently.**
+- **`postFeePayment` is fire-and-forget with no rollback (by design).** On post failure it logs but does **not** roll back the recorded payment; the newly-wired `postFeeAssignment`/`postWalletTopup` follow the same deliberate pattern. The rollback/reconciliation story is tracked separately from wiring the posters.
 
 ### P1 -- functional / misleading
 

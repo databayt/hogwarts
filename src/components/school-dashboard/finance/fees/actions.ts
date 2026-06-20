@@ -622,6 +622,39 @@ export async function assignFee(data: FormData): Promise<ActionResult<string>> {
       },
     })
 
+    // Accrual posting: recognize the receivable + revenue now (DR Student Fees
+    // Receivable, CR Fee Revenue). The later fee-payment post debits Cash and
+    // credits this SAME receivable, so revenue is recognized exactly once — at
+    // assignment. Without this, the payment post credits a receivable that was
+    // never debited, driving it negative and never recognizing revenue.
+    // Fire-and-forget by design (mirrors recordPayment); the rollback story is
+    // shared P0 work tracked separately in finance/ISSUE.md.
+    try {
+      const feeStructure = await db.feeStructure.findFirst({
+        where: { id: feeStructureId, schoolId: ctx.schoolId },
+        select: { name: true },
+      })
+      const { postFeeAssignment } = await import("../lib/accounting/actions")
+      const postResult = await postFeeAssignment(ctx.schoolId, {
+        assignmentId: feeAssignment.id,
+        studentId,
+        amount: finalAmount,
+        feeType: feeStructure?.name ?? "Fee",
+        assignedDate: feeAssignment.createdAt,
+      })
+      if (!postResult.success) {
+        console.error(
+          "[assignFee] postFeeAssignment failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[assignFee] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
     // Look up school's preferred language and load the dictionary once so
     // every downstream dispatch avoids ternary-per-sentence duplication.
     const schoolPref = await db.school.findFirst({
@@ -765,6 +798,50 @@ export async function bulkAssignFees(
       data: assignmentData,
       skipDuplicates: true,
     })
+
+    // Accrual posting for each assignment (DR Receivable, CR Revenue). createMany
+    // returns no ids, so re-query the rows; posting is idempotent by
+    // (schoolId, sourceModule=FEES, sourceRecordId=assignmentId), so re-posting
+    // any pre-existing row that skipDuplicates left in place is a safe no-op.
+    // Mirrors assignFee; fire-and-forget by design.
+    try {
+      const created = await db.feeAssignment.findMany({
+        where: {
+          schoolId: ctx.schoolId,
+          feeStructureId,
+          academicYear,
+          studentId: { in: studentIds },
+        },
+        select: {
+          id: true,
+          studentId: true,
+          finalAmount: true,
+          createdAt: true,
+        },
+      })
+      const { postFeeAssignment } = await import("../lib/accounting/actions")
+      for (const a of created) {
+        const postResult = await postFeeAssignment(ctx.schoolId, {
+          assignmentId: a.id,
+          studentId: a.studentId,
+          amount: Number(a.finalAmount),
+          feeType: feeStructure.name,
+          assignedDate: a.createdAt,
+        })
+        if (!postResult.success) {
+          console.error(
+            "[bulkAssignFees] postFeeAssignment failed:",
+            a.id,
+            postResult.errors
+          )
+        }
+      }
+    } catch (postingErr) {
+      console.error(
+        "[bulkAssignFees] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
 
     // Dispatch fee_due notifications for all assigned students (non-blocking)
     try {
