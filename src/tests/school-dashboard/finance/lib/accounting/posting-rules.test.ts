@@ -14,6 +14,17 @@ import {
 } from "@/components/school-dashboard/finance/lib/accounting/posting-rules"
 import { validateDoubleEntry } from "@/components/school-dashboard/finance/lib/accounting/utils"
 
+// The posting rules lazily backfill the chart of accounts by importing the real
+// seed-accounts module (which writes via the real db). Stub it to a no-op so the
+// "missing account" path re-resolves against the in-test mock db and surfaces the
+// domain error ("Required accounts not found") rather than a Prisma FK error.
+vi.mock(
+  "@/components/school-dashboard/finance/lib/accounting/seed-accounts",
+  () => ({
+    initializeAccountingSystem: vi.fn(async () => ({ accountsCreated: 0 })),
+  })
+)
+
 // ---------------------------------------------------------------------------
 // A mock `db` that mirrors the real Prisma constraint: ChartOfAccount is keyed
 // by `code` (@@unique([schoolId, code])). The mock ONLY matches on `where.code`.

@@ -2,8 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 // Thin barrel so finance components import money + date formatters from one path.
-// Money amounts across finance are stored in cents; formatCurrency handles the
-// division so callers pass raw `Decimal.toNumber()` values without extra math.
+// Convention: finance money (Payment.amount, the ledger's Decimal(12,2) columns,
+// fee/invoice amounts) is stored in WHOLE currency units. Use `formatMoney` for
+// those. `formatCurrency` (re-exported below) divides by 100 and is ONLY for the
+// rare value genuinely stored as integer cents — never use it on whole-unit
+// aggregates (it renders 1/100 of the real figure).
 
 export { formatCurrency, toCents, fromCents } from "./accounting/utils"
 export { formatDate, getDateLocale } from "@/lib/format-date"
