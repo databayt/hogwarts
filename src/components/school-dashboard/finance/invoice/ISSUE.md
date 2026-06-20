@@ -58,35 +58,28 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ## Remaining Work
 
-### P1: PDF & Print (infrastructure exists at `file/generate/` and `file/print/`, needs wiring)
+### P1: PDF & Print
 
-- [ ] Create `mapInvoiceToGenerateData()` adapter function
-  - Maps `UserInvoice` (Prisma) → `InvoiceData` (`file/generate/types.ts`)
-  - Field mapping: `item_name` → `description`, `price` → `unitPrice`
-  - Fetches school data (name, logo, address) from `School` model
-  - Fetches logo from `UserInvoiceSettings.invoiceLogo`
-  - Fetches signature from `UserInvoiceSignature` (name + image)
-- [ ] Add "Download PDF" button to `invoice/view-content.tsx` using `useGenerate().generateInvoice()`
-- [ ] Add "Print" button to `invoice/view-content.tsx` using `usePrint().printById()`
-- [ ] Add PDF download action to DataTable action menu in `columns.tsx`
-- [ ] Wire school logo from `UserInvoiceSettings.invoiceLogo` into PDF `schoolLogo` field
-- [ ] Wire signature from `UserInvoiceSignature` into PDF footer section
+- [x] PDF data adapter — `mapInvoiceToInvoiceData` (`invoice-pdf-data.ts`): `UserInvoice` → `InvoiceData`, item_name→description, price→unitPrice; tested
+- [x] "Download PDF" button on the invoice view (`DownloadInvoiceButton` → `useGenerate().generateInvoice`)
+- [x] Wire school logo (`UserInvoiceSettings.invoiceLogo`) into PDF `schoolLogo` — `getInvoiceById` fetches it → `InvoiceForPdf` → adapter → template (template already renders it RTL + Rubik) (2026-06-21 `eb4e88574`)
+- [ ] "Print" button (`usePrint().printById`) — prints a DOM element; Download-PDF covers the core need, low priority
+- [ ] PDF download action in the DataTable row menu (`columns.tsx`)
+- [ ] Signature in the PDF footer — `InvoiceData` has no signature field (Certificate/ReportCard do); needs a type + template addition
 
-### P1: Email Template Upgrade
+### P1: Email Template Upgrade — DONE (2026-06-21 `eb4e88574`)
 
-- [ ] Add school name and logo to email header (fetch from `UserInvoiceSettings`)
-- [ ] Add itemized breakdown table to email body (currently only shows total)
-- [ ] Add signature image/name to email footer
-- [ ] Replace hardcoded sender `"Invoice App <onboarding@resend.dev>"` with school-specific email or verified domain
-- [ ] Add RTL support for Arabic recipients (direction, Rubik font)
-- [ ] Migrate from plain React JSX to React Email primitives (`@react-email/components`)
+- [x] School logo (or name) header — `sendInvoiceEmail` fetches `UserInvoiceSettings`
+- [x] Itemized breakdown table + subtotal/discount/tax/total/amount-due (currency-formatted)
+- [x] Signature image + name footer (`UserInvoiceSignature`)
+- [x] School-specific sender via `EMAIL_FROM` env (was hardcoded `onboarding@resend.dev`)
+- [x] RTL for Arabic recipients (Html `dir`, Arabic-capable font stack, per-direction alignment) + self-contained en/ar label map
+- [x] Migrated to `@react-email/components`
 
 ### P1: Settings → Output Wiring
 
-- [ ] Fetch `UserInvoiceSettings` + `UserInvoiceSignature` in PDF generation flow
-- [ ] Fetch logo and signature in email sending flow (`sendInvoiceEmail`)
-- [ ] Display school logo in `invoice/view-content.tsx` header
-- [ ] Display signature in invoice view footer
+- [x] Fetch logo in the PDF flow (`getInvoiceById`) + logo & signature in the email flow (`sendInvoiceEmail`)
+- [ ] Display school logo + signature in the on-screen `invoice/view-content.tsx` (the PDF + email are branded; the screen view is not yet) · low priority
 
 ### P1: CSV Export Wiring
 
