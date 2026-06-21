@@ -45,7 +45,17 @@ Three buckets. Bucket A is small and surgical, bucket B is mostly confirmation, 
 
 ### B — Database (audit + apply, Neon-branch-first)
 
-Transportation and Conference additive DB landed on Neon prod at their 2026-06-20 deploys. The task is **confirmation, not migration**: audit Neon prod against the Prisma schema and apply any remaining additive drift (attendance hot-path indexes, stream composite indexes, saas-dashboard `School.isActive/planType` + `Lead.nextFollowUpAt`) on a Neon branch first, then promote. No destructive operations — additive only.
+Transportation and Conference additive DB landed on Neon prod at their 2026-06-20 deploys. The task is **confirmation + a small additive apply**, never destructive — Neon-branch-first, then promote. Deploy-pending manifest:
+
+| Migration                                                                           | Type           | Safety                                                                                      |
+| ----------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
+| Attendance hot-path indexes (2)                                                     | additive index | safe                                                                                        |
+| Stream composite indexes (3)                                                        | additive index | safe                                                                                        |
+| saas-dashboard `School.isActive`/`planType` + `Lead.nextFollowUpAt`                 | additive col   | safe (nullable / defaulted)                                                                 |
+| **`JournalEntry` `@@index` → `@@unique([schoolId, sourceModule, sourceRecordId])`** | index→unique   | safe — prod has **0** non-null `sourceRecordId` rows, so nothing to dedupe (verified)       |
+| toCents ÷100 ledger sweep (`scripts/migrate-ledger-cents-to-whole-units.ts`)        | data (script)  | **verified no-op** — read-only prod check found 0 inflated rows; run post-deploy as a sweep |
+
+The catalog TOCTOU fixes, billing atomic CAS, exams AI cost cap, and RBAC/calculator tests shipped this session are **code-only — no DB change**.
 
 ### C — Ops / env / infra (the real lead time)
 
@@ -89,7 +99,7 @@ Five tracks run in parallel across all four weeks: **A** Code, **B** Data, **C**
 
 **Week 4 — Harden & Launch**
 
-- E · Drain the highest-value SaaS-dashboard backlog: ✅ invoice state-machine guard (`3be3506ed` — no voiding a paid invoice; buttons gated) · ✅ exams RBAC + calculator test coverage + AI generation/grading cost cap (2026-06-21). Remaining: close catalog TOCTOU windows · i18n sweep · the Kanban demo route (still linked from analytics nav + command menu — full removal is a product call, not dead code).
+- E · Drain the highest-value SaaS-dashboard backlog: ✅ invoice state-machine guard + atomic CAS (`3be3506ed` + 2026-06-21 — no voiding a paid invoice, no concurrent double-transition; buttons gated) · ✅ exams RBAC + calculator test coverage + AI generation/grading cost cap (2026-06-21) · ✅ catalog TOCTOU closed (proposal reject + 4 exam-approval actions now atomic; chapter/lesson count denormalization wrapped in transactions, 2026-06-21). A **two-pass adversarial review** (find → verify, then re-verify the fixes) confirmed + closed 8 further correctness defects across finance/catalog/exams/billing incl. a P0 ledger-reversal no-op. Remaining: i18n sweep · the Kanban demo route (still linked from analytics nav + command menu — full removal is a product call, not dead code).
 - D · Per-pilot smoke on King Fahad + Albayan · load + rate-limit verification (now Redis-backed) · final `secure` pass · wire the hardcoded-string ratchet into the PR gate.
 - Run the launch gate.
 
@@ -97,11 +107,11 @@ Five tracks run in parallel across all four weeks: **A** Code, **B** Data, **C**
 
 The sprint ends when this is green. Items that are audience-specific are tagged.
 
-- [ ] All bucket-A code merged to `main`
-- [ ] Neon prod schema confirmed against Prisma (no additive drift)
+- [x] Bucket-A code merged to `main` (exams route tree verified present; Playwright CI command fixed; `/api/health` Stripe-optional) — committed, **not yet pushed**
+- [ ] Neon prod schema confirmed against Prisma + the additive manifest applied (Neon-branch-first) — see bucket B table
 - [ ] Sentry + Upstash + FCM env set; Sentry receiving events
-- [ ] `playwright test` green in CI (no longer a no-op)
-- [ ] Finance ledger correct: `toCents` ×100 bug resolved (`posting-rules.test.ts` green) + wireable posters wired (`postFeeAssignment`/`postFeePayment`/`postWalletTopup` done; invoice/expense/salary pending their flows + rule fix)
+- [x] Playwright CI command fixed (`tests` → `test`, sharded) — now runs; first green CI run still pending
+- [x] Finance ledger correct: `toCents` ×100 resolved + **all 6 posters wired & balanced** + idempotent `createJournalEntry` + a two-pass adversarial review closed 8 further defects (incl. the P0 `reverseJournalEntry` no-op, negative-net Cash inversion, payroll post-before-flip recovery); `posting-rules.test.ts` green
 - [ ] King Fahad + Albayan tenants smoke-clean end-to-end
 - [ ] Oracle VM live; WhatsApp QR scanned per pilot school
 - [ ] Tap keys set — _UAE / Aldar_
