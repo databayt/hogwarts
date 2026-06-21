@@ -51,6 +51,10 @@ jobs:
 
       - name: TypeScript Check
         run: pnpm tsc --noEmit
+        env:
+          # tsc on this codebase's type graph exceeds the default ~2GB heap and
+          # OOMs on CI runners (#351); ubuntu-latest has 16GB, match local 8GB.
+          NODE_OPTIONS: --max-old-space-size=8192
 
   license-headers:
     name: License Headers

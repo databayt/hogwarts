@@ -54,6 +54,9 @@ jobs:
 
       - name: Run TypeScript checks
         run: pnpm tsc --noEmit
+        env:
+          # Match local heap; default ~2GB OOMs on this type graph (#351).
+          NODE_OPTIONS: --max-old-space-size=8192
 
       - name: Run ESLint
         run: pnpm lint src/components/file-upload src/lib/storage src/lib/upload
