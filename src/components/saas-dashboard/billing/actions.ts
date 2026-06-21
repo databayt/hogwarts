@@ -14,6 +14,9 @@ import {
   requireOperator,
 } from "@/components/saas-dashboard/lib/operator-auth"
 
+import type { InvoiceStatus } from "./types"
+import { canPayInvoice, canVoidInvoice } from "./util"
+
 // ============= Type Definitions =============
 
 type ActionResult<T> =
@@ -39,6 +42,31 @@ export async function invoiceUpdateStatus(input: {
     await requireNotImpersonating()
 
     const validated = updateInvoiceStatusSchema.parse(input)
+
+    // State-machine guard: only legal transitions. Prevents voiding a paid
+    // invoice or marking a void/uncollectible one paid — the UI previously
+    // showed both buttons regardless of state. Uses the same canPayInvoice /
+    // canVoidInvoice helpers the columns now gate the buttons with.
+    const current = await db.invoice.findUnique({
+      where: { id: validated.id },
+      select: { status: true },
+    })
+    if (!current) {
+      return { success: false, error: new Error("Invoice not found") }
+    }
+    const from = current.status as InvoiceStatus
+    if (validated.status === "paid" && !canPayInvoice(from)) {
+      return {
+        success: false,
+        error: new Error("Only an open or draft invoice can be marked paid"),
+      }
+    }
+    if (validated.status === "void" && !canVoidInvoice(from)) {
+      return {
+        success: false,
+        error: new Error("A paid or already-void invoice cannot be voided"),
+      }
+    }
 
     // Properly typed Prisma operation - no type assertion needed
     const invoice = await db.invoice.update({

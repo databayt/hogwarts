@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import { invoiceUpdateStatus } from "@/components/saas-dashboard/billing/actions"
+import type { InvoiceStatus } from "@/components/saas-dashboard/billing/types"
+import {
+  canPayInvoice,
+  canVoidInvoice,
+} from "@/components/saas-dashboard/billing/util"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type InvoiceRow = {
@@ -156,56 +161,60 @@ export function getInvoiceColumns(
         const inv = row.original as InvoiceRow
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  const result = await invoiceUpdateStatus({
-                    id: inv.id,
-                    status: "paid",
-                  })
-                  if (result.success) {
-                    SuccessToast(
-                      c?.invoiceMarkedPaid || "Invoice marked as paid"
+            {canPayInvoice(inv.status as InvoiceStatus) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const result = await invoiceUpdateStatus({
+                      id: inv.id,
+                      status: "paid",
+                    })
+                    if (result.success) {
+                      SuccessToast(
+                        c?.invoiceMarkedPaid || "Invoice marked as paid"
+                      )
+                    } else {
+                      ErrorToast(result.error.message)
+                    }
+                  } catch (e) {
+                    ErrorToast(
+                      e instanceof Error ? e.message : c?.failed || "Failed"
                     )
-                  } else {
-                    ErrorToast(result.error.message)
                   }
-                } catch (e) {
-                  ErrorToast(
-                    e instanceof Error ? e.message : c?.failed || "Failed"
-                  )
-                }
-              }}
-            >
-              {c?.markPaid || "Mark paid"}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  const result = await invoiceUpdateStatus({
-                    id: inv.id,
-                    status: "void",
-                  })
-                  if (result.success) {
-                    SuccessToast(
-                      c?.invoiceVoided || "Invoice voided successfully"
+                }}
+              >
+                {c?.markPaid || "Mark paid"}
+              </Button>
+            )}
+            {canVoidInvoice(inv.status as InvoiceStatus) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const result = await invoiceUpdateStatus({
+                      id: inv.id,
+                      status: "void",
+                    })
+                    if (result.success) {
+                      SuccessToast(
+                        c?.invoiceVoided || "Invoice voided successfully"
+                      )
+                    } else {
+                      ErrorToast(result.error.message)
+                    }
+                  } catch (e) {
+                    ErrorToast(
+                      e instanceof Error ? e.message : c?.failed || "Failed"
                     )
-                  } else {
-                    ErrorToast(result.error.message)
                   }
-                } catch (e) {
-                  ErrorToast(
-                    e instanceof Error ? e.message : c?.failed || "Failed"
-                  )
-                }
-              }}
-            >
-              {c?.void || "Void"}
-            </Button>
+                }}
+              >
+                {c?.void || "Void"}
+              </Button>
+            )}
           </div>
         )
       },

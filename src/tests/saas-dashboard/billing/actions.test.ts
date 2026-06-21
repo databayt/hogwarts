@@ -14,6 +14,7 @@ import * as billing from "@/components/saas-dashboard/billing/actions"
 vi.mock("@/lib/db", () => ({
   db: {
     invoice: {
+      findUnique: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
@@ -46,6 +47,9 @@ describe("billing/actions.ts", () => {
 
   describe("invoiceUpdateStatus", () => {
     it("updates invoice status to paid", async () => {
+      vi.mocked(db.invoice.findUnique).mockResolvedValue({
+        status: "open",
+      } as any)
       vi.mocked(db.invoice.update).mockResolvedValue({
         id: "i1",
         schoolId: "s1",
@@ -69,6 +73,9 @@ describe("billing/actions.ts", () => {
     })
 
     it("updates invoice status to void", async () => {
+      vi.mocked(db.invoice.findUnique).mockResolvedValue({
+        status: "open",
+      } as any)
       vi.mocked(db.invoice.update).mockResolvedValue({
         id: "i1",
         schoolId: "s1",
@@ -86,7 +93,24 @@ describe("billing/actions.ts", () => {
       })
     })
 
+    it("rejects an illegal transition (void a paid invoice) without updating", async () => {
+      vi.mocked(db.invoice.findUnique).mockResolvedValue({
+        status: "paid",
+      } as any)
+
+      const result = await billing.invoiceUpdateStatus({
+        id: "i1",
+        status: "void",
+      })
+
+      expect(result.success).toBe(false)
+      expect(db.invoice.update).not.toHaveBeenCalled()
+    })
+
     it("handles not found (db throws)", async () => {
+      vi.mocked(db.invoice.findUnique).mockResolvedValue({
+        status: "open",
+      } as any)
       vi.mocked(db.invoice.update).mockRejectedValue(
         new Error("Record not found")
       )
