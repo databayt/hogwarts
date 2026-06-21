@@ -116,6 +116,12 @@ export async function approveExpense(formData: FormData) {
     if (!session?.user?.schoolId || !session?.user?.id) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    const canApprove = await checkCurrentUserPermission(
+      session.user.schoolId,
+      "expenses",
+      "approve"
+    )
+    if (!canApprove) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const data = {
       expenseId: formData.get("expenseId"),

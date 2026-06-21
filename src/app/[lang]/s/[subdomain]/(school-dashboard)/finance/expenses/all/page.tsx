@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ExpenseRowActions } from "@/components/school-dashboard/finance/expenses/expense-row-actions"
 
 export const metadata = { title: "Expenses" }
 
@@ -83,33 +84,38 @@ export default async function ExpensesListPage({ params }: Props) {
       ) : (
         <div className="space-y-3">
           {expenses.map((expense) => (
-            <Link
+            <Card
               key={expense.id}
-              href={`/${lang}/finance/expenses/${expense.id}`}
+              className="hover:bg-muted/50 transition-colors"
             >
-              <Card className="hover:bg-muted/50 transition-colors">
-                <CardContent className="flex items-center justify-between py-4">
-                  <div>
-                    <p className="font-medium">
-                      {expense.expenseNumber}
-                      {expense.vendor && ` \u2014 ${expense.vendor}`}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      {expense.category.name} &mdash;{" "}
-                      {formatDate(expense.expenseDate, lang)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-medium">
-                      {formatCurrency(Number(expense.amount), lang, currency)}
-                    </p>
-                    <Badge variant={statusVariant(expense.status)}>
-                      {expense.status}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+              <CardContent className="flex items-center justify-between gap-3 py-4">
+                <Link
+                  href={`/${lang}/finance/expenses/${expense.id}`}
+                  className="min-w-0 flex-1"
+                >
+                  <p className="font-medium">
+                    {expense.expenseNumber}
+                    {expense.vendor && ` \u2014 ${expense.vendor}`}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    {expense.category.name} &mdash;{" "}
+                    {formatDate(expense.expenseDate, lang)}
+                  </p>
+                </Link>
+                <div className="flex shrink-0 items-center gap-3">
+                  <p className="font-medium">
+                    {formatCurrency(Number(expense.amount), lang, currency)}
+                  </p>
+                  <Badge variant={statusVariant(expense.status)}>
+                    {expense.status}
+                  </Badge>
+                  <ExpenseRowActions
+                    expenseId={expense.id}
+                    status={expense.status}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
