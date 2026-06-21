@@ -1,5 +1,9 @@
 # Issues - Billing Component
 
+## Recently Fixed
+
+- **`invoiceUpdateStatus` state-machine guard (2026-06-21 `3be3506ed`)** — the action accepted any status transition and the columns showed both Mark-paid + Void buttons regardless of current state, so an operator could void a PAID invoice or pay a void/uncollectible one. The server now fetches the current status and rejects illegal transitions via `canPayInvoice`/`canVoidInvoice`; the columns gate the buttons per row; a regression test was added. (Canonical finding tracking: [`../OPTIMIZATION_BACKLOG.md`](../OPTIMIZATION_BACKLOG.md).)
+
 ## 🔴 Critical Issues (Fix Immediately)
 
 ### 1. Missing Server Component Implementation
