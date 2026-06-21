@@ -178,11 +178,6 @@ describe("accounting/posting-rules — whole-unit amounts (no cents inflation)",
   })
 
   it("salary payment records the gross expense in whole units (no withholdings case)", async () => {
-    // NOTE: we use the no-withholding case here. The withholding path of
-    // createSalaryPaymentEntry double-counts (DR salary-expense gross AND DR
-    // payroll-tax-expense, while crediting tax-payable once) and does not balance
-    // — but that function is currently orphaned (zero callers) and its payroll math
-    // is out of Phase-0 scope (wiring + fixing the orphaned postings is Phase 2).
     const db = makeDb(ALL_CODES)
     const entry = await createSalaryPaymentEntry(
       SCHOOL_ID,
@@ -202,6 +197,38 @@ describe("accounting/posting-rules — whole-unit amounts (no cents inflation)",
       (l) => l.accountCode === StandardAccountCodes.SALARY_EXPENSE
     )
     expect(salaryLine?.debit).toBe(10000) // whole units, not 1,000,000
+    expect(validateDoubleEntry(entry.lines)).toBe(true)
+  })
+
+  it("salary payment BALANCES with tax + other deductions (withholding model)", async () => {
+    const db = makeDb(ALL_CODES)
+    // gross 10,000; tax 1,500 withheld; 500 other deductions (insurance/loan) →
+    // net = 10,000 − 1,500 − 500 = 8,000. socialSecurity 0.
+    const entry = await createSalaryPaymentEntry(
+      SCHOOL_ID,
+      {
+        slipId: "slip-2",
+        teacherId: "tch-1",
+        grossSalary: 10000,
+        taxAmount: 1500,
+        socialSecurityAmount: 0,
+        netSalary: 8000,
+        paymentDate: new Date(),
+      },
+      db as never
+    )
+
+    // No standalone payroll-tax-expense debit (the old unbalanced bug).
+    expect(
+      entry.lines.some(
+        (l) => l.accountCode === StandardAccountCodes.PAYROLL_TAX_EXPENSE
+      )
+    ).toBe(false)
+    // Residual (10,000 − 8,000 − 1,500 = 500) credited to Accounts Payable.
+    const apLine = entry.lines.find(
+      (l) => l.accountCode === StandardAccountCodes.ACCOUNTS_PAYABLE
+    )
+    expect(apLine?.credit).toBe(500)
     expect(validateDoubleEntry(entry.lines)).toBe(true)
   })
 })

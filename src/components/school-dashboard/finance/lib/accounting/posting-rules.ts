@@ -248,14 +248,21 @@ export async function createFeeAssignmentEntry(
 }
 
 /**
- * Salary Payment Posting Rule
+ * Salary Payment Posting Rule (withholding model)
  *
- * When salary is paid:
- * DR: Salary Expense
- * DR: Payroll Tax Expense
- * CR: Cash/Bank Account
- * CR: Tax Payable (if withheld)
- * CR: Social Security Payable (if withheld)
+ * Gross salary is the employer's full cost; withholdings are routed to liability
+ * accounts instead of cash. This ALWAYS balances because the credits reconstruct
+ * gross exactly (net + tax + ss + other = gross):
+ *   DR: Salary Expense                    = gross
+ *   CR: Cash/Bank                         = net  (what the employee receives)
+ *   CR: Tax Payable                       = tax  (income tax withheld, if any)
+ *   CR: Social Security Payable           = ss   (if any)
+ *   CR: Accounts Payable (other deductions) = gross − net − tax − ss (if any)
+ *
+ * The old rule additionally DEBITED a "Payroll Tax Expense" with no matching
+ * credit, so it did not balance when tax > 0 — that line is removed. The residual
+ * line absorbs any other deductions (insurance, loans, …) so the entry balances
+ * regardless of the slip's deduction mix.
  */
 export async function createSalaryPaymentEntry(
   schoolId: string,
@@ -275,11 +282,6 @@ export async function createSalaryPaymentEntry(
     StandardAccountCodes.SALARY_EXPENSE,
     db
   )
-  const taxExpenseId = await getAccountIdByCode(
-    schoolId,
-    StandardAccountCodes.PAYROLL_TAX_EXPENSE,
-    db
-  )
   const cashAccountId = await getAccountIdByCode(
     schoolId,
     StandardAccountCodes.CASH,
@@ -295,8 +297,19 @@ export async function createSalaryPaymentEntry(
     StandardAccountCodes.SOCIAL_SECURITY_PAYABLE,
     db
   )
+  const payableId = await getAccountIdByCode(
+    schoolId,
+    StandardAccountCodes.ACCOUNTS_PAYABLE,
+    db
+  )
 
-  if (!salaryExpenseId || !cashAccountId || !taxPayableId || !ssPayableId) {
+  if (
+    !salaryExpenseId ||
+    !cashAccountId ||
+    !taxPayableId ||
+    !ssPayableId ||
+    !payableId
+  ) {
     throw new Error("Required accounts not found")
   }
 
@@ -304,6 +317,10 @@ export async function createSalaryPaymentEntry(
   const taxAmount = paymentData.taxAmount
   const ssAmount = paymentData.socialSecurityAmount
   const netAmount = paymentData.netSalary
+  // Any deductions that aren't tax/ss (insurance, loan repayment, …) are owed to
+  // third parties — credit them to Accounts Payable so the entry balances.
+  const otherDeductions =
+    Math.round((grossAmount - netAmount - taxAmount - ssAmount) * 100) / 100
 
   const lines: JournalEntryLine[] = [
     {
@@ -314,27 +331,15 @@ export async function createSalaryPaymentEntry(
       credit: 0,
       description: `Salary expense for teacher`,
     },
+    {
+      accountId: cashAccountId,
+      accountCode: StandardAccountCodes.CASH,
+      accountName: "Cash",
+      debit: 0,
+      credit: netAmount,
+      description: `Salary payment to teacher`,
+    },
   ]
-
-  if (taxAmount > 0 && taxExpenseId) {
-    lines.push({
-      accountId: taxExpenseId,
-      accountCode: StandardAccountCodes.PAYROLL_TAX_EXPENSE,
-      accountName: "Payroll Tax Expense",
-      debit: taxAmount,
-      credit: 0,
-      description: `Employer payroll tax`,
-    })
-  }
-
-  lines.push({
-    accountId: cashAccountId,
-    accountCode: StandardAccountCodes.CASH,
-    accountName: "Cash",
-    debit: 0,
-    credit: netAmount,
-    description: `Salary payment to teacher`,
-  })
 
   if (taxAmount > 0) {
     lines.push({
@@ -355,6 +360,17 @@ export async function createSalaryPaymentEntry(
       debit: 0,
       credit: ssAmount,
       description: `Social security withheld`,
+    })
+  }
+
+  if (otherDeductions > 0) {
+    lines.push({
+      accountId: payableId,
+      accountCode: StandardAccountCodes.ACCOUNTS_PAYABLE,
+      accountName: "Accounts Payable",
+      debit: 0,
+      credit: otherDeductions,
+      description: `Salary deductions withheld`,
     })
   }
 

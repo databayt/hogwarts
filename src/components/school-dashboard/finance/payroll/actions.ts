@@ -633,7 +633,10 @@ export async function processPayments(
     const paidSlips = await db.salarySlip.findMany({
       where: { payrollRunId, status: "PAID" },
       select: {
+        id: true,
         teacherId: true,
+        grossSalary: true,
+        taxAmount: true,
         netSalary: true,
         teacher: { select: { userId: true, firstName: true, lastName: true } },
       },
@@ -661,6 +664,37 @@ export async function processPayments(
           console.error("[processPayments] Notification error:", err)
         )
       }
+    }
+
+    // Post each disbursed slip to the double-entry ledger (DR salary expense; CR
+    // cash + tax/ss/other-deduction payables). Fire-and-forget, idempotent by
+    // sourceRecordId=slipId. socialSecurityAmount is 0 — payroll does not withhold
+    // SS yet, so the residual (gross − net − tax) is credited to Accounts Payable.
+    try {
+      const { postSalaryPayment } = await import("../lib/accounting/actions")
+      for (const slip of paidSlips) {
+        const postResult = await postSalaryPayment(schoolId, {
+          slipId: slip.id,
+          teacherId: slip.teacherId,
+          grossSalary: Number(slip.grossSalary),
+          taxAmount: Number(slip.taxAmount),
+          socialSecurityAmount: 0,
+          netSalary: Number(slip.netSalary),
+          paymentDate: new Date(),
+        })
+        if (!postResult.success) {
+          console.error(
+            "[processPayments] postSalaryPayment failed:",
+            slip.id,
+            postResult.errors
+          )
+        }
+      }
+    } catch (postingErr) {
+      console.error(
+        "[processPayments] Ledger posting threw (continuing):",
+        postingErr
+      )
     }
 
     revalidatePath("/finance/payroll")
