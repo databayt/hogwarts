@@ -19,7 +19,7 @@
 
 ### P1
 
-- [ ] Ledger posting not wired -- `postSalaryPayment` has zero callers, so disbursement posts nothing (umbrella ISSUE.md P0)
+- [x] Ledger posting wired -- `processPayments` (disbursement) posts `postSalaryPayment` per paid slip after the unbalanced posting rule was fixed (DR Salary Expense / CR Cash + Tax/SS/AP); idempotent, unit-tested (2026-06-21 `771166fc7`)
 - [ ] No payslip PDF -- staff has no document to download
 - [ ] Disbursement is single-step "PAID"; no actual bank file export
 - [x] Withholding tax now progressive — marginal `calculateProgressiveTax` over `config.TAX_BRACKETS` (was flat 15%); unit-tested (2026-06-20 `e637129ee`)
