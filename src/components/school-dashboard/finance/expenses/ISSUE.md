@@ -17,7 +17,7 @@
 
 ### P1
 
-- [ ] Ledger posting not wired -- `postExpensePayment` has zero callers (see umbrella ISSUE.md P0)
+- [x] Ledger posting wired -- `markExpensePaid` (APPROVED→PAID, +paidAt) posts `postExpensePayment` (DR expense / CR cash); idempotent, unit-tested. Backend only: the expenses block has no list/row-action UI yet (`approveExpense` is also UI-orphaned), so the trigger awaits an expense list build. (2026-06-21 `5b789ec28`)
 - [ ] Approval routing rules (by amount threshold, by category)
 - [ ] Email notification on approval state change
 - [ ] Bulk categorisation / reassign category

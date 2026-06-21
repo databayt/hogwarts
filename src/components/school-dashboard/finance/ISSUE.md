@@ -21,22 +21,22 @@ last_audited: 2026-06-13
 
 ## Status banner
 
-| Sub-module  | Readiness | Ledger wired                             | i18n | Tests  | Docs |
-| ----------- | --------- | ---------------------------------------- | ---- | ------ | ---- |
-| invoice     | 95%       | ❌ `postInvoicePayment` orphaned         | ⚠️   | 🟢 131 | ✅   |
-| fees        | 96%       | 🟢 payments + assignments (no rollback)  | ✅   | 🟡 17+ | ✅   |
-| budget      | 85%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
-| receipt     | 90%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
-| banking     | 85%       | 🔗 reconciliation live                   | ⚠️   | 🟡 5   | ✅   |
-| dashboard   | 80%       | ➖ n/a (trends are mock)                 | ✅   | ❌     | ✅   |
-| expenses    | 80%       | ❌ `postExpensePayment` orphaned         | ⚠️   | ❌     | ✅   |
-| accounts    | 75%       | 🟢 engine home (fee payments only)       | ⚠️   | 🟡 10  | ✅   |
-| permissions | 75%       | ➖ n/a                                   | ⚠️   | ❌     | ✅   |
-| reports     | 75%       | 🔗 reads ledger (fee-only data)          | ⚠️   | ❌     | ✅   |
-| salary      | 75%       | ➖ n/a                                   | ✅   | ❌     | ✅   |
-| timesheet   | 75%       | ➖ n/a                                   | ⚠️   | ❌     | ✅   |
-| wallet      | 75%       | 🟡 `postWalletTopup` wired (no rollback) | ⚠️   | ❌     | ✅   |
-| payroll     | 65%       | ❌ `postSalaryPayment` orphaned          | ✅   | ❌     | ✅   |
+| Sub-module  | Readiness | Ledger wired                                    | i18n | Tests  | Docs |
+| ----------- | --------- | ----------------------------------------------- | ---- | ------ | ---- |
+| invoice     | 95%       | 🟡 `postInvoicePayment` wired (markInvoicePaid) | ⚠️   | 🟢 131 | ✅   |
+| fees        | 96%       | 🟢 payments + assignments (no rollback)         | ✅   | 🟡 17+ | ✅   |
+| budget      | 85%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
+| receipt     | 90%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
+| banking     | 85%       | 🔗 reconciliation live                          | ⚠️   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (trends are mock)                        | ✅   | ❌     | ✅   |
+| expenses    | 80%       | 🟡 `postExpensePayment` wired (markExpensePaid) | ⚠️   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home (fee payments only)              | ⚠️   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                                          | ⚠️   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (fee-only data)                 | ⚠️   | ❌     | ✅   |
+| salary      | 75%       | ➖ n/a                                          | ✅   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                                          | ⚠️   | ❌     | ✅   |
+| wallet      | 75%       | 🟡 `postWalletTopup` wired (no rollback)        | ⚠️   | ❌     | ✅   |
+| payroll     | 65%       | ❌ `postSalaryPayment` orphaned                 | ✅   | ❌     | ✅   |
 
 Legend — **Ledger**: 🟢 posts journal entries · 🟡 posts but not transactional · ❌ posting fn exists but has zero callers · 🔗 consumes the ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English (separate from the cross-cutting DB-`lang` gap below). **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 
@@ -68,7 +68,7 @@ All items below were verified against live code on 2026-05-21 (file:line cited).
 
 The block-level "P0: none" of prior cycles was inaccurate. These are silent-data-integrity issues:
 
-- **3 of 6 domain posting functions are now wired; the other 3 are blocked on more than wiring.** Wired: `postFeePayment` (fees + Stripe/Tap webhooks), `postWalletTopup` (wallet top-up), and — 2026-06-20 — `postFeeAssignment` (`assignFee` + `bulkAssignFees`). Wiring assignment was a **correctness fix, not just coverage**: the accrual model recognizes revenue at assignment (DR Receivable / CR Revenue) and the payment post only clears the receivable (DR Cash / CR Receivable), so with payment wired but assignment not, the receivable was credited without ever being debited (driven negative) and revenue was never recognized. Still unwired, each blocked beyond wiring: **`postInvoicePayment`** — `UserInvoice` has no record-payment action (only the generic edit form + a `sentAt` stamp), so there is no payment event to hook; **`postExpensePayment`** — `approveExpense` only accepts `APPROVED`/`REJECTED` (never `PAID`), so no expense ever reaches a payment state; **`postSalaryPayment`** — the rule itself is unbalanced (below).
+- **5 of 6 domain posting functions are now wired.** Wired: `postFeePayment` (fees + Stripe/Tap webhooks), `postWalletTopup` (wallet top-up), `postFeeAssignment` (`assignFee`/`bulkAssignFees` — the accrual fix that stopped the receivable going negative), and — 2026-06-21 — `postInvoicePayment` (`markInvoicePaid`: full payment → DR Cash / CR Accounts Receivable) + `postExpensePayment` (`markExpensePaid`: APPROVED→PAID → DR expense / CR cash). Only **`postSalaryPayment`** remains unwired — blocked on the unbalanced salary posting rule (below), not on a missing event. Notes: invoice partial-payment-to-ledger is a follow-up (the ledger keys on invoice id, so partials need a per-payment ref); `markExpensePaid` is backend-only until the expenses block grows a list/row-action UI (`approveExpense` is also UI-orphaned).
 - **`createSalaryPaymentEntry` does not balance when tax > 0 (NEW P0).** It debits `gross + payroll-tax-expense` but credits only `net + tax-payable + ss-payable` (= gross), so debits exceed credits by the tax amount and `validateDoubleEntry` rejects it; it also has no line for generic "other deductions". This is why `postSalaryPayment` cannot simply be wired — the withholding model needs correcting and all payroll deductions mapped to contra/payable lines. (`posting-rules.test.ts` asserts only the no-withholding case for this reason.)
 - **`toCents` ×100 ledger inflation — FIXED in code (`916327882`); migration validated as a NO-OP safety net 2026-06-20.** The posting rules stored `toCents(amount)` while `LedgerEntry` is `Decimal(12,2)` whole units. Whole-units confirmed correct (Payment.amount is whole units; `banking/reconciliation` reads `LedgerEntry.debit` raw vs Payment sums; `fromCents` unused; no reader ÷100). `toCents` dropped from all six rules; `posting-rules.test.ts` green. **Prod check (square-hall-52214783, read-only): all 200 journal entries are SEEDED whole-unit demo data (`sourceRecordId=NULL`, no matching Payment, values like 45,686 fees / 146,371 salaries) — ZERO toCents-inflated rows.** They were created directly, not by the posting rules. So the code fix is **safe to deploy on its own**. `scripts/migrate-ledger-cents-to-whole-units.ts` is now **self-verifying + fees-scoped** (deflates only fee entries whose cash leg == `Payment.amount`×100; idempotent; physically cannot touch seeded data) — its DRY-RUN against prod reports "nothing in scope" for all 7 schools. Run it post-deploy only to sweep any real fee payment that posted through the old code in the pre-deploy window (expected no-op); Neon-branch-first per the script header.
 - **`finance/content.tsx` + `salary/content.tsx` rendered amounts at 1/100 — FIXED 2026-06-20 (`5ad229722`).** They summed whole-unit data (`Payment.amount` Decimal(10,2); salary `baseSalary`) but formatted with the `÷100 formatCurrency`. Both swapped to `formatMoney`. These were the **only two** importers of the `÷100 formatCurrency`, so no genuinely-cents caller remains for that variant (candidate for deletion in a later cleanup).

@@ -87,7 +87,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### P1: Ledger Posting Not Wired
 
-- [ ] Invoice payments don't post to the ledger -- `postInvoicePayment` exists in `finance/lib/accounting/` but has zero callers (umbrella ISSUE.md P0)
+- [x] Invoice payments post to the ledger — `markInvoicePaid` records full payment (amountPaid=total, status=PAID) and posts `postInvoicePayment` (DR Cash / CR Accounts Receivable); `MarkInvoicePaidButton` on the invoice view. Partial-payment-to-ledger is a follow-up (the ledger keys on invoice id). (2026-06-21 `5b789ec28`)
 
 ### P2: Stubs to Complete
 
