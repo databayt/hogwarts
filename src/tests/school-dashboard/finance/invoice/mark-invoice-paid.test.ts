@@ -19,7 +19,11 @@ vi.mock("@/components/school-dashboard/finance/lib/accounting/actions", () => ({
   postInvoicePayment: vi.fn().mockResolvedValue({ success: true }),
 }))
 vi.mock("@/lib/db", () => {
-  const m = () => ({ findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() })
+  const m = () => ({
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    updateMany: vi.fn(),
+  })
   return { db: { userInvoice: m(), user: m() } }
 })
 
@@ -40,11 +44,12 @@ beforeEach(() => {
 })
 
 describe("markInvoicePaid", () => {
-  it("rejects an already-paid invoice and does not update it", async () => {
+  it("rejects an already-settled invoice (no remaining balance) without flipping it", async () => {
     vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
       id: "inv-1",
       invoice_no: "INV-1",
       total: 100,
+      amountPaid: 100,
       status: "PAID",
       schoolId: SCHOOL,
     } as never)
@@ -52,7 +57,7 @@ describe("markInvoicePaid", () => {
     const res = await markInvoicePaid("inv-1")
 
     expect(res.success).toBe(false)
-    expect(db.userInvoice.update).not.toHaveBeenCalled()
+    expect(db.userInvoice.updateMany).not.toHaveBeenCalled()
     expect(postInvoicePayment).not.toHaveBeenCalled()
   })
 
@@ -62,29 +67,55 @@ describe("markInvoicePaid", () => {
     expect(res.success).toBe(false)
   })
 
-  it("marks an unpaid invoice paid (amountPaid=total, PAID) and posts the ledger", async () => {
+  it("does not post when the conditional flip loses the race (count 0)", async () => {
     vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
       id: "inv-1",
       invoice_no: "INV-1",
       total: 250,
+      amountPaid: 0,
       status: "UNPAID",
       schoolId: SCHOOL,
     } as never)
-    vi.mocked(db.userInvoice.update).mockResolvedValue({} as never)
+    vi.mocked(db.userInvoice.updateMany).mockResolvedValue({
+      count: 0,
+    } as never)
+
+    const res = await markInvoicePaid("inv-1")
+
+    expect(res.success).toBe(false)
+    expect(postInvoicePayment).not.toHaveBeenCalled()
+  })
+
+  it("flips an unpaid invoice (schoolId-scoped CAS) and posts only the remaining balance", async () => {
+    vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+      id: "inv-1",
+      invoice_no: "INV-1",
+      total: 250,
+      amountPaid: 100, // a prior partial payment
+      status: "PARTIAL",
+      schoolId: SCHOOL,
+    } as never)
+    vi.mocked(db.userInvoice.updateMany).mockResolvedValue({
+      count: 1,
+    } as never)
 
     const res = await markInvoicePaid("inv-1")
 
     expect(res.success).toBe(true)
-    expect(db.userInvoice.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { amountPaid: 250, status: "PAID" } })
+    expect(db.userInvoice.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "inv-1",
+          schoolId: SCHOOL,
+          status: { notIn: ["PAID", "CANCELLED"] },
+        }),
+        data: { amountPaid: 250, status: "PAID" },
+      })
     )
+    // Posts the balance still due (250 − 100 = 150), not the full total.
     expect(postInvoicePayment).toHaveBeenCalledWith(
       SCHOOL,
-      expect.objectContaining({
-        invoiceId: "inv-1",
-        amount: 250,
-        invoiceNumber: "INV-1",
-      })
+      expect.objectContaining({ invoiceId: "inv-1", amount: 150 })
     )
   })
 })

@@ -13,6 +13,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { checkCurrentUserPermission } from "../lib/permissions"
 import type { ExpenseActionResult } from "./types"
 import {
   expenseApprovalSchema,
@@ -165,22 +166,38 @@ export async function markExpensePaid(
     if (!session?.user?.schoolId || !session?.user?.id) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
-
-    const existing = await db.expense.findFirst({
-      where: { id: expenseId, schoolId: session.user.schoolId },
-      select: { status: true },
-    })
-    if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
-    if (existing.status !== "APPROVED") {
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
-    }
+    // Paying an expense posts to the ledger — gate it behind the same finance
+    // permission that guards approval (server actions are callable directly, so
+    // the UI gating in content.tsx is not sufficient).
+    const canApprove = await checkCurrentUserPermission(
+      session.user.schoolId,
+      "expenses",
+      "approve"
+    )
+    if (!canApprove) return actionError(ACTION_ERRORS.UNAUTHORIZED)
 
     const paidAt = new Date()
-    const expense = await db.expense.update({
-      where: { id: expenseId, schoolId: session.user.schoolId },
-      data: { status: "PAID", paidAt },
-      include: { category: { select: { id: true, name: true } } },
-    })
+    // Atomic conditional transition: the status guard lives in the WHERE clause,
+    // so only an APPROVED expense flips to PAID. A concurrent second call (or a
+    // non-approved / wrong-tenant expense) matches no row → Prisma throws P2025,
+    // caught below. This closes the check-then-write double-payment race.
+    let expense
+    try {
+      expense = await db.expense.update({
+        where: {
+          id: expenseId,
+          schoolId: session.user.schoolId,
+          status: "APPROVED",
+        },
+        data: { status: "PAID", paidAt },
+        include: { category: { select: { id: true, name: true } } },
+      })
+    } catch (e: unknown) {
+      if ((e as { code?: string })?.code === "P2025") {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+      throw e
+    }
 
     // Post to the double-entry ledger (DR expense / CR cash). Non-fatal.
     try {

@@ -214,6 +214,23 @@ export async function createJournalEntry(
       journalEntryId: journalEntry.id,
     }
   } catch (error) {
+    // Lost the race against the @@unique([schoolId, sourceModule, sourceRecordId])
+    // constraint — a concurrent caller already posted this exact source event.
+    // That is an idempotent replay, not a failure: return the existing entry.
+    if (
+      input.sourceRecordId &&
+      (error as { code?: string })?.code === "P2002"
+    ) {
+      const existing = await db.journalEntry.findFirst({
+        where: {
+          schoolId,
+          sourceModule: input.sourceModule,
+          sourceRecordId: input.sourceRecordId,
+        },
+        select: { id: true },
+      })
+      if (existing) return { success: true, journalEntryId: existing.id }
+    }
     console.error("Error creating journal entry:", error)
     return {
       success: false,

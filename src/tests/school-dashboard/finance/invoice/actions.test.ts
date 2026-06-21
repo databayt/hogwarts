@@ -766,7 +766,7 @@ describe("invoice/actions.ts", () => {
       // sentAt must be stamped on success
       expect(db.userInvoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "inv-1" },
+          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
           data: expect.objectContaining({ sentAt: expect.any(Date) }),
         })
       )

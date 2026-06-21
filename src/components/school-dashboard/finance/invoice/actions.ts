@@ -781,7 +781,7 @@ export async function sendInvoiceEmail(
         total: fmt(it.quantity * Number(it.price)),
       })),
       subtotal: fmt(subTotal),
-      discount: discountAmt > 0 ? fmt(discountAmt) : undefined,
+      discount: discountAmt > 0 ? fmt(-discountAmt) : undefined,
       tax: taxPct > 0 ? fmt((subTotal * taxPct) / 100) : undefined,
       total: fmt(Number(invoice.total)),
       amountDue: amountPaid > 0 && due > 0 ? fmt(due) : undefined,
@@ -805,7 +805,7 @@ export async function sendInvoiceEmail(
 
     // Stamp sentAt so the detail view can show "Sent <date>".
     await db.userInvoice.update({
-      where: { id: invoiceId },
+      where: { id: invoiceId, schoolId: ctx.schoolId },
       data: { sentAt: new Date() },
     })
 
@@ -849,27 +849,39 @@ export async function markInvoicePaid(
         id: true,
         invoice_no: true,
         total: true,
+        amountPaid: true,
         status: true,
         schoolId: true,
       },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
-    if (invoice.status === "PAID")
-      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const total = Number(invoice.total)
+    // Only the balance still due is collected now — respect any prior partial
+    // payment (e.g. a Tap/Stripe webhook that set amountPaid + PARTIAL).
+    const remaining = total - Number(invoice.amountPaid ?? 0)
+    if (remaining <= 0) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
     const paidAt = new Date()
-    const total = Number(invoice.total)
-    await db.userInvoice.update({
-      where: { id: invoiceId },
+    // Atomic conditional flip: only the winner of a concurrent double-submit
+    // mutates the row (count 1) and goes on to post; losers — and already-PAID
+    // or CANCELLED invoices — match no row and bail. schoolId-scoped.
+    const flipped = await db.userInvoice.updateMany({
+      where: {
+        id: invoiceId,
+        schoolId: ctx.schoolId,
+        status: { notIn: ["PAID", "CANCELLED"] },
+      },
       data: { amountPaid: total, status: "PAID" },
     })
+    if (flipped.count === 0) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
-    // Post to the double-entry ledger (DR cash / CR accounts receivable). Non-fatal.
+    // Post the amount actually collected now (the remaining balance) to the
+    // double-entry ledger (DR cash / CR accounts receivable). Non-fatal.
     try {
       const { postInvoicePayment } = await import("../lib/accounting/actions")
       const postResult = await postInvoicePayment(ctx.schoolId, {
         invoiceId: invoice.id,
-        amount: total,
+        amount: remaining,
         paymentDate: paidAt,
         invoiceNumber: invoice.invoice_no,
       })

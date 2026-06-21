@@ -196,17 +196,20 @@ export interface DashboardStats {
 
 /**
  * formatCurrency
- * Helper function to format amounts from cents to display currency
+ * Formats a WHOLE-unit amount as a localized currency string. Finance amounts
+ * (Payment.amount, ledger Decimal(12,2), expense/salary/budget/wallet aggregates)
+ * are stored in whole units — do NOT divide by 100. The only callers are the
+ * expenses/payroll/budget/wallet dashboards, all of which pass whole-unit sums.
  */
 export function formatCurrency(
-  amountInCents: number,
+  amount: number,
   locale: string = "en-US",
   currency: string = "USD"
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-  }).format(amountInCents / 100)
+  }).format(amount)
 }
 
 /**

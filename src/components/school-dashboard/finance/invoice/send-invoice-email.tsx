@@ -243,7 +243,7 @@ export const SendInvoiceEmail = ({
               {discount && (
                 <TotalRow
                   label={t.discount}
-                  value={`-${discount}`}
+                  value={discount}
                   align={align}
                   endAlign={endAlign}
                 />

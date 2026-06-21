@@ -284,7 +284,13 @@ export async function generateSalarySlips(
       // Calculate gross, tax, and net
       const baseSalary = Number(activeSalaryStructure.baseSalary)
       const grossSalary = baseSalary + totalAllowances
-      const taxAmount = calculateProgressiveTax(grossSalary)
+      // Tax only the taxable base (base + taxable allowances), matching the
+      // salary calculator in salary/actions.ts so the stored slip + the ledger
+      // agree with what the user was shown (non-taxable allowances excluded).
+      const taxableAllowances = allowances
+        .filter((a: { isTaxable: boolean }) => a.isTaxable)
+        .reduce((sum: number, a: { amount: number }) => sum + a.amount, 0)
+      const taxAmount = calculateProgressiveTax(baseSalary + taxableAllowances)
       const netSalary = grossSalary - taxAmount - totalDeductionsAmount
 
       // Generate slip number
@@ -615,11 +621,16 @@ export async function processPayments(
       },
     })
 
-    // Update payroll run status
-    await db.payrollRun.update({
-      where: { id: payrollRunId },
+    // Atomic gate: flip the run to PAID only if it is still APPROVED. A
+    // concurrent second invocation sees count 0 and bails before re-posting the
+    // salary ledger entries (which would double salary expense).
+    const runFlip = await db.payrollRun.updateMany({
+      where: { id: payrollRunId, schoolId, status: "APPROVED" },
       data: { status: "PAID" },
     })
+    if (runFlip.count === 0) {
+      return { success: true, data: 0 }
+    }
 
     const schoolPref4 = await db.school.findFirst({
       where: { id: schoolId },
