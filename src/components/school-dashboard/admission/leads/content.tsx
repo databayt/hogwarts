@@ -105,7 +105,7 @@ export default async function LeadsContent({ dictionary, lang }: Props) {
           <TabsTrigger value="inquiries">
             {leads?.tabs?.inquiries || "Inquiries"}
             {inquiriesTotal > 0 && (
-              <span className="bg-muted ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums">
+              <span className="bg-muted ms-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums">
                 {inquiriesTotal}
               </span>
             )}
@@ -113,7 +113,7 @@ export default async function LeadsContent({ dictionary, lang }: Props) {
           <TabsTrigger value="tours">
             {leads?.tabs?.tours || "Tour Bookings"}
             {tourBookingsTotal > 0 && (
-              <span className="bg-muted ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums">
+              <span className="bg-muted ms-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums">
                 {tourBookingsTotal}
               </span>
             )}
