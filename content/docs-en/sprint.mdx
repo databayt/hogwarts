@@ -45,17 +45,16 @@ Three buckets. Bucket A is small and surgical, bucket B is mostly confirmation, 
 
 ### B — Database (audit + apply, Neon-branch-first)
 
-Transportation and Conference additive DB landed on Neon prod at their 2026-06-20 deploys. The task is **confirmation + a small additive apply**, never destructive — Neon-branch-first, then promote. Deploy-pending manifest:
+**Audited against prod 2026-06-21** (`prisma migrate diff`, read-only). The bucket reduced to a single genuinely-pending migration — everything else was already live:
 
-| Migration                                                                           | Type           | Safety                                                                                      |
-| ----------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| Attendance hot-path indexes (2)                                                     | additive index | safe                                                                                        |
-| Stream composite indexes (3)                                                        | additive index | safe                                                                                        |
-| saas-dashboard `School.isActive`/`planType` + `Lead.nextFollowUpAt`                 | additive col   | safe (nullable / defaulted)                                                                 |
-| **`JournalEntry` `@@index` → `@@unique([schoolId, sourceModule, sourceRecordId])`** | index→unique   | safe — prod has **0** non-null `sourceRecordId` rows, so nothing to dedupe (verified)       |
-| toCents ÷100 ledger sweep (`scripts/migrate-ledger-cents-to-whole-units.ts`)        | data (script)  | **verified no-op** — read-only prod check found 0 inflated rows; run post-deploy as a sweep |
+| Migration                                                                           | Status                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attendance hot-path indexes / Stream composite indexes                              | ✅ already on prod (prior deploys) — the diff shows none missing                                                                                                           |
+| saas-dashboard `schools.isActive`/`planType` + `leads.nextFollowUpAt`               | ✅ already on prod (columns present)                                                                                                                                       |
+| **`JournalEntry` `@@index` → `@@unique([schoolId, sourceModule, sourceRecordId])`** | ✅ **APPLIED to prod 2026-06-21, Neon-branch-first** — tested on branch `br-jolly-block-adtzmbb3`, then promoted; 0 duplicate rows, 200 rows unchanged, index now `UNIQUE` |
+| toCents ÷100 ledger sweep (`scripts/migrate-ledger-cents-to-whole-units.ts`)        | data script — **verified no-op** (0 inflated rows); run post-deploy as a safety sweep                                                                                      |
 
-The catalog TOCTOU fixes, billing atomic CAS, exams AI cost cap, and RBAC/calculator tests shipped this session are **code-only — no DB change**.
+`prisma migrate diff` also surfaces **pre-existing** drift (`live_class_*` FK renames, `roomName` NOT NULL, index renames, `live_class_events.eventId` unique, `PricingRule.updatedAt` default) — **deliberately not applied**: reconciliation noise from earlier conference/live-class refactors, not this sprint's work. The catalog TOCTOU fixes, billing atomic CAS, exams AI cost cap, and RBAC/calculator tests are **code-only — no DB change**.
 
 ### C — Ops / env / infra (the real lead time)
 
@@ -108,7 +107,7 @@ Five tracks run in parallel across all four weeks: **A** Code, **B** Data, **C**
 The sprint ends when this is green. Items that are audience-specific are tagged.
 
 - [x] Bucket-A code merged to `main` (exams route tree verified present; Playwright CI command fixed; `/api/health` Stripe-optional) — committed, **not yet pushed**
-- [ ] Neon prod schema confirmed against Prisma + the additive manifest applied (Neon-branch-first) — see bucket B table
+- [x] Neon prod schema confirmed against Prisma + additive manifest applied (Neon-branch-first): `JournalEntry @@unique` live on prod 2026-06-21; saas cols + attendance/stream indexes already present; only the verified-no-op toCents sweep remains (post-deploy) — see bucket B
 - [ ] Sentry + Upstash + FCM env set; Sentry receiving events
 - [x] Playwright CI command fixed (`tests` → `test`, sharded) — now runs; first green CI run still pending
 - [x] Finance ledger correct: `toCents` ×100 resolved + **all 6 posters wired & balanced** + idempotent `createJournalEntry` + a two-pass adversarial review closed 8 further defects (incl. the P0 `reverseJournalEntry` no-op, negative-net Cash inversion, payroll post-before-flip recovery); `posting-rules.test.ts` green
