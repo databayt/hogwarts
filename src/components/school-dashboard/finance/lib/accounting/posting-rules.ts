@@ -316,7 +316,12 @@ export async function createSalaryPaymentEntry(
   const grossAmount = paymentData.grossSalary
   const taxAmount = paymentData.taxAmount
   const ssAmount = paymentData.socialSecurityAmount
-  const netAmount = paymentData.netSalary
+  // Clamp to zero: when deductions exceed (gross − tax − ss) the net can go
+  // negative, which would post a NEGATIVE credit on Cash and silently INFLATE
+  // the Cash balance (a negative credit is added back as a debit). The
+  // over-deduction is absorbed by Accounts Payable via otherDeductions below, so
+  // the entry still balances.
+  const netAmount = Math.max(0, paymentData.netSalary)
   // Any deductions that aren't tax/ss (insurance, loan repayment, …) are owed to
   // third parties — credit them to Accounts Payable so the entry balances.
   const otherDeductions =

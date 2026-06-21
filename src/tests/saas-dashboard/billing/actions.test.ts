@@ -66,10 +66,33 @@ describe("billing/actions.ts", () => {
         data: expect.objectContaining({ id: "i1", status: "paid" }),
       })
       expect(db.invoice.update).toHaveBeenCalledWith({
-        where: { id: "i1" },
+        where: { id: "i1", status: "open" },
         data: expect.objectContaining({ status: "paid" }),
       })
       expect(revalidatePath).toHaveBeenCalledWith("/billing")
+    })
+
+    it("reports a friendly error when the CAS write loses the race (P2025)", async () => {
+      vi.mocked(db.invoice.findUnique).mockResolvedValue({
+        status: "open",
+      } as any)
+      const { Prisma } = await import("@prisma/client")
+      vi.mocked(db.invoice.update).mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("No record", {
+          code: "P2025",
+          clientVersion: "x",
+        })
+      )
+
+      const result = await billing.invoiceUpdateStatus({
+        id: "i1",
+        status: "paid",
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toContain("status changed")
+      }
     })
 
     it("updates invoice status to void", async () => {

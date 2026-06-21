@@ -2,6 +2,7 @@
 
 ## Recently Fixed
 
+- **`invoiceUpdateStatus` made atomic (2026-06-21, adversarial-review follow-up)** — the state-machine guard (below) read the status then wrote without re-asserting it, so two concurrent operators could both transition the same invoice (e.g. one "paid", one "void") with the last write silently winning. The update now re-asserts the source status in the WHERE (`{ id, status: from }`); a lost race throws P2025 and returns a "status changed — please refresh" error. Regression test added.
 - **`invoiceUpdateStatus` state-machine guard (2026-06-21 `3be3506ed`)** — the action accepted any status transition and the columns showed both Mark-paid + Void buttons regardless of current state, so an operator could void a PAID invoice or pay a void/uncollectible one. The server now fetches the current status and rejects illegal transitions via `canPayInvoice`/`canVoidInvoice`; the columns gate the buttons per row; a regression test was added. (Canonical finding tracking: [`../OPTIMIZATION_BACKLOG.md`](../OPTIMIZATION_BACKLOG.md).)
 
 ## 🔴 Critical Issues (Fix Immediately)

@@ -24,7 +24,7 @@ vi.mock("@/lib/db", () => {
     findUnique: vi.fn(),
     updateMany: vi.fn(),
   })
-  return { db: { userInvoice: m(), user: m() } }
+  return { db: { userInvoice: m(), user: m(), $transaction: vi.fn() } }
 })
 
 const SCHOOL = "school-1"
@@ -41,6 +41,11 @@ beforeEach(() => {
   } as never)
   // canSeeAllSchoolInvoices() reads the user's role.
   vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as never)
+  // markInvoicePaid reads the balance + flips inside one transaction; run the
+  // callback against the same db mock so tx === db.
+  vi.mocked(db.$transaction).mockImplementation((cb: never) =>
+    (cb as (tx: typeof db) => unknown)(db)
+  )
 })
 
 describe("markInvoicePaid", () => {

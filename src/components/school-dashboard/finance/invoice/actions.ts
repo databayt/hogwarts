@@ -855,25 +855,42 @@ export async function markInvoicePaid(
       },
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
-    const total = Number(invoice.total)
-    // Only the balance still due is collected now — respect any prior partial
-    // payment (e.g. a Tap/Stripe webhook that set amountPaid + PARTIAL).
-    const remaining = total - Number(invoice.amountPaid ?? 0)
-    if (remaining <= 0) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
     const paidAt = new Date()
-    // Atomic conditional flip: only the winner of a concurrent double-submit
-    // mutates the row (count 1) and goes on to post; losers — and already-PAID
-    // or CANCELLED invoices — match no row and bail. schoolId-scoped.
-    const flipped = await db.userInvoice.updateMany({
-      where: {
-        id: invoiceId,
-        schoolId: ctx.schoolId,
-        status: { notIn: ["PAID", "CANCELLED"] },
-      },
-      data: { amountPaid: total, status: "PAID" },
+    // Read the balance-due and flip in ONE transaction so the amount posted to
+    // the ledger reflects the balance that existed at the moment of the write.
+    // Computing `remaining` from the earlier (pre-permission-check) snapshot was
+    // racy: a concurrent webhook partial-payment (amountPaid + PARTIAL) landing
+    // in between would make us over-post the already-collected amount to accounts
+    // receivable. Re-reading amountPaid inside the transaction collapses that
+    // window. Only the winner of a concurrent double-submit flips the row
+    // (count 1); losers — and already-PAID/CANCELLED invoices — match no row.
+    const flip = await db.$transaction(async (tx) => {
+      const fresh = await tx.userInvoice.findFirst({
+        where: canSeeAll
+          ? { id: invoiceId, schoolId: ctx.schoolId }
+          : { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
+        select: { total: true, amountPaid: true, status: true },
+      })
+      if (!fresh || fresh.status === "PAID" || fresh.status === "CANCELLED") {
+        return null
+      }
+      const freshTotal = Number(fresh.total)
+      const freshRemaining = freshTotal - Number(fresh.amountPaid ?? 0)
+      if (freshRemaining <= 0) return null
+      const flipped = await tx.userInvoice.updateMany({
+        where: {
+          id: invoiceId,
+          schoolId: ctx.schoolId,
+          status: { notIn: ["PAID", "CANCELLED"] },
+        },
+        data: { amountPaid: freshTotal, status: "PAID" },
+      })
+      if (flipped.count === 0) return null
+      return { remaining: freshRemaining }
     })
-    if (flipped.count === 0) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    if (!flip) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const remaining = flip.remaining
 
     // Post the amount actually collected now (the remaining balance) to the
     // double-entry ledger (DR cash / CR accounts receivable). Non-fatal.

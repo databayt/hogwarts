@@ -316,6 +316,23 @@ describe("Exam Approval Actions", () => {
       })
     })
 
+    it("returns error when already processed (race lost)", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.examTemplate.findUnique).mockResolvedValue({
+        id: "tpl-1",
+      } as any)
+      vi.mocked(db.examTemplate.updateMany).mockResolvedValue({
+        count: 0,
+      } as any)
+
+      const result = await approveExamTemplate("tpl-1")
+
+      expect(result).toEqual({
+        success: false,
+        error: "template_already_processed",
+      })
+    })
+
     it("returns error for non-existent template", async () => {
       mockDeveloperSession()
       vi.mocked(db.examTemplate.findUnique).mockResolvedValue(null)

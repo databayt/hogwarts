@@ -396,7 +396,14 @@ export async function reverseJournalEntry(
         description: `REVERSAL: ${originalEntry.description} - ${reason}`,
         reference: originalEntry.entryNumber,
         sourceModule: originalEntry.sourceModule as any,
-        sourceRecordId: originalEntry.sourceRecordId || undefined,
+        // Distinct source key: reusing the original's sourceRecordId would make
+        // the idempotency guard above match the ORIGINAL entry and short-circuit
+        // without ever posting the offsetting lines. Keying the reversal on the
+        // original entry id keeps the reversal balanced AND idempotent (a second
+        // reversal attempt finds this entry instead of re-posting).
+        sourceRecordId: originalEntry.sourceRecordId
+          ? `reversal:${originalEntry.id}`
+          : undefined,
         lines: reversingLines,
         fiscalYearId: originalEntry.fiscalYearId,
         autoPost: true,

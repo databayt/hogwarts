@@ -3,7 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import type { Invoice } from "@prisma/client"
+import { Prisma, type Invoice } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
@@ -68,9 +68,12 @@ export async function invoiceUpdateStatus(input: {
       }
     }
 
-    // Properly typed Prisma operation - no type assertion needed
+    // Atomic CAS: re-assert the source status in the WHERE so a concurrent
+    // operator who already transitioned this invoice between the read above and
+    // this write can't be silently overwritten. Prisma throws P2025 when no row
+    // matches the (id, status) pair (handled in the catch below).
     const invoice = await db.invoice.update({
-      where: { id: validated.id },
+      where: { id: validated.id, status: from },
       data: {
         status: validated.status,
         updatedAt: new Date(),
@@ -87,6 +90,19 @@ export async function invoiceUpdateStatus(input: {
 
     return { success: true, data: invoice }
   } catch (error) {
+    // P2025 = the CAS WHERE matched no row: a concurrent operator already
+    // transitioned this invoice. Report it instead of a generic failure.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return {
+        success: false,
+        error: new Error(
+          "Invoice status changed since you loaded the page — please refresh"
+        ),
+      }
+    }
     console.error("Failed to update invoice status:", error)
     return {
       success: false,

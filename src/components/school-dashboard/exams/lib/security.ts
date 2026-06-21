@@ -121,21 +121,26 @@ export function checkAIGenerationRateLimit(schoolId: string): {
   resetIn: number
   scope: "minute" | "day"
 } {
-  // Burst guard — 20 generation requests / minute / school
-  const minute = checkRateLimit({
-    key: `ai-generate:min:${schoolId}`,
-    maxRequests: 20,
-    windowMs: 60 * 1000,
-  })
-  if (!minute.allowed) return { ...minute, scope: "minute" }
-
-  // Daily cost ceiling — 300 generation requests / day / school
+  // Daily cost ceiling checked FIRST — 300 generation requests / day / school.
+  // (If the burst guard ran first it would consume a minute slot even on
+  // requests the day cap will reject, and then mis-report scope="minute" with a
+  // ~60s wait when the real wait is until the daily window resets.)
   const day = checkRateLimit({
     key: `ai-generate:day:${schoolId}`,
     maxRequests: 300,
     windowMs: 24 * 60 * 60 * 1000,
   })
   if (!day.allowed) return { ...day, scope: "day" }
+
+  // Burst guard — 20 generation requests / minute / school. Only reached when
+  // the daily budget still has room, so a minute slot is consumed only for a
+  // request that is otherwise allowed.
+  const minute = checkRateLimit({
+    key: `ai-generate:min:${schoolId}`,
+    maxRequests: 20,
+    windowMs: 60 * 1000,
+  })
+  if (!minute.allowed) return { ...minute, scope: "minute" }
 
   return { ...minute, scope: "minute" }
 }

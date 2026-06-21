@@ -609,7 +609,8 @@ export async function processPayments(
       return { success: false, error: PAYROLL_ERRORS.NOT_APPROVED }
     }
 
-    // Update all salary slips to PAID status
+    // Mark all generated slips PAID first. Idempotent on retry: the filter
+    // requires GENERATED, so a re-run matches 0 rows.
     const updateResult = await db.salarySlip.updateMany({
       where: {
         payrollRunId,
@@ -621,26 +622,6 @@ export async function processPayments(
       },
     })
 
-    // Atomic gate: flip the run to PAID only if it is still APPROVED. A
-    // concurrent second invocation sees count 0 and bails before re-posting the
-    // salary ledger entries (which would double salary expense).
-    const runFlip = await db.payrollRun.updateMany({
-      where: { id: payrollRunId, schoolId, status: "APPROVED" },
-      data: { status: "PAID" },
-    })
-    if (runFlip.count === 0) {
-      return { success: true, data: 0 }
-    }
-
-    const schoolPref4 = await db.school.findFirst({
-      where: { id: schoolId },
-      select: { preferredLanguage: true },
-    })
-    const schoolLang4 = (schoolPref4?.preferredLanguage ?? "ar") as Locale
-    const dict4 = await getDictionary(schoolLang4)
-    const n4 = (dict4 as any)?.finance?.notifications as
-      | Record<string, string>
-      | undefined
     const paidSlips = await db.salarySlip.findMany({
       where: { payrollRunId, status: "PAID" },
       select: {
@@ -652,35 +633,16 @@ export async function processPayments(
         teacher: { select: { userId: true, firstName: true, lastName: true } },
       },
     })
-    for (const slip of paidSlips) {
-      if (slip.teacher?.userId) {
-        dispatchNotification({
-          schoolId,
-          userId: slip.teacher.userId,
-          type: "system_alert",
-          title: n4?.salaryPaidTitle || "Salary Paid",
-          body: interp(
-            n4?.salaryPaidBody || "Your salary of {amount} has been paid.",
-            { amount: Number(slip.netSalary).toLocaleString() }
-          ),
-          lang: schoolLang4,
-          priority: "high",
-          channels: ["in_app", "email"],
-          metadata: {
-            payrollRunId,
-            netSalary: Number(slip.netSalary),
-            url: "/finance/payroll",
-          },
-        }).catch((err) =>
-          console.error("[processPayments] Notification error:", err)
-        )
-      }
-    }
 
     // Post each disbursed slip to the double-entry ledger (DR salary expense; CR
-    // cash + tax/ss/other-deduction payables). Fire-and-forget, idempotent by
-    // sourceRecordId=slipId. socialSecurityAmount is 0 — payroll does not withhold
-    // SS yet, so the residual (gross − net − tax) is credited to Accounts Payable.
+    // cash + tax/ss/other-deduction payables) BEFORE flipping the run to its
+    // terminal PAID state. Posting is idempotent by sourceRecordId=slipId, so if
+    // this crashes/times out mid-loop the run is still APPROVED and a retry
+    // re-enters, re-posts (no double), then claims the gate below. Doing the gate
+    // flip first (as before) made a crash here unrecoverable — the run was PAID
+    // but the ledger was partial, and re-entry was blocked by the APPROVED guard.
+    // socialSecurityAmount is 0 — payroll does not withhold SS yet, so the
+    // residual (gross − net − tax) is credited to Accounts Payable.
     try {
       const { postSalaryPayment } = await import("../lib/accounting/actions")
       for (const slip of paidSlips) {
@@ -706,6 +668,53 @@ export async function processPayments(
         "[processPayments] Ledger posting threw (continuing):",
         postingErr
       )
+    }
+
+    // Atomic gate: flip the run to PAID only if it is still APPROVED, AFTER the
+    // ledger is posted. A concurrent second invocation sees count 0 and bails
+    // here — before notifying — so neither the ledger (idempotent) nor the
+    // notifications double-fire.
+    const runFlip = await db.payrollRun.updateMany({
+      where: { id: payrollRunId, schoolId, status: "APPROVED" },
+      data: { status: "PAID" },
+    })
+    if (runFlip.count === 0) {
+      return { success: true, data: 0 }
+    }
+
+    // Notify each teacher (winner only — fire-and-forget).
+    const schoolPref4 = await db.school.findFirst({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const schoolLang4 = (schoolPref4?.preferredLanguage ?? "ar") as Locale
+    const dict4 = await getDictionary(schoolLang4)
+    const n4 = (dict4 as any)?.finance?.notifications as
+      | Record<string, string>
+      | undefined
+    for (const slip of paidSlips) {
+      if (slip.teacher?.userId) {
+        dispatchNotification({
+          schoolId,
+          userId: slip.teacher.userId,
+          type: "system_alert",
+          title: n4?.salaryPaidTitle || "Salary Paid",
+          body: interp(
+            n4?.salaryPaidBody || "Your salary of {amount} has been paid.",
+            { amount: Number(slip.netSalary).toLocaleString() }
+          ),
+          lang: schoolLang4,
+          priority: "high",
+          channels: ["in_app", "email"],
+          metadata: {
+            payrollRunId,
+            netSalary: Number(slip.netSalary),
+            url: "/finance/payroll",
+          },
+        }).catch((err) =>
+          console.error("[processPayments] Notification error:", err)
+        )
+      }
     }
 
     revalidatePath("/finance/payroll")

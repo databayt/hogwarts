@@ -356,7 +356,9 @@ describe("Proposal Actions (SaaS)", () => {
       vi.mocked(db.chapter.create).mockResolvedValue({
         id: "ch-1",
       } as any)
-      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
+      // approveProposal flips the proposal status via tx.proposal.update (NOT
+      // updateMany — only rejectProposal uses the CAS updateMany guard).
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await approveProposal("p-2")
 
@@ -368,6 +370,10 @@ describe("Proposal Actions (SaaS)", () => {
           name: "Mechanics",
           status: "PUBLISHED",
         }),
+      })
+      expect(db.proposal.update).toHaveBeenCalledWith({
+        where: { id: "p-2" },
+        data: expect.objectContaining({ status: "PUBLISHED" }),
       })
     })
 
@@ -387,12 +393,17 @@ describe("Proposal Actions (SaaS)", () => {
       vi.mocked(db.lesson.create).mockResolvedValue({
         id: "les-1",
       } as any)
-      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
+      // approveProposal uses tx.proposal.update (not the CAS updateMany).
+      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
 
       const result = await approveProposal("p-3")
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual({ catalogEntityId: "les-1" })
+      expect(db.proposal.update).toHaveBeenCalledWith({
+        where: { id: "p-3" },
+        data: expect.objectContaining({ status: "PUBLISHED" }),
+      })
       expect(db.lesson.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           chapterId: "ch-1",
