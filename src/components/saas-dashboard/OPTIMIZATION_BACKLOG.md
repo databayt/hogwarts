@@ -78,7 +78,7 @@
 - [P2/correctness] CSV export hardcodes Arabic locale for all date cells — `src/components/saas-dashboard/billing/actions.ts`
 - [P2/security] CSV injection via school.name / school.domain — formula prefix not sanitized — `src/components/saas-dashboard/billing/actions.ts`
 - [P2/i18n] receipts/upload.tsx toast messages and labels hardcoded English — `src/components/saas-dashboard/billing/receipts/upload.tsx`
-- [P2/correctness] invoiceUpdateStatus applies no state-machine guard — can void a paid invoice — `src/components/saas-dashboard/billing/actions.ts`
+- [x] ~~[P2/correctness] invoiceUpdateStatus applies no state-machine guard — can void a paid invoice~~ — FIXED 2026-06-21 (`3be3506ed`): server fetches current status + rejects illegal transitions (canPayInvoice/canVoidInvoice); columns gate the buttons per row; test added — `src/components/saas-dashboard/billing/actions.ts`
 - [P2/deadcode] Duplicate where-clause logic across getInvoicesData, getInvoices, and getInvoicesCSV — `src/components/saas-dashboard/billing/content.tsx, src/components/saas-dashboard/billing/actions.ts`
 - [P2/deadcode] useBillingData hook calls /api/billing which does not exist — `src/components/saas-dashboard/billing/hooks/use-billing.ts`
 - [P2/deadcode] card.tsx / featured.tsx / all.tsx components are not rendered anywhere in live routes — `src/components/saas-dashboard/billing/card.tsx, src/components/saas-dashboard/billing/featured.tsx, src/components/saas-dashboard/billing/all.tsx`
