@@ -17,7 +17,7 @@
 
 ### P1
 
-- [x] Ledger posting wired -- `markExpensePaid` (APPROVED→PAID, +paidAt) posts `postExpensePayment` (DR expense / CR cash); idempotent, unit-tested. Backend only: the expenses block has no list/row-action UI yet (`approveExpense` is also UI-orphaned), so the trigger awaits an expense list build. (2026-06-21 `5b789ec28`)
+- [x] Ledger posting wired + surfaced -- `markExpensePaid` (APPROVED→PAID, +paidAt) posts `postExpensePayment` (DR expense / CR cash); idempotent, unit-tested. The expense list (`expenses/all`) now has `ExpenseRowActions`: PENDING→Approve/Reject (`approveExpense`), APPROVED→Mark paid (`markExpensePaid`). Both actions also gained the `expenses/approve` permission gate. (2026-06-21 `5b789ec28`, `92d0ffbe6`)
 - [ ] Approval routing rules (by amount threshold, by category)
 - [ ] Email notification on approval state change
 - [ ] Bulk categorisation / reassign category
