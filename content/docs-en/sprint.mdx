@@ -106,7 +106,7 @@ Five tracks run in parallel across all four weeks: **A** Code, **B** Data, **C**
 
 The sprint ends when this is green. Items that are audience-specific are tagged.
 
-- [x] Bucket-A code merged to `main` (exams route tree verified present; Playwright CI command fixed; `/api/health` Stripe-optional) — committed, **not yet pushed**
+- [x] Bucket-A code **DEPLOYED to prod** 2026-06-21 (`febb7da3b..626b5d690` → origin/main; Vercel `dpl_FJzP8oBEvcYVnw3L8YiraqkfqUcr` ● READY on ed.databayt.org; smoke /en /ar /en/login /en/features /en/community /en/docs/sprint /en/docs/finance = 200; `/api/health` = `healthy`, Stripe-optional confirmed live)
 - [x] Neon prod schema confirmed against Prisma + additive manifest applied (Neon-branch-first): `JournalEntry @@unique` live on prod 2026-06-21; saas cols + attendance/stream indexes already present; only the verified-no-op toCents sweep remains (post-deploy) — see bucket B
 - [ ] Sentry + Upstash + FCM env set; Sentry receiving events
 - [x] Playwright CI command fixed (`tests` → `test`, sharded) — now runs; first green CI run still pending
