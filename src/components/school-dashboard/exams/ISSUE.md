@@ -15,7 +15,13 @@ last_audited: 2026-06-14
 
 **Status:** IN PROGRESS
 **Completion:** 78%
-**Last Updated:** 2026-06-14
+**Last Updated:** 2026-06-21
+
+---
+
+## Recently Added
+
+- **RBAC test coverage (2026-06-21)** — added `src/tests/school-dashboard/exams/lib/permissions.test.ts` (10 tests): the full `hasPermission` role matrix (DEVELOPER/ADMIN full, TEACHER author-but-not-publish/override, ACCOUNTANT read-only, STUDENT/GUARDIAN/STAFF read-scoped, unknown role deny-by-default) + `getExamTabsForRole` (management tabs gated to DEVELOPER/ADMIN/TEACHER; STUDENT/GUARDIAN/ACCOUNTANT read-only tabs; unknown role → overview only). The score calculator was already covered (`results/lib/calculator.test.ts`, 61 tests) — the audit's "calculator untested" claim was stale.
 
 ---
 
