@@ -136,7 +136,7 @@ describe("Term Actions", () => {
       const result = await createTerm(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Academic year")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -145,7 +145,7 @@ describe("Term Actions", () => {
       const result = await createTerm(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("requires school context", async () => {
@@ -154,7 +154,7 @@ describe("Term Actions", () => {
       const result = await createTerm(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Missing school")
+      if (!result.success) expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 
@@ -182,7 +182,7 @@ describe("Term Actions", () => {
       const result = await updateTerm({ id: "nonexistent", termNumber: 2 })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("not found")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -191,7 +191,7 @@ describe("Term Actions", () => {
       const result = await updateTerm({ id: "term-1", termNumber: 2 })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -235,7 +235,7 @@ describe("Term Actions", () => {
       const result = await deleteTerm({ id: "term-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -291,7 +291,7 @@ describe("Term Actions", () => {
       const result = await setActiveTerm({ id: "nonexistent" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("not found")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -300,7 +300,7 @@ describe("Term Actions", () => {
       const result = await setActiveTerm({ id: "term-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 

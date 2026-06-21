@@ -147,7 +147,7 @@ describe("Period Actions", () => {
       const result = await createPeriod(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("requires school context", async () => {
@@ -156,7 +156,7 @@ describe("Period Actions", () => {
       const result = await createPeriod(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Missing school")
+      if (!result.success) expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 
@@ -184,7 +184,7 @@ describe("Period Actions", () => {
       const result = await updatePeriod({ id: "nonexistent", name: "Break" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("not found")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -193,7 +193,7 @@ describe("Period Actions", () => {
       const result = await updatePeriod({ id: "period-1", name: "Break" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -237,7 +237,7 @@ describe("Period Actions", () => {
       const result = await deletePeriod({ id: "period-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 

@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -62,6 +63,10 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
@@ -71,6 +76,9 @@ describe("Parent/Guardian Actions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-1", schoolId: mockSchoolId, role: "ADMIN" },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",

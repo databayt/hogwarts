@@ -5,7 +5,7 @@ import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
-import { dispatchNotification } from "@/lib/dispatch-notification"
+import { dispatchTemplated } from "@/lib/dispatch-notification"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   sendBatchGradeNotifications,
@@ -25,6 +25,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn(),
+  dispatchTemplated: vi.fn(),
 }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
@@ -75,7 +76,7 @@ describe("sendGradeNotification", () => {
       { guardian: { userId: "user-g1" } },
       { guardian: { userId: "user-g2" } },
     ] as never)
-    vi.mocked(dispatchNotification).mockResolvedValue("notif-id" as never)
+    vi.mocked(dispatchTemplated).mockResolvedValue("notif-id" as never)
 
     const r = await sendGradeNotification({
       resultId: "res-1",
@@ -84,9 +85,9 @@ describe("sendGradeNotification", () => {
 
     expect(r.success).toBe(true)
     if (r.success) expect(r.data?.count).toBe(3)
-    expect(dispatchNotification).toHaveBeenCalledTimes(3)
+    expect(dispatchTemplated).toHaveBeenCalledTimes(3)
     // every dispatch is schoolId-scoped
-    for (const call of vi.mocked(dispatchNotification).mock.calls) {
+    for (const call of vi.mocked(dispatchTemplated).mock.calls) {
       expect((call[0] as { schoolId: string }).schoolId).toBe(SCHOOL)
     }
   })
@@ -101,7 +102,7 @@ describe("sendGradeNotification", () => {
       class: { subject: { name: "Math" } },
     } as never)
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([] as never)
-    vi.mocked(dispatchNotification).mockResolvedValue("id" as never)
+    vi.mocked(dispatchTemplated).mockResolvedValue("id" as never)
 
     await sendGradeNotification({ resultId: "res-1", type: "grade_posted" })
 
@@ -143,7 +144,7 @@ describe("sendBatchGradeNotifications", () => {
     vi.mocked(db.studentGuardian.findMany).mockResolvedValue([
       { guardian: { userId: "user-g1" } },
     ] as never)
-    vi.mocked(dispatchNotification).mockResolvedValue("id" as never)
+    vi.mocked(dispatchTemplated).mockResolvedValue("id" as never)
     vi.mocked(db.notificationBatch.update).mockResolvedValue({} as never)
 
     const r = await sendBatchGradeNotifications({

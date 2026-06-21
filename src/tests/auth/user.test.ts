@@ -33,6 +33,7 @@ import {
 vi.mock("@/lib/db", () => ({
   db: {
     user: {
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -72,14 +73,17 @@ describe("getUserByEmail", () => {
     const result = await getUserByEmail("test@example.com")
 
     expect(result).toEqual(mockUser)
+    // Current implementation: looks for platform users (schoolId: null) first
     expect(mockedDb.user.findMany).toHaveBeenCalledWith({
-      where: { email: "test@example.com" },
-      orderBy: { createdAt: "desc" },
+      where: { email: "test@example.com", schoolId: null },
+      orderBy: { updatedAt: "desc" },
     })
   })
 
   it("should return null when user not found", async () => {
     mockedDb.user.findMany.mockResolvedValue([])
+    // Fallback: findFirst is called when no platform user found (backward compat)
+    mockedDb.user.findFirst.mockResolvedValue(null)
 
     const result = await getUserByEmail("notfound@example.com")
 
@@ -111,39 +115,28 @@ describe("getUserByEmail", () => {
   })
 
   /**
-   * KNOWN ISSUE - P0: getUserByEmail returns non-tenant-specific user
-   *
-   * This test documents the current behavior where getUserByEmail does NOT
-   * scope by schoolId. This means if the same email exists in multiple schools,
-   * it returns the most recent user regardless of school context.
-   *
-   * REQUIRED FIX: Add optional schoolId parameter and update callers.
+   * The function now accepts an optional schoolId parameter for tenant-aware
+   * lookups. Without a schoolId, it searches for platform users (schoolId: null)
+   * first, then falls back to any user with that email for backward compat.
    */
   it("P0 ISSUE: returns user without tenant scoping", async () => {
-    const school1User = createMockUser({
-      id: "user-school-1",
+    const platformUser = createMockUser({
+      id: "user-platform",
       email: "shared@example.com",
-      schoolId: "school-1",
-    })
-    const school2User = createMockUser({
-      id: "user-school-2",
-      email: "shared@example.com",
-      schoolId: "school-2",
+      schoolId: null,
     })
 
-    // Current behavior: returns any user with email, not tenant-scoped
-    mockedDb.user.findMany.mockResolvedValue([school2User, school1User])
+    // Without schoolId: looks for platform users (schoolId: null)
+    mockedDb.user.findMany.mockResolvedValue([platformUser])
 
     const result = await getUserByEmail("shared@example.com")
 
-    // This test documents the ISSUE: no way to specify schoolId
-    // The function should ideally accept (email, schoolId?) parameter
-    expect(result?.schoolId).toBe("school-2") // Returns first match, not scoped
+    expect(result?.id).toBe("user-platform")
 
-    // The query does NOT include schoolId filter
+    // The query NOW includes schoolId: null filter (platform user lookup)
     expect(mockedDb.user.findMany).toHaveBeenCalledWith({
-      where: { email: "shared@example.com" }, // Missing schoolId!
-      orderBy: { createdAt: "desc" },
+      where: { email: "shared@example.com", schoolId: null },
+      orderBy: { updatedAt: "desc" },
     })
   })
 })
@@ -385,20 +378,19 @@ describe("Multi-Tenant Safety", () => {
    * CRITICAL: These tests document multi-tenant safety concerns
    */
 
-  it("ISSUE: getUserByEmail does not validate tenant context", async () => {
-    // Document that getUserByEmail has no tenant validation
-    const user = createMockUser({
+  it("ISSUE: getUserByEmail now uses schoolId: null for platform user lookup", async () => {
+    // The function now scopes the platform lookup to schoolId: null
+    const platformUser = createMockUser({
       email: "test@example.com",
-      schoolId: "school-1",
+      schoolId: null,
     })
-    mockedDb.user.findMany.mockResolvedValue([user])
+    mockedDb.user.findMany.mockResolvedValue([platformUser])
 
-    // No schoolId parameter available
     await getUserByEmail("test@example.com")
 
-    // Query does not include schoolId
+    // Query includes schoolId: null (platform user scope)
     const queryArg = mockedDb.user.findMany.mock.calls[0][0]
-    expect(queryArg.where).not.toHaveProperty("schoolId")
+    expect(queryArg.where).toHaveProperty("schoolId", null)
   })
 
   it("ISSUE: getOrCreateOAuthUser does not consider subdomain context", async () => {

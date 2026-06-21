@@ -409,7 +409,7 @@ describe("i18n Schema Factories", () => {
     it("should create schema with dictionary messages", () => {
       const schema = createLoginSchema(mockDictionary)
       const result = schema.safeParse({
-        email: "invalid",
+        identifier: "bad@",
         password: "password123",
       })
       expect(result.success).toBe(false)
@@ -418,7 +418,7 @@ describe("i18n Schema Factories", () => {
     it("should validate email correctly", () => {
       const schema = createLoginSchema(mockDictionary)
       const result = schema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
@@ -512,7 +512,7 @@ describe("Edge Cases", () => {
   describe("email edge cases", () => {
     it("should accept email with subdomain", () => {
       const result = LoginSchema.safeParse({
-        email: "user@mail.example.com",
+        identifier: "user@mail.example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
@@ -520,7 +520,7 @@ describe("Edge Cases", () => {
 
     it("should accept email with plus sign", () => {
       const result = LoginSchema.safeParse({
-        email: "user+tag@example.com",
+        identifier: "user+tag@example.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
@@ -528,7 +528,7 @@ describe("Edge Cases", () => {
 
     it("should accept email with numbers", () => {
       const result = LoginSchema.safeParse({
-        email: "user123@example123.com",
+        identifier: "user123@example123.com",
         password: "password123",
       })
       expect(result.success).toBe(true)
@@ -536,7 +536,7 @@ describe("Edge Cases", () => {
 
     it("should reject email with spaces", () => {
       const result = LoginSchema.safeParse({
-        email: "user @example.com",
+        identifier: "user @example.com",
         password: "password123",
       })
       expect(result.success).toBe(false)
@@ -566,7 +566,7 @@ describe("Edge Cases", () => {
   describe("2FA code edge cases", () => {
     it("should accept 6-digit 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
         code: "123456",
       })
@@ -575,7 +575,7 @@ describe("Edge Cases", () => {
 
     it("should accept undefined 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: "test@example.com",
+        identifier: "test@example.com",
         password: "password123",
         code: undefined,
       })

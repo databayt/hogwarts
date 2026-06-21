@@ -1,10 +1,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import {
   autoGenerateCertificates,
   batchGenerateCertificates,
@@ -22,6 +22,10 @@ import {
   updateCertificateConfig,
   verifyCertificate,
 } from "@/components/school-dashboard/exams/certificates/actions/index"
+
+vi.mock("@/lib/tenant-context", () => ({
+  getTenantContext: vi.fn(),
+}))
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -56,9 +60,12 @@ vi.mock("next/cache", () => ({
 const SCHOOL = "school-1"
 
 function asSchool(schoolId: string | null = SCHOOL, role = "ADMIN") {
-  vi.mocked(auth).mockResolvedValue({
-    user: { id: "user-1", role, schoolId },
-  } as never)
+  vi.mocked(getTenantContext).mockResolvedValue({
+    schoolId,
+    role: role as never,
+    requestId: "req-1",
+    isPlatformAdmin: role === "DEVELOPER",
+  })
 }
 
 const validConfigInput = {

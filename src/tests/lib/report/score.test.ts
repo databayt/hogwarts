@@ -177,9 +177,10 @@ describe("runHardFilters", () => {
   })
 
   it("HF7: rejects keyboard mashing (low letter ratio)", () => {
+    // Has ≥5 unique meaningful tokens (passes HF6) but <40% letter ratio (triggers HF7)
     const parsed = reportSchema.parse({
       ...baseInput,
-      description: "!@#$%^&*()!@#$%^&*()!@#$%^&*()!@#$%^&*()!!!!!!",
+      description: "ab12 cd34 ef56 gh78 ij90 9900 8800 7700 6600 5500",
     })
     const r = runHardFilters(parsed, adminReporter, ctx)
     expect(r?.code).toBe("HF7_gibberish")

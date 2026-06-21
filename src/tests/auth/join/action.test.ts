@@ -42,7 +42,7 @@ vi.mock("@/components/auth/tokens", () => ({
 }))
 
 vi.mock("@/components/auth/mail", () => ({
-  sendVerificationEmail: vi.fn(),
+  sendVerificationEmail: vi.fn().mockResolvedValue(true),
 }))
 
 vi.mock("bcryptjs", () => ({
@@ -243,7 +243,9 @@ describe("Register Action - Email Verification", () => {
     expect(mockedSendVerificationEmail).toHaveBeenCalledWith(
       "new@example.com",
       "verification-token",
-      "en"
+      "en",
+      undefined,
+      undefined
     )
   })
 
@@ -261,7 +263,10 @@ describe("Register Action - Email Verification", () => {
       username: "newuser",
     })
 
-    expect(result).toEqual({ success: "Confirmation email sent!" })
+    expect(result).toEqual({
+      success: "Confirmation email sent!",
+      email: "new@example.com",
+    })
   })
 })
 
@@ -316,7 +321,10 @@ describe("Register Action - Multi-Tenant Safety", () => {
       username: "user1",
     })
 
-    expect(result1).toEqual({ success: "Confirmation email sent!" })
+    expect(result1).toEqual({
+      success: "Confirmation email sent!",
+      email: "shared@example.com",
+    })
 
     // If getUserByEmail doesn't scope by schoolId, second registration would fail
     // even if it should succeed for a different school

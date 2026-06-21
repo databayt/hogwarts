@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { auth } from "@/auth"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
@@ -25,6 +26,19 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    school: {
+      findUnique: vi.fn().mockResolvedValue({ preferredLanguage: "en" }),
+    },
+    class: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    classTeacher: {
+      count: vi.fn().mockResolvedValue(0),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    timetable: {
+      count: vi.fn().mockResolvedValue(0),
+    },
     user: {
       findFirst: vi.fn(),
     },
@@ -36,8 +50,31 @@ vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(),
 }))
 
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}))
+
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}))
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockReturnValue({
+    get: vi.fn().mockReturnValue(undefined),
+  }),
+}))
+
+vi.mock("@/components/translation/search", () => ({
+  search: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock("@/components/translation/person", () => ({
+  getNames: vi.fn().mockResolvedValue(new Map()),
+}))
+
+vi.mock("@/lib/spotlight-cache", () => ({
+  revalidateSpotlight: vi.fn(),
 }))
 
 describe("Teacher Actions", () => {
@@ -45,12 +82,22 @@ describe("Teacher Actions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user-1", schoolId: mockSchoolId, role: "ADMIN" },
+    } as any)
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test-school",
       role: "ADMIN",
       locale: "en",
     })
+    // Reset default mocks for db models that vi.clearAllMocks() would clear
+    vi.mocked(db.school.findUnique).mockResolvedValue({
+      preferredLanguage: "en",
+    } as any)
+    vi.mocked(db.class.count).mockResolvedValue(0)
+    vi.mocked(db.classTeacher.count).mockResolvedValue(0)
+    vi.mocked(db.timetable.count).mockResolvedValue(0)
   })
 
   describe("createTeacher", () => {

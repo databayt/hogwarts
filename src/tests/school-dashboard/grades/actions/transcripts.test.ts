@@ -26,6 +26,13 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("next/headers", () => ({
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}))
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimitAsync: vi.fn().mockResolvedValue({ allowed: true }),
+  RATE_LIMITS: { PUBLIC: { windowMs: 60000, maxRequests: 30 } },
+}))
 
 const SCHOOL = "school-1"
 

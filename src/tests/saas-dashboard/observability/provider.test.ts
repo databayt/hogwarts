@@ -27,10 +27,14 @@ describe("observability/provider", () => {
     ])
     const mockCount = vi.fn().mockResolvedValue(1)
     vi.spyOn(dbMod, "db", "get").mockReturnValue({
-      $transaction: (fns: any[]) => Promise.all(fns.map((fn) => fn)),
+      $transaction: (arr: any[]) => Promise.all(arr),
       auditLog: { findMany: mockFindMany, count: mockCount },
-      user: { findUnique: vi.fn().mockResolvedValue({ email: "a@b.com" }) },
-      school: { findUnique: vi.fn().mockResolvedValue({ name: "Alpha" }) },
+      user: {
+        findMany: vi.fn().mockResolvedValue([{ id: "u1", email: "a@b.com" }]),
+      },
+      school: {
+        findMany: vi.fn().mockResolvedValue([{ id: "s1", name: "Alpha" }]),
+      },
     } as any)
 
     const { rows, total } = await fetchLogs({

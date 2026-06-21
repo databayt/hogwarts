@@ -6,32 +6,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
-  exportSchoolData,
-  getSchoolUsers,
-  updateUserRole,
-} from "@/components/school-dashboard/settings/actions"
+  createSchoolYear,
+  deleteSchoolYear,
+  getSchoolYears,
+  updateSchoolYear,
+} from "@/components/school-dashboard/school/academic/year/actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({
   db: {
-    user: {
+    schoolYear: {
+      create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
       count: vi.fn(),
     },
     school: {
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn((callback) =>
-      callback({
-        user: {
-          updateMany: vi.fn(),
-          findMany: vi.fn(),
-          count: vi.fn(),
-        },
-      })
-    ),
   },
 }))
 
@@ -56,44 +51,40 @@ describe("Settings Actions", () => {
     })
   })
 
-  describe("updateUserRole", () => {
-    it("updates user role within same school", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          user: {
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-        }
-        return callback(tx)
-      })
+  describe("updateSchoolYear", () => {
+    it("updates school year within same school", async () => {
+      // First findFirst: existence check → returns the record
+      // Second findFirst: duplicate-name check → returns null (no duplicate)
+      vi.mocked(db.schoolYear.findFirst)
+        .mockResolvedValueOnce({
+          id: "year-1",
+          yearName: "2024-2025",
+          schoolId: mockSchoolId,
+        } as any)
+        .mockResolvedValueOnce(null)
+      vi.mocked(db.schoolYear.updateMany).mockResolvedValue({ count: 1 })
 
-      const result = await updateUserRole({
-        userId: "user-1",
-        role: "TEACHER",
+      const result = await updateSchoolYear({
+        id: "year-1",
+        yearName: "2024-2025 Updated",
       })
 
       expect(result.success).toBe(true)
     })
 
-    it("prevents updating user from different school", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          user: {
-            updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-        }
-        return callback(tx)
-      })
+    it("prevents updating year from different school (NOT_FOUND)", async () => {
+      // findFirst returns null when schoolId doesn't match
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
 
-      const result = await updateUserRole({
-        userId: "user-from-other-school",
-        role: "ADMIN",
+      const result = await updateSchoolYear({
+        id: "year-from-other-school",
+        yearName: "Updated",
       })
 
       expect(result.success).toBe(false)
     })
 
-    it("requires ADMIN role to update user roles", async () => {
+    it("requires ADMIN role to update school years", async () => {
       vi.mocked(getTenantContext).mockResolvedValue({
         schoolId: mockSchoolId,
         subdomain: "test-school",
@@ -101,85 +92,110 @@ describe("Settings Actions", () => {
         locale: "en",
       })
 
-      const result = await updateUserRole({
-        userId: "user-1",
-        role: "ADMIN",
+      const result = await updateSchoolYear({
+        id: "year-1",
+        yearName: "Blocked Update",
       })
 
       expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
-  describe("getSchoolUsers", () => {
-    it("fetches users scoped to schoolId", async () => {
-      const mockUsers = [
-        { id: "1", name: "John Doe", role: "TEACHER", schoolId: mockSchoolId },
+  describe("getSchoolYears", () => {
+    it("fetches school years scoped to schoolId", async () => {
+      const mockYears = [
+        {
+          id: "1",
+          yearName: "2024-2025",
+          schoolId: mockSchoolId,
+          startDate: new Date("2024-09-01"),
+          endDate: new Date("2025-06-30"),
+          createdAt: new Date(),
+          _count: { terms: 2, periods: 6 },
+        },
         {
           id: "2",
-          name: "Jane Smith",
-          role: "STUDENT",
+          yearName: "2023-2024",
           schoolId: mockSchoolId,
+          startDate: new Date("2023-09-01"),
+          endDate: new Date("2024-06-30"),
+          createdAt: new Date(),
+          _count: { terms: 2, periods: 6 },
         },
       ]
 
-      vi.mocked(db.user.findMany).mockResolvedValue(mockUsers as any)
-      vi.mocked(db.user.count).mockResolvedValue(2)
+      vi.mocked(db.schoolYear.findMany).mockResolvedValue(mockYears as any)
+      vi.mocked(db.schoolYear.count).mockResolvedValue(2)
 
-      const result = await getSchoolUsers({})
+      const result = await getSchoolYears()
 
       expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(2)
+      expect(result.data?.rows).toHaveLength(2)
     })
 
-    it("applies role filter with schoolId", async () => {
-      vi.mocked(db.user.findMany).mockResolvedValue([])
-      vi.mocked(db.user.count).mockResolvedValue(0)
+    it("applies schoolId filter to query", async () => {
+      vi.mocked(db.schoolYear.findMany).mockResolvedValue([])
+      vi.mocked(db.schoolYear.count).mockResolvedValue(0)
 
-      await getSchoolUsers({ role: "TEACHER" })
+      await getSchoolYears()
 
-      expect(db.user.findMany).toHaveBeenCalledWith(
+      expect(db.schoolYear.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             schoolId: mockSchoolId,
-            role: "TEACHER",
           }),
         })
       )
     })
   })
 
-  describe("exportSchoolData", () => {
-    it("exports data only for current school", async () => {
-      vi.mocked(db.school.findFirst).mockResolvedValue({
+  describe("deleteSchoolYear (school data export equivalent)", () => {
+    it("deletes year only for current school", async () => {
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
         id: mockSchoolId,
-        name: "Test School",
-        students: [],
-        teachers: [],
-        classes: [],
+        yearName: "Test Year",
+        _count: { terms: 0, periods: 0 },
+        schoolId: mockSchoolId,
       } as any)
+      vi.mocked(db.schoolYear.deleteMany).mockResolvedValue({ count: 1 })
 
-      const result = await exportSchoolData({
-        format: "json",
-        includeStudents: true,
-        includeTeachers: true,
-      })
+      const result = await deleteSchoolYear({ id: mockSchoolId })
 
       expect(result.success).toBe(true)
-      expect(db.school.findFirst).toHaveBeenCalledWith(
+      expect(db.schoolYear.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: mockSchoolId },
+          where: expect.objectContaining({ id: mockSchoolId }),
         })
       )
     })
 
-    it("returns error when school not found", async () => {
-      vi.mocked(db.school.findFirst).mockResolvedValue(null)
+    it("returns error when school year not found", async () => {
+      vi.mocked(db.schoolYear.findFirst).mockResolvedValue(null)
 
-      const result = await exportSchoolData({
-        format: "json",
+      const result = await deleteSchoolYear({ id: "nonexistent-year" })
+
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe("createSchoolYear", () => {
+    it("requires MISSING_SCHOOL error when schoolId is null", async () => {
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: null as any,
+        subdomain: "test-school",
+        role: "ADMIN",
+        locale: "en",
+      })
+
+      const result = await createSchoolYear({
+        yearName: "2026-2027",
+        startDate: new Date("2026-09-01"),
+        endDate: new Date("2027-06-30"),
       })
 
       expect(result.success).toBe(false)
+      expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 })

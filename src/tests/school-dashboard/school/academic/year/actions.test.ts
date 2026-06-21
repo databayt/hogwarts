@@ -140,7 +140,7 @@ describe("School Year Actions", () => {
       const result = await createSchoolYear(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("requires school context", async () => {
@@ -149,7 +149,7 @@ describe("School Year Actions", () => {
       const result = await createSchoolYear(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Missing school")
+      if (!result.success) expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 
@@ -183,7 +183,7 @@ describe("School Year Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("not found")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -195,7 +195,7 @@ describe("School Year Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -238,7 +238,7 @@ describe("School Year Actions", () => {
       const result = await deleteSchoolYear({ id: "year-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 

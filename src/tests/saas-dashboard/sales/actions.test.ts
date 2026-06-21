@@ -239,7 +239,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized: Platform admin access required",
+        error: "Forbidden",
       })
       expect(db.lead.create).not.toHaveBeenCalled()
     })
@@ -262,7 +262,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized",
+        error: "Forbidden",
       })
       expect(db.lead.create).not.toHaveBeenCalled()
     })
@@ -354,7 +354,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized: Platform admin access required",
+        error: "Forbidden",
       })
       expect(db.lead.findFirst).not.toHaveBeenCalled()
     })
@@ -439,7 +439,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized: Platform admin access required",
+        error: "Forbidden",
       })
       expect(db.lead.findFirst).not.toHaveBeenCalled()
     })
@@ -654,7 +654,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized: Platform admin access required",
+        error: "Forbidden",
       })
       expect(db.lead.count).not.toHaveBeenCalled()
       expect(db.lead.findMany).not.toHaveBeenCalled()
@@ -726,7 +726,7 @@ describe("Sales Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Unauthorized: Platform admin access required",
+        error: "Forbidden",
       })
       expect(db.lead.findFirst).not.toHaveBeenCalled()
     })

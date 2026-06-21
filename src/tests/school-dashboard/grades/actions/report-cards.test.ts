@@ -28,15 +28,19 @@ vi.mock("@/lib/db", () => ({
       create: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
       count: vi.fn(),
     },
     reportCardGrade: { deleteMany: vi.fn(), createMany: vi.fn() },
+    school: { findUnique: vi.fn().mockResolvedValue(null) },
   },
 }))
 
 vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotification: vi.fn().mockResolvedValue(undefined),
+}))
 // Fire-and-forget notifications — keep them out of these tests.
 vi.mock("@/components/school-dashboard/grades/actions/notifications", () => ({
   sendBatchGradeNotifications: vi.fn().mockResolvedValue({ success: true }),

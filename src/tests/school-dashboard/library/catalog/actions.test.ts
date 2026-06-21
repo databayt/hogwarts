@@ -24,18 +24,18 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    schoolBookSelection: {
+    bookSelection: {
       findFirst: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
     },
-    catalogBook: {
+    book: {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
-    book: {
+    schoolBook: {
       create: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -130,7 +130,7 @@ describe("Library Catalog Actions", () => {
     it("creates selection + Book in transaction", async () => {
       mockAdminSession()
       vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
+      vi.mocked(db.book.findUnique).mockResolvedValue(mockBook as any)
 
       let txSelectionCreate: ReturnType<typeof vi.fn>
       let txBookCreate: ReturnType<typeof vi.fn>
@@ -138,12 +138,12 @@ describe("Library Catalog Actions", () => {
         txSelectionCreate = vi.fn().mockResolvedValue({})
         txBookCreate = vi.fn().mockResolvedValue({})
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             create: txSelectionCreate,
             count: vi.fn().mockResolvedValue(1),
           },
-          book: { create: txBookCreate },
-          catalogBook: { update: vi.fn().mockResolvedValue({}) },
+          schoolBook: { create: txBookCreate },
+          book: { update: vi.fn().mockResolvedValue({}) },
         }
         return callback(tx)
       })
@@ -182,18 +182,18 @@ describe("Library Catalog Actions", () => {
     it("sets shelfLocation to null when not provided", async () => {
       mockAdminSession()
       vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
+      vi.mocked(db.book.findUnique).mockResolvedValue(mockBook as any)
 
       let txSelectionCreate: ReturnType<typeof vi.fn>
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         txSelectionCreate = vi.fn().mockResolvedValue({})
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             create: txSelectionCreate,
             count: vi.fn().mockResolvedValue(1),
           },
-          book: { create: vi.fn().mockResolvedValue({}) },
-          catalogBook: { update: vi.fn().mockResolvedValue({}) },
+          schoolBook: { create: vi.fn().mockResolvedValue({}) },
+          book: { update: vi.fn().mockResolvedValue({}) },
         }
         return callback(tx)
       })
@@ -225,7 +225,7 @@ describe("Library Catalog Actions", () => {
     it("returns error for non-existent catalog book", async () => {
       mockAdminSession()
       vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(null)
+      vi.mocked(db.book.findUnique).mockResolvedValue(null)
 
       const result = await selectBook("nonexistent", 5)
 
@@ -284,15 +284,15 @@ describe("Library Catalog Actions", () => {
     it("allows DEVELOPER role", async () => {
       mockDeveloperSession()
       vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
+      vi.mocked(db.book.findUnique).mockResolvedValue(mockBook as any)
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             create: vi.fn().mockResolvedValue({}),
             count: vi.fn().mockResolvedValue(1),
           },
-          book: { create: vi.fn().mockResolvedValue({}) },
-          catalogBook: { update: vi.fn().mockResolvedValue({}) },
+          schoolBook: { create: vi.fn().mockResolvedValue({}) },
+          book: { update: vi.fn().mockResolvedValue({}) },
         }
         return callback(tx)
       })
@@ -305,7 +305,7 @@ describe("Library Catalog Actions", () => {
     it("updates usageCount inside transaction", async () => {
       mockAdminSession()
       vi.mocked(db.bookSelection.findFirst).mockResolvedValue(null)
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(mockBook as any)
+      vi.mocked(db.book.findUnique).mockResolvedValue(mockBook as any)
 
       let txBookUpdate: ReturnType<typeof vi.fn>
       let txSelectionCount: ReturnType<typeof vi.fn>
@@ -313,12 +313,12 @@ describe("Library Catalog Actions", () => {
         txSelectionCount = vi.fn().mockResolvedValue(3)
         txBookUpdate = vi.fn().mockResolvedValue({})
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             create: vi.fn().mockResolvedValue({}),
             count: txSelectionCount,
           },
-          book: { create: vi.fn().mockResolvedValue({}) },
-          catalogBook: { update: txBookUpdate },
+          schoolBook: { create: vi.fn().mockResolvedValue({}) },
+          book: { update: txBookUpdate },
         }
         return callback(tx)
       })
@@ -344,20 +344,18 @@ describe("Library Catalog Actions", () => {
         summary: null,
         coverUrl: null,
       }
-      vi.mocked(db.schoolBook.findUnique).mockResolvedValue(
-        catalogWithNulls as any
-      )
+      vi.mocked(db.book.findUnique).mockResolvedValue(catalogWithNulls as any)
 
       let txBookCreate: ReturnType<typeof vi.fn>
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         txBookCreate = vi.fn().mockResolvedValue({})
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             create: vi.fn().mockResolvedValue({}),
             count: vi.fn().mockResolvedValue(1),
           },
-          book: { create: txBookCreate },
-          catalogBook: { update: vi.fn().mockResolvedValue({}) },
+          schoolBook: { create: txBookCreate },
+          book: { update: vi.fn().mockResolvedValue({}) },
         }
         return callback(tx)
       })
@@ -395,12 +393,12 @@ describe("Library Catalog Actions", () => {
         txBookUpdate = vi.fn().mockResolvedValue({})
         txSelectionCount = vi.fn().mockResolvedValue(0)
         const tx = {
-          schoolBookSelection: {
+          bookSelection: {
             delete: txSelectionDelete,
             count: txSelectionCount,
           },
-          book: { updateMany: txBookUpdateMany },
-          catalogBook: { update: txBookUpdate },
+          schoolBook: { updateMany: txBookUpdateMany },
+          book: { update: txBookUpdate },
         }
         return callback(tx)
       })

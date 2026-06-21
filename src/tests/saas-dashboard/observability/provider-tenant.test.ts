@@ -12,13 +12,13 @@ describe("observability/provider tenant scoping", () => {
     const mockFindMany = vi.fn().mockResolvedValue([])
     const mockCount = vi.fn().mockResolvedValue(0)
     vi.spyOn(dbMod, "db", "get").mockReturnValue({
-      $transaction: (fns: any[]) => Promise.all(fns.map((fn) => fn)),
+      $transaction: (arr: any[]) => Promise.all(arr),
       auditLog: {
         findMany: (...args: any[]) => mockFindMany(...args),
         count: mockCount,
       },
-      user: { findUnique: vi.fn() },
-      school: { findUnique: vi.fn() },
+      user: { findMany: vi.fn().mockResolvedValue([]) },
+      school: { findMany: vi.fn().mockResolvedValue([]) },
     } as any)
 
     await fetchLogs({ page: 1, perPage: 10, tenantId: "tenant-123" })

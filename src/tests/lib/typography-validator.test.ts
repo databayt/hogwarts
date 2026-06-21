@@ -8,41 +8,45 @@ import { validateTypography } from "@/lib/typography-validator"
 describe("Typography Validator", () => {
   describe("detectHardcodedTypography", () => {
     it("should detect hardcoded text-* classes", () => {
-      const html = '<div className="text-2xl font-bold">Title</div>'
+      // Use <p> (semantic element) so only the hardcoded-typography violation fires
+      // Use text-2xl font-semibold which maps to h3 in TYPOGRAPHY_MAPPINGS
+      const html = '<p className="text-2xl font-semibold">Title</p>'
       const violations = validateTypography(html)
 
       expect(violations).toHaveLength(1)
       expect(violations[0]).toMatchObject({
         type: "hardcoded-typography",
-        element: "div",
-        classes: ["text-2xl", "font-bold"],
+        element: "p",
+        classes: ["text-2xl", "font-semibold"],
         suggestion: "Use <h3> instead",
       })
     })
 
     it("should detect font-* classes without text size", () => {
-      const html = '<span className="font-semibold">Text</span>'
+      // Use <strong> (semantic element) so only the hardcoded-typography violation fires
+      const html = '<strong className="font-semibold">Text</strong>'
       const violations = validateTypography(html)
 
       expect(violations).toHaveLength(1)
       expect(violations[0]).toMatchObject({
         type: "hardcoded-typography",
-        element: "span",
+        element: "strong",
         classes: ["font-semibold"],
         suggestion: "Use semantic HTML element",
       })
     })
 
     it("should detect text-muted-foreground on non-semantic elements", () => {
+      // Use <p> (semantic) so only hardcoded-typography fires; text-sm triggers it
       const html =
-        '<div className="text-sm text-muted-foreground">Description</div>'
+        '<p className="text-sm text-muted-foreground">Description</p>'
       const violations = validateTypography(html)
 
       expect(violations).toHaveLength(1)
       expect(violations[0]).toMatchObject({
         type: "hardcoded-typography",
-        element: "div",
-        classes: ["text-sm", "text-muted-foreground"],
+        element: "p",
+        classes: ["text-sm"],
         suggestion: 'Use <p className="muted"> instead',
       })
     })
@@ -127,7 +131,8 @@ describe("Typography Validator", () => {
 
     testCases.forEach(({ input, expected }) => {
       it(`should suggest ${expected} for ${input}`, () => {
-        const html = `<div className="${input}">Text</div>`
+        // Use <p> (semantic element) so violations[0] is the hardcoded-typography one
+        const html = `<p className="${input}">Text</p>`
         const violations = validateTypography(html)
 
         expect(violations[0].suggestion).toContain(expected)
@@ -187,7 +192,8 @@ describe("Typography Validator", () => {
     })
 
     it("should detect hardcoded directional classes", () => {
-      const html = '<div className="text-left">Text</div>'
+      // Use <p> (semantic element) so only hardcoded-direction fires
+      const html = '<p className="text-left">Text</p>'
       const violations = validateTypography(html)
 
       expect(violations).toHaveLength(1)

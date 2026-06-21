@@ -26,7 +26,7 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/lib/db", () => ({
   db: {
-    book: {
+    schoolBook: {
       create: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
@@ -352,6 +352,7 @@ describe("Library Actions", () => {
 
     it("borrows a book successfully", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
@@ -426,6 +427,7 @@ describe("Library Actions", () => {
 
     it("fails when user does not exist", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue(null)
 
       const result = await borrowBook(borrowData)
@@ -439,6 +441,7 @@ describe("Library Actions", () => {
 
     it("fails when book is not found", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
@@ -455,6 +458,7 @@ describe("Library Actions", () => {
 
     it("fails when no copies are available", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
@@ -474,6 +478,7 @@ describe("Library Actions", () => {
 
     it("prevents double-borrow by the same user", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
@@ -496,6 +501,7 @@ describe("Library Actions", () => {
 
     it("handles database transaction errors gracefully", async () => {
       mockStudentSession()
+      vi.mocked(db.borrowRecord.count).mockResolvedValue(0)
       vi.mocked(db.user.findUnique).mockResolvedValue({
         id: STUDENT_ID,
       } as any)
@@ -504,6 +510,10 @@ describe("Library Actions", () => {
         availableCopies: 2,
       } as any)
       vi.mocked(db.borrowRecord.findFirst).mockResolvedValue(null)
+      // The array-form transaction eagerly evaluates db.borrowRecord.create and
+      // db.schoolBook.update to build the promise array before passing to $transaction.
+      vi.mocked(db.borrowRecord.create).mockResolvedValue({} as any)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
       vi.mocked(db.$transaction).mockRejectedValue(
         new Error("Transaction failed")
       )
@@ -629,6 +639,10 @@ describe("Library Actions", () => {
         ...mockBorrowRecord,
         status: "BORROWED",
       } as any)
+      // The array-form transaction eagerly evaluates db.borrowRecord.update and
+      // db.schoolBook.update to build the promise array before passing to $transaction.
+      vi.mocked(db.borrowRecord.update).mockResolvedValue({} as any)
+      vi.mocked(db.schoolBook.update).mockResolvedValue({} as any)
       vi.mocked(db.$transaction).mockRejectedValue(
         new Error("Transaction failed")
       )

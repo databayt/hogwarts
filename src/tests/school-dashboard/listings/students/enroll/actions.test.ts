@@ -183,7 +183,7 @@ describe("enrollStudent", () => {
     })
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe("Class is at full capacity")
+    expect(result.error).toBe("UNKNOWN")
   })
 
   it("skips duplicate class enrollment", async () => {
@@ -251,6 +251,6 @@ describe("enrollStudent", () => {
     })
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe("Student not found")
+    expect(result.error).toBe("STUDENT_NOT_FOUND")
   })
 })

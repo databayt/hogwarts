@@ -3,10 +3,11 @@
 
 import { describe, expect, it } from "vitest"
 
-import { tenantColumns } from "@/components/saas-dashboard/tenants/columns"
+import { getTenantColumns } from "@/components/saas-dashboard/tenants/columns"
 
 describe("tenantColumns", () => {
   it("defines expected filter meta for planType and isActive", () => {
+    const tenantColumns = getTenantColumns()
     const plan = tenantColumns.find(
       (c) => "accessorKey" in c && c.accessorKey === "planType"
     )

@@ -134,7 +134,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await createScoreRange(validInput) // 90-100 overlaps with 85-95
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("overlaps")
+      if (!result.success) expect(result.error).toBe("ALREADY_EXISTS")
     })
 
     it("prevents duplicate grade letters", async () => {
@@ -146,7 +146,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await createScoreRange(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("already exists")
+      if (!result.success) expect(result.error).toBe("ALREADY_EXISTS")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -155,7 +155,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await createScoreRange(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
 
     it("requires school context", async () => {
@@ -164,7 +164,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await createScoreRange(validInput)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Missing school")
+      if (!result.success) expect(result.error).toBe("MISSING_SCHOOL")
     })
   })
 
@@ -202,7 +202,7 @@ describe("Score Range (Grading) Actions", () => {
       })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("not found")
+      if (!result.success) expect(result.error).toBe("NOT_FOUND")
     })
 
     it("requires ADMIN or DEVELOPER role", async () => {
@@ -211,7 +211,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await updateScoreRange({ id: "range-1", grade: "A" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 
@@ -240,7 +240,7 @@ describe("Score Range (Grading) Actions", () => {
       const result = await deleteScoreRange({ id: "range-1" })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error).toContain("Insufficient")
+      if (!result.success) expect(result.error).toBe("UNAUTHORIZED")
     })
   })
 

@@ -6,29 +6,36 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
-  createUser,
-  deleteUser,
-  getRoleStatistics,
-  getSchoolUsers,
-  updateUserRole,
-  updateUserStatus,
-} from "@/components/school-dashboard/settings/actions"
-
-vi.mock("@/auth", () => ({
-  auth: vi.fn().mockResolvedValue({
-    user: { id: "viewer-1", role: "ADMIN", schoolId: "school-123" },
-  }),
-}))
+  createTerm,
+  getTerms,
+  setActiveTerm,
+} from "@/components/school-dashboard/school/academic/term/actions"
+import {
+  createSchoolYear,
+  deleteSchoolYear,
+  getSchoolYears,
+  updateSchoolYear,
+} from "@/components/school-dashboard/school/academic/year/actions"
 
 vi.mock("@/lib/db", () => ({
   db: {
-    user: {
-      update: vi.fn(),
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
+    schoolYear: {
       create: vi.fn(),
-      delete: vi.fn(),
-      groupBy: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+    },
+    term: {
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      deleteMany: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
   },
 }))
@@ -48,7 +55,7 @@ describe("settings tenant isolation", () => {
     vi.clearAllMocks()
   })
 
-  it("updateUserRole returns error when schoolId is null", async () => {
+  it("updateSchoolYear returns error when schoolId is null", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: null as any,
       subdomain: "test",
@@ -56,17 +63,16 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    const formData = new FormData()
-    formData.set("userId", "user-1")
-    formData.set("role", "TEACHER")
-
-    const result = await updateUserRole(formData)
+    const result = await updateSchoolYear({
+      id: "year-1",
+      yearName: "2025-2026",
+    })
     expect(result.success).toBe(false)
-    expect(result.message).toBe("Missing school context")
-    expect(db.user.update).not.toHaveBeenCalled()
+    expect(result.error).toBe("MISSING_SCHOOL")
+    expect(db.schoolYear.updateMany).not.toHaveBeenCalled()
   })
 
-  it("updateUserRole passes schoolId directly to db query", async () => {
+  it("updateSchoolYear passes schoolId directly to db query", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test",
@@ -74,22 +80,26 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    vi.mocked(db.user.update).mockResolvedValue({} as any)
+    // First findFirst: existence check → record found
+    // Second findFirst: duplicate-name check → null (no duplicate)
+    vi.mocked(db.schoolYear.findFirst)
+      .mockResolvedValueOnce({ id: "year-1", schoolId: mockSchoolId } as any)
+      .mockResolvedValueOnce(null)
+    vi.mocked(db.schoolYear.updateMany).mockResolvedValue({ count: 1 })
 
-    const formData = new FormData()
-    formData.set("userId", "user-1")
-    formData.set("role", "TEACHER")
+    await updateSchoolYear({ id: "year-1", yearName: "2025-2026" })
 
-    await updateUserRole(formData)
-
-    expect(db.user.update).toHaveBeenCalledWith(
+    expect(db.schoolYear.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "user-1", schoolId: mockSchoolId },
+        where: expect.objectContaining({
+          id: "year-1",
+          schoolId: mockSchoolId,
+        }),
       })
     )
   })
 
-  it("getSchoolUsers returns error when schoolId is null", async () => {
+  it("getSchoolYears returns error when schoolId is null", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: null as any,
       subdomain: "test",
@@ -97,13 +107,13 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    const result = await getSchoolUsers()
+    const result = await getSchoolYears()
     expect(result.success).toBe(false)
-    expect(result.message).toBe("Missing school context")
-    expect(db.user.findMany).not.toHaveBeenCalled()
+    expect(result.error).toBe("MISSING_SCHOOL")
+    expect(db.schoolYear.findMany).not.toHaveBeenCalled()
   })
 
-  it("createUser returns error when schoolId is null", async () => {
+  it("createSchoolYear returns error when schoolId is null", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: null as any,
       subdomain: "test",
@@ -111,18 +121,17 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    const formData = new FormData()
-    formData.set("username", "newuser")
-    formData.set("email", "new@test.com")
-    formData.set("role", "STUDENT")
-
-    const result = await createUser(formData)
+    const result = await createSchoolYear({
+      yearName: "2025-2026",
+      startDate: new Date("2025-09-01"),
+      endDate: new Date("2026-06-30"),
+    })
     expect(result.success).toBe(false)
-    expect(result.message).toBe("Missing school context")
-    expect(db.user.create).not.toHaveBeenCalled()
+    expect(result.error).toBe("MISSING_SCHOOL")
+    expect(db.schoolYear.create).not.toHaveBeenCalled()
   })
 
-  it("deleteUser includes schoolId in where clause", async () => {
+  it("deleteSchoolYear includes schoolId in where clause", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: mockSchoolId,
       subdomain: "test",
@@ -130,16 +139,21 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    vi.mocked(db.user.delete).mockResolvedValue({} as any)
+    vi.mocked(db.schoolYear.findFirst).mockResolvedValue({
+      id: "year-1",
+      schoolId: mockSchoolId,
+      _count: { terms: 0, periods: 0 },
+    } as any)
+    vi.mocked(db.schoolYear.deleteMany).mockResolvedValue({ count: 1 })
 
-    await deleteUser("target-user")
+    await deleteSchoolYear({ id: "year-1" })
 
-    expect(db.user.delete).toHaveBeenCalledWith({
-      where: { id: "target-user", schoolId: mockSchoolId },
+    expect(db.schoolYear.deleteMany).toHaveBeenCalledWith({
+      where: { id: "year-1", schoolId: mockSchoolId },
     })
   })
 
-  it("getRoleStatistics returns error when schoolId is null", async () => {
+  it("getTerms returns error when schoolId is null", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: null as any,
       subdomain: "test",
@@ -147,13 +161,13 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    const result = await getRoleStatistics()
+    const result = await getTerms()
     expect(result.success).toBe(false)
-    expect(result.statistics).toEqual([])
-    expect(db.user.groupBy).not.toHaveBeenCalled()
+    expect(result.error).toBe("MISSING_SCHOOL")
+    expect(db.term.findMany).not.toHaveBeenCalled()
   })
 
-  it("updateUserStatus returns error when schoolId is null", async () => {
+  it("setActiveTerm returns error when schoolId is null", async () => {
     vi.mocked(getTenantContext).mockResolvedValue({
       schoolId: null as any,
       subdomain: "test",
@@ -161,13 +175,9 @@ describe("settings tenant isolation", () => {
       locale: "en",
     })
 
-    const formData = new FormData()
-    formData.set("userId", "user-1")
-    formData.set("isActive", "false")
-
-    const result = await updateUserStatus(formData)
+    const result = await setActiveTerm({ id: "term-1" })
     expect(result.success).toBe(false)
-    expect(result.message).toBe("Missing school context")
-    expect(db.user.update).not.toHaveBeenCalled()
+    expect(result.error).toBe("MISSING_SCHOOL")
+    expect(db.term.updateMany).not.toHaveBeenCalled()
   })
 })

@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { dispatchNotification } from "@/lib/dispatch-notification"
 import { sendEmail } from "@/lib/email"
 import { normalizePhoneNumber, sendSMS } from "@/lib/notifications/sms"
 import {
@@ -33,6 +34,10 @@ vi.mock("@/lib/notifications/sms", () => ({
   sendSMS: vi.fn().mockResolvedValue({ success: true }),
 }))
 
+vi.mock("@/lib/dispatch-notification", () => ({
+  dispatchNotification: vi.fn().mockResolvedValue("notif-id"),
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     application: { findFirst: vi.fn() },
@@ -45,11 +50,13 @@ vi.mock("@/lib/db", () => ({
     teacher: { create: vi.fn(), count: vi.fn().mockResolvedValue(0) },
     teacherPhoneNumber: { create: vi.fn() },
     teacherQualification: { create: vi.fn() },
+    teacherSubjectExpertise: {
+      createMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
     staffMember: { create: vi.fn() },
     staffPhoneNumber: { create: vi.fn() },
     staffQualification: { create: vi.fn() },
     student: { create: vi.fn(), count: vi.fn().mockResolvedValue(0) },
-    notification: { createMany: vi.fn().mockResolvedValue({ count: 0 }) },
     $transaction: vi.fn(),
   },
 }))
@@ -298,6 +305,9 @@ describe("submitInternalOnboarding", () => {
     teacher: { create: vi.fn() },
     teacherPhoneNumber: { create: vi.fn() },
     teacherQualification: { create: vi.fn() },
+    teacherSubjectExpertise: {
+      createMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
     staffMember: { create: vi.fn() },
     staffPhoneNumber: { create: vi.fn() },
     staffQualification: { create: vi.fn() },
@@ -319,7 +329,7 @@ describe("submitInternalOnboarding", () => {
     vi.mocked(db.student.count).mockResolvedValue(0)
     vi.mocked(db.teacher.count).mockResolvedValue(0)
     vi.mocked(db.user.findMany).mockResolvedValue([])
-    vi.mocked(db.notification.createMany).mockResolvedValue({ count: 0 })
+    vi.mocked(dispatchNotification).mockResolvedValue("notif-id")
     vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
       return callback(txMock)
     })
@@ -1103,22 +1113,22 @@ describe("submitInternalOnboarding", () => {
           roleDetails: createTeacherDetails(),
         })
 
-        expect(db.notification.createMany).toHaveBeenCalledWith({
-          data: expect.arrayContaining([
-            expect.objectContaining({
-              schoolId: "school-1",
-              userId: "admin-1",
-              type: "account_created",
-              priority: "high",
-            }),
-            expect.objectContaining({
-              schoolId: "school-1",
-              userId: "admin-2",
-              type: "account_created",
-              priority: "high",
-            }),
-          ]),
-        })
+        expect(dispatchNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            schoolId: "school-1",
+            userId: "admin-1",
+            type: "account_created",
+            priority: "high",
+          })
+        )
+        expect(dispatchNotification).toHaveBeenCalledWith(
+          expect.objectContaining({
+            schoolId: "school-1",
+            userId: "admin-2",
+            type: "account_created",
+            priority: "high",
+          })
+        )
       })
 
       it("should NOT call createMany when no admins exist", async () => {
@@ -1126,7 +1136,7 @@ describe("submitInternalOnboarding", () => {
 
         await submitTeacherSuccessfully()
 
-        expect(db.notification.createMany).not.toHaveBeenCalled()
+        expect(dispatchNotification).not.toHaveBeenCalled()
       })
 
       it("should NOT fail submission when notification fails", async () => {
@@ -1138,7 +1148,7 @@ describe("submitInternalOnboarding", () => {
         vi.mocked(db.user.findMany).mockResolvedValue([
           { id: "admin-1" } as any,
         ])
-        vi.mocked(db.notification.createMany).mockRejectedValueOnce(
+        vi.mocked(dispatchNotification).mockRejectedValueOnce(
           new Error("Notification service down")
         )
 
