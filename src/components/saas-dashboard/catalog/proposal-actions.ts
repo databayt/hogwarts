@@ -345,8 +345,11 @@ export async function rejectProposal(
       }
     }
 
-    await db.proposal.update({
-      where: { id },
+    // Atomic check-and-act: guard the status in the WHERE so two concurrent
+    // reviewers can't both reject (and both notify). Only the first UPDATE
+    // matches `status IN (SUBMITTED, IN_REVIEW)`; the second sees count === 0.
+    const rejected = await db.proposal.updateMany({
+      where: { id, status: { in: ["SUBMITTED", "IN_REVIEW"] } },
       data: {
         status: "REJECTED",
         reviewedBy: userId,
@@ -354,6 +357,14 @@ export async function rejectProposal(
         rejectionReason,
       },
     })
+
+    if (rejected.count === 0) {
+      // Lost the race — another reviewer already transitioned this proposal.
+      return {
+        success: false,
+        error: `Cannot reject a proposal with status: ${proposal.status}`,
+      }
+    }
 
     // Notify the requesting school — failure must never fail the rejection.
     try {

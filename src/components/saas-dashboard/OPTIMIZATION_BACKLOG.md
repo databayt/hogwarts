@@ -90,9 +90,9 @@
 ### catalog
 
 - [P1/correctness] Analytics 'Assignments' card counts SchoolAssignment (school scope) instead of catalog Assignment templates — `src/components/saas-dashboard/catalog/analytics-content.tsx`
-- [P1/correctness] TOCTOU in rejectProposal — status guard is outside transaction, enabling double-reject — `src/components/saas-dashboard/catalog/proposal-actions.ts`
-- [P1/correctness] TOCTOU in approveExam/rejectExam/approveExamTemplate/rejectExamTemplate — no status guard and existence check is outside transaction — `src/components/saas-dashboard/catalog/exam-approval-actions.ts`
-- [P1/correctness] Denormalized chapter/lesson count updates run outside a transaction — race condition corrupts counts — `src/components/saas-dashboard/catalog/actions.ts`
+- ✅ [P1/correctness] (2026-06-21) TOCTOU in rejectProposal — fixed: atomic status-guarded `updateMany` (`status IN [SUBMITTED, IN_REVIEW]`), returns error + skips notification when count===0. `approveProposal` already used in-transaction optimistic locking. — `src/components/saas-dashboard/catalog/proposal-actions.ts`
+- ✅ [P1/correctness] (2026-06-21) TOCTOU in approveExam/rejectExam/approveExamTemplate/rejectExamTemplate — fixed: all four now use atomic `updateMany` guarded by `approvalStatus: "PENDING"`, returning `*_already_processed` when the race is lost (no double-publish). — `src/components/saas-dashboard/catalog/exam-approval-actions.ts`
+- ✅ [P1/correctness] (2026-06-21) Denormalized chapter/lesson count updates — fixed: createChapter/deleteChapter/createLesson/deleteLesson now wrap mutation + recount + denormalized write in one `$transaction` (atomic; the recount still self-heals prior drift, preserved deliberately because `updateLesson` can move a lesson between chapters). Residual concurrent-opposite-op race under READ COMMITTED is self-healed on next mutation. — `src/components/saas-dashboard/catalog/actions.ts`
 - [P1/correctness] S3 thumbnail upload succeeds before DB update — failure orphans the S3 object — `src/components/saas-dashboard/catalog/image-actions.ts`
 - [P2/correctness] approveContent has no idempotency guard — double-clicking Approve silently overwrites approvedAt — `src/components/saas-dashboard/catalog/approval-actions.ts`
 - [P2/correctness] approvedAt is set on REJECTION — semantic field naming bug leads to wrong audit trail — `src/components/saas-dashboard/catalog/approval-actions.ts`

@@ -134,6 +134,12 @@ function makeLessonFormData(overrides: Record<string, string> = {}): FormData {
 describe("Catalog Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Interactive $transaction(cb) runs the callback with the db mock as `tx`
+    // so per-table mocks apply inside the transaction; the array form (used by
+    // the reorder actions) just resolves to its argument.
+    vi.mocked(db.$transaction).mockImplementation((arg: any) =>
+      typeof arg === "function" ? arg(db) : Promise.resolve(arg)
+    )
   })
 
   // ==========================================================================

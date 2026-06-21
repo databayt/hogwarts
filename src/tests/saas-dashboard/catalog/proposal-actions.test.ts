@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     subject: {
       findUnique: vi.fn(),
@@ -355,7 +356,7 @@ describe("Proposal Actions (SaaS)", () => {
       vi.mocked(db.chapter.create).mockResolvedValue({
         id: "ch-1",
       } as any)
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await approveProposal("p-2")
 
@@ -386,7 +387,7 @@ describe("Proposal Actions (SaaS)", () => {
       vi.mocked(db.lesson.create).mockResolvedValue({
         id: "les-1",
       } as any)
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await approveProposal("p-3")
 
@@ -469,7 +470,7 @@ describe("Proposal Actions (SaaS)", () => {
         proposedBy: "teacher-1",
         data: { name: "Astrology" },
       } as any)
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
       vi.mocked(db.user.findFirst).mockResolvedValue({
         role: "TEACHER",
       } as any)
@@ -477,8 +478,8 @@ describe("Proposal Actions (SaaS)", () => {
       const result = await rejectProposal("p-1", "Duplicate subject")
 
       expect(result).toEqual({ success: true })
-      expect(db.proposal.update).toHaveBeenCalledWith({
-        where: { id: "p-1" },
+      expect(db.proposal.updateMany).toHaveBeenCalledWith({
+        where: { id: "p-1", status: { in: ["SUBMITTED", "IN_REVIEW"] } },
         data: expect.objectContaining({
           status: "REJECTED",
           reviewedBy: "dev-1",
@@ -486,6 +487,23 @@ describe("Proposal Actions (SaaS)", () => {
         }),
       })
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/proposals")
+    })
+
+    it("returns error when another reviewer already transitioned it (race lost)", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.proposal.findUnique).mockResolvedValue({
+        status: "SUBMITTED",
+        schoolId: "school-1",
+        proposedBy: "teacher-1",
+        data: { name: "Astrology" },
+      } as any)
+      // CAS update matches zero rows — someone else already rejected/approved.
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 0 } as any)
+
+      const result = await rejectProposal("p-1", "Duplicate subject")
+
+      expect(result.success).toBe(false)
+      expect(dispatchNotification).not.toHaveBeenCalled()
     })
 
     it("notifies proposer + school admins on rejection with the reason", async () => {
@@ -496,7 +514,7 @@ describe("Proposal Actions (SaaS)", () => {
         proposedBy: "teacher-1",
         data: { name: "Astrology" },
       } as any)
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
       vi.mocked(db.user.findFirst).mockResolvedValue({
         role: "TEACHER",
       } as any)
@@ -536,7 +554,7 @@ describe("Proposal Actions (SaaS)", () => {
         proposedBy: "teacher-1",
         data: { name: "Astrology" },
       } as any)
-      vi.mocked(db.proposal.update).mockResolvedValue({} as any)
+      vi.mocked(db.proposal.updateMany).mockResolvedValue({ count: 1 } as any)
       vi.mocked(db.user.findFirst).mockRejectedValue(new Error("db down"))
 
       const result = await rejectProposal("p-1", "Some reason")

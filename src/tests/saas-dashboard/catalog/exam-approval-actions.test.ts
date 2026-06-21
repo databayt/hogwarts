@@ -30,12 +30,14 @@ vi.mock("@/lib/db", () => ({
       findUnique: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     examTemplate: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       count: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     school: {
       findMany: vi.fn(),
@@ -131,13 +133,13 @@ describe("Exam Approval Actions", () => {
       vi.mocked(db.exam.findUnique).mockResolvedValue({
         id: "exam-1",
       } as any)
-      vi.mocked(db.exam.update).mockResolvedValue({} as any)
+      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await approveExam("exam-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.exam.update).toHaveBeenCalledWith({
-        where: { id: "exam-1" },
+      expect(db.exam.updateMany).toHaveBeenCalledWith({
+        where: { id: "exam-1", approvalStatus: "PENDING" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           approvedBy: "dev-1",
@@ -148,6 +150,19 @@ describe("Exam Approval Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/catalog/approvals")
     })
 
+    it("returns error when already processed (race lost)", async () => {
+      mockDeveloperSession()
+      vi.mocked(db.exam.findUnique).mockResolvedValue({ id: "exam-1" } as any)
+      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 0 } as any)
+
+      const result = await approveExam("exam-1")
+
+      expect(result).toEqual({
+        success: false,
+        error: "exam_already_processed",
+      })
+    })
+
     it("returns error for non-existent exam", async () => {
       mockDeveloperSession()
       vi.mocked(db.exam.findUnique).mockResolvedValue(null)
@@ -155,7 +170,7 @@ describe("Exam Approval Actions", () => {
       const result = await approveExam("nonexistent")
 
       expect(result).toEqual({ success: false, error: "exam_not_found" })
-      expect(db.exam.update).not.toHaveBeenCalled()
+      expect(db.exam.updateMany).not.toHaveBeenCalled()
     })
 
     it("requires DEVELOPER role", async () => {
@@ -180,13 +195,13 @@ describe("Exam Approval Actions", () => {
       vi.mocked(db.exam.findUnique).mockResolvedValue({
         id: "exam-1",
       } as any)
-      vi.mocked(db.exam.update).mockResolvedValue({} as any)
+      vi.mocked(db.exam.updateMany).mockResolvedValue({ count: 1 } as any)
 
       const result = await rejectExam("exam-1", "Low quality")
 
       expect(result).toEqual({ success: true })
-      expect(db.exam.update).toHaveBeenCalledWith({
-        where: { id: "exam-1" },
+      expect(db.exam.updateMany).toHaveBeenCalledWith({
+        where: { id: "exam-1", approvalStatus: "PENDING" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
           rejectionReason: "Low quality",
@@ -285,13 +300,15 @@ describe("Exam Approval Actions", () => {
       vi.mocked(db.examTemplate.findUnique).mockResolvedValue({
         id: "tpl-1",
       } as any)
-      vi.mocked(db.examTemplate.update).mockResolvedValue({} as any)
+      vi.mocked(db.examTemplate.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await approveExamTemplate("tpl-1")
 
       expect(result).toEqual({ success: true })
-      expect(db.examTemplate.update).toHaveBeenCalledWith({
-        where: { id: "tpl-1" },
+      expect(db.examTemplate.updateMany).toHaveBeenCalledWith({
+        where: { id: "tpl-1", approvalStatus: "PENDING" },
         data: expect.objectContaining({
           approvalStatus: "APPROVED",
           status: "PUBLISHED",
@@ -333,13 +350,15 @@ describe("Exam Approval Actions", () => {
       vi.mocked(db.examTemplate.findUnique).mockResolvedValue({
         id: "tpl-1",
       } as any)
-      vi.mocked(db.examTemplate.update).mockResolvedValue({} as any)
+      vi.mocked(db.examTemplate.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
 
       const result = await rejectExamTemplate("tpl-1", "Incomplete")
 
       expect(result).toEqual({ success: true })
-      expect(db.examTemplate.update).toHaveBeenCalledWith({
-        where: { id: "tpl-1" },
+      expect(db.examTemplate.updateMany).toHaveBeenCalledWith({
+        where: { id: "tpl-1", approvalStatus: "PENDING" },
         data: expect.objectContaining({
           approvalStatus: "REJECTED",
           rejectionReason: "Incomplete",

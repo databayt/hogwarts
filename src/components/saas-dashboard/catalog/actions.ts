@@ -97,17 +97,19 @@ export async function createChapter(data: FormData) {
     sequenceOrder: Number(raw.sequenceOrder) || 0,
   })
 
-  const chapter = await db.chapter.create({
-    data: validated,
-  })
-
-  // Update denormalized count
-  const count = await db.chapter.count({
-    where: { subjectId: validated.subjectId },
-  })
-  await db.subject.update({
-    where: { id: validated.subjectId },
-    data: { totalChapters: count },
+  // Create + recount + denormalized write in one transaction so the count and
+  // the totalChapters write commit atomically (a partial failure can no longer
+  // leave the count drifted; the recount still self-heals prior drift).
+  const chapter = await db.$transaction(async (tx) => {
+    const created = await tx.chapter.create({ data: validated })
+    const count = await tx.chapter.count({
+      where: { subjectId: validated.subjectId },
+    })
+    await tx.subject.update({
+      where: { id: validated.subjectId },
+      data: { totalChapters: count },
+    })
+    return created
   })
 
   revalidatePath(`/catalog/${validated.subjectId}`)
@@ -140,15 +142,16 @@ export async function deleteChapter(id: string) {
     select: { subjectId: true },
   })
 
-  await db.chapter.delete({ where: { id } })
-
-  // Update denormalized count
-  const count = await db.chapter.count({
-    where: { subjectId: chapter.subjectId },
-  })
-  await db.subject.update({
-    where: { id: chapter.subjectId },
-    data: { totalChapters: count },
+  // Delete + recount + denormalized write atomically.
+  await db.$transaction(async (tx) => {
+    await tx.chapter.delete({ where: { id } })
+    const count = await tx.chapter.count({
+      where: { subjectId: chapter.subjectId },
+    })
+    await tx.subject.update({
+      where: { id: chapter.subjectId },
+      data: { totalChapters: count },
+    })
   })
 
   revalidatePath(`/catalog/${chapter.subjectId}`)
@@ -171,33 +174,35 @@ export async function createLesson(data: FormData) {
       : undefined,
   })
 
-  const lesson = await db.lesson.create({
-    data: validated,
+  // Create + recount (chapter + subject) + denormalized writes atomically.
+  const { lesson, subjectId } = await db.$transaction(async (tx) => {
+    const created = await tx.lesson.create({ data: validated })
+
+    const chapter = await tx.chapter.findUniqueOrThrow({
+      where: { id: validated.chapterId },
+      select: { subjectId: true },
+    })
+
+    const chapterLessonCount = await tx.lesson.count({
+      where: { chapterId: validated.chapterId },
+    })
+    await tx.chapter.update({
+      where: { id: validated.chapterId },
+      data: { totalLessons: chapterLessonCount },
+    })
+
+    const totalLessons = await tx.lesson.count({
+      where: { chapter: { subjectId: chapter.subjectId } },
+    })
+    await tx.subject.update({
+      where: { id: chapter.subjectId },
+      data: { totalLessons },
+    })
+
+    return { lesson: created, subjectId: chapter.subjectId }
   })
 
-  // Update denormalized counts
-  const chapter = await db.chapter.findUniqueOrThrow({
-    where: { id: validated.chapterId },
-    select: { subjectId: true },
-  })
-
-  const chapterLessonCount = await db.lesson.count({
-    where: { chapterId: validated.chapterId },
-  })
-  await db.chapter.update({
-    where: { id: validated.chapterId },
-    data: { totalLessons: chapterLessonCount },
-  })
-
-  const totalLessons = await db.lesson.count({
-    where: { chapter: { subjectId: chapter.subjectId } },
-  })
-  await db.subject.update({
-    where: { id: chapter.subjectId },
-    data: { totalLessons },
-  })
-
-  revalidatePath(`/catalog/${chapter.subjectId}`)
+  revalidatePath(`/catalog/${subjectId}`)
   return { success: true, lesson }
 }
 
@@ -285,23 +290,25 @@ export async function deleteLesson(id: string) {
     },
   })
 
-  await db.lesson.delete({ where: { id } })
+  // Delete + recount (chapter + subject) + denormalized writes atomically.
+  await db.$transaction(async (tx) => {
+    await tx.lesson.delete({ where: { id } })
 
-  // Update denormalized counts
-  const chapterLessonCount = await db.lesson.count({
-    where: { chapterId: lesson.chapterId },
-  })
-  await db.chapter.update({
-    where: { id: lesson.chapterId },
-    data: { totalLessons: chapterLessonCount },
-  })
+    const chapterLessonCount = await tx.lesson.count({
+      where: { chapterId: lesson.chapterId },
+    })
+    await tx.chapter.update({
+      where: { id: lesson.chapterId },
+      data: { totalLessons: chapterLessonCount },
+    })
 
-  const totalLessons = await db.lesson.count({
-    where: { chapter: { subjectId: lesson.chapter.subjectId } },
-  })
-  await db.subject.update({
-    where: { id: lesson.chapter.subjectId },
-    data: { totalLessons },
+    const totalLessons = await tx.lesson.count({
+      where: { chapter: { subjectId: lesson.chapter.subjectId } },
+    })
+    await tx.subject.update({
+      where: { id: lesson.chapter.subjectId },
+      data: { totalLessons },
+    })
   })
 
   revalidatePath(`/catalog/${lesson.chapter.subjectId}`)

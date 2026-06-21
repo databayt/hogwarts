@@ -121,8 +121,10 @@ export async function approveExam(
       return { success: false, error: "exam_not_found" }
     }
 
-    await db.exam.update({
-      where: { id: catalogExamId },
+    // Atomic check-and-act: only PENDING → APPROVED transitions, so two
+    // concurrent reviewers can't both publish the same exam.
+    const updated = await db.exam.updateMany({
+      where: { id: catalogExamId, approvalStatus: "PENDING" },
       data: {
         approvalStatus: "APPROVED",
         approvedBy: userId,
@@ -131,6 +133,9 @@ export async function approveExam(
         status: "PUBLISHED",
       },
     })
+    if (updated.count === 0) {
+      return { success: false, error: "exam_already_processed" }
+    }
 
     revalidatePath("/catalog/approvals")
     return { success: true }
@@ -165,8 +170,9 @@ export async function rejectExam(
       return { success: false, error: "exam_not_found" }
     }
 
-    await db.exam.update({
-      where: { id: catalogExamId },
+    // Atomic check-and-act: only PENDING → REJECTED transitions.
+    const updated = await db.exam.updateMany({
+      where: { id: catalogExamId, approvalStatus: "PENDING" },
       data: {
         approvalStatus: "REJECTED",
         approvedBy: userId,
@@ -174,6 +180,9 @@ export async function rejectExam(
         rejectionReason: reason,
       },
     })
+    if (updated.count === 0) {
+      return { success: false, error: "exam_already_processed" }
+    }
 
     revalidatePath("/catalog/approvals")
     return { success: true }
@@ -279,8 +288,9 @@ export async function approveExamTemplate(id: string): Promise<ActionResponse> {
       return { success: false, error: "template_not_found" }
     }
 
-    await db.examTemplate.update({
-      where: { id },
+    // Atomic check-and-act: only PENDING → APPROVED transitions.
+    const updated = await db.examTemplate.updateMany({
+      where: { id, approvalStatus: "PENDING" },
       data: {
         approvalStatus: "APPROVED",
         approvedBy: userId,
@@ -289,6 +299,9 @@ export async function approveExamTemplate(id: string): Promise<ActionResponse> {
         status: "PUBLISHED",
       },
     })
+    if (updated.count === 0) {
+      return { success: false, error: "template_already_processed" }
+    }
 
     revalidatePath("/catalog/approvals")
     return { success: true }
@@ -326,8 +339,9 @@ export async function rejectExamTemplate(
       return { success: false, error: "template_not_found" }
     }
 
-    await db.examTemplate.update({
-      where: { id },
+    // Atomic check-and-act: only PENDING → REJECTED transitions.
+    const updated = await db.examTemplate.updateMany({
+      where: { id, approvalStatus: "PENDING" },
       data: {
         approvalStatus: "REJECTED",
         approvedBy: userId,
@@ -335,6 +349,9 @@ export async function rejectExamTemplate(
         rejectionReason: reason,
       },
     })
+    if (updated.count === 0) {
+      return { success: false, error: "template_already_processed" }
+    }
 
     revalidatePath("/catalog/approvals")
     return { success: true }
