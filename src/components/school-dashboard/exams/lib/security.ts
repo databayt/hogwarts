@@ -105,6 +105,42 @@ export function checkAIGradingRateLimit(schoolId: string): {
 }
 
 /**
+ * Rate limit for AI question-generation requests (cost cap).
+ *
+ * Generation is the most expensive AI call in the exam module — each request
+ * produces a batch of questions against a paid LLM — so it is capped more
+ * tightly than grading, with both a per-minute burst guard and a per-school
+ * daily ceiling so a runaway loop or an accidental client retry storm cannot run
+ * up an unbounded bill. Like the rest of this module the store is in-memory and
+ * per-instance (it resets on cold start); wire Upstash Redis for a hard
+ * cross-instance cap in production.
+ */
+export function checkAIGenerationRateLimit(schoolId: string): {
+  allowed: boolean
+  remaining: number
+  resetIn: number
+  scope: "minute" | "day"
+} {
+  // Burst guard — 20 generation requests / minute / school
+  const minute = checkRateLimit({
+    key: `ai-generate:min:${schoolId}`,
+    maxRequests: 20,
+    windowMs: 60 * 1000,
+  })
+  if (!minute.allowed) return { ...minute, scope: "minute" }
+
+  // Daily cost ceiling — 300 generation requests / day / school
+  const day = checkRateLimit({
+    key: `ai-generate:day:${schoolId}`,
+    maxRequests: 300,
+    windowMs: 24 * 60 * 60 * 1000,
+  })
+  if (!day.allowed) return { ...day, scope: "day" }
+
+  return { ...minute, scope: "minute" }
+}
+
+/**
  * Exam attempt lock status
  */
 export interface AttemptLock {

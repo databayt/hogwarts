@@ -14,6 +14,7 @@ import type { QuestionType } from "@prisma/client"
 import { generateQuestionsWithAI, isAIServiceAvailable } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
 
+import { checkAIGenerationRateLimit } from "../../lib/security"
 import type { AIGeneratedQuestion } from "../types"
 import { aiGenerationSchema } from "../validation"
 import type { ActionResponse } from "./types"
@@ -35,6 +36,18 @@ export async function generateQuestionsAI(
         success: false,
         error: "AI service not configured. Please contact administrator.",
         code: "AI_UNAVAILABLE",
+      }
+    }
+
+    // Cost cap — throttle AI generation per school (burst + daily ceiling)
+    const rl = checkAIGenerationRateLimit(session.user.schoolId)
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error: `AI generation limit reached (${rl.scope}). Try again in ${Math.ceil(
+          rl.resetIn / 1000
+        )}s.`,
+        code: "RATE_LIMITED",
       }
     }
 

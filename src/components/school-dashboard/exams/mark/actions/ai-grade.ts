@@ -15,6 +15,7 @@ import {
 } from "@/lib/ai/openai"
 import { db } from "@/lib/db"
 
+import { checkAIGradingRateLimit } from "../../lib/security"
 import { parseAcceptedAnswers } from "../utils"
 import type {
   ActionResponse,
@@ -90,6 +91,18 @@ export async function aiGradeAnswer(
         error:
           "AI grading service is not available. Please grade manually or contact administrator.",
         code: "AI_SERVICE_UNAVAILABLE",
+      }
+    }
+
+    // Cost cap — throttle AI grading per school
+    const rl = checkAIGradingRateLimit(schoolId)
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error: `AI grading limit reached. Try again in ${Math.ceil(
+          rl.resetIn / 1000
+        )}s.`,
+        code: "RATE_LIMITED",
       }
     }
 
