@@ -38,7 +38,7 @@ last_audited: 2026-06-14
 - [x] Conflict detection (same class, overlapping time)
 - [x] Export capabilities (CSV, PDF schedule)
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-06-21 — full route tree present and wired to content components with auth + RBAC; the earlier "BLOCKER: routes missing" claim was stale)
 
 ### Question Bank Sub-Block
 
@@ -50,7 +50,7 @@ last_audited: 2026-06-14
 - [x] Practice mode and sessions
 - [x] Catalog tab view
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-06-21 — full route tree present and wired to content components with auth + RBAC; the earlier "BLOCKER: routes missing" claim was stale)
 
 ### Generate Sub-Block
 
@@ -62,7 +62,7 @@ last_audited: 2026-06-14
 - [x] Difficulty distribution
 - [x] Template reuse across classes
 - [x] Version library
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-06-21 — full route tree present and wired to content components with auth + RBAC; the earlier "BLOCKER: routes missing" claim was stale)
 
 ### Mark Sub-Block
 
@@ -75,7 +75,7 @@ last_audited: 2026-06-14
 - [x] Mobile grading view
 - [x] Answer key management
 - [x] Server actions with Zod validation
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-06-21 — full route tree present and wired to content components with auth + RBAC; the earlier "BLOCKER: routes missing" claim was stale)
 
 ### Results Sub-Block
 
@@ -88,7 +88,7 @@ last_audited: 2026-06-14
 - [x] Question-wise breakdown
 - [x] Analytics charts
 - [x] Cache manager for performance
-- [ ] Route pages created in app directory (BLOCKER)
+- [x] Route pages created in app directory (verified 2026-06-21 — full route tree present and wired to content components with auth + RBAC; the earlier "BLOCKER: routes missing" claim was stale)
 
 ### Additional Modules
 

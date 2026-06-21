@@ -39,6 +39,6 @@ wallet/
 ### Integration Points
 
 - Students can pay fees from wallet balance
-- Ledger posting (`postWalletTopup`) exists in `finance/lib/accounting/` but is **not yet wired** -- top-ups don't post (umbrella `ISSUE.md` P0)
+- Ledger posting (`postWalletTopup`) is **wired** (2026-06-21) -- `topupWallet` posts a balanced journal entry on each top-up (fire-and-forget, no rollback, same pattern as the other posters)
 - Transaction history feeds into `finance/reports/`
 - See [finance master README](../README.md) for architecture details
