@@ -7,8 +7,10 @@ FILE="$CLAUDE_FILE_PATH"
 # Skip non-TS/TSX files
 echo "$FILE" | grep -qE '\.(tsx?|jsx?)$' || exit 0
 
-# Skip dictionary files and tests files (false positives)
-echo "$FILE" | grep -qE '(dictionaries/|__tests__/|\.tests\.|\.spec\.)' && exit 0
+# Skip dictionary files, tests, and API routes (false positives).
+# src/app/api/** returns machine-facing JSON (an API contract the mobile client
+# localizes), not UI text — mirrors the EXCLUDE_RE in i18n-hardcoded-ratchet.ts.
+echo "$FILE" | grep -qE '(dictionaries/|__tests__/|\.tests\.|\.spec\.|/app/api/)' && exit 0
 
 FOUND=""
 

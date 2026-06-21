@@ -20,9 +20,18 @@ import { join, relative } from "path"
 const ROOT = process.cwd()
 const SCAN_DIRS = [join(ROOT, "src", "app"), join(ROOT, "src", "components")]
 
-/** Mirrors check-i18n.sh skip list; tests + dictionary JSON are not UI. */
+/**
+ * Mirrors check-i18n.sh skip list; tests + dictionary JSON are not UI.
+ *
+ * `src/app/api/**` is excluded too: API routes return machine-facing JSON
+ * (`NextResponse.json({ error: "..." })`) to the mobile app / external clients
+ * — an API contract, not user-facing UI text. The mobile client localizes on
+ * its side (see `/api/mobile/translate`), so hardcoded English in API error
+ * responses is out of scope for the UI-translation ratchet. Server actions in
+ * `src/components/**` (the UI data path) remain fully scanned.
+ */
 const EXCLUDE_RE =
-  /(\/dictionaries\/|\/src\/tests\/|\.test\.|\.spec\.|\.d\.ts$)/
+  /(\/src\/app\/api\/|\/dictionaries\/|\/src\/tests\/|\.test\.|\.spec\.|\.d\.ts$)/
 
 export const PATTERNS = {
   formLabel: /<FormLabel>[A-Za-z][^{<]+<\/FormLabel>/,
