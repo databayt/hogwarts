@@ -816,6 +816,83 @@ export async function sendInvoiceEmail(
   }
 }
 
+/**
+ * Record full payment of a UserInvoice and post it to the double-entry ledger.
+ *
+ * Sets amountPaid = total and status = PAID, then posts `postInvoicePayment`
+ * (DR Cash / CR Accounts Receivable). Posting is fire-and-forget (mirrors fees
+ * `recordPayment`) and idempotent by `sourceRecordId=invoiceId`, so re-marking a
+ * paid invoice posts once. Partial recording (amountPaid &lt; total with a
+ * per-payment ledger entry) is a follow-up: the ledger keys on the invoice id,
+ * so partials need a per-payment reference.
+ */
+export async function markInvoicePaid(
+  invoiceId: string
+): Promise<ActionResponse> {
+  try {
+    const ctx = await requireAuthAndTenant()
+    if (isAuthError(ctx)) return ctx
+
+    const canEdit = await checkCurrentUserPermission(
+      ctx.schoolId,
+      "invoice",
+      "edit"
+    )
+    if (!canEdit) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+    const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
+    const invoice = await db.userInvoice.findFirst({
+      where: canSeeAll
+        ? { id: invoiceId, schoolId: ctx.schoolId }
+        : { id: invoiceId, userId: ctx.userId, schoolId: ctx.schoolId },
+      select: {
+        id: true,
+        invoice_no: true,
+        total: true,
+        status: true,
+        schoolId: true,
+      },
+    })
+    if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
+    if (invoice.status === "PAID")
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+
+    const paidAt = new Date()
+    const total = Number(invoice.total)
+    await db.userInvoice.update({
+      where: { id: invoiceId },
+      data: { amountPaid: total, status: "PAID" },
+    })
+
+    // Post to the double-entry ledger (DR cash / CR accounts receivable). Non-fatal.
+    try {
+      const { postInvoicePayment } = await import("../lib/accounting/actions")
+      const postResult = await postInvoicePayment(ctx.schoolId, {
+        invoiceId: invoice.id,
+        amount: total,
+        paymentDate: paidAt,
+        invoiceNumber: invoice.invoice_no,
+      })
+      if (!postResult.success) {
+        console.error(
+          "[markInvoicePaid] postInvoicePayment failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[markInvoicePaid] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
+    revalidatePath(`/s/${invoice.schoolId ?? ctx.schoolId}/finance/invoice`)
+    return { success: true }
+  } catch {
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
 // ============================================================================
 // User Profile (used by onboarding + user-edit-profile)
 // ============================================================================

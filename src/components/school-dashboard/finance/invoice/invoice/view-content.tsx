@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
 
-import { DownloadInvoiceButton, SendInvoiceButton } from "../download-invoice"
+import {
+  DownloadInvoiceButton,
+  MarkInvoicePaidButton,
+  SendInvoiceButton,
+} from "../download-invoice"
 
 interface LinkedPayment {
   id: string
@@ -115,6 +119,14 @@ export default function ViewInvoiceModalContent({
               subjectPrefix={iv?.invoice || "Invoice"}
               sentLabel={iv?.invoiceSent || "Invoice sent"}
               errorLabel={iv?.sendFailed || "Failed to send invoice"}
+            />
+          )}
+          {invoice.id && invoice.status !== "PAID" && (
+            <MarkInvoicePaidButton
+              invoiceId={invoice.id}
+              label={iv?.markPaid || "Mark paid"}
+              paidLabel={iv?.invoicePaidToast || "Invoice marked as paid"}
+              errorLabel={iv?.markPaidFailed || "Failed to mark invoice paid"}
             />
           )}
         </div>

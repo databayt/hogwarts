@@ -149,6 +149,70 @@ export async function approveExpense(formData: FormData) {
   }
 }
 
+/**
+ * Mark an APPROVED expense as PAID and post it to the double-entry ledger.
+ *
+ * Approval precedes payment (mirrors payroll). The status guard also prevents
+ * double-payment — a PAID expense is rejected. Posting `postExpensePayment`
+ * (DR expense / CR cash) is fire-and-forget, mirroring fees `recordPayment`; it
+ * is idempotent by `sourceRecordId=expenseId`, so a retried call posts once.
+ */
+export async function markExpensePaid(
+  expenseId: string
+): Promise<ExpenseActionResult> {
+  try {
+    const session = await auth()
+    if (!session?.user?.schoolId || !session?.user?.id) {
+      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    const existing = await db.expense.findFirst({
+      where: { id: expenseId, schoolId: session.user.schoolId },
+      select: { status: true },
+    })
+    if (!existing) return actionError(ACTION_ERRORS.NOT_FOUND)
+    if (existing.status !== "APPROVED") {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    const paidAt = new Date()
+    const expense = await db.expense.update({
+      where: { id: expenseId, schoolId: session.user.schoolId },
+      data: { status: "PAID", paidAt },
+      include: { category: { select: { id: true, name: true } } },
+    })
+
+    // Post to the double-entry ledger (DR expense / CR cash). Non-fatal.
+    try {
+      const { postExpensePayment } = await import("../lib/accounting/actions")
+      const postResult = await postExpensePayment(session.user.schoolId, {
+        expenseId: expense.id,
+        categoryName: expense.category?.name ?? "Expense",
+        amount: Number(expense.amount),
+        paymentDate: paidAt,
+        description: expense.description ?? "",
+      })
+      if (!postResult.success) {
+        console.error(
+          "[markExpensePaid] postExpensePayment failed:",
+          postResult.errors
+        )
+      }
+    } catch (postingErr) {
+      console.error(
+        "[markExpensePaid] Ledger posting threw (continuing):",
+        postingErr
+      )
+    }
+
+    revalidatePath("/finance/expenses")
+    return { success: true }
+  } catch (error) {
+    console.error("Error marking expense paid:", error)
+    return actionError(ACTION_ERRORS.EXPENSE_CREATE_FAILED)
+  }
+}
+
 export async function createExpenseCategory(formData: FormData) {
   try {
     const session = await auth()

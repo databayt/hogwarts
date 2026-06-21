@@ -4,7 +4,7 @@
 "use client"
 
 import { useState } from "react"
-import { Download, Loader2, Send } from "lucide-react"
+import { CheckCircle2, Download, Loader2, Send } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -106,6 +106,61 @@ export function SendInvoiceButton({
         <Send className="size-4" />
       )}
       {label ?? "Send"}
+    </Button>
+  )
+}
+
+interface MarkInvoicePaidButtonProps {
+  invoiceId: string
+  label?: string
+  paidLabel?: string
+  errorLabel?: string
+}
+
+/**
+ * Client "Mark as paid" trigger. Records full payment of a UserInvoice via the
+ * markInvoicePaid server action (sets amountPaid = total, status = PAID, and
+ * posts DR Cash / CR Accounts Receivable to the ledger). Shown only while the
+ * invoice is not already paid.
+ */
+export function MarkInvoicePaidButton({
+  invoiceId,
+  label,
+  paidLabel,
+  errorLabel,
+}: MarkInvoicePaidButtonProps) {
+  const [isMarking, setIsMarking] = useState(false)
+
+  const handleMark = async () => {
+    try {
+      setIsMarking(true)
+      const actions = await import("./actions")
+      const res = await actions.markInvoicePaid(invoiceId)
+      if (res.success) {
+        toast.success(paidLabel ?? "Invoice marked as paid")
+      } else {
+        toast.error(res.error || errorLabel || "Failed to mark invoice paid")
+      }
+    } catch {
+      toast.error(errorLabel ?? "Failed to mark invoice paid")
+    } finally {
+      setIsMarking(false)
+    }
+  }
+
+  return (
+    <Button
+      variant="default"
+      size="sm"
+      disabled={isMarking}
+      onClick={handleMark}
+    >
+      {isMarking ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <CheckCircle2 className="size-4" />
+      )}
+      {label ?? "Mark paid"}
     </Button>
   )
 }
