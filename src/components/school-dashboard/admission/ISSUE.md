@@ -29,6 +29,13 @@ last_audited: 2026-06-13
 
 ---
 
+## Fixed (2026-06-22) ✅
+
+- **`getCampaign` RBAC gap** — `getCampaign` was the only exported admission action without an `assertAdmissionPermission` check (it had `auth()` + `schoolId` scoping only), so any authenticated tenant user (STUDENT/GUARDIAN/etc.) could read campaign detail. Now gated at `manageCampaigns` to match its sole caller (the campaign edit form) and the sibling `create`/`update`/`deleteCampaign` actions. (`111c06ff8`)
+- **`getApplications` type lie** — the client-refetch row map omitted `applicationFeePaid` even though `ApplicationRow` requires it and the SSR path supplies it, so client-side sort/paginate/filter returned the boolean as `undefined`. The query (`applicationListSelect`) already selects the field — added the missing map entry. (`111c06ff8`)
+
+> Surfaced by a `/qa admission` audit (multi-agent adversarial QA trial). Both verified — tsc 0, 155 admission tests green. The audit run hit the Claude session limit mid-flight (its adversarial-verify phase collapsed), so these two were the hand-confirmed high-confidence findings; the broader 52-check matrix was not a clean signal. Other plausible-but-unverified finds from that run (WelcomeDialog illustrations 403; `assertAdmissionPermission` throwing inside try/catch → generic error code instead of forbidden; `getApplications` table clipped by `overflow-x-clip` at mobile) are NOT yet triaged.
+
 ## Fixed (2026-06-13) ✅
 
 - **P0-3 Merit ranking** — new `updateApplicationScores` server action + inline score-entry UI (entrance/interview, 0-100). `generateMeritList` now computes a weighted `meritScore` (entrance 60% / interview 40%) and ranks by it (nulls last); batched writes. Merit tab is fully functional.
