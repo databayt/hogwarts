@@ -227,10 +227,13 @@ export async function getCampaign(params: { id: string }): Promise<
   try {
     const session = await auth()
     const schoolId = session?.user?.schoolId
+    const role = session?.user?.role
 
-    if (!schoolId) {
+    if (!schoolId || !role) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    assertAdmissionPermission(role, "manageCampaigns")
 
     const campaign = await db.admissionCampaign.findUnique({
       where: { id: params.id, schoolId },
@@ -441,6 +444,7 @@ export async function getApplications(params: {
           status: a.status,
           meritScore: a.meritScore?.toString() ?? null,
           meritRank: a.meritRank,
+          applicationFeePaid: a.applicationFeePaid,
           campaignName: a.campaign.name,
           campaignId: a.campaign.id,
           submittedAt: a.submittedAt?.toISOString() ?? null,
