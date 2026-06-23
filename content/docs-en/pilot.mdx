@@ -26,6 +26,43 @@ This frame also aligns with our [Shared Economy](/docs/shared-economy) posture �
 
 **Exit terms**: schools can leave any time. We export all data in standard CSV/JSON. No lock-in.
 
+## Onboarding & go-live
+
+During the pilot **the school sets up nothing.** We provision a private, working school — your subdomain, your curriculum seed, your roster imported — then send you a link to log in. No software to install, no server, no re-typing data. Time from "yes" to a populated dashboard: **same day.** The school's only homework is sending the student and teacher list it already keeps in Excel.
+
+### The links you receive
+
+At handover you get **one message** with everything below. Replace `{school}` with the subdomain (e.g. `kingfahad`); Arabic (`/ar`) is the default, English is `/en`.
+
+| Link                                                  | For        | Purpose                                        |
+| ----------------------------------------------------- | ---------- | ---------------------------------------------- |
+| `https://{school}.databayt.org/ar/login`              | Admin      | Log in to run the school.                      |
+| `https://{school}.databayt.org/ar/dashboard`          | Admin      | The control center (after login).              |
+| `https://{school}.databayt.org`                       | Public     | The school's public homepage.                  |
+| `https://{school}.databayt.org/ar/admissions`         | Parents    | Admissions info + "Apply" — the link to share. |
+| `https://{school}.databayt.org/ar/application`        | Applicants | The online application form.                   |
+| `https://{school}.databayt.org/ar/application/status` | Applicants | Check application status (no account needed).  |
+| `https://ed.databayt.org/en/docs`                     | Staff      | Help & documentation.                          |
+
+Plus the **admin login**: `admin@{school}.edu` with a temporary password changed on first sign-in. Live reference: [King Fahad Schools](https://kingfahad.databayt.org) — admin `admin@kingfahad.edu`, parents apply at `/ar/application`.
+
+### What the school needs
+
+To **start**, send us once: school name + description; country & currency; logo + brand colour _(optional)_; the **student and teacher lists** (Excel or CSV, in whatever columns they already have — Arabic or English headers both work); and one admin point-of-contact.
+
+To **use it**, all they need is a **modern web browser** (Chrome, Safari, Edge, or Firefox) and an internet connection. The app also installs to a phone home screen _(optional)_. No install, no server, no IT person, and no payment processor required to begin.
+
+### Step by step
+
+1. **Intake** — the school sends the details + roster. Messy or Arabic columns are fine; the importer maps common names (الاسم/"name", الصف/"grade", ولي الأمر/"guardian") and auto-generates student IDs.
+2. **We provision** — private subdomain, full school structure, roster import, and admin login, ready in minutes.
+3. **Handover** — the school receives the links and admin credential in one message.
+4. **First login** — the admin signs in, sets a password, and lands on a dashboard **already populated** with their grades, classes, subjects, and people — not a blank page.
+5. **Get people in** — invite teachers and staff by email; generate student logins from the dashboard (share by copy/email/WhatsApp); guardians link from the same import; a 6-character join code allows self-enroll.
+6. **Open admissions** _(optional)_ — the admissions page and application form are already live; share the admissions link to start accepting applications. Applying is free for families.
+
+**Fees during the pilot** are recorded in the system but collected the school's usual way (cash or bank transfer); online card payments can be switched on later. All data stays exportable as CSV/JSON at any time — no lock-in.
+
 ## Cohort 1 — MENA-10
 
 | Country      | Slots  | Target school types                     | Primary channel                | Status     |
@@ -141,3 +178,4 @@ Schools can apply at hogwarts.databayt.org/pilot (CTA on the marketing site — 
 - [Shared economy](/docs/shared-economy) — why pilots are partners, not customers
 - [Case study](/docs/case-study) — King Fahad first draft + future slots
 - [Incubators](/docs/incubators) — MSAR + Orange Corners applications
+- [Onboarding](/docs/onboarding) — the self-service wizard behind the white-glove setup
