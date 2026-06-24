@@ -2,24 +2,30 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { RoleCardsSection } from "../types"
+import { InfoCard } from "./info-card"
 
 interface Props {
   section: RoleCardsSection
 }
 
 export function RoleCardsSectionComponent({ section }: Props) {
+  const cols =
+    section.cards.length % 4 === 0
+      ? "sm:grid-cols-2 lg:grid-cols-4"
+      : "sm:grid-cols-2 lg:grid-cols-3"
+
   return (
     <section className="mb-16">
-      <h2 className="font-heading mb-8 text-center text-2xl font-bold md:text-3xl">
+      <h2 className="font-heading mb-8 text-2xl font-bold tracking-tight md:text-3xl">
         {section.heading}
       </h2>
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+      <div className={`grid gap-4 ${cols}`}>
         {section.cards.map((card) => (
-          <div key={card.title} className="rounded-lg border p-6 text-center">
-            <div className="bg-primary/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full" />
-            <h3 className="mb-2 font-semibold">{card.title}</h3>
-            <p className="text-muted-foreground text-sm">{card.description}</p>
-          </div>
+          <InfoCard
+            key={card.title}
+            title={card.title}
+            description={card.description}
+          />
         ))}
       </div>
     </section>

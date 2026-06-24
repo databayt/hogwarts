@@ -10,6 +10,27 @@ const labels = {
       ar: "ابدأ من قالب إقليمي أو من الصفر.",
     },
   },
+  basics: {
+    title: { en: "Basics", ar: "الأساسيات" },
+    description: {
+      en: "Name the template, pick a subject, and set duration and marks.",
+      ar: "سمِّ القالب واختر المادة وحدد المدة والدرجات.",
+    },
+  },
+  questions: {
+    title: { en: "Questions", ar: "الأسئلة" },
+    description: {
+      en: "Select question types and how many of each.",
+      ar: "اختر أنواع الأسئلة وعدد كل نوع.",
+    },
+  },
+  review: {
+    title: { en: "Review & Save", ar: "المراجعة والحفظ" },
+    description: {
+      en: "Review your template and set the passing score before saving.",
+      ar: "راجع القالب وحدد درجة النجاح قبل الحفظ.",
+    },
+  },
   name: {
     title: { en: "Template Name", ar: "اسم القالب" },
     description: {
@@ -160,6 +181,15 @@ export const difficultyLabels = {
   currently: { en: "currently", ar: "حاليًا" },
 } as const
 
+/** Subject step form body labels */
+export const subjectLabels = {
+  subject: { en: "Subject", ar: "المادة" },
+  grade: { en: "Filter by grade", ar: "تصفية حسب الصف" },
+  gradeLabel: { en: "Grade", ar: "الصف" },
+  allGrades: { en: "All grades", ar: "كل الصفوف" },
+  selectSubject: { en: "Select a subject", ar: "اختر المادة" },
+} as const
+
 /** Question types step form body labels */
 export const questionTypesLabels = {
   selectAtLeastOne: {
@@ -172,6 +202,64 @@ export const questionTypesLabels = {
 export const durationMarksLabels = {
   duration: { en: "Duration (minutes)", ar: "المدة (بالدقائق)" },
   totalMarks: { en: "Total Marks", ar: "إجمالي الدرجات" },
+} as const
+
+/** Basics step form body labels */
+export const basicsLabels = {
+  name: { en: "Template Name", ar: "اسم القالب" },
+  namePlaceholder: {
+    en: "e.g. Term 1 Midterm",
+    ar: "مثال: اختبار منتصف الفصل ١",
+  },
+  description: { en: "Description", ar: "الوصف" },
+  descriptionPlaceholder: {
+    en: "Optional notes about this template",
+    ar: "ملاحظات اختيارية عن هذا القالب",
+  },
+  examType: { en: "Exam Type", ar: "نوع الاختبار" },
+  subject: { en: "Subject", ar: "المادة" },
+  selectSubject: { en: "Select a subject", ar: "اختر المادة" },
+  duration: { en: "Duration (minutes)", ar: "المدة (بالدقائق)" },
+  totalMarks: { en: "Total Marks", ar: "إجمالي الدرجات" },
+} as const
+
+/** Exam type option labels */
+export const EXAM_TYPE_LABELS: Record<string, { en: string; ar: string }> = {
+  MIDTERM: { en: "Midterm", ar: "منتصف الفصل" },
+  FINAL: { en: "Final", ar: "نهائي" },
+  QUIZ: { en: "Quiz", ar: "اختبار قصير" },
+  POP_QUIZ: { en: "Pop Quiz", ar: "اختبار مفاجئ" },
+  MOCK: { en: "Mock", ar: "تجريبي" },
+  PRACTICE: { en: "Practice", ar: "تدريبي" },
+}
+
+/** Difficulty table step form body labels */
+export const difficultyTableLabels = {
+  type: { en: "Type", ar: "النوع" },
+  easy: { en: "Easy", ar: "سهل" },
+  medium: { en: "Medium", ar: "متوسط" },
+  hard: { en: "Hard", ar: "صعب" },
+  total: { en: "Total", ar: "المجموع" },
+  hint: {
+    en: "Adjust how each type splits across difficulty. Pre-filled and ready.",
+    ar: "عدّل توزيع كل نوع على مستويات الصعوبة. مهيأ وجاهز.",
+  },
+  noTypes: {
+    en: "Go back and select question types first.",
+    ar: "ارجع واختر أنواع الأسئلة أولًا.",
+  },
+} as const
+
+/** Review step extra labels */
+export const reviewLabels = {
+  passingScore: { en: "Passing Score (%)", ar: "درجة النجاح (٪)" },
+  subject: { en: "Subject", ar: "المادة" },
+  examType: { en: "Exam Type", ar: "نوع الاختبار" },
+  paper: { en: "Paper", ar: "الورقة" },
+  preset: { en: "Preset", ar: "القالب" },
+  blank: { en: "Blank", ar: "فارغ" },
+  saving: { en: "Saving…", ar: "جارٍ الحفظ…" },
+  generateExam: { en: "Save & generate exam", ar: "احفظ وأنشئ اختبارًا" },
 } as const
 
 /** Gallery step form body labels */

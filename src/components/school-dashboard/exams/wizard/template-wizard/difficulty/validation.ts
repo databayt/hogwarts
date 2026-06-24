@@ -4,9 +4,14 @@
 import { z } from "zod"
 
 export const difficultySchema = z.object({
-  EASY: z.number().min(0),
-  MEDIUM: z.number().min(0),
-  HARD: z.number().min(0),
+  distribution: z.record(
+    z.string(),
+    z.object({
+      EASY: z.number().min(0),
+      MEDIUM: z.number().min(0),
+      HARD: z.number().min(0),
+    })
+  ),
 })
 
 export type DifficultyFormData = z.infer<typeof difficultySchema>

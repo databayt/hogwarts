@@ -37,8 +37,7 @@ export const REPORT_DICTIONARY = {
     triggerAriaLabel: "Report an issue",
     title: "Report an issue",
     categoryPlaceholder: "Category",
-    descriptionPlaceholder:
-      "Describe the issue in detail (minimum 30 characters)…",
+    descriptionPlaceholder: "Describe the issue",
     descriptionHint: "{count}/30+ chars",
     addDetails: "Add steps and expected behavior (optional)",
     reproPlaceholder: "Steps to reproduce: 1. … 2. … 3. …",
@@ -65,7 +64,7 @@ export const REPORT_DICTIONARY = {
     triggerAriaLabel: "الإبلاغ عن مشكلة",
     title: "الإبلاغ عن مشكلة",
     categoryPlaceholder: "التصنيف",
-    descriptionPlaceholder: "صف المشكلة بالتفصيل (30 حرفاً على الأقل)…",
+    descriptionPlaceholder: "صف المشكلة",
     descriptionHint: "{count}/30+ حرف",
     addDetails: "أضف الخطوات والسلوك المتوقع (اختياري)",
     reproPlaceholder: "خطوات إعادة الإنتاج: 1. … 2. … 3. …",

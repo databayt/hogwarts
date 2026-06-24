@@ -57,12 +57,35 @@ questionText,questionType,difficulty,bloomLevel,points,options,sampleAnswer,tags
 "What is 2+2?",MULTIPLE_CHOICE,EASY,REMEMBER,1,"[{""text"":""4"",""isCorrect"":true},{""text"":""3"",""isCorrect"":false}]","","math,arithmetic"
 ```
 
+## Create an exam — three modes
+
+The front door (`/exams/new`) is a single screen offering three creation modes. All three converge on the same downstream — a `GeneratedExam` with questions → paper preview → schedule — and differ only in how the blueprint and questions are seeded. This mirrors the market's fastest patterns (see [assessment tools](/docs/competitors#assessment--exam-creation-tools)); the long configuration wizard is demoted to the short "from scratch" fallback.
+
+| Mode                   | Route                      | Seeds from                                                                       | Speed   |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------------------- | ------- |
+| **Adopt a template**   | `/exams/generate/catalog`  | A platform-curated, curriculum-aligned `ExamTemplate` (browse → preview → Adopt) | Fastest |
+| **Generate with AI**   | `/exams/qbank/ai-generate` | A topic prompt → AI-drafted questions into your bank (review before saving)      | Fast    |
+| **Build from scratch** | `/exams/template/add`      | A short 5-step wizard you fill in                                                | Custom  |
+
+The **build-from-scratch wizard** is 5 one-screen steps — `gallery → basics → questions → difficulty → review` — never scrolling past the first screen:
+
+| Step       | Collects                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| Start      | Pick a **region preset** (sd/sa/us/mena or blank) — one choice sets the whole paper appearance |
+| Basics     | Name, subject, exam type, duration, total marks                                                |
+| Questions  | Question types + count each                                                                    |
+| Difficulty | One compact table (types × Easy/Medium/Hard), pre-filled and balanced                          |
+| Review     | Summary + passing score → save                                                                 |
+
+Appearance is **region-preset only** — a single curriculum-aligned layout choice, not per-slot configuration (the over-engineering documented in the [design lessons](/docs/competitors#assessment--exam-creation-tools)). The preset writes a complete `blockConfig` (slots + decorations) + `printConfig`, so the printed paper loses no fidelity.
+
 ## Generation
 
 | Route                           | Purpose                                        |
 | ------------------------------- | ---------------------------------------------- |
 | `/exams/generate/templates`     | Distribution rules per type, difficulty, Bloom |
 | `/exams/generate/catalog`       | Browse and import shared templates             |
+| `/exams/qbank/ai-generate`      | AI-drafted questions from a topic prompt       |
 | `/exams/generate/versions`      | Multiple shuffled versions                     |
 | `/exams/generate/contributions` | Author tracking                                |
 
@@ -70,13 +93,15 @@ Smart selection: group by type and difficulty, fill distribution, apply Bloom di
 
 ## Management
 
-| Route              | Purpose                            |
-| ------------------ | ---------------------------------- |
-| `/exams/new`       | Basic info, schedule, marks config |
-| `/exams/[id]`      | Details + result summary           |
-| `/exams/[id]/edit` | Modify before administration       |
+| Route              | Purpose                                         |
+| ------------------ | ----------------------------------------------- |
+| `/exams/new`       | Create-exam chooser (adopt · AI · from scratch) |
+| `/exams/[id]`      | Details + result summary                        |
+| `/exams/[id]/edit` | Modify before administration                    |
 
 `manage/calendar.tsx` — visual schedule. `manage/conflict-display.tsx` — overlap warnings. `manage/analytics-dashboard.tsx` — school-wide stats, standards coverage, quick paper-gen, export.
+
+The `/exams/manage` list (`manage/columns.tsx`) shows seven columns: **Title** (row anchor), **Grade** (the exam's `class.grade`, not the course-offering name), **Subject**, **Type**, **When** (date · start time · duration, merged into one), **Marks**, and **Status**. Exams are scoped to a `Class` (course offering) which carries `gradeId` and `classroomId` — there is no direct `Section` link, so the list cannot show a section without a schema change.
 
 ## Paper generation
 
@@ -264,4 +289,5 @@ Key invariant: `grades/lib/gradebook.ts` is the single write path for ALL automa
 ## See also
 
 - [Exam wizard](/docs/exam-wizard) — template + generation + cert wizards
+- [Competitors → assessment tools](/docs/competitors#assessment--exam-creation-tools) — the ~25 exam-creation tools that shaped the 3-mode front door
 - [Multi-tenancy](/docs/multi-tenancy) — RBAC + scoping

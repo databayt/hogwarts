@@ -34,6 +34,19 @@ export function safeSerializeDate(date: Date | null | undefined): string {
 }
 
 /**
+ * Helper to resolve username to profile name (firstName + lastName) if present
+ */
+function resolveProfileName(user: any): string | null {
+  if (!user) return null
+  const profile =
+    user.student || user.teacher || user.guardian || user.staffMember
+  if (profile?.firstName) {
+    return `${profile.firstName} ${profile.lastName || ""}`.trim()
+  }
+  return user.username ?? null
+}
+
+/**
  * Serialize a conversation participant
  */
 export function serializeParticipant(participant: any) {
@@ -46,6 +59,7 @@ export function serializeParticipant(participant: any) {
     user: participant.user
       ? {
           ...participant.user,
+          username: resolveProfileName(participant.user),
         }
       : null,
   }
@@ -79,6 +93,7 @@ export function serializeReaction(reaction: any) {
     user: reaction.user
       ? {
           ...reaction.user,
+          username: resolveProfileName(reaction.user),
         }
       : null,
   }
@@ -96,6 +111,7 @@ export function serializeReadReceipt(receipt: any) {
     user: receipt.user
       ? {
           ...receipt.user,
+          username: resolveProfileName(receipt.user),
         }
       : null,
   }
@@ -113,6 +129,7 @@ export function serializeReplyTo(replyTo: any) {
     sender: replyTo.sender
       ? {
           ...replyTo.sender,
+          username: resolveProfileName(replyTo.sender),
         }
       : null,
   }
@@ -133,6 +150,7 @@ export function serializeMessage(message: any) {
     sender: message.sender
       ? {
           ...message.sender,
+          username: resolveProfileName(message.sender),
         }
       : null,
     attachments: message.attachments?.map(serializeAttachment) || [],
@@ -163,6 +181,7 @@ export function serializeConversation(conversation: any) {
     createdBy: conversation.createdBy
       ? {
           ...conversation.createdBy,
+          username: resolveProfileName(conversation.createdBy),
         }
       : null,
     lastMessage: conversation.lastMessage

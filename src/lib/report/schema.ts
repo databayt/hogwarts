@@ -22,17 +22,12 @@ export const REPORT_CATEGORIES = [
 
 /**
  * Bounds reasoned in plan §4:
- *  - 30 char min kills "tests", "asdf", "doesn't work" (real spam patterns).
- *  - 2000 char max prevents paste-bomb / prompt-injection wall-of-text.
+ *  - description only needs to be non-empty (no min/max length constraint).
  *  - pageUrl is checked again later against the repo's host allowlist (HF5).
  *  - viewport regex bounds the existing client capture format (e.g. "1280x720").
  */
 export const reportSchema = z.object({
-  description: z
-    .string()
-    .trim()
-    .min(30, "Please describe the issue in at least 30 characters")
-    .max(2000, "Description is too long"),
+  description: z.string().trim().min(1, "Please describe the issue"),
   pageUrl: z.string().url().max(2048),
   category: z.enum(REPORT_CATEGORIES).default("other"),
   reproSteps: z.string().trim().max(1000).optional(),

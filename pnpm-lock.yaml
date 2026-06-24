@@ -295,6 +295,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      docxtemplater:
+        specifier: ^3.69.0
+        version: 3.69.0
       embla-carousel-autoplay:
         specifier: ^8.6.0
         version: 8.6.0(embla-carousel@8.6.0)
@@ -319,6 +322,9 @@ importers:
       geist:
         specifier: ^1.4.2
         version: 1.4.2(next@16.2.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
+      gsap:
+        specifier: ^3.15.0
+        version: 3.15.0
       html2canvas:
         specifier: ^1.4.1
         version: 1.4.1
@@ -340,6 +346,9 @@ importers:
       jspdf:
         specifier: ^3.0.3
         version: 3.0.3
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
       kbar:
         specifier: 0.1.0-beta.48
         version: 0.1.0-beta.48(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -415,6 +424,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      pizzip:
+        specifier: ^3.2.0
+        version: 3.2.0
       plaid:
         specifier: ^39.0.0
         version: 39.0.0
@@ -529,6 +541,9 @@ importers:
       stripe:
         specifier: ^20.0.0
         version: 20.0.0(@types/node@20.19.9)
+      swiper:
+        specifier: ^12.2.0
+        version: 12.2.0
       swr:
         specifier: ^2.2.5
         version: 2.3.5(react@19.2.0)
@@ -8113,6 +8128,13 @@ packages:
       }
     engines: { node: ">=10.0.0" }
 
+  "@xmldom/xmldom@0.9.10":
+    resolution:
+      {
+        integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==,
+      }
+    engines: { node: ">=14.6" }
+
   "@xtuc/ieee754@1.2.0":
     resolution:
       {
@@ -9865,6 +9887,13 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  docxtemplater@3.69.0:
+    resolution:
+      {
+        integrity: sha512-l1zDGXj4CHdBCkGPvmVOsEzc4DDpMxLXgnNd1zllEck9gxCGkkV5vv1tOD5JhudaM73nTIgymy4wil2u9O/uhQ==,
+      }
+    engines: { node: ">=0.10" }
+
   dom-accessibility-api@0.5.16:
     resolution:
       {
@@ -11144,6 +11173,12 @@ packages:
     resolution:
       {
         integrity: sha512-HZRwumpOGUrHyxO5bqKZL0B0GlUpwtCAzZ42sgxUPniu33R1LSFH5yrIcBCHjkctCAh3mtWKcKd9J4vDDdeVHA==,
+      }
+
+  gsap@3.15.0:
+    resolution:
+      {
+        integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==,
       }
 
   hachure-fill@0.5.2:
@@ -14090,6 +14125,12 @@ packages:
       }
     engines: { node: ">=12" }
 
+  pizzip@3.2.0:
+    resolution:
+      {
+        integrity: sha512-X4NPNICxCfIK8VYhF6wbksn81vTiziyLbvKuORVAmolvnUzl1A1xmz9DAWKxPRq9lZg84pJOOAMq3OE61bD8IQ==,
+      }
+
   pkg-types@1.3.1:
     resolution:
       {
@@ -16090,6 +16131,13 @@ packages:
         integrity: sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw==,
       }
     engines: { node: ">=12.0.0" }
+
+  swiper@12.2.0:
+    resolution:
+      {
+        integrity: sha512-K8uXsBZU6ME97Ia3xbBge8IRCnR1lOmIILzvY/jGVic7dSTQ530s3uO8RvXbPUtkkXLWIwmZLRPbtDxRWVAFdg==,
+      }
+    engines: { node: ">= 4.7.0" }
 
   swr@2.3.5:
     resolution:
@@ -22860,6 +22908,8 @@ snapshots:
 
   "@xmldom/xmldom@0.8.11": {}
 
+  "@xmldom/xmldom@0.9.10": {}
+
   "@xtuc/ieee754@1.2.0": {}
 
   "@xtuc/long@4.2.2": {}
@@ -23837,6 +23887,10 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
+
+  docxtemplater@3.69.0:
+    dependencies:
+      "@xmldom/xmldom": 0.9.10
 
   dom-accessibility-api@0.5.16: {}
 
@@ -24862,6 +24916,8 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   grid-index@1.1.0: {}
+
+  gsap@3.15.0: {}
 
   hachure-fill@0.5.2: {}
 
@@ -26891,6 +26947,10 @@ snapshots:
 
   picomatch@4.0.3: {}
 
+  pizzip@3.2.0:
+    dependencies:
+      pako: 2.1.0
+
   pkg-types@1.3.1:
     dependencies:
       confbox: 0.1.8
@@ -28359,6 +28419,8 @@ snapshots:
 
   svg-pathdata@6.0.3:
     optional: true
+
+  swiper@12.2.0: {}
 
   swr@2.3.5(react@19.2.0):
     dependencies:

@@ -10,6 +10,7 @@ import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import { getNextStep } from "../config"
 import { getStepLabel } from "../labels"
 import { useTemplateWizard } from "../use-template-wizard"
 import { getSchoolTemplates } from "./actions"
@@ -42,7 +43,7 @@ export default function GalleryContent({ dictionary }: Props) {
   return (
     <WizardStep
       entityId={templateId}
-      nextStep={`/exams/template/add/${templateId}/name`}
+      nextStep={getNextStep("gallery", templateId)}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}

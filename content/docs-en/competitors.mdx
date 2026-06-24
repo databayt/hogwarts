@@ -19,6 +19,51 @@ Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at
 | [Fedena](https://www.fedena.com/)                  | Global reach                     | 22 core modules                               |
 | [OpenEduCat](https://openeducat.org/)              | Open source                      | Odoo-based                                    |
 
+## Assessment & exam-creation tools
+
+These are not full-SIS competitors — they are point tools for **exam, test, and quiz creation**. We track them because the exams module's creation UX competes with them directly, and because they map the design space for "how a teacher builds an exam." We researched ~25; the patterns below directly informed the [3-mode "Create Exam"](/docs/exams#generation) direction (Adopt a blueprint · Generate with AI · Build from scratch).
+
+Five **creation models** exist in the market. The fastest are blueprint-adopt and AI-prompt; the long configuration wizard is the anti-pattern teachers avoid.
+
+| Tool                                                                                                                                  | Model                       | Time-to-create      | Notable for us                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------ |
+| [Google Forms](https://support.google.com/edu/classroom/answer/9095575)                                                               | Blank editor                | 60–120 min (formal) | Free, ubiquitous; no blueprint, no print-quality paper, no analytics                             |
+| [Testmoz](https://testmoz.com/features)                                                                                               | Blank editor                | minutes             | Simple, no student account, low-bandwidth tolerant                                               |
+| [ThatQuiz](https://www.thatquiz.org/tq/teacher.html)                                                                                  | Blank editor                | fast (built-in Qs)  | Trivial for math/geography auto-questions; slow for custom                                       |
+| [ClassMarker](https://www.classmarker.com/)                                                                                           | Blank editor                | minutes             | Proctoring; "meager" layout customization (G2)                                                   |
+| [Kahoot](https://kahoot.com/)                                                                                                         | Blank editor (game)         | 10–15 min           | Engagement, not assessment; no PDF, no marks distribution                                        |
+| [Canva for Education](https://www.canva.com/education/teachers/)                                                                      | Template gallery            | ~5 min              | Design-only, no grading/bank; strong Arabic-RTL design templates                                 |
+| [ExamView](https://www.notelyn.com/pl/blog/examview-test-generator)                                                                   | Gallery (publisher banks)   | 5–10 min\*          | Desktop app; US-textbook banks only — thin for MENA                                              |
+| [ProProfs](https://www.proprofs.com/quiz-school/)                                                                                     | Gallery + AI                | minutes             | 1M+ question library, adaptive difficulty, Bloom tags                                            |
+| [Pear / Edulastic](https://www.peardeck.com/blog/harness-the-power-of-ai-with-pear-assessment-question-generator-and-assisted-rubric) | Question-bank assembly + AI | 20–40 min           | 100k+ items, DOK selector, assisted rubric; standards-tagging gaps                               |
+| [Edcite](https://www.edcite.com/)                                                                                                     | Question-bank assembly      | —                   | 60+ tech-enhanced item types; US-standards focus                                                 |
+| [AssessPrep](https://www.assessprep.com/curriculum/igcse)                                                                             | Question-bank + AI          | ~60 min saved       | 60k IGCSE/IB examiner-written Qs; Paper Mode QR scan-back — closest to our international segment |
+| [Teachmint](https://www.teachmint.com/features/tests)                                                                                 | Question-bank               | 3 steps             | 2M+ Qs across 25 Indian boards                                                                   |
+| [Toddle](https://www.toddleapp.com/ib-myp/)                                                                                           | Question-bank / formative   | —                   | IB-aligned, AI rubric/comment; no exam-paper generation                                          |
+| [ExamSoft](https://examsoft.com/resources/exam-creation-workflow/)                                                                    | Blueprint-first             | days–weeks          | Institutional governance, Bloom blueprint, validator approval                                    |
+| [Eklavvya](https://www.eklavvya.com/blog/ai-question-paper-generator/)                                                                | Blueprint-first + AI        | —                   | University-grade; 5-set anti-leak, coverage reports, OTP delivery                                |
+| [SchoolDeck](https://databus.co/schooldeck/features/ai-question-paper/)                                                               | Blueprint-first + AI        | **under 2 min**     | CBSE NEP 50/20/30 auto-enforced; OMR + marking scheme + answer key                               |
+| [Testmate](https://questionpapergenerator.testmate.in/cbse-question-paper-generator.html)                                             | Blueprint-first + AI        | **~60 sec**         | CBSE 3-step; auto Set A/B/C; institute branding saved once                                       |
+| [Wayground / Quizizz](https://wayground.com/quizizz-ai)                                                                               | AI generation               | 2–3 min             | Prompt/PDF → draft; one-click differentiated easy/medium/hard versions                           |
+| [PrepAI](https://www.prepai.io/)                                                                                                      | AI generation               | under 1 min         | Text/PDF/YouTube → Qs; Bloom K1–K6 HOTS                                                          |
+| [MagicSchool AI](https://www.magicschool.ai/)                                                                                         | AI generation               | 2–3 min             | Teacher AI suite; topic → quiz                                                                   |
+| [Monsha](https://monsha.ai/)                                                                                                          | AI generation               | —                   | 9-step granular; DOK/Bloom/Lexile; exports to Forms/Kahoot/Quizizz                               |
+| [QuestionPaper.ai](https://questionpaper.ai/)                                                                                         | AI generation               | 3 steps             | Bloom K1–K6, OBE-aligned; Indian higher-ed                                                       |
+| [ProProfs Quiz Maker](https://www.proprofs.com/quiz-school/features/ai-quiz-maker/)                                                   | Gallery + AI                | minutes             | (see above) AI quiz maker tier                                                                   |
+| [LEAD School](https://leadschool.in/)                                                                                                 | Vertically integrated       | —                   | Curriculum + textbook + assessment bundle (India)                                                |
+
+\* IF a publisher bank exists for the textbook; otherwise no path from custom content.
+
+### Design lessons
+
+- **Fast = adopt a blueprint, or prompt an AI.** SchoolDeck/Testmate hit < 2 minutes by pre-baking the curriculum blueprint; AI tools hit 2–3 minutes from a topic prompt. The multi-step configuration wizard is the slow path teachers abandon.
+- **Teachers skip configuration.** Per-question-type difficulty and Bloom distributions are almost always defaulted or skipped — design for "click through with sensible defaults," not "configure everything."
+- **2–3 fixed professional layouts suffice.** Pixel-level header/footer/cover customization is Canva's job, not assessment software's; it is the over-engineering to avoid.
+- **Print-ready PDF with branding set once is non-negotiable** for MENA/Sudan, where paper exams dominate.
+- **A platform-curated, curriculum-aligned library is the moat.** AssessPrep's 60k IGCSE bank and SchoolDeck's baked-in CBSE blueprints are why schools pay on day one. Our exam catalog/adopt already proves this pattern.
+
+**The gap nobody fills:** professional **Arabic-RTL exam papers** and **bilingual report cards**. No researched tool handles Arabic-primary paper formatting well — this is our regional advantage.
+
 ## Feature comparison
 
 The "Industry standard" column means at least 5 of the 9 vendors above ship the capability. "Hogwarts" reflects what is shipped in production today; aspirational items are called out in the Notes column.

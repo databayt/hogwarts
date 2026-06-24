@@ -12,6 +12,8 @@ import {
 } from "@/components/internationalization/config"
 
 import "./globals.css"
+import "@/styles/zenda-clone.css"
+import "@/styles/apple-clone.css"
 
 export const metadata: Metadata = {
   title: "Hogwarts",

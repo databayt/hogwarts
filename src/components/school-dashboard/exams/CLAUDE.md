@@ -26,6 +26,19 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
 
 ## Key Decisions
 
+- **Exam creation = 3-mode chooser, not a long wizard (2026-06-23)** — `/exams/new`
+  is a one-screen chooser (`create/content.tsx`): **Adopt a template** (catalog
+  browse/adopt + `AdoptExamDialog`), **Generate with AI** (→ `/exams/qbank/ai-generate`),
+  **Build from scratch** (the 5-step template wizard). The template wizard
+  (`wizard/template-wizard/`) is exactly 5 one-screen steps —
+  `gallery → basics → questions → difficulty → review` — and is the _fallback_, not
+  the front door. **Appearance is region-preset-only**: the `gallery` step's preset
+  writes the full `blockConfig` (slots + decorations); there are no per-slot layout
+  steps and no print step (defaults come from `parseTemplateToWizardData`). Step order
+  lives in `config.ts` (`getNextStep()`); don't hardcode `nextStep` URLs. Removed/legacy
+  step slugs are remapped by `normalizeTemplateWizardStep()` so old drafts resume on a
+  valid step. `examType` persists in `blockConfig.examType` (no own column) — read it
+  back there, don't hardcode `"MIDTERM"`.
 - **Gradebook spine is NOT "use server"** — `grades/lib/gradebook.ts` is a plain
   helper module imported by server actions. Marking it `"use server"` would expose
   each export as an HTTP endpoint. Import it; do not add the directive.

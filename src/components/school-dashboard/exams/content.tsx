@@ -478,8 +478,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       </div>
 
       {/* Progress Cards Row */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="py-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="rounded-3xl py-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
@@ -487,7 +487,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <CircleCheck className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-foreground mt-1 text-2xl font-semibold">
+            <p className="text-foreground mt-1 text-3xl font-semibold tracking-tight">
               {completedExamsCount}
             </p>
             <Progress value={completionRate} className="mt-4 h-2" />
@@ -502,7 +502,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card className="rounded-3xl py-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
@@ -510,7 +510,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <CircleAlert className="h-4 w-4 text-orange-500" />
             </div>
-            <p className="text-foreground mt-1 text-2xl font-semibold">
+            <p className="text-foreground mt-1 text-3xl font-semibold tracking-tight">
               {pendingMarkingCount}
             </p>
             <Progress value={markingProgress} className="mt-4 h-2" />
@@ -525,7 +525,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card className="rounded-3xl py-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
@@ -533,7 +533,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <FileBarChart className="h-4 w-4 text-blue-500" />
             </div>
-            <p className="text-foreground mt-1 text-2xl font-semibold">
+            <p className="text-foreground mt-1 text-3xl font-semibold tracking-tight">
               {resultsGeneratedCount}
             </p>
             <Progress
@@ -560,7 +560,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card className="rounded-3xl py-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
@@ -568,7 +568,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <Target className="h-4 w-4 text-purple-500" />
             </div>
-            <p className="text-foreground mt-1 text-2xl font-semibold">
+            <p className="text-foreground mt-1 text-3xl font-semibold tracking-tight">
               {templatesCount}
             </p>
             <div className="mt-4 flex flex-wrap gap-1">
@@ -589,7 +589,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       {/* Feature Blocks - Professional Card Design */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Question Bank Block */}
-        <Card className="group border-border/50 relative overflow-hidden transition-all duration-300 hover:border-blue-500/40">
+        <Card className="group border-border/50 relative overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           <CardHeader className="relative">
             <div className="flex items-center justify-between">
@@ -600,7 +600,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 {questionBankCount} {d?.qbank?.question || "questions"}
               </Badge>
             </div>
-            <CardTitle className="mt-4">
+            <CardTitle className="mt-4 tracking-tight">
               {d?.dashboard?.blocks?.qbank?.title || "Question Bank"}
             </CardTitle>
             <CardDescription>
@@ -633,7 +633,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Auto Generate Block */}
-        <Card className="group border-border/50 relative overflow-hidden transition-all duration-300 hover:border-purple-500/40">
+        <Card className="group border-border/50 relative overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-0.5 hover:border-purple-500/40 hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           <CardHeader className="relative">
             <div className="flex items-center justify-between">
@@ -645,7 +645,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 {d?.dashboard?.aiPowered || "AI Powered"}
               </Badge>
             </div>
-            <CardTitle className="mt-4">
+            <CardTitle className="mt-4 tracking-tight">
               {d?.dashboard?.blocks?.generate?.title || "Auto Generation"}
             </CardTitle>
             <CardDescription>
@@ -675,7 +675,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Auto Marking Block */}
-        <Card className="group border-border/50 relative overflow-hidden transition-all duration-300 hover:border-orange-500/40">
+        <Card className="group border-border/50 relative overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-500/40 hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           <CardHeader className="relative">
             <div className="flex items-center justify-between">
@@ -688,7 +688,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 </Badge>
               )}
             </div>
-            <CardTitle className="mt-4">
+            <CardTitle className="mt-4 tracking-tight">
               {d?.dashboard?.blocks?.mark?.title || "Auto Marking"}
             </CardTitle>
             <CardDescription>
@@ -721,7 +721,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       {/* Results & Quick Actions Row */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Results Block */}
-        <Card className="group border-border/50 relative overflow-hidden transition-all duration-300 hover:border-emerald-500/40">
+        <Card className="group border-border/50 relative overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           <CardHeader className="relative">
             <div className="flex items-center justify-between">
@@ -732,7 +732,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 {resultsGeneratedCount} records
               </Badge>
             </div>
-            <CardTitle className="mt-4">
+            <CardTitle className="mt-4 tracking-tight">
               {d?.dashboard?.blocks?.results?.title || "Results & Reports"}
             </CardTitle>
             <CardDescription>
@@ -747,11 +747,11 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             </p>
             <Separator className="my-4" />
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-muted/50 border-border/50 rounded-lg border p-3">
+              <div className="bg-muted/50 border-border/50 rounded-2xl border p-3">
                 <p className="text-muted-foreground text-xs">Completion Rate</p>
                 <p className="text-lg font-semibold">{completionRate}%</p>
               </div>
-              <div className="bg-muted/50 border-border/50 rounded-lg border p-3">
+              <div className="bg-muted/50 border-border/50 rounded-2xl border p-3">
                 <p className="text-muted-foreground text-xs">Avg. Score</p>
                 <p className="text-lg font-semibold">--</p>
               </div>
@@ -773,7 +773,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Quick Actions */}
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="bg-muted ring-border/50 rounded-lg p-2 ring-1">
@@ -832,7 +832,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               className="h-11 w-full justify-start"
               asChild
             >
-              <Link href={`/${lang}/exams/generate`}>
+              <Link href={`/${lang}/exams/qbank/ai-generate`}>
                 <Sparkles className="me-3 h-4 w-4 text-purple-500" />
                 {d?.dashboard?.quickActions?.generateAI || "Generate with AI"}
               </Link>
@@ -854,7 +854,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
       </div>
 
       {/* Workflow Guide - Compact */}
-      <Card className="bg-muted/30">
+      <Card className="bg-muted/30 rounded-3xl">
         <CardHeader>
           <CardTitle className="text-lg">
             {d?.dashboard?.workflow?.title || "Exam Workflow Guide"}

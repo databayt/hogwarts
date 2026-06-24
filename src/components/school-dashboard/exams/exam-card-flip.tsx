@@ -54,7 +54,7 @@ export function ExamCardFlip({
 
   return (
     <div
-      className="group relative h-[320px] w-full max-w-[280px] [perspective:2000px]"
+      className="group relative h-[320px] w-full [perspective:2000px]"
       onMouseEnter={() => setIsFlipped(true)}
       onMouseLeave={() => setIsFlipped(false)}
     >

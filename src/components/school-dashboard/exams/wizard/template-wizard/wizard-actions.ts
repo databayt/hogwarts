@@ -15,8 +15,10 @@ import {
   DEFAULT_DECORATIONS,
   DEFAULT_GRADE_BOUNDARIES,
   INITIAL_STATE,
+  type ExamType,
   type QuestionTypeConfig,
 } from "../types"
+import { normalizeTemplateWizardStep } from "./config"
 import type { TemplateWizardData } from "./use-template-wizard"
 
 /** Parse JSON fields from ExamTemplate into flat wizard data */
@@ -73,13 +75,13 @@ function parseTemplateToWizardData(template: {
       typeof template.totalMarks === "object"
         ? template.totalMarks.toNumber()
         : Number(template.totalMarks),
-    wizardStep: template.wizardStep,
+    wizardStep: normalizeTemplateWizardStep(template.wizardStep),
     gradeIds: template.gradeIds,
     sectionIds: template.sectionIds,
     classroomIds: template.classroomIds,
     distribution,
     questionTypes,
-    examType: "MIDTERM",
+    examType: (blockConfig.examType as ExamType) || "MIDTERM",
     headerVariant: slots.header || "standard",
     footerVariant: slots.footer || "standard",
     studentInfoVariant: slots.studentInfo || "standard",

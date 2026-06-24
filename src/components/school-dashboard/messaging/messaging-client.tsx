@@ -568,7 +568,7 @@ export function MessagingClient({
       }
 
       // Cache miss or stale — fetch from server
-      const result = await fetchConversationData({ conversationId })
+      const result = await fetchConversationData({ conversationId, locale })
       if (result.success) {
         setActiveConversation(result.data.conversation)
         cacheRef.current.set(conversationId, {

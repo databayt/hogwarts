@@ -60,7 +60,11 @@ export default async function ExamsContent({
         take,
         include: {
           class: {
-            select: { name: true, lang: true },
+            select: {
+              name: true,
+              lang: true,
+              grade: { select: { name: true } },
+            },
           },
           subject: {
             select: { name: true, lang: true },
@@ -71,9 +75,9 @@ export default async function ExamsContent({
     ])
 
     const displayLang = lang === "en" ? ("en" as const) : ("ar" as const)
-    const [classLabels, subjectLabels, localizedTitles] = await Promise.all([
+    const [gradeLabels, subjectLabels, localizedTitles] = await Promise.all([
       getLabels(
-        rows.map((e) => e.class?.name).filter(Boolean) as string[],
+        rows.map((e) => e.class?.grade?.name).filter(Boolean) as string[],
         displayLang,
         schoolId!
       ),
@@ -93,12 +97,12 @@ export default async function ExamsContent({
     data = rows.map((e) => ({
       id: e.id,
       title: examTitleById.get(e.id) ?? e.title,
-      className: e.class?.name
-        ? (classLabels.get(e.class.name) ?? e.class.name)
-        : "Unknown",
-      name: e.subject?.name
+      grade: e.class?.grade?.name
+        ? (gradeLabels.get(e.class.grade.name) ?? e.class.grade.name)
+        : "—",
+      subjectName: e.subject?.name
         ? (subjectLabels.get(e.subject.name) ?? e.subject.name)
-        : "Unknown",
+        : "—",
       examDate: e.examDate.toISOString(),
       startTime: e.startTime,
       endTime: e.endTime,

@@ -64,6 +64,20 @@ export const DEFAULT_DECORATIONS: DecorationConfig = {
   frame: { enabled: false },
 }
 
+/**
+ * Split a question count into a sensible Easy/Medium/Hard distribution that
+ * sums exactly to `count` (≈40% easy, ≈40% medium, ≈20% hard). Used to keep a
+ * type's difficulty breakdown coherent with its total so the difficulty step is
+ * pre-filled and valid on load.
+ */
+export function balancedDifficulty(count: number): DifficultyDistribution {
+  const safe = Math.max(0, Math.floor(count))
+  const easy = Math.round(safe * 0.4)
+  const hard = Math.round(safe * 0.2)
+  const medium = Math.max(0, safe - easy - hard)
+  return { EASY: easy, MEDIUM: medium, HARD: hard }
+}
+
 export const INITIAL_STATE = {
   selectedPresetId: null,
   name: "",

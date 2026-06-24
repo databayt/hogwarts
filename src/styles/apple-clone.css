@@ -1,0 +1,28 @@
+/* Minimal CSS the ported apple Store/Mac sections need. Unique class names +
+ * font vars only consumed by those components — safe to load globally. */
+
+.apple-store-gutter {
+  padding-inline: max(22px, calc((100% - 1160px) / 2));
+}
+
+.apple-store-rail {
+  padding-inline: max(22px, calc((100% - 1160px) / 2));
+  scroll-padding-inline: max(22px, calc((100% - 1160px) / 2));
+}
+
+/* Swiper inside the scoped zenda testimonial must clip its looped track so the
+ * off-screen duplicate slides don't push a horizontal page scrollbar. */
+.zenda-clone .swiper,
+.zenda-clone .testimonial_swiper_component,
+.zenda-clone .testimonial_swiper_wrap {
+  overflow: hidden;
+}
+
+:root {
+  --font-sf-pro-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", system-ui,
+    sans-serif;
+  --font-sf-pro-text:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui,
+    sans-serif;
+}

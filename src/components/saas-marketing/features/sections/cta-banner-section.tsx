@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
 import type { CtaBannerSection } from "../types"
-import { ImagePlaceholder } from "./image-placeholder"
 
 interface Props {
   section: CtaBannerSection
@@ -17,24 +16,21 @@ interface Props {
 
 export function CtaBannerSectionComponent({ section, lang, ctaLabel }: Props) {
   return (
-    <section className="bg-muted/50 mb-16 overflow-hidden rounded-2xl">
-      <div className="grid items-center gap-8 md:grid-cols-2">
-        <div className="p-8 md:p-12">
-          <h2 className="font-heading mb-4 text-2xl font-bold md:text-3xl">
-            {section.heading}
-          </h2>
-          {section.description && (
-            <p className="text-muted-foreground mb-6">{section.description}</p>
-          )}
-          <Link
-            href={`/${lang}/onboarding`}
-            className={cn(buttonVariants({ size: "lg" }))}
-          >
-            {ctaLabel}
-          </Link>
-        </div>
-        <ImagePlaceholder aspectRatio="video" className="rounded-none" />
-      </div>
+    <section className="bg-muted/40 mb-16 rounded-2xl border px-6 py-10 text-center md:px-12 md:py-14">
+      <h2 className="font-heading mx-auto max-w-3xl text-2xl font-bold tracking-tight text-balance md:text-3xl">
+        {section.heading}
+      </h2>
+      {section.description && (
+        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-pretty">
+          {section.description}
+        </p>
+      )}
+      <Link
+        href={`/${lang}/onboarding`}
+        className={cn(buttonVariants({ size: "lg" }), "mt-8")}
+      >
+        {ctaLabel}
+      </Link>
     </section>
   )
 }

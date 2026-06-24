@@ -47,8 +47,8 @@ src/components/saas-marketing/
 │   ├── types.ts                    # Feature types
 │   ├── util.ts                     # Feature utilities
 │   ├── feature-icons.tsx           # Category fallback icon set (getCategoryIcon)
-│   ├── icon-map.tsx                # Lucide name→component map (UNUSED — feature.icon not wired to grid)
-│   ├── sections/                   # Reusable section renderers
+│   ├── icon-map.tsx                # Lucide name→component map (getIconComponent) — Glyph's fallback resolver
+│   ├── sections/                   # Reusable section renderers + detail-page UI kit (clean, static, glyph-based)
 │   │   ├── section-renderer.tsx
 │   │   ├── hero-section.tsx
 │   │   ├── feature-cards-section.tsx
@@ -59,7 +59,20 @@ src/components/saas-marketing/
 │   │   ├── stats-bar-section.tsx
 │   │   ├── cta-banner-section.tsx
 │   │   ├── section-heading.tsx
-│   │   └── image-placeholder.tsx
+│   │   ├── related-features.tsx    # Related-feature cards (reuses the `Card` atom + Glyph)
+│   │   ├── bottom-cta.tsx          # Clean centered closing CTA (border-top, dual buttons)
+│   │   ├── info-card.tsx           # Clean content card mirroring the `Card` atom (Glyph + title + desc)
+│   │   ├── glyph.tsx               # 'use client' bare glyph: real /feature PNG (dark:invert) else Lucide
+│   │   ├── card-art.ts             # title→real-PNG keyword map (artForTitle), server-safe
+│   │   └── card-icons.ts           # title→Lucide-name keyword map (iconNameForTitle) — Glyph fallback
+│   ├── imported/                   # Static zenda/apple sections rendered below the detail page (to tweak later)
+│   │   ├── index.tsx               # <ImportedSections /> — stacks the six
+│   │   ├── how-it-works.tsx        # zenda "Transform the way you pay fees" + $2Bn/150k/4.8
+│   │   ├── parents-voice.tsx       # zenda testimonials (static grid)
+│   │   ├── smarter-transactions.tsx# zenda services deck + 61/75/71 research stats
+│   │   ├── more-ease.tsx           # zenda "Less Stress. More Ease." category cards
+│   │   ├── apple-store.tsx         # apple Store hero + product rail (public/store/nav/*.png)
+│   │   └── why-apple-mac.tsx       # apple "Why Apple is the best place to buy Mac" value props
 │   └── page-data/                  # Per-feature page content
 │       ├── index.ts
 │       ├── core.ts

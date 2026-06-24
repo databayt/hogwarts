@@ -38,26 +38,27 @@ const statusLabels: Record<string, Record<string, string>> = {
   },
 }
 
+// Readable type labels — kept consistent with the Type filter options below
 const examTypeLabelsI18n: Record<string, Record<string, string>> = {
   ar: {
-    MIDTERM: "منتصف",
+    MIDTERM: "منتصف الفصل",
     FINAL: "نهائي",
-    QUIZ: "اختبار",
+    QUIZ: "اختبار قصير",
     TEST: "اختبار",
     ASSIGNMENT: "واجب",
-    HOMEWORK: "واجب",
+    HOMEWORK: "واجب منزلي",
     PROJECT: "مشروع",
     PRACTICAL: "عملي",
   },
   en: {
-    MIDTERM: "Mid",
+    MIDTERM: "Midterm",
     FINAL: "Final",
     QUIZ: "Quiz",
     TEST: "Test",
-    ASSIGNMENT: "HW",
-    HOMEWORK: "HW",
-    PROJECT: "Proj",
-    PRACTICAL: "Prac",
+    ASSIGNMENT: "Assignment",
+    HOMEWORK: "Homework",
+    PROJECT: "Project",
+    PRACTICAL: "Practical",
   },
 }
 
@@ -66,9 +67,9 @@ const getStatusBadge = (status: string, lang = "en") => {
     string,
     "default" | "secondary" | "destructive" | "outline"
   > = {
-    PLANNED: "default",
-    IN_PROGRESS: "secondary",
-    COMPLETED: "outline",
+    PLANNED: "outline",
+    IN_PROGRESS: "default",
+    COMPLETED: "secondary",
     CANCELLED: "destructive",
   }
 
@@ -78,18 +79,6 @@ const getStatusBadge = (status: string, lang = "en") => {
       {labels[status] || status.replace("_", " ")}
     </Badge>
   )
-}
-
-// Short labels for exam types - keep badges compact
-const examTypeLabels: Record<string, string> = {
-  MIDTERM: "Mid",
-  FINAL: "Final",
-  QUIZ: "Quiz",
-  TEST: "Test",
-  ASSIGNMENT: "HW",
-  HOMEWORK: "HW",
-  PROJECT: "Proj",
-  PRACTICAL: "Prac",
 }
 
 const getExamTypeBadge = (type: string, lang = "en") => {
@@ -122,13 +111,11 @@ export const getExamColumns = (
 
   const t = {
     title: isAr ? "العنوان" : "Title",
-    class: isAr ? "الفصل" : "Class",
+    grade: isAr ? "الصف" : "Grade",
     subject: isAr ? "المادة" : "Subject",
     type: isAr ? "النوع" : "Type",
-    date: isAr ? "التاريخ" : "Date",
-    startTime: isAr ? "وقت البدء" : "Start Time",
-    duration: isAr ? "المدة" : "Duration",
-    totalMarks: isAr ? "الدرجة الكلية" : "Total Marks",
+    when: isAr ? "الموعد" : "When",
+    totalMarks: isAr ? "الدرجة" : "Marks",
     status: isAr ? "الحالة" : "Status",
     actions: isAr ? "إجراءات" : "Actions",
     view: isAr ? "عرض" : "View",
@@ -153,21 +140,24 @@ export const getExamColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.title} />
       ),
+      cell: ({ getValue }) => (
+        <span className="font-medium">{getValue<string>()}</span>
+      ),
       meta: { label: t.title, variant: "text" },
       enableColumnFilter: true,
     },
     {
-      accessorKey: "className",
-      id: "className",
+      accessorKey: "grade",
+      id: "grade",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.class} />
+        <DataTableColumnHeader column={column} title={t.grade} />
       ),
-      meta: { label: t.class, variant: "text" },
+      meta: { label: t.grade, variant: "text" },
       enableColumnFilter: true,
     },
     {
-      accessorKey: "name",
-      id: "name",
+      accessorKey: "subjectName",
+      id: "subjectName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t.subject} />
       ),
@@ -195,43 +185,28 @@ export const getExamColumns = (
       enableColumnFilter: true,
     },
     {
+      // "When" merges date + start time + duration into one compact column
       accessorKey: "examDate",
       id: "examDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.date} />
+        <DataTableColumnHeader column={column} title={t.when} />
       ),
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground text-xs tabular-nums">
-          {new Date(getValue<string>()).toLocaleDateString(
-            isAr ? "ar-SA" : "en-US"
-          )}
-        </span>
-      ),
-      meta: { label: t.date, variant: "text" },
-    },
-    {
-      accessorKey: "startTime",
-      id: "startTime",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.startTime} />
-      ),
-      cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums">{getValue<string>()}</span>
-      ),
-      meta: { label: t.startTime, variant: "text" },
-    },
-    {
-      accessorKey: "duration",
-      id: "duration",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t.duration} />
-      ),
-      cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums">
-          {getValue<number>()} {t.min}
-        </span>
-      ),
-      meta: { label: t.duration, variant: "text" },
+      cell: ({ row }) => {
+        const d = new Date(row.original.examDate)
+        return (
+          <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">
+            {d.toLocaleDateString(isAr ? "ar-SA" : "en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+            {" · "}
+            {row.original.startTime}
+            {" · "}
+            {row.original.duration} {t.min}
+          </span>
+        )
+      },
+      meta: { label: t.when, variant: "text" },
     },
     {
       accessorKey: "totalMarks",

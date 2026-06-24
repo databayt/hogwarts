@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { HeroSection } from "../types"
-import { ImagePlaceholder } from "./image-placeholder"
+import { Glyph } from "./glyph"
 
 interface Props {
   section: HeroSection
@@ -10,16 +10,14 @@ interface Props {
 
 export function HeroSectionComponent({ section }: Props) {
   return (
-    <section className="mb-16 grid items-center gap-8 md:grid-cols-2 md:gap-12">
-      <div>
-        <h1 className="font-heading mb-4 text-4xl font-bold tracking-tight md:text-5xl">
-          {section.heading}
-        </h1>
-        <p className="text-muted-foreground text-lg md:text-xl">
-          {section.description}
-        </p>
-      </div>
-      <ImagePlaceholder aspectRatio="video" />
+    <section className="mb-16 max-w-3xl">
+      <Glyph title={section.heading} size={56} className="mb-6" />
+      <h1 className="font-heading text-4xl font-bold tracking-tight text-balance md:text-5xl md:leading-[1.08]">
+        {section.heading}
+      </h1>
+      <p className="text-muted-foreground mt-5 text-lg leading-relaxed text-pretty md:text-xl">
+        {section.description}
+      </p>
     </section>
   )
 }

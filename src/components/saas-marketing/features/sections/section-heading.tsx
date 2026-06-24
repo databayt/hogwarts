@@ -9,12 +9,12 @@ interface Props {
 
 export function SectionHeadingComponent({ section }: Props) {
   return (
-    <div className="mb-10 text-center">
-      <h2 className="font-heading mb-2 text-2xl font-bold md:text-3xl">
+    <div className="mb-8 max-w-2xl">
+      <h2 className="font-heading text-2xl font-bold tracking-tight md:text-3xl">
         {section.heading}
       </h2>
       {section.description && (
-        <p className="text-muted-foreground mx-auto max-w-2xl">
+        <p className="text-muted-foreground mt-3 text-pretty">
           {section.description}
         </p>
       )}

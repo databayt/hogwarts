@@ -332,6 +332,7 @@ export async function proxy(req: NextRequest) {
     if (isAuth) {
       const requestHeaders = new Headers(req.headers)
       requestHeaders.set("x-locale", locale)
+      requestHeaders.set("x-subdomain", subdomain)
       const response = NextResponse.next({
         request: { headers: requestHeaders },
       })
@@ -358,6 +359,7 @@ export async function proxy(req: NextRequest) {
 
     const requestHeaders = new Headers(req.headers)
     requestHeaders.set("x-locale", locale)
+    requestHeaders.set("x-subdomain", subdomain)
     const response = NextResponse.rewrite(url, {
       request: { headers: requestHeaders },
     })

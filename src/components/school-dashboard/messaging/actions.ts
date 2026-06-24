@@ -1947,6 +1947,7 @@ export async function searchConversationMessages(input: {
 export async function fetchConversationData(input: {
   conversationId: string
   take?: number
+  locale?: "ar" | "en"
 }): Promise<
   ActionResponse<{
     conversation: any
@@ -1987,11 +1988,41 @@ export async function fetchConversationData(input: {
 
     const messages = conversation.messages.slice(0, take)
 
+    const serializedConv = serializeConversation(conversation)
+    const serializedMsgs = serializeMessages(messages).reverse()
+
+    // Localize names in ONE batched call if locale is provided
+    if (input.locale && serializedConv) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nameRefs: Array<{ obj: any }> = []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const collect = (obj: any) => {
+        if (obj?.username) nameRefs.push({ obj })
+      }
+      for (const p of serializedConv.participants ?? []) collect(p.user)
+      collect(serializedConv.createdBy)
+      collect(serializedConv.lastMessage?.sender)
+      for (const msg of serializedMsgs) collect(msg.sender)
+
+      if (nameRefs.length > 0) {
+        const { getNames } = await import("@/components/translation/person")
+        const translated = await getNames(
+          nameRefs,
+          (r) => ({ firstName: r.obj.username as string }),
+          input.locale,
+          schoolId
+        )
+        for (const r of nameRefs) {
+          r.obj.username = translated.get(r.obj.username) ?? r.obj.username
+        }
+      }
+    }
+
     return {
       success: true,
       data: {
-        conversation: serializeConversation(conversation),
-        messages: serializeMessages(messages).reverse(),
+        conversation: serializedConv,
+        messages: serializedMsgs,
         hasMore: conversation._count.messages > messages.length,
       },
     }

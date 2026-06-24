@@ -58,8 +58,8 @@ export interface ExamResultRow {
 export interface ExamListRow {
   id: string
   title: string
-  className: string
-  name: string
+  grade: string
+  subjectName: string
   examDate: string
   startTime: string
   endTime: string

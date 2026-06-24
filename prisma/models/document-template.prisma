@@ -1,0 +1,38 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+/// A school-uploaded .docx template (certificate, exam paper, report card, …)
+/// that the document fill-engine merges real data into. The uploaded blob lives
+/// in S3 (referenced by storageKey/fileUrl); this row is the lightweight
+/// registry + detected merge-field list.
+model DocumentTemplate {
+  id          String                   @id @default(cuid())
+  schoolId    String
+  category    DocumentTemplateCategory
+  name        String
+  description String?
+  storageKey  String // S3 key of the uploaded .docx
+  fileUrl     String // CDN url
+  mergeFields String[] // detected placeholder/loop tags, e.g. ["studentName","grade"]
+  lang        String                   @default("ar")
+  isDefault   Boolean                  @default(false) // default template for this category
+  isActive    Boolean                  @default(true)
+  createdBy   String
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, category])
+  @@map("document_templates")
+}
+
+enum DocumentTemplateCategory {
+  CERTIFICATE
+  EXAM_PAPER
+  REPORT_CARD
+  LETTER
+  RECEIPT
+  ID_CARD
+  CUSTOM
+}

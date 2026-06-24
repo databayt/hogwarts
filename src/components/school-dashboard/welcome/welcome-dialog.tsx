@@ -28,18 +28,15 @@ const TOTAL_STEPS = 3
 const STEPS_CONFIG = [
   {
     bg: "#d97757",
-    illustration:
-      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-node-pair.svg",
+    illustration: "/anthropic/Hands-Build.svg",
   },
   {
     bg: "#6a9bcc",
-    illustration:
-      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-puzzle.svg",
+    illustration: "/anthropic/Objects-Puzzle.svg",
   },
   {
     bg: "#788c5d",
-    illustration:
-      "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
+    illustration: "/anthropic/Hands-Stack.svg",
   },
 ]
 

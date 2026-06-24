@@ -430,6 +430,9 @@ model School {
   // Webhook idempotency — see prisma/models/webhooks.prisma
   processedWebhookEvents ProcessedWebhookEvent[]
 
+  // Document templates — see prisma/models/document-template.prisma
+  documentTemplates DocumentTemplate[]
+
   @@map("schools")
 }
 

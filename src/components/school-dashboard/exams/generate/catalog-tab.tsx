@@ -46,6 +46,7 @@ import {
   type ExamDetail,
   type ExamRow,
 } from "./actions/catalog-browse"
+import { AdoptExamDialog } from "./adopt-exam-dialog"
 
 const EXAM_TYPE_LABELS: Record<string, string> = {
   final: "Final",
@@ -79,6 +80,8 @@ export function ExamBrowseTab() {
   const [previewExam, setPreviewExam] = useState<ExamDetail | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [loadingPreview, setLoadingPreview] = useState(false)
+  const [adoptExamId, setAdoptExamId] = useState<string | null>(null)
+  const [adoptOpen, setAdoptOpen] = useState(false)
 
   const fetchExams = useCallback(() => {
     startTransition(async () => {
@@ -105,6 +108,12 @@ export function ExamBrowseTab() {
     } finally {
       setLoadingPreview(false)
     }
+  }
+
+  const openAdopt = (examId: string) => {
+    setPreviewOpen(false)
+    setAdoptExamId(examId)
+    setAdoptOpen(true)
   }
 
   const totalPages = Math.ceil(total / 20)
@@ -259,7 +268,11 @@ export function ExamBrowseTab() {
                     {t?.preview ?? "Preview"}
                   </Button>
                   {!exam.isAdopted && (
-                    <Button size="sm" className="flex-1">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openAdopt(exam.id)}
+                    >
                       <Download className="me-1 size-4" />
                       {t?.adopt ?? "Adopt"}
                     </Button>
@@ -424,7 +437,7 @@ export function ExamBrowseTab() {
                   {t?.close ?? "Close"}
                 </Button>
                 {!previewExam.isAdopted && (
-                  <Button>
+                  <Button onClick={() => openAdopt(previewExam.id)}>
                     <Download className="me-1 size-4" />
                     {t?.adoptThisExam ?? "Adopt This Exam"}
                   </Button>
@@ -434,6 +447,13 @@ export function ExamBrowseTab() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Adopt scheduling dialog */}
+      <AdoptExamDialog
+        examId={adoptExamId}
+        open={adoptOpen}
+        onOpenChange={setAdoptOpen}
+      />
     </div>
   )
 }

@@ -110,6 +110,7 @@ export async function getExams(
           class: {
             select: {
               name: true,
+              grade: { select: { name: true } },
             },
           },
           subject: {
@@ -126,8 +127,8 @@ export async function getExams(
     const mapped: ExamListRow[] = rows.map((exam) => ({
       id: exam.id,
       title: exam.title,
-      className: exam.class?.name || "Unknown",
-      name: exam.subject?.name || "Unknown",
+      grade: exam.class?.grade?.name || "—",
+      subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,
       endTime: exam.endTime,
@@ -210,7 +211,10 @@ export async function getUpcomingExams(input?: {
       take: input?.limit || 10,
       include: {
         class: {
-          select: { name: true },
+          select: {
+            name: true,
+            grade: { select: { name: true } },
+          },
         },
         subject: {
           select: { name: true },
@@ -221,8 +225,8 @@ export async function getUpcomingExams(input?: {
     const mapped: ExamListRow[] = exams.map((exam) => ({
       id: exam.id,
       title: exam.title,
-      className: exam.class?.name || "Unknown",
-      name: exam.subject?.name || "Unknown",
+      grade: exam.class?.grade?.name || "—",
+      subjectName: exam.subject?.name || "—",
       examDate: exam.examDate.toISOString(),
       startTime: exam.startTime,
       endTime: exam.endTime,

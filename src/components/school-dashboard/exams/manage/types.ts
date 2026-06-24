@@ -56,8 +56,8 @@ export type ExamDTO = {
 export type ExamRow = {
   id: string
   title: string
-  className: string
-  name: string
+  grade: string
+  subjectName: string
   examDate: string
   startTime: string
   endTime: string
