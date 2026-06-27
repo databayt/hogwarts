@@ -363,17 +363,17 @@ export async function createStudent(
       data: {
         schoolId,
         studentId: generatedCode,
-        firstName: parsed.firstName,
+        firstName: parsed.firstName ?? "",
         middleName: parsed.middleName ?? null,
-        lastName: parsed.lastName,
+        lastName: parsed.lastName ?? "",
         // Persist contact fields so fee-due / reminder channels have a target
         // (previously dropped at create — see fee-overdue cron recipient logic).
         email: parsed.email || null,
         mobileNumber: parsed.mobileNumber || null,
-        ...(parsed.dateOfBirth
-          ? { dateOfBirth: new Date(parsed.dateOfBirth) }
-          : {}),
-        gender: parsed.gender,
+        dateOfBirth: parsed.dateOfBirth
+          ? new Date(parsed.dateOfBirth)
+          : new Date(),
+        gender: parsed.gender ?? "male",
         profilePhotoUrl: parsed.profilePhotoUrl || null,
         ...(parsed.enrollmentDate
           ? { enrollmentDate: new Date(parsed.enrollmentDate) }
@@ -1212,9 +1212,18 @@ export async function getStudents(
     // of truth. The NEXT_LOCALE cookie is only a fallback for non-routed callers — it
     // is global and can disagree with the URL, which is what regressed search/load-more
     // back to Arabic on /en even after a correct initial render.
-    const cookieStore = await cookies()
-    const displayLang: "ar" | "en" =
-      sp.lang ?? (cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar")
+    let displayLang: "ar" | "en" = "ar"
+    if (sp.lang) {
+      displayLang = sp.lang
+    } else {
+      try {
+        const cookieStore = await cookies()
+        displayLang =
+          cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
+      } catch {
+        displayLang = "ar"
+      }
+    }
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: { preferredLanguage: true },

@@ -81,3 +81,9 @@ node_modules/
 
 # US-curriculum scraped source data (served from S3/CloudFront in production)
 scripts/us-curriculum/
+
+# Neon CLI project link
+.neon
+
+# Local scratchpad
+scratchpad/

@@ -96,6 +96,7 @@ async function createFullClassChain(schoolId: string, suffix: string) {
   const subject = await db.subject.create({
     data: {
       name: `Subject ${suffix}`,
+      slug: `subject-${suffix}`,
       department: department.departmentName,
     },
   })

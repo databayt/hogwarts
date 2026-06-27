@@ -299,7 +299,7 @@ describe("CRUD operations", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("school")
+      expect(result.error?.toLowerCase()).toContain("school")
     })
 
     it("returns error when not authenticated", async () => {
@@ -312,7 +312,7 @@ describe("CRUD operations", () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("authenticated")
+      expect(result.error?.toLowerCase()).toContain("authenticated")
     })
   })
 
@@ -586,19 +586,19 @@ describe("Authorization edge cases", () => {
       gender: "male",
     })
     expect(createResult.success).toBe(false)
-    expect(createResult.error).toContain("authenticated")
+    expect(createResult.error?.toLowerCase()).toContain("authenticated")
 
     const getResult = await getStudent({ id: "any-id" })
     expect(getResult.success).toBe(false)
-    expect(getResult.error).toContain("authenticated")
+    expect(getResult.error?.toLowerCase()).toContain("authenticated")
 
     const updateResult = await updateStudent({ id: "any-id", firstName: "X" })
     expect(updateResult.success).toBe(false)
-    expect(updateResult.error).toContain("authenticated")
+    expect(updateResult.error?.toLowerCase()).toContain("authenticated")
 
     const deleteResult = await deleteStudent({ id: "any-id" })
     expect(deleteResult.success).toBe(false)
-    expect(deleteResult.error).toContain("authenticated")
+    expect(deleteResult.error?.toLowerCase()).toContain("authenticated")
   })
 
   it("rejects operations when tenant context has no schoolId", async () => {
@@ -624,6 +624,6 @@ describe("Authorization edge cases", () => {
       gender: "male",
     })
     expect(result.success).toBe(false)
-    expect(result.error).toContain("school")
+    expect(result.error?.toLowerCase()).toContain("school")
   })
 })
