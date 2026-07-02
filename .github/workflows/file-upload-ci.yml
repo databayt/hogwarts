@@ -204,7 +204,7 @@ jobs:
         run: node scripts/analyze-performance.js performance-results.json
 
       - name: Comment PR with results
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         if: github.event_name == 'pull_request'
         with:
           script: |
