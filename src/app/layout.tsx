@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next"
 import { cookies, headers } from "next/headers"
+import { preconnect } from "react-dom"
 
 import { fontRubik } from "@/components/atom/fonts"
 import {
@@ -38,6 +39,10 @@ export default async function RootLayout({
   // and RTL set are interpolated from config — single source of truth.
   const localeAlternation = i18n.locales.join("|")
   const rtlLocales = JSON.stringify(i18n.locales.filter((l) => isRTL(l)))
+
+  // Marketing images, illustrations, Lottie and lesson video all load straight
+  // from the CDN — open the connection early, it matters on high-RTT links.
+  preconnect(`https://${process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"}`)
 
   return (
     <html
