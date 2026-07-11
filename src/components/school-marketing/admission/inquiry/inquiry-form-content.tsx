@@ -46,7 +46,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { School } from "../../types"
 import { submitInquiry } from "../actions"
 import type { InquiryFormData } from "../types"
-import { DEFAULT_GRADES, INQUIRY_SOURCES } from "../types"
+import { getGradeOptions, getInquirySourceOptions } from "../types"
 
 interface Props {
   school: School
@@ -128,7 +128,7 @@ export default function InquiryFormContent({
         SuccessToast(dict.inquirySubmitted || "Inquiry submitted successfully")
       } else {
         ErrorToast(
-          result.error || dict.failedToSubmit || "Failed to submit inquiry"
+          dict.failedToSubmit || "Failed to submit inquiry"
         )
       }
     } catch (error) {
@@ -331,9 +331,9 @@ export default function InquiryFormContent({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DEFAULT_GRADES.map((grade) => (
-                            <SelectItem key={grade.grade} value={grade.grade}>
-                              {grade.grade}
+                          {getGradeOptions(lang).map((grade) => (
+                            <SelectItem key={grade.value} value={grade.value}>
+                              {grade.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -387,7 +387,7 @@ export default function InquiryFormContent({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {INQUIRY_SOURCES.map((source) => (
+                        {getInquirySourceOptions(lang).map((source) => (
                           <SelectItem key={source.value} value={source.value}>
                             {source.label}
                           </SelectItem>

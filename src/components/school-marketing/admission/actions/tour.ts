@@ -6,6 +6,7 @@ import type { SlotType } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
+import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import {
@@ -22,6 +23,7 @@ import type {
   TourSlot,
 } from "../types"
 import { createTourBookingSchema } from "../validation"
+import { getAdmissionPortalFlags } from "./portal-flags"
 
 // Initialize Resend for email
 const resend = process.env.RESEND_API_KEY
@@ -49,6 +51,13 @@ export async function getAvailableSlots(
     }
 
     const schoolId = schoolResult.data.id
+
+    // Honor the school's tour-booking toggle (default on when unset) so the
+    // wizard can't browse slots for a surface the admin turned off.
+    const flags = await getAdmissionPortalFlags(schoolId)
+    if (!flags.enableTourBooking) {
+      return { success: true, data: [] }
+    }
 
     // Default to next 30 days if no dates provided
     const start = startDate || new Date()
@@ -168,6 +177,17 @@ export async function createTourBooking(
     if (!rlResult.allowed) {
       return { success: false, error: "RATE_LIMITED" }
     }
+    // Per-IP limit alongside the per-email one — throwaway emails otherwise
+    // bypass the email bucket entirely.
+    const ip = await getClientIp()
+    const ipRl = await checkUserRateLimit(
+      `tour-ip:${subdomain}:${ip}`,
+      { windowMs: 60 * 60 * 1000, maxRequests: 10 },
+      "tour_booking_ip"
+    )
+    if (!ipRl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
 
     // Validate data
     const schema = createTourBookingSchema()
@@ -273,12 +293,19 @@ export async function createTourBooking(
       }
     }
 
-    // Notify ADMIN + STAFF about new tour lead (fire-and-forget)
+    // Notify ADMIN + STAFF about new tour lead (fire-and-forget), in the
+    // school's own language rather than always Arabic.
+    const notifLang = schoolResult.data.preferredLanguage === "en" ? "en" : "ar"
+    const notifTitle = notifLang === "en" ? "New tour booking" : "حجز جولة جديد"
+    const notifBody =
+      notifLang === "en"
+        ? `${validated.parentName} booked a campus tour`
+        : `${validated.parentName} حجز جولة للتعرف على المدرسة`
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "حجز جولة جديد",
-      body: `${validated.parentName} حجز جولة للتعرف على المدرسة`,
+      title: notifTitle,
+      body: notifBody,
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",
@@ -295,8 +322,8 @@ export async function createTourBooking(
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "حجز جولة جديد",
-      body: `${validated.parentName} حجز جولة للتعرف على المدرسة`,
+      title: notifTitle,
+      body: notifBody,
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",

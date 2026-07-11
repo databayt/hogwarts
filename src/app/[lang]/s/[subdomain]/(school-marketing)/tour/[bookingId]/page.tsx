@@ -28,6 +28,7 @@ import {
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getBookingDetails } from "@/components/school-marketing/admission/actions"
+import ManageBooking from "@/components/school-marketing/admission/tour/manage-booking"
 
 interface BookingPageProps {
   params: Promise<{ lang: Locale; subdomain: string; bookingId: string }>
@@ -181,36 +182,16 @@ export default async function BookingPage({ params }: BookingPageProps) {
                 the booker's name/email/student would leak PII (2026-05-21 audit,
                 P1-2). The booking number + slot details are enough to confirm. */}
 
-            {/* Actions */}
+            {/* Actions — self-service cancel/reschedule (replaces the old
+                mailto links to a non-existent @{subdomain}.edu address). */}
             {(booking.status === "CONFIRMED" ||
               booking.status === "PENDING") && (
-              <div className="border-t pt-4">
-                <p className="text-muted-foreground mb-4 text-sm">
-                  {isRTL
-                    ? "هل تريد تغيير موعدك؟ تواصل معنا لإعادة الجدولة أو الإلغاء."
-                    : "Need to change your appointment? Contact us to reschedule or cancel."}
-                </p>
-                <div className="flex gap-3">
-                  <a
-                    href={`mailto:admissions@${subdomain}.edu?subject=Reschedule Tour ${booking.bookingNumber}`}
-                  >
-                    <Button variant="outline" size="sm">
-                      {isRTL ? "إعادة جدولة" : "Reschedule"}
-                    </Button>
-                  </a>
-                  <a
-                    href={`mailto:admissions@${subdomain}.edu?subject=Cancel Tour ${booking.bookingNumber}`}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {isRTL ? "إلغاء" : "Cancel"}
-                    </Button>
-                  </a>
-                </div>
-              </div>
+              <ManageBooking
+                subdomain={subdomain}
+                bookingNumber={booking.bookingNumber}
+                isRTL={isRTL}
+                locale={lang}
+              />
             )}
           </CardContent>
         </Card>

@@ -127,7 +127,7 @@ export default function StatusTrackerContent({
         setStep("display")
       } else {
         ErrorToast(
-          result.error || dict.failedToFetch || "Failed to fetch status"
+          dict.failedToFetch || "Failed to fetch status"
         )
         setAccessToken(null)
         setStep("request")
@@ -158,7 +158,7 @@ export default function StatusTrackerContent({
           dict.codeSentSuccess || "Verification code sent to your email"
         )
       } else {
-        ErrorToast(result.error || dict.failedToSend || "Failed to send code")
+        ErrorToast(dict.failedToSend || "Failed to send code")
       }
     } catch (error) {
       ErrorToast(dict.failedToSend || "Failed to send code")
@@ -181,7 +181,7 @@ export default function StatusTrackerContent({
         await fetchStatus(result.data.accessToken)
       } else {
         ErrorToast(
-          result.error || dict.invalidCode || "Invalid verification code"
+          dict.invalidCode || "Invalid verification code"
         )
       }
     } catch (error) {
@@ -199,7 +199,7 @@ export default function StatusTrackerContent({
       if (result.success) {
         SuccessToast(dict.newCodeSent || "New code sent")
       } else {
-        ErrorToast(result.error || dict.failedToResend || "Failed to resend")
+        ErrorToast(dict.failedToResend || "Failed to resend")
       }
     } catch (error) {
       ErrorToast(dict.failedToResend || "Failed to resend")

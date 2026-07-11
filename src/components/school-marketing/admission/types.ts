@@ -312,6 +312,29 @@ export const INQUIRY_SOURCES = [
   { value: "other", label: "أخرى" },
 ] as const
 
+const INQUIRY_SOURCE_LABELS_EN: Record<string, string> = {
+  website: "Website",
+  social: "Social media",
+  referral: "Friend / family",
+  advertisement: "Advertisement",
+  event: "School event",
+  other: "Other",
+}
+
+/**
+ * Localized inquiry-source options. The `value` is stable (stored in the DB);
+ * only the label switches language. Falls back to the Arabic label.
+ */
+export function getInquirySourceOptions(
+  lang: string
+): { value: string; label: string }[] {
+  return INQUIRY_SOURCES.map((s) => ({
+    value: s.value,
+    label:
+      lang === "en" ? (INQUIRY_SOURCE_LABELS_EN[s.value] ?? s.label) : s.label,
+  }))
+}
+
 // ============================================
 // OTP Types
 // ============================================
@@ -372,6 +395,38 @@ export const DEFAULT_GRADES: GradeMapping[] = [
   { grade: "الصف الحادي عشر", minAge: 15, maxAge: 16 },
   { grade: "الصف الثاني عشر", minAge: 16, maxAge: 17 },
 ]
+
+const GRADE_LABELS_EN: Record<string, string> = {
+  "روضة 1": "KG 1",
+  "روضة 2": "KG 2",
+  "الصف الأول": "Grade 1",
+  "الصف الثاني": "Grade 2",
+  "الصف الثالث": "Grade 3",
+  "الصف الرابع": "Grade 4",
+  "الصف الخامس": "Grade 5",
+  "الصف السادس": "Grade 6",
+  "الصف السابع": "Grade 7",
+  "الصف الثامن": "Grade 8",
+  "الصف التاسع": "Grade 9",
+  "الصف العاشر": "Grade 10",
+  "الصف الحادي عشر": "Grade 11",
+  "الصف الثاني عشر": "Grade 12",
+}
+
+/**
+ * Localized grade options. The `value` stays the (Arabic) grade name that is
+ * stored and matched on; only the shown label switches to English. Falls back
+ * to the Arabic name for any grade without an English mapping.
+ */
+export function getGradeOptions(
+  lang: string,
+  gradeMapping: GradeMapping[] = DEFAULT_GRADES
+): { value: string; label: string }[] {
+  return gradeMapping.map((g) => ({
+    value: g.grade,
+    label: lang === "en" ? (GRADE_LABELS_EN[g.grade] ?? g.grade) : g.grade,
+  }))
+}
 
 // Utility function to suggest grade based on date of birth
 export function suggestGradeFromDOB(

@@ -7,6 +7,7 @@ import type { AdmissionApplicationStatus } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { Resend } from "resend"
 
+import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
@@ -17,6 +18,7 @@ import type {
   ChecklistItem,
   StatusTimelineEntry,
 } from "../types"
+import { getAdmissionPortalFlags } from "./portal-flags"
 
 /** sha256 hash of an OTP so we never store plaintext */
 function hashOtp(otp: string): string {
@@ -92,6 +94,16 @@ export async function requestStatusOTP(
       // Return generic response — do not reveal rate-limit status to caller
       return OTP_GENERIC_RESPONSE
     }
+    // Per-IP limit too — the email bucket alone is trivially bypassed.
+    const ip = await getClientIp()
+    const ipRl = await checkUserRateLimit(
+      `otp-ip:${subdomain}:${ip}`,
+      { windowMs: 60 * 60 * 1000, maxRequests: 15 },
+      "otp_request_ip"
+    )
+    if (!ipRl.allowed) {
+      return OTP_GENERIC_RESPONSE
+    }
 
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
@@ -100,6 +112,12 @@ export async function requestStatusOTP(
     }
 
     const schoolId = schoolResult.data.id
+
+    // Honor the school's status-tracker toggle (default on when unset).
+    const flags = await getAdmissionPortalFlags(schoolId)
+    if (!flags.enableStatusTracker) {
+      return OTP_GENERIC_RESPONSE
+    }
 
     // Find the application — if not found, return generic (not an oracle)
     const application = await db.application.findFirst({

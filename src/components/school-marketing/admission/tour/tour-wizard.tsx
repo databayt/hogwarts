@@ -42,7 +42,7 @@ import type {
   TourBookingData,
   TourSlot,
 } from "../types"
-import { DEFAULT_GRADES } from "../types"
+import { getGradeOptions } from "../types"
 
 type Step = "date" | "time" | "info" | "confirm"
 
@@ -192,8 +192,7 @@ export function TourWizard({
         goTo("confirm")
       } else {
         ErrorToast(
-          result.error ||
-            tour?.errors?.failedToBookTour ||
+          tour?.errors?.failedToBookTour ||
             "Failed to book tour"
         )
       }
@@ -607,9 +606,9 @@ function InfoStep({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {DEFAULT_GRADES.map((grade) => (
-                        <SelectItem key={grade.grade} value={grade.grade}>
-                          {grade.grade}
+                      {getGradeOptions(isRTL ? "ar" : "en").map((grade) => (
+                        <SelectItem key={grade.value} value={grade.value}>
+                          {grade.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

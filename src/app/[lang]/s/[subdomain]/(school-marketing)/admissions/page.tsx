@@ -7,6 +7,7 @@ import { notFound } from "next/navigation"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAdmissionPortalFlags } from "@/components/school-marketing/admission/actions/portal-flags"
 import AdmissionContent from "@/components/school-marketing/admission/content"
 import {
   generateDefaultMetadata,
@@ -53,6 +54,25 @@ export default async function Admission({ params }: AdmissionProps) {
   }
 
   const school = result.data
+
+  // Honor the school's public-portal master switch (default on when unset).
+  const flags = await getAdmissionPortalFlags(school.id)
+  if (!flags.enablePublicPortal) {
+    return (
+      <div className="school-content" data-school-id={school.id}>
+        <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+          <h1 className="mb-3 text-2xl font-semibold">
+            {lang === "ar" ? "القبول مغلق حالياً" : "Admissions are closed"}
+          </h1>
+          <p className="text-muted-foreground">
+            {lang === "ar"
+              ? "بوابة القبول غير متاحة في الوقت الحالي. يرجى التحقق لاحقاً."
+              : "The admissions portal is not open right now. Please check back later."}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

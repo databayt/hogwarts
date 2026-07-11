@@ -7,6 +7,7 @@ import { notFound } from "next/navigation"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAdmissionPortalFlags } from "@/components/school-marketing/admission/actions/portal-flags"
 import StatusTrackerContent from "@/components/school-marketing/admission/status/status-tracker-content"
 
 interface StatusPageProps {
@@ -41,6 +42,25 @@ export default async function StatusPage({
 
   if (!schoolResult.success || !schoolResult.data) {
     notFound()
+  }
+
+  // Honor the school's status-tracker toggle (default on when unset).
+  const flags = await getAdmissionPortalFlags(schoolResult.data.id)
+  if (!flags.enableStatusTracker) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+        <h1 className="mb-3 text-2xl font-semibold">
+          {lang === "ar"
+            ? "تتبع الطلب غير متاح"
+            : "Status tracking is unavailable"}
+        </h1>
+        <p className="text-muted-foreground">
+          {lang === "ar"
+            ? "خدمة تتبع حالة الطلب غير مفعّلة حالياً لهذه المدرسة."
+            : "This school has not enabled online application status tracking."}
+        </p>
+      </div>
+    )
   }
 
   return (

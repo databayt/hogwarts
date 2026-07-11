@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { Resend } from "resend"
 
+import { getClientIp } from "@/lib/client-ip"
 import { db } from "@/lib/db"
 import { dispatchNotificationsToAudience } from "@/lib/dispatch-notification"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
@@ -40,13 +41,23 @@ export async function submitInquiry(
     const schema = createInquirySchema()
     const validated = schema.parse(data)
 
-    // Rate-limit public inquiry submissions per (subdomain, email)
+    // Rate-limit public inquiry submissions per (subdomain, email) AND per IP —
+    // the email key alone lets one attacker cycle throwaway addresses forever.
     const rlResult = await checkUserRateLimit(
       `inquiry:${subdomain}:${validated.email}`,
       RATE_LIMITS.PUBLIC,
       "inquiry_submit"
     )
     if (!rlResult.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+    const ip = await getClientIp()
+    const ipRl = await checkUserRateLimit(
+      `inquiry-ip:${subdomain}:${ip}`,
+      { windowMs: 60 * 60 * 1000, maxRequests: 10 },
+      "inquiry_submit_ip"
+    )
+    if (!ipRl.allowed) {
       return { success: false, error: "RATE_LIMITED" }
     }
 
@@ -100,12 +111,19 @@ export async function submitInquiry(
       },
     })
 
-    // Notify ADMIN + STAFF about new inquiry lead (fire-and-forget)
+    // Notify ADMIN + STAFF about new inquiry lead (fire-and-forget), in the
+    // school's own language rather than always Arabic.
+    const notifLang = schoolResult.data.preferredLanguage === "en" ? "en" : "ar"
+    const notifTitle = notifLang === "en" ? "New inquiry" : "استفسار جديد"
+    const notifBody =
+      notifLang === "en"
+        ? `${validated.parentName} sent an inquiry via the admission portal`
+        : `${validated.parentName} أرسل استفساراً عبر بوابة القبول`
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "استفسار جديد",
-      body: `${validated.parentName} أرسل استفساراً عبر بوابة القبول`,
+      title: notifTitle,
+      body: notifBody,
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",
@@ -120,8 +138,8 @@ export async function submitInquiry(
     dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: "استفسار جديد",
-      body: `${validated.parentName} أرسل استفساراً عبر بوابة القبول`,
+      title: notifTitle,
+      body: notifBody,
       priority: "normal",
       channels: ["in_app"],
       targetScope: "role",
