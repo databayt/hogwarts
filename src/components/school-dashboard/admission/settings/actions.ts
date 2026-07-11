@@ -9,6 +9,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
+import { assertAdmissionPermission, isPermissionDenied } from "../authorization"
 import {
   admissionSettingsSchema,
   type AdmissionSettingsFormData,
@@ -24,6 +25,9 @@ export async function getAdmissionSettings(): Promise<
     if (!schoolId) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
+
+    // Settings include bank account details (IBAN/SWIFT) — admin-only read
+    assertAdmissionPermission(session.user.role ?? "", "manageSettings")
 
     // Get or create settings for this school
     let settings = await db.admissionSettings.findUnique({
@@ -77,6 +81,9 @@ export async function getAdmissionSettings(): Promise<
     }
   } catch (error) {
     console.error("[getAdmissionSettings]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -93,10 +100,7 @@ export async function saveAdmissionSettings(
     }
 
     // RBAC: Only ADMIN and DEVELOPER can modify admission settings
-    const role = session.user.role
-    if (role !== "DEVELOPER" && role !== "ADMIN") {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    assertAdmissionPermission(session.user.role ?? "", "manageSettings")
 
     // Validate input
     const validated = admissionSettingsSchema.safeParse(data)
@@ -130,6 +134,9 @@ export async function saveAdmissionSettings(
     return { success: true, data: null }
   } catch (error) {
     console.error("[saveAdmissionSettings]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

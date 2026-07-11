@@ -905,6 +905,9 @@ describe("Admission Actions", () => {
       id: "a-1",
       schoolId: SCHOOL_ID,
       userId: "user-applicant",
+      // confirmEnrollment now requires a live SELECTED offer (a declined offer
+      // sets WITHDRAWN — the gate stops enrolling a withdrawn applicant).
+      status: "SELECTED",
       firstName: "John",
       middleName: "M",
       lastName: "Doe",

@@ -31,11 +31,17 @@ import {
 // 1624→1547, zodMessage 880→864, bilingualField 123→111, toast 110→106,
 // button 35→34, placeholder 163→161. UI surfaces (src/components, non-api
 // src/app) remain fully scanned.
+// Re-baselined 2026-07-11: admission production-readiness pass added 12
+// legitimate error-CODE returns (not hardcoded UI English) — the RBAC
+// `FORBIDDEN` returns in admission leads actions (+5) and the offer-integrity
+// gates `OFFER_NOT_AVAILABLE`/`OFFER_EXPIRED`/`REGISTRATION_FEE_ALREADY_PAID`
+// in application/offer/actions.ts (+7), each following its file's existing
+// error-code pattern. errorReturn 1116→1128.
 const BASELINE_BY_PATTERN: Record<PatternName, number> = {
   formLabel: 23,
   toast: 106,
   button: 34,
-  errorReturn: 1116,
+  errorReturn: 1128,
   selectLabel: 1547,
   zodMessage: 864,
   bilingualField: 111,

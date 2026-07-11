@@ -24,7 +24,7 @@ import { generateStudentUsername } from "@/lib/student-username"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
 import { detectLang } from "@/components/translation/util"
 
-import { assertAdmissionPermission } from "./authorization"
+import { assertAdmissionPermission, isPermissionDenied } from "./authorization"
 import {
   getApplicationsList,
   getCampaignOptions,
@@ -32,6 +32,7 @@ import {
   getEnrollmentList,
   getMeritList,
 } from "./queries"
+import { isTransitionAllowed, isValidTargetStatus } from "./status-machine"
 import {
   campaignSchemaWithValidation,
   type CampaignFormData,
@@ -207,6 +208,9 @@ export async function getCampaigns(params: {
     }
   } catch (error) {
     console.error("[getCampaigns]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -259,6 +263,9 @@ export async function getCampaign(params: { id: string }): Promise<
     }
   } catch (error) {
     console.error("[getCampaign]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -312,6 +319,9 @@ export async function createCampaign(
     return { success: true, data: { id: campaign.id } }
   } catch (error) {
     console.error("[createCampaign]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     // Check for unique constraint violation
     if ((error as { code?: string })?.code === "P2002") {
       return actionError(ACTION_ERRORS.ALREADY_EXISTS)
@@ -357,6 +367,9 @@ export async function updateCampaign(
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateCampaign]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     // Check for unique constraint violation
     if ((error as { code?: string })?.code === "P2002") {
       return actionError(ACTION_ERRORS.ALREADY_EXISTS)
@@ -400,6 +413,9 @@ export async function deleteCampaign(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[deleteCampaign]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }
@@ -455,70 +471,11 @@ export async function getApplications(params: {
     }
   } catch (error) {
     console.error("[getApplications]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
-}
-
-// All valid statuses for the dropdown (ADMITTED only via confirmEnrollment)
-const VALID_STATUSES = [
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "SHORTLISTED",
-  "SELECTED",
-  "WAITLISTED",
-  "REJECTED",
-  "WITHDRAWN",
-]
-
-/**
- * Allowed status transitions for `updateApplicationStatus`. Keys are the
- * CURRENT status; values are the statuses it may move to. The terminal states
- * (REJECTED, WITHDRAWN, ADMITTED) have NO outgoing edges — this is what stops a
- * rejected/withdrawn applicant being flipped back to SELECTED to silently
- * re-issue an offer. ADMITTED is reachable ONLY via `confirmEnrollment`, never
- * this action, so it never appears as a target here.
- */
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  DRAFT: ["SUBMITTED", "WITHDRAWN"],
-  SUBMITTED: [
-    "UNDER_REVIEW",
-    "SHORTLISTED",
-    "WAITLISTED",
-    "REJECTED",
-    "WITHDRAWN",
-    "ENTRANCE_SCHEDULED",
-    "INTERVIEW_SCHEDULED",
-  ],
-  UNDER_REVIEW: [
-    "SHORTLISTED",
-    "WAITLISTED",
-    "SELECTED",
-    "REJECTED",
-    "WITHDRAWN",
-    "ENTRANCE_SCHEDULED",
-    "INTERVIEW_SCHEDULED",
-  ],
-  ENTRANCE_SCHEDULED: [
-    "INTERVIEW_SCHEDULED",
-    "SHORTLISTED",
-    "WAITLISTED",
-    "SELECTED",
-    "REJECTED",
-    "WITHDRAWN",
-  ],
-  INTERVIEW_SCHEDULED: [
-    "SHORTLISTED",
-    "WAITLISTED",
-    "SELECTED",
-    "REJECTED",
-    "WITHDRAWN",
-  ],
-  SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
-  WAITLISTED: ["SELECTED", "SHORTLISTED", "REJECTED", "WITHDRAWN"],
-  SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
-  REJECTED: [],
-  WITHDRAWN: [],
-  ADMITTED: [],
 }
 
 export async function updateApplicationStatus(params: {
@@ -536,7 +493,7 @@ export async function updateApplicationStatus(params: {
     assertAdmissionPermission(session.user.role, "updateStatus")
 
     // Validate target status is a known status
-    if (!VALID_STATUSES.includes(params.status)) {
+    if (!isValidTargetStatus(params.status)) {
       return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
     }
 
@@ -555,8 +512,7 @@ export async function updateApplicationStatus(params: {
     // offer) that the previous "any valid status → any valid status" check let
     // through.
     if (params.status !== current.status) {
-      const allowed = ALLOWED_TRANSITIONS[current.status] ?? []
-      if (!allowed.includes(params.status)) {
+      if (!isTransitionAllowed(current.status, params.status)) {
         return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
       }
     }
@@ -714,6 +670,9 @@ export async function updateApplicationStatus(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateApplicationStatus]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
@@ -766,6 +725,9 @@ export async function getMeritListData(params: {
     }
   } catch (error) {
     console.error("[getMeritListData]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -834,6 +796,9 @@ export async function updateApplicationScores(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[updateApplicationScores]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -947,6 +912,9 @@ export async function generateMeritList(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[generateMeritList]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -1006,6 +974,9 @@ export async function getEnrollmentData(params: {
     }
   } catch (error) {
     console.error("[getEnrollmentData]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -1055,8 +1026,14 @@ export async function confirmEnrollment(params: {
       return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
     }
 
+    // Enrollment may only be confirmed for a live, selected offer. ADMITTED is
+    // already enrolled; a declined offer sets status WITHDRAWN, so this gate is
+    // what stops a withdrawn/rejected applicant being turned into a Student.
     if (application.status === "ADMITTED") {
       return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+    }
+    if (application.status !== "SELECTED") {
+      return actionError(ACTION_ERRORS.APPLICATION_STATUS_INVALID)
     }
 
     if (
@@ -1167,9 +1144,13 @@ export async function confirmEnrollment(params: {
         // 3. Resolve userId — create a User for guest applications
         let userId = application.userId
         if (!userId) {
-          // Find existing user by email to avoid unique constraint violation
+          // Find existing user by email to avoid unique constraint violation.
+          // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
+          // same email may exist as separate rows in other schools. An unscoped
+          // match would annex another tenant's user (e.g. a parent who used the
+          // same email at a different school) into this school's Student record.
           const existingUser = await tx.user.findFirst({
-            where: { email: application.email },
+            where: { email: application.email, schoolId },
             select: { id: true },
           })
 
@@ -1876,6 +1857,9 @@ export async function confirmEnrollment(params: {
     }
   } catch (error) {
     console.error("[confirmEnrollment]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -1968,6 +1952,9 @@ export async function recordPayment(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[recordPayment]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -2045,6 +2032,9 @@ export async function getAvailableSectionsForPlacement(params: {
     }
   } catch (error) {
     console.error("[getAvailableSectionsForPlacement]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -2185,6 +2175,9 @@ export async function placeStudentInSection(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[placeStudentInSection]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }
@@ -2211,10 +2204,15 @@ export async function fetchCampaignOptions(): Promise<
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    assertAdmissionPermission(session.user.role ?? "", "viewApplications")
+
     const options = await getCampaignOptions(schoolId)
     return { success: true, data: options }
   } catch (error) {
     console.error("[fetchCampaignOptions]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
   }
 }

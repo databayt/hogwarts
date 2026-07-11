@@ -192,7 +192,7 @@ describe("Admission Settings Actions", () => {
       const result = await saveAdmissionSettings(validSettings)
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe("UNAUTHORIZED")
+      expect(result.error).toBe("FORBIDDEN")
     })
 
     it("returns validation error for invalid data", async () => {

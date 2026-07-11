@@ -13,12 +13,14 @@ import type { PageNavItem } from "@/components/atom/page-nav"
 
 // ACCOUNTANT is included: server grants them viewApplications + recordPayment;
 // they can see applications and enrollment tabs (read-only posture via getUIConfigForRole).
-const VIEW_ROLES: readonly Role[] = [
+export const ADMISSION_VIEW_ROLES: readonly Role[] = [
   "DEVELOPER",
   "ADMIN",
   "STAFF",
   "ACCOUNTANT",
 ] as const
+
+const VIEW_ROLES = ADMISSION_VIEW_ROLES
 
 export function getTabsForRole(
   role: Role | null | undefined,

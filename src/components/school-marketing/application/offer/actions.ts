@@ -534,10 +534,19 @@ export async function declineOffer(
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
     }
 
+    // Once the registration fee is paid the seat is committed — declining would
+    // strand a real payment. Block it and let the school handle a refund.
+    if (application.registrationFeePaid) {
+      return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
+    }
+
     await db.application.update({
       where: { id: applicationId, schoolId: application.schoolId },
       data: {
         status: "WITHDRAWN",
+        // Clear acceptance so a withdrawn offer can't slip past the
+        // offerAccepted-only gates on the payment actions.
+        offerAccepted: false,
       },
     })
 
@@ -630,6 +639,16 @@ export async function createRegistrationFeeCheckout(
     }
 
     const { application } = result
+
+    // Offer must still be live: a WITHDRAWN/declined or expired offer must not
+    // be payable (declining leaves offerAccepted untouched, so this status gate
+    // is what actually blocks paying a withdrawn offer).
+    if (application.status !== "SELECTED") {
+      return { success: false, error: "OFFER_NOT_AVAILABLE" }
+    }
+    if (isOfferExpired(application.offerExpiryDate)) {
+      return { success: false, error: "OFFER_EXPIRED" }
+    }
 
     // Must have accepted the offer first
     if (!application.offerAccepted) {
@@ -770,6 +789,14 @@ export async function recordRegistrationCashIntent(
 
     const { application } = result
 
+    // Offer must still be live — a withdrawn or expired offer is not payable.
+    if (application.status !== "SELECTED") {
+      return { success: false, error: "OFFER_NOT_AVAILABLE" }
+    }
+    if (isOfferExpired(application.offerExpiryDate)) {
+      return { success: false, error: "OFFER_EXPIRED" }
+    }
+
     // Must have accepted the offer first
     if (!application.offerAccepted) {
       return { success: false, error: "OFFER_NOT_ACCEPTED" }
@@ -886,6 +913,14 @@ export async function recordRegistrationBankTransferIntent(
     }
 
     const { application } = result
+
+    // Offer must still be live — a withdrawn or expired offer is not payable.
+    if (application.status !== "SELECTED") {
+      return { success: false, error: "OFFER_NOT_AVAILABLE" }
+    }
+    if (isOfferExpired(application.offerExpiryDate)) {
+      return { success: false, error: "OFFER_EXPIRED" }
+    }
 
     // Must have accepted the offer first
     if (!application.offerAccepted) {

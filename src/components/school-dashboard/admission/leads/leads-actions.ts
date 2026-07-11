@@ -10,7 +10,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { assertAdmissionPermission } from "../authorization"
+import { assertAdmissionPermission, isPermissionDenied } from "../authorization"
 import {
   getInquiriesList,
   getTourBookingsList,
@@ -53,6 +53,9 @@ export async function getInquiries(params: {
     return { success: true, data: { rows, total: count } }
   } catch (err) {
     console.error("[getInquiries]", err)
+    if (isPermissionDenied(err)) {
+      return { success: false, error: "FORBIDDEN" }
+    }
     return { success: false, error: "INTERNAL_ERROR" }
   }
 }
@@ -85,6 +88,9 @@ export async function getTourBookings(params: {
     return { success: true, data: { rows, total: count } }
   } catch (err) {
     console.error("[getTourBookings]", err)
+    if (isPermissionDenied(err)) {
+      return { success: false, error: "FORBIDDEN" }
+    }
     return { success: false, error: "INTERNAL_ERROR" }
   }
 }
@@ -137,6 +143,9 @@ export async function updateInquiryStatus(params: {
     return { success: true, data: null }
   } catch (err) {
     console.error("[updateInquiryStatus]", err)
+    if (isPermissionDenied(err)) {
+      return { success: false, error: "FORBIDDEN" }
+    }
     return { success: false, error: "INTERNAL_ERROR" }
   }
 }
@@ -181,6 +190,9 @@ export async function markInquiryConverted(params: {
     return { success: true, data: null }
   } catch (err) {
     console.error("[markInquiryConverted]", err)
+    if (isPermissionDenied(err)) {
+      return { success: false, error: "FORBIDDEN" }
+    }
     return { success: false, error: "INTERNAL_ERROR" }
   }
 }
@@ -242,6 +254,9 @@ export async function updateTourBookingStatus(params: {
     return { success: true, data: null }
   } catch (err) {
     console.error("[updateTourBookingStatus]", err)
+    if (isPermissionDenied(err)) {
+      return { success: false, error: "FORBIDDEN" }
+    }
     return { success: false, error: "INTERNAL_ERROR" }
   }
 }

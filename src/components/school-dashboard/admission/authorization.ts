@@ -17,6 +17,7 @@ import type { UserRole } from "@prisma/client"
 
 type AdmissionAction =
   | "manageCampaigns"
+  | "manageSettings"
   | "reviewApplications"
   | "updateStatus"
   | "confirmEnrollment"
@@ -27,6 +28,7 @@ type AdmissionAction =
 
 const ADMISSION_PERMISSIONS: Record<AdmissionAction, UserRole[]> = {
   manageCampaigns: ["DEVELOPER", "ADMIN"],
+  manageSettings: ["DEVELOPER", "ADMIN"],
   reviewApplications: ["DEVELOPER", "ADMIN", "STAFF"],
   updateStatus: ["DEVELOPER", "ADMIN", "STAFF"],
   confirmEnrollment: ["DEVELOPER", "ADMIN"],
@@ -35,6 +37,8 @@ const ADMISSION_PERMISSIONS: Record<AdmissionAction, UserRole[]> = {
   generateMeritList: ["DEVELOPER", "ADMIN"],
   viewApplications: ["DEVELOPER", "ADMIN", "STAFF", "ACCOUNTANT"],
 }
+
+const PERMISSION_DENIED = "PermissionDeniedError"
 
 export function canPerformAdmissionAction(
   role: string,
@@ -49,8 +53,14 @@ export function assertAdmissionPermission(
   action: AdmissionAction
 ): void {
   if (!canPerformAdmissionAction(role, action)) {
-    throw new Error(
+    const error = new Error(
       `Permission denied: ${action} requires role ${ADMISSION_PERMISSIONS[action].join(", ")}`
     )
+    error.name = PERMISSION_DENIED
+    throw error
   }
+}
+
+export function isPermissionDenied(error: unknown): boolean {
+  return error instanceof Error && error.name === PERMISSION_DENIED
 }

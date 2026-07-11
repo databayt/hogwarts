@@ -259,7 +259,7 @@ describe("getInquiries server action", () => {
     } as never)
     const result = await getInquiries({})
     expect(result.success).toBe(false)
-    expect((result as { error: string }).error).toBe("INTERNAL_ERROR")
+    expect((result as { error: string }).error).toBe("FORBIDDEN")
   })
 })
 
@@ -375,7 +375,7 @@ describe("updateInquiryStatus server action", () => {
     mockAccountantSession()
     const result = await updateInquiryStatus({ id: "i1", status: "CONTACTED" })
     expect(result.success).toBe(false)
-    expect((result as { error: string }).error).toBe("INTERNAL_ERROR")
+    expect((result as { error: string }).error).toBe("FORBIDDEN")
   })
 })
 

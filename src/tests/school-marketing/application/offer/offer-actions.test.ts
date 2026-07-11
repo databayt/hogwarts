@@ -210,7 +210,9 @@ describe("declineOffer", () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: APPLICATION_ID, schoolId: SCHOOL_ID },
-        data: { status: "WITHDRAWN" },
+        // Declining also clears offerAccepted so a withdrawn offer can't slip
+        // past the offerAccepted-only gate on the payment actions.
+        data: { status: "WITHDRAWN", offerAccepted: false },
       })
     )
   })
@@ -249,6 +251,32 @@ describe("createRegistrationFeeCheckout", () => {
       "en"
     )
     expect(result).toEqual({ success: false, error: "OFFER_NOT_ACCEPTED" })
+  })
+
+  it("rejects payment for a withdrawn offer even if it was accepted", async () => {
+    // Declining leaves the seat forfeited; a withdrawn offer must not be
+    // payable regardless of the historical offerAccepted flag.
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ status: "WITHDRAWN", offerAccepted: true })
+    )
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en"
+    )
+    expect(result).toEqual({ success: false, error: "OFFER_NOT_AVAILABLE" })
+  })
+
+  it("rejects payment for an expired offer", async () => {
+    mockFindFirst.mockResolvedValue(
+      makeApplication({ offerAccepted: true, offerExpiryDate: new Date(0) })
+    )
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en"
+    )
+    expect(result).toEqual({ success: false, error: "OFFER_EXPIRED" })
   })
 
   it("returns REGISTRATION_FEE_ALREADY_PAID when fee is already paid", async () => {

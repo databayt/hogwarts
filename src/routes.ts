@@ -104,6 +104,16 @@ export const roleRoutes: Record<string, Role[]> = {
   "/settings/*": ["ADMIN", "DEVELOPER"],
 
   // ============================================================================
+  // Admission routes (staff-side only — applicant PII, merit, bank settings)
+  // Exact entries narrow admin-only tabs; the wildcard covers the rest.
+  // ============================================================================
+  "/admission": ["ADMIN", "DEVELOPER"],
+  "/admission/settings": ["ADMIN", "DEVELOPER"],
+  "/admission/merit": ["ADMIN", "STAFF", "DEVELOPER"],
+  "/admission/leads": ["ADMIN", "STAFF", "DEVELOPER"],
+  "/admission/*": ["ADMIN", "STAFF", "ACCOUNTANT", "DEVELOPER"],
+
+  // ============================================================================
   // Finance routes (all authenticated users - role-specific views handled in UI)
   // ============================================================================
   "/finance": [
