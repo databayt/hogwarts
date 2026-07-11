@@ -7,24 +7,136 @@ The admin admission flow runs from application review through enrollment confirm
 
 **Applying is always free.** The application wizard collects information only — no payment is taken at the application stage. Payment is triggered at two later points: the registration fee when the applicant accepts an offer, and tuition invoices after enrollment is confirmed.
 
-## Pipeline
+## Flow
 
-```
-Applicant submits (free) → SUBMITTED
-Review application       → UNDER_REVIEW
-Score & rank             → Merit list
-Select applicant         → SELECTED (admissionOffered=true)
-  Applicant accepts offer → pays registration fee
-Confirm enrollment       → ADMITTED
-                           → Student (ACTIVE)
-                           → User (role=STUDENT)
-                           → Guardians + StudentGuardian
-                           → StudentYearLevel + AcademicGrade
-                           → FeeAssignments + UserInvoices (tuition)
-                           → StudentDocuments
-Place in section         → Classroom roster
-Edit in wizard           → Update details
-```
+A family moves through six stages. The first four happen on the public website (driven by the family); the last two happen in the staff dashboard.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Family discovers the school"] --> B{"First step?"}
+    B -->|"Ask a question"| C["Inquiry"]
+    B -->|"Visit campus"| D["Book a tour"]
+    B -->|"Ready to apply"| E["Application wizard (free, 5 steps)"]
+    C --> F["Appears in staff Leads"]
+    D --> F
+    F --> E
+    E --> G["Application submitted, Tracking Code issued"]
+    G --> H["Staff review: score, rank, decide"]
+    H --> I{"Decision"}
+    I -->|"Reject / Waitlist"| J["Applicant notified"]
+    I -->|"Select"| K["Offer email with private link"]
+    K --> L{"Family responds"}
+    L -->|"Decline"| M["Withdrawn, seat released"]
+    L -->|"Accept"| N["Pay registration fee (card / cash / bank)"]
+    N --> O["Admin confirms enrollment"]
+    O --> P["Student created: fees, guardians, class seat"]
+    P --> Q["Student can sign in and attend"]`}
+/>
+
+**Two invariants hold everywhere:** applying is always free (the only payment is the registration fee, after an offer is accepted), and schools never see each other's data (every read and write is scoped to one school).
+
+### Public portal
+
+Ask a question, book a tour, or check an application's status.
+
+<Mermaid
+  chart={`flowchart TD
+    V["Visitor on the public site"] --> Choice{"Choose"}
+    Choice -->|"Question"| Inq["Inquiry form"]
+    Choice -->|"Visit"| Tour["Tour booking"]
+    Choice -->|"Check status"| Stat["Status tracker"]
+    Inq --> InqOK["Saved as a Lead, staff notified"]
+    Tour --> Slot{"Seat left?"}
+    Slot -->|"Yes"| TourOK["Confirmed, self-serve cancel/reschedule"]
+    Slot -->|"No"| TourFull["Slot full message"]
+    Stat --> OTP["App no. + email, one-time code, status timeline"]`}
+/>
+
+### Application wizard
+
+A logged-in family completes a five-step form that auto-saves and is resumable.
+
+<Mermaid
+  chart={`flowchart TD
+    L["Family logs in"] --> S1["1 Attachments"]
+    S1 --> S2["2 Personal + guardian"]
+    S2 --> S3["3 Location"]
+    S3 --> S4["4 Academic"]
+    S4 --> S5["5 Fees preview (FREE, no payment)"]
+    S5 --> Submit["Submit"]
+    Submit --> Rec["One Application created"]
+    Rec --> TC["Application Tracking Code shown"]`}
+/>
+
+### Staff review
+
+Only staff-side roles may open the dashboard. Terminal statuses cannot re-offer.
+
+<Mermaid
+  chart={`flowchart TD
+    App["New application (Submitted)"] --> Rev["Staff review"]
+    Rev --> Score["Enter entrance + interview scores (0-100)"]
+    Score --> Merit["Generate merit list (ranked)"]
+    Merit --> St{"Set a status"}
+    St -->|"Under review / Shortlist"| Rev
+    St -->|"Reject / Waitlist"| End["Applicant notified"]
+    St -->|"Select"| Offer["Offer email + private link"]`}
+/>
+
+### Offer and registration fee
+
+The one payment in the flow, taken only after an offer is accepted.
+
+<Mermaid
+  chart={`flowchart TD
+    Email["Offer email, private link"] --> Login["Family logs in (link preserved)"]
+    Login --> View["Offer page"]
+    View --> Dec{"Accept or decline?"}
+    Dec -->|"Decline"| Wd["Withdrawn, not payable"]
+    Dec -->|"Accept"| Pay{"Choose payment"}
+    Pay -->|"Card"| Card["Online checkout (methods match currency)"]
+    Pay -->|"Cash / Bank"| Manual["Records an intent"]
+    Card --> WH["Webhook confirms payment"]
+    Manual --> AdminC["Admin confirms money received"]
+    WH --> Paid["Marked paid"]
+    AdminC --> Paid
+    Paid --> Ready["Ready for enrollment"]`}
+/>
+
+### Enrollment
+
+One all-or-nothing transaction turns an accepted applicant into a placed student.
+
+<Mermaid
+  chart={`flowchart TD
+    Acc["Accepted + fee handled"] --> Btn["Admin clicks Confirm Enrollment"]
+    Btn --> Tx["One transaction creates:"]
+    Tx --> S["Student record"]
+    Tx --> Fees["Fee assignments + invoices"]
+    Tx --> G["Guardians linked + notified"]
+    Tx --> Docs["Documents copied"]
+    S --> Place["Place into a Section (seat-limited)"]
+    Place --> Live["On roster, attendance, timetable; can sign in"]`}
+/>
+
+### Behind the scenes
+
+Settings, AI document reading, reminder jobs, and notifications.
+
+<Mermaid
+  chart={`flowchart LR
+    Set["Admission settings"] --> Flow["Shape fees, weights, toggles"]
+    Up["Uploaded document"] --> AI["AI reads and classifies"]
+    AI --> Panel["Staff see extracted details"]
+    Cron["Daily jobs"] --> Rem["Fee-due and offer-expiry reminders"]
+    Ev["Any key event"] --> Notif["In-app + email, in the school's language"]`}
+/>
+
+## Structure
+
+The admission feature follows the mirror pattern — every route under `app/[lang]/` has a matching feature directory under `components/`, so if you know the URL you know where the code lives.
+
+<Structure />
 
 ## Routes
 
