@@ -29,6 +29,22 @@ last_audited: 2026-06-13
 
 ---
 
+## Fixed (2026-07-11) ✅ — production-readiness security pass (commit `f680ca7ed`, local)
+
+Full 6-leg trace (portal · wizard · dashboard · offer+payment · enrollment · settings/AI/crons). Security + correctness subset landed; **remaining items tracked in [#376](https://github.com/databayt/hogwarts/issues/376)**.
+
+- **P0 — dashboard SSR had NO RBAC.** The tab content components import `queries.ts` directly (no role param), so any authenticated tenant user (STUDENT/GUARDIAN/TEACHER) could open `/admission/*` and SSR-read applicant PII, uploaded ID/bank docs, merit ranks, and enrollment data. Fixed with a `/admission*` role matrix (`routes.ts`) **and** a hard role gate in `admission/layout.tsx` (`ADMISSION_VIEW_ROLES`).
+- **P0 — `getAdmissionSettings` leaked bank name/account/IBAN/SWIFT** to any tenant user (read had no perm check). Added a `manageSettings` permission; gated read + write.
+- **P0 — a withdrawn (declined) offer was still payable and enrollable.** Registration-fee actions now require a live `SELECTED`, non-expired offer; `declineOffer` clears `offerAccepted` and refuses once paid; `confirmEnrollment` requires `SELECTED`.
+- **P0 — cross-tenant User annexation.** `confirmEnrollment`'s guest-User email lookup is now `schoolId`-scoped (`User` is unique per `(email, schoolId)`).
+- **P1 — permission-denied → generic error.** New `FORBIDDEN` code + `isPermissionDenied()`, wired through all admission catch sites (was swallowed into "update failed").
+- **P1 — status menu dead items.** New `status-machine.ts` single source; `VALID_STATUSES` now includes `ENTRANCE_SCHEDULED`/`INTERVIEW_SCHEDULED`; the detail dropdown offers only server-allowed transitions.
+- `fetchCampaignOptions` missing `viewApplications` assertion → added.
+
+> Note: several previously-listed "open" items were already resolved before this pass — the `confirmEnrollment` fee-matcher duplication (now calls `ensureStudentFeeAssignments(tx)`), and the `admission.ai.*`/`documentTypes.*` dict namespaces (present + bilingual). `bulk-placement.tsx` never existed. See #376 for the verified remaining ledger.
+
+---
+
 ## Fixed (2026-06-22) ✅
 
 - **`getCampaign` RBAC gap** — `getCampaign` was the only exported admission action without an `assertAdmissionPermission` check (it had `auth()` + `schoolId` scoping only), so any authenticated tenant user (STUDENT/GUARDIAN/etc.) could read campaign detail. Now gated at `manageCampaigns` to match its sole caller (the campaign edit form) and the sibling `create`/`update`/`deleteCampaign` actions. (`111c06ff8`)
