@@ -256,6 +256,9 @@ export function VideoSettingsDialog({
               </Select>
               <p className="text-muted-foreground text-xs">
                 You can change visibility at any time. Your video, your choice.
+                {video.approvalStatus === "APPROVED" &&
+                  visibility !== "PUBLIC" &&
+                  " Making an approved video public resubmits it for platform review."}
               </p>
             </div>
           )}

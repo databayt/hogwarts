@@ -16,6 +16,7 @@ import { StreamAdminDashboardContent } from "@/components/stream/settings/overvi
 import { getPendingVideos } from "@/components/stream/settings/video-review-actions"
 import { VideoReviewContent } from "@/components/stream/settings/video-review-content"
 import { getMyVideos } from "@/components/stream/teach/actions"
+import { getProposableLessons } from "@/components/stream/teach/get-proposable-lessons"
 import { TeachVideosContent } from "@/components/stream/teach/videos-content"
 
 interface Props {
@@ -223,17 +224,26 @@ export default async function StreamSettingsPage({
   }
 
   // Fetch data based on role
-  const [enrollments, subjects, videos, overviewStats, pendingVideos] =
-    await Promise.all([
-      isAdmin ? getSchoolEnrollments() : Promise.resolve([]),
-      isAdmin && schoolId
-        ? getSubjectsWithInstructors(schoolId)
-        : Promise.resolve([]),
-      getMyVideos(),
-      isAdmin && schoolId ? getOverviewStats(schoolId) : Promise.resolve(null),
-      // Admin video-review queue (getPendingVideos self-guards role + school).
-      isAdmin ? getPendingVideos() : Promise.resolve([]),
-    ])
+  const [
+    enrollments,
+    subjects,
+    videos,
+    overviewStats,
+    pendingVideos,
+    proposableLessons,
+  ] = await Promise.all([
+    isAdmin ? getSchoolEnrollments() : Promise.resolve([]),
+    isAdmin && schoolId
+      ? getSubjectsWithInstructors(schoolId)
+      : Promise.resolve([]),
+    getMyVideos(),
+    isAdmin && schoolId ? getOverviewStats(schoolId) : Promise.resolve(null),
+    // Admin video-review queue (getPendingVideos self-guards role + school).
+    isAdmin ? getPendingVideos() : Promise.resolve([]),
+    // Upload entry on the Videos tab — lessons the caller may propose for
+    // (self-guards role; ADMIN/DEVELOPER/TEACHER all propose here).
+    getProposableLessons(),
+  ])
 
   return (
     <StreamSettingsContent
@@ -270,9 +280,12 @@ export default async function StreamSettingsPage({
           lang={lang}
           videos={videos}
           subdomain={subdomain}
+          proposableLessons={proposableLessons}
         />
       }
-      reviewContent={<VideoReviewContent videos={pendingVideos} />}
+      reviewContent={
+        <VideoReviewContent videos={pendingVideos} userRole={role} />
+      }
       pendingReviewCount={pendingVideos.length}
     />
   )

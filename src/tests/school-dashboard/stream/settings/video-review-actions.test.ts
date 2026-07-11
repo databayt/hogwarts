@@ -23,7 +23,11 @@ vi.mock("@/lib/db", () => ({
   db: {
     video: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       updateMany: vi.fn(),
+    },
+    notification: {
+      create: vi.fn(),
     },
   },
 }))
@@ -31,13 +35,23 @@ vi.mock("@/lib/db", () => ({
 const mockAuth = auth as unknown as ReturnType<typeof vi.fn>
 const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockFindMany = db.video.findMany as ReturnType<typeof vi.fn>
+const mockFindFirst = db.video.findFirst as ReturnType<typeof vi.fn>
 const mockUpdateMany = db.video.updateMany as ReturnType<typeof vi.fn>
+const mockNotify = db.notification.create as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
   mockFindMany.mockResolvedValue([])
+  // Default pending video: school-scoped visibility, owned by teacher-1.
+  mockFindFirst.mockResolvedValue({
+    id: "v-1",
+    title: "Algebra intro",
+    userId: "teacher-1",
+    visibility: "SCHOOL",
+  })
   mockUpdateMany.mockResolvedValue({ count: 1 })
+  mockNotify.mockResolvedValue({ id: "n-1" })
 })
 
 describe("getPendingVideos — auth", () => {
@@ -119,6 +133,104 @@ describe("reviewVideo — auth", () => {
     mockUpdateMany.mockResolvedValueOnce({ count: 0 })
     const result = await reviewVideo("v-1", "APPROVED")
     expect(result.status).toBe("error")
+  })
+
+  it("returns error when the video isn't in this school (findFirst null)", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role: "ADMIN" } })
+    mockFindFirst.mockResolvedValueOnce(null)
+    const result = await reviewVideo("v-other-school", "APPROVED")
+    expect(result.status).toBe("error")
+    expect(mockUpdateMany).not.toHaveBeenCalled()
+  })
+})
+
+describe("reviewVideo — platform gate for global surfaces", () => {
+  it.each(["PUBLIC", "PAID"] as const)(
+    "ADMIN cannot approve a %s video (platform catalog lane)",
+    async (visibility) => {
+      mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role: "ADMIN" } })
+      mockFindFirst.mockResolvedValueOnce({
+        id: "v-1",
+        title: "Global video",
+        userId: "teacher-1",
+        visibility,
+      })
+      const result = await reviewVideo("v-1", "APPROVED")
+      expect(result.status).toBe("error")
+      expect(result.message).toMatch(/platform/i)
+      expect(mockUpdateMany).not.toHaveBeenCalled()
+    }
+  )
+
+  it("ADMIN can still REJECT a PUBLIC video", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role: "ADMIN" } })
+    mockFindFirst.mockResolvedValueOnce({
+      id: "v-1",
+      title: "Global video",
+      userId: "teacher-1",
+      visibility: "PUBLIC",
+    })
+    const result = await reviewVideo("v-1", "REJECTED", "off-topic")
+    expect(result.status).toBe("success")
+    expect(mockUpdateMany).toHaveBeenCalledOnce()
+  })
+
+  it("DEVELOPER can approve a PUBLIC video", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "dev-1", role: "DEVELOPER" } })
+    mockFindFirst.mockResolvedValueOnce({
+      id: "v-1",
+      title: "Global video",
+      userId: "teacher-1",
+      visibility: "PUBLIC",
+    })
+    const result = await reviewVideo("v-1", "APPROVED")
+    expect(result.status).toBe("success")
+    expect(mockUpdateMany).toHaveBeenCalledOnce()
+  })
+
+  it("ADMIN can approve a SCHOOL video (in-school surface)", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "u-1", role: "ADMIN" } })
+    const result = await reviewVideo("v-1", "APPROVED")
+    expect(result.status).toBe("success")
+    expect(mockUpdateMany).toHaveBeenCalledOnce()
+  })
+})
+
+describe("reviewVideo — contributor notification", () => {
+  beforeEach(() => {
+    mockAuth.mockResolvedValue({ user: { id: "admin-7", role: "ADMIN" } })
+  })
+
+  it("notifies the owner on approval", async () => {
+    await reviewVideo("v-1", "APPROVED")
+    expect(mockNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          schoolId: "school-1",
+          userId: "teacher-1",
+          type: "document_shared",
+        }),
+      })
+    )
+  })
+
+  it("notifies the owner on rejection with the reason in the body", async () => {
+    await reviewVideo("v-1", "REJECTED", "Audio too low")
+    expect(mockNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "teacher-1",
+          type: "system_alert",
+          body: expect.stringContaining("Audio too low"),
+        }),
+      })
+    )
+  })
+
+  it("a notification failure does not fail the review", async () => {
+    mockNotify.mockRejectedValueOnce(new Error("notification table down"))
+    const result = await reviewVideo("v-1", "APPROVED")
+    expect(result.status).toBe("success")
   })
 })
 

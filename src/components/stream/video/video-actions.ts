@@ -39,6 +39,10 @@ export interface UploadVideoInput {
   // Bytes consumed in our storage (self-hosted uploads). null/0 for external
   // URLs (YouTube/Vimeo) which consume no quota.
   fileSize?: number
+  // Direct-to-S3 uploads (via /api/blob/presign): the object key + provider.
+  // storageKey powers CDN invalidation on delete/revoke/replace.
+  storageKey?: string
+  storageProvider?: string
 }
 
 /**
@@ -161,6 +165,8 @@ export async function uploadVideo(
         provider: data.provider,
         durationSeconds: data.durationSeconds ?? null,
         fileSize: fileSize > 0 ? fileSize : null,
+        storageKey: data.storageKey?.trim() || null,
+        storageProvider: data.storageProvider?.trim() || null,
         approvalStatus: "PENDING",
         visibility,
         price: pricing === "PAID" ? data.price : null,

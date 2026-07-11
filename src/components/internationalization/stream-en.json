@@ -145,7 +145,9 @@
       "yourSchool": "Your School",
       "featured": "Featured",
       "community": "Community",
-      "instructor": "Instructor"
+      "instructor": "Instructor",
+      "unlock": "Unlock",
+      "purchaseFailed": "Failed to start purchase"
     },
     "courseDetail": {
       "home": "Home",
@@ -188,7 +190,6 @@
       "home": "Home",
       "courses": "Courses",
       "myLearning": "My Learning",
-      "settings": "Settings",
       "settings": "Settings",
       "signIn": "Sign In",
       "profile": "Profile"
@@ -414,13 +415,21 @@
         "sourceUpload": "Upload",
         "urlPlaceholder": "https://youtube.com/watch?v=... or https://vimeo.com/...",
         "urlHelper": "Supports YouTube, Vimeo, or direct video URLs.",
-        "uploadPlaceholderLine1": "Direct upload coming soon.",
-        "uploadPlaceholderLine2": "For now, use a YouTube or Vimeo URL.",
         "description": "Description (optional)",
         "descriptionPlaceholder": "Brief description of what this video covers...",
         "price": "Price",
         "currency": "Currency",
-        "pricePlaceholder": "9.99"
+        "pricePlaceholder": "9.99",
+        "uploadDrop": "Click to choose a video file",
+        "uploadHint": "MP4, WebM, MOV or AVI — up to 5GB",
+        "uploading": "Uploading…",
+        "uploadCancel": "Cancel upload",
+        "uploadComplete": "Upload complete",
+        "uploadRemove": "Remove",
+        "uploadFailed": "Upload failed. Please try again.",
+        "uploadInvalidType": "Unsupported file type — use MP4, WebM, MOV or AVI.",
+        "uploadTooLarge": "File is too large — the limit is 5GB.",
+        "uploadQuotaNote": "Uploaded files count toward your school's video storage quota."
       },
       "audience": {
         "label": "Audience",

@@ -27,6 +27,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import type { TeacherVideo } from "./actions"
+import type { ProposableLesson } from "./get-proposable-lessons"
+import { ProposeVideoDialog } from "./propose-video-dialog"
 import { VideoSettingsDialog } from "./video-settings-dialog"
 
 interface Props {
@@ -34,6 +36,8 @@ interface Props {
   lang: string
   videos: TeacherVideo[]
   subdomain: string
+  // Lessons the caller may propose a video for — powers the upload button.
+  proposableLessons?: ProposableLesson[]
 }
 
 const statusVariant: Record<
@@ -47,11 +51,23 @@ const statusVariant: Record<
 
 type StatusFilter = "all" | "APPROVED" | "PENDING" | "REJECTED"
 
-export function TeachVideosContent({ dictionary, lang, videos }: Props) {
+export function TeachVideosContent({
+  dictionary,
+  lang,
+  videos,
+  proposableLessons = [],
+}: Props) {
   const [filter, setFilter] = useState<StatusFilter>("all")
   const router = useRouter()
   // The settings page passes the `stream` subtree as `dictionary`.
   const d = (dictionary as Record<string, any>)?.teachVideos ?? {}
+  const uploadButton =
+    proposableLessons.length > 0 ? (
+      <ProposeVideoDialog
+        lessons={proposableLessons}
+        dictionary={dictionary as Record<string, any>}
+      />
+    ) : null
 
   const statusLabel: Record<string, string> = {
     APPROVED: d.statusApproved ?? "Approved",
@@ -96,19 +112,19 @@ export function TeachVideosContent({ dictionary, lang, videos }: Props) {
   if (videos.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {d.title ?? "My Videos"}
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {d.title ?? "My Videos"}
+          </h1>
+          {uploadButton}
+        </div>
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Film className="text-muted-foreground mb-4 size-12" />
+          <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
+            <Film className="text-muted-foreground size-12" />
             <p className="text-muted-foreground text-sm">
               {d.emptyNone ?? "You haven't uploaded any videos yet."}
             </p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {d.emptyHint ??
-                'Use the "Propose a Video" button from your dashboard.'}
-            </p>
+            {uploadButton}
           </CardContent>
         </Card>
       </div>
@@ -117,13 +133,16 @@ export function TeachVideosContent({ dictionary, lang, videos }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">
           {d.title ?? "My Videos"}
         </h1>
-        <Badge variant="outline">
-          {videos.length} {d.videosUnit ?? "videos"}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline">
+            {videos.length} {d.videosUnit ?? "videos"}
+          </Badge>
+          {uploadButton}
+        </div>
       </div>
 
       {/* Summary stats */}

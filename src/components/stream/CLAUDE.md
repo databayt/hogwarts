@@ -5,10 +5,10 @@ title: Stream (LMS)
 file_type: claude
 owner: Abdout
 maturity: Built+Polish
-completion: 80
+completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-05-25
+last_audited: 2026-07-11
 ---
 
 # Stream (LMS) Block
@@ -38,15 +38,33 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~80% complete.
 - **The real paywall is the `null` videoUrl from the server** (see
   `get-lesson-with-progress.ts`), not client lock UI. Never emit a playable URL
   for an unowned PAID video.
-- **No-video lessons fall back to the marketing "story" clip.** When a lesson
-  has zero videos (`lesson.availableVideos.length === 0`), the lesson player
-  (`dashboard/lesson/content.tsx`) plays `asset("/media/story.mp4")` — the same
-  clip on the public SaaS marketing page — so the surface is never empty.
-  `isFallbackVideo` gates `onProgress`/`onComplete` so the placeholder clip
-  NEVER writes lesson watch-progress or auto-completes a lesson (the manual
-  "Mark as Complete" button still works). Critically, the fallback is keyed on
-  _no videos at all_, NOT on a `null` URL — a paywalled (paid + unpurchased)
-  video keeps its locked/purchase UX and must never be replaced by the clip.
+- **No-video AND broken-source lessons fall back to the marketing "story"
+  clip.** When a lesson has zero videos (`lesson.availableVideos.length === 0`)
+  — or the selected video's source fails to load (`VideoPlayer.onSourceError`
+  → `sourceFailed`) — the lesson player (`dashboard/lesson/content.tsx`) plays
+  `asset("/media/story.mp4")` — the same clip on the public SaaS marketing
+  page — so the surface is never empty. `playingFallback`
+  (= `isFallbackVideo || sourceFailed`) gates `onProgress`/`onComplete` so the
+  placeholder clip NEVER writes lesson watch-progress or auto-completes a
+  lesson (the manual "Mark as Complete" button still works). Critically, the
+  fallback is keyed on _no videos_ or _source error_, NOT on a `null` URL — a
+  paywalled (paid + unpurchased) video keeps its locked/purchase UX and must
+  never be replaced by the clip. The `sourceFailed` swap is part of the
+  VideoPlayer `key` (a `<video>` needs a remount, not just a new `src`).
+- **PUBLIC/PAID approval belongs to the platform lane.** The school Review tab
+  (`reviewVideo`) approves only SCHOOL/PRIVATE-surface videos and refuses
+  APPROVE for PUBLIC/PAID (reject stays allowed) — those flow through
+  /catalog/approvals (DEVELOPER, `approveContent` with override). Owner-side
+  mirror: `updateVideoVisibility` widening an APPROVED video to PUBLIC resets
+  `approvalStatus` to PENDING (DEVELOPER exempt; narrowing always free). Both
+  lanes notify the contributor (`db.notification.create`, failure-tolerant).
+- **Direct upload = presign → S3 PUT → storage fields.** The propose dialog's
+  Upload tab POSTs `/api/blob/presign` (5GB cap, video MIME allowlist), PUTs
+  via XHR for progress, then `uploadVideo` persists `fileSize`/`storageKey`/
+  `storageProvider` (provider SELF_HOSTED) — storageKey powers CloudFront
+  invalidation on delete/revoke/replace and the quota counter. Upload entry
+  points: teacher dashboard overview AND the settings Videos tab
+  (ADMIN/DEVELOPER/TEACHER, fed by `getProposableLessons()`).
 - **Money fields are `Float`** (`Video.price`, `VideoPurchase.amount`); go
   through `Number()` before arithmetic. Float→Decimal is deferred (ripples into
   ~13 read sites + a shared-DB table rewrite).

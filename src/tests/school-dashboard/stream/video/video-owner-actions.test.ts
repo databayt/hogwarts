@@ -132,10 +132,68 @@ describe("updateVideoVisibility — paid paywall guard", () => {
     })
     mockFindUnique.mockResolvedValueOnce({
       ...ownedVideo,
-      visibility: "SCHOOL",
+      visibility: "PRIVATE",
     })
+    const result = await updateVideoVisibility("v-1", "SCHOOL")
+    expect(result.status).toBe("success")
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "v-1" },
+      data: { visibility: "SCHOOL" },
+    })
+  })
+})
+
+describe("updateVideoVisibility — PUBLIC widening resubmits for platform review", () => {
+  it("APPROVED school video → PUBLIC resets approval to PENDING for a non-dev owner", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    // ownedVideo default: visibility SCHOOL, approvalStatus APPROVED
     const result = await updateVideoVisibility("v-1", "PUBLIC")
     expect(result.status).toBe("success")
+    expect(result.message).toMatch(/review/i)
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "v-1" },
+      data: {
+        visibility: "PUBLIC",
+        approvalStatus: "PENDING",
+        approvedBy: null,
+        approvedAt: null,
+      },
+    })
+  })
+
+  it("narrowing an APPROVED video (SCHOOL → PRIVATE) does NOT reset approval", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    await updateVideoVisibility("v-1", "PRIVATE")
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "v-1" },
+      data: { visibility: "PRIVATE" },
+    })
+  })
+
+  it("a PENDING video going PUBLIC keeps its pending state untouched", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "owner-1", role: "TEACHER" },
+    })
+    mockFindUnique.mockResolvedValueOnce({
+      ...ownedVideo,
+      approvalStatus: "PENDING",
+    })
+    await updateVideoVisibility("v-1", "PUBLIC")
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: "v-1" },
+      data: { visibility: "PUBLIC" },
+    })
+  })
+
+  it("DEVELOPER widening to PUBLIC does not reset approval (they are the platform lane)", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "dev-1", role: "DEVELOPER" },
+    })
+    await updateVideoVisibility("v-1", "PUBLIC")
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: "v-1" },
       data: { visibility: "PUBLIC" },

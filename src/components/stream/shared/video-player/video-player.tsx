@@ -192,6 +192,7 @@ export function VideoPlayer({
   onProgress,
   onComplete,
   onNextLesson,
+  onSourceError,
   className,
   autoPlay = false,
   chapterNumber,
@@ -518,6 +519,7 @@ export function VideoPlayer({
         autoPlay={autoPlay}
         playsInline
         onClick={actions.togglePlay}
+        onError={onSourceError}
         aria-label={title}
         controlsList="nodownload"
         onDragStart={(e) => e.preventDefault()}

@@ -15,6 +15,9 @@ export interface VideoPlayerProps {
   onProgress?: (progress: VideoProgress) => void
   onComplete?: () => void
   onNextLesson?: () => void
+  // Fires when the <video> element fails to load/decode its source (dead URL,
+  // unsupported codec). Lets the caller swap in a fallback source.
+  onSourceError?: () => void
   className?: string
   autoPlay?: boolean
   chapterNumber?: number

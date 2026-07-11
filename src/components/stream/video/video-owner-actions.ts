@@ -55,12 +55,15 @@ async function assertOwnership(videoId: string) {
     return { error: "You do not own this video" }
   }
 
-  return { video: video!, userId: session.user.id }
+  return { video: video!, userId: session.user.id, isDev }
 }
 
 /**
  * Toggle video visibility. Owner can change at any time,
- * even after admin approval.
+ * even after admin approval — with one governance exception: widening an
+ * APPROVED video to PUBLIC puts it in front of every school, so that change
+ * resubmits the video for platform catalog review (approval → PENDING).
+ * Narrowing (PUBLIC → SCHOOL/PRIVATE) is always free and immediate.
  */
 export async function updateVideoVisibility(
   videoId: string,
@@ -85,16 +88,32 @@ export async function updateVideoVisibility(
     }
   }
 
+  // Going global is a scope widening the school lane can't grant — the school
+  // review only covered SCHOOL/PRIVATE surface. DEVELOPER owners skip this
+  // (they ARE the platform lane).
+  const needsPlatformReview =
+    visibility === "PUBLIC" &&
+    video.visibility !== "PUBLIC" &&
+    video.approvalStatus === "APPROVED" &&
+    !result.isDev
+
   try {
     await db.video.update({
       where: { id: videoId },
-      data: { visibility },
+      data: {
+        visibility,
+        ...(needsPlatformReview
+          ? { approvalStatus: "PENDING", approvedBy: null, approvedAt: null }
+          : {}),
+      },
     })
 
     revalidatePath("/[lang]/s/[subdomain]/stream")
     return {
       status: "success",
-      message: `Visibility changed to ${visibility.toLowerCase()}`,
+      message: needsPlatformReview
+        ? "Visibility set to public — resubmitted for platform review"
+        : `Visibility changed to ${visibility.toLowerCase()}`,
     }
   } catch (error) {
     console.error("Failed to update video visibility:", error)

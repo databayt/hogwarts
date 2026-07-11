@@ -5,10 +5,10 @@ title: Stream (LMS)
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 80
+completion: 85
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
-last_audited: 2026-06-14
+last_audited: 2026-07-11
 ---
 
 ## Stream — Learning Management System (LMS)
@@ -145,17 +145,20 @@ src/components/stream/
 ### Status
 
 **Catalog runtime path: production-hardened (2026-05-29) + optimized
-(2026-06-14).** P0 paywall + payment webhook, the P1 integrity cluster,
-critical-path tests, the lesson hot-path perf work, and P2 video hardening are
-done and tested. The 2026-06-14 optimization pass removed ~1,870 lines of dead
-code (incl. the only `@tiptap` importer), parallelized serial DB waterfalls,
-collapsed count queries into `groupBy`/`_count`, killed ~4Hz video-player
-listener churn, demoted the home page to a Server Component, lazy-loaded the
-lottie animation, and added 3 composite indexes (deploy-pending). See `ISSUES.md`
-→ "Optimization Pass — 2026-06-14". The admin Review tab (a merge regression
-that left it unwired) was re-wired the same day. Deferred: a Float→Decimal
-money-type migration, and the server-action / search-bar i18n consumption layer.
-Do **not** assume "100%" — check `ISSUES.md`.
+(2026-06-14) + upload/ownership loop closed (2026-07-11).** P0 paywall +
+payment webhook, the P1 integrity cluster, critical-path tests, the lesson
+hot-path perf work, and P2 video hardening are done and tested. The 2026-06-14
+optimization pass removed ~1,870 lines of dead code, parallelized serial DB
+waterfalls, and killed ~4Hz video-player listener churn. The 2026-07-11 pass
+wired direct-to-S3 upload into the propose dialog (presign → PUT → storageKey),
+gave ADMIN/DEVELOPER an upload entry on the settings Videos tab, fixed the
+single-paid-video purchase dead end (hero Unlock pill + purchasable chips),
+added a broken-source → story.mp4 fallback (`onSourceError`), gated PUBLIC/PAID
+approval to the platform catalog lane (school lane approves SCHOOL/PRIVATE;
+owner widening APPROVED→PUBLIC resubmits for review), and added contributor
+notifications to the school review lane. Deferred: Float→Decimal money-type
+migration, i18n consumption backlog, orphaned-upload S3 sweep. Do **not**
+assume "100%" — check `ISSUE.md`.
 
 ### Data Architecture
 

@@ -44,6 +44,7 @@ import {
   VideoPlayer,
   type VideoProgress,
 } from "@/components/stream/shared/video-player"
+import { purchaseVideo } from "@/components/stream/video/video-purchase-actions"
 
 import {
   markLessonComplete,
@@ -107,6 +108,10 @@ export function StreamLessonContent({
   const [wishlistDialog, setWishlistDialog] = useState<
     "added" | "removed" | null
   >(null)
+  // The real video's source failed to load (dead URL, bad codec) — swap in the
+  // marketing fallback clip rather than leaving a black player.
+  const [sourceFailed, setSourceFailed] = useState(false)
+  const [isPurchasePending, startPurchaseTransition] = useTransition()
 
   // Auto-dismiss wishlist overlay after 1.5s
   useEffect(() => {
@@ -121,16 +126,57 @@ export function StreamLessonContent({
   )
 
   // Resolve the current video URL — prefer the selected instructor video, then
-  // the lesson default. When the lesson has NO videos at all, fall back to the
-  // marketing story clip so the surface is never empty. We deliberately do NOT
-  // fall back when videos exist but are paywalled (paid + unpurchased) — that
-  // must keep the existing locked/purchase UX, not play a marketing clip.
+  // the lesson default. When the lesson has NO videos at all — or the real
+  // video's source failed to load — fall back to the marketing story clip so
+  // the surface is never empty. We deliberately do NOT fall back when videos
+  // exist but are paywalled (paid + unpurchased) — that must keep the
+  // locked/purchase UX, not play a marketing clip.
   const lessonVideoUrl = activeVideo?.videoUrl ?? lesson.videoUrl
   const isFallbackVideo = lesson.availableVideos.length === 0
-  const currentVideoUrl =
-    lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null)
+  // Any fallback playback (no videos, or broken source) must never write
+  // lesson watch-progress or auto-complete.
+  const playingFallback = isFallbackVideo || sourceFailed
+  const currentVideoUrl = sourceFailed
+    ? FALLBACK_VIDEO_URL
+    : (lessonVideoUrl ?? (isFallbackVideo ? FALLBACK_VIDEO_URL : null))
+
+  // Paid + unpurchased selected video → the server sent no URL. Surface a
+  // purchase CTA (the InstructorSwitcher only renders with 2+ videos, so a
+  // lone paid video would otherwise be a dead end with a disabled Play).
+  const lockedVideo =
+    activeVideo && activeVideo.requiresPayment && !activeVideo.hasPurchased
+      ? activeVideo
+      : null
 
   const baseUrl = `/${lang}/stream/courses/${lesson.chapter.course.slug}`
+
+  const handleUnlock = useCallback(
+    (videoId: string) => {
+      startPurchaseTransition(async () => {
+        const result = await purchaseVideo(videoId)
+        if (result.status === "success" && result.checkoutUrl) {
+          window.location.href = result.checkoutUrl
+          return
+        }
+        toast.error(
+          result.message ?? d?.purchaseFailed ?? "Failed to start purchase"
+        )
+      })
+    },
+    [d?.purchaseFailed]
+  )
+
+  // A new instructor selection gets a fresh chance at its real source.
+  const handleSwitchVideo = useCallback((videoId: string) => {
+    setSourceFailed(false)
+    setActiveVideoId(videoId)
+  }, [])
+
+  const handleSourceError = useCallback(() => {
+    // If the fallback clip itself fails there is nothing further to swap in.
+    if (playingFallback) return
+    setSourceFailed(true)
+  }, [playingFallback])
 
   const handleToggleComplete = () => {
     startTransition(async () => {
@@ -169,14 +215,14 @@ export function StreamLessonContent({
   // watch progress.
   const handleProgress = useCallback(
     (progress: VideoProgress) => {
-      if (isFallbackVideo) return
+      if (playingFallback) return
       updateLessonProgress({
         lessonId: lesson.id,
         watchedSeconds: Math.floor(progress.watchedSeconds),
         totalSeconds: Math.floor(progress.duration),
       })
     },
-    [lesson.id, isFallbackVideo]
+    [lesson.id, playingFallback]
   )
 
   // Auto-mark complete when video finishes
@@ -184,7 +230,7 @@ export function StreamLessonContent({
     if (isCompleted) return
     // The marketing fallback clip must not auto-complete a real lesson; the
     // student can still mark it complete manually.
-    if (isFallbackVideo) return
+    if (playingFallback) return
 
     startTransition(async () => {
       try {
@@ -202,7 +248,7 @@ export function StreamLessonContent({
         toast.error(d?.failedToComplete || "Failed to mark lesson as complete")
       }
     })
-  }, [isCompleted, isFallbackVideo, lesson.id, lesson.chapter.course.slug])
+  }, [isCompleted, playingFallback, lesson.id, lesson.chapter.course.slug])
 
   // Handle auto-play next lesson
   const handleNextLesson = useCallback(() => {
@@ -342,10 +388,32 @@ export function StreamLessonContent({
 
               {/* Row 5: Play pill + Wishlist */}
               <div className="mt-4 flex items-center gap-3">
-                {/* Play button — two states based on watch progress */}
-                {lesson.progress &&
-                lesson.progress.watchedSeconds > 0 &&
-                lesson.progress.totalSeconds ? (
+                {/* Locked (paid + unpurchased) with no playable source →
+                    purchase pill. Without this, a lone paid video is a dead
+                    end: the switcher needs 2+ videos and Play stays disabled. */}
+                {lockedVideo && !currentVideoUrl ? (
+                  <button
+                    onClick={() => handleUnlock(lockedVideo.id)}
+                    disabled={isPurchasePending}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-6 font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    {isPurchasePending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Lock className="size-4" />
+                    )}
+                    {d?.unlock || "Unlock"}
+                    {lockedVideo.price != null && (
+                      <span className="text-black/60">
+                        {lockedVideo.price.toFixed(2)}{" "}
+                        {lockedVideo.currency ?? ""}
+                      </span>
+                    )}
+                  </button>
+                ) : /* Play button — two states based on watch progress */
+                lesson.progress &&
+                  lesson.progress.watchedSeconds > 0 &&
+                  lesson.progress.totalSeconds ? (
                   <button
                     onClick={() => {
                       if (currentVideoUrl) {
@@ -623,8 +691,9 @@ export function StreamLessonContent({
           <VideoPlayer
             // Remount on instructor switch — a <video> won't reload just from a
             // changed `src` attribute (it needs .load()), so keying on the
-            // active video id gives the new instructor's source a fresh element.
-            key={activeVideoId ?? "default"}
+            // active video id gives the new instructor's source a fresh
+            // element. Same reason the fallback swap is part of the key.
+            key={`${activeVideoId ?? "default"}${sourceFailed ? ":fallback" : ""}`}
             url={currentVideoUrl}
             title={lesson.title}
             lessonId={lesson.id}
@@ -634,6 +703,7 @@ export function StreamLessonContent({
             onProgress={handleProgress}
             onComplete={handleVideoComplete}
             onNextLesson={handleNextLesson}
+            onSourceError={handleSourceError}
             autoPlay={autoPlay}
             chapterNumber={lesson.chapter.position}
             lessonNumber={lesson.position}
@@ -647,7 +717,7 @@ export function StreamLessonContent({
         <InstructorSwitcher
           videos={lesson.availableVideos}
           activeVideoId={activeVideoId}
-          onSwitch={setActiveVideoId}
+          onSwitch={handleSwitchVideo}
           dictionary={dictionary as Record<string, any>}
         />
       )}
@@ -736,21 +806,23 @@ export function StreamLessonContent({
               return (
                 <button
                   key={video.id}
-                  disabled={locked}
-                  aria-disabled={locked}
+                  disabled={locked && isPurchasePending}
                   onClick={() => {
                     // Locked (paid + unpurchased) videos have no playable URL —
-                    // switching would blank the player. Unlock via the
-                    // InstructorSwitcher above instead.
-                    if (locked) return
-                    setActiveVideoId(video.id)
+                    // switching would blank the player. Start the purchase
+                    // instead so a lone paid video is never a dead end.
+                    if (locked) {
+                      handleUnlock(video.id)
+                      return
+                    }
+                    handleSwitchVideo(video.id)
                     setShowHero(false)
                   }}
                   className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
                     activeVideoId === video.id
                       ? "border-primary bg-primary/5"
                       : "bg-muted/50 hover:bg-muted"
-                  } ${locked ? "cursor-not-allowed opacity-60" : ""}`}
+                  } ${locked ? "opacity-75" : ""}`}
                 >
                   <Avatar className="size-10">
                     <AvatarImage src={video.instructor.image ?? undefined} />
@@ -783,6 +855,13 @@ export function StreamLessonContent({
                           ? video.school.name
                           : SOURCE_LABELS[video.source]}
                       </Badge>
+                      {locked && (
+                        <span className="text-muted-foreground text-[10px]">
+                          {video.price != null
+                            ? `${video.price.toFixed(2)} ${video.currency ?? ""}`
+                            : (d?.unlock ?? "Unlock")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>

@@ -94,6 +94,11 @@ export async function getPendingVideos(): Promise<PendingVideoItem[]> {
 
 /**
  * Approve or reject a video with optional notes.
+ *
+ * Governance: the school lane may only APPROVE videos whose surface stays
+ * inside the school (PRIVATE/SCHOOL). PUBLIC and PAID videos surface across
+ * every school, so their approval belongs to the platform catalog review
+ * (/catalog/approvals, DEVELOPER) — a school admin can still REJECT them.
  */
 export async function reviewVideo(
   videoId: string,
@@ -105,7 +110,8 @@ export async function reviewVideo(
     return { status: "error", message: "Not authenticated" }
   }
 
-  if (!["ADMIN", "DEVELOPER"].includes(session.user.role || "")) {
+  const role = session.user.role || ""
+  if (!["ADMIN", "DEVELOPER"].includes(role)) {
     return { status: "error", message: "Insufficient permissions" }
   }
 
@@ -115,9 +121,32 @@ export async function reviewVideo(
   }
 
   try {
-    // Single tenant-scoped write: schoolId is in the WHERE, so a video from
-    // another school can't be mutated even if its id is guessed. count === 0
-    // means "not found in this school" (404).
+    // Tenant-scoped read first — we need visibility (platform gate) and the
+    // owner (notification) anyway, and it keeps "not found in this school"
+    // indistinguishable from "doesn't exist".
+    const video = await db.video.findFirst({
+      where: { id: videoId, schoolId },
+      select: { id: true, title: true, userId: true, visibility: true },
+    })
+
+    if (!video) {
+      return { status: "error", message: "Video not found" }
+    }
+
+    if (
+      decision === "APPROVED" &&
+      ["PUBLIC", "PAID"].includes(video.visibility) &&
+      role !== "DEVELOPER"
+    ) {
+      return {
+        status: "error",
+        message:
+          "Public and paid videos are approved by the platform catalog team",
+      }
+    }
+
+    // Tenant-scoped write: schoolId stays in the WHERE, so a video from
+    // another school can't be mutated even if its id is guessed.
     const result = await db.video.updateMany({
       where: { id: videoId, schoolId },
       data: {
@@ -131,6 +160,33 @@ export async function reviewVideo(
 
     if (result.count === 0) {
       return { status: "error", message: "Video not found" }
+    }
+
+    // Tell the contributor — same notification shapes as the platform lane
+    // (approval-actions.ts). Never fail the review over a notification.
+    try {
+      await db.notification.create({
+        data: {
+          schoolId,
+          userId: video.userId,
+          actorId: session.user.id,
+          priority: "normal",
+          type: decision === "APPROVED" ? "document_shared" : "system_alert",
+          title:
+            decision === "APPROVED" ? "Video approved" : "Video needs changes",
+          body:
+            decision === "APPROVED"
+              ? `Your video "${video.title}" has been approved and is now live.`
+              : `Your video "${video.title}" was not approved.${rejectionReason ? ` Reason: ${rejectionReason}` : ""}`,
+          metadata: {
+            entityType: "video",
+            entityId: video.id,
+            url: "/stream/settings?tab=videos",
+          },
+        },
+      })
+    } catch (notifyError) {
+      console.error("Failed to notify video contributor:", notifyError)
     }
 
     // Refresh the review queue (settings) and the catalog/lesson views where an

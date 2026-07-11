@@ -145,7 +145,9 @@
       "yourSchool": "مدرستك",
       "featured": "مميز",
       "community": "المجتمع",
-      "instructor": "مدرب"
+      "instructor": "مدرب",
+      "unlock": "فتح",
+      "purchaseFailed": "تعذّر بدء عملية الشراء"
     },
     "courseDetail": {
       "home": "الرئيسية",
@@ -188,7 +190,6 @@
       "home": "الرئيسية",
       "courses": "الدورات",
       "myLearning": "تعلمي",
-      "settings": "الإعدادات",
       "settings": "الإعدادات",
       "signIn": "تسجيل الدخول",
       "profile": "الملف الشخصي"
@@ -414,13 +415,21 @@
         "sourceUpload": "رفع",
         "urlPlaceholder": "https://youtube.com/watch?v=... أو https://vimeo.com/...",
         "urlHelper": "يدعم YouTube و Vimeo أو روابط الفيديو المباشرة.",
-        "uploadPlaceholderLine1": "الرفع المباشر قريبًا.",
-        "uploadPlaceholderLine2": "في الوقت الحالي، استخدم رابط YouTube أو Vimeo.",
         "description": "الوصف (اختياري)",
         "descriptionPlaceholder": "وصف موجز لما يغطيه هذا الفيديو...",
         "price": "السعر",
         "currency": "العملة",
-        "pricePlaceholder": "9.99"
+        "pricePlaceholder": "9.99",
+        "uploadDrop": "انقر لاختيار ملف فيديو",
+        "uploadHint": "MP4 أو WebM أو MOV أو AVI — حتى 5 جيجابايت",
+        "uploading": "جارٍ الرفع…",
+        "uploadCancel": "إلغاء الرفع",
+        "uploadComplete": "اكتمل الرفع",
+        "uploadRemove": "إزالة",
+        "uploadFailed": "فشل الرفع. حاول مرة أخرى.",
+        "uploadInvalidType": "نوع الملف غير مدعوم — استخدم MP4 أو WebM أو MOV أو AVI.",
+        "uploadTooLarge": "الملف كبير جدًا — الحد الأقصى 5 جيجابايت.",
+        "uploadQuotaNote": "الملفات المرفوعة تُحتسب ضمن حصة تخزين الفيديو لمدرستك."
       },
       "audience": {
         "label": "الجمهور",

@@ -2,15 +2,18 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo, useRef, useState, useTransition } from "react"
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  CheckCircle2,
   ExternalLink,
+  FileVideo,
   Loader2,
   Upload,
   Video,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -26,6 +29,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
@@ -58,8 +62,36 @@ interface Props {
 
 type Step = "select-lesson" | "add-video" | "confirm"
 
+type UploadStatus = "idle" | "uploading" | "done" | "error"
+
+interface UploadedMeta {
+  name: string
+  size: number
+  key: string
+  storageProvider: string
+}
+
+// Mirrors the presign route's guards (src/app/api/blob/presign/route.ts) so
+// bad files fail fast client-side instead of on the request.
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024 * 1024 // 5GB
+const ALLOWED_UPLOAD_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+]
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
 export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
-  const d = dictionary?.stream?.proposeVideo ?? {}
+  // Callers pass either the full dictionary (teacher dashboard) or the
+  // `stream` subtree (settings videos tab) — accept both.
+  const d = dictionary?.stream?.proposeVideo ?? dictionary?.proposeVideo ?? {}
   const dSteps = d.steps ?? {}
   const dDesc = d.descriptions ?? {}
   const dFields = d.fields ?? {}
@@ -83,7 +115,24 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
   const [price, setPrice] = useState("")
   const [currency, setCurrency] = useState("USD")
 
+  // Direct-to-S3 upload state (presign → PUT). On success `videoUrl` holds the
+  // final CDN URL and `uploadedMeta` carries key/size for quota + invalidation.
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle")
+  const [uploadPct, setUploadPct] = useState(0)
+  const [uploadedMeta, setUploadedMeta] = useState<UploadedMeta | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const xhrRef = useRef<XMLHttpRequest | null>(null)
+
   const selectedLesson = lessons.find((l) => l.id === selectedLessonId)
+
+  const clearUpload = useCallback(() => {
+    xhrRef.current?.abort()
+    xhrRef.current = null
+    setUploadStatus("idle")
+    setUploadPct(0)
+    setUploadedMeta(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }, [])
 
   const resetForm = useCallback(() => {
     setStep("select-lesson")
@@ -96,7 +145,96 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
     setPricing("FREE")
     setPrice("")
     setCurrency("USD")
-  }, [])
+    clearUpload()
+  }, [clearUpload])
+
+  const handleFileSelected = useCallback(
+    async (file: File) => {
+      if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+        toast.error(
+          dFields.uploadInvalidType ??
+            "Unsupported file type — use MP4, WebM, MOV or AVI."
+        )
+        return
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        toast.error(
+          dFields.uploadTooLarge ?? "File is too large — the limit is 5GB."
+        )
+        return
+      }
+
+      setUploadStatus("uploading")
+      setUploadPct(0)
+      setVideoUrl("")
+      setUploadedMeta(null)
+
+      try {
+        const presignRes = await fetch("/api/blob/presign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+        })
+        if (!presignRes.ok) {
+          const body = (await presignRes.json().catch(() => null)) as {
+            error?: string
+          } | null
+          throw new Error(body?.error || "presign-failed")
+        }
+        const presign = (await presignRes.json()) as {
+          presignedUrl: string
+          finalUrl: string
+          key: string
+          storageProvider: string
+        }
+
+        // XMLHttpRequest instead of fetch — fetch has no upload progress.
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhrRef.current = xhr
+          xhr.open("PUT", presign.presignedUrl)
+          xhr.setRequestHeader("Content-Type", file.type)
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              setUploadPct(Math.round((e.loaded / e.total) * 100))
+            }
+          }
+          xhr.onload = () =>
+            xhr.status >= 200 && xhr.status < 300
+              ? resolve()
+              : reject(new Error(`upload-status-${xhr.status}`))
+          xhr.onerror = () => reject(new Error("upload-network-error"))
+          xhr.onabort = () => reject(new Error("upload-aborted"))
+          xhr.send(file)
+        })
+
+        xhrRef.current = null
+        setVideoUrl(presign.finalUrl)
+        setUploadedMeta({
+          name: file.name,
+          size: file.size,
+          key: presign.key,
+          storageProvider: presign.storageProvider,
+        })
+        setUploadPct(100)
+        setUploadStatus("done")
+      } catch (error) {
+        xhrRef.current = null
+        if ((error as Error).message === "upload-aborted") {
+          setUploadStatus("idle")
+          return
+        }
+        console.error("Direct video upload failed:", error)
+        setUploadStatus("error")
+        toast.error(dFields.uploadFailed ?? "Upload failed. Please try again.")
+      }
+    },
+    [dFields]
+  )
 
   function detectProvider(
     url: string
@@ -115,6 +253,7 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
     const priceNumber = pricing === "PAID" ? Number(price) : undefined
     const currencyCode =
       pricing === "PAID" ? currency.trim().toUpperCase() : undefined
+    const isDirectUpload = videoSource === "upload" && uploadedMeta !== null
 
     startTransition(async () => {
       const result = await uploadVideo({
@@ -122,11 +261,18 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
         title: title.trim(),
         description: description.trim() || undefined,
         videoUrl: videoUrl.trim(),
-        provider: detectProvider(videoUrl),
+        provider: isDirectUpload ? "SELF_HOSTED" : detectProvider(videoUrl),
         audience,
         pricing,
         price: priceNumber,
         currency: currencyCode,
+        ...(isDirectUpload
+          ? {
+              fileSize: uploadedMeta.size,
+              storageKey: uploadedMeta.key,
+              storageProvider: uploadedMeta.storageProvider,
+            }
+          : {}),
       })
 
       if (result.status === "success") {
@@ -283,7 +429,17 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
               <Label>{dFields.source ?? "Video Source"}</Label>
               <Tabs
                 value={videoSource}
-                onValueChange={(v) => setVideoSource(v as "url" | "upload")}
+                onValueChange={(v) => {
+                  const next = v as "url" | "upload"
+                  setVideoSource(next)
+                  // Don't carry a URL across sources: the S3 finalUrl must not
+                  // appear (editable) in the URL field, nor a pasted URL count
+                  // as an upload.
+                  if (next === "url" && uploadedMeta) {
+                    clearUpload()
+                    setVideoUrl("")
+                  }
+                }}
               >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="url">
@@ -310,18 +466,82 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
                       "Supports YouTube, Vimeo, or direct video URLs."}
                   </p>
                 </TabsContent>
-                <TabsContent value="upload">
-                  <div className="text-muted-foreground rounded-lg border-2 border-dashed p-8 text-center text-sm">
-                    <Upload className="mx-auto mb-2 size-8 opacity-50" />
-                    <p>
-                      {dFields.uploadPlaceholderLine1 ??
-                        "Direct upload coming soon."}
-                    </p>
-                    <p className="text-xs">
-                      {dFields.uploadPlaceholderLine2 ??
-                        "For now, use a YouTube or Vimeo URL."}
-                    </p>
-                  </div>
+                <TabsContent value="upload" className="space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ALLOWED_UPLOAD_TYPES.join(",")}
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) void handleFileSelected(file)
+                    }}
+                  />
+                  {uploadStatus === "idle" || uploadStatus === "error" ? (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-muted-foreground hover:border-primary/50 hover:text-foreground w-full rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors"
+                    >
+                      <Upload className="mx-auto mb-2 size-8 opacity-50" />
+                      <p>
+                        {dFields.uploadDrop ?? "Click to choose a video file"}
+                      </p>
+                      <p className="text-xs">
+                        {dFields.uploadHint ??
+                          "MP4, WebM, MOV or AVI — up to 5GB"}
+                      </p>
+                    </button>
+                  ) : uploadStatus === "uploading" ? (
+                    <div className="space-y-3 rounded-lg border p-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Loader2 className="size-4 shrink-0 animate-spin" />
+                        <span className="truncate">
+                          {dFields.uploading ?? "Uploading…"} {uploadPct}%
+                        </span>
+                        <button
+                          type="button"
+                          onClick={clearUpload}
+                          className="text-muted-foreground hover:text-foreground ms-auto"
+                          aria-label={dFields.uploadCancel ?? "Cancel upload"}
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                      <Progress value={uploadPct} />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 rounded-lg border p-4">
+                      <FileVideo className="text-muted-foreground size-8 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {uploadedMeta?.name}
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                          <CheckCircle2 className="size-3 text-green-600" />
+                          {dFields.uploadComplete ?? "Upload complete"}
+                          {uploadedMeta
+                            ? ` · ${formatBytes(uploadedMeta.size)}`
+                            : null}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          clearUpload()
+                          setVideoUrl("")
+                        }}
+                      >
+                        {dFields.uploadRemove ?? "Remove"}
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-muted-foreground text-xs">
+                    {dFields.uploadQuotaNote ??
+                      "Uploaded files count toward your school's video storage quota."}
+                  </p>
                 </TabsContent>
               </Tabs>
             </div>
@@ -473,7 +693,11 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
                 <span className="text-muted-foreground">
                   {dConfirm.source ?? "Source"}
                 </span>
-                <span className="max-w-48 truncate text-xs">{videoUrl}</span>
+                <span className="max-w-48 truncate text-xs">
+                  {videoSource === "upload" && uploadedMeta
+                    ? uploadedMeta.name
+                    : videoUrl}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
