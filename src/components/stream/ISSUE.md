@@ -16,6 +16,7 @@ last_audited: 2026-07-11
 **Status:** BUILT
 **Completion:** 85%
 **Last Updated:** 2026-07-11
+**QA guide:** [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — full flow, sub-flows & test cases (mermaid charts + walkable checklists + release gate)
 
 ---
 
