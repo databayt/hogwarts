@@ -8,6 +8,7 @@ import type { Locale } from "@/components/internationalization/config"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+  searchParams: Promise<{ token?: string }>
 }
 
 export async function generateMetadata({
@@ -21,8 +22,15 @@ export async function generateMetadata({
   }
 }
 
-// Redirect to the first step (attachments)
-export default async function ApplicationFormPage({ params }: Props) {
+// Redirect to the first step (attachments), preserving a resume session
+// token (?token=) so ApplySessionProvider can rehydrate the draft instead of
+// silently starting a blank application.
+export default async function ApplicationFormPage({
+  params,
+  searchParams,
+}: Props) {
   const { lang, id } = await params
-  redirect(`/${lang}/application/${id}/attachments`)
+  const { token } = await searchParams
+  const query = token ? `?token=${encodeURIComponent(token)}` : ""
+  redirect(`/${lang}/application/${id}/attachments${query}`)
 }

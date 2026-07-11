@@ -22,7 +22,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-import { confirmEnrollment, recordPayment } from "./actions"
+import { confirmEnrollment, confirmRegistrationPayment } from "./actions"
 import { PlacementDialog } from "./placement-dialog"
 import { translateEnrollmentWarning } from "./warning-messages"
 
@@ -47,8 +47,32 @@ export type EnrollmentRow = {
   campaignId: string
   offerAccepted: boolean
   registrationFeePaid: boolean
+  /** "cash" | "bank_transfer" | "stripe" | "tap" | null — gates the "Confirm
+   *  Reg. Payment" row action (only cash/bank_transfer are admin-confirmable;
+   *  card/online methods are settled by their payment webhook). Optional:
+   *  the SSR path (enrollment-content.tsx, not owned here) does not yet
+   *  select this field from queries.ts — see final report. Falls back to
+   *  "not confirmable" (button hidden) when absent, never mis-shown. */
+  registrationFeeMethod?: string | null
   /** studentId is set after confirmEnrollment creates the Student record */
   studentId?: string | null
+}
+
+/** Manual payment methods the "Confirm Reg. Payment" action applies to —
+ *  mirrors MANUALLY_CONFIRMABLE_REGISTRATION_METHODS in ./actions.ts. */
+const MANUALLY_CONFIRMABLE_METHODS = new Set(["cash", "bank_transfer"])
+
+/**
+ * Dictionary keys pending merge into school-en/ar.json (see scratchpad
+ * dictkeys-enroll.json): `enrollment.confirmRegPayment`,
+ * `enrollment.regPaymentConfirmed`. Extended locally so tsc stays clean
+ * ahead of the merge — remove this augmentation once the keys land.
+ */
+type AdmissionDictWithPendingKeys = Dictionary["school"]["admission"] & {
+  enrollment?: Dictionary["school"]["admission"]["enrollment"] & {
+    confirmRegPayment?: string
+    regPaymentConfirmed?: string
+  }
 }
 
 const getOfferBadge = (
@@ -98,7 +122,7 @@ function EnrollmentActionsCell({
   locale,
 }: {
   enrollment: EnrollmentRow
-  dictionary: Dictionary["school"]["admission"]
+  dictionary: AdmissionDictWithPendingKeys
   locale: Locale
 }) {
   const router = useRouter()
@@ -109,18 +133,27 @@ function EnrollmentActionsCell({
   const isConfirmed =
     enrollment.admissionConfirmed || enrollment.status === "ENROLLED"
 
+  // Cash/bank-transfer registration-fee intents are never auto-confirmed —
+  // the public offer portal only records the parent's INTENT to pay by that
+  // method (no way to know the money actually changed hands). Card/online
+  // methods (stripe, tap) are confirmed by their payment webhook instead.
+  const showConfirmRegPayment =
+    !enrollment.registrationFeePaid &&
+    MANUALLY_CONFIRMABLE_METHODS.has(enrollment.registrationFeeMethod ?? "")
+
   const onView = () => {
     router.push(`/${locale}/admission/applications/${enrollment.id}`)
   }
 
-  const onRecordPayment = () => {
+  const onConfirmRegPayment = () => {
     startTransition(async () => {
-      const result = await recordPayment({
-        id: enrollment.id,
-        paymentId: `CASH-${Date.now()}`,
+      const result = await confirmRegistrationPayment({
+        applicationId: enrollment.id,
       })
       if (result.success) {
-        SuccessToast(t?.enrollment?.paymentRecorded || "Payment recorded")
+        SuccessToast(
+          t?.enrollment?.regPaymentConfirmed || "Registration payment confirmed"
+        )
         router.refresh()
       } else {
         ErrorToast(
@@ -206,6 +239,15 @@ function EnrollmentActionsCell({
               {t?.enrollment?.confirmEnrollment || "Confirm Enrollment"}
             </DropdownMenuItem>
           )}
+          {showConfirmRegPayment && (
+            <DropdownMenuItem
+              onClick={onConfirmRegPayment}
+              disabled={isPending}
+            >
+              {t?.enrollment?.confirmRegPayment ||
+                "Confirm Registration Payment"}
+            </DropdownMenuItem>
+          )}
           {/* Placement: show for confirmed/enrolled rows that still need a section */}
           {isConfirmed && (
             <DropdownMenuItem onClick={() => setPlacementOpen(true)}>
@@ -233,7 +275,7 @@ function EnrollmentActionsCell({
 }
 
 export const getEnrollmentColumns = (
-  dictionary: Dictionary["school"]["admission"],
+  dictionary: AdmissionDictWithPendingKeys,
   locale: Locale
 ): ColumnDef<EnrollmentRow>[] => {
   const t = dictionary

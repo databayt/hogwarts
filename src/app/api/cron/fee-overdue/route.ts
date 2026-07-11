@@ -25,6 +25,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 
@@ -77,13 +78,6 @@ function getEarliestOverdueDate(
     }
   }
   return earliest
-}
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization")
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return false
-  return authHeader === `Bearer ${cronSecret}`
 }
 
 function hasOverdueScheduleEntry(paymentSchedule: unknown, now: Date): boolean {

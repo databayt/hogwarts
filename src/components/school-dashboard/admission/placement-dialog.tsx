@@ -25,6 +25,40 @@ import {
   placeStudentInSection,
 } from "./actions"
 
+/**
+ * Dict-first mapping for admission action error CODES (see ACTION_ERRORS in
+ * src/lib/action-errors.ts) — a raw code like "SECTION_AT_CAPACITY" must
+ * never reach the toast. New keys are staged under
+ * dictionary.school.admission.errors (see dictkeys-dashboard.json) — cast
+ * defensively until the dictionary JSON carries them.
+ */
+function resolveAdmissionErrorMessage(
+  code: string | undefined,
+  dictionary: Dictionary["school"]["admission"]
+): string {
+  const staged = dictionary as unknown as {
+    errors?: {
+      forbidden?: string
+      sectionAtCapacity?: string
+      validationError?: string
+      generic?: string
+    }
+  }
+  const e = staged.errors
+  switch (code) {
+    case "FORBIDDEN":
+      return e?.forbidden || "You don't have permission to do this."
+    case "SECTION_AT_CAPACITY":
+      return (
+        e?.sectionAtCapacity || "This section is full. Choose another section."
+      )
+    case "VALIDATION_ERROR":
+      return e?.validationError || "Please check your input and try again."
+    default:
+      return e?.generic || "Something went wrong. Please try again."
+  }
+}
+
 interface SectionOption {
   id: string
   name: string
@@ -85,7 +119,7 @@ export function PlacementDialog({
         onOpenChange(false)
         router.refresh()
       } else {
-        ErrorToast(result.error || "Failed to place student")
+        ErrorToast(resolveAdmissionErrorMessage(result.error, t))
       }
     })
   }

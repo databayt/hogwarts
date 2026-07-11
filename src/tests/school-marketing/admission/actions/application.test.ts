@@ -39,6 +39,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       delete: vi.fn(),
       count: vi.fn(),
     },
@@ -618,6 +619,12 @@ describe("Application Actions", () => {
 
       vi.mocked(db.applicationSession.update).mockResolvedValue({} as any)
 
+      // Default: claim succeeds (session not already converted by a
+      // concurrent submit) — see "double-submit protection" below.
+      vi.mocked(db.applicationSession.updateMany).mockResolvedValue({
+        count: 1,
+      } as any)
+
       vi.mocked(db.school.findUnique).mockResolvedValue({
         id: SCHOOL_ID,
         country: "Sudan",
@@ -832,6 +839,127 @@ describe("Application Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toContain("Failed to submit application")
+    })
+
+    // =========================================================================
+    // requireDocuments enforcement (verified fix #2)
+    // =========================================================================
+
+    describe("requireDocuments enforcement", () => {
+      it("returns DOCUMENTS_REQUIRED when the school requires documents and none were provided", async () => {
+        vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+          allowMultipleApplications: false,
+          requireDocuments: true,
+        } as any)
+
+        const result = await submitApplication(
+          SUBDOMAIN,
+          SESSION_TOKEN,
+          validFormData // no `documents` field
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe("DOCUMENTS_REQUIRED")
+        expect(db.application.create).not.toHaveBeenCalled()
+      })
+
+      it("succeeds when the school requires documents and at least one was uploaded", async () => {
+        vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+          allowMultipleApplications: false,
+          requireDocuments: true,
+        } as any)
+
+        const result = await submitApplication(SUBDOMAIN, SESSION_TOKEN, {
+          ...validFormData,
+          documents: [
+            {
+              type: "id",
+              name: "ID",
+              url: "https://cdn.databayt.org/doc.pdf",
+              uploadedAt: new Date().toISOString(),
+            },
+          ],
+        })
+
+        expect(result.success).toBe(true)
+      })
+
+      it("does not enforce documents when requireDocuments is false/unset", async () => {
+        // Default beforeEach mock has no `requireDocuments` key (undefined).
+        const result = await submitApplication(
+          SUBDOMAIN,
+          SESSION_TOKEN,
+          validFormData
+        )
+
+        expect(result.success).toBe(true)
+      })
+    })
+
+    // =========================================================================
+    // Double-submit protection (verified fix #3)
+    // =========================================================================
+
+    describe("double-submit protection", () => {
+      it("claims the session token before creating the application", async () => {
+        await submitApplication(SUBDOMAIN, SESSION_TOKEN, validFormData)
+
+        expect(db.applicationSession.updateMany).toHaveBeenCalledWith({
+          where: {
+            sessionToken: SESSION_TOKEN,
+            schoolId: SCHOOL_ID,
+            convertedToApplicationId: null,
+          },
+          data: { convertedToApplicationId: "PENDING" },
+        })
+      })
+
+      it("returns APPLICATION_ALREADY_SUBMITTED when the claim matches zero rows (concurrent submit)", async () => {
+        vi.mocked(db.applicationSession.updateMany).mockResolvedValue({
+          count: 0,
+        } as any)
+
+        const result = await submitApplication(
+          SUBDOMAIN,
+          SESSION_TOKEN,
+          validFormData
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe("APPLICATION_ALREADY_SUBMITTED")
+        expect(db.application.create).not.toHaveBeenCalled()
+      })
+
+      it("releases the claim (resets convertedToApplicationId to null) when application creation fails", async () => {
+        vi.mocked(db.application.create).mockRejectedValue(
+          new Error("Connection timeout")
+        )
+
+        const result = await submitApplication(
+          SUBDOMAIN,
+          SESSION_TOKEN,
+          validFormData
+        )
+
+        expect(result.success).toBe(false)
+        expect(db.applicationSession.update).toHaveBeenCalledWith({
+          where: { sessionToken: SESSION_TOKEN },
+          data: { convertedToApplicationId: null },
+        })
+      })
+
+      it("does not attempt to claim a session when there is no appSession (session-less submit)", async () => {
+        vi.mocked(db.applicationSession.findUnique).mockResolvedValue(null)
+
+        const result = await submitApplication(
+          SUBDOMAIN,
+          SESSION_TOKEN,
+          validFormData
+        )
+
+        expect(result.success).toBe(true)
+        expect(db.applicationSession.updateMany).not.toHaveBeenCalled()
+      })
     })
   })
 })

@@ -23,6 +23,14 @@ export const admissionSettingsSchema = z
     applicationFee: z.number().min(0).default(0),
     offerExpiryDays: z.number().min(1).max(90).default(14),
 
+    // Public Portal Settings — gate the 4 public-facing entry points
+    // (school-marketing/admission actions read these; see AdmissionSettings
+    // Prisma model). Default true to match the schema + prior behavior.
+    enablePublicPortal: z.boolean().default(true),
+    enableInquiryForm: z.boolean().default(true),
+    enableTourBooking: z.boolean().default(true),
+    enableStatusTracker: z.boolean().default(true),
+
     // Notification Settings
     autoEmailNotifications: z.boolean().default(true),
 
@@ -34,18 +42,18 @@ export const admissionSettingsSchema = z
     bankDetails: bankDetailsSchema.optional().nullable(),
     cashPaymentInstructions: z.string().optional().nullable(),
 
-    // Merit Criteria Weights (must sum to 100)
-    academicWeight: z.number().min(0).max(100).default(40),
+    // Merit Criteria Weights. generateMeritList (actions.ts) only ever reads
+    // entranceWeight/interviewWeight — there is no academic-score input, so
+    // academicWeight is no longer user-editable (settings-content.tsx has no
+    // slider for it) and is always saved as 0. The field is kept so the
+    // upsert payload / Prisma column stay stable.
+    academicWeight: z.number().min(0).max(100).default(0),
     entranceWeight: z.number().min(0).max(100).default(35),
     interviewWeight: z.number().min(0).max(100).default(25),
   })
-  .refine(
-    (data) =>
-      data.academicWeight + data.entranceWeight + data.interviewWeight === 100,
-    {
-      message: "Merit weights must sum to 100%",
-      path: ["academicWeight"],
-    }
-  )
+  .refine((data) => data.entranceWeight + data.interviewWeight === 100, {
+    message: "Merit weights must sum to 100%",
+    path: ["entranceWeight"],
+  })
 
 export type AdmissionSettingsFormData = z.infer<typeof admissionSettingsSchema>

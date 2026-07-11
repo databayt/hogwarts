@@ -74,11 +74,17 @@ describe("ApplicationStatusBannerClient", () => {
   })
 
   // =========================================================================
-  // PAYMENT LINK URL
+  // OFFER LINK URL
   // =========================================================================
+  //
+  // The banner used to build its own `/application/{id}/payment` link
+  // client-side — that route is dead (applying is free; retired 2026-06-12).
+  // The server component now computes `offerUrl` (pointing at the offer page
+  // with the access token) and only when the application is SELECTED with an
+  // unexpired token; the client just renders the link when offerUrl is given.
 
-  describe("payment link URL", () => {
-    it("uses applicationId (not campaignId) in payment link for SELECTED+unpaid", () => {
+  describe("offer link (Pay Now button)", () => {
+    it("renders the Pay Now link using the server-provided offerUrl", () => {
       render(
         <ApplicationStatusBannerClient
           application={makeBannerApp({
@@ -88,26 +94,54 @@ describe("ApplicationStatusBannerClient", () => {
             applicationFeePaid: false,
           })}
           locale="en"
+          offerUrl="/en/application/app-123/offer?token=abc123"
         />
       )
 
       const payLink = screen.getByRole("link", { name: /pay now/i })
       expect(payLink).toHaveAttribute(
         "href",
-        expect.stringContaining("/application/app-123/payment")
-      )
-      expect(payLink).not.toHaveAttribute(
-        "href",
-        expect.stringContaining("camp-456")
+        "/en/application/app-123/offer?token=abc123"
       )
     })
 
-    it("does not show payment link when applicationFeePaid is true", () => {
+    it("does not show the link when applicationFeePaid is true (even if offerUrl is present)", () => {
       render(
         <ApplicationStatusBannerClient
           application={makeBannerApp({
             status: "SELECTED",
             applicationFeePaid: true,
+          })}
+          locale="en"
+          offerUrl="/en/application/app-123/offer?token=abc123"
+        />
+      )
+
+      expect(
+        screen.queryByRole("link", { name: /pay now/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it("does not show the link for SUBMITTED status (even if offerUrl is present)", () => {
+      render(
+        <ApplicationStatusBannerClient
+          application={makeBannerApp({ status: "SUBMITTED" })}
+          locale="en"
+          offerUrl="/en/application/app-123/offer?token=abc123"
+        />
+      )
+
+      expect(
+        screen.queryByRole("link", { name: /pay now/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it("does not show the link for SELECTED+unpaid when offerUrl is absent (e.g. expired token)", () => {
+      render(
+        <ApplicationStatusBannerClient
+          application={makeBannerApp({
+            status: "SELECTED",
+            applicationFeePaid: false,
           })}
           locale="en"
         />
@@ -116,19 +150,10 @@ describe("ApplicationStatusBannerClient", () => {
       expect(
         screen.queryByRole("link", { name: /pay now/i })
       ).not.toBeInTheDocument()
-    })
-
-    it("does not show payment link for SUBMITTED status", () => {
-      render(
-        <ApplicationStatusBannerClient
-          application={makeBannerApp({ status: "SUBMITTED" })}
-          locale="en"
-        />
-      )
-
+      // The status text itself should still render without the button.
       expect(
-        screen.queryByRole("link", { name: /pay now/i })
-      ).not.toBeInTheDocument()
+        screen.getByText(/approved, continue with payment/i)
+      ).toBeInTheDocument()
     })
   })
 
@@ -192,11 +217,19 @@ describe("ApplicationStatusBannerClient", () => {
       expect(screen.getByText(/withdrawn/i)).toBeInTheDocument()
     })
 
-    it("shows Arabic text when locale is 'ar'", () => {
+    it("shows Arabic text when the server resolves Arabic messages", () => {
+      // Banner copy is resolved server-side now (application-status-banner.tsx
+      // picks Arabic strings when locale === "ar"); the client just renders
+      // whatever `messages` it's given, so the test supplies the Arabic set
+      // directly rather than relying on client-side locale branching.
       render(
         <ApplicationStatusBannerClient
           application={makeBannerApp({ status: "SUBMITTED" })}
           locale="ar"
+          messages={{
+            applicationLabel: "طلب رقم",
+            waitingApproval: "بانتظار الموافقة",
+          }}
         />
       )
 

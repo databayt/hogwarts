@@ -84,13 +84,8 @@ export function MeritTable({
     total,
     perPage,
     fetcher: async (params) => {
-      // search param is client-filtered (server action gains search support via deferred task)
-      const { search: _search, ...serverParams } = params as Record<
-        string,
-        unknown
-      > & { search?: string }
       const result = await getMeritListData({
-        ...serverParams,
+        ...params,
         campaignId: campaignId || undefined,
       })
       if (result.success && result.data) {

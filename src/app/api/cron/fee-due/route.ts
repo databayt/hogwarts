@@ -28,6 +28,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 
@@ -38,15 +39,6 @@ const FEE_DUE_WINDOW_DAYS = 7
 
 /** Offer expiry reminders fire when expiry is within this many days. */
 const OFFER_EXPIRY_WINDOW_DAYS = 3
-
-// ── Auth ─────────────────────────────────────────────────────────────────────
-
-function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization")
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return false
-  return authHeader === `Bearer ${cronSecret}`
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

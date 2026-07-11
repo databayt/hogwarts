@@ -36,8 +36,10 @@ vi.mock("@/lib/db", () => ({
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({}),
     },
     section: {
       findMany: vi.fn(),
@@ -86,9 +88,11 @@ vi.mock("@/lib/db", () => ({
     guardianPhoneNumber: {
       create: vi.fn(),
       upsert: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     studentDocument: {
       create: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     admissionSettings: {
       findUnique: vi.fn(),
@@ -126,6 +130,16 @@ vi.mock("@/lib/grade-utils", () => ({
 
 vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
   createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
+}))
+
+// confirmEnrollment dynamically imports this to mint a password-setup link
+// for brand-new guest Users (no password set on create).
+vi.mock("@/components/auth/tokens", () => ({
+  generatePasswordResetToken: vi.fn().mockResolvedValue({
+    email: "guest@test.com",
+    token: "raw-reset-token-abc",
+    expires: new Date(Date.now() + 3600 * 1000),
+  }),
 }))
 
 // Mock the authorization module to let calls through
@@ -253,6 +267,9 @@ function setupEnrollmentMocks(overrides?: {
   vi.mocked(db.user.create).mockResolvedValue({
     id: "new-user-1",
   } as any)
+  // Guest path (hasUserId: false): no existing user matches this email in
+  // this school, so confirmEnrollment creates a brand-new guest User above.
+  vi.mocked(db.user.findFirst).mockResolvedValue(null)
 
   // 6. Fee structures
   vi.mocked(db.feeStructure.findMany).mockResolvedValue(
@@ -295,7 +312,10 @@ function setupEnrollmentMocks(overrides?: {
   // Post-transaction guardian query
   vi.mocked(db.studentGuardian.findMany).mockResolvedValue(
     guardianLinks.map((link: any) => ({
-      guardian: { userId: link.userId },
+      guardian: {
+        userId: link.userId ?? null,
+        emailAddress: link.emailAddress ?? null,
+      },
     }))
   )
 
@@ -381,6 +401,81 @@ describe("confirmEnrollment - notifications", () => {
     const guardianUserIds = guardianCalls.map((c) => (c[0] as any).userId)
     expect(guardianUserIds).toContain("guardian-user-1")
     expect(guardianUserIds).toContain("guardian-user-2")
+  })
+
+  it("falls back to directEmail for a guardian with no linked account (userId null) but an email on file", async () => {
+    // createOrLinkGuardian never sets a userId (guardians are contact
+    // records, not accounts) — this is the normal shape for every
+    // admission-created guardian, not an edge case.
+    setupEnrollmentMocks({
+      guardianLinks: [
+        { userId: null, emailAddress: "guardian-no-account@test.com" },
+      ],
+    })
+
+    const result = await confirmEnrollment({ id: APP_ID })
+
+    expect(result.success).toBe(true)
+
+    const notifCalls = vi.mocked(dispatchNotification).mock.calls
+    const guardianEmailCall = notifCalls.find((call) => {
+      const arg = call[0] as any
+      return (
+        arg.type === "account_created" &&
+        arg.directEmail === "guardian-no-account@test.com"
+      )
+    })
+
+    expect(guardianEmailCall).toBeDefined()
+    const arg = guardianEmailCall![0] as any
+    expect(arg.userId).toBeUndefined()
+    expect(arg.channels).toEqual(["email"])
+  })
+
+  it("does not send the email channel when the school disabled autoEmailNotifications", async () => {
+    setupEnrollmentMocks()
+    vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+      autoEmailNotifications: false,
+    } as any)
+
+    const result = await confirmEnrollment({ id: APP_ID })
+
+    expect(result.success).toBe(true)
+
+    // The account_created enrollment-confirmation notification still fires
+    // in-app, but must have dropped "email" from its channel list.
+    const notifCalls = vi.mocked(dispatchNotification).mock.calls
+    const enrollmentCall = notifCalls.find(
+      (call) => (call[0] as any).type === "account_created"
+    )
+    expect(enrollmentCall).toBeDefined()
+    const arg = enrollmentCall![0] as any
+    expect(arg.channels).toEqual(["in_app"])
+  })
+
+  it("mints a password-setup link for a brand-new guest User (no existing account)", async () => {
+    setupEnrollmentMocks({ hasUserId: false })
+
+    const result = await confirmEnrollment({ id: APP_ID })
+
+    expect(result.success).toBe(true)
+    // Confirms the guest-creation branch actually ran.
+    expect(db.user.create).toHaveBeenCalled()
+
+    const { generatePasswordResetToken } =
+      await import("@/components/auth/tokens")
+    expect(generatePasswordResetToken).toHaveBeenCalledWith("ahmed@example.com")
+
+    const notifCalls = vi.mocked(dispatchNotification).mock.calls
+    const enrollmentCall = notifCalls.find(
+      (call) => (call[0] as any).type === "account_created"
+    )
+    expect(enrollmentCall).toBeDefined()
+    const arg = enrollmentCall![0] as any
+    // The dead "/" link is replaced with an absolute password-setup URL so
+    // the new guest student can actually authenticate for the first time.
+    expect(arg.metadata.url).toContain("/new-password?token=")
+    expect(arg.body).toContain("/new-password?token=")
   })
 
   it("enrollment succeeds even when fee notification fails", async () => {

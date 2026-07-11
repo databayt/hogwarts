@@ -3,7 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect, useState, useTransition } from "react"
-import { Bell, Calculator, CreditCard, Save, Settings } from "lucide-react"
+import {
+  Bell,
+  Calculator,
+  CreditCard,
+  Globe,
+  Save,
+  Settings,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -43,6 +50,10 @@ export default function SettingsContent({ dictionary, lang }: Props) {
     requireDocuments: true,
     applicationFee: "0",
     offerExpiryDays: 14,
+    enablePublicPortal: true,
+    enableInquiryForm: true,
+    enableTourBooking: true,
+    enableStatusTracker: true,
     autoEmailNotifications: true,
     enableOnlinePayment: false,
     paymentMethods: ["stripe", "cash"] as string[],
@@ -54,7 +65,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
       swiftCode: "",
     },
     cashPaymentInstructions: "",
-    academicWeight: 40,
+    // No academic-score input exists (generateMeritList uses only entrance +
+    // interview) — kept at 0, not user-editable. See settings/validation.ts.
+    academicWeight: 0,
     entranceWeight: 35,
     interviewWeight: 25,
   })
@@ -70,6 +83,10 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           requireDocuments: result.data.requireDocuments,
           applicationFee: result.data.applicationFee.toString(),
           offerExpiryDays: result.data.offerExpiryDays,
+          enablePublicPortal: result.data.enablePublicPortal,
+          enableInquiryForm: result.data.enableInquiryForm,
+          enableTourBooking: result.data.enableTourBooking,
+          enableStatusTracker: result.data.enableStatusTracker,
           autoEmailNotifications: result.data.autoEmailNotifications,
           enableOnlinePayment: result.data.enableOnlinePayment,
           paymentMethods: (result.data.paymentMethods as string[]) ?? [
@@ -85,7 +102,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           },
           cashPaymentInstructions:
             (result.data.cashPaymentInstructions as string) ?? "",
-          academicWeight: result.data.academicWeight,
+          // academicWeight intentionally not read back — always 0 going
+          // forward (see settings/validation.ts).
+          academicWeight: 0,
           entranceWeight: result.data.entranceWeight,
           interviewWeight: result.data.interviewWeight,
         })
@@ -96,11 +115,10 @@ export default function SettingsContent({ dictionary, lang }: Props) {
   }, [])
 
   const handleSave = () => {
-    // Validate merit weights sum to 100
-    const totalWeight =
-      settings.academicWeight +
-      settings.entranceWeight +
-      settings.interviewWeight
+    // Validate merit weights sum to 100. There is no academic-score input
+    // (generateMeritList only reads entrance + interview) so academicWeight
+    // is deliberately excluded from this check — see settings/validation.ts.
+    const totalWeight = settings.entranceWeight + settings.interviewWeight
     if (totalWeight !== 100) {
       ErrorToast(t?.weightsMustSum || "Merit weights must sum to 100%")
       return
@@ -112,6 +130,10 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         requireDocuments: settings.requireDocuments,
         applicationFee: parseFloat(settings.applicationFee) || 0,
         offerExpiryDays: settings.offerExpiryDays,
+        enablePublicPortal: settings.enablePublicPortal,
+        enableInquiryForm: settings.enableInquiryForm,
+        enableTourBooking: settings.enableTourBooking,
+        enableStatusTracker: settings.enableStatusTracker,
         autoEmailNotifications: settings.autoEmailNotifications,
         enableOnlinePayment: settings.enableOnlinePayment,
         paymentMethods: settings.paymentMethods as (
@@ -125,7 +147,8 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         cashPaymentInstructions: settings.paymentMethods.includes("cash")
           ? settings.cashPaymentInstructions || null
           : null,
-        academicWeight: settings.academicWeight,
+        // Always 0 — no UI control sets this (see state init above).
+        academicWeight: 0,
         entranceWeight: settings.entranceWeight,
         interviewWeight: settings.interviewWeight,
       })
@@ -234,6 +257,99 @@ export default function SettingsContent({ dictionary, lang }: Props) {
                 }
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Public Portal Settings — gates the 4 public-facing admission entry
+          points on the school-marketing side (AdmissionSettings columns
+          already exist; see prisma/models/admission.prisma). */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            {(t as Record<string, string>)?.publicPortal || "Public Portal"}
+          </CardTitle>
+          <CardDescription>
+            {(t as Record<string, string>)?.publicPortalDescription ||
+              "Control which public-facing admission entry points are active"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>
+                {(t as Record<string, string>)?.enablePublicPortal ||
+                  "Enable Public Portal"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {(t as Record<string, string>)?.enablePublicPortalDesc ||
+                  "Turn the public admission portal on or off entirely"}
+              </p>
+            </div>
+            <Switch
+              checked={settings.enablePublicPortal}
+              onCheckedChange={(checked) =>
+                setSettings((s) => ({ ...s, enablePublicPortal: checked }))
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>
+                {(t as Record<string, string>)?.enableInquiryForm ||
+                  "Enable Inquiry Form"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {(t as Record<string, string>)?.enableInquiryFormDesc ||
+                  "Allow prospective families to submit inquiries"}
+              </p>
+            </div>
+            <Switch
+              checked={settings.enableInquiryForm}
+              onCheckedChange={(checked) =>
+                setSettings((s) => ({ ...s, enableInquiryForm: checked }))
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>
+                {(t as Record<string, string>)?.enableTourBooking ||
+                  "Enable Tour Booking"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {(t as Record<string, string>)?.enableTourBookingDesc ||
+                  "Allow families to book a campus tour online"}
+              </p>
+            </div>
+            <Switch
+              checked={settings.enableTourBooking}
+              onCheckedChange={(checked) =>
+                setSettings((s) => ({ ...s, enableTourBooking: checked }))
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>
+                {(t as Record<string, string>)?.enableStatusTracker ||
+                  "Enable Status Tracker"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {(t as Record<string, string>)?.enableStatusTrackerDesc ||
+                  "Let applicants check their application status without logging in"}
+              </p>
+            </div>
+            <Switch
+              checked={settings.enableStatusTracker}
+              onCheckedChange={(checked) =>
+                setSettings((s) => ({ ...s, enableStatusTracker: checked }))
+              }
+            />
           </div>
         </CardContent>
       </Card>
@@ -486,7 +602,10 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         </CardContent>
       </Card>
 
-      {/* Merit Criteria Settings */}
+      {/* Merit Criteria Settings — entrance + interview only. There is no
+          academic-score input anywhere in the admission pipeline
+          (generateMeritList in actions.ts computes meritScore from these two
+          scores alone), so no "Academic Weight" control is shown here. */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -494,29 +613,12 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             {t?.meritCriteria || "Default Merit Criteria"}
           </CardTitle>
           <CardDescription>
-            {t?.meritCriteriaDescription ||
-              "Set default weights for merit calculation"}
+            {(t as Record<string, string>)?.meritCriteriaDescription ||
+              "Set weights for the entrance exam and interview scores used to rank applicants (must total 100%)"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <Label>{t?.academicWeight || "Academic Weight"}</Label>
-                <span className="text-muted-foreground text-sm">
-                  {settings.academicWeight}%
-                </span>
-              </div>
-              <Slider
-                value={[settings.academicWeight]}
-                onValueChange={([value]) =>
-                  setSettings((s) => ({ ...s, academicWeight: value }))
-                }
-                max={100}
-                step={5}
-              />
-            </div>
-
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>{t?.entranceWeight || "Entrance Exam Weight"}</Label>
@@ -552,15 +654,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             </div>
 
             <div className="text-muted-foreground text-sm">
-              Total:{" "}
-              {settings.academicWeight +
-                settings.entranceWeight +
-                settings.interviewWeight}
-              %
-              {settings.academicWeight +
-                settings.entranceWeight +
-                settings.interviewWeight !==
-                100 && (
+              {(t as Record<string, string>)?.totalWeight || "Total"}:{" "}
+              {settings.entranceWeight + settings.interviewWeight}%
+              {settings.entranceWeight + settings.interviewWeight !== 100 && (
                 <span className="text-destructive ms-2">
                   ({t?.shouldEqual100 || "should equal 100%"})
                 </span>

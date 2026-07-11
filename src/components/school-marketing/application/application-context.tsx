@@ -5,6 +5,7 @@
 import React, {
   createContext,
   ReactNode,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -12,6 +13,7 @@ import React, {
   useRef,
   useState,
 } from "react"
+import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 
 import type { NameFormat } from "@/lib/name-utils"
@@ -205,6 +207,26 @@ const STORAGE_KEY = "hogwarts_apply_session"
 const buildStorageKey = (campaignId: string, userId: string | null): string =>
   `${STORAGE_KEY}_${campaignId}_${userId ?? "anon"}`
 
+// Reads the `?token=` query param and reports it up to the provider. Isolated
+// into its own component (rather than calling useSearchParams() directly in
+// ApplySessionProvider) so only this invisible leaf needs the <Suspense>
+// boundary useSearchParams() requires — the rest of the wizard subtree keeps
+// rendering normally instead of bailing out to full CSR.
+function ResumeTokenFromUrl({
+  onToken,
+}: {
+  onToken: (token: string | null) => void
+}) {
+  const searchParams = useSearchParams()
+  const token = searchParams.get("token")
+
+  useEffect(() => {
+    onToken(token)
+  }, [token, onToken])
+
+  return null
+}
+
 export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   children,
   initialSubdomain,
@@ -218,6 +240,13 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     initialSubdomain || null
   )
   const [campaign, setCampaign] = useState<PublicCampaign | null>(null)
+
+  // Fallback resume token read from the URL (?token=) when no
+  // initialSessionToken prop was passed in — see ResumeTokenFromUrl above.
+  const [urlToken, setUrlToken] = useState<string | null>(null)
+  const handleUrlToken = useCallback((token: string | null) => {
+    setUrlToken(token)
+  }, [])
 
   const [session, setSession] = useState<ApplySessionState>({
     sessionToken: initialSessionToken || null,
@@ -526,12 +555,15 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [session.isDirty])
 
-  // Load initial session if token provided
+  // Load initial session if a token was provided — either as a prop (server
+  // rendered) or as a `?token=` query param (resume links / resumed drafts
+  // land on a step page with the token in the URL, not as a prop).
+  const resumeToken = initialSessionToken || urlToken
   useEffect(() => {
-    if (initialSessionToken && !session.formData.personal) {
-      loadSession(initialSessionToken)
+    if (resumeToken && !session.formData.personal) {
+      loadSession(resumeToken)
     }
-  }, [initialSessionToken, loadSession, session.formData.personal])
+  }, [resumeToken, loadSession, session.formData.personal])
 
   const value = useMemo(
     () => ({
@@ -569,6 +601,9 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
 
   return (
     <ApplySessionContext.Provider value={value}>
+      <Suspense fallback={null}>
+        <ResumeTokenFromUrl onToken={handleUrlToken} />
+      </Suspense>
       {children}
     </ApplySessionContext.Provider>
   )

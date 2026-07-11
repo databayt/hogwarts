@@ -26,6 +26,108 @@ import type {
 } from "./types"
 
 // ============================================
+// SSRF PROTECTION
+// ============================================
+//
+// Mirrors validateUploadUrl in
+// src/components/school-marketing/application/attachments/extract-action.ts
+// (not exported there, so this is a local equivalent) — reject any fileUrl
+// that isn't an HTTPS URL on a known upload-bucket host BEFORE it reaches
+// classifyAdmissionDocument (which spends AI budget) or createProcessingJob.
+
+/** Allowed upload-bucket hostnames (suffix match) */
+const ALLOWED_HOST_SUFFIXES = [
+  ".uploadthing.com",
+  ".utfs.io",
+  ".amazonaws.com",
+  ".cloudfront.net",
+  ".blob.vercel-storage.com",
+  ".databayt.org",
+]
+
+/** Exact-match hostnames (bare domains without subdomain) */
+const ALLOWED_EXACT_HOSTS = [
+  "uploadthing.com",
+  "utfs.io",
+  "amazonaws.com",
+  "cloudfront.net",
+  "databayt.org",
+]
+
+/** RFC-1918 / link-local / loopback IPv4 ranges */
+function isPrivateIPv4(hostname: string): boolean {
+  const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(
+    hostname
+  )
+  if (!ipv4Match) return false
+  const [, a, b] = ipv4Match.map(Number)
+  // 127.x.x.x  (loopback)
+  if (a === 127) return true
+  // 10.x.x.x   (Class A private)
+  if (a === 10) return true
+  // 172.16-31.x.x (Class B private)
+  if (a === 172 && b >= 16 && b <= 31) return true
+  // 192.168.x.x (Class C private)
+  if (a === 192 && b === 168) return true
+  // 169.254.x.x (link-local / cloud metadata)
+  if (a === 169 && b === 254) return true
+  // 0.x.x.x
+  if (a === 0) return true
+  return false
+}
+
+/** Private/reserved IPv6 */
+function isPrivateIPv6(hostname: string): boolean {
+  const clean = hostname.replace(/^\[|]$/g, "").toLowerCase()
+  if (clean === "::1") return true // loopback
+  if (clean.startsWith("fc") || clean.startsWith("fd")) return true // unique local
+  if (clean.startsWith("fe80")) return true // link-local
+  // IPv4-mapped IPv6 (::ffff:a.b.c.d)
+  const v4Mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(clean)
+  if (v4Mapped) return isPrivateIPv4(v4Mapped[1])
+  return false
+}
+
+function validateUploadUrl(
+  url: string
+): { valid: true } | { valid: false; error: string } {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return { valid: false, error: "INVALID_URL" }
+  }
+
+  // Only HTTPS allowed
+  if (parsed.protocol !== "https:") {
+    return { valid: false, error: "INVALID_URL" }
+  }
+
+  const hostname = parsed.hostname.toLowerCase()
+
+  // Block private / internal IPs
+  if (isPrivateIPv4(hostname) || isPrivateIPv6(hostname)) {
+    return { valid: false, error: "INVALID_URL" }
+  }
+
+  // Block "localhost" variants
+  if (hostname === "localhost" || hostname.endsWith(".localhost")) {
+    return { valid: false, error: "INVALID_URL" }
+  }
+
+  // Check against allowlist
+  const allowed =
+    ALLOWED_EXACT_HOSTS.includes(hostname) ||
+    ALLOWED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))
+
+  if (!allowed) {
+    return { valid: false, error: "INVALID_URL" }
+  }
+
+  return { valid: true }
+}
+
+// ============================================
 // CLASSIFY DOCUMENT
 // ============================================
 
@@ -47,6 +149,12 @@ export async function classifyDocument(
     assertAdmissionPermission(session.user.role, "reviewApplications")
 
     if (!fileUrl) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
+
+    // SSRF protection: only allow known upload-bucket URLs before spending
+    // any AI budget on fetching this fileUrl.
+    if (!validateUploadUrl(fileUrl).valid) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
@@ -103,6 +211,12 @@ export async function processApplicationDocument(
     const role = session.user.role
     if (role !== "DEVELOPER" && role !== "ADMIN" && role !== "STAFF") {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    // SSRF protection: only allow known upload-bucket URLs before spending
+    // any AI budget classifying this document.
+    if (!validateUploadUrl(documentUrl).valid) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Verify application belongs to this school

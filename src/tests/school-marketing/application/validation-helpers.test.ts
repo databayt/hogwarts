@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest"
 
 import type {
   AcademicStepData,
-  ContactStepData,
   GuardianStepData,
   LocationStepData,
   PersonalStepData,
@@ -18,7 +17,6 @@ import {
   isValidPhone,
   validateAcademicStep,
   validateAllSteps,
-  validateContactStep,
   validateGuardianStep,
   validatePersonalStep,
 } from "@/components/school-marketing/application/validation-helpers"
@@ -34,15 +32,6 @@ const validPersonal: PersonalStepData = {
   gender: "MALE",
   nationality: "Sudanese",
   phone: "+249123456789",
-}
-
-const validContact: ContactStepData = {
-  email: "parent@example.com",
-  phone: "+249123456789",
-  address: "123 Main Street",
-  city: "Khartoum",
-  state: "Khartoum",
-  country: "Sudan",
 }
 
 const validGuardian: GuardianStepData = {
@@ -93,24 +82,6 @@ describe("validatePersonalStep", () => {
   })
 })
 
-describe("validateContactStep", () => {
-  it("returns true for complete contact data", () => {
-    expect(validateContactStep(validContact)).toBe(true)
-  })
-
-  it("returns true for undefined (contact merged into personal; always valid)", () => {
-    expect(validateContactStep(undefined)).toBe(true)
-  })
-
-  it("returns true when email is missing (contact is always valid)", () => {
-    expect(validateContactStep({ ...validContact, email: "" })).toBe(true)
-  })
-
-  it("returns true when country is missing (contact is always valid)", () => {
-    expect(validateContactStep({ ...validContact, country: "" })).toBe(true)
-  })
-})
-
 describe("validateGuardianStep", () => {
   it("returns true when father and mother names present", () => {
     expect(validateGuardianStep(validGuardian)).toBe(true)
@@ -148,7 +119,6 @@ describe("validateAllSteps", () => {
     expect(
       validateAllSteps({
         personal: validPersonal,
-        contact: validContact,
         location: validLocation,
         guardian: validGuardian,
         academic: validAcademic,
@@ -160,7 +130,6 @@ describe("validateAllSteps", () => {
     expect(
       validateAllSteps({
         personal: { ...validPersonal, firstName: "" },
-        contact: validContact,
         location: validLocation,
         guardian: validGuardian,
         academic: validAcademic,
@@ -177,16 +146,13 @@ describe("getStepValidationStatus", () => {
   it("returns correct status for each step", () => {
     const status = getStepValidationStatus({
       personal: validPersonal,
-      contact: undefined,
       guardian: validGuardian,
       academic: validAcademic,
     })
 
-    // validateContactStep always returns true (contact merged into personal);
     // location is undefined so validateLocationStep returns false
     expect(status).toEqual({
       personal: true,
-      contact: true,
       location: false,
       guardian: true,
       academic: true,

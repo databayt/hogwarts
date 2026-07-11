@@ -14,7 +14,7 @@ import {
   XCircle,
 } from "lucide-react"
 
-import type { BankDetails } from "@/lib/payment/types"
+import type { BankDetails, PaymentGateway } from "@/lib/payment/types"
 import { getSchoolDisplayName } from "@/lib/school-name"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -107,6 +107,11 @@ type OfferDict = Partial<{
   failedCheckout: string
   failedPayment: string
   unexpectedError: string
+  alreadyEnrolled: string
+  alreadyEnrolledMessage: string
+  payOnline: string
+  payOnlineDesc: string
+  noPaymentMethodConfigured: string
 }>
 
 interface OfferContentProps {
@@ -141,12 +146,17 @@ export default function OfferContent({
     campaign,
     feeSchedulePreview,
     registrationFeeTotal,
+    offerState,
+    availableGateways,
   } = offer
 
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [accepted, setAccepted] = useState(application.offerAccepted)
-  const [declined, setDeclined] = useState(false)
+  // Seeded from the server-resolved offerState — a page load can land
+  // directly on a previously-declined offer (e.g. reopening the email link),
+  // not just a decline that happens live in this session.
+  const [declined, setDeclined] = useState(offerState === "declined")
   const [regPaid, setRegPaid] = useState(application.registrationFeePaid)
   const [paymentResult, setPaymentResult] = useState<{
     method: string
@@ -199,25 +209,12 @@ export default function OfferContent({
     }
   }
 
-  const handlePayment = async (method: string) => {
+  const handlePayment = async (method: PaymentGateway) => {
     setLoading(method)
     setError(null)
 
     try {
-      if (method === "stripe") {
-        const result = await createRegistrationFeeCheckout(
-          application.id,
-          accessToken,
-          locale
-        )
-        if (result.success && result.data?.checkoutUrl) {
-          window.location.href = result.data.checkoutUrl
-          return
-        }
-        setError(
-          result.error || t?.failedCheckout || "Failed to create checkout"
-        )
-      } else if (method === "cash") {
+      if (method === "cash") {
         const result = await recordRegistrationCashIntent(
           application.id,
           accessToken
@@ -251,6 +248,24 @@ export default function OfferContent({
             result.error || t?.failedPayment || "Failed to record payment"
           )
         }
+      } else {
+        // Any other gateway in availableGateways is an online checkout rail
+        // (stripe today; tap/bankak/mobile_money once configured) — route
+        // through the generic checkout action, which re-validates the
+        // gateway server-side before creating a session.
+        const result = await createRegistrationFeeCheckout(
+          application.id,
+          accessToken,
+          locale,
+          method
+        )
+        if (result.success && result.data?.checkoutUrl) {
+          window.location.href = result.data.checkoutUrl
+          return
+        }
+        setError(
+          result.error || t?.failedCheckout || "Failed to create checkout"
+        )
       }
     } catch {
       setError(t?.unexpectedError || "An unexpected error occurred")
@@ -270,6 +285,23 @@ export default function OfferContent({
         <p className="text-muted-foreground text-center">
           {t?.declinedMessage ||
             "The admission offer has been declined. Contact the school for more information."}
+        </p>
+      </div>
+    )
+  }
+
+  // Already enrolled state — the school already confirmed enrollment
+  // (application moved past SELECTED to ADMITTED)
+  if (offerState === "already_enrolled") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
+        <CheckCircle2 className="h-16 w-16 text-green-600" />
+        <h2 className="text-xl font-semibold">
+          {t?.alreadyEnrolled || "Already Enrolled"}
+        </h2>
+        <p className="text-muted-foreground text-center">
+          {t?.alreadyEnrolledMessage ||
+            "This application has already been confirmed and enrolled. Contact the school for more information."}
         </p>
       </div>
     )
@@ -407,6 +439,36 @@ export default function OfferContent({
         </div>
       </div>
     )
+  }
+
+  // Payment method card metadata, keyed by gateway id. Only stripe/cash/
+  // bank_transfer have dedicated copy today; any other gateway that
+  // `availableGateways` resolves (tap/bankak/mobile_money, once configured)
+  // falls back to a generic "pay online" card rather than disappearing.
+  const gatewayMeta: Record<
+    string,
+    { icon: typeof CreditCard; label: string; desc: string }
+  > = {
+    stripe: {
+      icon: CreditCard,
+      label: t?.payWithCard || "Pay with Card",
+      desc: t?.payWithCardDesc || "Pay with credit or debit card",
+    },
+    cash: {
+      icon: Banknote,
+      label: t?.payAtSchoolLabel || "Pay at School",
+      desc: t?.payAtSchoolDesc || "Pay in cash at the school office",
+    },
+    bank_transfer: {
+      icon: Building2,
+      label: t?.bankTransfer || "Bank Transfer",
+      desc: t?.bankTransferDesc || "Transfer to the school bank account",
+    },
+  }
+  const defaultGatewayMeta = {
+    icon: CreditCard,
+    label: t?.payOnline || "Pay Online",
+    desc: t?.payOnlineDesc || "Pay online via a supported payment gateway",
   }
 
   return (
@@ -631,48 +693,38 @@ export default function OfferContent({
               </div>
 
               <div className="space-y-3">
-                {[
-                  {
-                    method: "stripe",
-                    icon: CreditCard,
-                    label: t?.payWithCard || "Pay with Card",
-                    desc: t?.payWithCardDesc || "Pay with credit or debit card",
-                  },
-                  {
-                    method: "cash",
-                    icon: Banknote,
-                    label: t?.payAtSchoolLabel || "Pay at School",
-                    desc:
-                      t?.payAtSchoolDesc || "Pay in cash at the school office",
-                  },
-                  {
-                    method: "bank_transfer",
-                    icon: Building2,
-                    label: t?.bankTransfer || "Bank Transfer",
-                    desc:
-                      t?.bankTransferDesc ||
-                      "Transfer to the school bank account",
-                  },
-                ].map(({ method, icon: Icon, label, desc }) => (
-                  <Card
-                    key={method}
-                    className="hover:border-primary cursor-pointer transition-colors"
-                    onClick={() => !loading && handlePayment(method)}
-                  >
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <div className="bg-primary/10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                        <Icon className="text-primary h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{label}</h3>
-                        <p className="text-muted-foreground text-sm">{desc}</p>
-                      </div>
-                      {loading === method && (
-                        <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                {availableGateways.map((method) => {
+                  const meta = gatewayMeta[method] ?? defaultGatewayMeta
+                  const Icon = meta.icon
+                  return (
+                    <Card
+                      key={method}
+                      className="hover:border-primary cursor-pointer transition-colors"
+                      onClick={() => !loading && handlePayment(method)}
+                    >
+                      <CardContent className="flex items-center gap-4 py-4">
+                        <div className="bg-primary/10 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                          <Icon className="text-primary h-6 w-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{meta.label}</h3>
+                          <p className="text-muted-foreground text-sm">
+                            {meta.desc}
+                          </p>
+                        </div>
+                        {loading === method && (
+                          <Loader2 className="text-primary h-5 w-5 animate-spin" />
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+                {availableGateways.length === 0 && (
+                  <p className="text-muted-foreground text-center text-sm">
+                    {t?.noPaymentMethodConfigured ||
+                      "No payment method is configured yet. Please contact the school."}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

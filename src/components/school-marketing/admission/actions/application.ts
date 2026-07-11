@@ -496,6 +496,12 @@ export async function submitApplication(
   data: ApplicationFormData,
   lang: string = "ar"
 ): Promise<ActionResult<SubmitApplicationResult>> {
+  // Tracks a session claimed via the atomic updateMany below so the outer
+  // catch can release it (set back to null) if application creation fails
+  // before a real Application row exists — see the claim/release comments
+  // further down. Declared outside the try block so the catch can see it.
+  let pendingClaimToken: string | null = null
+
   try {
     const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
@@ -524,7 +530,7 @@ export async function submitApplication(
         }),
         db.admissionSettings.findUnique({
           where: { schoolId },
-          select: { allowMultipleApplications: true },
+          select: { allowMultipleApplications: true, requireDocuments: true },
         }),
       ])
 
@@ -592,6 +598,33 @@ export async function submitApplication(
     })
     if (recentSubmissions >= 5) {
       return { success: false, error: "RATE_LIMITED" }
+    }
+
+    // Enforce the school's document requirement. The wizard never blocks
+    // navigation on missing attachments (attachments step is optional), so
+    // this is the one place that actually gates submission on it.
+    if (
+      admissionSettings?.requireDocuments &&
+      (!validated.documents || validated.documents.length === 0)
+    ) {
+      return { success: false, error: "DOCUMENTS_REQUIRED" }
+    }
+
+    // Atomically claim the session token before creating the Application so
+    // two concurrent submits of the same draft (e.g. a double-click, or the
+    // auto-save timer racing the submit click) can't both pass the
+    // convertedToApplicationId check and create two Application rows. The
+    // claim is released below if creation fails, and finalized with the real
+    // application id once the row exists (see "Mark session as converted").
+    if (appSession) {
+      const claim = await db.applicationSession.updateMany({
+        where: { sessionToken, schoolId, convertedToApplicationId: null },
+        data: { convertedToApplicationId: "PENDING" },
+      })
+      if (claim.count === 0) {
+        return { success: false, error: "APPLICATION_ALREADY_SUBMITTED" }
+      }
+      pendingClaimToken = sessionToken
     }
 
     // Generate unique application number
@@ -683,7 +716,13 @@ export async function submitApplication(
       },
     })
 
-    // Mark session as converted
+    // Point of no return — a real Application row now exists, so the outer
+    // catch must never release the claim again even if a later step in this
+    // function throws (that would let a retry create a duplicate Application).
+    pendingClaimToken = null
+
+    // Mark session as converted (finalizes the claim with the real id, in
+    // place of the "PENDING" placeholder set above)
     if (appSession) {
       await db.applicationSession.update({
         where: { sessionToken },
@@ -775,6 +814,18 @@ export async function submitApplication(
       },
     }
   } catch (error) {
+    // Release the claim so the applicant can retry instead of being
+    // permanently locked out of a draft that never became a real Application.
+    if (pendingClaimToken) {
+      await db.applicationSession
+        .update({
+          where: { sessionToken: pendingClaimToken },
+          data: { convertedToApplicationId: null },
+        })
+        .catch(() => {
+          // Best-effort release — don't mask the original error below.
+        })
+    }
     console.error("Error submitting application:", error)
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return {

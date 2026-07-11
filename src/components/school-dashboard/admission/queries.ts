@@ -32,12 +32,14 @@ export type ApplicationListFilters = {
 }
 
 export type MeritListFilters = {
+  search?: string
   campaignId?: string
   category?: string
   status?: string
 }
 
 export type EnrollmentFilters = {
+  search?: string
   campaignId?: string
   offerStatus?: string
   feeStatus?: string
@@ -178,6 +180,28 @@ export const applicationDetailSelect = {
   },
 } as const
 
+// Fields pulled for the read-time AI-extraction merge in getApplicationDetail
+// (see below) — deliberately narrow, no schoolId leak beyond the where-scope.
+export const documentJobSelect = {
+  fileUrl: true,
+  status: true,
+  resultData: true,
+  confidence: true,
+  jobType: true,
+} as const
+
+export type DocumentJobSummary = Prisma.DocumentProcessingJobGetPayload<{
+  select: typeof documentJobSelect
+}>
+
+export type ApplicationDetail = Prisma.ApplicationGetPayload<{
+  select: typeof applicationDetailSelect
+}> & {
+  /** AI document-processing jobs matched to this application's documents by
+   *  fileUrl — merged in at read time (see getApplicationDetail). */
+  documentJobs: DocumentJobSummary[]
+}
+
 // ============================================================================
 // Query Builders
 // ============================================================================
@@ -253,6 +277,41 @@ export function buildApplicationWhere(
   return where
 }
 
+/**
+ * Case-insensitive OR-contains search shared by the merit and enrollment
+ * tabs. Broader than buildApplicationWhere's search (adds guardianName) —
+ * merit/enrollment reviewers commonly search by the guardian's name.
+ */
+function buildApplicantSearchOr(
+  search: string
+): NonNullable<Prisma.ApplicationWhereInput["OR"]> {
+  return [
+    { firstName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+    { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+    {
+      guardianName: { contains: search, mode: Prisma.QueryMode.insensitive },
+    },
+    { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+    {
+      applicationNumber: {
+        contains: search,
+        mode: Prisma.QueryMode.insensitive,
+      },
+    },
+  ]
+}
+
+// Statuses generateMeritList actually pools + ranks (see actions.ts
+// generateMeritList). Applications that later moved to REJECTED/WITHDRAWN
+// keep a stale meritRank from a prior ranking run — restrict the default
+// view to the live pool; an explicit `filters.status` below overrides this
+// for an audit look-up (e.g. reviewing rejected-but-ranked entries).
+const MERIT_POOL_STATUSES: AdmissionApplicationStatus[] = [
+  "SHORTLISTED",
+  "SELECTED",
+  "WAITLISTED",
+]
+
 export function buildMeritWhere(
   schoolId: string,
   filters: MeritListFilters = {}
@@ -260,6 +319,11 @@ export function buildMeritWhere(
   const where: Prisma.ApplicationWhereInput = {
     schoolId,
     meritRank: { not: null },
+    status: { in: MERIT_POOL_STATUSES },
+  }
+
+  if (filters.search) {
+    where.OR = buildApplicantSearchOr(filters.search)
   }
 
   if (filters.campaignId) {
@@ -288,6 +352,10 @@ export function buildEnrollmentWhere(
     },
   }
 
+  if (filters.search) {
+    where.OR = buildApplicantSearchOr(filters.search)
+  }
+
   if (filters.campaignId) {
     where.campaignId = filters.campaignId
   }
@@ -299,10 +367,13 @@ export function buildEnrollmentWhere(
     where.admissionConfirmed = false
   }
 
+  // Registration fee is the real-money fee paid to secure the seat; the
+  // (free-application) applicationFeePaid flag is not what the enrollment
+  // fee badge or money flow use — see Application.registrationFeePaid.
   if (filters.feeStatus === "paid") {
-    where.applicationFeePaid = true
+    where.registrationFeePaid = true
   } else if (filters.feeStatus === "unpaid") {
-    where.applicationFeePaid = false
+    where.registrationFeePaid = false
   }
 
   return where
@@ -397,14 +468,46 @@ export async function getApplicationsList(
   return { rows, count }
 }
 
+/** Extract the `url` string of every entry in the raw `Application.documents`
+ *  JSON blob, tolerating both legacy `{name,url}` and ProcessedDocument
+ *  shapes. Never throws on malformed JSON — returns []. */
+function extractDocumentUrls(documents: Prisma.JsonValue | null): string[] {
+  if (!Array.isArray(documents)) return []
+  const urls: string[] = []
+  for (const entry of documents) {
+    if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+      const url = (entry as Record<string, unknown>).url
+      if (typeof url === "string" && url.length > 0) urls.push(url)
+    }
+  }
+  return urls
+}
+
 export async function getApplicationDetail(
   schoolId: string,
   applicationId: string
-) {
-  return db.application.findFirst({
+): Promise<ApplicationDetail | null> {
+  const application = await db.application.findFirst({
     where: { id: applicationId, schoolId },
     select: applicationDetailSelect,
   })
+
+  if (!application) return null
+
+  // Read-time merge: surface the latest AI extraction status/results from
+  // DocumentProcessingJob without writing anything back (this is a read-only
+  // query function — see ai/actions.ts getDocumentProcessingStatus for the
+  // write-back variant, which currently has no callers and so never runs).
+  // Jobs are matched to documents by fileUrl (each upload gets its own job).
+  const documentUrls = extractDocumentUrls(application.documents)
+  const documentJobs = documentUrls.length
+    ? await db.documentProcessingJob.findMany({
+        where: { schoolId, fileUrl: { in: documentUrls } },
+        select: documentJobSelect,
+      })
+    : []
+
+  return { ...application, documentJobs }
 }
 
 export async function getMeritList(

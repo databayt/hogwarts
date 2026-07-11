@@ -202,7 +202,11 @@ describe("updateApplicationStatus - offer expiry", () => {
 
     await updateApplicationStatus({ id: "app-1", status: "SELECTED" })
 
-    expect(db.admissionSettings.findUnique).toHaveBeenCalledTimes(1)
+    // Scope to the offer-expiry lookup specifically — dispatchAdmissionNotification
+    // now also reads admissionSettings for the autoEmailNotifications toggle.
+    expect(db.admissionSettings.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ select: { offerExpiryDays: true } })
+    )
 
     const updateCall = vi.mocked(db.application.update).mock.calls[0][0] as any
     const expiryDate = updateCall.data.offerExpiryDate as Date
@@ -222,7 +226,11 @@ describe("updateApplicationStatus - offer expiry", () => {
 
     await updateApplicationStatus({ id: "app-1", status: "SHORTLISTED" })
 
-    expect(db.admissionSettings.findUnique).not.toHaveBeenCalled()
+    // The offer-expiry lookup must not fire for a non-SELECTED transition (the
+    // autoEmailNotifications lookup inside notification dispatch may still run).
+    expect(db.admissionSettings.findUnique).not.toHaveBeenCalledWith(
+      expect.objectContaining({ select: { offerExpiryDays: true } })
+    )
 
     // Verify the update still happened, but without offer fields
     expect(db.application.update).toHaveBeenCalledTimes(1)

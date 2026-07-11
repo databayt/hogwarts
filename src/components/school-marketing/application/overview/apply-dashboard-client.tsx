@@ -30,8 +30,12 @@ export default function ApplyDashboardClient({
   const handleResumeDraft = (sessionToken: string) => {
     const draft = draftApplications.find((d) => d.sessionToken === sessionToken)
     if (draft) {
+      // Resume straight into the wizard with the draft's session token so
+      // ApplySessionProvider can rehydrate the saved formData, instead of
+      // routing through the marketing overview page (which drops the token
+      // and always starts a blank application).
       router.push(
-        `/${lang}/application/overview?id=${draft.campaignId || campaignId}`
+        `/${lang}/application/${draft.campaignId || campaignId}/attachments?token=${encodeURIComponent(draft.sessionToken)}`
       )
     }
   }

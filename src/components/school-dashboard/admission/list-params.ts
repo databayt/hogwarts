@@ -9,6 +9,46 @@ import {
 
 import { getSortingStateParser } from "@/components/table/lib/parsers"
 
+// Explicit column-id allowlists for `?sort=` — must match (a) the columns
+// actually rendered with a sort control in the corresponding *-columns.tsx
+// and (b) fields buildOrderBy can pass straight through to Prisma (real
+// scalar columns on the queried model, not computed/aliased display values
+// like `applicantName`/`campaignName`/`offerStatus`). Without an allowlist,
+// getSortingStateParser() accepts any arbitrary field name.
+const CAMPAIGN_SORT_IDS: string[] = [
+  "name",
+  "academicYear",
+  "status",
+  "applicationFee",
+  "totalSeats",
+  "startDate",
+  "endDate",
+]
+
+const APPLICATION_SORT_IDS: string[] = [
+  "applicationNumber",
+  "applyingForClass",
+  "status",
+  "meritRank",
+  "submittedAt",
+]
+
+const MERIT_SORT_IDS: string[] = [
+  "meritRank",
+  "applicationNumber",
+  "category",
+  "meritScore",
+  "entranceScore",
+  "interviewScore",
+  "status",
+]
+
+const ENROLLMENT_SORT_IDS: string[] = [
+  "meritRank",
+  "applicationNumber",
+  "applyingForClass",
+]
+
 // Campaigns search params
 export const campaignsSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -16,7 +56,7 @@ export const campaignsSearchParams = createSearchParamsCache({
   name: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
   academicYear: parseAsString.withDefault(""),
-  sort: getSortingStateParser().withDefault([]),
+  sort: getSortingStateParser(CAMPAIGN_SORT_IDS).withDefault([]),
 })
 
 export type CampaignsSearch = Awaited<
@@ -31,7 +71,7 @@ export const applicationsSearchParams = createSearchParamsCache({
   campaignId: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
   applyingForClass: parseAsString.withDefault(""),
-  sort: getSortingStateParser().withDefault([]),
+  sort: getSortingStateParser(APPLICATION_SORT_IDS).withDefault([]),
 })
 
 export type ApplicationsSearch = Awaited<
@@ -42,10 +82,11 @@ export type ApplicationsSearch = Awaited<
 export const meritSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
+  search: parseAsString.withDefault(""),
   campaignId: parseAsString.withDefault(""),
   category: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
-  sort: getSortingStateParser().withDefault([]),
+  sort: getSortingStateParser(MERIT_SORT_IDS).withDefault([]),
 })
 
 export type MeritSearch = Awaited<ReturnType<typeof meritSearchParams.parse>>
@@ -54,11 +95,12 @@ export type MeritSearch = Awaited<ReturnType<typeof meritSearchParams.parse>>
 export const enrollmentSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
+  search: parseAsString.withDefault(""),
   campaignId: parseAsString.withDefault(""),
   offerStatus: parseAsString.withDefault(""),
   feeStatus: parseAsString.withDefault(""),
   documentStatus: parseAsString.withDefault(""),
-  sort: getSortingStateParser().withDefault([]),
+  sort: getSortingStateParser(ENROLLMENT_SORT_IDS).withDefault([]),
 })
 
 export type EnrollmentSearch = Awaited<

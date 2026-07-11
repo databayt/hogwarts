@@ -84,7 +84,10 @@ export default function ContinueApplicationContent({
   const onSubmit = async (data: ContinueFormData) => {
     setIsLoading(true)
     try {
-      const result = await resumeApplicationSession(data.sessionToken || "")
+      const result = await resumeApplicationSession(
+        data.sessionToken || "",
+        subdomain ?? undefined
+      )
 
       if (result.success && result.data) {
         // Redirect to the application form with the session token

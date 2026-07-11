@@ -3901,7 +3901,7 @@
         "weekend": "Weekend",
         "periodsDay": "Periods/day",
         "duration": "Duration",
-        "startTime": "Start",
+        "startTime": "Start Time",
         "applyPreset": "Apply schedule",
         "bestMatch": "Best Match",
         "customSchedule": "Custom",
@@ -3923,7 +3923,6 @@
         "createNewPeriod": "Create a new period for the schedule",
         "periodName": "Period Name",
         "periodNamePlaceholder": "e.g., Period 1, Break, Lunch",
-        "startTime": "Start Time",
         "endTime": "End Time",
         "createPeriod": "Create Period",
         "editPeriod": "Edit Period",
@@ -9205,7 +9204,9 @@
         "placementConfirmed": "Student placed in section",
         "seatsLeft": "seats left",
         "sectionFull": "Full",
-        "viewFees": "View Fees"
+        "viewFees": "View Fees",
+        "confirmRegPayment": "Confirm Registration Payment",
+        "regPaymentConfirmed": "Registration payment confirmed"
       },
       "warnings": {
         "noFeeStructureMatch": "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees.",
@@ -9258,7 +9259,18 @@
         "bankName": "Bank Name",
         "accountName": "Account Name",
         "accountNumber": "Account Number",
-        "swiftCode": "SWIFT Code"
+        "swiftCode": "SWIFT Code",
+        "publicPortal": "Public Portal",
+        "publicPortalDescription": "Control which public-facing admission entry points are active",
+        "enablePublicPortal": "Enable Public Portal",
+        "enablePublicPortalDesc": "Turn the public admission portal on or off entirely",
+        "enableInquiryForm": "Enable Inquiry Form",
+        "enableInquiryFormDesc": "Allow prospective families to submit inquiries",
+        "enableTourBooking": "Enable Tour Booking",
+        "enableTourBookingDesc": "Allow families to book a campus tour online",
+        "enableStatusTracker": "Enable Status Tracker",
+        "enableStatusTrackerDesc": "Let applicants check their application status without logging in",
+        "totalWeight": "Total"
       },
       "form": {
         "stepPersonal": "Personal Information",
@@ -9656,7 +9668,9 @@
           "incompleteAcademic": "Please complete the Academic Information step",
           "failedToSaveSession": "Failed to save session",
           "failedToSubmit": "Failed to submit",
-          "rateLimited": "Too many attempts. Please wait a moment and try again."
+          "rateLimited": "Too many attempts. Please wait a moment and try again.",
+          "documentsRequired": "Please upload the required documents before submitting",
+          "applicationAlreadySubmitted": "This application has already been submitted"
         },
         "submit": "Submit"
       },
@@ -10132,6 +10146,23 @@
         "noInquiriesDescription": "Inquiries submitted via the public portal will appear here",
         "noTourBookings": "No tour bookings yet",
         "noTourBookingsDescription": "Tour bookings from the portal will appear here"
+      },
+      "errors": {
+        "forbidden": "You don't have permission to do this.",
+        "sectionAtCapacity": "This section is full. Choose another section.",
+        "validationError": "Please check your input and try again.",
+        "generic": "Something went wrong. Please try again."
+      },
+      "statusBanner": {
+        "applicationLabel": "Application",
+        "waitingApproval": "waiting for approval",
+        "approvedContinuePayment": "approved, continue with payment",
+        "payNow": "Pay Now",
+        "approvedPaymentReceived": "approved, payment received",
+        "enrolled": "enrolled",
+        "notAccepted": "not accepted",
+        "withdrawn": "withdrawn",
+        "dismiss": "Dismiss"
       }
     },
     "membership": {

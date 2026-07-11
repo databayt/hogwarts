@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import {
   confirmEnrollment,
+  confirmRegistrationPayment,
   createCampaign,
   deleteCampaign,
   fetchCampaignOptions,
@@ -125,11 +126,16 @@ vi.mock("@/lib/db", () => ({
     },
     guardianPhoneNumber: {
       create: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     studentDocument: {
       create: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     $transaction: vi.fn(),
+    // Row-lock probe in placeStudentInSection (TOCTOU fix) — result unused,
+    // just needs to resolve.
+    $queryRaw: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -147,6 +153,19 @@ vi.mock("@/lib/dispatch-notification", () => ({
 
 vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
   createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
+}))
+
+// updateApplicationStatus dynamically imports these for the dedicated
+// SELECTED-offer email — mock so a real Resend client is never constructed.
+vi.mock("@/lib/email-templates/admission", () => ({
+  buildOfferEmail: vi
+    .fn()
+    .mockReturnValue({ subject: "Offer", html: "<p>offer</p>" }),
+}))
+
+vi.mock("@/components/school-dashboard/notifications/email-service", () => ({
+  sendNotificationEmail: vi.fn().mockResolvedValue(undefined),
+  sendRawEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
 // confirmEnrollment delegates fee assignment + invoice fan-out to the canonical
@@ -662,6 +681,61 @@ describe("Admission Actions", () => {
       })
 
       expect(result.success).toBe(true)
+    })
+
+    it("sends the guest applicant (no userId) a directEmail status + offer email on SELECTED", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        status: "UNDER_REVIEW",
+        accessToken: "existing-token-abc",
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+      vi.mocked(db.application.findFirst).mockResolvedValue({
+        userId: null,
+        firstName: "Amina",
+        lastName: "Yousef",
+        campaignId: "camp-1",
+        accessToken: "existing-token-abc",
+        email: "guest-applicant@test.com",
+        applicationNumber: "APP-001",
+        fatherName: null,
+        motherName: null,
+        offerExpiryDate: null,
+      } as any)
+      vi.mocked(db.school.findFirst).mockResolvedValue({
+        preferredLanguage: "en",
+        name: "Test School",
+        nameEn: "Test School",
+        domain: "testschool",
+      } as any)
+
+      const { dispatchNotification } =
+        await import("@/lib/dispatch-notification")
+      const { sendRawEmail } =
+        await import("@/components/school-dashboard/notifications/email-service")
+
+      const result = await updateApplicationStatus({
+        id: "a-1",
+        status: "SELECTED",
+      })
+
+      expect(result.success).toBe(true)
+
+      // Status-change notification goes out via directEmail, not userId —
+      // guests have no in-app inbox to write to.
+      const directEmailCall = vi
+        .mocked(dispatchNotification)
+        .mock.calls.find(
+          (call) => (call[0] as any).directEmail === "guest-applicant@test.com"
+        )
+      expect(directEmailCall).toBeDefined()
+      expect((directEmailCall![0] as any).userId).toBeUndefined()
+      expect((directEmailCall![0] as any).channels).toEqual(["email"])
+
+      // The dedicated offer email (with the registration link) must also
+      // fire for guests — previously gated entirely behind `userId`.
+      expect(sendRawEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: "guest-applicant@test.com" })
+      )
     })
   })
 
@@ -1192,6 +1266,126 @@ describe("Admission Actions", () => {
   })
 
   // =========================================================================
+  // confirmRegistrationPayment (P0: cash/bank registration fee was never
+  // markable as paid — the public offer portal only records the parent's
+  // INTENT, never the confirmation)
+  // =========================================================================
+
+  describe("confirmRegistrationPayment", () => {
+    it("confirms a cash registration payment", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: "cash",
+        registrationFeePaid: false,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.application.update).toHaveBeenCalledWith({
+        where: { id: "a-1", schoolId: SCHOOL_ID },
+        data: {
+          registrationFeePaid: true,
+          registrationFeeDate: expect.any(Date),
+        },
+      })
+    })
+
+    it("confirms a bank_transfer registration payment", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: "bank_transfer",
+        registrationFeePaid: false,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+      vi.mocked(db.application.update).mockResolvedValue({} as any)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(true)
+    })
+
+    it("rejects when already paid", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: "cash",
+        registrationFeePaid: true,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("REGISTRATION_FEE_ALREADY_PAID")
+      expect(db.application.update).not.toHaveBeenCalled()
+    })
+
+    it("rejects when no payment method has been recorded yet", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: null,
+        registrationFeePaid: false,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("REGISTRATION_FEE_METHOD_MISSING")
+      expect(db.application.update).not.toHaveBeenCalled()
+    })
+
+    it("rejects card/online methods — those are confirmed only by their payment webhook", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue({
+        registrationFeeMethod: "stripe",
+        registrationFeePaid: false,
+        userId: "user-1",
+        email: "parent@test.com",
+      } as any)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("REGISTRATION_FEE_METHOD_INVALID")
+      expect(db.application.update).not.toHaveBeenCalled()
+    })
+
+    it("returns not found when the application does not exist in this school", async () => {
+      vi.mocked(db.application.findUnique).mockResolvedValue(null)
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "nonexistent",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("ADMISSION_NOT_FOUND")
+    })
+
+    it("returns unauthorized when there is no session", async () => {
+      mockUnauthenticated()
+
+      const result = await confirmRegistrationPayment({
+        applicationId: "a-1",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("UNAUTHORIZED")
+    })
+  })
+
+  // =========================================================================
   // getAvailableClassesForPlacement
   // =========================================================================
 
@@ -1273,6 +1467,26 @@ describe("Admission Actions", () => {
         where: { id: "student-1" },
         data: { sectionId: "sec-1" },
       })
+    })
+
+    it("row-locks the section (FOR UPDATE) before reading its capacity, to serialize concurrent placements", async () => {
+      setupPlacementMocks()
+
+      await placeStudentInSection({
+        applicationId: "a-1",
+        sectionId: "sec-1",
+      })
+
+      // TOCTOU fix: without this lock, two concurrent placements can both
+      // read "1 seat left" under Read Committed and both write, overselling
+      // the section. Verifies the lock statement runs before the capacity
+      // check commits to a write.
+      expect(db.$queryRaw).toHaveBeenCalled()
+      const queryRawCallArgs = vi.mocked(db.$queryRaw).mock.calls[0]
+      const sqlStrings = queryRawCallArgs[0] as unknown as string[]
+      expect(sqlStrings.join("")).toContain("FOR UPDATE")
+      expect(queryRawCallArgs).toContain("sec-1")
+      expect(queryRawCallArgs).toContain(SCHOOL_ID)
     })
 
     it("rejects placement for non-ADMITTED application", async () => {

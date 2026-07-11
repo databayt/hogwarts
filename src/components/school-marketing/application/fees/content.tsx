@@ -115,7 +115,6 @@ export default function FeesContent({ dictionary }: Props) {
       const stepStatus = getStepValidationStatus(currentSession.formData)
       const stepErrorMap: Record<string, string> = {
         personal: errorDict.incompletePersonal || errorDict.completeAllSteps,
-        contact: errorDict.incompleteContact || errorDict.completeAllSteps,
         location: errorDict.incompleteLocation || errorDict.completeAllSteps,
         guardian: errorDict.incompleteGuardian || errorDict.completeAllSteps,
         academic: errorDict.incompleteAcademic || errorDict.completeAllSteps,
@@ -175,7 +174,12 @@ export default function FeesContent({ dictionary }: Props) {
         const msg =
           result.error === "RATE_LIMITED"
             ? errorDict.rateLimited || errorDict.failedToSubmit
-            : result.error || errorDict.failedToSubmit
+            : result.error === "DOCUMENTS_REQUIRED"
+              ? errorDict.documentsRequired || errorDict.failedToSubmit
+              : result.error === "APPLICATION_ALREADY_SUBMITTED"
+                ? errorDict.applicationAlreadySubmitted ||
+                  errorDict.failedToSubmit
+                : result.error || errorDict.failedToSubmit
         throw new Error(msg)
       }
 

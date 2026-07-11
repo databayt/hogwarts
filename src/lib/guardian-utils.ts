@@ -77,7 +77,13 @@ export async function createOrLinkGuardian(
     update: {},
   })
 
-  // 2. Create or find Guardian (unique by schoolId + email if provided)
+  // 2. Create or find Guardian.
+  //    - Unique by schoolId + email when provided.
+  //    - Otherwise fall back to a phone-number lookup (GuardianPhoneNumber is
+  //      schoolId-scoped) before creating — without this, two submissions
+  //      for the same guardian with no email on file (e.g. the same father
+  //      listed on two siblings' applications) always created a duplicate
+  //      Guardian row instead of reusing the existing one.
   let guardian
   if (email) {
     guardian = await tx.guardian.upsert({
@@ -87,6 +93,21 @@ export async function createOrLinkGuardian(
       create: { schoolId, firstName, lastName, emailAddress: email },
       update: {},
     })
+  } else if (phone) {
+    const existingPhone = await tx.guardianPhoneNumber.findFirst({
+      where: { schoolId, phoneNumber: phone },
+      select: { guardianId: true },
+    })
+    const existingGuardian = existingPhone
+      ? await tx.guardian.findFirst({
+          where: { id: existingPhone.guardianId, schoolId },
+        })
+      : null
+    guardian =
+      existingGuardian ??
+      (await tx.guardian.create({
+        data: { schoolId, firstName, lastName },
+      }))
   } else {
     guardian = await tx.guardian.create({
       data: { schoolId, firstName, lastName },

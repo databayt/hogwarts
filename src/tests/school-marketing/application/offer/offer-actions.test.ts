@@ -4,12 +4,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { resolveSchoolLang } from "@/lib/dispatch-notification"
+import { resolveAvailableMethods } from "@/lib/payment/provider"
 import { checkUserRateLimit } from "@/lib/rate-limit"
 import {
   acceptOffer,
   createRegistrationFeeCheckout,
   declineOffer,
+  getOfferDetails,
+  recordRegistrationBankTransferIntent,
+  recordRegistrationCashIntent,
 } from "@/components/school-marketing/application/offer/actions"
+import { computeAvailableGateways } from "@/components/school-marketing/application/offer/gateways"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -46,10 +52,12 @@ vi.mock("@/lib/rate-limit", () => ({
 vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn(),
   dispatchNotificationsToAudience: vi.fn(),
+  resolveSchoolLang: vi.fn().mockResolvedValue("ar"),
 }))
 
 vi.mock("@/lib/payment/provider", () => ({
   createPaymentCheckout: vi.fn(),
+  resolveAvailableMethods: vi.fn().mockReturnValue(["stripe"]),
 }))
 
 vi.mock("next/cache", () => ({
@@ -106,6 +114,12 @@ const mockRL = checkUserRateLimit as ReturnType<typeof vi.fn>
 const mockFindFirst = db.application.findFirst as ReturnType<typeof vi.fn>
 const mockUpdate = db.application.update as ReturnType<typeof vi.fn>
 const mockSchoolFindUnique = db.school.findUnique as ReturnType<typeof vi.fn>
+const mockAdmissionSettingsFindUnique = db.admissionSettings
+  .findUnique as ReturnType<typeof vi.fn>
+const mockResolveAvailableMethods = resolveAvailableMethods as ReturnType<
+  typeof vi.fn
+>
+const mockResolveSchoolLang = resolveSchoolLang as ReturnType<typeof vi.fn>
 
 function allowRateLimit() {
   mockRL.mockResolvedValue({ allowed: true, remaining: 4, resetTime: 0 })
@@ -116,6 +130,16 @@ function blockRateLimit() {
     allowed: false,
     remaining: 0,
     resetTime: Date.now() + 60_000,
+  })
+}
+
+/** Default: online payment enabled, stripe resolvable, no admin allowlist. */
+function allowOnlineGateway(overrides: Record<string, unknown> = {}) {
+  mockResolveAvailableMethods.mockReturnValue(["stripe"])
+  mockAdmissionSettingsFindUnique.mockResolvedValue({
+    enableOnlinePayment: true,
+    paymentMethods: null,
+    ...overrides,
   })
 }
 
@@ -226,6 +250,8 @@ describe("createRegistrationFeeCheckout", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     allowRateLimit()
+    allowOnlineGateway()
+    mockSchoolFindUnique.mockResolvedValue({ currency: "SAR", domain: "demo" })
     ;(db.class.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([])
     ;(db.feeStructure.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
       []
@@ -237,7 +263,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({ success: false, error: "RATE_LIMITED" })
     expect(mockFindFirst).not.toHaveBeenCalled()
@@ -248,7 +275,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({ success: false, error: "OFFER_NOT_ACCEPTED" })
   })
@@ -262,7 +290,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({ success: false, error: "OFFER_NOT_AVAILABLE" })
   })
@@ -274,7 +303,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({ success: false, error: "OFFER_EXPIRED" })
   })
@@ -286,7 +316,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({
       success: false,
@@ -317,7 +348,8 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
 
     // Stale state was cleared before proceeding
@@ -346,8 +378,72 @@ describe("createRegistrationFeeCheckout", () => {
     const result = await createRegistrationFeeCheckout(
       APPLICATION_ID,
       ACCESS_TOKEN,
-      "en"
+      "en",
+      "stripe"
     )
     expect(result).toEqual({ success: false, error: "NO_FEE_CONFIGURED" })
+  })
+
+  it("rejects cash as a gateway — it has its own dedicated action", async () => {
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "cash"
+    )
+    expect(result).toEqual({
+      success: false,
+      error: "PAYMENT_METHOD_NOT_AVAILABLE",
+    })
+  })
+
+  it("rejects bank_transfer as a gateway — it has its own dedicated action", async () => {
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "bank_transfer"
+    )
+    expect(result).toEqual({
+      success: false,
+      error: "PAYMENT_METHOD_NOT_AVAILABLE",
+    })
+  })
+
+  it("rejects a gateway not resolved for the school (e.g. unsupported currency)", async () => {
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+    // No online gateway resolves for this school/currency (e.g. Stripe
+    // excluded because the school's currency isn't supported).
+    mockResolveAvailableMethods.mockReturnValue([])
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+    expect(result).toEqual({
+      success: false,
+      error: "PAYMENT_METHOD_NOT_AVAILABLE",
+    })
+  })
+
+  it("rejects an online gateway when the school has not enabled online payment", async () => {
+    mockFindFirst.mockResolvedValue(makeApplication({ offerAccepted: true }))
+    mockAdmissionSettingsFindUnique.mockResolvedValue({
+      enableOnlinePayment: false,
+      paymentMethods: null,
+    })
+    const result = await createRegistrationFeeCheckout(
+      APPLICATION_ID,
+      ACCESS_TOKEN,
+      "en",
+      "stripe"
+    )
+    expect(result).toEqual({
+      success: false,
+      error: "PAYMENT_METHOD_NOT_AVAILABLE",
+    })
   })
 })

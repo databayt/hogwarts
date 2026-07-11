@@ -8,7 +8,6 @@
 
 import type {
   AcademicStepData,
-  ContactStepData,
   GuardianStepData,
   LocationStepData,
   PersonalStepData,
@@ -23,16 +22,6 @@ export function validatePersonalStep(
 ): boolean {
   if (!data) return false
   return !!(data.firstName && data.lastName && data.phone)
-}
-
-/**
- * Validate contact step data
- * Contact is now merged into personal; always valid
- */
-export function validateContactStep(
-  _data: ContactStepData | undefined
-): boolean {
-  return true
 }
 
 /**
@@ -73,14 +62,12 @@ export function validateAcademicStep(
  */
 export function validateAllSteps(formData: {
   personal?: PersonalStepData
-  contact?: ContactStepData
   location?: LocationStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
 }): boolean {
   return (
     validatePersonalStep(formData.personal) &&
-    validateContactStep(formData.contact) &&
     validateLocationStep(formData.location) &&
     validateGuardianStep(formData.guardian) &&
     validateAcademicStep(formData.academic)
@@ -92,14 +79,12 @@ export function validateAllSteps(formData: {
  */
 export function getStepValidationStatus(formData: {
   personal?: PersonalStepData
-  contact?: ContactStepData
   location?: LocationStepData
   guardian?: GuardianStepData
   academic?: AcademicStepData
 }): Record<string, boolean> {
   return {
     personal: validatePersonalStep(formData.personal),
-    contact: validateContactStep(formData.contact),
     location: validateLocationStep(formData.location),
     guardian: validateGuardianStep(formData.guardian),
     academic: validateAcademicStep(formData.academic),

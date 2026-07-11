@@ -3901,7 +3901,7 @@
         "weekend": "عطلة نهاية الأسبوع",
         "periodsDay": "حصص/يوم",
         "duration": "المدة",
-        "startTime": "البداية",
+        "startTime": "وقت البدء",
         "applyPreset": "تطبيق الجدول",
         "bestMatch": "الأنسب",
         "customSchedule": "مخصص",
@@ -3923,7 +3923,6 @@
         "createNewPeriod": "إنشاء حصة جديدة للجدول",
         "periodName": "اسم الحصة",
         "periodNamePlaceholder": "مثال: الحصة 1، استراحة، غداء",
-        "startTime": "وقت البدء",
         "endTime": "وقت الانتهاء",
         "createPeriod": "إنشاء حصة",
         "editPeriod": "تعديل حصة",
@@ -9213,7 +9212,9 @@
         "placementConfirmed": "تم تعيين الطالب في الفصل",
         "seatsLeft": "مقاعد متاحة",
         "sectionFull": "ممتلئ",
-        "viewFees": "عرض الرسوم"
+        "viewFees": "عرض الرسوم",
+        "confirmRegPayment": "تأكيد دفع رسوم التسجيل",
+        "regPaymentConfirmed": "تم تأكيد دفع رسوم التسجيل"
       },
       "warnings": {
         "noFeeStructureMatch": "لا يوجد هيكل رسوم مطابق — تم تخطي الرسوم. قم بتكوين هيكل رسوم في المالية > الرسوم.",
@@ -9266,7 +9267,18 @@
         "bankName": "اسم البنك",
         "accountName": "اسم الحساب",
         "accountNumber": "رقم الحساب",
-        "swiftCode": "رمز SWIFT"
+        "swiftCode": "رمز SWIFT",
+        "publicPortal": "البوابة العامة",
+        "publicPortalDescription": "التحكم في نقاط الدخول العامة النشطة لبوابة القبول",
+        "enablePublicPortal": "تفعيل البوابة العامة",
+        "enablePublicPortalDesc": "تشغيل أو إيقاف بوابة القبول العامة بالكامل",
+        "enableInquiryForm": "تفعيل نموذج الاستفسار",
+        "enableInquiryFormDesc": "السماح للعائلات المهتمة بإرسال استفسارات",
+        "enableTourBooking": "تفعيل حجز الجولة",
+        "enableTourBookingDesc": "السماح للعائلات بحجز جولة في الحرم المدرسي عبر الإنترنت",
+        "enableStatusTracker": "تفعيل متتبع الحالة",
+        "enableStatusTrackerDesc": "السماح للمتقدمين بمتابعة حالة طلبهم دون تسجيل الدخول",
+        "totalWeight": "الإجمالي"
       },
       "form": {
         "stepPersonal": "المعلومات الشخصية",
@@ -9664,7 +9676,9 @@
           "incompleteAcademic": "يرجى إكمال خطوة المعلومات الأكاديمية",
           "failedToSaveSession": "فشل في حفظ الجلسة",
           "failedToSubmit": "فشل في تقديم الطلب",
-          "rateLimited": "محاولات كثيرة. يرجى الانتظار قليلاً والمحاولة مرة أخرى."
+          "rateLimited": "محاولات كثيرة. يرجى الانتظار قليلاً والمحاولة مرة أخرى.",
+          "documentsRequired": "يرجى رفع المستندات المطلوبة قبل التقديم",
+          "applicationAlreadySubmitted": "تم تقديم هذا الطلب مسبقاً"
         },
         "submit": "تقديم"
       },
@@ -10140,6 +10154,23 @@
         "noInquiriesDescription": "ستظهر هنا الاستفسارات المقدمة عبر البوابة العامة",
         "noTourBookings": "لا توجد حجوزات جولات بعد",
         "noTourBookingsDescription": "ستظهر هنا حجوزات الجولات من البوابة"
+      },
+      "errors": {
+        "forbidden": "ليس لديك صلاحية للقيام بذلك.",
+        "sectionAtCapacity": "هذا الفصل ممتلئ. اختر فصلاً آخر.",
+        "validationError": "يرجى التحقق من البيانات المدخلة والمحاولة مرة أخرى.",
+        "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+      },
+      "statusBanner": {
+        "applicationLabel": "طلب رقم",
+        "waitingApproval": "بانتظار الموافقة",
+        "approvedContinuePayment": "تمت الموافقة، أكمل الدفع",
+        "payNow": "ادفع الآن",
+        "approvedPaymentReceived": "تمت الموافقة، تم الدفع",
+        "enrolled": "تم التسجيل",
+        "notAccepted": "لم يتم القبول",
+        "withdrawn": "تم السحب",
+        "dismiss": "إغلاق"
       }
     },
     "membership": {

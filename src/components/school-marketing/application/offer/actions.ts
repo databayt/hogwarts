@@ -10,18 +10,34 @@ import { db } from "@/lib/db"
 import {
   dispatchNotification,
   dispatchNotificationsToAudience,
+  resolveSchoolLang,
 } from "@/lib/dispatch-notification"
 import { extractGradeNumber } from "@/lib/grade-utils"
 import { toSmallestUnit } from "@/lib/payment/currency"
 import { createPaymentCheckout } from "@/lib/payment/provider"
-import type { PaymentCheckoutResult } from "@/lib/payment/types"
+import type { PaymentCheckoutResult, PaymentGateway } from "@/lib/payment/types"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+
+import { computeAvailableGateways } from "./gateways"
 
 // ============================================================================
 // Types
 // ============================================================================
 
+/**
+ * Discriminates a valid-token offer view from a bare fetch error.
+ * - "active": SELECTED and not expired — the normal accept/pay flow.
+ * - "declined": applicant withdrew (status moved to WITHDRAWN).
+ * - "expired": SELECTED but past offerExpiryDate.
+ * - "already_enrolled": school confirmed enrollment (status ADMITTED).
+ * Applications that never reached an offer at all (still under review,
+ * rejected, waitlisted, draft, ...) are NOT covered here — those remain a
+ * bare `{ success: false, error: "OFFER_NOT_AVAILABLE" }` (true 404).
+ */
+export type OfferState = "active" | "declined" | "expired" | "already_enrolled"
+
 export interface OfferDetails {
+  offerState: OfferState
   application: {
     id: string
     applicationNumber: string
@@ -63,6 +79,8 @@ export interface OfferDetails {
     installments: number
   }[]
   registrationFeeTotal: number
+  /** Gateways the applicant may pay the registration fee with, in priority order. */
+  availableGateways: PaymentGateway[]
 }
 
 // ============================================================================
@@ -261,14 +279,22 @@ export async function getOfferDetails(
 
     const { application } = result
 
-    // Must be in SELECTED status for offer to be active
-    if (application.status !== "SELECTED") {
+    // Determine the offer's state from a valid token. WITHDRAWN (declined)
+    // and ADMITTED (already enrolled) are valid, non-active outcomes with
+    // their own friendly card in OfferContent — only applications that never
+    // reached an offer at all (still under review, rejected, waitlisted, ...)
+    // stay a true 404.
+    let offerState: OfferState
+    if (application.status === "WITHDRAWN") {
+      offerState = "declined"
+    } else if (application.status === "ADMITTED") {
+      offerState = "already_enrolled"
+    } else if (application.status !== "SELECTED") {
       return { success: false, error: "OFFER_NOT_AVAILABLE" }
-    }
-
-    // Check offer expiry
-    if (isOfferExpired(application.offerExpiryDate)) {
-      return { success: false, error: "OFFER_EXPIRED" }
+    } else if (isOfferExpired(application.offerExpiryDate)) {
+      offerState = "expired"
+    } else {
+      offerState = "active"
     }
 
     const schoolId = application.schoolId
@@ -282,12 +308,26 @@ export async function getOfferDetails(
         nameEn: true,
         address: true,
         currency: true,
+        country: true,
+        timezone: true,
       },
     })
 
     if (!school) {
       return { success: false, error: "SCHOOL_NOT_FOUND" }
     }
+
+    // Resolve which gateways the applicant may pay the registration fee with.
+    const admissionSettings = await db.admissionSettings.findUnique({
+      where: { schoolId },
+      select: { enableOnlinePayment: true, paymentMethods: true },
+    })
+    const availableGateways = computeAvailableGateways(
+      school.country,
+      school.timezone,
+      school.currency ?? "USD",
+      admissionSettings
+    )
 
     // Fetch fee schedule preview
     const gradeClassIds = await getGradeClassIds(
@@ -330,6 +370,7 @@ export async function getOfferDetails(
     return {
       success: true,
       data: {
+        offerState,
         application: {
           id: application.id,
           applicationNumber: application.applicationNumber,
@@ -377,6 +418,7 @@ export async function getOfferDetails(
           installments: fs.installments,
         })),
         registrationFeeTotal,
+        availableGateways,
       },
     }
   } catch (error) {
@@ -431,40 +473,30 @@ export async function acceptOffer(
     }
 
     const now = new Date()
-
-    await db.application.update({
-      where: { id: applicationId, schoolId: application.schoolId },
-      data: {
-        offerAccepted: true,
-        offerAcceptedAt: now,
-      },
-    })
-
-    // Notify school admins
     const applicantName = `${application.firstName} ${application.lastName}`
-    await dispatchNotificationsToAudience({
-      schoolId: application.schoolId,
-      type: "system_alert",
-      title: t(NOTIF.offerAccepted.title, "ar"),
-      body: t(NOTIF.offerAccepted.body(applicantName), "ar"),
-      lang: "ar",
-      priority: "high",
-      targetScope: "role",
-      targetRole: "ADMIN",
-      metadata: {
-        applicationId: application.id,
-        applicationNumber: application.applicationNumber,
-        action: "offer_accepted",
-      },
-    })
 
-    // Also notify in English for bilingual schools
+    // Resolve the school's notification language once — run alongside the
+    // write since neither depends on the other's result.
+    const [, lang] = await Promise.all([
+      db.application.update({
+        where: { id: applicationId, schoolId: application.schoolId },
+        data: {
+          offerAccepted: true,
+          offerAcceptedAt: now,
+        },
+      }),
+      resolveSchoolLang(application.schoolId),
+    ])
+
+    // Notify school admins — once, in the school's own language (previously
+    // dispatched twice, ar then en, spamming admins with a duplicate in a
+    // language their school doesn't use).
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
       type: "system_alert",
-      title: t(NOTIF.offerAccepted.title, "en"),
-      body: t(NOTIF.offerAccepted.body(applicantName), "en"),
-      lang: "en",
+      title: t(NOTIF.offerAccepted.title, lang),
+      body: t(NOTIF.offerAccepted.body(applicantName), lang),
+      lang,
       priority: "high",
       targetScope: "role",
       targetRole: "ADMIN",
@@ -481,9 +513,9 @@ export async function acceptOffer(
         schoolId: application.schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: t(NOTIF.offerAccepted.title, "ar"),
-        body: t(NOTIF.offerAccepted.body(applicantName), "ar"),
-        lang: "ar",
+        title: t(NOTIF.offerAccepted.title, lang),
+        body: t(NOTIF.offerAccepted.body(applicantName), lang),
+        lang,
       })
     }
 
@@ -540,40 +572,32 @@ export async function declineOffer(
       return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
     }
 
-    await db.application.update({
-      where: { id: applicationId, schoolId: application.schoolId },
-      data: {
-        status: "WITHDRAWN",
-        // Clear acceptance so a withdrawn offer can't slip past the
-        // offerAccepted-only gates on the payment actions.
-        offerAccepted: false,
-      },
-    })
-
-    // Notify school admins
     const applicantName = `${application.firstName} ${application.lastName}`
-    await dispatchNotificationsToAudience({
-      schoolId: application.schoolId,
-      type: "system_alert",
-      title: t(NOTIF.offerDeclined.title, "ar"),
-      body: t(NOTIF.offerDeclined.body(applicantName), "ar"),
-      lang: "ar",
-      priority: "high",
-      targetScope: "role",
-      targetRole: "ADMIN",
-      metadata: {
-        applicationId: application.id,
-        applicationNumber: application.applicationNumber,
-        action: "offer_declined",
-      },
-    })
 
+    // Resolve the school's notification language once — run alongside the
+    // write since neither depends on the other's result.
+    const [, lang] = await Promise.all([
+      db.application.update({
+        where: { id: applicationId, schoolId: application.schoolId },
+        data: {
+          status: "WITHDRAWN",
+          // Clear acceptance so a withdrawn offer can't slip past the
+          // offerAccepted-only gates on the payment actions.
+          offerAccepted: false,
+        },
+      }),
+      resolveSchoolLang(application.schoolId),
+    ])
+
+    // Notify school admins — once, in the school's own language (previously
+    // dispatched twice, ar then en, spamming admins with a duplicate in a
+    // language their school doesn't use).
     await dispatchNotificationsToAudience({
       schoolId: application.schoolId,
       type: "system_alert",
-      title: t(NOTIF.offerDeclined.title, "en"),
-      body: t(NOTIF.offerDeclined.body(applicantName), "en"),
-      lang: "en",
+      title: t(NOTIF.offerDeclined.title, lang),
+      body: t(NOTIF.offerDeclined.body(applicantName), lang),
+      lang,
       priority: "high",
       targetScope: "role",
       targetRole: "ADMIN",
@@ -590,9 +614,9 @@ export async function declineOffer(
         schoolId: application.schoolId,
         userId: application.userId,
         type: "system_alert",
-        title: t(NOTIF.offerDeclined.title, "ar"),
-        body: t(NOTIF.offerDeclined.body(applicantName), "ar"),
-        lang: "ar",
+        title: t(NOTIF.offerDeclined.title, lang),
+        body: t(NOTIF.offerDeclined.body(applicantName), lang),
+        lang,
       })
     }
 
@@ -619,7 +643,8 @@ export async function declineOffer(
 export async function createRegistrationFeeCheckout(
   applicationId: string,
   accessToken: string,
-  locale: string
+  locale: string,
+  gateway: PaymentGateway
 ): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
     // Rate limit: 5 checkout attempts per minute per token (each attempt
@@ -681,17 +706,44 @@ export async function createRegistrationFeeCheckout(
 
     const schoolId = application.schoolId
 
-    // Get school details for currency
+    // Get school details for currency + gateway resolution
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: {
         currency: true,
         domain: true,
+        country: true,
+        timezone: true,
       },
     })
 
     if (!school) {
       return { success: false, error: "SCHOOL_NOT_FOUND" }
+    }
+
+    const currency = school.currency ?? "USD"
+
+    // Validate the requested gateway against what's actually available for
+    // this school — never trust the client-supplied gateway blindly. This is
+    // also what stops a Sudan school's "Pay Card" from ever reaching Stripe:
+    // Stripe isn't in SD's resolved gateway list, so it fails here instead of
+    // erroring inside Stripe on an unsupported SDG charge. cash/bank_transfer
+    // have their own dedicated actions — reject them here.
+    if (gateway === "cash" || gateway === "bank_transfer") {
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
+    }
+    const admissionSettings = await db.admissionSettings.findUnique({
+      where: { schoolId },
+      select: { enableOnlinePayment: true, paymentMethods: true },
+    })
+    const availableGateways = computeAvailableGateways(
+      school.country,
+      school.timezone,
+      currency,
+      admissionSettings
+    )
+    if (!availableGateways.includes(gateway)) {
+      return { success: false, error: "PAYMENT_METHOD_NOT_AVAILABLE" }
     }
 
     // Calculate the fee amount
@@ -708,11 +760,10 @@ export async function createRegistrationFeeCheckout(
       return { success: false, error: "NO_FEE_CONFIGURED" }
     }
 
-    const currency = school.currency ?? "USD"
     const referenceNumber = `REG-${nanoid(10).toUpperCase()}`
     const baseUrl = getBaseUrl(school.domain ?? "")
 
-    const checkoutResult = await createPaymentCheckout("stripe", {
+    const checkoutResult = await createPaymentCheckout(gateway, {
       amount: feeAmount,
       currency,
       context: "admission_fee",
@@ -747,7 +798,7 @@ export async function createRegistrationFeeCheckout(
     await db.application.update({
       where: { id: applicationId, schoolId },
       data: {
-        registrationFeeMethod: "stripe",
+        registrationFeeMethod: gateway,
         registrationFeeReference: referenceNumber,
         registrationFeeAmount: feeAmount,
       },
@@ -758,7 +809,7 @@ export async function createRegistrationFeeCheckout(
     return {
       success: true,
       data: {
-        method: "stripe",
+        method: gateway,
         checkoutUrl: checkoutResult.checkoutUrl,
         referenceNumber,
       },
@@ -782,6 +833,17 @@ export async function recordRegistrationCashIntent(
   accessToken: string
 ): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
+    // Rate limit: 5 attempts per minute per token (mirrors the checkout
+    // limiter — each attempt writes a fresh reference number).
+    const rl = await checkUserRateLimit(
+      `reg-cash:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-cash"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     const result = await validateAccessToken(applicationId, accessToken)
     if ("error" in result) {
       return { success: false, error: result.error }
@@ -802,29 +864,30 @@ export async function recordRegistrationCashIntent(
       return { success: false, error: "OFFER_NOT_ACCEPTED" }
     }
 
-    // Already paid
+    // Already paid — hard block. A method recorded but unpaid (the applicant
+    // picked a different method earlier, or an admin asked them to switch so
+    // the cash-confirm flow can proceed) is NOT a lock: re-recording below
+    // overwrites the stale method/reference/amount instead.
     if (application.registrationFeePaid) {
       return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
-    }
-
-    // Already has a payment method recorded
-    if (application.registrationFeeMethod) {
-      return { success: false, error: "PAYMENT_ALREADY_RECORDED" }
     }
 
     const schoolId = application.schoolId
     const referenceNumber = `RCASH-${nanoid(10).toUpperCase()}`
 
-    // Get school currency and cash instructions
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    })
-
-    const settings = await db.admissionSettings.findUnique({
-      where: { schoolId },
-      select: { cashPaymentInstructions: true },
-    })
+    // Get school currency, cash instructions, and notification language —
+    // independent reads, run together.
+    const [school, settings, lang] = await Promise.all([
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      }),
+      db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { cashPaymentInstructions: true },
+      }),
+      resolveSchoolLang(schoolId),
+    ])
 
     // Calculate fee amount
     const feeAmount = await calculateRegistrationFee(
@@ -860,14 +923,14 @@ export async function recordRegistrationCashIntent(
       },
     })
 
-    // Notify school admins about cash intent
+    // Notify school admins about cash intent — in the school's own language
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: t(NOTIF.registrationFeePaid.title, "ar"),
-      body: t(NOTIF.registrationFeePaid.body(applicantName, "cash"), "ar"),
-      lang: "ar",
+      title: t(NOTIF.registrationFeePaid.title, lang),
+      body: t(NOTIF.registrationFeePaid.body(applicantName, "cash"), lang),
+      lang,
       targetScope: "role",
       targetRole: "ADMIN",
       metadata: {
@@ -907,6 +970,17 @@ export async function recordRegistrationBankTransferIntent(
   accessToken: string
 ): Promise<ActionResponse<PaymentCheckoutResult>> {
   try {
+    // Rate limit: 5 attempts per minute per token (mirrors the checkout
+    // limiter — each attempt writes a fresh reference number).
+    const rl = await checkUserRateLimit(
+      `reg-bank:${accessToken}`,
+      RATE_LIMITS.AUTH,
+      "reg-bank"
+    )
+    if (!rl.allowed) {
+      return { success: false, error: "RATE_LIMITED" }
+    }
+
     const result = await validateAccessToken(applicationId, accessToken)
     if ("error" in result) {
       return { success: false, error: result.error }
@@ -927,29 +1001,30 @@ export async function recordRegistrationBankTransferIntent(
       return { success: false, error: "OFFER_NOT_ACCEPTED" }
     }
 
-    // Already paid
+    // Already paid — hard block. A method recorded but unpaid (the applicant
+    // picked a different method earlier, or an admin asked them to switch so
+    // the cash-confirm flow can proceed) is NOT a lock: re-recording below
+    // overwrites the stale method/reference/amount instead.
     if (application.registrationFeePaid) {
       return { success: false, error: "REGISTRATION_FEE_ALREADY_PAID" }
-    }
-
-    // Already has a payment method recorded
-    if (application.registrationFeeMethod) {
-      return { success: false, error: "PAYMENT_ALREADY_RECORDED" }
     }
 
     const schoolId = application.schoolId
     const referenceNumber = `RTRF-${nanoid(10).toUpperCase()}`
 
-    // Get school currency and bank details
-    const school = await db.school.findUnique({
-      where: { id: schoolId },
-      select: { currency: true },
-    })
-
-    const settings = await db.admissionSettings.findUnique({
-      where: { schoolId },
-      select: { bankDetails: true },
-    })
+    // Get school currency, bank details, and notification language —
+    // independent reads, run together.
+    const [school, settings, lang] = await Promise.all([
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      }),
+      db.admissionSettings.findUnique({
+        where: { schoolId },
+        select: { bankDetails: true },
+      }),
+      resolveSchoolLang(schoolId),
+    ])
 
     const bankDetails = settings?.bankDetails as Record<string, string> | null
 
@@ -993,17 +1068,18 @@ export async function recordRegistrationBankTransferIntent(
       },
     })
 
-    // Notify school admins about bank transfer intent
+    // Notify school admins about bank transfer intent — in the school's own
+    // language
     const applicantName = `${application.firstName} ${application.lastName}`
     await dispatchNotificationsToAudience({
       schoolId,
       type: "system_alert",
-      title: t(NOTIF.registrationFeePaid.title, "ar"),
+      title: t(NOTIF.registrationFeePaid.title, lang),
       body: t(
         NOTIF.registrationFeePaid.body(applicantName, "bank_transfer"),
-        "ar"
+        lang
       ),
-      lang: "ar",
+      lang,
       targetScope: "role",
       targetRole: "ADMIN",
       metadata: {

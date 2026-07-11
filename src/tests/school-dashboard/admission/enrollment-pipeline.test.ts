@@ -83,6 +83,7 @@ vi.mock("@/lib/db", () => ({
     guardian: {
       upsert: vi.fn(),
       create: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     studentGuardian: {
       findMany: vi.fn(),
@@ -90,13 +91,20 @@ vi.mock("@/lib/db", () => ({
     },
     guardianPhoneNumber: {
       upsert: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     studentDocument: {
       create: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     school: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+    },
+    // Read by dispatchAdmissionNotification (autoEmailNotifications gate) —
+    // null resolves to "not explicitly disabled" (column default is true).
+    admissionSettings: {
+      findUnique: vi.fn().mockResolvedValue(null),
     },
     $transaction: vi.fn(),
   },
@@ -539,6 +547,63 @@ describe("confirmEnrollment - full pipeline", () => {
     expect(db.guardianPhoneNumber.upsert).toHaveBeenCalledTimes(2)
   })
 
+  it("reuses an existing guardian found by phone number when no email is on file", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      ...mockApplication,
+      motherEmail: null, // no email on file for the mother this time
+    } as any)
+    // An existing Guardian already has this phone number on file (e.g. from
+    // a sibling's earlier application) — createOrLinkGuardian must reuse it
+    // instead of creating a duplicate Guardian row.
+    vi.mocked(db.guardianPhoneNumber.findFirst).mockImplementation(
+      async (args: any) =>
+        args?.where?.phoneNumber === "+249222222222"
+          ? ({ guardianId: "existing-guardian-mother" } as any)
+          : null
+    )
+    vi.mocked(db.guardian.findFirst).mockResolvedValue({
+      id: "existing-guardian-mother",
+    } as any)
+
+    const result = await confirmEnrollment({ id: "app-1" })
+
+    expect(result.success).toBe(true)
+    expect(db.guardianPhoneNumber.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { schoolId: SCHOOL_ID, phoneNumber: "+249222222222" },
+      })
+    )
+    expect(db.guardian.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "existing-guardian-mother", schoolId: SCHOOL_ID },
+      })
+    )
+    // Reused via the phone match — never falls through to a fresh create.
+    expect(db.guardian.create).not.toHaveBeenCalled()
+  })
+
+  it("creates a new guardian when neither email nor an existing phone match is found", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      ...mockApplication,
+      motherEmail: null,
+    } as any)
+    // No existing GuardianPhoneNumber row matches — genuinely new guardian.
+    vi.mocked(db.guardianPhoneNumber.findFirst).mockResolvedValue(null)
+
+    const result = await confirmEnrollment({ id: "app-1" })
+
+    expect(result.success).toBe(true)
+    expect(db.guardian.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          schoolId: SCHOOL_ID,
+          firstName: "Fatima",
+          lastName: "Ali",
+        }),
+      })
+    )
+  })
+
   // =========================================================================
   // Section suggestion
   // =========================================================================
@@ -681,5 +746,35 @@ describe("confirmEnrollment - full pipeline", () => {
 
     expect(result.success).toBe(true)
     expect(db.studentDocument.create).toHaveBeenCalledTimes(1)
+  })
+
+  it("skips creating a duplicate StudentDocument when one already exists for the same fileUrl (idempotent retry)", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      ...mockApplication,
+      documents: [
+        {
+          type: "birth_cert",
+          name: "Birth Certificate",
+          url: "https://cdn.test/cert.pdf",
+        },
+        { type: "photo", name: "Photo", url: "https://cdn.test/photo.jpg" },
+      ],
+    } as any)
+    // Simulate a prior partial run: the birth certificate was already copied.
+    vi.mocked(db.studentDocument.findFirst).mockImplementation(
+      async (args: any) =>
+        args?.where?.fileUrl === "https://cdn.test/cert.pdf"
+          ? ({ id: "existing-doc-1" } as any)
+          : null
+    )
+
+    const result = await confirmEnrollment({ id: "app-1" })
+
+    expect(result.success).toBe(true)
+    // Only the photo (not yet copied) should be created.
+    expect(db.studentDocument.create).toHaveBeenCalledTimes(1)
+    expect(db.studentDocument.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ fileUrl: "https://cdn.test/photo.jpg" }),
+    })
   })
 })

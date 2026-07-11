@@ -13,10 +13,36 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getFields } from "@/components/translation/display"
 
 import { DocumentsSection } from "./ai/documents-section"
-import type { ProcessedDocument } from "./ai/types"
+import type {
+  DocumentProcessingStatus,
+  ExtractedDocumentData,
+  ProcessedDocument,
+} from "./ai/types"
 import ApplicationDetailActions from "./application-detail-actions"
 import { getApplicationDetail } from "./queries"
 import { ScoreEntryInline } from "./score-entry-inline"
+
+// Legacy/loosely-typed shape of one entry in the raw Application.documents
+// JSON blob, before the read-time AI-extraction merge below.
+interface RawDocumentEntry {
+  type?: string
+  url?: string
+  fileName?: string
+  name?: string
+  status?: string
+  confidence?: number
+  extractedData?: unknown
+  jobId?: string
+  error?: string
+  processedAt?: string
+}
+
+const JOB_STATUS_MAP: Record<string, DocumentProcessingStatus> = {
+  PENDING: "pending",
+  PROCESSING: "processing",
+  COMPLETED: "completed",
+  FAILED: "failed",
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -191,7 +217,13 @@ export default async function ApplicationDetailContent({
       reviewer?.username || reviewer?.email || application.reviewedBy
   }
 
-  // Parse documents JSON — supports both legacy {name, url} and ProcessedDocument formats
+  // Parse documents JSON — supports both legacy {name, url} and
+  // ProcessedDocument formats — then merge in the latest AI extraction
+  // status/result from application.documentJobs. That merge happens at read
+  // time in getApplicationDetail (queries.ts), matched by fileUrl, because
+  // getDocumentProcessingStatus (ai/actions.ts) — the write-back variant that
+  // syncs job status onto Application.documents — currently has no callers,
+  // so the stored JSON never advances past status:"pending" on its own.
   let documents: ProcessedDocument[] = []
   if (application.documents) {
     try {
@@ -200,17 +232,37 @@ export default async function ApplicationDetailContent({
           ? JSON.parse(application.documents)
           : application.documents
       if (Array.isArray(parsed)) {
-        documents = parsed.map((doc: any) => ({
-          type: doc.type ?? "other",
-          url: doc.url ?? "",
-          fileName: doc.fileName ?? doc.name ?? "",
-          status: doc.status ?? undefined,
-          confidence: doc.confidence ?? undefined,
-          extractedData: doc.extractedData ?? undefined,
-          jobId: doc.jobId ?? undefined,
-          error: doc.error ?? undefined,
-          processedAt: doc.processedAt ?? undefined,
-        }))
+        const jobByUrl = new Map(
+          application.documentJobs.map((job) => [job.fileUrl, job] as const)
+        )
+        documents = (parsed as RawDocumentEntry[]).map((doc) => {
+          const job = doc.url ? jobByUrl.get(doc.url) : undefined
+
+          const mergedStatus: DocumentProcessingStatus =
+            (job ? JOB_STATUS_MAP[job.status] : undefined) ??
+            (doc.status as DocumentProcessingStatus | undefined) ??
+            "pending"
+
+          const mergedExtractedData: ExtractedDocumentData | undefined =
+            job && job.status === "COMPLETED" && job.resultData != null
+              ? (job.resultData as unknown as ExtractedDocumentData)
+              : (doc.extractedData as ExtractedDocumentData | undefined)
+
+          return {
+            type: (doc.type as ProcessedDocument["type"]) ?? "other",
+            url: doc.url ?? "",
+            fileName: doc.fileName ?? doc.name ?? "",
+            status: mergedStatus,
+            confidence: job?.confidence ?? doc.confidence ?? undefined,
+            extractedData: mergedExtractedData,
+            jobId: doc.jobId ?? undefined,
+            // documentJobSelect doesn't pull errorMessage (not requested), so
+            // a FAILED job has no fresher error text to merge in — keep
+            // whatever was already stored on the document entry.
+            error: doc.error ?? undefined,
+            processedAt: doc.processedAt ?? undefined,
+          }
+        })
       }
     } catch {
       // ignore parse errors

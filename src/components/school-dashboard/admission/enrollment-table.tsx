@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   AlertTriangle,
   Clock,
@@ -59,17 +59,29 @@ export function EnrollmentTable({
 }: EnrollmentTableProps) {
   const t = dictionary
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const [searchInput, setSearchInput] = useState("")
   const deferredSearch = useDeferredValue(searchInput)
 
+  // offerStatus/feeStatus/documentStatus are URL-driven (nuqs-backed column
+  // filters write these keys — see useDataTable). Reading them here ensures
+  // client-side refetches (load-more, search/campaignId change) keep the
+  // same filter instead of silently reverting to the unfiltered set.
+  const offerStatus = searchParams.get("offerStatus") || undefined
+  const feeStatus = searchParams.get("feeStatus") || undefined
+  const documentStatus = searchParams.get("documentStatus") || undefined
+
   const filters = useMemo(() => {
     const f: Record<string, unknown> = {}
     if (deferredSearch) f.search = deferredSearch
     if (campaignId) f.campaignId = campaignId
+    if (offerStatus) f.offerStatus = offerStatus
+    if (feeStatus) f.feeStatus = feeStatus
+    if (documentStatus) f.documentStatus = documentStatus
     return f
-  }, [deferredSearch, campaignId])
+  }, [deferredSearch, campaignId, offerStatus, feeStatus, documentStatus])
 
   const {
     data,
@@ -83,13 +95,8 @@ export function EnrollmentTable({
     total,
     perPage,
     fetcher: async (params) => {
-      // search param is client-filtered (server action gains search support via deferred task)
-      const { search: _search, ...serverParams } = params as Record<
-        string,
-        unknown
-      > & { search?: string }
       const result = await getEnrollmentData({
-        ...serverParams,
+        ...params,
         campaignId: campaignId || undefined,
       })
       if (result.success && result.data) {

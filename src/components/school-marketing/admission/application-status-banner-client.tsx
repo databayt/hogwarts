@@ -14,26 +14,57 @@ interface BannerApplication {
   applicationFeePaid: boolean
 }
 
+// All banner copy is resolved server-side (dictionary lookup + locale-aware
+// fallback — see application-status-banner.tsx) so this client component
+// never has to branch on `locale` itself. Every field defaults to English
+// here too so the component still renders sensibly if a caller omits
+// `messages` (e.g. a test rendering the component in isolation).
+export interface BannerMessages {
+  applicationLabel?: string
+  waitingApproval?: string
+  approvedContinuePayment?: string
+  payNow?: string
+  approvedPaymentReceived?: string
+  enrolled?: string
+  notAccepted?: string
+  withdrawn?: string
+  dismiss?: string
+}
+
+const DEFAULT_MESSAGES: Required<BannerMessages> = {
+  applicationLabel: "Application",
+  waitingApproval: "waiting for approval",
+  approvedContinuePayment: "approved, continue with payment",
+  payNow: "Pay Now",
+  approvedPaymentReceived: "approved, payment received",
+  enrolled: "enrolled",
+  notAccepted: "not accepted",
+  withdrawn: "withdrawn",
+  dismiss: "Dismiss",
+}
+
 interface ApplicationStatusBannerClientProps {
   application: BannerApplication
   locale: string
+  // Present only when the application is SELECTED and its access token is
+  // still valid — the dead `/payment` route must never be linked.
+  offerUrl?: string
+  messages?: BannerMessages
 }
 
 function BannerMessage({
   status,
   applicationNumber,
   applicationFeePaid,
-  applicationId,
-  locale,
+  offerUrl,
+  messages,
 }: {
   status: string
   applicationNumber: string
   applicationFeePaid: boolean
-  applicationId: string
-  locale: string
+  offerUrl?: string
+  messages: Required<BannerMessages>
 }) {
-  const isAr = locale === "ar"
-
   // SUBMITTED / UNDER_REVIEW / SHORTLISTED / ENTRANCE_SCHEDULED / INTERVIEW_SCHEDULED
   if (
     status === "SUBMITTED" ||
@@ -44,10 +75,10 @@ function BannerMessage({
   ) {
     return (
       <span className="text-sm text-white">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "بانتظار الموافقة" : "waiting for approval"}
+        {messages.waitingApproval}
       </span>
     )
   }
@@ -56,16 +87,18 @@ function BannerMessage({
   if (status === "SELECTED" && !applicationFeePaid) {
     return (
       <span className="flex items-center gap-2 text-sm text-white">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "تمت الموافقة، أكمل الدفع" : "approved, continue with payment"}
-        <Link
-          href={`/${locale}/application/${applicationId}/payment`}
-          className="rounded-md bg-white px-3 py-1 text-sm font-medium text-[#E8704E] hover:bg-white/90"
-        >
-          {isAr ? "ادفع الآن" : "Pay Now"}
-        </Link>
+        {messages.approvedContinuePayment}
+        {offerUrl && (
+          <Link
+            href={offerUrl}
+            className="rounded-md bg-white px-3 py-1 text-sm font-medium text-[#E8704E] hover:bg-white/90"
+          >
+            {messages.payNow}
+          </Link>
+        )}
       </span>
     )
   }
@@ -74,10 +107,10 @@ function BannerMessage({
   if (status === "SELECTED" && applicationFeePaid) {
     return (
       <span className="text-sm text-white">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "تمت الموافقة، تم الدفع" : "approved, payment received"}
+        {messages.approvedPaymentReceived}
       </span>
     )
   }
@@ -86,10 +119,10 @@ function BannerMessage({
   if (status === "ADMITTED") {
     return (
       <span className="text-sm text-white">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "تم التسجيل" : "enrolled"}
+        {messages.enrolled}
       </span>
     )
   }
@@ -98,10 +131,10 @@ function BannerMessage({
   if (status === "REJECTED") {
     return (
       <span className="text-sm text-white/80">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "لم يتم القبول" : "not accepted"}
+        {messages.notAccepted}
       </span>
     )
   }
@@ -109,10 +142,10 @@ function BannerMessage({
   if (status === "WITHDRAWN") {
     return (
       <span className="text-sm text-white/80">
-        {isAr ? "طلب رقم" : "Application"}{" "}
+        {messages.applicationLabel}{" "}
         <span className="font-mono font-medium">{applicationNumber}</span>
         {" — "}
-        {isAr ? "تم السحب" : "withdrawn"}
+        {messages.withdrawn}
       </span>
     )
   }
@@ -120,7 +153,7 @@ function BannerMessage({
   // Fallback
   return (
     <span className="text-sm text-white">
-      {isAr ? "طلب رقم" : "Application"}{" "}
+      {messages.applicationLabel}{" "}
       <span className="font-mono font-medium">{applicationNumber}</span>
     </span>
   )
@@ -128,9 +161,14 @@ function BannerMessage({
 
 export function ApplicationStatusBannerClient({
   application,
-  locale,
+  offerUrl,
+  messages,
 }: ApplicationStatusBannerClientProps) {
   const [dismissed, setDismissed] = useState(false)
+  const resolvedMessages: Required<BannerMessages> = {
+    ...DEFAULT_MESSAGES,
+    ...messages,
+  }
 
   const storageKey = `banner-dismissed-${application.id}`
 
@@ -154,14 +192,14 @@ export function ApplicationStatusBannerClient({
           status={application.status}
           applicationNumber={application.applicationNumber}
           applicationFeePaid={application.applicationFeePaid}
-          applicationId={application.id}
-          locale={locale}
+          offerUrl={offerUrl}
+          messages={resolvedMessages}
         />
 
         <button
           onClick={handleDismiss}
           className="ms-2 text-white/70 hover:text-white"
-          aria-label="Dismiss"
+          aria-label={resolvedMessages.dismiss}
         >
           <X className="h-4 w-4" />
         </button>

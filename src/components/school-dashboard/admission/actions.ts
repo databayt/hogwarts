@@ -81,6 +81,12 @@ const NOTIF = {
       ar: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}`,
       en: `Congratulations! Your enrollment has been confirmed. Enrollment #: ${enrollmentNumber}`,
     }),
+    // New guest accounts have no password — this variant links to the
+    // password-set page so the student can actually log in for the first time.
+    bodyWithSetup: (enrollmentNumber: string, setupUrl: string) => ({
+      ar: `تهانينا! تم تأكيد تسجيلك بالمدرسة. رقم التسجيل: ${enrollmentNumber}. لإنشاء كلمة المرور وتسجيل الدخول لأول مرة، يرجى زيارة: ${setupUrl}`,
+      en: `Congratulations! Your enrollment has been confirmed. Enrollment #: ${enrollmentNumber}. To set your password and log in for the first time, visit: ${setupUrl}`,
+    }),
   },
   feeDue: {
     title: { ar: "رسوم دراسية جديدة", en: "New Tuition Fees" },
@@ -133,7 +139,24 @@ async function dispatchAdmissionNotification(params: {
   metadata?: Record<string, unknown>
   actorId?: string
 }): Promise<void> {
-  const channels = params.channels ?? ["in_app", "email"]
+  let channels = params.channels ?? ["in_app", "email"]
+
+  // Honor the school's "Automatic Email Notifications" toggle
+  // (AdmissionSettings.autoEmailNotifications). Previously never read here,
+  // so every caller's hardcoded `channels: ["in_app", "email"]` sent email
+  // unconditionally even when an admin had disabled it in Settings. Applies
+  // to explicit AND default channel lists alike — in_app is never affected.
+  if (channels.includes("email")) {
+    const settings = await db.admissionSettings.findUnique({
+      where: { schoolId: params.schoolId },
+      select: { autoEmailNotifications: true },
+    })
+    // Column defaults to true; only a persisted `false` turns email off.
+    if (settings?.autoEmailNotifications === false) {
+      channels = channels.filter((c) => c !== "email")
+    }
+  }
+
   const notificationId = await dispatchNotification({
     ...params,
     channels,
@@ -568,7 +591,7 @@ export async function updateApplicationStatus(params: {
         offerExpiryDate: true,
       },
     })
-    if (application?.userId) {
+    if (application) {
       const school = await db.school.findFirst({
         where: { id: schoolId },
         select: {
@@ -593,31 +616,60 @@ export async function updateApplicationStatus(params: {
           NOTIF.statusUpdate.fallback(params.status),
         notifLang
       )
-      dispatchAdmissionNotification({
-        schoolId,
-        userId: application.userId,
-        type: "system_alert",
-        title: t(NOTIF.statusUpdate.title, notifLang),
-        body: statusMessage,
-        lang: notifLang,
-        priority: params.status === "SELECTED" ? "high" : "normal",
-        channels: ["in_app", "email"],
-        metadata: {
-          applicationId: params.id,
-          status: params.status,
-          url:
-            params.status === "SELECTED" && application.accessToken
-              ? `/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
-              : "/admission",
-        },
-        actorId: session.user?.id,
-      }).catch((err) =>
-        console.error("[updateApplicationStatus] Notification error:", err)
-      )
+      const notifMetadata = {
+        applicationId: params.id,
+        status: params.status,
+        url:
+          params.status === "SELECTED" && application.accessToken
+            ? `/application/${params.id}/offer?token=${encodeURIComponent(application.accessToken)}`
+            : "/admission",
+      }
+
+      // Guest applicants (no userId) have no in-app inbox — fall back to
+      // directEmail so they still hear about the status change. Previously
+      // this whole block (including the dedicated offer email below) was
+      // gated on `application.userId`, so a guest selected for admission
+      // silently received nothing.
+      if (application.userId) {
+        dispatchAdmissionNotification({
+          schoolId,
+          userId: application.userId,
+          type: "system_alert",
+          title: t(NOTIF.statusUpdate.title, notifLang),
+          body: statusMessage,
+          lang: notifLang,
+          priority: params.status === "SELECTED" ? "high" : "normal",
+          channels: ["in_app", "email"],
+          metadata: notifMetadata,
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error("[updateApplicationStatus] Notification error:", err)
+        )
+      } else if (application.email) {
+        dispatchAdmissionNotification({
+          schoolId,
+          directEmail: application.email,
+          type: "system_alert",
+          title: t(NOTIF.statusUpdate.title, notifLang),
+          body: statusMessage,
+          lang: notifLang,
+          priority: params.status === "SELECTED" ? "high" : "normal",
+          channels: ["email"],
+          metadata: notifMetadata,
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error(
+            "[updateApplicationStatus] Guest notification error:",
+            err
+          )
+        )
+      }
 
       // Dedicated offer email with the registration link on SELECTED, so the
       // guardian actually receives it (the in-app notification's metadata.url
-      // may never be opened). Non-blocking — failure must not fail the action.
+      // may never be opened). Runs for BOTH guest and registered applicants —
+      // only needs email + accessToken, not userId. Non-blocking — failure
+      // must not fail the action.
       if (
         params.status === "SELECTED" &&
         application.email &&
@@ -833,12 +885,46 @@ export async function generateMeritList(params: {
     const entranceW = weightSum > 0 ? rawEntrance / weightSum : 0.6
     const interviewW = weightSum > 0 ? rawInterview / weightSum : 0.4
 
+    // Clear stale ranks first: an application that was previously ranked but
+    // has since moved to REJECTED/WITHDRAWN/ADMITTED (or any status outside
+    // the eligible set below) must drop off the merit list on regenerate —
+    // otherwise it keeps displaying its last computed meritScore/meritRank
+    // forever. Scoped to this campaign only.
+    const ELIGIBLE_STATUSES = ["SHORTLISTED", "SELECTED", "WAITLISTED"] as const
+    const staleRanked = await db.application.findMany({
+      where: {
+        schoolId,
+        campaignId: params.campaignId,
+        meritRank: { not: null },
+        status: { notIn: [...ELIGIBLE_STATUSES] },
+      },
+      select: { id: true },
+    })
+
+    if (staleRanked.length > 0) {
+      const STALE_CHUNK_SIZE = 50
+      const staleChunks: { id: string }[][] = []
+      for (let i = 0; i < staleRanked.length; i += STALE_CHUNK_SIZE) {
+        staleChunks.push(staleRanked.slice(i, i + STALE_CHUNK_SIZE))
+      }
+      for (const chunk of staleChunks) {
+        await db.$transaction(
+          chunk.map((app) =>
+            db.application.update({
+              where: { id: app.id, schoolId },
+              data: { meritScore: null, meritRank: null },
+            })
+          )
+        )
+      }
+    }
+
     // Fetch all eligible applications for the campaign
     const applications = await db.application.findMany({
       where: {
         schoolId,
         campaignId: params.campaignId,
-        status: { in: ["SHORTLISTED", "SELECTED", "WAITLISTED"] },
+        status: { in: [...ELIGIBLE_STATUSES] },
       },
       select: {
         id: true,
@@ -944,6 +1030,23 @@ export async function getEnrollmentData(params: {
 
     const result = await getEnrollmentList(schoolId, params)
 
+    // registrationFeeMethod is not in getEnrollmentList's select (queries.ts,
+    // not owned here) — fetch it in one extra batched query keyed by id so
+    // the "Confirm Reg. Payment" row action can gate on cash/bank_transfer
+    // intents. TODO(queries.ts owner): fold registrationFeeMethod into
+    // applicationListSelect/getEnrollmentList's select to drop this query.
+    const ids = result.rows.map((a) => a.id)
+    const methodRows =
+      ids.length > 0
+        ? await db.application.findMany({
+            where: { id: { in: ids }, schoolId },
+            select: { id: true, registrationFeeMethod: true },
+          })
+        : []
+    const methodById = new Map(
+      methodRows.map((r) => [r.id, r.registrationFeeMethod])
+    )
+
     return {
       success: true,
       data: {
@@ -968,6 +1071,13 @@ export async function getEnrollmentData(params: {
             (Array.isArray(a.documents) ? a.documents.length > 0 : true),
           campaignName: a.campaign.name,
           campaignId: a.campaign.id,
+          // BUG: previously omitted, so the offer-accepted badge and Reg Fee
+          // column always rendered their falsy default regardless of the
+          // real value — both fields ARE already in getEnrollmentList's
+          // select (queries.ts), just never threaded through this mapping.
+          offerAccepted: a.offerAccepted,
+          registrationFeePaid: a.registrationFeePaid,
+          registrationFeeMethod: methodById.get(a.id) ?? null,
         })),
         total: result.count,
       },
@@ -1108,7 +1218,7 @@ export async function confirmEnrollment(params: {
       }
     }
 
-    const txUserId = await db.$transaction(
+    const { userId: txUserId, isNewGuestUser } = await db.$transaction(
       async (tx) => {
         // 2. Update application status to ADMITTED
         await tx.application.update({
@@ -1143,6 +1253,10 @@ export async function confirmEnrollment(params: {
 
         // 3. Resolve userId — create a User for guest applications
         let userId = application.userId
+        // True only when this tx mints a brand-new guest User below (no
+        // password set on create) — used post-commit to send a password-set
+        // link, since this account otherwise has no way to ever authenticate.
+        let isNewGuestUser = false
         if (!userId) {
           // Find existing user by email to avoid unique constraint violation.
           // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
@@ -1173,6 +1287,7 @@ export async function confirmEnrollment(params: {
               },
             })
             userId = guestUser.id
+            isNewGuestUser = true
           }
 
           // Link the application to the new user
@@ -1644,6 +1759,19 @@ export async function confirmEnrollment(params: {
             if (appDocs && Array.isArray(appDocs)) {
               for (const doc of appDocs) {
                 if (!doc.url) continue
+                // Idempotent: confirmEnrollment can run more than once for
+                // the same application (retry after a partial failure,
+                // double-submit) — without this guard every re-run
+                // duplicates the same StudentDocument row.
+                const existingDoc = await tx.studentDocument.findFirst({
+                  where: {
+                    schoolId,
+                    studentId: student.id,
+                    fileUrl: doc.url,
+                  },
+                  select: { id: true },
+                })
+                if (existingDoc) continue
                 await tx.studentDocument.create({
                   data: {
                     schoolId,
@@ -1669,7 +1797,7 @@ export async function confirmEnrollment(params: {
           enrolledStudentId = student.id
         }
 
-        return userId
+        return { userId, isNewGuestUser }
       },
       { timeout: 30000 }
     )
@@ -1737,19 +1865,49 @@ export async function confirmEnrollment(params: {
 
     const effectiveUserId = txUserId || application.userId
     if (effectiveUserId) {
+      // A brand-new guest User (created above because the applicant had no
+      // existing login) has NO password set — without a way to authenticate,
+      // the account is unusable. Mint a password-reset token and link to the
+      // root-domain /new-password page (there is no per-subdomain route;
+      // cross-subdomain SSO shares the session once a password is set).
+      let passwordSetupUrl: string | null = null
+      if (isNewGuestUser) {
+        try {
+          const { generatePasswordResetToken } =
+            await import("@/components/auth/tokens")
+          const reset = await generatePasswordResetToken(application.email)
+          const rootUrl =
+            process.env.NEXT_PUBLIC_APP_URL ?? "https://ed.databayt.org"
+          passwordSetupUrl = `${rootUrl}/${schoolLang}/new-password?token=${encodeURIComponent(reset.token)}`
+        } catch (err) {
+          console.warn(
+            "[confirmEnrollment] Failed to mint password-setup link:",
+            err
+          )
+        }
+      }
+
       dispatchAdmissionNotification({
         schoolId,
         userId: effectiveUserId,
         type: "account_created",
         title: t(NOTIF.enrollment.title, schoolLang),
-        body: t(NOTIF.enrollment.body(enrollmentNumber), schoolLang),
+        body: passwordSetupUrl
+          ? t(
+              NOTIF.enrollment.bodyWithSetup(
+                enrollmentNumber,
+                passwordSetupUrl
+              ),
+              schoolLang
+            )
+          : t(NOTIF.enrollment.body(enrollmentNumber), schoolLang),
         lang: schoolLang,
         priority: "high",
         channels: ["in_app", "email"],
         metadata: {
           applicationId: params.id,
           enrollmentNumber,
-          url: "/",
+          url: passwordSetupUrl ?? "/",
         },
       }).catch((err) =>
         console.error("[confirmEnrollment] Notification error:", err)
@@ -1808,36 +1966,42 @@ export async function confirmEnrollment(params: {
       if (enrolledStudentId) {
         const guardianLinks = await db.studentGuardian.findMany({
           where: { studentId: enrolledStudentId, schoolId },
-          select: { guardian: { select: { userId: true } } },
+          select: {
+            guardian: { select: { userId: true, emailAddress: true } },
+          },
         })
         for (const link of guardianLinks) {
-          if (link.guardian?.userId) {
-            const studentFullName = `${application.firstName} ${application.lastName}`
-            dispatchAdmissionNotification({
-              schoolId,
-              userId: link.guardian.userId,
-              type: "account_created",
-              title: t(NOTIF.guardianEnrollment.title, schoolLang),
-              body: t(
-                NOTIF.guardianEnrollment.body(studentFullName),
-                schoolLang
-              ),
-              lang: schoolLang,
-              priority: "high",
-              channels: ["in_app", "email"],
-              metadata: {
-                applicationId: params.id,
-                enrollmentNumber,
-                studentName: `${application.firstName} ${application.lastName}`,
-                url: "/",
-              },
-            }).catch((err) =>
-              console.error(
-                "[confirmEnrollment] Guardian notification error:",
-                err
-              )
+          const guardianUserId = link.guardian?.userId
+          const guardianEmail = link.guardian?.emailAddress
+          // Guardians created by confirmEnrollment (via createOrLinkGuardian)
+          // never have a userId — they're contact records, not accounts —
+          // so this previously never fired for admission-created guardians.
+          // Fall back to directEmail when there's no linked account.
+          if (!guardianUserId && !guardianEmail) continue
+          const studentFullName = `${application.firstName} ${application.lastName}`
+          dispatchAdmissionNotification({
+            schoolId,
+            ...(guardianUserId
+              ? { userId: guardianUserId }
+              : { directEmail: guardianEmail! }),
+            type: "account_created",
+            title: t(NOTIF.guardianEnrollment.title, schoolLang),
+            body: t(NOTIF.guardianEnrollment.body(studentFullName), schoolLang),
+            lang: schoolLang,
+            priority: "high",
+            channels: guardianUserId ? ["in_app", "email"] : ["email"],
+            metadata: {
+              applicationId: params.id,
+              enrollmentNumber,
+              studentName: `${application.firstName} ${application.lastName}`,
+              url: "/",
+            },
+          }).catch((err) =>
+            console.error(
+              "[confirmEnrollment] Guardian notification error:",
+              err
             )
-          }
+          )
         }
       }
     } catch {
@@ -1952,6 +2116,143 @@ export async function recordPayment(params: {
     return { success: true, data: null }
   } catch (error) {
     console.error("[recordPayment]", error)
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
+    return actionError(ACTION_ERRORS.ADMISSION_UPDATE_FAILED)
+  }
+}
+
+/**
+ * Manual payment methods an admin can confirm here. "stripe"/"tap" (card/
+ * online) are confirmed automatically by their payment webhook — never
+ * manually, since only the webhook has proof the charge actually settled.
+ */
+const MANUALLY_CONFIRMABLE_REGISTRATION_METHODS = new Set([
+  "cash",
+  "bank_transfer",
+])
+
+/**
+ * Admin confirms a cash or bank-transfer registration-fee payment intent.
+ *
+ * The public offer portal (school-marketing/application/offer/actions.ts)
+ * only ever RECORDS the parent's intent to pay in cash/by bank transfer
+ * (method + reference + amount) — it has no way to know the money actually
+ * changed hands, so it never sets registrationFeePaid. Only the Stripe/Tap
+ * webhooks do that automatically for card payments. Cash/bank intents were
+ * consequently stuck unpaid forever with no admin path to mark them settled.
+ */
+export async function confirmRegistrationPayment(params: {
+  applicationId: string
+}): Promise<ActionResponse> {
+  try {
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    assertAdmissionPermission(session.user.role, "recordPayment")
+
+    const application = await db.application.findUnique({
+      where: { id: params.applicationId, schoolId },
+      select: {
+        registrationFeeMethod: true,
+        registrationFeePaid: true,
+        userId: true,
+        email: true,
+      },
+    })
+
+    if (!application) {
+      return actionError(ACTION_ERRORS.ADMISSION_NOT_FOUND)
+    }
+
+    if (application.registrationFeePaid) {
+      return actionError(ACTION_ERRORS.REGISTRATION_FEE_ALREADY_PAID)
+    }
+
+    if (!application.registrationFeeMethod) {
+      return actionError(ACTION_ERRORS.REGISTRATION_FEE_METHOD_MISSING)
+    }
+
+    if (
+      !MANUALLY_CONFIRMABLE_REGISTRATION_METHODS.has(
+        application.registrationFeeMethod
+      )
+    ) {
+      return actionError(ACTION_ERRORS.REGISTRATION_FEE_METHOD_INVALID)
+    }
+
+    await db.application.update({
+      where: { id: params.applicationId, schoolId },
+      data: {
+        registrationFeePaid: true,
+        registrationFeeDate: new Date(),
+      },
+    })
+
+    // Notify the applicant, mirroring recordPayment's userId/directEmail
+    // branch. Non-blocking — failure must not fail the action.
+    try {
+      const school = await db.school.findFirst({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const notifLang = school?.preferredLanguage ?? "ar"
+      if (application.userId) {
+        dispatchAdmissionNotification({
+          schoolId,
+          userId: application.userId,
+          type: "fee_paid",
+          title: t(NOTIF.feePaid.title, notifLang),
+          body: t(NOTIF.feePaid.body, notifLang),
+          lang: notifLang,
+          priority: "normal",
+          channels: ["in_app", "email"],
+          metadata: {
+            applicationId: params.applicationId,
+            url: "/admission",
+          },
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error("[confirmRegistrationPayment] Notification error:", err)
+        )
+      } else if (application.email) {
+        dispatchAdmissionNotification({
+          schoolId,
+          directEmail: application.email,
+          type: "fee_paid",
+          title: t(NOTIF.feePaid.title, notifLang),
+          body: t(NOTIF.feePaid.body, notifLang),
+          lang: notifLang,
+          priority: "normal",
+          channels: ["email"],
+          metadata: {
+            applicationId: params.applicationId,
+            url: "/admission",
+          },
+          actorId: session.user?.id,
+        }).catch((err) =>
+          console.error(
+            "[confirmRegistrationPayment] Guest notification error:",
+            err
+          )
+        )
+      }
+    } catch (notifErr) {
+      console.warn(
+        "[confirmRegistrationPayment] Notification setup failed:",
+        notifErr
+      )
+    }
+
+    revalidatePath("/admission/enrollment")
+    return { success: true, data: null }
+  } catch (error) {
+    console.error("[confirmRegistrationPayment]", error)
     if (isPermissionDenied(error)) {
       return actionError(ACTION_ERRORS.FORBIDDEN)
     }
@@ -2080,6 +2381,16 @@ export async function placeStudentInSection(params: {
 
     // Check section capacity and assign atomically
     const sectionData = await db.$transaction(async (tx) => {
+      // Row-lock the target section for the life of this transaction. Without
+      // this, two concurrent placements can both read "1 seat left" under
+      // Postgres's default Read Committed isolation (plain SELECTs never
+      // block each other) and both proceed to write, overselling the
+      // section. FOR UPDATE forces the second transaction's SELECT to block
+      // until the first commits, so it re-reads the now-updated count.
+      // No-ops harmlessly if the id doesn't exist — the findFirst below
+      // still returns null and the existing NOT_FOUND path handles it.
+      await tx.$queryRaw`SELECT id FROM "sections" WHERE id = ${params.sectionId} AND "schoolId" = ${schoolId} FOR UPDATE`
+
       const section = await tx.section.findFirst({
         where: { id: params.sectionId, schoolId },
         select: {
