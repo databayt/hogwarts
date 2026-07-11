@@ -8,6 +8,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { checkUserRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { getObjectSize } from "@/lib/s3"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   checkSchoolVideoQuota,
@@ -143,7 +144,17 @@ export async function uploadVideo(
 
     // Storage quota: only relevant for self-hosted bytes (external URLs have
     // no fileSize). Skips entirely when no size is provided or quota is unset.
-    const fileSize = data.fileSize && data.fileSize > 0 ? data.fileSize : 0
+    // For direct uploads the client-claimed size is advisory — HEAD the object
+    // for the authoritative byte count (falls back to the claim when S3 is
+    // unreachable, never blocks the submit).
+    const storageKey = data.storageKey?.trim() || null
+    let fileSize = data.fileSize && data.fileSize > 0 ? data.fileSize : 0
+    if (storageKey) {
+      const authoritative = await getObjectSize(storageKey)
+      if (authoritative !== null && authoritative > 0) {
+        fileSize = authoritative
+      }
+    }
     if (fileSize > 0) {
       const quota = await checkSchoolVideoQuota(schoolId, fileSize)
       if (!quota.allowed) {
@@ -165,7 +176,7 @@ export async function uploadVideo(
         provider: data.provider,
         durationSeconds: data.durationSeconds ?? null,
         fileSize: fileSize > 0 ? fileSize : null,
-        storageKey: data.storageKey?.trim() || null,
+        storageKey,
         storageProvider: data.storageProvider?.trim() || null,
         approvalStatus: "PENDING",
         visibility,
@@ -188,6 +199,37 @@ export async function uploadVideo(
         { schoolId }
       )
     )
+
+    // Tell the school's reviewers a submission landed (off the response path;
+    // the uploader themself is excluded). Failure must never fail the upload.
+    const uploaderId = session.user.id
+    after(async () => {
+      try {
+        const admins = await db.user.findMany({
+          where: { schoolId, role: "ADMIN", id: { not: uploaderId } },
+          select: { id: true },
+        })
+        if (admins.length === 0) return
+        await db.notification.createMany({
+          data: admins.map((admin) => ({
+            schoolId,
+            userId: admin.id,
+            actorId: uploaderId,
+            type: "system_alert" as const,
+            priority: "normal" as const,
+            title: "New video pending review",
+            body: `"${title}" was submitted and is waiting in the review queue.`,
+            metadata: {
+              entityType: "video",
+              entityId: created.id,
+              url: "/stream/settings?tab=review",
+            },
+          })),
+        })
+      } catch (notifyError) {
+        console.error("Failed to notify reviewers of new video:", notifyError)
+      }
+    })
 
     revalidatePath(
       `/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.subject.slug}`

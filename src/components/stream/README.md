@@ -5,7 +5,7 @@ title: Stream (LMS)
 file_type: readme
 owner: Abdout
 maturity: Built+Polish
-completion: 85
+completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-07-11
@@ -156,9 +156,16 @@ single-paid-video purchase dead end (hero Unlock pill + purchasable chips),
 added a broken-source → story.mp4 fallback (`onSourceError`), gated PUBLIC/PAID
 approval to the platform catalog lane (school lane approves SCHOOL/PRIVATE;
 owner widening APPROVED→PUBLIC resubmits for review), and added contributor
-notifications to the school review lane. Deferred: Float→Decimal money-type
-migration, i18n consumption backlog, orphaned-upload S3 sweep. Do **not**
-assume "100%" — check `ISSUE.md`.
+notifications to the school review lane. A same-day second pass closed every
+open P2/P3: reviewer notifications on new submissions, presign quota
+pre-check, HeadObject-authoritative quota accounting (new `src/lib/s3.ts`),
+abandoned-upload cleanup (guarded `DELETE /api/blob/presign` + dialog hook),
+full i18n for the review/manage dialogs, and a de-fabricated, localized
+search-bar. **At final review/test** — remaining items are post-release
+engineering debt only (Float→Decimal, action error-code migration,
+browser-crash orphan sweep, legacy `streamEnrollment` on the payment-success
+path); see `ISSUE.md`. QA guide:
+[hogwarts#377](https://github.com/databayt/hogwarts/issues/377).
 
 ### Data Architecture
 

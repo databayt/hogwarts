@@ -20,7 +20,10 @@ import { auth } from "@/auth"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
+import { db } from "@/lib/db"
+import { deleteObject } from "@/lib/s3"
 import { getTenantContext } from "@/lib/tenant-context"
+import { checkSchoolVideoQuota } from "@/components/stream/lib/quota"
 
 let s3Client: S3Client | null = null
 
@@ -113,6 +116,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 6b. Storage quota pre-check — refuse before any bytes move, instead of
+    // letting the upload finish and failing at submit time.
+    if (schoolId) {
+      const quota = await checkSchoolVideoQuota(schoolId, size)
+      if (!quota.allowed) {
+        return NextResponse.json(
+          { error: "Storage quota exceeded for this school" },
+          { status: 413 }
+        )
+      }
+    }
+
     // 7. Check S3 configuration
     const client = getS3Client()
     if (!client) {
@@ -160,5 +175,75 @@ export async function POST(request: NextRequest) {
       { error: "Failed to generate upload URL" },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Abandoned-upload cleanup — delete an uploaded object that was never
+ * submitted as a video. Guards:
+ * - same auth/roles as POST
+ * - the key must live under the caller's own upload prefix
+ *   (`stream/<schoolId>/video/`, or `stream/platform/video/` for DEVELOPER)
+ * - refuses when a Video row references the key (that file is live content;
+ *   deleting it belongs to `deleteOwnVideo`, which also releases quota)
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      )
+    }
+
+    if (!["TEACHER", "ADMIN", "DEVELOPER"].includes(session.user.role || "")) {
+      return NextResponse.json(
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      )
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId && session.user.role !== "DEVELOPER") {
+      return NextResponse.json(
+        { error: "School context required" },
+        { status: 400 }
+      )
+    }
+
+    const body = (await request.json()) as { key?: string }
+    const key = body.key?.trim()
+    if (!key) {
+      return NextResponse.json(
+        { error: "Missing required field: key" },
+        { status: 400 }
+      )
+    }
+
+    const allowedPrefix = `stream/${schoolId ?? "platform"}/video/`
+    if (!key.startsWith(allowedPrefix) || key.includes("..")) {
+      return NextResponse.json(
+        { error: "Key outside your upload scope" },
+        { status: 403 }
+      )
+    }
+
+    const inUse = await db.video.findFirst({
+      where: { storageKey: key },
+      select: { id: true },
+    })
+    if (inUse) {
+      return NextResponse.json(
+        { error: "Object is referenced by a video" },
+        { status: 409 }
+      )
+    }
+
+    const deleted = await deleteObject(key)
+    return NextResponse.json({ deleted })
+  } catch (error) {
+    console.error("Upload cleanup failed:", error)
+    return NextResponse.json({ error: "Failed to clean up" }, { status: 500 })
   }
 }

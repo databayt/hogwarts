@@ -5,7 +5,7 @@ title: Stream (LMS)
 file_type: claude
 owner: Abdout
 maturity: Built+Polish
-completion: 85
+completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/us-curriculum
 last_audited: 2026-07-11
@@ -15,7 +15,7 @@ last_audited: 2026-07-11
 
 ## Context
 
-Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~80% complete. See [README](README.md) for routes + file structure and [ISSUE](ISSUE.md) for the live work list. Tracker: [323](https://github.com/databayt/hogwarts/issues/323).
+Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~90% complete and **at final review/test** (remaining items are post-release engineering debt — see ISSUE.md). See [README](README.md) for routes + file structure and [ISSUE](ISSUE.md) for the live work list. Tracker: [323](https://github.com/databayt/hogwarts/issues/323) · QA guide: [377](https://github.com/databayt/hogwarts/issues/377).
 
 ## Before You Start
 
@@ -59,12 +59,27 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~80% complete.
   `approvalStatus` to PENDING (DEVELOPER exempt; narrowing always free). Both
   lanes notify the contributor (`db.notification.create`, failure-tolerant).
 - **Direct upload = presign → S3 PUT → storage fields.** The propose dialog's
-  Upload tab POSTs `/api/blob/presign` (5GB cap, video MIME allowlist), PUTs
-  via XHR for progress, then `uploadVideo` persists `fileSize`/`storageKey`/
-  `storageProvider` (provider SELF_HOSTED) — storageKey powers CloudFront
-  invalidation on delete/revoke/replace and the quota counter. Upload entry
-  points: teacher dashboard overview AND the settings Videos tab
-  (ADMIN/DEVELOPER/TEACHER, fed by `getProposableLessons()`).
+  Upload tab POSTs `/api/blob/presign` (5GB cap, video MIME allowlist, quota
+  pre-check → 413), PUTs via XHR for progress, then `uploadVideo` persists
+  `fileSize`/`storageKey`/`storageProvider` (provider SELF_HOSTED) — storageKey
+  powers CloudFront invalidation on delete/revoke/replace and the quota
+  counter. Quota bytes are AUTHORITATIVE: `uploadVideo` HEADs the object
+  (`getObjectSize` in `src/lib/s3.ts`) and overrides the client-claimed size.
+  Abandoned uploads self-clean: the dialog fires the guarded
+  `DELETE /api/blob/presign` (own-prefix only; refuses keys a Video row
+  references) on remove/tab-switch/close-without-submit. Upload entry points:
+  teacher dashboard overview AND the settings Videos tab
+  (ADMIN/DEVELOPER/TEACHER, fed by `getProposableLessons()`). New PENDING
+  submissions notify the school's other ADMINs (off-response-path,
+  failure-tolerant).
+- **Stream client i18n is dict-key-with-English-fallback everywhere** —
+  `stream.videoReview.*`, `stream.videoSettings.*`, `stream.search.*`,
+  `stream.proposeVideo.fields.upload*`, `stream.lesson.unlock/purchaseFailed`
+  all exist in BOTH `stream-en.json` and `stream-ar.json`. The search-bar's
+  Explore dropdown is deliberately minimal (popular chips + browse-all) — the
+  old "recently viewed / recommended / category" cards were fabricated
+  placeholder content (external Coursera images, departments that don't
+  exist); don't reintroduce them without real data.
 - **Money fields are `Float`** (`Video.price`, `VideoPurchase.amount`); go
   through `Number()` before arithmetic. Float→Decimal is deferred (ripples into
   ~13 read sites + a shared-DB table rewrite).

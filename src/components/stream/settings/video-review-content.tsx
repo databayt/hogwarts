@@ -2,9 +2,8 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useState, useTransition } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
 import {
   Check,
   CheckCircle2,
@@ -18,7 +17,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
 import type { PendingVideoItem } from "./video-review-actions"
@@ -30,9 +29,18 @@ interface Props {
   // (DEVELOPER via /catalog/approvals) may approve them — the server enforces
   // this; the flag just keeps the UI honest.
   userRole?: string
+  lang?: string
+  // The `stream` dictionary subtree.
+  dictionary?: Record<string, any>
 }
 
-export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
+export function VideoReviewContent({
+  videos: initialVideos,
+  userRole,
+  lang = "en",
+  dictionary,
+}: Props) {
+  const d = dictionary?.videoReview ?? {}
   const isDeveloper = userRole === "DEVELOPER"
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -44,6 +52,15 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
   // Track locally dismissed items for instant UI feedback
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
+  const dateFmt = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+    return (date: Date | string) => fmt.format(new Date(date))
+  }, [lang])
+
   const videos = initialVideos.filter((v) => !dismissed.has(v.id))
 
   function handleApprove(videoId: string) {
@@ -51,11 +68,11 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
     startTransition(async () => {
       const result = await reviewVideo(videoId, "APPROVED")
       if (result.status === "success") {
-        toast.success(result.message)
+        toast.success(d.toastApproved ?? result.message)
         setDismissed((prev) => new Set(prev).add(videoId))
         router.refresh()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedReview ?? result.message)
       }
       setReviewingId(null)
     })
@@ -70,12 +87,12 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
         rejectionReasons[videoId]
       )
       if (result.status === "success") {
-        toast.success(result.message)
+        toast.success(d.toastRejected ?? result.message)
         setDismissed((prev) => new Set(prev).add(videoId))
         setShowRejectInput(null)
         router.refresh()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedReview ?? result.message)
       }
       setReviewingId(null)
     })
@@ -87,7 +104,7 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <CheckCircle2 className="text-muted-foreground mb-4 size-12" />
           <p className="text-muted-foreground text-sm">
-            No videos pending review.
+            {d.emptyState ?? "No videos pending review."}
           </p>
         </CardContent>
       </Card>
@@ -99,7 +116,7 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
       <div className="flex items-center gap-2">
         <Inbox className="size-5" />
         <h3 className="font-semibold">
-          {videos.length} video{videos.length !== 1 && "s"} pending review
+          {videos.length} {d.pendingSuffix ?? "pending review"}
         </h3>
       </div>
 
@@ -126,8 +143,8 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
                     <div>
                       <p className="font-medium">{video.title}</p>
                       <p className="text-muted-foreground text-xs">
-                        by {video.user.username || video.user.email} &middot;{" "}
-                        {format(new Date(video.createdAt), "MMM d, yyyy")}
+                        {d.by ?? "by"} {video.user.username || video.user.email}{" "}
+                        &middot; {dateFmt(video.createdAt)}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
@@ -155,14 +172,15 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
                     rel="noopener noreferrer"
                     className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
                   >
-                    Preview video <ExternalLink className="size-3" />
+                    {d.previewVideo ?? "Preview video"}{" "}
+                    <ExternalLink className="size-3" />
                   </a>
 
                   {/* Actions */}
                   {platformOnly && (
                     <p className="text-muted-foreground text-xs">
-                      Public and paid videos are approved by the platform
-                      catalog team. You can still reject.
+                      {d.platformHint ??
+                        "Public and paid videos are approved by the platform catalog team. You can still reject."}
                     </p>
                   )}
                   <div className="flex items-center gap-2 pt-1">
@@ -174,17 +192,19 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
                       }
                     >
                       {isPending && reviewingId === video.id ? (
-                        <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                        <Loader2 className="me-1.5 size-3.5 animate-spin" />
                       ) : (
-                        <Check className="mr-1.5 size-3.5" />
+                        <Check className="me-1.5 size-3.5" />
                       )}
-                      Approve
+                      {d.approve ?? "Approve"}
                     </Button>
 
                     {showRejectInput === video.id ? (
                       <div className="flex items-center gap-2">
                         <Input
-                          placeholder="Reason (optional)"
+                          placeholder={
+                            d.reasonPlaceholder ?? "Reason (optional)"
+                          }
                           value={rejectionReasons[video.id] || ""}
                           onChange={(e) =>
                             setRejectionReasons((prev) => ({
@@ -200,14 +220,14 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
                           onClick={() => handleReject(video.id)}
                           disabled={isPending && reviewingId === video.id}
                         >
-                          Confirm Reject
+                          {d.confirmReject ?? "Confirm Reject"}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => setShowRejectInput(null)}
                         >
-                          Cancel
+                          {d.cancel ?? "Cancel"}
                         </Button>
                       </div>
                     ) : (
@@ -217,8 +237,8 @@ export function VideoReviewContent({ videos: initialVideos, userRole }: Props) {
                         onClick={() => setShowRejectInput(video.id)}
                         disabled={isPending && reviewingId === video.id}
                       >
-                        <X className="mr-1.5 size-3.5" />
-                        Reject
+                        <X className="me-1.5 size-3.5" />
+                        {d.reject ?? "Reject"}
                       </Button>
                     )}
                   </div>

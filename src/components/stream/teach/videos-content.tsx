@@ -298,6 +298,7 @@ export function TeachVideosContent({
                             courseName: video.lesson.chapter.subject.name,
                           }}
                           onUpdate={() => router.refresh()}
+                          dictionary={dictionary as Record<string, any>}
                         >
                           <Button
                             variant="ghost"

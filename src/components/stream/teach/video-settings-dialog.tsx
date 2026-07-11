@@ -55,67 +55,95 @@ interface VideoSettingsDialogProps {
   }
   onUpdate?: () => void
   children: React.ReactNode
+  // The `stream` dictionary subtree.
+  dictionary?: Record<string, any>
 }
 
-const VISIBILITY_OPTIONS = [
-  {
-    value: "PRIVATE",
-    label: "Private",
-    icon: EyeOff,
-    description: "Only you can see",
-  },
-  {
-    value: "SCHOOL",
-    label: "School",
-    icon: School,
-    description: "Visible to school members",
-  },
-  {
-    value: "PUBLIC",
-    label: "Public",
-    icon: Globe,
-    description: "Visible to everyone",
-  },
-] as const
+type FreeVisibility = "PRIVATE" | "SCHOOL" | "PUBLIC"
 
 export function VideoSettingsDialog({
   video,
   onUpdate,
   children,
+  dictionary,
 }: VideoSettingsDialogProps) {
+  const d = dictionary?.videoSettings ?? {}
+  const dt = dictionary?.teachVideos ?? {}
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [visibility, setVisibility] = useState(video.visibility)
-  const [paywallTarget, setPaywallTarget] = useState<
-    "PRIVATE" | "SCHOOL" | "PUBLIC"
-  >("SCHOOL")
+  const [approvalStatus, setApprovalStatus] = useState(video.approvalStatus)
+  const [paywallTarget, setPaywallTarget] = useState<FreeVisibility>("SCHOOL")
   const isPaid = visibility === "PAID"
+
+  const statusLabel: Record<string, string> = {
+    APPROVED: dt.statusApproved ?? "Approved",
+    PENDING: dt.statusPending ?? "Pending",
+    REJECTED: dt.statusRejected ?? "Rejected",
+  }
+
+  const visibilityOptions: Array<{
+    value: FreeVisibility
+    label: string
+    icon: typeof EyeOff
+    description: string
+  }> = [
+    {
+      value: "PRIVATE",
+      label: d.optionPrivate ?? "Private",
+      icon: EyeOff,
+      description: d.optionPrivateDesc ?? "Only you can see",
+    },
+    {
+      value: "SCHOOL",
+      label: d.optionSchool ?? "School",
+      icon: School,
+      description: d.optionSchoolDesc ?? "Visible to school members",
+    },
+    {
+      value: "PUBLIC",
+      label: d.optionPublic ?? "Public",
+      icon: Globe,
+      description: d.optionPublicDesc ?? "Visible to everyone",
+    },
+  ]
 
   function handleRemovePaywall() {
     startTransition(async () => {
       const result = await removeVideoPaywall(video.id, paywallTarget)
       if (result.status === "success") {
-        toast.success(result.message)
+        toast.success(d.toastPaywallRemoved ?? result.message)
         setVisibility(paywallTarget)
         onUpdate?.()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedAction ?? result.message)
       }
     })
   }
 
   function handleVisibilityChange(newVisibility: string) {
+    // Widening an APPROVED video to PUBLIC resubmits it for platform review —
+    // mirror the server rule so the toast + status badge stay truthful.
+    const willResubmit =
+      newVisibility === "PUBLIC" &&
+      visibility !== "PUBLIC" &&
+      approvalStatus === "APPROVED"
     setVisibility(newVisibility)
     startTransition(async () => {
       const result = await updateVideoVisibility(
         video.id,
-        newVisibility as "PRIVATE" | "SCHOOL" | "PUBLIC"
+        newVisibility as FreeVisibility
       )
       if (result.status === "success") {
-        toast.success(result.message)
+        if (willResubmit) {
+          setApprovalStatus("PENDING")
+          toast.success(d.toastResubmitted ?? result.message)
+        } else {
+          toast.success(d.toastVisibility ?? result.message)
+        }
         onUpdate?.()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedAction ?? result.message)
         setVisibility(video.visibility)
       }
     })
@@ -125,11 +153,11 @@ export function VideoSettingsDialog({
     startTransition(async () => {
       const result = await revokeVideoAccess(video.id)
       if (result.status === "success") {
-        toast.success(result.message)
+        toast.success(d.toastRevoked ?? result.message)
         setVisibility("PRIVATE")
         onUpdate?.()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedAction ?? result.message)
       }
     })
   }
@@ -138,11 +166,11 @@ export function VideoSettingsDialog({
     startTransition(async () => {
       const result = await deleteOwnVideo(video.id)
       if (result.status === "success") {
-        toast.success(result.message)
+        toast.success(d.toastDeleted ?? result.message)
         setOpen(false)
         onUpdate?.()
       } else {
-        toast.error(result.message)
+        toast.error(d.failedAction ?? result.message)
       }
     })
   }
@@ -161,23 +189,27 @@ export function VideoSettingsDialog({
         <div className="space-y-4">
           {/* Status */}
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Status</span>
+            <span className="text-muted-foreground text-sm">
+              {d.status ?? "Status"}
+            </span>
             <Badge
               variant={
-                video.approvalStatus === "APPROVED"
+                approvalStatus === "APPROVED"
                   ? "default"
-                  : video.approvalStatus === "REJECTED"
+                  : approvalStatus === "REJECTED"
                     ? "destructive"
                     : "secondary"
               }
             >
-              {video.approvalStatus}
+              {statusLabel[approvalStatus] ?? approvalStatus}
             </Badge>
           </div>
 
           {/* Views */}
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Views</span>
+            <span className="text-muted-foreground text-sm">
+              {d.views ?? "Views"}
+            </span>
             <span className="text-sm font-medium">
               {video.viewCount.toLocaleString()}
             </span>
@@ -191,25 +223,25 @@ export function VideoSettingsDialog({
             // generic toggle refuses to un-paywall. Offer an explicit
             // "remove paywall → free audience" path instead.
             <div className="space-y-2">
-              <label className="text-sm font-medium">Paywall</label>
-              <Badge variant="secondary">Paid</Badge>
+              <label className="text-sm font-medium">
+                {d.paywall ?? "Paywall"}
+              </label>
+              <Badge variant="secondary">{d.paid ?? "Paid"}</Badge>
               <p className="text-muted-foreground text-xs">
-                This is a paid video. Removing the paywall makes it free at the
-                audience you choose. Existing buyers are not refunded.
+                {d.paywallDescription ??
+                  "This is a paid video. Removing the paywall makes it free at the audience you choose. Existing buyers are not refunded."}
               </p>
               <div className="flex items-center gap-2">
                 <Select
                   value={paywallTarget}
-                  onValueChange={(v) =>
-                    setPaywallTarget(v as "PRIVATE" | "SCHOOL" | "PUBLIC")
-                  }
+                  onValueChange={(v) => setPaywallTarget(v as FreeVisibility)}
                   disabled={isPending}
                 >
                   <SelectTrigger className="flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {VISIBILITY_OPTIONS.map((opt) => (
+                    {visibilityOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         <div className="flex items-center gap-2">
                           <opt.icon className="size-4" />
@@ -225,13 +257,15 @@ export function VideoSettingsDialog({
                   onClick={handleRemovePaywall}
                   disabled={isPending}
                 >
-                  Remove paywall
+                  {d.removePaywall ?? "Remove paywall"}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Visibility</label>
+              <label className="text-sm font-medium">
+                {d.visibility ?? "Visibility"}
+              </label>
               <Select
                 value={visibility}
                 onValueChange={handleVisibilityChange}
@@ -241,7 +275,7 @@ export function VideoSettingsDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {VISIBILITY_OPTIONS.map((opt) => (
+                  {visibilityOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       <div className="flex items-center gap-2">
                         <opt.icon className="size-4" />
@@ -255,10 +289,15 @@ export function VideoSettingsDialog({
                 </SelectContent>
               </Select>
               <p className="text-muted-foreground text-xs">
-                You can change visibility at any time. Your video, your choice.
-                {video.approvalStatus === "APPROVED" &&
-                  visibility !== "PUBLIC" &&
-                  " Making an approved video public resubmits it for platform review."}
+                {d.visibilityNote ??
+                  "You can change visibility at any time. Your video, your choice."}
+                {approvalStatus === "APPROVED" && visibility !== "PUBLIC" && (
+                  <>
+                    {" "}
+                    {d.publicResubmitNote ??
+                      "Making an approved video public resubmits it for platform review."}
+                  </>
+                )}
               </p>
             </div>
           )}
@@ -274,8 +313,8 @@ export function VideoSettingsDialog({
               disabled={isPending || visibility === "PRIVATE"}
               className="justify-start"
             >
-              <Shield className="mr-2 size-4" />
-              Revoke Access Immediately
+              <Shield className="me-2 size-4" />
+              {d.revoke ?? "Revoke Access Immediately"}
             </Button>
 
             <AlertDialog>
@@ -286,25 +325,29 @@ export function VideoSettingsDialog({
                   className="text-destructive hover:text-destructive justify-start"
                   disabled={isPending}
                 >
-                  <Trash2 className="mr-2 size-4" />
-                  Delete Video Permanently
+                  <Trash2 className="me-2 size-4" />
+                  {d.deletePermanently ?? "Delete Video Permanently"}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this video?</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    {d.deleteTitle ?? "Delete this video?"}
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete &ldquo;{video.title}&rdquo; and
-                    remove it from the lesson. This action cannot be undone.
+                    {(
+                      d.deleteDescription ??
+                      "This will permanently delete “{title}” and remove it from the lesson. This action cannot be undone."
+                    ).replace("{title}", video.title)}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{d.cancel ?? "Cancel"}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    Delete
+                    {d.delete ?? "Delete"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -316,11 +359,12 @@ export function VideoSettingsDialog({
             <div className="flex items-start gap-2">
               <Eye className="text-muted-foreground mt-0.5 size-4" />
               <div className="space-y-1">
-                <p className="text-xs font-medium">You own this video</p>
+                <p className="text-xs font-medium">
+                  {d.ownershipTitle ?? "You own this video"}
+                </p>
                 <p className="text-muted-foreground text-xs">
-                  You retain all rights. The platform only displays your video
-                  while visibility is non-private. You can revoke access or
-                  delete at any time.
+                  {d.ownershipBody ??
+                    "You retain all rights. The platform only displays your video while visibility is non-private. You can revoke access or delete at any time."}
                 </p>
               </div>
             </div>

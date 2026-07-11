@@ -25,6 +25,18 @@ vi.mock("@/components/stream/lib/quota", () => ({
   incrementSchoolVideoUsage: vi.fn(),
 }))
 
+vi.mock("@/lib/s3", () => ({
+  getObjectSize: vi.fn(),
+}))
+
+// The real limiter is in-memory and shared across the whole file run — with
+// enough tests reusing one user id it trips mid-file and later tests fail on
+// "Too many uploads" instead of what they assert. Deterministic allow-all.
+vi.mock("@/lib/rate-limit", () => ({
+  checkUserRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
+  RATE_LIMITS: { STREAM_UPLOAD: {} },
+}))
+
 vi.mock("@/lib/db", () => ({
   db: {
     lesson: {
@@ -33,6 +45,12 @@ vi.mock("@/lib/db", () => ({
     video: {
       create: vi.fn(),
     },
+    user: {
+      findMany: vi.fn(),
+    },
+    notification: {
+      createMany: vi.fn(),
+    },
   },
 }))
 
@@ -40,6 +58,8 @@ const mockAuth = auth as unknown as ReturnType<typeof vi.fn>
 const mockTenant = getTenantContext as ReturnType<typeof vi.fn>
 const mockLessonFind = db.lesson.findFirst as ReturnType<typeof vi.fn>
 const mockVideoCreate = db.video.create as ReturnType<typeof vi.fn>
+const mockUserFindMany = db.user.findMany as ReturnType<typeof vi.fn>
+const mockNotifyMany = db.notification.createMany as ReturnType<typeof vi.fn>
 
 const baseInput = {
   catalogLessonId: "lesson-1",
@@ -49,7 +69,7 @@ const baseInput = {
   durationSeconds: 600,
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks()
   mockTenant.mockResolvedValue({ schoolId: "school-1", subdomain: "demo" })
   mockLessonFind.mockResolvedValue({
@@ -57,10 +77,15 @@ beforeEach(() => {
     chapter: { subject: { slug: "math" } },
   })
   mockVideoCreate.mockResolvedValue({ id: "video-1" })
+  mockUserFindMany.mockResolvedValue([{ id: "admin-1" }, { id: "admin-2" }])
+  mockNotifyMany.mockResolvedValue({ count: 2 })
   vi.mocked(checkSchoolVideoQuota).mockResolvedValue({
     allowed: true,
   } as any)
   vi.mocked(incrementSchoolVideoUsage).mockResolvedValue(BigInt(0))
+  const { getObjectSize } = await import("@/lib/s3")
+  // Default: S3 unavailable → callers fall back to the client-claimed size.
+  vi.mocked(getObjectSize).mockResolvedValue(null)
 })
 
 describe("uploadVideo — URL validation & quota (P2 hardening)", () => {
@@ -265,5 +290,83 @@ describe("uploadVideo — multi-tenant write", () => {
         data: expect.objectContaining({ visibility: "PUBLIC" }),
       })
     )
+  })
+})
+
+describe("uploadVideo — reviewer notification on new PENDING", () => {
+  beforeEach(() =>
+    mockAuth.mockResolvedValue({ user: { id: "t-1", role: "TEACHER" } })
+  )
+
+  it("notifies the school's admins, excluding the uploader", async () => {
+    await uploadVideo(baseInput)
+    expect(mockUserFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { schoolId: "school-1", role: "ADMIN", id: { not: "t-1" } },
+      })
+    )
+    expect(mockNotifyMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            schoolId: "school-1",
+            userId: "admin-1",
+            actorId: "t-1",
+            type: "system_alert",
+          }),
+        ]),
+      })
+    )
+  })
+
+  it("skips notification when the school has no other admins", async () => {
+    mockUserFindMany.mockResolvedValueOnce([])
+    await uploadVideo(baseInput)
+    expect(mockNotifyMany).not.toHaveBeenCalled()
+  })
+
+  it("a notification failure does not fail the upload", async () => {
+    mockNotifyMany.mockRejectedValueOnce(new Error("notifications down"))
+    const result = await uploadVideo(baseInput)
+    expect(result.status).toBe("success")
+  })
+})
+
+describe("uploadVideo — authoritative fileSize via S3 HEAD", () => {
+  beforeEach(() =>
+    mockAuth.mockResolvedValue({ user: { id: "t-1", role: "TEACHER" } })
+  )
+
+  it("uses the HEAD ContentLength over the client-claimed size for quota", async () => {
+    const { getObjectSize } = await import("@/lib/s3")
+    vi.mocked(getObjectSize).mockResolvedValueOnce(9_000_000)
+    await uploadVideo({
+      ...baseInput,
+      fileSize: 1, // hostile client claims 1 byte
+      storageKey: "stream/school-1/video/123_v.mp4",
+      storageProvider: "aws_s3",
+    })
+    expect(checkSchoolVideoQuota).toHaveBeenCalledWith("school-1", 9_000_000)
+    expect(mockVideoCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ fileSize: 9_000_000 }),
+      })
+    )
+  })
+
+  it("falls back to the claimed size when HEAD is unavailable", async () => {
+    await uploadVideo({
+      ...baseInput,
+      fileSize: 5_000_000,
+      storageKey: "stream/school-1/video/123_v.mp4",
+      storageProvider: "aws_s3",
+    })
+    expect(checkSchoolVideoQuota).toHaveBeenCalledWith("school-1", 5_000_000)
+  })
+
+  it("never calls HEAD for URL submissions (no storageKey)", async () => {
+    const { getObjectSize } = await import("@/lib/s3")
+    await uploadVideo(baseInput)
+    expect(vi.mocked(getObjectSize)).not.toHaveBeenCalled()
   })
 })

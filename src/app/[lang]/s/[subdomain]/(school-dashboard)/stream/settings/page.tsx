@@ -284,7 +284,12 @@ export default async function StreamSettingsPage({
         />
       }
       reviewContent={
-        <VideoReviewContent videos={pendingVideos} userRole={role} />
+        <VideoReviewContent
+          videos={pendingVideos}
+          userRole={role}
+          lang={lang}
+          dictionary={dictionary.stream || {}}
+        />
       }
       pendingReviewCount={pendingVideos.length}
     />

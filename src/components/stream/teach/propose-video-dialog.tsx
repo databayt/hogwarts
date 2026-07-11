@@ -122,12 +122,29 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
   const [uploadedMeta, setUploadedMeta] = useState<UploadedMeta | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
+  // Uploaded-but-not-yet-submitted object key. Submit success clears it; any
+  // other exit (remove, tab switch, dialog close) deletes the stranded object
+  // server-side. A ref, not state — cleanup runs from close callbacks where
+  // state could be stale.
+  const cleanupKeyRef = useRef<string | null>(null)
 
   const selectedLesson = lessons.find((l) => l.id === selectedLessonId)
 
   const clearUpload = useCallback(() => {
     xhrRef.current?.abort()
     xhrRef.current = null
+    // Best-effort server-side delete of an orphaned upload. The route refuses
+    // (409) if a Video row already claimed the key, so this can never destroy
+    // submitted content.
+    const strandedKey = cleanupKeyRef.current
+    if (strandedKey) {
+      cleanupKeyRef.current = null
+      void fetch("/api/blob/presign", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: strandedKey }),
+      }).catch(() => {})
+    }
     setUploadStatus("idle")
     setUploadPct(0)
     setUploadedMeta(null)
@@ -213,6 +230,7 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
         })
 
         xhrRef.current = null
+        cleanupKeyRef.current = presign.key
         setVideoUrl(presign.finalUrl)
         setUploadedMeta({
           name: file.name,
@@ -276,6 +294,8 @@ export function ProposeVideoDialog({ lessons, children, dictionary }: Props) {
       })
 
       if (result.status === "success") {
+        // The Video row now owns the uploaded object — nothing to clean up.
+        cleanupKeyRef.current = null
         toast.success(
           dToast.success ??
             "Video submitted for review. You'll be notified when it's approved."
