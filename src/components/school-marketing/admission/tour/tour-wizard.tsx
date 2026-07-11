@@ -191,10 +191,7 @@ export function TourWizard({
         setConfirmation(result.data)
         goTo("confirm")
       } else {
-        ErrorToast(
-          tour?.errors?.failedToBookTour ||
-            "Failed to book tour"
-        )
+        ErrorToast(tour?.errors?.failedToBookTour || "Failed to book tour")
       }
     } catch {
       ErrorToast(tour?.errors?.failedToBookTour || "Failed to book tour")

@@ -127,9 +127,7 @@ export default function InquiryFormContent({
         setIsSubmitted(true)
         SuccessToast(dict.inquirySubmitted || "Inquiry submitted successfully")
       } else {
-        ErrorToast(
-          dict.failedToSubmit || "Failed to submit inquiry"
-        )
+        ErrorToast(dict.failedToSubmit || "Failed to submit inquiry")
       }
     } catch (error) {
       ErrorToast(dict.failedToSubmit || "Failed to submit inquiry")

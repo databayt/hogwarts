@@ -126,9 +126,7 @@ export default function StatusTrackerContent({
         setStatus(result.data)
         setStep("display")
       } else {
-        ErrorToast(
-          dict.failedToFetch || "Failed to fetch status"
-        )
+        ErrorToast(dict.failedToFetch || "Failed to fetch status")
         setAccessToken(null)
         setStep("request")
       }
@@ -180,9 +178,7 @@ export default function StatusTrackerContent({
         setAccessToken(result.data.accessToken)
         await fetchStatus(result.data.accessToken)
       } else {
-        ErrorToast(
-          dict.invalidCode || "Invalid verification code"
-        )
+        ErrorToast(dict.invalidCode || "Invalid verification code")
       }
     } catch (error) {
       ErrorToast(dict.verificationFailed || "Verification failed")

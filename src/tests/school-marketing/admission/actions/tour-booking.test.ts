@@ -35,6 +35,11 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
+// Server Action IP resolution reads next/headers — stub it in unit tests.
+vi.mock("next/headers", () => ({
+  headers: vi.fn(async () => ({ get: () => null })),
+}))
+
 vi.mock("@/lib/subdomain-actions", () => ({
   getSchoolBySubdomain: vi.fn(),
 }))
