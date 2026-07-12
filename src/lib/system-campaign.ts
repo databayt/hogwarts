@@ -108,7 +108,9 @@ export async function ensureDirectAdmitApplication(
       // Gender enum — cast at this boundary only (never on the Student side).
       gender: (input.gender ?? undefined) as Gender | undefined,
       nationality: input.nationality ?? "",
-      email: input.email,
+      // provisionStudent always passes a normalized email (real or synthesized
+      // placeholder) into the shadow-Application path; coalesce for the type.
+      email: input.email ?? "",
       phone: input.phone ?? "",
       address: input.address ?? "",
       city: input.city ?? "",

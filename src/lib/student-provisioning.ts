@@ -70,8 +70,11 @@ export interface ProvisionStudentInput {
   category?: string | null
   photoUrl?: string | null
 
-  // Contact
-  email: string
+  // Contact. Optional: the admin wizard collects no email — provisionStudent
+  // synthesizes a stable `${studentCode}@student.local` placeholder so the
+  // student still gets a login (credential delivered as a temp password, not
+  // emailed to the placeholder).
+  email?: string | null
   phone?: string | null
   alternatePhone?: string | null
   address?: string | null
@@ -189,6 +192,13 @@ export async function provisionStudent(
     tx,
   })
 
+  // Every student gets a login, so User.email (unique per school) must exist.
+  // Synthesize a stable placeholder when the source has none (admin wizard).
+  const email =
+    input.email && input.email.trim()
+      ? input.email.trim()
+      : `${studentCode}@student.local`
+
   // ---------------------------------------------------------------------
   // 3. Resolve/create User — BEFORE fees (invoice fan-out is a no-op
   //    without a userId).
@@ -199,7 +209,7 @@ export async function provisionStudent(
     // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
     // same email may exist as separate rows in other schools.
     const existingUser = await tx.user.findFirst({
-      where: { email: input.email, schoolId },
+      where: { email, schoolId },
       select: { id: true },
     })
 
@@ -214,7 +224,7 @@ export async function provisionStudent(
     } else {
       const guestUser = await tx.user.create({
         data: {
-          email: input.email,
+          email,
           username: studentCode,
           role: "STUDENT",
           schoolId,
@@ -242,7 +252,12 @@ export async function provisionStudent(
   // ---------------------------------------------------------------------
   const applicationId: string =
     input.applicationId ??
-    (await ensureDirectAdmitApplication(tx, input, opts.origin, studentCode))
+    (await ensureDirectAdmitApplication(
+      tx,
+      { ...input, email },
+      opts.origin,
+      studentCode
+    ))
 
   // ---------------------------------------------------------------------
   // 5. Find-or-create Student.
@@ -294,7 +309,7 @@ export async function provisionStudent(
           dateOfBirth: input.dateOfBirth ?? new Date("2000-01-01"),
           gender: input.gender ?? "MALE",
           nationality: input.nationality ?? undefined,
-          email: input.email,
+          email,
           mobileNumber: input.phone ?? undefined,
           alternatePhone: input.alternatePhone ?? undefined,
           currentAddress: input.address ?? undefined,
@@ -496,6 +511,7 @@ export async function provisionStudent(
         phone: guardian.phone ?? null,
         occupation: guardian.occupation ?? null,
         isPrimary: guardian.isPrimary ?? false,
+        createLogin: guardian.createLogin,
       })
     }
   } catch (guardianError) {

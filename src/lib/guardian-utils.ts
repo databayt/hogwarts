@@ -8,6 +8,8 @@
 
 import type { PrismaClient } from "@prisma/client"
 
+import { mintTempPassword, sanitizeUsername } from "@/lib/credentials"
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -35,6 +37,9 @@ interface CreateOrLinkResult {
   guardianId: string
   guardianTypeId: string
   studentGuardianId: string
+  /** Set only when `createLogin` was requested AND a brand-new guardian User
+   *  was minted (so the caller can surface the plaintext once). Null otherwise. */
+  credentials: { username: string; password: string } | null
 }
 
 // Prisma transaction client type
@@ -54,7 +59,15 @@ type TxClient = Omit<
  */
 export async function createOrLinkGuardian(
   tx: TxClient,
-  params: GuardianEntry & { schoolId: string; studentId: string }
+  params: GuardianEntry & {
+    schoolId: string
+    studentId: string
+    /** Mint a guardian portal login (User role GUARDIAN) when an email is
+     *  present and the guardian has none yet. Bulk CSV import passes true (it
+     *  gave families logins before this unification); admission + the student
+     *  wizard omit it and keep guardians contact-only, as they do today. */
+    createLogin?: boolean
+  }
 ): Promise<CreateOrLinkResult> {
   const {
     schoolId,
@@ -66,7 +79,9 @@ export async function createOrLinkGuardian(
     phone,
     occupation,
     isPrimary,
+    createLogin,
   } = params
+  let credentials: { username: string; password: string } | null = null
 
   // 1. Ensure GuardianType exists
   const guardianType = await tx.guardianType.upsert({
@@ -114,6 +129,42 @@ export async function createOrLinkGuardian(
     })
   }
 
+  // 2.5 Optional guardian portal login (bulk-import parity). User is unique by
+  //     (email, schoolId); reuse an existing account, else mint one with a
+  //     temp password. username is non-unique so a sanitized base is fine.
+  if (createLogin && email && !guardian.userId) {
+    const existingUser = await tx.user.findFirst({
+      where: { email, schoolId },
+      select: { id: true },
+    })
+    let guardianUserId: string
+    if (existingUser) {
+      guardianUserId = existingUser.id
+    } else {
+      const { plain, hashed } = await mintTempPassword()
+      const username =
+        sanitizeUsername(email) ||
+        sanitizeUsername(`${firstName}.${lastName}`) ||
+        undefined
+      const created = await tx.user.create({
+        data: {
+          email,
+          username,
+          role: "GUARDIAN",
+          schoolId,
+          emailVerified: new Date(),
+          password: hashed,
+        },
+      })
+      guardianUserId = created.id
+      credentials = { username: username ?? email, password: plain }
+    }
+    await tx.guardian.update({
+      where: { id: guardian.id },
+      data: { userId: guardianUserId },
+    })
+  }
+
   // 3. Link student to guardian
   const studentGuardian = await tx.studentGuardian.upsert({
     where: {
@@ -158,6 +209,7 @@ export async function createOrLinkGuardian(
     guardianId: guardian.id,
     guardianTypeId: guardianType.id,
     studentGuardianId: studentGuardian.id,
+    credentials,
   }
 }
 
