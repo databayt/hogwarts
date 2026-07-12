@@ -8,8 +8,7 @@ import { auth } from "@/auth"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
-import { generateStudentUsername } from "@/lib/student-username"
+import { provisionStudent } from "@/lib/student-provisioning"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import type { StudentWizardData } from "./use-student-wizard"
@@ -143,9 +142,26 @@ export async function completeStudentWizard(
         where: { id: studentId, schoolId },
         select: {
           firstName: true,
+          middleName: true,
           lastName: true,
           studentId: true,
           academicGradeId: true,
+          sectionId: true,
+          dateOfBirth: true,
+          gender: true,
+          nationality: true,
+          mobileNumber: true,
+          alternatePhone: true,
+          currentAddress: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          country: true,
+          profilePhotoUrl: true,
+          previousSchoolName: true,
+          previousGrade: true,
+          lang: true,
+          userId: true,
         },
       }),
       db.studentGuardian.count({
@@ -173,45 +189,55 @@ export async function completeStudentWizard(
       )
     }
 
-    // Assign the per-school code on wizard completion if one wasn't already set.
-    // Draft students are created blank, so this is the first point we know the grade.
-    const code =
-      student.studentId ??
-      (await generateStudentUsername({
-        schoolId,
-        academicGradeId: student.academicGradeId,
-      }))
-
-    await db.student.updateMany({
-      where: { id: studentId, schoolId },
-      data: {
-        wizardStep: null,
-        ...(student.studentId ? {} : { studentId: code }),
-      },
-    })
-
-    // Defensive auto-assign — the academic step normally handles this, but
-    // when the wizard is completed via a non-standard flow (resumed from
-    // another device, partial state, etc.) the academic step may have been
-    // skipped. Idempotent so a duplicate call here is a no-op when the
-    // assignments already exist.
-    if (student.academicGradeId) {
-      try {
-        await ensureStudentFeeAssignments({
-          schoolId,
-          studentId,
-          academicGradeId: student.academicGradeId,
-        })
-      } catch (err) {
-        console.error(
-          "[completeStudentWizard] ensureStudentFeeAssignments failed:",
-          err
-        )
-      }
-    }
+    // Provision the full student graph via the shared core: creates the User +
+    // login (the draft had none), mints a direct-admit Application (channel
+    // ADMIN_DIRECT), assigns the student code, links year-level, and generates
+    // fee assignments AND invoices (previously skipped because there was no
+    // userId). Guardians + documents were already created in earlier wizard
+    // steps, so they're not re-passed. `email` is absent for wizard students —
+    // the core synthesizes a placeholder so the login can exist.
+    const result = await db.$transaction(
+      (tx) =>
+        provisionStudent(
+          {
+            existingStudentId: studentId,
+            schoolId,
+            firstName: student.firstName,
+            middleName: student.middleName,
+            lastName: student.lastName,
+            dateOfBirth: student.dateOfBirth,
+            gender: student.gender,
+            nationality: student.nationality,
+            phone: student.mobileNumber,
+            alternatePhone: student.alternatePhone,
+            address: student.currentAddress,
+            city: student.city,
+            state: student.state,
+            postalCode: student.postalCode,
+            country: student.country,
+            academicGradeId: student.academicGradeId,
+            sectionId: student.sectionId,
+            previousSchool: student.previousSchoolName,
+            previousGrade: student.previousGrade,
+            photoUrl: student.profilePhotoUrl,
+            lang: student.lang,
+            userId: student.userId,
+          },
+          {
+            notify: true,
+            credentialDelivery: "temp-password",
+            origin: "ADMIN_DIRECT",
+          },
+          tx
+        ),
+      { timeout: 30000 }
+    )
 
     revalidatePath("/students")
-    return { success: true }
+    return {
+      success: true,
+      data: { studentId, credentials: result.credentials ?? null },
+    }
   } catch (error) {
     return actionError(
       ACTION_ERRORS.STUDENT_UPDATE_FAILED,
