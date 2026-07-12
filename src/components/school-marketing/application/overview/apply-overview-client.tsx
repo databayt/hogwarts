@@ -3,8 +3,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { ClipboardList, FileText, User, type LucideIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -16,7 +16,7 @@ interface Stage {
   number: number
   title: string
   description: string
-  illustration: string
+  Icon: LucideIcon
   bgColor: string
 }
 
@@ -49,8 +49,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       description:
         overviewDict.stage1Desc ||
         "Upload documents to auto-fill your application",
-      illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/lamp-paper.svg",
+      Icon: FileText,
       bgColor: "#d97757",
     },
     {
@@ -59,8 +58,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       description:
         overviewDict.stage2Desc ||
         "Enter your personal details and contact information",
-      illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/node-constitution.svg",
+      Icon: User,
       bgColor: "#6a9bcc",
     },
     {
@@ -68,8 +66,7 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       title: groupsDict.details || "Details",
       description:
         overviewDict.stage3Desc || "Add guardian info and academic background",
-      illustration:
-        "https://d1dlwtcfl0db67.cloudfront.net/anthropic/illustrations/hand-abacus.svg",
+      Icon: ClipboardList,
       bgColor: "#788c5d",
     },
   ]
@@ -127,15 +124,13 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
                   </div>
                   <div className="hidden flex-shrink-0 md:flex">
                     <div
-                      className="relative h-14 w-14 overflow-hidden rounded-lg"
+                      className="flex h-14 w-14 items-center justify-center rounded-lg"
                       style={{ backgroundColor: stage.bgColor }}
                     >
-                      <Image
-                        src={stage.illustration}
-                        alt={stage.title}
-                        fill
-                        sizes="56px"
-                        className="object-contain p-1"
+                      <stage.Icon
+                        className="h-7 w-7 text-white"
+                        strokeWidth={1.5}
+                        aria-hidden="true"
                       />
                     </div>
                   </div>

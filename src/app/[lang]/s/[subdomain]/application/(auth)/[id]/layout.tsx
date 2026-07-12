@@ -65,20 +65,27 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
     return <>{children}</>
   }
 
-  // Render skeleton based on loading state
+  // Render skeleton based on loading state.
+  // Mirrors the two-column FormLayout shape (and [id]/loading.tsx) so the
+  // route-level suspense skeleton and this session-init skeleton stay visually
+  // continuous — otherwise the content area flashes between two different
+  // skeleton layouts while the wizard session initializes.
   const renderSkeleton = () => (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-start gap-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-8 w-64 max-w-full" />
-          <Skeleton className="h-4 w-96 max-w-full" />
+    <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-10">
+      {/* Left column - FormHeading */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-3 sm:space-y-4">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-5 w-72 max-w-full" />
         </div>
       </div>
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+      {/* Right column - Form fields */}
+      <div className="w-full lg:w-auto lg:shrink-0 lg:basis-[48%]">
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
       </div>
     </div>
   )

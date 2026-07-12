@@ -5,6 +5,7 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { getFeePreviewByGradeLabel, type FeePreview } from "@/lib/fee-preview"
+import { selfHealFeeProvisioning } from "@/lib/fee-provisioning-self-heal"
 import { getTenantContext } from "@/lib/tenant-context"
 
 /**
@@ -20,7 +21,16 @@ export async function getApplicationFeePreview(
     if (!applyingForClass || applyingForClass.trim().length === 0) {
       return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
-    const preview = await getFeePreviewByGradeLabel(schoolId, applyingForClass)
+    let preview = await getFeePreviewByGradeLabel(schoolId, applyingForClass)
+    if (!preview.matched) {
+      // Grades + School.tuitionFee exist but per-grade structures were never
+      // provisioned (onboarding after() dropped on a cold serverless exit).
+      // The heal is idempotent and cheap when nothing is missing; the
+      // provisioned structures inherit the school-wide fee until the admin
+      // customizes them via the pricing matrix.
+      await selfHealFeeProvisioning(schoolId)
+      preview = await getFeePreviewByGradeLabel(schoolId, applyingForClass)
+    }
     return { success: true, data: preview }
   } catch (error) {
     return actionError(

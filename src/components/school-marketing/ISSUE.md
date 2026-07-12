@@ -67,6 +67,8 @@ Active step order: **attachments → personal → location → academic → fees
 
 **PRODUCT DECISION (2026-06-13):** Applying is ALWAYS FREE. The fees step is now an informational free-application preview only — no payment method selection, no Bankak/Kashi icons. Payment happens post-acceptance only: registration fee on offer acceptance + tuition invoices.
 
+**FEES STEP REDESIGN (2026-07-12):** The step shows the grade's term/year tuition (auto-generated per-grade FeeStructure, inheriting School.tuitionFee until customized via PricingRule). The "applying is free" banner was removed (free is the baseline, not advertised). Fee-preview matching now mirrors `fee-auto-assign` three-source matching + variant collapse (previously `{classId: null}` summed every grade's auto-generated structure); when no structures exist, the action fires `selfHealFeeProvisioning` and retries. A "discounts and scholarships may apply" line opens a dialog listing scholarships, early-payment hint, and the estimate disclaimer.
+
 - [x] Application context provider (per-user draft scoping)
 - [x] Validation context provider
 - [x] Step header / progress bar (3 phases)

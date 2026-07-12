@@ -9,7 +9,6 @@ import {
   CalendarClock,
   CheckCircle2,
   CreditCard,
-  GraduationCap,
   Loader2,
   XCircle,
 } from "lucide-react"
@@ -35,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import type { OfferDetails } from "./actions"
@@ -476,9 +476,7 @@ export default function OfferContent({
       <div className="container mx-auto max-w-3xl space-y-6 px-4">
         {/* Header */}
         <div className="text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <GraduationCap className="h-8 w-8 text-green-600" />
-          </div>
+          <CelebrationAnimation className="mb-2 h-28 w-28 sm:h-32 sm:w-32" />
           <h1 className="text-2xl font-bold sm:text-3xl">
             {t?.congratulations || "Congratulations! You've Been Accepted"}
           </h1>

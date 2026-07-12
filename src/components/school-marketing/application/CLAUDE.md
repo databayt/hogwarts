@@ -15,7 +15,8 @@ Public multi-step application form for prospective students (5 steps: attachment
 
 ## Key Decisions
 
-- **APPLYING IS ALWAYS FREE (2026-06-13 — product decision, do not revert)**: The fees step is now an informational free-application preview. It shows the applicant what fees exist but collects NO payment and presents NO payment method UI. Submission fires at the end of this step. Payment only happens post-acceptance: registration fee on offer acceptance + tuition invoices via fee assignments. Never re-introduce a payment gate here.
+- **APPLYING IS ALWAYS FREE (2026-06-13 — product decision, do not revert)**: The fees step collects NO payment and presents NO payment method UI. Submission fires at the end of this step. Payment only happens post-acceptance: registration fee on offer acceptance + tuition invoices via fee assignments. Never re-introduce a payment gate here.
+- **Fees step shows term/year grade tuition (2026-07-12)**: No "applying is free" banner — free is the baseline, not advertised. The step shows the selected grade's tuition for the academic year (per-grade auto-generated FeeStructure inheriting `School.tuitionFee` until a PricingRule customizes it), installment options, and a "discounts and scholarships may apply" line that opens a dialog (scholarships list, early-payment hint, estimate disclaimer). `getApplicationFeePreview` self-heals fee provisioning when a school has grades + tuitionFee but zero structures.
 - `ApplicationContext` (React context) manages all form state across steps -- injected at layout level
 - Login required to apply (auth-gated `(auth)/layout.tsx`); drafts are scoped per user (`hogwarts_apply_session_{campaignId}_{userId}`). Sessions still saved server-side via `saveApplicationSession` for cross-device resume
 - callbackUrl preserves the full token'd offer path through the login redirect so applicants land directly on their offer after signing in

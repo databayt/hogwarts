@@ -18,8 +18,10 @@ import { useForm, useFormContext } from "react-hook-form"
 
 import { asset } from "@/lib/asset-url"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { normalizeUploadUrl } from "@/lib/upload-url"
 import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
+import { PdfThumbnail } from "@/components/file/pdf-thumbnail"
 import { useUpload } from "@/components/file/upload/use-upload"
 import { FileUploadField } from "@/components/form/atoms/file-upload"
 
@@ -151,10 +153,11 @@ function DocumentCard({
   const errorMsg = rejectionError || uploadError
 
   const uploaded = !!hasFile
-  const fileUrl =
+  const fileUrl = normalizeUploadUrl(
     typeof currentValue === "string"
       ? currentValue
       : (currentValue as { url?: string })?.url || ""
+  )
   const mimeType =
     typeof currentValue === "object"
       ? (currentValue as { mimeType?: string })?.mimeType || ""
@@ -211,17 +214,17 @@ function DocumentCard({
               className="relative z-0 h-full w-full object-cover"
             />
           ) : /\.pdf$/i.test(fileUrl) || mimeType === "application/pdf" ? (
-            <object
-              data={`${fileUrl}#page=1&view=FitH`}
-              type="application/pdf"
-              className="pointer-events-none h-full w-full"
-              aria-label={label}
-            >
-              <div className="flex flex-1 flex-col items-center justify-center gap-1">
-                <CheckCircle className="h-8 w-8 text-green-500" />
-                <p className="text-muted-foreground text-xs">{pdfLabel}</p>
-              </div>
-            </object>
+            <PdfThumbnail
+              url={fileUrl}
+              label={label}
+              className="relative z-0"
+              fallback={
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <p className="text-muted-foreground text-xs">{pdfLabel}</p>
+                </div>
+              }
+            />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-1">
               <CheckCircle className="h-8 w-8 text-green-500" />

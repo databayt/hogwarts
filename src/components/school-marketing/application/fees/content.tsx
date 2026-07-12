@@ -4,12 +4,19 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
-import { Info } from "lucide-react"
+import { BadgePercent } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 import type { FeePreview } from "@/lib/fee-preview"
 import { formatCurrency } from "@/lib/payment/currency"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -70,6 +77,7 @@ export default function FeesContent({ dictionary }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showDiscountsDialog, setShowDiscountsDialog] = useState(false)
   const [submitResult, setSubmitResult] = useState<SubmitActionResult | null>(
     null
   )
@@ -224,9 +232,13 @@ export default function FeesContent({ dictionary }: Props) {
     )
 
     const tuitionTemplate =
-      feePreviewDict.tuitionFor ||
-      (isRTL ? "رسوم {{grade}}" : "Tuition for {{grade}}")
-    const tuition = tuitionTemplate.replace("{{grade}}", gradeLabel)
+      feePreviewDict.tuitionForYear ||
+      (isRTL
+        ? "رسوم {{grade}} للعام الدراسي {{year}}"
+        : "{{grade}} tuition for the {{year}} academic year")
+    const tuition = tuitionTemplate
+      .replace("{{grade}}", gradeLabel)
+      .replace("{{year}}", preview.academicYear)
 
     const uniqueInstallments = Array.from(
       new Set(
@@ -279,55 +291,132 @@ export default function FeesContent({ dictionary }: Props) {
               <Skeleton className="h-8 w-full" />
             </div>
           ) : preview && preview.matched ? (
-            <div className="space-y-8">
-              {/* Free-application notice */}
-              <Alert>
-                <Info className="h-4 w-4" aria-hidden="true" />
-                <AlertDescription>
-                  {feePreviewDict.freeApplicationNote ||
-                    (isRTL
-                      ? "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
-                      : "Applying is completely free. The fees below apply only after acceptance and during the registration stage.")}
-                </AlertDescription>
-              </Alert>
-
-              {/* Fee preview */}
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-sm">{tuitionLine}</p>
-                <p className="text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
-                  {amountLabel}
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">{tuitionLine}</p>
+              <p className="text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
+                {amountLabel}
+              </p>
+              {installmentLine && (
+                <p className="text-muted-foreground text-sm">
+                  {installmentLine}
                 </p>
-                {installmentLine && (
-                  <p className="text-muted-foreground text-sm">
-                    {installmentLine}
-                  </p>
-                )}
-              </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowDiscountsDialog(true)}
+                className="text-muted-foreground hover:text-foreground mt-3 inline-flex items-center gap-1.5 text-sm underline decoration-dotted underline-offset-4 transition-colors"
+              >
+                <BadgePercent className="h-4 w-4" aria-hidden="true" />
+                {feePreviewDict.discountsNote ||
+                  (isRTL
+                    ? "قد تنطبق خصومات ومنح دراسية"
+                    : "Discounts and scholarships may apply")}
+              </button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Free-application notice always shown */}
-              <Alert>
-                <Info className="h-4 w-4" aria-hidden="true" />
-                <AlertDescription>
-                  {feePreviewDict.freeApplicationNote ||
-                    (isRTL
-                      ? "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
-                      : "Applying is completely free. The fees below apply only after acceptance and during the registration stage.")}
-                </AlertDescription>
-              </Alert>
-              <Alert>
-                <AlertDescription>
-                  {feePreviewDict.noFeesDescription ||
-                    (isRTL
-                      ? "تعذّر تحميل معلومات الرسوم. يمكنك إتمام التقديم وسيُبلَّغك بالرسوم لاحقاً."
-                      : "Unable to load fee information. You can still submit your application and fees will be communicated later.")}
-                </AlertDescription>
-              </Alert>
-            </div>
+            <Alert>
+              <AlertDescription>
+                {feePreviewDict.noFeesDescription ||
+                  (isRTL
+                    ? "تعذّر تحميل معلومات الرسوم. يمكنك إتمام التقديم وسيُبلَّغك بالرسوم لاحقاً."
+                    : "Unable to load fee information. You can still submit your application and fees will be communicated later.")}
+              </AlertDescription>
+            </Alert>
           )}
         </div>
       </FormLayout>
+      <Dialog open={showDiscountsDialog} onOpenChange={setShowDiscountsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {feePreviewDict.discountsDialogTitle ||
+                (isRTL
+                  ? "الخصومات والمنح الدراسية"
+                  : "Discounts & Scholarships")}
+            </DialogTitle>
+            <DialogDescription>
+              {feePreviewDict.discountsDialogDescription ||
+                (isRTL
+                  ? "المبلغ المعروض تقديري. تُطبَّق خصومات الأشقاء والدفع المبكر والمنح الدراسية تلقائياً عند الاستحقاق، ويُؤكَّد المبلغ النهائي عند التسجيل."
+                  : "The amount shown is an estimate. Sibling, early-payment, and scholarship discounts are applied when eligible, and the final amount is confirmed at registration.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {preview?.earlyPaymentHint && (
+              <p className="text-sm">
+                {(
+                  feePreviewDict.earlyPaymentHint ||
+                  (isRTL
+                    ? "ادفع قبل {{date}} لتوفير {{savings}}."
+                    : "Pay before {{date}} to save {{savings}}.")
+                )
+                  .replace(
+                    "{{date}}",
+                    new Date(
+                      preview.earlyPaymentHint.deadline
+                    ).toLocaleDateString(locale === "ar" ? "ar-SD" : "en-US")
+                  )
+                  .replace(
+                    "{{savings}}",
+                    formatCurrency(
+                      preview.earlyPaymentHint.savings,
+                      preview.currency,
+                      locale === "ar" ? "ar-SD" : "en-US"
+                    )
+                  )}
+              </p>
+            )}
+            {preview && preview.scholarships.length > 0 ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">
+                  {feePreviewDict.scholarshipsHeading ||
+                    (isRTL
+                      ? "المنح الدراسية المتاحة"
+                      : "Available scholarships")}
+                </h4>
+                <ul className="space-y-1.5">
+                  {preview.scholarships.map((s) => (
+                    <li
+                      key={s.id}
+                      className="text-muted-foreground flex items-baseline justify-between gap-4 text-sm"
+                    >
+                      <span>{s.name}</span>
+                      <span className="shrink-0 tabular-nums">
+                        {s.coverageType === "FULL"
+                          ? feePreviewDict.scholarshipCoverageFull ||
+                            (isRTL ? "تغطية كاملة" : "Full coverage")
+                          : s.coverageType === "PERCENTAGE"
+                            ? (
+                                feePreviewDict.scholarshipCoveragePercentage ||
+                                (isRTL ? "خصم {{value}}٪" : "{{value}}% off")
+                              ).replace("{{value}}", String(s.coverageAmount))
+                            : (
+                                feePreviewDict.scholarshipCoverageFixed ||
+                                (isRTL ? "خصم {{value}}" : "{{value}} off")
+                              ).replace(
+                                "{{value}}",
+                                formatCurrency(
+                                  s.coverageAmount,
+                                  preview.currency,
+                                  locale === "ar" ? "ar-SD" : "en-US"
+                                )
+                              )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {feePreviewDict.noScholarshipsNote ||
+                  (isRTL
+                    ? "لا توجد منح معلنة لهذا العام — تواصل مع إدارة المدرسة للاستفسار عن الدعم المتاح."
+                    : "No scholarships are listed for this year — contact the school to ask about available support.")}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       {submitResult && (
         <ApplicationSuccessModal
           applicationNumber={submitResult.applicationNumber}
