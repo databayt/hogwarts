@@ -835,3 +835,35 @@ figure.shiki figcaption {
   font-family: var(--font-mono);
   color: var(--code-foreground);
 }
+
+/* ===================================================================== */
+/* Print — strip app chrome so any dashboard page prints as a clean sheet */
+/* ===================================================================== */
+@page {
+  margin: 1.5cm;
+}
+
+@media print {
+  /* Preserve token colors (photos, badges, borders) on paper */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide the whole sidebar (outer wrapper carries the layout gap + fixed
+     container). Elements opting out of print use the .no-print helper or
+     Tailwind's print:hidden variant. */
+  [data-slot="sidebar"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Let content flow full-width to the page edges instead of the sidebar
+     inset, and never clip printed content horizontally. */
+  .dashboard-container {
+    padding-inline: 0 !important;
+    overflow: visible !important;
+  }
+}

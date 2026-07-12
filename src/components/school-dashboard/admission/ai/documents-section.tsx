@@ -5,6 +5,9 @@
 import { useState } from "react"
 import { FileText } from "lucide-react"
 
+import { normalizeUploadUrl } from "@/lib/upload-url"
+import { PdfThumbnail } from "@/components/file/pdf-thumbnail"
+
 import { DocumentReviewPanel } from "./document-review-panel"
 import type { ProcessedDocument } from "./types"
 
@@ -46,9 +49,9 @@ export function DocumentsSection({
             href={photoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex h-36 flex-col items-center justify-center"
+            className="group flex h-28 items-center justify-center"
           >
-            <div className="group-hover:border-foreground/30 h-24 w-24 overflow-hidden rounded-full border-2 transition-colors">
+            <div className="group-hover:border-foreground/30 h-28 w-28 overflow-hidden rounded-full border-2 transition-colors">
               <img
                 src={photoUrl}
                 alt={t?.photo || "Photo"}
@@ -63,7 +66,7 @@ export function DocumentsSection({
             href={signatureUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex h-36 items-center overflow-hidden rounded-lg border transition-colors"
+            className="group relative flex h-28 items-center overflow-hidden rounded-lg border transition-colors"
           >
             <img
               src={signatureUrl}
@@ -89,7 +92,8 @@ export function DocumentsSection({
         )}
         {/* Documents — thumbnail card with glass label */}
         {documents.map((doc, i) => {
-          const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(doc.url || "")
+          const url = normalizeUploadUrl(doc.url || "")
+          const isImage = /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url)
           const typeLabel =
             dictionary?.admission?.documentTypes?.[doc.type] ??
             defaultDocTypeLabels[doc.type] ??
@@ -98,15 +102,15 @@ export function DocumentsSection({
             doc.fileName ||
             `${dictionary?.admission?.ai?.document ?? "Document"} ${i + 1}`
 
-          const isPdf = /\.pdf$/i.test(doc.url || "")
+          const isPdf = /\.pdf$/i.test(url)
 
           return (
             <a
               key={doc.url || i}
-              href={doc.url}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative flex h-36 items-center overflow-hidden rounded-lg border transition-colors"
+              className="group relative flex h-28 items-center overflow-hidden rounded-lg border transition-colors"
               onClick={(e) => {
                 if (doc.status === "completed" && doc.extractedData) {
                   e.preventDefault()
@@ -116,21 +120,18 @@ export function DocumentsSection({
             >
               {isImage ? (
                 <img
-                  src={doc.url}
+                  src={url}
                   alt={displayName}
                   className="h-full w-full object-cover"
                 />
               ) : isPdf ? (
-                <object
-                  data={`${doc.url}#page=1&view=FitH`}
-                  type="application/pdf"
-                  className="pointer-events-none h-full w-full"
-                  aria-label={displayName}
-                >
-                  <div className="flex h-full w-full items-center justify-center">
+                <PdfThumbnail
+                  url={url}
+                  label={displayName}
+                  fallback={
                     <FileText className="text-muted-foreground h-10 w-10" />
-                  </div>
-                </object>
+                  }
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <FileText className="text-muted-foreground h-10 w-10" />
@@ -156,7 +157,7 @@ export function DocumentsSection({
         })}
         {/* Empty state */}
         {!hasAnyContent && (
-          <div className="col-span-full flex h-36 items-center justify-center rounded-lg border border-dashed">
+          <div className="col-span-full flex h-28 items-center justify-center rounded-lg border border-dashed">
             <p className="text-muted-foreground text-sm">
               {t?.noDocuments || "No documents uploaded"}
             </p>

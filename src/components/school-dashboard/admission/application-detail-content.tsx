@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { normalizeUploadUrl } from "@/lib/upload-url"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Locale } from "@/components/internationalization/config"
@@ -250,7 +251,7 @@ export default async function ApplicationDetailContent({
 
           return {
             type: (doc.type as ProcessedDocument["type"]) ?? "other",
-            url: doc.url ?? "",
+            url: normalizeUploadUrl(doc.url ?? ""),
             fileName: doc.fileName ?? doc.name ?? "",
             status: mergedStatus,
             confidence: job?.confidence ?? doc.confidence ?? undefined,
@@ -269,6 +270,16 @@ export default async function ApplicationDetailContent({
     }
   }
 
+  // Merit & Scores is only meaningful once scoring has begun. Hide the whole
+  // section when nothing has been recorded — scores are entered from the Merit
+  // tab (ScoreEntryDialog / EditableScoreCell), so nothing is lost here.
+  const hasMeritData =
+    application.entranceScore != null ||
+    application.interviewScore != null ||
+    application.meritScore != null ||
+    application.meritRank != null ||
+    application.waitlistNumber != null
+
   return (
     <div className="flex flex-col gap-6 md:flex-row md:gap-12">
       {/* Sidebar — 30% */}
@@ -277,7 +288,7 @@ export default async function ApplicationDetailContent({
         <div>
           {application.photoUrl ? (
             <Image
-              src={application.photoUrl}
+              src={normalizeUploadUrl(application.photoUrl)}
               alt={fullName}
               width={208}
               height={208}
@@ -467,15 +478,24 @@ export default async function ApplicationDetailContent({
               label={
                 t?.applicationDetail?.preferredStream || "Preferred Stream"
               }
-              value={d("preferredStream")}
+              value={
+                enumLabel("stream", application.preferredStream) ||
+                d("preferredStream")
+              }
             />
             <InfoRow
               label={t?.applicationDetail?.secondLanguage || "Second Language"}
-              value={d("secondLanguage")}
+              value={
+                enumLabel("language", application.secondLanguage) ||
+                d("secondLanguage")
+              }
             />
             <InfoRow
               label={t?.applicationDetail?.thirdLanguage || "Third Language"}
-              value={d("thirdLanguage")}
+              value={
+                enumLabel("language", application.thirdLanguage) ||
+                d("thirdLanguage")
+              }
             />
             <InfoRow
               label={t?.applicationDetail?.previousSchool || "Previous School"}
@@ -507,42 +527,48 @@ export default async function ApplicationDetailContent({
           </div>
         </section>
 
-        {/* Merit & Scores */}
-        <section>
-          <h2 className="text-lg font-semibold">
-            {t?.applicationDetail?.merit || "Merit & Scores"}
-          </h2>
-          <Separator className="my-3" />
-          {/* Editable score entry for entrance + interview */}
-          <ScoreEntryInline
-            applicationId={applicationId}
-            entranceScore={
-              application.entranceScore != null
-                ? Number(application.entranceScore)
-                : null
-            }
-            interviewScore={
-              application.interviewScore != null
-                ? Number(application.interviewScore)
-                : null
-            }
-            dictionary={dictionary.admission}
-          />
-          <div className="mt-3 grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
-            <InfoRow
-              label={t?.applicationDetail?.meritScore || "Merit Score"}
-              value={application.meritScore?.toString()}
+        {/* Merit & Scores — hidden until scoring has begun */}
+        {hasMeritData && (
+          <section>
+            <h2 className="text-lg font-semibold">
+              {t?.applicationDetail?.merit || "Merit & Scores"}
+            </h2>
+            <Separator className="my-3" />
+            {/* Editable score entry for entrance + interview */}
+            <ScoreEntryInline
+              applicationId={applicationId}
+              entranceScore={
+                application.entranceScore != null
+                  ? Number(application.entranceScore)
+                  : null
+              }
+              interviewScore={
+                application.interviewScore != null
+                  ? Number(application.interviewScore)
+                  : null
+              }
+              dictionary={dictionary.admission}
             />
-            <InfoRow
-              label={t?.applicationDetail?.meritRank || "Merit Rank"}
-              value={application.meritRank ? `#${application.meritRank}` : null}
-            />
-            <InfoRow
-              label={t?.applicationDetail?.waitlistNumber || "Waitlist Number"}
-              value={application.waitlistNumber}
-            />
-          </div>
-        </section>
+            <div className="mt-3 grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
+              <InfoRow
+                label={t?.applicationDetail?.meritScore || "Merit Score"}
+                value={application.meritScore?.toString()}
+              />
+              <InfoRow
+                label={t?.applicationDetail?.meritRank || "Merit Rank"}
+                value={
+                  application.meritRank ? `#${application.meritRank}` : null
+                }
+              />
+              <InfoRow
+                label={
+                  t?.applicationDetail?.waitlistNumber || "Waitlist Number"
+                }
+                value={application.waitlistNumber}
+              />
+            </div>
+          </section>
+        )}
 
         {/* Admission & Payment */}
         <section>
@@ -706,8 +732,8 @@ export default async function ApplicationDetailContent({
           <Separator className="my-3" />
           <DocumentsSection
             documents={documents}
-            photoUrl={application.photoUrl}
-            signatureUrl={application.signatureUrl}
+            photoUrl={normalizeUploadUrl(application.photoUrl)}
+            signatureUrl={normalizeUploadUrl(application.signatureUrl)}
             dictionary={dictionary}
             applicationId={applicationId}
           />

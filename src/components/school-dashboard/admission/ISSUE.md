@@ -29,6 +29,17 @@ last_audited: 2026-06-13
 
 ---
 
+## Fixed (2026-07-12) ✅ — application-detail page polish (uncommitted)
+
+Focused UI pass on `application-detail-content.tsx` + the shared print chrome:
+
+- **Print now produces a clean sheet.** Added a global `@media print` block (`globals.css`) that hides the platform sidebar (`[data-slot="sidebar"]`), resets `.dashboard-container` inset, and sets `@page` margins; `print:hidden` added to the platform header, report-issue footer, both `ApplicationDetailActions` placements, and the score **Edit** button. GOTCHA: an `@page` at-rule nested **inside** `@media print` is silently dropped by Lightning CSS (Tailwind v4) — `@page` must sit at top level or the whole print block vanishes.
+- **Academic section enum translation.** `preferredStream` / `secondLanguage` / `thirdLanguage` are stored as enum codes (`science`, `arabic`, `french`) but were rendered via raw `d()` translation, surfacing lowercase codes on `/en`. Now resolved through `enumLabel("stream"|"language", …)` (mirrors the Personal section), with `d()` fallback.
+- **Merit & Scores hides when empty.** The whole section is now gated on `hasMeritData` (any of entrance/interview/merit score, merit rank, waitlist). Score entry is unaffected — the Merit tab's `ScoreEntryDialog`/`EditableScoreCell` remain the entry point.
+- **Documents thumbnails.** Photo circle enlarged (`h-24 w-24` → `h-28 w-28`); signature/document/empty boxes aligned to the same height (`h-36` → `h-28`) for a concise, circle-consistent row.
+
+Verified on `demo.localhost` (admin) against an enriched-then-reverted demo application: PDF print (print media) shows no chrome; Academic renders Science/Arabic/French; Merit shows with data and is absent when null; document boxes match the circle height.
+
 ## Fixed (2026-07-11) ✅ — production-readiness security pass (commit `f680ca7ed`, local)
 
 Full 6-leg trace (portal · wizard · dashboard · offer+payment · enrollment · settings/AI/crons). Security + correctness subset landed; **remaining items tracked in [#376](https://github.com/databayt/hogwarts/issues/376)**.

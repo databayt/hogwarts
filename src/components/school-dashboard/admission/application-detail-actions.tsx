@@ -112,7 +112,7 @@ export default function ApplicationDetailActions({
         variant="ghost"
         size="icon"
         onClick={() => window.print()}
-        className="h-9 w-9"
+        className="h-9 w-9 print:hidden"
       >
         <Printer className="h-4 w-4" />
         <span className="sr-only">
@@ -123,7 +123,7 @@ export default function ApplicationDetailActions({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 print:hidden">
       {statusOptions.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

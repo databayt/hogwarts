@@ -123,7 +123,7 @@ export function ScoreEntryInline({
           variant="ghost"
           size="sm"
           onClick={() => setEditing(true)}
-          className="h-8 gap-1.5"
+          className="h-8 gap-1.5 print:hidden"
         >
           <Pencil className="h-3.5 w-3.5" />
           {t?.meritList?.editScores || "Edit"}
