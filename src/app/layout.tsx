@@ -42,7 +42,9 @@ export default async function RootLayout({
 
   // Marketing images, illustrations, Lottie and lesson video all load straight
   // from the CDN — open the connection early, it matters on high-RTT links.
-  preconnect(`https://${process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"}`)
+  preconnect(
+    `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN?.trim() || "cdn.databayt.org"}`
+  )
 
   return (
     <html

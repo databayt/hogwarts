@@ -11,11 +11,17 @@
  * CLEANUP RULES:
  * 1. Delete read notifications past their expiresAt date
  * 2. Delete all notifications older than 90 days (hard retention limit)
+ * 3. Delete delivery logs older than 90 days — the logs table is the largest
+ *    grower in the DB (send/bounce telemetry, no user-facing value past the
+ *    retention window). Logs tied to a notification also cascade with rule 2;
+ *    this pass catches batch logs (notificationId null) and survivors.
  *
- * WHY TWO PASSES:
+ * WHY THESE PASSES:
  * - Read + expired: User saw it and it's past shelf life
  * - 90-day hard limit: Even unread notifications get cleaned up eventually
  *   to prevent unbounded table growth
+ * - Delivery-log limit: same rationale as the hard limit; without it the
+ *   table grows without bound (observed 127 MB on prod, 2026-07-12)
  */
 
 import { NextRequest, NextResponse } from "next/server"
@@ -58,10 +64,21 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    // Delete delivery logs older than 90 days (batch logs have no parent
+    // notification, so the cascade above never reaches them)
+    const oldDeliveryLogs = await db.notificationDeliveryLog.deleteMany({
+      where: {
+        createdAt: {
+          lte: ninetyDaysAgo,
+        },
+      },
+    })
+
     return NextResponse.json({
       success: true,
       expiredReadDeleted: expiredRead.count,
       oldDeleted: oldNotifications.count,
+      deliveryLogsDeleted: oldDeliveryLogs.count,
       duration: Date.now() - startTime,
     })
   } catch (error) {
