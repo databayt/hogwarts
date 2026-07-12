@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
 import { BookCover } from "../book-cover"
+import { BOOK_GRADE_LEVEL_LABELS, type BookGradeLevel } from "../config"
 import BookVideo from "./book-video"
 import BorrowBook from "./borrow-book"
 import { StarRating } from "./star-rating"
@@ -200,7 +201,11 @@ export default async function LibraryBookDetailContent({
 
           <div className="flex flex-wrap items-center gap-2">
             {catalogBook.gradeLevel && catalogBook.gradeLevel !== "GENERAL" && (
-              <Badge variant="outline">{catalogBook.gradeLevel}</Badge>
+              <Badge variant="outline">
+                {BOOK_GRADE_LEVEL_LABELS[
+                  catalogBook.gradeLevel as BookGradeLevel
+                ] ?? catalogBook.gradeLevel}
+              </Badge>
             )}
             <Badge variant="secondary">{catalogBook.genre}</Badge>
           </div>

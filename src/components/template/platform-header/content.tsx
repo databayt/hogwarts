@@ -73,7 +73,7 @@ export default function PlatformHeader({
   }, [role, dictionary])
 
   return (
-    <div className="bg-background sticky top-0 z-40 -mx-2">
+    <div className="bg-background sticky top-0 z-40 -mx-2 print:hidden">
       <header className="mx-2 flex h-12 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center gap-2">
           {/* Desktop: Sidebar trigger */}

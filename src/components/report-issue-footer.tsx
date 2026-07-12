@@ -18,7 +18,7 @@ export function ReportIssueFooter() {
   if (pathname?.includes("/school/configuration/")) return null
 
   return (
-    <div className="text-muted-foreground pt-8 pb-4 text-start text-sm">
+    <div className="text-muted-foreground pt-8 pb-4 text-start text-sm print:hidden">
       <ReportIssue />
     </div>
   )

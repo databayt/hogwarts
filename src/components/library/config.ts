@@ -77,6 +77,14 @@ export const BOOK_GRADE_LEVELS = [
 
 export type BookGradeLevel = (typeof BOOK_GRADE_LEVELS)[number]
 
+export const BOOK_GRADE_LEVEL_LABELS: Record<BookGradeLevel, string> = {
+  GENERAL: "General",
+  KG: "KG",
+  PRIMARY: "Elementary",
+  INTERMEDIATE: "Middle",
+  SECONDARY: "High",
+}
+
 // Admin navigation items
 export const ADMIN_NAV_ITEMS = [
   {

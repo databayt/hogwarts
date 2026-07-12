@@ -113,6 +113,7 @@
 
 ## Completed (Recent)
 
+- [x] Grade-level English labels standardized to US terms (2026-07-12): PRIMARY→Elementary, INTERMEDIATE→Middle, SECONDARY→High in contribute, all-books, and book-detail (raw enum badge now labeled via `BOOK_GRADE_LEVEL_LABELS` in `config.ts`). Enum values unchanged; Arabic labels unchanged.
 - [x] Fixed related book links in book-detail (relative → absolute `/${lang}/library/books/${id}`)
 - [x] Fixed my-profile links to use `catalogBookId` instead of school Book.id (was causing 404s)
 - [x] Fixed my-profile Image crash on empty coverUrl (added fallback cover)

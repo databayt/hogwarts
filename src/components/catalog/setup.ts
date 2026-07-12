@@ -15,6 +15,8 @@ import {
 /** Map School.schoolLevel to catalog level names */
 const SCHOOL_LEVEL_TO_CATALOG: Record<string, string[]> = {
   primary: ["ELEMENTARY"],
+  middle: ["MIDDLE"],
+  // "secondary" predates the middle option and historically covers 7-12
   secondary: ["MIDDLE", "HIGH"],
   both: ["ELEMENTARY", "MIDDLE", "HIGH"],
 }
@@ -76,19 +78,19 @@ const YEAR_LEVEL_DEFAULTS = [
     name: "Grade 7",
     slug: "grade-7",
     levelOrder: 9,
-    schoolLevels: ["secondary", "both"],
+    schoolLevels: ["middle", "secondary", "both"],
   },
   {
     name: "Grade 8",
     slug: "grade-8",
     levelOrder: 10,
-    schoolLevels: ["secondary", "both"],
+    schoolLevels: ["middle", "secondary", "both"],
   },
   {
     name: "Grade 9",
     slug: "grade-9",
     levelOrder: 11,
-    schoolLevels: ["secondary", "both"],
+    schoolLevels: ["middle", "secondary", "both"],
   },
   {
     name: "Grade 10",

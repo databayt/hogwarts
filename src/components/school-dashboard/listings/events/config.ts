@@ -116,7 +116,7 @@ export const getTargetAudiences = (d?: EventsDictionary) => {
     { value: "All Students", label: a?.allStudents || "All Students" },
     {
       value: "Primary Students",
-      label: a?.primaryStudents || "Primary Students",
+      label: a?.primaryStudents || "Elementary Students",
     },
     {
       value: "Secondary Students",

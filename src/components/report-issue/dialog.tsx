@@ -250,9 +250,9 @@ function TriggerButton({
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className="hover:bg-accent inline-flex h-9 w-9 items-center justify-center rounded-md"
+        className="flex h-8 w-8 items-center justify-center"
       >
-        <Bug className="h-4 w-4" />
+        <Bug className="h-6 w-6" strokeWidth={0.75} />
       </button>
     )
   }

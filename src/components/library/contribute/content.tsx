@@ -39,9 +39,9 @@ const GRADE_LEVEL_LABELS: Record<string, Record<string, string>> = {
   en: {
     GENERAL: "General",
     KG: "KG",
-    PRIMARY: "Primary",
-    INTERMEDIATE: "Intermediate",
-    SECONDARY: "Secondary",
+    PRIMARY: "Elementary",
+    INTERMEDIATE: "Middle",
+    SECONDARY: "High",
   },
   ar: {
     GENERAL: "عام",

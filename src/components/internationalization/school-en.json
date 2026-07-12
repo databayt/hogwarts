@@ -9471,7 +9471,16 @@
           "cashInstructions": "Cash Payment Instructions",
           "noFeesTitle": "No fees configured yet",
           "noFeesDescription": "The school has not set up fee structures for this grade. You can continue — fees will be communicated separately.",
-          "freeApplicationNote": "Applying is completely free. The fees below apply only after acceptance and during the registration stage."
+          "tuitionForYear": "{{grade}} tuition for the {{year}} academic year",
+          "discountsNote": "Discounts and scholarships may apply",
+          "discountsDialogTitle": "Discounts & Scholarships",
+          "discountsDialogDescription": "The amount shown is an estimate. Sibling, early-payment, and scholarship discounts are applied when eligible, and the final amount is confirmed at registration.",
+          "scholarshipsHeading": "Available scholarships",
+          "scholarshipCoveragePercentage": "{{value}}% off",
+          "scholarshipCoverageFixed": "{{value}} off",
+          "scholarshipCoverageFull": "Full coverage",
+          "earlyPaymentHint": "Pay before {{date}} to save {{savings}}.",
+          "noScholarshipsNote": "No scholarships are listed for this year — contact the school to ask about available support."
         },
         "success": {
           "title": "Application Submitted!",
@@ -10123,7 +10132,12 @@
         "registrationFailed": "Payment Failed",
         "registrationFailedMessage": "The payment could not be processed. Please try again or choose a different payment method.",
         "registrationSuccess": "Registration Fee Paid",
-        "registrationSuccessMessage": "Your registration fee payment was successful. The school will confirm your enrollment shortly."
+        "registrationSuccessMessage": "Your registration fee payment was successful. The school will confirm your enrollment shortly.",
+        "alreadyEnrolled": "Already Enrolled",
+        "alreadyEnrolledMessage": "This application has already been confirmed and enrolled. Contact the school for more information.",
+        "payOnline": "Pay Online",
+        "payOnlineDesc": "Pay online via a supported payment gateway",
+        "noPaymentMethodConfigured": "No payment method is configured yet. Please contact the school."
       },
       "ai": {
         "extractedData": "Extracted Data",

@@ -51,7 +51,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "SD",
     schoolType: ["public", "national"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4], // Sun-Thu
     periods: [
       {
@@ -141,7 +141,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "SD",
     schoolType: ["private"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4], // Sun-Thu
     periods: [
       {
@@ -224,7 +224,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "SD",
     schoolType: ["british", "international"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5], // Mon-Fri
     periods: [
       {
@@ -301,7 +301,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "SD",
     schoolType: ["ib", "american"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5], // Mon-Fri
     periods: [
       {
@@ -440,7 +440,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "GULF",
     schoolType: ["public", "national"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4], // Sun-Thu
     periods: [
       {
@@ -524,7 +524,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "GULF",
     schoolType: ["private", "british", "international", "ib", "american"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4], // Sun-Thu
     periods: [
       {
@@ -616,7 +616,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
       "ib",
       "american",
     ],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5], // Mon-Fri
     periods: [
       {
@@ -699,7 +699,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "en",
     country: "US",
     schoolType: ["public", "private", "charter"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5], // Mon-Fri
     periods: [
       {
@@ -783,7 +783,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "EG",
     schoolType: ["public", "national"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4], // Sun-Thu
     periods: [
       {
@@ -1108,7 +1108,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "SA",
     schoolType: ["public", "private", "national"],
-    schoolLevel: ["secondary"],
+    schoolLevel: ["middle", "secondary"],
     workingDays: [0, 1, 2, 3, 4],
     periods: [
       {
@@ -1269,7 +1269,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "KW",
     schoolType: ["public", "national"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4],
     periods: [
       {
@@ -1423,7 +1423,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "AE",
     schoolType: ["public", "private", "national"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5],
     periods: [
       {
@@ -1577,7 +1577,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "JO",
     schoolType: ["public", "private", "national"],
-    schoolLevel: ["secondary", "both"],
+    schoolLevel: ["middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4],
     periods: [
       {
@@ -1661,7 +1661,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "ar",
     country: "QA",
     schoolType: ["public", "private", "national"],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [0, 1, 2, 3, 4],
     periods: [
       {
@@ -1820,7 +1820,7 @@ export const TIMETABLE_STRUCTURES: TimetableStructure[] = [
     lang: "en",
     country: "*",
     schoolType: [],
-    schoolLevel: ["primary", "secondary", "both"],
+    schoolLevel: ["primary", "middle", "secondary", "both"],
     workingDays: [1, 2, 3, 4, 5], // Mon-Fri
     periods: [
       {

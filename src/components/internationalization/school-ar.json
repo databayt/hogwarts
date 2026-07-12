@@ -9479,7 +9479,16 @@
           "cashInstructions": "تعليمات الدفع النقدي",
           "noFeesTitle": "لا توجد رسوم مُعدَّة بعد",
           "noFeesDescription": "لم تقم المدرسة بإعداد هياكل رسوم لهذا الصف بعد. يمكنك المتابعة وسيتم إبلاغك بالرسوم لاحقاً.",
-          "freeApplicationNote": "التقديم مجاني تماماً. الرسوم أدناه تُطبَّق فقط بعد قبول الطالب ومرحلة التسجيل."
+          "tuitionForYear": "رسوم {{grade}} للعام الدراسي {{year}}",
+          "discountsNote": "قد تنطبق خصومات ومنح دراسية",
+          "discountsDialogTitle": "الخصومات والمنح الدراسية",
+          "discountsDialogDescription": "المبلغ المعروض تقديري. تُطبَّق خصومات الأشقاء والدفع المبكر والمنح الدراسية تلقائياً عند الاستحقاق، ويُؤكَّد المبلغ النهائي عند التسجيل.",
+          "scholarshipsHeading": "المنح الدراسية المتاحة",
+          "scholarshipCoveragePercentage": "خصم {{value}}٪",
+          "scholarshipCoverageFixed": "خصم {{value}}",
+          "scholarshipCoverageFull": "تغطية كاملة",
+          "earlyPaymentHint": "ادفع قبل {{date}} لتوفير {{savings}}.",
+          "noScholarshipsNote": "لا توجد منح معلنة لهذا العام — تواصل مع إدارة المدرسة للاستفسار عن الدعم المتاح."
         },
         "success": {
           "title": "تم تقديم طلبك بنجاح!",
@@ -10131,7 +10140,12 @@
         "registrationFailed": "فشلت عملية الدفع",
         "registrationFailedMessage": "تعذّر معالجة الدفع. يرجى المحاولة مرة أخرى أو اختيار طريقة دفع مختلفة.",
         "registrationSuccess": "تم دفع رسوم التسجيل",
-        "registrationSuccessMessage": "تمت عملية دفع رسوم التسجيل بنجاح. ستقوم المدرسة بتأكيد تسجيلك قريباً."
+        "registrationSuccessMessage": "تمت عملية دفع رسوم التسجيل بنجاح. ستقوم المدرسة بتأكيد تسجيلك قريباً.",
+        "alreadyEnrolled": "مُسجَّل بالفعل",
+        "alreadyEnrolledMessage": "تم تأكيد هذا الطلب وتسجيله بالفعل. تواصل مع المدرسة لمزيد من المعلومات.",
+        "payOnline": "الدفع عبر الإنترنت",
+        "payOnlineDesc": "ادفع عبر الإنترنت من خلال بوابة دفع مدعومة.",
+        "noPaymentMethodConfigured": "لم يتم إعداد أي وسيلة دفع بعد. يرجى التواصل مع المدرسة."
       },
       "ai": {
         "extractedData": "البيانات المستخرجة",

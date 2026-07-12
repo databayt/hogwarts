@@ -24,9 +24,9 @@ interface Props {
 const GRADE_LEVEL_LABELS: Record<string, string> = {
   GENERAL: "General",
   KG: "KG",
-  PRIMARY: "Primary",
-  INTERMEDIATE: "Intermediate",
-  SECONDARY: "Secondary",
+  PRIMARY: "Elementary",
+  INTERMEDIATE: "Middle",
+  SECONDARY: "High",
 }
 
 export default async function AllBooksContent({
