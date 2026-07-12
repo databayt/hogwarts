@@ -254,7 +254,7 @@ export async function provisionStudent(
     input.applicationId ??
     (await ensureDirectAdmitApplication(
       tx,
-      { ...input, email },
+      { ...input, email, userId },
       opts.origin,
       studentCode
     ))
@@ -297,7 +297,27 @@ export async function provisionStudent(
     input.emergencyContactRelation ?? primaryGuardian?.typeName ?? "Parent"
 
   const student = existingStudent
-    ? existingStudent
+    ? input.existingStudentId
+      ? // Wizard draft-reuse path: the pre-created Student row has no userId
+        // or applicationId yet — link them (and finalize the draft) here, or
+        // login/invoices stay broken. The admission reuse-by-userId path below
+        // (existingStudentId omitted) is a re-confirm of an already-linked
+        // student, so it must remain a no-op to preserve behavior + tests.
+        await tx.student.update({
+          where: { id: existingStudent.id },
+          data: {
+            userId,
+            applicationId,
+            studentId: studentCode,
+            status: "ACTIVE",
+            wizardStep: null,
+            admissionDate: new Date(),
+            enrollmentDate: new Date(),
+            admissionNumber: input.admissionNumber ?? undefined,
+          },
+          select: { id: true, schoolId: true },
+        })
+      : existingStudent
     : await tx.student.create({
         data: {
           schoolId,
@@ -317,6 +337,11 @@ export async function provisionStudent(
           state: input.state ?? undefined,
           postalCode: input.postalCode ?? undefined,
           country: input.country ?? undefined,
+          // Set the explicitly-provided grade (wizard/CSV) at create time.
+          // Admission omits it (undefined → Prisma skips) and lets the
+          // YearLevel match in step 6 derive it from applyingForClass, exactly
+          // as confirmEnrollment did.
+          academicGradeId: input.academicGradeId ?? undefined,
           applicationId,
           admissionNumber: input.admissionNumber ?? undefined,
           admissionDate: new Date(),
@@ -351,24 +376,44 @@ export async function provisionStudent(
   //    exact original behavior rather than "fixing" the redundancy.
   // ---------------------------------------------------------------------
   try {
-    let yearLevel = await tx.yearLevel.findFirst({
-      where: { schoolId, levelName: input.applyingForClass ?? undefined },
-    })
+    const applyingClass = input.applyingForClass?.trim()
+    let yearLevel = null as Awaited<
+      ReturnType<typeof tx.yearLevel.findFirst>
+    > | null
 
-    if (!yearLevel) {
+    // Callers that provide a grade directly (wizard/CSV) but no applyingForClass
+    // label resolve the YearLevel from the known AcademicGrade — NEVER via an
+    // empty levelName filter, which Prisma would treat as "match any level" and
+    // clobber the caller's grade with an arbitrary one.
+    if (!applyingClass && input.academicGradeId) {
+      const ag = await tx.academicGrade.findFirst({
+        where: { id: input.academicGradeId, schoolId },
+        select: { yearLevelId: true },
+      })
+      if (ag?.yearLevelId) {
+        yearLevel = await tx.yearLevel.findFirst({
+          where: { id: ag.yearLevelId, schoolId },
+        })
+      }
+    }
+
+    if (!yearLevel && applyingClass) {
+      yearLevel = await tx.yearLevel.findFirst({
+        where: { schoolId, levelName: applyingClass },
+      })
+    }
+
+    if (!yearLevel && applyingClass) {
       yearLevel = await tx.yearLevel.findFirst({
         where: {
           schoolId,
-          levelName: {
-            equals: input.applyingForClass ?? undefined,
-            mode: "insensitive",
-          },
+          levelName: { equals: applyingClass, mode: "insensitive" },
         },
       })
     }
 
-    if (!yearLevel) {
-      const gradeNum = extractGradeNumber(input.applyingForClass ?? "")
+    if (!yearLevel && applyingClass) {
+      const gradeNum = extractGradeNumber(applyingClass)
       if (gradeNum) {
         // Match via AcademicGrade.gradeNumber (not levelOrder, which
         // includes KG levels and shifts the numbering).
@@ -391,11 +436,17 @@ export async function provisionStudent(
     }
 
     if (yearLevel) {
-      // Unconditional — mirrors confirmEnrollment exactly (a falsy
-      // academicYear here means Prisma treats yearName as unfiltered).
-      const schoolYear = await tx.schoolYear.findFirst({
-        where: { schoolId, yearName: input.academicYear ?? undefined },
-      })
+      // Admission passes the campaign's academicYear (exact match — mirrors
+      // confirmEnrollment). Callers without one (wizard/CSV) resolve the most
+      // recent SchoolYear deterministically instead of an arbitrary row.
+      const schoolYear = input.academicYear
+        ? await tx.schoolYear.findFirst({
+            where: { schoolId, yearName: input.academicYear },
+          })
+        : await tx.schoolYear.findFirst({
+            where: { schoolId },
+            orderBy: { createdAt: "desc" },
+          })
 
       if (schoolYear) {
         // Upsert to be idempotent (unique on [schoolId, studentId, yearId]).
@@ -421,15 +472,20 @@ export async function provisionStudent(
         )
       }
 
-      // Set academicGradeId from the matched YearLevel.
-      const academicGrade = await tx.academicGrade.findFirst({
-        where: { schoolId, yearLevelId: yearLevel.id },
-      })
-      if (academicGrade) {
-        await tx.student.update({
-          where: { id: student.id },
-          data: { academicGradeId: academicGrade.id },
+      // Derive academicGradeId from the matched YearLevel ONLY when the caller
+      // didn't provide one. Admission derives it (input.academicGradeId
+      // undefined → runs, as before); wizard/CSV set it explicitly and must not
+      // be overridden by a level-derived guess.
+      if (!input.academicGradeId) {
+        const academicGrade = await tx.academicGrade.findFirst({
+          where: { schoolId, yearLevelId: yearLevel.id },
         })
+        if (academicGrade) {
+          await tx.student.update({
+            where: { id: student.id },
+            data: { academicGradeId: academicGrade.id },
+          })
+        }
       }
     } else {
       console.warn(

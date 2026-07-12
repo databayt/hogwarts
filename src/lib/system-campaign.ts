@@ -98,6 +98,9 @@ export async function ensureDirectAdmitApplication(
       campaignId,
       applicationNumber,
       channel,
+      // Link the provisioned student's User so the shadow Application matches
+      // the portal path (where Application.userId is always set).
+      userId: input.userId ?? undefined,
       lang: input.lang ?? "ar",
       status: "ADMITTED",
       firstName: input.firstName,
