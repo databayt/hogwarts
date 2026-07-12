@@ -16,8 +16,6 @@ import {
 } from "@aws-sdk/client-s3"
 import { getSignedUrl as awsGetSignedUrl } from "@aws-sdk/s3-request-presigner"
 
-import { toCloudFrontUrl } from "@/lib/cloudfront-url"
-
 import type { StorageProvider } from "../types"
 import { BaseStorageProvider, type UploadProviderOptions } from "./base"
 
@@ -90,10 +88,15 @@ export class AWSS3Provider extends BaseStorageProvider {
 
       await client.send(command)
 
-      // Return CloudFront URL if configured, otherwise S3 URL
+      // Return the direct S3 URL for the upload bucket. The cdn.databayt.org
+      // CloudFront distribution serves the curated `databayt-cdn` bucket, NOT
+      // this upload bucket (AWS_S3_BUCKET / hogwarts-databayt), so rewriting to
+      // the CDN domain produced 403s on every fresh upload (broken images).
+      // The upload bucket is public-read; signed-read paths derive the key via
+      // extractKeyFromUrl(), which parses S3 URLs the same as CloudFront ones.
       const currentRegion = process.env.AWS_REGION || "us-east-1"
       const s3Url = `https://${bucket}.s3.${currentRegion}.amazonaws.com/${path}`
-      return toCloudFrontUrl(s3Url)
+      return s3Url
     } catch (error) {
       console.error("[AWSS3Provider] Upload error:", error)
       throw new Error(
