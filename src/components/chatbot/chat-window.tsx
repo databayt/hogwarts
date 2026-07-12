@@ -5,6 +5,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 
+import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -164,14 +165,11 @@ export const ChatWindow = memo(function ChatWindow({
     return -1
   }, [messages])
 
-  // School logo for inline message avatars (fallback to "AI" text when missing)
-  const assistantAvatarSrc = schoolContext?.logoUrl ?? null
-  const assistantAvatarAlt =
-    promptType === "schoolSite" && schoolContext
-      ? locale === "ar"
-        ? schoolContext.schoolNameAr
-        : schoolContext.schoolName
-      : "AI"
+  // Inline assistant avatars use the generic robot — the chatbot is uniform
+  // across every tenant, never school-branded (falls back to "AI" text if the
+  // image fails to load).
+  const assistantAvatarSrc = asset("/illustrations/robot.png")
+  const assistantAvatarAlt = "AI"
 
   // Auto focus input when chat opens on desktop
   useEffect(() => {

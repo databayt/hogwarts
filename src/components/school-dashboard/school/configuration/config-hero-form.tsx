@@ -43,7 +43,10 @@ export function ConfigHeroForm({
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     if (files.length > 0) {
       const uploadedFile = files[0]
-      setHeroImage(uploadedFile.cdnUrl || uploadedFile.url)
+      // Use the direct S3 URL — it's public-read and renders. Do NOT use cdnUrl:
+      // it points at cdn.databayt.org, which fronts the *curated* bucket (not
+      // this upload bucket) and 403s on every fresh upload (broken images).
+      setHeroImage(uploadedFile.url)
       setIsDirty(true)
     }
   }

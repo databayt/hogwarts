@@ -100,7 +100,10 @@ export const ChatbotContent = forwardRef<
           position={chatbotConfig.position}
           locale={chatbotConfig.locale}
           dictionary={fullDictionary}
-          schoolLogoUrl={schoolContext?.logoUrl ?? null}
+          // The chatbot FAB is intentionally uniform across every tenant — the
+          // generic robot, never the school logo. Per-school branding lives in
+          // the site header, not the assistant.
+          schoolLogoUrl={null}
           schoolName={schoolDisplayName ?? undefined}
         />
 
