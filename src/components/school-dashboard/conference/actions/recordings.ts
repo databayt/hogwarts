@@ -28,10 +28,10 @@ export async function listRecordings(sessionId: string) {
   try {
     const session = await db.conference.findFirst({
       where: { id: sessionId, schoolId: ctx.schoolId, deletedAt: null },
-      select: { sectionId: true },
+      select: { sectionId: true, visibility: true },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
-    if (!(await canAccessSession(ctx, session.sectionId))) {
+    if (!(await canAccessSession(ctx, session.sectionId, session.visibility))) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
     const recordings = await db.conferenceRecording.findMany({
@@ -68,14 +68,21 @@ export async function getRecordingUrl(recordingId: string) {
         s3Key: true,
         s3Region: true,
         mimeType: true,
-        session: { select: { sectionId: true } },
+        session: { select: { sectionId: true, visibility: true } },
       },
     })
     if (!recording) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
-    // Enrollment gate: staff school-wide; STUDENT/GUARDIAN only their section.
-    if (!(await canAccessSession(ctx, recording.session?.sectionId ?? null))) {
+    // Enrollment gate: staff school-wide; STUDENT/GUARDIAN only their section
+    // (or any member for a school-wide session).
+    if (
+      !(await canAccessSession(
+        ctx,
+        recording.session?.sectionId ?? null,
+        recording.session?.visibility ?? "section"
+      ))
+    ) {
       return actionError(ACTION_ERRORS.LIVE_CLASS_RECORDING_NOT_FOUND)
     }
     const url = await getRecordingPlaybackUrl(recording, 300)

@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getLiveClass } from "@/components/school-dashboard/conference/actions/sessions"
 import { joinLiveClass } from "@/components/school-dashboard/conference/actions/tokens"
 import { resolveLiveClassError } from "@/components/school-dashboard/conference/error-map"
 import { RoomClient } from "@/components/school-dashboard/conference/room"
@@ -24,6 +25,25 @@ export default async function Page({ params }: Props) {
   }
 
   const dictionary = await getDictionary(lang)
+
+  // External-link sessions have no SFU room — an eligible viewer landing here
+  // is handed to the vendor meeting instead of an SFU error. getLiveClass is
+  // enrollment-gated, so the URL never leaves the server for outsiders.
+  const detail = await getLiveClass(id)
+  if (
+    "success" in detail &&
+    detail.success &&
+    detail.data.provider === "external"
+  ) {
+    if (
+      detail.data.meetingUrl &&
+      (detail.data.status === "live" || detail.data.status === "scheduled")
+    ) {
+      redirect(detail.data.meetingUrl)
+    }
+    redirect(`/${lang}/conference/${id}`)
+  }
+
   const result = await joinLiveClass(id)
 
   const t = dictionary?.liveClasses

@@ -21,7 +21,8 @@
     "play": "تشغيل",
     "loading": "جارٍ التحميل…",
     "back": "رجوع",
-    "viewRecordings": "عرض التسجيلات"
+    "viewRecordings": "عرض التسجيلات",
+    "openMeeting": "فتح رابط الاجتماع"
   },
   "form": {
     "title": "العنوان",
@@ -40,7 +41,11 @@
     "recording": "التسجيل",
     "enabled": "مفعّل",
     "disabled": "معطّل",
-    "recordings": "التسجيلات"
+    "recordings": "التسجيلات",
+    "visibility": "من يمكنه الانضمام",
+    "visibilitySection": "الشعبة فقط",
+    "visibilitySchool": "المدرسة كاملة",
+    "lesson": "الدرس"
   },
   "status": {
     "scheduled": "مجدول",
@@ -178,5 +183,14 @@
       "empty": "لا توجد شعب بعد.",
       "error": "تعذّر تحديث الشعبة."
     }
+  },
+  "references": {
+    "title": "الدرس والمراجع",
+    "videos": "الفيديوهات",
+    "materials": "المواد",
+    "practiceQuestions": "أسئلة تدريب",
+    "exams": "الاختبارات والكويزات",
+    "assignments": "الواجبات",
+    "links": "الروابط"
   }
 }

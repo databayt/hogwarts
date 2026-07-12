@@ -24,11 +24,14 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
 2. Read `ISSUE.md` for the open backlog
 3. The Prisma models live in `prisma/models/conference.prisma` (renamed from
    `live-class.prisma`; `Conference*` model names, DB tables preserved via `@@map`):
-   - `Conference` — scheduled or ad-hoc session (`provider`, `meetingUrl?`, `meetingProvider?`)
+   - `Conference` — scheduled or ad-hoc session (`provider`, `meetingUrl?`, `meetingProvider?`,
+     `visibility` section|school, `catalogLessonId?` → catalog Lesson)
    - `ConferenceParticipant` — one row per invited user (host / student / observer) + telemetry
    - `ConferenceRecording` — composite Egress recording metadata + S3 location + `expiresAt`
    - `ConferenceEvent` — webhook audit log + `eventId @unique` idempotency
    - `ConferenceLink` — set-once recurring link `[schoolId, subjectId, sectionId, termId]`
+   - `ConferenceResource` — attached reference; exactly ONE of `schoolExamId` /
+     `schoolAssignmentId` / http(s) `url` per row (ContentOverride pattern)
 4. LiveKit lib wrappers in `livekit/`:
    - `client.ts` (singletons + `isLiveKitConfigured`/`getLiveKitReadiness`), `token.ts` (JWT),
      `rooms.ts`, `egress.ts`, `recording-urls.ts`, `webhook.ts`, `room-naming.ts`
@@ -38,6 +41,36 @@ AWS S3 `me-central-1` with PDPL-configurable retention.
 
 ## Key Decisions
 
+- **Visibility (private/public control)**: `Conference.visibility` —
+  `section` (default; roster + guardians, host-only when no section) or
+  `school` (any member of THIS school: students PARTICIPANT, guardians
+  OBSERVER, staff/accountant PARTICIPANT). There is deliberately NO
+  cross-school or anonymous tier. Enforced in `resolveParticipantRole`
+  (tokens), `canAccessSession` (recordings + rich detail), and every list
+  read (`buildLiveClassWhere` OR, `listForStudent`/`listForGuardian`,
+  content.tsx SSR). School-wide sessions notify ALL school users via the hub.
+- **Provider choice lives in the wizard (list layer too)**: `list-actions.ts
+createLiveClass` branches on `provider` — `livekit` mirrors
+  `actions/sessions.ts` (placeholder → `roomNameFor`, HOST upsert, duration
+  cap); `external` keeps the adapter flow + `ext-` roomName. Provider is
+  IMMUTABLE on edit (room lifecycle is bound to it). Join is provider-aware
+  everywhere: table menu, detail page, and the room route redirects external
+  sessions to their vendor URL (after the enrollment-gated read).
+- **References**: one `catalogLessonId` FK surfaces the lesson's videos /
+  attachments / materials / practice-question count on the detail page
+  (`getLessonReferenceContent`); quizzes/exams/assignments/ad-hoc links are
+  `ConferenceResource` rows — tenant-verified (`verifyResourceRefs`) before
+  write, replace-all on update, "quiz" = `SchoolExam.examType QUIZ`, NOT a
+  separate model. Picker data (`getLiveClassReferenceOptions`) is
+  staff-gated and fetched per-subject on step entry — never on mount.
+- **URLs are scheme-locked**: zod `.url()` admits `javascript:`/`data:` —
+  meetingUrl and resource urls additionally require `^https?://` because
+  they render as `<a href>` / `window.open` targets. Keep the regex when
+  touching the schemas.
+- **The form is a 5-step wizard** (`form.tsx` + `form-steps.tsx`) on the
+  house stepped-modal idiom (classes/events/invoice): local step state,
+  per-step `form.trigger(STEP_FIELDS[n])`, `ModalFooter` step ratio,
+  `NONE` sentinel for optional pickers (Radix Select forbids empty values).
 - **Room naming**: `sch-{schoolId}-lc-{sessionId}` — globally unique and
   embeds the tenant boundary, so the SFU namespace can't leak across
   schools and the webhook handler recovers `schoolId` from the room name

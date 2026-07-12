@@ -509,7 +509,7 @@ describe("listLiveClasses", () => {
     )
   })
 
-  it("student list is scoped to own sectionId", async () => {
+  it("student list is scoped to own sectionId + school-wide sessions", async () => {
     mockStudent()
     vi.mocked(db.student.findFirst).mockResolvedValue({
       sectionId: "sec-1",
@@ -520,22 +520,28 @@ describe("listLiveClasses", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           schoolId: SCHOOL_ID,
-          sectionId: "sec-1",
+          OR: [{ sectionId: "sec-1" }, { visibility: "school" }],
         }),
       })
     )
   })
 
-  it("student without section returns empty list", async () => {
+  it("student without section still sees school-wide sessions only", async () => {
     mockStudent()
     vi.mocked(db.student.findFirst).mockResolvedValue({
       sectionId: null,
     } as never)
+    vi.mocked(db.conference.findMany).mockResolvedValue([] as never)
     const result = await listLiveClasses()
     expect("success" in result && result.success).toBe(true)
-    if ("success" in result && result.success) {
-      expect(result.data).toEqual([])
-    }
+    expect(db.conference.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          schoolId: SCHOOL_ID,
+          OR: [{ visibility: "school" }],
+        }),
+      })
+    )
   })
 })
 

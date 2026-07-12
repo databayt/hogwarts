@@ -97,18 +97,53 @@ builds. API (external / scheduler-invoked → stay routes, not server actions): 
 `LiveClass*` → `Conference*`; every DB table / column / enum-type name preserved via `@@map`/`@map`
 → **zero-change migration** (byte-identical `migrate diff` vs baseline).
 
-| Model                   | Purpose                                                                           |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| `Conference`            | A session. `provider` (`livekit`\|`external`), `meetingUrl?`, `meetingProvider?`. |
-| `ConferenceParticipant` | One row per invited user + connection telemetry (RTT, TCP-fallback flag).         |
-| `ConferenceRecording`   | Egress metadata + S3 location + retention `expiresAt`.                            |
-| `ConferenceEvent`       | Webhook audit log + `eventId @unique` idempotency.                                |
-| `ConferenceLink`        | Set-once recurring link `[schoolId, subjectId, sectionId, termId]`.               |
+| Model                   | Purpose                                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `Conference`            | A session. `provider` (`livekit`\|`external`), `meetingUrl?`, `visibility` (`section`\|`school`), `catalogLessonId?`. |
+| `ConferenceParticipant` | One row per invited user + connection telemetry (RTT, TCP-fallback flag).                                             |
+| `ConferenceRecording`   | Egress metadata + S3 location + retention `expiresAt`.                                                                |
+| `ConferenceEvent`       | Webhook audit log + `eventId @unique` idempotency.                                                                    |
+| `ConferenceLink`        | Set-once recurring link `[schoolId, subjectId, sectionId, termId]`.                                                   |
+| `ConferenceResource`    | Attached reference — exactly one of `schoolExamId` / `schoolAssignmentId` / http(s) `url` per row.                    |
 
 Enums `ConferenceProvider` · `ConferenceStatus` · `ConferenceRecordingStatus` ·
-`ConferenceParticipantRole` · `ConferenceParticipantStatus`; 4 `School.conference*` config columns
-(`conferenceRetentionDays` 90 · `conferenceMaxConcurrent` 50 · `conferenceMaxDuration` 120 ·
-`conferenceRecordingDefault` true).
+`ConferenceParticipantRole` · `ConferenceParticipantStatus` · `ConferenceVisibility`; 5
+`School.conference*` config columns (`conferenceRetentionDays` 90 · `conferenceMaxConcurrent` 50 ·
+`conferenceMaxDuration` 120 · `conferenceRecordingDefault` true · `conferenceAttendanceSync` false).
+
+### Access control — private vs school-wide
+
+`visibility` decides who may see and join a session, on top of the absolute tenant boundary:
+
+- **`section`** (default) — the session's section roster joins as PARTICIPANT, their guardians as
+  OBSERVER; a session with no section is host-only (a private meeting).
+- **`school`** — every member of the school: students PARTICIPANT, guardians OBSERVER,
+  staff/accountant PARTICIPANT. For assemblies, PD webinars, parent town halls. Scheduling one
+  notifies the whole school through the notification hub.
+
+There is deliberately **no cross-school or anonymous tier** — eligibility, list scoping, detail
+reads, and recordings access all enforce the same rule (`resolveParticipantRole`,
+`canAccessSession`, `buildLiveClassWhere`). Meeting and reference URLs are scheme-locked to
+http(s) — `javascript:`/`data:` URIs are rejected at validation.
+
+### References — lesson, quiz, assignment, links
+
+One `catalogLessonId` FK links a session to a catalog lesson; the session page then surfaces the
+lesson's **videos, attachments, materials, and practice-question count** automatically.
+Quizzes/exams (`SchoolExam` — a quiz is `examType: QUIZ`, not a separate model), assignments, and
+ad-hoc links attach as `ConferenceResource` rows — tenant-verified before write, replaced as a set
+on update. The wizard's References step loads its pickers per chosen subject
+(`getLiveClassReferenceOptions`, staff-gated).
+
+### The create wizard
+
+The dashboard form is a 5-step compact wizard (`form.tsx` + `form-steps.tsx`) on the house
+stepped-modal pattern — **Basics → Schedule → Meeting → References → Access**, a handful of fields
+per step. The Meeting step picks the back-end: **In-app room** (LiveKit — default whenever
+`isLiveKitConfigured()`, with recording + max-participants knobs) or **External link** (pasted
+Meet/Zoom/Teams URL + optional weekly-recurring default). Provider is immutable after creation;
+Join is provider-aware everywhere (table menu, detail page, and the room route hands external
+sessions to their vendor URL).
 
 ## Providers
 

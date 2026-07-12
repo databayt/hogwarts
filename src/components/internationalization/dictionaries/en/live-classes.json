@@ -21,7 +21,8 @@
     "play": "Play",
     "loading": "Loading…",
     "back": "Back",
-    "viewRecordings": "View recordings"
+    "viewRecordings": "View recordings",
+    "openMeeting": "Open meeting link"
   },
   "form": {
     "title": "Title",
@@ -40,7 +41,11 @@
     "recording": "Recording",
     "enabled": "Enabled",
     "disabled": "Disabled",
-    "recordings": "Recordings"
+    "recordings": "Recordings",
+    "visibility": "Who can join",
+    "visibilitySection": "Section only",
+    "visibilitySchool": "Whole school",
+    "lesson": "Lesson"
   },
   "status": {
     "scheduled": "Scheduled",
@@ -178,5 +183,14 @@
       "empty": "No sections yet.",
       "error": "Could not update the section."
     }
+  },
+  "references": {
+    "title": "Lesson & references",
+    "videos": "Videos",
+    "materials": "Materials",
+    "practiceQuestions": "practice questions",
+    "exams": "Exams & quizzes",
+    "assignments": "Assignments",
+    "links": "Links"
   }
 }

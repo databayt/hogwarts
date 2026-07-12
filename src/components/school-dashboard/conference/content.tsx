@@ -11,6 +11,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { type LiveClassRow } from "@/components/school-dashboard/conference/columns"
 import { liveClassesSearchParams } from "@/components/school-dashboard/conference/list-params"
 import { getUIConfigForRole } from "@/components/school-dashboard/conference/list-permissions"
+import { isLiveKitConfigured } from "@/components/school-dashboard/conference/livekit/client"
 import {
   getLiveClassesList,
   getLiveClassFormOptions,
@@ -111,6 +112,8 @@ export default async function LiveClassesContent({
               ? (labels.get(r.section.name) ?? r.section.name)
               : null,
             status: r.status,
+            provider: r.provider,
+            visibility: r.visibility,
             meetingUrl: r.meetingUrl,
             meetingProvider: r.meetingProvider,
             scheduledStart: r.scheduledStart
@@ -144,6 +147,7 @@ export default async function LiveClassesContent({
         perPage={sp.perPage}
         permissions={permissions}
         formOptions={formOptions}
+        liveKitAvailable={isLiveKitConfigured()}
       />
     </div>
   )

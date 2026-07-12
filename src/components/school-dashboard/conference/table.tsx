@@ -5,6 +5,7 @@
 import * as React from "react"
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 import { asset } from "@/lib/asset-url"
 import {
@@ -46,6 +47,8 @@ interface LiveClassesTableProps {
   permissions?: UIPermissions
   /** Server-resolved dropdown options for the create/edit form. */
   formOptions: LiveClassFormOptions
+  /** Whether the in-app (LiveKit) room back-end is provisioned. */
+  liveKitAvailable?: boolean
 }
 
 function LiveClassesTableInner({
@@ -56,9 +59,11 @@ function LiveClassesTableInner({
   perPage = 20,
   permissions = FULL_UI_PERMISSIONS,
   formOptions,
+  liveKitAvailable = false,
 }: LiveClassesTableProps) {
   const t = dictionary
   const { openModal } = useModal()
+  const router = useRouter()
 
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const [searchInput, setSearchInput] = useState("")
@@ -98,6 +103,21 @@ function LiveClassesTableInner({
     [openModal]
   )
 
+  // Clean client paths — the middleware maps them to /s/[subdomain] internally.
+  const handleView = useCallback(
+    (id: string) => {
+      router.push(`/${lang}/conference/${id}`)
+    },
+    [router, lang]
+  )
+
+  const handleJoinRoom = useCallback(
+    (id: string) => {
+      router.push(`/${lang}/conference/${id}/room`)
+    },
+    [router, lang]
+  )
+
   const handleDelete = useCallback(
     async (liveClass: LiveClassRow) => {
       try {
@@ -128,9 +148,11 @@ function LiveClassesTableInner({
       getLiveClassColumns(t, lang, {
         onEdit: handleEdit,
         onDelete: handleDelete,
+        onView: handleView,
+        onJoinRoom: handleJoinRoom,
         permissions,
       }),
-    [t, lang, handleEdit, handleDelete, permissions]
+    [t, lang, handleEdit, handleDelete, handleView, handleJoinRoom, permissions]
   )
 
   const { table } = useDataTable<LiveClassRow>({
@@ -274,6 +296,7 @@ function LiveClassesTableInner({
             lang={lang}
             dictionary={t}
             options={formOptions}
+            liveKitAvailable={liveKitAvailable}
           />
         }
       />

@@ -20,6 +20,7 @@ Three meeting back-ends behind a single UI:
 ```
 conference/
 ├── content.tsx · queries.ts · actions.ts · list-actions.ts   server entry + reads + barrels
+├── form-steps.tsx                                             the 5 wizard steps (Basics/Schedule/Meeting/References/Access)
 ├── actions/                                                   rich sessions-layer server actions
 │   ├── helpers.ts        requireContext · canAccessSession · conferenceRevalidatePath
 │   ├── sessions.ts       lifecycle state machine (create/start/end/cancel/list/get + fromTimetable)
@@ -71,19 +72,24 @@ The Prisma models are in `prisma/models/conference.prisma`.
 
 ## Status
 
-| Capability                                        | Status                                     |
-| ------------------------------------------------- | ------------------------------------------ |
-| Prisma models (`Conference*` + link) + Neon       | ✅ live                                    |
-| External pasted-link provider                     | ✅ live                                    |
-| List CRUD + detail + schedule + settings UI       | ✅ live                                    |
-| Per-section recording opt-out                     | ✅ live                                    |
-| In-room HOST moderation (kick)                    | ✅ live                                    |
-| Timetable Start / Join (teacher+student+guardian) | ✅ live (`Conference.timetableId`)         |
-| Notifications → hub (in-app + email)              | ✅ live (all 4 mutating paths fan out)     |
-| Attendance-from-presence (opt-in)                 | 🟡 coded, LiveKit-only + DB deploy-pending |
-| Native Meet/Zoom/Teams `createMeeting`            | 🟡 wired, dark until OAuth creds           |
-| LiveKit SFU rooms + Egress recording              | 🟡 coded, dormant until infra              |
-| Capacity dashboard (`/observability/conf.`)       | ⏸️ backlog                                 |
+| Capability                                        | Status                                      |
+| ------------------------------------------------- | ------------------------------------------- |
+| Prisma models (`Conference*` + link + resources)  | ✅ schema; visibility/resources DDL staged  |
+| External pasted-link provider                     | ✅ live                                     |
+| LiveKit-first dashboard create (5-step wizard)    | ✅ coded (in-app option gated on env)       |
+| Private/public control (`visibility`)             | ✅ coded (section default / school-wide)    |
+| Lesson + exam/quiz/assignment/link references     | ✅ coded (`catalogLessonId` + resources)    |
+| Provider-aware Join (table/detail/room redirect)  | ✅ coded                                    |
+| List CRUD + detail + schedule + settings UI       | ✅ live                                     |
+| Per-section recording opt-out                     | ✅ live                                     |
+| In-room HOST moderation (kick)                    | ✅ live                                     |
+| Timetable Start / Join (teacher+student+guardian) | ✅ live (`Conference.timetableId`)          |
+| Timetable weekly-grid live indicators (all roles) | ✅ coded                                    |
+| Notifications → hub (in-app + email)              | ✅ live (+ school-wide fan-out)             |
+| Attendance-from-presence (opt-in)                 | ✅ live (DB applied); VIRTUAL visible in UI |
+| Native Meet/Zoom/Teams `createMeeting`            | 🟡 wired, dark until OAuth creds            |
+| LiveKit SFU rooms + Egress recording              | 🟡 coded, dormant until infra               |
+| Capacity dashboard (`/observability/conf.`)       | ⏸️ backlog                                  |
 
 See `ISSUE.md` for the open backlog and `RUNBOOK.md` for the 6-gate LiveKit provisioning sequence.
 

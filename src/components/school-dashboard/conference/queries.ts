@@ -22,8 +22,9 @@ import { db } from "@/lib/db"
 export type LiveClassListFilters = {
   title?: string // Searches title field
   status?: string
-  // Role-scoped row restriction: when set, only sessions in these sections are
-  // returned (STUDENT/GUARDIAN). Omit for staff (whole-school) views.
+  // Role-scoped row restriction: when set, only sessions in these sections —
+  // plus any school-wide (`visibility: school`) session — are returned
+  // (STUDENT/GUARDIAN). Omit for staff (whole-school) views.
   sectionIds?: string[]
 }
 
@@ -78,7 +79,12 @@ export function buildLiveClassWhere(
   }
 
   if (filters.sectionIds) {
-    where.sectionId = { in: filters.sectionIds }
+    // Scoped viewers see their own sections' sessions AND every school-wide
+    // session. Never plain `sectionId in` alone — that would hide assemblies.
+    where.OR = [
+      { sectionId: { in: filters.sectionIds } },
+      { visibility: "school" },
+    ]
   }
 
   return where
@@ -239,6 +245,118 @@ export async function getLiveClassFormOptions(
   }
 }
 
+export type LessonReferenceContent = {
+  videos: { id: string; title: string; videoUrl: string }[]
+  attachments: { id: string; name: string; url: string }[]
+  materials: {
+    id: string
+    title: string
+    type: string
+    fileUrl: string | null
+    externalUrl: string | null
+  }[]
+  questionCount: number
+}
+
+/**
+ * The linked catalog lesson's teachable content, surfaced on the session
+ * detail page (videos, attachments, materials, practice-question count).
+ * Catalog content is platform-global — no schoolId axis; access is gated by
+ * the session read that precedes this call.
+ */
+export async function getLessonReferenceContent(
+  catalogLessonId: string
+): Promise<LessonReferenceContent> {
+  const [videos, attachments, materials, questionCount] = await Promise.all([
+    db.video.findMany({
+      where: { catalogLessonId },
+      select: { id: true, title: true, videoUrl: true },
+      orderBy: { createdAt: "asc" },
+      take: 20,
+    }),
+    db.attachment.findMany({
+      where: { catalogLessonId },
+      select: { id: true, name: true, url: true },
+      orderBy: { createdAt: "asc" },
+      take: 20,
+    }),
+    db.material.findMany({
+      where: { catalogLessonId },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        fileUrl: true,
+        externalUrl: true,
+      },
+      orderBy: { createdAt: "asc" },
+      take: 20,
+    }),
+    db.question.count({
+      where: { catalogLessonId, approvalStatus: "APPROVED" },
+    }),
+  ])
+  return { videos, attachments, materials, questionCount }
+}
+
+export type LiveClassReferenceData = {
+  lessons: { id: string; name: string }[]
+  exams: { id: string; title: string; examType: string; examDate: string }[]
+  assignments: { id: string; title: string; dueDate: string }[]
+}
+
+/**
+ * Picker data for the wizard's References step, scoped to one subject:
+ * catalog lessons (global content, reached via the subject's chapters),
+ * school exams/quizzes, and school assignments (via the Class↔Subject axis).
+ * Fetched on demand when a subject is chosen — never on form mount.
+ * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
+ * @param subjectId - Catalog subject id the session teaches
+ */
+export async function getLiveClassReferenceData(
+  schoolId: string,
+  subjectId: string
+): Promise<LiveClassReferenceData> {
+  const [lessons, exams, assignments] = await Promise.all([
+    db.lesson.findMany({
+      where: { chapter: { subjectId }, status: "PUBLISHED" },
+      select: { id: true, name: true },
+      orderBy: [
+        { chapter: { sequenceOrder: "asc" } },
+        { sequenceOrder: "asc" },
+      ],
+      take: 200,
+    }),
+    db.schoolExam.findMany({
+      where: { schoolId, subjectId },
+      select: { id: true, title: true, examType: true, examDate: true },
+      orderBy: { examDate: "desc" },
+      take: 50,
+    }),
+    db.schoolAssignment.findMany({
+      where: { schoolId, class: { subjectId } },
+      select: { id: true, title: true, dueDate: true },
+      orderBy: { dueDate: "desc" },
+      take: 50,
+    }),
+  ])
+
+  return {
+    lessons,
+    exams: exams.map((e) => ({
+      id: e.id,
+      title: e.title,
+      examType: e.examType,
+      examDate: e.examDate.toISOString(),
+    })),
+    assignments: assignments.map((a) => ({
+      id: a.id,
+      title: a.title,
+      dueDate: a.dueDate.toISOString(),
+    })),
+  }
+}
+
 /**
  * Get a single live class by ID, scoped by school. Excludes soft-deleted rows.
  * @param schoolId - School ID for multi-tenant filtering (REQUIRED)
@@ -251,6 +369,25 @@ export async function getLiveClassDetail(schoolId: string, id: string) {
       schoolId,
       deletedAt: null,
     },
-    include: liveClassListInclude,
+    include: {
+      ...liveClassListInclude,
+      catalogLesson: { select: { id: true, name: true } },
+      resources: {
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          url: true,
+          title: true,
+          schoolExamId: true,
+          schoolAssignmentId: true,
+          schoolExam: {
+            select: { id: true, title: true, examType: true, examDate: true },
+          },
+          schoolAssignment: {
+            select: { id: true, title: true, type: true, dueDate: true },
+          },
+        },
+      },
+    },
   })
 }

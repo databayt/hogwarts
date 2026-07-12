@@ -332,3 +332,88 @@ describe("joinLiveClass eligibility", () => {
     expect(decodeMeta(result.data.token).schoolId).toBe(SCHOOL_ID)
   })
 })
+
+describe("joinLiveClass eligibility — school-wide visibility", () => {
+  // A `visibility: "school"` session (assembly / town hall): membership in
+  // the school is the whole gate — no section relationship required.
+  function mockSchoolWideSession(sectionId: string | null = null) {
+    vi.mocked(db.conference.findFirst).mockResolvedValue({
+      id: SESSION_ID,
+      roomName: ROOM_NAME,
+      sectionId,
+      visibility: "school",
+      maxParticipants: 50,
+      status: "live",
+      lang: "ar",
+      teacher: { userId: TEACHER_USER_ID },
+    } as never)
+  }
+
+  it("student from ANY section → PARTICIPANT (membership check only)", async () => {
+    mockSchoolWideSession()
+    mockUser(STUDENT_USER_ID, "STUDENT")
+    vi.mocked(db.student.findFirst).mockResolvedValue({ id: "stu-1" } as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("PARTICIPANT")
+    // The lookup must NOT be narrowed to a section — school membership only.
+    expect(db.student.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { schoolId: SCHOOL_ID, userId: STUDENT_USER_ID },
+      })
+    )
+  })
+
+  it("guardian with any ward in the school → OBSERVER", async () => {
+    mockSchoolWideSession()
+    mockUser(GUARDIAN_USER_ID, "GUARDIAN")
+    vi.mocked(db.guardian.findFirst).mockResolvedValue({ id: "g-1" } as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("OBSERVER")
+    expect(db.guardian.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { schoolId: SCHOOL_ID, userId: GUARDIAN_USER_ID },
+      })
+    )
+  })
+
+  it("STAFF → PARTICIPANT on a school-wide session", async () => {
+    mockSchoolWideSession()
+    mockUser("u-staff", "STAFF")
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("PARTICIPANT")
+  })
+
+  it("ACCOUNTANT → PARTICIPANT on a school-wide session", async () => {
+    mockSchoolWideSession()
+    mockUser("u-accountant", "ACCOUNTANT")
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(true)
+    if (!("success" in result) || !result.success) return
+    expect(result.data.role).toBe("PARTICIPANT")
+  })
+
+  it("a user with no student row in the school is still denied", async () => {
+    mockSchoolWideSession()
+    mockUser("u-stu-foreign", "STUDENT")
+    vi.mocked(db.student.findFirst).mockResolvedValue(null as never)
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_PARTICIPANT_DENIED")
+  })
+
+  it("section visibility is unchanged: STAFF stays denied there", async () => {
+    // Default beforeEach session (visibility undefined → section semantics).
+    mockUser("u-staff", "STAFF")
+    const result = await joinLiveClass(SESSION_ID)
+    expect("success" in result && result.success).toBe(false)
+    if ("error" in result)
+      expect(result.error).toBe("LIVE_CLASS_PARTICIPANT_DENIED")
+  })
+})

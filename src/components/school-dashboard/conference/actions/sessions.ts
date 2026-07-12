@@ -26,6 +26,7 @@ import {
 import { prewarm } from "@/components/translation/prewarm"
 
 import {
+  canAccessSession,
   concurrentCapError,
   conferenceRevalidatePath,
   requireContext,
@@ -132,6 +133,8 @@ async function createLiveClassWithCtx(
           (data.recordingEnabled ?? school.conferenceRecordingDefault) &&
           !sectionOptOut,
         maxParticipants: data.maxParticipants ?? 50,
+        visibility: data.visibility ?? "section",
+        catalogLessonId: data.catalogLessonId ?? null,
         roomName: placeholder,
       },
     })
@@ -520,11 +523,16 @@ async function listForStudent(ctx: Ctx, filter?: { status?: string[] }) {
     where: { schoolId: ctx.schoolId, userId: ctx.userId },
     select: { sectionId: true },
   })
-  if (!student?.sectionId) return { success: true as const, data: [] }
+  if (!student) return { success: true as const, data: [] }
   const sessions = await db.conference.findMany({
     where: {
       schoolId: ctx.schoolId,
-      sectionId: student.sectionId,
+      // Own section's sessions + every school-wide session. A sectionless
+      // student still sees assemblies.
+      OR: [
+        ...(student.sectionId ? [{ sectionId: student.sectionId }] : []),
+        { visibility: "school" as const },
+      ],
       deletedAt: null,
       ...(filter?.status
         ? {
@@ -566,11 +574,14 @@ async function listForGuardian(ctx: Ctx, filter?: { status?: string[] }) {
   const sectionIds = guardian.studentGuardians
     .map((sg) => sg.student.sectionId)
     .filter((id): id is string => Boolean(id))
-  if (sectionIds.length === 0) return { success: true as const, data: [] }
   const sessions = await db.conference.findMany({
     where: {
       schoolId: ctx.schoolId,
-      sectionId: { in: sectionIds },
+      // Wards' sections + every school-wide session (parent town halls).
+      OR: [
+        ...(sectionIds.length ? [{ sectionId: { in: sectionIds } }] : []),
+        { visibility: "school" as const },
+      ],
       deletedAt: null,
       ...(filter?.status
         ? {
@@ -608,31 +619,62 @@ async function listForGuardian(ctx: Ctx, filter?: { status?: string[] }) {
  */
 export async function getLiveClass(id: string) {
   // Try every role bucket — each requireContext call enforces auth +
-  // schoolId + role. The first one that succeeds gives us the schoolId.
+  // schoolId + role. The first one that succeeds gives us the context.
   const dashboardCtx = await requireContext("read_school_dashboard")
-  let schoolId: string | null = dashboardCtx.ok ? dashboardCtx.schoolId : null
-  if (!schoolId) {
+  let ctx: Ctx | null = dashboardCtx.ok ? dashboardCtx : null
+  if (!ctx) {
     const studentCtx = await requireContext("join_as_participant")
-    schoolId = studentCtx.ok ? studentCtx.schoolId : null
+    ctx = studentCtx.ok ? studentCtx : null
   }
-  if (!schoolId) {
+  if (!ctx) {
     const guardianCtx = await requireContext("join_as_observer")
-    schoolId = guardianCtx.ok ? guardianCtx.schoolId : null
+    ctx = guardianCtx.ok ? guardianCtx : null
   }
-  if (!schoolId) {
+  if (!ctx) {
     return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
     const session = await db.conference.findFirst({
-      where: { id, schoolId, deletedAt: null },
+      where: { id, schoolId: ctx.schoolId, deletedAt: null },
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true } },
         section: { select: { id: true, name: true } },
         subject: { select: { id: true, name: true } },
+        catalogLesson: { select: { id: true, name: true } },
+        resources: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            url: true,
+            title: true,
+            schoolExam: {
+              select: {
+                id: true,
+                title: true,
+                examType: true,
+                examDate: true,
+              },
+            },
+            schoolAssignment: {
+              select: { id: true, title: true, type: true, dueDate: true },
+            },
+          },
+        },
       },
     })
     if (!session) return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    // Enrollment gate: same-school is not enough for STUDENT/GUARDIAN — the
+    // row (incl. meetingUrl) only leaves the server for a session they may
+    // actually attend. NOT_FOUND (not UNAUTHORIZED) so other sections'
+    // sessions aren't revealed to exist. Staff roles (incl. ACCOUNTANT via
+    // read_school_dashboard) keep whole-school read.
+    if (
+      (ctx.role === "STUDENT" || ctx.role === "GUARDIAN") &&
+      !(await canAccessSession(ctx, session.sectionId, session.visibility))
+    ) {
+      return actionError(ACTION_ERRORS.LIVE_CLASS_NOT_FOUND)
+    }
     return { success: true as const, data: session }
   } catch {
     return actionError(ACTION_ERRORS.LOAD_FAILED)

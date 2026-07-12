@@ -52,6 +52,8 @@ export function createLiveClassScheduleSchema(v: ValidationHelper) {
       scheduledStart: z.string().datetime(),
       scheduledEnd: z.string().datetime(),
       recordingEnabled: z.boolean().default(true),
+      visibility: z.enum(["section", "school"]).default("section"),
+      catalogLessonId: idSchema.optional(),
       maxParticipants: z
         .number()
         .int()
@@ -95,6 +97,8 @@ export const liveClassScheduleSchema = z
     scheduledStart: z.string().datetime(),
     scheduledEnd: z.string().datetime(),
     recordingEnabled: z.boolean().default(true),
+    visibility: z.enum(["section", "school"]).default("section"),
+    catalogLessonId: idSchema.optional(),
     maxParticipants: z
       .number()
       .int()
@@ -118,7 +122,9 @@ export const liveClassScheduleSchema = z
     }
   )
 
-export type LiveClassServerInput = z.infer<typeof liveClassScheduleSchema>
+// z.input, not z.infer: fields with .default() (recordingEnabled, visibility,
+// maxParticipants…) stay optional for callers; safeParse fills them in.
+export type LiveClassServerInput = z.input<typeof liveClassScheduleSchema>
 
 export const idOnlySchema = z.object({ id: idSchema })
 export type IdOnly = z.infer<typeof idOnlySchema>

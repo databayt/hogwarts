@@ -125,7 +125,13 @@ export function ConferenceStructure({ className }: ConferenceStructureProps) {
         {
           name: "form.tsx",
           type: "file",
-          description: "create/edit modal form",
+          description: "create/edit 5-step wizard (modal)",
+        },
+        {
+          name: "form-steps.tsx",
+          type: "file",
+          description:
+            "wizard steps: basics · schedule · meeting · references · access",
         },
         {
           name: "schedule-form.tsx",

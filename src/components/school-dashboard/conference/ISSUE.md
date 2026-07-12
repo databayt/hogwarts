@@ -111,6 +111,78 @@
 
 ## Done
 
+### LiveKit-first production pass (2026-07-12)
+
+Made the block LiveKit-first end-to-end, added private/public room control,
+lesson/quiz/assignment references, and converted the create form into a
+5-step compact wizard. tsc 0; 237/237 conference tests green (13 new),
+timetable 149, attendance 507, dictionary parity green.
+
+- **Dashboard create is provider-aware (P0 for "use LiveKit"):** the list
+  layer no longer hardcodes `provider: "external"` — the wizard's Meeting
+  step offers **In-app room (LiveKit)** vs **External link**. The LiveKit
+  branch mirrors `actions/sessions.ts` semantics (placeholder → tenant
+  roomName via `roomNameFor`, HOST participant upsert, per-school duration
+  cap); external keeps the adapter flow. In-app option defaults on and is
+  disabled with a provisioning hint until `isLiveKitConfigured()`.
+- **Provider-aware Join everywhere:** table row menu (external → vendor URL
+  new tab, livekit → `/conference/[id]/room`), new **View** item → detail
+  page (previously unreachable from the table), detail page Join fixed (was
+  sending external sessions into the SFU room), and the room route now
+  redirects external sessions to their vendor URL (enrollment-gated).
+- **Private/public control:** new `Conference.visibility` —
+  `section` (default; exact previous behavior) | `school` (any member of the
+  school: students PARTICIPANT, guardians OBSERVER, staff/accountant
+  PARTICIPANT). Enforced in `resolveParticipantRole` (tokens),
+  `canAccessSession` (recordings + detail), and every list read
+  (`buildLiveClassWhere` OR, `listForStudent`/`listForGuardian`). No
+  cross-school or anonymous tier exists — tenant boundary absolute.
+- **Closed an enrollment leak (P1):** rich `getLiveClass` (sessions.ts) — a
+  public server action — returned any same-school session **including
+  meetingUrl** to any STUDENT/GUARDIAN. Now gated with `canAccessSession`
+  (NOT_FOUND semantics), staff/ACCOUNTANT read unchanged.
+- **Scheme-locked URLs (P1):** zod `.url()` admits `javascript:`/`data:`
+  URIs; meetingUrl (create+update) and resource links now require http(s) —
+  they render as `<a href>`/`window.open` targets.
+- **References:** `Conference.catalogLessonId` (one FK → lesson's videos,
+  attachments, materials, practice-question count on the detail page) + new
+  `ConferenceResource` rows (exactly one of `schoolExamId` (quiz =
+  `examType: QUIZ`) / `schoolAssignmentId` / http(s) url; tenant-verified
+  before write; replace-all on update). Picker data via
+  `getLiveClassReferenceOptions` (staff-gated, fetched per-subject on step
+  entry — never on mount).
+- **Compact wizard:** `form.tsx` rebuilt on the house stepped-modal idiom
+  (classes/events/invoice) — 5 steps × ≤4 fields (Basics / Schedule /
+  Meeting / References / Access) in `form-steps.tsx`, per-step
+  `form.trigger`, `ModalFooter` step ratio, edit-safe (provider immutable),
+  full en/ar dictionary coverage.
+- **Timetable embed:** weekly grid (`simple-grid.tsx`) now shows a live-now
+  pulse / scheduled-today dot per slot for ALL roles incl. admin
+  (`getLiveClassIndicators` fetched inside the existing weekly queries —
+  closes "admin has zero live-class affordance" at the indicator level).
+- **Attendance embed:** fixed the `AttendanceMethod` type drift — the union
+  now derives from Prisma, so VIRTUAL (and KIOSK) rows render labeled
+  ("Live Class"/"حصة مباشرة") and are **no longer silently excluded from CSV
+  exports** (both selected-methods defaults + checkbox lists).
+- **School-wide notifications:** `visibility: school` sessions fan out to
+  every school member through the hub (per-user channel prefs still honored).
+- **Ops:** `cleanup-notifications` cron now also prunes
+  `NotificationDeliveryLog` >90d (largest table in prod, 127 MB, had NO
+  retention).
+
+**DB (pending — Neon project at its 512 MB size cap):** additive DDL staged
+at `scratchpad/conference_visibility_resources_ddl.sql` (enum
+`LiveClassVisibility`, `visibility` + `catalogLessonId` columns + FK,
+`live_class_resources` table + FKs/indexes). Apply with
+`cat scratchpad/conference_visibility_resources_ddl.sql | pnpm prisma db execute --stdin --url "$DATABASE_URL"`
+once space frees (options: approve a one-time >90d delivery-log prune, or
+the planned account#1 toggle-back). Until applied, `/conference` reads that
+select the new columns will fail — deploy after DDL.
+
+- [ ] **Apply staged visibility/resources DDL** (blocked on Neon space —
+      see above; the June-20 attendance-sync DDL is confirmed LIVE, the
+      "deploy-pending" note in the 2026-06-20 entry below is stale).
+
 ### Integration optimization pass (2026-06-20)
 
 Closed the integration seams with notifications, timetable, and attendance.

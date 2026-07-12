@@ -3,7 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
-import type { ConferenceParticipantRole, UserRole } from "@prisma/client"
+import type {
+  ConferenceParticipantRole,
+  ConferenceVisibility,
+  UserRole,
+} from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -17,7 +21,14 @@ import { concurrentCapError } from "./helpers"
 
 /**
  * Decide a user's role within a given session based on their UserRole and
- * relationship to the section. Returns `null` if the user is not eligible.
+ * relationship to the section, honoring the session's visibility tier.
+ * Returns `null` if the user is not eligible.
+ *
+ * - `section` (default): section roster joins as PARTICIPANT, their guardians
+ *   as OBSERVER; no section → host-only (a private meeting).
+ * - `school`: any member of THIS school — students PARTICIPANT, guardians
+ *   OBSERVER, staff/accountant PARTICIPANT. Never anyone outside the school:
+ *   schoolId comes from the tenant context and every lookup is scoped by it.
  */
 async function resolveParticipantRole(
   userId: string,
@@ -25,12 +36,33 @@ async function resolveParticipantRole(
   schoolId: string,
   sessionId: string,
   sessionTeacherUserId: string | null,
-  sessionSectionId: string | null
+  sessionSectionId: string | null,
+  sessionVisibility: ConferenceVisibility = "section"
 ): Promise<ConferenceParticipantRole | null> {
   if (userRole === "DEVELOPER") return "HOST"
   if (userRole === "ADMIN") return "CO_HOST"
   if (userRole === "TEACHER") {
     return sessionTeacherUserId === userId ? "HOST" : "CO_HOST"
+  }
+  if (sessionVisibility === "school") {
+    if (userRole === "STUDENT") {
+      const student = await db.student.findFirst({
+        where: { schoolId, userId },
+        select: { id: true },
+      })
+      return student ? "PARTICIPANT" : null
+    }
+    if (userRole === "GUARDIAN") {
+      const guardian = await db.guardian.findFirst({
+        where: { schoolId, userId },
+        select: { id: true },
+      })
+      return guardian ? "OBSERVER" : null
+    }
+    if (userRole === "STAFF" || userRole === "ACCOUNTANT") {
+      return "PARTICIPANT"
+    }
+    return null
   }
   if (!sessionSectionId) return null // No section → only host can join
   if (userRole === "STUDENT") {
@@ -84,6 +116,7 @@ export async function joinLiveClass(
         id: true,
         roomName: true,
         sectionId: true,
+        visibility: true,
         maxParticipants: true,
         status: true,
         lang: true,
@@ -114,7 +147,8 @@ export async function joinLiveClass(
     schoolId,
     sessionId,
     liveClass.teacher.userId,
-    liveClass.sectionId
+    liveClass.sectionId,
+    liveClass.visibility
   )
   if (!participantRole) {
     return actionError(ACTION_ERRORS.LIVE_CLASS_PARTICIPANT_DENIED)

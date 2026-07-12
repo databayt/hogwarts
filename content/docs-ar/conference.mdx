@@ -96,18 +96,50 @@ API (مُستدعاة خارجياً / عبر المجدول → تبقى مسا
 `LiveClass*` → `Conference*`؛ مع الحفاظ على كل اسم جدول / عمود / نوع تعداد عبر `@@map`/`@map` →
 **ترحيل بلا تغيير** (فرق `migrate diff` مطابق تماماً للأساس).
 
-| النموذج                 | الغرض                                                                        |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `Conference`            | جلسة. `provider` (`livekit`\|`external`)، `meetingUrl?`، `meetingProvider?`. |
-| `ConferenceParticipant` | صفّ لكل مستخدم مدعوّ + قياسات الاتصال (RTT، علامة الرجوع لـ TCP).            |
-| `ConferenceRecording`   | بيانات الـ Egress وموقع S3 + `expiresAt` للاحتفاظ.                           |
-| `ConferenceEvent`       | سجلّ تدقيق الـ Webhook + `eventId @unique` لضمان عدم التكرار.                |
-| `ConferenceLink`        | رابط متكرّر يُضبط مرة واحدة `[schoolId, subjectId, sectionId, termId]`.      |
+| النموذج                 | الغرض                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Conference`            | جلسة. `provider` (`livekit`\|`external`)، `meetingUrl?`، `visibility` (`section`\|`school`)، `catalogLessonId?`. |
+| `ConferenceParticipant` | صفّ لكل مستخدم مدعوّ + قياسات الاتصال (RTT، علامة الرجوع لـ TCP).                                                |
+| `ConferenceRecording`   | بيانات الـ Egress وموقع S3 + `expiresAt` للاحتفاظ.                                                               |
+| `ConferenceEvent`       | سجلّ تدقيق الـ Webhook + `eventId @unique` لضمان عدم التكرار.                                                    |
+| `ConferenceLink`        | رابط متكرّر يُضبط مرة واحدة `[schoolId, subjectId, sectionId, termId]`.                                          |
+| `ConferenceResource`    | مرجع مرفق — واحد فقط من `schoolExamId` / `schoolAssignmentId` / رابط http(s) في كل صف.                           |
 
 التعدادات `ConferenceProvider` · `ConferenceStatus` · `ConferenceRecordingStatus` ·
-`ConferenceParticipantRole` · `ConferenceParticipantStatus`؛ و4 أعمدة إعداد `School.conference*`
-(`conferenceRetentionDays` 90 · `conferenceMaxConcurrent` 50 · `conferenceMaxDuration` 120 ·
-`conferenceRecordingDefault` true).
+`ConferenceParticipantRole` · `ConferenceParticipantStatus` · `ConferenceVisibility`؛ و5 أعمدة إعداد
+`School.conference*` (`conferenceRetentionDays` 90 · `conferenceMaxConcurrent` 50 ·
+`conferenceMaxDuration` 120 · `conferenceRecordingDefault` true · `conferenceAttendanceSync` false).
+
+### التحكّم بالوصول — خاص أم على مستوى المدرسة
+
+`visibility` يحدّد من يرى الجلسة وينضم إليها، فوق حدود المستأجر المطلقة:
+
+- **`section`** (الافتراضي) — طلاب شعبة الجلسة ينضمون كـ PARTICIPANT وأولياء أمورهم كـ OBSERVER؛
+  الجلسة بلا شعبة تكون للمضيف فقط (اجتماع خاص).
+- **`school`** — كل عضو في المدرسة: الطلاب PARTICIPANT، أولياء الأمور OBSERVER، الموظفون والمحاسب
+  PARTICIPANT. للطوابير والندوات واللقاءات العامة. جدولتها تُشعر المدرسة كاملة عبر مركز الإشعارات.
+
+لا يوجد عمداً **أي مستوى عابر للمدارس أو مجهول** — الأهلية وتقييد القوائم وقراءة التفاصيل والوصول
+للتسجيلات كلها تفرض القاعدة نفسها (`resolveParticipantRole`، `canAccessSession`،
+`buildLiveClassWhere`). روابط الاجتماع والمراجع مقفولة على http(s) — تُرفض `javascript:`/`data:`
+عند التحقق.
+
+### المراجع — درس، كويز، واجب، روابط
+
+مفتاح `catalogLessonId` واحد يربط الجلسة بدرس من المنهج؛ فتعرض صفحة الجلسة تلقائياً **فيديوهات
+الدرس ومرفقاته ومواده وعدد أسئلة التدريب**. الاختبارات والكويزات (`SchoolExam` — الكويز هو
+`examType: QUIZ` وليس نموذجاً منفصلاً) والواجبات والروابط الحرة تُرفق كصفوف `ConferenceResource` —
+تُتحقق ملكيتها للمدرسة قبل الكتابة وتُستبدل كمجموعة عند التعديل. خطوة «المراجع» في المعالج تحمّل
+خياراتها حسب المادة المختارة (`getLiveClassReferenceOptions`، لطاقم الإدارة فقط).
+
+### معالج الإنشاء
+
+نموذج اللوحة معالج مضغوط من 5 خطوات (`form.tsx` + `form-steps.tsx`) على نمط النوافذ متعددة الخطوات
+المعتمد — **الأساسيات ← الجدولة ← الاجتماع ← المراجع ← الوصول**، بضعة حقول في كل خطوة. خطوة
+«الاجتماع» تختار الخلفية: **غرفة داخل المنصة** (LiveKit — الافتراضي متى كان `isLiveKitConfigured()`،
+مع مفاتيح التسجيل والحد الأقصى للمشاركين) أو **رابط خارجي** (رابط Meet/Zoom/Teams + خيار الرابط
+الأسبوعي المتكرر). لا يتغيّر المزوّد بعد الإنشاء؛ وزر الانضمام واعٍ بالمزوّد في كل مكان (قائمة
+الجدول، صفحة التفاصيل، ومسار الغرفة يحوّل الجلسات الخارجية إلى رابط المزوّد).
 
 ## المزوّدون
 

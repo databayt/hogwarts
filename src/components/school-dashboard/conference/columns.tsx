@@ -25,6 +25,10 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export interface ColumnCallbacks {
   onEdit?: (id: string) => void
   onDelete?: (row: LiveClassRow) => void
+  /** Open the session detail page. */
+  onView?: (id: string) => void
+  /** Enter the in-app (LiveKit) room. */
+  onJoinRoom?: (id: string) => void
   permissions?: UIPermissions
 }
 
@@ -40,6 +44,8 @@ export type LiveClassRow = {
   sectionId: string | null
   sectionName: string | null
   status: string
+  provider: string
+  visibility: string
   meetingUrl: string | null
   meetingProvider: string | null
   scheduledStart: string
@@ -185,19 +191,28 @@ export const getLiveClassColumns = (
 
         const onEdit = () => callbacks?.onEdit?.(liveClass.id)
         const onDelete = () => callbacks?.onDelete?.(liveClass)
+        const onView = () => callbacks?.onView?.(liveClass.id)
         const onJoin = () => {
-          if (liveClass.meetingUrl) {
+          // Provider-aware Join: external links open the vendor meeting in a
+          // new tab; in-app sessions enter the LiveKit room route.
+          if (liveClass.provider === "livekit") {
+            callbacks?.onJoinRoom?.(liveClass.id)
+          } else if (liveClass.meetingUrl) {
             window.open(liveClass.meetingUrl, "_blank", "noopener,noreferrer")
           }
         }
+        const joinable =
+          liveClass.provider === "livekit"
+            ? liveClass.status === "live" || liveClass.status === "scheduled"
+            : Boolean(liveClass.meetingUrl) &&
+              (liveClass.status === "live" || liveClass.status === "scheduled")
 
         return (
           <ActionMenu srLabel={t.openMenu}>
             <DropdownMenuLabel>{c.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {liveClass.meetingUrl && (
-              <ActionMenuItem label={t.join} onClick={onJoin} />
-            )}
+            <ActionMenuItem label={t.view} onClick={onView} />
+            {joinable && <ActionMenuItem label={t.join} onClick={onJoin} />}
             {permissions.showEditAction && (
               <ActionMenuItem label={t.edit} onClick={onEdit} />
             )}

@@ -106,6 +106,7 @@ async function loadSession(
       schoolId: true,
       title: true,
       sectionId: true,
+      visibility: true,
       scheduledStart: true,
       teacher: {
         select: { firstName: true, lastName: true, userId: true },
@@ -123,7 +124,16 @@ async function loadSession(
   const userIds = new Set<string>()
   if (session.teacher.userId) userIds.add(session.teacher.userId)
 
-  if (session.sectionId) {
+  if (session.visibility === "school") {
+    // School-wide session (assembly / town hall): every member of the school
+    // is the audience. The hub batches the createMany and honors per-user
+    // channel preferences, so a large school stays safe.
+    const users = await db.user.findMany({
+      where: { schoolId },
+      select: { id: true },
+    })
+    for (const u of users) userIds.add(u.id)
+  } else if (session.sectionId) {
     // Resolve student User ids in the section
     const students = await db.student.findMany({
       where: { schoolId, sectionId: session.sectionId, userId: { not: null } },

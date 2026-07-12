@@ -26,13 +26,17 @@ import {
   liveClassSchema,
   updateLiveClassSchema,
   type LiveClassFormData,
+  type LiveClassResourceInput,
   type UpdateLiveClassData,
 } from "./list-validation"
+import { roomNameFor } from "./livekit/room-naming"
 import { getProviderAdapter, type ProviderId } from "./providers"
 import {
   getLiveClassDetail,
   getLiveClassesList,
+  getLiveClassReferenceData,
   resolveViewerSectionScope,
+  type LiveClassReferenceData,
 } from "./queries"
 
 // ============================================================================
@@ -57,6 +61,74 @@ function mapMeetingProviderToId(provider?: string | null): ProviderId {
   if (p.includes("zoom")) return "zoom"
   if (p.includes("teams")) return "teams"
   return "external"
+}
+
+/**
+ * Tenant-verify attached references before writing ConferenceResource rows.
+ * Every exam/assignment id must belong to this school — a foreign id is a
+ * validation failure, never a silent skip. Returns the rows ready to insert.
+ */
+async function verifyResourceRefs(
+  schoolId: string,
+  resources: LiveClassResourceInput[]
+): Promise<
+  { ok: true; rows: Omit<LiveClassResourceInput, "url">[] } | { ok: false }
+> {
+  const examIds = [
+    ...new Set(
+      resources.map((r) => r.schoolExamId).filter((x): x is string => !!x)
+    ),
+  ]
+  const assignmentIds = [
+    ...new Set(
+      resources.map((r) => r.schoolAssignmentId).filter((x): x is string => !!x)
+    ),
+  ]
+  const [examCount, assignmentCount] = await Promise.all([
+    examIds.length
+      ? db.schoolExam.count({ where: { id: { in: examIds }, schoolId } })
+      : Promise.resolve(0),
+    assignmentIds.length
+      ? db.schoolAssignment.count({
+          where: { id: { in: assignmentIds }, schoolId },
+        })
+      : Promise.resolve(0),
+  ])
+  if (examCount !== examIds.length) return { ok: false }
+  if (assignmentCount !== assignmentIds.length) return { ok: false }
+  return { ok: true, rows: resources }
+}
+
+/** Replace a session's resource rows (tenant-scoped, ordered). */
+async function writeResources(
+  schoolId: string,
+  sessionId: string,
+  resources: LiveClassResourceInput[]
+): Promise<void> {
+  await db.$transaction([
+    db.conferenceResource.deleteMany({ where: { schoolId, sessionId } }),
+    ...(resources.length
+      ? [
+          db.conferenceResource.createMany({
+            data: resources.map((r, i) => ({
+              schoolId,
+              sessionId,
+              schoolExamId: r.schoolExamId || null,
+              schoolAssignmentId: r.schoolAssignmentId || null,
+              url: r.url || null,
+              title: r.title || null,
+              order: i,
+            })),
+          }),
+        ]
+      : []),
+  ])
+}
+
+/** A catalog lesson id must exist before we point a session at it. */
+async function lessonExists(catalogLessonId: string): Promise<boolean> {
+  const n = await db.lesson.count({ where: { id: catalogLessonId } })
+  return n > 0
 }
 
 // ============================================================================
@@ -112,6 +184,8 @@ export async function getLiveClasses(params: {
           sectionId: r.sectionId,
           sectionName: r.section?.name ?? null,
           status: r.status,
+          provider: r.provider,
+          visibility: r.visibility,
           meetingUrl: r.meetingUrl,
           meetingProvider: r.meetingProvider,
           scheduledStart: r.scheduledStart.toISOString(),
@@ -135,11 +209,22 @@ export async function getLiveClass(params: { id: string }): Promise<
     teacherId: string
     subjectId: string | null
     sectionId: string | null
+    provider: string
+    visibility: string
     meetingUrl: string | null
     meetingProvider: string | null
     scheduledStart: string
     scheduledEnd: string
     status: string
+    recordingEnabled: boolean
+    maxParticipants: number
+    catalogLessonId: string | null
+    resources: {
+      schoolExamId: string | null
+      schoolAssignmentId: string | null
+      url: string | null
+      title: string | null
+    }[]
   }>
 > {
   try {
@@ -179,15 +264,59 @@ export async function getLiveClass(params: { id: string }): Promise<
         teacherId: liveClass.teacherId,
         subjectId: liveClass.subjectId,
         sectionId: liveClass.sectionId,
+        provider: liveClass.provider,
+        visibility: liveClass.visibility,
         meetingUrl: liveClass.meetingUrl,
         meetingProvider: liveClass.meetingProvider,
         scheduledStart: liveClass.scheduledStart.toISOString(),
         scheduledEnd: liveClass.scheduledEnd.toISOString(),
         status: liveClass.status,
+        recordingEnabled: liveClass.recordingEnabled,
+        maxParticipants: liveClass.maxParticipants,
+        catalogLessonId: liveClass.catalogLessonId,
+        resources: liveClass.resources.map((r) => ({
+          schoolExamId: r.schoolExamId,
+          schoolAssignmentId: r.schoolAssignmentId,
+          url: r.url,
+          title: r.title,
+        })),
       },
     }
   } catch (error) {
     console.error("[getLiveClass]", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
+  }
+}
+
+/**
+ * Reference-picker options for the wizard's References step, scoped to one
+ * subject. Management data — same gate as the form rosters. Called on demand
+ * when a subject is chosen (never on form mount — request-storm rule).
+ */
+export async function getLiveClassReferenceOptions(params: {
+  subjectId: string
+}): Promise<ActionResponse<LiveClassReferenceData>> {
+  try {
+    const session = await auth()
+    const { schoolId } = await getTenantContext()
+    const role = session?.user?.role as Role | undefined
+
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    if (!canManageLiveClasses(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+    if (!params.subjectId) {
+      return {
+        success: true,
+        data: { lessons: [], exams: [], assignments: [] },
+      }
+    }
+
+    const data = await getLiveClassReferenceData(schoolId, params.subjectId)
+    return { success: true, data }
+  } catch (error) {
+    console.error("[getLiveClassReferenceOptions]", error)
     return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
@@ -283,10 +412,11 @@ export async function createLiveClass(
     }
     const d = validated.data
 
-    // Verify the teacher belongs to this school (tenant safety on a FK we set).
+    // Verify the teacher belongs to this school (tenant safety on a FK we
+    // set). userId feeds the HOST participant upsert on the in-app-room path.
     const teacher = await db.teacher.findFirst({
       where: { id: d.teacherId, schoolId },
-      select: { id: true },
+      select: { id: true, userId: true },
     })
     if (!teacher) return actionError(ACTION_ERRORS.TEACHER_NOT_FOUND)
 
@@ -295,7 +425,10 @@ export async function createLiveClass(
     const [schoolCfg, sectionCfg] = await Promise.all([
       db.school.findUnique({
         where: { id: schoolId },
-        select: { conferenceRecordingDefault: true },
+        select: {
+          conferenceRecordingDefault: true,
+          conferenceMaxDuration: true,
+        },
       }),
       d.sectionId
         ? db.section.findFirst({
@@ -304,12 +437,35 @@ export async function createLiveClass(
           })
         : Promise.resolve(null),
     ])
+    // In-app rooms honor the form's recording toggle; external links keep the
+    // school default (nothing to record without the SFU). The section opt-out
+    // always wins.
     const recordingEnabled =
-      (schoolCfg?.conferenceRecordingDefault ?? true) &&
+      (d.provider === "livekit"
+        ? (d.recordingEnabled ?? schoolCfg?.conferenceRecordingDefault ?? true)
+        : (schoolCfg?.conferenceRecordingDefault ?? true)) &&
       !(sectionCfg?.conferenceRecordingOptOut ?? false)
 
     const scheduledStart = combineDateAndTime(d.startDate, d.startTime)
     const scheduledEnd = combineDateAndTime(d.endDate, d.endTime)
+
+    // In-app rooms hold an SFU slot — enforce the per-school duration cap
+    // (external links are just calendar entries; no resource to cap).
+    if (d.provider === "livekit") {
+      const durationMin =
+        (scheduledEnd.getTime() - scheduledStart.getTime()) / 60_000
+      if (durationMin > (schoolCfg?.conferenceMaxDuration ?? 240)) {
+        return actionError(ACTION_ERRORS.LIVE_CLASS_MAX_DURATION_EXCEEDED)
+      }
+    }
+
+    // Tenant-verify attached references before anything is written.
+    const resources = d.resources ?? []
+    const verifiedRefs = await verifyResourceRefs(schoolId, resources)
+    if (!verifiedRefs.ok) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    if (d.catalogLessonId && !(await lessonExists(d.catalogLessonId))) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
 
     // Single-language storage: detect lang from title and stamp it.
     const content = withLang(
@@ -322,58 +478,122 @@ export async function createLiveClass(
     // colliding with another class at the same start time.
     const sessionRef = randomUUID()
 
-    // When a native provider (Meet/Zoom/Teams) is configured, auto-generate a
-    // fresh meeting link via its API; otherwise keep the pasted URL. Ships dark
-    // — a no-op until the provider's OAuth credentials are present.
-    let meetingUrl = d.meetingUrl
-    const providerId = mapMeetingProviderToId(d.meetingProvider)
-    if (providerId !== "external") {
-      const adapter = getProviderAdapter(providerId)
-      if (adapter.isConfigured()) {
-        try {
-          const meeting = await adapter.createMeeting({
+    // Fields shared by both providers.
+    const commonData = {
+      schoolId,
+      teacherId: d.teacherId,
+      subjectId: d.subjectId || null,
+      sectionId: d.sectionId || null,
+      scheduledStart,
+      scheduledEnd,
+      status: d.status ?? "scheduled",
+      visibility: d.visibility ?? "section",
+      catalogLessonId: d.catalogLessonId || null,
+      recordingEnabled,
+      maxParticipants: d.maxParticipants ?? 50,
+      title: content.title,
+      description: content.description,
+      lang: content.lang,
+    } as const
+
+    let created: { id: string }
+    let meetingUrl: string | null = d.meetingUrl || null
+
+    if (d.provider === "livekit") {
+      // In-app SFU room — mirror actions/sessions.ts: create with a
+      // placeholder, then stamp the tenant-namespaced roomName containing the
+      // cuid so the SFU namespace can't collide or leak across schools.
+      created = await db.conference.create({
+        data: {
+          ...commonData,
+          provider: "livekit",
+          roomName: `pending-${sessionRef}`,
+          meetingUrl: null,
+          meetingProvider: null,
+        },
+        select: { id: true },
+      })
+      await db.conference.update({
+        where: { id: created.id },
+        data: { roomName: roomNameFor(schoolId, created.id) },
+      })
+      // Auto-invite the teacher as HOST; students/observers resolve lazily on
+      // join via the section roster (or school-wide visibility).
+      if (teacher.userId) {
+        await db.conferenceParticipant.upsert({
+          where: {
+            sessionId_userId: {
+              sessionId: created.id,
+              userId: teacher.userId,
+            },
+          },
+          create: {
             schoolId,
-            title: content.title,
-            scheduledStart,
-            scheduledEnd,
-            hostUserId: session.user.id ?? "",
-            sessionId: sessionRef,
-          })
-          meetingUrl = meeting.joinUrl
-        } catch (err) {
-          console.error("[createLiveClass] provider createMeeting failed:", err)
-          // Only fall back silently when the user supplied a manual URL as a
-          // safety net; otherwise surface the failure instead of creating a
-          // class with no working join link.
-          if (!d.meetingUrl) {
-            return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+            sessionId: created.id,
+            userId: teacher.userId,
+            role: "HOST",
+          },
+          update: { role: "HOST" },
+        })
+      }
+      meetingUrl = null
+    } else {
+      // When a native provider (Meet/Zoom/Teams) is configured, auto-generate
+      // a fresh meeting link via its API; otherwise keep the pasted URL. Ships
+      // dark — a no-op until the provider's OAuth credentials are present.
+      const providerId = mapMeetingProviderToId(d.meetingProvider)
+      if (providerId !== "external") {
+        const adapter = getProviderAdapter(providerId)
+        if (adapter.isConfigured()) {
+          try {
+            const meeting = await adapter.createMeeting({
+              schoolId,
+              title: content.title,
+              scheduledStart,
+              scheduledEnd,
+              hostUserId: session.user.id ?? "",
+              sessionId: sessionRef,
+            })
+            meetingUrl = meeting.joinUrl
+          } catch (err) {
+            console.error(
+              "[createLiveClass] provider createMeeting failed:",
+              err
+            )
+            // Only fall back silently when the user supplied a manual URL as a
+            // safety net; otherwise surface the failure instead of creating a
+            // class with no working join link.
+            if (!d.meetingUrl) {
+              return actionError(ACTION_ERRORS.LIVE_CLASS_PROVIDER_UNAVAILABLE)
+            }
           }
         }
       }
+
+      created = await db.conference.create({
+        data: {
+          ...commonData,
+          provider: "external",
+          // External sessions have no SFU room; roomName is a required @unique
+          // column, so reuse the synthetic, non-colliding session ref.
+          roomName: `ext-${sessionRef}`,
+          meetingUrl,
+          meetingProvider: d.meetingProvider || null,
+        },
+        select: { id: true },
+      })
     }
 
-    const created = await db.conference.create({
-      data: {
-        schoolId,
-        teacherId: d.teacherId,
-        subjectId: d.subjectId || null,
-        sectionId: d.sectionId || null,
-        provider: "external",
-        // External sessions have no SFU room; roomName is a required @unique
-        // column, so reuse the synthetic, non-colliding session ref.
-        roomName: `ext-${sessionRef}`,
-        meetingUrl,
-        meetingProvider: d.meetingProvider || null,
-        scheduledStart,
-        scheduledEnd,
-        status: d.status ?? "scheduled",
-        recordingEnabled,
-        title: content.title,
-        description: content.description,
-        lang: content.lang,
-      },
-      select: { id: true },
-    })
+    // Attached references (already tenant-verified above). Best-effort is NOT
+    // enough here — the teacher just picked them — but a failure after the
+    // session exists shouldn't orphan the create either; surface via logs.
+    if (resources.length > 0) {
+      try {
+        await writeResources(schoolId, created.id, resources)
+      } catch (err) {
+        console.error("[createLiveClass] resource write failed:", err)
+      }
+    }
 
     // Warm the other-language cache off the response path (seamless first read)
     after(() =>
@@ -386,9 +606,16 @@ export async function createLiveClass(
 
     // "Set once & reuse": persist the link as the section+subject default for
     // the active term so every weekly recurrence surfaces the same timetable
-    // Join button without re-entering it. Best-effort — a default-link failure
-    // must not fail the schedule create.
-    if (d.saveAsDefault && d.subjectId && d.sectionId) {
+    // Join button without re-entering it. External links only — an in-app
+    // room has no reusable URL (ConferenceLink.meetingUrl is required).
+    // Best-effort — a default-link failure must not fail the schedule create.
+    if (
+      d.provider === "external" &&
+      d.saveAsDefault &&
+      meetingUrl &&
+      d.subjectId &&
+      d.sectionId
+    ) {
       try {
         const { term } = await resolveActiveTerm(schoolId)
         if (term) {
@@ -485,6 +712,24 @@ export async function updateLiveClass(
     if (d.meetingProvider !== undefined)
       updateData.meetingProvider = d.meetingProvider || null
     if (d.status !== undefined) updateData.status = d.status
+    if (d.visibility !== undefined) updateData.visibility = d.visibility
+    if (d.recordingEnabled !== undefined)
+      updateData.recordingEnabled = d.recordingEnabled
+    if (d.maxParticipants !== undefined)
+      updateData.maxParticipants = d.maxParticipants
+    if (d.catalogLessonId !== undefined) {
+      if (d.catalogLessonId && !(await lessonExists(d.catalogLessonId))) {
+        return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+      }
+      updateData.catalogLessonId = d.catalogLessonId || null
+    }
+
+    // Attached references: replace-all when the array is provided at all
+    // (tenant-verified first — a foreign exam/assignment id fails validation).
+    if (d.resources !== undefined) {
+      const verifiedRefs = await verifyResourceRefs(schoolId, d.resources)
+      if (!verifiedRefs.ok) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    }
 
     // Recompute schedule when date or time changed. Need both date+time for a
     // boundary; load the existing row if only one half changed.
@@ -517,6 +762,15 @@ export async function updateLiveClass(
     })
 
     if (result.count === 0) return actionError(ACTION_ERRORS.NOT_FOUND)
+
+    // Row exists and is ours — safe to swap the reference set now.
+    if (d.resources !== undefined) {
+      try {
+        await writeResources(schoolId, d.id, d.resources)
+      } catch (err) {
+        console.error("[updateLiveClass] resource write failed:", err)
+      }
+    }
 
     // Warm the other-language cache when text content changed (off response path)
     if (updateData.title || updateData.description) {

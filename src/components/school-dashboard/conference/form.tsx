@@ -2,52 +2,51 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useMemo, useTransition } from "react"
+//
+// Live-class wizard — five compact steps (Basics → Schedule → Meeting →
+// References → Access) inside the standard modal, following the house
+// stepped-modal idiom (classes/events/invoice forms): local step state,
+// per-step `form.trigger`, ModalFooter with step ratio. Kept deliberately
+// light per step, like the school-onboarding and application wizards.
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ar, enUS } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
-import { type DateRange } from "react-day-picker"
 import { useForm } from "react-hook-form"
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import { Form } from "@/components/ui/form"
-import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import { ErrorToast, SuccessToast } from "@/components/atom/toast"
-import {
-  CheckboxField,
-  InputField,
-  SelectField,
-  TextareaField,
-} from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
-import { createLiveClass, getLiveClass, updateLiveClass } from "./list-actions"
+import {
+  NONE,
+  STEP_FIELDS,
+  StepAccess,
+  StepBasics,
+  StepMeeting,
+  StepReferences,
+  StepSchedule,
+  TOTAL_STEPS,
+  type WizardFormValues,
+} from "./form-steps"
+import {
+  createLiveClass,
+  getLiveClass,
+  getLiveClassReferenceOptions,
+  updateLiveClass,
+} from "./list-actions"
 import {
   createLiveClassSchema,
   type LiveClassFormData,
 } from "./list-validation"
-import { type LiveClassFormOptions } from "./queries"
+import {
+  type LiveClassFormOptions,
+  type LiveClassReferenceData,
+} from "./queries"
 
-const FIELD_NAMES = [
-  "title",
-  "teacherId",
-  "meetingUrl",
-  "startDate",
-  "endDate",
-  "startTime",
-  "endTime",
-] as const
+const HTTP_URL = /^https?:\/\/.+/
 
 interface LiveClassFormProps {
   onSuccess?: () => void
@@ -60,6 +59,8 @@ interface LiveClassFormProps {
    * option-backed selects on every remount.
    */
   options: LiveClassFormOptions
+  /** Whether the in-app (LiveKit) room back-end is provisioned. */
+  liveKitAvailable?: boolean
 }
 
 export function LiveClassForm({
@@ -67,25 +68,25 @@ export function LiveClassForm({
   lang = "en",
   dictionary,
   options,
+  liveKitAvailable = false,
 }: LiveClassFormProps) {
   const { modal, closeModal } = useModal()
   // `isPending` reflects ONLY an in-flight submit — it drives the "Saving…"
   // footer label and disables every field while saving.
   const [isPending, startTransition] = useTransition()
+  const [currentStep, setCurrentStep] = useState(1)
   const itemId = modal.id
   const isEdit = !!itemId
 
   const t = dictionary
   const f = t.form
 
-  const { teachers, subjects, sections } = options
-
   const schema = useMemo(
     () => createLiveClassSchema(t.validation),
     [t.validation]
   )
 
-  const form = useForm<LiveClassFormData>({
+  const form = useForm<WizardFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: {
@@ -93,6 +94,7 @@ export function LiveClassForm({
       teacherId: "",
       subjectId: "",
       sectionId: "",
+      provider: liveKitAvailable ? "livekit" : "external",
       meetingUrl: "",
       meetingProvider: "",
       startDate: new Date(),
@@ -100,10 +102,37 @@ export function LiveClassForm({
       startTime: "09:00",
       endTime: "10:00",
       status: "scheduled",
+      visibility: "section",
       description: "",
+      recordingEnabled: true,
+      maxParticipants: 50,
+      catalogLessonId: "",
+      resources: [],
       saveAsDefault: false,
+      examRefId: "",
+      assignmentRefId: "",
+      linkUrl: "",
+      linkTitle: "",
     },
   })
+
+  // Reference-picker data, fetched once per chosen subject — on step entry,
+  // never on mount (request-storm rule).
+  const [refData, setRefData] = useState<LiveClassReferenceData | null>(null)
+  const [refLoading, setRefLoading] = useState(false)
+  const refLoadedFor = useRef<string | null>(null)
+
+  const loadRefData = async (subjectId: string) => {
+    if (!subjectId || refLoadedFor.current === subjectId) return
+    refLoadedFor.current = subjectId
+    setRefLoading(true)
+    try {
+      const res = await getLiveClassReferenceOptions({ subjectId })
+      if (res.success && res.data) setRefData(res.data)
+    } finally {
+      setRefLoading(false)
+    }
+  }
 
   // Load existing data for edit mode. Plain async — prefilling values must not
   // flip the submit-pending UI ("Saving…" + disabled fields) on open.
@@ -116,11 +145,16 @@ export function LiveClassForm({
           const d = result.data
           const start = new Date(d.scheduledStart)
           const end = new Date(d.scheduledEnd)
+          const examRef = d.resources.find((r) => r.schoolExamId)
+          const assignmentRef = d.resources.find((r) => r.schoolAssignmentId)
+          const linkRef = d.resources.find((r) => r.url)
           form.reset({
+            ...form.getValues(),
             title: d.title,
             teacherId: d.teacherId,
             subjectId: d.subjectId ?? "",
             sectionId: d.sectionId ?? "",
+            provider: d.provider === "livekit" ? "livekit" : "external",
             meetingUrl: d.meetingUrl ?? "",
             meetingProvider: d.meetingProvider ?? "",
             startDate: start,
@@ -128,28 +162,97 @@ export function LiveClassForm({
             startTime: toTimeString(start),
             endTime: toTimeString(end),
             status: d.status as LiveClassFormData["status"],
+            visibility: d.visibility === "school" ? "school" : "section",
             description: d.description ?? "",
+            recordingEnabled: d.recordingEnabled,
+            maxParticipants: d.maxParticipants,
+            catalogLessonId: d.catalogLessonId ?? "",
+            examRefId: examRef?.schoolExamId ?? "",
+            assignmentRefId: assignmentRef?.schoolAssignmentId ?? "",
+            linkUrl: linkRef?.url ?? "",
+            linkTitle: linkRef?.title ?? "",
           })
+          // Pre-load picker labels so saved references display on step 4.
+          if (d.subjectId) void loadRefData(d.subjectId)
         }
       })()
       return () => {
         active = false
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, itemId, form])
+
+  /** Compose the resources array from the three UI pickers. */
+  const composeResources = (): LiveClassFormData["resources"] => {
+    const v = form.getValues()
+    const rows: LiveClassFormData["resources"] = []
+    if (v.examRefId && v.examRefId !== NONE) {
+      rows.push({
+        schoolExamId: v.examRefId,
+        schoolAssignmentId: null,
+        url: null,
+        title: null,
+      })
+    }
+    if (v.assignmentRefId && v.assignmentRefId !== NONE) {
+      rows.push({
+        schoolExamId: null,
+        schoolAssignmentId: v.assignmentRefId,
+        url: null,
+        title: null,
+      })
+    }
+    if (v.linkUrl) {
+      rows.push({
+        schoolExamId: null,
+        schoolAssignmentId: null,
+        url: v.linkUrl,
+        title: v.linkTitle || null,
+      })
+    }
+    return rows
+  }
 
   const onSubmit = async (data: LiveClassFormData) => {
     startTransition(async () => {
-      const payload = {
-        ...data,
-        subjectId: data.subjectId || null,
-        sectionId: data.sectionId || null,
-        meetingProvider: data.meetingProvider || null,
-        description: data.description || null,
-      }
+      const catalogLessonId =
+        data.catalogLessonId && data.catalogLessonId !== NONE
+          ? data.catalogLessonId
+          : null
+
       const result = isEdit
-        ? await updateLiveClass({ ...payload, id: itemId! })
-        : await createLiveClass(payload)
+        ? await updateLiveClass({
+            id: itemId!,
+            title: data.title,
+            teacherId: data.teacherId,
+            subjectId: data.subjectId || null,
+            sectionId: data.sectionId || null,
+            // Provider is immutable; the URL only applies to external links.
+            ...(data.provider === "external" && data.meetingUrl
+              ? { meetingUrl: data.meetingUrl }
+              : {}),
+            meetingProvider: data.meetingProvider || null,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            status: data.status,
+            visibility: data.visibility,
+            recordingEnabled: data.recordingEnabled,
+            maxParticipants: data.maxParticipants,
+            catalogLessonId,
+            resources: data.resources,
+            description: data.description || null,
+          })
+        : await createLiveClass({
+            ...data,
+            subjectId: data.subjectId || null,
+            sectionId: data.sectionId || null,
+            meetingProvider: data.meetingProvider || null,
+            description: data.description || null,
+            catalogLessonId,
+          })
 
       if (result.success) {
         SuccessToast(isEdit ? t.toasts.updated : t.toasts.created)
@@ -161,202 +264,130 @@ export function LiveClassForm({
     })
   }
 
-  const watched = form.watch()
-  const filledCount = FIELD_NAMES.filter((name) => {
-    const value = watched[name]
-    return value !== "" && value !== null && value !== undefined
-  }).length
-  const progress = (filledCount / FIELD_NAMES.length) * 100
+  const handleNext = async () => {
+    if (currentStep < TOTAL_STEPS) {
+      // Step 3's URL requirement only applies to external sessions — the
+      // full-schema resolver handles that via superRefine, and trigger()
+      // surfaces just this step's fields.
+      const fields = STEP_FIELDS[currentStep] ?? []
+      const valid = fields.length ? await form.trigger(fields) : true
+      if (!valid) return
+      const next = currentStep + 1
+      // Entering References: fetch pickers for the chosen subject once.
+      if (next === 4) {
+        const subjectId = form.getValues("subjectId")
+        if (subjectId) void loadRefData(subjectId)
+      }
+      setCurrentStep(next)
+      return
+    }
 
-  const noTeachers = teachers.length === 0
+    // Last step — inline-check the ad-hoc link, compose references, submit.
+    const linkUrl = form.getValues("linkUrl")
+    if (linkUrl && !HTTP_URL.test(linkUrl)) {
+      form.setError("linkUrl", {
+        type: "manual",
+        message: t.validation?.resourceUrlInvalid,
+      })
+      setCurrentStep(4)
+      return
+    }
+    form.setValue("resources", composeResources())
+    await form.handleSubmit(onSubmit)()
+  }
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    } else {
+      closeModal()
+    }
+  }
+
+  // Edit mode: save from any step without walking to the end.
+  const handleSaveCurrentStep = async () => {
+    if (!isEdit) {
+      await handleNext()
+      return
+    }
+    const fields = STEP_FIELDS[currentStep] ?? []
+    const valid = fields.length ? await form.trigger(fields) : true
+    if (!valid) return
+    form.setValue("resources", composeResources())
+    await form.handleSubmit(onSubmit)()
+  }
+
+  const stepLabels: Record<number, string> = {
+    1: t.steps.basics,
+    2: t.steps.schedule,
+    3: t.steps.meeting,
+    4: t.steps.references,
+    5: t.steps.access,
+  }
+
+  const subjectId = form.watch("subjectId")
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <StepBasics f={f} options={options} isPending={isPending} />
+      case 2:
+        return <StepSchedule f={f} lang={lang} isPending={isPending} />
+      case 3:
+        return (
+          <StepMeeting
+            f={f}
+            isPending={isPending}
+            isEdit={isEdit}
+            liveKitAvailable={liveKitAvailable}
+          />
+        )
+      case 4:
+        return (
+          <StepReferences
+            f={f}
+            isPending={isPending}
+            hasSubject={!!subjectId}
+            refData={refData}
+            refLoading={refLoading}
+          />
+        )
+      case 5:
+        return <StepAccess f={f} isPending={isPending} />
+      default:
+        return null
+    }
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
           title={isEdit ? t.edit : t.create}
           description={isEdit ? t.editDescription : t.createDescription}
         >
-          <div className="space-y-4">
-            <InputField
-              name="title"
-              label={f.titleLabel}
-              placeholder={f.titlePlaceholder}
-              required
-              disabled={isPending}
-            />
-
-            <SelectField
-              name="teacherId"
-              label={f.teacherLabel}
-              placeholder={noTeachers ? f.noTeachers : f.teacherPlaceholder}
-              required
-              disabled={isPending || noTeachers}
-              options={teachers.map((teacher) => ({
-                value: teacher.id,
-                label: teacher.name,
-              }))}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <SelectField
-                name="subjectId"
-                label={f.subjectLabel}
-                placeholder={f.subjectPlaceholder}
-                disabled={isPending}
-                options={subjects.map((subject) => ({
-                  value: subject.id,
-                  label: subject.name,
-                }))}
-              />
-              <SelectField
-                name="sectionId"
-                label={f.sectionLabel}
-                placeholder={f.sectionPlaceholder}
-                disabled={isPending}
-                options={sections.map((section) => ({
-                  value: section.id,
-                  label: section.name,
-                }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{f.dateRangeLabel}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[calc(var(--cell-size,1.75rem)*14+1rem+1.5rem)] justify-start text-start font-normal",
-                      !watched.startDate && "text-muted-foreground"
-                    )}
-                    disabled={isPending}
-                  >
-                    <CalendarIcon />
-                    {watched.startDate ? (
-                      watched.endDate ? (
-                        <>
-                          {watched.startDate.toLocaleDateString(
-                            lang === "ar" ? "ar-SA" : "en-US",
-                            { day: "numeric", month: "short", year: "2-digit" }
-                          )}{" "}
-                          -{" "}
-                          {watched.endDate.toLocaleDateString(
-                            lang === "ar" ? "ar-SA" : "en-US",
-                            { day: "numeric", month: "short", year: "2-digit" }
-                          )}
-                        </>
-                      ) : (
-                        watched.startDate.toLocaleDateString(
-                          lang === "ar" ? "ar-SA" : "en-US",
-                          { day: "numeric", month: "short", year: "2-digit" }
-                        )
-                      )
-                    ) : (
-                      <span>{f.pickDateRange}</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    defaultMonth={watched.startDate}
-                    locale={lang === "ar" ? ar : enUS}
-                    selected={{
-                      from: watched.startDate,
-                      to: watched.endDate,
-                    }}
-                    onSelect={(range: DateRange | undefined) => {
-                      if (range?.from)
-                        form.setValue("startDate", range.from, {
-                          shouldValidate: true,
-                        })
-                      if (range?.to)
-                        form.setValue("endDate", range.to, {
-                          shouldValidate: true,
-                        })
-                    }}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                name="startTime"
-                label={f.startTimeLabel}
-                type="time"
-                required
-                disabled={isPending}
-              />
-              <InputField
-                name="endTime"
-                label={f.endTimeLabel}
-                type="time"
-                required
-                disabled={isPending}
-              />
-            </div>
-
-            <InputField
-              name="meetingUrl"
-              label={f.meetingUrlLabel}
-              placeholder={f.meetingUrlPlaceholder}
-              type="url"
-              required
-              disabled={isPending}
-            />
-
-            <SelectField
-              name="meetingProvider"
-              label={f.meetingProviderLabel}
-              placeholder={f.meetingProviderPlaceholder}
-              disabled={isPending}
-              options={[
-                { value: "Google Meet", label: f.providerGoogleMeet },
-                { value: "Zoom", label: f.providerZoom },
-                { value: "Microsoft Teams", label: f.providerTeams },
-              ]}
-            />
-
-            <TextareaField
-              name="description"
-              label={f.descriptionLabel}
-              placeholder={f.descriptionPlaceholder}
-              rows={3}
-              disabled={isPending}
-            />
-
-            {/* "Set once & reuse": only meaningful when both subject and section
-                are chosen, since the recurring link is keyed by section+subject
-                for the active term. */}
-            {watched.subjectId && watched.sectionId && (
-              <CheckboxField
-                name="saveAsDefault"
-                checkboxLabel={f.saveAsDefaultLabel}
-                description={f.saveAsDefaultHint}
-                disabled={isPending}
-              />
-            )}
-          </div>
+          {renderCurrentStep()}
         </ModalFormLayout>
       </form>
 
       <ModalFooter
-        currentStep={1}
-        totalSteps={1}
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
+        stepLabel={stepLabels[currentStep]}
         isEdit={isEdit}
         isSubmitting={isPending}
-        progress={progress}
-        onBack={closeModal}
-        onNext={() => form.handleSubmit(onSubmit)()}
+        isDirty={form.formState.isDirty}
+        onBack={handleBack}
+        onNext={handleNext}
+        onSaveStep={handleSaveCurrentStep}
         labels={{
           cancel: t.cancel,
+          back: t.back,
+          next: t.next,
           create: t.create,
           save: t.save,
           saving: t.saving,
+          stepOf: t.steps.stepOf,
         }}
       />
     </Form>

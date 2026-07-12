@@ -2,7 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { auth } from "@/auth"
-import type { UserRole } from "@prisma/client"
+import type { ConferenceVisibility, UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
@@ -23,15 +23,35 @@ const SESSION_STAFF_ROLES: UserRole[] = [
  * Enrollment-level access to a live-class session (and its recordings),
  * on top of the role-level `view_recordings` permission. Staff may view
  * school-wide; a STUDENT/GUARDIAN may only access a session whose section
- * they (or their ward) are enrolled in. Mirrors resolveParticipantRole in
- * actions/tokens.ts. Without this, any student could pull another section's
- * recording within the same school.
+ * they (or their ward) are enrolled in — unless the session is school-wide
+ * (`visibility: school`), where any member of the school qualifies. Mirrors
+ * resolveParticipantRole in actions/tokens.ts. Without this, any student
+ * could pull another section's recording within the same school.
  */
 export async function canAccessSession(
   ctx: { userId: string; role: UserRole; schoolId: string },
-  sectionId: string | null
+  sectionId: string | null,
+  visibility: ConferenceVisibility = "section"
 ): Promise<boolean> {
   if (SESSION_STAFF_ROLES.includes(ctx.role)) return true
+  if (visibility === "school") {
+    // School-wide session: membership in the school is the whole gate.
+    if (ctx.role === "STUDENT") {
+      const student = await db.student.findFirst({
+        where: { schoolId: ctx.schoolId, userId: ctx.userId },
+        select: { id: true },
+      })
+      return Boolean(student)
+    }
+    if (ctx.role === "GUARDIAN") {
+      const guardian = await db.guardian.findFirst({
+        where: { schoolId: ctx.schoolId, userId: ctx.userId },
+        select: { id: true },
+      })
+      return Boolean(guardian)
+    }
+    return false
+  }
   if (!sectionId) return false
   if (ctx.role === "STUDENT") {
     const student = await db.student.findFirst({
