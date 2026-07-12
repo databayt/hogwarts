@@ -107,6 +107,8 @@ export function AttendanceExport({
     "NFC",
     "BLUETOOTH",
     "BULK_UPLOAD",
+    "VIRTUAL",
+    "KIOSK",
   ])
 
   const handleExport = async () => {
@@ -382,6 +384,8 @@ export function AttendanceExport({
                   "NFC",
                   "BLUETOOTH",
                   "BULK_UPLOAD",
+                  "VIRTUAL",
+                  "KIOSK",
                 ] as const
               ).map((methodKey) => (
                 <div

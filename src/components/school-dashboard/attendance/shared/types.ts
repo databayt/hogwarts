@@ -3,6 +3,8 @@
 
 // Shared types for all attendance methods
 
+import type { AttendanceMethod as PrismaAttendanceMethod } from "@prisma/client"
+
 export type AttendanceStatus =
   | "PRESENT"
   | "ABSENT"
@@ -11,17 +13,10 @@ export type AttendanceStatus =
   | "SICK"
   | "HOLIDAY"
 
-export type AttendanceMethod =
-  | "MANUAL"
-  | "GEOFENCE"
-  | "QR_CODE"
-  | "BARCODE"
-  | "RFID"
-  | "FINGERPRINT"
-  | "FACE_RECOGNITION"
-  | "NFC"
-  | "BLUETOOTH"
-  | "BULK_UPLOAD"
+// Derived from Prisma (prisma/models/attendance.prisma) so this union can
+// never drift from the database enum again. Includes hardware/system-marked
+// methods (KIOSK, VIRTUAL) alongside user-selectable ones.
+export type AttendanceMethod = PrismaAttendanceMethod
 
 export type IdentifierType =
   | "BARCODE"

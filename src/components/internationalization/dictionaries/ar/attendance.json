@@ -24,7 +24,9 @@
     "FACE_RECOGNITION": "التعرف على الوجه",
     "NFC": "NFC",
     "BLUETOOTH": "بلوتوث",
-    "BULK_UPLOAD": "رفع جماعي"
+    "BULK_UPLOAD": "رفع جماعي",
+    "VIRTUAL": "حصة مباشرة",
+    "KIOSK": "كشك"
   },
   "excuseReason": {
     "MEDICAL": "طبي",

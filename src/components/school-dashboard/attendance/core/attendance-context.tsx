@@ -38,6 +38,10 @@ import type {
 import { calculateAttendanceStats } from "../shared/utils"
 
 // Define the attendance method configurations
+// NOTE: VIRTUAL and KIOSK are deliberately excluded from this manual-marking
+// method picker — they are system/hardware-generated (VIRTUAL is auto-marked
+// from live-class presence by conference sync; KIOSK comes from self-service
+// kiosk check-in), not methods a user hand-picks here.
 const ATTENDANCE_METHODS: AttendanceMethodConfig[] = [
   {
     method: "MANUAL",

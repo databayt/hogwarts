@@ -172,6 +172,8 @@ const getMethodDisplayName = (method: string): string => {
     NFC: "NFC",
     BLUETOOTH: "Bluetooth",
     BULK_UPLOAD: "Bulk Upload",
+    VIRTUAL: "Live Class",
+    KIOSK: "Kiosk",
   }
   return names[method] || method
 }

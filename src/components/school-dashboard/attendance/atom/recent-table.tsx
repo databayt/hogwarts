@@ -80,6 +80,8 @@ const methodLabels: Record<AttendanceMethod, string> = {
   NFC: "NFC",
   BLUETOOTH: "Bluetooth",
   BULK_UPLOAD: "Import",
+  VIRTUAL: "Live Class",
+  KIOSK: "Kiosk",
 }
 
 function formatTime(date: Date | string | undefined): string {

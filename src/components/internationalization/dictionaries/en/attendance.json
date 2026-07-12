@@ -24,7 +24,9 @@
     "FACE_RECOGNITION": "Face Recognition",
     "NFC": "NFC",
     "BLUETOOTH": "Bluetooth",
-    "BULK_UPLOAD": "Bulk Upload"
+    "BULK_UPLOAD": "Bulk Upload",
+    "VIRTUAL": "Live Class",
+    "KIOSK": "Kiosk"
   },
   "excuseReason": {
     "MEDICAL": "Medical",
