@@ -47,6 +47,7 @@ model Lesson {
   schoolQuestionBanks QuestionBank[]
   schoolExams         SchoolExam[]
   schoolAssignments   SchoolAssignment[]
+  conferences         Conference[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

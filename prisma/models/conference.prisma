@@ -50,6 +50,19 @@ enum ConferenceParticipantRole {
   @@map("LiveClassParticipantRole")
 }
 
+// Who inside the school may see and join a session. `section` (default) keeps
+// today's behavior: the section roster + their guardians (+ staff); a session
+// with no section is host-only. `school` opens the room to every member of the
+// school — assemblies, PD webinars, parent town halls. There is deliberately
+// NO cross-school or anonymous tier: the tenant boundary (schoolId + room-name
+// namespace) always applies.
+enum ConferenceVisibility {
+  section
+  school
+
+  @@map("LiveClassVisibility")
+}
+
 enum ConferenceParticipantStatus {
   invited
   joined
@@ -97,6 +110,16 @@ model Conference {
   recordingEnabled Boolean          @default(true)
   maxParticipants  Int              @default(50)
 
+  // Access control — see ConferenceVisibility. Enforced in token eligibility,
+  // recordings access, and every list read path.
+  visibility ConferenceVisibility @default(section)
+
+  // Optional catalog-lesson reference: one FK transitively surfaces the
+  // lesson's videos, attachments, materials, and practice questions on the
+  // session detail page (the catalog hierarchy-attachment pattern).
+  catalogLessonId String?
+  catalogLesson   Lesson? @relation(fields: [catalogLessonId], references: [id], onDelete: SetNull)
+
   // Content (single-language storage — see translation rule)
   title       String
   description String? @db.Text
@@ -109,6 +132,7 @@ model Conference {
   participants ConferenceParticipant[]
   recordings   ConferenceRecording[]
   events       ConferenceEvent[]
+  resources    ConferenceResource[]
 
   @@index([schoolId, status])
   @@index([schoolId, teacherId])
@@ -118,8 +142,39 @@ model Conference {
   // scheduledStart window scoped by school.
   @@index([schoolId, status, scheduledStart])
   @@index([timetableId])
+  @@index([catalogLessonId])
   @@index([deletedAt])
   @@map("live_class_sessions")
+}
+
+// Reference material attached to a session — exactly one of schoolExamId
+// (exams AND quizzes: quiz = SchoolExam.examType QUIZ), schoolAssignmentId,
+// or url is populated per row (the ContentOverride multi-nullable-FK pattern).
+// Lesson-level materials/videos/questions are NOT rows here — they surface
+// automatically through Conference.catalogLessonId.
+model ConferenceResource {
+  id        String     @id @default(cuid())
+  schoolId  String
+  sessionId String
+  session   Conference @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  schoolExamId String?
+  schoolExam   SchoolExam? @relation(fields: [schoolExamId], references: [id], onDelete: Cascade)
+
+  schoolAssignmentId String?
+  schoolAssignment   SchoolAssignment? @relation(fields: [schoolAssignmentId], references: [id], onDelete: Cascade)
+
+  // Ad-hoc external reference (worksheet URL, article, drive folder…).
+  url   String?
+  title String?
+
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, sessionId])
+  @@index([schoolExamId])
+  @@index([schoolAssignmentId])
+  @@map("live_class_resources")
 }
 
 // One row per user invited to a conference (host, students, observers).

@@ -128,6 +128,7 @@ model SchoolExam {
   studentAnswers StudentAnswer[]
   markingResults MarkingResult[]
   examSessions   ExamSession[]
+  conferenceResources ConferenceResource[]
 
   // Catalog bridge relations
   catalogChapter Chapter? @relation(fields: [catalogChapterId], references: [id], onDelete: SetNull)

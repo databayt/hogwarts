@@ -45,6 +45,7 @@ model SchoolAssignment {
   catalogAssignment Assignment?            @relation(fields: [catalogAssignmentId], references: [id], onDelete: SetNull)
   submissions       AssignmentSubmission[]
   results           Result[]
+  conferenceResources ConferenceResource[]
 
   wizardStep String?
 
