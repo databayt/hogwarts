@@ -8,6 +8,7 @@
 
 import type {
   AdmissionApplicationStatus,
+  AdmissionChannel,
   AdmissionStatus,
 } from "@prisma/client"
 import { Prisma } from "@prisma/client"
@@ -29,6 +30,9 @@ export type ApplicationListFilters = {
   campaignId?: string
   status?: string
   applyingForClass?: string
+  /** Admission channel; defaults to "PORTAL" (the reviewed pipeline). Pass a
+   *  specific channel to filter, or "all" to include direct-admit/bulk rows. */
+  channel?: string
 }
 
 export type MeritListFilters = {
@@ -44,6 +48,8 @@ export type EnrollmentFilters = {
   offerStatus?: string
   feeStatus?: string
   documentStatus?: string
+  /** Admission channel; defaults to "PORTAL". Pass "all" to include direct-admit/bulk. */
+  channel?: string
 }
 
 export type PaginationParams = {
@@ -236,6 +242,13 @@ export function buildApplicationWhere(
 ): Prisma.ApplicationWhereInput {
   const where: Prisma.ApplicationWhereInput = { schoolId }
 
+  // Default the review surface to the reviewed pipeline (PORTAL). Direct-admit
+  // and bulk-imported students are real admission records but stay out of the
+  // Applications tab unless explicitly requested, so it isn't flooded.
+  if (filters.channel !== "all") {
+    where.channel = (filters.channel ?? "PORTAL") as AdmissionChannel
+  }
+
   if (filters.search) {
     where.OR = [
       {
@@ -350,6 +363,12 @@ export function buildEnrollmentWhere(
     status: {
       in: ["SELECTED", "ADMITTED"] as AdmissionApplicationStatus[],
     },
+  }
+
+  // Direct-admit/bulk students are already ADMITTED and don't go through the
+  // enrollment-confirmation step, so keep them out of this tab by default.
+  if (filters.channel !== "all") {
+    where.channel = (filters.channel ?? "PORTAL") as AdmissionChannel
   }
 
   if (filters.search) {

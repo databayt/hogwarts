@@ -13,6 +13,10 @@ model AdmissionCampaign {
   applicationFee      Decimal?        @db.Decimal(10, 2)
   totalSeats          Int
   reservedSeats       Json? // Category-wise reservation
+  // Hidden, auto-created per-school campaign that direct-admit (admin/bulk)
+  // students' shadow Applications hang off. At most one per school (enforced by
+  // a partial unique index applied out-of-band; Prisma can't express it).
+  isSystemGenerated   Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
@@ -37,6 +41,13 @@ model Application {
   // Language the applicant-entered content was captured in (single-language
   // storage — see .claude/rules/translation.md). Drives on-demand translation.
   lang String @default("ar")
+
+  // How this student entered the system. PORTAL = the public application wizard
+  // (the reviewed pipeline). The others are direct-admit "shadow" applications
+  // minted by provisionStudent so every student is born from an Application.
+  // Non-PORTAL rows are excluded from the review/enrollment dashboards by
+  // default (see school-dashboard/admission/queries.ts).
+  channel AdmissionChannel @default(PORTAL)
 
   // User coupling (mirrors onboarding's user.schoolId pattern)
   userId String?
@@ -154,6 +165,7 @@ model Application {
   @@index([status])
   @@index([email])
   @@index([meritRank])
+  @@index([schoolId, channel])
 }
 
 // Communication with applicants
@@ -182,6 +194,15 @@ enum AdmissionStatus {
   CLOSED
   PROCESSING
   COMPLETED
+}
+
+// How a student entered the system — set on every Application via provisionStudent.
+enum AdmissionChannel {
+  PORTAL // public application wizard (the reviewed admit→offer→pay pipeline)
+  ADMIN_DIRECT // school-dashboard admin single-student wizard
+  ONBOARDING_IMPORT // CSV import during the onboarding wizard
+  BULK_IMPORT // CSV import via school-dashboard /school/bulk
+  LEGACY_BACKFILL // retroactive rows created by the backfill script
 }
 
 enum AdmissionApplicationStatus {

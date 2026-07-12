@@ -18,11 +18,10 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { dispatchNotification } from "@/lib/dispatch-notification"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
-import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { extractGradeNumber } from "@/lib/grade-utils"
-import { generateStudentUsername } from "@/lib/student-username"
+import type { ProvisionGuardianInput } from "@/lib/student-provisioning"
+import { provisionStudent } from "@/lib/student-provisioning"
 import { sendNotificationEmail } from "@/components/school-dashboard/notifications/email-service"
-import { detectLang } from "@/components/translation/util"
 
 import { assertAdmissionPermission, isPermissionDenied } from "./authorization"
 import {
@@ -1231,312 +1230,129 @@ export async function confirmEnrollment(params: {
           },
         })
 
-        // Resolve the target AcademicGrade so the student code can be
-        // year+grade scoped. Mirrors the cascade used further down for YearLevel.
-        const applyingGradeNumber = extractGradeNumber(
-          application.applyingForClass ?? ""
-        )
-        const resolvedAcademicGrade = applyingGradeNumber
-          ? await tx.academicGrade.findFirst({
-              where: { schoolId, gradeNumber: applyingGradeNumber },
-              select: { id: true },
-            })
-          : null
+        // Build the guardian inputs from the application's father/mother/
+        // other fields (typed entries with fullName split into first/last),
+        // then delegate every user/student/yearLevel/role/fee/guardian/
+        // document create to the shared provisioning core. confirmEnrollment
+        // always reuses THIS existing Application (never mints a shadow one)
+        // and keeps ownership of the registration-fee ledger entry below,
+        // which reads the FeeAssignment provisionStudent creates.
+        let guardianInputs: ProvisionGuardianInput[] = []
+        try {
+          const { fromFullName } = await import("@/lib/guardian-utils")
 
-        // Per-school student code (YYGGNNNN). Generated inside the tx so
-        // concurrent enrollments see each other's increments.
-        const studentCode = await generateStudentUsername({
-          schoolId,
-          academicGradeId: resolvedAcademicGrade?.id ?? null,
-          tx,
-        })
+          const guardianEntries: Array<{
+            typeName: string
+            fullName: string
+            email: string | null
+            phone: string | null
+            occupation: string | null
+            isPrimary: boolean
+          }> = []
 
-        // 3. Resolve userId — create a User for guest applications
-        let userId = application.userId
-        // True only when this tx mints a brand-new guest User below (no
-        // password set on create) — used post-commit to send a password-set
-        // link, since this account otherwise has no way to ever authenticate.
-        let isNewGuestUser = false
-        if (!userId) {
-          // Find existing user by email to avoid unique constraint violation.
-          // MUST be schoolId-scoped: User is @@unique([email, schoolId]) and the
-          // same email may exist as separate rows in other schools. An unscoped
-          // match would annex another tenant's user (e.g. a parent who used the
-          // same email at a different school) into this school's Student record.
-          const existingUser = await tx.user.findFirst({
-            where: { email: application.email, schoolId },
-            select: { id: true },
-          })
-
-          if (existingUser) {
-            userId = existingUser.id
-            // Stamp the code onto the existing user's username if they don't
-            // already have one (e.g., an applicant who self-registered).
-            await tx.user.updateMany({
-              where: { id: existingUser.id, username: null },
-              data: { username: studentCode },
+          if (application.fatherName) {
+            guardianEntries.push({
+              typeName: "father",
+              fullName: application.fatherName,
+              email: application.fatherEmail,
+              phone: application.fatherPhone,
+              occupation: application.fatherOccupation,
+              isPrimary: true,
             })
-          } else {
-            const guestUser = await tx.user.create({
-              data: {
-                email: application.email,
-                username: studentCode,
-                role: "STUDENT",
-                schoolId,
-                emailVerified: new Date(),
-              },
+          }
+          if (application.motherName) {
+            guardianEntries.push({
+              typeName: "mother",
+              fullName: application.motherName,
+              email: application.motherEmail,
+              phone: application.motherPhone,
+              occupation: application.motherOccupation,
+              isPrimary: !application.fatherName,
             })
-            userId = guestUser.id
-            isNewGuestUser = true
+          }
+          if (
+            application.guardianName &&
+            application.guardianName !== application.fatherName &&
+            application.guardianName !== application.motherName
+          ) {
+            guardianEntries.push({
+              typeName:
+                application.guardianRelation?.toLowerCase() || "guardian",
+              fullName: application.guardianName,
+              email: application.guardianEmail,
+              phone: application.guardianPhone,
+              occupation: null,
+              isPrimary: false,
+            })
           }
 
-          // Link the application to the new user
-          await tx.application.update({
-            where: { id: params.id, schoolId },
-            data: { userId },
-          })
+          guardianInputs = guardianEntries.map((entry) => fromFullName(entry))
+        } catch (guardianBuildError) {
+          console.warn(
+            "[confirmEnrollment] Guardian entry construction failed:",
+            guardianBuildError
+          )
+          warnings.push({ code: "GUARDIAN_CREATE_FAILED" })
         }
 
+        const provisionResult = await provisionStudent(
+          {
+            schoolId,
+            firstName: application.firstName,
+            middleName: application.middleName,
+            lastName: application.lastName,
+            dateOfBirth: application.dateOfBirth,
+            gender: application.gender,
+            nationality: application.nationality,
+            category: application.category,
+            photoUrl: application.photoUrl,
+            email: application.email,
+            phone: application.phone,
+            alternatePhone: application.alternatePhone,
+            address: application.address,
+            city: application.city,
+            state: application.state,
+            postalCode: application.postalCode,
+            country: application.country,
+            applyingForClass: application.applyingForClass,
+            academicYear: application.campaign.academicYear,
+            previousSchool: application.previousSchool,
+            previousGrade: application.previousClass,
+            previousMarks: application.previousMarks,
+            previousPercentage: application.previousPercentage,
+            achievements: application.achievements,
+            guardians: guardianInputs,
+            documents:
+              (application.documents as Array<{
+                type?: string
+                name?: string
+                url?: string
+                uploadedAt?: string
+              }> | null) ?? undefined,
+            applicationId: params.id,
+            admissionNumber: enrollmentNumber,
+            userId: application.userId,
+            emergencyContactName:
+              application.guardianName || application.fatherName || undefined,
+            emergencyContactPhone:
+              application.guardianPhone || application.fatherPhone || undefined,
+            emergencyContactRelation: application.guardianRelation || "Parent",
+          },
+          { notify: false, credentialDelivery: "reset-link", origin: "PORTAL" },
+          tx
+        )
+
+        warnings.push(
+          ...provisionResult.warnings.map((w) => ({
+            code: w.code as EnrollmentWarningCode,
+            meta: w.meta,
+          }))
+        )
+
         {
-          // Check if student already exists and belongs to a different school
-          const existingStudent = await tx.student.findUnique({
-            where: { userId },
-            select: { id: true, schoolId: true },
-          })
+          const studentId = provisionResult.studentId
 
-          if (existingStudent && existingStudent.schoolId !== schoolId) {
-            throw new Error("Student is already enrolled in another school")
-          }
-
-          // Build previous academic record from application marks
-          const previousAcademicParts: string[] = []
-          if (application.previousMarks)
-            previousAcademicParts.push(`Marks: ${application.previousMarks}`)
-          if (application.previousPercentage)
-            previousAcademicParts.push(
-              `Percentage: ${application.previousPercentage}%`
-            )
-          if (application.achievements)
-            previousAcademicParts.push(
-              `Achievements: ${application.achievements}`
-            )
-
-          const student = existingStudent
-            ? existingStudent
-            : await tx.student.create({
-                data: {
-                  schoolId,
-                  userId,
-                  studentId: studentCode,
-                  firstName: application.firstName,
-                  middleName: application.middleName,
-                  lastName: application.lastName,
-                  dateOfBirth:
-                    application.dateOfBirth ?? new Date("2000-01-01"),
-                  gender: application.gender ?? "MALE",
-                  nationality: application.nationality ?? undefined,
-                  email: application.email,
-                  mobileNumber: application.phone,
-                  alternatePhone: application.alternatePhone ?? undefined,
-                  currentAddress: application.address,
-                  city: application.city,
-                  state: application.state,
-                  postalCode: application.postalCode,
-                  country: application.country,
-                  applicationId: application.id,
-                  admissionNumber: enrollmentNumber,
-                  admissionDate: new Date(),
-                  enrollmentDate: new Date(),
-                  status: "ACTIVE",
-                  category: application.category ?? undefined,
-                  profilePhotoUrl: application.photoUrl ?? undefined,
-                  previousSchoolName: application.previousSchool ?? undefined,
-                  previousGrade: application.previousClass ?? undefined,
-                  previousAcademicRecord:
-                    previousAcademicParts.length > 0
-                      ? previousAcademicParts.join("; ")
-                      : undefined,
-                  // Map guardian/parent info to emergency contact
-                  emergencyContactName:
-                    application.guardianName ||
-                    application.fatherName ||
-                    undefined,
-                  emergencyContactPhone:
-                    application.guardianPhone ||
-                    application.fatherPhone ||
-                    undefined,
-                  emergencyContactRelation:
-                    application.guardianRelation || "Parent",
-                  // Detect language from the applicant's name
-                  lang: detectLang(
-                    [application.firstName, application.lastName]
-                      .filter(Boolean)
-                      .join(" ")
-                  ),
-                  // Application provides all required fields — wizard is complete
-                  wizardStep: null,
-                },
-              })
-
-          // 4. Try to match applyingForClass to a YearLevel and create StudentYearLevel
-          let matchedYearLevelId: string | null = null
-          try {
-            // Cascading search: exact -> case-insensitive -> grade number
-            let yearLevel = await tx.yearLevel.findFirst({
-              where: {
-                schoolId,
-                levelName: application.applyingForClass,
-              },
-            })
-
-            if (!yearLevel) {
-              yearLevel = await tx.yearLevel.findFirst({
-                where: {
-                  schoolId,
-                  levelName: {
-                    equals: application.applyingForClass,
-                    mode: "insensitive",
-                  },
-                },
-              })
-            }
-
-            if (!yearLevel) {
-              const gradeNum = extractGradeNumber(
-                application.applyingForClass ?? ""
-              )
-              if (gradeNum) {
-                // Match via AcademicGrade.gradeNumber (not levelOrder, which
-                // includes KG levels and shifts the numbering)
-                const academicGrade = await tx.academicGrade.findFirst({
-                  where: { schoolId, gradeNumber: gradeNum },
-                  select: { yearLevelId: true },
-                })
-                if (academicGrade?.yearLevelId) {
-                  yearLevel = await tx.yearLevel.findFirst({
-                    where: { id: academicGrade.yearLevelId, schoolId },
-                  })
-                }
-                // Fallback to levelOrder if no AcademicGrade match
-                if (!yearLevel) {
-                  yearLevel = await tx.yearLevel.findFirst({
-                    where: { schoolId, levelOrder: gradeNum },
-                  })
-                }
-              }
-            }
-
-            if (yearLevel) {
-              matchedYearLevelId = yearLevel.id
-
-              // Find the school year matching the campaign's academic year
-              const schoolYear = await tx.schoolYear.findFirst({
-                where: {
-                  schoolId,
-                  yearName: application.campaign.academicYear,
-                },
-              })
-
-              if (schoolYear) {
-                // Upsert to be idempotent (unique on [schoolId, studentId, yearId])
-                await tx.studentYearLevel.upsert({
-                  where: {
-                    schoolId_studentId_yearId: {
-                      schoolId,
-                      studentId: student.id,
-                      yearId: schoolYear.id,
-                    },
-                  },
-                  create: {
-                    schoolId,
-                    studentId: student.id,
-                    levelId: yearLevel.id,
-                    yearId: schoolYear.id,
-                  },
-                  update: {
-                    levelId: yearLevel.id,
-                  },
-                })
-              } else {
-                console.warn(
-                  `[confirmEnrollment] No SchoolYear found for academicYear="${application.campaign.academicYear}" in school=${schoolId}`
-                )
-              }
-
-              // 4b. Set academicGradeId from the matched YearLevel
-              const academicGrade = await tx.academicGrade.findFirst({
-                where: { schoolId, yearLevelId: yearLevel.id },
-              })
-              if (academicGrade) {
-                await tx.student.update({
-                  where: { id: student.id },
-                  data: { academicGradeId: academicGrade.id },
-                })
-              }
-            } else {
-              console.warn(
-                `[confirmEnrollment] No YearLevel found matching applyingForClass="${application.applyingForClass}" in school=${schoolId}. Available levels should be checked in Year Level settings.`
-              )
-            }
-          } catch (ylError) {
-            // Don't break enrollment if year level matching fails
-            console.warn(
-              "[confirmEnrollment] Failed to create StudentYearLevel:",
-              ylError
-            )
-          }
-
-          // 5. Update user role to STUDENT if not already a higher role
-          try {
-            const user = await tx.user.findUnique({
-              where: { id: userId },
-              select: { role: true, schoolId: true },
-            })
-
-            if (user && user.role === "USER") {
-              await tx.user.update({
-                where: { id: userId },
-                data: { role: "STUDENT", schoolId },
-              })
-            }
-          } catch (roleError) {
-            console.warn(
-              "[confirmEnrollment] Failed to update user role:",
-              roleError
-            )
-          }
-
-          // 6. Auto-assign fees + generate invoices via the canonical helper.
-          // This is the SINGLE source of truth for student→FeeStructure
-          // matching (school-wide, class-linked, and auto-generated per-grade
-          // structures) shared by every student-creation path. Passing `tx`
-          // runs the assignment + invoice fan-out inside this enrollment
-          // transaction; `notify: false` defers the fee_due notification to
-          // the post-commit dispatch below.
-          try {
-            const studentGrade = await tx.student.findUnique({
-              where: { id: student.id },
-              select: { academicGradeId: true },
-            })
-            await ensureStudentFeeAssignments(
-              {
-                schoolId,
-                studentId: student.id,
-                academicGradeId: studentGrade?.academicGradeId ?? null,
-                academicYear: application.campaign.academicYear,
-                notify: false,
-              },
-              tx
-            )
-          } catch (feeError) {
-            console.warn(
-              "[confirmEnrollment] Fee auto-assignment failed:",
-              feeError
-            )
-            warnings.push({ code: "FEE_AUTO_ASSIGN_FAILED" })
-          }
-
-          // 6b. Registration-fee materialization (ADMISSION-FEE-NO-LEDGER).
+          // Registration-fee materialization (ADMISSION-FEE-NO-LEDGER).
           // If the application captured a registration-fee payment at offer
           // time, we must create a Payment + journal entry so the books reflect
           // the money already collected.  Idempotent: if a Payment for this
@@ -1547,11 +1363,12 @@ export async function confirmEnrollment(params: {
           ) {
             try {
               // Find the registration-type FeeAssignment just created by
-              // ensureStudentFeeAssignments (or a pre-existing one).
+              // provisionStudent's ensureStudentFeeAssignments call (or a
+              // pre-existing one).
               const regAssignment = await tx.feeAssignment.findFirst({
                 where: {
                   schoolId,
-                  studentId: student.id,
+                  studentId,
                   feeStructure: {
                     OR: [
                       {
@@ -1612,7 +1429,7 @@ export async function confirmEnrollment(params: {
                     data: {
                       schoolId,
                       feeAssignmentId: regAssignment.id,
-                      studentId: student.id,
+                      studentId,
                       paymentNumber,
                       receiptNumber,
                       amount: regAmount,
@@ -1643,7 +1460,7 @@ export async function confirmEnrollment(params: {
                       schoolId,
                       {
                         paymentId: newPayment.id,
-                        studentId: student.id,
+                        studentId,
                         amount: regAmount,
                         paymentMethod: paymentMethod,
                         paymentDate: regPaymentDate,
@@ -1682,122 +1499,13 @@ export async function confirmEnrollment(params: {
             }
           }
 
-          // 7. Create Guardian records from application parent/guardian data
-          try {
-            const { createOrLinkGuardian, fromFullName } =
-              await import("@/lib/guardian-utils")
-
-            const guardianEntries: Array<{
-              typeName: string
-              fullName: string
-              email: string | null
-              phone: string | null
-              occupation: string | null
-              isPrimary: boolean
-            }> = []
-
-            if (application.fatherName) {
-              guardianEntries.push({
-                typeName: "father",
-                fullName: application.fatherName,
-                email: application.fatherEmail,
-                phone: application.fatherPhone,
-                occupation: application.fatherOccupation,
-                isPrimary: true,
-              })
-            }
-            if (application.motherName) {
-              guardianEntries.push({
-                typeName: "mother",
-                fullName: application.motherName,
-                email: application.motherEmail,
-                phone: application.motherPhone,
-                occupation: application.motherOccupation,
-                isPrimary: !application.fatherName,
-              })
-            }
-            if (
-              application.guardianName &&
-              application.guardianName !== application.fatherName &&
-              application.guardianName !== application.motherName
-            ) {
-              guardianEntries.push({
-                typeName:
-                  application.guardianRelation?.toLowerCase() || "guardian",
-                fullName: application.guardianName,
-                email: application.guardianEmail,
-                phone: application.guardianPhone,
-                occupation: null,
-                isPrimary: false,
-              })
-            }
-
-            for (const entry of guardianEntries) {
-              await createOrLinkGuardian(tx, {
-                schoolId,
-                studentId: student.id,
-                ...fromFullName(entry),
-              })
-            }
-          } catch (guardianError) {
-            console.warn(
-              "[confirmEnrollment] Guardian creation failed:",
-              guardianError
-            )
-            warnings.push({ code: "GUARDIAN_CREATE_FAILED" })
-          }
-
-          // 8. Copy application documents to StudentDocument records
-          try {
-            const appDocs = application.documents as Array<{
-              type?: string
-              name?: string
-              url?: string
-              uploadedAt?: string
-            }> | null
-
-            if (appDocs && Array.isArray(appDocs)) {
-              for (const doc of appDocs) {
-                if (!doc.url) continue
-                // Idempotent: confirmEnrollment can run more than once for
-                // the same application (retry after a partial failure,
-                // double-submit) — without this guard every re-run
-                // duplicates the same StudentDocument row.
-                const existingDoc = await tx.studentDocument.findFirst({
-                  where: {
-                    schoolId,
-                    studentId: student.id,
-                    fileUrl: doc.url,
-                  },
-                  select: { id: true },
-                })
-                if (existingDoc) continue
-                await tx.studentDocument.create({
-                  data: {
-                    schoolId,
-                    studentId: student.id,
-                    documentType: doc.type || "Other",
-                    documentName: doc.name || doc.type || "Document",
-                    fileUrl: doc.url,
-                    uploadedAt: doc.uploadedAt
-                      ? new Date(doc.uploadedAt)
-                      : new Date(),
-                  },
-                })
-              }
-            }
-          } catch (docError) {
-            console.warn("[confirmEnrollment] Document copy failed:", docError)
-          }
-
-          // (Invoice generation is handled by ensureStudentFeeAssignments in
-          // step 6 — it fans out one invoice per installment for each newly
-          // created assignment, inside this same transaction.)
-
-          enrolledStudentId = student.id
+          enrolledStudentId = studentId
         }
 
-        return { userId, isNewGuestUser }
+        return {
+          userId: provisionResult.userId,
+          isNewGuestUser: provisionResult.isNewUser,
+        }
       },
       { timeout: 30000 }
     )
