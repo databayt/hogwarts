@@ -52,12 +52,21 @@ interface SimpleGridProps {
   highlightToday?: boolean
   /** Set of slot IDs that have conflicts (shown with red ring) */
   conflictSlotIds?: Set<string>
+  /**
+   * Map of timetable slot id -> today's Conference state, from
+   * `getLiveClassIndicators`. Renders a small "live now" / "scheduled today"
+   * dot on the matching cell — a lightweight awareness signal, not a Join
+   * affordance (Join stays on the Today cards).
+   */
+  liveIndicators?: Record<string, "live" | "scheduled">
   dictionary?: {
     period?: string
     lunch?: string
     lunchBreak?: string
     days?: string[]
     conflict?: string
+    liveNow?: string
+    scheduledToday?: string
   }
 }
 
@@ -72,8 +81,14 @@ export default function SimpleGrid({
   onSlotClick,
   highlightToday = false,
   conflictSlotIds,
+  liveIndicators,
   dictionary,
 }: SimpleGridProps) {
+  const liveNowLabel =
+    dictionary?.liveNow ?? (isRTL ? "مباشر الآن" : "Live now")
+  const scheduledTodayLabel =
+    dictionary?.scheduledToday ?? (isRTL ? "مجدول اليوم" : "Scheduled today")
+
   // Get current day for highlighting
   const today = highlightToday ? new Date().getDay() : -1
 
@@ -271,12 +286,13 @@ export default function SimpleGrid({
                     conflictSlotIds &&
                     (conflictSlotIds.has(slot.id) ||
                       conflictSlotIds.has(slot.classId || ""))
+                  const liveState = slot ? liveIndicators?.[slot.id] : undefined
 
                   return (
                     <div
                       key={`${day}-${period.id}`}
                       className={cn(
-                        "flex min-h-14 flex-col items-center justify-center px-2 py-2 transition-all duration-200 sm:min-h-20 sm:px-4 sm:py-4",
+                        "relative flex min-h-14 flex-col items-center justify-center px-2 py-2 transition-all duration-200 sm:min-h-20 sm:px-4 sm:py-4",
                         slot && display?.primary
                           ? getSubjectTailwind(display.primary)
                           : EMPTY_CELL_STYLE,
@@ -292,6 +308,35 @@ export default function SimpleGrid({
                         editable && onSlotClick?.(day, period.id, slot)
                       }
                     >
+                      {liveState && (
+                        <span
+                          className="absolute end-1 top-1 flex items-center gap-1 print:hidden"
+                          title={
+                            liveState === "scheduled"
+                              ? scheduledTodayLabel
+                              : undefined
+                          }
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              liveState === "live"
+                                ? "bg-destructive animate-pulse"
+                                : "border-muted-foreground border"
+                            )}
+                          />
+                          {liveState === "live" ? (
+                            <span className="text-destructive text-[9px] leading-none font-semibold">
+                              {liveNowLabel}
+                            </span>
+                          ) : (
+                            <span className="sr-only">
+                              {scheduledTodayLabel}
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {slot && display ? (
                         <>
                           {/* Conflict is not signalled by colour alone (the red

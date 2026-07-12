@@ -128,3 +128,45 @@ export async function attachLiveClasses<
     return { ...e, liveClass: null }
   })
 }
+
+/**
+ * Build a `timetableId -> "live" | "scheduled"` map for today's Conference
+ * sessions, so the weekly grid (`SimpleGrid`) can show a lightweight "live
+ * now" / "scheduled today" indicator on the matching slot — independent of
+ * `attachLiveClasses` above, which resolves a Join *target* for the
+ * section+subject of the current today-schedule entry only (Today cards),
+ * not a per-slot map for the full week grid.
+ *
+ * A slot with no session today (or a session not anchored to a timetable
+ * slot, e.g. an ad-hoc conference) has no entry in the returned map.
+ *
+ * Tenant safety: every query is scoped by the passed `schoolId` (resolved
+ * from the request context upstream, never from client input).
+ */
+export async function getLiveClassIndicators(
+  schoolId: string
+): Promise<Record<string, "live" | "scheduled">> {
+  const dayStart = new Date()
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date()
+  dayEnd.setHours(23, 59, 59, 999)
+
+  const sessions = await db.conference.findMany({
+    where: {
+      schoolId,
+      status: { in: ["scheduled", "live"] },
+      scheduledStart: { gte: dayStart, lte: dayEnd },
+      deletedAt: null,
+    },
+    select: { timetableId: true, status: true },
+  })
+
+  const indicators: Record<string, "live" | "scheduled"> = {}
+  for (const session of sessions) {
+    if (!session.timetableId) continue
+    if (indicators[session.timetableId] === "live") continue // live never downgrades to scheduled
+    indicators[session.timetableId] =
+      session.status === "live" ? "live" : "scheduled"
+  }
+  return indicators
+}

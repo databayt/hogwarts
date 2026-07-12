@@ -100,6 +100,9 @@ export default function StudentView({
     gradeNameAr?: string | null
   } | null>(null)
   const [subjectCount, setSubjectCount] = useState(0)
+  const [liveIndicators, setLiveIndicators] = useState<
+    Record<string, "live" | "scheduled">
+  >({})
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -124,6 +127,7 @@ export default function StudentView({
       setStudentInfo(weeklyResult.studentInfo)
       setSubjectCount(weeklyResult.subjectCount)
       setSchoolName(weeklyResult.schoolName || "")
+      setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -435,6 +439,11 @@ export default function StudentView({
               viewMode="class"
               editable={false}
               highlightToday
+              liveIndicators={liveIndicators}
+              dictionary={{
+                liveNow: d?.liveNow,
+                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+              }}
             />
           </CardContent>
         </Card>

@@ -46,6 +46,46 @@ last_audited: 2026-06-13
 
 ## Known Issues
 
+### Recently Fixed (2026-07-12 -- live-class awareness on the weekly grid)
+
+The "Full Week" grid (`views/simple-grid.tsx`) was invisible to live-class
+state — only the Today cards (teacher/student/guardian) showed a Join button
+via `attachLiveClasses`, so a session live right now (or scheduled today) had
+zero affordance on the weekly grid, and **admin had no live-class signal at
+all** (admin never renders Today cards).
+
+1. New helper `getLiveClassIndicators(schoolId)` in `live-class-join.ts` — one
+   tenant-scoped `db.conference.findMany` for today's `live`/`scheduled`
+   sessions (`deletedAt: null`), returning a `timetableId -> "live" |
+"scheduled"` map ("live" always wins over "scheduled" for the same slot).
+   Independent of `attachLiveClasses` (which is section+subject keyed, for
+   the Today-card Join target, not a per-slot map).
+2. `getTimetableByTeacher` / `getTimetableByRoom` / `getTimetableByStudentGrade`
+   / the private `getTimetableByClassIds` (feeds guardian's `getChildTimetable`)
+   now fetch the indicator map in the same `Promise.all` as their slots query
+   and return it as `liveIndicators` — no new client-triggered fetch, the
+   existing on-mount action call just returns one more field.
+3. `simple-grid.tsx` accepts `liveIndicators?: Record<string, "live" |
+"scheduled">` and renders a small corner badge per slot: a pulsing
+   `bg-destructive` dot + "Live now" label for `live`, a subtle outline dot
+   (title-attr + `sr-only` tooltip) for `scheduled`. Semantic tokens only,
+   logical `end-1`/`top-1` positioning (RTL-safe), `print:hidden`.
+4. All 4 role views (teacher/student/guardian/admin — admin covers both its
+   room and teacher grid modes) thread `liveIndicators` from their existing
+   action-call result into `<SimpleGrid>`, resetting it alongside `slots` on
+   selection change (admin) so no stale dot flashes.
+5. Dictionary: `school.timetable.liveNow` added (en: "Live now", ar: "مباشر
+   الآن"); the scheduled-state tooltip reuses the existing
+   `school.liveClasses.status.scheduled` ("Scheduled"/"مجدول") — no new key.
+
+Scope note: `views/preview.tsx` (a random-teacher/class demo widget, not one
+of the 4 role views) was left unwired — out of the explicit scope and not a
+live operational grid.
+
+tsc 0 in `timetable/*` (5 pre-existing errors in `conference/*` from another
+in-flight workstream, unrelated); 149 timetable tests green; i18n parity +
+rtl-physical-class ratchets green.
+
 ### Recently Fixed (2026-06-17 -- zero-click auto-provision, schedule configurator, slot-editor simplification)
 
 Driven by "why no subjects render on `/en/timetable`": the demo had **0 timetable

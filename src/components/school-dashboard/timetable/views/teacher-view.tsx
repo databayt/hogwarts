@@ -101,6 +101,9 @@ export default function TeacherView({
     periodsPerWeek: number
     classesTeaching: number
   } | null>(null)
+  const [liveIndicators, setLiveIndicators] = useState<
+    Record<string, "live" | "scheduled">
+  >({})
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -135,6 +138,7 @@ export default function TeacherView({
       setSlots(weeklyResult.slots)
       setTeacherInfo(weeklyResult.teacherInfo)
       setWorkload(weeklyResult.workload)
+      setLiveIndicators(weeklyResult.liveIndicators ?? {})
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -495,6 +499,11 @@ export default function TeacherView({
               isRTL={isRTL}
               viewMode="teacher"
               editable={false}
+              liveIndicators={liveIndicators}
+              dictionary={{
+                liveNow: d?.liveNow,
+                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+              }}
             />
           </CardContent>
         </Card>

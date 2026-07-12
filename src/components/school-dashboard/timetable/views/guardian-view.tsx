@@ -92,6 +92,9 @@ export default function GuardianView({
   const [slots, setSlots] = useState<any[]>([])
   const [studentInfo, setStudentInfo] = useState<any>(null)
   const [classInfo, setClassInfo] = useState<any>(null)
+  const [liveIndicators, setLiveIndicators] = useState<
+    Record<string, "live" | "scheduled">
+  >({})
 
   // View state
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -149,6 +152,9 @@ export default function GuardianView({
       setSlots(result.slots)
       setStudentInfo(result.studentInfo)
       setClassInfo((result as { classInfo?: any }).classInfo || null)
+      // The early-return branch (no classes/section) omits `liveIndicators` —
+      // narrow with `in` rather than casting.
+      setLiveIndicators("liveIndicators" in result ? result.liveIndicators : {})
       setTodaySchedule(today.schedule)
     } catch (err) {
       setError(
@@ -471,6 +477,11 @@ export default function GuardianView({
               isRTL={isRTL}
               viewMode="class"
               editable={false}
+              liveIndicators={liveIndicators}
+              dictionary={{
+                liveNow: d?.liveNow,
+                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+              }}
             />
           </CardContent>
         </Card>

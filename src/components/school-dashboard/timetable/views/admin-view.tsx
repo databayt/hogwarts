@@ -126,6 +126,9 @@ export default function AdminView({
   // Timetable data
   const [slots, setSlots] = useState<any[]>([])
   const [entityInfo, setEntityInfo] = useState<any>(null)
+  const [liveIndicators, setLiveIndicators] = useState<
+    Record<string, "live" | "scheduled">
+  >({})
 
   // Slot editor
   const [slotEditorOpen, setSlotEditorOpen] = useState(false)
@@ -240,6 +243,7 @@ export default function AdminView({
         })
         setEntityInfo(result.roomInfo)
         setSlots(result?.slots || [])
+        setLiveIndicators(result?.liveIndicators ?? {})
       } else if (viewMode === "teacher" && selectedId) {
         const result = await getTimetableByTeacher({
           termId,
@@ -247,6 +251,7 @@ export default function AdminView({
         })
         setEntityInfo(result.teacherInfo)
         setSlots(result?.slots || [])
+        setLiveIndicators(result?.liveIndicators ?? {})
       }
     } finally {
       setIsLoadingData(false)
@@ -259,6 +264,7 @@ export default function AdminView({
     setViewMode("classroom")
     setSlots([])
     setEntityInfo(null)
+    setLiveIndicators({})
     setIsLoadingData(true)
     writeFilterCookie({ viewMode: "classroom", roomId })
   }
@@ -269,6 +275,7 @@ export default function AdminView({
     setViewMode("teacher")
     setSlots([])
     setEntityInfo(null)
+    setLiveIndicators({})
     setIsLoadingData(true)
     writeFilterCookie({ viewMode: "teacher", teacherId })
   }
@@ -404,6 +411,11 @@ export default function AdminView({
               viewMode="room"
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
+              liveIndicators={liveIndicators}
+              dictionary={{
+                liveNow: d?.liveNow,
+                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+              }}
             />
           ) : null}
         </>
@@ -447,6 +459,11 @@ export default function AdminView({
               viewMode="teacher"
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
+              liveIndicators={liveIndicators}
+              dictionary={{
+                liveNow: d?.liveNow,
+                scheduledToday: dictionary?.liveClasses?.status?.scheduled,
+              }}
             />
           ) : null}
         </>

@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/timetable
-last_audited: 2026-06-13
+last_audited: 2026-07-12
 ---
 
 ## Timetable -- Weekly Schedule Management
@@ -25,6 +25,7 @@ The Timetable block provides school-wide weekly schedule building, conflict dete
 - **Teacher**: View personal teaching schedule, see assigned classes and periods, print weekly timetable
 - **Student**: View class timetable, see subject and period details
 - **Guardian**: View child's class schedule via parent portal
+- **All roles**: The "Full Week" grid shows a lightweight live-class indicator (pulsing dot for `live`, outline dot for `scheduled`) on any slot with a Conference session today — see `live-class-join.ts` → `getLiveClassIndicators`. Join stays on the Today cards; the grid indicator is awareness-only.
 
 ### Routes
 
@@ -59,7 +60,8 @@ src/components/school-dashboard/timetable/
   util.ts               # Pure helpers (detectConflicts cohort identity, etc.)
   permissions.ts        # Server-side guards (requireAdminAccess/…), audit log
   permissions-config.ts # Client-safe permission matrix + role→view mapping
-  live-class-join.ts    # attachLiveClasses resolver (timetable ↔ conference)
+  live-class-join.ts    # attachLiveClasses (Today-card Join target) +
+                        #   getLiveClassIndicators (weekly-grid live/scheduled dots)
   slot-editor-dialog.tsx# Slot add/edit dialog (section + subject pickers)
   print.css             # A4 print styles
   analytics/content.tsx     # Analytics page

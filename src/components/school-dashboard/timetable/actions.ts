@@ -94,7 +94,7 @@ import {
   type SubjectAllocation,
   type TeacherAvailability,
 } from "./generate/algorithm"
-import { attachLiveClasses } from "./live-class-join"
+import { attachLiveClasses, getLiveClassIndicators } from "./live-class-join"
 import {
   getPermissionContext,
   logTimetableAction,
@@ -1952,37 +1952,43 @@ async function getTimetableByClassIds(input: {
   const hasClassIds = input.classIds.length > 0
   const hasSectionId = !!input.sectionId
 
-  const slots = await db.timetable.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      weekOffset: input.weekOffset ?? 0,
-      ...(hasClassIds || hasSectionId
-        ? {
-            OR: [
-              ...(hasClassIds ? [{ classId: { in: input.classIds } }] : []),
-              ...(hasSectionId ? [{ sectionId: input.sectionId }] : []),
-            ],
-          }
-        : {}),
-    },
-    include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
-      classroom: { select: { id: true, roomName: true } },
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
+  // Slots + today's live/scheduled Conference indicators load in parallel —
+  // both are read-only and independent (see getLiveClassIndicators for the
+  // tenant-scoped query it runs).
+  const [slots, liveIndicators] = await Promise.all([
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        weekOffset: input.weekOffset ?? 0,
+        ...(hasClassIds || hasSectionId
+          ? {
+              OR: [
+                ...(hasClassIds ? [{ classId: { in: input.classIds } }] : []),
+                ...(hasSectionId ? [{ sectionId: input.sectionId }] : []),
+              ],
+            }
+          : {}),
+      },
+      include: {
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+        classroom: { select: { id: true, roomName: true } },
+        class: {
+          select: {
+            id: true,
+            name: true,
+            subject: { select: { name: true } },
+          },
+        },
+        section: { select: { name: true } },
+        subject: { select: { name: true } },
+        period: {
+          select: { id: true, name: true, startTime: true, endTime: true },
         },
       },
-      section: { select: { name: true } },
-      subject: { select: { name: true } },
-      period: {
-        select: { id: true, name: true, startTime: true, endTime: true },
-      },
-    },
-  })
+    }),
+    getLiveClassIndicators(schoolId),
+  ])
 
   return {
     workingDays: config.workingDays,
@@ -2006,6 +2012,7 @@ async function getTimetableByClassIds(input: {
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
+    liveIndicators,
   }
 }
 
@@ -2126,38 +2133,43 @@ export async function getTimetableByStudentGrade(input: {
   const hasClassIds = classIds.length > 0
   const hasSectionId = !!studentSectionId
 
-  // Get all timetable slots for all classes in this grade (and section-based slots)
-  const slots = await db.timetable.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      weekOffset: input.weekOffset ?? 0,
-      ...(hasClassIds || hasSectionId
-        ? {
-            OR: [
-              ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
-              ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
-            ],
-          }
-        : {}),
-    },
-    include: {
-      teacher: { select: { id: true, firstName: true, lastName: true } },
-      classroom: { select: { id: true, roomName: true } },
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
+  // Get all timetable slots for all classes in this grade (and section-based
+  // slots), alongside today's live/scheduled Conference indicators — both
+  // read-only and independent, so they run in parallel.
+  const [slots, liveIndicators] = await Promise.all([
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        weekOffset: input.weekOffset ?? 0,
+        ...(hasClassIds || hasSectionId
+          ? {
+              OR: [
+                ...(hasClassIds ? [{ classId: { in: classIds } }] : []),
+                ...(hasSectionId ? [{ sectionId: studentSectionId }] : []),
+              ],
+            }
+          : {}),
+      },
+      include: {
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+        classroom: { select: { id: true, roomName: true } },
+        class: {
+          select: {
+            id: true,
+            name: true,
+            subject: { select: { name: true } },
+          },
+        },
+        section: { select: { name: true } },
+        subject: { select: { name: true } },
+        period: {
+          select: { id: true, name: true, startTime: true, endTime: true },
         },
       },
-      section: { select: { name: true } },
-      subject: { select: { name: true } },
-      period: {
-        select: { id: true, name: true, startTime: true, endTime: true },
-      },
-    },
-  })
+    }),
+    getLiveClassIndicators(schoolId),
+  ])
 
   return {
     studentInfo: {
@@ -2194,6 +2206,7 @@ export async function getTimetableByStudentGrade(input: {
       sectionId: s.sectionId,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
+    liveIndicators,
   }
 }
 
@@ -2421,34 +2434,43 @@ export async function getTimetableByTeacher(input: {
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
-  const slots = await db.timetable.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      teacherId: input.teacherId,
-      weekOffset: input.weekOffset ?? 0,
-    },
-    include: {
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
+  // Slots + today's live/scheduled Conference indicators load in parallel —
+  // both are read-only and independent.
+  const [slots, teacherInfo, liveIndicators] = await Promise.all([
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        teacherId: input.teacherId,
+        weekOffset: input.weekOffset ?? 0,
+      },
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            subject: { select: { name: true } },
+          },
+        },
+        subject: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } },
+        classroom: { select: { id: true, roomName: true } },
+        period: {
+          select: { id: true, name: true, startTime: true, endTime: true },
         },
       },
-      subject: { select: { id: true, name: true } },
-      section: { select: { id: true, name: true } },
-      classroom: { select: { id: true, roomName: true } },
-      period: {
-        select: { id: true, name: true, startTime: true, endTime: true },
+    }),
+    db.teacher.findFirst({
+      where: { id: input.teacherId, schoolId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        emailAddress: true,
       },
-    },
-  })
-
-  const teacherInfo = await db.teacher.findFirst({
-    where: { id: input.teacherId, schoolId },
-    select: { id: true, firstName: true, lastName: true, emailAddress: true },
-  })
+    }),
+    getLiveClassIndicators(schoolId),
+  ])
 
   // Calculate workload
   const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
@@ -2508,6 +2530,7 @@ export async function getTimetableByTeacher(input: {
       classesTeaching: [...new Set(slots.map((s) => s.classId))].length,
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
+    liveIndicators,
   }
 }
 
@@ -2538,29 +2561,34 @@ export async function getTimetableByRoom(input: {
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
-  const slots = await db.timetable.findMany({
-    where: {
-      schoolId,
-      termId: input.termId,
-      classroomId: input.roomId,
-      weekOffset: input.weekOffset ?? 0,
-    },
-    include: {
-      class: {
-        select: {
-          id: true,
-          name: true,
-          subject: { select: { name: true } },
+  // Slots + today's live/scheduled Conference indicators load in parallel —
+  // both are read-only and independent.
+  const [slots, liveIndicators] = await Promise.all([
+    db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        classroomId: input.roomId,
+        weekOffset: input.weekOffset ?? 0,
+      },
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            subject: { select: { name: true } },
+          },
+        },
+        subject: { select: { id: true, name: true } },
+        section: { select: { id: true, name: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+        period: {
+          select: { id: true, name: true, startTime: true, endTime: true },
         },
       },
-      subject: { select: { id: true, name: true } },
-      section: { select: { id: true, name: true } },
-      teacher: { select: { id: true, firstName: true, lastName: true } },
-      period: {
-        select: { id: true, name: true, startTime: true, endTime: true },
-      },
-    },
-  })
+    }),
+    getLiveClassIndicators(schoolId),
+  ])
 
   const roomInfo = await db.classroom.findFirst({
     where: { id: input.roomId, schoolId },
@@ -2628,6 +2656,7 @@ export async function getTimetableByRoom(input: {
       rate: Math.round(utilizationRate),
     },
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
+    liveIndicators,
   }
 }
 
