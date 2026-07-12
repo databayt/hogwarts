@@ -1,0 +1,169 @@
+---
+title: LMS (Stream)
+description: Catalog-based video learning — free and paid enrollment, multi-instructor lessons, contributor uploads with a two-desk review pipeline, per-video unlocks, and full contributor ownership.
+---
+
+Stream is the platform's learning module. Students browse the shared [catalog](/docs/catalog), enroll in courses, and watch lessons; teachers and admins contribute videos that flow through a review pipeline and stay under the contributor's control — including per-video paid unlocks. Two journeys meet at the lesson page, and this page documents both, then the code layout that implements them.
+
+The acceptance script lives in [hogwarts#377](https://github.com/databayt/hogwarts/issues/377) — the same flows as walkable test checklists.
+
+## How it flows
+
+### The full journey
+
+The **student journey** (browse → enroll → watch → complete) and the **contributor journey** (upload → review → live → owner control) connect where an approved video lands in a lesson.
+
+<Mermaid
+  chart={`flowchart TD
+    subgraph SJ["🧑‍🎓 Student journey"]
+        A["🧑‍🎓 Student browses courses"] --> B{"Course free or paid?"}
+        B -->|"Free"| C["Enroll instantly"]
+        B -->|"Paid"| D["💳 Card checkout → webhook confirms"]
+        C --> E["📺 Open a lesson"]
+        D --> E
+        E --> F{"Does the lesson have a working video?"}
+        F -->|"Yes"| G["▶️ Watch — progress saved"]
+        F -->|"No / broken"| H["🎬 Fallback story clip plays<br/>(no progress recorded)"]
+        F -->|"Only a PAID video"| I["🔒 Unlock · price → buy → watch"]
+        G --> J["✅ Auto-complete + quiz → gradebook"]
+    end
+    subgraph CJ["👩‍🏫 Contributor journey"]
+        K["👩‍🏫 Teacher/Admin uploads a video<br/>(URL or file) + picks audience & price"] --> L["⏳ Pending review<br/>school admins notified"]
+        L --> M{"Audience?"}
+        M -->|"School / Private"| N["🏫 School admin approves"]
+        M -->|"Public / Paid"| O["🌍 Platform team approves"]
+        N --> P["🎉 Live in the lesson, credited to uploader"]
+        O --> P
+        P --> Q["Owner keeps control:<br/>visibility · revoke · replace · delete"]
+    end
+    P -.-> F`}
+/>
+
+Three invariants hold everywhere:
+
+1. **An unpaid-for video never has a playable link.** The lock icon is cosmetic; the real paywall is that the server emits no video URL until the purchase exists.
+2. **The player is never an empty black box.** No video → the marketing story clip plays — but the fallback never replaces a paid video's lock screen, and never writes lesson progress.
+3. **Schools never see each other's private data.** School-visibility videos stay inside their school; only content approved as Public/Paid — by the platform desk, not a school admin — crosses schools, always credited to the uploader.
+
+### Discover & enroll
+
+<Mermaid
+  chart={`flowchart TD
+    V["🧑‍🎓 Student opens /stream"] --> Cat["Browse course catalog<br/>(search + filters)"]
+    Cat --> Det["Course detail — chapters & lessons"]
+    Det --> Q{"Free or paid course?"}
+    Q -->|"Free"| Free["Enroll — instant, no payment UI"]
+    Q -->|"Paid"| Pay["💳 Stripe checkout"]
+    Pay --> WH{"Payment confirmed<br/>(webhook)?"}
+    WH -->|"Yes"| OK["Enrolled ✔ + success page + email"]
+    WH -->|"Cancelled"| No["Cancel page — not enrolled"]
+    Free --> Dash["Course appears in 'My learning' dashboard"]
+    OK --> Dash`}
+/>
+
+The catalog shows only published subjects the school has selected; content a school hid via override never appears for its students. Free courses enroll in one click with no payment UI; paid courses activate only after the Stripe webhook confirms. Free-course lessons are open even without enrolling — paid-course lessons are blocked for non-enrolled students, including by direct link.
+
+### Watch a lesson
+
+<Mermaid
+  chart={`flowchart TD
+    L["📺 Student opens a lesson"] --> Has{"Approved videos?"}
+    Has -->|"None"| FB["🎬 Story fallback clip plays<br/>no progress · no auto-complete"]
+    Has -->|"Yes"| Pick["Highest-ranked / school-preferred video selected"]
+    Pick --> Locked{"Is it paid & unpurchased?"}
+    Locked -->|"Yes"| Lock["🔒 Unlock · price pill"]
+    Locked -->|"No"| Play["▶️ Plays — resume from last position"]
+    Play --> Err{"Source fails to load?"}
+    Err -->|"Yes"| FB
+    Err -->|"No"| Prog["💾 Progress saved as you watch"]
+    Prog --> Endd["Video ends → lesson auto-completes<br/>→ Up-next countdown to next lesson"]
+    Endd --> Quiz["📝 Practice quiz → score lands in gradebook"]`}
+/>
+
+A lesson with no videos — or one whose file is dead or undecodable — plays the story fallback clip instead of a black screen. Fallback playback records no progress and never auto-completes (the manual "Mark as Complete" still works). Real videos resume where the student left off, auto-complete on finish, and offer up-next. With multiple instructors, chips switch the player; the school's preferred instructor plays by default, and every video credits its uploader. The practice quiz writes into the school gradebook when the student belongs to a class for that subject.
+
+### Contribute a video
+
+<Mermaid
+  chart={`flowchart TD
+    T["👩‍🏫 Teacher / 👨‍💼 Admin"] --> Btn["'Propose a Video' button<br/>(Settings → Videos tab)"]
+    Btn --> S1["1️⃣ Pick the lesson"]
+    S1 --> S2["2️⃣ Add the video"]
+    S2 --> Src{"Source?"}
+    Src -->|"URL"| U["YouTube / Vimeo / direct link"]
+    Src -->|"Upload"| F["📤 Choose file → quota checked up-front →<br/>progress bar → done<br/>(MP4/WebM/MOV/AVI, up to 5GB)"]
+    U --> Aud["Audience: Public / School / Private<br/>Pricing: Free / Paid (+price & currency)"]
+    F --> Aud
+    Aud --> S3["3️⃣ Review & submit<br/>('your rights' card shown)"]
+    S3 --> P["⏳ Pending review — school admins notified,<br/>visible in My Videos"]`}
+/>
+
+Teachers, admins, and developers contribute through the same three-step dialog. Direct uploads go straight to storage with a progress bar; wrong types, oversized files, and a full storage quota are refused before any bytes move, and an uploaded-but-unsubmitted file cleans itself up when the dialog is abandoned. Quota counts the file's real size on storage, not what the client claims. Every submission lands as Pending — no role skips review — and the school's other admins are notified.
+
+### Review & publish
+
+<Mermaid
+  chart={`flowchart TD
+    P["⏳ Pending video"] --> Where{"Audience?"}
+    Where -->|"School / Private"| SA["🏫 School admin — Review tab"]
+    Where -->|"Public / Paid"| PT["🌍 Platform team — /catalog/approvals<br/>(may tweak audience/price before approving)"]
+    SA --> D1{"Decision"}
+    PT --> D2{"Decision"}
+    D1 -->|"Approve"| Live["🎉 Live in the lesson, uploader credited"]
+    D1 -->|"Reject + reason"| Rej["Contributor notified, sees the reason"]
+    D2 -->|"Approve"| Live
+    D2 -->|"Reject + reason"| Rej
+    Live --> N["🔔 Contributor notified"]`}
+/>
+
+Two desks. The school admin's Review tab approves content that stays inside the school; anything Public or Paid belongs to the platform catalog desk, because it surfaces in every school — a school admin sees Approve disabled with an explanation (and the server refuses regardless), while Reject stays available. Both desks notify the contributor, and a rejection carries its reason into My Videos.
+
+### Ownership, control & paid unlocks
+
+<Mermaid
+  chart={`flowchart TD
+    subgraph OC["Owner controls — My Videos ⚙️"]
+        O["👩‍🏫 Owner"] --> Vis["Change visibility any time"]
+        Vis --> Wide{"Widening an APPROVED video to Public?"}
+        Wide -->|"Yes"| Rev2["Goes back to Pending —<br/>platform re-review"]
+        Wide -->|"No"| Now["Applies instantly"]
+        O --> Rvk["🛡️ Revoke — instantly Private + CDN purge"]
+        O --> Rep["♻️ Replace file — back to Pending"]
+        O --> Del["🗑️ Delete — gone + quota released"]
+        O --> Pw["Remove paywall (explicit, warns: no refunds)"]
+    end
+    subgraph BP["Buying a paid video"]
+        S["🧑‍🎓 Student sees 🔒 Unlock · price"] --> CO["💳 Card checkout"]
+        CO --> WH["Webhook confirms"]
+        WH --> Un["Video unlocked for that student<br/>(time-limited signed links)"]
+    end`}
+/>
+
+The contributor owns the video for good: visibility changes apply instantly, except widening an already-approved video to Public, which resubmits it for platform review (narrowing is always free). Revoke flips to Private and purges the CDN; replace resets approval; delete releases the storage quota. A paid video can't be un-paywalled through the visibility menu — only the explicit remove-paywall action, which warns that buyers aren't refunded. On the buying side, a lone paid video shows an Unlock-with-price pill on the lesson hero, checkout runs through Stripe, and the unlock is per-student with time-limited signed links.
+
+### Behind the scenes
+
+<Mermaid
+  chart={`flowchart LR
+    Set["⚙️ Settings — overview · enrollments ·<br/>instructors · review · videos"] --> Shape["Shape the whole feature"]
+    Pref["🎚️ Instructor preference (per subject)"] --> Order["Which video plays first, school-wide"]
+    Ovr["🙈 Content override"] --> Hide["Hide a chapter/lesson/video<br/>for this school only"]
+    Quota["📦 Storage quota"] --> Cap["Caps direct uploads per school —<br/>checked up-front, counted from real bytes"]
+    Par["👪 Parent view"] --> Kid["Child's progress, read-only"]
+    Mail["📧 Resend emails"] --> Ev["Enrollment + completion emails"]`}
+/>
+
+Settings tabs are role-gated (teachers see only Videos; admins see all five, with a pending-count badge on Review). Instructor preference sets the default video source per subject school-wide; content overrides hide catalog items for one school without affecting others; parents get a read-only view of their child's progress; enrollment and completion emails go out via Resend. The whole surface — player, dialogs, review desk, search — follows the school's language, Arabic RTL included.
+
+## Structure
+
+The block follows the [mirror pattern](/docs/architecture): routes under `app/[lang]/s/[subdomain]/(school-dashboard)/stream/` are thin wrappers, and everything lives in `src/components/stream/`. Read fetchers in `data/catalog/` are server-only modules wrapped in React `cache()` — deliberately **not** `"use server"` actions.
+
+<StreamStructure />
+
+## Related
+
+- [Catalog](/docs/catalog) — owns `Subject`/`Chapter`/`Lesson`, selections, overrides, and instructor preferences that Stream reads.
+- [Architecture](/docs/architecture) — the mirror pattern and file contracts this block follows.
+- [Onboarding videos](/docs/onboarding-videos) — the marketing "story" clip that doubles as the lesson fallback.
+- [QA guide (hogwarts#377)](https://github.com/databayt/hogwarts/issues/377) — these flows as a walkable acceptance script.
