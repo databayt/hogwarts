@@ -94,13 +94,10 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
     if (isCreating) return
 
     setIsCreating(true)
-    // Show loading toast
-    const loadingToast = toast.loading(t.creatingSchool)
 
     try {
       const response = await initializeSchoolSetup()
       if (response.success && response.data) {
-        toast.dismiss(loadingToast)
         // Refresh session to sync new schoolId into JWT
         try {
           await updateSession()
@@ -112,14 +109,12 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
           `/${locale || "en"}/onboarding/overview?schoolId=${response.data.schoolId}`
         )
       } else {
-        toast.dismiss(loadingToast)
         const errorMsg =
           typeof response.error === "string" ? response.error : t.createFailed
         toast.error(errorMsg)
         console.error("Failed to create school:", response.error)
       }
     } catch (error) {
-      toast.dismiss(loadingToast)
       toast.error(t.createFailed)
       console.error("Failed to create school:", error)
     } finally {

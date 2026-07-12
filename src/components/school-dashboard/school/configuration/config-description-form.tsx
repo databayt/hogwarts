@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState, useTransition } from "react"
 import {
+  BookOpen,
   Building2,
   Globe,
   GraduationCap,
@@ -105,6 +106,12 @@ export function ConfigDescriptionForm({
       title: dict.primaryLevel,
       subtitle: dict.primaryGrades,
       icon: School,
+    },
+    {
+      id: "middle",
+      title: dict.middleLevel,
+      subtitle: dict.middleGrades,
+      icon: BookOpen,
     },
     {
       id: "secondary",

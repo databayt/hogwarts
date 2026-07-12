@@ -35,7 +35,12 @@ import type { Locale } from "@/components/internationalization/config"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { OnboardingProgress, OnboardingSchoolData } from "./types"
-import { formatCapacity, formatCurrency, formatSchoolType } from "./util"
+import {
+  formatCapacity,
+  formatCurrency,
+  formatSchoolLevel,
+  formatSchoolType,
+} from "./util"
 
 interface SchoolDetailProps {
   school: OnboardingSchoolData
@@ -255,7 +260,9 @@ export default function SchoolDetail({
                 <p className="text-muted-foreground text-sm font-medium">
                   Education Level
                 </p>
-                <Badge variant="outline">{school.schoolLevel}</Badge>
+                <Badge variant="outline">
+                  {formatSchoolLevel(school.schoolLevel)}
+                </Badge>
               </div>
             )}
           </CardContent>

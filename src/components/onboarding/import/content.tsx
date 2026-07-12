@@ -195,7 +195,7 @@ function DropZone({
   const hasResult = state.result || state.error
 
   return (
-    <div className="w-full max-w-[400px]">
+    <div className="w-full">
       <div
         className={`min-h-[140px] rounded-lg border-2 border-dashed transition-colors ${
           state.error

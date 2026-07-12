@@ -189,13 +189,17 @@ export function formatCapacity(students: number, teachers: number): string {
   return `${students} students, ${teachers} teachers (${ratio}:1 ratio)`
 }
 
-export function formatSchoolType(level: string, type: string): string {
+export function formatSchoolLevel(level: string): string {
   const levelMap: Record<string, string> = {
-    primary: "Primary",
-    secondary: "Secondary",
-    both: "Primary & Secondary",
+    primary: "Elementary",
+    middle: "Middle",
+    secondary: "High",
+    both: "K-12",
   }
+  return levelMap[level] || level
+}
 
+export function formatSchoolType(level: string, type: string): string {
   const typeMap: Record<string, string> = {
     private: "Private",
     public: "Public",
@@ -204,7 +208,7 @@ export function formatSchoolType(level: string, type: string): string {
     special: "Special Needs",
   }
 
-  const formattedLevel = levelMap[level] || level
+  const formattedLevel = formatSchoolLevel(level)
   const formattedType = typeMap[type] || type
 
   return `${formattedType} ${formattedLevel} School`

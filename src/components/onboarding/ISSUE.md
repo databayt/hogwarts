@@ -66,6 +66,7 @@ last_audited: 2026-05-25
 
 ## Resolved Issues
 
+- [x] School-level naming standardized to US terms (2026-07-12) -- English labels renamed Primary→Elementary, Secondary→High across the description/capacity steps, dictionaries, config fallbacks, and `formatSchoolType`/`formatSchoolLevel` (`util.ts`). Stored values (`primary`/`middle`/`secondary`/`both`) unchanged — display-only. Arabic labels already correct. Also fixed: `schoolLevel="middle"` previously provisioned ZERO year levels (catalog `setup.ts` now maps middle→Grades 7-9 + MIDDLE catalog level) and the configuration description form was missing the Middle option that onboarding offers.
 - [x] Authentication fallback logic -- Implemented atomic transactions with Prisma `$transaction` in `school-access.ts`. Race conditions handled with idempotent responses.
 - [x] Legacy code cleanup (Dec 2024) -- Removed `action.ts` (superseded), `use-optimized-listing.tsx` (unused), `enums.ts` (Airbnb legacy), `host-refactor-plan.md` (old planning doc).
 - [x] External file consolidation -- Moved `onboarding-auth.ts` into block, deleted unused `onboarding-optimization.ts` and `onboarding.config.ts`.

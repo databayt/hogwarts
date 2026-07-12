@@ -6,7 +6,7 @@ import { SchoolLevel, SchoolType } from "./types"
 export const SCHOOL_LEVELS: SchoolLevel[] = [
   {
     id: "primary",
-    title: "Primary School",
+    title: "Elementary School",
     description: "Elementary education (typically ages 6-11)",
   },
   {
@@ -16,12 +16,12 @@ export const SCHOOL_LEVELS: SchoolLevel[] = [
   },
   {
     id: "secondary",
-    title: "Secondary School",
+    title: "High School",
     description: "High school education (typically ages 15-18)",
   },
   {
     id: "both",
-    title: "Primary & Secondary",
+    title: "Both (K-12)",
     description: "Complete K-12 education system",
   },
 ]

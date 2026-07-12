@@ -2,9 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useMemo, useRef, useState, useTransition } from "react"
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useController, useForm, useWatch, type Control } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -35,17 +42,113 @@ function getSchoolLevelLabel(
 ): string {
   switch (schoolLevel) {
     case "primary":
-      return dict.primarySchool || "Primary School (Grades 1-6)"
+      return dict.primarySchool || "Elementary School (Grades 1-6)"
     case "middle":
       return dict.middleSchool || "Middle School (Grades 7-9)"
     case "secondary":
-      return dict.secondarySchool || "Secondary School (Grades 10-12)"
+      return dict.secondarySchool || "High School (Grades 10-12)"
     case "both":
       return dict.fullSchool || "Full School (Grades 1-12)"
     default:
       return dict.fullSchool || "Full School (Grades 1-12)"
   }
 }
+
+/**
+ * A single stepper row. Defined at module scope (NOT inside CapacityForm) so its
+ * component identity is stable across parent re-renders — otherwise React would
+ * unmount/remount every row on each keystroke, which is the "flash" all three
+ * counters showed when one was clicked. `useController` subscribes this row to
+ * ONLY its own field, so incrementing one counter never re-renders the others.
+ */
+const CounterRow = memo(function CounterRow({
+  control,
+  name,
+  label,
+  step,
+  min,
+  max,
+  onCommit,
+}: {
+  control: Control<CapacityFormData>
+  name: keyof CapacityFormData
+  label: string
+  step: number
+  min: number
+  max: number
+  onCommit: () => void
+}) {
+  const { field } = useController({ control, name })
+  const value = (field.value as number) ?? min
+
+  const commit = useCallback(
+    (raw: number) => {
+      const next = Math.min(max, Math.max(min, raw))
+      field.onChange(next)
+      onCommit()
+    },
+    [field, min, max, onCommit]
+  )
+
+  const atMin = value <= min
+  const atMax = value >= max
+
+  return (
+    <div className="border-border flex items-center justify-between border-b py-4 last:border-b-0 sm:py-6">
+      <div className="text-foreground text-sm font-medium sm:text-base">
+        {label}
+      </div>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => commit(value - step)}
+          disabled={atMin}
+          aria-label={`decrease ${label}`}
+          className={cn(
+            "flex h-10 min-h-[40px] w-10 items-center justify-center rounded-full border transition-colors active:scale-95 sm:h-7 sm:min-h-[28px] sm:w-7",
+            atMin && "cursor-not-allowed opacity-50"
+          )}
+        >
+          <Icons.minus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+        </Button>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => {
+            const raw = e.target.value
+            if (raw === "") {
+              field.onChange(min)
+              return
+            }
+            const parsed = parseInt(raw, 10)
+            if (Number.isFinite(parsed)) commit(parsed)
+          }}
+          onBlur={() => commit(value)}
+          className="focus:ring-primary w-16 [appearance:textfield] rounded-md border-none bg-transparent text-center font-mono text-lg font-medium tabular-nums outline-none focus:ring-2 sm:text-base [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => commit(value + step)}
+          disabled={atMax}
+          aria-label={`increase ${label}`}
+          className={cn(
+            "flex h-10 min-h-[40px] w-10 items-center justify-center rounded-full border transition-colors active:scale-95 sm:h-7 sm:min-h-[28px] sm:w-7",
+            atMax && "cursor-not-allowed opacity-50"
+          )}
+        >
+          <Icons.plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+        </Button>
+      </div>
+    </div>
+  )
+})
 
 interface CapacityFormProps {
   schoolId: string
@@ -63,7 +166,10 @@ export function CapacityForm({
   dictionary,
 }: CapacityFormProps) {
   const dict = dictionary?.onboarding || {}
-  const [isPending, startTransition] = useTransition()
+  // Keep the transition for the background save, but don't read `isPending`:
+  // toggling it disabled the whole control set mid-save, which flickered the
+  // counters on every step. The save stays off the interaction's critical path.
+  const [, startTransition] = useTransition()
   const [error, setError] = useState<string>("")
 
   const form = useForm<CapacityFormData>({
@@ -77,144 +183,56 @@ export function CapacityForm({
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleSubmit = (data: CapacityFormData) => {
-    startTransition(async () => {
-      try {
-        setError("")
-        const result = await updateSchoolCapacity(schoolId, data)
-
-        if (result.success) {
-          onSuccess?.()
-        } else {
-          setError(result.error || "Failed to update capacity")
-          if (result.errors) {
-            Object.entries(result.errors).forEach(([field, message]) => {
-              form.setError(field as keyof CapacityFormData, { message })
-            })
-          }
-        }
-      } catch (err) {
-        setError("An unexpected error occurred")
-      }
-    })
-  }
-
-  const debouncedSave = useCallback(
+  const handleSubmit = useCallback(
     (data: CapacityFormData) => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
-      debounceTimerRef.current = setTimeout(() => {
-        handleSubmit(data)
-      }, 500)
+      startTransition(async () => {
+        try {
+          setError("")
+          const result = await updateSchoolCapacity(schoolId, data)
+
+          if (result.success) {
+            onSuccess?.()
+          } else {
+            setError(result.error || "Failed to update capacity")
+            if (result.errors) {
+              Object.entries(result.errors).forEach(([field, message]) => {
+                form.setError(field as keyof CapacityFormData, { message })
+              })
+            }
+          }
+        } catch {
+          setError("An unexpected error occurred")
+        }
+      })
     },
-    [] // handleSubmit is stable within the component
+    [schoolId, onSuccess, form, startTransition]
   )
 
-  const updateField = (
-    field: keyof CapacityFormData,
-    delta: number,
-    min: number,
-    max: number
-  ) => {
-    const currentValue = form.getValues(field)
-    const newValue = Math.min(max, Math.max(min, currentValue + delta))
-    form.setValue(field, newValue)
+  // Stable across renders — CounterRow reads the latest values via getValues at
+  // fire time, so the debounce closure never goes stale.
+  const handleCommit = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      handleSubmit(form.getValues())
+    }, 500)
+  }, [handleSubmit, form])
 
-    const updatedData = form.getValues()
-    debouncedSave(updatedData)
-  }
-
-  const teachers = form.watch("teachers")
-  const sectionsPerGrade = form.watch("sectionsPerGrade")
-  const studentsPerSection = form.watch("studentsPerSection")
+  // Only the summary depends on all three values, so it lives here. The rows
+  // themselves subscribe individually inside CounterRow.
+  const [teachers, sectionsPerGrade, studentsPerSection] = useWatch({
+    control: form.control,
+    name: ["teachers", "sectionsPerGrade", "studentsPerSection"],
+  })
 
   const gradeCount = useMemo(() => getGradeCount(schoolLevel), [schoolLevel])
-  const totalClassrooms = gradeCount * sectionsPerGrade
-  const totalCapacity = totalClassrooms * studentsPerSection
+  const totalClassrooms = gradeCount * (sectionsPerGrade ?? 0)
+  const totalCapacity = totalClassrooms * (studentsPerSection ?? 0)
   const levelLabel = useMemo(
     () => getSchoolLevelLabel(schoolLevel, dict),
     [schoolLevel, dict]
   )
-
-  const setFieldValue = useCallback(
-    (field: keyof CapacityFormData, raw: number, min: number, max: number) => {
-      const clamped = Math.min(max, Math.max(min, raw))
-      form.setValue(field, clamped)
-      debouncedSave(form.getValues())
-    },
-    [form, debouncedSave]
-  )
-
-  const CounterRow = ({
-    label,
-    field,
-    step,
-    minValue,
-    maxValue,
-  }: {
-    label: string
-    field: keyof CapacityFormData
-    step: number
-    minValue: number
-    maxValue: number
-  }) => {
-    const value = form.watch(field)
-
-    return (
-      <div className="border-border flex items-center justify-between border-b py-4 last:border-b-0 sm:py-6">
-        <div className="text-foreground text-sm font-medium sm:text-base">
-          {label}
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => updateField(field, -step, minValue, maxValue)}
-            disabled={value <= minValue || isPending}
-            className={cn(
-              "flex h-10 min-h-[40px] w-10 items-center justify-center rounded-full border transition-colors sm:h-7 sm:min-h-[28px] sm:w-7",
-              value <= minValue && "cursor-not-allowed opacity-50"
-            )}
-          >
-            <Icons.minus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-          </Button>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={minValue}
-            max={maxValue}
-            value={value}
-            onChange={(e) => {
-              const next = parseInt(e.target.value, 10)
-              if (Number.isFinite(next)) {
-                setFieldValue(field, next, minValue, maxValue)
-              } else if (e.target.value === "") {
-                form.setValue(field, minValue)
-              }
-            }}
-            onBlur={() => setFieldValue(field, value, minValue, maxValue)}
-            disabled={isPending}
-            className="focus:ring-primary w-16 [appearance:textfield] rounded-md border-none bg-transparent text-center font-mono text-lg font-medium outline-none focus:ring-2 sm:text-base [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => updateField(field, step, minValue, maxValue)}
-            disabled={value >= maxValue || isPending}
-            className={cn(
-              "flex h-10 min-h-[40px] w-10 items-center justify-center rounded-full border transition-colors sm:h-7 sm:min-h-[28px] sm:w-7",
-              value >= maxValue && "cursor-not-allowed opacity-50"
-            )}
-          >
-            <Icons.plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-          </Button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <Form {...form}>
@@ -227,25 +245,31 @@ export function CapacityForm({
 
         <div className="bg-background">
           <CounterRow
+            control={form.control}
+            name="teachers"
             label={dict.teachers || "Teachers"}
-            field="teachers"
             step={1}
-            minValue={1}
-            maxValue={500}
+            min={1}
+            max={500}
+            onCommit={handleCommit}
           />
           <CounterRow
+            control={form.control}
+            name="sectionsPerGrade"
             label={dict.sectionsPerGrade || "Sections per Grade"}
-            field="sectionsPerGrade"
             step={1}
-            minValue={1}
-            maxValue={10}
+            min={1}
+            max={10}
+            onCommit={handleCommit}
           />
           <CounterRow
+            control={form.control}
+            name="studentsPerSection"
             label={dict.studentsPerSection || "Students per Section"}
-            field="studentsPerSection"
             step={1}
-            minValue={1}
-            maxValue={60}
+            min={1}
+            max={60}
+            onCommit={handleCommit}
           />
         </div>
 

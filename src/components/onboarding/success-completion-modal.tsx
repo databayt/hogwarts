@@ -9,10 +9,10 @@ import React, {
   useEffect,
   useState,
 } from "react"
-import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 import { useSession } from "next-auth/react"
 
+import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import { Modal } from "@/components/atom/modal"
 
 interface SuccessCompletionModalProps {
@@ -39,21 +39,11 @@ export default function SuccessCompletionModal({
   const dict = dictionary?.school?.onboarding || {}
   const { data: session } = useSession()
   const [copied, setCopied] = useState(false)
-  const [animationData, setAnimationData] = useState<object | null>(null)
   const [password, setPassword] = useState<string | null>(null)
 
   useEffect(() => {
     const pw = sessionStorage.getItem("_onboard_pw")
     if (pw) setPassword(pw)
-  }, [])
-
-  useEffect(() => {
-    fetch(
-      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/confetti.json`
-    )
-      .then((res) => res.json())
-      .then((data) => setAnimationData(data))
-      .catch(console.error)
   }, [])
 
   // Strip common prefixes (ed., www.) so school URL is school.databayt.org
@@ -85,12 +75,7 @@ export default function SuccessCompletionModal({
       preventDefaultClose={false}
     >
       <div className="px-8 py-12 text-center">
-        {/* Celebration Animation - always reserve space to prevent layout shift */}
-        <div className="mx-auto mb-4 h-32 w-32">
-          {animationData && (
-            <Lottie animationData={animationData} loop autoplay />
-          )}
-        </div>
+        <CelebrationAnimation className="mb-4" />
 
         {/* Success Message */}
         <p className="text-muted-foreground mb-2">

@@ -130,7 +130,7 @@ export function DescriptionForm({
     {
       id: "public" as const,
       title: dict.publicSchool,
-      image: asset("/illustrations/onboarding-public.png"),
+      image: asset("/illustrations/public.png"),
     },
     {
       id: "international" as const,

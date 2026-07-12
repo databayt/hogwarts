@@ -181,9 +181,9 @@ export const REQUIRED_STEPS: OnboardingStep[] = Object.values(ONBOARDING_STEPS)
 
 // School type options
 export const SCHOOL_TYPES = [
-  { value: "primary", label: "Primary School", description: "Ages 5-11" },
-  { value: "secondary", label: "Secondary School", description: "Ages 12-18" },
-  { value: "both", label: "Primary & Secondary", description: "Ages 5-18" },
+  { value: "primary", label: "Elementary School", description: "Ages 5-11" },
+  { value: "secondary", label: "High School", description: "Ages 12-18" },
+  { value: "both", label: "Both (K-12)", description: "Ages 5-18" },
 ] as const
 
 // School category options
