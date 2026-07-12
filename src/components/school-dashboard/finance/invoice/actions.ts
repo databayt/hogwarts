@@ -77,11 +77,6 @@ interface SettingsFormData {
   signature?: SignatureData
 }
 
-interface EnrollmentFeeItem {
-  name: string
-  amount: number
-}
-
 // ============================================================================
 // Helpers
 // ============================================================================
@@ -1112,112 +1107,5 @@ export async function getDashboardStats(): Promise<ActionResponse> {
     }
   } catch (error) {
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-  }
-}
-
-// ============================================================================
-// Enrollment Invoice Generation (called from admission actions)
-// ============================================================================
-
-/**
- * Create an invoice from enrollment fee assignments.
- * Called by confirmEnrollment() — does NOT require auth (runs within the enrollment transaction context).
- */
-export async function createInvoiceFromEnrollment(params: {
-  schoolId: string
-  userId: string
-  studentName: string
-  studentEmail: string
-  schoolName: string
-  schoolAddress: string
-  currency: string
-  items: EnrollmentFeeItem[]
-  dueDate?: Date
-  feeAssignmentId?: string
-  tx?: Parameters<Parameters<typeof db.$transaction>[0]>[0]
-}): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
-  try {
-    const {
-      schoolId,
-      userId,
-      studentName,
-      studentEmail,
-      schoolName,
-      schoolAddress,
-      currency,
-      items,
-      tx,
-    } = params
-
-    if (items.length === 0) {
-      return { success: true }
-    }
-
-    const invoiceNumber = await generateUniqueInvoiceNumber(schoolId, "ENR")
-    const subTotal = items.reduce((sum, item) => sum + item.amount, 0)
-    const dueDate =
-      params.dueDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
-    // If a transaction client is provided, use it directly (caller manages atomicity).
-    // Otherwise, create our own transaction.
-    const createInvoice = async (
-      client: Pick<typeof db, "userInvoiceAddress" | "userInvoice">
-    ) => {
-      const fromAddress = await client.userInvoiceAddress.create({
-        data: {
-          name: schoolName,
-          address1: schoolAddress || "School Address",
-          schoolId,
-        },
-      })
-
-      const toAddress = await client.userInvoiceAddress.create({
-        data: {
-          name: studentName,
-          email: studentEmail,
-          address1: "Student",
-          schoolId,
-        },
-      })
-
-      return client.userInvoice.create({
-        data: {
-          invoice_no: invoiceNumber,
-          invoice_date: new Date(),
-          due_date: dueDate,
-          currency,
-          fromAddressId: fromAddress.id,
-          toAddressId: toAddress.id,
-          sub_total: subTotal,
-          total: subTotal,
-          status: "UNPAID",
-          userId,
-          schoolId,
-          feeAssignmentId: params.feeAssignmentId || null,
-          notes: "Auto-generated from enrollment",
-          items: {
-            create: items.map((item) => ({
-              item_name: item.name,
-              quantity: 1,
-              price: item.amount,
-              total: item.amount,
-              schoolId,
-            })),
-          },
-        },
-      })
-    }
-
-    const invoice = tx
-      ? await createInvoice(tx)
-      : await db.$transaction((txClient) => createInvoice(txClient))
-
-    return { success: true, invoiceId: invoice.id }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create invoice",
-    }
   }
 }

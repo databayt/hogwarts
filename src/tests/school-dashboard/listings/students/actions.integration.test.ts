@@ -26,10 +26,10 @@ import "@/tests/integration/setup"
 import { auth } from "@/auth"
 import { cleanupTestData, createTestSchool } from "@/tests/integration/helpers"
 
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
-  createStudent,
   deleteStudent,
   getStudent,
   getStudents,
@@ -99,24 +99,39 @@ function setTenantContext(schoolId: string) {
 }
 
 /**
- * Create a student via the action and track it for cleanup.
+ * Create a student directly via Prisma and track it for cleanup.
+ *
+ * Used to delegate to the `createStudent` server action, but that action was
+ * deleted as dead code (zero production callers — every real create path now
+ * goes through `provisionStudent`, see src/lib/student-provisioning.ts). This
+ * suite only needs a real student row to exercise updateStudent/deleteStudent/
+ * getStudent/getStudents tenant-scoping, so it creates the fixture directly
+ * with the same minimal required fields `createStudent` used to default
+ * (dateOfBirth falls back to "now" when omitted, matching the old behavior).
  */
 async function createAndTrack(input: {
   firstName: string
   lastName: string
   gender?: "male" | "female"
-}) {
-  const result = await createStudent({
-    firstName: input.firstName,
-    lastName: input.lastName,
-    gender: input.gender ?? "male",
-  })
-
-  if (result.success && result.data?.id) {
-    createdStudentIds.push(result.data.id)
+}): Promise<ActionResponse<{ id: string }>> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { success: false, error: "MISSING_SCHOOL" }
   }
 
-  return result
+  const row = await db.student.create({
+    data: {
+      schoolId,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      gender: input.gender ?? "male",
+      dateOfBirth: new Date(),
+    },
+  })
+
+  createdStudentIds.push(row.id)
+
+  return { success: true, data: { id: row.id } }
 }
 
 // ---------------------------------------------------------------------------
@@ -262,58 +277,6 @@ describe("Multi-tenant isolation", () => {
 describe("CRUD operations", () => {
   beforeEach(() => {
     setTenantContext(schoolA.id)
-  })
-
-  describe("createStudent", () => {
-    it("persists a student in the database with correct schoolId", async () => {
-      const result = await createAndTrack({
-        firstName: "Create",
-        lastName: "Test",
-        gender: "male",
-      })
-
-      expect(result.success).toBe(true)
-      const id = (result as { success: true; data: { id: string } }).data.id
-      expect(id).toBeTruthy()
-
-      // Verify directly in database
-      const row = await db.student.findUnique({ where: { id } })
-      expect(row).not.toBeNull()
-      expect(row!.firstName).toBe("Create")
-      expect(row!.lastName).toBe("Test")
-      expect(row!.schoolId).toBe(schoolA.id)
-    })
-
-    it("returns error when schoolId is missing", async () => {
-      vi.mocked(getTenantContext).mockResolvedValue({
-        schoolId: null,
-        requestId: null,
-        role: null,
-        isPlatformAdmin: false,
-      })
-
-      const result = await createStudent({
-        firstName: "No",
-        lastName: "School",
-        gender: "male",
-      })
-
-      expect(result.success).toBe(false)
-      expect(result.error?.toLowerCase()).toContain("school")
-    })
-
-    it("returns error when not authenticated", async () => {
-      vi.mocked(auth).mockResolvedValue(null)
-
-      const result = await createStudent({
-        firstName: "No",
-        lastName: "Auth",
-        gender: "male",
-      })
-
-      expect(result.success).toBe(false)
-      expect(result.error?.toLowerCase()).toContain("authenticated")
-    })
   })
 
   describe("updateStudent", () => {
@@ -580,14 +543,6 @@ describe("Authorization edge cases", () => {
     })
     vi.mocked(auth).mockResolvedValue(null)
 
-    const createResult = await createStudent({
-      firstName: "No",
-      lastName: "Auth",
-      gender: "male",
-    })
-    expect(createResult.success).toBe(false)
-    expect(createResult.error?.toLowerCase()).toContain("authenticated")
-
     const getResult = await getStudent({ id: "any-id" })
     expect(getResult.success).toBe(false)
     expect(getResult.error?.toLowerCase()).toContain("authenticated")
@@ -599,31 +554,5 @@ describe("Authorization edge cases", () => {
     const deleteResult = await deleteStudent({ id: "any-id" })
     expect(deleteResult.success).toBe(false)
     expect(deleteResult.error?.toLowerCase()).toContain("authenticated")
-  })
-
-  it("rejects operations when tenant context has no schoolId", async () => {
-    vi.mocked(auth).mockResolvedValue({
-      user: {
-        id: "test-user",
-        email: "test@test.com",
-        role: "ADMIN",
-        schoolId: schoolA.id,
-      },
-      expires: new Date(Date.now() + 86_400_000).toISOString(),
-    })
-    vi.mocked(getTenantContext).mockResolvedValue({
-      schoolId: null,
-      requestId: null,
-      role: null,
-      isPlatformAdmin: false,
-    })
-
-    const result = await createStudent({
-      firstName: "No",
-      lastName: "Tenant",
-      gender: "male",
-    })
-    expect(result.success).toBe(false)
-    expect(result.error?.toLowerCase()).toContain("school")
   })
 })

@@ -29,6 +29,18 @@ interface SmartImportResult {
   failed: number
   skipped: number
   errors: Array<{ row: number; error: string; details?: string }>
+  // Plaintext temp credentials minted for the imported users. Passwords are
+  // crypto-random + single-use (mustChangePassword), so this is the only place
+  // the admin can read them to distribute. Mirrors school/bulk's
+  // SmartImportResult — this return type used to silently drop the field.
+  credentials?: Array<{
+    row: number
+    name: string
+    username: string
+    email: string | null
+    role: string
+    password: string
+  }>
 }
 
 /**
@@ -148,7 +160,7 @@ export async function smartImport(
   // Call existing import functions
   const result =
     type === "students"
-      ? await importStudents(csvContent, schoolId)
+      ? await importStudents(csvContent, schoolId, "ONBOARDING_IMPORT")
       : await importTeachers(csvContent, schoolId)
 
   logger.info("Smart import completed", {
@@ -165,5 +177,6 @@ export async function smartImport(
     failed: result.failed,
     skipped: result.skipped,
     errors: result.errors,
+    credentials: result.credentials,
   }
 }

@@ -18,6 +18,7 @@
  * import { importStudents, importTeachers } from "@/components/file"
  * ```
  */
+import type { AdmissionChannel } from "@prisma/client"
 import { hash } from "bcryptjs"
 import { parse } from "csv-parse/sync"
 import { z, ZodError } from "zod"
@@ -25,7 +26,11 @@ import { z, ZodError } from "zod"
 import { generateTempPassword, makeUniqueUsername } from "@/lib/credentials"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
-import { generateStudentUsername } from "@/lib/student-username"
+import {
+  provisionStudent,
+  type ProvisionGuardianInput,
+  type ProvisionStudentInput,
+} from "@/lib/student-provisioning"
 import { detectLang } from "@/components/translation/util"
 
 import {
@@ -122,33 +127,6 @@ interface ImportResult {
 }
 
 /**
- * Map CSV status values to StudentStatus enum
- */
-function mapStudentStatus(
-  status?: string
-): "ACTIVE" | "INACTIVE" | "SUSPENDED" | "GRADUATED" | "TRANSFERRED" {
-  if (!status) return "ACTIVE"
-  const normalized = status.toLowerCase().trim()
-  const map: Record<
-    string,
-    "ACTIVE" | "INACTIVE" | "SUSPENDED" | "GRADUATED" | "TRANSFERRED"
-  > = {
-    active: "ACTIVE",
-    inactive: "INACTIVE",
-    suspended: "SUSPENDED",
-    graduated: "GRADUATED",
-    transferred: "TRANSFERRED",
-    // Arabic
-    نشط: "ACTIVE",
-    "غير نشط": "INACTIVE",
-    معلق: "SUSPENDED",
-    متخرج: "GRADUATED",
-    منقول: "TRANSFERRED",
-  }
-  return map[normalized] || "ACTIVE"
-}
-
-/**
  * Parse section string like "Grade 9-C" into grade number and section letter.
  * Also handles: "9-C", "Grade 9 C", "9C", "الصف التاسع-ج"
  */
@@ -208,11 +186,24 @@ class CsvImportService {
   private readonly CHUNK_SIZE = 50
 
   /**
-   * Import students from CSV — chunked parallel hashing + batched DB inserts
+   * Import students from CSV — validates + resolves grade/section per row,
+   * then delegates the actual creation to the shared `provisionStudent` core
+   * (the same path admission's `confirmEnrollment` uses). Compared to the old
+   * hand-rolled createMany block, every bulk-imported student now also gets a
+   * StudentYearLevel row, a shadow ADMITTED Application (tagged with the
+   * caller's AdmissionChannel), and fee/invoice assignment.
+   *
+   * Rows are provisioned SEQUENTIALLY, not in parallel/chunked batches:
+   * `provisionStudent` mints the per-school student code (YYGGNNNN) by
+   * probing the latest existing code in its (year, grade) bucket inside its
+   * own transaction — unsafe against two concurrent transactions racing on
+   * the same bucket. A chunked/background strategy for very large files is a
+   * separate follow-up, not attempted here.
    */
   async importStudents(
     csvContent: string,
-    schoolId: string
+    schoolId: string,
+    origin: AdmissionChannel
   ): Promise<ImportResult> {
     const result: ImportResult = {
       success: false,
@@ -235,7 +226,7 @@ class CsvImportService {
         }),
         db.user.findMany({
           where: { schoolId },
-          select: { email: true, username: true },
+          select: { email: true },
         }),
       ])
       const existingStudentIds = new Set(
@@ -243,11 +234,6 @@ class CsvImportService {
       )
       const existingEmails = new Set(
         existingUsers.map((u) => u.email).filter(Boolean)
-      )
-      // Username set for guardians created during this import (students use the
-      // unique studentId code; guardians derive a handle from their name).
-      const takenUsernames = new Set<string>(
-        existingUsers.map((u) => u.username).filter(Boolean) as string[]
       )
 
       // Phase 1: Validate all rows and collect valid ones
@@ -305,9 +291,11 @@ class CsvImportService {
             continue
           }
 
-          // Only dedupe CSV-provided studentIds here. Missing ones get a
-          // school-scoped code (YYGGNNNN) assigned later, after we've
-          // resolved each row's grade — see the chunk loop below.
+          // Only dedupe CSV-provided studentIds here. provisionStudent always
+          // mints its own school-scoped login code (YYGGNNNN) — a CSV-supplied
+          // studentId is preserved as `admissionNumber` instead (see the
+          // per-row mapping below). This dedup guard is kept as a harmless
+          // legacy safety net against re-uploading the same file.
           if (validated.studentId) {
             if (existingStudentIds.has(validated.studentId)) {
               result.warnings?.push({
@@ -357,21 +345,28 @@ class CsvImportService {
         }
       }
 
-      // Detect CSV language from a sample of names
-      const sampleNames = validRows.slice(0, 5).map((r) => r.validated.name)
-      const detectedLang = detectLang(sampleNames.join(" "))
-
-      // Pre-load academic grades and sections for section auto-linking
-      const [existingGrades, existingSections] = await Promise.all([
-        db.academicGrade.findMany({
-          where: { schoolId },
-          select: { id: true, name: true, gradeNumber: true },
-        }),
-        db.section.findMany({
-          where: { schoolId },
-          select: { id: true, name: true, gradeId: true },
-        }),
-      ])
+      // Pre-load academic grades and sections for section auto-linking, plus
+      // the school's current academic year (so every row's StudentYearLevel
+      // match inside provisionStudent targets the right SchoolYear instead of
+      // leaving `academicYear` undefined, which would let Prisma match an
+      // arbitrary SchoolYear row).
+      const [existingGrades, existingSections, currentSchoolYear] =
+        await Promise.all([
+          db.academicGrade.findMany({
+            where: { schoolId },
+            select: { id: true, name: true, gradeNumber: true },
+          }),
+          db.section.findMany({
+            where: { schoolId },
+            select: { id: true, name: true, gradeId: true },
+          }),
+          db.schoolYear.findFirst({
+            where: { schoolId },
+            orderBy: { startDate: "desc" },
+            select: { yearName: true },
+          }),
+        ])
+      const academicYear = currentSchoolYear?.yearName ?? undefined
 
       // Build lookup maps: gradeNumber -> gradeId, "gradeId:sectionName" -> sectionId
       const gradeByNumber = new Map<number, string>()
@@ -385,268 +380,193 @@ class CsvImportService {
         sectionByKey.set(`${s.gradeId}:${s.name.toUpperCase()}`, s.id)
       }
 
-      // Track created student IDs for access code generation
-      const createdStudentUserIds: string[] = []
+      // Track successfully-provisioned student IDs for access-code generation.
+      const provisionedStudentIds: string[] = []
+      // Batch-level fee-assignment visibility, re-derived here (rather than
+      // reading provisionStudent's per-row warnings) because the "no grade"
+      // case never actually reaches provisionStudent's own warnings array —
+      // ensureStudentFeeAssignments short-circuits to `skipped: 1` without
+      // throwing when academicGradeId is null, so it never populates
+      // FEE_AUTO_ASSIGN_FAILED. We already know academicGradeId locally
+      // (resolved per row below), so we can surface the same admin-facing
+      // summary the old hand-rolled Phase 3/4 gave.
+      let gradelessCount = 0
+      let feeFailCount = 0
 
-      // Phase 2: Process valid rows in chunks with parallel bcrypt + batched DB inserts
-      for (let c = 0; c < validRows.length; c += this.CHUNK_SIZE) {
-        const chunk = validRows.slice(c, c + this.CHUNK_SIZE)
+      // Phase 2: Provision each valid row through the shared core, one row at
+      // a time (see the method doc comment above for why this can't be
+      // parallelized/chunked).
+      for (const r of validRows) {
+        let academicGradeId: string | undefined
+        let sectionId: string | undefined
 
-        // Phase 2a: resolve grade + section for each row so the generator
-        // can produce a grade-scoped code (YYGGNNNN) per row.
-        const resolved = chunk.map((r) => {
-          let academicGradeId: string | undefined
-          let sectionId: string | undefined
-
-          if (r.validated.section) {
-            const parsed = parseSectionString(r.validated.section)
-            if (parsed.gradeNumber != null) {
-              academicGradeId =
-                gradeByNumber.get(parsed.gradeNumber) || undefined
-              if (academicGradeId && parsed.sectionLetter) {
-                sectionId =
-                  sectionByKey.get(
-                    `${academicGradeId}:${parsed.sectionLetter}`
-                  ) || undefined
-              }
+        if (r.validated.section) {
+          const parsed = parseSectionString(r.validated.section)
+          if (parsed.gradeNumber != null) {
+            academicGradeId = gradeByNumber.get(parsed.gradeNumber) || undefined
+            if (academicGradeId && parsed.sectionLetter) {
+              sectionId =
+                sectionByKey.get(
+                  `${academicGradeId}:${parsed.sectionLetter}`
+                ) || undefined
             }
-          }
-
-          if (!academicGradeId && r.validated.yearLevel) {
-            const parsed = parseSectionString(r.validated.yearLevel)
-            if (parsed.gradeNumber != null) {
-              academicGradeId =
-                gradeByNumber.get(parsed.gradeNumber) || undefined
-            }
-          }
-
-          return { row: r, academicGradeId, sectionId }
-        })
-
-        // Phase 2b: assign codes. Sequential because each call probes the
-        // latest existing code in its (year,grade) bucket — can't parallelise
-        // without racing on the same bucket.
-        for (const item of resolved) {
-          if (!item.row.validated.studentId) {
-            const code = await generateStudentUsername({
-              schoolId,
-              academicGradeId: item.academicGradeId ?? null,
-            })
-            item.row.validated.studentId = code
           }
         }
 
-        // Crypto-random temp password per student. NEVER derive it from the
-        // student code — that code is the public username, so a derived
-        // password (`student<code>`) was guessable and let anyone log in as
-        // the student before they did. Plaintext is collected into
-        // result.credentials for the admin to distribute.
-        const plains = chunk.map(() => generateTempPassword())
-        const hashes = await Promise.all(
-          plains.map((p) => hash(p, this.BCRYPT_ROUNDS))
-        )
+        if (!academicGradeId && r.validated.yearLevel) {
+          const parsed = parseSectionString(r.validated.yearLevel)
+          if (parsed.gradeNumber != null) {
+            academicGradeId = gradeByNumber.get(parsed.gradeNumber) || undefined
+          }
+        }
 
-        // Generate UUIDs client-side for createMany
-        const userIds = chunk.map(() => crypto.randomUUID())
+        // Students whose CSV had no recognizable grade/section can't be
+        // matched to a fee structure — tracked for the aggregate warning
+        // below (mirrors the old Phase 4 "gradeless" surfacing).
+        if (!academicGradeId) gradelessCount++
+
+        const nameParts = r.validated.name.trim().split(/\s+/)
+        const firstName = nameParts[0] || "Unknown"
+        const lastName = nameParts.slice(1).join(" ") || "Unknown"
+
+        // Guardian — only when the row actually names one. Phase 1's
+        // validateGuardianInfo already guarantees at least one contact method
+        // (email or phone) is present whenever guardianName is, so this is
+        // never a contactless guardian. createLogin:true preserves this
+        // import's long-standing behavior of giving imported guardians a
+        // portal login (admission/wizard callers of provisionStudent omit it
+        // and stay contact-only — see createOrLinkGuardian's doc comment).
+        const guardians: ProvisionGuardianInput[] = []
+        if (r.validated.guardianName) {
+          const guardianParts = r.validated.guardianName.trim().split(/\s+/)
+          guardians.push({
+            typeName: "guardian",
+            firstName: guardianParts[0] || "Unknown",
+            lastName: guardianParts.slice(1).join(" ") || "Unknown",
+            email: r.validated.guardianEmail ?? null,
+            phone: r.validated.guardianPhone ?? null,
+            occupation: null,
+            isPrimary: true,
+            createLogin: true,
+          })
+        }
+
+        // The shadow Application provisionStudent mints for every direct-admit
+        // row casts `gender` straight into Prisma's `Gender` enum (MALE /
+        // FEMALE only — see ensureDirectAdmitApplication in system-campaign.ts).
+        // The CSV schema additionally allows "other", and Student.gender
+        // itself is a free-text column with no enum constraint, so: pass an
+        // enum-safe value (or undefined) into provisionStudent, then restore
+        // the row's exact original value onto Student.gender immediately
+        // after (same transaction, below) — the Application write never sees
+        // a non-enum string, and "other"/lowercase fidelity on the Student row
+        // is never lost.
+        const provisionGender =
+          r.validated.gender === "male"
+            ? "MALE"
+            : r.validated.gender === "female"
+              ? "FEMALE"
+              : undefined
+
+        const input: ProvisionStudentInput = {
+          schoolId,
+          firstName,
+          middleName: r.validated.middleName ?? null,
+          lastName,
+          dateOfBirth: r.validated.dateOfBirth
+            ? new Date(r.validated.dateOfBirth)
+            : null,
+          gender: provisionGender,
+          email: r.email,
+          academicGradeId: academicGradeId ?? null,
+          sectionId: sectionId ?? null,
+          applyingForClass:
+            r.validated.yearLevel || r.validated.section || undefined,
+          academicYear,
+          admissionNumber: r.validated.studentId ?? undefined,
+          guardians,
+        }
 
         try {
-          await db.$transaction(async (tx) => {
-            // Batch create users — username is the per-school code, not the
-            // display name, so it's stable and safe to log in with.
-            await tx.user.createMany({
-              data: chunk.map((r, idx) => ({
-                id: userIds[idx],
-                username: r.validated.studentId!,
-                email: r.email,
-                // Admin is bulk-importing — the login verification gate has
-                // nothing to verify against, so stamp verified now and let
-                // the student log in with username + password.
-                emailVerified: new Date(),
-                password: hashes[idx],
-                role: "STUDENT" as const,
-                schoolId,
-                mustChangePassword: true,
-              })),
-            })
+          const provisionResult = await db.$transaction(
+            async (tx) => {
+              const res = await provisionStudent(
+                input,
+                { notify: false, credentialDelivery: "temp-password", origin },
+                tx
+              )
+              await tx.student.update({
+                where: { id: res.studentId },
+                data: { gender: r.validated.gender ?? "other" },
+              })
+              return res
+            },
+            { timeout: 15000 }
+          )
 
-            // Batch create students
-            await tx.student.createMany({
-              data: chunk.map((r, idx) => {
-                const nameParts = r.validated.name.trim().split(/\s+/)
-                const { academicGradeId, sectionId } = resolved[idx]
+          result.imported++
+          provisionedStudentIds.push(provisionResult.studentId)
 
-                // Calculate wizardStep based on missing fields
-                // Wizard steps: personal -> enrollment -> contact -> location -> health -> previous-education
-                const hasPersonal =
-                  nameParts[0] &&
-                  nameParts[0] !== "Unknown" &&
-                  r.validated.dateOfBirth &&
-                  r.validated.gender
-                const hasEnrollment = !!academicGradeId
-                const hasContact =
-                  r.validated.email || r.validated.guardianPhone
-                const wizardStep = !hasPersonal
-                  ? "personal"
-                  : !hasEnrollment
-                    ? "enrollment"
-                    : !hasContact
-                      ? "contact"
-                      : null
-
-                return {
-                  userId: userIds[idx],
-                  schoolId,
-                  studentId: r.validated.studentId!,
-                  firstName: nameParts[0] || "Unknown",
-                  middleName: r.validated.middleName || undefined,
-                  lastName: nameParts.slice(1).join(" ") || "Unknown",
-                  dateOfBirth: r.validated.dateOfBirth
-                    ? new Date(r.validated.dateOfBirth)
-                    : new Date("2010-01-01"),
-                  gender: r.validated.gender || "other",
-                  status: mapStudentStatus(r.validated.status),
-                  enrollmentDate: r.validated.enrollmentDate
-                    ? new Date(r.validated.enrollmentDate)
-                    : new Date(),
-                  academicGradeId: academicGradeId || undefined,
-                  sectionId: sectionId || undefined,
-                  yearLevel: r.validated.yearLevel || undefined,
-                  lang: detectedLang,
-                  wizardStep,
-                }
-              }),
-            })
-          })
-
-          result.imported += chunk.length
-          createdStudentUserIds.push(...userIds)
-
-          for (let idx = 0; idx < chunk.length; idx++) {
-            const r = chunk[idx]
+          if (provisionResult.credentials) {
             result.credentials?.push({
               row: r.rowNumber,
               name: r.validated.name,
-              username: r.validated.studentId!,
+              username: provisionResult.credentials.username,
               email: r.email,
               role: "STUDENT",
-              password: plains[idx],
+              password: provisionResult.credentials.password,
             })
           }
 
-          // Handle guardians sequentially after the batch (they have complex find-or-create logic)
-          for (let idx = 0; idx < chunk.length; idx++) {
-            const r = chunk[idx]
-            if (r.validated.guardianName && r.validated.guardianEmail) {
-              try {
-                const guardianCred = await this.createGuardianLink(
-                  schoolId,
-                  userIds[idx],
-                  r.validated.guardianName,
-                  r.validated.guardianEmail,
-                  r.validated.guardianPhone,
-                  detectedLang,
-                  takenUsernames
-                )
-                if (guardianCred) {
-                  result.credentials?.push({
-                    row: r.rowNumber,
-                    ...guardianCred,
-                  })
-                }
-              } catch {
-                // Guardian creation failure shouldn't fail the student import
-                result.warnings?.push({
-                  row: r.rowNumber,
-                  warning: `Student imported but guardian creation failed`,
-                })
-              }
+          for (const w of provisionResult.warnings) {
+            if (w.code === "FEE_AUTO_ASSIGN_FAILED") {
+              feeFailCount++
+              continue
             }
+            result.warnings?.push({
+              row: r.rowNumber,
+              warning: `Student imported with a warning: ${w.code}`,
+            })
           }
         } catch (error) {
-          // If batch fails, mark all rows in chunk as failed
-          for (const r of chunk) {
-            result.errors.push({
-              row: r.rowNumber,
-              error:
-                error instanceof Error ? error.message : "Batch insert failed",
-              data: r.validated,
-            })
-            result.failed++
-          }
-          // Undo the imported count we would have added
+          result.errors.push({
+            row: r.rowNumber,
+            error:
+              error instanceof Error ? error.message : "Provisioning failed",
+            data: r.validated,
+          })
+          result.failed++
         }
       }
 
-      // Phase 3: Generate access codes for newly created students
-      if (createdStudentUserIds.length > 0) {
+      // Surface silent gaps so "imported: N" never implies "all billed".
+      if (gradelessCount > 0) {
+        result.warnings?.push({
+          row: 0,
+          warning: `${gradelessCount} student(s) imported without a recognized grade — no fees were assigned. Set their grade from the student list to assign fees.`,
+        })
+      }
+      if (feeFailCount > 0) {
+        result.warnings?.push({
+          row: 0,
+          warning: `Fee assignment failed for ${feeFailCount} student(s). You can re-sync fees from the Finance → Fees page.`,
+        })
+      }
+
+      // Phase 3: Generate access codes for newly-provisioned students
+      if (provisionedStudentIds.length > 0) {
         try {
-          // Look up student records by userId to get student IDs + grades
-          const createdStudents = await db.student.findMany({
-            where: { schoolId, userId: { in: createdStudentUserIds } },
-            select: { id: true, academicGradeId: true },
-          })
-
-          if (createdStudents.length > 0) {
-            const { generateAccessCodesForStudents } =
-              await import("@/lib/student-access-code")
-            const codes = await generateAccessCodesForStudents(
-              schoolId,
-              createdStudents.map((s) => s.id)
-            )
-            result.accessCodes = codes.map((c) => ({
-              studentId: c.studentId,
-              code: c.code,
-              expiresAt: c.expiresAt.toISOString(),
-            }))
-
-            // Phase 4: Auto-assign fees + invoices via the canonical helper.
-            // notify=false on bulk imports — admin can re-trigger
-            // notifications via the Sync button if desired (avoids
-            // notification storm on a 500-row import).
-            const { ensureStudentFeeAssignments } =
-              await import("@/lib/fee-auto-assign")
-            let gradelessCount = 0
-            let feeFailCount = 0
-            for (const s of createdStudents) {
-              // Students whose CSV had no recognizable grade/section can't be
-              // matched to a fee structure. Track + surface them so the admin
-              // knows these rows have NO fees until a grade is set (then the
-              // student-wizard / grade-edit path back-fills via the same
-              // helper — see updateStudent + completeStudentWizard).
-              if (!s.academicGradeId) {
-                gradelessCount++
-                continue
-              }
-              try {
-                await ensureStudentFeeAssignments({
-                  schoolId,
-                  studentId: s.id,
-                  academicGradeId: s.academicGradeId,
-                  notify: false,
-                })
-              } catch (feeErr) {
-                feeFailCount++
-                logger.error(
-                  `Bulk import fee auto-assign failed for student ${s.id}`,
-                  feeErr instanceof Error ? feeErr : new Error("Unknown error"),
-                  { action: "bulk_fee_assign_error", schoolId }
-                )
-              }
-            }
-            // Surface silent gaps so "imported: N" never implies "all billed".
-            if (gradelessCount > 0) {
-              result.warnings?.push({
-                row: 0,
-                warning: `${gradelessCount} student(s) imported without a recognized grade — no fees were assigned. Set their grade from the student list to assign fees.`,
-              })
-            }
-            if (feeFailCount > 0) {
-              result.warnings?.push({
-                row: 0,
-                warning: `Fee assignment failed for ${feeFailCount} student(s). You can re-sync fees from the Finance → Fees page.`,
-              })
-            }
-          }
+          const { generateAccessCodesForStudents } =
+            await import("@/lib/student-access-code")
+          const codes = await generateAccessCodesForStudents(
+            schoolId,
+            provisionedStudentIds
+          )
+          result.accessCodes = codes.map((c) => ({
+            studentId: c.studentId,
+            code: c.code,
+            expiresAt: c.expiresAt.toISOString(),
+          }))
         } catch (codeError) {
           // Access code generation failure shouldn't fail the import
           logger.error(
@@ -681,121 +601,6 @@ class CsvImportService {
       )
       throw error
     }
-  }
-
-  /**
-   * Helper: create guardian and link to student (by userId)
-   */
-  private async createGuardianLink(
-    schoolId: string,
-    studentUserId: string,
-    guardianName: string,
-    guardianEmail: string,
-    guardianPhone?: string,
-    lang: "ar" | "en" = "ar",
-    takenUsernames?: Set<string>
-  ): Promise<{
-    name: string
-    username: string
-    email: string | null
-    role: string
-    password: string
-  } | null> {
-    // Find the student record by userId
-    const student = await db.student.findFirst({
-      where: { userId: studentUserId, schoolId },
-    })
-    if (!student) return null
-
-    // Check if guardian already exists
-    let guardian = await db.guardian.findFirst({
-      where: { schoolId, user: { email: guardianEmail } },
-    })
-
-    let createdCred: {
-      name: string
-      username: string
-      email: string | null
-      role: string
-      password: string
-    } | null = null
-
-    if (!guardian) {
-      // Login-valid unique username + crypto-random temp password (the shared
-      // static "parent123" let anyone log into every imported guardian).
-      const guardianUsername = makeUniqueUsername(
-        guardianName,
-        takenUsernames ?? new Set<string>(),
-        "g"
-      )
-      const plainGuardianPassword = generateTempPassword()
-      const guardianPassword = await hash(
-        plainGuardianPassword,
-        this.BCRYPT_ROUNDS
-      )
-      const guardianUser = await db.user.create({
-        data: {
-          username: guardianUsername,
-          email: guardianEmail,
-          password: guardianPassword,
-          role: "GUARDIAN",
-          schoolId,
-          mustChangePassword: true,
-        },
-      })
-      createdCred = {
-        name: guardianName,
-        username: guardianUsername,
-        email: guardianEmail,
-        role: "GUARDIAN",
-        password: plainGuardianPassword,
-      }
-
-      const parts = guardianName.trim().split(/\s+/)
-      guardian = await db.guardian.create({
-        data: {
-          userId: guardianUser.id,
-          schoolId,
-          firstName: parts[0] || "Unknown",
-          lastName: parts.slice(1).join(" ") || "Unknown",
-          emailAddress: guardianEmail,
-          lang,
-        },
-      })
-
-      if (guardianPhone) {
-        await db.guardianPhoneNumber.create({
-          data: {
-            guardianId: guardian.id,
-            schoolId,
-            phoneNumber: guardianPhone,
-            isPrimary: true,
-          },
-        })
-      }
-    }
-
-    // Get or create guardian type
-    let guardianType = await db.guardianType.findFirst({
-      where: { schoolId, name: "guardian" },
-    })
-    if (!guardianType) {
-      guardianType = await db.guardianType.create({
-        data: { schoolId, name: "guardian" },
-      })
-    }
-
-    await db.studentGuardian.create({
-      data: {
-        studentId: student.id,
-        guardianId: guardian.id,
-        schoolId,
-        guardianTypeId: guardianType.id,
-        isPrimary: true,
-      },
-    })
-
-    return createdCred
   }
 
   /**
@@ -1615,8 +1420,12 @@ class CsvImportService {
 const csvImportService = new CsvImportService()
 
 // Export convenience functions
-export async function importStudents(csvContent: string, schoolId: string) {
-  return csvImportService.importStudents(csvContent, schoolId)
+export async function importStudents(
+  csvContent: string,
+  schoolId: string,
+  origin: AdmissionChannel
+): Promise<ImportResult> {
+  return csvImportService.importStudents(csvContent, schoolId, origin)
 }
 export async function importTeachers(csvContent: string, schoolId: string) {
   return csvImportService.importTeachers(csvContent, schoolId)

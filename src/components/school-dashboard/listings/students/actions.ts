@@ -15,7 +15,7 @@
  * - Search & filter: Find students by name, enrollment status, class
  *
  * KEY ALGORITHMS:
- * 1. createStudent(): Validates userId uniqueness globally, normalizes strings
+ * 1. updateStudent(): Validates userId uniqueness globally, normalizes strings
  * 2. getStudents(): Supports filtering by name, class, year level with pagination
  * 3. linkGuardian(): Creates many-to-many relationship between student and guardian
  * 4. Email deduplication: UNIQUE constraint per school prevents duplicates within tenant
@@ -77,6 +77,7 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { auth } from "@/auth"
+import type { AdmissionChannel } from "@prisma/client"
 import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -99,7 +100,6 @@ import {
 } from "@/components/school-dashboard/listings/students/authorization"
 import {
   getStudentsSchema,
-  studentCreateSchema,
   studentUpdateSchema,
 } from "@/components/school-dashboard/listings/students/validation"
 import { getLabels, getNames } from "@/components/translation/person"
@@ -286,148 +286,6 @@ async function autoEnrollStudentInClasses(
 // ============================================================================
 // Mutations
 // ============================================================================
-
-/**
- * Create a new student
- * @param input - Student data
- * @returns Action response with student ID
- */
-export async function createStudent(
-  input: z.infer<typeof studentCreateSchema>
-): Promise<ActionResponse<{ id: string }>> {
-  try {
-    // Get authentication context
-    const session = await auth()
-    const authContext = getAuthContext(session)
-    if (!authContext) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    // Get tenant context
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Check permission
-    try {
-      assertStudentPermission(authContext, "create", { schoolId })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : ACTION_ERRORS.UNAUTHORIZED,
-      }
-    }
-
-    // Parse and validate input
-    const parsed = studentCreateSchema.parse(input)
-
-    let normalizedUserId: string | null =
-      parsed.userId && parsed.userId.trim().length > 0
-        ? parsed.userId.trim()
-        : null
-
-    if (normalizedUserId) {
-      // Ensure the referenced user exists to avoid FK violation
-      const userModel = getModelOrThrow("user")
-      const user = await userModel.findFirst({
-        where: { id: normalizedUserId },
-      })
-      if (!user) {
-        normalizedUserId = null
-      } else {
-        // Check if this userId is already being used by ANY student (global unique constraint)
-        const studentModel = getModelOrThrow("student")
-        const existingStudent = await studentModel.findFirst({
-          where: {
-            userId: normalizedUserId,
-          },
-        })
-        if (existingStudent) {
-          normalizedUserId = null // Don't use this userId if it's already taken
-        }
-      }
-    }
-
-    // Pre-generate the per-school student code (YYGGNNNN) so username and
-    // Student.studentId stay in sync from creation — avoids a second update.
-    const generatedCode = await generateStudentUsername({
-      schoolId,
-      academicGradeId: parsed.academicGradeId || null,
-    })
-
-    // Create student record
-    const studentModel = getModelOrThrow("student")
-    const row = await studentModel.create({
-      data: {
-        schoolId,
-        studentId: generatedCode,
-        firstName: parsed.firstName ?? "",
-        middleName: parsed.middleName ?? null,
-        lastName: parsed.lastName ?? "",
-        // Persist contact fields so fee-due / reminder channels have a target
-        // (previously dropped at create — see fee-overdue cron recipient logic).
-        email: parsed.email || null,
-        mobileNumber: parsed.mobileNumber || null,
-        dateOfBirth: parsed.dateOfBirth
-          ? new Date(parsed.dateOfBirth)
-          : new Date(),
-        gender: parsed.gender ?? "male",
-        profilePhotoUrl: parsed.profilePhotoUrl || null,
-        ...(parsed.enrollmentDate
-          ? { enrollmentDate: new Date(parsed.enrollmentDate) }
-          : {}),
-        userId: normalizedUserId,
-        academicGradeId: parsed.academicGradeId || null,
-        sectionId: parsed.sectionId || null,
-      },
-    })
-
-    // Auto-enroll in classes if grade is set
-    if (parsed.academicGradeId) {
-      await autoEnrollStudentInClasses(row.id, parsed.academicGradeId, schoolId)
-
-      // Founder contract: every student-create path with a known grade
-      // ends with FeeAssignment rows. Idempotent + transactional.
-      try {
-        await ensureStudentFeeAssignments({
-          schoolId,
-          studentId: row.id,
-          academicGradeId: parsed.academicGradeId,
-        })
-      } catch (err) {
-        console.error(
-          "[createStudent] ensureStudentFeeAssignments failed:",
-          err
-        )
-      }
-    }
-
-    // Revalidate cache
-    revalidatePath(STUDENTS_PATH)
-    revalidateSpotlight(schoolId)
-
-    return { success: true, data: { id: row.id } }
-  } catch (error) {
-    console.error("[createStudent] Error:", error, {
-      input,
-      timestamp: new Date().toISOString(),
-    })
-
-    if (error instanceof z.ZodError) {
-      return actionError(
-        ACTION_ERRORS.VALIDATION_ERROR,
-        error.issues.map((e) => e.message).join(", ")
-      )
-    }
-
-    return actionError(
-      ACTION_ERRORS.STUDENT_CREATE_FAILED,
-      error instanceof Error ? error.message : undefined
-    )
-  }
-}
 
 /**
  * Update an existing student
@@ -1767,398 +1625,6 @@ export async function getStudentsExportData(
 }
 
 /**
- * Register a new student with comprehensive information
- * @param input - Complete student registration data
- * @returns Action response with student data
- */
-export async function registerStudent(
-  input: Record<string, unknown>
-): Promise<ActionResponse<any>> {
-  try {
-    const session = await auth()
-    const authContext = getAuthContext(session)
-    if (!authContext) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    try {
-      assertStudentPermission(authContext, "create", { schoolId })
-    } catch {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
-
-    // Validate required fields
-    const registrationSchema = z
-      .object({
-        firstName: z.string().min(1),
-        lastName: z.string().min(1),
-        dateOfBirth: z.string().min(1),
-        gender: z.string().min(1),
-        middleName: z.string().optional().nullable(),
-        bloodGroup: z.string().optional().nullable(),
-        nationality: z.string().optional().nullable(),
-        passportNumber: z.string().optional().nullable(),
-        email: z.string().email().optional().nullable(),
-        mobileNumber: z.string().optional().nullable(),
-        guardians: z
-          .array(
-            z.object({
-              firstName: z.string().min(1),
-              lastName: z.string().min(1),
-              email: z.string().optional().nullable(),
-              mobileNumber: z.string().optional().nullable(),
-              relation: z.string().optional().nullable(),
-              isPrimary: z.boolean().optional(),
-            })
-          )
-          .optional(),
-      })
-      .passthrough()
-
-    const parsed = registrationSchema.parse(input)
-    // Use parsed data from here on
-    const validatedInput = parsed as Record<string, any>
-
-    // Process guardian data first if provided
-    const guardianIds = []
-    if (validatedInput.guardians && validatedInput.guardians.length > 0) {
-      const guardianModel = getModelOrThrow("guardian")
-      const guardianPhoneNumberModel = getModelOrThrow("guardianPhoneNumber")
-
-      for (const guardian of validatedInput.guardians) {
-        // Check if guardian already exists by email
-        let guardianRecord = await guardianModel.findFirst({
-          where: {
-            schoolId,
-            emailAddress: guardian.email,
-          },
-        })
-
-        if (!guardianRecord) {
-          // Create new guardian
-          guardianRecord = await guardianModel.create({
-            data: {
-              schoolId,
-              firstName: guardian.firstName,
-              lastName: guardian.lastName,
-              emailAddress: guardian.email,
-            },
-          })
-
-          // Add phone number if provided
-          if (guardian.mobileNumber) {
-            await guardianPhoneNumberModel.create({
-              data: {
-                schoolId,
-                guardianId: guardianRecord.id,
-                phoneNumber: guardian.mobileNumber,
-                phoneType: "mobile",
-                isPrimary: true,
-              },
-            })
-          }
-        }
-
-        guardianIds.push({
-          id: guardianRecord.id,
-          relation: guardian.relation,
-          isPrimary: guardian.isPrimary || false,
-        })
-      }
-    }
-
-    // Prepare student data
-    const studentData: any = {
-      schoolId,
-      firstName: validatedInput.firstName,
-      middleName: validatedInput.middleName || null,
-      lastName: validatedInput.lastName,
-      dateOfBirth: new Date(validatedInput.dateOfBirth),
-      gender: validatedInput.gender,
-      bloodGroup: validatedInput.bloodGroup || null,
-      nationality: validatedInput.nationality || "Saudi Arabia",
-      passportNumber: validatedInput.passportNumber || null,
-      visaStatus: validatedInput.visaStatus || null,
-      visaExpiryDate: validatedInput.visaExpiryDate
-        ? new Date(validatedInput.visaExpiryDate as string)
-        : null,
-
-      // Contact Information
-      email: validatedInput.email || null,
-      mobileNumber: validatedInput.mobileNumber || null,
-      alternatePhone: validatedInput.alternatePhone || null,
-
-      // Address
-      currentAddress: validatedInput.currentAddress || null,
-      permanentAddress: validatedInput.sameAsPermanent
-        ? validatedInput.currentAddress
-        : validatedInput.permanentAddress || null,
-      city: validatedInput.city || null,
-      state: validatedInput.state || null,
-      postalCode: validatedInput.postalCode || null,
-      country: validatedInput.country || "Saudi Arabia",
-
-      // Emergency Contact
-      emergencyContactName: validatedInput.emergencyContactName || null,
-      emergencyContactPhone: validatedInput.emergencyContactPhone || null,
-      emergencyContactRelation: validatedInput.emergencyContactRelation || null,
-
-      // Status and Enrollment
-      status: validatedInput.status || "ACTIVE",
-      enrollmentDate: validatedInput.enrollmentDate
-        ? new Date(validatedInput.enrollmentDate as string)
-        : new Date(),
-      admissionNumber: validatedInput.admissionNumber || null,
-      admissionDate: validatedInput.admissionDate
-        ? new Date(validatedInput.admissionDate as string)
-        : new Date(),
-
-      // Academic
-      category: validatedInput.category || null,
-      studentType: validatedInput.studentType || "REGULAR",
-      academicGradeId: validatedInput.academicGradeId || null,
-
-      // Health Information
-      medicalConditions: validatedInput.medicalConditions || null,
-      allergies: validatedInput.allergies || null,
-      medicationRequired: validatedInput.medicationRequired || null,
-      doctorName: validatedInput.doctorName || null,
-      doctorContact: validatedInput.doctorContact || null,
-      insuranceProvider: validatedInput.insuranceProvider || null,
-      insuranceNumber: validatedInput.insuranceNumber || null,
-
-      // Previous Education
-      previousSchoolName: validatedInput.previousSchoolName || null,
-      previousSchoolAddress: validatedInput.previousSchoolAddress || null,
-      previousGrade: validatedInput.previousGrade || null,
-      transferCertificateNo: validatedInput.transferCertificateNo || null,
-      transferDate: validatedInput.transferDate
-        ? new Date(validatedInput.transferDate as string)
-        : null,
-      previousAcademicRecord: validatedInput.previousAcademicRecord || null,
-
-      // Photo
-      profilePhotoUrl: validatedInput.profilePhotoUrl || null,
-
-      // GR Number - Auto-generate if not provided
-      grNumber: validatedInput.grNumber || null,
-    }
-
-    // Generate GR Number if not provided
-    const studentModel = getModelOrThrow("student")
-    if (!studentData.grNumber) {
-      const lastStudent = await studentModel.findFirst({
-        where: { schoolId },
-        orderBy: { createdAt: "desc" },
-        select: { grNumber: true },
-      })
-
-      let nextGRNumber = 1
-      if (lastStudent?.grNumber) {
-        const match = lastStudent.grNumber.match(/\d+/)
-        if (match) {
-          nextGRNumber = parseInt(match[0]) + 1
-        }
-      }
-
-      const year = new Date().getFullYear()
-      studentData.grNumber = `GR${year}${nextGRNumber.toString().padStart(4, "0")}`
-    }
-
-    // Create the student record
-    const student = await studentModel.create({
-      data: studentData,
-    })
-
-    // Create guardian relationships
-    if (guardianIds.length > 0) {
-      // Get or create guardian type
-      const guardianTypeModel = getModelOrThrow("guardianType")
-      let guardianType = await guardianTypeModel.findFirst({
-        where: {
-          schoolId,
-          name: "Parent",
-        },
-      })
-
-      if (!guardianType) {
-        guardianType = await guardianTypeModel.create({
-          data: {
-            schoolId,
-            name: "Parent",
-          },
-        })
-      }
-
-      // Create student-guardian relationships
-      const studentGuardianModel = getModelOrThrow("studentGuardian")
-      for (const guardian of guardianIds) {
-        await studentGuardianModel.create({
-          data: {
-            schoolId,
-            studentId: student.id,
-            guardianId: guardian.id,
-            guardianTypeId: guardianType.id,
-            isPrimary: guardian.isPrimary,
-          },
-        })
-      }
-    }
-
-    // Save documents if provided
-    if (validatedInput.documents && validatedInput.documents.length > 0) {
-      const studentDocumentModel = getModelOrThrow("studentDocument")
-      for (const doc of validatedInput.documents) {
-        if (doc.fileUrl) {
-          await studentDocumentModel.create({
-            data: {
-              schoolId,
-              studentId: student.id,
-              documentType: doc.documentType,
-              documentName: doc.documentName,
-              description: doc.description || null,
-              fileUrl: doc.fileUrl,
-              fileSize: doc.fileSize || null,
-              mimeType: doc.mimeType || null,
-              tags: doc.tags || [],
-            },
-          })
-        }
-      }
-    }
-
-    // Save health records/vaccinations if provided
-    if (validatedInput.vaccinations && validatedInput.vaccinations.length > 0) {
-      const healthRecordModel = getModelOrThrow("healthRecord")
-      for (const vaccination of validatedInput.vaccinations) {
-        if (vaccination.name) {
-          await healthRecordModel.create({
-            data: {
-              schoolId,
-              studentId: student.id,
-              recordDate: new Date(vaccination.date),
-              recordType: "VACCINATION",
-              title: vaccination.name,
-              description: `Vaccination record for ${vaccination.name}`,
-              followUpDate: vaccination.nextDueDate
-                ? new Date(vaccination.nextDueDate)
-                : null,
-              recordedBy: "System",
-            },
-          })
-        }
-      }
-    }
-
-    // Enroll in class/batch if provided
-    if (input.classId) {
-      // Capacity validation - check if class has available spots
-      const classModel = getModelOrThrow("class")
-      const classData = await classModel.findFirst({
-        where: { id: input.classId, schoolId },
-        select: {
-          id: true,
-          name: true,
-          maxCapacity: true,
-          _count: {
-            select: { studentClasses: true },
-          },
-        },
-      })
-
-      if (!classData) {
-        return actionError(ACTION_ERRORS.CLASS_NOT_FOUND)
-      }
-
-      const maxCapacity = classData.maxCapacity || 50 // Default to 50 if not set
-      const currentEnrollment = classData._count.studentClasses
-
-      if (currentEnrollment >= maxCapacity) {
-        // Detail string is for logs/debugging; the client maps the CODE to a
-        // localized message (never surface raw English to the user).
-        return actionError(
-          ACTION_ERRORS.CLASS_AT_CAPACITY,
-          `${classData.name}: ${currentEnrollment}/${maxCapacity}`
-        )
-      }
-
-      const studentClassModel = getModelOrThrow("studentClass")
-      await studentClassModel.create({
-        data: {
-          schoolId,
-          studentId: student.id,
-          classId: input.classId,
-          dateJoined: new Date(),
-          isActive: true,
-        },
-      })
-    }
-
-    if (input.batchId) {
-      const studentBatchModel = getModelOrThrow("studentBatch")
-      await studentBatchModel.create({
-        data: {
-          schoolId,
-          studentId: student.id,
-          batchId: input.batchId,
-          startDate: new Date(),
-          isActive: true,
-        },
-      })
-    }
-
-    // Founder contract: the registration form path must provision fees +
-    // invoices like every other student-creation entrypoint (createStudent,
-    // wizard, enroll, CSV import). Idempotent; existing admin discounts /
-    // scholarships are preserved (helper only inserts missing assignments).
-    if (validatedInput.academicGradeId) {
-      try {
-        await ensureStudentFeeAssignments({
-          schoolId,
-          studentId: student.id,
-          academicGradeId: validatedInput.academicGradeId,
-        })
-      } catch (err) {
-        console.error(
-          "[registerStudent] ensureStudentFeeAssignments failed:",
-          err
-        )
-      }
-    }
-
-    // Revalidate cache
-    revalidatePath(STUDENTS_PATH)
-
-    return {
-      success: true,
-      data: student,
-    }
-  } catch (error) {
-    console.error("[registerStudent] Error:", error, {
-      input,
-      timestamp: new Date().toISOString(),
-    })
-
-    if (error instanceof z.ZodError) {
-      return actionError(
-        ACTION_ERRORS.VALIDATION_ERROR,
-        error.issues.map((e) => e.message).join(", ")
-      )
-    }
-
-    return actionError(
-      ACTION_ERRORS.STUDENT_CREATE_FAILED,
-      error instanceof Error ? error.message : undefined
-    )
-  }
-}
-
-/**
  * Bulk delete students
  * @param input - Array of student IDs
  * @returns Action response with count of deleted students
@@ -2477,7 +1943,7 @@ interface StudentCredentialsPayload {
   password: string | null
   /** True the first time a User is minted for this student on this call. */
   isNew: boolean
-  /** True when the student has a real applicant email (signed up themselves). Password stays under their control; admin shouldn't auto-reset it. */
+  /** True when the student's Application channel is PORTAL (applied themselves). Password stays under their control; admin shouldn't auto-reset it. */
   isSelfOnboarded: boolean
 }
 
@@ -2489,7 +1955,7 @@ type StudentContext = {
   userId: string | null
   studentId: string | null
   academicGradeId: string | null
-  applicationId: string | null
+  application: { channel: AdmissionChannel } | null
 }
 
 /**
@@ -2521,7 +1987,7 @@ async function loadStudentForCredentials(
       userId: true,
       studentId: true,
       academicGradeId: true,
-      applicationId: true,
+      application: { select: { channel: true } },
     },
   })
 }
@@ -2544,10 +2010,14 @@ async function ensureStudentCode(
 }
 
 function deriveIsSelfOnboarded(student: StudentContext): boolean {
-  // Self-onboarded = came through the public admission flow (has applicationId)
-  // AND supplied their own email during application. Manually-added students
-  // have no email at all and no applicationId — they log in with username.
-  return !!student.applicationId && !!student.email
+  // Self-onboarded = applied through the public admission portal and keeps
+  // the password they chose there. Every student now carries an Application
+  // (provisionStudent mints a shadow row for admin/bulk/legacy paths too), so
+  // the old `!!applicationId` check no longer discriminates anything — key
+  // off the channel instead. PORTAL is the only channel where the applicant
+  // set their own password; ADMIN_DIRECT / ONBOARDING_IMPORT / BULK_IMPORT /
+  // LEGACY_BACKFILL all need an admin-minted temp password.
+  return student.application?.channel === "PORTAL"
 }
 
 /**

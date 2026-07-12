@@ -203,7 +203,7 @@ export async function bulkSmartImport(
 
   const result =
     type === "students"
-      ? await importStudents(csvContent, schoolId)
+      ? await importStudents(csvContent, schoolId, "BULK_IMPORT")
       : type === "teachers"
         ? await importTeachers(csvContent, schoolId)
         : type === "staff"

@@ -8,10 +8,8 @@ import { db } from "@/lib/db"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
-  createStudent,
   deleteStudent,
   getStudents,
-  registerStudent,
   updateStudent,
 } from "@/components/school-dashboard/listings/students/actions"
 
@@ -136,47 +134,6 @@ describe("Student Actions", () => {
     })
   })
 
-  describe("createStudent", () => {
-    it("creates student with schoolId for multi-tenant isolation", async () => {
-      const mockStudent = {
-        id: "student-1",
-        firstName: "John",
-        lastName: "Doe",
-        schoolId: mockSchoolId,
-      }
-
-      // createStudent uses getModelOrThrow which returns db.student directly
-      vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
-
-      const result = await createStudent({
-        firstName: "John",
-        lastName: "Doe",
-        gender: "male",
-        dateOfBirth: "2010-05-15",
-      })
-
-      expect(result.success).toBe(true)
-    })
-
-    it("returns error when no schoolId in tenant context", async () => {
-      vi.mocked(getTenantContext).mockResolvedValue({
-        schoolId: null as any,
-        subdomain: "test",
-        role: "ADMIN",
-        locale: "en",
-      })
-
-      const result = await createStudent({
-        firstName: "John",
-        lastName: "Doe",
-        gender: "male",
-      })
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("MISSING_SCHOOL")
-    })
-  })
-
   describe("updateStudent", () => {
     it("updates student with schoolId scope", async () => {
       // updateStudent uses getModelOrThrow which returns db.student directly
@@ -277,120 +234,18 @@ describe("Student Actions", () => {
   })
 
   // ==========================================================================
-  // Founder-contract convergence: every student-create / grade-update path
-  // that knows the student's grade MUST end with ensureStudentFeeAssignments.
-  // These are the regression guards for the fee-provisioning fix — the
-  // registration form previously created students with zero fees.
+  // Founder-contract convergence: the grade-update path (updateStudent) MUST
+  // end with ensureStudentFeeAssignments when academicGradeId changes. These
+  // are the regression guards for the fee-provisioning fix.
+  //
+  // The createStudent/registerStudent variants of this guard were removed
+  // here when both functions were deleted as dead code (unified onto the
+  // provisionStudent core — see src/lib/student-provisioning.ts). Equivalent
+  // create-path fee-provisioning coverage now lives with that core's callers
+  // (e.g. src/tests/file/import/csv-import.test.ts).
   // ==========================================================================
   describe("founder-contract: fee auto-assignment convergence", () => {
     const mockAcademicGradeId = "grade-7"
-
-    it("registerStudent provisions fees with { schoolId, studentId, academicGradeId }", async () => {
-      const mockStudent = { id: "student-reg-1", schoolId: mockSchoolId }
-      // registerStudent generates a GR number from the latest student, then
-      // creates the student row.
-      vi.mocked(db.student.findFirst).mockResolvedValue(null)
-      vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
-
-      const result = await registerStudent({
-        firstName: "Reg",
-        lastName: "Student",
-        dateOfBirth: "2012-03-01",
-        gender: "male",
-        academicGradeId: mockAcademicGradeId,
-      })
-
-      expect(result.success).toBe(true)
-      expect(ensureStudentFeeAssignments).toHaveBeenCalledTimes(1)
-      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
-        schoolId: mockSchoolId,
-        studentId: mockStudent.id,
-        academicGradeId: mockAcademicGradeId,
-      })
-    })
-
-    it("registerStudent does NOT provision fees when no academicGradeId is set", async () => {
-      vi.mocked(db.student.findFirst).mockResolvedValue(null)
-      vi.mocked(db.student.create).mockResolvedValue({
-        id: "student-reg-2",
-        schoolId: mockSchoolId,
-      } as any)
-
-      const result = await registerStudent({
-        firstName: "NoGrade",
-        lastName: "Student",
-        dateOfBirth: "2012-03-01",
-        gender: "female",
-      })
-
-      expect(result.success).toBe(true)
-      expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
-    })
-
-    it("createStudent provisions fees when academicGradeId is supplied", async () => {
-      const mockStudent = { id: "student-create-1", schoolId: mockSchoolId }
-      vi.mocked(db.student.create).mockResolvedValue(mockStudent as any)
-
-      const result = await createStudent({
-        firstName: "John",
-        lastName: "Doe",
-        gender: "male",
-        dateOfBirth: "2010-05-15",
-        academicGradeId: mockAcademicGradeId,
-      })
-
-      expect(result.success).toBe(true)
-      expect(ensureStudentFeeAssignments).toHaveBeenCalledTimes(1)
-      expect(ensureStudentFeeAssignments).toHaveBeenCalledWith({
-        schoolId: mockSchoolId,
-        studentId: mockStudent.id,
-        academicGradeId: mockAcademicGradeId,
-      })
-    })
-
-    it("createStudent does NOT provision fees without an academicGradeId", async () => {
-      vi.mocked(db.student.create).mockResolvedValue({
-        id: "student-create-2",
-        schoolId: mockSchoolId,
-      } as any)
-
-      const result = await createStudent({
-        firstName: "John",
-        lastName: "Doe",
-        gender: "male",
-        dateOfBirth: "2010-05-15",
-      })
-
-      expect(result.success).toBe(true)
-      expect(ensureStudentFeeAssignments).not.toHaveBeenCalled()
-    })
-
-    it("createStudent persists email + mobileNumber in the create payload", async () => {
-      vi.mocked(db.student.create).mockResolvedValue({
-        id: "student-create-3",
-        schoolId: mockSchoolId,
-      } as any)
-
-      const result = await createStudent({
-        firstName: "John",
-        lastName: "Doe",
-        gender: "male",
-        dateOfBirth: "2010-05-15",
-        email: "john.doe@example.com",
-        mobileNumber: "+966500000000",
-      })
-
-      expect(result.success).toBe(true)
-      expect(db.student.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            schoolId: mockSchoolId,
-            email: "john.doe@example.com",
-            mobileNumber: "+966500000000",
-          }),
-        })
-      )
-    })
 
     it("updateStudent provisions fees when academicGradeId changes", async () => {
       vi.mocked(db.student.updateMany).mockResolvedValue({ count: 1 })

@@ -156,7 +156,14 @@ export async function POST(request: NextRequest) {
 
     let result
     if (type === "students") {
-      result = await importStudents(content, session.user.schoolId)
+      // Same engine as /school/bulk's Server Action — this REST endpoint is
+      // just a non-web (e.g. mobile) entry point onto the identical bulk CSV
+      // import flow, so it's tagged with the same AdmissionChannel.
+      result = await importStudents(
+        content,
+        session.user.schoolId,
+        "BULK_IMPORT"
+      )
     } else {
       result = await importTeachers(content, session.user.schoolId)
     }
