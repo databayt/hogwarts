@@ -6,14 +6,13 @@ import React, {
   Dispatch,
   SetStateAction,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react"
 import Link from "next/link"
-import Lottie from "lottie-react"
 import { Check, Copy } from "lucide-react"
 
+import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import { Modal } from "@/components/atom/modal"
 
 interface ApplicationSuccessModalProps {
@@ -47,7 +46,6 @@ export default function ApplicationSuccessModal({
   // legacy `password` prop so in-flight data still renders correctly.
   const resolvedTrackingCode = trackingCode ?? password
   const [copied, setCopied] = useState(false)
-  const [animationData, setAnimationData] = useState<object | null>(null)
 
   const dict = useMemo(() => {
     const d = dictionary as Record<string, unknown> | undefined
@@ -56,15 +54,6 @@ export default function ApplicationSuccessModal({
     const apply = admission?.apply as Record<string, unknown> | undefined
     return (apply?.successModal as Record<string, string>) ?? {}
   }, [dictionary])
-
-  useEffect(() => {
-    fetch(
-      `https://${process.env.NEXT_PUBLIC_CDN_DOMAIN || "cdn.databayt.org"}/hogwarts/animations/confetti.json`
-    )
-      .then((res) => res.json())
-      .then((data) => setAnimationData(data))
-      .catch(console.error)
-  }, [])
 
   const handleCopy = useCallback(() => {
     const lines = [
@@ -97,12 +86,7 @@ export default function ApplicationSuccessModal({
       preventDefaultClose
     >
       <div className="px-4 py-8 text-center sm:px-8 sm:py-12">
-        {/* Celebration Animation */}
-        <div className="mx-auto mb-4 h-32 w-32">
-          {animationData && (
-            <Lottie animationData={animationData} loop autoplay />
-          )}
-        </div>
+        <CelebrationAnimation className="mb-4" />
 
         {/* Success Message */}
         <p className="text-muted-foreground mb-6">
