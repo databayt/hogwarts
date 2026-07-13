@@ -169,6 +169,10 @@ export default function PersonalContent() {
                     lastName: data.lastName,
                     mobileNumber: data.mobileNumber ?? undefined,
                     alternatePhone: data.alternatePhone ?? undefined,
+                    dateOfBirth: data.dateOfBirth
+                      ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
+                      : undefined,
+                    gender: data.gender ?? undefined,
                   }
                 : undefined
             }

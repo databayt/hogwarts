@@ -104,7 +104,12 @@ export async function createDraftStudent(): Promise<
         schoolId,
         firstName: "",
         lastName: "",
-        dateOfBirth: new Date(),
+        // `dateOfBirth` is NOT NULL, so a draft needs a stub. Use a neutral
+        // sentinel (matches provisionStudent's own fallback) rather than
+        // `new Date()`, which silently stamped every student as "born today".
+        // The wizard's personal step now collects the real DOB + gender and
+        // overwrites these when the admin fills them in.
+        dateOfBirth: new Date("2000-01-01"),
         gender: "male",
         wizardStep: "attachments",
       },

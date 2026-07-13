@@ -9,18 +9,27 @@ import React, {
   useMemo,
   useTransition,
 } from "react"
+import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ar } from "date-fns/locale/ar"
+import { enUS } from "date-fns/locale/en-US"
 import { useForm } from "react-hook-form"
 
 import type { NameFormat } from "@/lib/name-utils"
 import { composeFullName } from "@/lib/name-utils"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
-import { NameFields, PhoneField } from "@/components/form"
+import {
+  DateField,
+  NameFields,
+  PhoneField,
+  SelectField,
+} from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { getGenderOptions } from "../../config"
 import { updateStudentPersonal } from "./actions"
 import {
   getPersonalStudentSchema,
@@ -37,12 +46,18 @@ interface PersonalFormProps {
 export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
   ({ studentId, initialData, nameFormat = "full", onValidChange }, ref) => {
     const [isPending, startTransition] = useTransition()
+    const params = useParams()
+    const dateLocale = (params?.lang as string) === "ar" ? ar : enUS
     const { dictionary } = useDictionary()
     const students = (dictionary?.school as Record<string, unknown>)
       ?.students as Record<string, unknown> | undefined
     const t = students?.personal as Record<string, string> | undefined
+    const tInfo = students?.information as Record<string, string> | undefined
     const tContact = students?.contact as Record<string, string> | undefined
     const tRoot = students as Record<string, string> | undefined
+    const genderOptions = getGenderOptions(
+      students as Parameters<typeof getGenderOptions>[0]
+    )
 
     const { v } = useMemo(() => {
       const messages = (dictionary as Record<string, unknown>)?.messages as
@@ -67,6 +82,8 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
         lastName: initialData?.lastName || "",
         mobileNumber: initialData?.mobileNumber || "",
         alternatePhone: initialData?.alternatePhone || "",
+        dateOfBirth: initialData?.dateOfBirth || "",
+        gender: initialData?.gender || "",
         ...(nameFormat === "full"
           ? {
               _fullName: composeFullName(
@@ -167,9 +184,29 @@ export const PersonalForm = forwardRef<WizardFormRef, PersonalFormProps>(
             disabled={isPending}
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
+            <DateField
+              name="dateOfBirth"
+              label={tInfo?.dateOfBirth}
+              placeholder={tInfo?.pickDate}
+              captionLayout="dropdown"
+              startMonth={new Date(2000, 0)}
+              endMonth={new Date()}
+              maxDate={new Date()}
+              locale={dateLocale}
+              disabled={isPending}
+            />
+            <SelectField
+              name="gender"
+              label={tInfo?.gender}
+              placeholder={tInfo?.selectGender}
+              options={genderOptions}
+              disabled={isPending}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-7">
             <PhoneField
               name="mobileNumber"
-              label={`${tContact?.phone || t?.phone || "Phone"} *`}
+              label={tContact?.phone || t?.phone || "Phone"}
               placeholder={tContact?.phonePlaceholder || "Enter phone number"}
               disabled={isPending}
             />

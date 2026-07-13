@@ -42,6 +42,8 @@ export async function getStudentPersonal(
           lastName: true,
           mobileNumber: true,
           alternatePhone: true,
+          dateOfBirth: true,
+          gender: true,
         },
       }),
       db.school.findUnique({
@@ -60,6 +62,10 @@ export async function getStudentPersonal(
         lastName: student.lastName,
         mobileNumber: student.mobileNumber ?? undefined,
         alternatePhone: student.alternatePhone ?? undefined,
+        dateOfBirth: student.dateOfBirth
+          ? student.dateOfBirth.toISOString().slice(0, 10)
+          : undefined,
+        gender: student.gender ?? undefined,
         nameFormat: (school?.nameFormat as NameFormat) ?? "full",
       },
     }
@@ -85,6 +91,13 @@ export async function updateStudentPersonal(
     const cookieStore = await cookies()
     const lang = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
 
+    // DOB/gender: only overwrite when the admin actually entered a value.
+    // Blank leaves the draft-row stub untouched (the column is NOT NULL).
+    const dob =
+      parsed.dateOfBirth && parsed.dateOfBirth.trim()
+        ? new Date(parsed.dateOfBirth)
+        : undefined
+
     await db.student.updateMany({
       where: { id: studentId, schoolId },
       data: {
@@ -93,6 +106,8 @@ export async function updateStudentPersonal(
         lastName: parsed.lastName,
         mobileNumber: parsed.mobileNumber || null,
         alternatePhone: parsed.alternatePhone || null,
+        ...(dob && !Number.isNaN(dob.getTime()) ? { dateOfBirth: dob } : {}),
+        ...(parsed.gender?.trim() ? { gender: parsed.gender.trim() } : {}),
         lang,
       },
     })

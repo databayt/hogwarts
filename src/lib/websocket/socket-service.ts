@@ -314,7 +314,17 @@ class SocketService {
         })
 
         this.socket.on("connect_error", (error) => {
-          console.error("WebSocket connection error:", error)
+          // Log only the first failure. socket.io retries up to
+          // maxReconnectAttempts times; logging every attempt floods the
+          // console. A persistent failure here means NEXT_PUBLIC_SOCKET_URL /
+          // the socket server is misconfigured — verify the endpoint, not the
+          // client.
+          if (this.reconnectAttempts === 0) {
+            console.warn(
+              "WebSocket connection error:",
+              error instanceof Error ? error.message : error
+            )
+          }
           this.isConnecting = false
           this.reconnectAttempts++
 

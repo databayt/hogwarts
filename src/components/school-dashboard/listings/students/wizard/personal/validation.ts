@@ -16,6 +16,11 @@ import type { ValidationHelper } from "@/components/internationalization/helpers
 const studentContactFields = {
   mobileNumber: z.string().optional(),
   alternatePhone: z.string().optional(),
+  // DOB (as a "YYYY-MM-DD" string from DateField) and gender are optional here;
+  // when blank the draft row keeps its stub value. Both mirror the public
+  // application's personal step so the two create-flows capture the same shape.
+  dateOfBirth: z.string().optional(),
+  gender: z.string().optional(),
 }
 
 export function createPersonalStudentSchema(v?: ValidationHelper) {
