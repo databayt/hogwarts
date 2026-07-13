@@ -1,11 +1,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 //
-// Cron: every 5 minutes — finds sessions starting in the next 5-10 min and
+// Cron: every 15 minutes — finds sessions starting in the next 5-20 min and
 // dispatches a `live_class_starting_soon` notification (idempotent via
-// ConferenceEvent eventType lookup). The 5-min-wide window matches the */5
+// ConferenceEvent eventType lookup). The 15-min-wide window matches the */15
 // cadence so no start time falls into a gap between consecutive runs; the
 // idempotency guard means the boundary overlap never double-sends.
+// (Cadence was reduced from */5 to */15 so Neon compute can scale to zero
+// between runs — see vercel.json crons.)
 
 import { NextResponse } from "next/server"
 
@@ -24,7 +26,7 @@ export async function GET(req: Request) {
 
   const now = Date.now()
   const startMin = new Date(now + 5 * 60 * 1000)
-  const startMax = new Date(now + 10 * 60 * 1000)
+  const startMax = new Date(now + 20 * 60 * 1000)
 
   const sessions = await db.conference.findMany({
     where: {

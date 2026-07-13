@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/publish-announcements",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/expire-announcements",
@@ -11,19 +11,19 @@
     },
     {
       "path": "/api/cron/process-email-notifications",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/process-report-card-pdfs",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/process-transcript-pdfs",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/process-push-notifications",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/term-end-report-cards",
@@ -31,11 +31,11 @@
     },
     {
       "path": "/api/cron/process-whatsapp-notifications",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/process-broadcast-batches",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/cleanup-notifications",
@@ -83,11 +83,11 @@
     },
     {
       "path": "/api/cron/live-class-reminders",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/end-stale-live-classes",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/expire-live-recordings",
@@ -99,7 +99,7 @@
     },
     {
       "path": "/api/cron/process-document-jobs",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/exam-reminders",
