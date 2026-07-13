@@ -13,6 +13,38 @@ last_audited: 2026-06-12
 
 # Translation Engine — Live Work List
 
+## Done (2026-07-12 provider-chain resilience + backfill "final fix")
+
+**Root cause found for "database content is not translated":** the Google
+Translate quota died 2026-06-14 (403 `userRateLimitExceeded` on every call —
+billing/quota needs fixing in the Google Cloud console) and NOTHING was
+cached for a month; every page silently fell back to source text. The demo
+school (created after the outage began) had exactly 1 cache row.
+
+- [x] **Provider chain (`engine.ts`)** — Google → Groq LLM fallback
+      (`groq.ts`, llama-3.1-8b-instant, free tier), each behind its own
+      circuit breaker (3 failures → open; Google probes every 5 min, Groq
+      every 2 min). All consumers (localize/actions/prewarm) now import
+      `./engine`; nothing imports google.ts/groq.ts directly. One dead
+      provider can never again silently kill translations or tax renders
+      with its timeout.
+- [x] **Sweep core (`sweep.ts`)** — shared registry+person-names walker
+      behind `pnpm i18n:backfill` AND the new daily
+      `/api/cron/translation-sweep` (03:30 UTC, bounded 2000
+      translations/240s). Names (students/teachers/guardians/staff) sweep as
+      composed fullName — exactly what getNames() looks up. Junk tenants
+      skipped; Notification excluded by default; values >1500 chars left to
+      read-time caching; global memo dedupes across schools.
+- [x] **Prune widened** — predicate now `provider != "manual"` (was
+      `= "google"`) so engine/sweep rows ("groq"/"auto") stay evictable.
+- [x] **Vercel GROQ_API_KEY replaced** — the 215-day-old prod/preview key
+      was revoked ("Invalid API Key"); replaced with the working key and
+      verified live against the Groq API.
+- [x] Tests: engine.test.ts (chain/breaker/error-preference),
+      groq.test.ts (JSON protocol, count-mismatch, blank substitution,
+      chunking, retry policy); prewarm/localize/actions mocks retargeted to
+      engine. Suite: 180 green.
+
 ## Done (2026-06-17 read-path degradation polish)
 
 - [x] **403 rate-limit now classified transient** — Google returns

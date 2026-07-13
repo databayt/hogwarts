@@ -3,14 +3,14 @@ title: Translation
 description: Two-tier i18n — dictionary JSON for static UI, batched localize() for dynamic content. Coverage gaps and adoption patterns.
 ---
 
-Translation runs on two tiers: dictionary JSON files for static UI (parity-enforced across `ar`/`en` by a CI test) and the batched `localize()` engine for dynamic database content via a three-tier cache (in-memory LRU → `Translation` table → Google Translate). Drift can no longer ship: en/ar key parity, untranslated placeholders, hardcoded-string counts, and RTL physical classes are all gated in `pnpm test` and CI. The remaining work is the hardcoded-string sweep tracked by the ratchet baselines — run `npx tsx scripts/i18n-hardcoded-ratchet.ts --by-dir` for the live count.
+Translation runs on two tiers: dictionary JSON files for static UI (parity-enforced across `ar`/`en` by a CI test) and the batched `localize()` engine for dynamic database content via a three-tier cache (in-memory LRU → `Translation` table → provider chain). The provider chain (`engine.ts`) tries Google Translate first and falls back to a Groq LLM (free tier) — each behind a circuit breaker — so a dead provider (as happened 2026-06-14 → 2026-07-12 when the Google quota died and silently killed all dynamic translation) can never again take translations down platform-wide. A registry-driven sweep (`pnpm i18n:backfill` + the daily `/api/cron/translation-sweep`) backfills and self-heals the cache for existing content, person names, new schools, and bulk imports. Drift can no longer ship: en/ar key parity, untranslated placeholders, hardcoded-string counts, and RTL physical classes are all gated in `pnpm test` and CI. The remaining work is the hardcoded-string sweep tracked by the ratchet baselines — run `npx tsx scripts/i18n-hardcoded-ratchet.ts --by-dir` for the live count.
 
 ## Architecture
 
-| Tier          | What                                          | How                                                                                    |
-| ------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
-| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`                                 |
-| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → batched `localize()`/`getLabels()` → LRU → DB cache → Google |
+| Tier          | What                                          | How                                                                                                 |
+| ------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| 1 — Static UI | Sidebar, table headers, status badges, labels | Dictionary JSON → `getDictionary()` → `dictionary.key`                                              |
+| 2 — Dynamic   | Announcements, subjects, departments, events  | Single-language storage → batched `localize()`/`getLabels()` → LRU → DB cache → Google → Groq (LLM) |
 
 ## Infrastructure files
 
@@ -21,8 +21,11 @@ Translation runs on two tiers: dictionary JSON files for static UI (parity-enfor
 | `src/components/translation/prewarm.ts`                | Cache-fill on write via `after()`                   |
 | `src/components/translation/person.ts`                 | `getNames()`/`getLabels()` — batched names/labels   |
 | `src/components/translation/display.ts`                | `getText()`, `getFields()` — single values only     |
-| `src/components/translation/actions.ts`                | `translate()` core (LRU → DB → Google)              |
+| `src/components/translation/actions.ts`                | `translate()` core (LRU → DB → provider chain)      |
+| `src/components/translation/engine.ts`                 | Provider chain: Google → Groq, circuit breakers     |
 | `src/components/translation/google.ts`                 | Google client: timeout, chunking, retry policy      |
+| `src/components/translation/groq.ts`                   | Groq LLM fallback: JSON batch protocol, free tier   |
+| `src/components/translation/sweep.ts`                  | Cache sweep core (backfill CLI + daily cron)        |
 | `src/components/translation/util.ts`                   | `withLang`, `detectScript`                          |
 | `src/components/internationalization/helpers/index.ts` | `ValidationHelper`, `ToastHelper`, `ErrorHelper`    |
 | `src/components/internationalization/namespaces.ts`    | Single namespace registry (server + client)         |

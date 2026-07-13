@@ -6,7 +6,7 @@ import "server-only"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { translateBatch } from "./google"
+import { translateBatch } from "./engine"
 import { getDisplayLang } from "./locale"
 import { memoGet, memoSet } from "./memory-cache"
 import { fieldsFor, type TranslatableModel } from "./registry"

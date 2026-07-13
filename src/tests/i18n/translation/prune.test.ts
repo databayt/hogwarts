@@ -29,9 +29,9 @@ describe("prune-translation-cache", () => {
     expect("lastAccessedAt" in where).toBe(false)
   })
 
-  it("NEVER deletes manual overrides — only provider=google", () => {
+  it("NEVER deletes manual overrides — every auto provider (google/groq/auto) is fair game", () => {
     const where = pruneWhere(new Date())
-    expect(where.provider).toBe("google")
+    expect(where.provider).toEqual({ not: "manual" })
   })
 
   it("only deletes never-hit rows (hitCount = 0)", () => {

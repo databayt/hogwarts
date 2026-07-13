@@ -94,7 +94,8 @@ model Announcement {
 ### Display with Translation
 
 **Lists — batched `localize()` (preferred).** One DB query for the whole
-page, three-tier resolution (in-memory LRU → `Translation` cache → Google):
+page, three-tier resolution (in-memory LRU → `Translation` cache → provider
+chain: Google → Groq LLM fallback, each behind a circuit breaker):
 
 ```tsx
 import { localize } from "@/components/translation/localize"
@@ -148,8 +149,11 @@ The migration off `titleEn`/`titleAr` patterns to single-language storage is com
 | `src/components/translation/person.ts`       | `getNames()`/`getLabels()` — batched names/labels  |
 | `src/components/translation/memory-cache.ts` | Process LRU (hot short terms, zero DB round-trips) |
 | `src/components/translation/display.ts`      | `getText()`, `getFields()` — single-value path     |
-| `src/components/translation/actions.ts`      | `translate()` core (LRU → DB → Google)             |
+| `src/components/translation/actions.ts`      | `translate()` core (LRU → DB → provider chain)     |
+| `src/components/translation/engine.ts`       | Provider chain: Google → Groq, circuit breakers    |
 | `src/components/translation/google.ts`       | Google client: timeout, chunking, retry policy     |
+| `src/components/translation/groq.ts`         | Groq LLM fallback provider (free tier)             |
+| `src/components/translation/sweep.ts`        | Cache sweep core (`i18n:backfill` + daily cron)    |
 | `src/components/translation/util.ts`         | `withLang`, `detectScript`                         |
 | `prisma/models/translation.prisma`           | `Translation` model (per-school cache)             |
 

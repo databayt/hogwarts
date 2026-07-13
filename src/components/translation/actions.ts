@@ -7,7 +7,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { translateBatch, translateRaw } from "./google"
+import { translateBatch, translateRaw } from "./engine"
 import { memoGet, memoSet } from "./memory-cache"
 import type {
   Lang,

@@ -16,9 +16,11 @@ last_audited: 2026-06-11
 ## Context
 
 Dynamic DB-content translation (System B): registry-driven batched
-`localize()` over a 3-tier cache (LRU → `Translation` table → Google v2),
-with prewarm-on-write. See [README](README.md) for the API decision table
-and [ISSUE](ISSUE.md) for the backlog. Static UI dictionaries are
+`localize()` over a 3-tier cache (LRU → `Translation` table → provider
+chain), with prewarm-on-write, a backfill/self-heal sweep, and a daily cron.
+Providers: Google v2 → Groq LLM fallback via `engine.ts`. See
+[README](README.md) for the API decision table and [ISSUE](ISSUE.md) for
+the backlog. Static UI dictionaries are
 [internationalization/](../internationalization/CLAUDE.md) (System A).
 
 ## Before You Start
@@ -31,6 +33,12 @@ and [ISSUE](ISSUE.md) for the backlog. Static UI dictionaries are
 
 ## Key Decisions
 
+- **All provider calls go through `engine.ts`** (Google → Groq fallback,
+  circuit breaker per provider — 3 failures open, Google probes at 5 min,
+  Groq at 2 min). NEVER import google.ts or groq.ts from a consumer — a
+  single-provider import silently loses the fallback that keeps translations
+  alive during quota outages (Google was dead 2026-06-14 → 2026-07-12 and
+  killed ALL dynamic translation platform-wide with near-zero signal).
 - **Source-language truth = `detectScript(value)`**, never the stored `lang`
   flag — a mislabeled row must render correctly, not garbled. prewarm uses
   the same rule so cache keys always line up with read-time keys.
@@ -64,6 +72,9 @@ and [ISSUE](ISSUE.md) for the backlog. Static UI dictionaries are
   the process-level cache bleeds across tests otherwise.
 - **`"use server"` files** (actions.ts, google.ts, display.ts) may only
   EXPORT async functions — helpers go in non-action modules.
+- **sweep.ts / engine.ts must stay importable from tsx scripts** — no
+  `import "server-only"` there (scripts/prewarm-existing.ts runs them via
+  `pnpm i18n:backfill`).
 
 ## Related Blocks
 

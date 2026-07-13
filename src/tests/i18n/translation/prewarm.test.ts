@@ -16,7 +16,7 @@ vi.mock("@/lib/db", () => ({
   db: { translation: { upsert }, $transaction },
 }))
 
-vi.mock("@/components/translation/google", () => ({ translateBatch }))
+vi.mock("@/components/translation/engine", () => ({ translateBatch }))
 
 beforeEach(() => {
   vi.clearAllMocks()

@@ -35,8 +35,11 @@ src/components/translation/
 ├── locale.ts          # getDisplayLang() — ambient viewer locale (x-locale → cookie → ar)
 ├── person.ts          # getNames()/getLabels() — batched names/labels, transliteration fallback
 ├── display.ts         # getText()/getFields() — single-value path (LRU-backed via translate())
-├── actions.ts         # translate() core (LRU→DB→Google), translateText/Fields, autoTranslate
-├── google.ts          # translateRaw/translateBatch — 2.5s timeout, chunking (100 q / 4k chars), transient retry opt-in
+├── actions.ts         # translate() core (LRU→DB→engine), translateText/Fields, autoTranslate
+├── engine.ts          # ⭐ Provider chain: Google → Groq, each behind a circuit breaker — THE import for consumers
+├── google.ts          # Google provider — 2.5s timeout, chunking (100 q / 4k chars), transient retry opt-in
+├── groq.ts            # Groq LLM fallback provider — free tier, JSON batch protocol, 10s timeout
+├── sweep.ts           # Registry+names cache sweep core (shared by i18n:backfill + daily cron)
 ├── search.ts          # Bilingual cache-only search OR-conditions (no API cost)
 ├── transliterate.ts   # Offline ar→Latin (names fallback when API down)
 ├── util.ts            # withLang(), detectScript(), detectLang(), needsTranslation()
@@ -65,11 +68,16 @@ code review and the per-feature batched-call tests do.
    stored `lang` flag — mislabeled rows must not render garbled).
 2. Values already in the display script are returned as-is (zero cost).
 3. LRU hit → return. DB cache hit (ONE `findMany` for the whole batch) →
-   memoize + return. Miss → ONE chunked `translateBatch` call → persist +
+   memoize + return. Miss → ONE chunked `translateBatch` call through the
+   **provider chain** (engine.ts: Google → Groq LLM fallback, each behind a
+   circuit breaker — 3 consecutive failures open the circuit so a dead
+   provider is skipped instantly instead of taxing every render with its
+   timeout; Google probes again after 5 min, Groq after 2 min) → persist +
    memoize → return.
-4. Google failure → **body text falls back to the source language** (logged,
-   throttled 5-min); **names transliterate** ar→Latin offline. Renders never
-   block or throw.
+4. BOTH providers failing → **body text falls back to the source language**
+   (logged, throttled 5-min); **names transliterate** ar→Latin offline.
+   Renders never block or throw. (This chain exists because the Google quota
+   died 2026-06-14 and silently killed ALL translation for a month.)
 
 ### Cache semantics
 
@@ -79,8 +87,8 @@ code review and the per-feature batched-call tests do.
 - **Manual overrides** (`provider: "manual"`) are never overwritten by
   prewarm/localize (upserts only touch `lastAccessedAt`) and never pruned.
 - Orphan cleanup: `pnpm i18n:prune` (manual, dry-run by default; deletes
-  only `provider=google AND hitCount=0 AND createdAt < cutoff` — recency is
-  NOT the eviction key because batched reads don't bump `lastAccessedAt`).
+  only `provider != "manual" AND hitCount=0 AND createdAt < cutoff` — recency
+  is NOT the eviction key because batched reads don't bump `lastAccessedAt`).
 - LRU is per-instance, latency-only; correctness never depends on it.
 
 ### Prewarm coverage
@@ -94,13 +102,22 @@ both languages automatically. The prewarm ratchet
 (`src/tests/i18n/audit-untranslated.test.ts`) fails the suite if a new
 write path ships without prewarm.
 
-### Backfill (existing corpus)
+### Backfill + self-heal sweep
 
-`pnpm i18n:backfill` (`scripts/prewarm-existing.ts`) — deploy-time sweep
-that warms the cache for rows written BEFORE prewarm existed. Dry-run by
-default (reports rows/unique-strings/chars and ~cost per school×model;
-catalog-global content costs rows × schools). Run `--execute` once at
-deploy; create-only, never overwrites, batch errors skip and continue.
+`pnpm i18n:backfill` (`scripts/prewarm-existing.ts`) — CLI over the shared
+sweep core (`sweep.ts`) that warms the cache for existing rows AND person
+names (students/teachers/guardians/staff as composed full names — exactly
+what `getNames()` looks up). Dry-run by default (reports rows/unique/chars
+per school×model; catalog-global content costs rows × schools). Create-only,
+never overwrites, batch errors skip and continue. Junk/test tenants are
+skipped unless `--all-schools`; `Notification` (40k+ transient rows) is
+excluded unless `--model Notification`.
+
+`/api/cron/translation-sweep` (daily 03:30 UTC) runs the same core bounded
+(`maxTranslations: 2000`, 240s deadline) — the self-heal that keeps NEW
+schools (provisioned outside request scope, so never prewarmed), bulk
+imports, and provider-outage backlogs translated without anyone thinking
+about it. Steady-state runs find zero misses and cost zero provider calls.
 
 ### Tests
 

@@ -15,11 +15,12 @@
  *
  * WHAT IT DELETES — and why these exact predicates:
  *
- *   provider = "google"  AND  hitCount = 0  AND  createdAt < cutoff
+ *   provider != "manual"  AND  hitCount = 0  AND  createdAt < cutoff
  *
- * - provider="google": only auto-generated rows. Manual overrides
- *   (provider:"manual") are NEVER touched — a human wrote those and
- *   re-translating would silently lose the correction.
+ * - provider != "manual": only auto-generated rows ("google", "groq", "auto"
+ *   from the engine/sweep). Manual overrides (provider:"manual") are NEVER
+ *   touched — a human wrote those and re-translating would silently lose the
+ *   correction.
  * - hitCount = 0: only rows that were prewarmed/seeded but never actually
  *   served from cache. A row with hits has proven it's worth keeping.
  * - createdAt (NOT lastAccessedAt): keyed on AGE, never on recency. This is the
@@ -35,7 +36,7 @@
  */
 import { Command } from "commander"
 
-const PROVIDER = "google" as const
+const PROTECTED_PROVIDER = "manual" as const
 const BATCH_SIZE = 1000
 
 /** Cutoff = `months` calendar months before `now`. */
@@ -46,12 +47,12 @@ export function pruneCutoff(months: number, now: Date = new Date()): Date {
 }
 
 /**
- * Prune predicate: google-provider, never-hit, older than cutoff.
+ * Prune predicate: auto-generated (non-manual), never-hit, older than cutoff.
  * Manual overrides and any row that has ever been served are excluded.
  */
 export function pruneWhere(cutoff: Date) {
   return {
-    provider: PROVIDER,
+    provider: { not: PROTECTED_PROVIDER },
     hitCount: 0,
     createdAt: { lt: cutoff },
   } as const
@@ -78,7 +79,7 @@ async function main(opts: { months: string; execute?: boolean }) {
     )
     console.log(
       `  matched: ${matched} rows  ` +
-        `[provider="google", hitCount=0, createdAt < ${cutoff.toISOString().slice(0, 10)}]`
+        `[provider!="manual", hitCount=0, createdAt < ${cutoff.toISOString().slice(0, 10)}]`
     )
 
     if (dryRun) {

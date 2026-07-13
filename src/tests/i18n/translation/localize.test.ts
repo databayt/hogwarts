@@ -18,7 +18,7 @@ vi.mock("@/lib/db", () => ({
   db: { translation: { findMany, upsert }, $transaction },
 }))
 
-vi.mock("@/components/translation/google", () => ({ translateBatch }))
+vi.mock("@/components/translation/engine", () => ({ translateBatch }))
 
 vi.mock("@/lib/tenant-context", () => ({
   getTenantContext: vi.fn(async () => ({ schoolId: "school-ambient" })),

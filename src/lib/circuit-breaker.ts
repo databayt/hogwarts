@@ -35,7 +35,7 @@ interface CircuitBreakerConfig {
   name: string // For logging
 }
 
-class CircuitBreaker {
+export class CircuitBreaker {
   private failures = 0
   private lastFailureTime = 0
   private state: CircuitState = "closed"
@@ -53,7 +53,7 @@ class CircuitBreaker {
         this.state = "half-open"
       } else {
         throw new CircuitBreakerError(
-          `[${this.config.name}] Circuit breaker is open — database unavailable`,
+          `[${this.config.name}] Circuit breaker is open — service unavailable`,
           this.remainingCooldownMs()
         )
       }

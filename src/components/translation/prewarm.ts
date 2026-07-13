@@ -5,7 +5,7 @@ import "server-only"
 
 import { db } from "@/lib/db"
 
-import { translateBatch } from "./google"
+import { translateBatch } from "./engine"
 import { memoSet } from "./memory-cache"
 import { fieldsFor, type TranslatableModel } from "./registry"
 import type { Lang } from "./types"

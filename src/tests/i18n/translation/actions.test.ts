@@ -12,7 +12,7 @@ import {
   translateFields,
   translateText,
 } from "@/components/translation/actions"
-import { translateBatch, translateRaw } from "@/components/translation/google"
+import { translateBatch, translateRaw } from "@/components/translation/engine"
 import { memoClear } from "@/components/translation/memory-cache"
 
 vi.mock("@/auth", () => ({
@@ -30,7 +30,7 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
-vi.mock("@/components/translation/google", () => ({
+vi.mock("@/components/translation/engine", () => ({
   translateRaw: vi.fn(),
   translateBatch: vi.fn(),
 }))
