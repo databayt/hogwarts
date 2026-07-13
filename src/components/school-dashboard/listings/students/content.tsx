@@ -127,6 +127,17 @@ export default async function StudentsContent({
           }
         : {}),
       ...(sp.status ? buildStatusFilter(sp.status) : {}),
+      // Classroom filter — matches on the section's room code/name. Previously
+      // the `className` param was parsed but never mapped into the query.
+      ...(sp.className
+        ? {
+            section: {
+              classroom: {
+                roomName: { contains: sp.className, mode: "insensitive" },
+              },
+            },
+          }
+        : {}),
     }
     const where: any = withArchiveScope(baseFilters, sp.scope)
     const skip = (sp.page - 1) * sp.perPage
