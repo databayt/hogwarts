@@ -1,0 +1,132 @@
+{
+  "brand": "hogwarts",
+  "slug": "hogwarts-intro",
+  "title": {
+    "ar": "تعريف بمنصة hogwarts",
+    "en": "Meet hogwarts"
+  },
+  "slides": [
+    {
+      "type": "cover",
+      "theme": "ivory",
+      "art": "Hands-Build.svg",
+      "eyebrow": { "ar": "hogwarts × databayt", "en": "hogwarts × databayt" },
+      "headline": {
+        "ar": "أتمِت الرتيب، وأعلِ الدهشة.",
+        "en": "Automate the boring, elevate the wonder."
+      },
+      "sub": {
+        "ar": "منصة واحدة لمدرستك كلها — من القبول إلى الفواتير.",
+        "en": "One platform for your whole school — from admission to invoices."
+      }
+    },
+    {
+      "type": "point",
+      "theme": "ivory",
+      "art": "Hands-Document.svg",
+      "kicker": { "ar": "المشكلة", "en": "The problem" },
+      "headline": {
+        "ar": "أسبوع المدير يذوب في الورق.",
+        "en": "The principal's week melts into paperwork."
+      },
+      "body": {
+        "ar": "قبول هنا، وحضور هناك، ودرجات وفواتير في أنظمة متفرقة — والوقت يضيع بينها.",
+        "en": "Admissions here, attendance there, grades and invoices in scattered systems — and the hours vanish in between."
+      }
+    },
+    {
+      "type": "point",
+      "theme": "oat",
+      "art": "Scene-Complex-01.svg",
+      "kicker": { "ar": "الحل", "en": "The answer" },
+      "headline": {
+        "ar": "كل تعويذة تحتاجها مدرستك — في مكان واحد.",
+        "en": "Every spell your school needs — in one place."
+      },
+      "body": {
+        "ar": "القبول والحضور والدرجات والرسائل والفواتير، تعمل معًا بسلاسة… أقرب إلى السحر.",
+        "en": "Admission, attendance, grades, messaging, and billing — working together, seamlessly. Almost like magic."
+      }
+    },
+    {
+      "type": "point",
+      "theme": "ivory",
+      "art": "Hands-Stack.svg",
+      "kicker": { "ar": "للإدارة", "en": "For administrators" },
+      "headline": {
+        "ar": "ساعة من الورق، تُنجز بنقرة.",
+        "en": "An hour of paperwork, done in a click."
+      },
+      "body": {
+        "ar": "تقارير جاهزة، وتذكيرات تلقائية، وأخطاء أقل — ووقت أكثر لما يستحق.",
+        "en": "Ready reports, automatic reminders, fewer errors — and more time for what matters."
+      }
+    },
+    {
+      "type": "point",
+      "theme": "ivory",
+      "art": "People-Motion-01.svg",
+      "kicker": { "ar": "لأولياء الأمور", "en": "For parents" },
+      "headline": {
+        "ar": "اطمئنان… بلمحة.",
+        "en": "Peace of mind, at a glance."
+      },
+      "body": {
+        "ar": "الحضور والدرجات والإعلانات تصل أولًا بأول — وبالعربية أولًا.",
+        "en": "Attendance, grades, and announcements arrive in real time — Arabic-first."
+      }
+    },
+    {
+      "type": "stat",
+      "theme": "dark",
+      "value": "72",
+      "label": {
+        "ar": "لبنة مفتوحة المصدر تُبنى عليها مدرستك",
+        "en": "open-source building blocks behind your school"
+      },
+      "support": {
+        "ar": "مفتوح المصدر. مفتوح الشيفرة.",
+        "en": "Open Source. Open Code."
+      }
+    },
+    {
+      "type": "quote",
+      "theme": "oat",
+      "art": "careers-heart-hand.svg",
+      "text": {
+        "ar": "كل ما تحتاجه مدرستك… يظهر حين تطلبه.",
+        "en": "Everything your school needs… appears when you ask for it."
+      },
+      "attribution": {
+        "ar": "غرفة الاحتياج",
+        "en": "The Room of Requirement"
+      }
+    },
+    {
+      "type": "cta",
+      "theme": "clay",
+      "headline": {
+        "ar": "مدرستك تستحق قليلًا من السحر.",
+        "en": "Your school deserves a little magic."
+      },
+      "action": { "ar": "اطلب عرضًا تجريبيًا", "en": "Book a demo" },
+      "url": "https://ed.databayt.org"
+    }
+  ],
+  "captions": {
+    "base": {
+      "ar": "أسبوع الإدارة يذوب في الورق؟ hogwarts منصة مفتوحة المصدر تجمع القبول والحضور والدرجات والفواتير في مكان واحد — بالعربية أولًا. اسحب لتعرف القصة، واطلب عرضًا تجريبيًا من الرابط.",
+      "en": "Paperwork eating the week? hogwarts is the open-source platform that brings admission, attendance, grades, and billing into one place — Arabic-first. Swipe through, then book a demo at the link."
+    },
+    "hashtags": [
+      "#إدارة_المدارس",
+      "#نظام_مدرسي",
+      "#تقنية_التعليم",
+      "#SchoolManagement",
+      "#EdTech"
+    ],
+    "link": "https://ed.databayt.org"
+  },
+  "createdAt": "2026-07-13",
+  "status": "staged"
+}
