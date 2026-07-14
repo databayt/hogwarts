@@ -67,11 +67,36 @@ export async function seedClasses(
       .map((g) => [g.yearLevelId!, g.id])
   )
 
-  // Create one class per subject × year level. Lite caps the subject set so the
-  // demo doesn't generate ~1700 classes (see SEED_PROFILE_COUNTS.classSubjectCap).
-  const classSubjects = subjects.slice(0, SEED_PROFILE_COUNTS.classSubjectCap)
+  // Grade-appropriate classes: one class per active curriculum subject-selection
+  // (a grade + the subjects that grade actually takes), driven by
+  // school_subject_selections — the real per-country curriculum (e.g. Sudan's
+  // grade-specific subjects, not every subject in every grade). catalogSubjectId
+  // references Subject.id, the same space as Class.subjectId, so the pair check is
+  // direct. Falls back to the legacy subject×grade cross-product (capped, to stay
+  // lean) only when a school has no selections yet.
+  const selections = await prisma.subjectSelection.findMany({
+    where: { schoolId, isActive: true },
+    select: { gradeId: true, catalogSubjectId: true },
+  })
+  const curriculumPairs = new Set(
+    selections.map((s) => `${s.gradeId}:${s.catalogSubjectId}`)
+  )
+  const useCurriculum = curriculumPairs.size > 0
+  const classSubjects = useCurriculum
+    ? subjects
+    : subjects.slice(0, SEED_PROFILE_COUNTS.classSubjectCap)
+
   for (const subject of classSubjects) {
     for (const level of yearLevels) {
+      // Resolve gradeId from yearLevel, then skip (subject, grade) pairs the
+      // curriculum doesn't include so each grade gets only its real subjects.
+      const gradeId = gradeByYearLevel.get(level.id) || null
+      if (
+        useCurriculum &&
+        (!gradeId || !curriculumPairs.has(`${gradeId}:${subject.id}`))
+      )
+        continue
+
       // Assign a teacher (round-robin)
       const teacher = teachers[teacherIndex % teachers.length]
       teacherIndex++
@@ -82,9 +107,6 @@ export async function seedClasses(
 
       // Create class name (Arabic: subject - level)
       const className = `${subject.name} - ${level.levelName}`
-
-      // Resolve gradeId from yearLevel
-      const gradeId = gradeByYearLevel.get(level.id) || null
 
       try {
         const classRecord = await prisma.class.upsert({
