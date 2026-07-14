@@ -197,7 +197,13 @@
 
 :root[dir="rtl"] {
   --font-sans:
-    var(--font-rubik), ui-sans-serif, system-ui, -apple-system,
+    var(--font-thmanyah-sans), ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Headings mirror --font-sans (Thmanyah) for Arabic. Self-contained
+     fallbacks only — no var(--font-geist-sans), which is undefined at the
+     :root level and would invalidate the whole token. */
+  --font-heading:
+    var(--font-thmanyah-sans), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
