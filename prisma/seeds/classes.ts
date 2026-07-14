@@ -10,6 +10,7 @@
 
 import type { PrismaClient } from "@prisma/client"
 
+import { SEED_PROFILE_COUNTS } from "./constants"
 import type {
   ClassRef,
   ClassroomRef,
@@ -66,8 +67,10 @@ export async function seedClasses(
       .map((g) => [g.yearLevelId!, g.id])
   )
 
-  // Create one class per subject × year level
-  for (const subject of subjects) {
+  // Create one class per subject × year level. Lite caps the subject set so the
+  // demo doesn't generate ~1700 classes (see SEED_PROFILE_COUNTS.classSubjectCap).
+  const classSubjects = subjects.slice(0, SEED_PROFILE_COUNTS.classSubjectCap)
+  for (const subject of classSubjects) {
     for (const level of yearLevels) {
       // Assign a teacher (round-robin)
       const teacher = teachers[teacherIndex % teachers.length]
@@ -168,7 +171,7 @@ export async function seedSections(
     })
   }
 
-  const SECTION_LETTERS = ["A", "B"]
+  const SECTION_LETTERS = SEED_PROFILE_COUNTS.sectionLetters
   let teacherIdx = 0
   let created = 0
 

@@ -248,6 +248,41 @@ export const ADMIN_USERS = [
 ]
 
 // ============================================================================
+// SEED PROFILE — "lite" vs "full"
+// ============================================================================
+//
+// SEED_PROFILE=lite produces a small but realistic demo (~50 students across a
+// full K-12 span, ~12 teachers, ~1 homeroom per grade) that STAYS small across
+// deploys. It exists so the demo can run on a fresh Neon Free project (512 MB
+// storage + a monthly compute quota) for a whole month without tripping either
+// cap. Default ("full") is the canonical ~800-student demo — untouched unless
+// SEED_PROFILE is explicitly set to "lite".
+//
+// All levers move together so the lean set is self-consistent AND is recognized
+// as "fully seeded" by getDemoSeedStatus (SEED_THRESHOLDS in index.ts) —
+// otherwise ensure-demo.ts would re-grow it to full on the next deploy.
+export const SEED_IS_LITE = process.env.SEED_PROFILE === "lite"
+
+export const SEED_PROFILE_COUNTS = {
+  // USER accounts minted in the auth phase — the hard ceiling on how many
+  // students / teachers / guardians the later phases can create.
+  studentUsers: SEED_IS_LITE ? 55 : 1000,
+  teacherUsers: SEED_IS_LITE ? 12 : 100,
+  guardianUsers: SEED_IS_LITE ? 110 : 2000,
+  // Per-K-12-level student cap. 13 levels × 4 = 52 students, so every grade
+  // stays populated. min()'d with the full per-level counts, so "full" is a no-op.
+  studentsPerLevelCap: SEED_IS_LITE ? 4 : Number.POSITIVE_INFINITY,
+  // Homeroom sections per grade. Lite uses one (A) so rooms aren't near-empty.
+  sectionLetters: (SEED_IS_LITE ? ["A"] : ["A", "B"]) as string[],
+  // Subjects used to generate classes (one class per subject × grade). The SD
+  // catalog carries ~123 global subjects, so full makes ~1700 classes (123 × 13
+  // grades) which then bloats every downstream per-class table. Lite keeps ~12
+  // core subjects/grade (~156 classes) — leaner AND more realistic, since no
+  // student takes 123 subjects. min()'d via slice, so full is a no-op.
+  classSubjectCap: SEED_IS_LITE ? 12 : Number.POSITIVE_INFINITY,
+}
+
+// ============================================================================
 // YEAR LEVELS (K-12 Sudanese System)
 // ============================================================================
 

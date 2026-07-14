@@ -21,7 +21,7 @@
 
 import type { PrismaClient, UserRole } from "@prisma/client"
 
-import { ADMIN_USERS, HP_CHARACTERS } from "./constants"
+import { ADMIN_USERS, HP_CHARACTERS, SEED_PROFILE_COUNTS } from "./constants"
 import type { UserRef } from "./types"
 import {
   generateSchoolEmail,
@@ -414,9 +414,21 @@ export async function seedAllUsers(
   allUsers: UserRef[]
 }> {
   const adminUsers = await seedAdminUsers(prisma, schoolId)
-  const teacherUsers = await seedTeacherUsers(prisma, schoolId, 100)
-  const studentUsers = await seedStudentUsers(prisma, schoolId, 1000)
-  const guardianUsers = await seedGuardianUsers(prisma, schoolId, 2000)
+  const teacherUsers = await seedTeacherUsers(
+    prisma,
+    schoolId,
+    SEED_PROFILE_COUNTS.teacherUsers
+  )
+  const studentUsers = await seedStudentUsers(
+    prisma,
+    schoolId,
+    SEED_PROFILE_COUNTS.studentUsers
+  )
+  const guardianUsers = await seedGuardianUsers(
+    prisma,
+    schoolId,
+    SEED_PROFILE_COUNTS.guardianUsers
+  )
 
   // Combine all users
   const allUsers = [

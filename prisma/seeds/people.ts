@@ -20,6 +20,7 @@ import {
   getStudentBirthDate,
   GUARDIAN_TYPES,
   HP_CHARACTERS,
+  SEED_PROFILE_COUNTS,
   TEACHER_DATA,
   YEAR_LEVELS,
 } from "./constants"
@@ -636,7 +637,12 @@ export async function seedStudents(
   // Calculate distribution per level based on YEAR_LEVELS config
   const levelDistribution = YEAR_LEVELS.map((level) => ({
     level: yearLevels.find((yl) => yl.levelName === level.name),
-    count: level.studentsPerLevel,
+    // Lite profile caps per-level students so a fresh Neon Free project stays
+    // small; full profile's cap is Infinity, so this min() is a no-op there.
+    count: Math.min(
+      level.studentsPerLevel,
+      SEED_PROFILE_COUNTS.studentsPerLevelCap
+    ),
     order: level.order,
   }))
 

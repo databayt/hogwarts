@@ -68,6 +68,7 @@ import { seedCatalogBooks } from "./catalog/books"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
+import { SEED_IS_LITE } from "./constants"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -98,7 +99,12 @@ import { logHeader, logPhase, logSummary, measureDuration } from "./utils"
 // run reached Phase 6. A partial seed (users but no classes) is NOT "full".
 // ============================================================================
 
-export const SEED_THRESHOLDS = { students: 500, classes: 100 } as const
+// Lite profile lowers the "fully seeded" bar to match its small output so
+// ensure-demo.ts takes the fast path instead of re-growing the demo to full
+// on every deploy. Both bounds sit safely below what the lite seed produces
+// (~52 students, well over a dozen classes).
+export const SEED_THRESHOLDS: { students: number; classes: number } =
+  SEED_IS_LITE ? { students: 30, classes: 5 } : { students: 500, classes: 100 }
 
 export async function getDemoSeedStatus(
   prisma: PrismaClient,

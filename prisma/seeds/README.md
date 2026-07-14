@@ -12,6 +12,21 @@ Seeds the **demo school** (`domain: "demo"`) with a full, realistic dataset. The
 | `pnpm db:seed:single <name>` | `single.ts`               | Re-seed one module against the existing demo |
 | `pnpm db:seed:single --list` | `single.ts`               | List module targets                          |
 
+## Profiles — `full` (default) vs `lite`
+
+Set **`SEED_PROFILE=lite`** to seed a small-but-realistic demo: ~50 students across a full
+K-12 span, ~12 teachers, ~110 guardians, one homeroom (section A) per grade. Everything
+downstream — attendance, grades, exams, invoices, guardians — scales off those counts, so
+the whole DB stays tiny (~40-70 MB static). This exists so the demo can run on a **fresh
+Neon Free project** (512 MB storage + a monthly compute quota) for a whole month without
+tripping either cap. Unset / anything else = `full`, the canonical ~800-student demo.
+
+The knobs live in one place: `SEED_IS_LITE` + `SEED_PROFILE_COUNTS` in `constants.ts`
+(student/teacher/guardian user counts, per-level cap, section letters) **and** the matching
+`SEED_THRESHOLDS` in `index.ts`. They move together on purpose: if the "fully seeded"
+threshold didn't drop with the data, `ensure-demo` would re-grow the lean demo to full on
+the next deploy. Set the env var in the target project's Vercel env, not in code.
+
 ### `ensure-demo.ts` (the default)
 
 Runs on every deploy against the **production** demo school. It is **build-safe** — every
