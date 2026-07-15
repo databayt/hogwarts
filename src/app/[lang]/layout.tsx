@@ -10,7 +10,7 @@ import { SessionProvider } from "next-auth/react"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import { Toaster } from "@/components/ui/sonner"
-import { fontThmanyahSans } from "@/components/atom/fonts"
+import { fontThmanyahText } from "@/components/atom/fonts"
 import { ThemeProvider } from "@/components/atom/theme-provider"
 import {
   i18n,
@@ -105,13 +105,13 @@ export default async function LocaleLayout({
   const fontClass = isSubdomain
     ? "font-sans"
     : isRTL
-      ? fontThmanyahSans.className
+      ? fontThmanyahText.className
       : GeistSans.className
 
   return (
     <DirectionProvider direction={config.dir} lang={lang}>
       <div
-        className={`${fontClass} ${GeistSans.variable} ${rubik.variable} ${fontThmanyahSans.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
+        className={`${fontClass} ${GeistSans.variable} ${rubik.variable} ${fontThmanyahText.variable} layout-container antialiased [--footer-height:calc(var(--spacing)*14)] [--header-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}
       >
         <SessionProvider session={session}>
           <NuqsAdapter>

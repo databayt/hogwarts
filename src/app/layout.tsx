@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import { cookies, headers } from "next/headers"
 import { preconnect } from "react-dom"
 
-import { fontRubik, fontThmanyahSans } from "@/components/atom/fonts"
+import { fontRubik, fontThmanyahText } from "@/components/atom/fonts"
 import {
   i18n,
   isRTL,
@@ -50,7 +50,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${fontRubik.variable} ${fontThmanyahSans.variable}`}
+      className={`${fontRubik.variable} ${fontThmanyahText.variable}`}
       suppressHydrationWarning
     >
       <head>

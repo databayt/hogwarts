@@ -32,30 +32,31 @@ export const fontRubik = Rubik({
 // public/fonts/thmanyah/ (fetched on build by scripts/fetch-thmanyah.mjs;
 // license forbids redistribution so the woff2 files are git-ignored).
 // Applied for Arabic only via the :root[dir="rtl"] tokens in globals.css.
-export const fontThmanyahSans = localFont({
+// Uses the "serif text" family (Thmanyah's running-text serif), not the sans.
+export const fontThmanyahText = localFont({
   src: [
     {
-      path: "../../../public/fonts/thmanyah/thmanyah-sans-300.woff2",
+      path: "../../../public/fonts/thmanyah/thmanyah-serif-text-300.woff2",
       weight: "300",
     },
     {
-      path: "../../../public/fonts/thmanyah/thmanyah-sans-400.woff2",
+      path: "../../../public/fonts/thmanyah/thmanyah-serif-text-400.woff2",
       weight: "400",
     },
     {
-      path: "../../../public/fonts/thmanyah/thmanyah-sans-500.woff2",
+      path: "../../../public/fonts/thmanyah/thmanyah-serif-text-500.woff2",
       weight: "500",
     },
     {
-      path: "../../../public/fonts/thmanyah/thmanyah-sans-700.woff2",
+      path: "../../../public/fonts/thmanyah/thmanyah-serif-text-700.woff2",
       weight: "700",
     },
     {
-      path: "../../../public/fonts/thmanyah/thmanyah-sans-900.woff2",
+      path: "../../../public/fonts/thmanyah/thmanyah-serif-text-900.woff2",
       weight: "900",
     },
   ],
-  variable: "--font-thmanyah-sans",
+  variable: "--font-thmanyah-text",
   display: "swap",
 })
 
