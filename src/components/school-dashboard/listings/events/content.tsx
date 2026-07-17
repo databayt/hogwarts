@@ -62,6 +62,9 @@ export default async function EventsContent({
 
     const where: any = {
       schoolId,
+      // Exclude in-flight wizard drafts — they have a blank title until the
+      // wizard completes and would otherwise pollute the list and its count.
+      wizardStep: null,
       ...(andClauses.length ? { AND: andClauses } : {}),
       ...(sp.eventType ? { eventType: sp.eventType } : {}),
       ...(sp.status ? { status: sp.status } : {}),
@@ -90,6 +93,25 @@ export default async function EventsContent({
         orderBy,
         skip,
         take,
+        // Only the columns EventRow renders — keeps the description/notes Text
+        // columns out of the RSC payload on every row of every page.
+        select: {
+          id: true,
+          title: true,
+          lang: true,
+          eventType: true,
+          eventDate: true,
+          startTime: true,
+          endTime: true,
+          location: true,
+          organizer: true,
+          targetAudience: true,
+          maxAttendees: true,
+          currentAttendees: true,
+          status: true,
+          isPublic: true,
+          createdAt: true,
+        },
       }),
       db.event.count({ where }),
     ])

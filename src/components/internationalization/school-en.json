@@ -1986,7 +1986,8 @@
       },
       "academic": {
         "title": "Academic Information",
-        "description": "Enter the student's enrollment and previous education details."
+        "description": "Enter the student's enrollment and previous education details.",
+        "completeRequirements": "Complete the Personal step first: a name and at least one parent are required."
       },
       "enrollment": {
         "title": "Enrollment Details",
@@ -2000,6 +2001,7 @@
         "categoryPlaceholder": "Enter category",
         "academicGradeId": "Grade",
         "academicGradeIdPlaceholder": "Enter academic grade ID",
+        "academicStreamId": "Stream",
         "sectionId": "Section",
         "sectionIdPlaceholder": "Enter section ID",
         "statusOptions": {
@@ -3692,7 +3694,8 @@
           "final": "Final",
           "chapter_test": "Chapter Test",
           "practice": "Practice",
-          "quiz": "Quiz"
+          "quiz": "Quiz",
+          "diagnostic": "Diagnostic"
         },
         "materialTypes": {
           "TEXTBOOK": "Textbook",
@@ -3715,12 +3718,22 @@
           "presentation": "Presentation"
         },
         "textbook": "Textbook",
-        "openTextbook": "Open Textbook"
+        "openTextbook": "Open Textbook",
+        "unitExam": "exam",
+        "unitExams": "exams",
+        "unitTest": "test",
+        "unitTests": "tests",
+        "unitItem": "item",
+        "unitItems": "items",
+        "pagesAvg": "pg avg"
       }
     },
     "timetable": {
       "title": "Timetable",
       "draftNotice": "This is a default schedule template based on your school's structure. Set it up to start scheduling classes.",
+      "termLabel": "Term",
+      "draft": "Draft",
+      "unknown": "Unknown",
       "setupTimetable": "Set up timetable",
       "settingUp": "Setting up…",
       "setupFailed": "Could not set up the timetable. Please try again from Settings.",
@@ -3758,6 +3771,7 @@
       "teacher": "Teacher",
       "room": "Room",
       "conflictDetected": "Conflict Detected",
+      "conflict": "Conflict",
       "noConflicts": "No Conflicts",
       "liveNow": "Live now",
       "printTimetable": "Print Timetable",
@@ -3808,16 +3822,20 @@
         "roomUtilization": "Room Utilization",
         "errors": "Errors",
         "warnings": "Warnings",
+        "andMore": "...and {count} more",
         "unplacedClasses": "Unplaced Classes",
         "unplacedDesc": "These classes could not be fully scheduled. Check teacher availability and room capacity.",
         "schedulePreview": "Schedule Preview",
         "reviewBeforeApply": "Review the generated schedule before applying",
         "day": "Day",
         "period": "Period",
+        "section": "Section",
+        "subject": "Subject",
         "class": "Class",
         "teacher": "Teacher",
         "room": "Room",
         "score": "Score",
+        "unassigned": "Unassigned",
         "noViolations": "No violations",
         "regenerate": "Regenerate",
         "merge": "Merge",
@@ -3834,6 +3852,7 @@
         "generationComplete": "Generation Complete",
         "successfullyGenerated": "Successfully generated",
         "generationPartial": "Generation Partial",
+        "generationPartialDesc": "Generated {placed}/{total} slots with {errors} errors",
         "generationFailed": "Generation Failed"
       },
       "conflicts": {
@@ -3904,8 +3923,11 @@
         "scheduleDescription": "Pick a preset and fine-tune it, then adjust individual periods below.",
         "preset": "Schedule preset",
         "weekend": "Weekend",
+        "weekendFriSat": "Fri - Sat",
+        "weekendSatSun": "Sat - Sun",
         "periodsDay": "Periods/day",
         "duration": "Duration",
+        "minutesSuffix": "min",
         "startTime": "Start Time",
         "applyPreset": "Apply schedule",
         "bestMatch": "Best Match",
@@ -3944,6 +3966,7 @@
         "skipped": "skipped",
         "structureApplied": "Structure Applied",
         "created": "Created",
+        "periodAddedDesc": "{name} added",
         "selectSchoolYear": "Select School Year",
         "selectSchoolYearFirst": "Please select a school year first",
         "selectTermToConfigure": "Select a term to configure settings",
@@ -4396,7 +4419,11 @@
         "suggestForTeacher": "Suggest for teacher",
         "suggestForRoom": "Suggest for room",
         "suggestions": "Suggestions:",
-        "apply": "Apply"
+        "apply": "Apply",
+        "loadTermsError": "Failed to load terms",
+        "detectError": "Failed to detect conflicts",
+        "teacherConflictsPlural": "teacher conflicts",
+        "roomConflictsPlural": "room conflicts"
       },
       "timetableNav": {
         "timetable": "Timetable",
@@ -4546,7 +4573,17 @@
       "analyticsExtra": {
         "classesCount": "{count} classes",
         "subjectsCount": "{count} subjects",
-        "hoursPerWeek": "{count}h/week"
+        "hoursPerWeek": "{count}h/week",
+        "loadTermsFailed": "Failed to load terms",
+        "loadAnalyticsFailed": "Failed to load analytics",
+        "rooms": "Rooms",
+        "periodsCount": "{count} periods",
+        "periodsPerWeekCount": "{count} periods/week",
+        "noTeacherData": "No teacher data available",
+        "roomSlotsUsage": "{used}/{total} slots ({capacity} seats)",
+        "noRoomData": "No room data available",
+        "noSubjectData": "No subject data available",
+        "selectTermPrompt": "Select a term to view analytics"
       },
       "dayNames": [
         "Sunday",
@@ -4695,6 +4732,8 @@
       "exportCSV": "Export CSV",
       "exporting": "Exporting...",
       "loading": "Loading...",
+      "noResults": "No results.",
+      "rowsSelected": "row(s) selected.",
       "loadMore": "Load More",
       "searchColumns": "Search columns...",
       "noColumns": "No columns found.",
@@ -4725,8 +4764,11 @@
         "expiresAtDescription": "Optional: Set when this announcement should automatically be unpublished."
       },
       "config": {
+        "title": "Announcement Settings",
+        "description": "Configure how announcements are created and delivered",
         "saved": "Settings saved successfully",
         "saveFailed": "Failed to save settings",
+        "loadFailed": "Failed to load settings",
         "publishingDefaults": "Publishing Defaults",
         "notifications": "Notifications",
         "templates": "Templates",
@@ -6609,9 +6651,10 @@
       },
       "statuses": {
         "PLANNED": "Planned",
-        "IN_PROGRESS": "In Progress",
+        "ONGOING": "In Progress",
         "COMPLETED": "Completed",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "POSTPONED": "Postponed"
       },
       "types": {
         "ACADEMIC": "Academic",
@@ -6665,7 +6708,8 @@
           "startTimeLabel": "Start Time",
           "endTimeLabel": "End Time",
           "locationLabel": "Location",
-          "locationPlaceholder": "Enter event location"
+          "locationPlaceholder": "Enter event location",
+          "pickDate": "Pick a date"
         },
         "settings": {
           "title": "Event Settings",
@@ -6704,7 +6748,31 @@
         "maxAttendeesMin": "Max attendees must be at least 1",
         "eventDateRequired": "Event date is required",
         "mustBeAtLeast1": "Must be at least 1"
-      }
+      },
+      "titleColumn": "Title",
+      "endTime": "End Time",
+      "deleteConfirm": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "csv": {
+        "id": "ID",
+        "maxAttendees": "Max Attendees",
+        "currentAttendees": "Current Attendees",
+        "public": "Public",
+        "created": "Created",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "errorBoundary": {
+        "title": "Unable to load events",
+        "description": "An unexpected error occurred while loading events.",
+        "detailTitle": "Unable to load event details",
+        "detailDescription": "An unexpected error occurred while loading the event details.",
+        "errorRef": "Error reference",
+        "tryAgain": "Try again",
+        "backToEvents": "Back to events"
+      },
+      "noResults": "No results.",
+      "rowsSelected": "row(s) selected."
     },
     "assignments": {
       "title": "Assignments",
@@ -9570,7 +9638,10 @@
             "category": "Category",
             "selectCategory": "Select category",
             "religion": "Religion",
-            "selectReligion": "Select religion"
+            "selectReligion": "Select religion",
+            "tabStudent": "Student",
+            "tabFather": "Father",
+            "tabMother": "Mother"
           },
           "contact": {
             "email": "Email",
@@ -9614,7 +9685,8 @@
             "email": "Email",
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "emailPlaceholder": "email@example.com",
-            "selectCountry": "Select country"
+            "selectCountry": "Select country",
+            "nameRequiredHint": "Enter the father's or mother's name to continue"
           },
           "academic": {
             "previousSchool": "Previous School",
@@ -9725,7 +9797,10 @@
           "failedToSubmit": "Failed to submit",
           "rateLimited": "Too many attempts. Please wait a moment and try again.",
           "documentsRequired": "Please upload the required documents before submitting",
-          "applicationAlreadySubmitted": "This application has already been submitted"
+          "applicationAlreadySubmitted": "This application has already been submitted",
+          "applicationDuplicate": "An application with this information already exists",
+          "missingField": "A required field is missing: {{field}}. Please go back and complete it.",
+          "applicationEmailDuplicate": "An application with this email already exists for this campaign"
         },
         "submit": "Submit"
       },
@@ -11329,5 +11404,8 @@
         }
       }
     }
+  },
+  "finance": {
+    "bankingPage": {}
   }
 }

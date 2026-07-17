@@ -34,6 +34,7 @@ import { useDataTable } from "@/components/table/use-data-table"
 
 import { CredentialsDialog, openCredentialsDialog } from "../credentials"
 import { AccessCodeDialog } from "./access-code-dialog"
+import { openAccessCodeDialog } from "./access-code-store"
 import { bulkSyncStudentGrades, getStudents, getStudentsCSV } from "./actions"
 import { getStudentColumns, type StudentRow } from "./columns"
 import { PurgeDialog } from "./purge-dialog"
@@ -125,18 +126,13 @@ function StudentsTableInner({
     filters: debouncedSearch ? { name: debouncedSearch } : undefined,
   })
 
-  // Access code dialog state
-  const [accessCodeOpen, setAccessCodeOpen] = useState(false)
-  const [accessCodeStudentIds, setAccessCodeStudentIds] = useState<string[]>([])
-  const [accessCodeStudentNames, setAccessCodeStudentNames] = useState<
-    Record<string, string>
-  >({})
-
+  // Access-code ("Link Parent") dialog open-state lives in a module store
+  // (./access-code-store), NOT useState — the generate Server Action remounts
+  // this table on completion, which wiped a local flag and closed the dialog
+  // the instant it opened. Same remount-survival fix the credentials dialog uses.
   const handleGenerateAccessCode = useCallback(
     (studentId: string, studentName: string) => {
-      setAccessCodeStudentIds([studentId])
-      setAccessCodeStudentNames({ [studentId]: studentName })
-      setAccessCodeOpen(true)
+      openAccessCodeDialog([studentId], { [studentId]: studentName })
     },
     []
   )
@@ -431,12 +427,7 @@ function StudentsTableInner({
         </>
       )}
 
-      <AccessCodeDialog
-        open={accessCodeOpen}
-        onOpenChange={setAccessCodeOpen}
-        studentIds={accessCodeStudentIds}
-        studentNames={accessCodeStudentNames}
-      />
+      <AccessCodeDialog />
 
       <CredentialsDialog
         labels={dictionary?.credentials as Record<string, string> | undefined}

@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
+import { ErrorToast } from "@/components/atom/toast"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
 import type { WizardFormRef } from "@/components/form/wizard"
@@ -99,11 +100,15 @@ export default function AcademicContent() {
     | Record<string, unknown>
     | undefined
   const t = students?.academic as Record<string, string> | undefined
+  const tRoot = students as Record<string, string> | undefined
   const tEnrollment = students?.enrollment as Record<string, string> | undefined
 
   // Academic is the final step. Next triggers save + completeStudentWizard
   // + redirect to listings.
   useEffect(() => {
+    const requirementsMsg =
+      t?.completeRequirements ||
+      "Complete the Personal step first: a name and at least one parent are required."
     const handleNext = async () => {
       if (isSavingRef.current) return
       isSavingRef.current = true
@@ -112,9 +117,22 @@ export default function AcademicContent() {
         const result = await completeStudentWizard(studentId)
         if (result.success) {
           router.push(`/${locale}/students`)
+        } else {
+          // completeStudentWizard returns { success: false } (it never throws).
+          // Its `error` is a raw ACTION_ERRORS code (e.g. "VALIDATION_ERROR"),
+          // not user text — so map the expected missing-name/parent failure to a
+          // friendly translated message, and fall back to a generic one for the
+          // rarer codes. Without surfacing anything the "Create" button appeared
+          // to do nothing and the admin was stuck with zero feedback (issue #380).
+          const code = "error" in result ? result.error : undefined
+          ErrorToast(
+            code === "VALIDATION_ERROR" || !code
+              ? requirementsMsg
+              : tRoot?.failedToCreate || requirementsMsg
+          )
         }
-      } catch {
-        // Error handled in form
+      } catch (e) {
+        ErrorToast(e instanceof Error ? e.message : requirementsMsg)
       } finally {
         isSavingRef.current = false
       }
@@ -122,7 +140,7 @@ export default function AcademicContent() {
 
     setCustomNavigation({ onNext: handleNext })
     return () => setCustomNavigation(undefined)
-  }, [studentId, router, locale, setCustomNavigation])
+  }, [studentId, router, locale, setCustomNavigation, t, tRoot])
 
   return (
     <WizardStep

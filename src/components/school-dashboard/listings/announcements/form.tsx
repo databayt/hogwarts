@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -14,13 +14,15 @@ import { ModalFooter } from "@/components/atom/modal/modal-footer"
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   createAnnouncement,
   getAnnouncement,
   updateAnnouncement,
 } from "@/components/school-dashboard/listings/announcements/actions"
 import {
-  announcementCreateSchema,
+  createAnnouncementSchema,
   type AnnouncementFormValues,
 } from "@/components/school-dashboard/listings/announcements/validation"
 import { detectLang } from "@/components/translation/util"
@@ -43,9 +45,18 @@ export function AnnouncementCreateForm({
   const { modal, closeModal } = useModal()
   const router = useRouter()
   const t = dictionary
+  // The announcements section alone has no `messages`, so pull the full
+  // dictionary for the shared validation strings.
+  const { dictionary: fullDictionary } = useDictionary()
+
+  const schema = useMemo(() => {
+    const messages = fullDictionary?.messages
+    if (!messages) return createAnnouncementSchema()
+    return createAnnouncementSchema(createI18nHelpers(messages).validation)
+  }, [fullDictionary])
 
   const form = useForm<AnnouncementFormValues>({
-    resolver: zodResolver(announcementCreateSchema) as any,
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       title: "",
       body: "",

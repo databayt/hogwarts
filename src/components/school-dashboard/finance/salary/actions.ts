@@ -17,6 +17,7 @@ import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import { calculateProgressiveTax } from "../payroll/config"
+import { resolvePayrollPolicy } from "../payroll/country-rules/registry"
 import {
   salaryAllowanceSchema,
   salaryCalculatorSchema,
@@ -536,6 +537,15 @@ export async function calculateSalary(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
+    // Resolve the school's payroll policy so the calculator taxes by the
+    // school's own country's brackets — and so it agrees with what the real
+    // payroll run (generateSalarySlips) will later compute for the same staff.
+    const schoolForPolicy = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { country: true, timezone: true, currency: true },
+    })
+    const payrollPolicy = resolvePayrollPolicy(schoolForPolicy ?? {})
+
     // Calculate total allowances
     const totalAllowances = salaryStructure.allowances.reduce(
       (sum, a) => sum + Number(a.amount),
@@ -552,8 +562,11 @@ export async function calculateSalary(
       .reduce((sum, a) => sum + Number(a.amount), 0)
     const taxableIncome = baseSalary + taxableAllowances
 
-    // Progressive marginal tax on taxable income (see payroll/config TAX_BRACKETS)
-    const taxAmount = calculateProgressiveTax(taxableIncome)
+    // Progressive marginal tax on taxable income, using the school's country pack
+    const taxAmount = calculateProgressiveTax(
+      taxableIncome,
+      payrollPolicy.taxBrackets
+    )
 
     // Calculate total deductions
     const totalDeductions = salaryStructure.deductions.reduce(

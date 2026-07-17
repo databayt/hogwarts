@@ -12,14 +12,27 @@
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { Prisma } from "@prisma/client"
+import { z } from "zod"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { dispatchNotification } from "@/lib/dispatch-notification"
+import {
+  dispatchNotification,
+  dispatchNotificationsToAudience,
+} from "@/lib/dispatch-notification"
+import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
+import {
+  filterConfiguredManualRails,
+  getSchoolPaymentSettings,
+  resolveWalletDetails,
+} from "@/lib/payment/manual-rail-settings"
+import { resolveAvailableMethods } from "@/lib/payment/provider"
+import type { PaymentGateway, WalletDetails } from "@/lib/payment/types"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { allocatePaymentToInvoices } from "../lib/invoice-allocation"
 import { checkCurrentUserPermission } from "../lib/permissions"
 import {
   calculateSiblingDiscount,
@@ -1240,14 +1253,11 @@ export async function recordPayment(
         )
       }
 
-      // Multi-invoice allocation: allocate payment across ALL linked invoices
-      // oldest-first using amountPaid/PARTIAL (new schema fields). Skip PAID invoices.
+      // Allocate THIS payment across the assignment's invoices oldest-first
+      // (shared allocator — see lib/invoice-allocation.ts). Incremental:
+      // pass the payment amount, not the running total.
       try {
-        await allocatePaymentToInvoices(
-          ctx.schoolId,
-          feeAssignmentId,
-          newTotalPaid
-        )
+        await allocatePaymentToInvoices(ctx.schoolId, feeAssignmentId, amount)
       } catch (invoiceSyncErr) {
         console.warn("[recordPayment] Invoice sync failed:", invoiceSyncErr)
       }
@@ -1457,21 +1467,17 @@ export async function markPaymentCleared(
       )
     }
 
-    // Sync linked invoice — same logic as the cleared-payment branch in
-    // recordPayment so the parent's invoice status flips on reconcile.
+    // Allocate the now-cleared payment across the assignment's invoices via the
+    // shared allocator (see lib/invoice-allocation.ts). Replaces an earlier
+    // single-invoice blind PAID/UNPAID flip that never set amountPaid and lost
+    // PARTIAL — a partially-covering manual transfer used to erase its own
+    // partial state. Incremental: pass this payment's amount.
     try {
-      const linkedInvoice = await db.userInvoice.findFirst({
-        where: {
-          feeAssignmentId: payment.feeAssignmentId,
-          schoolId: ctx.schoolId,
-        },
-      })
-      if (linkedInvoice) {
-        await db.userInvoice.update({
-          where: { id: linkedInvoice.id },
-          data: { status: newStatus === "PAID" ? "PAID" : "UNPAID" },
-        })
-      }
+      await allocatePaymentToInvoices(
+        ctx.schoolId,
+        payment.feeAssignmentId,
+        paymentAmount
+      )
     } catch (invoiceSyncErr) {
       console.warn(
         "[markPaymentCleared] Invoice sync failed (non-fatal):",
@@ -2016,7 +2022,13 @@ export async function deleteFine(id: string): Promise<ActionResult> {
  */
 export async function createFeePaymentCheckout(
   feeAssignmentId: string,
-  lang: string
+  lang: string,
+  /**
+   * The rail the payer clicked. Re-validated server-side against the school's
+   * own resolved list — a client-supplied value is never trusted. Omit to keep
+   * the legacy behaviour of taking the school's first available rail.
+   */
+  requestedGateway?: PaymentGateway
 ): Promise<ActionResult<{ checkoutUrl: string }>> {
   try {
     // Auth + tenant gate (same shape as requireFeePermission, but we need the
@@ -2101,13 +2113,30 @@ export async function createFeePaymentCheckout(
     const { createPaymentCheckout, resolveAvailableMethods } =
       await import("@/lib/payment/provider")
     const { toSmallestUnit } = await import("@/lib/payment/currency")
+    const { isManualGateway } = await import("@/lib/payment/types")
     const availableGateways = resolveAvailableMethods(
       school?.country,
       school?.timezone,
       currency
     )
-    // First configured gateway wins; fall back to "stripe" for backward compat.
-    const gateway = availableGateways[0] ?? "stripe"
+
+    // Honour the rail the payer actually clicked, but only after re-resolving
+    // it server-side: previously this always took availableGateways[0], so on a
+    // multi-rail school (e.g. AE = [tap, stripe]) clicking "Stripe" silently
+    // charged via Tap. An unavailable request is refused, never downgraded.
+    if (requestedGateway && !availableGateways.includes(requestedGateway)) {
+      return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
+    }
+    const gateway =
+      requestedGateway ?? availableGateways.find((g) => !isManualGateway(g))
+
+    // Manual rails (bankak/cashi/cash/bank_transfer) settle outside the app and
+    // produce no checkout URL — they go through submitManualPaymentProof. This
+    // also stops a Sudan school (whose list is wallet-first) from silently
+    // falling into a redirect flow that can never complete.
+    if (!gateway || isManualGateway(gateway)) {
+      return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
+    }
 
     const result = await createPaymentCheckout(gateway, {
       amount: remaining,
@@ -2146,6 +2175,250 @@ export async function createFeePaymentCheckout(
     return { success: true, data: { checkoutUrl: result.checkoutUrl } }
   } catch (error) {
     console.error("Error creating fee payment checkout:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+// ============================================
+// MANUAL WALLET RAILS (Bankak / Cashi)
+// ============================================
+//
+// Sudan's rails have no merchant API — see src/lib/payment/providers/bankak.ts.
+// The flow is: show the school's account + a reference to quote → the payer
+// transfers in their own app → they submit the bank's transaction reference and
+// a screenshot → the bursar verifies via the EXISTING markPaymentCleared, which
+// already posts the ledger, syncs the invoice, and notifies. Nothing new is
+// needed on the settle side; this is purely the missing payer-side leg.
+
+/** The reference we ask the payer to quote in their transfer note. */
+function buildFeeReference(feeAssignmentId: string): string {
+  return `FEE-${feeAssignmentId.slice(-8).toUpperCase()}`
+}
+
+/**
+ * Account details for a wallet rail, for the payer-facing rail card.
+ * Ownership-gated (student/guardian), not permission-gated — parents call this.
+ */
+export async function getManualRailDetails(
+  feeAssignmentId: string,
+  gateway: Extract<PaymentGateway, "bankak" | "cashi">
+): Promise<
+  ActionResult<{
+    wallet: WalletDetails
+    /** Quote this in the transfer note so the bursar can match it. */
+    reference: string
+    /** Outstanding balance — what the payer should send. */
+    remaining: number
+    currency: string
+  }>
+> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const [isFinanceAdmin, assignment, school, settings] = await Promise.all([
+      checkCurrentUserPermission(schoolId, "fees", "view"),
+      db.feeAssignment.findFirst({
+        where: { id: feeAssignmentId, schoolId },
+        select: {
+          id: true,
+          studentId: true,
+          finalAmount: true,
+          currency: true,
+          payments: { where: { status: "SUCCESS" }, select: { amount: true } },
+        },
+      }),
+      db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true, country: true, timezone: true },
+      }),
+      getSchoolPaymentSettings(schoolId),
+    ])
+
+    // Uniform refusal so a non-owner can't probe for assignment ids.
+    if (!assignment) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!isFinanceAdmin) {
+      const isOwner = await userOwnsAssignment({
+        userId: session.user.id,
+        studentId: assignment.studentId,
+        schoolId,
+      })
+      if (!isOwner) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const currency =
+      assignment.currency ??
+      school?.currency ??
+      resolveDefaultCurrency(school?.country, school?.timezone)
+
+    // Re-resolve server-side: the rail must be both offered in this country
+    // AND actually configured by this school, or we'd render an account-less card.
+    const offered = filterConfiguredManualRails(
+      resolveAvailableMethods(school?.country, school?.timezone, currency),
+      settings
+    )
+    if (!offered.includes(gateway)) {
+      return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
+    }
+
+    const reference = buildFeeReference(feeAssignmentId)
+    const wallet = resolveWalletDetails(gateway, settings, reference)
+    if (!wallet) return actionError(ACTION_ERRORS.PAYMENT_GATEWAY_UNAVAILABLE)
+
+    const totalPaid = assignment.payments.reduce(
+      (sum, p) => sum + Number(p.amount),
+      0
+    )
+    const remaining = Math.max(Number(assignment.finalAmount) - totalPaid, 0)
+
+    return { success: true, data: { wallet, reference, remaining, currency } }
+  } catch (error) {
+    console.error("Error resolving manual rail details:", error)
+    return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+  }
+}
+
+const manualProofSchema = z.object({
+  feeAssignmentId: z.string().min(1),
+  gateway: z.enum(["bankak", "cashi", "bank_transfer"]),
+  /**
+   * The BANK's transaction reference, read off the payer's own app receipt —
+   * not the reference we asked them to quote. This is what makes the
+   * @@unique([schoolId, transactionId]) replay guard meaningful.
+   */
+  bankReference: z.string().trim().min(3).max(64),
+  proofUrl: z.string().url(),
+  amount: z.number().positive(),
+})
+
+/**
+ * Payer-side submission of a completed manual transfer.
+ *
+ * Deliberately ownership-gated rather than `requireFeePermission` — the whole
+ * point is that a parent, not an admin, files this. It lands in
+ * PENDING_VERIFICATION and touches neither the ledger nor the assignment
+ * status; `markPaymentCleared` owns that transition once a human confirms.
+ */
+export async function submitManualPaymentProof(
+  input: unknown
+): Promise<ActionResult<{ paymentId: string }>> {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const parsed = manualProofSchema.safeParse(input)
+    if (!parsed.success) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
+    const { feeAssignmentId, gateway, bankReference, proofUrl, amount } =
+      parsed.data
+
+    const [isFinanceAdmin, assignment] = await Promise.all([
+      checkCurrentUserPermission(schoolId, "fees", "view"),
+      db.feeAssignment.findFirst({
+        where: { id: feeAssignmentId, schoolId },
+        select: { id: true, studentId: true, currency: true },
+      }),
+    ])
+
+    if (!assignment) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!isFinanceAdmin) {
+      const isOwner = await userOwnsAssignment({
+        userId: session.user.id,
+        studentId: assignment.studentId,
+        schoolId,
+      })
+      if (!isOwner) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    let payment
+    try {
+      payment = await db.payment.create({
+        data: {
+          schoolId,
+          feeAssignmentId,
+          studentId: assignment.studentId,
+          paymentNumber: await generateUniquePaymentNumber(schoolId),
+          amount,
+          currency: assignment.currency ?? null,
+          // Coarse enum bucket; the wallet's real identity rides on
+          // gatewayMethod, exactly as Tap does for MADA/KNET/Apple Pay.
+          paymentMethod: "BANK_TRANSFER",
+          gatewayMethod: gateway,
+          paymentDate: new Date(),
+          status: "PENDING_VERIFICATION",
+          receiptNumber: await generateUniqueReceiptNumber(schoolId),
+          transactionId: bankReference,
+          depositSlipUrl: proofUrl,
+          remarks: buildFeeReference(feeAssignmentId),
+        },
+      })
+    } catch (error) {
+      // @@unique([schoolId, transactionId]): the same bank reference cannot be
+      // claimed twice — either a double-submit or someone reusing a receipt.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return actionError(ACTION_ERRORS.PAYMENT_REFERENCE_ALREADY_USED)
+      }
+      throw error
+    }
+
+    // Queue the receipt for AI extraction on the EXISTING generic document
+    // queue (drained by /api/cron/process-document-jobs) so the bursar sees
+    // extracted amount/reference beside the image. Non-fatal: a failed queue
+    // must never lose the payer's submission — the bursar can still verify by eye.
+    try {
+      const { createProcessingJob } =
+        await import("@/lib/document-extraction/queue-runner")
+      await createProcessingJob({
+        schoolId,
+        userId: session.user.id,
+        jobType: "bank_receipt",
+        fileUrl: proofUrl,
+        metadata: { paymentId: payment.id, feeAssignmentId },
+      })
+    } catch (error) {
+      console.error("[submitManualPaymentProof] AI queue failed:", error)
+    }
+
+    // Tell the bursar there's something to verify.
+    try {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const lang = school?.preferredLanguage === "en" ? "en" : "ar"
+      const dict = await getDictionary(lang as Locale)
+      const n = (dict as any)?.finance?.notifications
+      await dispatchNotificationsToAudience({
+        schoolId,
+        type: "fee_paid",
+        title: n?.proofSubmittedTitle || "Payment proof submitted",
+        body:
+          n?.proofSubmittedBody ||
+          "A payment proof is waiting for verification.",
+        channels: ["in_app"],
+        targetScope: "role",
+        targetRoles: ["ACCOUNTANT", "ADMIN"],
+        metadata: {
+          paymentId: payment.id,
+          url: `/finance/fees/payments/${payment.id}`,
+        },
+      })
+    } catch (error) {
+      console.error("[submitManualPaymentProof] notify failed:", error)
+    }
+
+    revalidatePath(`/finance/fees/assignments/${feeAssignmentId}`)
+    return { success: true, data: { paymentId: payment.id } }
+  } catch (error) {
+    console.error("Error submitting manual payment proof:", error)
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }
 }
@@ -2453,57 +2726,6 @@ export async function updateFeeAssignmentDiscount(
 // ============================================
 // PRIVATE HELPERS
 // ============================================
-
-/**
- * Multi-invoice allocation — allocate cumulative paid amount across ALL linked
- * invoices oldest-first. An invoice is considered covered once its sub_total is
- * fully covered by the running allocation. Remaining invoices stay UNPAID.
- * PAID invoices are never modified.
- *
- * This mirrors the webhook agent's approach so both code paths (manual cash
- * recordPayment + Stripe webhook) use the same allocation logic.
- */
-async function allocatePaymentToInvoices(
-  schoolId: string,
-  feeAssignmentId: string,
-  totalPaidSoFar: number
-): Promise<void> {
-  const invoices = await db.userInvoice.findMany({
-    where: { schoolId, feeAssignmentId, status: { not: "PAID" } },
-    select: { id: true, sub_total: true, status: true },
-    orderBy: { due_date: "asc" },
-  })
-
-  let remaining = totalPaidSoFar
-  for (const inv of invoices) {
-    const invAmount = Number(inv.sub_total)
-    if (remaining <= 0) {
-      // No more payment to allocate — leave this invoice UNPAID
-      break
-    }
-    if (remaining >= invAmount) {
-      // Fully cover this invoice
-      await db.userInvoice.update({
-        where: { id: inv.id },
-        data: {
-          status: "PAID" as any,
-          amountPaid: invAmount,
-        },
-      })
-      remaining -= invAmount
-    } else {
-      // Partial coverage — mark PARTIAL, record amountPaid
-      await db.userInvoice.update({
-        where: { id: inv.id },
-        data: {
-          status: "PARTIAL" as any,
-          amountPaid: remaining,
-        },
-      })
-      remaining = 0
-    }
-  }
-}
 
 /**
  * Collision-safe payment number generator.

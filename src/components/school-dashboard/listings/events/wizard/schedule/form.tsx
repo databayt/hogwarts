@@ -2,11 +2,17 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ar, enUS } from "date-fns/locale"
 import { useForm } from "react-hook-form"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { DateField, InputField, SelectField } from "@/components/form"
@@ -16,7 +22,7 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { TIME_SLOTS } from "@/components/school-dashboard/listings/events/config"
 
 import { updateEventSchedule } from "./actions"
-import { scheduleSchema, type ScheduleFormData } from "./validation"
+import { createScheduleSchema, type ScheduleFormData } from "./validation"
 
 interface ScheduleFormProps {
   eventId: string
@@ -34,9 +40,14 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
       | undefined
     const dateLocale = lang === "ar" ? ar : enUS
 
+    const schema = useMemo(
+      () => createScheduleSchema(dictionary?.school?.events?.validation),
+      [dictionary]
+    )
+
     const form = useForm<ScheduleFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(scheduleSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         eventDate: initialData?.eventDate,
         startTime: initialData?.startTime || "09:00",
@@ -68,7 +79,8 @@ export const ScheduleForm = forwardRef<WizardFormRef, ScheduleFormProps>(
               const data = form.getValues()
               const result = await updateEventSchedule(eventId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                // Actions return error codes — translate before display.
+                ErrorToast(resolveActionError(result.error ?? "", dictionary))
                 reject(new Error(result.error))
                 return
               }

@@ -103,12 +103,15 @@ const baseInput = {
 // ─── schema ────────────────────────────────────────────────────────────────
 
 describe("reportSchema", () => {
-  it("rejects descriptions under 30 chars", () => {
-    const res = reportSchema.safeParse({
-      ...baseInput,
-      description: "too short",
-    })
-    expect(res.success).toBe(false)
+  it("accepts any non-empty description (the ≥30-char rule lives in HF1, not the schema)", () => {
+    // schema.ts intentionally constrains description to non-empty only; the
+    // length/quality gate was moved to runHardFilters (see HF1 below).
+    expect(
+      reportSchema.safeParse({ ...baseInput, description: "too short" }).success
+    ).toBe(true)
+    expect(
+      reportSchema.safeParse({ ...baseInput, description: "" }).success
+    ).toBe(false)
   })
 
   it("accepts a well-formed report", () => {

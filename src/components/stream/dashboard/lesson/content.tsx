@@ -51,6 +51,7 @@ import {
   markLessonIncomplete,
   updateLessonProgress,
 } from "./catalog-actions"
+import { submitLessonQuiz } from "./quiz-actions"
 
 interface StreamLessonContentProps {
   dictionary: Record<string, unknown>
@@ -65,12 +66,6 @@ interface StreamLessonContentProps {
     options: unknown
     sampleAnswer: string | null
   }>
-}
-
-const SOURCE_LABELS: Record<AvailableVideo["source"], string> = {
-  "own-school": "Your School",
-  featured: "Featured",
-  "other-school": "Community",
 }
 
 // When a lesson has no playable video of its own (no approved lesson video, or
@@ -92,6 +87,12 @@ export function StreamLessonContent({
   // so descend a single level here — NOT `?.stream?.lesson` (that double-nest
   // bug left ~45 player strings rendering English fallbacks on every tenant).
   const d = (dictionary as Record<string, any>)?.lesson
+  // Instructor video source labels (localized).
+  const sourceLabels: Record<AvailableVideo["source"], string> = {
+    "own-school": d?.yourSchool || "Your School",
+    featured: d?.featured || "Featured",
+    "other-school": d?.community || "Community",
+  }
   const [showHero, setShowHero] = useState(true)
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
@@ -301,7 +302,7 @@ export function StreamLessonContent({
                       key={grade}
                       className="rounded-md border border-white/30 bg-black/60 px-2.5 text-xs font-medium text-white backdrop-blur-sm"
                     >
-                      {d?.grade || "Grade"} {gradeWord(grade)}
+                      {d?.grade || "Grade"} {gradeWord(grade, lang)}
                     </span>
                   ))}
                 </div>
@@ -329,8 +330,10 @@ export function StreamLessonContent({
               {/* Chapter & Lesson position + MORE */}
               <div className="mt-1 flex items-center gap-2 text-sm text-white">
                 <span>
-                  C{lesson.chapter.position} L{lesson.position} &middot;{" "}
-                  {lesson.chapter.course.title} &middot; {lesson.chapter.title}
+                  {d?.chapterShort || "C"}
+                  {lesson.chapter.position} {d?.lessonShort || "L"}
+                  {lesson.position} &middot; {lesson.chapter.course.title}{" "}
+                  &middot; {lesson.chapter.title}
                 </span>
                 <button
                   onClick={() => setShowDescDialog(true)}
@@ -379,8 +382,10 @@ export function StreamLessonContent({
                   <>
                     <span>&middot;</span>
                     <span>
-                      {lesson.attachments.length} resource
-                      {lesson.attachments.length > 1 ? "s" : ""}
+                      {lesson.attachments.length}{" "}
+                      {lesson.attachments.length > 1
+                        ? d?.resourceMany || "resources"
+                        : d?.resourceOne || "resource"}
                     </span>
                   </>
                 )}
@@ -528,7 +533,7 @@ export function StreamLessonContent({
                     </span>
                     {lesson.isFree && (
                       <span className="rounded border px-1 text-[10px] leading-4">
-                        Free
+                        {d?.free || "Free"}
                       </span>
                     )}
                     <span className="rounded border px-1 text-[10px] leading-4">
@@ -578,7 +583,8 @@ export function StreamLessonContent({
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.chapter.course.grades
                               .map(
-                                (g) => `${d?.grade || "Grade"} ${gradeWord(g)}`
+                                (g) =>
+                                  `${d?.grade || "Grade"} ${gradeWord(g, lang)}`
                               )
                               .join(", ")}
                           </p>
@@ -591,7 +597,12 @@ export function StreamLessonContent({
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300">
                             {lesson.availableVideos
-                              .map((v) => v.instructor.name ?? "Instructor")
+                              .map(
+                                (v) =>
+                                  v.instructor.name ??
+                                  d?.instructor ??
+                                  "Instructor"
+                              )
                               .join(", ")}
                           </p>
                         </div>
@@ -778,11 +789,14 @@ export function StreamLessonContent({
                       ) : (
                         <>
                           <span>
-                            C{sibling.chapterPosition}, L
+                            {d?.chapterShort || "C"}
+                            {sibling.chapterPosition}, {d?.lessonShort || "L"}
                             {sibling.lessonPosition}
                           </span>
                           <span>&middot;</span>
-                          <span>{sibling.duration ?? "?"} min</span>
+                          <span>
+                            {sibling.duration ?? "?"} {d?.min || "min"}
+                          </span>
                         </>
                       )}
                     </div>
@@ -838,7 +852,7 @@ export function StreamLessonContent({
                   </Avatar>
                   <div className="text-start">
                     <p className="text-sm font-medium">
-                      {video.instructor.name ?? "Instructor"}
+                      {video.instructor.name ?? d?.instructor ?? "Instructor"}
                     </p>
                     <div className="flex items-center gap-1.5">
                       <Badge
@@ -853,7 +867,7 @@ export function StreamLessonContent({
                       >
                         {video.source === "other-school" && video.school.name
                           ? video.school.name
-                          : SOURCE_LABELS[video.source]}
+                          : sourceLabels[video.source]}
                       </Badge>
                       {locked && (
                         <span className="text-muted-foreground text-[10px]">
@@ -871,20 +885,14 @@ export function StreamLessonContent({
         </div>
       )}
 
-      {/* Quiz — practice questions from Question */}
+      {/* Quiz — graded; the score is written to the gradebook server-side */}
       {quizQuestions && quizQuestions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {d?.practiceQuiz || "Practice Quiz"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {quizQuestions.map((q, idx) => (
-              <QuizQuestion key={q.id} question={q} index={idx} />
-            ))}
-          </CardContent>
-        </Card>
+        <LessonQuiz
+          questions={quizQuestions}
+          lessonId={lesson.id}
+          subjectId={lesson.chapter.course.id}
+          d={d}
+        />
       )}
 
       {/* Lesson Info */}
@@ -937,7 +945,7 @@ export function StreamLessonContent({
               {d?.duration || "Duration"}:{" "}
               {lesson.videoDuration
                 ? `${Math.floor(lesson.videoDuration / 60)}m ${Math.floor(lesson.videoDuration % 60)}s`
-                : `${lesson.duration} minutes`}
+                : `${lesson.duration} ${d?.minutes || "minutes"}`}
             </p>
           )}
         </CardContent>
@@ -1007,7 +1015,7 @@ export function StreamLessonContent({
   )
 }
 
-// Helper: number to word (1-12)
+// Helper: number to word (1-12), locale-aware
 const GRADE_WORDS: Record<number, string> = {
   1: "One",
   2: "Two",
@@ -1022,7 +1030,22 @@ const GRADE_WORDS: Record<number, string> = {
   11: "Eleven",
   12: "Twelve",
 }
-function gradeWord(n: number): string {
+const GRADE_WORDS_AR: Record<number, string> = {
+  1: "الأول",
+  2: "الثاني",
+  3: "الثالث",
+  4: "الرابع",
+  5: "الخامس",
+  6: "السادس",
+  7: "السابع",
+  8: "الثامن",
+  9: "التاسع",
+  10: "العاشر",
+  11: "الحادي عشر",
+  12: "الثاني عشر",
+}
+function gradeWord(n: number, lang?: string): string {
+  if (lang === "ar") return GRADE_WORDS_AR[n] ?? String(n)
   return GRADE_WORDS[n] ?? String(n)
 }
 
@@ -1047,24 +1070,149 @@ function formatRemaining(watchedSeconds: number, totalSeconds: number): string {
   return `${remainMin}m left`
 }
 
-// Lightweight quiz question renderer for practice mode
+type QuizQuestionShape = {
+  id: string
+  questionText: string
+  questionType: string
+  options: unknown
+  sampleAnswer: string | null
+}
+
+/** The question types `submitLessonQuiz` can auto-grade and this UI can render. */
+const GRADEABLE_TYPES = ["MULTIPLE_CHOICE", "TRUE_FALSE"]
+
+/**
+ * Graded lesson quiz: collects one answer per question, submits them together,
+ * and lets the SERVER grade. Correctness is deliberately not revealed until
+ * after submit — the previous version revealed the answer on click, which
+ * cannot coexist with a score that reaches the gradebook.
+ *
+ * Answers are sent as option INDEXES (what the action matches on), not text.
+ */
+function LessonQuiz({
+  questions,
+  lessonId,
+  subjectId,
+  d,
+}: {
+  questions: QuizQuestionShape[]
+  lessonId: string
+  subjectId: string
+  d?: Record<string, any>
+}) {
+  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [result, setResult] = useState<{
+    score: number
+    total: number
+    percentage: number
+  } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, startSubmit] = useTransition()
+
+  // Only gradeable questions gate the submit button; ungradeable ones (essay,
+  // short answer) still render but the server ignores them.
+  const gradeable = questions.filter((q) =>
+    GRADEABLE_TYPES.includes(q.questionType)
+  )
+  const allAnswered = gradeable.every((q) => answers[q.id] !== undefined)
+  const submitted = result !== null
+
+  const handleSubmit = () => {
+    setError(null)
+    startSubmit(async () => {
+      const res = await submitLessonQuiz({
+        lessonId,
+        subjectId,
+        answers: Object.entries(answers).map(([questionId, index]) => ({
+          questionId,
+          selectedOptionIndex: index,
+        })),
+      })
+      if (res.success) {
+        setResult(res.data)
+      } else {
+        setError(d?.quizSubmitFailed || "Couldn't submit your answers")
+      }
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">{d?.quiz || "Quiz"}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {questions.map((q, idx) => (
+          <QuizQuestion
+            key={q.id}
+            question={q}
+            index={idx}
+            d={d}
+            selectedIndex={answers[q.id]}
+            submitted={submitted}
+            onSelect={(i) => setAnswers((prev) => ({ ...prev, [q.id]: i }))}
+          />
+        ))}
+
+        {error && <p className="text-destructive text-sm">{error}</p>}
+
+        {submitted ? (
+          <div className="bg-muted rounded-lg p-4 text-center">
+            <p className="text-2xl font-bold">{result.percentage}%</p>
+            <p className="muted text-sm">
+              {result.score} / {result.total}
+            </p>
+          </div>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={!allAnswered || isSubmitting || gradeable.length === 0}
+            className="w-full"
+          >
+            {isSubmitting
+              ? d?.quizSubmitting || "Submitting..."
+              : d?.quizSubmit || "Submit Quiz"}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// Single question. Controlled by LessonQuiz; reveals correctness only once the
+// server has graded (`submitted`).
 function QuizQuestion({
   question,
   index,
+  d,
+  selectedIndex,
+  submitted,
+  onSelect,
 }: {
-  question: {
-    id: string
-    questionText: string
-    questionType: string
-    options: unknown
-    sampleAnswer: string | null
-  }
+  question: QuizQuestionShape
   index: number
+  d?: Record<string, any>
+  selectedIndex: number | undefined
+  submitted: boolean
+  onSelect: (index: number) => void
 }) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
-  const [showAnswer, setShowAnswer] = useState(false)
-
-  const options = Array.isArray(question.options) ? question.options : []
+  // TRUE_FALSE stores its options the same way MULTIPLE_CHOICE does
+  // (`[{ text, isCorrect }]`), so both render from the stored options and the
+  // index we send back always lines up with what the server grades.
+  //
+  // Two option shapes exist in catalog_questions: the verified curriculum
+  // (prisma/seeds/catalog/sd-content.ts) writes `text` — which is what
+  // quiz-actions' ChoiceOption declares — while the generated demo filler
+  // (catalog/content.ts) writes `label`. Read both, or every demo question
+  // renders blank buttons. Grading is unaffected (the server only reads
+  // `isCorrect` by index).
+  const options = Array.isArray(question.options)
+    ? (question.options as Array<{
+        text?: string
+        label?: string
+        isCorrect?: boolean
+      }>)
+    : []
 
   return (
     <div className="space-y-2 rounded-lg border p-4">
@@ -1072,61 +1220,38 @@ function QuizQuestion({
         {index + 1}. {question.questionText}
       </p>
 
-      {question.questionType === "MCQ" && options.length > 0 && (
+      {options.length > 0 && (
         <div className="space-y-1.5">
-          {options.map(
-            (opt: { text?: string; isCorrect?: boolean }, i: number) => {
-              const text = typeof opt === "string" ? opt : (opt?.text ?? "")
-              const isCorrect = typeof opt === "object" && opt?.isCorrect
-              return (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setSelectedOption(text)
-                    setShowAnswer(true)
-                  }}
-                  className={`w-full rounded-md border px-3 py-2 text-start text-sm transition-colors ${
-                    showAnswer && isCorrect
-                      ? "border-green-500 bg-green-50 dark:bg-green-950"
-                      : selectedOption === text && showAnswer && !isCorrect
-                        ? "border-red-500 bg-red-50 dark:bg-red-950"
-                        : selectedOption === text
-                          ? "border-primary"
-                          : "hover:bg-muted/50"
-                  }`}
-                >
-                  {text}
-                </button>
-              )
-            }
-          )}
+          {options.map((opt, i) => {
+            const text =
+              typeof opt === "string" ? opt : (opt?.text ?? opt?.label ?? "")
+            const isCorrect = typeof opt === "object" && opt?.isCorrect === true
+            const isPicked = selectedIndex === i
+            return (
+              <button
+                key={i}
+                onClick={() => onSelect(i)}
+                disabled={submitted}
+                className={`w-full rounded-md border px-3 py-2 text-start text-sm transition-colors ${
+                  submitted && isCorrect
+                    ? "border-green-500 bg-green-50 dark:bg-green-950"
+                    : isPicked && submitted && !isCorrect
+                      ? "border-red-500 bg-red-50 dark:bg-red-950"
+                      : isPicked
+                        ? "border-primary"
+                        : "hover:bg-muted/50"
+                } ${submitted ? "cursor-default" : "cursor-pointer"}`}
+              >
+                {text}
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {question.questionType === "TRUE_FALSE" && (
-        <div className="flex gap-2">
-          {["True", "False"].map((opt) => (
-            <button
-              key={opt}
-              onClick={() => {
-                setSelectedOption(opt)
-                setShowAnswer(true)
-              }}
-              className={`rounded-md border px-4 py-2 text-sm transition-colors ${
-                selectedOption === opt
-                  ? "border-primary bg-primary/5"
-                  : "hover:bg-muted/50"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {showAnswer && question.sampleAnswer && (
+      {submitted && question.sampleAnswer && (
         <p className="text-muted-foreground mt-2 text-xs">
-          Answer: {question.sampleAnswer}
+          {d?.answer || "Answer"}: {question.sampleAnswer}
         </p>
       )}
     </div>

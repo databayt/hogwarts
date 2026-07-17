@@ -179,15 +179,28 @@ export default function FeesContent({ dictionary }: Props) {
         locale
       )
       if (!result.success || !result.data) {
-        const msg =
-          result.error === "RATE_LIMITED"
-            ? errorDict.rateLimited || errorDict.failedToSubmit
-            : result.error === "DOCUMENTS_REQUIRED"
-              ? errorDict.documentsRequired || errorDict.failedToSubmit
-              : result.error === "APPLICATION_ALREADY_SUBMITTED"
-                ? errorDict.applicationAlreadySubmitted ||
-                  errorDict.failedToSubmit
-                : result.error || errorDict.failedToSubmit
+        // Server actions return error CODES, never prose — every code is
+        // resolved through the dictionary so Arabic users never see English.
+        // Unknown codes fall back to the generic translated message rather
+        // than leaking a raw server string to the UI.
+        const errorCodeMap: Record<string, string | undefined> = {
+          RATE_LIMITED: errorDict.rateLimited,
+          DOCUMENTS_REQUIRED: errorDict.documentsRequired,
+          APPLICATION_ALREADY_SUBMITTED: errorDict.applicationAlreadySubmitted,
+          APPLICATION_DUPLICATE: errorDict.applicationDuplicate,
+          APPLICATION_EMAIL_DUPLICATE: errorDict.applicationEmailDuplicate,
+          SUBMIT_FAILED: errorDict.failedToSubmit,
+        }
+        const code = result.error ?? ""
+        const missingField = code.startsWith("MISSING_FIELD:")
+          ? code.slice("MISSING_FIELD:".length)
+          : null
+        const msg = missingField
+          ? (errorDict.missingField || errorDict.failedToSubmit)?.replace(
+              "{{field}}",
+              missingField
+            )
+          : errorCodeMap[code] || errorDict.failedToSubmit
         throw new Error(msg)
       }
 

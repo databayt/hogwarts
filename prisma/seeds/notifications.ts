@@ -28,27 +28,27 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "assignment_created" as const,
     priority: "normal" as const,
-    title: "New Assignment Posted",
+    title: "واجب جديد",
     bodyTemplate:
-      "A new assignment '{{assignmentName}}' has been posted. Due date: {{dueDate}}.",
+      "تم نشر واجب جديد بعنوان '{{assignmentName}}'. تاريخ التسليم: {{dueDate}}.",
     targetRole: "STUDENT",
     weight: 15,
   },
   {
     type: "assignment_due" as const,
     priority: "high" as const,
-    title: "Assignment Due Soon",
+    title: "موعد تسليم الواجب يقترب",
     bodyTemplate:
-      "Reminder: '{{assignmentName}}' is due tomorrow. Please submit before the deadline.",
+      "تذكير: موعد تسليم '{{assignmentName}}' غداً. يرجى التسليم قبل الموعد النهائي.",
     targetRole: "STUDENT",
     weight: 10,
   },
   {
     type: "assignment_graded" as const,
     priority: "normal" as const,
-    title: "Assignment Graded",
+    title: "تم تصحيح الواجب",
     bodyTemplate:
-      "Your assignment '{{assignmentName}}' has been graded. Score: {{score}}/{{total}}.",
+      "تم تصحيح واجبك '{{assignmentName}}'. الدرجة: {{score}}/{{total}}.",
     targetRole: "STUDENT",
     weight: 12,
   },
@@ -57,9 +57,8 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "grade_posted" as const,
     priority: "normal" as const,
-    title: "New Grade Posted",
-    bodyTemplate:
-      "Your grade for {{subject}} has been posted. Check your gradebook.",
+    title: "تم نشر درجة جديدة",
+    bodyTemplate: "تم نشر درجتك في مادة {{subject}}. يرجى مراجعة سجل الدرجات.",
     targetRole: "STUDENT",
     weight: 10,
   },
@@ -68,16 +67,16 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "attendance_marked" as const,
     priority: "low" as const,
-    title: "Attendance Recorded",
-    bodyTemplate: "Your attendance for today has been marked as {{status}}.",
+    title: "تم تسجيل الحضور",
+    bodyTemplate: "تم تسجيل حضورك اليوم بحالة: {{status}}.",
     targetRole: "STUDENT",
     weight: 8,
   },
   {
     type: "attendance_alert" as const,
     priority: "high" as const,
-    title: "Student Absence Alert",
-    bodyTemplate: "Your child was marked absent from {{subject}} today.",
+    title: "تنبيه غياب الطالب",
+    bodyTemplate: "تم تسجيل غياب ابنك/ابنتك عن حصة {{subject}} اليوم.",
     targetRole: "GUARDIAN",
     weight: 8,
   },
@@ -86,26 +85,25 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "fee_due" as const,
     priority: "high" as const,
-    title: "Fee Payment Due",
+    title: "استحقاق دفع الرسوم",
     bodyTemplate:
-      "Your school fee payment of {{amount}} is due by {{dueDate}}.",
+      "دفعة الرسوم المدرسية البالغة {{amount}} مستحقة بتاريخ {{dueDate}}.",
     targetRole: "GUARDIAN",
     weight: 10,
   },
   {
     type: "fee_overdue" as const,
     priority: "urgent" as const,
-    title: "Overdue Payment Notice",
-    bodyTemplate:
-      "Your fee payment of {{amount}} is overdue. Please make payment immediately.",
+    title: "إشعار تأخر السداد",
+    bodyTemplate: "تأخر سداد رسومك البالغة {{amount}}. يرجى السداد فوراً.",
     targetRole: "GUARDIAN",
     weight: 5,
   },
   {
     type: "fee_paid" as const,
     priority: "normal" as const,
-    title: "Payment Received",
-    bodyTemplate: "Payment of {{amount}} has been received. Thank you.",
+    title: "تم استلام الدفعة",
+    bodyTemplate: "تم استلام دفعة بقيمة {{amount}}. شكراً لكم.",
     targetRole: "GUARDIAN",
     weight: 8,
   },
@@ -114,7 +112,7 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "announcement" as const,
     priority: "normal" as const,
-    title: "New Announcement",
+    title: "إعلان جديد",
     bodyTemplate: "{{title}}: {{preview}}...",
     targetRole: "ALL",
     weight: 12,
@@ -124,8 +122,8 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "event_reminder" as const,
     priority: "normal" as const,
-    title: "Event Reminder",
-    bodyTemplate: "Reminder: {{eventName}} is scheduled for {{eventDate}}.",
+    title: "تذكير بالفعالية",
+    bodyTemplate: "تذكير: من المقرر إقامة {{eventName}} بتاريخ {{eventDate}}.",
     targetRole: "ALL",
     weight: 8,
   },
@@ -134,16 +132,16 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "class_cancelled" as const,
     priority: "high" as const,
-    title: "Class Cancelled",
-    bodyTemplate: "{{className}} scheduled for {{date}} has been cancelled.",
+    title: "تم إلغاء الحصة",
+    bodyTemplate: "تم إلغاء {{className}} المقررة بتاريخ {{date}}.",
     targetRole: "STUDENT",
     weight: 5,
   },
   {
     type: "class_rescheduled" as const,
     priority: "high" as const,
-    title: "Class Rescheduled",
-    bodyTemplate: "{{className}} has been rescheduled to {{newDate}}.",
+    title: "تم تغيير موعد الحصة",
+    bodyTemplate: "تم تغيير موعد {{className}} إلى {{newDate}}.",
     targetRole: "STUDENT",
     weight: 5,
   },
@@ -152,7 +150,7 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "system_alert" as const,
     priority: "normal" as const,
-    title: "System Notification",
+    title: "إشعار النظام",
     bodyTemplate: "{{message}}",
     targetRole: "ALL",
     weight: 5,
@@ -160,26 +158,24 @@ const NOTIFICATION_CONFIGS = [
   {
     type: "account_created" as const,
     priority: "normal" as const,
-    title: "Welcome to Hogwarts Academy",
-    bodyTemplate:
-      "Your account has been created successfully. Complete your profile to get started.",
+    title: "مرحباً بك في مدرستنا",
+    bodyTemplate: "تم إنشاء حسابك بنجاح. أكمل ملفك الشخصي للبدء.",
     targetRole: "ALL",
     weight: 3,
   },
   {
     type: "document_shared" as const,
     priority: "normal" as const,
-    title: "Document Shared",
-    bodyTemplate:
-      "{{senderName}} has shared a document with you: {{documentName}}.",
+    title: "تمت مشاركة مستند",
+    bodyTemplate: "قام {{senderName}} بمشاركة مستند معك: {{documentName}}.",
     targetRole: "ALL",
     weight: 6,
   },
   {
     type: "report_ready" as const,
     priority: "normal" as const,
-    title: "Report Ready",
-    bodyTemplate: "Your {{reportType}} report is ready for download.",
+    title: "التقرير جاهز",
+    bodyTemplate: "تقرير {{reportType}} الخاص بك جاهز للتحميل.",
     targetRole: "ALL",
     weight: 5,
   },
@@ -187,57 +183,57 @@ const NOTIFICATION_CONFIGS = [
 
 // Sample data for templates
 const ASSIGNMENT_NAMES = [
-  "Chapter 5 Review",
-  "Math Problem Set",
-  "Science Lab Report",
-  "Essay Assignment",
-  "Group Project",
-  "Weekly Quiz",
-  "Reading Comprehension",
-  "Practice Problems",
+  "مراجعة الفصل الخامس",
+  "مجموعة مسائل الرياضيات",
+  "تقرير المختبر العلمي",
+  "واجب كتابة مقال",
+  "مشروع جماعي",
+  "اختبار أسبوعي قصير",
+  "فهم المقروء",
+  "تمارين تدريبية",
 ]
 
 const SUBJECTS = [
-  "Mathematics",
-  "Arabic",
-  "English",
-  "Science",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "History",
-  "Geography",
-  "Islamic Studies",
+  "الرياضيات",
+  "اللغة العربية",
+  "اللغة الإنجليزية",
+  "العلوم",
+  "الفيزياء",
+  "الكيمياء",
+  "الأحياء",
+  "التاريخ",
+  "الجغرافيا",
+  "التربية الإسلامية",
 ]
 
 const EVENT_NAMES = [
-  "Parent-Teacher Conference",
-  "Sports Day",
-  "Science Fair",
-  "Annual Day Celebration",
-  "Mid-Term Exams",
-  "Final Exams",
-  "School Assembly",
-  "Book Fair",
+  "اجتماع أولياء الأمور والمعلمين",
+  "اليوم الرياضي",
+  "المعرض العلمي",
+  "الاحتفال السنوي",
+  "امتحانات منتصف الفصل",
+  "الامتحانات النهائية",
+  "الطابور الصباحي",
+  "معرض الكتاب",
 ]
 
 const ANNOUNCEMENT_TITLES = [
-  "School Closure Notice",
-  "Holiday Schedule",
-  "Exam Schedule Released",
-  "New Library Hours",
-  "Sports Team Tryouts",
-  "School Trip Announcement",
-  "Registration Open",
-  "Important Update",
+  "إشعار إغلاق المدرسة",
+  "جدول الإجازات",
+  "صدور جدول الامتحانات",
+  "مواعيد جديدة للمكتبة",
+  "اختبارات الانضمام للفريق الرياضي",
+  "إعلان رحلة مدرسية",
+  "باب التسجيل مفتوح",
+  "تحديث مهم",
 ]
 
 const SYSTEM_MESSAGES = [
-  "System maintenance scheduled for tonight.",
-  "New features have been added to the school-dashboard.",
-  "Please update your contact information.",
-  "The grading system has been updated.",
-  "New security measures are in effect.",
+  "صيانة النظام مقررة هذه الليلة.",
+  "تمت إضافة ميزات جديدة إلى لوحة تحكم المدرسة.",
+  "يرجى تحديث بيانات التواصل الخاصة بك.",
+  "تم تحديث نظام الدرجات.",
+  "دخلت إجراءات أمنية جديدة حيز التنفيذ.",
 ]
 
 // ============================================================================
@@ -254,28 +250,28 @@ function generateNotificationBody(
 
   // Replace placeholders with sample data
   body = body.replace("{{assignmentName}}", randomElement(ASSIGNMENT_NAMES))
-  body = body.replace("{{dueDate}}", "December 15, 2025")
+  body = body.replace("{{dueDate}}", "١٥ ديسمبر ٢٠٢٥")
   body = body.replace("{{score}}", String(randomNumber(70, 100)))
   body = body.replace("{{total}}", "100")
   body = body.replace("{{subject}}", randomElement(SUBJECTS))
-  body = body.replace("{{status}}", randomElement(["present", "late"]))
-  body = body.replace("{{amount}}", `$${randomNumber(500, 2000)}`)
+  body = body.replace("{{status}}", randomElement(["حاضر", "متأخر"]))
+  body = body.replace("{{amount}}", `${randomNumber(50000, 500000)} ج.س`)
   body = body.replace("{{title}}", randomElement(ANNOUNCEMENT_TITLES))
   body = body.replace(
     "{{preview}}",
-    "Please read the full announcement for details"
+    "يرجى قراءة الإعلان كاملاً للاطلاع على التفاصيل"
   )
   body = body.replace("{{eventName}}", randomElement(EVENT_NAMES))
-  body = body.replace("{{eventDate}}", "December 20, 2025")
-  body = body.replace("{{className}}", `${randomElement(SUBJECTS)} Class`)
-  body = body.replace("{{date}}", "December 18, 2025")
-  body = body.replace("{{newDate}}", "December 19, 2025")
+  body = body.replace("{{eventDate}}", "٢٠ ديسمبر ٢٠٢٥")
+  body = body.replace("{{className}}", `حصة ${randomElement(SUBJECTS)}`)
+  body = body.replace("{{date}}", "١٨ ديسمبر ٢٠٢٥")
+  body = body.replace("{{newDate}}", "١٩ ديسمبر ٢٠٢٥")
   body = body.replace("{{message}}", randomElement(SYSTEM_MESSAGES))
-  body = body.replace("{{senderName}}", "School Admin")
-  body = body.replace("{{documentName}}", "Progress Report.pdf")
+  body = body.replace("{{senderName}}", "إدارة المدرسة")
+  body = body.replace("{{documentName}}", "تقرير_الأداء.pdf")
   body = body.replace(
     "{{reportType}}",
-    randomElement(["progress", "attendance", "performance"])
+    randomElement(["الأداء", "الحضور", "التحصيل"])
   )
 
   return body

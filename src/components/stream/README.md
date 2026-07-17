@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-07-11
+last_audited: 2026-07-17
 ---
 
 ## Stream — Learning Management System (LMS)

@@ -37,6 +37,8 @@ vi.mock("@/lib/db", () => {
   })
   return {
     db: {
+      user: createMock(),
+      financePermission: createMock(),
       userInvoice: createMock(),
       userInvoiceAddress: createMock(),
       userInvoiceItem: createMock(),
@@ -74,14 +76,22 @@ vi.mock("next/cache", () => ({
 const MOCK_USER_ID = "user-1"
 const MOCK_SCHOOL_ID = "school-1"
 
-function mockAuthSuccess() {
+/** Signed in as a role the finance permission check will resolve. Defaults to
+ *  ADMIN, who passes on role alone (no FinancePermission row needed). */
+function mockAuthSuccess(role: string = "ADMIN") {
   vi.mocked(auth).mockResolvedValue({
-    user: { id: MOCK_USER_ID, role: "ADMIN", schoolId: MOCK_SCHOOL_ID },
+    user: { id: MOCK_USER_ID, role, schoolId: MOCK_SCHOOL_ID },
   } as any)
   vi.mocked(getTenantContext).mockResolvedValue({
     schoolId: MOCK_SCHOOL_ID,
     subdomain: "demo",
   } as any)
+  // checkFinancePermission re-reads the role from the DB rather than the session
+  vi.mocked(db.user.findUnique).mockResolvedValue({
+    role,
+    schoolId: MOCK_SCHOOL_ID,
+  } as any)
+  vi.mocked(db.financePermission.findUnique).mockResolvedValue(null as any)
 }
 
 function mockAuthFailure() {
@@ -353,6 +363,99 @@ describe("wizard/actions.ts", () => {
           }),
         })
       )
+    })
+  })
+
+  // ==========================================================================
+  // Authorization
+  //
+  // Every export here is a "use server" endpoint: reaching it proves nothing
+  // about the caller, and getTenantContext() only reflects the subdomain in
+  // the request. A non-finance role must never touch invoice data, however it
+  // arrives at the action.
+  // ==========================================================================
+
+  describe("authorization", () => {
+    const UNPRIVILEGED = ["STUDENT", "GUARDIAN", "TEACHER", "USER"]
+
+    it.each(UNPRIVILEGED)("refuses %s on getInvoiceForWizard", async (role) => {
+      mockAuthSuccess(role)
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        id: "inv-1",
+      } as any)
+
+      const result = await getInvoiceForWizard("inv-1")
+
+      expect(result.success).toBe(false)
+      expect(db.userInvoice.findFirst).not.toHaveBeenCalled()
+    })
+
+    it.each(UNPRIVILEGED)("refuses %s on createDraftInvoice", async (role) => {
+      mockAuthSuccess(role)
+
+      const result = await createDraftInvoice()
+
+      expect(result.success).toBe(false)
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it.each(UNPRIVILEGED)(
+      "refuses %s on completeInvoiceWizard",
+      async (role) => {
+        mockAuthSuccess(role)
+
+        const result = await completeInvoiceWizard("inv-1")
+
+        expect(result.success).toBe(false)
+        expect(db.userInvoice.updateMany).not.toHaveBeenCalled()
+      }
+    )
+
+    it.each(UNPRIVILEGED)("refuses %s on deleteDraftInvoice", async (role) => {
+      mockAuthSuccess(role)
+
+      const result = await deleteDraftInvoice("inv-1")
+
+      expect(result.success).toBe(false)
+      expect(db.$transaction).not.toHaveBeenCalled()
+    })
+
+    it.each(UNPRIVILEGED)(
+      "refuses %s on updateInvoiceWizardStep",
+      async (role) => {
+        mockAuthSuccess(role)
+
+        await updateInvoiceWizardStep("inv-1", "items")
+
+        expect(db.userInvoice.updateMany).not.toHaveBeenCalled()
+      }
+    )
+
+    it("refuses an anonymous caller even though the subdomain resolves", async () => {
+      mockAuthFailure()
+      vi.mocked(getTenantContext).mockResolvedValue({
+        schoolId: MOCK_SCHOOL_ID,
+        subdomain: "demo",
+      } as any)
+
+      const result = await getInvoiceForWizard("inv-1")
+
+      expect(result.success).toBe(false)
+      expect(db.userInvoice.findFirst).not.toHaveBeenCalled()
+    })
+
+    it("allows ACCOUNTANT, who is a finance role", async () => {
+      mockAuthSuccess("ACCOUNTANT")
+      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+        id: "inv-1",
+        from: {},
+        to: {},
+        items: [],
+      } as any)
+
+      const result = await getInvoiceForWizard("inv-1")
+
+      expect(result.success).toBe(true)
     })
   })
 })

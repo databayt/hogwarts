@@ -26,6 +26,9 @@ vi.mock("@/lib/db", () => ({
     },
     userInvoice: {
       findFirst: vi.fn(),
+      // findMany backs the shared allocatePaymentToInvoices helper that
+      // markPaymentCleared/recordPayment now call; default [] = no-op sync.
+      findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn(),
     },
     student: {

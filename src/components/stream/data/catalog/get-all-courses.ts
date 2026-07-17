@@ -5,6 +5,7 @@
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import { getCatalogImageUrl } from "@/components/catalog/image-url"
 import { ensureSubjectSelections } from "@/components/catalog/setup"
 import { localize } from "@/components/translation/localize"
@@ -18,7 +19,6 @@ import type { Lang } from "@/components/translation/types"
  * Migration: Replaces getCoursesList from queries.ts which queries StreamCourse.
  */
 export async function getAllCatalogCourses(
-  schoolId: string | null,
   params: {
     page?: number
     perPage?: number
@@ -28,6 +28,11 @@ export async function getAllCatalogCourses(
     lang?: string
   } = {}
 ) {
+  // This module is "use server", so this export is a POST endpoint the browser
+  // can invoke directly. schoolId must come from the request's tenant context —
+  // taking it as an argument let any caller read (and, via
+  // ensureSubjectSelections below, write) another school's catalog.
+  const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return { rows: [] as CatalogCourseType[], count: 0 }
   }

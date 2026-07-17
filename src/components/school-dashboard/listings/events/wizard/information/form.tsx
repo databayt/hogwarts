@@ -2,10 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { forwardRef, useImperativeHandle, useTransition } from "react"
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useTransition,
+} from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
@@ -17,7 +23,7 @@ import {
 } from "@/components/school-dashboard/listings/events/wizard/config"
 
 import { updateEventInformation } from "./actions"
-import { informationSchema, type InformationFormData } from "./validation"
+import { createInformationSchema, type InformationFormData } from "./validation"
 
 interface InformationFormProps {
   eventId: string
@@ -34,9 +40,14 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
       | undefined
     const typeOptions = getEventTypeOptions(dictionary?.school?.events)
 
+    const schema = useMemo(
+      () => createInformationSchema(dictionary?.school?.events?.validation),
+      [dictionary]
+    )
+
     const form = useForm<InformationFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(informationSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         title: initialData?.title || "",
         description: initialData?.description || "",
@@ -66,7 +77,8 @@ export const InformationForm = forwardRef<WizardFormRef, InformationFormProps>(
               const data = form.getValues()
               const result = await updateEventInformation(eventId, data)
               if (!result.success) {
-                ErrorToast(result.error || "Failed to save")
+                // Actions return error codes — translate before display.
+                ErrorToast(resolveActionError(result.error ?? "", dictionary))
                 reject(new Error(result.error))
                 return
               }

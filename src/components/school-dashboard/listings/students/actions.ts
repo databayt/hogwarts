@@ -1784,6 +1784,17 @@ export async function generateStudentAccessCodes(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
+    // Minting parent-linking codes is a guardian operation — gate it like the
+    // rest of the module (ADMIN/TEACHER only). Was previously auth()+schoolId
+    // with no role check, so any authenticated member could generate codes.
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    try {
+      assertStudentPermission(authContext, "link_guardian", { schoolId })
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const parsed = z
       .object({ studentIds: z.array(z.string().min(1)).min(1).max(100) })
       .parse(input)
@@ -1855,6 +1866,14 @@ export async function getStudentAccessCodes(input: {
       return actionError(ACTION_ERRORS.MISSING_SCHOOL)
     }
 
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    try {
+      assertStudentPermission(authContext, "link_guardian", { schoolId })
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const { studentId } = z
       .object({ studentId: z.string().min(1) })
       .parse(input)
@@ -1916,6 +1935,16 @@ export async function bulkSyncStudentGrades(): Promise<
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    // Bulk grade re-resolution mutates every unassigned student — gate to
+    // roles that can update students (was auth()+schoolId with no role check).
+    const authContext = getAuthContext(session)
+    if (!authContext) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    try {
+      assertStudentPermission(authContext, "update", { schoolId })
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const result = await syncStudentGrades(schoolId)
 

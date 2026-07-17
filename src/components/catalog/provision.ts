@@ -7,7 +7,11 @@ import {
   resolveAcademicCalendar,
 } from "@/components/school-dashboard/timetable/calendars"
 
-import { defaultRoomName } from "./room-naming"
+import {
+  defaultRoomName,
+  defaultSectionName,
+  sectionLetters,
+} from "./room-naming"
 import {
   ensureSubjectSelections,
   setupCatalogForSchool,
@@ -140,6 +144,9 @@ export async function applyTimetableStructureForNewSchool(
               name: period.name,
               startTime: new Date(Date.UTC(1970, 0, 1, startHour, startMin)),
               endTime: new Date(Date.UTC(1970, 0, 1, endHour, endMin)),
+              // The structure's `type` is the authority — persist it instead of
+              // leaving readers to guess break-ness from the name.
+              isBreak: period.type !== "class",
             },
           })
           createdCount++
@@ -220,11 +227,18 @@ export async function applyTimetableStructureForNewSchool(
 export async function autoProvisionSections(schoolId: string) {
   const school = await db.school.findUnique({
     where: { id: schoolId },
-    select: { sectionsPerGrade: true, studentsPerSection: true },
+    select: {
+      sectionsPerGrade: true,
+      studentsPerSection: true,
+      preferredLanguage: true,
+    },
   })
 
   const sectionsPerGrade = school?.sectionsPerGrade || 2
   const studentsPerSection = school?.studentsPerSection || 30
+  // Single-language storage: the school's preferred language IS the storage
+  // language for everything we mint here (section names, letters, room codes).
+  const lang = school?.preferredLanguage ?? "en"
 
   const grades = await db.academicGrade.findMany({
     where: { schoolId },
@@ -239,7 +253,7 @@ export async function autoProvisionSections(schoolId: string) {
     return { classrooms: 0, sections: 0 }
   }
 
-  const letters = "ABCDEFGHIJ".split("")
+  const letters = sectionLetters(lang)
 
   // Process each grade in its own transaction to avoid P2028 timeout
   // on Neon (single transaction with 48+ sequential upserts exceeds 30s)
@@ -255,9 +269,15 @@ export async function autoProvisionSections(schoolId: string) {
         for (let i = 0; i < sectionsPerGrade; i++) {
           const letter = letters[i]
           // e.g. Grade 1 → A01 (section A), B01 (section B); Grade 12 → A12, B12.
+          // Arabic school → أ01 / ب01, section "الصف الأول - أ".
           // Grade-assigned (not shared) so each grade owns its homeroom classrooms.
           const roomName = defaultRoomName(letter, grade.gradeNumber)
-          const sectionName = `Grade ${grade.gradeNumber}-${letter}`
+          const sectionName = defaultSectionName(
+            lang,
+            grade.gradeNumber,
+            grade.name,
+            letter
+          )
 
           const classroom = await tx.classroom.upsert({
             where: { schoolId_roomName: { schoolId, roomName } },
@@ -267,6 +287,12 @@ export async function autoProvisionSections(schoolId: string) {
               capacity: studentsPerSection,
               typeId: classroomType.id,
               gradeId: grade.id,
+              // Tag what we actually wrote. Rows that claim a language they
+              // aren't written in are the recurring bug here (16 English
+              // classrooms tagged lang=ar; 10 English "Islamic" subjects) —
+              // the translation layer trusts `lang` and renders the source
+              // verbatim, so a dishonest tag is unfixable at read time.
+              lang,
             },
             update: {},
           })
@@ -281,6 +307,7 @@ export async function autoProvisionSections(schoolId: string) {
               gradeId: grade.id,
               name: sectionName,
               letter,
+              lang,
               classroomId: classroom.id,
               maxCapacity: studentsPerSection,
             },
@@ -341,15 +368,12 @@ export async function autoGenerateTimetableForSchool(
   const periods = await db.period.findMany({
     where: { schoolId, yearId: activeTerm.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, isBreak: true },
   })
-  const teachingPeriodIds = periods
-    .filter(
-      (p) =>
-        !p.name.toLowerCase().includes("break") &&
-        !p.name.toLowerCase().includes("lunch")
-    )
-    .map((p) => p.id)
+  // Read the column, not the name. The old English substring test meant a
+  // school naming its break «فسحة» had it classified as TEACHING time, and the
+  // generator scheduled classes straight into the break.
+  const teachingPeriodIds = periods.filter((p) => !p.isBreak).map((p) => p.id)
   console.log(
     `${tag} Periods: ${periods.length} total, ${teachingPeriodIds.length} teaching`
   )

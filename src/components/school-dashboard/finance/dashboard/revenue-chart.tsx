@@ -110,6 +110,32 @@ function RevenueChartInner({
     return value.toString()
   }
 
+  // No monthly history yet → an all-zero 12-month chart reads as "revenue
+  // collapsed", which is false. Show an honest empty state instead.
+  const hasHistory =
+    revenueData.some((v) => v) ||
+    expenseData.some((v) => v) ||
+    profitData.some((v) => v)
+
+  if (!hasHistory) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>{dp?.revenueExpenses || "Revenue & Expenses"}</CardTitle>
+          <CardDescription>
+            {dp?.monthlyPerformance ||
+              "Monthly financial performance over the last 12 months"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground py-16 text-center text-sm">
+            {dp?.noHistoricalData || "No historical data yet"}
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className={className}>
       <CardHeader>

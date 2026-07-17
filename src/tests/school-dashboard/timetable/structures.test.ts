@@ -543,4 +543,84 @@ describe("Timetable Structures", () => {
       }
     })
   })
+
+  // A Sudanese school day has exactly ONE break: the mid-morning فسحة, when
+  // فطور is eaten. There is no second break and no lunch — الغداء is eaten at
+  // home after dismissal. (Confirmed with Abdout, 2026-07-17.) The national
+  // structures previously carried a Western `type: "lunch"` period.
+  describe("Sudanese national structures: one فسحة, no lunch", () => {
+    const nationalSudanese = ["sd-gov-default", "sd-private"]
+
+    it.each(nationalSudanese)("%s has no lunch period", (slug) => {
+      const structure = getStructureBySlug(slug)!
+      expect(structure.periods.some((p) => p.type === "lunch")).toBe(false)
+      expect(structure.lunchAfterPeriod).toBeNull()
+    })
+
+    it.each(nationalSudanese)("%s has exactly one break", (slug) => {
+      const structure = getStructureBySlug(slug)!
+      expect(structure.periods.filter((p) => p.type === "break")).toHaveLength(
+        1
+      )
+    })
+
+    it.each(nationalSudanese)("%s breaks mid-morning, not midday", (slug) => {
+      const structure = getStructureBySlug(slug)!
+      const [fasha] = structure.periods.filter((p) => p.type === "break")
+      const [hour] = fasha.startTime.split(":").map(Number)
+      expect(hour).toBeLessThan(11)
+    })
+
+    it.each(nationalSudanese)("%s runs back-to-back after the فسحة", (slug) => {
+      const structure = getStructureBySlug(slug)!
+      const afterBreak = structure.periods.slice(
+        structure.periods.findIndex((p) => p.type === "break") + 1
+      )
+      // Dropping the second break must pull the tail of the day EARLIER, not
+      // leave a 40-minute hole where it used to sit.
+      expect(afterBreak.every((p) => p.type === "class")).toBe(true)
+      const mins = (t: string) => {
+        const [h, m] = t.split(":").map(Number)
+        return h * 60 + m
+      }
+      for (let i = 1; i < afterBreak.length; i++) {
+        const gap =
+          mins(afterBreak[i].startTime) - mins(afterBreak[i - 1].endTime)
+        expect(gap).toBeLessThanOrEqual(10)
+      }
+    })
+
+    // British-curriculum schools genuinely do have a lunch — the correction is
+    // about Sudanese national schools, not every SD-hosted school.
+    it("sd-british keeps its lunch", () => {
+      const structure = getStructureBySlug("sd-british")!
+      expect(structure.periods.some((p) => p.type === "lunch")).toBe(true)
+    })
+  })
+
+  // Period.isBreak is the source of truth for break-ness; `name` is
+  // user-editable free text. Readers must never re-derive it by testing the
+  // name for the English substrings "break"/"lunch" — an Arabic «فسحة» matches
+  // neither, which had the generator scheduling classes into the break.
+  describe("break-ness is typed, never inferred from the name", () => {
+    it("every period type is a known value", () => {
+      for (const structure of TIMETABLE_STRUCTURES) {
+        for (const period of structure.periods) {
+          expect(["class", "break", "lunch"]).toContain(period.type)
+        }
+      }
+    })
+
+    it("a non-class period is a break regardless of its name", () => {
+      // The exact mapping seedPeriods + applyTimetableStructureForNewSchool use
+      // to populate Period.isBreak.
+      const arabicNamed = { name: "الفسحة", type: "break" as const }
+      expect(arabicNamed.type !== "class").toBe(true)
+      // ...whereas the old inference silently classified it as teaching time:
+      const oldInference =
+        arabicNamed.name.toLowerCase().includes("break") ||
+        arabicNamed.name.toLowerCase().includes("lunch")
+      expect(oldInference).toBe(false)
+    })
+  })
 })

@@ -26,10 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function AnnouncementsTemplatesPage({ params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  // Independent of each other — don't make the templates wait on the dictionary.
+  const [dictionary, result] = await Promise.all([
+    getDictionary(lang),
+    getTemplates(),
+  ])
   const d = dictionary?.school?.announcements
-
-  const result = await getTemplates()
   const templates = result.success ? result.data : []
 
   // No templates - show empty state

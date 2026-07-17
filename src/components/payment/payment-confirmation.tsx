@@ -4,7 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { CheckCircle2 } from "lucide-react"
 
-import type { BankDetails, CheckoutResult } from "@/lib/payment/types"
+import type {
+  BankDetails,
+  CheckoutResult,
+  WalletDetails,
+} from "@/lib/payment/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
@@ -72,9 +76,9 @@ export function PaymentConfirmation({
             />
           )}
 
-          {result.gateway === "mobile_money" && (
-            <MobileMoneyConfirmation
-              instructions={result.mobileMoneyInstructions}
+          {result.wallet && (
+            <WalletConfirmation
+              wallet={result.wallet}
               referenceNumber={result.referenceNumber}
               isRTL={isRTL}
             />
@@ -161,43 +165,85 @@ function BankTransferConfirmation({
   )
 }
 
-function MobileMoneyConfirmation({
-  instructions,
+/**
+ * Bankak / Cashi confirmation: shows the school's real wallet account (and QR
+ * when configured) rather than the generic "open your app" placeholder the old
+ * mobile_money rail rendered — that rail had no source for its instructions, so
+ * it always fell through to boilerplate.
+ */
+function WalletConfirmation({
+  wallet,
   referenceNumber,
   isRTL,
 }: {
-  instructions?: string
+  wallet: WalletDetails
   referenceNumber: string
   isRTL: boolean
 }) {
+  const isBankak = wallet.provider === "bankak"
+  const appName = isBankak
+    ? isRTL
+      ? "بنكك"
+      : "Bankak"
+    : isRTL
+      ? "ماي كاشي"
+      : "MyCashi"
+
   return (
     <>
       <Separator />
-      <div>
+      <div className="space-y-2">
         <p className="font-medium">
-          {isRTL ? "تعليمات الدفع الإلكتروني" : "Mobile Money Instructions"}
+          {isRTL ? `التحويل عبر ${appName}` : `Transfer via ${appName}`}
         </p>
-        {instructions ? (
-          <p className="text-muted-foreground mt-2 text-sm">{instructions}</p>
-        ) : (
-          <div className="text-muted-foreground mt-2 space-y-1 text-sm">
-            <p>
+        <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
+          {wallet.accountName && (
+            <DetailRow
+              label={isRTL ? "اسم الحساب" : "Account Name"}
+              value={wallet.accountName}
+            />
+          )}
+          <DetailRow
+            label={
+              isBankak
+                ? isRTL
+                  ? "رقم الحساب"
+                  : "Account Number"
+                : isRTL
+                  ? "رمز التاجر"
+                  : "Merchant Code"
+            }
+            value={wallet.accountNumber}
+            mono
+          />
+        </div>
+        {wallet.qrUrl && (
+          <div className="flex flex-col items-center gap-2 py-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={wallet.qrUrl}
+              alt={
+                isRTL
+                  ? `رمز الاستجابة السريعة لـ ${appName}`
+                  : `${appName} QR code`
+              }
+              className="h-40 w-40 rounded-lg border object-contain"
+            />
+            <p className="text-muted-foreground text-xs">
               {isRTL
-                ? "1. افتح تطبيق بنكك أو mBOK"
-                : "1. Open your Bankak or mBOK app"}
-            </p>
-            <p>
-              {isRTL
-                ? `2. أرسل المبلغ مع رقم المرجع: ${referenceNumber}`
-                : `2. Send the amount with reference: ${referenceNumber}`}
-            </p>
-            <p>
-              {isRTL
-                ? "3. احتفظ بإيصال التحويل"
-                : "3. Keep the transfer receipt"}
+                ? `امسح الرمز داخل تطبيق ${appName}`
+                : `Scan this in the ${appName} app`}
             </p>
           </div>
         )}
+        {wallet.instructions && (
+          <p className="text-muted-foreground text-sm">{wallet.instructions}</p>
+        )}
+        <p className="text-muted-foreground text-sm">
+          {isRTL
+            ? `استخدم رقم المرجع "${referenceNumber}" في وصف التحويل، ثم أرفق صورة الإيصال لتأكيد الدفع`
+            : `Use reference "${referenceNumber}" in the transfer note, then attach the receipt to confirm payment`}
+        </p>
       </div>
     </>
   )

@@ -23,7 +23,7 @@ function emailLayout(content: string, locale: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>${isRTL ? "هجورتس" : "Hogwarts"}</title>
+  <title>${isRTL ? "هوغورتس" : "Hogwarts"}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:${fontFamily};-webkit-font-smoothing:antialiased;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;">
@@ -153,7 +153,7 @@ ${emailCode(token)}
         "ar"
       ),
     twoFactorText: (token: string) =>
-      `رمز التحقق: ${token}\n\nأدخل هذا الرمز لإتمام تسجيل الدخول.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+      `رمز التحقق: ${token}\n\nأدخل هذا الرمز لإتمام تسجيل الدخول.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
 
     resetSubject: "إعادة تعيين كلمة المرور",
     resetBody: (link: string) =>
@@ -165,7 +165,7 @@ ${emailButton(link, "إعادة التعيين")}
         "ar"
       ),
     resetText: (link: string) =>
-      `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+      `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
 
     resetCodeSubject: "رمز إعادة تعيين كلمة المرور",
     resetCodeBody: (code: string) =>
@@ -177,7 +177,7 @@ ${emailCode(code)}
         "ar"
       ),
     resetCodeText: (code: string) =>
-      `إعادة تعيين كلمة المرور\n\nرمز إعادة التعيين: ${code}\n\nأدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+      `إعادة تعيين كلمة المرور\n\nرمز إعادة التعيين: ${code}\n\nأدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
 
     verifySubject: "تأكيد بريدك الإلكتروني",
     verifyBody: (code: string) =>
@@ -189,7 +189,7 @@ ${emailCode(code)}
         "ar"
       ),
     verifyText: (code: string) =>
-      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 30 دقيقة.\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— هجورتس (ed.databayt.org)`,
+      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 30 دقيقة.\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
   },
 } as const
 

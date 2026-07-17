@@ -286,17 +286,20 @@ function buildMethodOptions(
   enabledAppMethods: string[],
   methodDict: MyFeesMethodDict
 ): Array<{ value: string; label: string }> {
-  // App-level tokens → Prisma enum values + a user-friendly label.
-  // stripe/card-online → CREDIT_CARD (primary online path)
+  // App-level gateway tokens → Prisma PaymentMethod enum values + a label.
+  // stripe/tap → CREDIT_CARD (online card paths)
   // cash → CASH
   // bank_transfer → BANK_TRANSFER
-  // mobile_money → WALLET (closest enum)
+  // bankak/cashi → BANK_TRANSFER; these Sudan wallet rails settle as a
+  //   transfer to the school's account. Their specific identity is preserved
+  //   on Payment.gatewayMethod (as Tap does for MADA/KNET), not in this enum.
   const mapping: Record<string, string> = {
     stripe: "CREDIT_CARD",
+    tap: "CREDIT_CARD",
     cash: "CASH",
     bank_transfer: "BANK_TRANSFER",
-    mobile_money: "WALLET",
-    tap: "CREDIT_CARD",
+    bankak: "BANK_TRANSFER",
+    cashi: "BANK_TRANSFER",
   }
   const seen = new Set<string>()
   const options: Array<{ value: string; label: string }> = []

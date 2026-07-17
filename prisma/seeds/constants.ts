@@ -59,11 +59,11 @@ export const DEMO_SCHOOL = {
   state: "Khartoum",
   country: "SD",
 
-  // Pricing
-  tuitionFee: 5000,
-  registrationFee: 200,
+  // Pricing (SDG — Sudanese Pound; realistic private-school figures)
+  tuitionFee: 450000,
+  registrationFee: 50000,
   applicationFee: 0,
-  currency: "USD",
+  currency: "SDG",
   paymentSchedule: "annual",
 
   // Capacity
@@ -252,7 +252,7 @@ export const ADMIN_USERS = [
 // ============================================================================
 //
 // SEED_PROFILE=lite produces a small but realistic demo (~50 students across a
-// full K-12 span, ~12 teachers, ~1 homeroom per grade) that STAYS small across
+// full K-12 span, ~24 teachers, ~1 homeroom per grade) that STAYS small across
 // deploys. It exists so the demo can run on a fresh Neon Free project (512 MB
 // storage + a monthly compute quota) for a whole month without tripping either
 // cap. Default ("full") is the canonical ~800-student demo — untouched unless
@@ -263,23 +263,48 @@ export const ADMIN_USERS = [
 // otherwise ensure-demo.ts would re-grow it to full on the next deploy.
 export const SEED_IS_LITE = process.env.SEED_PROFILE === "lite"
 
+// Medium profile — a mid/large-school demo (~380 students across the full K-12
+// span) that stays comfortably under the Neon Free 512 MB storage + monthly
+// compute quota, unlike "full" (~1000 students, ~445 MB) which tripped the cap
+// and caused the July outage. Bigger than "lite" (~55) so a "big school" pitch
+// doesn't look thin. All levers move together, and the matching SEED_THRESHOLDS
+// (index.ts) drop so ensure-demo.ts recognizes this set as fully seeded and
+// never re-grows it to full on the next deploy.
+export const SEED_IS_MEDIUM = process.env.SEED_PROFILE === "medium"
+
 export const SEED_PROFILE_COUNTS = {
   // USER accounts minted in the auth phase — the hard ceiling on how many
   // students / teachers / guardians the later phases can create.
-  studentUsers: SEED_IS_LITE ? 55 : 1000,
-  teacherUsers: SEED_IS_LITE ? 12 : 100,
-  guardianUsers: SEED_IS_LITE ? 110 : 2000,
-  // Per-K-12-level student cap. 13 levels × 4 = 52 students, so every grade
+  studentUsers: SEED_IS_LITE ? 55 : SEED_IS_MEDIUM ? 380 : 1000,
+  // Teachers are a CAPACITY constraint on the timetable, not just flavour: the
+  // generator caps each teacher at maxPeriodsPerWeek=25 (catalog/provision.ts),
+  // and lite's 12 sections x ~30 periods = ~360 slots to fill. 12 teachers could
+  // supply at most 300 — so the grid was arithmetically unfillable and ~87% of
+  // slots came out teacher-less. 24 gives ~600 of headroom (and 2 teachers per
+  // grade is what a real 12-section school looks like anyway). Keep
+  // teacherUsers >= ceil(sections * periodsPerWeek / 25) with room to spare.
+  teacherUsers: SEED_IS_LITE ? 24 : SEED_IS_MEDIUM ? 36 : 100,
+  guardianUsers: SEED_IS_LITE ? 110 : SEED_IS_MEDIUM ? 600 : 2000,
+  // Per-K-12-level student cap. Lite 4×14≈52, medium 30×14≈380 — every grade
   // stays populated. min()'d with the full per-level counts, so "full" is a no-op.
-  studentsPerLevelCap: SEED_IS_LITE ? 4 : Number.POSITIVE_INFINITY,
-  // Homeroom sections per grade. Lite uses one (A) so rooms aren't near-empty.
+  studentsPerLevelCap: SEED_IS_LITE
+    ? 4
+    : SEED_IS_MEDIUM
+      ? 30
+      : Number.POSITIVE_INFINITY,
+  // Homeroom sections per grade. Lite uses one (A) so rooms aren't near-empty;
+  // medium + full use two (A, B).
   sectionLetters: (SEED_IS_LITE ? ["A"] : ["A", "B"]) as string[],
   // Subjects used to generate classes (one class per subject × grade). The SD
   // catalog carries ~123 global subjects, so full makes ~1700 classes (123 × 13
-  // grades) which then bloats every downstream per-class table. Lite keeps ~12
-  // core subjects/grade (~156 classes) — leaner AND more realistic, since no
-  // student takes 123 subjects. min()'d via slice, so full is a no-op.
-  classSubjectCap: SEED_IS_LITE ? 12 : Number.POSITIVE_INFINITY,
+  // grades) which then bloats every downstream per-class table. Lite + medium
+  // keep ~12 core subjects/grade (~156 classes) — leaner AND more realistic,
+  // since no student takes 123 subjects. min()'d via slice, so full is a no-op.
+  classSubjectCap: SEED_IS_LITE
+    ? 12
+    : SEED_IS_MEDIUM
+      ? 12
+      : Number.POSITIVE_INFINITY,
 }
 
 // ============================================================================
@@ -889,66 +914,84 @@ export const TEACHER_DATA: TeacherData[] = [
 
 export const CLASSROOMS: ClassroomData[] = [
   // Regular Classrooms (30)
-  { name: "A101", capacity: 30, type: "classroom", building: "A", floor: 1 },
-  { name: "A102", capacity: 30, type: "classroom", building: "A", floor: 1 },
-  { name: "A103", capacity: 30, type: "classroom", building: "A", floor: 1 },
-  { name: "A201", capacity: 30, type: "classroom", building: "A", floor: 2 },
-  { name: "A202", capacity: 30, type: "classroom", building: "A", floor: 2 },
-  { name: "A203", capacity: 30, type: "classroom", building: "A", floor: 2 },
-  { name: "B101", capacity: 35, type: "classroom", building: "B", floor: 1 },
-  { name: "B102", capacity: 35, type: "classroom", building: "B", floor: 1 },
-  { name: "B103", capacity: 35, type: "classroom", building: "B", floor: 1 },
-  { name: "B201", capacity: 35, type: "classroom", building: "B", floor: 2 },
-  { name: "B202", capacity: 35, type: "classroom", building: "B", floor: 2 },
-  { name: "B203", capacity: 35, type: "classroom", building: "B", floor: 2 },
+  { name: "أ101", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "أ102", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "أ103", capacity: 30, type: "classroom", building: "A", floor: 1 },
+  { name: "أ201", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "أ202", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "أ203", capacity: 30, type: "classroom", building: "A", floor: 2 },
+  { name: "ب101", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "ب102", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "ب103", capacity: 35, type: "classroom", building: "B", floor: 1 },
+  { name: "ب201", capacity: 35, type: "classroom", building: "B", floor: 2 },
+  { name: "ب202", capacity: 35, type: "classroom", building: "B", floor: 2 },
+  { name: "ب203", capacity: 35, type: "classroom", building: "B", floor: 2 },
 
   // Labs (10)
-  { name: "Physics Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
-  { name: "Chemistry Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
-  { name: "Biology Lab", capacity: 25, type: "lab", building: "C", floor: 1 },
   {
-    name: "Computer Lab 1",
+    name: "مختبر الفيزياء",
+    capacity: 25,
+    type: "lab",
+    building: "C",
+    floor: 1,
+  },
+  {
+    name: "مختبر الكيمياء",
+    capacity: 25,
+    type: "lab",
+    building: "C",
+    floor: 1,
+  },
+  { name: "مختبر الأحياء", capacity: 25, type: "lab", building: "C", floor: 1 },
+  {
+    name: "معمل الحاسوب 1",
     capacity: 30,
     type: "lab",
     building: "C",
     floor: 2,
   },
   {
-    name: "Computer Lab 2",
+    name: "معمل الحاسوب 2",
     capacity: 30,
     type: "lab",
     building: "C",
     floor: 2,
   },
-  { name: "Language Lab", capacity: 25, type: "lab", building: "C", floor: 2 },
+  { name: "مختبر اللغات", capacity: 25, type: "lab", building: "C", floor: 2 },
 
   // Special Rooms (15)
-  { name: "Library", capacity: 100, type: "library", building: "D", floor: 1 },
-  { name: "Art Room", capacity: 25, type: "art", building: "D", floor: 1 },
-  { name: "Music Room", capacity: 30, type: "music", building: "D", floor: 1 },
+  { name: "المكتبة", capacity: 100, type: "library", building: "D", floor: 1 },
+  { name: "غرفة الفنون", capacity: 25, type: "art", building: "D", floor: 1 },
   {
-    name: "Assembly Hall",
+    name: "غرفة الموسيقى",
+    capacity: 30,
+    type: "music",
+    building: "D",
+    floor: 1,
+  },
+  {
+    name: "قاعة الاجتماعات الكبرى",
     capacity: 500,
     type: "hall",
     building: "D",
     floor: 1,
   },
   {
-    name: "Sports Hall",
+    name: "الصالة الرياضية",
     capacity: 200,
     type: "sports",
     building: "E",
     floor: 1,
   },
   {
-    name: "Football Field",
+    name: "ملعب كرة القدم",
     capacity: 100,
     type: "sports",
     building: "E",
     floor: 0,
   },
   {
-    name: "Basketball Court",
+    name: "ملعب كرة السلة",
     capacity: 50,
     type: "sports",
     building: "E",
@@ -957,15 +1000,21 @@ export const CLASSROOMS: ClassroomData[] = [
 
   // Admin Rooms
   {
-    name: "Principal Office",
+    name: "مكتب المدير",
     capacity: 10,
     type: "admin",
     building: "A",
     floor: 1,
   },
-  { name: "Staff Room", capacity: 40, type: "admin", building: "A", floor: 1 },
   {
-    name: "Meeting Room",
+    name: "غرفة المعلمين",
+    capacity: 40,
+    type: "admin",
+    building: "A",
+    floor: 1,
+  },
+  {
+    name: "غرفة الاجتماعات",
     capacity: 20,
     type: "admin",
     building: "A",

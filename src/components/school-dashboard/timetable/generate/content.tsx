@@ -93,15 +93,6 @@ interface GenerationStats {
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const DAY_NAMES_AR = [
-  "الأحد",
-  "الاثنين",
-  "الثلاثاء",
-  "الأربعاء",
-  "الخميس",
-  "الجمعة",
-  "السبت",
-]
 
 export default function GenerateTimetableContent({ dictionary, lang }: Props) {
   const d = dictionary?.timetable
@@ -195,12 +186,18 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
         if (result.success) {
           toast({
             title: d?.generate?.generationComplete || "Generation Complete",
-            description: `Successfully generated ${result.stats.placedSlots} slots`,
+            description: `${g?.successfullyGenerated ?? "Successfully generated"} ${result.stats.placedSlots} ${g?.slots ?? "slots"}`,
           })
         } else {
           toast({
             title: d?.generate?.generationPartial || "Generation Partial",
-            description: `Generated ${result.stats.placedSlots}/${result.stats.totalSlots} slots with ${result.errors.length} errors`,
+            description: (
+              g?.generationPartialDesc ??
+              "Generated {placed}/{total} slots with {errors} errors"
+            )
+              .replace("{placed}", String(result.stats.placedSlots))
+              .replace("{total}", String(result.stats.totalSlots))
+              .replace("{errors}", String(result.errors.length)),
             variant: "destructive",
           })
         }
@@ -232,7 +229,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
       if (result.success) {
         toast({
           title: d?.generate?.timetableApplied || "Timetable Applied",
-          description: `Successfully created ${result.createdCount} slots`,
+          description: `${g?.successfullyCreated ?? "Successfully created"} ${result.createdCount} ${g?.slots ?? "slots"}`,
         })
         // Reset preview state
         setPreviewSlots([])
@@ -318,7 +315,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
     {} as Record<number, GeneratedSlot[]>
   )
 
-  const dayNames = lang === "ar" ? DAY_NAMES_AR : DAY_NAMES
+  const dayNames = (d?.dayNames as string[] | undefined) ?? DAY_NAMES
 
   return (
     <div className="space-y-6">
@@ -750,7 +747,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                           <li key={i}>{error}</li>
                         ))}
                         {errors.length > 5 && (
-                          <li>...and {errors.length - 5} more</li>
+                          <li>
+                            {(g?.andMore ?? "...and {count} more").replace(
+                              "{count}",
+                              String(errors.length - 5)
+                            )}
+                          </li>
                         )}
                       </ul>
                     </AlertDescription>
@@ -768,7 +770,12 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                           <li key={i}>{warning}</li>
                         ))}
                         {warnings.length > 5 && (
-                          <li>...and {warnings.length - 5} more</li>
+                          <li>
+                            {(g?.andMore ?? "...and {count} more").replace(
+                              "{count}",
+                              String(warnings.length - 5)
+                            )}
+                          </li>
                         )}
                       </ul>
                     </AlertDescription>
@@ -786,7 +793,7 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                   {unplacedClasses.length})
                 </AlertTitle>
                 <AlertDescription>
-                  {g?.unplacedClassesDesc ??
+                  {g?.unplacedDesc ??
                     "These classes could not be fully scheduled. Check teacher availability and room capacity."}
                 </AlertDescription>
               </Alert>
@@ -858,7 +865,9 @@ export default function GenerateTimetableContent({ dictionary, lang }: Props) {
                               {slot.teacherId ? (
                                 `${slot.teacherId.slice(0, 8)}...`
                               ) : (
-                                <Badge variant="outline">Unassigned</Badge>
+                                <Badge variant="outline">
+                                  {g?.unassigned ?? "Unassigned"}
+                                </Badge>
                               )}
                             </TableCell>
                             <TableCell>

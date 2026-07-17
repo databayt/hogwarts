@@ -84,6 +84,8 @@ export default function ApplicationSuccessModal({
       setShowModal={setShowModal}
       className="md:max-w-sm"
       preventDefaultClose
+      title={dict.submitted || "Application submitted"}
+      description={dict.submitted || "Application submitted"}
     >
       <div className="px-4 py-8 text-center sm:px-8 sm:py-12">
         <CelebrationAnimation className="mb-4" />

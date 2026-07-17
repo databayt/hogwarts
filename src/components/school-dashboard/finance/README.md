@@ -21,26 +21,56 @@ The Finance Block is a feature-based financial management system for multi-tenan
 
 ### Honest Status Matrix
 
-This matrix is the authoritative readiness view; it is kept identical to the banner in `ISSUE.md` and the matrix at `/docs/finance`. The **Ledger** column is the key honesty signal -- only fee payments reach the general ledger today.
+This matrix is the readiness view, mirrored in `ISSUE.md` and at `/docs/finance`. The **Ledger** column is the key honesty signal — it now tracks whether a money event can actually _reach_ the ledger from the UI, not merely whether a posting function has a caller.
 
-| Sub-module  | Readiness | Ledger wired                       | i18n | Tests  | Docs |
-| ----------- | --------- | ---------------------------------- | ---- | ------ | ---- |
-| invoice     | 90%       | ❌ `postInvoicePayment` orphaned   | ⚠️   | 🟢 131 | ✅   |
-| fees        | 85%       | 🟡 fee payments only (no rollback) | ✅   | 🟡 13  | ✅   |
-| budget      | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| receipt     | 85%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| banking     | 80%       | ➖ n/a                             | ⚠️   | 🟡 5   | ✅   |
-| dashboard   | 80%       | ➖ n/a (trends are mock)           | ✅   | ❌     | ✅   |
-| expenses    | 80%       | ❌ `postExpensePayment` orphaned   | ⚠️   | ❌     | ✅   |
-| accounts    | 75%       | 🟢 engine home (fee payments only) | ⚠️   | 🟡 10  | ✅   |
-| permissions | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
-| reports     | 75%       | 🔗 reads ledger (fee-only data)    | ⚠️   | ❌     | ✅   |
-| salary      | 75%       | ➖ n/a                             | ✅   | ❌     | ✅   |
-| timesheet   | 75%       | ➖ n/a                             | ⚠️   | ❌     | ✅   |
-| wallet      | 75%       | ❌ `postWalletTopup` orphaned      | ⚠️   | ❌     | ✅   |
-| payroll     | 65%       | ❌ `postSalaryPayment` orphaned    | ✅   | ❌     | ✅   |
+> **2026-07-17 — this matrix was wrong in three directions. Verify before trusting it.**
+>
+> 1. It rated salary/payroll i18n "✅" while their nav bars, headings and `metadata.title` were
+>    hardcoded English, and `PayrollStatus`/`SlipStatus`/`PayFrequency` rendered as raw enums.
+> 2. It said nothing about RBAC — yet **27 of the block's 30 db-querying `page.tsx` files had no
+>    permission gate at all**, so any authenticated student could read the balance sheet, P&L,
+>    trial balance, general ledger, and the full staff payroll. Fixed 2026-07-17; see `guard.ts`.
+> 3. Its **"❌ orphaned" ledger markers were stale** — every posting function has had a real caller
+>    since 2026-06-21 (`ISSUE.md` line 71 records it; this file was never updated). But `ISSUE.md`'s
+>    "all 6 wired" is **also** misleading, for the reason below.
+>
+> **What matters is reachability, not whether a caller exists.** `postSalaryPayment` is called by
+> `processPayments`, and `postWalletTopup` by `topupWallet` — but **nothing calls those two actions**:
+> no UI, no cron, no API route. `/finance/payroll/disbursement` and `/finance/payroll/process` are
+> **404 — never built**, and `/finance/wallet/new` is a "coming soon" stub. So payroll and wallet money
+> **never reaches the ledger**: the general ledger, balance sheet, P&L and trial balance omit salary
+> expense entirely — the largest cost a school has. `scripts/migrate-ledger-cents-to-whole-units.ts`
+> independently observed the same thing ("postWalletTopup is wired but has produced no rows").
+>
+> The **Nav** column is the honest signal for salary/payroll: their navigation advertised 35 routes
+> with **no component behind them** — and that unbuilt disbursement UI is _why_ payroll's ledger
+> posting is dead. The two failures share one root cause.
 
-Legend -- **Ledger**: 🟢 posts · 🟡 posts but not transactional · ❌ posting fn exists but zero callers · 🔗 consumes ledger · ➖ not a money-mover. **i18n**: ✅ ready · ⚠️ validation strings still hardcoded English. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
+| Sub-module  | Readiness | Ledger wired                        | Nav             | i18n | Tests  | Docs |
+| ----------- | --------- | ----------------------------------- | --------------- | ---- | ------ | ---- |
+| invoice     | 90%       | 🟢 `markInvoicePaid` → posts        | ✅ all resolve  | 🟢   | 🟢 153 | ✅   |
+| fees        | 85%       | 🟢 payment + assignment (no rollbk) | ✅ all resolve  | ✅   | 🟡 13  | ✅   |
+| budget      | 85%       | ➖ n/a                              | ✅ all resolve  | ✅   | ❌     | ✅   |
+| receipt     | 85%       | ➖ n/a                              | ✅ all resolve  | ✅   | ❌     | ✅   |
+| banking     | 80%       | ➖ n/a                              | ✅ all resolve  | ⚠️   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (trends are mock)            | ✅ all resolve  | ✅   | ❌     | ✅   |
+| expenses    | 80%       | 🟢 `markExpensePaid` → posts        | ✅ all resolve  | ⚠️   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home                      | ✅ all resolve  | ⚠️   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                              | ➖              | ⚠️   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (no salary/wallet)  | ✅ all resolve  | ⚠️   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                              | ✅ all resolve  | ⚠️   | ❌     | ✅   |
+| wallet      | 75%       | 🔴 wired but UNREACHABLE            | ✅ all resolve  | ⚠️   | ❌     | ✅   |
+| salary      | 40%       | ➖ n/a                              | 🔴 2 of 16 real | 🟢   | ❌     | ✅   |
+| payroll     | 35%       | 🔴 wired but UNREACHABLE            | 🔴 2 of 23 real | 🟢   | ❌     | ✅   |
+
+Legend -- **Ledger**: 🟢 reaches the ledger from the UI · 🔴 posting fn is wired to an action nothing can invoke · 🔗 consumes ledger · ➖ not a money-mover. **Nav**: ✅ every link resolves · 🔴 most advertised routes don't exist (now rendered disabled + "coming soon"). **i18n**: 🟢 verified in a browser on /ar · ✅ believed ready · ⚠️ validation strings still hardcoded English. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
+
+**salary/payroll readiness was restated 75%/65% → 40%/35%.** Nothing regressed; the old numbers
+counted a navigation shell as a feature. What actually exists: payroll = one runs list (+detail,
++create stub); salary = one structures list (+detail, +create stub). Slips, processing, approval,
+disbursement, tax settings, allowances, deductions, calculator, increments, advances and every
+salary/payroll report are **unbuilt** — there is no component for any of them, and an employee has
+**no way to see their own payslip**.
 
 > **i18n caveat:** the i18n column tracks UI/validation strings only. Separately, **no finance Prisma model has a `lang` field**, so DB-stored finance text (`Fine.reason`, `Scholarship` / `ExpenseCategory` / `ChartOfAccount` names, `FeeStructure` name/description) can't use the platform's `getText` convention. Tracked in `ISSUE.md` P1.
 

@@ -93,10 +93,12 @@ export async function submitLessonQuiz(input: {
   let score = 0
   let total = 0
 
+  // NOTE: an unanswered gradeable question counts toward `total` but earns no
+  // point. Skipping used to `continue` before `total++`, which scored "answered
+  // 1 of 10 correctly, skipped the rest" as 100% — harmless for practice, but
+  // this result feeds the gradebook and report cards.
   for (const q of questions) {
     const studentAnswer = answerMap.get(q.id)
-    if (!studentAnswer) continue // student skipped this question
-
     const type = q.questionType as string
 
     if (type === "MULTIPLE_CHOICE" || type === "TRUE_FALSE") {
@@ -105,7 +107,7 @@ export async function submitLessonQuiz(input: {
       if (!opts || opts.length === 0) continue
 
       total++
-      const idx = studentAnswer.selectedOptionIndex
+      const idx = studentAnswer?.selectedOptionIndex
       if (idx !== undefined && idx >= 0 && idx < opts.length) {
         if (opts[idx].isCorrect === true) score++
       }
@@ -120,7 +122,7 @@ export async function submitLessonQuiz(input: {
         continue
 
       total++
-      const raw = studentAnswer.answerText ?? ""
+      const raw = studentAnswer?.answerText ?? ""
       const caseSensitive = opts.caseSensitive === true
       const studentText = caseSensitive ? raw.trim() : raw.trim().toLowerCase()
       const match = opts.acceptedAnswers.some((accepted) => {

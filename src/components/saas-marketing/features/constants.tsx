@@ -2563,21 +2563,25 @@ export const FEATURE_DETAILS: Record<
  */
 export const IMPACT_METRICS: ImpactMetric[] = [
   {
+    id: "time-saved",
     value: "80%",
     label: "Time Saved",
     description: "Reduction in administrative tasks through automation",
   },
   {
+    id: "cost-reduction",
     value: "60%",
     label: "Cost Reduction",
     description: "Lower operational costs with paperless workflows",
   },
   {
+    id: "enrollment-boost",
     value: "25%",
     label: "Enrollment Boost",
     description: "Increase in enrollment with online admissions",
   },
   {
+    id: "uptime",
     value: "99.9%",
     label: "Uptime",
     description: "Reliable cloud infrastructure for uninterrupted access",

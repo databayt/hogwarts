@@ -121,14 +121,14 @@ const INQUIRY_SOURCES = [
 ]
 
 const INQUIRY_MESSAGES = [
-  "I would like to learn more about admission requirements for my child.",
-  "Can you please send me information about your curriculum and fees?",
-  "I am interested in enrolling my child for the upcoming academic year.",
-  "We recently moved to the area and are looking for a good school.",
-  "A friend recommended your school. Can we schedule a visit?",
-  "What are the admission deadlines and required documents?",
-  "I would like to know about scholarship opportunities.",
-  "Can you share details about your extracurricular activities?",
+  "أرغب في معرفة المزيد عن متطلبات القبول لطفلي.",
+  "هل يمكنكم إرسال معلومات عن المنهج الدراسي والرسوم؟",
+  "أنا مهتم بتسجيل طفلي للعام الدراسي القادم.",
+  "انتقلنا مؤخرًا إلى المنطقة ونبحث عن مدرسة جيدة.",
+  "رشّح لنا أحد الأصدقاء مدرستكم. هل يمكننا تحديد موعد لزيارة؟",
+  "ما هي المواعيد النهائية للقبول والمستندات المطلوبة؟",
+  "أرغب في معرفة فرص المنح الدراسية المتاحة.",
+  "هل يمكنكم مشاركة تفاصيل عن الأنشطة اللاصفية لديكم؟",
 ]
 
 // ============================================================================
@@ -204,20 +204,24 @@ export async function seedAdmissionSettings(
         tourDaysOfWeek: [0, 1, 2, 3, 4], // Sun-Thu
         documentRequirements: JSON.stringify([
           {
-            name: "Birth Certificate",
+            name: "شهادة الميلاد",
             required: true,
-            description: "Official copy",
+            description: "نسخة رسمية",
           },
           {
-            name: "Previous Report Cards",
+            name: "كشوف الدرجات السابقة",
             required: true,
-            description: "Last 2 years",
+            description: "لآخر سنتين",
           },
-          { name: "Passport Photo", required: true, description: "Recent 4x6" },
           {
-            name: "Transfer Certificate",
+            name: "صورة شخصية",
+            required: true,
+            description: "صورة حديثة مقاس 4×6",
+          },
+          {
+            name: "شهادة نقل",
             required: false,
-            description: "If applicable",
+            description: "إن وجدت",
           },
         ]),
       },
@@ -241,7 +245,7 @@ export async function seedAdmissionCampaign(
   const currentYear = new Date().getFullYear()
   const nextYear = currentYear + 1
   const academicYear = `${currentYear}-${nextYear}`
-  const campaignName = `Admission ${academicYear}`
+  const campaignName = `القبول للعام الدراسي ${academicYear}`
 
   try {
     const existing = await prisma.admissionCampaign.findFirst({
@@ -260,19 +264,19 @@ export async function seedAdmissionCampaign(
         startDate: new Date(`${currentYear}-01-01`),
         endDate: new Date(`${currentYear}-08-31`),
         status: "OPEN",
-        description: `Admission open for the ${academicYear} academic year. Apply now for KG through Grade 12.`,
+        description: `القبول مفتوح للعام الدراسي ${academicYear}. قدّم الآن من الروضة حتى الصف الثاني عشر.`,
         eligibilityCriteria: JSON.stringify({
           minAge: { KG1: 4, KG2: 5, Grade1: 6 },
-          requiredDocuments: ["Birth Certificate", "Previous Report Cards"],
+          requiredDocuments: ["شهادة الميلاد", "كشوف الدرجات السابقة"],
           entranceTest: true,
           interview: true,
         }),
         requiredDocuments: JSON.stringify([
-          "Birth Certificate",
-          "Previous Report Cards",
-          "Passport Photo",
-          "Transfer Certificate",
-          "Parent ID",
+          "شهادة الميلاد",
+          "كشوف الدرجات السابقة",
+          "صورة شخصية",
+          "شهادة نقل",
+          "هوية ولي الأمر",
         ]),
         applicationFee: 0,
         totalSeats: 200,
@@ -355,8 +359,8 @@ export async function seedTimeSlots(
               maxCapacity: 10,
               currentBookings: 0,
               isActive: true,
-              location: "Main Office",
-              notes: "School tour for prospective families",
+              location: "المكتب الرئيسي",
+              notes: "جولة مدرسية للأسر المهتمة بالالتحاق",
             },
           })
           slotIds.push(slot.id)
@@ -608,7 +612,7 @@ export async function seedApplications(
               reviewedAt,
               reviewedBy,
               reviewNotes: reviewedAt
-                ? `Application reviewed. ${config.status === "REJECTED" ? "Does not meet eligibility criteria." : "Meets basic requirements."}`
+                ? `تمت مراجعة الطلب. ${config.status === "REJECTED" ? "لا يستوفي معايير الأهلية." : "يستوفي المتطلبات الأساسية."}`
                 : null,
               entranceScore,
               interviewScore,
@@ -818,7 +822,7 @@ export async function seedTourBookings(
                   : null,
               noShowReason:
                 config.status === "NO_SHOW"
-                  ? "Family did not show up for scheduled tour"
+                  ? "لم تحضر الأسرة الجولة المجدولة"
                   : null,
               numberOfAttendees: randomNumber(1, 3),
               reminderSent: config.status !== "PENDING",
@@ -830,7 +834,7 @@ export async function seedTourBookings(
                   : null,
               cancelReason:
                 config.status === "CANCELLED"
-                  ? "Family requested cancellation due to schedule conflict"
+                  ? "طلبت الأسرة الإلغاء بسبب تعارض في المواعيد"
                   : null,
               createdAt: getPastDate(randomNumber(5, 20)),
             },

@@ -90,7 +90,6 @@ async function CoursesRenderer({
       <StreamCoursesContent
         dictionary={dictionary}
         lang={lang}
-        schoolId={schoolId}
         courses={[]}
         totalCount={0}
         page={1}
@@ -102,7 +101,7 @@ async function CoursesRenderer({
     )
   }
 
-  const { rows, count } = await getAllCatalogCourses(schoolId, {
+  const { rows, count } = await getAllCatalogCourses({
     page: search.page,
     perPage: search.perPage,
     title: search.title || undefined,
@@ -115,7 +114,6 @@ async function CoursesRenderer({
     <StreamCoursesContent
       dictionary={dictionary}
       lang={lang}
-      schoolId={schoolId}
       courses={rows}
       totalCount={count}
       page={search.page}

@@ -21,6 +21,7 @@ import "dotenv/config"
 
 import { PrismaClient } from "@prisma/client"
 
+import { autoGenerateTimetableForSchool } from "@/components/catalog/provision"
 import {
   setupCatalogForSchool,
   setupDefaultsForSchool,
@@ -59,6 +60,7 @@ import { seedQaCurriculum } from "./catalog/qa"
 import { seedCurriculumRegistry } from "./catalog/registry"
 import { seedSaCurriculum } from "./catalog/sa"
 import { seedSdCurriculum } from "./catalog/sd"
+import { seedSdContent } from "./catalog/sd-content"
 import { seedUsCurriculum } from "./catalog/us"
 import { seedCatalogVideos } from "./catalog/videos"
 import { seedAllClasses } from "./classes"
@@ -87,7 +89,6 @@ import { seedComboniTeachers } from "./seed-comboni-teachers"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
-import { seedTimetable } from "./timetable"
 import { seedTransportation } from "./transportation"
 import type {
   ClassRef,
@@ -102,7 +103,7 @@ import type {
   UserRef,
   YearLevelRef,
 } from "./types"
-import { measureDuration } from "./utils"
+import { logSuccess, measureDuration } from "./utils"
 
 // ============================================================================
 // DB RESOLVERS - Fetch existing data instead of re-seeding
@@ -347,11 +348,26 @@ async function resolveTerm(
   prisma: PrismaClient,
   schoolId: string
 ): Promise<TermRef> {
-  const term = await prisma.term.findFirst({
-    where: { schoolId },
-    select: { id: true, termNumber: true, startDate: true, endDate: true },
-    orderBy: { termNumber: "asc" },
-  })
+  // Prefer the ACTIVE term — `resolveActiveTerm` (what every read path uses)
+  // reads by this flag, so falling back to Term 1 would point re-seeds at a
+  // term the dashboard never displays.
+  const select = {
+    id: true,
+    termNumber: true,
+    startDate: true,
+    endDate: true,
+    isActive: true,
+  }
+  const term =
+    (await prisma.term.findFirst({
+      where: { schoolId, isActive: true },
+      select,
+    })) ??
+    (await prisma.term.findFirst({
+      where: { schoolId },
+      select,
+      orderBy: { termNumber: "asc" },
+    }))
   if (!term) throw new Error("No term found. Run full seed first.")
   return term
 }
@@ -517,6 +533,14 @@ const SEEDS: Record<string, SeedEntry> = {
     global: true,
     run: async (prisma) => {
       await seedSdCurriculum(prisma)
+    },
+  },
+  "sd-content": {
+    description:
+      "Ingest authored SD qbank + exams for all grades (curriculum/sd/g1–g12) into catalog Question/Exam",
+    global: true,
+    run: async (prisma) => {
+      await seedSdContent(prisma)
     },
   },
   content: {
@@ -865,21 +889,22 @@ const SEEDS: Record<string, SeedEntry> = {
     },
   },
   timetable: {
-    description: "Weekly timetable",
+    description: "Weekly timetable (production generator, section-based)",
     run: async (prisma, schoolId) => {
-      const classes = await resolveClasses(prisma, schoolId)
-      const teachers = await resolveTeachers(prisma, schoolId)
-      const classrooms = await resolveClassrooms(prisma, schoolId)
-      const periods = await resolvePeriods(prisma, schoolId)
+      // Same production path real schools get at onboarding — one source of
+      // truth. The generator only createMany's, so clear the active term's
+      // slots first to keep re-runs idempotent.
       const term = await resolveTerm(prisma, schoolId)
-      await seedTimetable(
-        prisma,
-        schoolId,
-        classes,
-        teachers,
-        classrooms,
-        periods,
-        term
+      await prisma.timetable.deleteMany({
+        where: { schoolId, termId: term.id, weekOffset: 0 },
+      })
+      const result = await autoGenerateTimetableForSchool(schoolId)
+      logSuccess(
+        "Timetable",
+        result.slotsCreated,
+        result.warnings.length > 0
+          ? `${result.warnings.length} warnings (subject over-allocation)`
+          : undefined
       )
     },
   },

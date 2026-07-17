@@ -7,8 +7,11 @@ import { notFound } from "next/navigation"
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { resolveDefaultCurrency } from "@/lib/payment/gateway-config"
+import {
+  filterConfiguredManualRails,
+  getSchoolPaymentSettings,
+} from "@/lib/payment/manual-rail-settings"
 import { resolveAvailableMethods } from "@/lib/payment/provider"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,11 +32,13 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { interpolate } from "@/components/internationalization/helpers"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FeePaymentMethods } from "@/components/school-dashboard/finance/fees/fee-payment-methods"
 import {
   buildInstallments,
   InstallmentTimeline,
 } from "@/components/school-dashboard/finance/fees/installment-timeline"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Assignment Details" }
 
@@ -76,11 +81,15 @@ export default async function AssignmentDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
 
-  const [assignment, school] = await Promise.all([
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
+
+  const [assignment, school, paymentSettings] = await Promise.all([
     db.feeAssignment.findFirst({
       where: { id, schoolId },
       include: {
@@ -112,6 +121,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
       where: { id: schoolId },
       select: { currency: true, country: true, timezone: true },
     }),
+    getSchoolPaymentSettings(schoolId),
   ])
 
   if (!assignment) notFound()
@@ -119,14 +129,17 @@ export default async function AssignmentDetailPage({ params }: Props) {
   const currency =
     school?.currency ??
     resolveDefaultCurrency(school?.country, school?.timezone)
-  // Online methods the school's region supports (Tap-first for AE, Stripe
-  // elsewhere). Filtered by configured + currency-compatible so we never
-  // render a gateway whose API key is missing.
-  const methods = resolveAvailableMethods(
+  // Rails the school's region supports (Tap-first for AE, Stripe elsewhere,
+  // Bankak/Cashi for SD). Filtered by configured + currency-compatible so we
+  // never render a gateway whose API key is missing...
+  const resolvedMethods = resolveAvailableMethods(
     school?.country,
     school?.timezone,
     currency
   )
+  // ...then drop the manual wallet rails this school hasn't set up, since
+  // isConfigured() is env-level and can't know about per-school accounts.
+  const methods = filterConfiguredManualRails(resolvedMethods, paymentSettings)
 
   const studentName = [
     assignment.student?.firstName,

@@ -12,7 +12,7 @@ import type { PrismaClient } from "@prisma/client"
 
 import { CLASSROOMS } from "./constants"
 import type { ClassroomRef } from "./types"
-import { logSuccess } from "./utils"
+import { logSuccess, logWarning } from "./utils"
 
 // ============================================================================
 // CLASSROOM TYPES SEEDING
@@ -97,6 +97,37 @@ export async function seedClassrooms(
       name: classroom.roomName,
       capacity: classroom.capacity,
     })
+  }
+
+  // Report rooms this school has that CLASSROOMS no longer defines.
+  //
+  // The upsert above keys on `schoolId_roomName`, so renaming a room in the
+  // constant CANNOT update the existing row — it creates a new one and orphans
+  // the old. That is exactly how the demo ended up listing "Football Field" /
+  // "Staff Room" / "Physics Lab" in the /ar classroom picker long after
+  // CLASSROOMS was Arabized: 16 English rows tagged `lang=ar`, referenced by
+  // nothing, invisible to the seed. Renames were applied out-of-band on
+  // 2026-07-17.
+  //
+  // Report, don't delete: schools legitimately add their own rooms through the
+  // classrooms UI, and this seeder cannot tell those apart from stale ones.
+  const defined = new Set(CLASSROOMS.map((c) => c.name))
+  const orphans = await prisma.classroom.findMany({
+    where: { schoolId, roomName: { notIn: [...defined] } },
+    select: {
+      roomName: true,
+      _count: { select: { timetables: true, sections: true } },
+    },
+  })
+  const unreferenced = orphans.filter(
+    (o) => o._count.timetables === 0 && o._count.sections === 0
+  )
+  if (unreferenced.length > 0) {
+    logWarning(
+      `${unreferenced.length} classroom(s) are not in CLASSROOMS and unused — likely stale renames: ${unreferenced
+        .map((o) => o.roomName)
+        .join(", ")}`
+    )
   }
 
   // Count by type

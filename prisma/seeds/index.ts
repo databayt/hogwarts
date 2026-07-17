@@ -41,6 +41,7 @@ import "dotenv/config"
 
 import { PrismaClient } from "@prisma/client"
 
+import { autoGenerateTimetableForSchool } from "@/components/catalog/provision"
 import {
   setupCatalogForSchool,
   setupDefaultsForSchool,
@@ -68,7 +69,7 @@ import { seedCatalogBooks } from "./catalog/books"
 import { seedCatalog } from "./catalog/index"
 import { seedAllClasses } from "./classes"
 import { seedClassrooms } from "./classrooms"
-import { SEED_IS_LITE } from "./constants"
+import { SEED_IS_LITE, SEED_IS_MEDIUM } from "./constants"
 import { seedEvents } from "./events"
 import { seedExamResults, seedExams, seedGradingConfig } from "./exams"
 import { seedFees } from "./fees"
@@ -88,9 +89,14 @@ import { seedSchoolWithBranding } from "./school"
 import { seedStaffMembers } from "./staff-members"
 import { seedStreamCourses, seedStreamEnrollments } from "./stream"
 import { seedSubjects } from "./subjects"
-import { seedTimetable } from "./timetable"
 import type { SeedContext } from "./types"
-import { logHeader, logPhase, logSummary, measureDuration } from "./utils"
+import {
+  logHeader,
+  logPhase,
+  logSuccess,
+  logSummary,
+  measureDuration,
+} from "./utils"
 
 // ============================================================================
 // SEED STATUS — the single source of truth for "is the demo fully seeded?"
@@ -99,12 +105,16 @@ import { logHeader, logPhase, logSummary, measureDuration } from "./utils"
 // run reached Phase 6. A partial seed (users but no classes) is NOT "full".
 // ============================================================================
 
-// Lite profile lowers the "fully seeded" bar to match its small output so
-// ensure-demo.ts takes the fast path instead of re-growing the demo to full
-// on every deploy. Both bounds sit safely below what the lite seed produces
-// (~52 students, well over a dozen classes).
+// Lite/medium profiles lower the "fully seeded" bar to match their smaller
+// output so ensure-demo.ts takes the fast path instead of re-growing the demo
+// to full on every deploy. Each bound sits safely below what that profile
+// produces (lite ~52 students; medium ~380 students / ~156 classes).
 export const SEED_THRESHOLDS: { students: number; classes: number } =
-  SEED_IS_LITE ? { students: 30, classes: 5 } : { students: 500, classes: 100 }
+  SEED_IS_LITE
+    ? { students: 30, classes: 5 }
+    : SEED_IS_MEDIUM
+      ? { students: 250, classes: 50 }
+      : { students: 500, classes: 100 }
 
 export async function getDemoSeedStatus(
   prisma: PrismaClient,
@@ -304,7 +314,12 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // ========================================================================
     // PHASE 6: CLASSES & ENROLLMENTS
     // ========================================================================
-    const term = terms[0] // Use first term
+    // Scope classes + timetable to the ACTIVE term, not blindly Term 1.
+    // `seedTerms` derives which term is active from today's date, so a seed run
+    // during the Term 2 window (Jan–Jun) marked Term 2 active while everything
+    // below landed on Term 1 — `resolveActiveTerm` then read Term 2 and found
+    // zero slots, rendering an empty grid on a school with 1,120 seeded slots.
+    const term = terms.find((t) => t.isActive) ?? terms[0]
 
     const classes = await measureDuration("Classes & Enrollments", () =>
       seedAllClasses(
@@ -441,17 +456,40 @@ export async function seedMain(externalPrisma?: PrismaClient) {
       )
     )
 
-    await measureDuration("Timetable", () =>
-      seedTimetable(
-        prisma,
-        school.id,
-        classes,
-        teachers,
-        classrooms,
-        periods,
-        term
+    // Timetable comes from the PRODUCTION generator — the same path a real
+    // school gets at onboarding — so the seed and onboarding share one source
+    // of truth (mirrors the retirement of the hand-rolled catalog/demo.ts).
+    // The legacy `seedTimetable` scheduled classes into whatever room was free
+    // (offices, labs, the football field) and emitted classId-only rows with no
+    // sectionId/subjectId, so nothing landed in a section's homeroom and the
+    // section-based reads couldn't see it. The generator places each section in
+    // its own homeroom and writes section+subject on every slot.
+    // It only createMany's, so clear the term first to keep re-seeds idempotent.
+    await measureDuration("Timetable", async () => {
+      // Count-guard like every other phase. Without this the delete+regenerate
+      // below runs on EVERY deploy: `ensure-demo` only fast-paths at >=500
+      // students, and the lite demo has ~57, so prebuild walks the slow path
+      // each time and would rebuild the grid (and reshuffle every teacher
+      // assignment) on every push. SEED_FORCE=1 re-walks deliberately.
+      const existing = await prisma.timetable.count({
+        where: { schoolId: school.id, termId: term.id, weekOffset: 0 },
+      })
+      if (existing > 0 && process.env.SEED_FORCE !== "1") {
+        logSuccess("Timetable", existing, "already seeded — skipped")
+        return
+      }
+      await prisma.timetable.deleteMany({
+        where: { schoolId: school.id, termId: term.id, weekOffset: 0 },
+      })
+      const result = await autoGenerateTimetableForSchool(school.id)
+      logSuccess(
+        "Timetable",
+        result.slotsCreated,
+        result.warnings.length > 0
+          ? `${result.warnings.length} warnings (subject over-allocation)`
+          : undefined
       )
-    )
+    })
 
     // Gamification (badges, streaks, competitions)
     await measureDuration("Gamification", () =>

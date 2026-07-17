@@ -109,7 +109,9 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
             <BarChart className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            {/* Three financial statements are actually implemented and
+                navigable: balance sheet, profit & loss, trial balance. */}
+            <div className="text-2xl font-bold">3</div>
             <p className="text-muted-foreground text-xs">
               {rp?.availableReports || "Available reports"}
             </p>

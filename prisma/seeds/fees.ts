@@ -34,74 +34,74 @@ import {
 // ============================================================================
 
 const FEE_STRUCTURES = [
-  // Kindergarten (levelOrder 1-2)
+  // Kindergarten (levelOrder 1-2) — amounts in SDG (Sudanese Pound)
   {
-    name: "Kindergarten Fee Structure",
+    name: "هيكل رسوم رياض الأطفال",
     levelOrders: [1, 2],
-    tuitionFee: 15000,
-    registrationFee: 500,
-    libraryFee: 200,
-    sportsFee: 300,
-    transportFee: 2000,
-    description: "Fee structure for kindergarten students",
+    tuitionFee: 375000,
+    registrationFee: 12500,
+    libraryFee: 5000,
+    sportsFee: 7500,
+    transportFee: 50000,
+    description: "هيكل الرسوم لطلاب مرحلة رياض الأطفال",
   },
   // Primary (levelOrder 3-8)
   {
-    name: "Primary Fee Structure",
+    name: "هيكل رسوم المرحلة الابتدائية",
     levelOrders: [3, 4, 5, 6, 7, 8],
-    tuitionFee: 18000,
-    registrationFee: 600,
-    examFee: 300,
-    libraryFee: 250,
-    laboratoryFee: 200,
-    sportsFee: 400,
-    transportFee: 2500,
-    description: "Fee structure for primary school students",
+    tuitionFee: 450000,
+    registrationFee: 15000,
+    examFee: 7500,
+    libraryFee: 6000,
+    laboratoryFee: 5000,
+    sportsFee: 10000,
+    transportFee: 60000,
+    description: "هيكل الرسوم لطلاب المرحلة الابتدائية",
   },
   // Intermediate (levelOrder 9-11)
   {
-    name: "Intermediate Fee Structure",
+    name: "هيكل رسوم المرحلة المتوسطة",
     levelOrders: [9, 10, 11],
-    tuitionFee: 22000,
-    registrationFee: 750,
-    examFee: 400,
-    libraryFee: 300,
-    laboratoryFee: 400,
-    sportsFee: 500,
-    transportFee: 3000,
-    description: "Fee structure for intermediate school students",
+    tuitionFee: 550000,
+    registrationFee: 18000,
+    examFee: 10000,
+    libraryFee: 7500,
+    laboratoryFee: 10000,
+    sportsFee: 12500,
+    transportFee: 75000,
+    description: "هيكل الرسوم لطلاب المرحلة المتوسطة",
   },
   // Secondary (levelOrder 12-14)
   {
-    name: "Secondary Fee Structure",
+    name: "هيكل رسوم المرحلة الثانوية",
     levelOrders: [12, 13, 14],
-    tuitionFee: 28000,
-    registrationFee: 1000,
-    examFee: 600,
-    libraryFee: 400,
-    laboratoryFee: 600,
-    sportsFee: 600,
-    transportFee: 3500,
-    description: "Fee structure for secondary school students",
+    tuitionFee: 700000,
+    registrationFee: 25000,
+    examFee: 15000,
+    libraryFee: 10000,
+    laboratoryFee: 15000,
+    sportsFee: 15000,
+    transportFee: 90000,
+    description: "هيكل الرسوم لطلاب المرحلة الثانوية",
   },
 ]
 
-// Fee amounts by levelOrder (1=KG1 through 14=Grade12)
+// Fee amounts by levelOrder (1=KG1 through 14=Grade12) — SDG
 const FEE_AMOUNTS_BY_ORDER: Record<number, number> = {
-  1: 15000,
-  2: 15000, // KG
-  3: 18000,
-  4: 18000,
-  5: 18000, // Primary
-  6: 18000,
-  7: 18000,
-  8: 18000,
-  9: 22000,
-  10: 22000,
-  11: 22000, // Intermediate
-  12: 28000,
-  13: 28000,
-  14: 28000, // Secondary
+  1: 375000,
+  2: 375000, // KG
+  3: 450000,
+  4: 450000,
+  5: 450000, // Primary
+  6: 450000,
+  7: 450000,
+  8: 450000,
+  9: 550000,
+  10: 550000,
+  11: 550000, // Intermediate
+  12: 700000,
+  13: 700000,
+  14: 700000, // Secondary
 }
 
 // Payment methods distribution
@@ -117,55 +117,55 @@ const PAYMENT_METHODS = [
 const FINE_REASONS = [
   {
     type: "LATE_FEE",
-    reason: "Late payment penalty",
-    minAmount: 100,
-    maxAmount: 500,
+    reason: "غرامة تأخر السداد",
+    minAmount: 2500,
+    maxAmount: 12500,
   },
   {
     type: "LIBRARY_FINE",
-    reason: "Overdue library book",
-    minAmount: 50,
-    maxAmount: 200,
+    reason: "تأخير إرجاع كتاب المكتبة",
+    minAmount: 1500,
+    maxAmount: 5000,
   },
   {
     type: "DISCIPLINE_FINE",
-    reason: "Classroom disruption",
-    minAmount: 100,
-    maxAmount: 300,
+    reason: "الإخلال بالنظام داخل الفصل",
+    minAmount: 2500,
+    maxAmount: 7500,
   },
   {
     type: "DAMAGE_FINE",
-    reason: "School property damage",
-    minAmount: 200,
-    maxAmount: 1000,
+    reason: "إتلاف ممتلكات المدرسة",
+    minAmount: 5000,
+    maxAmount: 25000,
   },
 ] as const
 
 // Scholarship types
 const SCHOLARSHIPS = [
   {
-    name: "Merit Scholarship",
-    description: "For students with outstanding academic performance",
+    name: "منحة التفوق الدراسي",
+    description: "للطلاب ذوي الأداء الأكاديمي المتميز",
     coverageType: "PERCENTAGE",
     coverageAmount: 50,
     minPercentage: 90,
   },
   {
-    name: "Financial Aid",
-    description: "For families demonstrating financial need",
+    name: "المساعدة المالية",
+    description: "للأسر ذات الحاجة المالية",
     coverageType: "PERCENTAGE",
     coverageAmount: 75,
-    maxFamilyIncome: 50000,
+    maxFamilyIncome: 1500000,
   },
   {
-    name: "Sports Excellence",
-    description: "For students excelling in athletics",
+    name: "منحة التميز الرياضي",
+    description: "للطلاب المتميزين في المجال الرياضي",
     coverageType: "PERCENTAGE",
     coverageAmount: 25,
   },
   {
-    name: "Full Scholarship",
-    description: "Complete tuition waiver for exceptional cases",
+    name: "المنحة الكاملة",
+    description: "إعفاء كامل من الرسوم للحالات الاستثنائية",
     coverageType: "FULL",
     coverageAmount: 100,
   },
@@ -232,7 +232,7 @@ export async function seedFeeStructures(
               sportsFee: structure.sportsFee || 0,
               transportFee: structure.transportFee || 0,
               totalAmount,
-              lateFeeAmount: 200,
+              lateFeeAmount: 10000,
               lateFeeType: "FIXED",
               isActive: academicYear === "2025-2026",
             },
@@ -443,8 +443,8 @@ export async function seedPayments(
           status: "SUCCESS",
           remarks:
             assignment.status === "PARTIAL"
-              ? "Partial payment received"
-              : "Full payment received",
+              ? "تم استلام دفعة جزئية"
+              : "تم استلام دفعة كاملة",
         },
       })
       paymentCount++
@@ -633,13 +633,12 @@ export async function seedScholarships(
             applicationNumber: generateApplicationNumber(),
             applicationDate: new Date(),
             academicYear: "2025-2026",
-            familyIncome: randomNumber(20000, 100000),
-            statement:
-              "Application for financial assistance for the academic year.",
+            familyIncome: randomNumber(600000, 3000000),
+            statement: "طلب للحصول على مساعدة مالية للعام الدراسي.",
             status,
             reviewDate: status !== "PENDING" ? new Date() : null,
             awardedAmount:
-              status === "APPROVED" ? randomNumber(5000, 15000) : null,
+              status === "APPROVED" ? randomNumber(150000, 400000) : null,
             awardDate: status === "APPROVED" ? new Date() : null,
           },
         })

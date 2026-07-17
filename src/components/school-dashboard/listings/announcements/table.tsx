@@ -62,7 +62,10 @@ function getTitle(row: AnnouncementRow): string {
 }
 
 // Export CSV function
-function createGetAnnouncementsCSV(lang: Locale) {
+function createGetAnnouncementsCSV(
+  lang: Locale,
+  csvHeaders: Dictionary["school"]["announcements"]["csvHeaders"]
+) {
   return async function getAnnouncementsCSV(
     filters?: Record<string, unknown>
   ): Promise<string> {
@@ -77,13 +80,13 @@ function createGetAnnouncementsCSV(lang: Locale) {
 
     const rows = result.data.rows
     const headers = [
-      "ID",
-      "Title",
-      "Language",
-      "Scope",
-      "Published",
-      "Created At",
-      "Created By",
+      csvHeaders.id,
+      csvHeaders.title,
+      csvHeaders.language,
+      csvHeaders.scope,
+      csvHeaders.published,
+      csvHeaders.createdAt,
+      csvHeaders.createdBy,
     ]
     const csvRows = rows.map((row: any) =>
       [
@@ -91,7 +94,7 @@ function createGetAnnouncementsCSV(lang: Locale) {
         `"${(row.title || "").replace(/"/g, '""')}"`,
         row.lang || "ar",
         row.scope,
-        row.published ? "Yes" : "No",
+        row.published ? csvHeaders.yes : csvHeaders.no,
         row.createdAt,
         row.createdBy || "",
       ].join(",")
@@ -273,9 +276,9 @@ function AnnouncementsTableInner({
   // Handle view
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/announcements/${id}`)
+      router.push(`/${lang}/announcements/${id}`)
     },
-    [router]
+    [router, lang]
   )
 
   // Get scope badge variant
@@ -294,8 +297,8 @@ function AnnouncementsTableInner({
 
   // Create locale-aware CSV export function
   const getAnnouncementsCSV = useMemo(
-    () => createGetAnnouncementsCSV(lang),
-    [lang]
+    () => createGetAnnouncementsCSV(lang, t.csvHeaders),
+    [lang, t.csvHeaders]
   )
 
   // Translations for toolbar
@@ -312,6 +315,14 @@ function AnnouncementsTableInner({
     searchColumns: t.searchColumns,
     noColumns: t.noColumns,
     all: t.all,
+  }
+
+  // Translations for the table view's load-more footer and empty state
+  const tableTranslations = {
+    loadMore: t.loadMore,
+    loading: t.loading,
+    noResults: t.noResults,
+    rowsSelected: t.rowsSelected,
   }
 
   return (
@@ -337,6 +348,7 @@ function AnnouncementsTableInner({
           hasMore={hasMore}
           isLoading={isLoading || isPending}
           onLoadMore={loadMore}
+          translations={tableTranslations}
         />
       ) : (
         <>

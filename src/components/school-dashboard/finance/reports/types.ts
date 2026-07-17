@@ -77,6 +77,9 @@ export interface AccountSummary {
   accountName: string
   accountType: AccountType
   balance: number
+  /** True for a derived line (e.g. Current Year Earnings) that has no posted
+   *  account of its own — computed from revenue − expenses for the period. */
+  isComputed?: boolean
 }
 
 export interface TrialBalanceEntry {

@@ -118,7 +118,7 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
             take: 1,
           })
           .then(async (groups) => {
-            const brandName = lang === "ar" ? "هوجورتس" : "Hogwarts"
+            const brandName = lang === "ar" ? "هوغورتس" : "Hogwarts"
             const topCreatorSchoolId = groups[0]?.schoolId ?? null
             if (!topCreatorSchoolId) return brandName
             const school = await db.school.findUnique({
@@ -136,8 +136,8 @@ export const getCatalogCourse = cache(async function getCatalogCourse(
               topCreatorSchoolId
             )
           })
-      : Promise.resolve(lang === "ar" ? "هوجورتس" : "Hogwarts")
-    ).catch(() => (lang === "ar" ? "هوجورتس" : "Hogwarts")),
+      : Promise.resolve(lang === "ar" ? "هوغورتس" : "Hogwarts")
+    ).catch(() => (lang === "ar" ? "هوغورتس" : "Hogwarts")),
   ])
 
   // Batched translation — one localize() call per model instead of N×M getText.

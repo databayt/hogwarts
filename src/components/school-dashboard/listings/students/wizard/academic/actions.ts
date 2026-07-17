@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
+import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -10,10 +11,45 @@ import { db } from "@/lib/db"
 import { enrollStudentInGradeClasses } from "@/lib/enrollment-sync"
 import { ensureStudentFeeAssignments } from "@/lib/fee-auto-assign"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkStudentPermission,
+  getAuthContext,
+  type AuthContext,
+  type StudentAction,
+} from "@/components/school-dashboard/listings/students/authorization"
 import { getLabels } from "@/components/translation/person"
 import type { Lang } from "@/components/translation/types"
 
 import { academicSchema, type AcademicFormData } from "./validation"
+
+/**
+ * Shared guard — `getTenantContext()` resolves schoolId from the subdomain
+ * header before the session, so these actions must assert an authenticated,
+ * role-permitted session too (not schoolId alone). `updateStudentAcademic`
+ * in particular enrolls the student and materializes fee assignments +
+ * invoices, so an unauthenticated caller could provision billing. See the
+ * matching guard in the personal wizard actions.
+ */
+async function authorizeWizardAction(
+  action: StudentAction
+): Promise<
+  | { ok: true; schoolId: string; authContext: AuthContext }
+  | { ok: false; response: ActionResponse }
+> {
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) {
+    return { ok: false, response: actionError(ACTION_ERRORS.NOT_AUTHENTICATED) }
+  }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { ok: false, response: actionError(ACTION_ERRORS.MISSING_SCHOOL) }
+  }
+  if (!checkStudentPermission(authContext, action, { schoolId })) {
+    return { ok: false, response: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  return { ok: true, schoolId, authContext }
+}
 
 async function getDisplayLocale(schoolId: string, locale?: string) {
   let displayLang: Lang
@@ -37,8 +73,9 @@ export async function getGradeOptions(
   ActionResponse<{ value: string; label: string; gradeNumber: number }[]>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const grades = await db.academicGrade.findMany({
       where: { schoolId },
@@ -74,8 +111,9 @@ export async function getStreamOptions(
   locale?: string
 ): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const streams = await db.academicStream.findMany({
       where: { schoolId, gradeId },
@@ -109,8 +147,9 @@ export async function getSectionOptions(
   locale?: string
 ): Promise<ActionResponse<{ value: string; label: string }[]>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const sections = await db.section.findMany({
       where: { schoolId, gradeId },
@@ -143,8 +182,9 @@ export async function getStudentAcademic(
   studentId: string
 ): Promise<ActionResponse<AcademicFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
@@ -184,8 +224,9 @@ export async function updateStudentAcademic(
   input: AcademicFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("update")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const parsed = academicSchema.parse(input)
 

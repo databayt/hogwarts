@@ -10,7 +10,11 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { defaultRoomName } from "@/components/catalog/room-naming"
+import {
+  defaultRoomName,
+  defaultSectionName,
+  sectionLetters,
+} from "@/components/catalog/room-naming"
 
 import { assertClassroomPermission, getAuthContext } from "../authorization"
 import {
@@ -177,7 +181,7 @@ export async function generateSections(
     const [school, existingClassroomCount] = await Promise.all([
       db.school.findUnique({
         where: { id: schoolId },
-        select: { maxClasses: true },
+        select: { maxClasses: true, preferredLanguage: true },
       }),
       db.classroom.count({ where: { schoolId } }),
     ])
@@ -240,8 +244,9 @@ export async function generateSections(
         const usedLetters = new Set(existingSections.map((s) => s.letter))
 
         let created = 0
-        for (let i = 0; i < SECTION_LETTERS.length && created < needed; i++) {
-          const letter = SECTION_LETTERS[i]
+        const letters = sectionLetters(school?.preferredLanguage)
+        for (let i = 0; i < letters.length && created < needed; i++) {
+          const letter = letters[i]
           if (usedLetters.has(letter)) continue
 
           // e.g. Grade 1 → A01 (section A), B01 (section B); Grade 12 → A12, B12.
@@ -272,7 +277,12 @@ export async function generateSections(
             })
           }
 
-          const sectionName = `Grade ${grade.gradeNumber}-${letter}`
+          const sectionName = defaultSectionName(
+            school?.preferredLanguage,
+            grade.gradeNumber,
+            grade.name,
+            letter
+          )
           await tx.section.create({
             data: {
               schoolId,

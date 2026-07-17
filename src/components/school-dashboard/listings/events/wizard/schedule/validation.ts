@@ -3,11 +3,16 @@
 
 import { z } from "zod"
 
-export const scheduleSchema = z.object({
-  eventDate: z.coerce.date({ message: "Event date is required" }),
-  startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required"),
-  location: z.string().optional(),
-})
+import type { EventValidationMessages } from "../../validation"
+
+export const createScheduleSchema = (v?: EventValidationMessages) =>
+  z.object({
+    eventDate: z.coerce.date({ message: v?.eventDateRequired }),
+    startTime: z.string().min(1, v?.startTimeRequired),
+    endTime: z.string().min(1, v?.endTimeRequired),
+    location: z.string().optional(),
+  })
+
+export const scheduleSchema = createScheduleSchema()
 
 export type ScheduleFormData = z.infer<typeof scheduleSchema>

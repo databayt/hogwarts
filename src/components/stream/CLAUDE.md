@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 90
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/lms
-last_audited: 2026-07-11
+last_audited: 2026-07-17
 ---
 
 # Stream (LMS) Block
@@ -35,6 +35,24 @@ Stream (LMS) — Q3 2026 sprint epic 05, maturity `Built+Polish`, ~90% complete 
   single-call fetchers like `check-enrollment`/`get-course-progress` still carry
   `"use server"` for historical reasons — harmless, but don't add `cache()` to
   them without first removing the directive.)
+- **A `"use server"` fetcher must resolve `schoolId` itself, never accept it.**
+  `"use server"` turns every export into a POST endpoint, so a `schoolId`
+  parameter is attacker-controlled: `getAllCatalogCourses` took one until
+  2026-07-17 and was reachable with any tenant id (and reached
+  `ensureSubjectSelections`, which _writes_). Call `getTenantContext()` inside
+  the action instead. `get-course-sidebar-data.ts` still has the old shape (P1 in
+  ISSUE.md). Plain server-only fetchers (no directive + `cache()`, per the note
+  above) may keep taking `schoolId` — they aren't reachable from the browser.
+- **`asset()` always rewrites to `cdn.databayt.org/hogwarts/<basename>`** — it
+  drops the source subdir, so `asset("/illustrations/x.svg")` and
+  `asset("/icons/x.svg")` are the same URL, and **putting a file in `public/`
+  does not make it resolve**; the object has to exist on the CDN. A missing key
+  returns **403, not 404**. Assets fine-grouped into their own namespace
+  (`anthropic/`, …) are referenced by full CDN URL passed through `asset()`
+  (which returns absolute URLs untouched) — see `home/content.tsx` and the
+  courses hero. The 2026-07-12 CDN migration rewrote at least one real path to an
+  invented `illustrations/` filename; if art is missing, check the CDN before
+  trusting the call site.
 - **The real paywall is the `null` videoUrl from the server** (see
   `get-lesson-with-progress.ts`), not client lock UI. Never emit a playable URL
   for an unowned PAID video.

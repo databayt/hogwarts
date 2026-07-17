@@ -5,16 +5,17 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { isFinanceAuthError, requireFinanceActor } from "../../../guard"
 import { itemsSchema, type ItemsFormData } from "./validation"
 
 export async function getInvoiceItems(
   invoiceId: string
 ): Promise<ActionResponse<ItemsFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const ctx = await requireFinanceActor("invoice", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, schoolId },
@@ -68,10 +69,25 @@ export async function updateInvoiceItems(
   input: ItemsFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const parsed = itemsSchema.parse(input)
+
+    // Recomputed from quantity x price rather than trusted from the request:
+    // the client posts sub_total/total next to the items, so a hand-made call
+    // could otherwise pin any total onto real line items. Mirrors the wizard
+    // form's arithmetic, where `discount` is an absolute amount subtracted
+    // before `tax_percentage` applies.
+    const items = parsed.items.map((item) => ({
+      ...item,
+      total: item.quantity * item.price,
+    }))
+    const subTotal = items.reduce((sum, item) => sum + item.total, 0)
+    const afterDiscount = subTotal - (parsed.discount ?? 0)
+    const total =
+      afterDiscount + afterDiscount * ((parsed.tax_percentage ?? 0) / 100)
 
     await db.$transaction(async (tx) => {
       // Delete existing items
@@ -80,9 +96,9 @@ export async function updateInvoiceItems(
       })
 
       // Recreate with new data
-      if (parsed.items.length > 0) {
+      if (items.length > 0) {
         await tx.userInvoiceItem.createMany({
-          data: parsed.items.map((item) => ({
+          data: items.map((item) => ({
             invoiceId,
             schoolId,
             item_name: item.item_name,
@@ -97,10 +113,10 @@ export async function updateInvoiceItems(
       await tx.userInvoice.updateMany({
         where: { id: invoiceId, schoolId },
         data: {
-          sub_total: parsed.sub_total,
+          sub_total: subTotal,
           discount: parsed.discount ?? null,
           tax_percentage: parsed.tax_percentage ?? null,
-          total: parsed.total,
+          total,
         },
       })
     })

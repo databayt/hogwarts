@@ -6,13 +6,14 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { ScholarshipForm } from "@/components/school-dashboard/finance/fees/scholarship-form"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Scholarship Details" }
 
@@ -29,9 +30,13 @@ export default async function ScholarshipDetailPage({
   const { edit } = await searchParams
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.scholarshipForm
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   const [scholarship, schoolForCurrency] = await Promise.all([
     db.scholarship.findFirst({

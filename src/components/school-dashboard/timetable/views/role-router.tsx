@@ -18,6 +18,7 @@ import {
 } from "../actions"
 import { DRAFT_TERM_ID } from "../config"
 import AdminView from "./admin-view"
+import { TimetableGridSkeleton } from "./grid-skeleton"
 import GuardianView from "./guardian-view"
 import StudentView from "./student-view"
 import TeacherView from "./teacher-view"
@@ -97,7 +98,9 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
         void source
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load timetable"
+          err instanceof Error
+            ? err.message
+            : dictionary.timetable.roleRouter.loadFailed
         )
       }
     })
@@ -129,7 +132,7 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full rounded-lg" />
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <TimetableGridSkeleton />
       </div>
     )
   }
@@ -148,7 +151,9 @@ export default function RoleRouter({ dictionary, lang, defaultTab }: Props) {
   if (!viewData || !termId) {
     return (
       <Alert>
-        <AlertDescription>No timetable data available</AlertDescription>
+        <AlertDescription>
+          {dictionary.timetable.roleRouter.noData}
+        </AlertDescription>
       </Alert>
     )
   }

@@ -504,7 +504,7 @@ ministry textbook structures are authored.
 | Curriculum      | Code         | Grades | Subjects | Chapters | Lessons | Source                  | Seed         |
 | --------------- | ------------ | ------ | -------- | -------- | ------- | ----------------------- | ------------ |
 | United States   | `US`         | 1–12   | ~240     | ~750     | ~3,993  | US-inventory            | `us`         |
-| Sudan           | `SD`         | 1–12   | 97       | 406      | 1,049   | `curriculum/sd`         | `sd`         |
+| Sudan           | `SD`         | 1–12   | 125      | 864      | 2,937   | `curriculum/sd`         | `sd`         |
 | England         | `GB`         | 1–12   | 184      | 363      | 730     | `curriculum/uk`         | `gb`         |
 | Cambridge IGCSE | `CAIE-IGCSE` | 10     | 8        | 76       | 76      | `curriculum/caie-igcse` | `caie-igcse` |
 | IB Diploma      | `IB-DP`      | 12     | 9        | 49       | 49      | `curriculum/ib`         | `ib`         |
@@ -522,15 +522,36 @@ ministry textbook structures are authored.
 > **not ingested** — it collides on the `us-g{N}-*` slug space and is shallower;
 > it stays as a reference overlay. No merge planned.
 
+### Real content — Sudan (all grades)
+
+`catalog/sd-content.ts` ingests the **authored** question banks and final exams
+that live next to each Sudan textbook
+(`curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json`) into
+`Question`/`Exam`/`ExamQuestion`: 102 subjects, ~2,700 questions (100%
+chapter-mapped; 405 also lesson-mapped, which is what feeds the stream lesson
+practice quiz), and one linked final exam per subject. Question ids resolve to
+chapters/lessons through a boundary-safe slug scan plus per-scheme parsers
+covering the seven authored id formats. A quality gate skips the 22 g11/g12
+files that are template-generated placeholders (>50% junk markers) — those
+subjects keep synthetic content instead. Rows are tagged `"sd"`; ingest is
+delete-and-recreate per subject and runs **locally** (`pnpm db:seed:single
+sd-content`) since `curriculum/` is not deployed.
+
+Sudan lessons deliberately have **no Video rows** — the stream lesson player
+falls back to the shared `story.mp4` clip on every SD lesson, so the player
+surface is never empty and never points at a missing CDN object.
+
 ### Generated content
 
 `catalog/content.ts` reads the published hierarchy and **generates synthetic**
 rows in bulk: exams (per subject/chapter/lesson), a question bank (~10/subject,
 6/chapter, 4/lesson), materials (metadata only — `fileUrl` is null), and one
-assignment per lesson. A subjects-only curriculum gets only per-subject rows. The
-exception is `catalog/exam-templates.ts`, which writes real hand-authored
-blueprints + templates (idempotent, every subject). The `Quiz` model is not
-seeded. **As of this session, `content.ts` is idempotent** — see
+assignment per lesson. A subjects-only curriculum gets only per-subject rows.
+Subjects that already carry real ingested content (questions tagged `"sd"`)
+are skipped, and orphaned synthetic rows (scope FKs nulled by chapter rebuilds)
+are pruned on every run. The exception is `catalog/exam-templates.ts`, which
+writes real hand-authored blueprints + templates (idempotent, every subject).
+The `Quiz` model is not seeded. `content.ts` is idempotent — see
 [Operations](#operations).
 
 ### TOC extraction quality
@@ -557,7 +578,8 @@ prisma/
     registry.ts                      # 12 Curriculum records + curriculumId backfill
     index.ts                         # seedCatalog + seedFullCatalog
     us.ts                            # US (240, us-inventory.json)
-    sd.ts                            # Full Sudan from curriculum/sd/ (97)
+    sd.ts                            # Full Sudan from curriculum/sd/ (125)
+    sd-content.ts                    # SD real qbank+exams ingest, g1–g12
     gb.ts / cbse.ts / caie-igcse.ts / ib.ts   # deep tree callers
     {sa,eg,ae,qa,kw,jo}.ts           # 6 subjects-only nationals
     concepts.ts / banners.ts         # shared image upload + backfill

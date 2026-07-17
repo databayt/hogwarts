@@ -271,7 +271,10 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
 
       toast({
         title: d?.settings?.createPeriod || "Period Created",
-        description: `${newPeriod.name} added`,
+        description: (d?.settings?.periodAddedDesc ?? "{name} added").replace(
+          "{name}",
+          newPeriod.name
+        ),
       })
       setNewPeriod({ name: "", startTime: "", endTime: "" })
       setIsAddingPeriod(false)
@@ -346,7 +349,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
 
       toast({
         title: d?.settings?.periodCopied || "Periods Copied",
-        description: `${result.copiedCount} copied, ${result.skippedCount} skipped`,
+        description: `${result.copiedCount} ${d?.settings?.copied || "copied"}, ${result.skippedCount} ${d?.settings?.skipped || "skipped"}`,
       })
       setIsCopyDialogOpen(false)
     } catch (err) {
@@ -381,7 +384,7 @@ export default function TimetableSettingsContent({ dictionary, lang }: Props) {
 
       toast({
         title: d?.settings?.structureApplied || "Structure Applied",
-        description: `Created ${result.createdCount} periods`,
+        description: `${d?.settings?.created || "Created"} ${result.createdCount} ${d?.settings?.periods || "periods"}`,
       })
       loadConfig()
     } catch (err) {

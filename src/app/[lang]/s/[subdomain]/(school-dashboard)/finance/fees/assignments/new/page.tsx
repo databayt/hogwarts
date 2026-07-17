@@ -2,10 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FeeAssignmentForm } from "@/components/school-dashboard/finance/fees/assignment-form"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = {
   title: "Assign Fee",
@@ -18,7 +19,7 @@ export default async function AssignFeePage({
 }) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) {
     return (
@@ -27,6 +28,10 @@ export default async function AssignFeePage({
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
   }
 
   const [students, feeStructures] = await Promise.all([

@@ -78,19 +78,17 @@ export async function FinanceDashboardContent({
         id: "total-revenue",
         title: dp?.totalRevenue || "Total Revenue",
         value: stats.totalRevenue,
-        change: 12,
-        changeType: "increase",
         icon: "💰",
         color: "green",
         description: dp?.totalInvoicedAmount || "Total invoiced amount",
-        trend: stats.revenuesTrend.slice(-7),
+        trend: stats.revenuesTrend.length
+          ? stats.revenuesTrend.slice(-7)
+          : undefined,
       },
       {
         id: "collected-revenue",
         title: dp?.collectedRevenue || "Collected Revenue",
         value: stats.collectedRevenue,
-        change: stats.collectionRate > 75 ? 5 : -5,
-        changeType: stats.collectionRate > 75 ? "increase" : "decrease",
         icon: "✅",
         color: "blue",
         description: `${stats.collectionRate.toFixed(1)}% ${dp?.collectionRate || "collection rate"}`,
@@ -99,8 +97,6 @@ export async function FinanceDashboardContent({
         id: "total-expenses",
         title: dp?.totalExpenses || "Total Expenses",
         value: stats.totalExpenses,
-        change: 3,
-        changeType: "increase",
         icon: "💸",
         color: "red",
         description: dp?.allExpensesPeriod || "All expenses this period",
@@ -109,19 +105,17 @@ export async function FinanceDashboardContent({
         id: "net-profit",
         title: dp?.netProfit || "Net Profit",
         value: stats.netProfit,
-        change: stats.profitMargin,
-        changeType: stats.netProfit > 0 ? "increase" : "decrease",
         icon: "📈",
         color: stats.netProfit > 0 ? "green" : "red",
         description: `${stats.profitMargin.toFixed(1)}% ${dp?.profitMargin || "profit margin"}`,
-        trend: stats.profitTrend.slice(-7),
+        trend: stats.profitTrend.length
+          ? stats.profitTrend.slice(-7)
+          : undefined,
       },
       {
         id: "cash-balance",
         title: dp?.cashBalance || "Cash Balance",
         value: stats.cashBalance,
-        change: 8,
-        changeType: "increase",
         icon: "🏦",
         color: "purple",
         description: `${stats.cashRunway} ${dp?.monthsRunway || "months runway"}`,
@@ -130,8 +124,6 @@ export async function FinanceDashboardContent({
         id: "outstanding-invoices",
         title: dp?.outstanding || "Outstanding",
         value: stats.outstandingRevenue,
-        change: stats.overdueInvoices,
-        changeType: stats.overdueInvoices > 0 ? "increase" : "neutral",
         icon: "⏰",
         color: "yellow",
         description: `${stats.overdueInvoices} ${dp?.overdueInvoices || "overdue invoices"}`,
@@ -140,8 +132,6 @@ export async function FinanceDashboardContent({
         id: "students-paid",
         title: dp?.studentsPaid || "Students Paid",
         value: `${stats.studentsWithPayments}/${stats.totalStudents}`,
-        change: (stats.studentsWithPayments / stats.totalStudents) * 100,
-        changeType: "neutral",
         icon: "👥",
         color: "blue",
         description: dp?.feePaymentStatus || "Fee payment status",
@@ -150,8 +140,6 @@ export async function FinanceDashboardContent({
         id: "payroll-expense",
         title: dp?.payroll || "Payroll",
         value: stats.totalPayroll,
-        change: 0,
-        changeType: "neutral",
         icon: "💼",
         color: "orange",
         description: `${stats.payrollProcessed} ${dp?.processedPending || "processed, pending".split(", ")[0]}, ${stats.pendingPayroll} ${(dp?.processedPending || "processed, pending").split(", ")[1] || "pending"}`,
@@ -237,6 +225,7 @@ export async function FinanceDashboardContent({
             inflowData={[stats.cashInflow]}
             outflowData={[stats.cashOutflow]}
             balanceData={[stats.cashBalance]}
+            currency={currency}
           />
           <BankAccountsSummary accounts={stats.bankAccounts} />
         </div>

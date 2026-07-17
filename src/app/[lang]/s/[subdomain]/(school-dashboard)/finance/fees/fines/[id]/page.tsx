@@ -4,10 +4,11 @@
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FineDetail } from "@/components/school-dashboard/finance/fees/fine-detail"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Fine Details" }
 
@@ -18,9 +19,13 @@ interface Props {
 export default async function FineDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   const fine = await db.fine.findFirst({
     where: { id, schoolId },

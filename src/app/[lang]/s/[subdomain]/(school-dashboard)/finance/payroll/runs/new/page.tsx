@@ -1,20 +1,28 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getTenantContext } from "@/lib/tenant-context"
+import type { Metadata } from "next"
+
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-
-export const metadata = { title: "Create Payroll Run" }
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.payrollPage?.createPayrollRun }
+}
+
 export default async function NewPayrollRunPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const d = dictionary?.finance?.payrollPage
+  const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])
 
   if (!schoolId) {
     return (
@@ -25,15 +33,17 @@ export default async function NewPayrollRunPage({ params }: Props) {
     )
   }
 
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="payroll" />
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Create Payroll Run</h3>
-        <p className="text-muted-foreground text-sm">
-          Start a new payroll processing run for the current period
-        </p>
+        <h3 className="text-lg font-medium">{d?.createPayrollRun}</h3>
+        <p className="text-muted-foreground text-sm">{d?.startNewPayrollRun}</p>
       </div>
-      <p className="text-muted-foreground">Payroll run form coming soon.</p>
+      <p className="text-muted-foreground">{d?.payrollRunFormComingSoon}</p>
     </div>
   )
 }

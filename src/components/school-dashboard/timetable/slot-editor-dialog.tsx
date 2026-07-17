@@ -50,17 +50,23 @@ import type { SectionForTimetable } from "./validation"
 // (and, in the classroom view, the selected room) — they are shown as read-only
 // context, not inputs. The only choices the admin makes are the subject and an
 // optional teacher (slots may be teacher-less; the name renders once assigned).
-const slotSchema = z.object({
-  dayOfWeek: z.number().min(0).max(6),
-  periodId: z.string().min(1, "Period is required"),
-  // Section-first: the cohort being scheduled (legacy classId no longer written)
-  sectionId: z.string().min(1, "Section is required"),
-  subjectId: z.string().min(1, "Subject is required"),
-  teacherId: z.string().optional(),
-  classroomId: z.string().min(1, "Classroom is required"),
-})
+// Schema factory: the messages reach the user through <FormMessage />, so they
+// have to come from the dictionary rather than literals (the `*Required` keys
+// already existed in both locales — they were simply never wired).
+const createSlotSchema = (t?: Record<string, string>) =>
+  z.object({
+    dayOfWeek: z.number().min(0).max(6),
+    periodId: z.string().min(1, t?.periodRequired ?? "Period is required"),
+    // Section-first: the cohort being scheduled (legacy classId no longer written)
+    sectionId: z.string().min(1, t?.sectionRequired ?? "Section is required"),
+    subjectId: z.string().min(1, t?.subjectRequired ?? "Subject is required"),
+    teacherId: z.string().optional(),
+    classroomId: z
+      .string()
+      .min(1, t?.classroomRequired ?? "Classroom is required"),
+  })
 
-type SlotFormData = z.infer<typeof slotSchema>
+type SlotFormData = z.infer<ReturnType<typeof createSlotSchema>>
 
 // Period start times are stored as UTC instants (ISO) or plain "HH:MM"; render
 // a compact "8:00" without the leading zero on the hour. Returns "" if unknown.
@@ -149,6 +155,8 @@ export function SlotEditorDialog({
   const periodObj = periods.find((p) => p.id === resolvedPeriodId)
   const classroomObj = classrooms.find((c) => c.id === resolvedClassroomId)
   const sectionObj = sections.find((s) => s.id === resolvedSectionId)
+
+  const slotSchema = useMemo(() => createSlotSchema(t), [t])
 
   const form = useForm<SlotFormData>({
     resolver: zodResolver(slotSchema),

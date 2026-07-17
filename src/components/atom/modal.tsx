@@ -23,6 +23,10 @@ interface ModalProps {
   onClose?: () => void
   desktopOnly?: boolean
   preventDefaultClose?: boolean
+  /** sr-only label Radix requires. Pass a dictionary string so screen readers
+   *  announce the modal in the user's language instead of English. */
+  title?: string
+  description?: string
 }
 
 export function Modal({
@@ -33,6 +37,8 @@ export function Modal({
   onClose,
   desktopOnly,
   preventDefaultClose,
+  title,
+  description,
 }: ModalProps) {
   // const router = useRouter();
 
@@ -104,9 +110,9 @@ export function Modal({
           }
         }}
       >
-        <DialogTitle className="sr-only">Dialog</DialogTitle>
+        <DialogTitle className="sr-only">{title ?? "Dialog"}</DialogTitle>
         <DialogDescription className="sr-only">
-          Dialog content
+          {description ?? "Dialog content"}
         </DialogDescription>
         {children}
       </DialogContent>

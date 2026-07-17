@@ -27,6 +27,19 @@ export function renderTemplate(
 // Default Templates (Arabic + English)
 // =============================================================================
 
+/**
+ * ⚠️ DEAD CODE (verified 2026-07-17) — `DEFAULT_TEMPLATES` and the
+ * `renderTemplate`/`getTemplate` helpers in this file have **zero production
+ * callers**. The actual WhatsApp sender (`dispatch.ts:212`) transmits
+ * `` `${notification.title}\n\n${notification.body}` `` verbatim, i.e. whatever
+ * `dispatchNotification` was handed. So these templates never render, and
+ * "fixing WhatsApp copy" means fixing the caller's dictionary strings, not this
+ * map. (`src/lib/notifications/render-template.ts` is a DIFFERENT, live
+ * `renderTemplate`, used by `dispatchTemplated` for DB NotificationTemplate rows.)
+ *
+ * Left in place rather than deleted mid-payment-pass; safe to remove in a
+ * cleanup PR once someone confirms no external/mobile consumer imports it.
+ */
 export const DEFAULT_TEMPLATES = {
   // Attendance
   attendance_absent: {

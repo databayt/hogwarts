@@ -5,7 +5,7 @@ import { resolvePaymentGateways } from "./gateway-config"
 import { bankTransferProvider } from "./providers/bank-transfer"
 import { bankakProvider } from "./providers/bankak"
 import { cashProvider } from "./providers/cash"
-import { mobileMoneyProvider } from "./providers/mobile-money"
+import { cashiProvider } from "./providers/cashi"
 import { stripeProvider } from "./providers/stripe"
 import { tapProvider } from "./providers/tap"
 import type {
@@ -27,9 +27,9 @@ function registerProvider(provider: PaymentProvider) {
 registerProvider(stripeProvider)
 registerProvider(tapProvider)
 registerProvider(bankakProvider)
+registerProvider(cashiProvider)
 registerProvider(cashProvider)
 registerProvider(bankTransferProvider)
-registerProvider(mobileMoneyProvider)
 
 /**
  * Get a specific provider by gateway type.

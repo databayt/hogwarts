@@ -117,10 +117,7 @@ export async function completeEventWizard(
     }
 
     if (!event.title || event.title.trim().length === 0) {
-      return {
-        success: false,
-        error: "Title is required before completing",
-      }
+      return actionError(ACTION_ERRORS.EVENT_TITLE_REQUIRED)
     }
 
     await db.event.updateMany({

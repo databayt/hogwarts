@@ -327,12 +327,24 @@ export async function createSalaryPaymentEntry(
   const otherDeductions =
     Math.round((grossAmount - netAmount - taxAmount - ssAmount) * 100) / 100
 
+  // The debit (the cost to the school) must cover the full payout. Normally
+  // that's gross. But if the components exceed gross — e.g. a negative
+  // deduction (a reimbursement) pushes net above gross — otherDeductions goes
+  // negative, its AP credit line is skipped below, and the entry would be left
+  // unbalanced. Raising the expense to the payout keeps it balanced with only
+  // non-negative lines, and is identical to `gross` whenever gross already
+  // covers the payout (every previously-valid entry).
+  const salaryExpenseDebit = Math.max(
+    grossAmount,
+    netAmount + taxAmount + ssAmount
+  )
+
   const lines: JournalEntryLine[] = [
     {
       accountId: salaryExpenseId,
       accountCode: StandardAccountCodes.SALARY_EXPENSE,
       accountName: "Salary Expense",
-      debit: grossAmount,
+      debit: salaryExpenseDebit,
       credit: 0,
       description: `Salary expense for teacher`,
     },

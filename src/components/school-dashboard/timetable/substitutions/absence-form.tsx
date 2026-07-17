@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { createTeacherAbsence, getTeachersForSelection } from "../actions"
-import { ABSENCE_TYPES } from "../config"
+import { ABSENCE_TYPES, getAbsenceTypeOptions } from "../config"
 
 interface Teacher {
   id: string
@@ -192,11 +192,13 @@ export function AbsenceFormDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(ABSENCE_TYPES).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>
-                    {value.label}
-                  </SelectItem>
-                ))}
+                {getAbsenceTypeOptions(dictionary?.school?.timetable).map(
+                  (opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>

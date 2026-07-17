@@ -3,22 +3,27 @@
 
 import { z } from "zod"
 
-export const informationSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  eventType: z
-    .enum([
-      "ACADEMIC",
-      "SPORTS",
-      "CULTURAL",
-      "PARENT_MEETING",
-      "CELEBRATION",
-      "WORKSHOP",
-      "OTHER",
-    ])
-    .optional(),
-  organizer: z.string().optional(),
-  targetAudience: z.string().optional(),
-})
+import type { EventValidationMessages } from "../../validation"
+
+export const createInformationSchema = (v?: EventValidationMessages) =>
+  z.object({
+    title: z.string().min(1, v?.titleRequired),
+    description: z.string().optional(),
+    eventType: z
+      .enum([
+        "ACADEMIC",
+        "SPORTS",
+        "CULTURAL",
+        "PARENT_MEETING",
+        "CELEBRATION",
+        "WORKSHOP",
+        "OTHER",
+      ])
+      .optional(),
+    organizer: z.string().optional(),
+    targetAudience: z.string().optional(),
+  })
+
+export const informationSchema = createInformationSchema()
 
 export type InformationFormData = z.infer<typeof informationSchema>

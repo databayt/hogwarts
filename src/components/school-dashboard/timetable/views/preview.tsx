@@ -210,7 +210,6 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
           slots={currentSlots}
           workingDays={workingDays}
           periods={periods}
-          lunchAfterPeriod={4}
           isRTL={isRTL}
           viewMode={isTeacherView ? "teacher" : "class"}
           editable={false}

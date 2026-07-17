@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/timetable
-last_audited: 2026-06-13
+last_audited: 2026-07-16
 ---
 
 # Timetable (LMS scheduling) Block
@@ -26,6 +26,31 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Key Decisions
 
+- **The demo seed uses the PRODUCTION generator** (2026-07-16): both
+  `prisma/seeds/index.ts` and `db:seed:single timetable` call
+  `autoGenerateTimetableForSchool` — the same path a real school gets at
+  onboarding — instead of the hand-rolled `seedTimetable`. That legacy seed
+  scheduled classes into any free room (offices, labs, the football field: 0 of
+  1,120 slots landed in a section homeroom) and wrote classId-only rows with no
+  sectionId/subjectId, which the section-based reads can't see. Same move the
+  catalog block already made retiring `catalog/demo.ts`: seed and onboarding
+  share one source of truth. `prisma/seeds/timetable.ts` is now unreferenced —
+  do NOT wire it back in. The generator only `createMany`s (skipDuplicates), so
+  every caller must `deleteMany` the term's slots first to stay idempotent.
+- **Anything the seed writes must be scoped to the ACTIVE term** (2026-07-16):
+  `seedTerms` derives which term is active from today's date, so `terms[0]` is
+  NOT reliably the active one — a seed run during the Term 2 window wrote every
+  class + slot to Term 1 while marking Term 2 active, and `resolveActiveTerm`
+  (what every read path uses) then found 0 slots on a school with 1,120. `TermRef`
+  carries `isActive` as the one source of truth; use `terms.find(t => t.isActive)`.
+- **Term pickers must default to the ACTIVE term, not the newest**
+  (2026-07-16): analytics/conflicts/generate all default to
+  `getTermsForSelection()[0]`, so that action orders `isActive desc` first. A
+  bare `startDate desc` opens those pages on a term the school isn't teaching.
+- **Period times are UTC wall-clock** (2026-07-16): the app writes them as
+  `new Date(Date.UTC(1970, 0, 1, h, m))` and the grid reads `getUTCHours()`.
+  The seed's `parseTime` must match — it used `setHours`, so times drifted by
+  the seeding machine's offset (07:45 → 05:45 on a CAT box).
 - **Timetable auto-provisions for EVERY school, zero clicks** (2026-06-17):
   `getProvisioningStatus` flags the `schedule`/`timetable` stages missing
   whenever counts are 0 (no longer gated on a pre-chosen
@@ -106,6 +131,73 @@ Timetable (LMS scheduling) — Q3 2026 sprint epic 05, maturity `Built+Polish`, 
 
 ## Danger Zones
 
+- **NEVER infer break-ness from `Period.name`** (2026-07-17): `Period.isBreak`
+  is the source of truth. `name` is user-editable free text, and 9 call sites
+  used to test it for the English substrings "break"/"lunch" (2 of them
+  case-sensitively) — so an Arabic «فسحة» classified as TEACHING time and the
+  generator scheduled classes straight into the break. Writers derive it from
+  `StructurePeriod.type !== "class"`. `structures.test.ts` locks this.
+- **Teacher fill is the generator's silent failure mode** (2026-07-17): it runs
+  with `enforceTeacherExpertise: true`, so a slot only gets a teacher if someone
+  holds expertise for that exact subject — and it reports success either way.
+  ALWAYS check `teacherId != null` counts before/after any regeneration. Two
+  independent things break it: sparse `teacher_subject_expertise` (fix:
+  coverage-first seeding), and raw capacity — each teacher is capped at
+  `maxPeriodsPerWeek: 25`, so `teacherUsers >= ceil(sections * periods / 25)`
+  or the grid is arithmetically unfillable no matter how good the expertise.
+- **A Sudanese school day has ONE فسحة, no lunch** (Abdout, 2026-07-17): 40min
+  mid-morning, when فطور is eaten; الغداء is eaten at home after dismissal. Do
+  not reintroduce a midday "Lunch" to `sd-gov-default`/`sd-private` — `sd-british`
+  is the only SD structure that legitimately has one. Locked by tests. **Never
+  infer Sudanese practice from a rename or from web search — ask Abdout** (web
+  search returns Sudan ISD _Texas_, South Sudan, Egypt and Oman, not Sudan).
+- **Any seed upserting on a DISPLAY NAME has a rename-orphan hazard**
+  (2026-07-17): `seedClassrooms` keys on `schoolId_roomName` and `seedPeriods`
+  on `schoolId_yearId_name`, so renaming a value in the constant CANNOT update
+  the existing row — it creates a new one and orphans the old, invisibly. That
+  is exactly how 16 English classrooms survived the CLASSROOMS Arabization and
+  kept showing in the /ar picker. Reconcile explicitly; delete only what nothing
+  references (`pruneStalePeriods` refuses to cascade live slots away and warns).
+- **Rows must not lie about their own `lang`** (2026-07-17): the translation
+  layer trusts the tag and renders the source verbatim, so `lang="ar"` on an
+  English string is unfixable at read time — and the Google quota is dead, so
+  there is no fallback. Hit three times (Islamic subjects, classrooms, sections).
+  `autoProvisionSections` + the Configure tab now persist `lang` on what they mint.
+- **Naming is locale-aware by `School.preferredLanguage`** (2026-07-17): section
+  letters and homeroom codes come from `sectionLetters()` / `defaultSectionName()`
+  in `catalog/room-naming.ts`, shared by `autoProvisionSections` AND the
+  classrooms Configure tab — change the helper, never re-inline, or the two
+  provisioning paths drift (the reason `defaultRoomName` was centralised).
+  Arabic uses أبجد order (أ، ب، ج) and **Latin digits** (أ01, not أ٠١) to match
+  how the UI renders numbers everywhere else (الحصة 1, 07:15).
+- **The grid skeleton must mirror `SimpleGrid`** (2026-07-17): use
+  `views/grid-skeleton.tsx` (`TimetableGridSkeleton`), never a bare
+  `<Skeleton className="h-96 …" />`. A blob gives no hint of the grid's shape,
+  so the page reflows when data lands. Its defaults describe the Sudanese day
+  (5 days, 7 periods, break after 3) — update them if the structure changes.
+
+- **Reads that only `include: { class: ... }` are blind to real slots**
+  (2026-07-16): section-based slots carry subject/section directly and have
+  `class: null`. `getTimetableAnalytics` read only `class`, so every subject
+  became "Unknown" and the class count went to 0 the moment generation moved to
+  the section axis. Select `subject`/`section` and coalesce cohort identity as
+  `sectionId ?? classId` — the same fallback `detectConflicts` uses.
+- **Never hash a subject/label on its FIRST character** (2026-07-16):
+  `getSubjectColorIndex` used `charCodeAt(0) % 5`, and virtually every Arabic
+  subject opens with the definite article "ال" (U+0627) — 8 of 9 demo subjects
+  collapsed onto one colour, so /ar rendered a flat red grid while /en looked
+  fine. Hash the whole string. The same trap applies to any first-char keying
+  (avatar initials, grouping, bucketing) in an Arabic-first product.
+- **`SimpleGrid`'s `dictionary` prop falls back to hardcoded ENGLISH, not to
+  `isRTL`** (2026-07-16): `period`/`lunch`/`lunchBreak`/`conflict` have no
+  Arabic fallback (unlike `days`, which falls back via `isRTL`). All 5 call
+  sites in the 4 role views must pass the full object — passing a subset
+  silently leaves "Period 1" in English on /ar.
+- **Server actions must not compose display labels from literals**
+  (2026-07-16): `getActiveTerm`/`getPersonalizedTimetable`/`getTermsForSelection`
+  return a ready-to-render `label`; building it as `` `Term ${n}` `` left the
+  badge English on /ar forever. Use the INTERNAL `getTimetableDict()` helper —
+  keep it unexported (every export here is an HTTP endpoint).
 - **`validate*Constraints` are INTERNAL, not exported** (2026-06-13): in a
   `"use server"` file, every `export` is an HTTP endpoint.
   `validateTeacherConstraints`/`validateRoomConstraints`/`validateSlotConstraints`

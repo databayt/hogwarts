@@ -9,6 +9,7 @@ import { getPolicyContext } from "@/lib/rbac/context"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAllCatalogCourses } from "@/components/stream/data/catalog/get-all-courses"
 import { getContinueWatching } from "@/components/stream/data/catalog/get-continue-watching"
 import { StreamHomeContent } from "@/components/stream/home/content"
 
@@ -52,7 +53,13 @@ export default async function StreamHomePage({ params }: Props) {
     session?.user?.role === "TEACHER" ||
     session?.user?.role === "DEVELOPER"
 
-  const continueWatching = session?.user ? await getContinueWatching() : []
+  // Real courses for the "new releases" strip — this school's own selected
+  // catalog, not a hardcoded list. Empty when the school has no selections yet,
+  // in which case the section hides itself rather than inventing content.
+  const [continueWatching, { rows: featuredCourses }] = await Promise.all([
+    session?.user ? getContinueWatching() : Promise.resolve([]),
+    getAllCatalogCourses({ perPage: 4, lang }),
+  ])
 
   return (
     <StreamHomeContent
@@ -62,6 +69,7 @@ export default async function StreamHomePage({ params }: Props) {
       isAuthenticated={!!session?.user}
       isAdmin={isAdmin}
       continueWatching={continueWatching}
+      featuredCourses={featuredCourses}
     />
   )
 }

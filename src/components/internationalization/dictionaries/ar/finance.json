@@ -785,7 +785,8 @@
       "history": "سجل الرواتب",
       "deductions": "الاستقطاعات",
       "benefits": "المزايا",
-      "reports": "التقارير"
+      "reports": "التقارير",
+      "runs": "تشغيل كشوف الرواتب"
     },
     "payroll": "كشف الرواتب",
     "processPayroll": "معالجة الرواتب",
@@ -856,7 +857,8 @@
       "slips": "قسائم الرواتب",
       "increments": "الزيادات",
       "advances": "السلف",
-      "reports": "التقارير"
+      "reports": "التقارير",
+      "structures": "هياكل الرواتب"
     },
     "salary": "الراتب",
     "salaries": "الرواتب",
@@ -1585,7 +1587,8 @@
     "totalBalance": "إجمالي الرصيد",
     "quickActions": "إجراءات سريعة",
     "pending": "قيد الانتظار",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "noHistoricalData": "لا توجد بيانات تاريخية بعد"
   },
   "mainPage": {
     "unpaid": "غير مدفوع",
@@ -1609,7 +1612,8 @@
     "accountHolder": "صاحب الحساب",
     "currentBalance": "الرصيد الحالي",
     "availableBalance": "الرصيد المتاح",
-    "type": "النوع"
+    "type": "النوع",
+    "paymentMethods": "طرق الدفع"
   },
   "receiptPage": {
     "heading": "الإيصالات",
@@ -2592,6 +2596,70 @@
     "payrollRejectedTitle": "تم رفض كشف الرواتب",
     "payrollRejectedBody": "تم رفض كشف الرواتب {runNumber}: {reason}",
     "salaryPaidTitle": "تم صرف الراتب",
-    "salaryPaidBody": "تم صرف راتبك بقيمة {amount}."
+    "salaryPaidBody": "تم صرف راتبك بقيمة {amount}.",
+    "proofSubmittedTitle": "تم إرسال إيصال دفع",
+    "proofSubmittedBody": "يوجد إيصال تحويل بانتظار المراجعة والتأكيد."
+  },
+  "paymentSettings": {
+    "title": "طرق الدفع",
+    "description": "حدّد كيف تدفع الأسر رسوم المدرسة، ومتى تتم متابعة الرسوم غير المسددة.",
+    "loadFailed": "تعذّر تحميل إعدادات الدفع.",
+    "bankakTitle": "بنكك",
+    "bankakDescription": "بنك الخرطوم. يحوّل ولي الأمر عبر تطبيق بنكك ثم يرفق الإيصال ليراجعه فريقك.",
+    "cashiTitle": "كاشي",
+    "cashiDescription": "محفظة ماي كاشي. يرسل ولي الأمر إلى رمز التاجر ثم يرفق الإيصال ليراجعه فريقك.",
+    "accountName": "اسم الحساب",
+    "accountNumber": "رقم الحساب",
+    "merchantCode": "رمز التاجر",
+    "qrUrl": "رابط صورة رمز بنكك للدفع",
+    "cashiQrUrl": "رابط صورة رمز كاشي",
+    "qrHint": "اختياري. يمكن لولي الأمر مسح الرمز بدلاً من كتابة رقم الحساب.",
+    "instructions": "تعليمات",
+    "remindersTitle": "تذكيرات الدفع",
+    "remindersDescription": "متى تتم متابعة الرسوم غير المسددة. تُرسل التذكيرات داخل التطبيق وبالبريد الإلكتروني وعبر واتساب.",
+    "beforeDue": "أيام قبل تاريخ الاستحقاق",
+    "beforeDueHint": "افصل بينها بفاصلة، مثال: 7، 3، 1",
+    "afterDue": "أيام بعد تاريخ الاستحقاق",
+    "afterDueHint": "افصل بينها بفاصلة، مثال: 1، 7، 14، 30",
+    "escalation": "تصعيد إلى المالية بعد (أيام التأخير)",
+    "escalationHint": "يُشعر المدير والمحاسب عند بقاء الرسوم غير مسددة هذه المدة."
+  },
+  "payrollStatus": {
+    "DRAFT": "مسودة",
+    "PROCESSING": "قيد المعالجة",
+    "PENDING_APPROVAL": "في انتظار الموافقة",
+    "APPROVED": "موافق عليه",
+    "PAID": "مدفوع",
+    "CANCELLED": "ملغى"
+  },
+  "slipStatus": {
+    "GENERATED": "تم الإنشاء",
+    "REVIEWED": "تمت المراجعة",
+    "PAID": "مدفوع",
+    "CANCELLED": "ملغى"
+  },
+  "payFrequency": {
+    "MONTHLY": "شهري",
+    "BI_WEEKLY": "كل أسبوعين",
+    "WEEKLY": "أسبوعي",
+    "DAILY": "يومي"
+  },
+  "payrollSettings": {
+    "title": "إعدادات الرواتب",
+    "description": "تُشتق هذه القواعد القانونية من دولة مدرستك وتُطبَّق على كل عملية رواتب.",
+    "taxAndStatutory": "القواعد الضريبية والقانونية",
+    "country": "الدولة",
+    "autoDetected": "تم اكتشافها تلقائياً من موقع مدرستك",
+    "incomeTaxBrackets": "شرائح ضريبة الدخل",
+    "from": "من",
+    "to": "إلى",
+    "rate": "النسبة",
+    "andAbove": "وما فوق",
+    "taxFree": "معفى من الضريبة",
+    "socialSecurity": "الضمان الاجتماعي",
+    "employeeRate": "نسبة الموظف",
+    "employerRate": "نسبة صاحب العمل",
+    "notConfiguredTitle": "لم يتم تكوين القواعد الضريبية لهذه المدرسة",
+    "notConfiguredBody": "لم يتم تعيين دولة المدرسة، لذا تُعالَج الرواتب بدون أي اقتطاع قانوني. عيّن دولة المدرسة في الإعدادات لتطبيق قواعد ضريبة الدخل والضمان الاجتماعي الصحيحة."
   }
 }

@@ -53,7 +53,7 @@
     },
     "dashboard": {
       "title": "نظرة عامة",
-      "welcome": "مرحباً بك في هجورتس",
+      "welcome": "مرحباً بك في هوغورتس",
       "overview": "نظرة عامة",
       "quickStats": "إحصائيات سريعة",
       "totalStudents": "إجمالي الطلاب",
@@ -1933,7 +1933,7 @@
       },
       "personal": {
         "title": "المعلومات الشخصية",
-        "description": "المعلومات الشخصية للطالب ولي الامر",
+        "description": "المعلومات الشخصية للطالب وولي الأمر",
         "studentTab": "الطالب",
         "fatherTab": "الأب",
         "motherTab": "الأم",
@@ -1986,7 +1986,8 @@
       },
       "academic": {
         "title": "المعلومات الأكاديمية",
-        "description": "أدخل تفاصيل التسجيل والتعليم السابق للطالب."
+        "description": "أدخل تفاصيل التسجيل والتعليم السابق للطالب.",
+        "completeRequirements": "أكمل الخطوة الشخصية أولاً: الاسم واسم ولي أمر واحد على الأقل مطلوبان."
       },
       "enrollment": {
         "title": "تفاصيل التسجيل",
@@ -2000,6 +2001,7 @@
         "categoryPlaceholder": "أدخل الفئة",
         "academicGradeId": "الصف",
         "academicGradeIdPlaceholder": "أدخل معرف الصف الدراسي",
+        "academicStreamId": "المسار",
         "sectionId": "الشعبة",
         "sectionIdPlaceholder": "أدخل معرف الشعبة",
         "statusOptions": {
@@ -3692,7 +3694,8 @@
           "final": "نهائي",
           "chapter_test": "اختبار فصل",
           "practice": "تدريبي",
-          "quiz": "اختبار قصير"
+          "quiz": "اختبار قصير",
+          "diagnostic": "تشخيصي"
         },
         "materialTypes": {
           "TEXTBOOK": "كتاب",
@@ -3715,12 +3718,22 @@
           "presentation": "عرض تقديمي"
         },
         "textbook": "الكتاب المدرسي",
-        "openTextbook": "فتح الكتاب"
+        "openTextbook": "فتح الكتاب",
+        "unitExam": "اختبار",
+        "unitExams": "اختبارات",
+        "unitTest": "اختبار",
+        "unitTests": "اختبارات",
+        "unitItem": "عنصر",
+        "unitItems": "عناصر",
+        "pagesAvg": "متوسط الصفحات"
       }
     },
     "timetable": {
       "title": "الجدول الدراسي",
       "draftNotice": "هذا قالب جدول افتراضي مبني على هيكل مدرستك. قم بإعداده لبدء جدولة الحصص.",
+      "termLabel": "الفصل",
+      "draft": "مسودة",
+      "unknown": "غير معروف",
       "setupTimetable": "إعداد الجدول",
       "settingUp": "جارٍ الإعداد…",
       "setupFailed": "تعذّر إعداد الجدول. يرجى المحاولة من الإعدادات.",
@@ -3758,6 +3771,7 @@
       "teacher": "المعلم",
       "room": "الغرفة",
       "conflictDetected": "تم اكتشاف تعارض",
+      "conflict": "تعارض",
       "noConflicts": "لا يوجد تعارضات",
       "liveNow": "مباشر الآن",
       "printTimetable": "طباعة الجدول",
@@ -3808,16 +3822,20 @@
         "roomUtilization": "استخدام الغرف",
         "errors": "أخطاء",
         "warnings": "تحذيرات",
+        "andMore": "...و{count} أخرى",
         "unplacedClasses": "فصول غير مُوزَّعة",
         "unplacedDesc": "لم يتم جدولة هذه الفصول بالكامل. تحقق من توفر المعلمين وسعة الغرف.",
         "schedulePreview": "معاينة الجدول",
         "reviewBeforeApply": "راجع الجدول المُنشأ قبل التطبيق",
         "day": "اليوم",
         "period": "الحصة",
+        "section": "الشعبة",
+        "subject": "المادة",
         "class": "الفصل",
         "teacher": "المعلم",
         "room": "الغرفة",
         "score": "النتيجة",
+        "unassigned": "غير معيّن",
         "noViolations": "لا توجد مخالفات",
         "regenerate": "إعادة الإنشاء",
         "merge": "دمج",
@@ -3834,6 +3852,7 @@
         "generationComplete": "اكتمل الإنشاء",
         "successfullyGenerated": "تم إنشاء",
         "generationPartial": "إنشاء جزئي",
+        "generationPartialDesc": "تم إنشاء {placed}/{total} حصة مع {errors} خطأ",
         "generationFailed": "فشل الإنشاء"
       },
       "conflicts": {
@@ -3904,8 +3923,11 @@
         "scheduleDescription": "اختر نمطاً جاهزاً وعدّله، ثم اضبط الحصص فردياً أدناه.",
         "preset": "نمط الجدول",
         "weekend": "عطلة نهاية الأسبوع",
+        "weekendFriSat": "الجمعة - السبت",
+        "weekendSatSun": "السبت - الأحد",
         "periodsDay": "حصص/يوم",
         "duration": "المدة",
+        "minutesSuffix": "دقيقة",
         "startTime": "وقت البدء",
         "applyPreset": "تطبيق الجدول",
         "bestMatch": "الأنسب",
@@ -3944,6 +3966,7 @@
         "skipped": "مُتخطى",
         "structureApplied": "تم تطبيق الهيكل",
         "created": "تم الإنشاء",
+        "periodAddedDesc": "تمت إضافة {name}",
         "selectSchoolYear": "اختر العام الدراسي",
         "selectSchoolYearFirst": "يرجى اختيار عام دراسي أولاً",
         "selectTermToConfigure": "اختر فصلاً لتكوين الإعدادات",
@@ -4404,7 +4427,11 @@
         "suggestForTeacher": "اقتراح للمعلم",
         "suggestForRoom": "اقتراح للغرفة",
         "suggestions": "الاقتراحات:",
-        "apply": "تطبيق"
+        "apply": "تطبيق",
+        "loadTermsError": "فشل تحميل الفصول",
+        "detectError": "فشل اكتشاف التعارضات",
+        "teacherConflictsPlural": "تعارضات المعلمين",
+        "roomConflictsPlural": "تعارضات الغرف"
       },
       "timetableNav": {
         "timetable": "الجدول",
@@ -4554,7 +4581,17 @@
       "analyticsExtra": {
         "classesCount": "{count} فصول",
         "subjectsCount": "{count} مواد",
-        "hoursPerWeek": "{count} ساعة/أسبوع"
+        "hoursPerWeek": "{count} ساعة/أسبوع",
+        "loadTermsFailed": "فشل تحميل الفصول الدراسية",
+        "loadAnalyticsFailed": "فشل تحميل التحليلات",
+        "rooms": "الغرف",
+        "periodsCount": "{count} حصص",
+        "periodsPerWeekCount": "{count} حصة/أسبوع",
+        "noTeacherData": "لا تتوفر بيانات عن المعلمين",
+        "roomSlotsUsage": "{used}/{total} حصة ({capacity} مقعد)",
+        "noRoomData": "لا تتوفر بيانات عن الغرف",
+        "noSubjectData": "لا تتوفر بيانات عن المواد",
+        "selectTermPrompt": "اختر فصلاً دراسياً لعرض التحليلات"
       },
       "dayNames": [
         "الأحد",
@@ -4703,6 +4740,8 @@
       "exportCSV": "تصدير CSV",
       "exporting": "جارٍ التصدير...",
       "loading": "جارٍ التحميل...",
+      "noResults": "لا توجد نتائج.",
+      "rowsSelected": "صف محدد.",
       "loadMore": "تحميل المزيد",
       "searchColumns": "بحث في الأعمدة...",
       "noColumns": "لا توجد أعمدة.",
@@ -4733,8 +4772,11 @@
         "expiresAtDescription": "اختياري: حدد موعد إلغاء نشر هذا الإعلان تلقائياً."
       },
       "config": {
+        "title": "إعدادات الإعلانات",
+        "description": "تكوين كيفية إنشاء الإعلانات وتسليمها",
         "saved": "تم حفظ الإعدادات بنجاح",
         "saveFailed": "فشل حفظ الإعدادات",
+        "loadFailed": "فشل تحميل الإعدادات",
         "publishingDefaults": "إعدادات النشر الافتراضية",
         "notifications": "الإشعارات",
         "templates": "القوالب",
@@ -6617,9 +6659,10 @@
       },
       "statuses": {
         "PLANNED": "مخطط",
-        "IN_PROGRESS": "قيد التنفيذ",
+        "ONGOING": "قيد التنفيذ",
         "COMPLETED": "مكتمل",
-        "CANCELLED": "ملغي"
+        "CANCELLED": "ملغي",
+        "POSTPONED": "مؤجلة"
       },
       "types": {
         "ACADEMIC": "أكاديمي",
@@ -6673,7 +6716,8 @@
           "startTimeLabel": "وقت البداية",
           "endTimeLabel": "وقت الانتهاء",
           "locationLabel": "الموقع",
-          "locationPlaceholder": "أدخل موقع الفعالية"
+          "locationPlaceholder": "أدخل موقع الفعالية",
+          "pickDate": "اختر تاريخاً"
         },
         "settings": {
           "title": "إعدادات الفعالية",
@@ -6712,7 +6756,31 @@
         "maxAttendeesMin": "الحد الأقصى للحضور يجب أن يكون 1 على الأقل",
         "eventDateRequired": "تاريخ الفعالية مطلوب",
         "mustBeAtLeast1": "يجب أن يكون 1 على الأقل"
-      }
+      },
+      "titleColumn": "العنوان",
+      "endTime": "وقت الانتهاء",
+      "deleteConfirm": "لا يمكن التراجع عن هذا الإجراء.",
+      "cancel": "إلغاء",
+      "csv": {
+        "id": "المعرف",
+        "maxAttendees": "الحد الأقصى للحضور",
+        "currentAttendees": "الحضور الحالي",
+        "public": "عام",
+        "created": "تاريخ الإنشاء",
+        "yes": "نعم",
+        "no": "لا"
+      },
+      "errorBoundary": {
+        "title": "تعذر تحميل الفعاليات",
+        "description": "حدث خطأ غير متوقع أثناء تحميل الفعاليات.",
+        "detailTitle": "تعذر تحميل تفاصيل الفعالية",
+        "detailDescription": "حدث خطأ غير متوقع أثناء تحميل تفاصيل الفعالية.",
+        "errorRef": "مرجع الخطأ",
+        "tryAgain": "حاول مرة أخرى",
+        "backToEvents": "العودة إلى الفعاليات"
+      },
+      "noResults": "لا توجد نتائج.",
+      "rowsSelected": "صف محدد."
     },
     "assignments": {
       "title": "الواجبات",
@@ -7786,7 +7854,7 @@
       "finishSetupDescription": "راجع إعداد مدرستك وأكمل عملية الإعداد.",
       "clickNextToFinish": "انقر على التالي للإنهاء والذهاب إلى لوحة التحكم.",
       "overview": {
-        "title": "من السهل البدء\nفي هجورتس",
+        "title": "من السهل البدء\nفي هوغورتس",
         "getStarted": "ابدأ الآن",
         "creatingSchool": "جاري إنشاء المدرسة...",
         "steps": {
@@ -9414,7 +9482,7 @@
           "personal": {
             "label": "المعلومات الشخصية",
             "title": "المعلومات الشخصية",
-            "description": "المعلومات الشخصية للطالب ولي الامر"
+            "description": "المعلومات الشخصية للطالب وولي الأمر"
           },
           "contact": {
             "label": "معلومات الاتصال",
@@ -9578,7 +9646,10 @@
             "category": "الفئة",
             "selectCategory": "اختر الفئة",
             "religion": "الديانة",
-            "selectReligion": "اختر الديانة"
+            "selectReligion": "اختر الديانة",
+            "tabStudent": "الطالب",
+            "tabFather": "الأب",
+            "tabMother": "الأم"
           },
           "contact": {
             "email": "البريد الإلكتروني",
@@ -9622,7 +9693,8 @@
             "email": "البريد الإلكتروني",
             "phonePlaceholder": "+249 XXX XXX XXXX",
             "emailPlaceholder": "email@example.com",
-            "selectCountry": "اختر الدولة"
+            "selectCountry": "اختر الدولة",
+            "nameRequiredHint": "أدخل اسم الأب أو الأم للمتابعة"
           },
           "academic": {
             "previousSchool": "المدرسة السابقة",
@@ -9733,7 +9805,10 @@
           "failedToSubmit": "فشل في تقديم الطلب",
           "rateLimited": "محاولات كثيرة. يرجى الانتظار قليلاً والمحاولة مرة أخرى.",
           "documentsRequired": "يرجى رفع المستندات المطلوبة قبل التقديم",
-          "applicationAlreadySubmitted": "تم تقديم هذا الطلب مسبقاً"
+          "applicationAlreadySubmitted": "تم تقديم هذا الطلب مسبقاً",
+          "applicationDuplicate": "يوجد طلب مسجل بهذه البيانات بالفعل",
+          "missingField": "حقل مطلوب غير مكتمل: {{field}}. يرجى الرجوع لاستكماله.",
+          "applicationEmailDuplicate": "يوجد طلب مسجل بهذا البريد الإلكتروني لهذه الحملة بالفعل"
         },
         "submit": "تقديم"
       },
@@ -11337,5 +11412,8 @@
         }
       }
     }
+  },
+  "finance": {
+    "bankingPage": {}
   }
 }

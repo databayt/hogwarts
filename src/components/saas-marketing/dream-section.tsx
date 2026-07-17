@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -93,12 +93,18 @@ const categoryCards = [
 ]
 
 export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
+  const isRTL = lang === "ar"
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [hoveredTag, setHoveredTag] = useState<string | null>(null)
   const [animationComplete, setAnimationComplete] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
   const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === "dark"
+  // `resolvedTheme` is undefined during SSR, so gate it behind mount to avoid a
+  // hydration mismatch on the theme-dependent subtitle color (server renders the
+  // light value, client the dark one → mismatched inline `color` in dark mode).
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  const isDark = mounted && resolvedTheme === "dark"
 
   // Scroll-linked animation setup
   // Animation starts when section top hits viewport top (after header)
@@ -149,6 +155,11 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
     title: string
     titleAr: string
     subtitle: string
+    highlight: string
+    headlineLead: string
+    headlineTrail: string
+    included: string
+    module: string
     tags: Record<string, string>
   }
 
@@ -186,188 +197,246 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
     })
   }
 
+  // Category of the currently hovered tag (drives the reveal card labels).
+  const hoveredCategory = hoveredTag
+    ? tags.find((t) => t.id === hoveredTag)?.categories[0]
+    : undefined
+  const hoveredCatTitle = hoveredCategory
+    ? categoriesDict[hoveredCategory].title
+    : ""
+
+  // The animated "?" box is language-neutral, so both the LTR and RTL
+  // headlines render the exact same element.
+  const animatedBox = (
+    <div className="relative w-[clamp(6rem,15vw,13rem)] flex-shrink-0 self-start">
+      {/* Animated ? box - absolutely positioned so height expansion doesn't affect layout */}
+      <motion.div
+        className="absolute start-0 top-0 flex w-full flex-col items-center justify-center overflow-hidden rounded-lg will-change-transform"
+        style={{
+          y: boxY,
+          height: boxHeight,
+          backgroundColor: boxBgColor,
+        }}
+      >
+        <AnimatePresence mode="wait">
+          {hoveredTag ? (
+            <motion.div
+              key="hovered-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex h-full w-full flex-col p-3"
+            >
+              {/* Top cream card with speech bubble - fixed container */}
+              <div className="relative mx-2 mt-10 flex flex-col items-center justify-center rounded-[3.5rem] bg-[#FAE5CC] px-2 py-16 text-center text-black">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={hoveredTag}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col items-center"
+                  >
+                    <span className="text-xs tracking-wider text-[#F5A623] uppercase">
+                      {isRTL ? hoveredCatTitle : hoveredCategory}
+                    </span>
+                    <span className="mt-1 text-lg leading-tight font-extrabold">
+                      {dreamDict.tags[hoveredTag]}
+                    </span>
+                    <span className="mt-2 text-lg font-extrabold">
+                      {dreamDict.included}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+                {/* Speech bubble pointer */}
+                <svg
+                  className="absolute -bottom-3 left-1/2 -translate-x-1/2"
+                  width="20"
+                  height="12"
+                  viewBox="0 0 20 12"
+                >
+                  <path d="M0 0 L10 12 L20 0 Z" fill="#FAE5CC" />
+                </svg>
+              </div>
+              {/* Bottom section */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={hoveredTag}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex flex-1 flex-col items-center justify-start px-2 pt-8 text-center"
+                >
+                  <p className="text-lg leading-tight font-bold text-white">
+                    {hoveredCatTitle}
+                  </p>
+                  <p className="mt-1 text-base text-white/80">
+                    {dreamDict.module}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            <motion.span
+              key="question"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-[clamp(1.5rem,6vw,4rem)] font-light text-white"
+            >
+              ?
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      {/* Image - appears on hover, slides out from behind the box */}
+      <AnimatePresence mode="wait">
+        {hoveredTag && tagImages[hoveredTag] && (
+          <motion.div
+            key={hoveredTag}
+            initial={{ opacity: 0, x: 100, zIndex: -10 }}
+            animate={{ opacity: 1, x: -100, zIndex: 10 }}
+            exit={{ opacity: 0, x: 100, zIndex: -10 }}
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+              zIndex: { delay: 0.15 },
+            }}
+            className="pointer-events-none absolute -start-48 top-[250px] h-[30rem] w-80"
+          >
+            <Image
+              src={tagImages[hoveredTag]}
+              alt="Feature preview"
+              fill
+              className="object-contain object-bottom"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+
   return (
     <section ref={sectionRef} className="bg-background relative h-[200vh]">
       <div className="sticky top-0 h-screen px-4 py-12 md:px-0 md:py-24">
-        {/* Desktop Title Row with scroll animation */}
-        <div className="mb-8 hidden w-full items-center gap-1 md:mb-12 md:flex md:gap-1.5">
-          {/* FIND */}
-          <motion.span
-            className="flex-shrink-0 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
-            style={{ color: findColor }}
-          >
-            FIND
-          </motion.span>
-
-          {/* Box container - relative wrapper for absolute positioned animated box */}
-          <div className="relative w-[clamp(6rem,15vw,13rem)] flex-shrink-0 self-start">
-            {/* Animated ? box - absolutely positioned so height expansion doesn't affect layout */}
-            <motion.div
-              className="absolute start-0 top-0 flex w-full flex-col items-center justify-center overflow-hidden rounded-lg will-change-transform"
-              style={{
-                y: boxY,
-                height: boxHeight,
-                backgroundColor: boxBgColor,
-              }}
-            >
-              <AnimatePresence mode="wait">
-                {hoveredTag ? (
-                  <motion.div
-                    key="hovered-content"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex h-full w-full flex-col p-3"
-                  >
-                    {/* Top cream card with speech bubble - fixed container */}
-                    <div className="relative mx-2 mt-10 flex flex-col items-center justify-center rounded-[3.5rem] bg-[#FAE5CC] px-2 py-16 text-center text-black">
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={hoveredTag}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{ duration: 0.15 }}
-                          className="flex flex-col items-center"
-                        >
-                          <span className="text-xs tracking-wider text-[#F5A623] uppercase">
-                            {
-                              tags.find((t) => t.id === hoveredTag)
-                                ?.categories[0]
-                            }
-                          </span>
-                          <span className="mt-1 text-lg leading-tight font-extrabold">
-                            {dreamDict.tags[hoveredTag]}
-                          </span>
-                          <span className="mt-2 text-lg font-extrabold">
-                            included!
-                          </span>
-                        </motion.div>
-                      </AnimatePresence>
-                      {/* Speech bubble pointer */}
-                      <svg
-                        className="absolute -bottom-3 left-1/2 -translate-x-1/2"
-                        width="20"
-                        height="12"
-                        viewBox="0 0 20 12"
-                      >
-                        <path d="M0 0 L10 12 L20 0 Z" fill="#FAE5CC" />
-                      </svg>
-                    </div>
-                    {/* Bottom section */}
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={hoveredTag}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex flex-1 flex-col items-center justify-start px-2 pt-8 text-center"
-                      >
-                        <p className="text-lg leading-tight font-bold text-white">
-                          {tags.find((t) => t.id === hoveredTag)
-                            ?.categories[0] === "academic" && "Academic"}
-                          {tags.find((t) => t.id === hoveredTag)
-                            ?.categories[0] === "admin" && "Administration"}
-                          {tags.find((t) => t.id === hoveredTag)
-                            ?.categories[0] === "finance" && "Finance"}
-                          {tags.find((t) => t.id === hoveredTag)
-                            ?.categories[0] === "tech" && "Technology"}
-                        </p>
-                        <p className="mt-1 text-base text-white/80">module</p>
-                      </motion.div>
-                    </AnimatePresence>
-                  </motion.div>
-                ) : (
-                  <motion.span
-                    key="question"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-[clamp(1.5rem,6vw,4rem)] font-light text-white"
-                  >
-                    ?
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.div>
-            {/* Image - appears on hover, slides out from behind the box */}
-            <AnimatePresence mode="wait">
-              {hoveredTag && tagImages[hoveredTag] && (
-                <motion.div
-                  key={hoveredTag}
-                  initial={{ opacity: 0, x: 100, zIndex: -10 }}
-                  animate={{ opacity: 1, x: -100, zIndex: 10 }}
-                  exit={{ opacity: 0, x: 100, zIndex: -10 }}
-                  transition={{
-                    duration: 0.2,
-                    ease: "easeOut",
-                    zIndex: { delay: 0.15 },
-                  }}
-                  className="pointer-events-none absolute -start-48 top-[250px] h-[30rem] w-80"
-                >
-                  <Image
-                    src={tagImages[hoveredTag]}
-                    alt="Feature preview"
-                    fill
-                    className="object-contain object-bottom"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* YOUR BOOST - animated container */}
-          <motion.div
-            className="-ms-3 flex flex-grow items-center justify-end"
-            style={{ x: textX }}
-          >
-            {/* YOUR - Vertical text */}
+        {/* Desktop Title Row (LTR): FIND [?] YOUR BOOST — kinetic English typography */}
+        {!isRTL && (
+          <div className="mb-8 hidden w-full items-center gap-1 md:mb-12 md:flex md:gap-1.5">
+            {/* FIND */}
             <motion.span
-              className="flex-shrink-0 text-[clamp(1.25rem,2.7vw,2.15rem)] font-extrabold tracking-[0.1em]"
-              style={{
-                writingMode: "vertical-lr",
-                transform: "rotate(180deg)",
-                color: textColor,
-              }}
+              className="flex-shrink-0 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
+              style={{ color: findColor }}
             >
-              YOUR
-            </motion.span>
-
-            {/* BOOST */}
-            <motion.span
-              className="-ms-3 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
-              style={{ color: textColor }}
-            >
-              BOOST
-            </motion.span>
-          </motion.div>
-        </div>
-
-        {/* Mobile Title Row - no scroll animation */}
-        <div className="mb-8 flex flex-col items-center gap-2 md:hidden">
-          <div className="flex items-center gap-2">
-            <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
               FIND
-            </span>
-            <div className="flex h-10 w-12 items-center justify-center rounded-md bg-neutral-200">
-              <span className="text-2xl font-light text-white">?</span>
+            </motion.span>
+
+            {/* Animated ? box (shared LTR/RTL) */}
+            {animatedBox}
+
+            {/* YOUR BOOST - animated container */}
+            <motion.div
+              className="-ms-3 flex flex-grow items-center justify-end"
+              style={{ x: textX }}
+            >
+              {/* YOUR - Vertical text */}
+              <motion.span
+                className="flex-shrink-0 text-[clamp(1.25rem,2.7vw,2.15rem)] font-extrabold tracking-[0.1em]"
+                style={{
+                  writingMode: "vertical-lr",
+                  transform: "rotate(180deg)",
+                  color: textColor,
+                }}
+              >
+                YOUR
+              </motion.span>
+
+              {/* BOOST */}
+              <motion.span
+                className="-ms-3 text-[clamp(2.5rem,12vw,10rem)] leading-[0.8] font-black"
+                style={{ color: textColor }}
+              >
+                BOOST
+              </motion.span>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Desktop Title Row (RTL): اكتشف [?] قوتك — mirrors the LTR spatial
+            rhythm (lead + box hug the start edge, trail sweeps to the end) so
+            the growing box stays clear of the tag cloud; no vertical/slide
+            typography, which are English-only devices. */}
+        {isRTL && (
+          <div className="mb-8 hidden w-full items-center gap-1 md:mb-12 md:flex md:gap-1.5">
+            {/* اكتشف — scaled so lead + box stay within the start half (Arabic
+                glyphs are wider than Latin, so a smaller clamp keeps the growing
+                box clear of the tag cloud, mirroring the LTR width budget). */}
+            <motion.span
+              className="flex-shrink-0 text-[clamp(1.75rem,7.5vw,7rem)] leading-[0.85] font-black"
+              style={{ color: findColor }}
+            >
+              {dreamDict.headlineLead}
+            </motion.span>
+
+            {/* Animated ? box (shared LTR/RTL) */}
+            {animatedBox}
+
+            {/* قوتك */}
+            <div className="flex flex-grow items-center justify-end">
+              <motion.span
+                className="text-[clamp(1.75rem,7.5vw,7rem)] leading-[0.85] font-black"
+                style={{ color: textColor }}
+              >
+                {dreamDict.headlineTrail}
+              </motion.span>
             </div>
           </div>
-          <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
-            YOUR BOOST
-          </span>
-        </div>
+        )}
+
+        {/* Mobile Title Row (LTR) - no scroll animation */}
+        {!isRTL && (
+          <div className="mb-8 flex flex-col items-center gap-2 md:hidden">
+            <div className="flex items-center gap-2">
+              <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
+                FIND
+              </span>
+              <div className="flex h-10 w-12 items-center justify-center rounded-md bg-neutral-200">
+                <span className="text-2xl font-light text-white">?</span>
+              </div>
+            </div>
+            <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
+              YOUR BOOST
+            </span>
+          </div>
+        )}
+
+        {/* Mobile Title Row (RTL): اكتشف [?] قوتك on one line */}
+        {isRTL && (
+          <div className="mb-8 flex flex-col items-center gap-2 md:hidden">
+            <div className="flex items-center gap-3">
+              <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
+                {dreamDict.headlineLead}
+              </span>
+              <div className="flex h-10 w-12 items-center justify-center rounded-md bg-neutral-200">
+                <span className="text-2xl font-light text-white">?</span>
+              </div>
+              <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
+                {dreamDict.headlineTrail}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Subtitle - mobile: centered, desktop: aligned with YOUR at half screen */}
         <p className="text-foreground mb-5 pe-0 text-center text-lg font-black md:ms-[50%] md:mb-8 md:pe-4 md:text-start md:text-2xl lg:text-3xl">
-          {dreamDict.subtitle.split("features").map((part, i, arr) => (
+          {dreamDict.subtitle.split(dreamDict.highlight).map((part, i, arr) => (
             <span key={i}>
               {part}
               {i < arr.length - 1 && (
                 <motion.span style={{ color: subtitleColor }}>
-                  features
+                  {dreamDict.highlight}
                 </motion.span>
               )}
             </span>

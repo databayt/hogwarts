@@ -134,9 +134,13 @@ model Application {
   // Registration Fee (paid to secure seat before enrollment)
   registrationFeePaid      Boolean   @default(false)
   registrationFeeAmount    Decimal?  @db.Decimal(10, 2)
-  registrationFeeMethod    String? // "stripe", "cash", "bank_transfer"
+  registrationFeeMethod    String? // "stripe", "tap", "bankak", "cashi", "cash", "bank_transfer"
   registrationFeeReference String?
   registrationFeeDate      DateTime?
+  // Proof of payment for the manual rails (Bankak/Cashi/bank transfer): the
+  // transfer screenshot the applicant uploads. Mirrors Payment.depositSlipUrl —
+  // registration-fee state lives on these flat columns, not a Payment row.
+  registrationFeeProofUrl  String?
 
   // Application Fee Payment
   applicationFeePaid Boolean   @default(false)

@@ -312,7 +312,7 @@ async function processSchool(
       metadata: {
         invoiceId: invoice.id,
         invoiceNo: invoice.invoice_no,
-        url: "/finance/invoices",
+        url: "/finance/invoice",
       },
     })
     if (result) notificationsCreated++

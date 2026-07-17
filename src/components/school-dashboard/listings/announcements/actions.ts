@@ -105,7 +105,6 @@ import {
   announcementUpdateSchema,
   getAnnouncementsSchema,
 } from "@/components/school-dashboard/listings/announcements/validation"
-import { autoTranslate } from "@/components/translation/actions"
 import { localize, localizeOne } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
 import { search } from "@/components/translation/search"
@@ -185,14 +184,8 @@ export async function createAnnouncement(
     // Validate scope permissions
     try {
       validateAnnouncementScope(authContext, parsed.scope)
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Invalid scope for your role",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Check create permission
@@ -200,14 +193,8 @@ export async function createAnnouncement(
       assertAnnouncementPermission(authContext, "create", {
         scope: parsed.scope,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to create announcements",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Create announcement with audit trail - single-language fields
@@ -241,7 +228,9 @@ export async function createAnnouncement(
     // Dispatch notifications when publishing immediately
     if (parsed.published) {
       dispatchAnnouncementNotifications(row.id, schoolId, {
-        title: parsed.title || "New Announcement",
+        // The schema requires a title before publish, so this is always real
+        // content — which the notification layer localizes per reader.
+        title: parsed.title!,
         scope: parsed.scope,
         classId: parsed.classId || undefined,
         role: parsed.role || undefined,
@@ -268,129 +257,7 @@ export async function createAnnouncement(
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create announcement",
-    }
-  }
-}
-
-/**
- * Create announcement with automatic translation
- * When user enters content in one language, automatically translates to the other
- * @param input - Announcement data with source language
- * @returns Action response with announcement ID
- */
-export async function createAnnouncementWithTranslation(input: {
-  title: string
-  body: string
-  sourceLanguage: "en" | "ar"
-  scope: "school" | "class" | "role"
-  classId?: string | null
-  role?: string | null
-  published?: boolean
-  priority?: "low" | "normal" | "high" | "urgent"
-  scheduledFor?: string | null
-  expiresAt?: string | null
-  pinned?: boolean
-  featured?: boolean
-}): Promise<ActionResponse<{ id: string }>> {
-  try {
-    // Get authentication context
-    const session = await auth()
-    const authContext = getAuthContext(session)
-    if (!authContext) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    // Get tenant context
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    // Validate scope permissions
-    try {
-      validateAnnouncementScope(authContext, input.scope)
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Invalid scope for your role",
-      }
-    }
-
-    // Check create permission
-    try {
-      assertAnnouncementPermission(authContext, "create", {
-        scope: input.scope,
-      })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to create announcements",
-      }
-    }
-
-    // Auto-translate content (optional preview, not stored)
-    const translatedData = await autoTranslate(
-      { title: input.title, body: input.body },
-      ["title", "body"],
-      input.sourceLanguage
-    )
-
-    // Create announcement with single-language content
-    const row = await db.announcement.create({
-      data: {
-        schoolId,
-        title: input.title || null,
-        body: input.body || null,
-        lang: input.sourceLanguage,
-        scope: input.scope,
-        classId: input.classId || null,
-        role: (input.role as any) || null,
-        published: input.published ?? false,
-        priority: input.priority || "normal",
-        scheduledFor: input.scheduledFor ? new Date(input.scheduledFor) : null,
-        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-        pinned: input.pinned || false,
-        featured: input.featured || false,
-        publishedAt: input.published ? new Date() : null,
-      },
-    })
-
-    // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH)
-    revalidateTag(`announcements-${schoolId}`, "max")
-
-    return {
-      success: true,
-      data: {
-        id: row.id,
-        ...(translatedData.translatedFields ? { translated: true } : {}),
-      } as { id: string },
-    }
-  } catch (error) {
-    console.error("[createAnnouncementWithTranslation] Error:", error, {
-      input,
-      timestamp: new Date().toISOString(),
-    })
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create announcement",
-    }
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_CREATE_FAILED)
   }
 }
 
@@ -444,14 +311,8 @@ export async function updateAnnouncement(
         schoolId: existing.schoolId,
         scope: existing.scope as "school" | "class" | "role",
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to update this announcement",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Build update data object - single-language fields
@@ -514,13 +375,7 @@ export async function updateAnnouncement(
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to update announcement",
-    }
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_UPDATE_FAILED)
   }
 }
 
@@ -573,14 +428,8 @@ export async function deleteAnnouncement(input: {
         schoolId: existing.schoolId,
         scope: existing.scope as "school" | "class" | "role",
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to delete this announcement",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Delete announcement (using deleteMany for tenant safety)
@@ -604,13 +453,7 @@ export async function deleteAnnouncement(input: {
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete announcement",
-    }
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_DELETE_FAILED)
   }
 }
 
@@ -647,6 +490,8 @@ export async function toggleAnnouncementPublish(input: {
       where: { id, schoolId },
       select: {
         id: true,
+        // Needed for the notification dispatched on publish.
+        title: true,
         createdBy: true,
         schoolId: true,
         scope: true,
@@ -666,14 +511,14 @@ export async function toggleAnnouncementPublish(input: {
         schoolId: existing.schoolId,
         scope: existing.scope as "school" | "class" | "role",
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to publish this announcement",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    // Recipients are notified by the announcement's title, so refuse to publish
+    // a titleless draft rather than dispatching a placeholder to the school.
+    if (publish && !existing.title?.trim()) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     // Update publish status
@@ -688,8 +533,9 @@ export async function toggleAnnouncementPublish(input: {
     // Dispatch notifications when publishing
     if (publish) {
       dispatchAnnouncementNotifications(id, schoolId, {
-        title:
-          existing.scope === "school" ? "New Announcement" : "New Announcement",
+        // The title is real content; the notification layer localizes it per
+        // reader. A hardcoded English placeholder never would.
+        title: existing.title!,
         scope: existing.scope as "school" | "class" | "role",
       }).catch((err) =>
         console.error(
@@ -717,13 +563,7 @@ export async function toggleAnnouncementPublish(input: {
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to toggle publish status",
-    }
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_UPDATE_FAILED)
   }
 }
 
@@ -787,14 +627,8 @@ export async function getAnnouncement(input: {
         id: announcement.id,
         schoolId: announcement.schoolId,
       })
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to read this announcement",
-      }
+    } catch {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // On-demand translation when the caller asks for a display language.
@@ -822,11 +656,7 @@ export async function getAnnouncement(input: {
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch announcement",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -956,13 +786,7 @@ export async function getAnnouncements(
       }
     }
 
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch announcements",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -1023,11 +847,7 @@ export async function getPreviousAnnouncements(options?: {
     return { success: true, data: announcements }
   } catch (error) {
     console.error("[getPreviousAnnouncements] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch suggestions",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -1111,10 +931,7 @@ export async function getAnnouncementConfig(): Promise<
     }
   } catch (error) {
     console.error("[getAnnouncementConfig] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch config",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -1134,10 +951,7 @@ export async function updateAnnouncementConfig(
 
     // Only admins can update config
     if (!["ADMIN", "DEVELOPER"].includes(authContext.role)) {
-      return {
-        success: false,
-        error: "Only admins can update announcement settings",
-      }
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get tenant context
@@ -1186,10 +1000,7 @@ export async function updateAnnouncementConfig(
     }
   } catch (error) {
     console.error("[updateAnnouncementConfig] Error:", error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update config",
-    }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -1225,11 +1036,7 @@ export async function getAnnouncementTemplates(): Promise<
     return { success: true, data: templates }
   } catch (error) {
     console.error("[getAnnouncementTemplates] Error:", error)
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch templates",
-    }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 

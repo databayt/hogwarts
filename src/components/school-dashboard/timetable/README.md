@@ -8,7 +8,7 @@ maturity: Production-Ready
 completion: 95
 tracker: https://github.com/databayt/hogwarts/issues/323
 docs: https://ed.databayt.org/en/docs/timetable
-last_audited: 2026-07-12
+last_audited: 2026-07-16
 ---
 
 ## Timetable -- Weekly Schedule Management
@@ -77,6 +77,7 @@ src/components/school-dashboard/timetable/
     role-router.tsx         #   loads active term + personalized data, routes by role
     admin-view.tsx, teacher-view.tsx, student-view.tsx, guardian-view.tsx
     simple-grid.tsx         #   the weekly grid primitive
+    grid-skeleton.tsx       #   TimetableGridSkeleton — mirrors simple-grid's DOM
     preview.tsx, live-join-button.tsx, start-live-class-button.tsx, index.ts
 ```
 

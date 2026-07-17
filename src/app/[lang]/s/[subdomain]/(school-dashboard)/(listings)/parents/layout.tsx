@@ -16,21 +16,17 @@ export default async function ParentsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.parents
 
-  // Parents page navigation (4 links)
+  // Parents page navigation. Only routes that exist are linked — the
+  // Link / Communication / Settings pages were never built, so linking them
+  // fell through to /parents/[id] and rendered a 404 (issue #378).
   const parentsPages: PageNavItem[] = [
     { name: d?.allParents || "All", href: `/${lang}/parents` },
-    { name: d?.navLink || "Link", href: `/${lang}/parents/link` },
-    {
-      name: d?.navCommunication || "Communication",
-      href: `/${lang}/parents/communication`,
-    },
-    { name: d?.navSettings || "Settings", href: `/${lang}/parents/settings` },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Parents"} />
-      <PageNav pages={parentsPages} />
+      {parentsPages.length > 1 && <PageNav pages={parentsPages} />}
       {children}
     </div>
   )

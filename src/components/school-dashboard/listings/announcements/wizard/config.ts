@@ -11,6 +11,14 @@ export const ANNOUNCEMENT_WIZARD_CONFIG: WizardConfig = {
     2: ["targeting"],
   },
   groupLabels: ["Content", "Targeting & Publishing"],
+  i18nGroupLabels: {
+    ar: ["المحتوى", "الاستهداف والنشر"],
+    en: ["Content", "Targeting & Publishing"],
+  },
   requiredSteps: ["content"],
   finalLabel: "Publish",
+  i18nFinalLabel: {
+    ar: "نشر",
+    en: "Publish",
+  },
 }

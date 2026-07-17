@@ -72,6 +72,7 @@ import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { resolveActiveTerm } from "@/lib/term-resolver"
 import { applyTimetableStructureForNewSchool } from "@/components/catalog/provision"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getDisplayLang } from "@/components/translation/locale"
 import { getLabels, getNames } from "@/components/translation/person"
 import { fullName } from "@/components/translation/util"
@@ -136,6 +137,22 @@ import {
 
 // Note: Types (ConstraintViolation, ImportResult, ImportSlot, etc.)
 // should be imported directly from ./types.ts by consuming files
+
+/**
+ * Timetable dictionary for the caller's display language.
+ *
+ * Term/year labels are composed here rather than in the client because these
+ * actions return a ready-to-render `label`. Building them with string literals
+ * ("Term 1", "— Draft") left the badge English on /ar no matter the locale.
+ *
+ * INTERNAL helper — deliberately NOT exported: in a "use server" file every
+ * export is an HTTP endpoint.
+ */
+async function getTimetableDict() {
+  const lang = await getDisplayLang()
+  const dictionary = await getDictionary(lang)
+  return dictionary.school.timetable
+}
 
 // ============================================================================
 // TEACHER CONSTRAINT VALIDATION
@@ -891,14 +908,23 @@ export async function getTermsForSelection() {
   const termModel = getModel("term")
   if (!termModel) return { terms: [] as Array<{ id: string; label: string }> }
 
+  // ACTIVE term first. Every consumer (analytics, conflicts, generate) defaults
+  // its picker to terms[0]; ordering purely by startDate surfaced the newest
+  // term instead, so those pages opened on a term the school isn't teaching —
+  // reading "0 slots" against a fully scheduled timetable.
   const rows = await termModel.findMany({
     where: { schoolId },
-    orderBy: { startDate: "desc" },
+    orderBy: [{ isActive: "desc" }, { startDate: "desc" }],
     select: { id: true, termNumber: true },
   })
 
+  const t = await getTimetableDict()
+
   return {
-    terms: rows.map((t: any) => ({ id: t.id, label: `Term ${t.termNumber}` })),
+    terms: rows.map((row: any) => ({
+      id: row.id,
+      label: `${t.termLabel} ${row.termNumber}`,
+    })),
   }
 }
 
@@ -1858,7 +1884,13 @@ export async function getTimetableByClass(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   const slots = await db.timetable.findMany({
@@ -1946,7 +1978,13 @@ async function getTimetableByClassIds(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   const hasClassIds = input.classIds.length > 0
@@ -2126,7 +2164,13 @@ export async function getTimetableByStudentGrade(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   const studentSectionId = student.sectionId ?? undefined
@@ -2187,9 +2231,7 @@ export async function getTimetableByStudentGrade(input: {
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak:
-        p.name.toLowerCase().includes("break") ||
-        p.name.toLowerCase().includes("lunch"),
+      isBreak: p.isBreak,
     })),
     slots: slots.map((s) => ({
       id: s.id,
@@ -2268,7 +2310,13 @@ export async function getTimetableByGradeLevel(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   // Get all timetable slots for this grade — both axes
@@ -2327,9 +2375,7 @@ export async function getTimetableByGradeLevel(input: {
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak:
-        p.name.toLowerCase().includes("break") ||
-        p.name.toLowerCase().includes("lunch"),
+      isBreak: p.isBreak,
     })),
     slots: slots.map((s) => ({
       id: s.id,
@@ -2431,7 +2477,13 @@ export async function getTimetableByTeacher(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   // Slots + today's live/scheduled Conference indicators load in parallel —
@@ -2558,7 +2610,13 @@ export async function getTimetableByRoom(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   // Slots + today's live/scheduled Conference indicators load in parallel —
@@ -2597,10 +2655,7 @@ export async function getTimetableByRoom(input: {
 
   // Calculate utilization
   const totalPossibleSlots =
-    config.workingDays.length *
-    periods.filter(
-      (p) => !p.name.includes("Break") && !p.name.includes("Lunch")
-    ).length
+    config.workingDays.length * periods.filter((p) => !p.isBreak).length
   const utilizationRate =
     totalPossibleSlots > 0 ? (slots.length / totalPossibleSlots) * 100 : 0
 
@@ -2687,6 +2742,12 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     include: {
       teacher: { select: { id: true, firstName: true, lastName: true } },
       classroom: { select: { id: true, roomName: true, capacity: true } },
+      // Section-based slots carry subject/section directly and have class: null.
+      // Reading only `class` made every metric below collapse (subject
+      // distribution all "Unknown", class count 0) once generation moved to the
+      // section axis — the operational identity of a slot is section+subject.
+      subject: { select: { name: true } },
+      section: { select: { id: true, name: true } },
       class: {
         select: {
           id: true,
@@ -2696,6 +2757,13 @@ export async function getTimetableAnalytics(input: { termId: string }) {
       },
     },
   })
+
+  const t = await getTimetableDict()
+  // Cohort identity: section first, legacy class second — same fallback the
+  // conflict detector uses (see util.ts `detectConflicts`).
+  const cohortOf = (s: (typeof slots)[number]) => s.sectionId ?? s.classId
+  const subjectOf = (s: (typeof slots)[number]) =>
+    s.subject?.name || s.class?.subject?.name || s.class?.name || t.unknown
 
   // Teacher workload analysis
   const teacherWorkload = new Map<
@@ -2717,9 +2785,10 @@ export async function getTimetableAnalytics(input: { termId: string }) {
         subjects: new Set(),
       }
       existing.periods++
-      if (slot.classId) existing.classes.add(slot.classId)
-      if (slot.class?.subject?.name)
-        existing.subjects.add(slot.class.subject.name)
+      const cohort = cohortOf(slot)
+      if (cohort) existing.classes.add(cohort)
+      const subjectName = slot.subject?.name || slot.class?.subject?.name
+      if (subjectName) existing.subjects.add(subjectName)
       teacherWorkload.set(key, existing)
     }
   }
@@ -2730,9 +2799,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     select: { id: true, roomName: true, capacity: true },
   })
 
-  const teachingPeriods = periods.filter(
-    (p) => !p.name.includes("Break") && !p.name.includes("Lunch")
-  )
+  const teachingPeriods = periods.filter((p) => !p.isBreak)
   const maxSlotsPerRoom = config.workingDays.length * teachingPeriods.length
 
   // Count used slots per room in ONE pass over the slots (already in memory)
@@ -2768,35 +2835,59 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     { name: string; periods: number; classes: Set<string> }
   >()
   for (const slot of slots) {
-    const subject = slot.class?.subject?.name || slot.class?.name || "Unknown"
+    const subject = subjectOf(slot)
     const existing = subjectDist.get(subject) || {
       name: subject,
       periods: 0,
       classes: new Set(),
     }
     existing.periods++
-    if (slot.classId) existing.classes.add(slot.classId)
+    const cohort = cohortOf(slot)
+    if (cohort) existing.classes.add(cohort)
     subjectDist.set(subject, existing)
   }
 
   // Detect conflicts
   const { conflicts } = await detectTimetableConflicts({ termId: input.termId })
 
+  // Localize the display names the same way the grid already does
+  // (`getTimetableByRoom` runs subjects through getLabels / teachers through
+  // getNames). Analytics returned the RAW stored names, so /en read Arabic
+  // subjects and /ar read the odd English one. Both are batched — one
+  // resolution per render, never per row.
+  const lang = await getDisplayLang()
+  const subjectNames = await getLabels(
+    Array.from(subjectDist.keys()),
+    lang,
+    schoolId
+  )
+  const analyticsTeacherNames = await getNames(
+    Array.from(teacherWorkload.entries()).map(([id, d]) => {
+      const [firstName, ...rest] = d.name.split(" ")
+      return { id, firstName, lastName: rest.join(" ") }
+    }),
+    (t) => ({ firstName: t.firstName, lastName: t.lastName }),
+    lang,
+    schoolId
+  )
+
   return {
     summary: {
       totalSlots: slots.length,
       totalTeachers: teacherWorkload.size,
       totalRooms: rooms.length,
-      totalClasses: [...new Set(slots.map((s) => s.classId))].length,
+      totalClasses: new Set(slots.map(cohortOf).filter(Boolean)).size,
       conflictCount: conflicts.length,
     },
     teacherWorkload: Array.from(teacherWorkload.entries())
       .map(([id, data]) => ({
         id,
-        name: data.name,
+        name: analyticsTeacherNames.get(data.name) ?? data.name,
         periodsPerWeek: data.periods,
         classesCount: data.classes.size,
-        subjects: Array.from(data.subjects),
+        subjects: Array.from(data.subjects).map(
+          (s) => subjectNames.get(s) ?? s
+        ),
       }))
       .sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
     roomUtilization: roomUtilization.sort(
@@ -2804,7 +2895,7 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     ),
     subjectDistribution: Array.from(subjectDist.entries())
       .map(([name, data]) => ({
-        name,
+        name: subjectNames.get(name) ?? name,
         periodsPerWeek: data.periods,
         classesCount: data.classes.size,
       }))
@@ -2947,7 +3038,13 @@ export async function getPeriodsForTerm(input: { termId: string }) {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   return {
@@ -2957,9 +3054,7 @@ export async function getPeriodsForTerm(input: { termId: string }) {
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak:
-        p.name.toLowerCase().includes("break") ||
-        p.name.toLowerCase().includes("lunch"),
+      isBreak: p.isBreak,
     })),
   }
 }
@@ -3028,6 +3123,7 @@ export async function getActiveTerm() {
   if (!schoolId) throw new Error("MISSING_SCHOOL_CONTEXT")
 
   const { term, source } = await resolveActiveTerm(schoolId)
+  const t = await getTimetableDict()
 
   if (!term) {
     // No real term yet — synthesize a draft so the grid renders (no DB writes).
@@ -3036,7 +3132,7 @@ export async function getActiveTerm() {
       term: {
         id: DRAFT_TERM_ID,
         termNumber: 1,
-        label: `${draft.yearName} — Draft`,
+        label: `${draft.yearName} — ${t.draft}`,
         startDate: draft.startDate,
         endDate: draft.endDate,
         yearId: DRAFT_TERM_ID,
@@ -3056,7 +3152,7 @@ export async function getActiveTerm() {
     term: {
       id: term.id,
       termNumber: term.termNumber,
-      label: `${schoolYear?.yearName ?? "Unknown"} - Term ${term.termNumber}`,
+      label: `${schoolYear?.yearName ?? t.unknown} - ${t.termLabel} ${term.termNumber}`,
       startDate: term.startDate,
       endDate: term.endDate,
       yearId: term.yearId,
@@ -3271,7 +3367,7 @@ export async function getPersonalizedTimetable(input: {
         id: DRAFT_TERM_ID,
         termNumber: 1,
         yearName: draft.yearName,
-        label: `${draft.yearName} — Draft`,
+        label: `${draft.yearName} — ${(await getTimetableDict()).draft}`,
       },
       workingDays: draft.workingDays,
       periods: draft.periods,
@@ -3297,7 +3393,13 @@ export async function getPersonalizedTimetable(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   return {
@@ -3308,7 +3410,7 @@ export async function getPersonalizedTimetable(input: {
       id: input.termId,
       termNumber: term.termNumber,
       yearName: term.schoolYear.yearName,
-      label: `${term.schoolYear.yearName} - Term ${term.termNumber}`,
+      label: `${term.schoolYear.yearName} - ${(await getTimetableDict()).termLabel} ${term.termNumber}`,
     },
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
@@ -3317,9 +3419,7 @@ export async function getPersonalizedTimetable(input: {
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak:
-        p.name.toLowerCase().includes("break") ||
-        p.name.toLowerCase().includes("lunch"),
+      isBreak: p.isBreak,
     })),
     lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
@@ -3547,7 +3647,13 @@ export async function getChildTodaySchedule(input: {
     db.period.findMany({
       where: { schoolId, yearId: term.yearId },
       orderBy: { startTime: "asc" },
-      select: { id: true, name: true, startTime: true, endTime: true },
+      select: {
+        id: true,
+        name: true,
+        startTime: true,
+        endTime: true,
+        isBreak: true,
+      },
     }),
     db.student.findFirst({
       where: { id: input.childId, schoolId },
@@ -3611,9 +3717,7 @@ export async function getChildTodaySchedule(input: {
   const fullSchedule = periods.map((period) => {
     const existing = schedule.find((s) => s.periodId === period.id)
     if (existing) return existing
-    const isBreak =
-      period.name.toLowerCase().includes("break") ||
-      period.name.toLowerCase().includes("lunch")
+    const isBreak = period.isBreak
     return {
       periodId: period.id,
       periodName: period.name,
@@ -3673,7 +3777,13 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     db.period.findMany({
       where: { schoolId, yearId: term.yearId },
       orderBy: { startTime: "asc" },
-      select: { id: true, name: true, startTime: true, endTime: true },
+      select: {
+        id: true,
+        name: true,
+        startTime: true,
+        endTime: true,
+        isBreak: true,
+      },
     }),
     role === "TEACHER"
       ? db.teacher.findFirst({
@@ -3764,9 +3874,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     const existing = schedule.find((s) => s.periodId === period.id)
     if (existing) return existing
 
-    const isBreak =
-      period.name.toLowerCase().includes("break") ||
-      period.name.toLowerCase().includes("lunch")
+    const isBreak = period.isBreak
     return {
       periodId: period.id,
       periodName: period.name,
@@ -4164,6 +4272,8 @@ export async function listTimetableTemplates() {
     },
   })
 
+  const dict = await getTimetableDict()
+
   return {
     templates: templates.map((t) => ({
       id: t.id,
@@ -4178,7 +4288,7 @@ export async function listTimetableTemplates() {
         teacherCount: t.teacherCount,
       },
       source: t.sourceTerm
-        ? `${t.sourceTerm.schoolYear.yearName} Term ${t.sourceTerm.termNumber}`
+        ? `${t.sourceTerm.schoolYear.yearName} ${dict.termLabel} ${t.sourceTerm.termNumber}`
         : null,
       createdBy: t.createdBy?.email,
       createdAt: t.createdAt,
@@ -4470,19 +4580,13 @@ export async function generateTimetablePreview(input: {
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, isBreak: true },
   })
 
   // Build generation config
   const generationConfig: GenerationConfig = {
     workingDays: scheduleConfig.workingDays,
-    periodsPerDay: periods
-      .filter(
-        (p) =>
-          !p.name.toLowerCase().includes("break") &&
-          !p.name.toLowerCase().includes("lunch")
-      )
-      .map((p) => p.id),
+    periodsPerDay: periods.filter((p) => !p.isBreak).map((p) => p.id),
     constraints: {
       enforceTeacherExpertise:
         input.config?.constraints?.enforceTeacherExpertise ?? true,
@@ -5083,7 +5187,13 @@ export async function createPeriod(rawInput: {
   // Check for overlapping periods
   const existingPeriods = await db.period.findMany({
     where: { schoolId, yearId: input.yearId },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   for (const existing of existingPeriods) {
@@ -5180,7 +5290,13 @@ export async function updatePeriod(input: {
   // Check for overlapping periods (excluding this one)
   const otherPeriods = await db.period.findMany({
     where: { schoolId, yearId: existing.yearId, NOT: { id: input.periodId } },
-    select: { id: true, name: true, startTime: true, endTime: true },
+    select: {
+      id: true,
+      name: true,
+      startTime: true,
+      endTime: true,
+      isBreak: true,
+    },
   })
 
   for (const other of otherPeriods) {
@@ -5901,9 +6017,11 @@ export async function getTermsForCopy() {
     },
   })
 
+  const dict = await getTimetableDict()
+
   return terms.map((t) => ({
     id: t.id,
-    label: `${t.schoolYear.yearName} - Term ${t.termNumber}`,
+    label: `${t.schoolYear.yearName} - ${dict.termLabel} ${t.termNumber}`,
     startDate: t.startDate,
     endDate: t.endDate,
     yearId: t.schoolYear.id,

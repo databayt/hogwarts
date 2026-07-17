@@ -21,33 +21,24 @@ export default async function PayrollLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const role = (session?.user?.role ?? null) as Role | null
   const d = dictionary?.finance?.payroll
+  const ps = dictionary?.finance?.payrollSettings
   const canView = isRoleIn(role, FINANCE_VIEW_ROLES)
 
-  // Define payroll page navigation
+  // Only routes that exist are listed. Processing / history / deductions /
+  // benefits / reports have no page or component yet — their labels stay in the
+  // dictionary (finance.payroll.navigation) for whenever they get built.
   const n = d?.navigation
   const payrollPages: PageNavItem[] = !canView
     ? []
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/payroll` },
         {
-          name: n?.processing || "Payroll Processing",
-          href: `/${lang}/finance/payroll/processing`,
+          name: n?.runs || "Payroll Runs",
+          href: `/${lang}/finance/payroll/runs`,
         },
         {
-          name: n?.history || "Payroll History",
-          href: `/${lang}/finance/payroll/history`,
-        },
-        {
-          name: n?.deductions || "Deductions",
-          href: `/${lang}/finance/payroll/deductions`,
-        },
-        {
-          name: n?.benefits || "Benefits",
-          href: `/${lang}/finance/payroll/benefits`,
-        },
-        {
-          name: n?.reports || "Reports",
-          href: `/${lang}/finance/payroll/reports`,
+          name: ps?.title || "Payroll Settings",
+          href: `/${lang}/finance/payroll/settings`,
         },
       ]
 

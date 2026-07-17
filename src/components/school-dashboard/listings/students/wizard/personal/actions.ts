@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { cookies } from "next/headers"
+import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -10,6 +11,12 @@ import { db } from "@/lib/db"
 import { createOrLinkGuardian, splitGuardianName } from "@/lib/guardian-utils"
 import type { NameFormat } from "@/lib/name-utils"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkStudentPermission,
+  getAuthContext,
+  type AuthContext,
+  type StudentAction,
+} from "@/components/school-dashboard/listings/students/authorization"
 
 import {
   personalGuardianSchema,
@@ -17,6 +24,36 @@ import {
   type PersonalGuardianFormData,
   type PersonalStudentFormData,
 } from "./validation"
+
+/**
+ * Shared guard for the wizard sub-actions. `getTenantContext()` resolves
+ * schoolId from the x-subdomain header BEFORE the session, so gating on
+ * schoolId alone leaves these actions callable by an unauthenticated request
+ * to a valid school subdomain (they read/write student PII, addresses,
+ * documents, and guardian phone/WhatsApp). Every action must additionally
+ * assert an authenticated session with a role that permits the operation —
+ * mirrors the inline auth+permission pattern in the block's main actions.ts.
+ */
+async function authorizeWizardAction(
+  action: StudentAction
+): Promise<
+  | { ok: true; schoolId: string; authContext: AuthContext }
+  | { ok: false; response: ActionResponse }
+> {
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) {
+    return { ok: false, response: actionError(ACTION_ERRORS.NOT_AUTHENTICATED) }
+  }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { ok: false, response: actionError(ACTION_ERRORS.MISSING_SCHOOL) }
+  }
+  if (!checkStudentPermission(authContext, action, { schoolId })) {
+    return { ok: false, response: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  return { ok: true, schoolId, authContext }
+}
 
 // -----------------------------------------------------------------------------
 // Student sub-tab — only the fields the simplified wizard collects.
@@ -30,8 +67,9 @@ export async function getStudentPersonal(
   ActionResponse<PersonalStudentFormData & { nameFormat: NameFormat }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const [student, school] = await Promise.all([
       db.student.findFirst({
@@ -82,8 +120,9 @@ export async function updateStudentPersonal(
   input: PersonalStudentFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("update")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const parsed = personalStudentSchema.parse(input)
 
@@ -131,8 +170,9 @@ export async function getStudentPersonalGuardians(
   studentId: string
 ): Promise<ActionResponse<PersonalGuardianFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const studentGuardians = await db.studentGuardian.findMany({
       where: { studentId, schoolId },
@@ -186,8 +226,9 @@ export async function saveStudentPersonalGuardians(
   input: PersonalGuardianFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("link_guardian")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const parsed = personalGuardianSchema.parse(input)
 

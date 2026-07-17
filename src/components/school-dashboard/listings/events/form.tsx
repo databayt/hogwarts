@@ -2,13 +2,14 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { useModal } from "@/components/atom/modal/context"
 import { ModalFooter } from "@/components/atom/modal/modal-footer"
@@ -21,7 +22,10 @@ import {
   getEvent,
   updateEvent,
 } from "@/components/school-dashboard/listings/events/actions"
-import { eventCreateSchema } from "@/components/school-dashboard/listings/events/validation"
+import {
+  createEventCreateSchema,
+  type EventFormData,
+} from "@/components/school-dashboard/listings/events/validation"
 
 import { BasicInformationStep } from "./basic-information"
 import { DetailsAttendeesStep } from "./details-attendees"
@@ -48,8 +52,14 @@ export function EventCreateForm({
     undefined
   )
 
-  const form = useForm<z.infer<typeof eventCreateSchema>>({
-    resolver: zodResolver(eventCreateSchema),
+  // Validation messages come from the dictionary so Zod errors render in-locale.
+  const schema = useMemo(
+    () => createEventCreateSchema(fullDict?.school?.events?.validation),
+    [fullDict]
+  )
+
+  const form = useForm<EventFormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       title: "",
       description: "",
@@ -104,7 +114,7 @@ export function EventCreateForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId])
 
-  async function onSubmit(values: z.infer<typeof eventCreateSchema>) {
+  async function onSubmit(values: EventFormData) {
     try {
       // For new events, set lang to current locale
       // For edits, preserve the original stored lang
@@ -132,11 +142,15 @@ export function EventCreateForm({
           router.refresh()
         }
       } else {
+        const fallback = currentId
+          ? t?.error?.updateFailed || "Failed to update event"
+          : t?.error?.createFailed || "Failed to create event"
+        // Actions return error *codes* — resolve to a translated string rather
+        // than surfacing the raw code (e.g. "EVENT_UPDATE_FAILED") in a toast.
         toast.error(
-          res?.error ||
-            (currentId
-              ? t?.error?.updateFailed || "Failed to update event"
-              : t?.error?.createFailed || "Failed to create event")
+          res?.error
+            ? resolveActionError(res.error, fullDict) || fallback
+            : fallback
         )
       }
     } catch (error) {

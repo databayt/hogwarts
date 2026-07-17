@@ -12,6 +12,7 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   assertEventPermission,
   getAuthContext,
@@ -65,6 +66,43 @@ type EventListResult = {
 }
 
 const EVENTS_PATH = "/events"
+
+/** Matches the export cap used by the sibling listings (assignments, staff). */
+const CSV_EXPORT_LIMIT = 10000
+
+/**
+ * Columns the events list actually renders. Keeps the `description`/`notes`
+ * Text columns (and internal fields) off the wire for every row of every page.
+ * Not exported — "use server" modules may only export async functions.
+ */
+const EVENT_ROW_SELECT = {
+  id: true,
+  title: true,
+  lang: true,
+  eventType: true,
+  eventDate: true,
+  startTime: true,
+  endTime: true,
+  location: true,
+  organizer: true,
+  targetAudience: true,
+  maxAttendees: true,
+  currentAttendees: true,
+  status: true,
+  isPublic: true,
+  createdAt: true,
+} satisfies Prisma.EventSelect
+
+/** Placeholder labels for rows with no location/organizer/audience set. */
+async function getEventsDictionary(lang: "ar" | "en") {
+  const dictionary = await getDictionary(lang)
+  const d = dictionary.school?.events
+  return {
+    locationTBD: d?.locationTBD ?? "TBD",
+    organizerTBD: d?.organizerTBD ?? "TBD",
+    audienceTBD: d?.audienceTBD ?? "All",
+  }
+}
 
 // ============================================================================
 // Mutations
@@ -403,6 +441,9 @@ export async function getEvents(
 
     const where: any = {
       schoolId,
+      // Exclude in-flight wizard drafts — they have a blank title until the
+      // wizard completes and would otherwise pollute the list and its count.
+      wizardStep: null,
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
@@ -432,26 +473,37 @@ export async function getEvents(
         orderBy,
         skip,
         take,
+        select: EVENT_ROW_SELECT,
       }),
       db.event.count({ where }),
     ])
 
-    const mapped: EventListResult[] = (rows as Array<any>).map((e) => ({
-      id: e.id as string,
-      title: e.title as string,
-      eventType: e.eventType as string,
-      eventDate: (e.eventDate as Date).toISOString(),
-      startTime: e.startTime as string,
-      endTime: e.endTime as string,
-      location: e.location || "TBD",
-      organizer: e.organizer || "TBD",
-      targetAudience: e.targetAudience || "All",
-      maxAttendees: e.maxAttendees as number | null,
-      currentAttendees: e.currentAttendees as number,
-      status: e.status as string,
-      isPublic: e.isPublic as boolean,
-      createdAt: (e.createdAt as Date).toISOString(),
-    }))
+    // Match the SSR path: translate + resolve placeholder labels in-locale, so
+    // search/load-more rows don't regress to English after the first render.
+    const displayLang = sp.displayLang ?? "ar"
+    const [localizedRows, d] = await Promise.all([
+      localize("Event", rows as any[], { schoolId, lang: displayLang }),
+      getEventsDictionary(displayLang),
+    ])
+
+    const mapped: EventListResult[] = (localizedRows as Array<any>).map(
+      (e) => ({
+        id: e.id as string,
+        title: e.title as string,
+        eventType: e.eventType as string,
+        eventDate: (e.eventDate as Date).toISOString(),
+        startTime: e.startTime as string,
+        endTime: e.endTime as string,
+        location: e.location || d.locationTBD,
+        organizer: e.organizer || d.organizerTBD,
+        targetAudience: e.targetAudience || d.audienceTBD,
+        maxAttendees: e.maxAttendees as number | null,
+        currentAttendees: e.currentAttendees as number,
+        status: e.status as string,
+        isPublic: e.isPublic as boolean,
+        createdAt: (e.createdAt as Date).toISOString(),
+      })
+    )
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {
@@ -499,6 +551,7 @@ export async function getEventsCSV(
 
     const where: any = {
       schoolId,
+      wizardStep: null,
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
@@ -506,32 +559,50 @@ export async function getEventsCSV(
       ...(sp.status ? { status: sp.status } : {}),
     }
 
-    const events = await db.event.findMany({
-      where,
-      orderBy: [{ eventDate: "desc" }],
+    const displayLang = sp.displayLang ?? "ar"
+    const [events, dictionary] = await Promise.all([
+      db.event.findMany({
+        where,
+        orderBy: [{ eventDate: "desc" }],
+        select: EVENT_ROW_SELECT,
+        take: CSV_EXPORT_LIMIT,
+      }),
+      getDictionary(displayLang),
+    ])
+
+    const d = dictionary.school?.events as Record<string, any> | undefined
+    const csvD = (d?.csv ?? {}) as Record<string, string>
+    const types = (d?.types ?? {}) as Record<string, string>
+    const statuses = (d?.statuses ?? {}) as Record<string, string>
+
+    // Translate the free-text columns so an Arabic export isn't half-English.
+    const localizedEvents = await localize("Event", events as any[], {
+      schoolId,
+      lang: displayLang,
     })
 
     const headers = [
-      "ID",
-      "Title",
-      "Type",
-      "Date",
-      "Start Time",
-      "End Time",
-      "Location",
-      "Organizer",
-      "Audience",
-      "Max Attendees",
-      "Current Attendees",
-      "Status",
-      "Public",
-      "Created",
-    ]
-    const csvRows = (events as Array<any>).map((e) =>
+      csvD.id ?? "ID",
+      d?.titleColumn ?? "Title",
+      d?.type ?? "Type",
+      d?.date ?? "Date",
+      d?.startTime ?? "Start Time",
+      d?.endTime ?? "End Time",
+      d?.location ?? "Location",
+      d?.organizer ?? "Organizer",
+      d?.audience ?? "Audience",
+      csvD.maxAttendees ?? "Max Attendees",
+      csvD.currentAttendees ?? "Current Attendees",
+      d?.status ?? "Status",
+      csvD.public ?? "Public",
+      csvD.created ?? "Created",
+    ].map((h) => `"${String(h).replace(/"/g, '""')}"`)
+
+    const csvRows = (localizedEvents as Array<any>).map((e) =>
       [
         e.id,
         `"${(e.title || "").replace(/"/g, '""')}"`,
-        e.eventType,
+        `"${(types[e.eventType] ?? e.eventType).replace(/"/g, '""')}"`,
         new Date(e.eventDate).toISOString().split("T")[0],
         e.startTime,
         e.endTime,
@@ -540,8 +611,8 @@ export async function getEventsCSV(
         `"${(e.targetAudience || "").replace(/"/g, '""')}"`,
         e.maxAttendees || "",
         e.currentAttendees || 0,
-        e.status,
-        e.isPublic ? "Yes" : "No",
+        `"${(statuses[e.status] ?? e.status).replace(/"/g, '""')}"`,
+        e.isPublic ? (csvD.yes ?? "Yes") : (csvD.no ?? "No"),
         new Date(e.createdAt).toISOString().split("T")[0],
       ].join(",")
     )
@@ -720,12 +791,16 @@ export async function cancelEventRegistration(input: {
 
     const { eventId } = z.object({ eventId: z.string().min(1) }).parse(input)
 
-    const existing = await db.eventRegistration.findUnique({
+    // Scope by schoolId: the (eventId, userId) unique key is global, so an
+    // unscoped lookup would cancel a registration in whichever school owns the
+    // event rather than the caller's active tenant — and the schoolId-scoped
+    // currentAttendees decrement below would then silently no-op, permanently
+    // inflating that school's count. registerForEvent already scopes this way.
+    const existing = await db.eventRegistration.findFirst({
       where: {
-        eventId_userId: {
-          eventId,
-          userId: session.user.id,
-        },
+        eventId,
+        userId: session.user.id,
+        schoolId,
       },
     })
 

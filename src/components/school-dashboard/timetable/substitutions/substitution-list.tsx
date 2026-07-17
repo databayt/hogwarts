@@ -201,7 +201,15 @@ export function SubstitutionList({
   }
 
   const getDayName = (dayOfWeek: number) => {
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    const days = dictionary?.school?.timetable?.dayNames ?? [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+    ]
     return days[dayOfWeek] || ""
   }
 

@@ -26,10 +26,18 @@
  *   journal entries have sourceRecordId=NULL (seeded whole-unit demo data), so
  *   ZERO rows are inflated and this script is currently a NO-OP. It exists as a
  *   safety net for any real fee payment that posts through the OLD code before
- *   the toCents fix deploys. (postExpensePayment/postSalaryPayment are orphaned,
- *   so expenses/payroll ledger rows are ONLY ever seed/manual = whole units and
- *   are never in scope; postWalletTopup is wired but has produced no rows — if
- *   that changes, extend this script with a WalletTransaction-verified branch.)
+ *   the toCents fix deploys.
+ *
+ *   Scope re-verified 2026-07-17 — the original note said expenses/payroll were
+ *   out of scope because their posters were "orphaned". That premise is stale
+ *   (they were wired the next day, 2026-06-21: 5b789ec28 / 771166fc7), but the
+ *   conclusion still holds for a better reason: the toCents fix (916327882)
+ *   landed 2026-06-20, BEFORE any of those posters could run, so they have never
+ *   written an inflated row. `toCents` now has zero production callers.
+ *   postWalletTopup and postSalaryPayment additionally cannot run at all —
+ *   nothing invokes topupWallet/processPayments (no UI, no cron, no API route).
+ *   If a disbursement or wallet-top-up UI is ever built, they still cannot
+ *   inflate (toCents is gone); this script stays fees-scoped by design.
  *
  * WHAT IT DOES (per school, in one transaction, only when APPLY=1)
  *   1. For each fees JournalEntry with a sourceRecordId whose cash-leg debit ==

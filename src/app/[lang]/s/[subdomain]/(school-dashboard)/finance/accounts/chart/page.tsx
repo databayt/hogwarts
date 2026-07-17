@@ -4,12 +4,13 @@
 import Link from "next/link"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Chart of Accounts" }
 
@@ -20,7 +21,7 @@ interface Props {
 export default async function ChartOfAccountsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("accounts", ["view"])
 
   if (!schoolId) {
     return (
@@ -29,6 +30,10 @@ export default async function ChartOfAccountsPage({ params }: Props) {
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="accounts" />
   }
 
   const accounts = await db.chartOfAccount.findMany({

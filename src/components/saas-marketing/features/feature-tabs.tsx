@@ -14,6 +14,7 @@ import type { Locale } from "@/components/internationalization/config"
 
 import { FEATURE_GROUPS, GROUP_OF, SHOWN_FEATURES } from "./constants"
 import { getCategoryIcon } from "./feature-icons"
+import { featuresUi, GROUP_LABEL_AR, localizeFeature } from "./i18n"
 
 // Clean 512×512 icon set served locally from `public/feature/`.
 // NOTE: do NOT route these through asset()/the CDN — the flat CDN namespace
@@ -106,6 +107,8 @@ const tabs: { id: TabId; label: string }[] = [
 export default function FeatureTabs({ lang }: FeatureTabsProps) {
   const [active, setActive] = useState<TabId>("all")
   const [expanded, setExpanded] = useState(false)
+  const isAr = lang === "ar"
+  const ui = featuresUi(lang)
 
   const filtered = useMemo(
     () =>
@@ -137,7 +140,9 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
                     active === tab.id ? "bg-muted text-primary" : ""
                   )}
                 >
-                  <h6>{tab.label}</h6>
+                  <h6>
+                    {isAr ? (GROUP_LABEL_AR[tab.id] ?? tab.label) : tab.label}
+                  </h6>
                 </button>
               ))}
             </nav>
@@ -152,17 +157,18 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
           const imageSrc = FEATURE_IMAGES[feature.id]
           const Icon = getCategoryIcon(feature.category)
           const dim = SMALLER_ICONS.has(feature.id) ? 28 : 32
+          const { title, description } = localizeFeature(feature, lang)
           return (
             <Card
               key={feature.id}
               id={feature.id}
-              title={feature.title}
-              description={feature.description}
+              title={title}
+              description={description}
               icon={
                 imageSrc ? (
                   <Image
                     src={imageSrc}
-                    alt={feature.title}
+                    alt={title}
                     width={dim}
                     height={dim}
                     className="dark:brightness-90 dark:contrast-125 dark:invert"
@@ -181,7 +187,7 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
       <SeeMore
         hasMore={hasMore && !expanded}
         onClick={() => setExpanded(true)}
-        label="See more"
+        label={ui.seeMore}
         className="pb-8"
       />
     </>

@@ -37,6 +37,7 @@ export default function PersonalContent({ dictionary }: Props) {
   const personalFormRef = useRef<PersonalFormRef>(null)
   const guardianFormRef = useRef<GuardianFormRef>(null)
   const [activeTab, setActiveTab] = useState<ActiveTab>("student")
+  const [guardianMissing, setGuardianMissing] = useState(false)
 
   const initialData = getStepData("personal")
   const guardianInitialData = getStepData("guardian")
@@ -74,6 +75,11 @@ export default function PersonalContent({ dictionary }: Props) {
       guardianData?.fatherName || guardianData?.motherName
     )
 
+    // A guardian name is required to advance, but it lives behind the
+    // Father/Mother tabs — surface why Next is blocked instead of leaving the
+    // applicant staring at a dead button after filling every starred field.
+    setGuardianMissing(!!isPersonalValid && !isGuardianValid)
+
     if (isPersonalValid && isGuardianValid) {
       enableNext()
       setCustomNavigation({ onNext })
@@ -94,15 +100,15 @@ export default function PersonalContent({ dictionary }: Props) {
   const sections: { key: ActiveTab; label: string }[] = [
     {
       key: "student",
-      label: isRTL ? "الطالب" : "Student",
+      label: (stepDict.tabStudent as string) || (isRTL ? "الطالب" : "Student"),
     },
     {
       key: "father",
-      label: isRTL ? "الأب" : "Father",
+      label: (stepDict.tabFather as string) || (isRTL ? "الأب" : "Father"),
     },
     {
       key: "mother",
-      label: isRTL ? "الأم" : "Mother",
+      label: (stepDict.tabMother as string) || (isRTL ? "الأم" : "Mother"),
     },
   ]
 
@@ -137,6 +143,15 @@ export default function PersonalContent({ dictionary }: Props) {
             controlledParent={activeTab === "mother" ? "mother" : "father"}
           />
         </div>
+
+        {guardianMissing && (
+          <p className="text-muted-foreground" role="status">
+            {(guardianDict.nameRequiredHint as string) ||
+              (isRTL
+                ? "أدخل اسم الأب أو الأم للمتابعة"
+                : "Enter the father's or mother's name to continue")}
+          </p>
+        )}
 
         <div className="flex items-center gap-2">
           {previous && (

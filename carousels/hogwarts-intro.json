@@ -12,8 +12,8 @@
       "art": "Hands-Build.svg",
       "eyebrow": { "ar": "hogwarts × databayt", "en": "hogwarts × databayt" },
       "headline": {
-        "ar": "أتمِت الرتيب، وأعلِ الدهشة.",
-        "en": "Automate the boring, elevate the wonder."
+        "ar": "أتمِت الرتيب، وتفرّغ لِما يهم.",
+        "en": "Automate the boring."
       },
       "sub": {
         "ar": "منصة واحدة لمدرستك كلها — من القبول إلى الفواتير.",
@@ -40,12 +40,12 @@
       "art": "Scene-Complex-01.svg",
       "kicker": { "ar": "الحل", "en": "The answer" },
       "headline": {
-        "ar": "كل تعويذة تحتاجها مدرستك — في مكان واحد.",
-        "en": "Every spell your school needs — in one place."
+        "ar": "كل ما تحتاجه مدرستك — في مكان واحد.",
+        "en": "Everything your school needs — in one place."
       },
       "body": {
-        "ar": "القبول والحضور والدرجات والرسائل والفواتير، تعمل معًا بسلاسة… أقرب إلى السحر.",
-        "en": "Admission, attendance, grades, messaging, and billing — working together, seamlessly. Almost like magic."
+        "ar": "القبول والحضور والدرجات والرسائل والفواتير، تعمل معًا بسلاسة — دون أوراق أو أنظمة متفرقة.",
+        "en": "Admission, attendance, grades, messaging, and billing — working together, seamlessly. No paper, no scattered systems."
       }
     },
     {
@@ -94,20 +94,20 @@
       "theme": "oat",
       "art": "careers-heart-hand.svg",
       "text": {
-        "ar": "كل ما تحتاجه مدرستك… يظهر حين تطلبه.",
-        "en": "Everything your school needs… appears when you ask for it."
+        "ar": "أن تُدار مدرستك بثقة… يبدأ بنظامٍ واحد.",
+        "en": "Running your school with confidence starts with one system."
       },
       "attribution": {
-        "ar": "غرفة الاحتياج",
-        "en": "The Room of Requirement"
+        "ar": "hogwarts",
+        "en": "hogwarts"
       }
     },
     {
       "type": "cta",
       "theme": "clay",
       "headline": {
-        "ar": "مدرستك تستحق قليلًا من السحر.",
-        "en": "Your school deserves a little magic."
+        "ar": "مدرستك تستحق نظاماً يليق بها.",
+        "en": "Your school deserves a system that fits."
       },
       "action": { "ar": "اطلب عرضًا تجريبيًا", "en": "Book a demo" },
       "url": "https://ed.databayt.org"
@@ -115,8 +115,8 @@
   ],
   "captions": {
     "base": {
-      "ar": "أسبوع الإدارة يذوب في الورق؟ hogwarts منصة مفتوحة المصدر تجمع القبول والحضور والدرجات والفواتير في مكان واحد — بالعربية أولًا. اسحب لتعرف القصة، واطلب عرضًا تجريبيًا من الرابط.",
-      "en": "Paperwork eating the week? hogwarts is the open-source platform that brings admission, attendance, grades, and billing into one place — Arabic-first. Swipe through, then book a demo at the link."
+      "ar": "أسبوع الإدارة يذوب في الورق؟ hogwarts منصة مفتوحة المصدر تجمع القبول والحضور والدرجات والفواتير في مكان واحد. اسحب لتعرف القصة، واطلب عرضًا تجريبيًا من الرابط.",
+      "en": "Paperwork eating the week? hogwarts is the open-source platform that brings admission, attendance, grades, and billing into one place. Swipe through, then book a demo at the link."
     },
     "hashtags": [
       "#إدارة_المدارس",

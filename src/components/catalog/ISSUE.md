@@ -2,7 +2,7 @@
 
 **Status:** PRODUCTION READY (code paths); content/assets partial
 **Completion:** 95%
-**Last Updated:** 2026-06-12
+**Last Updated:** 2026-07-17
 
 ---
 
@@ -50,6 +50,11 @@
 - [x] Registry-driven 12 curricula (`registry.ts`), generic tree engine (`engine.ts`)
 - [x] Deep seeds: SD (g1-12 + 118 textbook PDFs), US (g1-12); GB deep tree from `curriculum/uk`
 - [x] `content.ts` idempotent re-runs + typed CreateManyInput arrays (fixed 2026-06-10)
+- [x] **SD real content, all grades** (2026-07-17): `sd-content.ts` ingests authored qbank+exams for g1–g12 — 102 subjects, 2,706 questions (100% chapter-mapped, 405 lesson-mapped → feeds the stream lesson practice quiz via `catalogLessonId`), 102 final exams (1,532 links). Quality gate junk-skips 22 template-generated g11/g12 files (>50% placeholder) — those keep `content.ts` synthetic rows; the synthetic guard is dynamic (questions tagged `"sd"`), not slug-based
+- [x] `content.ts` prunes all-scope-null orphans each run (2026-07-17) — tree seeds SetNull chapter/lesson FKs on every rebuild, so chapter/lesson-scoped synthetic rows used to accumulate per seed cycle (g11-french had 218 exams; now bounded at ~110)
+- [x] SD subject art prefers real per-subject keys `catalog/textbooks/<slug>/{thumbnail,banner,cover}.jpg` when the local file exists (2026-07-17) — `upload-textbooks-all.ts` now uploads thumbnail/banner (+ subjects without a textbook) and updates the four Subject fields; slug mapping shared via `resolveSdDbSlug` from `sd.ts`
+- [x] **Real textbook covers for ALL SD grades** (2026-07-17): page-1 `cover.jpg` rendered via pdftoppm for the 116 textbooks that lacked one (g1 already had them) — 118/125 subjects carry a real cover, CDN-verified; the 5 concept-cover leftovers have no textbook.pdf. Assets live in BOTH `hogwarts-databayt` and `databayt-cdn` (the `cdn.databayt.org` origin — `catalog/**` keys must exist there or they 403)
+- [x] SD lessons carry NO Video rows by design — the stream lesson player's `story.mp4` fallback is the intended surface for the whole SD tree (verified 0 rows, 2026-07-17)
 
 ### Tests & quality
 

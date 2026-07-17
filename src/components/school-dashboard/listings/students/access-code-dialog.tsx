@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useRef, useState, useTransition } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Check, Copy, Loader2, Printer } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
@@ -18,31 +18,22 @@ import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
-import { generateStudentAccessCodes } from "./actions"
+import {
+  closeAccessCodeDialog,
+  ensureAccessCodes,
+  useAccessCodeDialogState,
+} from "./access-code-store"
 
-interface AccessCodeResult {
-  studentId: string
-  studentName: string
-  code: string
-  expiresAt: string
-}
-
-interface AccessCodeDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  studentIds: string[]
-  studentNames: Record<string, string>
-}
-
-export function AccessCodeDialog({
-  open,
-  onOpenChange,
-  studentIds,
-  studentNames,
-}: AccessCodeDialogProps) {
-  const [codes, setCodes] = useState<AccessCodeResult[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+/**
+ * "Link Parent" dialog. Open-state and generated codes live in a module store
+ * (`./access-code-store`), NOT React state, so the dialog survives the
+ * listings-table remount that fires when the generate Server Action completes.
+ * A local `useState` here previously got wiped by that remount, closing the
+ * dialog the instant it opened.
+ */
+export function AccessCodeDialog() {
+  const { open, studentIds, studentNames, codes, error, isLoading } =
+    useAccessCodeDialogState()
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
   const { locale } = useLocale()
@@ -51,30 +42,14 @@ export function AccessCodeDialog({
     | Record<string, string>
     | undefined
 
-  const handleGenerate = useCallback(() => {
-    setError(null)
-    setCodes([])
-    startTransition(async () => {
-      const result = await generateStudentAccessCodes({
-        studentIds,
-      })
-      if (result.success && result.data) {
-        setCodes(
-          result.data.map((c) => ({
-            ...c,
-            studentName: studentNames[c.studentId] || c.studentId,
-          }))
-        )
-      } else {
-        setError(
-          "error" in result
-            ? (result.error ??
-                (t?.failedToGenerate || "Failed to generate codes"))
-            : t?.failedToGenerate || "Failed to generate codes"
-        )
-      }
-    })
-  }, [studentIds, studentNames])
+  // Auto-generate once when the dialog opens with target students. Idempotent
+  // and remount-safe — `ensureAccessCodes` no-ops while codes exist or a
+  // generation is already in flight.
+  useEffect(() => {
+    if (open && studentIds.length > 0 && codes.length === 0 && !isLoading) {
+      void ensureAccessCodes(t?.failedToGenerate || "Failed to generate codes")
+    }
+  }, [open, studentIds.length, codes.length, isLoading, t])
 
   const handleCopy = useCallback(async (code: string, index: number) => {
     try {
@@ -135,7 +110,7 @@ export function AccessCodeDialog({
           .map(
             (c) => `
           <div class="code-card">
-            <div class="student-name">${c.studentName}</div>
+            <div class="student-name">${studentNames[c.studentId] || c.studentId}</div>
             <div class="access-code">${c.code}</div>
             <div class="expiry">${t?.expires || "Expires"}: ${formatDate(c.expiresAt, locale as Locale)}</div>
           </div>
@@ -147,25 +122,11 @@ export function AccessCodeDialog({
     `)
     printWindow.document.close()
     printWindow.print()
-  }, [codes])
+  }, [codes, studentNames, t, locale])
 
-  // Auto-generate when dialog opens with students
-  useEffect(() => {
-    if (open && studentIds.length > 0 && codes.length === 0 && !isPending) {
-      handleGenerate()
-    }
-  }, [open, studentIds, codes.length, isPending, handleGenerate])
-
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (!nextOpen) {
-        setCodes([])
-        setError(null)
-      }
-      onOpenChange(nextOpen)
-    },
-    [onOpenChange]
-  )
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (!nextOpen) closeAccessCodeDialog()
+  }, [])
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -183,7 +144,7 @@ export function AccessCodeDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {isPending && (
+          {isLoading && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
               <span className="text-muted-foreground ms-2 text-sm">
@@ -207,7 +168,9 @@ export function AccessCodeDialog({
                     className="flex items-center justify-between rounded-lg border p-3"
                   >
                     <div>
-                      <p className="text-sm font-medium">{item.studentName}</p>
+                      <p className="text-sm font-medium">
+                        {studentNames[item.studentId] || item.studentId}
+                      </p>
                       <p className="font-mono text-lg font-bold tracking-wider">
                         {item.code}
                       </p>
@@ -235,14 +198,6 @@ export function AccessCodeDialog({
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                   <Printer className="me-2 h-4 w-4" />
                   {t?.print || "Print"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerate}
-                  disabled={isPending}
-                >
-                  {t?.regenerate || "Regenerate"}
                 </Button>
               </div>
             </>

@@ -31,88 +31,88 @@ import {
 
 const DIRECT_MESSAGE_TEMPLATES = [
   // Parent-Teacher conversations
-  "Thank you for your dedication to my child's education.",
-  "Could we schedule a meeting to discuss progress?",
-  "I noticed improvement in the last homework assignment.",
-  "Is there any additional support available?",
-  "The parent-teacher conference was very helpful.",
-  "Please let me know if there are any concerns.",
-  "My child mentioned enjoying your class.",
-  "Are there any recommended resources for home study?",
+  "شكراً لتفانيكم في تعليم ابني.",
+  "هل يمكننا تحديد موعد لمناقشة التقدم الدراسي؟",
+  "لاحظت تحسناً في الواجب المنزلي الأخير.",
+  "هل يوجد دعم إضافي متاح؟",
+  "كان اجتماع أولياء الأمور مع المعلمين مفيداً جداً.",
+  "يرجى إعلامي في حال وجود أي ملاحظات.",
+  "ذكر لي ابني أنه يستمتع بحصتكم.",
+  "هل توجد مصادر موصى بها للمذاكرة في المنزل؟",
 
   // Teacher-Teacher conversations
-  "Can you share the curriculum materials?",
-  "Let's coordinate on the upcoming project.",
-  "The staff meeting was productive.",
-  "Do you have time to discuss the assessment?",
-  "I'll send the updated lesson plan.",
-  "Thanks for covering my class yesterday.",
+  "هل يمكنك مشاركة المواد المنهجية؟",
+  "لنتنسق بخصوص المشروع القادم.",
+  "كان اجتماع الهيئة التدريسية مثمراً.",
+  "هل لديك وقت لمناقشة التقييم؟",
+  "سأرسل خطة الدرس المحدثة.",
+  "شكراً لتغطيتك حصتي بالأمس.",
 
   // Admin communications
-  "Please review the attached document.",
-  "The deadline has been extended.",
-  "Thank you for the quick response.",
-  "I'll follow up on this matter.",
+  "يرجى مراجعة المستند المرفق.",
+  "تم تمديد الموعد النهائي.",
+  "شكراً على سرعة الرد.",
+  "سأتابع هذا الأمر.",
 ]
 
 const GROUP_MESSAGE_TEMPLATES = [
   // Class group messages
-  "Reminder: Assignment due tomorrow",
-  "Great work on the project presentation!",
-  "Tomorrow's class will start 10 minutes late.",
-  "Study materials have been uploaded.",
-  "Please complete the survey by Friday.",
-  "Congratulations to everyone on the exam results!",
-  "The field trip permission forms are due.",
-  "Extra practice questions are available.",
+  "تذكير: موعد تسليم الواجب غداً",
+  "عمل رائع في عرض المشروع!",
+  "ستبدأ حصة الغد متأخرة 10 دقائق.",
+  "تم رفع مواد المذاكرة.",
+  "يرجى إكمال الاستبيان قبل يوم الجمعة.",
+  "تهانينا للجميع على نتائج الامتحان!",
+  "موعد تسليم استمارات إذن الرحلة الميدانية.",
+  "تتوفر أسئلة تدريبية إضافية.",
 
   // Department messages
-  "Department meeting scheduled for Thursday.",
-  "New curriculum guidelines are attached.",
-  "Please submit your quarterly reports.",
-  "Professional development session next week.",
-  "Sharing best practices from the workshop.",
-  "Budget allocation has been approved.",
+  "اجتماع القسم مقرر يوم الخميس.",
+  "إرشادات المنهج الجديدة مرفقة.",
+  "يرجى تسليم تقاريركم الفصلية.",
+  "جلسة تطوير مهني الأسبوع القادم.",
+  "مشاركة أفضل الممارسات من ورشة العمل.",
+  "تمت الموافقة على تخصيص الميزانية.",
 ]
 
 const ANNOUNCEMENT_TEMPLATES = [
-  "School will be closed on Monday for the holiday.",
-  "Registration for next semester is now open.",
-  "Important: Updated safety protocols.",
-  "Congratulations to our award winners!",
-  "Annual sports day is scheduled for next month.",
-  "Parent-teacher conferences begin next week.",
-  "Final exam schedule has been posted.",
-  "Library hours extended during exam period.",
+  "ستكون المدرسة مغلقة يوم الاثنين بمناسبة العطلة.",
+  "التسجيل للفصل الدراسي القادم مفتوح الآن.",
+  "مهم: تحديث بروتوكولات السلامة.",
+  "تهانينا للفائزين بالجوائز!",
+  "اليوم الرياضي السنوي مقرر الشهر القادم.",
+  "تبدأ اجتماعات أولياء الأمور مع المعلمين الأسبوع القادم.",
+  "تم نشر جدول الامتحانات النهائية.",
+  "تم تمديد ساعات عمل المكتبة خلال فترة الامتحانات.",
 ]
 
 const CONVERSATION_TITLES = {
   group: [
-    "Grade 10 Mathematics Group",
-    "Science Club Discussion",
-    "Student Council",
-    "PTA Committee",
-    "Sports Team Chat",
-    "Art Club Members",
-    "Debate Team",
-    "Music Ensemble",
-    "Chess Club",
-    "Drama Group",
+    "مجموعة رياضيات الصف العاشر",
+    "نقاش نادي العلوم",
+    "مجلس الطلاب",
+    "لجنة أولياء الأمور والمعلمين",
+    "محادثة الفريق الرياضي",
+    "أعضاء نادي الفنون",
+    "فريق المناظرات",
+    "الفرقة الموسيقية",
+    "نادي الشطرنج",
+    "مجموعة المسرح",
   ],
   department: [
-    "Languages Department",
-    "Sciences Department",
-    "Humanities Team",
-    "Administration Group",
-    "ICT Team",
-    "Arts & PE Faculty",
+    "قسم اللغات",
+    "قسم العلوم",
+    "فريق العلوم الإنسانية",
+    "مجموعة الإدارة",
+    "فريق تقنية المعلومات",
+    "هيئة الفنون والتربية البدنية",
   ],
   announcement: [
-    "School Announcements",
-    "Urgent Notices",
-    "Weekly Updates",
-    "Academic Calendar",
-    "Event Announcements",
+    "إعلانات المدرسة",
+    "إشعارات عاجلة",
+    "التحديثات الأسبوعية",
+    "التقويم الدراسي",
+    "إعلانات الفعاليات",
   ],
 }
 
@@ -269,7 +269,7 @@ export async function seedConversations(
             schoolId,
             type: "group",
             title,
-            description: `Discussion group for ${title}`,
+            description: `مجموعة نقاش لـ ${title}`,
             createdById: creator,
             lastMessageAt: generateRecentDate(15),
           },
@@ -304,7 +304,7 @@ export async function seedConversations(
 
   // 3. Create Class Conversations (10)
   for (let i = 0; i < 10; i++) {
-    const title = `Class ${i + 1} Discussion`
+    const title = `نقاش الفصل ${i + 1}`
     const creator = randomElement(teacherUserIds) || adminUserIds[0]
 
     try {
@@ -318,7 +318,7 @@ export async function seedConversations(
             schoolId,
             type: "class",
             title,
-            description: "Class discussion and announcements",
+            description: "نقاش الفصل والإعلانات",
             createdById: creator,
             lastMessageAt: generateRecentDate(20),
           },
@@ -368,7 +368,7 @@ export async function seedConversations(
             schoolId,
             type: "department",
             title,
-            description: `${title} communication channel`,
+            description: `قناة تواصل ${title}`,
             createdById: creator,
             lastMessageAt: generateRecentDate(25),
           },

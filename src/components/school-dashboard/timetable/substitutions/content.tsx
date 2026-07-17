@@ -39,7 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getSubstitutionRecords, getTeacherAbsences } from "../actions"
-import { ABSENCE_TYPES } from "../config"
+import { getAbsenceTypeOptions } from "../config"
 import { AbsenceFormDialog } from "./absence-form"
 import { SubstitutionList } from "./substitution-list"
 
@@ -176,8 +176,10 @@ export function SubstitutionsContent({ termId }: SubstitutionsContentProps) {
   }
 
   const getAbsenceTypeLabel = (type: string) => {
-    const typeInfo = ABSENCE_TYPES[type as keyof typeof ABSENCE_TYPES]
-    return typeInfo?.label || type
+    const opt = getAbsenceTypeOptions(dictionary?.school?.timetable).find(
+      (o) => o.value === type
+    )
+    return opt?.label || type
   }
 
   const formatDateRange = (start: Date, end: Date) => {

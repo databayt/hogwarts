@@ -20,12 +20,13 @@ export const TOTAL_FIELDS = [
   ...STEP_FIELDS[3],
 ].length
 
-/** Event status values */
+/** Event status values — must mirror the Prisma `EventStatus` enum exactly. */
 export const EVENT_STATUS_VALUES = [
   "PLANNED",
-  "IN_PROGRESS",
+  "ONGOING",
   "COMPLETED",
   "CANCELLED",
+  "POSTPONED",
 ] as const
 
 /** Event type values */
@@ -91,9 +92,10 @@ export const getEventStatuses = (d?: EventsDictionary) => {
   const s = d?.statuses as Record<string, string> | undefined
   return [
     { value: "PLANNED", label: s?.PLANNED || "Planned" },
-    { value: "IN_PROGRESS", label: s?.IN_PROGRESS || "In Progress" },
+    { value: "ONGOING", label: s?.ONGOING || "In Progress" },
     { value: "COMPLETED", label: s?.COMPLETED || "Completed" },
     { value: "CANCELLED", label: s?.CANCELLED || "Cancelled" },
+    { value: "POSTPONED", label: s?.POSTPONED || "Postponed" },
   ]
 }
 

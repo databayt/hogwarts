@@ -18,8 +18,6 @@ const VIEW_ROLES: readonly Role[] = [
   "ACCOUNTANT",
 ] as const
 
-const MANAGE_ROLES: readonly Role[] = ["DEVELOPER", "ADMIN", "STAFF"] as const
-
 export function getTabsForRole(
   role: Role | null | undefined,
   lang: string,
@@ -27,25 +25,12 @@ export function getTabsForRole(
 ): PageNavItem[] {
   if (!isRoleIn(role, VIEW_ROLES)) return []
 
-  const isAdmin = isRoleIn(role, ADMIN_ROLES)
-  const canManage = isRoleIn(role, MANAGE_ROLES)
-
+  // Only /parents exists today. The Link / Communication / Settings routes were
+  // never built, so linking them 404'd (issue #378). Re-add tabs here as each
+  // route ships.
   const tabs: PageNavItem[] = [
     { name: d?.allParents || "All", href: `/${lang}/parents` },
   ]
-  if (canManage) {
-    tabs.push({ name: d?.navLink || "Link", href: `/${lang}/parents/link` })
-    tabs.push({
-      name: d?.navCommunication || "Communication",
-      href: `/${lang}/parents/communication`,
-    })
-  }
-  if (isAdmin) {
-    tabs.push({
-      name: d?.navSettings || "Settings",
-      href: `/${lang}/parents/settings`,
-    })
-  }
   return tabs
 }
 

@@ -5,12 +5,13 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { generateTrialBalance } from "@/components/school-dashboard/finance/reports/actions"
 import type { TrialBalanceData } from "@/components/school-dashboard/finance/reports/types"
 
@@ -24,7 +25,7 @@ export default async function TrialBalancePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.reportsPage
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("reports", ["view"])
 
   if (!schoolId) {
     return (
@@ -35,9 +36,14 @@ export default async function TrialBalancePage({ params }: Props) {
     )
   }
 
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="reports" />
+  }
+
   const [fiscalYear, schoolForCurrency] = await Promise.all([
     db.fiscalYear.findFirst({
       where: { schoolId, isCurrent: true },
+      orderBy: { startDate: "desc" },
     }),
     db.school.findUnique({
       where: { id: schoolId },
@@ -46,7 +52,32 @@ export default async function TrialBalancePage({ params }: Props) {
   ])
   const currency = schoolForCurrency?.currency ?? "USD"
 
-  const result = await generateTrialBalance(fiscalYear?.id)
+  if (!fiscalYear) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">
+            {d?.trialBalance || "Trial Balance"}
+          </h3>
+          <Link
+            href={`/${lang}/finance/reports`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {d?.backToReports || "Back to Reports"}
+          </Link>
+        </div>
+        <p className="text-muted-foreground py-8 text-center">
+          {d?.noActiveFiscalYear ||
+            "No active fiscal year found. Please set up a fiscal year first."}
+        </p>
+      </div>
+    )
+  }
+
+  const result = await generateTrialBalance(
+    fiscalYear.startDate,
+    fiscalYear.endDate
+  )
 
   if (!result.success || !result.data) {
     return (

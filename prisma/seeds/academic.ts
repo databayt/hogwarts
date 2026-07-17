@@ -23,6 +23,7 @@ import {
   getTermDates,
   logPhase,
   logSuccess,
+  logWarning,
   parseTime,
 } from "./utils"
 
@@ -130,6 +131,7 @@ export async function seedTerms(
     termNumber: t1.termNumber,
     startDate: t1.startDate,
     endDate: t1.endDate,
+    isActive: t1.isActive,
   })
 
   // Term 2
@@ -161,6 +163,7 @@ export async function seedTerms(
     termNumber: t2.termNumber,
     startDate: t2.startDate,
     endDate: t2.endDate,
+    isActive: t2.isActive,
   })
 
   logSuccess("Terms", terms.length, "Term 1, Term 2")
@@ -172,8 +175,113 @@ export async function seedTerms(
 // PERIODS SEEDING
 // ============================================================================
 
+/** Shape shared by SCHOOL_PERIODS and a structure's period list. */
+type PeriodDef = {
+  name: string
+  startTime: string
+  endTime: string
+  isBreak: boolean
+}
+
 /**
- * Seed school periods (7 teaching + 2 breaks)
+ * Period definitions for a school: its declared TIMETABLE_STRUCTURE when we
+ * recognise one, else the legacy hand-rolled list.
+ */
+async function resolvePeriodDefs(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<PeriodDef[]> {
+  const school = await prisma.school.findUnique({
+    where: { id: schoolId },
+    select: { timetableStructure: true },
+  })
+  const declared = school?.timetableStructure
+  if (!declared) return SCHOOL_PERIODS
+
+  const { getStructureBySlug, LEGACY_TEMPLATE_MAP } =
+    await import("@/components/school-dashboard/timetable/structures")
+  const structure = getStructureBySlug(
+    LEGACY_TEMPLATE_MAP[declared] ?? declared
+  )
+  if (!structure) {
+    logWarning(
+      `Unknown timetableStructure "${declared}" — using SCHOOL_PERIODS`
+    )
+    return SCHOOL_PERIODS
+  }
+  // `type` is the structure's source of truth for break-ness ("class" | "break"
+  // | "lunch"); Period has no isBreak column, so the NAME is what every reader
+  // downstream keys off — keep the structure's names verbatim.
+  return structure.periods.map((p) => ({
+    name: p.name,
+    startTime: p.startTime,
+    endTime: p.endTime,
+    isBreak: p.type !== "class",
+  }))
+}
+
+/**
+ * Drop periods left over from a different structure (or an older seed), but
+ * only when nothing references them. Without this a re-seed onto a school that
+ * previously held 8 hand-rolled periods leaves BOTH sets — "Period 8" +
+ * "Break 1" + "Break 2" alongside the structure's "Break"/"Lunch" — and the
+ * grid renders a Frankenstein day.
+ */
+async function pruneStalePeriods(
+  prisma: PrismaClient,
+  schoolId: string,
+  schoolYearId: string,
+  keepNames: string[]
+): Promise<void> {
+  const stale = await prisma.period.findMany({
+    where: { schoolId, yearId: schoolYearId, name: { notIn: keepNames } },
+    select: { id: true, name: true, _count: { select: { timetables: true } } },
+  })
+  if (stale.length === 0) return
+
+  const removable = stale.filter((p) => p._count.timetables === 0)
+  const referenced = stale.filter((p) => p._count.timetables > 0)
+
+  if (removable.length > 0) {
+    await prisma.period.deleteMany({
+      where: { id: { in: removable.map((p) => p.id) } },
+    })
+    logSuccess(
+      "Periods pruned",
+      removable.length,
+      `stale: ${removable.map((p) => p.name).join(", ")}`
+    )
+  }
+  if (referenced.length > 0) {
+    // Deleting these would take live timetable slots with them — surface it and
+    // let the timetable re-seed (which clears the term) resolve the ordering.
+    logWarning(
+      `${referenced.length} stale period(s) still hold timetable slots and were kept: ${referenced
+        .map((p) => `${p.name}(${p._count.timetables})`)
+        .join(", ")} — re-seed the timetable to clear them`
+    )
+  }
+}
+
+/**
+ * Seed school periods from the school's DECLARED timetable structure
+ * (TIMETABLE_STRUCTURES) — the same definitions the onboarding path applies,
+ * so seed and onboarding share one source of truth. Mirrors the timetable
+ * generator swap and the retirement of the hand-rolled catalog/demo.ts.
+ *
+ * The demo declares `timetableStructure: "sd-private"` (المدارس الخاصة
+ * السودانية — 7×50min, 07:15–14:25, Sun–Thu) but this function used to
+ * hand-roll SCHOOL_PERIODS (8×45min, 07:45–15:00), so the school claimed a
+ * Sudanese structure it did not have. Two visible bugs on /ar/timetable:
+ *  - the hand-rolled breaks were named "Break 1"/"Break 2". EVERY break/lunch
+ *    check in the block matches the English substring "lunch" (Period has no
+ *    isBreak column), so nothing matched → `lunchTime` resolved to "" and the
+ *    Lunch row rendered with no time at all.
+ *  - `lunchAfterPeriod` is read from the STRUCTURE (5) while the hand-rolled
+ *    lunch sat after period 6 → the row was drawn a full period too early.
+ *
+ * Falls back to SCHOOL_PERIODS only when the school declares no (known)
+ * structure, so non-Sudanese/unconfigured schools behave exactly as before.
  */
 export async function seedPeriods(
   prisma: PrismaClient,
@@ -181,8 +289,9 @@ export async function seedPeriods(
   schoolYearId: string
 ): Promise<PeriodRef[]> {
   const periods: PeriodRef[] = []
+  const periodDefs = await resolvePeriodDefs(prisma, schoolId)
 
-  for (const periodData of SCHOOL_PERIODS) {
+  for (const periodData of periodDefs) {
     const startTime = parseTime(periodData.startTime)
     const endTime = parseTime(periodData.endTime)
 
@@ -197,6 +306,7 @@ export async function seedPeriods(
       update: {
         startTime,
         endTime,
+        isBreak: periodData.isBreak,
       },
       create: {
         schoolId,
@@ -204,6 +314,7 @@ export async function seedPeriods(
         name: periodData.name,
         startTime,
         endTime,
+        isBreak: periodData.isBreak,
       },
     })
 
@@ -215,8 +326,17 @@ export async function seedPeriods(
     })
   }
 
-  const teachingPeriods = SCHOOL_PERIODS.filter((p) => !p.isBreak).length
-  const breakPeriods = SCHOOL_PERIODS.filter((p) => p.isBreak).length
+  await pruneStalePeriods(
+    prisma,
+    schoolId,
+    schoolYearId,
+    periodDefs.map((p) => p.name)
+  )
+
+  // Count the definitions we actually seeded — reading SCHOOL_PERIODS here
+  // reported the hand-rolled 8/2 split regardless of the structure applied.
+  const teachingPeriods = periodDefs.filter((p) => !p.isBreak).length
+  const breakPeriods = periodDefs.filter((p) => p.isBreak).length
 
   logSuccess(
     "Periods",

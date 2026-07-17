@@ -289,6 +289,14 @@ export function CatalogContentSections({
       exploreQBank: cat?.exploreQBank || "Explore QBank",
       textbook: cat?.textbook || "Textbook",
       openTextbook: cat?.openTextbook || "Open Textbook",
+      // Count units (singular / plural)
+      unitExam: cat?.unitExam || "exam",
+      unitExams: cat?.unitExams || "exams",
+      unitTest: cat?.unitTest || "test",
+      unitTests: cat?.unitTests || "tests",
+      unitItem: cat?.unitItem || "item",
+      unitItems: cat?.unitItems || "items",
+      pagesAvg: cat?.pagesAvg || "pg avg",
       // Question type descriptions
       MULTIPLE_CHOICE_DESC:
         cat?.questionDescriptions?.MULTIPLE_CHOICE ||
@@ -591,11 +599,11 @@ function ExamTypePipeline({
               {group.count}{" "}
               {TEST_TYPES.has(group.key)
                 ? group.count === 1
-                  ? "test"
-                  : "tests"
+                  ? t.unitTest
+                  : t.unitTests
                 : group.count === 1
-                  ? "exam"
-                  : "exams"}
+                  ? t.unitExam
+                  : t.unitExams}
             </p>
             <div className="text-muted-foreground space-y-0.5 text-xs">
               {group.avgDuration != null && (
@@ -741,11 +749,11 @@ function MaterialTypePipeline({
               <Icon className="text-muted-foreground size-5" />
               <p className="text-foreground text-sm font-bold">{group.label}</p>
               <p className="text-muted-foreground text-xs">
-                {group.count} {group.count === 1 ? "item" : "items"}
+                {group.count} {group.count === 1 ? t.unitItem : t.unitItems}
               </p>
               {group.avgPages != null && (
                 <p className="text-muted-foreground text-xs">
-                  {group.avgPages} pg avg
+                  {group.avgPages} {t.pagesAvg}
                 </p>
               )}
             </div>

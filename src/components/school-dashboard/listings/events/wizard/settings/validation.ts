@@ -3,11 +3,16 @@
 
 import { z } from "zod"
 
-export const settingsSchema = z.object({
-  maxAttendees: z.coerce.number().min(1, "Must be at least 1").optional(),
-  isPublic: z.boolean(),
-  registrationRequired: z.boolean(),
-  notes: z.string().optional(),
-})
+import type { EventValidationMessages } from "../../validation"
+
+export const createSettingsSchema = (v?: EventValidationMessages) =>
+  z.object({
+    maxAttendees: z.coerce.number().min(1, v?.mustBeAtLeast1).optional(),
+    isPublic: z.boolean(),
+    registrationRequired: z.boolean(),
+    notes: z.string().optional(),
+  })
+
+export const settingsSchema = createSettingsSchema()
 
 export type SettingsFormData = z.infer<typeof settingsSchema>

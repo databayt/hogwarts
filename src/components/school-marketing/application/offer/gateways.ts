@@ -11,7 +11,7 @@ import type { PaymentGateway } from "@/lib/payment/types"
  * export async functions) so it can be shared by the server action and unit
  * tests as a pure, synchronous helper.
  *
- * - Online gateways (stripe/tap/bankak/mobile_money) come from
+ * - Online gateways (stripe/tap) come from
  *   `resolveAvailableMethods`, which already filters the country's priority
  *   list down to providers that are configured AND support the school's
  *   currency (this is what keeps Stripe from ever being offered to a Sudan

@@ -5,16 +5,17 @@
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { isFinanceAuthError, requireFinanceActor } from "../../../guard"
 import { detailsSchema, type DetailsFormData } from "./validation"
 
 export async function getInvoiceDetails(
   invoiceId: string
 ): Promise<ActionResponse<DetailsFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const ctx = await requireFinanceActor("invoice", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, schoolId },
@@ -64,8 +65,9 @@ export async function updateInvoiceDetails(
   input: DetailsFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const parsed = detailsSchema.parse(input)
 

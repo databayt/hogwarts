@@ -43,6 +43,7 @@ import {
   isUniqueConstraintError,
   logPhase,
   logSuccess,
+  logWarning,
   processBatch,
   randomElement,
   randomNumber,
@@ -107,6 +108,56 @@ export async function seedTeachers(
   const deptMap = new Map(departments.map((d) => [d.departmentName, d]))
   const departmentHeadsAssigned = new Set<string>()
 
+  // employeeId is @@unique([schoolId, employeeId]) but was derived from the
+  // ARRAY INDEX, and resolveUsers' findMany returns users in arbitrary order.
+  // Growing an existing set (12 -> 24 teachers) therefore landed new users on
+  // indices whose EMP id an existing teacher already held: create threw a
+  // unique error, the catch below looked for an existing teacher BY userId,
+  // found none (it's a NEW user), and dropped it silently — 24 users yielded
+  // only 18 teachers, with EMP0013 skipped. Allocate the next genuinely-free
+  // id instead. Safe under processBatch concurrency: check-and-reserve has no
+  // await inside, so it can't interleave.
+  const existingTeacherRows = await prisma.teacher.findMany({
+    where: { schoolId },
+    select: { employeeId: true, emailAddress: true },
+  })
+  const takenEmployeeIds = new Set(
+    existingTeacherRows
+      .map((t) => t.employeeId)
+      .filter((id): id is string => Boolean(id))
+  )
+  let employeeSeq = 0
+  const allocateEmployeeId = (): string => {
+    let id = generateEmployeeId(employeeSeq++)
+    while (takenEmployeeIds.has(id)) id = generateEmployeeId(employeeSeq++)
+    takenEmployeeIds.add(id)
+    return id
+  }
+
+  // emailAddress is @@unique([schoolId, emailAddress]) and generatePersonalEmail
+  // is likewise index-derived, so it fails the exact same way: a new user picks
+  // up the address an existing teacher was given under the old ordering. Bump
+  // the discriminator until the address is actually free.
+  const takenEmails = new Set(
+    existingTeacherRows
+      .map((t) => t.emailAddress)
+      .filter((e): e is string => Boolean(e))
+  )
+  const allocatePersonalEmail = (
+    firstName: string,
+    lastName: string,
+    startIndex: number
+  ): string => {
+    let i = startIndex
+    let email = generatePersonalEmail(firstName, lastName, i)
+    while (takenEmails.has(email)) {
+      i++
+      email = generatePersonalEmail(firstName, lastName, i)
+    }
+    takenEmails.add(email)
+    return email
+  }
+
   // Process in batches
   await processBatch(teacherUsers, 20, async (user, index) => {
     // Use predefined teacher data if available, otherwise generate
@@ -123,14 +174,18 @@ export async function seedTeachers(
       : teacherData.lastName
     const birthDate = isHpTeacher ? HP_CHARACTERS.teacher.birthDate : undefined
 
-    // Personal email (firstname-lastname@domain.com)
+    // Personal email (firstname-lastname@domain.com). Existing teachers keep
+    // their index-derived address (the update path is unchanged); only NEW rows
+    // go through the allocator, so it never consumes an address on behalf of a
+    // teacher that already owns one.
+    const englishGiven = getEnglishGivenName(
+      teacherData.firstName,
+      teacherData.gender
+    )
+    const englishSurname = getEnglishSurname(teacherData.lastName)
     const personalEmail = isHpTeacher
       ? HP_CHARACTERS.teacher.personalEmail
-      : generatePersonalEmail(
-          getEnglishGivenName(teacherData.firstName, teacherData.gender),
-          getEnglishSurname(teacherData.lastName),
-          index
-        )
+      : generatePersonalEmail(englishGiven, englishSurname, index)
 
     try {
       // Find by userId first (handles email migration from login → personal)
@@ -155,8 +210,10 @@ export async function seedTeachers(
           data: {
             schoolId,
             userId: user.id,
-            emailAddress: personalEmail,
-            employeeId: generateEmployeeId(index),
+            emailAddress: isHpTeacher
+              ? personalEmail
+              : allocatePersonalEmail(englishGiven, englishSurname, index),
+            employeeId: allocateEmployeeId(),
             firstName,
             lastName,
             gender: teacherData.gender,
@@ -218,10 +275,22 @@ export async function seedTeachers(
           firstName: existing.firstName,
           lastName: existing.lastName,
         })
+      } else {
+        // A unique clash on a user that has NO teacher row means the row was
+        // dropped, not deduped — the caller silently ends up short-staffed and
+        // the timetable generator then can't fill the grid. Say so.
+        logWarning(
+          `Teacher NOT created for ${user.email} — unique clash with no existing row`
+        )
       }
     }
   })
 
+  if (teachers.length < teacherUsers.length) {
+    logWarning(
+      `Teachers: ${teachers.length}/${teacherUsers.length} teacher users have a Teacher row`
+    )
+  }
   logSuccess("Teachers", teachers.length, "with department assignments")
 
   return teachers
@@ -484,8 +553,27 @@ export async function seedTeacherExperience(
 // ============================================================================
 
 /**
- * Seed teacher subject expertise
- * Target: 100+ expertise records (1-2 per teacher)
+ * How many qualified teachers every taught subject is guaranteed. >1 gives the
+ * generator room to resolve a clash (same teacher wanted by two sections in one
+ * period) instead of dropping the slot's teacher entirely.
+ */
+const TEACHERS_PER_SUBJECT = 3
+
+/**
+ * Seed teacher subject expertise — COVERAGE-FIRST, keyed on the subjects the
+ * school actually teaches (`seedSubjects` returns its SubjectSelection rows).
+ *
+ * `autoGenerateTimetableForSchool` generates with `enforceTeacherExpertise:
+ * true` — a slot only gets a teacher if someone holds expertise for that exact
+ * subject. The previous shape dealt each teacher 1-3 RANDOM subjects, which
+ * guaranteed nothing: whole subjects ended up with no qualified teacher and the
+ * generator correctly emitted teacher-less slots (the lite demo filled 45/360;
+ * even the 83-teacher local demo only reached 569/720). Walking subjects
+ * instead of teachers makes coverage a postcondition rather than a coin flip.
+ *
+ * Round-robin over teachers so load spreads evenly instead of clustering on
+ * whoever the RNG favoured. NOTE: expertise is not workload — the generator
+ * still caps each teacher at maxPeriodsPerWeek (25), so breadth here is free.
  */
 export async function seedTeacherSubjectExpertise(
   prisma: PrismaClient,
@@ -504,54 +592,46 @@ export async function seedTeacherSubjectExpertise(
     )
     return existing
   }
-  let expertiseCount = 0
 
-  if (subjects.length === 0) {
-    logSuccess("Teacher Subject Expertise", 0, "no subjects available")
+  if (subjects.length === 0 || teachers.length === 0) {
+    logSuccess("Teacher Subject Expertise", 0, "no subjects/teachers available")
     return 0
   }
 
-  for (const teacher of teachers) {
-    // Each teacher gets 1-3 subject expertise areas
-    const numSubjects = randomNumber(1, 3)
-    const assignedSubjects = new Set<string>()
+  const perSubject = Math.min(TEACHERS_PER_SUBJECT, teachers.length)
+  const rows: Array<{
+    schoolId: string
+    teacherId: string
+    subjectId: string
+    expertiseLevel: string
+  }> = []
 
-    for (let i = 0; i < numSubjects; i++) {
-      try {
-        const subject = randomElement(subjects)
-        if (assignedSubjects.has(subject.id)) continue
-        assignedSubjects.add(subject.id)
-
-        const expertiseLevel =
-          i === 0 ? "PRIMARY" : Math.random() < 0.5 ? "SECONDARY" : "CERTIFIED"
-
-        const existing = await prisma.teacherSubjectExpertise.findFirst({
-          where: {
-            schoolId,
-            teacherId: teacher.id,
-            subjectId: subject.id,
-          },
-        })
-
-        if (!existing) {
-          await prisma.teacherSubjectExpertise.create({
-            data: {
-              schoolId,
-              teacherId: teacher.id,
-              subjectId: subject.id,
-              expertiseLevel,
-            },
-          })
-          expertiseCount++
-        }
-      } catch {
-        // Skip if creation fails
-      }
+  let cursor = 0
+  for (const subject of subjects) {
+    for (let i = 0; i < perSubject; i++) {
+      const teacher = teachers[cursor % teachers.length]
+      cursor++
+      rows.push({
+        schoolId,
+        teacherId: teacher.id,
+        subjectId: subject.id,
+        expertiseLevel:
+          i === 0 ? "PRIMARY" : i === 1 ? "SECONDARY" : "CERTIFIED",
+      })
     }
   }
 
-  logSuccess("Teacher Subject Expertise", expertiseCount, "subject assignments")
-  return expertiseCount
+  const { count } = await prisma.teacherSubjectExpertise.createMany({
+    data: rows,
+    skipDuplicates: true,
+  })
+
+  logSuccess(
+    "Teacher Subject Expertise",
+    count,
+    `${subjects.length} subjects x ${perSubject} qualified teachers`
+  )
+  return count
 }
 
 // ============================================================================

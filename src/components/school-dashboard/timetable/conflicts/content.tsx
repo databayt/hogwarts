@@ -78,7 +78,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError("Failed to load terms")
+      setError(d?.conflictsDrawer?.loadTermsError ?? "Failed to load terms")
     }
   }
 
@@ -92,7 +92,9 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
         setConflicts(detected)
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to detect conflicts"
+          err instanceof Error
+            ? err.message
+            : (d?.conflictsDrawer?.detectError ?? "Failed to detect conflicts")
         )
       }
     })
@@ -207,11 +209,16 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                         </h3>
                         <p className="text-sm text-red-600 dark:text-red-400">
                           {teacherConflicts.length}{" "}
-                          {d?.conflicts?.teacherConflict || "teacher conflict"}
-                          {teacherConflicts.length !== 1 ? "s" : ""},{" "}
-                          {roomConflicts.length}{" "}
-                          {d?.conflicts?.roomConflict || "room conflict"}
-                          {roomConflicts.length !== 1 ? "s" : ""}
+                          {teacherConflicts.length === 1
+                            ? (d?.conflicts?.teacherConflict ??
+                              "teacher conflict")
+                            : (d?.conflictsDrawer?.teacherConflictsPlural ??
+                              "teacher conflicts")}
+                          , {roomConflicts.length}{" "}
+                          {roomConflicts.length === 1
+                            ? (d?.conflicts?.roomConflict ?? "room conflict")
+                            : (d?.conflictsDrawer?.roomConflictsPlural ??
+                              "room conflicts")}
                         </p>
                       </div>
                     </>

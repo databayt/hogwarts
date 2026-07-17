@@ -44,13 +44,26 @@ src/components/school-dashboard/listings/students/
   config.ts            # Constants and configuration
   content.tsx          # Server component (data fetching, passes to table)
   export-button.tsx    # CSV export functionality
-  access-code-dialog.tsx # Student access code dialog
+  access-code-dialog.tsx # "Link Parent" access-code dialog (store-backed)
+  access-code-store.ts # Module store for the access-code dialog — open-state +
+                       #   codes live outside React so the dialog survives the table
+                       #   remount the generate action triggers (issue #381)
   list-params.ts       # nuqs URL state (page, perPage, name, status, sort)
   queries.ts           # Read-only database queries
   table.tsx            # Client DataTable with useDataTable
   types.ts             # Transport types (StudentDTO, StudentRow)
   validation.ts        # Zod schemas (shared client + server)
 ```
+
+### Security (RBAC) — every action gates on the SESSION, not schoolId
+
+`getTenantContext()` resolves `schoolId` from the `x-subdomain` header **before**
+the session, so `schoolId` is resolvable without a login. An action that checks
+only `if (!schoolId)` is therefore callable by an unauthenticated request to a
+valid school subdomain. **Every** server action here — including the per-step
+wizard sub-actions (`wizard/{personal,location,attachments}/actions.ts`) — must
+call `auth()` + `assertStudentPermission(...)` (the `authorizeWizardAction` guard),
+not just resolve the tenant. See `authorization.ts` for the permission matrix.
 
 ### Status
 

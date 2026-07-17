@@ -34,6 +34,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 import { getTimetableByTeacher, getTodaySchedule } from "../actions"
+import { TimetableGridSkeleton } from "./grid-skeleton"
 import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 import { StartLiveClassButton } from "./start-live-class-button"
@@ -487,7 +488,7 @@ export default function TeacherView({
         )
       ) : // Full Week View
       isLoadingData || isLoading ? (
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <TimetableGridSkeleton />
       ) : (
         <Card>
           <CardContent className="pt-4">
@@ -495,12 +496,15 @@ export default function TeacherView({
               slots={filteredSlots}
               workingDays={workingDays}
               periods={periods}
-              lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="teacher"
               editable={false}
               liveIndicators={liveIndicators}
               dictionary={{
+                period: d?.period,
+                break: d?.break,
+                days: d?.dayNames,
+                conflict: d?.conflict,
                 liveNow: d?.liveNow,
                 scheduledToday: dictionary?.liveClasses?.status?.scheduled,
               }}

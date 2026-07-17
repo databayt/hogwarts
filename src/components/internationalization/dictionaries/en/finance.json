@@ -785,7 +785,8 @@
       "history": "Payroll History",
       "deductions": "Deductions",
       "benefits": "Benefits",
-      "reports": "Reports"
+      "reports": "Reports",
+      "runs": "Payroll Runs"
     },
     "payroll": "Payroll",
     "processPayroll": "Process Payroll",
@@ -856,7 +857,8 @@
       "slips": "Salary Slips",
       "increments": "Increments",
       "advances": "Advances",
-      "reports": "Reports"
+      "reports": "Reports",
+      "structures": "Salary Structures"
     },
     "salary": "Salary",
     "salaries": "Salaries",
@@ -1585,7 +1587,8 @@
     "totalBalance": "Total Balance",
     "quickActions": "Quick Actions",
     "pending": "Pending",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "noHistoricalData": "No historical data yet"
   },
   "mainPage": {
     "unpaid": "unpaid",
@@ -1609,7 +1612,8 @@
     "accountHolder": "Account holder",
     "currentBalance": "Current balance",
     "availableBalance": "Available balance",
-    "type": "Type"
+    "type": "Type",
+    "paymentMethods": "Payment Methods"
   },
   "receiptPage": {
     "heading": "Receipts",
@@ -2592,6 +2596,70 @@
     "payrollRejectedTitle": "Payroll Rejected",
     "payrollRejectedBody": "Payroll run {runNumber} was rejected: {reason}",
     "salaryPaidTitle": "Salary Paid",
-    "salaryPaidBody": "Your salary of {amount} has been paid."
+    "salaryPaidBody": "Your salary of {amount} has been paid.",
+    "proofSubmittedTitle": "Payment proof submitted",
+    "proofSubmittedBody": "A transfer receipt is waiting for verification."
+  },
+  "paymentSettings": {
+    "title": "Payment methods",
+    "description": "Configure how families pay the school, and when unpaid fees are chased.",
+    "loadFailed": "Could not load payment settings.",
+    "bankakTitle": "Bankak",
+    "bankakDescription": "Bank of Khartoum. Parents transfer in the Bankak app and attach the receipt for your team to verify.",
+    "cashiTitle": "Cashi",
+    "cashiDescription": "MyCashi wallet. Parents send to your merchant code and attach the receipt for your team to verify.",
+    "accountName": "Account name",
+    "accountNumber": "Account number",
+    "merchantCode": "Merchant code",
+    "qrUrl": "Bankak Pay QR image URL",
+    "cashiQrUrl": "Cashi QR image URL",
+    "qrHint": "Optional. Parents can scan this instead of typing the account number.",
+    "instructions": "Instructions",
+    "remindersTitle": "Payment reminders",
+    "remindersDescription": "When to chase an unpaid fee. Reminders go out in-app, by email, and over WhatsApp.",
+    "beforeDue": "Days before due date",
+    "beforeDueHint": "Comma-separated, e.g. 7, 3, 1",
+    "afterDue": "Days after due date",
+    "afterDueHint": "Comma-separated, e.g. 1, 7, 14, 30",
+    "escalation": "Escalate to finance after (days overdue)",
+    "escalationHint": "Notifies ADMIN and ACCOUNTANT when a fee stays unpaid this long."
+  },
+  "payrollStatus": {
+    "DRAFT": "Draft",
+    "PROCESSING": "Processing",
+    "PENDING_APPROVAL": "Pending Approval",
+    "APPROVED": "Approved",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled"
+  },
+  "slipStatus": {
+    "GENERATED": "Generated",
+    "REVIEWED": "Reviewed",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled"
+  },
+  "payFrequency": {
+    "MONTHLY": "Monthly",
+    "BI_WEEKLY": "Bi-Weekly",
+    "WEEKLY": "Weekly",
+    "DAILY": "Daily"
+  },
+  "payrollSettings": {
+    "title": "Payroll Settings",
+    "description": "These statutory rules default from your school's country and apply to every payroll run.",
+    "taxAndStatutory": "Tax & Statutory Rules",
+    "country": "Country",
+    "autoDetected": "Auto-detected from your school's location",
+    "incomeTaxBrackets": "Income Tax Brackets",
+    "from": "From",
+    "to": "To",
+    "rate": "Rate",
+    "andAbove": "and above",
+    "taxFree": "Tax-free",
+    "socialSecurity": "Social Security",
+    "employeeRate": "Employee rate",
+    "employerRate": "Employer rate",
+    "notConfiguredTitle": "Tax rules not configured for this school",
+    "notConfiguredBody": "The school's country isn't set, so payroll runs with ZERO statutory withholding. Set the school's country in settings to apply the correct income-tax and social-security rules."
   }
 }

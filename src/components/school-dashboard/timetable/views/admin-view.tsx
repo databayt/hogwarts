@@ -22,7 +22,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -44,6 +43,7 @@ import type {
   TimetableSlot,
 } from "../types"
 import type { SectionForTimetable } from "../validation"
+import { TimetableGridSkeleton } from "./grid-skeleton"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -400,19 +400,22 @@ export default function AdminView({
       {viewMode === "classroom" && (
         <>
           {isLoadingData || isLoading ? (
-            <Skeleton className="h-96 w-full rounded-lg" />
+            <TimetableGridSkeleton />
           ) : selectedClassroom ? (
             <SimpleGrid
               slots={slots}
               workingDays={workingDays}
               periods={periods}
-              lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="room"
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
               liveIndicators={liveIndicators}
               dictionary={{
+                period: d?.period,
+                break: d?.break,
+                days: d?.dayNames,
+                conflict: d?.conflict,
                 liveNow: d?.liveNow,
                 scheduledToday: dictionary?.liveClasses?.status?.scheduled,
               }}
@@ -448,19 +451,22 @@ export default function AdminView({
           )}
 
           {isLoadingData || isLoading ? (
-            <Skeleton className="h-96 w-full rounded-lg" />
+            <TimetableGridSkeleton />
           ) : selectedId ? (
             <SimpleGrid
               slots={slots}
               workingDays={workingDays}
               periods={periods}
-              lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="teacher"
               editable={editableProp}
               onSlotClick={editableProp ? handleSlotClick : undefined}
               liveIndicators={liveIndicators}
               dictionary={{
+                period: d?.period,
+                break: d?.break,
+                days: d?.dayNames,
+                conflict: d?.conflict,
                 liveNow: d?.liveNow,
                 scheduledToday: dictionary?.liveClasses?.status?.scheduled,
               }}

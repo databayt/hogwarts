@@ -120,6 +120,20 @@ It validates admin + tenant, looks up the structure (resolving legacy names), op
 
 In **Settings**, the schedule configurator mirrors the onboarding schedule step: a preset `<Select>` (defaulted to the country-recommended structure) drives a live `StructurePreview`, with quick-config knobs — weekend, periods/day, duration, start — for fine-tuning. Applying writes the periods; the per-period editor below handles row-level manual tweaks. The `StructurePreview` is shared between onboarding and Settings so both surfaces look identical.
 
+The seed reads the school's **declared** structure rather than hand-rolling its own period list, so a school that says `sd-private` actually gets `sd-private`. Periods a previous structure left behind are pruned — but only when nothing references them; a period still holding timetable slots is kept and reported, since deleting it would take the slots with it.
+
+### Breaks are typed, never inferred
+
+`Period.isBreak` is the source of truth for whether a period is teaching time. Never re-derive it from `Period.name`: the name is user-editable free text, and testing it for the English substrings `"break"`/`"lunch"` means an Arabic «فسحة» matches nothing — the generator then treats the break as teaching time and schedules classes into it. Writers set it from `StructurePeriod.type !== "class"`; the grid renders break rows straight from the period data, so every break shows in its real time slot.
+
+### The Sudanese school day
+
+A Sudanese school day has exactly **one** break: the mid-morning **فسحة** (40 min), when فطور is eaten. There is no school lunch — **الغداء** is eaten at home after dismissal, so a midday "Lunch" period is a Western import and is not modelled. `sd-gov-default` runs 07:30–14:40 (8×45min) and `sd-private` 07:15–14:10 (7×50min), both Sun–Thu with a single فسحة after period 3. `sd-british` is the one SD structure that keeps a real lunch — it follows the British curriculum, Mon–Fri.
+
+### Sections and homerooms follow the school's language
+
+Section letters, section names, and homeroom codes are generated from `School.preferredLanguage` via `sectionLetters()` / `defaultSectionName()` in `catalog/room-naming.ts` — shared by `autoProvisionSections` and the classrooms Configure tab so the two provisioning paths cannot drift. An Arabic school gets أ/ب/ج (أبجد order), sections named `الصف الأول - أ` composed from the grade's own name, and homerooms `أ01`…`أ12`; digits stay Latin to match how the UI renders numbers everywhere else (الحصة 1, 07:15). English schools are unchanged (`Grade 1-A`, `A01`). Both paths persist `lang` on the rows they create — a row whose stored `lang` disagrees with the language it is actually written in cannot be fixed at read time, because the translation layer trusts the tag.
+
 ## Generating a timetable
 
 The **Generate** tab is a two-step, preview-then-commit flow:
@@ -131,7 +145,25 @@ See [Classrooms › Integration](/docs/classrooms#integration).
 
 ### Zero-click auto-provision
 
-You don't have to press **Generate** to get a timetable. Every school auto-provisions one as part of the provisioning doctor (`repairProvisioning` → `autoGenerateTimetableForSchool`), which runs at onboarding completion, on publish, and via the operator "Repair Provisioning" action. Curriculum (the grade → subject allocations) plus the schedule (periods + working days) is enough to fill the grid with teacher-less slots; teacher names appear once teachers are assigned, and students see their schedule the moment they're placed in a section. The active term is detected from today's date, and generation targets the same term the grid reads (`resolveActiveTerm`) so the two never disagree. A school that never picked a schedule structure still provisions — the doctor derives a country-recommended default and saves it.
+You don't have to press **Generate** to get a timetable. Every school auto-provisions one as part of the provisioning doctor (`repairProvisioning` → `autoGenerateTimetableForSchool`), which runs at onboarding completion, on publish, and via the operator "Repair Provisioning" action.
+
+The **demo seed uses this same generator** (2026-07-16), so seeded and real schools get identical, section-based timetables from one code path. The hand-rolled `seedTimetable` it replaced scheduled classes into whatever room happened to be free — offices, labs, even the football field — and wrote legacy `classId`-only rows the section-based reads can't see.
+
+<Callout type="warning">
+  Anything the seed writes must be scoped to the **active** term, not
+  `terms[0]`. Which term is active is derived from today's date, so seeding onto
+  the first term while a later one is active leaves the grid reading an empty
+  term on a school with a full timetable. Term pickers likewise default to the
+  active term (`getTermsForSelection` orders `isActive` first), never simply the
+  newest.
+</Callout>
+Curriculum (the grade → subject allocations) plus the schedule (periods +
+working days) is enough to fill the grid with teacher-less slots; teacher names
+appear once teachers are assigned, and students see their schedule the moment
+they're placed in a section. The active term is detected from today's date, and
+generation targets the same term the grid reads (`resolveActiveTerm`) so the two
+never disagree. A school that never picked a schedule structure still provisions
+— the doctor derives a country-recommended default and saves it.
 
 `detectTimetableConflicts()` backs the **Conflicts** tab — teacher, room, and section double-booking — and `suggestFreeSlots()` powers the slot editor's free-period suggestions. `getTimetableAnalytics()` backs the **Analytics** tab.
 

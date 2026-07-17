@@ -1,27 +1,38 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-
-export const metadata = { title: "Payroll Runs" }
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.payrollPage?.payrollRuns }
+}
+
 export default async function PayrollRunsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const d = dictionary?.finance?.payrollPage
+  const c = dictionary?.finance?.common
+  const runStatus = dictionary?.finance?.payrollStatus as
+    | Record<string, string>
+    | undefined
+  const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])
 
   if (!schoolId) {
     return (
@@ -30,6 +41,10 @@ export default async function PayrollRunsPage({ params }: Props) {
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="payroll" />
   }
 
   const [runs, schoolForCurrency] = await Promise.all([
@@ -63,17 +78,17 @@ export default async function PayrollRunsPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Payroll Runs</h3>
+        <h3 className="text-lg font-medium">{d?.payrollRuns}</h3>
         <Link
           href={`/${lang}/finance/payroll/runs/new`}
           className={buttonVariants()}
         >
-          Create Run
+          {d?.createRun}
         </Link>
       </div>
       {runs.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          No payroll runs yet.
+          {d?.noPayrollRunsYet}
         </p>
       ) : (
         <div className="space-y-3">
@@ -94,13 +109,13 @@ export default async function PayrollRunsPage({ params }: Props) {
                         {formatCurrency(Number(run.totalNet), lang, currency)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {run._count.salarySlips} slips
+                        {run._count.salarySlips} {c?.slips || "slips"}
                       </p>
                     </div>
                     <Badge
                       variant={statusConfig[run.status]?.variant || "outline"}
                     >
-                      {run.status}
+                      {runStatus?.[run.status] ?? run.status}
                     </Badge>
                   </div>
                 </CardContent>

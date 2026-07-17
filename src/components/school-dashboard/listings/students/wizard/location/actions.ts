@@ -2,19 +2,55 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import { auth } from "@/auth"
+
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import {
+  checkStudentPermission,
+  getAuthContext,
+  type AuthContext,
+  type StudentAction,
+} from "@/components/school-dashboard/listings/students/authorization"
 
 import { locationSchema, type LocationFormData } from "./validation"
+
+/**
+ * Shared guard — `getTenantContext()` resolves schoolId from the subdomain
+ * header before the session, so these address read/write actions must assert
+ * an authenticated, role-permitted session too (not schoolId alone). See the
+ * matching guard in the personal wizard actions.
+ */
+async function authorizeWizardAction(
+  action: StudentAction
+): Promise<
+  | { ok: true; schoolId: string; authContext: AuthContext }
+  | { ok: false; response: ActionResponse }
+> {
+  const session = await auth()
+  const authContext = getAuthContext(session)
+  if (!authContext) {
+    return { ok: false, response: actionError(ACTION_ERRORS.NOT_AUTHENTICATED) }
+  }
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return { ok: false, response: actionError(ACTION_ERRORS.MISSING_SCHOOL) }
+  }
+  if (!checkStudentPermission(authContext, action, { schoolId })) {
+    return { ok: false, response: actionError(ACTION_ERRORS.UNAUTHORIZED) }
+  }
+  return { ok: true, schoolId, authContext }
+}
 
 export async function getStudentLocation(
   studentId: string
 ): Promise<ActionResponse<LocationFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("read")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const student = await db.student.findFirst({
       where: { id: studentId, schoolId },
@@ -52,8 +88,9 @@ export async function updateStudentLocation(
   input: LocationFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const authz = await authorizeWizardAction("update")
+    if (!authz.ok) return authz.response
+    const { schoolId } = authz
 
     const parsed = locationSchema.parse(input)
 

@@ -43,7 +43,6 @@ interface SimpleGridProps {
   slots: Slot[]
   workingDays: number[]
   periods: Period[]
-  lunchAfterPeriod?: number | null
   isRTL?: boolean
   viewMode?: "class" | "teacher" | "room"
   editable?: boolean
@@ -61,8 +60,8 @@ interface SimpleGridProps {
   liveIndicators?: Record<string, "live" | "scheduled">
   dictionary?: {
     period?: string
-    lunch?: string
-    lunchBreak?: string
+    /** Label for any non-teaching period (الفسحة / استراحة). */
+    break?: string
     days?: string[]
     conflict?: string
     liveNow?: string
@@ -74,7 +73,6 @@ export default function SimpleGrid({
   slots,
   workingDays,
   periods,
-  lunchAfterPeriod,
   isRTL = false,
   viewMode = "class",
   editable = false,
@@ -92,14 +90,34 @@ export default function SimpleGrid({
   // Get current day for highlighting
   const today = highlightToday ? new Date().getDay() : -1
 
-  // Compute lunch time from periods
-  const lunchTime = useMemo(() => {
-    const breakPeriod = periods.find(
-      (p) => p.isBreak && p.name.toLowerCase().includes("lunch")
+  // Break rows are DATA-driven: every non-teaching period renders in its real
+  // time slot, keyed to the teaching period it precedes.
+  //
+  // This replaces a single "Lunch" row positioned by `lunchAfterPeriod`, which
+  // was broken three ways at once: it read `SchoolWeekConfig.defaultLunchAfterPeriod`
+  // (the demo has NO SchoolWeekConfig row, so it was null and the row NEVER
+  // rendered — every break was invisible); it found the period by matching the
+  // English substring "lunch" against a user-editable name (so an Arabic
+  // «فسحة» could never match); and it could only ever show ONE break, while a
+  // Sudanese day has two. Sudanese schools break for فطور mid-morning and eat
+  // الغداء at home after dismissal — there is no school lunch to model.
+  const breaksBeforePeriod = useMemo(() => {
+    const map = new Map<string, Period[]>()
+    const byTime = [...periods].sort(
+      (a, b) => +new Date(a.startTime) - +new Date(b.startTime)
     )
-    if (!breakPeriod) return ""
-    const d = new Date(breakPeriod.startTime)
-    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
+    let pending: Period[] = []
+    for (const p of byTime) {
+      if (p.isBreak) {
+        pending.push(p)
+        continue
+      }
+      if (pending.length > 0) {
+        map.set(p.id, pending)
+        pending = []
+      }
+    }
+    return map
   }, [periods])
 
   // Build a map for quick slot lookup
@@ -233,20 +251,18 @@ export default function SimpleGrid({
 
         {/* Body */}
         <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
-          {teachingPeriods.map((period, periodIdx) => (
+          {teachingPeriods.map((period) => (
             <div key={period.id}>
-              {/* Lunch Row (inserted after specified period) */}
-              {lunchAfterPeriod && periodIdx + 1 === lunchAfterPeriod && (
-                <div className={cn("grid", gridColsClass)}>
+              {/* Break row(s) preceding this teaching period, in real time order */}
+              {breaksBeforePeriod.get(period.id)?.map((br) => (
+                <div key={br.id} className={cn("grid", gridColsClass)}>
                   <div className="flex flex-col items-center justify-center border-e border-neutral-200 bg-neutral-100 px-2 py-3 sm:px-8 sm:py-5 dark:border-neutral-700 dark:bg-neutral-800">
                     <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                      {dictionary?.lunch ?? "Lunch"}
+                      {dictionary?.break ?? "Break"}
                     </span>
-                    {lunchTime && (
-                      <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                        ({lunchTime})
-                      </span>
-                    )}
+                    <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      ({formatTime(br.startTime)})
+                    </span>
                   </div>
                   <div
                     className={cn(
@@ -255,11 +271,11 @@ export default function SimpleGrid({
                     )}
                   >
                     <span className="font-medium text-neutral-500 dark:text-neutral-400">
-                      {dictionary?.lunchBreak ?? "Lunch Break"}
+                      {formatTime(br.startTime)} - {formatTime(br.endTime)}
                     </span>
                   </div>
                 </div>
-              )}
+              ))}
 
               {/* Regular Period Row */}
               <div className={cn("grid", gridColsClass)}>

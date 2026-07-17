@@ -176,6 +176,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
       {/* Feature Cards Grid */}
       <DashboardGrid type="features">
         <FeatureCard
+          comingSoonLabel={c?.comingSoon}
           title={pp?.payrollRuns || "Payroll Runs"}
           description={
             pp?.createManageRuns || "Create and manage payroll processing runs"
@@ -197,6 +198,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
           }
         />
         <FeatureCard
+          comingSoonLabel={c?.comingSoon}
           title={pp?.salarySlips || "Salary Slips"}
           description={
             pp?.viewManageSlips || "View and manage individual salary slips"
@@ -205,15 +207,18 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
           primaryAction={{
             label: pp?.viewSlips || "View Slips",
             href: `/${lang}/finance/payroll/slips`,
+            comingSoon: true,
             count: totalSlipsCount,
           }}
           secondaryAction={{
             label: `${pp?.reviewPending || "Review Pending"} (${pendingSlipsCount})`,
             href: `/${lang}/finance/payroll/slips/pending`,
+            comingSoon: true,
           }}
         />
         {canProcess && (
           <FeatureCard
+            comingSoonLabel={c?.comingSoon}
             title={fd?.payroll?.processPayroll || "Process Payroll"}
             description={
               pp?.startNewPayroll ||
@@ -223,15 +228,18 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             primaryAction={{
               label: fd?.payroll?.processPayroll || "Process Payroll",
               href: `/${lang}/finance/payroll/process`,
+              comingSoon: true,
             }}
             secondaryAction={{
               label: pp?.batchProcess || "Batch Process",
               href: `/${lang}/finance/payroll/process/batch`,
+              comingSoon: true,
             }}
           />
         )}
         {canApprove && (
           <FeatureCard
+            comingSoonLabel={c?.comingSoon}
             title={c?.approvalQueue || "Approval Queue"}
             description={
               pp?.reviewApproveRuns || "Review and approve pending payroll runs"
@@ -240,15 +248,18 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             primaryAction={{
               label: `${c?.approvalQueue || "Approval Queue"} (${pendingRunsCount})`,
               href: `/${lang}/finance/payroll/approval`,
+              comingSoon: true,
             }}
             secondaryAction={{
               label: c?.approvalHistory || "Approval History",
               href: `/${lang}/finance/payroll/approval/history`,
+              comingSoon: true,
             }}
           />
         )}
         {canProcess && (
           <FeatureCard
+            comingSoonLabel={c?.comingSoon}
             title={pp?.disbursement || "Disbursement"}
             description={
               pp?.processDisbursements ||
@@ -258,14 +269,17 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             primaryAction={{
               label: pp?.disburseSalaries || "Disburse Salaries",
               href: `/${lang}/finance/payroll/disbursement`,
+              comingSoon: true,
             }}
             secondaryAction={{
               label: pp?.paymentHistory || "Payment History",
               href: `/${lang}/finance/payroll/disbursement/history`,
+              comingSoon: true,
             }}
           />
         )}
         <FeatureCard
+          comingSoonLabel={c?.comingSoon}
           title={pp?.payrollSettings || "Payroll Settings"}
           description={
             pp?.configureTaxRules ||
@@ -275,10 +289,12 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
           primaryAction={{
             label: pp?.payrollSettings || "Payroll Settings",
             href: `/${lang}/finance/payroll/settings`,
+            comingSoon: true,
           }}
           secondaryAction={{
             label: pp?.taxConfiguration || "Tax Configuration",
             href: `/${lang}/finance/payroll/settings/tax`,
+            comingSoon: true,
           }}
         />
       </DashboardGrid>
@@ -293,27 +309,31 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/process/current-month`}>
-                <Clock className="me-2 h-4 w-4" />
-                {pp?.processCurrentMonth || "Process Current Month"}
-              </Link>
+            <Button variant="outline" size="sm" disabled>
+              <Clock className="me-2 h-4 w-4" />
+              {pp?.processCurrentMonth || "Process Current Month"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/slips/generate`}>
-                <FileText className="me-2 h-4 w-4" />
-                {pp?.generateSlips || "Generate Slips"}
-              </Link>
+            <Button variant="outline" size="sm" disabled>
+              <FileText className="me-2 h-4 w-4" />
+              {pp?.generateSlips || "Generate Slips"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/reports/summary`}>
-                {pp?.payrollSummary || "Payroll Summary"}
-              </Link>
+            <Button variant="outline" size="sm" disabled>
+              {pp?.payrollSummary || "Payroll Summary"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/reports/tax`}>
-                {pp?.taxReport || "Tax Report"}
-              </Link>
+            <Button variant="outline" size="sm" disabled>
+              {pp?.taxReport || "Tax Report"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
           </CardContent>
         </Card>

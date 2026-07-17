@@ -1,10 +1,17 @@
 /**
- * Upload ALL Sudan curriculum textbook PDFs to S3
+ * Upload curriculum subject assets to S3 — textbook PDFs + per-subject art.
  *
- * Scans curriculum/sd/ for textbook.pdf files and uploads them to S3 at:
- *   catalog/textbooks/{slug}/textbook.pdf
+ * Scans curriculum trees for, per subject dir:
+ *   textbook.pdf   → catalog/textbooks/{slug}/textbook.pdf   (Subject.pdf)
+ *   cover.jpg      → catalog/textbooks/{slug}/cover.jpg      (Subject.cover)
+ *   thumbnail.jpg  → catalog/textbooks/{slug}/thumbnail.jpg  (Subject.thumbnail)
+ *   banner.jpg     → catalog/textbooks/{slug}/banner.jpg     (Subject.banner)
+ * uploads whatever exists (subjects without a textbook still get their art),
+ * then points the matching catalog_subjects fields at the uploaded keys.
  *
- * Then updates the `pdf` field on matching catalog_subjects records.
+ * The seed (`prisma/seeds/catalog/sd.ts`) writes the SAME keys whenever the
+ * local file exists, so seed and upload never disagree; run this after adding
+ * or re-rendering assets so the keys actually resolve on the CDN.
  *
  * Usage: npx tsx scripts/upload-textbooks-all.ts [--dry-run]
  */
@@ -18,6 +25,8 @@ import {
 } from "@aws-sdk/client-s3"
 import { PrismaClient } from "@prisma/client"
 import { config } from "dotenv"
+
+import { resolveSdDbSlug } from "../prisma/seeds/catalog/sd"
 
 config()
 
@@ -33,80 +42,29 @@ const BUCKET = process.env.AWS_S3_BUCKET!
 const CURRICULUM_ROOT = resolve(__dirname, "../curriculum")
 const DRY_RUN = process.argv.includes("--dry-run")
 
-// Same slug resolution as sync-sd-curriculum.ts
-const DIR_TO_SLUG: Record<string, string> = {
-  islamic: "islamic-studies",
-  "islamic-studies": "islamic-studies",
-  ict: "computer",
-  "commercial-studies": "commerce",
-  "military-science": "military-sciences",
-  "arabic-specialized": "arabic-advanced",
-  quran: "quran-studies",
-  "arabic-literature": "literature",
-  "arabic-rhetoric": "rhetoric",
-  "arabic-grammar": "grammar",
-  "home-economics": "family-sciences",
-}
-
-const GRADE_OVERRIDES: Record<string, Record<string, string>> = {
-  g2: { art: "arts" },
-  g4: { art: "arts", english: "english-v2" },
-  g5: {
-    art: "arts",
-    "home-economics": "home-economics",
-    technology: "technology",
-  },
-  g6: {
-    islamic: "islamic-studies",
-    arabic: "arabic-v2",
-    ict: "technology",
-    technology: "technology",
-  },
-  g7: { islamic: "islamic-education", ict: "ict" },
-  g8: { islamic: "islamic-education", technology: "technology" },
-  g9: {
-    islamic: "islamic-studies",
-    ict: "communication-tech",
-    "technical-education": "technical-education",
-  },
-  g10: {
-    art: "art",
-    english: "english-v2",
-    "home-economics": "home-economics",
-    quran: "quran",
-  },
-  g11: {
-    art: "arts-design",
-    arabic: "arabic-advanced",
-    "home-economics": "family-sciences",
-  },
-  g12: {
-    islamic: "islamic-studies",
-    arabic: "arabic-advanced",
-    math: "basic-math",
-    "home-economics": "family-sciences",
-  },
-}
-
-function resolveSlug(grade: string, dirSubject: string): string {
-  const gradeOv = GRADE_OVERRIDES[grade]
-  if (gradeOv?.[dirSubject]) return `sd-${grade}-${gradeOv[dirSubject]}`
-  if (DIR_TO_SLUG[dirSubject]) return `sd-${grade}-${DIR_TO_SLUG[dirSubject]}`
-  return `sd-${grade}-${dirSubject}`
-}
-
-// Every curriculum tree under curriculum/ + how to build the DB Subject.slug it
-// maps to (must match the seed). Sudan uses its slug-overrides; the other trees
-// follow the tree-engine convention `${prefix}-${gradeDir}-${subjectDir}`.
-// Add a row here when a new tree gains textbook.pdf files.
+// Every curriculum tree under curriculum/ + how to build the DB Subject.slug
+// it maps to (must match the seed). Sudan resolves through the seed's own
+// dir→slug overrides; the other trees follow the tree-engine convention
+// `${prefix}-${gradeDir}-${subjectDir}`. Add a row here when a new tree gains
+// uploadable assets.
 const CURRICULA: Array<{
   dir: string
   slugFor: (grade: string, subject: string) => string
 }> = [
-  { dir: "sd", slugFor: resolveSlug }, // Sudan (curriculum/sd → SD)
+  { dir: "sd", slugFor: resolveSdDbSlug }, // Sudan (curriculum/sd → SD)
   { dir: "uk", slugFor: (g, s) => `gb-${g}-${s}` }, // England (curriculum/uk → GB)
   { dir: "in", slugFor: (g, s) => `cbse-${g}-${s}` }, // India (curriculum/in → CBSE)
 ]
+
+// Per-subject-dir assets: local filename → Subject field + content type.
+const SUBJECT_ASSETS = [
+  { file: "textbook.pdf", field: "pdf", contentType: "application/pdf" },
+  { file: "cover.jpg", field: "cover", contentType: "image/jpeg" },
+  { file: "thumbnail.jpg", field: "thumbnail", contentType: "image/jpeg" },
+  { file: "banner.jpg", field: "banner", contentType: "image/jpeg" },
+] as const
+
+type SubjectField = (typeof SUBJECT_ASSETS)[number]["field"]
 
 async function exists(key: string): Promise<boolean> {
   try {
@@ -117,35 +75,44 @@ async function exists(key: string): Promise<boolean> {
   }
 }
 
-async function upload(key: string, filePath: string): Promise<void> {
+async function upload(
+  key: string,
+  filePath: string,
+  contentType: string
+): Promise<void> {
   const body = readFileSync(filePath)
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,
       Key: key,
       Body: body,
-      ContentType: "application/pdf",
+      ContentType: contentType,
       CacheControl: "public, max-age=31536000, immutable",
     })
   )
 }
 
+interface AssetEntry {
+  key: string
+  filePath: string
+  contentType: string
+  field: SubjectField
+  sizeMB: number
+}
+
+interface SubjectEntry {
+  grade: string
+  subject: string
+  slug: string
+  assets: AssetEntry[]
+}
+
 async function main() {
   console.log(
-    `${DRY_RUN ? "[DRY RUN] " : ""}Uploading textbooks to S3 bucket: ${BUCKET}\n`
+    `${DRY_RUN ? "[DRY RUN] " : ""}Uploading curriculum assets to S3 bucket: ${BUCKET}\n`
   )
 
-  // Scan for all textbook.pdf files
-  interface TextbookEntry {
-    grade: string
-    subject: string
-    slug: string
-    filePath: string
-    sizeMB: number
-    s3Key: string
-  }
-
-  const entries: TextbookEntry[] = []
+  const entries: SubjectEntry[] = []
 
   for (const cur of CURRICULA) {
     const curDir = join(CURRICULUM_ROOT, cur.dir)
@@ -160,86 +127,97 @@ async function main() {
         const subjectPath = join(gradePath, subject)
         if (!statSync(subjectPath).isDirectory()) continue
 
-        const pdfPath = join(subjectPath, "textbook.pdf")
-        if (!existsSync(pdfPath)) continue
-
         const slug = cur.slugFor(grade, subject)
-        const sizeMB = statSync(pdfPath).size / 1024 / 1024
+        const assets: AssetEntry[] = []
+        for (const spec of SUBJECT_ASSETS) {
+          const filePath = join(subjectPath, spec.file)
+          if (!existsSync(filePath)) continue
+          assets.push({
+            key: `catalog/textbooks/${slug}/${spec.file}`,
+            filePath,
+            contentType: spec.contentType,
+            field: spec.field,
+            sizeMB: statSync(filePath).size / 1024 / 1024,
+          })
+        }
 
-        entries.push({
-          grade,
-          subject,
-          slug,
-          filePath: pdfPath,
-          sizeMB,
-          s3Key: `catalog/textbooks/${slug}/textbook.pdf`,
-        })
+        if (assets.length > 0) entries.push({ grade, subject, slug, assets })
       }
     }
   }
 
-  console.log(`Found ${entries.length} textbook PDFs\n`)
+  const assetCount = entries.reduce((n, e) => n + e.assets.length, 0)
+  console.log(`Found ${entries.length} subjects with ${assetCount} assets\n`)
 
   let uploaded = 0
   let skipped = 0
   let failed = 0
-  const dbUpdates: Array<{ slug: string; pdfKey: string }> = []
+  const dbUpdates: Array<{
+    slug: string
+    data: Partial<Record<SubjectField, string>>
+  }> = []
 
-  for (const entry of entries) {
-    const prefix = `  ${entry.slug} (${entry.sizeMB.toFixed(1)} MB)`
-
-    if (DRY_RUN) {
-      console.log(`${prefix} -> ${entry.s3Key}`)
-      dbUpdates.push({ slug: entry.slug, pdfKey: entry.s3Key })
-      uploaded++
-      continue
-    }
-
-    // Check if already uploaded
-    const alreadyExists = await exists(entry.s3Key)
-    if (alreadyExists) {
-      console.log(`${prefix} [already in S3, skip upload]`)
-      dbUpdates.push({ slug: entry.slug, pdfKey: entry.s3Key })
-      skipped++
-      continue
-    }
-
+  // Upload one asset, skipping when already in S3. Returns the outcome so the
+  // caller can tally + decide whether to keep the DB pointer.
+  async function put(
+    asset: AssetEntry
+  ): Promise<"uploaded" | "skipped" | "failed"> {
+    if (DRY_RUN) return "uploaded"
+    if (await exists(asset.key)) return "skipped"
     try {
-      await upload(entry.s3Key, entry.filePath)
-      console.log(`${prefix} [uploaded]`)
-      dbUpdates.push({ slug: entry.slug, pdfKey: entry.s3Key })
-      uploaded++
+      await upload(asset.key, asset.filePath, asset.contentType)
+      return "uploaded"
     } catch (err) {
       console.error(
-        `${prefix} [FAILED: ${err instanceof Error ? err.message : err}]`
+        `    [FAILED ${asset.key}: ${err instanceof Error ? err.message : err}]`
       )
-      failed++
+      return "failed"
     }
   }
 
+  for (const entry of entries) {
+    const data: Partial<Record<SubjectField, string>> = {}
+    const parts: string[] = []
+
+    for (const asset of entry.assets) {
+      const result = await put(asset)
+      if (result === "uploaded") uploaded++
+      else if (result === "skipped") skipped++
+      else {
+        failed++
+        continue // failed upload → leave the DB pointer alone
+      }
+      // uploaded or already-in-S3: the object resolves, point the DB at it
+      data[asset.field] = asset.key
+      parts.push(
+        `${asset.field}${asset.field === "pdf" ? ` (${asset.sizeMB.toFixed(1)} MB)` : ""} [${result}]`
+      )
+    }
+
+    console.log(`  ${entry.slug}: ${parts.join(", ") || "nothing uploadable"}`)
+    if (Object.keys(data).length > 0) dbUpdates.push({ slug: entry.slug, data })
+  }
+
   console.log(
-    `\nS3: ${uploaded} uploaded, ${skipped} skipped, ${failed} failed`
+    `\nS3: ${uploaded} uploaded, ${skipped} skipped (already exist), ${failed} failed`
   )
 
-  // Update DB pdf field
+  // Point Subject.pdf/cover/thumbnail/banner at the uploaded keys
   if (!DRY_RUN && dbUpdates.length > 0) {
     console.log(`\nUpdating ${dbUpdates.length} DB records...`)
     const prisma = new PrismaClient()
     try {
       let dbUpdated = 0
-      for (const { slug, pdfKey } of dbUpdates) {
+      for (const { slug, data } of dbUpdates) {
         try {
-          await prisma.subject.update({
-            where: { slug },
-            data: { pdf: pdfKey },
-          })
+          await prisma.subject.update({ where: { slug }, data })
           dbUpdated++
         } catch {
           // Subject might not exist in DB yet
           console.log(`  [skip DB] ${slug} not found in DB`)
         }
       }
-      console.log(`DB: ${dbUpdated} subjects updated with pdf field`)
+      console.log(`DB: ${dbUpdated} subjects updated`)
     } finally {
       await prisma.$disconnect()
     }

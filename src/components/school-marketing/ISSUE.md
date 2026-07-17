@@ -159,6 +159,27 @@ Active step order: **attachments → personal → location → academic → fees
 - [ ] **payment/content.tsx dead-file cleanup** — payment step file can be removed now that application is always free
 - [ ] **Leads tab i18n sweep** — `src/components/school-dashboard/admission/leads/` was added without full i18n coverage (tracked in dashboard-admission block)
 
+### Arabic (/ar) QA pass — apply wizard (2026-07-16)
+
+First full **browser E2E of the apply wizard in `/ar`** (the gap the 2026-05-22 remediation left open). Verdict: the Arabic happy path **works end-to-end** — submitted a real `Application` (`lang=ar`, `channel=PORTAL`, Arabic name + `الصف الأول`, S3 document, correctly `schoolId`-scoped). RTL mirrors on every step; grade options are proper Arabic ordinals; Mapbox geocoding returns Arabic (`&language=ar`); "always free" holds (no payment UI).
+
+Fixed in this pass:
+
+- [x] **English error prose leaked to `/ar`** — `admission/actions/application.ts` returned hardcoded English in 3 places; now returns error CODES (`SUBMIT_FAILED`, `APPLICATION_DUPLICATE`, `APPLICATION_EMAIL_DUPLICATE`). `fees/content.tsx` resolved errors as `result.error || dict.failedToSubmit`, so the raw server string always won (truthy) and the dictionary never fired — replaced with an explicit code map + `MISSING_FIELD:` parser. New keys `applicationDuplicate` / `applicationEmailDuplicate` / `missingField` (en+ar).
+- [x] **Silent dead Next button on Personal** — a guardian name (`fatherName || motherName`) is required to advance, but only the student fields carry `*`, so applicants filled every starred field and got no feedback. Added a `nameRequiredHint` shown exactly when personal is valid but guardian is missing. (Deliberately did NOT asterisk both parents — only one is required.)
+- [x] Arabic copy: "المعلومات الشخصية للطالب ولي الامر" → "…للطالب وولي الأمر" (missing conjunction + hamza), all 5 occurrences.
+- [x] Personal tab labels were hardcoded `isRTL ? "الطالب" : "Student"` → dict keys `tabStudent`/`tabFather`/`tabMother`.
+- [x] `atom/modal.tsx` announced sr-only "Dialog"/"Dialog content" to screen readers in every locale → optional `title`/`description` props (defaults unchanged); success modal passes the translated string.
+
+Still open from this pass:
+
+- [ ] **Attachments requirement is late-binding** — the step allows zero uploads, but with `AdmissionSettings.requireDocuments = true` submission is blocked at the END with `DOCUMENTS_REQUIRED`, after 4 more steps. Deliberate per the comment at `admission/actions/application.ts:603-610`, but it dead-ends the applicant. Surface the requirement on the attachments step itself.
+- [ ] **`validation-helpers.ts:19` docstring** claims dateOfBirth+gender are required; the code only checks `firstName && lastName && phone`.
+- [ ] **Demo school currency** — fees rendered `١٠٢٬٣٠٠٫٠٠ US$` to a Sudanese parent. Data, not code: `prisma/seeds/constants.ts:66` already says `SDG` but the `schools` row was stale (local fixed by hand; **prod demo not verified**). Number formatting itself is correct (U+066C/U+066B) — do not "fix" it.
+- [ ] **Mapbox `/ar`** (`src/components/atom/mapbox-location-picker.tsx`, SHARED atom) — map labels stay English (no language option set; style font is DIN Pro), opens on a world globe (`DEFAULT_CENTER=[0,20] DEFAULT_ZOOM=1.2`) rather than Sudan, and the lazily-loaded RTL-text plugin throws `TypeError: mo is not a function` ×2 (map still renders).
+- [ ] **`documents[]` names stored in English** ("Degree"/"Transcript"/"ID") → Arabic admins see English document labels.
+- [ ] Login "نسيت كلمة المرور؟" → bare `/reset`, missing the `/${lang}` prefix.
+
 ---
 
 ## Enhancements (Post-MVP)

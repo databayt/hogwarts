@@ -10,9 +10,12 @@
  * production provisioning pipeline (setupDefaultsForSchool + setupCatalogForSchool).
  *
  * Optimized + build-safe:
- *  - FAST PATH: when the demo is already fully seeded (≥500 students AND
- *    ≥100 classes) it skips the heavy seed entirely and only re-asserts the
- *    critical accounts — a couple of queries, a few seconds.
+ *  - FAST PATH: when the demo is already fully seeded it skips the heavy seed
+ *    entirely and only re-asserts the critical accounts — a couple of queries,
+ *    a few seconds. "Fully seeded" is SEED_THRESHOLDS (./index.ts), which is
+ *    PROFILE-AWARE: lite 30 students/5 classes, medium 250/50, full 500/100.
+ *    Don't hardcode the full-profile numbers here — prod demo runs lite, so it
+ *    fast-paths at ~57 students, nowhere near 500.
  *  - SLOW PATH: an empty or partially-seeded demo runs `seedMain`, which is
  *    fully idempotent (per-phase count-guards + upserts) so it resumes only
  *    the missing work and never duplicates rows on re-runs.

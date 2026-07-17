@@ -32,6 +32,7 @@ import { seedQaCurriculum } from "./qa"
 import { seedCurriculumRegistry } from "./registry"
 import { seedSaCurriculum } from "./sa"
 import { seedSdCurriculum } from "./sd"
+import { seedSdContent } from "./sd-content"
 import { seedUsCurriculum } from "./us"
 
 // Canonical seed order: deep sources first, then the subjects-only nationals.
@@ -54,6 +55,7 @@ const SOURCES = [
 export async function seedCatalog(prisma: PrismaClient): Promise<SubjectRef[]> {
   await seedUsCurriculum(prisma)
   await seedSdCurriculum(prisma)
+  await seedSdContent(prisma)
   await seedCurriculumRegistry(prisma)
   return publishedSubjects(prisma)
 }
@@ -63,6 +65,7 @@ export async function seedFullCatalog(
   prisma: PrismaClient
 ): Promise<SubjectRef[]> {
   for (const seed of SOURCES) await seed(prisma)
+  await seedSdContent(prisma)
   await seedCurriculumRegistry(prisma)
   await seedConceptImages(prisma)
   await seedConceptBanners()

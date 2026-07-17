@@ -95,16 +95,33 @@ export function EventDetailContent({
     unlimited: dictionary?.school?.events?.detail?.unlimited || "Unlimited",
   }
 
+  // Enum labels — the table resolves these via the same maps; without the
+  // lookup the badges render raw values ("PARENT_MEETING") in both locales.
+  const statusLabel = (value: string) => {
+    const statuses = dictionary?.school?.events?.statuses as
+      | Record<string, string>
+      | undefined
+    return statuses?.[value] ?? value.replace("_", " ")
+  }
+
+  const typeLabel = (value: string) => {
+    const types = dictionary?.school?.events?.types as
+      | Record<string, string>
+      | undefined
+    return types?.[value] ?? value.replace("_", " ")
+  }
+
   // Get status badge variant
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "COMPLETED":
         return "default"
-      case "IN_PROGRESS":
+      case "ONGOING":
         return "secondary"
       case "CANCELLED":
         return "destructive"
       case "PLANNED":
+      case "POSTPONED":
       default:
         return "outline"
     }
@@ -150,7 +167,9 @@ export function EventDetailContent({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={getStatusVariant(data.status)}>{data.status}</Badge>
+          <Badge variant={getStatusVariant(data.status)}>
+            {statusLabel(data.status)}
+          </Badge>
           <Badge variant={data.isPublic ? "secondary" : "outline"}>
             {data.isPublic ? (
               <>
@@ -195,7 +214,7 @@ export function EventDetailContent({
             <Calendar className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <Badge variant="outline">{data.eventType}</Badge>
+            <Badge variant="outline">{typeLabel(data.eventType)}</Badge>
           </CardContent>
         </Card>
 

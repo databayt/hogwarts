@@ -95,7 +95,7 @@ export function logSkipped(entity: string, identifier: string): void {
 export function logHeader(): void {
   console.log("\n" + "=".repeat(60))
   console.log("  🏫 HOGWARTS ACADEMY - SEED SYSTEM")
-  console.log("  🏫 أكاديمية هوجورتس - نظام البيانات التجريبية")
+  console.log("  🏫 أكاديمية هوغورتس - نظام البيانات التجريبية")
   console.log("=".repeat(60))
   console.log(`\n📅 Date: ${new Date().toLocaleDateString()}`)
   console.log(`⏰ Time: ${new Date().toLocaleTimeString()}`)
@@ -440,13 +440,21 @@ export function slugify(text: string): string {
 // ============================================================================
 
 /**
- * Parse time string (HH:MM) to Date
+ * Parse a wall-clock time string ("HH:MM") into the Date shape `Period.startTime`
+ * / `Period.endTime` (`@db.Time`) expect.
+ *
+ * The times are wall-clock ("Period 1 starts at 07:45"), NOT instants, so they
+ * are pinned to UTC on the epoch date — exactly how the app writes them
+ * (`new Date(Date.UTC(1970, 0, 1, h, m))` in the timetable actions) and how the
+ * grid reads them back (`getUTCHours()`).
+ *
+ * Using `setHours` here instead applied the SEEDING MACHINE's offset: seeded on
+ * a CAT (+02) box, "07:45" was stored as 05:45Z and the grid rendered "05:45" —
+ * a school day starting before 6am, and times that drifted with whoever ran the seed.
  */
-export function parseTime(timeStr: string, baseDate: Date = new Date()): Date {
+export function parseTime(timeStr: string): Date {
   const [hours, minutes] = timeStr.split(":").map(Number)
-  const date = new Date(baseDate)
-  date.setHours(hours, minutes, 0, 0)
-  return date
+  return new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0))
 }
 
 /**

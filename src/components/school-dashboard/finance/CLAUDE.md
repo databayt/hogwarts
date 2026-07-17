@@ -26,6 +26,15 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
 
 ## Key Decisions
 
+- **Every page and action gates through `guard.ts`** (block root, added 2026-07-17):
+  - Pages: `const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])`, then
+    `if (!can.view) return <FinanceAccessDenied dictionary={dictionary} module="payroll" />`.
+  - Actions: `const ctx = await requireFinanceActor("invoice", "edit"); if (isFinanceAuthError(ctx)) return ctx`.
+  - **The gate belongs in the page, not the layout.** Next.js 16 streams a page in parallel with
+    its layout, so a layout `redirect()` cannot stop the page's query — and a redirect thrown after
+    content streams corrupts the RSC payload (React #310). Deny with **inline UI**, never `redirect()`.
+  - `finance/permissions.ts` is **nav-only** (`PageNavItem[]` / toolbar `UIPermissions`) and
+    `isRoleIn` comes from `rbac/ui-permissions`. Neither is authorization — they only hide links.
 - **Double-entry bookkeeping**: all monetary events post journal entries via `lib/accounting/`. Debits always equal credits. Posting rules in `lib/accounting/posting-rules.ts` translate domain events (payment recorded, fee waived, salary slip approved) into balanced journal lines
 - **Amount storage convention is mixed**: Decimal columns hold whole units in dashboard aggregations but cents elsewhere -- `lib/format.ts` exposes both `formatMoney` (whole units) and `formatCurrency` (cents / 100). Know which your data uses before formatting
 - **Currency is per-school**: `School.currency` (ISO 4217 code) drives all money formatting. Never hardcode `$` or `SDG`. Fetch once in `content.tsx` and prop-drill to children
@@ -35,6 +44,14 @@ School finance module with 14 sub-modules and a shared double-entry bookkeeping 
 
 ## Danger Zones
 
+- **A fat `page.tsx` that queries `db` directly is the bug pattern here.** `content.tsx` is where
+  the permission gate lives, so bypassing the mirror pattern bypasses authorization — that is
+  exactly how 27 of 30 pages ended up ungated. Query from `content.tsx`, or call `guard.ts` first.
+- **`school-*.json` has a stale top-level `finance` stub that nothing reads.** The live dictionary
+  is `dictionaries/{en,ar}/finance.json` (2,324 keys, 100% parity). Editing the stub changes nothing
+  and parity tests still pass. Also: `d?.key || "English"` fallbacks are near-useless as a signal —
+  they resolve fine, so real i18n gaps are _no-lookup strings and raw enums_, which no parity check
+  can see. Verify /ar in a browser.
 - **Posting-rules edits can retroactively break balance sheets** -- always add new rules rather than modify existing ones for historical integrity
 - **Stripe webhook idempotency**: `webhooks/stripe/route.ts` uses event IDs to dedupe. Don't short-circuit it
 - **Missing `schoolId` in a finance query = cross-tenant ledger corruption** -- multi-tenant boundary is stricter here than anywhere else in the platform

@@ -118,10 +118,22 @@ export const DAY_LABELS_AR = [
   "السبت",
 ]
 
-/** Get palette index for a subject string -- consistent charCodeAt(0) % 5 */
+/**
+ * Get palette index for a subject string -- stable hash over the WHOLE name.
+ *
+ * Keying on `charCodeAt(0)` alone collapsed every Arabic subject onto one
+ * colour: virtually all of them open with the definite article "ال" (U+0627),
+ * so the grid rendered a single flat red on /ar while /en spread across the
+ * palette. Hashing every character restores the per-subject colour coding in
+ * both languages; same input still always yields the same colour.
+ */
 export function getSubjectColorIndex(subject: string): number {
   if (!subject) return 0
-  return subject.charCodeAt(0) % GRID_PALETTE.length
+  let hash = 0
+  for (let i = 0; i < subject.length; i++) {
+    hash = (hash * 31 + subject.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash) % GRID_PALETTE.length
 }
 
 /** Get Tailwind class string for a subject (SimpleGrid + TimetableCell) */
@@ -299,6 +311,32 @@ export function getDayLabels(lang?: string, d?: TtDict): string[] {
     return DAYS_OF_WEEK.map((day) => days[day.id]?.short ?? day.short)
   }
   return lang === "ar" ? DAY_LABELS_AR : DAY_LABELS_EN
+}
+
+/**
+ * Get localized absence-type options.
+ *
+ * ABSENCE_TYPES carries hardcoded ARABIC labels, and both substitution
+ * surfaces rendered `.label` straight from it — so /en showed Arabic. The
+ * localized strings already exist under `timetable.substitutions.reasons`;
+ * this maps each enum key onto them and keeps the constant as the fallback.
+ */
+export function getAbsenceTypeOptions(d?: TtDict) {
+  const reasons = (d?.substitutions as Record<string, any> | undefined)
+    ?.reasons as Record<string, string> | undefined
+  const dictKey: Record<keyof typeof ABSENCE_TYPES, string> = {
+    SICK: "sick",
+    PERSONAL: "personal",
+    TRAINING: "training",
+    EMERGENCY: "emergency",
+    OTHER: "other",
+  }
+  return (Object.keys(ABSENCE_TYPES) as Array<keyof typeof ABSENCE_TYPES>).map(
+    (value) => ({
+      value,
+      label: reasons?.[dictKey[value]] ?? ABSENCE_TYPES[value].label,
+    })
+  )
 }
 
 /** Get localized classroom type options */

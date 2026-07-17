@@ -5,7 +5,6 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -25,7 +24,9 @@ import {
 } from "@/components/ui/table"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { getFeeStats } from "@/components/school-dashboard/finance/fees/queries"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Fee Collection Report" }
 
@@ -37,9 +38,13 @@ export default async function FeeReportsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.fees?.reports
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   const [stats, recentPayments, topStructures, schoolForCurrency] =
     await Promise.all([

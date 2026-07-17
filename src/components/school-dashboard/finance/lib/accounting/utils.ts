@@ -24,8 +24,10 @@ export function validateDoubleEntry(lines: JournalEntryLine[]): boolean {
   const totalDebits = lines.reduce((sum, line) => sum + line.debit, 0)
   const totalCredits = lines.reduce((sum, line) => sum + line.credit, 0)
 
-  // Allow for minor rounding differences (1 cent)
-  return Math.abs(totalDebits - totalCredits) < 1
+  // Ledger amounts are WHOLE currency units (Decimal(12,2)), so the smallest
+  // real amount is 0.01. Tolerate only sub-cent float noise — a true 1-cent
+  // imbalance is a bug, not "minor". (Was `< 1`, dating from a cents era.)
+  return Math.abs(totalDebits - totalCredits) < 0.005
 }
 
 /**
@@ -100,14 +102,23 @@ export async function createJournalEntry(
       })
 
       if (!fiscalYear) {
-        fiscalYear = await db.fiscalYear.create({
-          data: {
-            schoolId,
-            name: fiscalYearName,
-            startDate: new Date(currentYear, 0, 1),
-            endDate: new Date(currentYear, 11, 31),
-            isCurrent: true,
-          },
+        // Clear any prior current year in the same step so a school never ends
+        // up with two isCurrent=true rows (which made reports pick a year at
+        // random, since findFirst had no orderBy).
+        fiscalYear = await db.$transaction(async (tx) => {
+          await tx.fiscalYear.updateMany({
+            where: { schoolId, isCurrent: true },
+            data: { isCurrent: false },
+          })
+          return tx.fiscalYear.create({
+            data: {
+              schoolId,
+              name: fiscalYearName,
+              startDate: new Date(currentYear, 0, 1),
+              endDate: new Date(currentYear, 11, 31),
+              isCurrent: true,
+            },
+          })
         })
       }
 

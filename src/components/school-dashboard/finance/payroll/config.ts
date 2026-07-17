@@ -56,20 +56,39 @@ export const TAX_BRACKETS = [
 
 /**
  * Progressive (marginal) income tax for one pay period. Each bracket's rate
- * applies only to the portion of `grossAmount` that falls inside it. `grossAmount`
- * and the bracket thresholds share the same WHOLE currency unit. Replaces the old
- * flat 15% used in payroll + salary calculations.
+ * applies only to the portion of `taxableAmount` that falls inside it. The
+ * amount and thresholds share the same WHOLE currency unit.
+ *
+ * `brackets` defaults to the Sudan-shaped {@link TAX_BRACKETS} for callers that
+ * predate country rules, but production payroll/salary now pass the brackets
+ * from the school's resolved {@link ResolvedPayrollPolicy} so a school is taxed
+ * by ITS OWN country's law — not Sudan's for everyone.
  */
-export function calculateProgressiveTax(grossAmount: number): number {
+export function calculateProgressiveTax(
+  taxableAmount: number,
+  brackets: ReadonlyArray<{
+    from: number
+    to: number | null
+    rate: number
+  }> = TAX_BRACKETS
+): number {
   let tax = 0
-  for (const bracket of TAX_BRACKETS) {
-    if (grossAmount <= bracket.from) break
+  for (const bracket of brackets) {
+    if (taxableAmount <= bracket.from) continue
     const upper =
-      bracket.to === null ? grossAmount : Math.min(grossAmount, bracket.to)
+      bracket.to === null ? taxableAmount : Math.min(taxableAmount, bracket.to)
     const portion = upper - bracket.from
     if (portion > 0) tax += portion * (bracket.rate / 100)
   }
   return tax
+}
+
+/** Employee social-security withholding for a pay period. */
+export function calculateSocialSecurity(
+  base: number,
+  ratePercent: number
+): number {
+  return Math.round(base * (ratePercent / 100) * 100) / 100
 }
 
 // Social security rates

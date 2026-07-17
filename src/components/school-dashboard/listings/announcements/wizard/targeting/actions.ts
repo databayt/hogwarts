@@ -7,16 +7,18 @@ import type { UserRole } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { getAllowedScopes } from "../../authorization"
+import { guardAnnouncement, resolveContext } from "../../guard"
 import { targetingSchema, type TargetingFormData } from "./validation"
 
 export async function getAnnouncementTargeting(
   announcementId: string
 ): Promise<ActionResponse<TargetingFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
@@ -49,11 +51,8 @@ export async function getAnnouncementTargeting(
         featured: announcement.featured,
       },
     }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -62,10 +61,23 @@ export async function updateAnnouncementTargeting(
   input: TargetingFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return guard.denied
+    const { authContext, schoolId } = guard.value
 
     const parsed = targetingSchema.parse(input)
+
+    // This step is where scope is chosen and the announcement goes live, so the
+    // caller's role has to permit both the target scope and the publish itself
+    // — a TEACHER may only ever address their own class.
+    if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (parsed.published) {
+      const canPublish = await guardAnnouncement(announcementId, "publish")
+      if (!canPublish.ok) return canPublish.denied
+    }
 
     await db.announcement.updateMany({
       where: { id: announcementId, schoolId },
@@ -83,11 +95,8 @@ export async function updateAnnouncementTargeting(
     })
 
     return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -95,8 +104,9 @@ export async function getClassesForAnnouncement(): Promise<
   { label: string; value: string }[]
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return []
+    const ctx = await resolveContext()
+    if (!ctx.ok) return []
+    const { schoolId } = ctx.value
 
     const classes = await db.class.findMany({
       where: { schoolId },

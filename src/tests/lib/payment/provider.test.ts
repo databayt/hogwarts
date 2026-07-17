@@ -4,8 +4,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Mock } from "vitest"
 
-import { createPaymentCheckout, getProvider } from "@/lib/payment/provider"
+import {
+  createPaymentCheckout,
+  getProvider,
+  resolveAvailableMethods,
+} from "@/lib/payment/provider"
 import { tapProvider } from "@/lib/payment/providers/tap"
+import { PAYMENT_GATEWAYS } from "@/lib/payment/types"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
 
 // ---------------------------------------------------------------------------
@@ -33,9 +38,21 @@ describe("Payment Provider Factory", () => {
     it("returns the registered provider for each gateway", () => {
       expect(getProvider("stripe")?.id).toBe("stripe")
       expect(getProvider("tap")?.id).toBe("tap")
+      expect(getProvider("bankak")?.id).toBe("bankak")
+      expect(getProvider("cashi")?.id).toBe("cashi")
       expect(getProvider("cash")?.id).toBe("cash")
       expect(getProvider("bank_transfer")?.id).toBe("bank_transfer")
-      expect(getProvider("mobile_money")?.id).toBe("mobile_money")
+    })
+
+    it("registers a provider for every gateway in PAYMENT_GATEWAYS", () => {
+      // Guards the drift that let `mobile_money` linger in a Zod enum after
+      // its provider was gone: the union and the registry must stay in step.
+      for (const gateway of PAYMENT_GATEWAYS) {
+        expect(
+          getProvider(gateway),
+          `no provider for "${gateway}"`
+        ).toBeDefined()
+      }
     })
 
     it("returns undefined for an unknown gateway", () => {

@@ -25,6 +25,8 @@ export {
   type WizardConfig,
   type WizardStepMeta,
   type WizardFormRef,
+  resolveFinalLabel,
+  resolveGroupLabels,
 } from "./config"
 
 // Provider factory

@@ -700,7 +700,7 @@ describe("Application Actions", () => {
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("already exists for this campaign")
+      expect(result.error).toBe("APPLICATION_EMAIL_DUPLICATE")
     })
 
     it("creates Application with all fields on success", async () => {
@@ -823,7 +823,7 @@ describe("Application Actions", () => {
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("already exists")
+      expect(result.error).toBe("APPLICATION_DUPLICATE")
     })
 
     it("handles generic DB error", async () => {
@@ -838,7 +838,9 @@ describe("Application Actions", () => {
       )
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain("Failed to submit application")
+      // Error CODE, not prose — the client resolves it through the dictionary
+      // so Arabic users never see an English fallback string.
+      expect(result.error).toBe("SUBMIT_FAILED")
     })
 
     // =========================================================================

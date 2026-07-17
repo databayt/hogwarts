@@ -52,6 +52,37 @@ interface CurriculumMeta {
   grades: Record<string, Record<string, { ar: string; en: string }>>
 }
 
+/**
+ * `curriculum.json` keys subject metadata by its own name, which is not always
+ * the directory name on disk: the folder is `islamic/` while the metadata key
+ * is `islamic-education` (g1–g9, g12) or `islamic-studies` (g10–g11). A raw
+ * `gradeMeta[dirName]` lookup misses and falls back to `slugToName(dirName)`,
+ * which stamped the ENGLISH "Islamic" onto 10 `lang=ar` rows. Alias the dir to
+ * its candidate metadata keys so the Arabic name resolves.
+ */
+const DIR_TO_META_KEYS: Record<string, string[]> = {
+  islamic: ["islamic-education", "islamic-studies"],
+}
+
+/**
+ * Resolve a subject's `{ ar, en }` metadata, tolerating dir/key drift.
+ * Returns undefined only when the curriculum genuinely has no entry — callers
+ * then fall back to the (English) slug-derived name.
+ */
+function resolveSubjectMeta(
+  gradeMeta: Record<string, { ar: string; en: string }> | undefined,
+  dirName: string
+): { ar: string; en: string } | undefined {
+  if (!gradeMeta) return undefined
+  const direct = gradeMeta[dirName]
+  if (direct) return direct
+  for (const key of DIR_TO_META_KEYS[dirName] ?? []) {
+    const aliased = gradeMeta[key]
+    if (aliased) return aliased
+  }
+  return undefined
+}
+
 function loadCurriculumMeta(): CurriculumMeta {
   if (!fs.existsSync(CURRICULUM_JSON)) {
     return { grades: {} }
@@ -258,6 +289,31 @@ function resolveSlugSuffix(grade: string, dirSubject: string): string {
   return dirSubject
 }
 
+/**
+ * Full DB Subject.slug for a curriculum/sd/ directory entry — the single
+ * source of truth for the dir→slug mapping, shared by sd-content.ts and
+ * scripts/upload-textbooks-all.ts so the three never drift.
+ */
+export function resolveSdDbSlug(grade: string, dirSubject: string): string {
+  return `sd-${grade}-${resolveSlugSuffix(grade, dirSubject)}`
+}
+
+/**
+ * Real per-subject art keys (uploaded by scripts/upload-textbooks-all.ts from
+ * the local `thumbnail.jpg` / `banner.jpg` / `cover.jpg` next to each
+ * textbook) — preferred over the shared concept art when the local file
+ * exists. Returns null when it doesn't.
+ */
+function localArtKey(
+  grade: string,
+  dirName: string,
+  dbSlug: string,
+  file: "thumbnail.jpg" | "banner.jpg" | "cover.jpg"
+): string | null {
+  const localPath = path.join(CURRICULUM_DIR, grade, dirName, file)
+  return fs.existsSync(localPath) ? `catalog/textbooks/${dbSlug}/${file}` : null
+}
+
 // ============================================================================
 // Main
 // ============================================================================
@@ -405,23 +461,34 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
     } else {
       // CREATE the missing subject
       const gradeMeta = meta.grades[entry.grade]
-      const subjectMeta = gradeMeta?.[entry.dirName]
+      const subjectMeta = resolveSubjectMeta(gradeMeta, entry.dirName)
       const name = subjectMeta?.ar ?? slugToName(entry.dirName)
       const concept = entry.concept
       const gradeConceptPrefix = concept
         ? `catalog/concepts/g${entry.gradeNum}-${concept}`
         : null
       const cvLevel = cvGradeToLevel(entry.gradeNum)
-      const subjThumb = USE_CLICKVIEW
-        ? clickviewConceptKey(cvLevel, concept, "thumbnail")
-        : gradeConceptPrefix
-          ? `${gradeConceptPrefix}/thumbnail`
-          : null
-      const subjBanner = USE_CLICKVIEW
-        ? clickviewConceptKey(cvLevel, concept, "banner")
-        : gradeConceptPrefix
-          ? `${gradeConceptPrefix}/banner`
-          : null
+      // Real per-subject art beats the shared concept art whenever the local
+      // file exists (upload-textbooks-all.ts pushes it to the same key).
+      const subjThumb =
+        localArtKey(
+          entry.grade,
+          entry.dirName,
+          entry.dbSlug,
+          "thumbnail.jpg"
+        ) ??
+        (USE_CLICKVIEW
+          ? clickviewConceptKey(cvLevel, concept, "thumbnail")
+          : gradeConceptPrefix
+            ? `${gradeConceptPrefix}/thumbnail`
+            : null)
+      const subjBanner =
+        localArtKey(entry.grade, entry.dirName, entry.dbSlug, "banner.jpg") ??
+        (USE_CLICKVIEW
+          ? clickviewConceptKey(cvLevel, concept, "banner")
+          : gradeConceptPrefix
+            ? `${gradeConceptPrefix}/banner`
+            : null)
 
       // Check if textbook.pdf exists locally
       const textbookPath = path.join(
@@ -434,6 +501,12 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
       const pdfKey = hasTextbook
         ? `catalog/textbooks/${entry.dbSlug}/textbook.pdf`
         : null
+
+      // Real per-textbook cover (PDF page 1) when rendered locally, else the
+      // shared concept cover.
+      const coverKey =
+        localArtKey(entry.grade, entry.dirName, entry.dbSlug, "cover.jpg") ??
+        (concept ? `catalog/concepts/${concept}/cover` : null)
 
       const newSubject = await prisma.subject.create({
         data: {
@@ -451,7 +524,7 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
           color: null,
           thumbnail: subjThumb,
           banner: subjBanner,
-          cover: concept ? `catalog/concepts/${concept}/cover` : null,
+          cover: coverKey,
           pdf: pdfKey,
           sortOrder: sortIdx++,
           status: "PUBLISHED",
@@ -491,14 +564,42 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
 
     const updates: Record<string, string | null> = {}
 
-    const expectedThumb = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/thumbnail`
-    const expectedBanner = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/banner`
-    const expectedCover = `catalog/concepts/${entry.concept}/cover`
+    // Prefer the real per-subject art (rendered/authored next to the textbook
+    // and uploaded by scripts/upload-textbooks-all.ts) over the shared concept
+    // art. Cut over from a stale concept key whenever the local file exists;
+    // otherwise only fill missing values with the concept fallback.
+    const localThumb = localArtKey(
+      entry.grade,
+      entry.dirName,
+      entry.dbSlug,
+      "thumbnail.jpg"
+    )
+    const localBanner = localArtKey(
+      entry.grade,
+      entry.dirName,
+      entry.dbSlug,
+      "banner.jpg"
+    )
+    const localCover = localArtKey(
+      entry.grade,
+      entry.dirName,
+      entry.dbSlug,
+      "cover.jpg"
+    )
+    const conceptThumb = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/thumbnail`
+    const conceptBanner = `catalog/concepts/g${entry.gradeNum}-${entry.concept}/banner`
+    const conceptCover = `catalog/concepts/${entry.concept}/cover`
 
     if (!dbSubject.concept) updates.concept = entry.concept
-    if (!dbSubject.thumbnail) updates.thumbnail = expectedThumb
-    if (!dbSubject.banner) updates.banner = expectedBanner
-    if (!dbSubject.cover) updates.cover = expectedCover
+    if (localThumb) {
+      if (dbSubject.thumbnail !== localThumb) updates.thumbnail = localThumb
+    } else if (!dbSubject.thumbnail) updates.thumbnail = conceptThumb
+    if (localBanner) {
+      if (dbSubject.banner !== localBanner) updates.banner = localBanner
+    } else if (!dbSubject.banner) updates.banner = conceptBanner
+    if (localCover) {
+      if (dbSubject.cover !== localCover) updates.cover = localCover
+    } else if (!dbSubject.cover) updates.cover = conceptCover
 
     // Set pdf path if textbook exists locally and not already set
     const textbookPath = path.join(
@@ -513,7 +614,7 @@ export async function seedSdCurriculum(prisma: PrismaClient): Promise<void> {
 
     // Update Arabic name from curriculum.json if available
     const gradeMeta = meta.grades[entry.grade]
-    const subjectMeta = gradeMeta?.[entry.dirName]
+    const subjectMeta = resolveSubjectMeta(gradeMeta, entry.dirName)
     if (subjectMeta) {
       updates.name = subjectMeta.ar
     }

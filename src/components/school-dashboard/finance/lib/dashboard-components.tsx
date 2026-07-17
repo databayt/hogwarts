@@ -65,20 +65,24 @@ export function StatsCard({
  * Action card with icon, title, description, and buttons
  * Uses semantic HTML and semantic tokens
  */
+interface FeatureAction {
+  label: string
+  href: string
+  count?: number
+  /** No route behind this yet: render it disabled rather than as a link that
+   *  404s. Pass `comingSoonLabel` on the card to say so. */
+  comingSoon?: boolean
+}
+
 interface FeatureCardProps {
   title: string
   description: string
   icon?: ElementType
-  primaryAction: {
-    label: string
-    href: string
-    count?: number
-  }
-  secondaryAction?: {
-    label: string
-    href: string
-  }
+  primaryAction: FeatureAction
+  secondaryAction?: FeatureAction
   isPrimary?: boolean // Adds border-primary/20 for emphasis
+  /** Translated "Coming soon" (finance.common.comingSoon). */
+  comingSoonLabel?: string
 }
 
 export function FeatureCard({
@@ -88,7 +92,46 @@ export function FeatureCard({
   primaryAction,
   secondaryAction,
   isPrimary = false,
+  comingSoonLabel,
 }: FeatureCardProps) {
+  const renderAction = (
+    action: FeatureAction,
+    { primary }: { primary: boolean }
+  ) => {
+    const label = (
+      <>
+        {action.label}
+        {action.count !== undefined && ` (${action.count})`}
+      </>
+    )
+    const props = primary
+      ? { className: "w-full" }
+      : {
+          variant: "outline" as const,
+          className: "w-full",
+          size: "sm" as const,
+        }
+
+    if (action.comingSoon) {
+      return (
+        <Button {...props} disabled>
+          {label}
+          {comingSoonLabel && (
+            <span className="text-muted-foreground ms-2 text-xs">
+              {comingSoonLabel}
+            </span>
+          )}
+        </Button>
+      )
+    }
+
+    return (
+      <Button {...props} asChild>
+        <Link href={action.href}>{label}</Link>
+      </Button>
+    )
+  }
+
   return (
     <Card className={isPrimary ? "border-primary/20" : ""}>
       <CardHeader>
@@ -101,17 +144,8 @@ export function FeatureCard({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
-        <Button asChild className="w-full">
-          <Link href={primaryAction.href}>
-            {primaryAction.label}
-            {primaryAction.count !== undefined && ` (${primaryAction.count})`}
-          </Link>
-        </Button>
-        {secondaryAction && (
-          <Button variant="outline" asChild className="w-full" size="sm">
-            <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
-          </Button>
-        )}
+        {renderAction(primaryAction, { primary: true })}
+        {secondaryAction && renderAction(secondaryAction, { primary: false })}
       </CardContent>
     </Card>
   )

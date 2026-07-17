@@ -7,17 +7,18 @@ import { after } from "next/server"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { guardAnnouncement } from "../../guard"
 import { contentSchema, type ContentFormData } from "./validation"
 
 export async function getAnnouncementContent(
   announcementId: string
 ): Promise<ActionResponse<ContentFormData>> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
@@ -47,11 +48,8 @@ export async function getAnnouncementContent(
           | undefined,
       },
     }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to load",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -60,8 +58,9 @@ export async function updateAnnouncementContent(
   input: ContentFormData
 ): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     const parsed = contentSchema.parse(input)
 
@@ -84,10 +83,7 @@ export async function updateAnnouncementContent(
     )
 
     return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to save",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }

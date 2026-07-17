@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { $Enums } from "@prisma/client"
 import { type UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
@@ -13,14 +14,9 @@ export type EventDTO = {
   schoolId: string
   title: string
   description: string | null
-  eventType:
-    | "ACADEMIC"
-    | "SPORTS"
-    | "CULTURAL"
-    | "PARENT_MEETING"
-    | "CELEBRATION"
-    | "WORKSHOP"
-    | "OTHER"
+  // Derived from Prisma rather than hand-listed — a duplicated union is what
+  // let `status` drift to a value ("IN_PROGRESS") the enum never had.
+  eventType: $Enums.EventType
   eventDate: Date
   startTime: string
   endTime: string
@@ -29,7 +25,7 @@ export type EventDTO = {
   targetAudience: string | null
   maxAttendees: number | null
   currentAttendees: number
-  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+  status: $Enums.EventStatus
   isPublic: boolean
   registrationRequired: boolean
   notes: string | null

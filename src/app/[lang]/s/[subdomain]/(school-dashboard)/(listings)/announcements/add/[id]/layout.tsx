@@ -4,7 +4,8 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import React from "react"
 
-import { WizardLayout } from "@/components/form/wizard"
+import { resolveFinalLabel, WizardLayout } from "@/components/form/wizard"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { updateAnnouncementWizardStep } from "@/components/school-dashboard/listings/announcements/wizard/actions"
 import { ANNOUNCEMENT_WIZARD_CONFIG } from "@/components/school-dashboard/listings/announcements/wizard/config"
 import {
@@ -17,6 +18,8 @@ export default function AnnouncementWizardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { locale } = useLocale()
+
   return (
     <WizardLayout
       config={ANNOUNCEMENT_WIZARD_CONFIG}
@@ -26,7 +29,7 @@ export default function AnnouncementWizardLayout({
       onStepChange={(entityId, step) => {
         updateAnnouncementWizardStep(entityId, step)
       }}
-      finalLabel="Publish"
+      finalLabel={resolveFinalLabel(ANNOUNCEMENT_WIZARD_CONFIG, locale)}
     >
       {children}
     </WizardLayout>

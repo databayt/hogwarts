@@ -5,13 +5,14 @@ import Link from "next/link"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { ExpenseRowActions } from "@/components/school-dashboard/finance/expenses/expense-row-actions"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Expenses" }
 
@@ -39,7 +40,7 @@ const statusVariant = (status: string) => {
 export default async function ExpensesListPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("expenses", ["view"])
 
   if (!schoolId) {
     return (
@@ -48,6 +49,10 @@ export default async function ExpensesListPage({ params }: Props) {
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="expenses" />
   }
 
   const [expenses, schoolForCurrency] = await Promise.all([

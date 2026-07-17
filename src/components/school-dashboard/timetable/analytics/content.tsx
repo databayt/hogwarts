@@ -103,7 +103,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError("Failed to load terms")
+      setError(d?.analyticsExtra?.loadTermsFailed ?? "Failed to load terms")
     }
   }
 
@@ -115,7 +115,10 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         setAnalytics(data as AnalyticsData)
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load analytics"
+          err instanceof Error
+            ? err.message
+            : (d?.analyticsExtra?.loadAnalyticsFailed ??
+                "Failed to load analytics")
         )
       }
     })
@@ -144,10 +147,14 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Term</label>
+              <label className="text-sm font-medium">
+                {d?.settings?.term ?? "Term"}
+              </label>
               <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue
+                    placeholder={d?.settings?.selectTerm ?? "Select term"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {terms.map((term) => (
@@ -169,7 +176,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 <RefreshCw
                   className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
                 />
-                Refresh
+                {d?.settings?.refresh ?? "Refresh"}
               </Button>
             </div>
           </div>
@@ -206,7 +213,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <p className="text-2xl font-bold">
                       {analytics.summary.totalSlots}
                     </p>
-                    <p className="text-muted-foreground text-sm">Total Slots</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.analyticsReports?.totalSlots ?? "Total Slots"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -220,7 +229,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <p className="text-2xl font-bold">
                       {analytics.summary.totalTeachers}
                     </p>
-                    <p className="text-muted-foreground text-sm">Teachers</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.templatesUi?.teachers ?? "Teachers"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -234,7 +245,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <p className="text-2xl font-bold">
                       {analytics.summary.totalClasses}
                     </p>
-                    <p className="text-muted-foreground text-sm">Classes</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.templatesUi?.classes ?? "Classes"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -248,7 +261,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <p className="text-2xl font-bold">
                       {analytics.summary.totalRooms}
                     </p>
-                    <p className="text-muted-foreground text-sm">Rooms</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.analyticsExtra?.rooms ?? "Rooms"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -273,7 +288,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <p className="text-2xl font-bold">
                       {analytics.summary.conflictCount}
                     </p>
-                    <p className="text-muted-foreground text-sm">Conflicts</p>
+                    <p className="text-muted-foreground text-sm">
+                      {d?.navigation?.conflicts ?? "Conflicts"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -286,7 +303,8 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Users className="h-5 w-5" />
-                  Teacher Workload
+                  {d?.analyticsReports?.tabTeacherWorkload ??
+                    "Teacher Workload"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -295,8 +313,13 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{teacher.name}</span>
                       <span className="text-muted-foreground">
-                        {teacher.periodsPerWeek} periods |{" "}
-                        {teacher.classesCount} classes
+                        {(
+                          d?.analyticsExtra?.periodsCount ?? "{count} periods"
+                        ).replace("{count}", String(teacher.periodsPerWeek))}
+                        {" | "}
+                        {(
+                          d?.analyticsExtra?.classesCount ?? "{count} classes"
+                        ).replace("{count}", String(teacher.classesCount))}
                       </span>
                     </div>
                     <Progress
@@ -307,7 +330,8 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 ))}
                 {analytics.teacherWorkload.length === 0 && (
                   <p className="text-muted-foreground py-4 text-center">
-                    No teacher data available
+                    {d?.analyticsExtra?.noTeacherData ??
+                      "No teacher data available"}
                   </p>
                 )}
               </CardContent>
@@ -318,7 +342,8 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <DoorOpen className="h-5 w-5" />
-                  Room Utilization
+                  {d?.analyticsReports?.tabRoomUtilization ??
+                    "Room Utilization"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -347,14 +372,19 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                       )}
                     />
                     <p className="text-muted-foreground text-xs">
-                      {room.usedSlots}/{room.totalSlots} slots ({room.capacity}{" "}
-                      seats)
+                      {(
+                        d?.analyticsExtra?.roomSlotsUsage ??
+                        "{used}/{total} slots ({capacity} seats)"
+                      )
+                        .replace("{used}", String(room.usedSlots))
+                        .replace("{total}", String(room.totalSlots))
+                        .replace("{capacity}", String(room.capacity))}
                     </p>
                   </div>
                 ))}
                 {analytics.roomUtilization.length === 0 && (
                   <p className="text-muted-foreground py-4 text-center">
-                    No room data available
+                    {d?.analyticsExtra?.noRoomData ?? "No room data available"}
                   </p>
                 )}
               </CardContent>
@@ -366,7 +396,8 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5" />
-                Subject Distribution
+                {d?.analyticsReports?.tabSubjectDistribution ??
+                  "Subject Distribution"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -378,14 +409,24 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                   >
                     <h4 className="font-semibold">{subject.name}</h4>
                     <div className="text-muted-foreground flex justify-between text-sm">
-                      <span>{subject.periodsPerWeek} periods/week</span>
-                      <span>{subject.classesCount} classes</span>
+                      <span>
+                        {(
+                          d?.analyticsExtra?.periodsPerWeekCount ??
+                          "{count} periods/week"
+                        ).replace("{count}", String(subject.periodsPerWeek))}
+                      </span>
+                      <span>
+                        {(
+                          d?.analyticsExtra?.classesCount ?? "{count} classes"
+                        ).replace("{count}", String(subject.classesCount))}
+                      </span>
                     </div>
                   </div>
                 ))}
                 {analytics.subjectDistribution.length === 0 && (
                   <p className="text-muted-foreground col-span-full py-4 text-center">
-                    No subject data available
+                    {d?.analyticsExtra?.noSubjectData ??
+                      "No subject data available"}
                   </p>
                 )}
               </div>
@@ -398,7 +439,10 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
       {!selectedTerm && !isPending && (
         <div className="text-muted-foreground py-12 text-center">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
-          <p>Select a term to view analytics</p>
+          <p>
+            {d?.analyticsExtra?.selectTermPrompt ??
+              "Select a term to view analytics"}
+          </p>
         </div>
       )}
     </div>

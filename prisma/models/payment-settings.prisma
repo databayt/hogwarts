@@ -1,0 +1,48 @@
+// School-level payment configuration.
+//
+// Scope note: these rails are consumed by BOTH admission (the registration fee
+// on offer acceptance) and finance (tuition invoices), so they live at the
+// school level rather than on AdmissionSettings — putting them there would make
+// finance import an admission-scoped model. See .claude/rules/blocks/admission.md.
+//
+// Bankak (Bank of Khartoum) and Cashi/MyCashi are Sudan's dominant rails. Neither
+// publishes a self-serve merchant API: BOK sells "Bankak Pay QR" and Cashi is a
+// CBoS-licensed QR network, both confirming inside the merchant's own app rather
+// than via webhook. So both are modelled as MANUAL rails — the school publishes an
+// account/QR, the payer transfers and submits the reference plus a screenshot, and
+// the bursar verifies. Rail identity is carried on Payment.gatewayMethod (free
+// text, same as Tap uses for MADA/KNET/Apple Pay), NOT as a PaymentMethod enum value.
+
+model SchoolPaymentSettings {
+  id       String @id @default(cuid())
+  schoolId String @unique
+
+  // Bankak (بنكك) — Bank of Khartoum
+  bankakEnabled       Boolean @default(false)
+  bankakAccountName   String?
+  bankakAccountNumber String?
+  bankakQrUrl         String?
+  bankakInstructions  String? @db.Text
+
+  // Cashi / MyCashi (كاشي)
+  cashiEnabled      Boolean @default(false)
+  cashiAccountName  String?
+  cashiMerchantCode String?
+  cashiQrUrl        String?
+  cashiInstructions String? @db.Text
+
+  // Reminder ladder — days BEFORE the due date a reminder fires (descending),
+  // days AFTER it that an overdue notice repeats, and the overdue age at which
+  // the bursar (ACCOUNTANT/ADMIN) gets escalated to. Replaces the hardcoded
+  // FEE_DUE_WINDOW_DAYS / REMINDER_INTERVAL_DAYS constants in the fee crons.
+  reminderLadderDays   Int[] @default([7, 3, 1])
+  overdueLadderDays    Int[] @default([1, 7, 14, 30])
+  bursarEscalationDays Int?  @default(14)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("school_payment_settings")
+}

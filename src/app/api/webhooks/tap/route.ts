@@ -454,42 +454,17 @@ async function recordTapFeePayment(args: {
     data: { status: newStatus },
   })
 
-  // INV-002 fix: sync ALL linked UserInvoices, allocating the paid amount
-  // oldest-first (multi-installment support). Uses amountPaid field and
-  // PARTIAL status for partial coverage.
+  // Sync ALL linked UserInvoices, allocating this payment oldest-first via the
+  // shared allocator (finance/lib/invoice-allocation.ts) so every payment path
+  // — recordPayment, markPaymentCleared, Stripe, Tap — uses identical logic.
   try {
-    const linkedInvoices = await db.userInvoice.findMany({
-      where: {
-        feeAssignmentId,
-        schoolId: assignment.schoolId,
-        status: { notIn: ["PAID", "CANCELLED"] },
-      },
-      orderBy: { due_date: "asc" },
-    })
-
-    if (linkedInvoices.length > 0) {
-      let remaining = paymentAmount
-      for (const inv of linkedInvoices) {
-        if (remaining <= 0) break
-        const invTotal = Number(inv.total)
-        const alreadyPaid = Number(inv.amountPaid)
-        const invRemaining = invTotal - alreadyPaid
-        if (invRemaining <= 0) continue
-
-        const applying = Math.min(remaining, invRemaining)
-        const newAmountPaid = alreadyPaid + applying
-        const fullyPaid = newAmountPaid >= invTotal
-        remaining -= applying
-
-        await db.userInvoice.update({
-          where: { id: inv.id },
-          data: {
-            amountPaid: newAmountPaid,
-            status: fullyPaid ? "PAID" : "PARTIAL",
-          },
-        })
-      }
-    }
+    const { allocatePaymentToInvoices } =
+      await import("@/components/school-dashboard/finance/lib/invoice-allocation")
+    await allocatePaymentToInvoices(
+      assignment.schoolId,
+      feeAssignmentId,
+      paymentAmount
+    )
   } catch (invoiceErr) {
     console.error("[Tap webhook] Invoice sync failed:", invoiceErr)
   }

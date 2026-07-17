@@ -53,7 +53,12 @@ The fee system enforces a strict four-level cascade. All four levels are now imp
 - [ ] Fines overview cards hardcode English titles (`Student Assignments`, `Fine Reports`, `Fines & Penalties`, `Scholarships`) -- see `content.tsx` card section
 - [ ] Fine type enum badges (`LATE FEE`, `DAMAGE FINE`, `LIBRARY FINE`, `DISCIPLINE FINE`) not translated on AR side -- map via `dictionary.finance.fees.fineTypes.*`
 - [ ] Fine reason text (`Late payment penalty`, `School property damage`, etc.) stored English-only in seed data -- resolve via `getText()` or require `lang` field on Fine model
-- [ ] Installment plans (schema: `FeePaymentPlan` exists, no UI flow)
+- [ ] Installment plans — **correction (2026-07-17): `FeePaymentPlan` does NOT
+      exist.** Grepped the whole schema + generated client: nothing. What exists is
+      `FeeStructure.paymentSchedule` (free-form JSON) + the read-only
+      `installment-timeline.tsx` derived from it. Real installment plans
+      (per-installment invoices, per-installment late fees) are a from-scratch
+      effort, not a UI on top of an existing model.
 - [ ] Fee reminders via WhatsApp (hook exists in `src/lib/whatsapp/`)
 - [ ] Scholarship auto-apply based on merit / need criteria
 - [ ] Fee waiver workflow distinct from scholarship

@@ -84,6 +84,13 @@ export function EventCalendarClient({
   const isAr = lang === "ar"
   const MONTH_NAMES = isAr ? MONTH_NAMES_AR : MONTH_NAMES_EN
   const DAY_NAMES = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
+
+  const eventTypeLabel = (value: string) => {
+    const types = dictionary?.events?.types as
+      | Record<string, string>
+      | undefined
+    return types?.[value] ?? value.replace("_", " ")
+  }
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -286,7 +293,9 @@ export function EventCalendarClient({
                         {evt.location && ` \u00b7 ${evt.location}`}
                       </p>
                     </div>
-                    <Badge variant="outline">{evt.eventType}</Badge>
+                    <Badge variant="outline">
+                      {eventTypeLabel(evt.eventType)}
+                    </Badge>
                   </div>
                 ))}
               </div>

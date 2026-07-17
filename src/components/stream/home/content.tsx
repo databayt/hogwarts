@@ -8,6 +8,7 @@ import { asset } from "@/lib/asset-url"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+import type { CatalogCourseType } from "../data/catalog/get-all-courses"
 import type { ContinueWatchingItem } from "../data/catalog/get-continue-watching"
 import type { StreamContentProps } from "../types"
 import { AIFluencySection } from "./ai-fluency-section"
@@ -39,6 +40,8 @@ interface StreamHomeProps extends StreamContentProps {
   isAuthenticated?: boolean
   isAdmin?: boolean
   continueWatching?: ContinueWatchingItem[]
+  /** Real courses from this school's catalog selection (see the stream page). */
+  featuredCourses?: CatalogCourseType[]
 }
 
 export function StreamHomeContent({
@@ -48,6 +51,7 @@ export function StreamHomeContent({
   isAuthenticated = false,
   isAdmin = false,
   continueWatching = [],
+  featuredCourses = [],
 }: StreamHomeProps) {
   // Get features from dictionary or use defaults
   const features: Feature[] = dictionary?.home?.features || [
@@ -172,7 +176,11 @@ export function StreamHomeContent({
 
       <SkillsSection dictionary={dictionary} lang={lang} />
 
-      <HotReleasesSection dictionary={dictionary} lang={lang} />
+      <HotReleasesSection
+        dictionary={dictionary}
+        lang={lang}
+        courses={featuredCourses}
+      />
 
       <CurriculumSection dictionary={dictionary} lang={lang} />
 

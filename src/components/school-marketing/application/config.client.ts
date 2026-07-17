@@ -125,7 +125,7 @@ export const STEP_METADATA: Record<
     label: (isRTL) => (isRTL ? "المعلومات الشخصية" : "Personal Information"),
     description: (isRTL) =>
       isRTL
-        ? "المعلومات الشخصية للطالب ولي الامر"
+        ? "المعلومات الشخصية للطالب وولي الأمر"
         : "Student and guardian personal details",
   },
   contact: {

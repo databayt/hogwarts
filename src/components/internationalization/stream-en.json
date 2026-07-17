@@ -147,7 +147,23 @@
       "community": "Community",
       "instructor": "Instructor",
       "unlock": "Unlock",
-      "purchaseFailed": "Failed to start purchase"
+      "purchaseFailed": "Failed to start purchase",
+      "moreFrom": "More from",
+      "min": "min",
+      "minWatched": "min watched",
+      "minutes": "minutes",
+      "backToCourse": "Back to Course",
+      "chapterShort": "C",
+      "lessonShort": "L",
+      "answer": "Answer",
+      "trueLabel": "True",
+      "falseLabel": "False",
+      "resourceOne": "resource",
+      "resourceMany": "resources",
+      "quiz": "Quiz",
+      "quizSubmit": "Submit Quiz",
+      "quizSubmitting": "Submitting...",
+      "quizSubmitFailed": "Couldn't submit your answers"
     },
     "courseDetail": {
       "home": "Home",
@@ -394,6 +410,11 @@
       "specialization": "Specialization",
       "course": "Course",
       "shortCourse": "Short Course"
+    },
+    "courseLevels": {
+      "ELEMENTARY": "Elementary",
+      "MIDDLE": "Middle",
+      "HIGH": "High"
     },
     "proposeVideo": {
       "trigger": "Propose a Video",

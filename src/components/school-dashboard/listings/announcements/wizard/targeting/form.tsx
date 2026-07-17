@@ -13,19 +13,22 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { CheckboxField, DateField, SelectField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardTabs, type WizardTab } from "@/components/form/wizard"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import { completeAnnouncementWizard } from "../actions"
 import {
   getClassesForAnnouncement,
   updateAnnouncementTargeting,
 } from "./actions"
-import { targetingSchema, type TargetingFormData } from "./validation"
+import { createTargetingSchema, type TargetingFormData } from "./validation"
 
 interface TargetingFormProps {
   announcementId: string
@@ -42,6 +45,7 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
       { label: string; value: string }[]
     >([])
     const { dictionary } = useDictionary()
+    const { locale } = useLocale()
     const wt = (dictionary?.school?.announcements as any)?.wizard?.targeting as
       | Record<string, string>
       | undefined
@@ -74,9 +78,15 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
       getClassesForAnnouncement().then(setClassOptions)
     }, [])
 
+    const schema = React.useMemo(() => {
+      const messages = dictionary?.messages
+      if (!messages) return createTargetingSchema()
+      return createTargetingSchema(createI18nHelpers(messages).validation)
+    }, [dictionary])
+
     const form = useForm<TargetingFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(targetingSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         scope: initialData?.scope || "school",
         classId: initialData?.classId,
@@ -118,7 +128,10 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                 data
               )
               if (!result.success) {
-                ErrorToast(result.error || w?.failedToSave || "Failed to save")
+                ErrorToast(
+                  resolveActionError(result.error ?? "", dictionary) ||
+                    w?.failedToSave
+                )
                 reject(new Error(result.error))
                 return
               }
@@ -128,22 +141,18 @@ export const TargetingForm = forwardRef<WizardFormRef, TargetingFormProps>(
                 await completeAnnouncementWizard(announcementId)
               if (!completeResult.success) {
                 ErrorToast(
-                  completeResult.error ||
-                    w?.failedToComplete ||
-                    "Failed to complete"
+                  resolveActionError(completeResult.error ?? "", dictionary) ||
+                    w?.failedToComplete
                 )
                 reject(new Error(completeResult.error))
                 return
               }
 
-              router.push("/announcements")
+              router.push(`/${locale}/announcements`)
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : w?.failedToSave || "Failed to save"
-              ErrorToast(msg)
+              // Never surface a raw JS Error message — it is always English.
+              ErrorToast(w?.failedToSave)
               reject(err)
             }
           })

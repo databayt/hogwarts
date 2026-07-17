@@ -11,6 +11,6 @@ export const PERSONAL_STEP_CONFIG = {
     isRTL ? "المعلومات الشخصية" : "Personal Information",
   description: (isRTL: boolean) =>
     isRTL
-      ? "المعلومات الشخصية للطالب ولي الامر"
+      ? "المعلومات الشخصية للطالب وولي الأمر"
       : "Student and guardian personal details",
 }

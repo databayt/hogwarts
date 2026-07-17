@@ -250,16 +250,18 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/allowances`}>
-                  {sp?.viewAllowances || "View Allowances"} ({allowancesCount})
-                </Link>
+              <Button className="w-full" disabled>
+                {sp?.viewAllowances || "View Allowances"} ({allowancesCount})
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
               {canCreate && (
-                <Button variant="outline" asChild className="w-full" size="sm">
-                  <Link href={`/${lang}/finance/salary/allowances/new`}>
-                    {sp?.addAllowance || "Add Allowance"}
-                  </Link>
+                <Button variant="outline" className="w-full" size="sm" disabled>
+                  {sp?.addAllowance || "Add Allowance"}
+                  <span className="text-muted-foreground ms-2 text-xs">
+                    {c?.comingSoon}
+                  </span>
                 </Button>
               )}
             </CardContent>
@@ -280,16 +282,18 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/deductions`}>
-                  {sp?.viewDeductions || "View Deductions"} ({deductionsCount})
-                </Link>
+              <Button className="w-full" disabled>
+                {sp?.viewDeductions || "View Deductions"} ({deductionsCount})
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
               {canCreate && (
-                <Button variant="outline" asChild className="w-full" size="sm">
-                  <Link href={`/${lang}/finance/salary/deductions/new`}>
-                    {sp?.addDeduction || "Add Deduction"}
-                  </Link>
+                <Button variant="outline" className="w-full" size="sm" disabled>
+                  {sp?.addDeduction || "Add Deduction"}
+                  <span className="text-muted-foreground ms-2 text-xs">
+                    {c?.comingSoon}
+                  </span>
                 </Button>
               )}
             </CardContent>
@@ -308,16 +312,18 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href={`/${lang}/finance/salary/calculator`}>
-                <Calculator className="me-2 h-4 w-4" />
-                {sp?.openCalculator || "Open Calculator"}
-              </Link>
+            <Button className="w-full" disabled>
+              <Calculator className="me-2 h-4 w-4" />
+              {sp?.openCalculator || "Open Calculator"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/salary/calculator/batch`}>
-                {sp?.batchCalculate || "Batch Calculate"}
-              </Link>
+            <Button variant="outline" className="w-full" size="sm" disabled>
+              {sp?.batchCalculate || "Batch Calculate"}
+              <span className="text-muted-foreground ms-2 text-xs">
+                {c?.comingSoon}
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -336,15 +342,17 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/reports`}>
-                  {c?.viewReports || "View Reports"}
-                </Link>
+              <Button className="w-full" disabled>
+                {c?.viewReports || "View Reports"}
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/reports/analysis`}>
-                  {sp?.salaryAnalysis || "Salary Analysis"}
-                </Link>
+              <Button variant="outline" className="w-full" size="sm" disabled>
+                {sp?.salaryAnalysis || "Salary Analysis"}
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
             </CardContent>
           </Card>
@@ -364,15 +372,17 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/bulk/increment`}>
-                  {sp?.bulkIncrement || "Bulk Increment"}
-                </Link>
+              <Button className="w-full" disabled>
+                {sp?.bulkIncrement || "Bulk Increment"}
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/bulk/update`}>
-                  {sp?.bulkUpdate || "Bulk Update"}
-                </Link>
+              <Button variant="outline" className="w-full" size="sm" disabled>
+                {sp?.bulkUpdate || "Bulk Update"}
+                <span className="text-muted-foreground ms-2 text-xs">
+                  {c?.comingSoon}
+                </span>
               </Button>
             </CardContent>
           </Card>

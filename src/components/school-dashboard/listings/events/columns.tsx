@@ -33,9 +33,10 @@ const STATUS_VARIANTS: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   PLANNED: "default",
-  IN_PROGRESS: "secondary",
+  ONGOING: "secondary",
   COMPLETED: "outline",
   CANCELLED: "destructive",
+  POSTPONED: "outline",
 }
 
 const TYPE_VARIANTS: Record<
@@ -61,7 +62,8 @@ export const getEventColumns = (
   const permissions = callbacks?.permissions ?? FULL_UI_PERMISSIONS
 
   const t = {
-    title: dictionary?.title || "Title",
+    // `dictionary.title` is the *page* title ("Events"), not the column header.
+    title: dictionary?.titleColumn || "Title",
     type: dictionary?.type || "Type",
     date: dictionary?.date || "Date",
     startTime: dictionary?.startTime || "Start Time",
@@ -213,14 +215,14 @@ export const getEventColumns = (
       meta: {
         label: t.status,
         variant: "select",
+        // Values must match the Prisma `EventStatus` enum — an unknown value
+        // here reaches Prisma as an invalid enum and the query throws.
         options: [
           { label: statuses?.PLANNED || "Planned", value: "PLANNED" },
-          {
-            label: statuses?.IN_PROGRESS || "In Progress",
-            value: "IN_PROGRESS",
-          },
+          { label: statuses?.ONGOING || "In Progress", value: "ONGOING" },
           { label: statuses?.COMPLETED || "Completed", value: "COMPLETED" },
           { label: statuses?.CANCELLED || "Cancelled", value: "CANCELLED" },
+          { label: statuses?.POSTPONED || "Postponed", value: "POSTPONED" },
         ],
       },
       enableColumnFilter: true,

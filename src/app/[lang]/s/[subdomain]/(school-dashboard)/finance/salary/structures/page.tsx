@@ -1,24 +1,31 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { getTenantContext } from "@/lib/tenant-context"
+import type { Metadata } from "next"
+
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 import { type SalaryStructureRow } from "@/components/school-dashboard/finance/salary/columns"
 import { getSalaryStructureList } from "@/components/school-dashboard/finance/salary/queries"
 import { SalaryStructuresTable } from "@/components/school-dashboard/finance/salary/table"
 import { getLabels } from "@/components/translation/person"
 
-export const metadata = { title: "Salary Structures" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.salaryPage?.salaryStructures }
 }
 
 export default async function SalaryStructuresPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("salary", ["view"])
 
   if (!schoolId) {
     return (
@@ -27,6 +34,10 @@ export default async function SalaryStructuresPage({ params }: Props) {
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="salary" />
   }
 
   const { rows, count } = await getSalaryStructureList(schoolId, {

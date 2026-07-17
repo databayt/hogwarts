@@ -594,12 +594,19 @@ export async function getInvoiceById(
     })
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
 
-    // Branding for the PDF: the invoice owner's logo (UserInvoiceSettings is
-    // per-user). The PDF template renders data.schoolLogo when present.
-    const settings = await db.userInvoiceSettings.findUnique({
-      where: { userId: invoice.userId },
-      select: { invoiceLogo: true },
-    })
+    // Branding for the PDF: the school's logo is the default; the invoice
+    // owner's per-user UserInvoiceSettings.invoiceLogo overrides it when set.
+    // The PDF template renders data.schoolLogo when present.
+    const [settings, school] = await Promise.all([
+      db.userInvoiceSettings.findUnique({
+        where: { userId: invoice.userId },
+        select: { invoiceLogo: true },
+      }),
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: { logoUrl: true },
+      }),
+    ])
 
     // INV-007 / spec item 6: linked fee payments when feeAssignmentId is set
     const linkedPayments = invoice.feeAssignmentId
@@ -634,7 +641,7 @@ export async function getInvoiceById(
         total: Number(invoice.total),
         amountPaid: Number(invoice.amountPaid),
         sentAt: invoice.sentAt ?? null,
-        schoolLogo: settings?.invoiceLogo ?? null,
+        schoolLogo: settings?.invoiceLogo ?? school?.logoUrl ?? null,
         items: invoice.items.map((item) => ({
           ...item,
           price: Number(item.price),
@@ -729,7 +736,7 @@ export async function sendInvoiceEmail(
       }),
       db.school.findUnique({
         where: { id: ctx.schoolId },
-        select: { preferredLanguage: true },
+        select: { preferredLanguage: true, logoUrl: true },
       }),
     ])
     if (!invoice) return actionError(ACTION_ERRORS.INVOICE_NOT_FOUND)
@@ -744,12 +751,14 @@ export async function sendInvoiceEmail(
     const fmt = (n: number) =>
       new Intl.NumberFormat(bcp47, { style: "currency", currency }).format(n)
 
-    // Branding: the invoice owner's logo + signature (UserInvoiceSettings is
-    // per-user, keyed by userId, with a one-to-one signature relation).
+    // Branding: the school's logo is the default; the invoice owner's per-user
+    // UserInvoiceSettings.invoiceLogo overrides it. Signature stays per-user
+    // (keyed by userId, one-to-one relation).
     const settings = await db.userInvoiceSettings.findUnique({
       where: { userId: invoice.userId },
       include: { signature: true },
     })
+    const logoUrl = settings?.invoiceLogo ?? school?.logoUrl ?? undefined
 
     const subTotal = Number(invoice.sub_total)
     const taxPct =
@@ -765,7 +774,7 @@ export async function sendInvoiceEmail(
     const emailContent = SendInvoiceEmail({
       lang,
       schoolName: invoice.from?.name ?? "",
-      logoUrl: settings?.invoiceLogo,
+      logoUrl,
       recipientName: invoice.to.name,
       invoiceNo: invoice.invoice_no,
       dueDate: format(invoice.due_date, "PPP", { locale: dateFnsLocale }),

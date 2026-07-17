@@ -11,6 +11,7 @@ import type { getDictionary } from "@/components/internationalization/dictionari
 import { IMPACT_METRICS } from "./constants"
 import FeatureTabs from "./feature-tabs"
 import Hero from "./hero"
+import { featuresUi, METRIC_AR } from "./i18n"
 
 interface ContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -19,6 +20,8 @@ interface ContentProps {
 
 export default function Content({ dictionary, params }: ContentProps) {
   const t = dictionary.marketing.features
+  const isAr = params.lang === "ar"
+  const ui = featuresUi(params.lang)
 
   return (
     <div className="px-responsive lg:px-0">
@@ -31,20 +34,23 @@ export default function Content({ dictionary, params }: ContentProps) {
           {t.impactTitle}
         </h2>
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {IMPACT_METRICS.map((metric) => (
-            <div
-              key={metric.label}
-              className="bg-muted/50 flex flex-col items-center rounded-lg p-6 text-center"
-            >
-              <span className="text-primary text-4xl font-bold md:text-5xl">
-                {metric.value}
-              </span>
-              <p className="mt-2 font-medium">{metric.label}</p>
-              <small className="text-muted-foreground mt-1">
-                {metric.description}
-              </small>
-            </div>
-          ))}
+          {IMPACT_METRICS.map((metric) => {
+            const m = isAr ? (METRIC_AR[metric.id] ?? metric) : metric
+            return (
+              <div
+                key={metric.id}
+                className="bg-muted/50 flex flex-col items-center rounded-lg p-6 text-center"
+              >
+                <span className="text-primary text-4xl font-bold md:text-5xl">
+                  {metric.value}
+                </span>
+                <p className="mt-2 font-medium">{m.label}</p>
+                <small className="text-muted-foreground mt-1">
+                  {m.description}
+                </small>
+              </div>
+            )
+          })}
         </div>
       </section>
 
@@ -57,7 +63,7 @@ export default function Content({ dictionary, params }: ContentProps) {
             href={`/${params.lang}/contact`}
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            {params.lang === "ar" ? "تحدث مع المبيعات" : "Talk to Sales"}
+            {ui.talkToSales}
           </Link>
         </div>
       </section>

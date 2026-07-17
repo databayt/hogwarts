@@ -97,6 +97,7 @@ describe("Announcement Actions", () => {
       // Mock existing announcement (findFirst is called first)
       vi.mocked(db.announcement.findFirst).mockResolvedValue({
         id: "ann-1",
+        title: "Test Announcement",
         createdBy: "test-user-id",
         schoolId: mockSchoolId,
         scope: "school",
@@ -108,6 +109,8 @@ describe("Announcement Actions", () => {
         id: "ann-1",
         publish: true,
       })
+
+      expect(result.success).toBe(true)
 
       // The important thing for multi-tenant safety is the query was scoped by schoolId
       expect(db.announcement.findFirst).toHaveBeenCalledWith(

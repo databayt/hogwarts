@@ -5,11 +5,12 @@ import type { PaymentGateway } from "./types"
 
 // Country → preferred gateways (ordered by preference)
 const COUNTRY_GATEWAYS: Record<string, PaymentGateway[]> = {
-  // Sudan: bankak (Bank of Khartoum mobile money) is the dominant rail —
-  // listed first so a future enabled+configured Bankak provider takes
-  // priority over the generic mobile_money fallback. Until the BoK spec is
-  // wired the provider returns isConfigured()=false and is filtered out.
-  SD: ["bankak", "mobile_money", "cash", "bank_transfer"],
+  // Sudan: bankak (Bank of Khartoum) and cashi (MyCashi) are the dominant
+  // rails and the ONLY ones that work here — Stripe rejects SDG and Tap does
+  // not cover SD. Both are manual rails (no merchant API exists for either),
+  // so they are offered whenever the school has configured an account; see
+  // `filterConfiguredManualRails` in ./manual-rail-settings.
+  SD: ["bankak", "cashi", "cash", "bank_transfer"],
   EG: ["stripe", "cash", "bank_transfer"],
   SA: ["tap", "stripe", "cash", "bank_transfer"],
   AE: ["tap", "stripe", "cash", "bank_transfer"],

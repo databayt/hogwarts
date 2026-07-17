@@ -170,7 +170,9 @@ export function ScheduleConfigurator({
             <SelectContent>
               {WEEKEND_OPTIONS.map((w) => (
                 <SelectItem key={w.value} value={w.value}>
-                  {w.label}
+                  {(w.value === "fri-sat"
+                    ? dict.weekendFriSat
+                    : dict.weekendSatSun) || w.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -210,7 +212,7 @@ export function ScheduleConfigurator({
             <SelectContent>
               {DURATION_OPTIONS.map((n) => (
                 <SelectItem key={n} value={String(n)}>
-                  {n} min
+                  {n} {dict.minutesSuffix || "min"}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { AnthropicIcons, Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   updateAnnouncementConfig,
   type AnnouncementConfigData,
@@ -57,6 +59,8 @@ export function AnnouncementConfigForm({
   dictionary,
 }: ConfigFormProps) {
   const [isPending, startTransition] = useTransition()
+  // Full dictionary, for resolving server action error codes to localized text.
+  const { dictionary: fullDictionary } = useDictionary()
 
   const form = useForm<AnnouncementConfigFormValues>({
     resolver: zodResolver(announcementConfigSchema),
@@ -93,14 +97,19 @@ export function AnnouncementConfigForm({
         toast.success(cfg?.saved || "Settings saved successfully")
       } else {
         toast.error(
-          result.error || cfg?.saveFailed || "Failed to save settings"
+          resolveActionError(result.error ?? "", fullDictionary) ||
+            cfg?.saveFailed ||
+            "Failed to save settings"
         )
       }
     })
   }
 
-  // Use nested config dictionary from dictionary?.config, with fallbacks
-  const cfg = dictionary?.config as Record<string, string> | undefined
+  // Callers pass the config labels flat; older callers nested them under `config`.
+  // Accept both so the labels never silently fall back to the English defaults.
+  const cfg = (dictionary?.config ?? dictionary) as
+    | Record<string, string>
+    | undefined
   const ann = dictionary as Record<string, any> | undefined
 
   const d = {
@@ -145,7 +154,8 @@ export function AnnouncementConfigForm({
     low: ann?.low || "Low",
     normal: ann?.normal || "Normal",
     high: ann?.high || "High",
-    urgent: ann?.urgent || "Urgent",
+    // "urgent" is the one priority that lives under priority.*, not at the root.
+    urgent: ann?.priority?.urgent?.label || ann?.urgent || "Urgent",
     none: cfg?.none || "None",
     daily: cfg?.daily || "Daily",
     weekly: cfg?.weekly || "Weekly",

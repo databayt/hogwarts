@@ -3,7 +3,7 @@
     "title": "ستريم - نظام إدارة التعلم",
     "description": "نظام إدارة التعلم الإلكتروني",
     "home": {
-      "badge": "أهلاً بك في هوجورتس",
+      "badge": "أهلاً بك في هوغورتس",
       "title": "لوموس",
       "description": "أضئ نورًا.",
       "exploreCourses": "استكشف الدورات",
@@ -114,7 +114,7 @@
       "notes": "الملاحظات",
       "discussion": "النقاش",
       "grade": "الصف",
-      "brandName": "هوجورتس",
+      "brandName": "هوغورتس",
       "more": "المزيد",
       "free": "مجاني",
       "freePreview": "معاينة مجانية",
@@ -147,7 +147,23 @@
       "community": "المجتمع",
       "instructor": "مدرب",
       "unlock": "فتح",
-      "purchaseFailed": "تعذّر بدء عملية الشراء"
+      "purchaseFailed": "تعذّر بدء عملية الشراء",
+      "moreFrom": "المزيد من",
+      "min": "دقيقة",
+      "minWatched": "دقيقة تمت مشاهدتها",
+      "minutes": "دقيقة",
+      "backToCourse": "العودة إلى الدورة",
+      "chapterShort": "ف",
+      "lessonShort": "د",
+      "answer": "الإجابة",
+      "trueLabel": "صح",
+      "falseLabel": "خطأ",
+      "resourceOne": "مورد",
+      "resourceMany": "موارد",
+      "quiz": "اختبار",
+      "quizSubmit": "إرسال الإجابات",
+      "quizSubmitting": "جارٍ الإرسال...",
+      "quizSubmitFailed": "تعذّر إرسال إجاباتك"
     },
     "courseDetail": {
       "home": "الرئيسية",
@@ -341,7 +357,7 @@
     },
     "skills": {
       "title": "تعلّم المهارات الأساسية للحياة المهنية",
-      "description": "يساعدك هوجورتس على بناء المهارات المطلوبة بسرعة والتقدم في مسيرتك المهنية.",
+      "description": "يساعدك هوغورتس على بناء المهارات المطلوبة بسرعة والتقدم في مسيرتك المهنية.",
       "generativeAI": "الذكاء الاصطناعي التوليدي",
       "itCertifications": "شهادات تقنية المعلومات",
       "dataScience": "علم البيانات"
@@ -394,6 +410,11 @@
       "specialization": "تخصص",
       "course": "دورة",
       "shortCourse": "دورة قصيرة"
+    },
+    "courseLevels": {
+      "ELEMENTARY": "ابتدائي",
+      "MIDDLE": "متوسط",
+      "HIGH": "ثانوي"
     },
     "proposeVideo": {
       "trigger": "اقترح فيديو",
@@ -496,7 +517,7 @@
       }
     },
     "instructorSwitcher": {
-      "hogwarts": "هوجورتس",
+      "hogwarts": "هوغورتس",
       "yourSchool": "مدرستك",
       "partnerSchool": "مدرسة شريكة",
       "unlock": "فتح",

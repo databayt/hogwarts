@@ -20,6 +20,7 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { calculateProgressiveTax } from "./config"
+import { resolvePayrollPolicy } from "./country-rules/registry"
 import {
   payrollApprovalSchema,
   payrollDisbursementSchema,
@@ -209,6 +210,15 @@ export async function generateSalarySlips(
       return { success: false, error: PAYROLL_ERRORS.INVALID_STATE }
     }
 
+    // Resolve the school's payroll policy ONCE — every slip in this run is taxed
+    // by the school's OWN country's brackets (auto-provisioned from its location),
+    // not a global Sudan default. isFailSafeDefault ⇒ no country rules configured.
+    const schoolForPolicy = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { country: true, timezone: true, currency: true },
+    })
+    const payrollPolicy = resolvePayrollPolicy(schoolForPolicy ?? {})
+
     // Update status to PROCESSING
     await db.payrollRun.update({
       where: { id: payrollRunId },
@@ -290,7 +300,10 @@ export async function generateSalarySlips(
       const taxableAllowances = allowances
         .filter((a: { isTaxable: boolean }) => a.isTaxable)
         .reduce((sum: number, a: { amount: number }) => sum + a.amount, 0)
-      const taxAmount = calculateProgressiveTax(baseSalary + taxableAllowances)
+      const taxAmount = calculateProgressiveTax(
+        baseSalary + taxableAllowances,
+        payrollPolicy.taxBrackets
+      )
       const netSalary = grossSalary - taxAmount - totalDeductionsAmount
 
       // Generate slip number

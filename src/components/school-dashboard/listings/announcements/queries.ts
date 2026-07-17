@@ -63,41 +63,6 @@ export const announcementListSelect = {
   expiresAt: true,
 } as const
 
-export const announcementDetailSelect = {
-  id: true,
-  schoolId: true,
-  title: true,
-  body: true,
-  lang: true,
-  scope: true,
-  priority: true,
-  classId: true,
-  role: true,
-  published: true,
-  publishedAt: true,
-  scheduledFor: true,
-  expiresAt: true,
-  pinned: true,
-  featured: true,
-  createdBy: true,
-  createdAt: true,
-  updatedAt: true,
-  class: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
-  creator: {
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      image: true,
-    },
-  },
-} as const
-
 // ============================================================================
 // Query Builders
 // ============================================================================
@@ -220,25 +185,6 @@ export async function getAnnouncementsList(
   ])
 
   return { rows, count }
-}
-
-/**
- * Get a single announcement by ID with full details
- * @param schoolId - School ID for multi-tenant filtering
- * @param announcementId - Announcement ID
- * @returns Promise with announcement or null
- */
-export async function getAnnouncementDetail(
-  schoolId: string,
-  announcementId: string
-) {
-  return db.announcement.findFirst({
-    where: {
-      id: announcementId,
-      schoolId,
-    },
-    select: announcementDetailSelect,
-  })
 }
 
 /**
@@ -429,25 +375,6 @@ export async function verifyAnnouncementOwnership(
   })
 
   return announcements.map((a) => a.id)
-}
-
-/**
- * Get announcements by multiple IDs
- * @param schoolId - School ID
- * @param announcementIds - Array of announcement IDs
- * @returns Promise with announcements
- */
-export async function getAnnouncementsByIds(
-  schoolId: string,
-  announcementIds: string[]
-) {
-  return db.announcement.findMany({
-    where: {
-      id: { in: announcementIds },
-      schoolId,
-    },
-    select: announcementDetailSelect,
-  })
 }
 
 // ============================================================================

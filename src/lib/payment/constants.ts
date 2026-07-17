@@ -35,8 +35,16 @@ export const GATEWAY_DISPLAY: Record<
     icon: "Smartphone",
     label: { ar: "بنكك", en: "Bankak" },
     description: {
-      ar: "ادفع عبر تطبيق بنكك من بنك الخرطوم",
-      en: "Pay via the Bankak app (Bank of Khartoum)",
+      ar: "حوّل عبر تطبيق بنكك ثم أرفق إيصال التحويل",
+      en: "Transfer in the Bankak app, then attach the receipt",
+    },
+  },
+  cashi: {
+    icon: "Wallet",
+    label: { ar: "كاشي", en: "Cashi" },
+    description: {
+      ar: "حوّل عبر تطبيق ماي كاشي ثم أرفق إيصال التحويل",
+      en: "Transfer in the MyCashi app, then attach the receipt",
     },
   },
   cash: {
@@ -53,14 +61,6 @@ export const GATEWAY_DISPLAY: Record<
     description: {
       ar: "حول المبلغ إلى الحساب البنكي",
       en: "Transfer to the bank account",
-    },
-  },
-  mobile_money: {
-    icon: "Smartphone",
-    label: { ar: "محفظة إلكترونية", en: "Mobile Money" },
-    description: {
-      ar: "ادفع عبر بنكك أو mBOK",
-      en: "Pay via Bankak or mBOK",
     },
   },
 }

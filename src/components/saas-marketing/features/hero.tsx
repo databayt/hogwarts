@@ -10,6 +10,8 @@ import { TwoButtons } from "@/components/atom/two-buttons"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { featuresUi } from "./i18n"
+
 interface HeroProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
   params: { lang: Locale }
@@ -17,6 +19,7 @@ interface HeroProps {
 
 export default function Hero({ dictionary, params }: HeroProps) {
   const t = dictionary.marketing.features
+  const ui = featuresUi(params.lang)
 
   return (
     <PageHeader
@@ -43,9 +46,9 @@ export default function Hero({ dictionary, params }: HeroProps) {
       description={t.subtitle}
       actions={
         <TwoButtons
-          primaryLabel="Browse Features"
+          primaryLabel={ui.browseFeatures}
           primaryHref={`/${params.lang}/features`}
-          secondaryLabel="Request Feature"
+          secondaryLabel={ui.requestFeature}
           secondaryHref={`/${params.lang}/contact`}
         />
       }

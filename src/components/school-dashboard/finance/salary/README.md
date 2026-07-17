@@ -42,5 +42,5 @@ salary/
 
 - Active structures consumed by `finance/payroll/` for processing
 - Salary costs deduct from `finance/budget/` salary allocation
-- Salary itself writes **no** journal entries; the ledger entry would come from payroll disbursement, whose `postSalaryPayment` is not yet wired (umbrella `ISSUE.md` P0)
+- Salary itself writes **no** journal entries. The ledger entry would come from payroll disbursement: `processPayments` _does_ call `postSalaryPayment` — but **nothing calls `processPayments`** (no UI, no cron, no API route; `/finance/payroll/disbursement` and `/finance/payroll/process` are 404, never built). So salary cost reaches the ledger **never**, and the P&L / balance sheet omit it. Verified 2026-07-17.
 - See [finance master README](../README.md) for architecture details

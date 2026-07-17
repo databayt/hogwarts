@@ -6,14 +6,16 @@ import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
+import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { updateAnnouncementContent } from "./actions"
-import { contentSchema, type ContentFormData } from "./validation"
+import { createContentSchema, type ContentFormData } from "./validation"
 
 interface ContentFormProps {
   announcementId: string
@@ -39,9 +41,15 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
       { label: w?.priorityUrgent || "Urgent", value: "urgent" },
     ]
 
+    const schema = React.useMemo(() => {
+      const messages = dictionary?.messages
+      if (!messages) return createContentSchema()
+      return createContentSchema(createI18nHelpers(messages).validation)
+    }, [dictionary])
+
     const form = useForm<ContentFormData>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolver: zodResolver(contentSchema) as any,
+      resolver: zodResolver(schema) as any,
       defaultValues: {
         title: initialData?.title || "",
         body: initialData?.body || "",
@@ -74,17 +82,17 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
                 data
               )
               if (!result.success) {
-                ErrorToast(result.error || w?.failedToSave || "Failed to save")
+                ErrorToast(
+                  resolveActionError(result.error ?? "", dictionary) ||
+                    w?.failedToSave
+                )
                 reject(new Error(result.error))
                 return
               }
               resolve()
             } catch (err) {
-              const msg =
-                err instanceof Error
-                  ? err.message
-                  : w?.failedToSave || "Failed to save"
-              ErrorToast(msg)
+              // Never surface a raw JS Error message — it is always English.
+              ErrorToast(w?.failedToSave)
               reject(err)
             }
           })

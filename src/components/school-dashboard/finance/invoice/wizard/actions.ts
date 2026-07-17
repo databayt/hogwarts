@@ -3,13 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { isFinanceAuthError, requireFinanceActor } from "../../guard"
 import type { InvoiceWizardData } from "./use-invoice-wizard"
 
 /** Fetch full invoice data for the wizard */
@@ -19,8 +18,9 @@ export async function getInvoiceForWizard(
   { success: true; data: InvoiceWizardData } | { success: false; error: string }
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const ctx = await requireFinanceActor("invoice", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const invoice = await db.userInvoice.findFirst({
       where: { id: invoiceId, schoolId },
@@ -56,15 +56,9 @@ export async function createDraftInvoice(): Promise<
   ActionResponse<{ id: string }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
-
-    const session = await auth()
-    if (!session?.user?.id) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("invoice", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const invoice = await db.$transaction(async (tx) => {
       // Create from address
@@ -97,7 +91,7 @@ export async function createDraftInvoice(): Promise<
           sub_total: 0,
           total: 0,
           status: "UNPAID",
-          userId: session.user.id,
+          userId: ctx.userId,
           schoolId,
           fromAddressId: fromAddress.id,
           toAddressId: toAddress.id,
@@ -121,15 +115,9 @@ export async function completeInvoiceWizard(
   invoiceId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     // Validate invoice has items
     const invoice = await db.userInvoice.findFirst({
@@ -173,11 +161,9 @@ export async function updateInvoiceWizardStep(
   step: string
 ): Promise<void> {
   try {
-    const session = await auth()
-    if (!session?.user) return
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return
+    const { schoolId } = ctx
 
     await db.userInvoice.updateMany({
       where: { id: invoiceId, schoolId },
@@ -193,15 +179,9 @@ export async function deleteDraftInvoice(
   invoiceId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const ctx = await requireFinanceActor("invoice", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     // Only delete if it's still a draft
     const invoice = await db.userInvoice.findFirst({

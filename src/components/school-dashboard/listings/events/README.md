@@ -41,11 +41,10 @@ events/
   table.tsx                # DataTable component
   list-params.ts           # Search/filter URL parameters
   authorization.ts         # RBAC permission checks
-  queries.ts               # Centralized query builders
+  queries.ts               # getEventsForMonth (calendar) — see note below
   detail.tsx               # Event detail view
   autocomplete.tsx         # Autocomplete for event search
   basic-information.tsx    # Info display section
-  management.tsx           # Event management UI
   schedule-location.tsx    # Schedule and location display
   details-attendees.tsx    # Attendee details section
   calendar/
@@ -70,6 +69,19 @@ events/
     actions.test.ts             # Server action tests
     validation.test.ts          # Zod schema tests
 ```
+
+### Conventions
+
+- **Status enum**: `PLANNED | ONGOING | COMPLETED | CANCELLED | POSTPONED` — mirror the
+  Prisma `EventStatus` enum exactly. Never hand-duplicate it in a TS union (that is how
+  the UI previously drifted to a nonexistent `IN_PROGRESS`); derive from `$Enums`.
+- **Wizard drafts**: in-flight events carry a non-null `wizardStep` and a blank title.
+  Every list/count/export query must filter `wizardStep: null` or drafts leak into the UI.
+- **Locale**: `getEvents`/`getEventsCSV` take `displayLang`; without it the load-more and
+  export paths silently fall back to Arabic storage language and English placeholders.
+- **`queries.ts`**: deliberately holds only `getEventsForMonth`. A large speculative
+  query-builder library was removed (never imported, and drifted out of sync with the
+  schema). The live list/detail queries are in `actions.ts` and `content.tsx`.
 
 ### Status
 

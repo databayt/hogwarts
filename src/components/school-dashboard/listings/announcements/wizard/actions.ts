@@ -3,13 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { getAllowedScopes } from "../authorization"
+import { guardAnnouncement, resolveContext } from "../guard"
 import type { AnnouncementWizardData } from "./use-announcement-wizard"
 
 /** Fetch full announcement data for the wizard */
@@ -20,8 +20,9 @@ export async function getAnnouncementForWizard(
   | { success: false; error: string }
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
@@ -49,12 +50,8 @@ export async function getAnnouncementForWizard(
     }
 
     return { success: true, data: announcement as AnnouncementWizardData }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to load announcement",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -63,14 +60,16 @@ export async function createDraftAnnouncement(): Promise<
   ActionResponse<{ id: string }>
 > {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await resolveContext()
+    if (!ctx.ok) return ctx.denied
+    const { authContext, schoolId } = ctx.value
 
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+    // Seed the draft with the caller's broadest allowed scope rather than a
+    // blanket "school": an empty list means the role may not author at all,
+    // and a TEACHER's draft must start out class-scoped.
+    const allowedScopes = getAllowedScopes(authContext.role)
+    if (allowedScopes.length === 0) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const announcement = await db.announcement.create({
@@ -78,21 +77,18 @@ export async function createDraftAnnouncement(): Promise<
         schoolId,
         title: null,
         body: null,
-        scope: "school",
+        scope: allowedScopes[0],
         priority: "normal",
         wizardStep: "content",
+        // Without this the ownership checks in checkAnnouncementPermission()
+        // can never pass, so teachers lose access to their own drafts.
+        createdBy: authContext.userId,
       },
     })
 
     return { success: true, data: { id: announcement.id } }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create announcement",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_CREATE_FAILED)
   }
 }
 
@@ -101,15 +97,9 @@ export async function completeAnnouncementWizard(
   announcementId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const guard = await guardAnnouncement(announcementId, "publish")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     // Validate required fields are present
     const announcement = await db.announcement.findFirst({
@@ -121,18 +111,8 @@ export async function completeAnnouncementWizard(
       return actionError(ACTION_ERRORS.ANNOUNCEMENT_NOT_FOUND)
     }
 
-    if (!announcement.title || !announcement.title.trim()) {
-      return {
-        success: false,
-        error: "Title is required before completing",
-      }
-    }
-
-    if (!announcement.body || !announcement.body.trim()) {
-      return {
-        success: false,
-        error: "Body is required before completing",
-      }
+    if (!announcement.title?.trim() || !announcement.body?.trim()) {
+      return actionError(ACTION_ERRORS.VALIDATION_ERROR)
     }
 
     await db.announcement.updateMany({
@@ -142,14 +122,8 @@ export async function completeAnnouncementWizard(
 
     revalidatePath("/announcements")
     return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to complete announcement wizard",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 
@@ -159,11 +133,9 @@ export async function updateAnnouncementWizardStep(
   step: string
 ): Promise<void> {
   try {
-    const session = await auth()
-    if (!session?.user) return
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return
+    const guard = await guardAnnouncement(announcementId, "update")
+    if (!guard.ok) return
+    const { schoolId } = guard.value
 
     await db.announcement.updateMany({
       where: { id: announcementId, schoolId },
@@ -179,15 +151,9 @@ export async function deleteDraftAnnouncement(
   announcementId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
-
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    const guard = await guardAnnouncement(announcementId, "delete")
+    if (!guard.ok) return guard.denied
+    const { schoolId } = guard.value
 
     // Atomic delete — only if it's still a draft
     const { count } = await db.announcement.deleteMany({
@@ -199,13 +165,7 @@ export async function deleteDraftAnnouncement(
     }
 
     return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to delete draft announcement",
-    }
+  } catch {
+    return actionError(ACTION_ERRORS.ANNOUNCEMENT_DELETE_FAILED)
   }
 }

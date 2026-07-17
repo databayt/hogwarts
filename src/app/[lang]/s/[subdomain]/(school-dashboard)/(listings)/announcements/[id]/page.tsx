@@ -12,8 +12,11 @@ interface Props {
 
 export default async function AnnouncementDetailPage({ params }: Props) {
   const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
-  const result = await getAnnouncement({ id, displayLang: lang })
+  // Independent of each other — don't make the announcement wait on the dictionary.
+  const [dictionary, result] = await Promise.all([
+    getDictionary(lang),
+    getAnnouncement({ id, displayLang: lang }),
+  ])
 
   return (
     <AnnouncementDetailContent

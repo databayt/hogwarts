@@ -122,6 +122,65 @@ function generatePaymentNumber(): string {
   return `PAY-${hex}`
 }
 
+/**
+ * Revoke catalog-course access behind a refunded/disputed charge.
+ *
+ * Two traps this has to work around:
+ *  - Stripe does NOT copy Checkout Session metadata onto the PaymentIntent or
+ *    Charge, and refund/dispute events only ever carry the charge. Checkouts
+ *    created before we started stamping `payment_intent_data.metadata` have no
+ *    `enrollmentId` at all, so fall back to resolving
+ *    payment_intent -> checkout session -> `Enrollment.stripeCheckoutSessionId`
+ *    (unique). That fallback is what covers already-sold courses.
+ *  - `Enrollment.schoolId` is nullable, so it can never be a required part of
+ *    the match, and `updateMany` keeps an already-revoked/missing row from
+ *    throwing.
+ */
+async function revokeEnrollmentForCharge(
+  charge: {
+    metadata?: { enrollmentId?: string } | null
+    payment_intent?: string | null
+  },
+  reason: "refund" | "dispute"
+): Promise<void> {
+  try {
+    let enrollmentId = charge.metadata?.enrollmentId ?? null
+
+    if (!enrollmentId && charge.payment_intent && stripe) {
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: charge.payment_intent,
+        limit: 1,
+      })
+      const checkoutSessionId = sessions.data[0]?.id
+      if (checkoutSessionId) {
+        const found = await db.enrollment.findUnique({
+          where: { stripeCheckoutSessionId: checkoutSessionId },
+          select: { id: true },
+        })
+        enrollmentId = found?.id ?? null
+      }
+    }
+
+    if (!enrollmentId) {
+      console.warn(
+        `[Webhook] ${reason}: no catalog enrollment resolved for charge (payment_intent=${charge.payment_intent ?? "none"})`
+      )
+      return
+    }
+
+    const { count } = await db.enrollment.updateMany({
+      where: { id: enrollmentId },
+      data: { isActive: false, status: "CANCELLED", updatedAt: new Date() },
+    })
+
+    console.log(
+      `[Webhook] Enrollment ${count === 1 ? "deactivated" : "not found"} (${reason}): ${enrollmentId}`
+    )
+  } catch (error) {
+    console.error(`[Webhook] Failed to revoke enrollment on ${reason}:`, error)
+  }
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return new Response("Stripe is not configured", { status: 500 })
@@ -536,41 +595,18 @@ export async function POST(req: Request) {
                 )
               }
 
-              // INV-002 fix: sync ALL linked UserInvoices, allocating the
-              // paid amount oldest-first (multi-installment support).
+              // Sync ALL linked UserInvoices, allocating this payment
+              // oldest-first via the shared allocator
+              // (finance/lib/invoice-allocation.ts) so every payment path —
+              // recordPayment, markPaymentCleared, Stripe, Tap — is identical.
               try {
-                const linkedInvoices = await db.userInvoice.findMany({
-                  where: {
-                    feeAssignmentId,
-                    schoolId: assignment.schoolId,
-                    status: { notIn: ["PAID", "CANCELLED"] },
-                  },
-                  orderBy: { due_date: "asc" },
-                })
-
-                if (linkedInvoices.length > 0) {
-                  let remaining = paymentAmount
-                  for (const inv of linkedInvoices) {
-                    if (remaining <= 0) break
-                    const invTotal = Number(inv.total)
-                    const alreadyPaid = Number(inv.amountPaid)
-                    const invRemaining = invTotal - alreadyPaid
-                    if (invRemaining <= 0) continue
-
-                    const applying = Math.min(remaining, invRemaining)
-                    const newAmountPaid = alreadyPaid + applying
-                    const fullyPaid = newAmountPaid >= invTotal
-                    remaining -= applying
-
-                    await db.userInvoice.update({
-                      where: { id: inv.id },
-                      data: {
-                        amountPaid: newAmountPaid,
-                        status: fullyPaid ? "PAID" : "PARTIAL",
-                      },
-                    })
-                  }
-                }
+                const { allocatePaymentToInvoices } =
+                  await import("@/components/school-dashboard/finance/lib/invoice-allocation")
+                await allocatePaymentToInvoices(
+                  assignment.schoolId,
+                  feeAssignmentId,
+                  paymentAmount
+                )
               } catch (invoiceSyncErr) {
                 console.error("[Webhook] Invoice sync failed:", invoiceSyncErr)
               }
@@ -946,31 +982,7 @@ export async function POST(req: Request) {
     }
     const charge = eventData.data.object
 
-    // Only handle course enrollment refunds (identified by metadata)
-    if (charge.metadata?.enrollmentId && charge.metadata?.schoolId) {
-      try {
-        await db.streamEnrollment.update({
-          where: {
-            id: charge.metadata.enrollmentId,
-            schoolId: charge.metadata.schoolId,
-          },
-          data: {
-            isActive: false,
-            status: "CANCELLED",
-            updatedAt: new Date(),
-          },
-        })
-
-        console.log(
-          `[Webhook] Enrollment deactivated (refund): ${charge.metadata.enrollmentId}`
-        )
-      } catch (error) {
-        console.error(
-          "[Webhook] Failed to deactivate enrollment on refund:",
-          error
-        )
-      }
-    }
+    await revokeEnrollmentForCharge(charge, "refund")
   }
 
   // ============================================
@@ -981,6 +993,7 @@ export async function POST(req: Request) {
       data: {
         object: {
           charge?: string
+          payment_intent?: string
           metadata?: {
             courseId?: string
             enrollmentId?: string
@@ -991,30 +1004,7 @@ export async function POST(req: Request) {
     }
     const dispute = eventData.data.object
 
-    if (dispute.metadata?.enrollmentId && dispute.metadata?.schoolId) {
-      try {
-        await db.streamEnrollment.update({
-          where: {
-            id: dispute.metadata.enrollmentId,
-            schoolId: dispute.metadata.schoolId,
-          },
-          data: {
-            isActive: false,
-            status: "CANCELLED",
-            updatedAt: new Date(),
-          },
-        })
-
-        console.log(
-          `[Webhook] Enrollment deactivated (dispute): ${dispute.metadata.enrollmentId}`
-        )
-      } catch (error) {
-        console.error(
-          "[Webhook] Failed to deactivate enrollment on dispute:",
-          error
-        )
-      }
-    }
+    await revokeEnrollmentForCharge(dispute, "dispute")
   }
 
   // ============================================
@@ -1292,6 +1282,35 @@ export async function POST(req: Request) {
         )
       } catch (error) {
         console.error("[Webhook] Failed to clean up expired enrollment:", error)
+      }
+    }
+
+    // Catalog enrollments are a separate lane: they never carry `courseId`
+    // (that key belongs to the legacy streamEnrollment flow), and their
+    // schoolId is nullable — so the branch above can never match one, leaving
+    // an abandoned checkout's PENDING row behind. Unlike refund/dispute, the
+    // session metadata IS present here, so enrollmentId is directly available.
+    if (
+      expiredMeta?.enrollmentId &&
+      expiredMeta?.type === "catalog_enrollment"
+    ) {
+      try {
+        await db.enrollment.deleteMany({
+          where: {
+            id: expiredMeta.enrollmentId,
+            isActive: false, // never activated
+            status: "PENDING", // and never paid for
+          },
+        })
+
+        console.log(
+          `[Webhook] Pending catalog enrollment cleaned up (expired checkout): ${expiredMeta.enrollmentId}`
+        )
+      } catch (error) {
+        console.error(
+          "[Webhook] Failed to clean up expired catalog enrollment:",
+          error
+        )
       }
     }
 

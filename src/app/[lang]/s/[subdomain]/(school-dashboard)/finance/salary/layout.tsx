@@ -23,31 +23,17 @@ export default async function SalaryLayout({ children, params }: Props) {
   const d = dictionary?.finance?.salary
   const canView = isRoleIn(role, FINANCE_VIEW_ROLES)
 
-  // Define salary page navigation
+  // Only routes that exist are listed. Slips / increments / advances / reports
+  // have no page or component yet — their labels stay in the dictionary
+  // (finance.salary.navigation) for whenever they get built.
   const n = d?.navigation
   const salaryPages: PageNavItem[] = !canView
     ? []
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/salary` },
         {
-          name: n?.structure || "Salary Structure",
-          href: `/${lang}/finance/salary/structure`,
-        },
-        {
-          name: n?.slips || "Salary Slips",
-          href: `/${lang}/finance/salary/slips`,
-        },
-        {
-          name: n?.increments || "Increments",
-          href: `/${lang}/finance/salary/increments`,
-        },
-        {
-          name: n?.advances || "Advances",
-          href: `/${lang}/finance/salary/advances`,
-        },
-        {
-          name: n?.reports || "Reports",
-          href: `/${lang}/finance/salary/reports`,
+          name: n?.structures || "Salary Structures",
+          href: `/${lang}/finance/salary/structures`,
         },
       ]
 

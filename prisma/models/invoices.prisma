@@ -47,6 +47,15 @@ model UserInvoice {
   // Wizard support
   wizardStep String? // null = complete, non-null = current wizard step slug
 
+  // Shareable public link (mirrors the ReportCard / ExamCertificate share pattern).
+  // The token IS the authorization — the public route looks up by shareToken alone,
+  // so it must stay globally unique. Powers the hosted invoice a parent can open,
+  // print, and pay from a WhatsApp link without an account.
+  shareToken  String?   @unique
+  shareExpiry DateTime?
+  isPublic    Boolean   @default(false)
+  viewCount   Int       @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,6 +64,7 @@ model UserInvoice {
   @@index([schoolId])
   @@index([status])
   @@index([feeAssignmentId])
+  @@index([shareToken])
 }
 
 model UserInvoiceItem {

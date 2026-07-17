@@ -251,6 +251,77 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
   console.log(`   Found ${subjects.length} subjects`)
 
+  // Prune orphaned synthetic rows: tree seeds (sd.ts, engine.ts) delete-and-
+  // recreate chapters/lessons every run, SetNull-ing the scope FKs of the
+  // chapter/lesson-scoped rows built here. Orphans then dodge the idempotency
+  // keys below (which include the scope ids) and accumulate on every
+  // seed cycle. Chapter/lesson-level exam types are never authored
+  // subject-level, and chapter/lesson-scoped questions/materials/assignments
+  // carry ONLY their scope FK — so all-scope-null rows are orphans.
+  const [orphanExams, orphanQuestions, orphanMaterials, orphanAssignments] =
+    await Promise.all([
+      prisma.exam.deleteMany({
+        where: {
+          examType: { in: ["chapter_test", "practice", "quiz", "diagnostic"] },
+          chapterId: null,
+          lessonId: null,
+        },
+      }),
+      prisma.question.deleteMany({
+        where: {
+          catalogSubjectId: null,
+          catalogChapterId: null,
+          catalogLessonId: null,
+        },
+      }),
+      prisma.material.deleteMany({
+        where: {
+          catalogSubjectId: null,
+          catalogChapterId: null,
+          catalogLessonId: null,
+        },
+      }),
+      prisma.assignment.deleteMany({
+        where: {
+          catalogSubjectId: null,
+          catalogChapterId: null,
+          catalogLessonId: null,
+        },
+      }),
+    ])
+  const orphanTotal =
+    orphanExams.count +
+    orphanQuestions.count +
+    orphanMaterials.count +
+    orphanAssignments.count
+  if (orphanTotal > 0) {
+    console.log(
+      `   Pruned ${orphanTotal} orphaned rows (${orphanExams.count} exams, ${orphanQuestions.count} questions, ${orphanMaterials.count} materials, ${orphanAssignments.count} assignments)`
+    )
+  }
+
+  // Subjects with REAL ingested content (sd-content.ts tags its rows "sd")
+  // skip synthetic exam/question generation so real and placeholder content
+  // never coexist. Resolved from the DB, not a slug prefix: the SD junk-gated
+  // subjects (template-generated qbanks) stay synthetic, and any future real
+  // ingest flips its subject over automatically. Materials/assignments still
+  // apply to every subject.
+  const realContentRows = await prisma.question.findMany({
+    where: { tags: { has: "sd" } },
+    select: { catalogSubjectId: true },
+    distinct: ["catalogSubjectId"],
+  })
+  const realContentSubjectIds = new Set(
+    realContentRows
+      .map((r) => r.catalogSubjectId)
+      .filter((id): id is string => id !== null)
+  )
+  if (realContentSubjectIds.size > 0) {
+    console.log(
+      `   ${realContentSubjectIds.size} subjects have real ingested content — skipping their synthetic exams/questions`
+    )
+  }
+
   // 2. Build all records in memory
   const materials: Prisma.MaterialCreateManyInput[] = []
   const exams: Prisma.ExamCreateManyInput[] = []
@@ -263,6 +334,8 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     const subject = subjects[si]
     const category = getSubjectCategory(subject.name)
     const level = extractSchoolLevel(subject.slug)
+
+    const isRealContent = realContentSubjectIds.has(subject.id)
 
     // --- Subject-level materials (3: textbook + syllabus + reference) ---
     materials.push({
@@ -312,30 +385,34 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
     })
 
     // --- Subject-level exams (final + midterm) ---
-    for (const examType of SUBJECT_LEVEL_EXAM_TYPES) {
-      const seed = si * 1000 + (examType === "final" ? 0 : 500)
-      exams.push(
-        buildExam(
-          subject.id,
-          category,
-          level,
-          examType,
-          `${subject.name} - ${examType === "final" ? "Final Exam" : "Midterm Exam"}`,
-          `${examType === "final" ? "Comprehensive final" : "Mid-semester"} examination for ${subject.name}`,
-          seed,
-          {}
+    if (!isRealContent)
+      for (const examType of SUBJECT_LEVEL_EXAM_TYPES) {
+        const seed = si * 1000 + (examType === "final" ? 0 : 500)
+        exams.push(
+          buildExam(
+            subject.id,
+            category,
+            level,
+            examType,
+            `${subject.name} - ${examType === "final" ? "Final Exam" : "Midterm Exam"}`,
+            `${examType === "final" ? "Comprehensive final" : "Mid-semester"} examination for ${subject.name}`,
+            seed,
+            {}
+          )
         )
-      )
-    }
+      }
 
     // --- Subject-level questions (10 per subject, spread across difficulties) ---
+    // globalIdx advances even when a subject is skipped so the deterministic
+    // question-text cycle stays stable for every other subject across runs.
     for (let q = 0; q < QUESTIONS_PER_SUBJECT; q++) {
       const diff = DIFFICULTIES[q % DIFFICULTIES.length]
-      questions.push(
-        buildQuestion(category, subject.name, subject.name, diff, globalIdx, {
-          catalogSubjectId: subject.id,
-        })
-      )
+      if (!isRealContent)
+        questions.push(
+          buildQuestion(category, subject.name, subject.name, diff, globalIdx, {
+            catalogSubjectId: subject.id,
+          })
+        )
       globalIdx++
     }
 
@@ -379,31 +456,40 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
       }
 
       // Chapter exams (chapter_test + practice)
-      for (const examType of CHAPTER_LEVEL_EXAM_TYPES) {
-        const seed =
-          si * 10000 + ci * 100 + (examType === "chapter_test" ? 0 : 50)
-        exams.push(
-          buildExam(
-            subject.id,
-            category,
-            level,
-            examType,
-            `${chapter.name} - ${examType === "chapter_test" ? "Chapter Test" : "Practice Test"}`,
-            `${examType === "chapter_test" ? "Assessment" : "Practice"} for ${chapter.name}`,
-            seed,
-            { chapterId: chapter.id }
+      if (!isRealContent)
+        for (const examType of CHAPTER_LEVEL_EXAM_TYPES) {
+          const seed =
+            si * 10000 + ci * 100 + (examType === "chapter_test" ? 0 : 50)
+          exams.push(
+            buildExam(
+              subject.id,
+              category,
+              level,
+              examType,
+              `${chapter.name} - ${examType === "chapter_test" ? "Chapter Test" : "Practice Test"}`,
+              `${examType === "chapter_test" ? "Assessment" : "Practice"} for ${chapter.name}`,
+              seed,
+              { chapterId: chapter.id }
+            )
           )
-        )
-      }
+        }
 
       // Chapter questions (6 per chapter: 2 per difficulty)
       for (let q = 0; q < QUESTIONS_PER_CHAPTER; q++) {
         const diff = DIFFICULTIES[q % DIFFICULTIES.length]
-        questions.push(
-          buildQuestion(category, chapter.name, chapter.name, diff, globalIdx, {
-            catalogChapterId: chapter.id,
-          })
-        )
+        if (!isRealContent)
+          questions.push(
+            buildQuestion(
+              category,
+              chapter.name,
+              chapter.name,
+              diff,
+              globalIdx,
+              {
+                catalogChapterId: chapter.id,
+              }
+            )
+          )
         globalIdx++
       }
 
@@ -413,35 +499,37 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
         const lessonSeed = si * 100000 + ci * 1000 + li
 
         // Lesson exams (quiz + diagnostic)
-        for (const examType of LESSON_LEVEL_EXAM_TYPES) {
-          const seed = lessonSeed + (examType === "quiz" ? 0 : 500)
-          exams.push(
-            buildExam(
-              subject.id,
-              category,
-              level,
-              examType,
-              `${lesson.name} - ${examType === "quiz" ? "Quiz" : "Diagnostic"}`,
-              `${examType === "quiz" ? "Quick quiz" : "Diagnostic assessment"} for ${lesson.name}`,
-              seed,
-              { chapterId: chapter.id, lessonId: lesson.id }
+        if (!isRealContent)
+          for (const examType of LESSON_LEVEL_EXAM_TYPES) {
+            const seed = lessonSeed + (examType === "quiz" ? 0 : 500)
+            exams.push(
+              buildExam(
+                subject.id,
+                category,
+                level,
+                examType,
+                `${lesson.name} - ${examType === "quiz" ? "Quiz" : "Diagnostic"}`,
+                `${examType === "quiz" ? "Quick quiz" : "Diagnostic assessment"} for ${lesson.name}`,
+                seed,
+                { chapterId: chapter.id, lessonId: lesson.id }
+              )
             )
-          )
-        }
+          }
 
         // Lesson questions (4 per lesson: spread across difficulties + 1 extra)
         for (let q = 0; q < QUESTIONS_PER_LESSON; q++) {
           const diff = DIFFICULTIES[q % DIFFICULTIES.length]
-          questions.push(
-            buildQuestion(
-              category,
-              lesson.name,
-              chapter.name,
-              diff,
-              globalIdx,
-              { catalogLessonId: lesson.id }
+          if (!isRealContent)
+            questions.push(
+              buildQuestion(
+                category,
+                lesson.name,
+                chapter.name,
+                diff,
+                globalIdx,
+                { catalogLessonId: lesson.id }
+              )
             )
-          )
           globalIdx++
         }
 

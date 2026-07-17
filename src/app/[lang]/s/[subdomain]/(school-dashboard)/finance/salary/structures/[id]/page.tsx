@@ -1,19 +1,26 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+import { formatCurrency } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
-
-export const metadata = { title: "Salary Structure Details" }
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.salaryPage?.salaryStructureDetails }
 }
 
 export default async function SalaryStructureDetailPage({ params }: Props) {
@@ -21,7 +28,10 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.salaryPage
   const c = dictionary?.finance?.common
-  const { schoolId } = await getTenantContext()
+  const payFrequency = dictionary?.finance?.payFrequency as
+    | Record<string, string>
+    | undefined
+  const { schoolId, can } = await resolveFinanceAccess("salary", ["view"])
 
   if (!schoolId) {
     return (
@@ -30,6 +40,10 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
           "School context not found"}
       </p>
     )
+  }
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="salary" />
   }
 
   const structure = await db.salaryStructure.findFirst({
@@ -60,7 +74,7 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
           <h3 className="text-lg font-medium">{teacherName}</h3>
           <p className="text-muted-foreground text-sm">
             {structure.teacher?.employeeId || c?.noId || "No ID"} —{" "}
-            {structure.payFrequency}
+            {payFrequency?.[structure.payFrequency] ?? structure.payFrequency}
           </p>
         </div>
         <Badge variant={structure.isActive ? "default" : "secondary"}>
@@ -79,10 +93,11 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {structure.currency}{" "}
-              {Number(structure.baseSalary).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {formatCurrency(
+                Number(structure.baseSalary),
+                lang,
+                structure.currency
+              )}
             </p>
           </CardContent>
         </Card>
@@ -95,10 +110,15 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
           <CardContent>
             <p className="text-2xl font-bold">{structure.allowances.length}</p>
             <p className="text-muted-foreground text-xs">
-              {c?.total || "Total"}: {structure.currency}{" "}
-              {structure.allowances
-                .reduce((sum, a) => sum + Number(a.amount), 0)
-                .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              {c?.total || "Total"}:{" "}
+              {formatCurrency(
+                structure.allowances.reduce(
+                  (sum, a) => sum + Number(a.amount),
+                  0
+                ),
+                lang,
+                structure.currency
+              )}
             </p>
           </CardContent>
         </Card>
@@ -111,10 +131,15 @@ export default async function SalaryStructureDetailPage({ params }: Props) {
           <CardContent>
             <p className="text-2xl font-bold">{structure.deductions.length}</p>
             <p className="text-muted-foreground text-xs">
-              {c?.total || "Total"}: {structure.currency}{" "}
-              {structure.deductions
-                .reduce((sum, d) => sum + Number(d.amount), 0)
-                .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              {c?.total || "Total"}:{" "}
+              {formatCurrency(
+                structure.deductions.reduce(
+                  (sum, d) => sum + Number(d.amount),
+                  0
+                ),
+                lang,
+                structure.currency
+              )}
             </p>
           </CardContent>
         </Card>

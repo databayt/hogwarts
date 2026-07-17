@@ -5,11 +5,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { FineForm } from "@/components/school-dashboard/finance/fees/fine-form"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Issue Fine" }
 
@@ -21,9 +22,13 @@ export default async function NewFinePage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.fineForm
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   const students = await db.student.findMany({
     where: { schoolId },

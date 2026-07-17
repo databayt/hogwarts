@@ -37,6 +37,24 @@ school-dashboard/listings/subjects/catalog, stream/data/catalog, library/catalog
 - **Per-curriculum provisioning** via `academic-config.ts`: SD keeps the original Arabic
   6+3+3 + Science/Arts streams byte-for-byte; US/GB/CBSE/transnational get their own
   structures; unknown codes fall back to a generic English 6+3+3.
+- **SD real content, all grades** (2026-07-17): `prisma/seeds/catalog/sd-content.ts`
+  ingests `curriculum/sd/g{1–12}/<subject>/{qbank,exams}.json` into
+  Question/Exam/ExamQuestion (delete-and-recreate per subject; rows tagged `"sd"`).
+  Chapter/lesson scope resolves from the question id via a boundary-safe slug scan +
+  per-scheme regexes (7 authored id schemes); the `catalogLessonId` it sets is what makes
+  the stream lesson practice quiz non-empty. A quality gate junk-skips files >50%
+  template placeholders ("Which concept is most important in unit-01?") — those subjects
+  keep `content.ts` synthetic rows. `content.ts` skips synthetic exams/questions for any
+  subject that HAS questions tagged `"sd"` (dynamic guard, converges in either run
+  order) and prunes all-scope-null orphaned synthetic rows (tree seeds SetNull the scope
+  FKs on every chapter rebuild — without the prune they accumulate per cycle). SD
+  subject art prefers real `catalog/textbooks/<slug>/{thumbnail,banner,cover}.jpg` keys
+  when the local file exists; `scripts/upload-textbooks-all.ts` uploads all four asset
+  types and shares `resolveSdDbSlug` with the seed. SD lessons deliberately get NO Video
+  rows — the stream player's `story.mp4` fallback is the intended surface (never write
+  Video rows pointing at objects that don't exist on the CDN; `videos.ts` HEAD-probes).
+  curriculum/ is .vercelignore'd, so all SD ingest runs are LOCAL against the target DB;
+  deploy-time seeds skip without deleting.
 - **PUBLISHED is the visibility floor**: every school-facing catalog read filters
   `status: "PUBLISHED"` (+ `approvalStatus`/`visibility` where the model has them).
 - **Approval publishes**: `approveContent` sets `status: "PUBLISHED"` for

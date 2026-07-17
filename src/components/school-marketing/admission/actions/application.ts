@@ -580,8 +580,7 @@ export async function submitApplication(
       if (existingApplication) {
         return {
           success: false,
-          error:
-            "An application with this email already exists for this campaign",
+          error: "APPLICATION_EMAIL_DUPLICATE",
         }
       }
     }
@@ -830,7 +829,7 @@ export async function submitApplication(
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return {
         success: false,
-        error: "An application with this information already exists",
+        error: "APPLICATION_DUPLICATE",
       }
     }
     // Prisma rejects inserts when a required column is null. Extract the
@@ -849,7 +848,7 @@ export async function submitApplication(
     }
     return {
       success: false,
-      error: "Failed to submit application. Please try again.",
+      error: "SUBMIT_FAILED",
     }
   }
 }

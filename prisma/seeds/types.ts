@@ -109,6 +109,13 @@ export interface TermRef {
   termNumber: number
   startDate: Date
   endDate: Date
+  /**
+   * Mirrors the persisted `Term.isActive`. Downstream phases (classes,
+   * timetable) MUST scope to the active term — `resolveActiveTerm` reads by
+   * this flag, so seeding them onto a different term makes the whole grid
+   * invisible. Exactly one term in the list is active.
+   */
+  isActive: boolean
 }
 
 // ============================================================================

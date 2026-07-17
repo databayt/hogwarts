@@ -54,6 +54,10 @@ export default async function BankingLayout({
           name: bp?.transactionHistory || "Transaction History",
           href: `/${lang}/finance/banking/transaction-history`,
         },
+        {
+          name: bp?.paymentMethods || "Payment Methods",
+          href: `/${lang}/finance/banking/payment-methods`,
+        },
       ]
 
   return (

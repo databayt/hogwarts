@@ -4,7 +4,6 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
-import { auth } from "@/auth"
 import type {
   AnnouncementPriority,
   AnnouncementScope,
@@ -12,9 +11,12 @@ import type {
   UserRole,
 } from "@prisma/client"
 
+import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { prewarm } from "@/components/translation/prewarm"
+
+import { getAllowedScopes } from "./authorization"
+import { resolveContext } from "./guard"
 
 export interface TemplateInput {
   name: string
@@ -30,13 +32,20 @@ export interface TemplateInput {
 }
 
 /**
+ * Only roles that may author an announcement may manage the templates used to
+ * author one. `getAllowedScopes` is the single source of truth for that.
+ */
+function canManageTemplates(role: UserRole): boolean {
+  return getAllowedScopes(role).length > 0
+}
+
+/**
  * Get all templates for the current school
  */
 export async function getTemplates() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return { success: false, error: "Missing school context", data: [] }
-  }
+  const ctx = await resolveContext()
+  if (!ctx.ok) return { ...ctx.denied, data: [] }
+  const { schoolId } = ctx.value
 
   try {
     const templates = await db.announcementTemplate.findMany({
@@ -45,12 +54,25 @@ export async function getTemplates() {
         { isSystem: "desc" }, // System templates first
         { createdAt: "desc" }, // Then by date
       ],
+      // The templates list renders these only — `body` is @db.Text and would
+      // bloat the payload for nothing.
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        isSystem: true,
+        title: true,
+        scope: true,
+        priority: true,
+        type: true,
+        createdAt: true,
+      },
     })
 
     return { success: true, data: templates }
   } catch (error) {
     console.error("[getTemplates] Error:", error)
-    return { success: false, error: "Failed to fetch templates", data: [] }
+    return { ...actionError(ACTION_ERRORS.LOAD_FAILED), data: [] }
   }
 }
 
@@ -58,10 +80,9 @@ export async function getTemplates() {
  * Get a single template by ID
  */
 export async function getTemplate(id: string) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return { success: false, error: "Missing school context" }
-  }
+  const ctx = await resolveContext()
+  if (!ctx.ok) return ctx.denied
+  const { schoolId } = ctx.value
 
   try {
     const template = await db.announcementTemplate.findFirst({
@@ -69,13 +90,13 @@ export async function getTemplate(id: string) {
     })
 
     if (!template) {
-      return { success: false, error: "Template not found" }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     return { success: true, data: template }
   } catch (error) {
     console.error("[getTemplate] Error:", error)
-    return { success: false, error: "Failed to fetch template" }
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }
 
@@ -83,15 +104,12 @@ export async function getTemplate(id: string) {
  * Create a new template (user-created, not system)
  */
 export async function createTemplate(input: TemplateInput) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
+  const ctx = await resolveContext()
+  if (!ctx.ok) return ctx.denied
+  const { authContext, schoolId } = ctx.value
 
-  if (!session?.user) {
-    return { success: false, error: "Not authenticated" }
-  }
-
-  if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+  if (!canManageTemplates(authContext.role)) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -109,13 +127,11 @@ export async function createTemplate(input: TemplateInput) {
         classId: input.classId,
         role: input.role,
         isSystem: false,
-        createdBy: session.user.id,
+        createdBy: authContext.userId,
       },
     })
 
-    after(() =>
-      prewarm("AnnouncementTemplate", template, { schoolId: schoolId! })
-    )
+    after(() => prewarm("AnnouncementTemplate", template, { schoolId }))
 
     revalidatePath("/announcements")
     return { success: true, data: { id: template.id } }
@@ -123,12 +139,9 @@ export async function createTemplate(input: TemplateInput) {
     console.error("[createTemplate] Error:", error)
     // Check for unique constraint violation
     if ((error as { code?: string }).code === "P2002") {
-      return {
-        success: false,
-        error: "A template with this name already exists",
-      }
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
     }
-    return { success: false, error: "Failed to create template" }
+    return actionError(ACTION_ERRORS.CREATE_FAILED)
   }
 }
 
@@ -139,27 +152,19 @@ export async function updateTemplate(
   id: string,
   input: Partial<TemplateInput>
 ) {
-  const { schoolId } = await getTenantContext()
+  const ctx = await resolveContext()
+  if (!ctx.ok) return ctx.denied
+  const { authContext, schoolId } = ctx.value
 
-  if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+  if (!canManageTemplates(authContext.role)) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
-    // Can only update non-system templates
-    const existing = await db.announcementTemplate.findFirst({
+    // Scope the write itself rather than gating it on a prior read — updateMany
+    // makes "exists, is ours, and is not a system template" one atomic check.
+    const { count } = await db.announcementTemplate.updateMany({
       where: { id, schoolId, isSystem: false },
-    })
-
-    if (!existing) {
-      return {
-        success: false,
-        error: "Template not found or cannot be modified",
-      }
-    }
-
-    await db.announcementTemplate.update({
-      where: { id },
       data: {
         name: input.name,
         description: input.description,
@@ -174,6 +179,10 @@ export async function updateTemplate(
       },
     })
 
+    if (count === 0) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
     after(() =>
       prewarm(
         "AnnouncementTemplate",
@@ -184,7 +193,7 @@ export async function updateTemplate(
           title: input.title,
           body: input.body,
         },
-        { schoolId: schoolId! }
+        { schoolId }
       )
     )
 
@@ -192,7 +201,7 @@ export async function updateTemplate(
     return { success: true }
   } catch (error) {
     console.error("[updateTemplate] Error:", error)
-    return { success: false, error: "Failed to update template" }
+    return actionError(ACTION_ERRORS.UPDATE_FAILED)
   }
 }
 
@@ -200,10 +209,12 @@ export async function updateTemplate(
  * Delete a template (only user-created, not system)
  */
 export async function deleteTemplate(id: string) {
-  const { schoolId } = await getTenantContext()
+  const ctx = await resolveContext()
+  if (!ctx.ok) return ctx.denied
+  const { authContext, schoolId } = ctx.value
 
-  if (!schoolId) {
-    return { success: false, error: "Missing school context" }
+  if (!canManageTemplates(authContext.role)) {
+    return actionError(ACTION_ERRORS.UNAUTHORIZED)
   }
 
   try {
@@ -213,16 +224,13 @@ export async function deleteTemplate(id: string) {
     })
 
     if (deleted.count === 0) {
-      return {
-        success: false,
-        error: "Template not found or cannot be deleted",
-      }
+      return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
     revalidatePath("/announcements")
     return { success: true }
   } catch (error) {
     console.error("[deleteTemplate] Error:", error)
-    return { success: false, error: "Failed to delete template" }
+    return actionError(ACTION_ERRORS.DELETE_FAILED)
   }
 }

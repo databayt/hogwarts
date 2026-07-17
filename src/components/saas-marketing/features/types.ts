@@ -85,6 +85,7 @@ export interface FeatureCategoryInfo {
  * Impact metric
  */
 export interface ImpactMetric {
+  id: string
   value: string
   label: string
   description: string

@@ -3,9 +3,31 @@ title: Admission
 description: Admin-side admission management — application review, enrollment confirmation, merit list, section placement, and document-AI processing.
 ---
 
-The admin admission flow runs from application review through enrollment confirmation. Confirming enrollment fires a single 30-second transaction that creates the Student, Guardians, FeeAssignments, and UserInvoices in one atomic step.
+The admin admission flow runs from application review through enrollment confirmation. Confirming enrollment fires a single transaction that creates the Student, Guardians, FeeAssignments, and UserInvoices in one atomic step.
 
 **Applying is always free.** The application wizard collects information only — no payment is taken at the application stage. Payment is triggered at two later points: the registration fee when the applicant accepts an offer, and tuition invoices after enrollment is confirmed.
+
+## Student intake — four channels, one pipeline
+
+A student can enter the system four ways. **All four funnel through one shared core, `provisionStudent`**, so however a student is added they get the same complete result — and every student is born from a real `Application`, tagged with the channel it came through.
+
+<Mermaid
+  chart={`flowchart TD
+    C1["Apply — public wizard<br/>(review → offer → confirm)"] --> Core
+    C2["Admin adds one — /students wizard"] --> Core
+    C3["Bulk import — school onboarding"] --> Core
+    C4["Bulk import — /school/bulk"] --> Core
+    Core["provisionStudent (one shared core)"] --> Out["Every student gets: a login (User) + credentials, fee assignments + invoices, guardians, grade + year-level, a class seat, and a channel-tagged Application"]`}
+/>
+
+| Channel         | How a student is added                                                             | `Application.channel` |
+| --------------- | ---------------------------------------------------------------------------------- | --------------------- |
+| Apply           | Family completes the public application, staff review → offer → confirm enrollment | `PORTAL`              |
+| Admin single    | An admin creates one student in the `/students` wizard                             | `ADMIN_DIRECT`        |
+| Onboarding bulk | CSV upload while setting up the school                                             | `ONBOARDING_IMPORT`   |
+| `/school/bulk`  | CSV upload later, from the dashboard                                               | `BULK_IMPORT`         |
+
+The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED` state, hung off a hidden per-school system campaign, so they never appear in the review queue. The Applications and Enrollment tabs **default to `PORTAL`** — a channel filter reveals the rest. Everything below describes the `PORTAL` (public application → enrollment) path in detail; the other three channels reuse the same `provisionStudent` step from enrollment onward.
 
 ## Flow
 
@@ -168,16 +190,19 @@ The admission feature follows the mirror pattern — every route under `app/[lan
 
 ## Enrollment transaction
 
-`confirmEnrollment()` runs a single 30-second `db.$transaction`:
+`confirmEnrollment()` keeps the application-specific work (status guard, `ENR-{yy}-{seq}` enrollment number, the registration-fee `Payment` + ledger entry) and delegates the actual student creation to the shared **`provisionStudent()`** core (`src/lib/student-provisioning.ts`) — the same core the admin wizard and bulk import call. Inside one `db.$transaction`:
 
-1. Set application status `ADMITTED` with enrollment number `ENR-{timestamp}-{random}`.
-2. Create `User` (role `STUDENT`) if applicant was a guest; promote `USER` → `STUDENT` otherwise.
-3. Create `Student` with application data pre-populated; match `applyingForClass` → `YearLevel` (exact name → case-insensitive → grade number → `levelOrder`); create `StudentYearLevel` and set `academicGradeId`.
-4. Auto-assign active `FeeStructures` for the campaign's academic year → `FeeAssignment` rows (`PENDING`).
-5. Create `Guardian` + `StudentGuardian` + `GuardianPhoneNumber` from father / mother data; copy application documents to `StudentDocument`.
-6. Generate one `UserInvoice` per `FeeAssignment` via `createInvoiceFromEnrollment()` (non-fatal): number `ENR-{unique}`, status `UNPAID`, due 30 days; one `UserInvoiceItem` per fee structure.
+1. Set application status `ADMITTED` with the enrollment number.
+2. `provisionStudent()`:
+   - Resolve `AcademicGrade`, generate the per-school student code (`YYGGNNNN`).
+   - Create `User` (role `STUDENT`) if the applicant was a guest; promote `USER` → `STUDENT` otherwise. **User is created before fees** — invoices no-op without a `userId`.
+   - Create the `Student` (or reuse a wizard draft), linking `userId` + `applicationId`.
+   - Match `applyingForClass` → `YearLevel`; create `StudentYearLevel` + set `academicGradeId`.
+   - Auto-assign active `FeeStructures` → `FeeAssignment` rows (`PENDING`) and one `UserInvoice` per assignment (via `ensureStudentFeeAssignments` → `ensureInvoicesForAssignment`).
+   - Create `Guardian` + `StudentGuardian` + `GuardianPhoneNumber`; copy application documents to `StudentDocument`.
+3. Materialize the registration-fee `Payment` + journal entry when the registration fee was paid.
 
-Post-transaction (best-effort): notify student + guardians (in-app + email), dispatch `fee_due` notifications, return `studentId`. The student is created with `wizardStep: null` and `status: ACTIVE`.
+Post-transaction (best-effort, owned by the caller): notify student + guardians, mint a password-reset link for a new guest user, dispatch `fee_due` notifications, compute a section suggestion. The student is created with `wizardStep: null` and `status: ACTIVE`. The admin wizard and CSV import call `provisionStudent()` the same way (with `origin` `ADMIN_DIRECT` / `BULK_IMPORT` / `ONBOARDING_IMPORT`), which is what gives every channel the same login + invoices.
 
 ## Application → Student data transfer
 
@@ -298,17 +323,18 @@ All queries scoped by `schoolId`. Submit flow resolves school from subdomain via
 
 ## Key files
 
-| Purpose              | Path                                                                                                                                                     |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dashboard actions    | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
-| Applications surface | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
-| Enrollment / merit   | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
-| Leads tab            | `src/components/school-dashboard/admission/leads/`                                                                                                       |
-| Document AI          | `src/components/school-dashboard/admission/ai/{classify,bank-receipt-schema}.ts`                                                                         |
-| Settings             | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
-| Invoice utility      | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
-| Schema               | `prisma/models/admission.prisma`                                                                                                                         |
-| Tests                | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
+| Purpose               | Path                                                                                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Provisioning core** | `src/lib/student-provisioning.ts` (shared by all 4 channels) + `src/lib/system-campaign.ts` (direct-admit Application + system campaign)                 |
+| Dashboard actions     | `src/components/school-dashboard/admission/actions.ts`                                                                                                   |
+| Applications surface  | `src/components/school-dashboard/admission/applications-{table,columns}.tsx` + `application-detail-content.tsx`                                          |
+| Enrollment / merit    | `src/components/school-dashboard/admission/{enrollment,merit}-table.tsx`                                                                                 |
+| Leads tab             | `src/components/school-dashboard/admission/leads/`                                                                                                       |
+| Document AI           | `src/components/school-dashboard/admission/ai/{classify,bank-receipt-schema}.ts`                                                                         |
+| Settings              | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
+| Invoice utility       | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
+| Schema                | `prisma/models/admission.prisma`                                                                                                                         |
+| Tests                 | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |
 
 ## See also
 

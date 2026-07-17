@@ -191,6 +191,7 @@ model School {
   tourBookings        TourBooking[]
   applicationSessions ApplicationSession[]
   admissionSettings   AdmissionSettings?
+  paymentSettings     SchoolPaymentSettings?
   admissionOTPs       AdmissionOTP[]
   visits              Visit[]
 
@@ -507,6 +508,14 @@ model Period {
   name      String
   startTime DateTime @db.Time()
   endTime   DateTime @db.Time()
+  /// Non-teaching period — فسحة / استراحة / lunch. THE source of truth for
+  /// break-ness: never infer it from `name`. `name` is user-editable and free
+  /// text, and every reader used to test it for the English substrings
+  /// "break"/"lunch" (inconsistently — some call sites case-sensitively), so an
+  /// Arabic «فسحة» matched nothing and the generator scheduled classes straight
+  /// into the break. Mirrors StructurePeriod.type !== "class" in
+  /// timetable/structures.ts, which is where new periods get their value.
+  isBreak   Boolean  @default(false)
 
   school         School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear     SchoolYear  @relation(fields: [yearId], references: [id], onDelete: Cascade)

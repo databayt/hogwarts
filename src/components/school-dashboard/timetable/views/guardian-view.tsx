@@ -26,6 +26,7 @@ import {
   getChildTodaySchedule,
   getGuardianChildren,
 } from "../actions"
+import { TimetableGridSkeleton } from "./grid-skeleton"
 import { isLiveJoinable, LiveJoinButton } from "./live-join-button"
 import SimpleGrid from "./simple-grid"
 
@@ -222,7 +223,7 @@ export default function GuardianView({
     return (
       <div className="space-y-4">
         <Skeleton className="h-24 w-full rounded-lg" />
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <TimetableGridSkeleton />
       </div>
     )
   }
@@ -465,7 +466,7 @@ export default function GuardianView({
         )
       ) : // Full Week View
       isLoadingData || isLoading ? (
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <TimetableGridSkeleton />
       ) : (
         <Card>
           <CardContent className="pt-4">
@@ -473,12 +474,15 @@ export default function GuardianView({
               slots={slots}
               workingDays={workingDays}
               periods={periods}
-              lunchAfterPeriod={lunchAfterPeriod}
               isRTL={isRTL}
               viewMode="class"
               editable={false}
               liveIndicators={liveIndicators}
               dictionary={{
+                period: d?.period,
+                break: d?.break,
+                days: d?.dayNames,
+                conflict: d?.conflict,
                 liveNow: d?.liveNow,
                 scheduledToday: dictionary?.liveClasses?.status?.scheduled,
               }}

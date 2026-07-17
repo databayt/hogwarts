@@ -6,7 +6,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import Autoplay from "embla-carousel-autoplay"
-import { ArrowRight, Users } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
@@ -25,21 +25,18 @@ const skills = [
     title: "Generative AI",
     image: asset("/illustrations/generative-ai.png"),
     href: "/stream/courses?category=ai",
-    learners: "1.7M+",
   },
   {
     key: "itCertifications",
     title: "IT Certifications",
     image: asset("/illustrations/it-certifications.png"),
     href: "/stream/courses?category=it",
-    learners: "14M+",
   },
   {
     key: "dataScience",
     title: "Data Science",
     image: asset("/illustrations/data-science.png"),
     href: "/stream/courses?category=data-science",
-    learners: "8.1M+",
   },
 ]
 
@@ -120,11 +117,10 @@ export function SkillsSection({
 
                       {/* Info Section - White box at bottom with padding on sides */}
                       <div className="bg-card absolute start-2 end-2 bottom-2 flex flex-col gap-2 rounded-xl p-3">
-                        {/* Learner Count Badge */}
-                        <div className="border-border text-muted-foreground inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
-                          <Users className="h-3 w-3" />
-                          <span>{skill.learners}</span>
-                        </div>
+                        {/* No learner-count badge: the numbers here ("1.7M+",
+                            "14M+", "8.1M+") were Coursera's platform-wide
+                            stats rendered as if they described this school.
+                            Restore only from a real per-category count. */}
 
                         {/* Title with Arrow */}
                         <div className="flex w-full flex-col gap-2">

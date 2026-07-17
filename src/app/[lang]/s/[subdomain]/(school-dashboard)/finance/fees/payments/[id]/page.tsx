@@ -6,7 +6,6 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +17,9 @@ import {
 } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { PaymentDetailActions } from "@/components/school-dashboard/finance/fees/payment-detail-actions"
+import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
 export const metadata = { title: "Payment Details" }
 
@@ -48,9 +49,13 @@ export default async function PaymentDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.fees?.payment
-  const { schoolId } = await getTenantContext()
+  const { schoolId, can } = await resolveFinanceAccess("fees", ["view"])
 
   if (!schoolId) notFound()
+
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="fees" />
+  }
 
   // School name + currency drive the receipt header and money formatting —
   // never hardcode "School" or a default currency on a financial document.

@@ -16,7 +16,10 @@ export interface InvoiceForPdf {
   tax_percentage?: number | string | null
   total: number | string
   notes?: string | null
-  /** Owner's invoice logo (UserInvoiceSettings.invoiceLogo), threaded for the PDF header. */
+  /**
+   * Logo for the PDF header, resolved by `getInvoiceById`:
+   * the owner's `UserInvoiceSettings.invoiceLogo` when set, else `School.logoUrl`.
+   */
   schoolLogo?: string | null
   from?: { name?: string | null; email?: string | null } | null
   to?: { name?: string | null; email?: string | null } | null

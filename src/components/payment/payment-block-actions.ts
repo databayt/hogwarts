@@ -10,6 +10,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { toSmallestUnit } from "@/lib/payment/currency"
 import { createPaymentCheckout } from "@/lib/payment/provider"
+import { PAYMENT_GATEWAYS } from "@/lib/payment/types"
 import type {
   CheckoutResult,
   PaymentContext,
@@ -24,14 +25,7 @@ import { buildTenantBaseUrl } from "@/components/school-dashboard/finance/fees/t
 // referenced entity (scoped by schoolId) below. This closes the previous
 // amount-tampering + open-redirect holes on this exported server action.
 const initiatePaymentSchema = z.object({
-  gateway: z.enum([
-    "stripe",
-    "tap",
-    "bankak",
-    "cash",
-    "bank_transfer",
-    "mobile_money",
-  ] as const),
+  gateway: z.enum(PAYMENT_GATEWAYS),
   context: z.enum([
     "admission_fee",
     "saas_subscription",

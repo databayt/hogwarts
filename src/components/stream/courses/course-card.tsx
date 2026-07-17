@@ -25,6 +25,13 @@ const COURSE_TYPE_FALLBACKS: Record<string, string> = {
   shortCourse: "Short Course",
 }
 
+// Keyed by the SchoolLevel enum as stored on Subject.levels.
+const COURSE_LEVEL_FALLBACKS: Record<string, string> = {
+  ELEMENTARY: "Elementary",
+  MIDDLE: "Middle",
+  HIGH: "High",
+}
+
 interface CourseCardProps {
   course: CatalogCourseType
   lang: string
@@ -34,13 +41,16 @@ interface CourseCardProps {
 function CourseCardImpl({ course, lang, dictionary }: CourseCardProps) {
   const [imageError, setImageError] = useState(false)
   const chaptersCount = course._count.chapters
-  const levelLabel = course._catalog?.levels?.[0]
-    ? course._catalog.levels[0].charAt(0) +
-      course._catalog.levels[0].slice(1).toLowerCase()
-    : course.category?.name || "Course"
   const courseTypeKey = getCourseTypeKey(chaptersCount)
   const ct = dictionary?.courseTypes as Record<string, string> | undefined
+  const cl = dictionary?.courseLevels as Record<string, string> | undefined
   const courseType = ct?.[courseTypeKey] ?? COURSE_TYPE_FALLBACKS[courseTypeKey]
+  // `levels` holds raw SchoolLevel enum values; the department name arrives
+  // pre-translated from the fetcher, so only the enum needs the dictionary.
+  const rawLevel = course._catalog?.levels?.[0]
+  const levelLabel = rawLevel
+    ? (cl?.[rawLevel] ?? COURSE_LEVEL_FALLBACKS[rawLevel] ?? rawLevel)
+    : course.category?.name || (ct?.course ?? COURSE_TYPE_FALLBACKS.course)
   const catalogColor = course._catalog?.color
 
   return (

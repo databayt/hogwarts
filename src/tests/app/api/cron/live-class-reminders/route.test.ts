@@ -47,7 +47,7 @@ describe("live-class-reminders cron — auth", () => {
 })
 
 describe("live-class-reminders cron — detection window", () => {
-  it("queries a 5-min-wide window [now+5min, now+10min] with no blind spot", async () => {
+  it("queries a 15-min-wide window [now+5min, now+20min] with no blind spot", async () => {
     await GET(req())
     const call = vi.mocked(db.conference.findMany).mock.calls[0][0] as {
       where: { scheduledStart: { gte: Date; lte: Date }; status: string }
@@ -56,18 +56,18 @@ describe("live-class-reminders cron — detection window", () => {
     const lte = call.where.scheduledStart.lte.getTime()
 
     expect(gte).toBe(NOW + 5 * 60 * 1000)
-    expect(lte).toBe(NOW + 10 * 60 * 1000)
+    expect(lte).toBe(NOW + 20 * 60 * 1000)
     expect(call.where.status).toBe("scheduled")
 
-    // Window must be at least as wide as the */5 cron cadence — otherwise a
-    // start time falls into a gap between consecutive runs.
-    expect(lte - gte).toBeGreaterThanOrEqual(5 * 60 * 1000)
+    // Window must be at least as wide as the cron cadence — the schedule was
+    // throttled to */15 (Neon scale-to-zero, 11506df6a), so a narrower window
+    // would leave a start time in the gap between consecutive runs.
+    expect(lte - gte).toBeGreaterThanOrEqual(15 * 60 * 1000)
 
-    // A class starting 9 min out — which the previous [now+8, now+12] window
-    // would catch but the very next run would re-evaluate — is inside [5,10].
-    const nineMinOut = NOW + 9 * 60 * 1000
-    expect(gte).toBeLessThanOrEqual(nineMinOut)
-    expect(lte).toBeGreaterThanOrEqual(nineMinOut)
+    // A class starting 18 min out lands inside [5,20] on this run.
+    const eighteenMinOut = NOW + 18 * 60 * 1000
+    expect(gte).toBeLessThanOrEqual(eighteenMinOut)
+    expect(lte).toBeGreaterThanOrEqual(eighteenMinOut)
   })
 })
 

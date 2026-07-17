@@ -6,7 +6,6 @@ import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Calendar, MapPin, Users } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { formatDate } from "@/lib/i18n-format"
@@ -17,7 +16,6 @@ import {
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import {
   confirmDeleteDialog,
   DeleteToast,
@@ -59,7 +57,8 @@ function EventsTableInner({
 
   // Translations with fallbacks
   const t = {
-    title: dictionary?.title || "Title",
+    // `dictionary.title` is the *page* title ("Events"), not the column header.
+    title: dictionary?.titleColumn || "Title",
     type: dictionary?.type || "Type",
     date: dictionary?.date || "Date",
     location: dictionary?.location || "Location",
@@ -78,6 +77,15 @@ function EventsTableInner({
     export: dictionary?.export || "Export",
     reset: dictionary?.reset || "Reset",
   }
+
+  // Grid view renders the same enums as the table — resolve via the same map.
+  const eventTypeLabel = useCallback(
+    (value: string) => {
+      const types = dictionary?.types as Record<string, string> | undefined
+      return types?.[value] ?? value.replace("_", " ")
+    },
+    [dictionary]
+  )
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
@@ -99,7 +107,9 @@ function EventsTableInner({
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getEvents(params)
+      // Forward the locale so search/load-more rows are translated and their
+      // placeholder labels resolved the same way the SSR first page is.
+      const result = await getEvents({ ...params, displayLang: lang })
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }
@@ -123,8 +133,8 @@ function EventsTableInner({
         const deleteMsg = `${dictionary?.delete || "Delete"} "${event.title}"?`
         const d = dictionary as Record<string, any> | undefined
         const ok = await confirmDeleteDialog(deleteMsg, {
-          title: `${d?.delete || "Delete"} "${event.title}"?`,
-          description: d?.deleteConfirm || "This action cannot be undone.",
+          title: deleteMsg,
+          description: d?.deleteConfirm,
           confirmText: d?.delete || "Delete",
           cancelText: d?.cancel || "Cancel",
         })
@@ -199,49 +209,32 @@ function EventsTableInner({
     }
   }, [router, lang, dictionary])
 
-  // Handle edit
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/${lang}/events/add/${id}/information`)
-    },
-    [router, lang]
-  )
-
   // Handle view
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/events/${id}`)
+      router.push(`/${lang}/events/${id}`)
     },
-    [router]
+    [router, lang]
   )
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(
     async (filters?: Record<string, unknown>) => {
-      const result = await getEventsCSV(filters)
+      const result = await getEventsCSV({ ...filters, displayLang: lang })
       if (!result.success || !result.data) {
         throw new Error("error" in result ? result.error : "Export failed")
       }
       return result.data
     },
-    []
+    [lang]
   )
 
-  // Get status badge variant
-  const getStatusBadge = (status: string) => {
-    const variants: Record<
-      string,
-      "default" | "secondary" | "destructive" | "outline"
-    > = {
-      PLANNED: "default",
-      IN_PROGRESS: "secondary",
-      COMPLETED: "outline",
-      CANCELLED: "destructive",
-    }
-    return {
-      label: status.replace("_", " "),
-      variant: variants[status] || "default",
-    }
+  // Translations for the table view's load-more footer and empty state
+  const tableTranslations = {
+    loadMore: dictionary?.loadMore || "Load More",
+    loading: dictionary?.loading || "Loading...",
+    noResults: dictionary?.noResults || "No results.",
+    rowsSelected: dictionary?.rowsSelected || "row(s) selected.",
   }
 
   // Toolbar translations
@@ -284,6 +277,7 @@ function EventsTableInner({
           hasMore={hasMore}
           isLoading={isLoading}
           onLoadMore={loadMore}
+          translations={tableTranslations}
         />
       ) : (
         <>
@@ -308,7 +302,7 @@ function EventsTableInner({
                   icon={asset("/illustrations/category-01.svg")}
                   title={event.title}
                   description={formatDate(event.eventDate, lang)}
-                  subtitle={event.eventType?.replace("_", " ")}
+                  subtitle={eventTypeLabel(event.eventType)}
                   onClick={() => handleView(event.id)}
                 />
               ))}

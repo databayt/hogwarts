@@ -202,13 +202,25 @@ export async function enrollInSubject(catalogSubjectId: string) {
         ],
         mode: "payment",
         success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses/${subject.slug}?enrolled=true`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/browse`,
+        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/courses`,
         metadata: {
           userId: session.user.id,
           catalogSubjectId: subject.id,
           enrollmentId: enrollment.id,
           type: "catalog_enrollment",
           ...(schoolId ? { schoolId } : {}),
+        },
+        // Session metadata does NOT propagate to the PaymentIntent/Charge, and
+        // refund/dispute webhooks only ever see the charge — so the same keys
+        // have to be stamped here or those handlers have nothing to match on.
+        payment_intent_data: {
+          metadata: {
+            userId: session.user.id,
+            catalogSubjectId: subject.id,
+            enrollmentId: enrollment.id,
+            type: "catalog_enrollment",
+            ...(schoolId ? { schoolId } : {}),
+          },
         },
       })
 

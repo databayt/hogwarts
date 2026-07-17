@@ -29,6 +29,8 @@ interface CashFlowChartProps {
   outflowData: number[]
   balanceData: number[]
   labels?: string[]
+  /** ISO 4217 code from School.currency — never hardcode. */
+  currency: string
   className?: string
 }
 
@@ -37,6 +39,7 @@ export function CashFlowChart({
   outflowData,
   balanceData,
   labels,
+  currency,
   className,
 }: CashFlowChartProps) {
   const { locale } = useLocale()
@@ -69,7 +72,7 @@ export function CashFlowChart({
   const formatValue = (value: number) => {
     return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: "SDG",
+      currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(Math.abs(value))

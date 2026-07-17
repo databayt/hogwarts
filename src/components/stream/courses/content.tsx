@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { useCallback, useEffect, useState, useTransition } from "react"
+import { useCallback, useState, useTransition } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
@@ -23,7 +23,6 @@ const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 interface Props {
   dictionary: Record<string, any>
   lang: string
-  schoolId: string | null
   courses: CatalogCourseType[]
   totalCount: number
   page: number
@@ -36,7 +35,6 @@ interface Props {
 export function StreamCoursesContent({
   dictionary,
   lang,
-  schoolId,
   courses,
   totalCount,
   page,
@@ -57,10 +55,18 @@ export function StreamCoursesContent({
   const [currentPage, setCurrentPage] = useState(page)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
+  // Reset the accumulated list only when the server actually queried something
+  // different (grade badge / page / search). Keying on the `courses` array
+  // itself would reset on every server render — and calling the load-more
+  // action re-renders this route, which used to wipe the appended pages the
+  // moment they arrived.
+  const serverKey = `${activeGrade}|${page}|${totalCount}`
+  const [prevServerKey, setPrevServerKey] = useState(serverKey)
+  if (serverKey !== prevServerKey) {
+    setPrevServerKey(serverKey)
     setAllCourses(courses)
     setCurrentPage(page)
-  }, [courses, page])
+  }
 
   const hasMore = allCourses.length < totalCount
 
@@ -78,7 +84,7 @@ export function StreamCoursesContent({
   const loadMore = () => {
     startTransition(async () => {
       const nextPage = currentPage + 1
-      const { rows } = await getAllCatalogCourses(schoolId, {
+      const { rows } = await getAllCatalogCourses({
         page: nextPage,
         perPage,
         grade: activeGrade ? parseInt(activeGrade) : undefined,
@@ -97,8 +103,10 @@ export function StreamCoursesContent({
           <div className="relative flex size-28 shrink-0 items-center justify-center rounded-xl bg-[#D97757] p-4 md:size-32">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={asset("/illustrations/anthropic-abstract.svg")}
-              alt="Courses"
+              src={asset(
+                "https://cdn.databayt.org/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              )}
+              alt=""
               className="size-20 md:size-24"
             />
           </div>

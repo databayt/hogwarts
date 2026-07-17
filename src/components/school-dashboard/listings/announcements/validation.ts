@@ -3,84 +3,101 @@
 
 import { z } from "zod"
 
-// Single-language announcement schema
-// Content stored in one language with a `lang` field
-export const announcementBaseSchema = z
-  .object({
-    title: z.string().optional(),
-    body: z.string().optional(),
-    lang: z.enum(["ar", "en"]).default("ar"),
-    scope: z.enum(["school", "class", "role"]),
-    classId: z.string().optional(),
-    role: z.string().optional(),
-    published: z.boolean(),
-    priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
-    scheduledFor: z.string().datetime().optional().or(z.literal("")),
-    expiresAt: z.string().datetime().optional().or(z.literal("")),
-    pinned: z.boolean().optional(),
-    featured: z.boolean().optional(),
-  })
-  .superRefine((val, ctx) => {
-    // Title is required
-    if (!val.title) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Title is required",
-        path: ["title"],
-      })
-    }
-    // Body is required
-    if (!val.body) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Body is required",
-        path: ["body"],
-      })
-    }
-    if (val.scope === "class" && !val.classId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Class is required when scope is class",
-        path: ["classId"],
-      })
-    }
-    if (val.scope === "role" && !val.role) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Role is required when scope is role",
-        path: ["role"],
-      })
-    }
-    // Validate scheduled date is in the future
-    if (
-      val.scheduledFor &&
-      val.scheduledFor !== "" &&
-      val.published === false
-    ) {
-      const scheduledDate = new Date(val.scheduledFor)
-      if (scheduledDate < new Date()) {
+import type { ValidationHelper } from "@/components/internationalization/helpers"
+
+/**
+ * Single-language announcement schema. Content is stored in one language with
+ * a `lang` field.
+ *
+ * Pass a ValidationHelper from the rendering component so field errors land in
+ * the reader's language; the English fallbacks only apply on the server, where
+ * no dictionary is in scope.
+ */
+export function createAnnouncementSchema(v?: ValidationHelper) {
+  return z
+    .object({
+      title: z.string().optional(),
+      body: z.string().optional(),
+      lang: z.enum(["ar", "en"]).default("ar"),
+      scope: z.enum(["school", "class", "role"]),
+      classId: z.string().optional(),
+      role: z.string().optional(),
+      published: z.boolean(),
+      priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+      scheduledFor: z.string().datetime().optional().or(z.literal("")),
+      expiresAt: z.string().datetime().optional().or(z.literal("")),
+      pinned: z.boolean().optional(),
+      featured: z.boolean().optional(),
+    })
+    .superRefine((val, ctx) => {
+      // Title is required
+      if (!val.title) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Scheduled date must be in the future",
-          path: ["scheduledFor"],
+          message: v?.get("titleRequired") || "Title is required",
+          path: ["title"],
         })
       }
-    }
-    // Validate expiration is after creation
-    if (val.expiresAt && val.expiresAt !== "") {
-      const expiresDate = new Date(val.expiresAt)
-      if (val.scheduledFor && val.scheduledFor !== "") {
+      // Body is required
+      if (!val.body) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: v?.required() || "Body is required",
+          path: ["body"],
+        })
+      }
+      if (val.scope === "class" && !val.classId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: v?.required() || "Class is required when scope is class",
+          path: ["classId"],
+        })
+      }
+      if (val.scope === "role" && !val.role) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            v?.get("roleRequired") || "Role is required when scope is role",
+          path: ["role"],
+        })
+      }
+      // Validate scheduled date is in the future
+      if (
+        val.scheduledFor &&
+        val.scheduledFor !== "" &&
+        val.published === false
+      ) {
         const scheduledDate = new Date(val.scheduledFor)
-        if (expiresDate <= scheduledDate) {
+        if (scheduledDate < new Date()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Expiration date must be after scheduled date",
-            path: ["expiresAt"],
+            message:
+              v?.get("futureDate") || "Scheduled date must be in the future",
+            path: ["scheduledFor"],
           })
         }
       }
-    }
-  })
+      // Validate expiration is after creation
+      if (val.expiresAt && val.expiresAt !== "") {
+        const expiresDate = new Date(val.expiresAt)
+        if (val.scheduledFor && val.scheduledFor !== "") {
+          const scheduledDate = new Date(val.scheduledFor)
+          if (expiresDate <= scheduledDate) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message:
+                v?.get("startBeforeEnd") ||
+                "Expiration date must be after scheduled date",
+              path: ["expiresAt"],
+            })
+          }
+        }
+      }
+    })
+}
+
+/** Dictionary-free schema for server actions and other non-UI contexts. */
+export const announcementBaseSchema = createAnnouncementSchema()
 
 export const announcementCreateSchema = announcementBaseSchema
 
@@ -90,11 +107,15 @@ export type AnnouncementFormValues = z.infer<typeof announcementCreateSchema>
 // Alias for compatibility
 export type AnnouncementFormData = AnnouncementFormValues
 
-export const announcementUpdateSchema = announcementBaseSchema
-  .partial()
-  .extend({
-    id: z.string().min(1, "Required"),
-  })
+export function createAnnouncementUpdateSchema(v?: ValidationHelper) {
+  return createAnnouncementSchema(v)
+    .partial()
+    .extend({
+      id: z.string().min(1, v?.required() || "Required"),
+    })
+}
+
+export const announcementUpdateSchema = createAnnouncementUpdateSchema()
 
 export const sortItemSchema = z.object({
   id: z.string(),

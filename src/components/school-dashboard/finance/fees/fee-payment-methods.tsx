@@ -12,6 +12,12 @@ import type { Locale } from "@/components/internationalization/config"
 import { PaymentMethodCard } from "@/components/payment/payment-method-card"
 
 import { createFeePaymentCheckout } from "./actions"
+import {
+  ManualPaymentRail,
+  type ManualRailDictionary,
+} from "./manual-payment-rail"
+
+type WalletGateway = Extract<PaymentGateway, "bankak" | "cashi">
 
 interface FeePaymentMethodsProps {
   feeAssignmentId: string
@@ -24,6 +30,8 @@ interface FeePaymentMethodsProps {
     redirecting?: string
     paymentFailed?: string
   }
+  /** Copy for the Bankak/Cashi transfer dialog. */
+  manualRailDictionary?: ManualRailDictionary
 }
 
 /**
@@ -43,27 +51,47 @@ export function FeePaymentMethods({
   remaining,
   methods,
   dictionary,
+  manualRailDictionary,
 }: FeePaymentMethodsProps) {
   const isRTL = lang === "ar"
   const [loading, setLoading] = useState<PaymentGateway | null>(null)
   const [, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [walletGateway, setWalletGateway] = useState<WalletGateway | null>(null)
 
-  // Only render online methods (Tap / Stripe / Bankak) — offline methods
-  // are recorded by the admin via the manual /payments/new flow.
-  const onlineMethods = methods.filter(
-    (m) => m === "tap" || m === "stripe" || m === "bankak"
+  // Two kinds of rail, two interactions:
+  //  - redirect rails (Tap/Stripe) hand off to a hosted checkout page;
+  //  - wallet rails (Bankak/Cashi) have no merchant API, so they open a dialog
+  //    showing the school's account and take a transfer reference + receipt.
+  // Bankak used to sit in the redirect list, which was doubly wrong: it has no
+  // checkout URL, and its provider was permanently unconfigured — so this
+  // filter resolved to [] and a Sudan school's parents saw no way to pay at all.
+  const redirectMethods = methods.filter((m) => m === "tap" || m === "stripe")
+  const walletMethods = methods.filter(
+    (m): m is WalletGateway => m === "bankak" || m === "cashi"
   )
+  const payableMethods = [...redirectMethods, ...walletMethods]
 
-  if (remaining <= 0 || onlineMethods.length === 0) return null
+  // cash / bank_transfer stay admin-recorded via /payments/new, as before.
+  if (remaining <= 0 || payableMethods.length === 0) return null
 
   function handleClick(gateway: PaymentGateway) {
-    setLoading(gateway)
     setError(null)
+
+    if (gateway === "bankak" || gateway === "cashi") {
+      setWalletGateway(gateway)
+      return
+    }
+
+    setLoading(gateway)
     startTransition(async () => {
-      // The gateway is resolved server-side from school config / currency;
-      // the picker drives loading state + intent only.
-      const result = await createFeePaymentCheckout(feeAssignmentId, lang)
+      // Pass the clicked rail: the action re-resolves it server-side against
+      // the school's own list, so this is intent, not a trusted value.
+      const result = await createFeePaymentCheckout(
+        feeAssignmentId,
+        lang,
+        gateway
+      )
       if (result.success && result.data?.checkoutUrl) {
         window.location.href = result.data.checkoutUrl
         return
@@ -96,7 +124,7 @@ export function FeePaymentMethods({
           </Alert>
         )}
         <div className="grid gap-3 sm:grid-cols-2">
-          {onlineMethods.map((method) => {
+          {payableMethods.map((method) => {
             const display = GATEWAY_DISPLAY[method]
             if (!display) return null
             return (
@@ -115,6 +143,19 @@ export function FeePaymentMethods({
           })}
         </div>
       </CardContent>
+
+      {walletGateway && (
+        <ManualPaymentRail
+          feeAssignmentId={feeAssignmentId}
+          gateway={walletGateway}
+          lang={lang}
+          open={walletGateway !== null}
+          onOpenChange={(open) => {
+            if (!open) setWalletGateway(null)
+          }}
+          dictionary={manualRailDictionary}
+        />
+      )}
     </Card>
   )
 }

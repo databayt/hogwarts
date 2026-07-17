@@ -18,6 +18,10 @@ import {
   type AdmissionDocumentSchemaMap,
 } from "@/components/school-dashboard/admission/ai/schemas"
 import type { AdmissionDocumentType } from "@/components/school-dashboard/admission/ai/types"
+import {
+  checkStudentPermission,
+  getAuthContext,
+} from "@/components/school-dashboard/listings/students/authorization"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -127,6 +131,18 @@ export async function extractStudentAutoFill(
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) return { success: false, error: "MISSING_SCHOOL_CONTEXT" }
+
+    // Role gate: this triggers a paid AI extraction, so restrict it to roles
+    // that can create/edit students (ADMIN/TEACHER/DEVELOPER). Without this a
+    // STUDENT/GUARDIAN session could burn the school's AI budget on arbitrary
+    // allowed-host URLs.
+    const authContext = getAuthContext(session)
+    if (
+      !authContext ||
+      !checkStudentPermission(authContext, "update", { schoolId })
+    ) {
+      return { success: false, error: "UNAUTHORIZED" }
+    }
 
     // SSRF protection
     const urlCheck = validateUploadUrl(fileUrl)

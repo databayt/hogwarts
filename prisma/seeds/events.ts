@@ -308,11 +308,15 @@ export async function seedEvents(
 
   for (const event of MENA_EVENTS) {
     try {
+      // Dedup by (schoolId, title) only — NOT by eventDate. Keying on the full
+      // datetime is timezone-fragile: a local seed (Africa/Khartoum) and a
+      // Vercel seed (UTC) store different instants for the same calendar day, so
+      // the old guard missed and inserted duplicate rows (seen live as every
+      // event appearing twice). Titles are unique per school in this calendar.
       const existing = await prisma.event.findFirst({
         where: {
           schoolId,
           title: event.title,
-          eventDate: event.startDate,
         },
       })
 

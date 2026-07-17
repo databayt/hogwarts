@@ -32,7 +32,7 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
   if (!feature) {
     return (
       <div className="flex flex-col items-center py-24 text-center">
-        <p className="text-muted-foreground">Feature not found.</p>
+        <p className="text-muted-foreground">{t.notFound}</p>
         <Link
           href={`/${lang}/features`}
           className={cn(buttonVariants({ variant: "outline" }), "mt-4 gap-2")}

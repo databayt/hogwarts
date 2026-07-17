@@ -250,7 +250,7 @@ export default function OfferContent({
         }
       } else {
         // Any other gateway in availableGateways is an online checkout rail
-        // (stripe today; tap/bankak/mobile_money once configured) — route
+        // (stripe/tap where supported) — route
         // through the generic checkout action, which re-validates the
         // gateway server-side before creating a session.
         const result = await createRegistrationFeeCheckout(
@@ -443,7 +443,7 @@ export default function OfferContent({
 
   // Payment method card metadata, keyed by gateway id. Only stripe/cash/
   // bank_transfer have dedicated copy today; any other gateway that
-  // `availableGateways` resolves (tap/bankak/mobile_money, once configured)
+  // `availableGateways` resolves (tap/stripe where the currency is supported)
   // falls back to a generic "pay online" card rather than disappearing.
   const gatewayMeta: Record<
     string,

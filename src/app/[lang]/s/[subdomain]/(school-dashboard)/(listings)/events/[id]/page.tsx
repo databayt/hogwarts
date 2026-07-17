@@ -13,7 +13,9 @@ interface Props {
 export default async function EventDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
-  const result = await getEvent({ id })
+  // displayLang localizes title/description/location/organizer — without it the
+  // detail page renders stored content untranslated.
+  const result = await getEvent({ id, displayLang: lang })
 
   return (
     <EventDetailContent

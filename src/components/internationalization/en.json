@@ -305,6 +305,7 @@
       "EVENT_CREATE_FAILED": "Failed to create event",
       "EVENT_UPDATE_FAILED": "Failed to update event",
       "EVENT_DELETE_FAILED": "Failed to delete event",
+      "EVENT_TITLE_REQUIRED": "Title is required before completing",
       "GRADE_NOT_FOUND": "Grade not found",
       "GRADE_CREATE_FAILED": "Failed to create grade",
       "GRADE_UPDATE_FAILED": "Failed to update grade",
@@ -602,7 +603,8 @@
       "backToFeatures": "Back to Features",
       "keyBenefits": "Key Benefits",
       "useCases": "Use Cases",
-      "relatedFeatures": "Related Features"
+      "relatedFeatures": "Related Features",
+      "notFound": "Feature not found."
     },
     "pricing": {
       "badge": "ROI Guaranteed",
@@ -2094,6 +2096,7 @@
       "timetable": "Timetable",
       "library": "Library",
       "stream": "Stream",
+      "courses": "Courses",
       "profile": "Profile",
       "school": "School",
       "sales": "Sales",
@@ -2281,6 +2284,11 @@
     "title": "FIND YOUR BOOST",
     "titleAr": "اكتشف حلمك",
     "subtitle": "Discover features you love",
+    "highlight": "features",
+    "headlineLead": "FIND",
+    "headlineTrail": "YOUR BOOST",
+    "included": "included!",
+    "module": "module",
     "tags": {
       "admission": "Admission",
       "exam": "Exams",

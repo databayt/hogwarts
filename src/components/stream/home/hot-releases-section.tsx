@@ -1,68 +1,57 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Star } from "lucide-react"
 
-import type { StreamContentProps } from "../types"
+import type { CatalogCourseType } from "@/components/stream/data/catalog/get-all-courses"
 
-const hotReleases = [
-  {
-    title: "Google People Management Essentials",
-    provider: "Google",
-    providerLogo:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
-    image:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/72/c2e795cd584b74accb5937ae2ac8c0/GwG_Career_Certs_Coursera_PME_Overall_Course_1x1.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-    typeKey: "specialization",
-    type: "Specialization",
-    rating: 4.8,
-  },
-  {
-    title: "Microsoft AI Agents: From Foundations to Applications",
-    provider: "Microsoft",
-    providerLogo:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/cc/61dbdf2c1c475d82d3b8bf8eee1bda/MSFT-stacked-logo_FINAL.png",
-    image:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/f4/6b2dde582549308d4a217c0686e215/Professional_Certificate_Image_1200x1200.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-    typeKey: "professionalCertificate",
-    type: "Professional Certificate",
-    rating: 4.7,
-  },
-  {
-    title: "PyTorch for Deep Learning",
-    provider: "DeepLearning.AI",
-    providerLogo:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/b4/5cb90bb92f420b99bf323a0356f451/Icon.png",
-    image:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/fe/a2eb6ae01140698ae0c0d1bb635f2b/DeepLearningAI_PyTorch_for_Deep-Learning_1000x1000-01.png?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-    typeKey: "professionalCertificate",
-    type: "Professional Certificate",
-    rating: 4.9,
-  },
-  {
-    title: "Google Data Analysis with Python",
-    provider: "Google",
-    providerLogo:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/4a/cb36835ae3421187080898a7ecc11d/Google-G_360x360.png",
-    image:
-      "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/18/a529bbeefc4bb79f3ae12773ad7542/176-85B-GRT-SEAN-0989.png?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-    typeKey: "specialization",
-    type: "Specialization",
-    rating: 4.9,
-  },
-]
+// Course type key by chapter count — mirrors courses/course-card.tsx so the
+// same course is badged identically here and in the catalog grid.
+const getCourseTypeKey = (chaptersCount: number): string => {
+  if (chaptersCount >= 10) return "professionalCertificate"
+  if (chaptersCount >= 5) return "specialization"
+  if (chaptersCount >= 3) return "course"
+  return "shortCourse"
+}
 
-export function HotReleasesSection({
-  dictionary,
-  lang,
-}: Omit<StreamContentProps, "schoolId">) {
+const COURSE_LEVEL_FALLBACKS: Record<string, string> = {
+  ELEMENTARY: "Elementary",
+  MIDDLE: "Middle",
+  HIGH: "High",
+}
+
+interface Props {
+  dictionary: Record<string, any>
+  lang: string
+  courses: CatalogCourseType[]
+}
+
+/**
+ * "New releases" strip — real Subjects from THIS school's catalog selection,
+ * passed down by the stream page.
+ *
+ * This section previously rendered four invented courses ("PyTorch for Deep
+ * Learning", …) with fabricated 4.7–4.9 ratings and artwork hotlinked from
+ * Coursera's CDN, every card linking to the generic catalog page. Everything
+ * here now comes from the database: no course is shown unless the school
+ * actually offers it, ratings render only when a real one exists, and each card
+ * links to its own course. If the school has no selections yet, the section
+ * renders nothing rather than inventing filler.
+ */
+export function HotReleasesSection({ dictionary, lang, courses }: Props) {
+  if (courses.length === 0) return null
+
+  const ct = dictionary?.courseTypes as Record<string, string> | undefined
+  const cl = dictionary?.courseLevels as Record<string, string> | undefined
+
   return (
     <section className="mb-16 rounded-xl bg-[#BCD1CA] py-6">
       <div className="px-6">
         {/* Title Row */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {dictionary?.hotReleases?.title || "Hot new releases"}
+            {dictionary?.hotReleases?.title || "New releases"}
           </h2>
           <Link
             href={`/${lang}/stream/courses`}
@@ -74,55 +63,71 @@ export function HotReleasesSection({
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {hotReleases.map((course, index) => (
-            <Link
-              key={index}
-              href={`/${lang}/stream/courses`}
-              className="group bg-background block overflow-hidden rounded-xl"
-            >
-              {/* Card Image */}
-              <div className="aspect-video overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
+          {courses.map((course) => {
+            const typeKey = getCourseTypeKey(course._count.chapters)
+            const rawLevel = course._catalog?.levels?.[0]
+            const level = rawLevel
+              ? (cl?.[rawLevel] ?? COURSE_LEVEL_FALLBACKS[rawLevel] ?? rawLevel)
+              : course.category?.name
+            const rating = course._catalog?.averageRating
 
-              {/* Content */}
-              <div className="space-y-2 p-4 text-start">
-                {/* Provider */}
-                <div className="flex items-center gap-1.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={course.providerLogo}
-                    alt={course.provider}
-                    className="h-4 w-4 object-contain"
-                  />
-                  <span className="text-muted-foreground text-xs">
-                    {course.provider}
-                  </span>
+            return (
+              <Link
+                key={course.id}
+                href={`/${lang}/stream/courses/${course.slug}`}
+                className="group bg-background block overflow-hidden rounded-xl"
+              >
+                {/* Card Image — the catalog thumbnail, or the subject's own
+                    colour when it has none. */}
+                <div className="aspect-video overflow-hidden">
+                  {course.imageUrl ? (
+                    <Image
+                      src={course.imageUrl}
+                      alt={course.title}
+                      width={320}
+                      height={180}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      unoptimized
+                    />
+                  ) : (
+                    <div
+                      className="h-full w-full"
+                      style={{
+                        backgroundColor: course._catalog?.color || "#e5e7eb",
+                      }}
+                    />
+                  )}
                 </div>
 
-                {/* Title */}
-                <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
-                  {course.title}
-                </h3>
+                {/* Content */}
+                <div className="space-y-2 p-4 text-start">
+                  {level && (
+                    <span className="text-muted-foreground text-xs">
+                      {level}
+                    </span>
+                  )}
 
-                {/* Type */}
-                <p className="text-muted-foreground text-xs">
-                  {dictionary?.courseTypes?.[course.typeKey] || course.type}
-                </p>
+                  <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-tight font-semibold transition-colors">
+                    {course.title}
+                  </h3>
 
-                {/* Rating */}
-                <div className="flex items-center gap-1">
-                  <Star className="text-foreground h-3 w-3 fill-current" />
-                  <span className="text-xs font-medium">{course.rating}</span>
+                  <p className="text-muted-foreground text-xs">
+                    {ct?.[typeKey] ?? ""}
+                  </p>
+
+                  {/* Rating — only when the course actually has one. */}
+                  {rating != null && rating > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Star className="text-foreground h-3 w-3 fill-current" />
+                      <span className="text-xs font-medium">
+                        {rating.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -5,52 +5,69 @@ import type {
   CheckoutResult,
   CreateCheckoutParams,
   PaymentProvider,
+  WalletDetails,
 } from "../types"
 
 /**
- * Bankak Payments provider — Sudan-only mobile money via Bank of Khartoum.
+ * Bankak (بنكك) — Bank of Khartoum. Sudan's dominant payment rail.
  *
- * **Status: scaffold only.** The Bankak merchant API spec is not publicly
- * documented; until Bank of Khartoum provides the integration contract this
- * provider returns `success: false` with a clear error message. The shape
- * mirrors `tap.ts` so when the spec lands the only changes needed are:
+ * **This is a manual rail, not a hosted checkout.** BoK does not publish a
+ * self-serve merchant API — it sells "Bankak Pay QR" / Merchant QR, which
+ * confirms inside the merchant's own Bankak app rather than via a webhook to
+ * us. So there is nothing to redirect to and nothing to call: the school
+ * publishes its account number (and optionally a QR), the payer transfers in
+ * the Bankak app, then submits the transfer reference plus a screenshot, and
+ * the bursar verifies it. Same shape as `cash.ts` / `bank-transfer.ts`.
  *
- *   1. Implement `createCheckout` to POST to Bankak's charge endpoint.
- *   2. Wire `src/app/api/webhooks/bankak/route.ts` to the same fee-payment
- *      handler used by Stripe and Tap.
- *   3. Add a per-school `bankakEnabled` flag (when introduced).
+ * This replaces the earlier env-gated scaffold, which returned
+ * `isConfigured() === false` forever (BANKAK_MERCHANT_ID was never issued) and
+ * therefore made `resolveAvailableMethods` drop Bankak from every Sudan
+ * school's gateway list — leaving SD schools with no payment path at all,
+ * since Stripe rejects SDG and Tap does not cover SD.
  *
- * Activation env vars (placeholders — real names TBD by BoK):
- *   - `BANKAK_MERCHANT_ID`
- *   - `BANKAK_SECRET_KEY`
- *   - `BANKAK_WEBHOOK_SECRET`
+ * Per-school availability is NOT decided here: `isConfigured()` is env-level
+ * and takes no schoolId. It is decided by `filterConfiguredManualRails` in
+ * `../manual-rail-settings.ts`, which drops this rail unless the school has
+ * actually configured a Bankak account.
  *
- * Until those are set `isConfigured()` returns false and the provider
- * router skips this gateway, so shipping the scaffold is safe even on
- * tenants that have no Sudan business.
+ * If BoK ever ships a real merchant API, add a `checkoutUrl` branch here; the
+ * `PaymentProvider` contract and every caller stay unchanged.
  */
-const SUPPORTED_CURRENCIES = new Set(["SDG", "USD"])
-
 export const bankakProvider: PaymentProvider = {
   id: "bankak",
 
-  supportsCurrency(currency: string): boolean {
-    return SUPPORTED_CURRENCIES.has(currency.toUpperCase())
+  supportsCurrency(): boolean {
+    // Manual rail — the school's own account settles it, so there is no
+    // processor currency matrix to satisfy.
+    return true
   },
 
   isConfigured(): boolean {
-    return Boolean(
-      process.env.BANKAK_MERCHANT_ID && process.env.BANKAK_SECRET_KEY
-    )
+    // No API key exists to check. Per-school gating happens in
+    // filterConfiguredManualRails().
+    return true
   },
 
   async createCheckout(params: CreateCheckoutParams): Promise<CheckoutResult> {
+    // Account details pass through metadata from the caller, resolved from
+    // SchoolPaymentSettings at the action layer (same contract as bank-transfer).
+    const wallet: WalletDetails | undefined = params.metadata
+      ?.bankakAccountNumber
+      ? {
+          provider: "bankak",
+          accountName: params.metadata.bankakAccountName ?? "",
+          accountNumber: params.metadata.bankakAccountNumber,
+          qrUrl: params.metadata.bankakQrUrl,
+          instructions: params.metadata.bankakInstructions,
+          reference: params.referenceNumber,
+        }
+      : undefined
+
     return {
-      success: false,
+      success: true,
       gateway: "bankak",
       referenceNumber: params.referenceNumber,
-      error:
-        "Bankak integration pending merchant API spec from Bank of Khartoum",
+      wallet,
     }
   },
 }
