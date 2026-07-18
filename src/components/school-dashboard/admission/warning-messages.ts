@@ -17,11 +17,6 @@ export function translateEnrollmentWarning(
         messages?.noFeeStructureMatch ||
         "No fee structure matched — fees skipped. Configure a fee structure in Finance > Fees."
       )
-    case "APPLICATION_FEE_UNPAID":
-      return (
-        messages?.applicationFeeUnpaid ||
-        "Application fee is unpaid. Enrollment confirmed, but consider collecting payment."
-      )
     case "FEE_AUTO_ASSIGN_FAILED":
       return (
         messages?.feeAutoAssignFailed ||

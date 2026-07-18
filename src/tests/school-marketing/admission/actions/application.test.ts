@@ -802,7 +802,9 @@ describe("Application Actions", () => {
       expect(db.application.findUnique).toHaveBeenCalledTimes(10)
     })
 
-    it("sets requiresPayment=true when campaign has fee", async () => {
+    it("never returns payment fields — applying is always free", async () => {
+      // Even when a legacy campaign row still carries an applicationFee,
+      // submission must not resurrect the retired payment leg.
       vi.mocked(db.admissionCampaign.findFirst).mockResolvedValue({
         id: CAMPAIGN_ID,
         schoolId: SCHOOL_ID,
@@ -818,21 +820,9 @@ describe("Application Actions", () => {
       )
 
       expect(result.success).toBe(true)
-      expect(result.data?.requiresPayment).toBe(true)
-      expect(result.data?.applicationFee).toBe(200)
-      expect(result.data?.currency).toBeDefined()
-      expect(result.data?.paymentMethods).toBeDefined()
-    })
-
-    it("sets requiresPayment=false when no fee", async () => {
-      const result = await submitApplication(
-        SUBDOMAIN,
-        SESSION_TOKEN,
-        validFormData
-      )
-
-      expect(result.success).toBe(true)
-      expect(result.data?.requiresPayment).toBe(false)
+      expect(result.data).not.toHaveProperty("requiresPayment")
+      expect(result.data).not.toHaveProperty("applicationFee")
+      expect(result.data).not.toHaveProperty("paymentMethods")
     })
 
     it("handles unique constraint error gracefully", async () => {

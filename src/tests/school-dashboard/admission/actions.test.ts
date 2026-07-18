@@ -396,7 +396,6 @@ describe("Admission Actions", () => {
 
       expect(result.success).toBe(true)
       expect(result.data?.id).toBe("c-1")
-      expect(result.data?.applicationFee).toBe("50")
       expect(db.admissionCampaign.findUnique).toHaveBeenCalledWith({
         where: { id: "c-1", schoolId: SCHOOL_ID },
       })

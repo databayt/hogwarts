@@ -27,7 +27,6 @@ export type CampaignRow = {
   endDate: string
   status: string
   totalSeats: number
-  applicationFee: string | null
   applicationsCount: number
   createdAt: string
 }
@@ -108,23 +107,6 @@ export const getCampaignColumns = (
       },
       enableColumnFilter: true,
       filterFn: (row, id, value) => value.includes(row.getValue(id)),
-    },
-    {
-      accessorKey: "applicationFee",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={
-            (t?.columns as Record<string, string>)?.applicationFee || "App Fee"
-          }
-        />
-      ),
-      cell: ({ getValue }) => {
-        const fee = getValue<string | null>()
-        if (!fee || parseFloat(fee) === 0)
-          return <span className="text-muted-foreground">-</span>
-        return <span className="text-sm font-medium tabular-nums">{fee}</span>
-      },
     },
     {
       accessorKey: "applicationsCount",

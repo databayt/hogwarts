@@ -20,7 +20,6 @@ export const admissionSettingsSchema = z
     // General Settings
     allowMultipleApplications: z.boolean().default(false),
     requireDocuments: z.boolean().default(true),
-    applicationFee: z.number().min(0).default(0),
     offerExpiryDays: z.number().min(1).max(90).default(14),
 
     // Public Portal Settings — gate the 4 public-facing entry points

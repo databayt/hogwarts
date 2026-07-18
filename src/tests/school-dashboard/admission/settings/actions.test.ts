@@ -111,9 +111,10 @@ describe("Admission Settings Actions", () => {
       expect(result.success).toBe(true)
       expect(result.data).toMatchObject({
         allowMultipleApplications: false,
-        applicationFee: 50,
         offerExpiryDays: 14,
       })
+      // Applying is always free — the read no longer surfaces a fee field.
+      expect(result.data).not.toHaveProperty("applicationFee")
       expect(db.admissionSettings.findUnique).toHaveBeenCalledWith({
         where: { schoolId: SCHOOL_ID },
       })
@@ -139,7 +140,6 @@ describe("Admission Settings Actions", () => {
       expect(db.admissionSettings.create).toHaveBeenCalledWith({
         data: { schoolId: SCHOOL_ID },
       })
-      expect(result.data?.applicationFee).toBe(0) // null → 0
     })
 
     it("returns error when not authenticated", async () => {

@@ -221,7 +221,6 @@ export async function getCampaigns(params: {
           endDate: c.endDate?.toISOString(),
           status: c.status,
           totalSeats: c.totalSeats,
-          applicationFee: c.applicationFee?.toString() ?? null,
           applicationsCount: c._count.applications,
           createdAt: c.createdAt?.toISOString(),
         })),
@@ -247,7 +246,6 @@ export async function getCampaign(params: { id: string }): Promise<
     status: string
     description: string | null
     totalSeats: number
-    applicationFee: string | null
   }>
 > {
   try {
@@ -280,7 +278,6 @@ export async function getCampaign(params: { id: string }): Promise<
         status: campaign.status,
         description: campaign.description,
         totalSeats: campaign.totalSeats,
-        applicationFee: campaign.applicationFee?.toString() ?? null,
       },
     }
   } catch (error) {
@@ -1095,7 +1092,6 @@ export type EnrollmentWarningCode =
   | "INVOICE_GENERATION_FAILED"
   | "GUARDIAN_CREATE_FAILED"
   | "NO_FEE_STRUCTURE_MATCH"
-  | "APPLICATION_FEE_UNPAID"
   | "REGISTRATION_FEE_NO_STRUCTURE"
 
 export interface EnrollmentWarning {
@@ -1127,7 +1123,7 @@ export async function confirmEnrollment(params: {
     const application = await db.application.findUnique({
       where: { id: params.id, schoolId },
       include: {
-        campaign: { select: { academicYear: true, applicationFee: true } },
+        campaign: { select: { academicYear: true } },
       },
     })
 
@@ -1185,22 +1181,9 @@ export async function confirmEnrollment(params: {
     let enrolledStudentId: string | null = null
     const warnings: EnrollmentWarning[] = []
 
-    // Warn (do not block) when the application fee is unpaid — admin can still enroll
-    const campaignFee = application.campaign?.applicationFee
-    const hasFeeRequirement = campaignFee && Number(campaignFee) > 0
-    if (hasFeeRequirement && !application.applicationFeePaid) {
-      const schoolCurrency = await db.school.findUnique({
-        where: { id: schoolId },
-        select: { currency: true },
-      })
-      warnings.push({
-        code: "APPLICATION_FEE_UNPAID",
-        meta: {
-          amount: Number(campaignFee),
-          currency: schoolCurrency?.currency ?? "USD",
-        },
-      })
-    }
+    // (No application-fee warning here: applying is always free — the
+    // 2026-06-12 product decision. The registration fee on the offer leg is
+    // the only pre-enrollment payment, checked by the offer actions.)
 
     // Warn (do not block) when no fee structure exists for the campaign's academic year —
     // the auto-assign loop in step 6 will find nothing and skip, so no invoice is generated

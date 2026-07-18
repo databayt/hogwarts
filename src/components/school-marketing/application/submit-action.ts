@@ -13,10 +13,6 @@ export interface SubmitActionResult {
   applicationNumber: string
   applicationId: string
   accessToken: string
-  requiresPayment: boolean
-  applicationFee?: number
-  currency?: string
-  paymentMethods?: string[]
 }
 
 // --- Input validation schemas ---
@@ -104,10 +100,6 @@ export async function submitApplicationAction(
           applicationNumber: result.data.applicationNumber,
           applicationId: result.data.applicationId,
           accessToken: result.data.accessToken,
-          requiresPayment: result.data.requiresPayment,
-          applicationFee: result.data.applicationFee,
-          currency: result.data.currency,
-          paymentMethods: result.data.paymentMethods,
         },
       }
     }

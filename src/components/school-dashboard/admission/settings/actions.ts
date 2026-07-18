@@ -49,7 +49,6 @@ export async function getAdmissionSettings(): Promise<
       data: {
         allowMultipleApplications: settings.allowMultipleApplications,
         requireDocuments: settings.requireDocuments,
-        applicationFee: settings.defaultApplicationFee?.toNumber() ?? 0,
         offerExpiryDays: settings.offerExpiryDays,
         autoEmailNotifications: settings.autoEmailNotifications,
         enableOnlinePayment: settings.enableOnlinePayment,
@@ -113,10 +112,11 @@ export async function saveAdmissionSettings(
     }
 
     // Upsert settings
+    // defaultApplicationFee deliberately not written — applying is always
+    // free (2026-06-12 product decision); the Prisma column stays untouched.
     const settingsData = {
       allowMultipleApplications: validated.data.allowMultipleApplications,
       requireDocuments: validated.data.requireDocuments,
-      defaultApplicationFee: validated.data.applicationFee || null,
       offerExpiryDays: validated.data.offerExpiryDays,
       autoEmailNotifications: validated.data.autoEmailNotifications,
       enableOnlinePayment: validated.data.enableOnlinePayment,

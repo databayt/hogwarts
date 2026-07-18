@@ -362,10 +362,6 @@ export interface SubmitApplicationResult {
   applicationId: string
   status: AdmissionApplicationStatus
   accessToken: string
-  requiresPayment: boolean
-  applicationFee?: number
-  currency?: string
-  paymentMethods?: string[]
 }
 
 // ============================================

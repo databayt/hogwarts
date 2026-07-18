@@ -123,9 +123,7 @@ export function CampaignsTable({
         pageIndex: 0,
         pageSize: data.length || perPage,
       },
-      columnVisibility: {
-        applicationFee: false,
-      },
+      columnVisibility: {},
     },
   })
 

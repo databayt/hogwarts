@@ -48,7 +48,6 @@ export default function SettingsContent({ dictionary, lang }: Props) {
   const [settings, setSettings] = useState({
     allowMultipleApplications: false,
     requireDocuments: true,
-    applicationFee: "0",
     offerExpiryDays: 14,
     enablePublicPortal: true,
     enableInquiryForm: true,
@@ -81,7 +80,6 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         setSettings({
           allowMultipleApplications: result.data.allowMultipleApplications,
           requireDocuments: result.data.requireDocuments,
-          applicationFee: result.data.applicationFee.toString(),
           offerExpiryDays: result.data.offerExpiryDays,
           enablePublicPortal: result.data.enablePublicPortal,
           enableInquiryForm: result.data.enableInquiryForm,
@@ -128,7 +126,6 @@ export default function SettingsContent({ dictionary, lang }: Props) {
       const result = await saveAdmissionSettings({
         allowMultipleApplications: settings.allowMultipleApplications,
         requireDocuments: settings.requireDocuments,
-        applicationFee: parseFloat(settings.applicationFee) || 0,
         offerExpiryDays: settings.offerExpiryDays,
         enablePublicPortal: settings.enablePublicPortal,
         enableInquiryForm: settings.enableInquiryForm,
@@ -227,20 +224,6 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="applicationFee">
-                {t?.applicationFee || "Application Fee"}
-              </Label>
-              <Input
-                id="applicationFee"
-                type="number"
-                value={settings.applicationFee}
-                onChange={(e) =>
-                  setSettings((s) => ({ ...s, applicationFee: e.target.value }))
-                }
-                placeholder="0"
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="offerExpiryDays">
                 {t?.offerExpiryDays || "Offer Expiry (days)"}

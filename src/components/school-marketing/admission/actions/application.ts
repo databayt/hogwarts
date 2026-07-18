@@ -14,10 +14,6 @@ import {
   buildNewApplicationAdminNotification,
   buildResumeApplicationEmail,
 } from "@/lib/email-templates/admission"
-import {
-  resolveDefaultCurrency,
-  resolvePaymentGateways,
-} from "@/lib/payment/gateway-config"
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 import type {
@@ -866,26 +862,10 @@ export async function submitApplication(
         )
     }
 
-    // Check if payment is required
-    const requiresPayment =
-      campaign.applicationFee && Number(campaign.applicationFee) > 0
-
-    // Resolve available payment methods for this school's region
-    let paymentMethods: string[] | undefined
-    let currency: string | undefined
-    let applicationFee: number | undefined
-    if (requiresPayment) {
-      const school = await db.school.findUnique({
-        where: { id: schoolId },
-        select: { country: true, timezone: true },
-      })
-      paymentMethods = resolvePaymentGateways(school?.country, school?.timezone)
-      currency = resolveDefaultCurrency(school?.country, school?.timezone)
-      applicationFee = Number(campaign.applicationFee)
-    }
-
     revalidatePath(`/application`)
 
+    // Applying is always free (2026-06-12 product decision) — no payment
+    // fields in the result; the registration fee lives on the offer leg.
     return {
       success: true,
       data: {
@@ -893,10 +873,6 @@ export async function submitApplication(
         applicationId: application.id,
         status: "SUBMITTED",
         accessToken,
-        requiresPayment: !!requiresPayment,
-        applicationFee,
-        currency,
-        paymentMethods,
       },
     }
   } catch (error) {
