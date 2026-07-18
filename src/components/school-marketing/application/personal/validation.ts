@@ -110,3 +110,32 @@ export function getPersonalSchema(
 export type PersonalSchemaType = z.infer<
   ReturnType<typeof createPersonalSchema>
 >
+
+/**
+ * Completion gate for the Next button — mirrors the REQUIRED constraints of
+ * the real schema (name min-length + phone length window) without running
+ * Zod, so the gate can never be looser than the form.trigger() call inside
+ * saveAndNext(). Optional-field constraints (formats, max lengths) still
+ * surface via the form's inline errors when saveAndNext runs.
+ */
+export function isPersonalStepComplete(
+  data: { firstName?: string; lastName?: string; phone?: string } | undefined,
+  nameFormat: NameFormat = "full"
+): boolean {
+  if (!data) return false
+  const first = data.firstName ?? ""
+  const last = data.lastName ?? ""
+  // "full" format validates one combined name input (_fullName, stripped
+  // before it reaches step data) — approximate with the combined split parts.
+  const nameOk =
+    nameFormat === "full"
+      ? (first + last).trim().length >= FORM_LIMITS.NAME_MIN_LENGTH
+      : first.length >= FORM_LIMITS.NAME_MIN_LENGTH &&
+        last.length >= FORM_LIMITS.NAME_MIN_LENGTH
+  const phoneLength = (data.phone ?? "").length
+  return (
+    nameOk &&
+    phoneLength >= FORM_LIMITS.PHONE_MIN_LENGTH &&
+    phoneLength <= FORM_LIMITS.PHONE_MAX_LENGTH
+  )
+}

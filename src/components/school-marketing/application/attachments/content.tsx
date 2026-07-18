@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -10,7 +10,7 @@ import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
-import { getApplyStepDict } from "../utils"
+import { getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { ATTACHMENTS_STEP_CONFIG } from "./config"
 import { AttachmentsForm } from "./form"
@@ -48,17 +48,28 @@ export default function AttachmentsContent({
 
   const initialData = getStepData("attachments")
   const stepDict = getApplyStepDict(dictionary, "documents")
+  const [saveError, setSaveError] = useState<string | null>(null)
+  // Memoized: onNext depends on it — an unstable reference would re-run the
+  // enable/disable effect (and re-set navigation) every render.
+  const errorDict = useMemo(() => getApplyErrorDict(dictionary), [dictionary])
 
   const onNext = useCallback(async () => {
     if (attachmentsFormRef.current) {
       try {
+        setSaveError(null)
         await attachmentsFormRef.current.saveAndNext()
         router.push(`/${locale}/application/${id}/personal`)
       } catch (error) {
-        console.error("Error saving attachments step:", error)
+        // Never swallow — surface why Next didn't advance.
+        const code = error instanceof Error ? error.message : ""
+        setSaveError(
+          code === "VALIDATION_FAILED"
+            ? errorDict.stepSaveFailed || errorDict.completeAllSteps
+            : errorDict.failedToSaveSession
+        )
       }
     }
-  }, [locale, id, router])
+  }, [locale, id, router, errorDict])
 
   // Upload results land in session.formData.attachments as the form syncs
   // (string URL or {url} object depending on the upload hook's shape).
@@ -102,6 +113,11 @@ export default function AttachmentsContent({
                 ? "هذه المدرسة تشترط رفع مستند واحد على الأقل للمتابعة"
                 : "This school requires at least one uploaded document to continue")}
           </AlertDescription>
+        </Alert>
+      )}
+      {saveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{saveError}</AlertDescription>
         </Alert>
       )}
       <AttachmentsForm

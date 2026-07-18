@@ -2,10 +2,11 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -13,12 +14,14 @@ import { useLocale } from "@/components/internationalization/use-locale"
 import { useApplySession } from "../application-context"
 import { GuardianForm } from "../guardian/form"
 import type { GuardianFormRef } from "../guardian/types"
+import { isGuardianStepComplete } from "../guardian/validation"
 import type { GuardianStepData, PersonalStepData } from "../types"
-import { getApplyDict, getApplyStepDict } from "../utils"
+import { getApplyDict, getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { PERSONAL_STEP_CONFIG } from "./config"
 import { PersonalForm } from "./form"
 import type { PersonalFormRef } from "./types"
+import { isPersonalStepComplete } from "./validation"
 
 type ActiveTab = "student" | "father" | "mother"
 
@@ -38,14 +41,19 @@ export default function PersonalContent({ dictionary }: Props) {
   const guardianFormRef = useRef<GuardianFormRef>(null)
   const [activeTab, setActiveTab] = useState<ActiveTab>("student")
   const [guardianMissing, setGuardianMissing] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const initialData = getStepData("personal")
   const guardianInitialData = getStepData("guardian")
   const stepDict = getApplyStepDict(dictionary, "personal")
   const guardianDict = getApplyDict(dictionary, "guardian")
+  // Memoized: onNext depends on it, and an unstable reference would make the
+  // enable/disable effect below re-run (and re-set navigation) every render.
+  const errorDict = useMemo(() => getApplyErrorDict(dictionary), [dictionary])
 
   const onNext = useCallback(async () => {
     try {
+      setSaveError(null)
       if (personalFormRef.current) {
         await personalFormRef.current.saveAndNext()
       }
@@ -54,9 +62,16 @@ export default function PersonalContent({ dictionary }: Props) {
       }
       router.push(`/${locale}/application/${id}/location`)
     } catch (error) {
-      console.error("Error saving personal step:", error)
+      // Never swallow — an apparently-live Next button that does nothing is
+      // the exact funnel trap this step used to have.
+      const code = error instanceof Error ? error.message : ""
+      setSaveError(
+        code === "VALIDATION_FAILED"
+          ? errorDict.stepSaveFailed || errorDict.completeAllSteps
+          : errorDict.failedToSaveSession
+      )
     }
-  }, [locale, id, router])
+  }, [locale, id, router, errorDict])
 
   const { nameFormat } = useApplySession()
 
@@ -64,16 +79,11 @@ export default function PersonalContent({ dictionary }: Props) {
     const personalData = session.formData.personal
     const guardianData = session.formData.guardian
 
-    const hasName =
-      nameFormat === "full"
-        ? personalData?.firstName || personalData?.lastName
-        : personalData?.firstName && personalData?.lastName
-
-    const isPersonalValid = hasName && personalData?.phone
-
-    const isGuardianValid = !!(
-      guardianData?.fatherName || guardianData?.motherName
-    )
+    // Mirror the REAL schema constraints (phone length window, ≥2-char parent
+    // name) — a looser truthy check here used to enable Next while
+    // form.trigger() inside saveAndNext() still failed, silently.
+    const isPersonalValid = isPersonalStepComplete(personalData, nameFormat)
+    const isGuardianValid = isGuardianStepComplete(guardianData)
 
     // A guardian name is required to advance, but it lives behind the
     // Father/Mother tabs — surface why Next is blocked instead of leaving the
@@ -151,6 +161,12 @@ export default function PersonalContent({ dictionary }: Props) {
                 ? "أدخل اسم الأب أو الأم للمتابعة"
                 : "Enter the father's or mother's name to continue")}
           </p>
+        )}
+
+        {saveError && (
+          <Alert variant="destructive">
+            <AlertDescription>{saveError}</AlertDescription>
+          </Alert>
         )}
 
         <div className="flex items-center gap-2">

@@ -172,3 +172,17 @@ export const guardianSchema = z
   )
 
 export type GuardianSchemaType = z.infer<typeof guardianSchema>
+
+/**
+ * Mirrors the guardian schema's refine — at least one parent name with
+ * ≥ 2 characters — so the personal step's Next gate can never be looser
+ * than the form.trigger() call inside saveAndNext().
+ */
+export function isGuardianStepComplete(
+  data: { fatherName?: string; motherName?: string } | undefined
+): boolean {
+  return !!(
+    (data?.fatherName && data.fatherName.length >= 2) ||
+    (data?.motherName && data.motherName.length >= 2)
+  )
+}

@@ -744,6 +744,16 @@
       "late": "Late",
       "holiday": "Holiday",
       "excused": "Excused",
+      "sick": "Sick",
+      "emptyStates": {
+        "noClasses": "No Classes Available",
+        "noClassesDesc": "You need to create classes before you can track attendance.",
+        "createFirstClass": "Create Your First Class",
+        "noStudentsInClass": "No Students in This Section",
+        "noStudentsInClassDesc": "This section doesn't have any enrolled students yet. Add students to start tracking their attendance.",
+        "enrollStudents": "Enroll Students",
+        "manageStudents": "Manage Students"
+      },
       "saveAttendance": "Save Attendance",
       "bulkMark": "Bulk Mark",
       "allPresent": "All Present",
@@ -886,6 +896,34 @@
       },
       "overviewExtras": {
         "retry": "Retry",
+        "noSchoolToday": "No school today",
+        "noSchoolTodayDesc": "Today is not a school day, so attendance is not expected.",
+        "classesProgress": "Classes marked today",
+        "excusePendingSince": "Excuse pending review since {date}",
+        "absentConsecutiveDays": "Absent {count} consecutive days",
+        "quickAccess": "Quick access",
+        "viewAll": "View all",
+        "bulkUpload": "Bulk Upload",
+        "kiosk": "Kiosk Check-in",
+        "letters": "Attendance Letters",
+        "gamification": "Gamification",
+        "aiInsights": "AI Insights",
+        "hallPass": "Hall Pass",
+        "mtssTiers": "MTSS Tiers",
+        "methodLabels": {
+          "MANUAL": "Manual",
+          "QR_CODE": "QR Code",
+          "BARCODE": "Barcode",
+          "GEOFENCE": "Geofence",
+          "RFID": "RFID",
+          "FINGERPRINT": "Fingerprint",
+          "FACE_RECOGNITION": "Face",
+          "NFC": "NFC",
+          "BLUETOOTH": "Bluetooth",
+          "BULK_UPLOAD": "Import",
+          "VIRTUAL": "Live Class",
+          "KIOSK": "Kiosk"
+        },
         "moreCount": "+{count} more",
         "criticalCount": "{count} critical",
         "warningCount": "{count} warning",
@@ -894,6 +932,7 @@
       },
       "columns": {
         "student": "Student",
+        "class": "Class",
         "status": "Status",
         "date": "Date",
         "method": "Method",
@@ -1374,6 +1413,7 @@
         }
       },
       "earlyWarning": {
+        "title": "Early Warning",
         "types": {
           "parentMeeting": "Parent Meeting",
           "counseling": "Counseling",
@@ -9802,7 +9842,14 @@
           "applicationDuplicate": "An application with this information already exists",
           "missingField": "A required field is missing: {{field}}. Please go back and complete it.",
           "applicationEmailDuplicate": "An application with this email already exists for this campaign",
-          "notAuthenticated": "Please sign in to continue your application"
+          "notAuthenticated": "Please sign in to continue your application",
+          "stepSaveFailed": "Couldn't continue — please check the highlighted fields and try again"
+        },
+        "contact": {
+          "phone": "Phone",
+          "whatsapp": "WhatsApp",
+          "phonePlaceholder": "Enter phone number",
+          "selectCountry": "Select country"
         },
         "submit": "Submit"
       },

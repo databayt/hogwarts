@@ -744,6 +744,16 @@
       "late": "متأخر",
       "holiday": "عطلة",
       "excused": "معذور",
+      "sick": "مريض",
+      "emptyStates": {
+        "noClasses": "لا توجد فصول متاحة",
+        "noClassesDesc": "تحتاج إلى إنشاء فصول قبل أن تتمكن من تسجيل الحضور.",
+        "createFirstClass": "أنشئ أول فصل",
+        "noStudentsInClass": "لا يوجد طلاب في هذه الشعبة",
+        "noStudentsInClassDesc": "لا يوجد طلاب مسجلون في هذه الشعبة بعد. أضف الطلاب لبدء تسجيل حضورهم.",
+        "enrollStudents": "تسجيل الطلاب",
+        "manageStudents": "إدارة الطلاب"
+      },
       "saveAttendance": "حفظ الحضور",
       "bulkMark": "تحديد جماعي",
       "allPresent": "الكل حاضر",
@@ -886,6 +896,34 @@
       },
       "overviewExtras": {
         "retry": "إعادة المحاولة",
+        "noSchoolToday": "لا يوجد دوام اليوم",
+        "noSchoolTodayDesc": "اليوم ليس يوم دوام، لذا لا يُتوقع تسجيل حضور.",
+        "classesProgress": "الفصول المسجلة اليوم",
+        "excusePendingSince": "عذر بانتظار المراجعة منذ {date}",
+        "absentConsecutiveDays": "غائب {count} أيام متتالية",
+        "quickAccess": "وصول سريع",
+        "viewAll": "عرض الكل",
+        "bulkUpload": "رفع جماعي",
+        "kiosk": "تسجيل ذاتي (كشك)",
+        "letters": "خطابات الحضور",
+        "gamification": "التحفيز",
+        "aiInsights": "رؤى الذكاء الاصطناعي",
+        "hallPass": "تصريح الخروج",
+        "mtssTiers": "مستويات الدعم",
+        "methodLabels": {
+          "MANUAL": "يدوي",
+          "QR_CODE": "رمز QR",
+          "BARCODE": "باركود",
+          "GEOFENCE": "سياج جغرافي",
+          "RFID": "RFID",
+          "FINGERPRINT": "بصمة",
+          "FACE_RECOGNITION": "تعرف على الوجه",
+          "NFC": "NFC",
+          "BLUETOOTH": "بلوتوث",
+          "BULK_UPLOAD": "استيراد",
+          "VIRTUAL": "حصة مباشرة",
+          "KIOSK": "كشك"
+        },
         "moreCount": "+{count} المزيد",
         "criticalCount": "{count} حرج",
         "warningCount": "{count} تحذير",
@@ -894,6 +932,7 @@
       },
       "columns": {
         "student": "الطالب",
+        "class": "الفصل",
         "status": "الحالة",
         "date": "التاريخ",
         "method": "الطريقة",
@@ -1374,6 +1413,7 @@
         }
       },
       "earlyWarning": {
+        "title": "الإنذار المبكر",
         "types": {
           "parentMeeting": "اجتماع ولي الأمر",
           "counseling": "إرشاد",
@@ -9810,7 +9850,14 @@
           "applicationDuplicate": "يوجد طلب مسجل بهذه البيانات بالفعل",
           "missingField": "حقل مطلوب غير مكتمل: {{field}}. يرجى الرجوع لاستكماله.",
           "applicationEmailDuplicate": "يوجد طلب مسجل بهذا البريد الإلكتروني لهذه الحملة بالفعل",
-          "notAuthenticated": "يرجى تسجيل الدخول لمتابعة طلبك"
+          "notAuthenticated": "يرجى تسجيل الدخول لمتابعة طلبك",
+          "stepSaveFailed": "تعذر المتابعة — يرجى مراجعة الحقول المحددة والمحاولة مرة أخرى"
+        },
+        "contact": {
+          "phone": "الهاتف",
+          "whatsapp": "واتساب",
+          "phonePlaceholder": "أدخل رقم الهاتف",
+          "selectCountry": "اختر الدولة"
         },
         "submit": "تقديم"
       },

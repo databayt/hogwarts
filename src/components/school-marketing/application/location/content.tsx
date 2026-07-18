@@ -2,15 +2,16 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import React, { useCallback, useEffect, useRef } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { useApplySession } from "../application-context"
 import type { LocationStepData } from "../types"
-import { getApplyStepDict } from "../utils"
+import { getApplyErrorDict, getApplyStepDict } from "../utils"
 import { useApplyValidation } from "../validation-context"
 import { LOCATION_STEP_CONFIG } from "./config"
 import { LocationForm } from "./form"
@@ -29,11 +30,15 @@ export default function LocationContent({ dictionary }: Props) {
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
   const { session, getStepData } = useApplySession()
   const locationFormRef = useRef<LocationFormRef>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const initialData = getStepData("location")
 
   // Location doesn't have a dedicated step in the dictionary steps, use config fallback
   const stepDict = getApplyStepDict(dictionary, "location")
+  // Memoized: onNext depends on it — an unstable reference would re-run the
+  // enable/disable effect (and re-set navigation) every render.
+  const errorDict = useMemo(() => getApplyErrorDict(dictionary), [dictionary])
 
   const locationIcon = (
     <svg
@@ -71,13 +76,20 @@ export default function LocationContent({ dictionary }: Props) {
   const onNext = useCallback(async () => {
     if (locationFormRef.current) {
       try {
+        setSaveError(null)
         await locationFormRef.current.saveAndNext()
         router.push(`/${locale}/application/${id}/academic`)
       } catch (error) {
-        console.error("Error saving location step:", error)
+        // Never swallow — surface why Next didn't advance.
+        const code = error instanceof Error ? error.message : ""
+        setSaveError(
+          code === "VALIDATION_FAILED"
+            ? errorDict.stepSaveFailed || errorDict.completeAllSteps
+            : errorDict.failedToSaveSession
+        )
       }
     }
-  }, [locale, id, router])
+  }, [locale, id, router, errorDict])
 
   useEffect(() => {
     const locationData = session.formData.location
@@ -111,6 +123,11 @@ export default function LocationContent({ dictionary }: Props) {
           stepDict.description || LOCATION_STEP_CONFIG.description(isRTL)
         )}
       />
+      {saveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
       <LocationForm
         ref={locationFormRef}
         initialData={initialData as LocationStepData}
