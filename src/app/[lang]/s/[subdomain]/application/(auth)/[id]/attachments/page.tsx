@@ -3,8 +3,10 @@
 
 import type { Metadata } from "next"
 
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getAdmissionPortalFlags } from "@/components/school-marketing/admission/actions/portal-flags"
 import AttachmentsContent from "@/components/school-marketing/application/attachments/content"
 
 interface Props {
@@ -26,5 +28,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AttachmentsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <AttachmentsContent dictionary={dictionary} />
+  // Surface the school's document requirement ON this step instead of letting
+  // the applicant discover it at final submit (DOCUMENTS_REQUIRED), 4 steps late.
+  const { schoolId } = await getTenantContext()
+  const requireDocuments = schoolId
+    ? (await getAdmissionPortalFlags(schoolId)).requireDocuments
+    : false
+  return (
+    <AttachmentsContent
+      dictionary={dictionary}
+      requireDocuments={requireDocuments}
+    />
+  )
 }

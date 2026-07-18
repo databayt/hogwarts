@@ -9503,7 +9503,8 @@
           },
           "documents": {
             "title": "Documents",
-            "description": "Upload required documents"
+            "description": "Upload required documents",
+            "requiredHint": "This school requires at least one uploaded document to continue"
           },
           "review": {
             "title": "Review & Submit",

@@ -9,6 +9,13 @@ export interface AdmissionPortalFlags {
   enableInquiryForm: boolean
   enableTourBooking: boolean
   enableStatusTracker: boolean
+  /**
+   * Whether submission requires at least one uploaded document. Unlike the
+   * portal toggles this defaults to FALSE when no settings row exists —
+   * mirroring the submitApplication gate (`admissionSettings?.requireDocuments`),
+   * which only enforces the requirement for schools that have a settings row.
+   */
+  requireDocuments: boolean
 }
 
 /**
@@ -29,6 +36,7 @@ export async function getAdmissionPortalFlags(
       enableInquiryForm: true,
       enableTourBooking: true,
       enableStatusTracker: true,
+      requireDocuments: true,
     },
   })
   return {
@@ -36,5 +44,6 @@ export async function getAdmissionPortalFlags(
     enableInquiryForm: settings?.enableInquiryForm ?? true,
     enableTourBooking: settings?.enableTourBooking ?? true,
     enableStatusTracker: settings?.enableStatusTracker ?? true,
+    requireDocuments: settings?.requireDocuments ?? false,
   }
 }
