@@ -163,6 +163,10 @@ model Application {
   student        Student?
 
   @@unique([schoolId, applicationNumber])
+  // DB backstop against duplicate submissions — app code already prevents
+  // them (session claim + duplicate-email check). userId is nullable and
+  // Postgres treats NULLs as distinct, so guest/legacy rows are unaffected.
+  @@unique([schoolId, campaignId, userId])
   @@index([schoolId])
   @@index([campaignId])
   @@index([userId])
@@ -217,6 +221,9 @@ enum AdmissionApplicationStatus {
   ENTRANCE_SCHEDULED
   INTERVIEW_SCHEDULED
   SELECTED
+  // Offer lapsed past offerExpiryDate — set by the daily cron, never from
+  // the status dropdown; admin can re-offer (EXPIRED → SELECTED).
+  EXPIRED
   WAITLISTED
   REJECTED
   ADMITTED
@@ -437,10 +444,13 @@ model AdmissionSettings {
   bankDetails             Json? // { bankName, accountName, accountNumber, iban, swiftCode }
   cashPaymentInstructions String? // Custom instructions for cash payments
 
-  // Merit Criteria Weights
-  academicWeight  Int @default(40)
-  entranceWeight  Int @default(35)
-  interviewWeight Int @default(25)
+  // Merit Criteria Weights. Settings validation requires
+  // entranceWeight + interviewWeight === 100; academicWeight is vestigial
+  // (no academic-score input — always saved 0). Defaults must satisfy the
+  // form's own invariant or a freshly seeded school cannot save settings.
+  academicWeight  Int @default(0)
+  entranceWeight  Int @default(60)
+  interviewWeight Int @default(40)
 
   // Tour/Interview Settings
   tourDuration      Int   @default(60) // minutes
