@@ -173,19 +173,28 @@ test.describe("AD-072: Form validation blocks navigation", () => {
       .catch(() => false)
 
     if (hasNext) {
-      await nextBtn.first().click()
-      await page.waitForTimeout(1000)
+      // The step gate mirrors the real Zod schema (isPersonalStepComplete /
+      // isGuardianStepComplete): with required fields empty, Next must be
+      // DISABLED — not an enabled button whose click silently no-ops (the
+      // old funnel trap this spec previously failed to catch with a vacuous
+      // toBeGreaterThanOrEqual(0) assertion).
+      await expect(nextBtn.first()).toBeDisabled()
 
-      // Should still be on personal step (validation blocked)
+      // A too-short phone must not enable it either (schema minimum is 10).
+      const phoneInput = page
+        .locator('input[name="phone"], input[type="tel"]')
+        .first()
+      const hasPhone = await phoneInput
+        .isVisible({ timeout: TIMEOUTS.short })
+        .catch(() => false)
+      if (hasPhone) {
+        await phoneInput.fill("123")
+        await page.waitForTimeout(500)
+        await expect(nextBtn.first()).toBeDisabled()
+      }
+
+      // Never navigated away
       expect(page.url()).toContain("/personal")
-
-      // Check for inline validation error indicators
-      const errorIndicators = page.locator(
-        '[data-state="error"], .text-destructive, [aria-invalid="true"], .border-destructive'
-      )
-      const errorCount = await errorIndicators.count()
-      // At least some validation errors should appear
-      expect(errorCount).toBeGreaterThanOrEqual(0) // May show toast instead
     }
   })
 })
