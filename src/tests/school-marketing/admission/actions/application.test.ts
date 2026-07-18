@@ -826,6 +826,8 @@ describe("Application Actions", () => {
     })
 
     it("handles unique constraint error gracefully", async () => {
+      // Covers the DB backstop @@unique([schoolId, campaignId, userId]) the
+      // same way as the applicationNumber unique — generic P2002 mapping.
       vi.mocked(db.application.create).mockRejectedValue(
         new Error("Unique constraint violation")
       )
@@ -838,6 +840,12 @@ describe("Application Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("APPLICATION_DUPLICATE")
+      // The atomic session claim must be released so the applicant can
+      // retry — a duplicate-blocked draft must never be permanently locked.
+      expect(db.applicationSession.update).toHaveBeenCalledWith({
+        where: { sessionToken: SESSION_TOKEN },
+        data: { convertedToApplicationId: null },
+      })
     })
 
     it("handles generic DB error", async () => {
