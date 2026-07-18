@@ -195,6 +195,38 @@ describe("updateApplicationStatus - offer expiry", () => {
     expect(expiryDate.getTime()).toBeLessThan(expectedExpiry + tolerance)
   })
 
+  it("re-offers an EXPIRED application (EXPIRED → SELECTED) with a fresh expiry", async () => {
+    vi.mocked(db.application.findUnique).mockResolvedValue({
+      status: "EXPIRED",
+    } as any)
+    vi.mocked(db.admissionSettings.findUnique).mockResolvedValue({
+      offerExpiryDays: 7,
+    } as any)
+
+    const result = await updateApplicationStatus({
+      id: "app-1",
+      status: "SELECTED",
+    })
+
+    expect(result.success).toBe(true)
+    const updateData = (
+      vi.mocked(db.application.update).mock.calls[0][0] as any
+    ).data
+    expect(updateData.status).toBe("SELECTED")
+    expect(updateData.admissionOffered).toBe(true)
+    expect(updateData.offerExpiryDate).toBeInstanceOf(Date)
+  })
+
+  it("rejects EXPIRED as a manually-set target status", async () => {
+    const result = await updateApplicationStatus({
+      id: "app-1",
+      status: "EXPIRED",
+    })
+
+    expect(result.success).toBe(false)
+    expect(db.application.update).not.toHaveBeenCalled()
+  })
+
   it("defaults to 14 days when no admission settings exist", async () => {
     vi.mocked(db.admissionSettings.findUnique).mockResolvedValue(null)
 

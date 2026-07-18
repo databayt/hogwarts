@@ -9067,6 +9067,7 @@
         "ENTRANCE_SCHEDULED": "Entrance Scheduled",
         "INTERVIEW_SCHEDULED": "Interview Scheduled",
         "SELECTED": "Selected",
+        "EXPIRED": "Offer Expired",
         "WAITLISTED": "Waitlisted",
         "REJECTED": "Rejected",
         "ADMITTED": "Admitted",

@@ -67,6 +67,10 @@ export const ALLOWED_TRANSITIONS: Record<string, readonly string[]> = {
   SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
   WAITLISTED: ["SELECTED", "SHORTLISTED", "REJECTED", "WITHDRAWN"],
   SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
+  // EXPIRED is cron-set only (offer lapsed past offerExpiryDate) — it is
+  // deliberately absent from VALID_STATUSES so it can never be picked from
+  // a dropdown; the admin's one move from it is a re-offer.
+  EXPIRED: ["SELECTED"],
   REJECTED: [],
   WITHDRAWN: [],
   ADMITTED: [],

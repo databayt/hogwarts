@@ -9075,6 +9075,7 @@
         "ENTRANCE_SCHEDULED": "اختبار القبول محدد",
         "INTERVIEW_SCHEDULED": "المقابلة محددة",
         "SELECTED": "مختار",
+        "EXPIRED": "انتهت صلاحية العرض",
         "WAITLISTED": "في قائمة الانتظار",
         "REJECTED": "مرفوض",
         "ADMITTED": "مقبول",

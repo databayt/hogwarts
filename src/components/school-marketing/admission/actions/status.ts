@@ -50,6 +50,7 @@ const STATUS_LABELS: Record<AdmissionApplicationStatus, string> = {
   ENTRANCE_SCHEDULED: "موعد الاختبار",
   INTERVIEW_SCHEDULED: "موعد المقابلة",
   SELECTED: "تم الاختيار",
+  EXPIRED: "منتهي الصلاحية",
   WAITLISTED: "قائمة الانتظار",
   REJECTED: "مرفوض",
   ADMITTED: "تم القبول",

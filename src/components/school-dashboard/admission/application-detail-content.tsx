@@ -77,6 +77,7 @@ function getStatusVariant(status: string) {
       return "outline"
     case "REJECTED":
     case "WITHDRAWN":
+    case "EXPIRED":
       return "destructive"
     default:
       return "outline"

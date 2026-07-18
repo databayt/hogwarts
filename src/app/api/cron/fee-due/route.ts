@@ -157,6 +157,7 @@ interface SchoolCounts {
   feeAssignmentReminders: number
   invoiceReminders: number
   offerExpiryReminders: number
+  offersExpired: number
   notificationsCreated: number
 }
 
@@ -175,6 +176,7 @@ async function processSchool(
   let feeAssignmentReminders = 0
   let invoiceReminders = 0
   let offerExpiryReminders = 0
+  let offersExpired = 0
   let notificationsCreated = 0
 
   // ── A1: FeeAssignments due within the window ──────────────────────────────
@@ -417,10 +419,27 @@ async function processSchool(
     }
   }
 
+  // ── C: Auto-expire lapsed offers ───────────────────────────────────────────
+  // SELECTED applications whose offerExpiryDate has passed flip to EXPIRED
+  // (the enum's cron-only status; admins can re-offer via EXPIRED → SELECTED).
+  // The offer actions' own status !== "SELECTED" guards already reject
+  // mutations post-flip; their date-based OFFER_EXPIRED check remains the
+  // safety net for the up-to-24h lag between lapse and this run.
+  const expired = await db.application.updateMany({
+    where: {
+      schoolId,
+      status: "SELECTED",
+      offerExpiryDate: { lt: now },
+    },
+    data: { status: "EXPIRED" },
+  })
+  offersExpired = expired.count
+
   return {
     feeAssignmentReminders,
     invoiceReminders,
     offerExpiryReminders,
+    offersExpired,
     notificationsCreated,
   }
 }
@@ -447,6 +466,7 @@ export async function GET(request: NextRequest) {
     let totalFeeAssignmentReminders = 0
     let totalInvoiceReminders = 0
     let totalOfferExpiryReminders = 0
+    let totalOffersExpired = 0
     let totalNotificationsCreated = 0
     let schoolsProcessed = 0
 
@@ -465,10 +485,19 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    // And schools with already-lapsed SELECTED offers awaiting the EXPIRED
+    // flip (part C) — they may have no pending fees and no upcoming expiries,
+    // so neither set above would visit them.
+    const lapsedOfferSchoolRows = await db.application.groupBy({
+      by: ["schoolId"],
+      where: { status: "SELECTED", offerExpiryDate: { lt: now } },
+    })
+
     const allSchoolIds = [
       ...new Set([
         ...schoolRows.map((r) => r.schoolId),
         ...offerSchoolRows.map((r) => r.schoolId),
+        ...lapsedOfferSchoolRows.map((r) => r.schoolId),
       ]),
     ]
 
@@ -485,6 +514,7 @@ export async function GET(request: NextRequest) {
       totalFeeAssignmentReminders += counts.feeAssignmentReminders
       totalInvoiceReminders += counts.invoiceReminders
       totalOfferExpiryReminders += counts.offerExpiryReminders
+      totalOffersExpired += counts.offersExpired
       totalNotificationsCreated += counts.notificationsCreated
       schoolsProcessed++
     }
@@ -495,6 +525,7 @@ export async function GET(request: NextRequest) {
       feeAssignmentReminders: totalFeeAssignmentReminders,
       invoiceReminders: totalInvoiceReminders,
       offerExpiryReminders: totalOfferExpiryReminders,
+      offersExpired: totalOffersExpired,
       notificationsCreated: totalNotificationsCreated,
       duration: Date.now() - startTime,
     })
