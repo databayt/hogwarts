@@ -195,9 +195,10 @@ export async function seedAdmissionSettings(
         autoEmailNotifications: true,
         smsNotifications: false,
         enableOnlinePayment: false,
-        academicWeight: 40,
-        entranceWeight: 35,
-        interviewWeight: 25,
+        // Must satisfy the settings form's entrance+interview===100 refine
+        academicWeight: 0,
+        entranceWeight: 60,
+        interviewWeight: 40,
         tourDuration: 60,
         interviewDuration: 30,
         maxToursPerDay: 5,

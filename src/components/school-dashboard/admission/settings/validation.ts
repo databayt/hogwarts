@@ -47,8 +47,8 @@ export const admissionSettingsSchema = z
     // slider for it) and is always saved as 0. The field is kept so the
     // upsert payload / Prisma column stay stable.
     academicWeight: z.number().min(0).max(100).default(0),
-    entranceWeight: z.number().min(0).max(100).default(35),
-    interviewWeight: z.number().min(0).max(100).default(25),
+    entranceWeight: z.number().min(0).max(100).default(60),
+    interviewWeight: z.number().min(0).max(100).default(40),
   })
   .refine((data) => data.entranceWeight + data.interviewWeight === 100, {
     message: "Merit weights must sum to 100%",

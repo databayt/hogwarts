@@ -65,13 +65,12 @@ function mockUnauthenticated() {
 const validSettings = {
   allowMultipleApplications: false,
   requireDocuments: true,
-  applicationFee: 50,
   offerExpiryDays: 14,
   autoEmailNotifications: true,
   enableOnlinePayment: false,
-  academicWeight: 40,
-  entranceWeight: 35,
-  interviewWeight: 25,
+  academicWeight: 0,
+  entranceWeight: 60,
+  interviewWeight: 40,
 }
 
 // ---------------------------------------------------------------------------
@@ -101,9 +100,9 @@ describe("Admission Settings Actions", () => {
         offerExpiryDays: 14,
         autoEmailNotifications: true,
         enableOnlinePayment: false,
-        academicWeight: 40,
-        entranceWeight: 35,
-        interviewWeight: 25,
+        academicWeight: 0,
+        entranceWeight: 60,
+        interviewWeight: 40,
       } as any)
 
       const result = await getAdmissionSettings()
@@ -129,9 +128,9 @@ describe("Admission Settings Actions", () => {
         offerExpiryDays: 14,
         autoEmailNotifications: true,
         enableOnlinePayment: false,
-        academicWeight: 40,
-        entranceWeight: 35,
-        interviewWeight: 25,
+        academicWeight: 0,
+        entranceWeight: 60,
+        interviewWeight: 40,
       } as any)
 
       const result = await getAdmissionSettings()
@@ -168,11 +167,11 @@ describe("Admission Settings Actions", () => {
         create: expect.objectContaining({
           schoolId: SCHOOL_ID,
           allowMultipleApplications: false,
-          academicWeight: 40,
+          academicWeight: 0,
         }),
         update: expect.objectContaining({
           allowMultipleApplications: false,
-          academicWeight: 40,
+          academicWeight: 0,
         }),
       })
     })
