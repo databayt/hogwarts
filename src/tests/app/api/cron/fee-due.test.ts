@@ -31,6 +31,7 @@ vi.mock("@/lib/db", () => ({
     application: {
       groupBy: vi.fn(),
       findMany: vi.fn(),
+      updateMany: vi.fn(),
     },
     notification: {
       findFirst: vi.fn(),
@@ -85,6 +86,8 @@ describe("fee-due cron — auth", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = "secret"
+    // Part C (auto-expire) runs for every processed school — default: no rows
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
   })
 
   it("returns 401 with no Authorization header", async () => {
@@ -113,6 +116,8 @@ describe("fee-due cron — per-school batching", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = "secret"
+    // Part C (auto-expire) runs for every processed school — default: no rows
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
   })
 
   it("iterates over distinct school IDs from both fee and offer groupBy", async () => {
@@ -163,6 +168,8 @@ describe("fee-due cron — FeeAssignment reminders", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = "secret"
+    // Part C (auto-expire) runs for every processed school — default: no rows
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([
       { schoolId: "school-1" },
@@ -288,6 +295,8 @@ describe("fee-due cron — UserInvoice reminders", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = "secret"
+    // Part C (auto-expire) runs for every processed school — default: no rows
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([
       { schoolId: "school-1" },
@@ -370,6 +379,8 @@ describe("fee-due cron — offer expiry reminders", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = "secret"
+    // Part C (auto-expire) runs for every processed school — default: no rows
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
 
     mockDb.feeAssignment.groupBy.mockResolvedValue([])
     mockDb.application.groupBy.mockResolvedValue([
@@ -485,5 +496,60 @@ describe("fee-due cron — offer expiry reminders", () => {
     const body = await res.json()
     expect(body.offerExpiryReminders).toBe(0)
     expect(mockDispatch).not.toHaveBeenCalled()
+  })
+})
+
+// ── Part C: auto-expire lapsed offers ───────────────────────────────────────
+
+describe("fee-due cron — auto-expire lapsed offers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.CRON_SECRET = "secret"
+    mockDb.application.updateMany.mockResolvedValue({ count: 0 } as any)
+    mockDb.feeAssignment.findMany.mockResolvedValue([])
+    mockDb.userInvoice.findMany.mockResolvedValue([])
+    mockDb.application.findMany.mockResolvedValue([])
+    mockDb.notification.findFirst.mockResolvedValue(null as any)
+    mockDb.school.findUnique.mockResolvedValue({
+      preferredLanguage: "ar",
+    } as any)
+  })
+
+  it("visits schools whose only work is a lapsed offer and flips them to EXPIRED", async () => {
+    mockDb.feeAssignment.groupBy.mockResolvedValue([] as any)
+    mockDb.application.groupBy
+      // 1st groupBy: upcoming-expiry reminder set (empty)
+      .mockResolvedValueOnce([] as any)
+      // 2nd groupBy: already-lapsed set — this school has no other work
+      .mockResolvedValueOnce([{ schoolId: "school-lapsed" }] as any)
+    mockDb.application.updateMany.mockResolvedValue({ count: 3 } as any)
+
+    const res = await GET(makeRequest("secret") as any)
+    const body = await res.json()
+
+    expect(body.schoolsProcessed).toBe(1)
+    expect(body.offersExpired).toBe(3)
+    // The flip only ever targets SELECTED rows already past their expiry —
+    // never future-dated offers.
+    expect(mockDb.application.updateMany).toHaveBeenCalledWith({
+      where: {
+        schoolId: "school-lapsed",
+        status: "SELECTED",
+        offerExpiryDate: { lt: expect.any(Date) },
+      },
+      data: { status: "EXPIRED" },
+    })
+  })
+
+  it("reports zero when nothing lapsed", async () => {
+    mockDb.feeAssignment.groupBy.mockResolvedValue([
+      { schoolId: "school-a" },
+    ] as any)
+    mockDb.application.groupBy.mockResolvedValue([] as any)
+
+    const res = await GET(makeRequest("secret") as any)
+    const body = await res.json()
+
+    expect(body.offersExpired).toBe(0)
   })
 })
