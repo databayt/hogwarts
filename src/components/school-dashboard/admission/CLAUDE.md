@@ -40,7 +40,10 @@ School-side admission pipeline: campaigns, applications, merit lists, enrollment
 - **Offer flow was broken (P0-1/P0-2) — fixed 2026-05-22 + 2026-06-13**: accessToken threaded from `offer/page.tsx` → `OfferContent` → all 5 mutations; `callbackUrl` now preserves the full token'd offer path through login; registration-fee success/fail banners; rate-limited; abandoned-checkout retry unblocked.
 - **AI subsystem was disconnected (P1-1) — fixed 2026-06-13**: `/api/cron/process-document-jobs` (\*/10) now drains the queue; `classify.ts` is budget-gated (`canUseAI`) + tracks usage; `classifyDocument`/`getDocumentProcessingStatus` are RBAC-gated; `bank-receipt-schema.ts` Zod fields made optional.
 - **Error display (P1-5) — fixed 2026-05-22**: clients now show localized messages; raw `OFFER_EXPIRED`-style codes no longer surface to users. When touching toasts, continue using the localized fallback pattern.
-- `Application.lang` field still absent (P1-6 — schema flag, deferred). Student lang derived via regex heuristic; keep until schema work is approved.
+- **`Application.lang` exists and is fully wired (P1-6 CLOSED)**: written by `submitApplication` since migration `20260522000000_add_lang_to_application`, selected in `applicationDetailSelect`, and read directly on the detail page (2026-07-18 — the Arabic-regex heuristic is gone).
+- **EXPIRED status (2026-07-18)**: cron-set only (daily fee-due job flips SELECTED past `offerExpiryDate`); never a dropdown target; admin re-offers via EXPIRED → SELECTED. `status-machine.ts` is the single transition source for BOTH dropdowns (`applications-columns.tsx` no longer hand-copies the map).
+- **Role-aware UI (2026-07-18)**: `getUIConfigForRole` drives `readOnly` on detail actions; campaigns/merit/settings/leads render `AdmissionAccessDenied` for roles outside their `getTabsForRole` set (inline denial, never `redirect()`).
+- **Applying is always free**: the vestigial application-fee plumbing (settings input, campaigns column, submit result fields, `APPLICATION_FEE_UNPAID` warning) was removed 2026-07-18; Prisma columns remain but nothing writes them.
 
 ## Related Blocks
 

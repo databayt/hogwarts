@@ -1,9 +1,9 @@
 ---
 title: Application
-description: Public applicant flow — login, campaign selection, 5-step wizard, session management, payment, status tracking, tour booking, and inquiry capture.
+description: Public applicant flow — login, campaign selection, 5-step wizard, session management, offer + registration fee, status tracking, tour booking, and inquiry capture.
 ---
 
-The applicant-facing portal runs at `school.databayt.org`. Applying requires a login (the wizard is auth-gated); status tracking stays account-less via OTP. After choosing a campaign, the applicant enters a 5-step wizard with auto-save (every 30 s + localStorage), submits on the Fees step, optionally pays, and tracks status via OTP or login.
+The applicant-facing portal runs at `school.databayt.org`. Applying requires a login (the wizard is auth-gated, and the actions enforce it server-side); status tracking stays account-less via OTP. After choosing a campaign, the applicant enters a 5-step wizard with auto-save (every 30 s + localStorage, with a server-session fallback when localStorage is lost), and submits on the Fees step. **Applying is always free** — the only payment in the whole journey is the registration fee, after an offer is accepted.
 
 ## Steps
 
@@ -12,24 +12,24 @@ The applicant-facing portal runs at `school.databayt.org`. Applying requires a l
 2. Log in (auth-gated) → choose campaign / start application
 3. Overview — drafts + new application
 4. Wizard — 5 steps (3 phases)
-5. Submit (on the Fees step)
-6. Payment (if required) → Offer (post-decision)
-7. Success page
+5. Submit (on the Fees step — free, no payment)
+6. Success dialog (inline) → application appears under "Your applications"
+7. Offer (post-decision) → registration fee to secure the seat
 ```
 
 ## Wizard
 
 Single shared `FormFooter` with three progress bars (one per phase). 30 s auto-save + localStorage backup.
 
-| #   | Step        | Required fields                                                                      | Route                                  |
-| --- | ----------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
-| 1   | Attachments | All optional (photo, degree, transcript, ID, resume, other) — triggers AI extraction | `/{lang}/application/{id}/attachments` |
-| 2   | Personal    | Student name, dateOfBirth, gender, nationality + guardian (Father/Mother) in tabs    | `/{lang}/application/{id}/personal`    |
-| 3   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                 | `/{lang}/application/{id}/location`    |
-| 4   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                             | `/{lang}/application/{id}/academic`    |
-| 5   | Fees        | Fee preview by grade + accepted payment methods — submits the application            | `/{lang}/application/{id}/fees`        |
+| #   | Step        | Required fields                                                                                                                                                                                                | Route                                  |
+| --- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1   | Attachments | Optional by default (photo, degree, transcript, ID, resume, other) — triggers AI extraction. When the school sets `requireDocuments`, this step blocks Next with a visible hint until ≥ 1 document is uploaded | `/{lang}/application/{id}/attachments` |
+| 2   | Personal    | Student name, dateOfBirth, gender, nationality + guardian (Father/Mother) in tabs                                                                                                                              | `/{lang}/application/{id}/personal`    |
+| 3   | Location    | address, city, state, country (Mapbox if `NEXT_PUBLIC_MAPBOX_TOKEN`)                                                                                                                                           | `/{lang}/application/{id}/location`    |
+| 4   | Academic    | applyingForClass (14 grade levels: KG1, KG2, Grade 1–12)                                                                                                                                                       | `/{lang}/application/{id}/academic`    |
+| 5   | Fees        | Informational fee preview by grade (applying is free — no payment UI) — submits the application                                                                                                                | `/{lang}/application/{id}/fees`        |
 
-The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`, and folds the former **Guardian** step into Student / Father / Mother tabs. The former standalone **Contact** step was removed — `email` is back-filled at submit from the session / logged-in user. **Fees** is the final step: it previews the fee for the chosen grade, then its button submits the application (routing to payment if a fee is due).
+The Personal step uses single "Full Name" or split fields based on the school's `nameFormat`, and folds the former **Guardian** step into Student / Father / Mother tabs. The former standalone **Contact** step was removed — `email` is back-filled at submit from the session / logged-in user. **Fees** is the final step: it previews the tuition for the chosen grade, then its button submits the application and shows the success dialog inline. Each step's Next button is gated by the same rules the real validation enforces (phone length, ≥ 2-character parent name), and any save/validation failure surfaces as an inline alert — never a silent no-op.
 
 ### Phase grouping
 
@@ -53,48 +53,46 @@ The Personal step uses single "Full Name" or split fields based on the school's 
 8. Create Application (status: SUBMITTED)
 9. Mark session as converted
 10. Notify admins + send applicant confirmation email (Resend)
-11. requiresPayment = campaign.applicationFee > 0
 ```
 
-Post-submit routing: payment page if `requiresPayment`, otherwise success page.
+The caller must be signed in (`NOT_AUTHENTICATED` otherwise), documents are
+required at this point only as a backstop (`DOCUMENTS_REQUIRED` — the
+attachments step already gates it), and duplicates are blocked both in code
+and by the `@@unique([schoolId, campaignId, userId])` DB constraint
+(`APPLICATION_DUPLICATE`). There is **no payment step** — the retired
+application-fee leg was removed entirely.
 
-## Payment
+## Success dialog
 
-| Method        | Behaviour                          |
-| ------------- | ---------------------------------- |
-| Pay with Card | Stripe Checkout redirect           |
-| Pay at School | Cash — shows reference number      |
-| Bank Transfer | Bank details with reference number |
+Submission opens the success dialog inline on the fees step (the standalone
+success/payment pages were deleted):
 
-Stripe webhook (`/api/webhooks/stripe`) sets `applicationFeePaid = true` and dispatches `fee_paid` notification on success.
+- Application Tracking Code (application number + access token for the OTP tracker)
+- Next steps timeline (email → review → decision)
 
-## Success page
+After submitting, the application stays visible under **"Your applications"**
+on the authenticated `/{lang}/application` dashboard — status badge,
+application number, submitted date, and a **View offer** link once SELECTED.
 
-- Confetti modal on first visit
-- Application number
-- Account credentials (email + default password)
-- "Complete Payment" CTA if unpaid
-- Next steps timeline (email → review → interview → decision)
-- Links to school explore + tour booking
+## Offer & registration fee (post-decision)
 
-## Offer (post-decision)
-
-Once an admission decision is made, `/{lang}/application/{id}/offer` lets the applicant accept or decline and pay the registration fee to secure the seat. It is reached via an emailed offer-token link.
+Once an admission decision is made, `/{lang}/application/{id}/offer` lets the applicant accept or decline and pay the **registration fee** to secure the seat — the only payment in the flow. It is reached via an emailed offer-token link or the dashboard's View-offer link. Methods (gated by what the school's currency/region supports): card checkout (webhook-confirmed), cash and bank transfer (admin-confirmed). Amounts render via locale-aware `formatCurrency`. Offers lapse: a daily job flips SELECTED applications past `offerExpiryDate` to **EXPIRED**; an admin can re-offer (EXPIRED → SELECTED).
 
 ## Application status banner
 
 Server-rendered banner on the school site for logged-in applicants. Dismissible per application via localStorage.
 
-| Status          | Message                                 | CTA              |
-| --------------- | --------------------------------------- | ---------------- |
-| SUBMITTED       | "Application #N — Submitted"            | —                |
-| UNDER_REVIEW    | "Application #N — Under Review"         | —                |
-| SHORTLISTED     | "Application #N — Shortlisted"          | —                |
-| SELECTED        | "Congratulations! You've been accepted" | Complete Payment |
-| SELECTED + paid | "Accepted — Payment received"           | Go to Dashboard  |
-| ADMITTED        | "Welcome! Enrollment confirmed"         | Go to Dashboard  |
-| WAITLISTED      | "Application #N — Waitlisted"           | —                |
-| REJECTED        | "Application #N — Not Selected"         | —                |
+| Status          | Message                                 | CTA             |
+| --------------- | --------------------------------------- | --------------- |
+| SUBMITTED       | "Application #N — Submitted"            | —               |
+| UNDER_REVIEW    | "Application #N — Under Review"         | —               |
+| SHORTLISTED     | "Application #N — Shortlisted"          | —               |
+| SELECTED        | "Congratulations! You've been accepted" | View Offer      |
+| SELECTED + paid | "Accepted — Payment received"           | Go to Dashboard |
+| EXPIRED         | "Application #N — Offer expired"        | —               |
+| ADMITTED        | "Welcome! Enrollment confirmed"         | Go to Dashboard |
+| WAITLISTED      | "Application #N — Waitlisted"           | —               |
+| REJECTED        | "Application #N — Not Selected"         | —               |
 
 Banner includes a 4-dot timeline: Submitted → Review → Decision → Enrolled.
 
@@ -154,12 +152,12 @@ The wizard itself is **auth-gated** (login required to apply). Status tracking, 
 
 ## Troubleshooting
 
-| Symptom                       | Likely cause                                                              |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| Application not saving        | Network error, expired session (7 d), subdomain not resolving             |
-| Submit fails validation       | Missing required field across steps; check error message field names      |
-| OTP not received              | Spam folder, wrong email, rate limit (3 / h)                              |
-| Payment page shows no methods | `AdmissionSettings.paymentMethods` empty, fee = 0, Stripe webhook missing |
+| Symptom                     | Likely cause                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| Application not saving      | Network error, expired session (7 d), subdomain not resolving                        |
+| Submit fails validation     | Missing required field across steps; check error message field names                 |
+| OTP not received            | Spam folder, wrong email, rate limit (3 / h)                                         |
+| Offer page shows no methods | School currency/region unsupported by every gateway — cash/bank should always remain |
 
 ## Key files
 
@@ -170,7 +168,7 @@ The wizard itself is **auth-gated** (login required to apply). Status tracking, 
 | Context        | `src/components/school-marketing/application/application-context.tsx`                                                                                                                                    |
 | Submit         | `src/components/school-marketing/application/submit-action.ts` + `admission/actions/application.ts`                                                                                                      |
 | Validation     | `src/components/school-marketing/admission/validation.ts`                                                                                                                                                |
-| Payment        | `src/components/school-marketing/application/payment/actions.ts`                                                                                                                                         |
+| Offer + fee    | `src/components/school-marketing/application/offer/{actions.ts, gateways.ts, content.tsx}` (registration fee — the only payment)                                                                         |
 | Stripe webhook | `src/app/api/webhooks/stripe/route.ts`                                                                                                                                                                   |
 | Schema         | `prisma/models/admission.prisma`                                                                                                                                                                         |
 | Tests          | `school-marketing/admission/__tests__/{status-banner.test.tsx, status/__tests__/status-display.test.tsx, actions/__tests__/status-tracking.test.ts}` + `app/api/webhooks/stripe/__tests__/route.test.ts` |

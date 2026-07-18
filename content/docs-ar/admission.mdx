@@ -3,9 +3,23 @@ title: القبول
 description: إدارة القبول من جانب المسؤول — مراجعة الطلبات، تأكيد التسجيل، قائمة الجدارة، توزيع الفصول، ومعالجة وثائق الذكاء الاصطناعي.
 ---
 
-يمتد تدفّق القبول من جانب المسؤول من مراجعة الطلب وحتى تأكيد التسجيل. تأكيد التسجيل يُطلق معاملة واحدة بمدة 30 ثانية تُنشئ `Student` و`Guardians` و`FeeAssignments` و`UserInvoices` في خطوة ذرّية واحدة.
+يمتد تدفّق القبول من جانب المسؤول من مراجعة الطلب وحتى تأكيد التسجيل. تأكيد التسجيل يُشغّل معاملة ذرّية واحدة تفوِّض إلى نواة `provisionStudent()` المشتركة، فتُنشئ `Student` و`Guardians` و`FeeAssignments` و`UserInvoices` معاً — إمّا أن تكتمل كلّها أو لا يُنشأ شيء.
 
 **التقديم مجاني دائماً.** يجمع معالج الطلب المعلومات فحسب — لا تُحصَّل أي مدفوعات في مرحلة التقديم. تُستحق المدفوعات في مرحلتين لاحقتين: رسوم التسجيل عند قبول المتقدّم للعرض، وفواتير الرسوم الدراسية بعد تأكيد التسجيل.
+
+## إضافة الطلاب — أربع قنوات وخطّ أنابيب واحد
+
+لا يصل الطالب عبر التقديم العلني فحسب؛ هناك **أربع** طرق لإضافته، وكلّها تمرّ منذ توحيد الإدخال عبر خطوة "provision" المشتركة نفسها، فيخرج الطالب متطابقاً أيّاً كانت قناته: حساب دخول، فواتير رسوم، أولياء أمور، صف وفصل، وسجل قبول حقيقي مُوسوم بالقناة.
+
+| القناة          | كيف يُضاف الطالب                                     | الوسم               |
+| --------------- | ---------------------------------------------------- | ------------------- |
+| التقديم         | الأسرة تُكمل معالج التقديم العلني ثم المراجعة والعرض | `PORTAL`            |
+| إضافة فردية     | المسؤول يُنشئ طالباً من معالج `/students`            | `ADMIN_DIRECT`      |
+| استيراد التهيئة | رفع CSV أثناء تهيئة المدرسة                          | `ONBOARDING_IMPORT` |
+| `/school/bulk`  | رفع CSV لاحقاً من لوحة التحكم                        | `BULK_IMPORT`       |
+| سكربت الترحيل   | سجل قبول رجعي لطالب سابق على التوحيد                 | `LEGACY_BACKFILL`   |
+
+القنوات غير `PORTAL` تُنشئ طلب "قبول مباشر" بحالة `ADMITTED` على حملة نظامية خفية لكل مدرسة، فلا تُغرق قائمة المراجعة — تبويبا الطلبات والتسجيل يعرضان قناة `PORTAL` افتراضياً مع مرشّح يكشف البقية.
 
 ## خط الأنابيب
 
@@ -49,6 +63,7 @@ Edit in wizard           → Update details
 | `ENTRANCE_SCHEDULED`  | المسؤول يجدول                  | يُحدَّد تاريخ امتحان القبول                          |
 | `INTERVIEW_SCHEDULED` | المسؤول يجدول                  | يُحدَّد تاريخ المقابلة                               |
 | `SELECTED`            | المسؤول يختار                  | يُنشأ العرض (انتهاء صلاحية قابل للتهيئة)، رابط الدفع |
+| `EXPIRED`             | مهمة يومية (انقضى العرض)       | ينقلب العرض المنقضي تلقائياً؛ يمكن إعادة العرض       |
 | `WAITLISTED`          | المسؤول يضع على قائمة الانتظار | إخطار المتقدّم                                       |
 | `REJECTED`            | المسؤول يرفض                   | إخطار المتقدّم                                       |
 | `ADMITTED`            | المسؤول يؤكّد التسجيل          | إنشاء `Student` و`Guardians` و`Fees` و`Invoices`     |
@@ -56,16 +71,15 @@ Edit in wizard           → Update details
 
 ## معاملة التسجيل
 
-`confirmEnrollment()` يُشغّل `db.$transaction` واحدة بمدة 30 ثانية:
+`confirmEnrollment()` يتحقّق من أن الطلب `SELECTED` وأن عرضه غير منقضٍ، ثم يُشغّل `db.$transaction` واحدة تفوِّض إنشاء الطالب إلى النواة المشتركة **`provisionStudent()`** (`src/lib/student-provisioning.ts`) — الخطوة نفسها التي تستخدمها قنوات الإدخال الأربع:
 
 1. ضبط حالة الطلب `ADMITTED` مع رقم تسجيل `ENR-{timestamp}-{random}`.
-2. إنشاء `User` (دور `STUDENT`) إذا كان المتقدّم زائراً؛ ترقية `USER` → `STUDENT` خلاف ذلك.
-3. إنشاء `Student` ببيانات الطلب مُعبَّأة مسبقاً؛ مطابقة `applyingForClass` → `YearLevel` (الاسم بالضبط → غير حسّاس لحالة الأحرف → رقم الصف → `levelOrder`)؛ إنشاء `StudentYearLevel` وضبط `academicGradeId`.
-4. تخصيص `FeeStructures` النشطة تلقائياً للسنة الأكاديمية للحملة → صفوف `FeeAssignment` (`PENDING`).
-5. إنشاء `Guardian` و`StudentGuardian` و`GuardianPhoneNumber` من بيانات الأب / الأم؛ نسخ وثائق الطلب إلى `StudentDocument`.
-6. توليد `UserInvoice` واحدة لكل `FeeAssignment` عبر `createInvoiceFromEnrollment()` (غير حرجة): الرقم `ENR-{unique}`، الحالة `UNPAID`، استحقاق 30 يوماً؛ `UserInvoiceItem` واحد لكل بنية رسوم.
+2. إنشاء `User` (دور `STUDENT`) إذا كان المتقدّم زائراً؛ ترقية `USER` → `STUDENT` خلاف ذلك (البحث عن الحساب مُنطَّق بـ `schoolId`).
+3. إنشاء `Student` ببيانات الطلب مُعبَّأة مسبقاً؛ مطابقة `applyingForClass` → `YearLevel`؛ إنشاء `StudentYearLevel` وضبط `academicGradeId`.
+4. تخصيص `FeeStructures` النشطة تلقائياً عبر `ensureStudentFeeAssignments(tx)` → صفوف `FeeAssignment` (`PENDING`) وفواتير `UserInvoice` المقابلة.
+5. إنشاء `Guardian` و`StudentGuardian` و`GuardianPhoneNumber` من بيانات الأب / الأم (مع منع تكرار وليّ الأمر بالبريد أو الهاتف)؛ نسخ وثائق الطلب إلى `StudentDocument`.
 
-ما بعد المعاملة (best-effort): إخطار الطالب وأولياء الأمور (داخل التطبيق + بريد)، إرسال إشعارات `fee_due`، إعادة `studentId`. يُنشأ الطالب بـ `wizardStep: null` و`status: ACTIVE`.
+ما بعد المعاملة (best-effort): إخطار الطالب وأولياء الأمور (داخل التطبيق + بريد)، رابط تعيين كلمة مرور للمستخدم الجديد، إرسال إشعارات `fee_due`، إعادة `studentId`. يُنشأ الطالب بـ `wizardStep: null` و`status: ACTIVE`.
 
 ## نقل البيانات من Application إلى Student
 
@@ -194,6 +208,7 @@ Edit in wizard           → Update details
 | تبويب العملاء المحتملون | `src/components/school-dashboard/admission/leads/`                                                                                                       |
 | وثائق الذكاء الاصطناعي  | `src/components/school-dashboard/admission/ai/{classify,bank-receipt-schema}.ts`                                                                         |
 | الإعدادات               | `src/components/school-dashboard/admission/settings/{actions,validation}.ts`                                                                             |
+| نواة الإدخال            | `src/lib/student-provisioning.ts` + `src/lib/system-campaign.ts`                                                                                         |
 | أداة الفاتورة           | `src/components/school-dashboard/finance/invoice/actions.ts`                                                                                             |
 | Schema                  | `prisma/models/admission.prisma`                                                                                                                         |
 | الاختبارات              | `src/components/school-dashboard/admission/__tests__/{actions,enrollment-pipeline}.test.ts` + `finance/invoice/__tests__/create-from-enrollment.test.ts` |

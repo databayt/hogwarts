@@ -26,6 +26,7 @@ A student can enter the system four ways. **All four funnel through one shared c
 | Admin single    | An admin creates one student in the `/students` wizard                             | `ADMIN_DIRECT`        |
 | Onboarding bulk | CSV upload while setting up the school                                             | `ONBOARDING_IMPORT`   |
 | `/school/bulk`  | CSV upload later, from the dashboard                                               | `BULK_IMPORT`         |
+| Backfill script | Retroactive shadow application for a pre-unification student                       | `LEGACY_BACKFILL`     |
 
 The non-`PORTAL` channels create a "direct-admit" `Application` in the `ADMITTED` state, hung off a hidden per-school system campaign, so they never appear in the review queue. The Applications and Enrollment tabs **default to `PORTAL`** — a channel filter reveals the rest. Everything below describes the `PORTAL` (public application → enrollment) path in detail; the other three channels reuse the same `provisionStudent` step from enrollment onward.
 
@@ -183,6 +184,7 @@ The admission feature follows the mirror pattern — every route under `app/[lan
 | `ENTRANCE_SCHEDULED`  | Admin schedules              | Entrance exam date set                            |
 | `INTERVIEW_SCHEDULED` | Admin schedules              | Interview date set                                |
 | `SELECTED`            | Admin selects                | Offer created (configurable expiry), payment link |
+| `EXPIRED`             | Daily job (offer lapsed)     | Offer past expiry auto-flips; admin can re-offer  |
 | `WAITLISTED`          | Admin waitlists              | Applicant notified                                |
 | `REJECTED`            | Admin rejects                | Applicant notified                                |
 | `ADMITTED`            | Admin confirms enrollment    | Student + Guardians + Fees + Invoices created     |

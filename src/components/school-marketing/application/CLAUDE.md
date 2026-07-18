@@ -4,7 +4,7 @@
 
 Public multi-step application form for prospective students (5 steps: attachments, personal, location, academic, fees-preview — guardian folded into personal tabs, contact removed). Session-based auto-save. Login required (auth-gated `(auth)/layout.tsx`); the OTP status tracker is account-less.
 
-**Last updated:** 2026-06-13
+**Last updated:** 2026-07-18 (audit pass: auth-required actions, tenant-scoped uploads, documents-required gate at the attachments step, aligned Next gates + inline save errors, submitted-applications dashboard section, server-session resume fallback, dead payment/success routes deleted)
 
 ## Before You Start
 
@@ -31,7 +31,8 @@ Public multi-step application form for prospective students (5 steps: attachment
 - `validation-helpers.ts` -- cross-step validation; changes affect which steps show as valid/invalid
 - File uploads in `attachments/` -- S3 integration; broken uploads block submission
 - Fees step -- preview only; do NOT add payment collection here (product decision above)
-- `payment/content.tsx` is now effectively dead (application is always free); clean up carefully, verify no runtime imports before deleting
+- `application-context.tsx` `initSession` falls back to a server draft lookup when localStorage is empty (2026-07-18) — the localStorage-hit path and `loadSession` are unchanged; a `?token=` resume skips the fallback. Keep it that way: the fallback must only ever run on the previously-blank path
+- The dead `payment/` and `success/` routes (+ `success/content.tsx`) were deleted 2026-07-18 — the wizard's only success surface is the inline `ApplicationSuccessModal` on the fees step
 
 ## Related Blocks
 

@@ -65,8 +65,8 @@ src/components/school-dashboard/admission/
 ├── enrollment-columns.tsx          # Enrollment DataTable column definitions
 ├── enrollment-table.tsx            # Enrollment DataTable (client) — PlacementDialog wired
 ├── placement-dialog.tsx            # Student placement dialog with seat counts (client)
-├── bulk-placement.tsx              # Bulk placement operations (client)
-├── settings-content.tsx            # Admission settings (server component)
+├── access-denied.tsx               # Role-gated tab denial panel (shared)
+├── settings-content.tsx            # Admission settings (client component)
 ├── leads/                          # Leads tab [NEW]
 │   ├── leads-content.tsx           # Leads tab server component (inquiries + tour bookings)
 │   ├── leads-columns.tsx           # Leads DataTable column definitions
@@ -80,13 +80,9 @@ src/components/school-dashboard/admission/
 │   ├── schemas.ts                  # Zod schemas for AI structured output
 │   ├── prompts.ts                  # AI system prompts
 │   ├── classify.ts                 # Claude Vision document classification (budget-gated + RBAC)
-│   ├── completeness.ts             # Document completeness checker
-│   ├── merit-engine.ts             # Weighted merit score computation
 │   ├── actions.ts                  # AI processing server actions (RBAC-gated)
 │   ├── bank-receipt-schema.ts      # Bank receipt extraction schema (optional fields)
-│   ├── bank-receipt-actions.ts     # Bank receipt processing actions
 │   ├── document-review-panel.tsx   # Document review UI (client)
-│   ├── document-card.tsx           # Individual document card (client)
 │   └── documents-section.tsx       # Documents section wrapper (client)
 └── __tests__/
     ├── actions.test.ts                     # Main action tests

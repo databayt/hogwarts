@@ -13,9 +13,9 @@ last_audited: 2026-06-13
 
 # Admission — Production Readiness Tracker
 
-**Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified; ~90% complete
-**Real Completion:** ~90% (core pipeline end-to-end; Leads tab added; server-side search + #269 + WhatsApp breadth remain)
-**Last Updated:** 2026-06-13
+**Status:** 🟢 PRODUCTION-READY CORE — full admit→accept→pay→enroll→fee flow verified; ~95% complete
+**Real Completion:** ~95% (core pipeline end-to-end; 2026-07-18 audit pass closed the wizard P0s, role-aware UI, EXPIRED status, weights defaults; #269 + WhatsApp breadth + tour-config settings remain)
+**Last Updated:** 2026-07-18 (full-flow audit + fix pass — see #376)
 **Last Audited:** 2026-06-13 (production-readiness pass; tsc 0, ~1010 tests passing)
 **Ship Issue:** [#239](https://github.com/databayt/hogwarts/issues/239)
 
@@ -135,23 +135,28 @@ Shared model: `prisma/models/admission.prisma` (9 models). Cross-block rule: `.c
 
 ### P1 — High (remaining)
 
-- **P1-6 — `Application` model has no `lang` field. [flag — schema]**
-  Violates Single-Language Storage. `submitApplication` never sets `lang`; downstream `getText()` can't translate applicant content; the Student record derives lang via fragile Arabic-character regex sniffing (`actions.ts:968`, `application-detail-content.tsx:134`).
+_None. P1-6 (`Application.lang`) is RESOLVED: the column exists (migration
+`20260522000000_add_lang_to_application`), `submitApplication` writes it, and
+since 2026-07-18 the detail page reads it directly (`applicationDetailSelect`
+selects `lang`; the Arabic-regex sniffing is gone)._
 
 ### P2 — Medium
 
-- **Server-side search** — Merit & Enrollment search boxes don't query the server; `deferredSearch` is computed but never sent to the fetcher (`merit-table.tsx`, `enrollment-table.tsx`); only client-side filters the current page.
 - **Issue #269** — fee-structure creation as modal (not a blocking flow issue).
-- Settings page exposes only ~12 of ~30 `AdmissionSettings` fields. Unmanaged: portal toggles (`enablePublicPortal`/`enableInquiryForm`/`enableTourBooking`/`enableStatusTracker`), tour/interview config, `smsNotifications`, `stripeAccountId`, `documentRequirements`, `gradeMapping`.
-- Settings portal toggles are not enforced (only `enableInquiryForm` checked action-side; others read nowhere).
-- `confirmEnrollment` duplicates the fee-auto-assign matching logic from `src/lib/fee-auto-assign.ts` — extend the helper to accept a `tx` client and call it once.
-- Status enum has `ENTRANCE_SCHEDULED` / `INTERVIEW_SCHEDULED` not wired into the status dropdown (`VALID_STATUSES`).
-- Missing dictionary keys: `columns.applicationFee`, `toolbar.delete`, and the entire `admission.ai.*` / `admission.documentTypes.*` namespaces (AI doc UI is English-only regardless of locale).
-- India-centric merit categories hardcoded (`General/OBC/SC/ST`, `merit-columns.tsx`) — irrelevant for the Sudan/Saudi market; make school-configurable.
+- Settings page manages ~15 of ~25 `AdmissionSettings` fields. Still unmanaged: tour/interview config (`tourDuration`/`interviewDuration`/`maxToursPerDay`/`tourDaysOfWeek`/`tourTimeSlots`), `smsNotifications`, `stripeAccountId`, `documentRequirements`, `gradeMapping`. (Portal toggles ARE managed + enforced; `applicationFee` input removed 2026-07-18 — applying is always free.)
 - `application-status-banner-client.tsx` + `INQUIRY_SOURCES`/`DEFAULT_GRADES` i18n migration — deferred.
-- Dead code: `tour-booking-content.tsx` (duplicate of `TourWizard`), `payment/content.tsx`, dead `contact` step route, `mailto:…@${subdomain}.edu` broken links.
+- Dead code: `tour-booking-content.tsx` was deleted in the 2026-07-11 pass; `payment/` + `success/` routes and the success page's `mailto:…@${subdomain}.edu` deleted 2026-07-18.
 - 13 prod `as any` (mostly `documents` JSON casts with no runtime validation).
 - **WhatsApp breadth (BUG-10)** — WhatsApp channel not wired for more admission events beyond current scope.
+
+### Resolved in the 2026-07-18 audit pass (was listed above)
+
+- ~~Server-side search~~ — full round-trip existed since 2026-07-11, but `merit-content.tsx`/`enrollment-content.tsx` dropped `sp.search` before the query (search boxes silently dead) — wired 2026-07-18.
+- ~~Portal toggles not enforced~~ — all four enforced since the 2026-07-11 portal leg (`inquiry.ts`, `tour.ts`, `status.ts`, admissions page).
+- ~~fee-auto-assign duplication~~ — `confirmEnrollment` delegates to `ensureStudentFeeAssignments(tx)` via `provisionStudent`.
+- ~~ENTRANCE/INTERVIEW_SCHEDULED not wired~~ — `status-machine.ts` has been the single source since 2026-07-11; the stale hand-copied map in `applications-columns.tsx` (which still hid them from the LIST dropdown) replaced with `getAllowedTransitions` 2026-07-18.
+- ~~Missing dict keys~~ — `admission.ai.*`/`admission.documentTypes.*` exist bilingual; `toolbar.delete` added 2026-07-18; `columns.applicationFee` obsolete (column removed).
+- ~~India-centric merit categories~~ — removed from `merit-columns.tsx`; `category` renders as a school-defined free-text badge.
 
 ### Previously Fixed (for reference)
 
@@ -173,7 +178,7 @@ Shared model: `prisma/models/admission.prisma` (9 models). Cross-block rule: `.c
 
 - **TypeScript:** tsc 0 errors.
 - **Unit tests:** ~1010 passing across all new suites (admission + finance + webhook). New tests cover merit scoring, placement, AI pipeline gating, webhook dedup/retry, fee-inheritance cascade, OTP hashing, rate-limiting.
-- **Coverage gaps (remaining):** server-side search wiring; `Application.lang` field tests.
+- **Coverage gaps (remaining):** none of the previously-listed ones — server-side search is wired end-to-end (2026-07-18) and `Application.lang` exists, is written on submit, and is read on the detail page. New suites 2026-07-18: `status-machine.test.ts` (EXPIRED semantics + invariants), `settings/validation.test.ts` (weights-defaults regression), upload tenant-scoping (`src/tests/file/upload/actions.test.ts`).
 
 ## Recent progress (2026-05-22 → 2026-06-13)
 
