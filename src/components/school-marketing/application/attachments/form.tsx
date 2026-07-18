@@ -10,14 +10,12 @@ import React, {
   useState,
 } from "react"
 import Image from "next/image"
-import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CheckCircle, Loader2, X } from "lucide-react"
 import { useDropzone } from "react-dropzone"
 import { useForm, useFormContext } from "react-hook-form"
 
 import { asset } from "@/lib/asset-url"
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 import { normalizeUploadUrl } from "@/lib/upload-url"
 import { cn } from "@/lib/utils"
 import { Form } from "@/components/ui/form"
@@ -62,7 +60,6 @@ function DocumentCard({
   label,
   icon,
   disabled,
-  schoolId,
   uploadedLabel,
   onUploaded,
   tooLargeLabel = "File too large (10MB max)",
@@ -75,7 +72,6 @@ function DocumentCard({
   label: string
   icon: string
   disabled?: boolean
-  schoolId?: string
   uploadedLabel?: string
   onUploaded?: (fileUrl: string) => void
   tooLargeLabel?: string
@@ -104,7 +100,6 @@ function DocumentCard({
     folder: "apply-documents",
     maxSize: 10 * 1024 * 1024,
     maxFiles: 1,
-    schoolId,
     onSuccess: (result) => {
       setRejectionError(null)
       form.setValue(name, result)
@@ -253,8 +248,6 @@ export const AttachmentsForm = forwardRef<
   AttachmentsFormProps
 >(({ initialData, onSuccess, dictionary }, ref) => {
   const { updateStepData, getStepData, saveSession } = useApplySession()
-  const params = useParams()
-  const [schoolId, setSchoolId] = useState<string>()
   const dict = getApplyDict(dictionary, "attachments")
 
   // Silent AI extraction → auto-fill subsequent steps
@@ -268,15 +261,6 @@ export const AttachmentsForm = forwardRef<
     },
     [getStepData, updateStepData]
   )
-
-  // Resolve schoolId from subdomain so applicants (who have no school) can upload
-  useEffect(() => {
-    const subdomain = params?.subdomain as string | undefined
-    if (!subdomain) return
-    getSchoolBySubdomain(subdomain).then((result) => {
-      if (result.success) setSchoolId(result.data.id)
-    })
-  }, [params?.subdomain])
 
   const form = useForm<AttachmentsFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -372,7 +356,6 @@ export const AttachmentsForm = forwardRef<
             }}
             placeholder={dict.photo || "Photo"}
             placeholderImage={asset("/icons/image.png")}
-            schoolId={schoolId}
           />
         </div>
 
@@ -383,7 +366,6 @@ export const AttachmentsForm = forwardRef<
             name={key}
             label={dict[dictKey] || dictKey}
             icon={icon}
-            schoolId={schoolId}
             uploadedLabel={dict.uploaded}
             tooLargeLabel={dict.tooLarge}
             invalidTypeLabel={dict.invalidType}

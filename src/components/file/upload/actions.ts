@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 import { FOLDER_STRUCTURE } from "../config"
 import { generateUniqueFilename } from "../formatters"
@@ -36,8 +37,6 @@ interface UploadOptions {
   tier?: StorageTier
   access?: "public" | "private"
   metadata?: Record<string, string>
-  /** Override schoolId (e.g., for applicants uploading to a school they don't belong to) */
-  schoolId?: string
 }
 
 interface UploadResult {
@@ -100,9 +99,12 @@ export async function uploadFile(
       schoolId = ownedSchool?.id
     }
 
-    // Allow explicit schoolId override (e.g., applicants uploading to a target school)
-    if (!schoolId && options.schoolId) {
-      schoolId = options.schoolId
+    // Applicants (User.schoolId = null) upload to the school whose subdomain
+    // the request came from — resolved server-side, never from a client value,
+    // so a caller can't write into another tenant's namespace.
+    if (!schoolId) {
+      const tenant = await getTenantContext()
+      schoolId = tenant.schoolId ?? undefined
     }
 
     if (!schoolId) {

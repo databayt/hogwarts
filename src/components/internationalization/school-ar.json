@@ -9808,7 +9808,8 @@
           "applicationAlreadySubmitted": "تم تقديم هذا الطلب مسبقاً",
           "applicationDuplicate": "يوجد طلب مسجل بهذه البيانات بالفعل",
           "missingField": "حقل مطلوب غير مكتمل: {{field}}. يرجى الرجوع لاستكماله.",
-          "applicationEmailDuplicate": "يوجد طلب مسجل بهذا البريد الإلكتروني لهذه الحملة بالفعل"
+          "applicationEmailDuplicate": "يوجد طلب مسجل بهذا البريد الإلكتروني لهذه الحملة بالفعل",
+          "notAuthenticated": "يرجى تسجيل الدخول لمتابعة طلبك"
         },
         "submit": "تقديم"
       },

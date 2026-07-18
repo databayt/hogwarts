@@ -190,6 +190,7 @@ export default function FeesContent({ dictionary }: Props) {
           APPLICATION_DUPLICATE: errorDict.applicationDuplicate,
           APPLICATION_EMAIL_DUPLICATE: errorDict.applicationEmailDuplicate,
           SUBMIT_FAILED: errorDict.failedToSubmit,
+          NOT_AUTHENTICATED: errorDict.notAuthenticated,
         }
         const code = result.error ?? ""
         const missingField = code.startsWith("MISSING_FIELD:")

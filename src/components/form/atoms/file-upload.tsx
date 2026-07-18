@@ -102,8 +102,6 @@ interface FileUploadFieldProps {
   }
   /** Files above this size (bytes) use chunked upload with real progress */
   chunkThreshold?: number
-  /** Override schoolId for uploads (e.g., applicants uploading to a target school) */
-  schoolId?: string
   /** Accept mapping for dropzone */
   accept?: Record<string, string[]>
   /** Dictionary for i18n */
@@ -145,7 +143,6 @@ export function FileUploadField({
   optimizeImages,
   imageOptimization,
   chunkThreshold,
-  schoolId,
   accept,
   dictionary,
   onUploadComplete,
@@ -184,7 +181,6 @@ export function FileUploadField({
               optimizeImages={optimizeImages}
               imageOptimization={imageOptimization}
               chunkThreshold={chunkThreshold}
-              schoolId={schoolId}
               accept={accept}
               dictionary={dictionary}
               initialUrl={

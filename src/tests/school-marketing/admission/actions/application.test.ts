@@ -336,6 +336,16 @@ describe("Application Actions", () => {
       })
     })
 
+    it("returns NOT_AUTHENTICATED when caller has no session", async () => {
+      mockUnauthenticated()
+
+      const result = await saveApplicationSession(SUBDOMAIN, sessionData)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+      expect(db.applicationSession.create).not.toHaveBeenCalled()
+    })
+
     it("validates session data via sessionDataSchema", async () => {
       const result = await saveApplicationSession(SUBDOMAIN, {
         formData: {},
@@ -643,6 +653,20 @@ describe("Application Actions", () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toBe("School not found")
+    })
+
+    it("returns NOT_AUTHENTICATED when caller has no session", async () => {
+      mockUnauthenticated()
+
+      const result = await submitApplication(
+        SUBDOMAIN,
+        SESSION_TOKEN,
+        validFormData
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("NOT_AUTHENTICATED")
+      expect(db.application.create).not.toHaveBeenCalled()
     })
 
     it("accepts data without schema validation (pre-validated by submit-action.ts)", async () => {

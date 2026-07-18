@@ -9800,7 +9800,8 @@
           "applicationAlreadySubmitted": "This application has already been submitted",
           "applicationDuplicate": "An application with this information already exists",
           "missingField": "A required field is missing: {{field}}. Please go back and complete it.",
-          "applicationEmailDuplicate": "An application with this email already exists for this campaign"
+          "applicationEmailDuplicate": "An application with this email already exists for this campaign",
+          "notAuthenticated": "Please sign in to continue your application"
         },
         "submit": "Submit"
       },

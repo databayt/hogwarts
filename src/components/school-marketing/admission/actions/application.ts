@@ -225,9 +225,13 @@ export async function saveApplicationSession(
 
     const schoolId = schoolResult.data.id
 
-    // Get authenticated user ID
+    // The apply wizard is login-required — (auth)/layout.tsx gates the UI,
+    // but Server Actions are public POST endpoints, so enforce it here too.
     const session = await auth()
-    const userId = session?.user?.id ?? undefined
+    const userId = session?.user?.id
+    if (!userId) {
+      return { success: false, error: "NOT_AUTHENTICATED" }
+    }
 
     // Validate session data
     const validated = sessionDataSchema.parse(data)
@@ -536,6 +540,12 @@ export async function submitApplication(
 
     if (appSession && appSession.schoolId !== schoolId) {
       return { success: false, error: "Invalid session" }
+    }
+
+    // Login is required to apply — the (auth) layout gates the UI, but Server
+    // Actions are public POST endpoints, so enforce the policy here as well.
+    if (!authSession?.user?.id) {
+      return { success: false, error: "NOT_AUTHENTICATED" }
     }
 
     // Resolve userId: prefer the session's original userId (set when applicant
