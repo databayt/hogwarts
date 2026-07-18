@@ -3,9 +3,11 @@
 
 import { SearchParams } from "nuqs/server"
 
+import { ADMIN_ROLES, isRoleIn } from "@/lib/rbac/ui-permissions"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { AdmissionAccessDenied } from "@/components/school-dashboard/admission/access-denied"
 import { meritSearchParams } from "@/components/school-dashboard/admission/list-params"
 import type { MeritRow } from "@/components/school-dashboard/admission/merit-columns"
 import { MeritTable } from "@/components/school-dashboard/admission/merit-table"
@@ -27,8 +29,14 @@ export default async function MeritContent({
   lang,
 }: Props) {
   const sp = await meritSearchParams.parse(await searchParams)
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
   const t = dictionary.admission
+
+  // Merit is hidden from ACCOUNTANT's nav (getTabsForRole) — close the
+  // direct-URL gap too. ADMIN/DEVELOPER/STAFF keep access.
+  if (!(isRoleIn(role, ADMIN_ROLES) || role === "STAFF")) {
+    return <AdmissionAccessDenied dictionary={dictionary} />
+  }
 
   let data: MeritRow[] = []
   let total = 0

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import type { Role } from "@/lib/rbac/types"
 import { normalizeUploadUrl } from "@/lib/upload-url"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -20,6 +21,7 @@ import type {
   ProcessedDocument,
 } from "./ai/types"
 import ApplicationDetailActions from "./application-detail-actions"
+import { getUIConfigForRole } from "./permissions"
 import { getApplicationDetail } from "./queries"
 import { ScoreEntryInline } from "./score-entry-inline"
 
@@ -136,6 +138,13 @@ export default async function ApplicationDetailContent({
   if (!schoolId) {
     notFound()
   }
+
+  // Read-only roles (ACCOUNTANT) must not see mutating controls that the
+  // server would reject anyway — drive the UI off the same role config the
+  // permission layer defines.
+  const uiConfig = getUIConfigForRole(
+    (session?.user?.role ?? null) as Role | null
+  )
 
   const application = await getApplicationDetail(schoolId, applicationId)
 
@@ -326,6 +335,7 @@ export default async function ApplicationDetailContent({
           applicationId={applicationId}
           currentStatus={application.status}
           dictionary={dictionary}
+          readOnly={uiConfig.readOnlyMode}
         />
       </div>
 

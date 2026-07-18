@@ -29,6 +29,12 @@ interface Props {
   currentStatus: string
   dictionary: Dictionary["school"]
   placement?: "sidebar" | "header"
+  /**
+   * Read-only posture (getUIConfigForRole — e.g. ACCOUNTANT): hide the
+   * mutating controls instead of rendering buttons whose server actions
+   * always reject with FORBIDDEN.
+   */
+  readOnly?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +61,7 @@ export default function ApplicationDetailActions({
   currentStatus,
   dictionary,
   placement = "sidebar",
+  readOnly = false,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -120,6 +127,12 @@ export default function ApplicationDetailActions({
         </span>
       </Button>
     )
+  }
+
+  // Read-only roles get no mutating sidebar controls at all (print above
+  // stays available — it isn't a mutation).
+  if (readOnly) {
+    return null
   }
 
   return (

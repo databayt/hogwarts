@@ -7,11 +7,13 @@
  * then hands off to client tables for load-more pagination.
  */
 
+import { ADMIN_ROLES, isRoleIn } from "@/lib/rbac/ui-permissions"
 import { getTenantContext } from "@/lib/tenant-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { AdmissionAccessDenied } from "../access-denied"
 import type {
   InquiryRow,
   LeadsAdmissionDict,
@@ -26,7 +28,13 @@ interface Props {
 }
 
 export default async function LeadsContent({ dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext()
+  const { schoolId, role } = await getTenantContext()
+
+  // Leads is hidden from ACCOUNTANT's nav (getTabsForRole) — close the
+  // direct-URL gap too. ADMIN/DEVELOPER/STAFF keep access.
+  if (!(isRoleIn(role, ADMIN_ROLES) || role === "STAFF")) {
+    return <AdmissionAccessDenied dictionary={dictionary} />
+  }
   // Cast to include the `leads` namespace (keys tracked in dict_keys output)
   const t = dictionary.admission as LeadsAdmissionDict
 

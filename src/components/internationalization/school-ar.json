@@ -9912,6 +9912,10 @@
           "decisionsReleasedDesc": "إرسال إشعارات القبول"
         }
       },
+      "accessDenied": {
+        "title": "الوصول مرفوض",
+        "description": "ليس لديك صلاحية للوصول إلى هذه الصفحة."
+      },
       "portal": {
         "welcome": "مرحباً",
         "completeYourApplication": "أكمل طلبك",

@@ -3,8 +3,11 @@
 
 import { Metadata } from "next"
 
+import { ADMIN_ROLES, isRoleIn } from "@/lib/rbac/ui-permissions"
+import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AdmissionAccessDenied } from "@/components/school-dashboard/admission/access-denied"
 import SettingsContent from "@/components/school-dashboard/admission/settings-content"
 
 interface Props {
@@ -26,6 +29,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SettingsPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
+
+  // Settings is an admin-only tab (getTabsForRole) and holds bank details —
+  // close the direct-URL gap for STAFF/ACCOUNTANT (the gated settings
+  // actions stay the hard enforcement; this is honest UI). Gated in the
+  // PAGE because SettingsContent is a client component.
+  const { role } = await getTenantContext()
+  if (!isRoleIn(role, ADMIN_ROLES)) {
+    return <AdmissionAccessDenied dictionary={dictionary.school} />
+  }
 
   return <SettingsContent dictionary={dictionary.school} lang={lang} />
 }

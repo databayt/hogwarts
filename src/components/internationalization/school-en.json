@@ -9904,6 +9904,10 @@
           "decisionsReleasedDesc": "Admission notifications sent to applicants"
         }
       },
+      "accessDenied": {
+        "title": "Access Denied",
+        "description": "You do not have permission to access this page."
+      },
       "portal": {
         "welcome": "Welcome",
         "completeYourApplication": "Complete your application",
