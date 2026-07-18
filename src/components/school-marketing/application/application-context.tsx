@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react"
 
 import type { NameFormat } from "@/lib/name-utils"
 import {
+  getDraftApplicationsByUser,
   resumeApplicationSession,
   saveApplicationSession,
 } from "@/components/school-marketing/admission/actions"
@@ -262,6 +263,51 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
 
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Load existing session from token — defined BEFORE initSession because
+  // initSession's server-draft fallback references it (useCallback deps).
+  const loadSession = useCallback(
+    async (token: string): Promise<boolean> => {
+      setSession((prev) => ({ ...prev, isLoading: true, error: null }))
+
+      try {
+        const result = await resumeApplicationSession(
+          token,
+          subdomain ?? undefined
+        )
+
+        if (result.success && result.data) {
+          const data = result.data
+          setSession((prev) => ({
+            ...prev,
+            sessionToken: token,
+            campaignId: data.campaignId || null,
+            formData: reNestFormData(data.formData as Record<string, unknown>),
+            currentStep:
+              (data.formData as { currentStep?: ApplyStep })?.currentStep ||
+              "personal",
+            isLoading: false,
+          }))
+          return true
+        } else {
+          setSession((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: result.error || "FAILED_TO_LOAD_SESSION",
+          }))
+          return false
+        }
+      } catch (error) {
+        setSession((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "FAILED_TO_LOAD_SESSION",
+        }))
+        return false
+      }
+    },
+    [subdomain]
+  )
+
   // Initialize session for a new application
   const initSession = useCallback(
     async (campaignId: string, subdomainValue: string) => {
@@ -313,6 +359,32 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
             }))
           }
         } else {
+          // No local draft — before blanking, ask the server. Auto-save keeps
+          // an ApplicationSession row per user+campaign, and losing
+          // localStorage (new device, cleared storage, private mode) must not
+          // silently reset a half-finished application. Skipped when a
+          // ?token= resume is in flight — that explicit token owns hydration
+          // and this lookup must not race it onto a different draft.
+          const hasUrlToken =
+            typeof window !== "undefined" &&
+            !!new URLSearchParams(window.location.search).get("token")
+          if (userId && !hasUrlToken) {
+            try {
+              const drafts = await getDraftApplicationsByUser(
+                subdomainValue,
+                userId
+              )
+              const match =
+                drafts.success && drafts.data
+                  ? drafts.data.find((d) => d.campaignId === campaignId)
+                  : undefined
+              if (match && (await loadSession(match.sessionToken))) {
+                return
+              }
+            } catch {
+              // Server lookup failed — fall through to a fresh session
+            }
+          }
           setSession((prev) => ({
             ...prev,
             campaignId,
@@ -329,51 +401,7 @@ export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
         }))
       }
     },
-    [userId]
-  )
-
-  // Load existing session from token
-  const loadSession = useCallback(
-    async (token: string): Promise<boolean> => {
-      setSession((prev) => ({ ...prev, isLoading: true, error: null }))
-
-      try {
-        const result = await resumeApplicationSession(
-          token,
-          subdomain ?? undefined
-        )
-
-        if (result.success && result.data) {
-          const data = result.data
-          setSession((prev) => ({
-            ...prev,
-            sessionToken: token,
-            campaignId: data.campaignId || null,
-            formData: reNestFormData(data.formData as Record<string, unknown>),
-            currentStep:
-              (data.formData as { currentStep?: ApplyStep })?.currentStep ||
-              "personal",
-            isLoading: false,
-          }))
-          return true
-        } else {
-          setSession((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: result.error || "FAILED_TO_LOAD_SESSION",
-          }))
-          return false
-        }
-      } catch (error) {
-        setSession((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: "FAILED_TO_LOAD_SESSION",
-        }))
-        return false
-      }
-    },
-    [subdomain]
+    [userId, loadSession]
   )
 
   // Update step data
