@@ -13,6 +13,7 @@ import {
   XCircle,
 } from "lucide-react"
 
+import { formatCurrency } from "@/lib/payment/currency"
 import type { BankDetails, PaymentGateway } from "@/lib/payment/types"
 import { getSchoolDisplayName } from "@/lib/school-name"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -149,6 +150,11 @@ export default function OfferContent({
     offerState,
     availableGateways,
   } = offer
+
+  // Locale-aware amounts — same formatting the fees-preview step uses,
+  // instead of raw "{amount} {currency}" concatenation.
+  const fmtAmount = (amount: number) =>
+    formatCurrency(amount, school.currency, locale === "ar" ? "ar-SD" : "en-US")
 
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -362,7 +368,7 @@ export default function OfferContent({
                   {t?.amount || "Amount"}
                 </span>
                 <span className="font-medium">
-                  {registrationFeeTotal} {school.currency}
+                  {fmtAmount(registrationFeeTotal)}
                 </span>
               </div>
 
@@ -611,7 +617,7 @@ export default function OfferContent({
                     <TableRow key={fs.id}>
                       <TableCell className="font-medium">{fs.name}</TableCell>
                       <TableCell className="text-end tabular-nums">
-                        {fs.totalAmount} {school.currency}
+                        {fmtAmount(fs.totalAmount)}
                       </TableCell>
                       <TableCell className="text-end tabular-nums">
                         {fs.installments}
@@ -621,7 +627,7 @@ export default function OfferContent({
                   <TableRow className="font-bold">
                     <TableCell>{t?.annualTotal || "Annual Total"}</TableCell>
                     <TableCell className="text-end tabular-nums">
-                      {totalAnnualFees} {school.currency}
+                      {fmtAmount(totalAnnualFees)}
                     </TableCell>
                     <TableCell />
                   </TableRow>
@@ -686,7 +692,7 @@ export default function OfferContent({
                   {t?.amountDue || "Amount Due"}
                 </p>
                 <p className="text-2xl font-bold">
-                  {registrationFeeTotal} {school.currency}
+                  {fmtAmount(registrationFeeTotal)}
                 </p>
               </div>
 
