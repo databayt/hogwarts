@@ -408,6 +408,8 @@ export async function seedApplications(
       | "DRAFT"
       | "SUBMITTED"
       | "UNDER_REVIEW"
+      | "ENTRANCE_SCHEDULED"
+      | "INTERVIEW_SCHEDULED"
       | "SHORTLISTED"
       | "SELECTED"
       | "ADMITTED"
@@ -432,7 +434,7 @@ export async function seedApplications(
     },
     {
       status: "SUBMITTED",
-      count: 10,
+      count: 8,
       hasEntranceScore: false,
       hasInterviewScore: false,
       hasMeritScore: false,
@@ -440,8 +442,26 @@ export async function seedApplications(
     },
     {
       status: "UNDER_REVIEW",
-      count: 8,
+      count: 6,
       hasEntranceScore: false,
+      hasInterviewScore: false,
+      hasMeritScore: false,
+      isAdmitted: false,
+    },
+    {
+      // Entrance test booked, not yet taken — no scores yet
+      status: "ENTRANCE_SCHEDULED",
+      count: 2,
+      hasEntranceScore: false,
+      hasInterviewScore: false,
+      hasMeritScore: false,
+      isAdmitted: false,
+    },
+    {
+      // Passed entrance, interview booked
+      status: "INTERVIEW_SCHEDULED",
+      count: 2,
+      hasEntranceScore: true,
       hasInterviewScore: false,
       hasMeritScore: false,
       isAdmitted: false,
@@ -621,11 +641,32 @@ export async function seedApplications(
               meritRank: config.hasMeritScore ? meritRank++ : null,
               waitlistNumber:
                 config.status === "WAITLISTED" ? randomNumber(1, 10) : null,
-              admissionOffered: config.isAdmitted,
-              offerDate: config.isAdmitted ? reviewedAt : null,
-              offerExpiryDate: config.isAdmitted
-                ? new Date((reviewedAt || new Date()).getTime() + 14 * 86400000)
-                : null,
+              // SELECTED *is* the offer-extended state — it must carry live
+              // offer fields (a demo SELECTED row without an offer looks
+              // broken); ADMITTED keeps its historical (past) offer dates.
+              admissionOffered:
+                config.isAdmitted || config.status === "SELECTED",
+              offerDate:
+                config.status === "SELECTED"
+                  ? reviewedAt || new Date()
+                  : config.isAdmitted
+                    ? reviewedAt
+                    : null,
+              offerExpiryDate:
+                config.status === "SELECTED"
+                  ? new Date(Date.now() + 14 * 86400000)
+                  : config.isAdmitted
+                    ? new Date(
+                        (reviewedAt || new Date()).getTime() + 14 * 86400000
+                      )
+                    : null,
+              // Live offer link for the applicant dashboard / offer page
+              accessToken:
+                config.status === "SELECTED" ? crypto.randomUUID() : null,
+              accessTokenExpiry:
+                config.status === "SELECTED"
+                  ? new Date(Date.now() + 180 * 86400000)
+                  : null,
               admissionConfirmed: config.isAdmitted && Math.random() < 0.8,
               confirmationDate:
                 config.isAdmitted && Math.random() < 0.8
@@ -634,8 +675,17 @@ export async function seedApplications(
                         randomNumber(1, 7) * 86400000
                     )
                   : null,
-              applicationFeePaid: config.status !== "DRAFT",
-              paymentDate: config.status !== "DRAFT" ? submittedAt : null,
+              // Applying is always free — applicationFeePaid is deprecated
+              // and no longer seeded. ADMITTED rows carry the registration
+              // fee confirmEnrollment actually gates on.
+              registrationFeePaid: config.isAdmitted,
+              registrationFeeAmount: config.isAdmitted ? 25000 : null,
+              registrationFeeMethod: config.isAdmitted
+                ? randomElement(["cash", "bank_transfer"])
+                : null,
+              registrationFeeDate: config.isAdmitted
+                ? reviewedAt || submittedAt
+                : null,
               createdAt,
               updatedAt: reviewedAt || submittedAt || createdAt,
             },
