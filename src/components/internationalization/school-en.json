@@ -9917,6 +9917,8 @@
         "enrollmentClosed": "Enrollment is Currently Closed",
         "enrollmentClosedDesc": "{schoolName} is not accepting applications at this time. Please visit the admissions page for upcoming enrollment dates.",
         "viewAdmissions": "View Admissions",
+        "submittedApplications": "Your applications",
+        "viewOffer": "View offer",
         "contactUs": "Contact Us",
         "applicationFallback": "Application",
         "today": "Today",

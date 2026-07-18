@@ -12,6 +12,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   getActiveCampaigns,
   getDraftApplicationsByUser,
+  getSubmittedApplicationsByUser,
 } from "@/components/school-marketing/admission/actions"
 import { EnrollmentClosed } from "@/components/school-marketing/admission/portal/enrollment-closed"
 import ApplyDashboardClient from "@/components/school-marketing/application/overview/apply-dashboard-client"
@@ -84,17 +85,23 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   // Pick campaign (K-12: single, multi: first active)
   const campaignId = campaigns[0].id
 
-  // Fetch draft applications for authenticated users
+  // Fetch draft + submitted applications for authenticated users
   let draftApplications: Awaited<
     ReturnType<typeof getDraftApplicationsByUser>
   >["data"] = []
+  let submittedApplications: Awaited<
+    ReturnType<typeof getSubmittedApplicationsByUser>
+  >["data"] = []
   if (session?.user?.id) {
-    const draftsResult = await getDraftApplicationsByUser(
-      subdomain,
-      session.user.id
-    )
+    const [draftsResult, submittedResult] = await Promise.all([
+      getDraftApplicationsByUser(subdomain, session.user.id),
+      getSubmittedApplicationsByUser(subdomain, session.user.id),
+    ])
     if (draftsResult.success && draftsResult.data) {
       draftApplications = draftsResult.data
+    }
+    if (submittedResult.success && submittedResult.data) {
+      submittedApplications = submittedResult.data
     }
   }
 
@@ -102,6 +109,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     <ApplyDashboardClient
       userName={session?.user?.name || undefined}
       draftApplications={draftApplications || []}
+      submittedApplications={submittedApplications || []}
       campaignId={campaignId}
       dictionary={dictionary}
       lang={lang}

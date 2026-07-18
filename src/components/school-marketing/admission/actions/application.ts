@@ -398,6 +398,83 @@ export async function getDraftApplicationsByUser(
 }
 
 /**
+ * Get submitted (non-draft) applications for an authenticated user.
+ *
+ * Powers the "your applications" section of the authenticated apply
+ * dashboard: once a draft converts, its ApplicationSession disappears from
+ * getDraftApplicationsByUser, and without this list the application would
+ * vanish from the signed-in view entirely (leaving only the account-less
+ * OTP status tracker).
+ */
+export async function getSubmittedApplicationsByUser(
+  subdomain: string,
+  userId: string
+): Promise<
+  ActionResult<
+    Array<{
+      id: string
+      applicationNumber: string
+      status: string
+      studentName: string | null
+      campaignName: string | null
+      submittedAt: Date | null
+      /** Non-null when a live offer link can be shown (status SELECTED) */
+      offerToken: string | null
+    }>
+  >
+> {
+  try {
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const schoolId = schoolResult.data.id
+
+    const applications = await db.application.findMany({
+      where: { schoolId, userId, status: { not: "DRAFT" } },
+      select: {
+        id: true,
+        applicationNumber: true,
+        status: true,
+        firstName: true,
+        lastName: true,
+        submittedAt: true,
+        accessToken: true,
+        accessTokenExpiry: true,
+        campaign: { select: { name: true } },
+      },
+      orderBy: { submittedAt: "desc" },
+    })
+
+    const now = new Date()
+    return {
+      success: true,
+      data: applications.map((app) => ({
+        id: app.id,
+        applicationNumber: app.applicationNumber,
+        status: app.status,
+        studentName:
+          app.firstName && app.lastName
+            ? `${app.firstName} ${app.lastName}`
+            : app.firstName || null,
+        campaignName: app.campaign?.name ?? null,
+        submittedAt: app.submittedAt,
+        offerToken:
+          app.status === "SELECTED" &&
+          app.accessToken &&
+          (!app.accessTokenExpiry || app.accessTokenExpiry > now)
+            ? app.accessToken
+            : null,
+      })),
+    }
+  } catch (error) {
+    console.error("Error fetching submitted applications by user:", error)
+    return { success: false, error: "Failed to fetch applications" }
+  }
+}
+
+/**
  * Resume application from session token
  */
 export async function resumeApplicationSession(

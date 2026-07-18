@@ -10,6 +10,7 @@ export {
   saveApplicationSession,
   resumeApplicationSession,
   getDraftApplicationsByUser,
+  getSubmittedApplicationsByUser,
   submitApplication,
 } from "./application"
 

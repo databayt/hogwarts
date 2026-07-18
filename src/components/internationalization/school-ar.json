@@ -9925,6 +9925,8 @@
         "enrollmentClosed": "التسجيل مغلق حالياً",
         "enrollmentClosedDesc": "{schoolName} لا تقبل طلبات في الوقت الحالي. يرجى زيارة صفحة القبول للاطلاع على المواعيد القادمة.",
         "viewAdmissions": "صفحة القبول",
+        "submittedApplications": "طلباتك",
+        "viewOffer": "عرض القبول",
         "contactUs": "تواصل معنا",
         "applicationFallback": "طلب القبول",
         "today": "اليوم",

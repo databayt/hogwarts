@@ -163,4 +163,123 @@ export function ApplicationCard({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Submitted applications — shown on the same dashboard once a draft converts
+// ---------------------------------------------------------------------------
+
+export interface SubmittedApplication {
+  id: string
+  applicationNumber: string
+  status: string
+  studentName: string | null
+  campaignName: string | null
+  submittedAt: Date | null
+  offerToken: string | null
+}
+
+function statusVariant(
+  status: string
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "SELECTED":
+    case "ADMITTED":
+      return "default"
+    case "REJECTED":
+    case "WITHDRAWN":
+      return "destructive"
+    default:
+      return "secondary"
+  }
+}
+
+interface SubmittedApplicationCardProps {
+  application: SubmittedApplication
+  onViewOffer?: (application: SubmittedApplication) => void
+  isRTL?: boolean
+  locale?: string
+  dictionary?: {
+    applicationFallback?: string
+    viewOffer?: string
+  }
+  /** school.admission.status.* labels keyed by status value */
+  statusDict?: Record<string, string>
+}
+
+export function SubmittedApplicationCard({
+  application,
+  onViewOffer,
+  isRTL = false,
+  locale = isRTL ? "ar" : "en",
+  dictionary,
+  statusDict,
+}: SubmittedApplicationCardProps) {
+  const dict = dictionary || {}
+
+  return (
+    <Card className="bg-card min-h-[50px] rounded-lg border py-3 shadow-none sm:min-h-[60px] sm:py-4">
+      <CardContent className="flex items-center px-2 py-0 sm:px-3">
+        <div className="flex flex-1 items-center gap-2">
+          <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md sm:h-10 sm:w-10">
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h5 className="truncate text-xs font-medium sm:text-sm">
+                {application.campaignName ||
+                  dict.applicationFallback ||
+                  "Application"}
+              </h5>
+              <Badge
+                variant={statusVariant(application.status)}
+                className="text-xs"
+              >
+                {statusDict?.[application.status] || application.status}
+              </Badge>
+            </div>
+            <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+              <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                {application.studentName && (
+                  <>
+                    <User className="h-3 w-3" />
+                    <span>{application.studentName}</span>
+                    <span className="hidden sm:inline">•</span>
+                  </>
+                )}
+                <span dir="ltr">{application.applicationNumber}</span>
+              </p>
+              {application.submittedAt && (
+                <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <Clock className="h-3 w-3" />
+                  <span>
+                    {new Date(application.submittedAt).toLocaleDateString(
+                      locale,
+                      { month: "short", day: "numeric" }
+                    )}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+          {application.offerToken && (
+            <Badge
+              role="button"
+              tabIndex={0}
+              variant="default"
+              className="cursor-pointer"
+              onClick={() => onViewOffer?.(application)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  onViewOffer?.(application)
+                }
+              }}
+            >
+              {dict.viewOffer || "View offer"}
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default ApplicationCard

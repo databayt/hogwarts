@@ -5,12 +5,16 @@
 import React from "react"
 import { useRouter } from "next/navigation"
 
-import { type DraftApplication } from "./application-card"
+import {
+  type DraftApplication,
+  type SubmittedApplication,
+} from "./application-card"
 import ApplicationDashboard from "./application-dashboard"
 
 interface ApplyDashboardClientProps {
   userName?: string
   draftApplications: DraftApplication[]
+  submittedApplications?: SubmittedApplication[]
   campaignId: string
   dictionary: any
   lang: string
@@ -20,12 +24,21 @@ interface ApplyDashboardClientProps {
 export default function ApplyDashboardClient({
   userName,
   draftApplications,
+  submittedApplications = [],
   campaignId,
   dictionary,
   lang,
   subdomain,
 }: ApplyDashboardClientProps) {
   const router = useRouter()
+
+  const handleViewOffer = (application: SubmittedApplication) => {
+    if (!application.offerToken) return
+    // Clean client URL — never include /s/[subdomain] (subdomain URL rule)
+    router.push(
+      `/${lang}/application/${application.id}/offer?token=${encodeURIComponent(application.offerToken)}`
+    )
+  }
 
   const handleResumeDraft = (sessionToken: string) => {
     const draft = draftApplications.find((d) => d.sessionToken === sessionToken)
@@ -53,7 +66,9 @@ export default function ApplyDashboardClient({
     <ApplicationDashboard
       userName={userName}
       draftApplications={draftApplications}
+      submittedApplications={submittedApplications}
       onResumeDraft={handleResumeDraft}
+      onViewOffer={handleViewOffer}
       onCreateNew={handleCreateNew}
       onCreateFromTemplate={handleCreateFromTemplate}
       dictionary={dictionary}
