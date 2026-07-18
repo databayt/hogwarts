@@ -23,6 +23,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import { updateApplicationStatus } from "./actions"
+import { getAllowedTransitions } from "./status-machine"
 
 export type ApplicationRow = {
   id: string
@@ -107,16 +108,11 @@ function ApplicationActionsCell({
     }
   }
 
-  // Must match VALID_TRANSITIONS in actions.ts
-  const VALID_TRANSITIONS: Record<string, string[]> = {
-    SUBMITTED: ["UNDER_REVIEW", "WITHDRAWN"],
-    UNDER_REVIEW: ["SHORTLISTED", "REJECTED", "WITHDRAWN"],
-    SHORTLISTED: ["SELECTED", "WAITLISTED", "REJECTED", "WITHDRAWN"],
-    SELECTED: ["WAITLISTED", "REJECTED", "WITHDRAWN"],
-    WAITLISTED: ["SELECTED", "REJECTED", "WITHDRAWN"],
-    REJECTED: [],
-    WITHDRAWN: [],
-  }
+  // Single source of truth — the same status machine the server action
+  // validates against. A hand-duplicated map here had silently drifted
+  // (ENTRANCE/INTERVIEW_SCHEDULED were missing, so staff couldn't select
+  // them from this dropdown even though the server accepts them).
+  const allowedTargets = getAllowedTransitions(application.status)
 
   const allStatusOptions = [
     {
@@ -142,7 +138,7 @@ function ApplicationActionsCell({
   ]
 
   const statusOptions = allStatusOptions.filter((opt) =>
-    VALID_TRANSITIONS[application.status]?.includes(opt.value)
+    allowedTargets.includes(opt.value)
   )
 
   return (

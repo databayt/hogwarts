@@ -109,6 +109,7 @@ export const applicationDetailSelect = {
   id: true,
   schoolId: true,
   applicationNumber: true,
+  lang: true,
   firstName: true,
   middleName: true,
   lastName: true,

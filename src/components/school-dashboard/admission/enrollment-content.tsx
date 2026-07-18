@@ -48,6 +48,7 @@ export default async function EnrollmentContent({
           offerStatus: sp.offerStatus,
           feeStatus: sp.feeStatus,
           documentStatus: sp.documentStatus,
+          search: sp.search,
           page: sp.page,
           perPage: sp.perPage,
           sort: sp.sort,

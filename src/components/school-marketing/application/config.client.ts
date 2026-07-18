@@ -7,9 +7,7 @@
 export type ApplyStep =
   | "attachments"
   | "personal"
-  | "contact"
   | "location"
-  | "guardian"
   | "academic"
   | "fees"
 
@@ -29,9 +27,7 @@ export const STEP_NAVIGATION: Record<
 > = {
   attachments: { next: "personal" },
   personal: { next: "location", previous: "attachments" },
-  contact: { next: "location", previous: "personal" },
   location: { next: "academic", previous: "personal" },
-  guardian: { next: "academic", previous: "location" }, // kept for type safety
   academic: { next: "fees", previous: "location" },
   fees: { previous: "academic" },
 }
@@ -128,19 +124,9 @@ export const STEP_METADATA: Record<
         ? "المعلومات الشخصية للطالب وولي الأمر"
         : "Student and guardian personal details",
   },
-  contact: {
-    label: (isRTL) => (isRTL ? "معلومات الاتصال" : "Contact Information"),
-    description: (isRTL) =>
-      isRTL ? "البريد الإلكتروني ورقم الهاتف" : "Email and phone number",
-  },
   location: {
     label: (isRTL) => (isRTL ? "العنوان" : "Address"),
     description: (isRTL) => (isRTL ? "عنوان الإقامة" : "Residential address"),
-  },
-  guardian: {
-    label: (isRTL) => (isRTL ? "معلومات ولي الأمر" : "Guardian Information"),
-    description: (isRTL) =>
-      isRTL ? "معلومات الوالدين أو ولي الأمر" : "Parent or guardian details",
   },
   academic: {
     label: (isRTL) => (isRTL ? "المعلومات الأكاديمية" : "Academic Information"),

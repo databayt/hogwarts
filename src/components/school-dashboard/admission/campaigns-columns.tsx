@@ -209,10 +209,8 @@ export const getCampaignColumns = (
             description:
               t?.campaigns?.deleteConfirm ||
               "Are you sure? This action cannot be undone.",
-            confirmText:
-              (t?.toolbar as Record<string, string>)?.delete || "Delete",
-            cancelText:
-              (t?.toolbar as Record<string, string>)?.cancel || "Cancel",
+            confirmText: t?.toolbar?.delete || "Delete",
+            cancelText: t?.toolbar?.cancel || "Cancel",
           })
           if (confirmed) onDelete?.(campaign.id)
         }

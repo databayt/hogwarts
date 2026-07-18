@@ -16,7 +16,7 @@ import { db } from "@/lib/db"
 import { createProcessingJob } from "@/lib/document-extraction/queue-runner"
 import { logger } from "@/lib/logger"
 
-import { assertAdmissionPermission } from "../authorization"
+import { assertAdmissionPermission, isPermissionDenied } from "../authorization"
 import { classifyAdmissionDocument } from "./classify"
 import type {
   AdmissionDocumentType,
@@ -174,6 +174,9 @@ export async function classifyDocument(
       data: result.data,
     }
   } catch (error) {
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     logger.error(
       "classifyDocument action failed",
       error instanceof Error ? error : new Error("Unknown error"),
@@ -207,11 +210,9 @@ export async function processApplicationDocument(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
-    // RBAC: ADMIN, STAFF can process documents
-    const role = session.user.role
-    if (role !== "DEVELOPER" && role !== "ADMIN" && role !== "STAFF") {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    // RBAC: ADMIN, STAFF can process documents (mirrors reviewApplications
+    // gate — same shared assertion as every other action in this file)
+    assertAdmissionPermission(session.user.role, "reviewApplications")
 
     // SSRF protection: only allow known upload-bucket URLs before spending
     // any AI budget classifying this document.
@@ -296,6 +297,9 @@ export async function processApplicationDocument(
       data: processedDoc,
     }
   } catch (error) {
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     logger.error(
       "processApplicationDocument failed",
       error instanceof Error ? error : new Error("Unknown error"),
@@ -394,6 +398,9 @@ export async function getDocumentProcessingStatus(
       data: docs,
     }
   } catch (error) {
+    if (isPermissionDenied(error)) {
+      return actionError(ACTION_ERRORS.FORBIDDEN)
+    }
     logger.error(
       "getDocumentProcessingStatus failed",
       error instanceof Error ? error : new Error("Unknown error"),

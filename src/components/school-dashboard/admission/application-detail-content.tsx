@@ -167,11 +167,9 @@ export default async function ApplicationDetailContent({
   const enumLabel = (group: string, value: string | null | undefined) =>
     value ? applyOptions?.[group]?.[value] : undefined
 
-  // Detect content language from the data itself
-  // Application has no `lang` field, so we detect from a known text field
-  const sampleText = application.applyingForClass || application.firstName || ""
-  const hasArabic = /[\u0600-\u06FF]/.test(sampleText)
-  const contentLang: "ar" | "en" = hasArabic ? "ar" : "en"
+  // Content language is the stored Application.lang column (written on
+  // submit) \u2014 same normalization submitApplication applies on the write side.
+  const contentLang: "ar" | "en" = application.lang === "en" ? "en" : "ar"
 
   // Translate display fields if viewer lang differs from content lang
   const translatableFields = [
@@ -219,8 +217,8 @@ export default async function ApplicationDetailContent({
   // Resolve reviewedBy user ID to name
   let reviewerName: string | null = null
   if (application.reviewedBy) {
-    const reviewer = await db.user.findUnique({
-      where: { id: application.reviewedBy },
+    const reviewer = await db.user.findFirst({
+      where: { id: application.reviewedBy, schoolId },
       select: { username: true, email: true },
     })
     reviewerName =

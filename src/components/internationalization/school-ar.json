@@ -9111,6 +9111,7 @@
       },
       "toolbar": {
         "reset": "إعادة تعيين",
+        "delete": "حذف",
         "tableView": "جدول",
         "gridView": "شبكة",
         "switchToTable": "التبديل إلى عرض الجدول",

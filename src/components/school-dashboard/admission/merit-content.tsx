@@ -49,6 +49,7 @@ export default async function MeritContent({
           campaignId: sp.campaignId,
           category: sp.category,
           status: sp.status,
+          search: sp.search,
           page: sp.page,
           perPage: sp.perPage,
           sort: sp.sort,

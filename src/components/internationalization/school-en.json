@@ -9103,6 +9103,7 @@
       },
       "toolbar": {
         "reset": "Reset",
+        "delete": "Delete",
         "tableView": "Table",
         "gridView": "Grid",
         "switchToTable": "Switch to table view",
