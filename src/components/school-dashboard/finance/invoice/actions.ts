@@ -583,15 +583,27 @@ export async function getInvoiceById(
 
     // Branding for the PDF: the school's logo is the default; the invoice
     // owner's per-user UserInvoiceSettings.invoiceLogo overrides it when set.
-    // The PDF template renders data.schoolLogo when present.
-    const [settings, school] = await Promise.all([
+    // The PDF template renders data.schoolLogo when present. The buyer lookup
+    // feeds the share dialog's WhatsApp channel (best-effort phone).
+    const [settings, school, buyer] = await Promise.all([
       db.userInvoiceSettings.findUnique({
         where: { userId: invoice.userId },
         select: { invoiceLogo: true },
       }),
       db.school.findUnique({
         where: { id: ctx.schoolId },
-        select: { logoUrl: true },
+        select: { logoUrl: true, name: true, email: true },
+      }),
+      db.user.findUnique({
+        where: { id: invoice.userId },
+        select: {
+          student: { select: { mobileNumber: true } },
+          guardian: {
+            select: {
+              phoneNumbers: { select: { phoneNumber: true }, take: 1 },
+            },
+          },
+        },
       }),
     ])
 
@@ -629,6 +641,12 @@ export async function getInvoiceById(
         amountPaid: Number(invoice.amountPaid),
         sentAt: invoice.sentAt ?? null,
         schoolLogo: settings?.invoiceLogo ?? school?.logoUrl ?? null,
+        schoolName: school?.name ?? null,
+        schoolEmail: school?.email ?? null,
+        recipientPhone:
+          buyer?.student?.mobileNumber ??
+          buyer?.guardian?.phoneNumbers[0]?.phoneNumber ??
+          null,
         items: invoice.items.map((item) => ({
           ...item,
           price: Number(item.price),
@@ -740,9 +758,14 @@ export async function sendInvoiceEmail(
     const amountPaid = Number(invoice.amountPaid ?? 0)
     const due = Number(invoice.total) - amountPaid
 
-    // INV-005: link to the real invoice detail route (client-facing path, no /s/).
+    // INV-005: client-facing path, no /s/. When the public share link is
+    // enabled, prefer it — the recipient (a parent) can open and print it
+    // without an account; otherwise fall back to the authed detail route.
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
-    const invoiceURL = `${appUrl}/${lang}/finance/invoice/invoice/view/${invoice.id}`
+    const invoiceURL =
+      invoice.isPublic && invoice.shareToken
+        ? `${appUrl}/${lang}/invoice/${invoice.shareToken}`
+        : `${appUrl}/${lang}/finance/invoice/invoice/view/${invoice.id}`
 
     const emailContent = SendInvoiceEmail({
       lang,

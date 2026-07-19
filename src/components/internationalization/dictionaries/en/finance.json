@@ -2083,7 +2083,8 @@
     "item": "Item",
     "qty": "Qty",
     "price": "Price",
-    "total": "Total"
+    "total": "Total",
+    "back": "Back"
   },
   "invoiceWizardItems": {
     "title": "Line Items",
@@ -2742,5 +2743,41 @@
     "successSummary": "Provisioned {students} students, {invoices} invoices created.",
     "nothingNew": "Already provisioned — nothing new.",
     "error": "Provisioning failed. Try again."
+  },
+  "invoiceSheet": {
+    "recipient": "RECIPIENT",
+    "invoice": "INVOICE",
+    "invoiceNumber": "INVOICE NUMBER",
+    "invoiceDate": "INVOICE DATE",
+    "description": "DESCRIPTION",
+    "price": "PRICE",
+    "qty": "QTY",
+    "amount": "AMOUNT",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "tax": "Tax",
+    "total": "TOTAL",
+    "paid": "Paid",
+    "balanceDue": "Balance due",
+    "notes": "NOTES",
+    "paymentTerms": "Payment is due by {date}."
+  },
+  "invoiceShare": {
+    "button": "Share",
+    "title": "Share invoice",
+    "description": "Anyone with the link can view and print this invoice — no account needed. Revoking keeps the same link for later re-enabling.",
+    "toggle": "Public link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "emailChannel": "Email",
+    "channelsHint": "Send via WhatsApp or email",
+    "disabledHint": "Enable the public link to share this invoice.",
+    "enableFailed": "Could not enable the public link.",
+    "revokeFailed": "Could not revoke the public link.",
+    "message": "Invoice {number} from {school}. View and print it here: {url}",
+    "emailSubject": "Invoice {number}",
+    "print": "Print",
+    "notFoundTitle": "Invoice unavailable",
+    "notFoundDescription": "This invoice link is invalid, expired, or has been revoked."
   }
 }

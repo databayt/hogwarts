@@ -1,10 +1,15 @@
-"use client"
-
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+//
+// Full-page invoice detail: an action toolbar (hidden in print) above the
+// print-first InvoiceSheet, plus the linked-payments card. Server component —
+// only the toolbar buttons are client leaves.
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
+
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 
 import {
@@ -12,6 +17,9 @@ import {
   MarkInvoicePaidButton,
   SendInvoiceButton,
 } from "../download-invoice"
+import { InvoicePrintButton } from "../invoice-print-button"
+import { InvoiceShareDialog } from "../invoice-share-dialog"
+import { InvoiceSheet } from "../invoice-sheet"
 
 interface LinkedPayment {
   id: string
@@ -29,41 +37,15 @@ interface InvoiceViewProps {
   lang?: Locale
 }
 
-const STATUS_COLORS: Record<
-  string,
-  {
-    variant: "default" | "secondary" | "destructive" | "outline"
-    className: string
-  }
-> = {
-  PAID: {
-    variant: "default",
-    className: "bg-green-100 text-green-800 hover:bg-green-100",
-  },
-  UNPAID: {
-    variant: "secondary",
-    className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-  },
-  OVERDUE: {
-    variant: "destructive",
-    className: "bg-red-100 text-red-800 hover:bg-red-100",
-  },
-  CANCELLED: {
-    variant: "outline",
-    className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
-  },
-  PARTIAL: {
-    variant: "outline",
-    className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-  },
-}
-
-export default function ViewInvoiceModalContent({
+export default function ViewInvoiceContent({
   invoice,
   dictionary,
   lang = "en",
 }: InvoiceViewProps) {
   const iv = (dictionary as any)?.finance?.invoiceView as
+    | Record<string, string>
+    | undefined
+  const share = (dictionary as any)?.finance?.invoiceShare as
     | Record<string, string>
     | undefined
 
@@ -75,42 +57,39 @@ export default function ViewInvoiceModalContent({
     )
   }
 
-  const statusCfg =
-    STATUS_COLORS[invoice.status as string] ?? STATUS_COLORS.UNPAID
-
-  const statusLabels: Record<string, string | undefined> = {
-    PAID: iv?.statusPaid,
-    UNPAID: iv?.statusUnpaid,
-    OVERDUE: iv?.statusOverdue,
-    CANCELLED: iv?.statusCancelled,
-    PARTIAL: iv?.statusPartial,
-  }
-  const statusLabel = statusLabels[invoice.status as string] ?? invoice.status
-
-  const amountPaid = Number(invoice.amountPaid ?? 0)
   const linkedPayments: LinkedPayment[] = invoice.linkedPayments ?? []
+  const isDraft = invoice.wizardStep != null
 
   return (
-    <div className="w-full max-w-3xl">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="mb-1 text-xl font-bold">{iv?.invoice || "Invoice"}</h1>
-          <p className="text-muted-foreground text-xs">#{invoice.invoice_no}</p>
-          {invoice.sentAt && (
-            <p className="text-muted-foreground mt-1 text-xs">
-              {iv?.sent || "Sent"} {formatDate(invoice.sentAt, lang)}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={statusCfg.variant} className={statusCfg.className}>
-            {statusLabel}
-          </Badge>
+    <div className="mx-auto w-full max-w-3xl pb-12">
+      {/* Toolbar — never printed */}
+      <div className="flex flex-wrap items-center justify-between gap-2 py-4 print:hidden">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/${lang}/finance/invoice`}>
+            <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+            {iv?.back || "Back"}
+          </Link>
+        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <InvoicePrintButton label={share?.print || "Print"} />
           <DownloadInvoiceButton
             invoice={invoice}
             lang={lang}
             label={iv?.downloadPdf || "Download PDF"}
           />
+          {invoice.id && !isDraft && (
+            <InvoiceShareDialog
+              invoiceId={invoice.id}
+              invoiceNo={invoice.invoice_no}
+              schoolName={invoice.schoolName ?? invoice.from?.name ?? null}
+              initialToken={invoice.shareToken ?? null}
+              initialIsPublic={Boolean(invoice.isPublic)}
+              recipientEmail={invoice.to?.email ?? null}
+              recipientPhone={invoice.recipientPhone ?? null}
+              lang={lang}
+              dictionary={dictionary}
+            />
+          )}
           {invoice.id && (
             <SendInvoiceButton
               invoiceId={invoice.id}
@@ -132,177 +111,98 @@ export default function ViewInvoiceModalContent({
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-6">
-        <div>
-          <h2 className="mb-2 font-semibold">{iv?.from || "From"}</h2>
-          <p>{invoice.from?.name}</p>
-          <p className="text-muted-foreground text-sm">{invoice.from?.email}</p>
-        </div>
-        <div>
-          <h2 className="mb-2 font-semibold">{iv?.to || "To"}</h2>
-          <p>{invoice.to?.name}</p>
-          <p className="text-muted-foreground text-sm">{invoice.to?.email}</p>
-        </div>
+      {/* The document itself */}
+      <div className="border-border bg-background border shadow-sm print:border-0 print:shadow-none">
+        <InvoiceSheet
+          data={{
+            invoice_no: invoice.invoice_no,
+            invoice_date: invoice.invoice_date,
+            due_date: invoice.due_date,
+            currency: invoice.currency || "USD",
+            status: invoice.status,
+            sub_total: Number(invoice.sub_total),
+            discount:
+              invoice.discount != null ? Number(invoice.discount) : null,
+            tax_percentage:
+              invoice.tax_percentage != null
+                ? Number(invoice.tax_percentage)
+                : null,
+            total: Number(invoice.total),
+            amountPaid: Number(invoice.amountPaid ?? 0),
+            notes: invoice.notes ?? null,
+            from: invoice.from ?? { name: "" },
+            to: invoice.to ?? { name: "" },
+            items: (invoice.items ?? []).map(
+              (item: {
+                id: string
+                item_name: string
+                quantity: number
+                price: number
+                total: number
+              }) => ({
+                id: item.id,
+                item_name: item.item_name,
+                quantity: item.quantity,
+                price: Number(item.price),
+                total: Number(item.total),
+              })
+            ),
+            schoolName: invoice.schoolName ?? null,
+            schoolLogo: invoice.schoolLogo ?? null,
+            schoolEmail: invoice.schoolEmail ?? null,
+          }}
+          dictionary={dictionary}
+          lang={lang}
+        />
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
-        <div>
-          <span className="font-medium">
-            {iv?.invoiceDate || "Invoice Date"}
-          </span>
-          <p>{formatDate(invoice.invoice_date, lang)}</p>
-        </div>
-        <div>
-          <span className="font-medium">{iv?.dueDate || "Due Date"}</span>
-          <p>{formatDate(invoice.due_date, lang)}</p>
-        </div>
-      </div>
-
-      <Separator className="my-6" />
-
-      <table className="mb-6 w-full text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2 text-start">{iv?.item || "Item"}</th>
-            <th className="py-2 text-end">{iv?.qty || "Qty"}</th>
-            <th className="py-2 text-end">{iv?.price || "Price"}</th>
-            <th className="py-2 text-end">{iv?.total || "Total"}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoice.items?.map((item: any) => {
-            const itemTotal = item.quantity * item.price
-            return (
-              <tr key={item.id} className="border-b">
-                <td className="py-2">{item.item_name}</td>
-                <td className="py-2 text-end">{item.quantity}</td>
-                <td className="py-2 text-end">
-                  {formatCurrency(item.price, lang, invoice.currency || "USD")}
-                </td>
-                <td className="py-2 text-end">
-                  {formatCurrency(itemTotal, lang, invoice.currency || "USD")}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-
-      <div className="flex justify-end">
-        <div className="w-56">
-          {invoice.discount != null && Number(invoice.discount) > 0 && (
-            <div className="flex justify-between py-1 text-sm">
-              <span>{iv?.discount || "Discount"}</span>
-              <span>
-                -
-                {formatCurrency(
-                  Number(invoice.discount),
-                  lang,
-                  invoice.currency || "USD"
-                )}
-              </span>
-            </div>
-          )}
-          {invoice.tax_percentage != null &&
-            Number(invoice.tax_percentage) > 0 && (
-              <div className="flex justify-between py-1 text-sm">
-                <span>
-                  {iv?.tax || "Tax"} ({Number(invoice.tax_percentage)}%)
-                </span>
-                <span>
-                  {formatCurrency(
-                    (Number(invoice.sub_total) *
-                      Number(invoice.tax_percentage)) /
-                      100,
-                    lang,
-                    invoice.currency || "USD"
-                  )}
-                </span>
-              </div>
-            )}
-          <div className="flex justify-between border-t py-2">
-            <span className="font-medium">{iv?.total || "Total"}</span>
-            <span className="font-bold">
-              {formatCurrency(
-                Number(invoice.total),
-                lang,
-                invoice.currency || "USD"
-              )}
-            </span>
-          </div>
-          {amountPaid > 0 && (
-            <div className="flex justify-between py-1 text-sm">
-              <span className="text-green-700">
-                {iv?.amountPaid || "Amount Paid"}
-              </span>
-              <span className="font-medium text-green-700">
-                {formatCurrency(amountPaid, lang, invoice.currency || "USD")}
-              </span>
-            </div>
-          )}
-          {amountPaid > 0 && Number(invoice.total) - amountPaid > 0 && (
-            <div className="flex justify-between py-1 text-sm">
-              <span className="text-orange-700">
-                {iv?.amountDue || "Amount Due"}
-              </span>
-              <span className="font-medium text-orange-700">
-                {formatCurrency(
-                  Number(invoice.total) - amountPaid,
-                  lang,
-                  invoice.currency || "USD"
-                )}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {invoice.notes && (
-        <div className="mt-6">
-          <h3 className="mb-1 text-sm font-medium">{iv?.notes || "Notes"}</h3>
-          <p className="text-muted-foreground text-sm">{invoice.notes}</p>
-        </div>
-      )}
-
+      {/* Linked fee payments — screen only */}
       {linkedPayments.length > 0 && (
-        <div className="mt-6">
-          <Separator className="mb-4" />
-          <h3 className="mb-3 text-sm font-medium">
-            {iv?.linkedPayments || "Linked Payments"}
-          </h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 text-start">
-                  {iv?.paymentNumber || "Payment #"}
-                </th>
-                <th className="py-2 text-start">{iv?.paymentDate || "Date"}</th>
-                <th className="py-2 text-start">
-                  {iv?.paymentMethod || "Method"}
-                </th>
-                <th className="py-2 text-end">
-                  {iv?.paymentAmount || "Amount"}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {linkedPayments.map((p) => (
-                <tr key={p.id} className="border-b last:border-0">
-                  <td className="py-2 font-mono text-xs">{p.paymentNumber}</td>
-                  <td className="py-2">{formatDate(p.paymentDate, lang)}</td>
-                  <td className="py-2">{p.paymentMethod}</td>
-                  <td className="py-2 text-end font-medium">
-                    {formatCurrency(
-                      p.amount,
-                      lang,
-                      p.currency ?? invoice.currency ?? "USD"
-                    )}
-                  </td>
+        <Card className="mt-6 print:hidden">
+          <CardHeader>
+            <CardTitle className="text-sm">
+              {iv?.linkedPayments || "Linked Payments"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 text-start">
+                    {iv?.paymentNumber || "Payment #"}
+                  </th>
+                  <th className="py-2 text-start">
+                    {iv?.paymentDate || "Date"}
+                  </th>
+                  <th className="py-2 text-start">
+                    {iv?.paymentMethod || "Method"}
+                  </th>
+                  <th className="py-2 text-end">
+                    {iv?.paymentAmount || "Amount"}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {linkedPayments.map((p) => (
+                  <tr key={p.id} className="border-b last:border-0">
+                    <td className="py-2 font-mono text-xs">
+                      {p.paymentNumber}
+                    </td>
+                    <td className="py-2">{formatDate(p.paymentDate, lang)}</td>
+                    <td className="py-2">{p.paymentMethod}</td>
+                    <td className="py-2 text-end font-medium">
+                      {formatCurrency(
+                        p.amount,
+                        lang,
+                        p.currency ?? invoice.currency ?? "USD"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

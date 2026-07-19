@@ -3,7 +3,12 @@
 
 /**
  * Unified File Block - Invoice Template
- * PDF template for invoices
+ *
+ * Milan Vučković minimalist-monospace design: IBM Plex Mono, letterspaced
+ * micro-labels, hairline rules, generous whitespace, one big bold TOTAL.
+ * Arabic invoices keep Rubik for prose (Plex Mono has no Arabic glyphs).
+ * Data contract (InvoiceData / TemplateStyle) is unchanged — visual restyle
+ * only; mapInvoiceToInvoiceData + DownloadInvoiceButton wiring untouched.
  */
 
 import React from "react"
@@ -37,15 +42,20 @@ Font.register({
   ],
 })
 
+// Static TTFs verified against fonts.googleapis.com/css2 (v20, 2026-07).
 Font.register({
-  family: "Inter",
+  family: "IBMPlexMono",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2",
+      src: "https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n5ig.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hjp-Ek-_EeA.woff2",
+      src: "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJ8lc.ttf",
+      fontWeight: "medium",
+    },
+    {
+      src: "https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3pQP8lc.ttf",
       fontWeight: "bold",
     },
   ],
@@ -55,188 +65,181 @@ Font.register({
 // Styles
 // ============================================================================
 
+const INK = "#111111"
+const MUTED = "#6b7280"
+const HAIRLINE = "#e5e7eb"
+
 const createStyles = (locale: string = "en") => {
   const isRTL = locale === "ar"
-  const fontFamily = isRTL ? "Rubik" : "Inter"
+  const fontFamily = isRTL ? "Rubik" : "IBMPlexMono"
+  const mono = "IBMPlexMono"
+  // react-pdf resolves neither `dir` nor logical properties — flip by hand.
+  const row = isRTL ? ("row-reverse" as const) : ("row" as const)
+  const start = isRTL ? ("right" as const) : ("left" as const)
+  const end = isRTL ? ("left" as const) : ("right" as const)
+  // Wide tracking suits Latin capitals only; Arabic letters must connect.
+  const tracking = isRTL ? 0.5 : 2.5
 
   return StyleSheet.create({
     page: {
-      padding: 40,
+      paddingVertical: 56,
+      paddingHorizontal: 48,
       fontFamily,
-      fontSize: 10,
-      direction: isRTL ? "rtl" : "ltr",
+      fontSize: 9,
+      color: INK,
       backgroundColor: "#ffffff",
     },
     header: {
-      flexDirection: isRTL ? "row-reverse" : "row",
+      flexDirection: row,
       justifyContent: "space-between",
-      marginBottom: 30,
-      paddingBottom: 20,
-      borderBottomWidth: 2,
-      borderBottomColor: "#e5e5e5",
+      alignItems: "flex-start",
     },
     logo: {
-      width: 80,
-      height: 80,
+      width: 52,
+      height: 52,
+      objectFit: "contain",
     },
-    schoolInfo: {
-      textAlign: isRTL ? "left" : "right",
-      maxWidth: 200,
+    logoFallback: {
+      width: 52,
+      height: 52,
+      backgroundColor: INK,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    schoolName: {
-      fontSize: 16,
+    logoFallbackText: {
+      fontFamily: mono,
+      color: "#ffffff",
+      fontSize: 20,
       fontWeight: "bold",
-      marginBottom: 5,
     },
-    schoolDetail: {
-      fontSize: 9,
-      color: "#666",
-      marginBottom: 2,
-    },
-    invoiceTitle: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: "#111827",
-      marginBottom: 20,
-      textAlign: isRTL ? "right" : "left",
-    },
-    infoSection: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      justifyContent: "space-between",
-      marginBottom: 30,
-    },
-    infoBlock: {
-      width: "45%",
+    headerEnd: {
+      maxWidth: 230,
+      textAlign: end,
     },
     label: {
-      fontSize: 9,
-      color: "#6b7280",
-      marginBottom: 2,
-      textTransform: "uppercase",
-    },
-    value: {
-      fontSize: 11,
-      marginBottom: 8,
-    },
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 4,
-      fontSize: 9,
+      fontSize: 7.5,
       fontWeight: "bold",
-      alignSelf: "flex-start",
+      letterSpacing: tracking,
+      color: INK,
     },
-    statusPaid: {
-      backgroundColor: "#dcfce7",
-      color: "#166534",
+    mutedLine: {
+      fontSize: 8.5,
+      lineHeight: 1.7,
+      color: MUTED,
     },
-    statusPending: {
-      backgroundColor: "#fef3c7",
-      color: "#92400e",
-    },
-    statusOverdue: {
-      backgroundColor: "#fee2e2",
-      color: "#991b1b",
-    },
-    table: {
-      marginBottom: 30,
-    },
-    tableHeader: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      backgroundColor: "#f3f4f6",
-      paddingVertical: 10,
-      paddingHorizontal: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: "#e5e5e5",
-    },
-    tableRow: {
-      flexDirection: isRTL ? "row-reverse" : "row",
-      paddingVertical: 10,
-      paddingHorizontal: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: "#f3f4f6",
-    },
-    colDescription: {
-      width: "45%",
-      textAlign: isRTL ? "right" : "left",
-    },
-    colQty: {
-      width: "15%",
-      textAlign: "center",
-    },
-    colPrice: {
-      width: "20%",
-      textAlign: isRTL ? "left" : "right",
-    },
-    colTotal: {
-      width: "20%",
-      textAlign: isRTL ? "left" : "right",
-    },
-    headerText: {
-      fontSize: 9,
-      fontWeight: "bold",
-      color: "#374151",
-      textTransform: "uppercase",
-    },
-    cellText: {
-      fontSize: 10,
-    },
-    totalsSection: {
-      alignItems: isRTL ? "flex-start" : "flex-end",
-      marginTop: 20,
-    },
-    totalRow: {
-      flexDirection: isRTL ? "row-reverse" : "row",
+    partiesRow: {
+      flexDirection: row,
       justifyContent: "space-between",
-      width: 200,
-      paddingVertical: 5,
+      alignItems: "flex-start",
+      marginTop: 48,
     },
-    totalLabel: {
-      fontSize: 10,
-      color: "#6b7280",
+    recipientBlock: {
+      maxWidth: 250,
+      textAlign: start,
     },
-    totalValue: {
-      fontSize: 10,
-      textAlign: isRTL ? "left" : "right",
+    titleBlock: {
+      textAlign: end,
     },
-    grandTotal: {
-      borderTopWidth: 2,
-      borderTopColor: "#111827",
-      paddingTop: 10,
+    invoiceTitle: {
+      fontSize: 26,
+      fontWeight: "bold",
+      letterSpacing: isRTL ? 0 : 1.5,
+    },
+    invoiceNumber: {
+      fontFamily: mono,
+      fontSize: 8.5,
+      color: MUTED,
+      marginTop: 4,
+    },
+    statusText: {
+      fontSize: 7.5,
+      fontWeight: "bold",
+      letterSpacing: tracking,
       marginTop: 10,
     },
+    table: {
+      marginTop: 48,
+    },
+    tableHeader: {
+      flexDirection: row,
+      paddingBottom: 10,
+    },
+    tableRow: {
+      flexDirection: row,
+      paddingVertical: 8,
+    },
+    colDate: { width: "16%", textAlign: start },
+    colDescription: { width: "40%", textAlign: start, paddingRight: 8 },
+    colPrice: { width: "16%", textAlign: end },
+    colQty: { width: "10%", textAlign: end },
+    colAmount: { width: "18%", textAlign: end },
+    cellText: {
+      fontSize: 8.5,
+      lineHeight: 1.5,
+      color: MUTED,
+    },
+    totalsRule: {
+      borderTopWidth: 0.75,
+      borderTopColor: HAIRLINE,
+      marginTop: 12,
+      paddingTop: 16,
+      flexDirection: row,
+      justifyContent: "flex-end",
+    },
+    totalsBlock: {
+      width: 220,
+    },
+    totalRow: {
+      flexDirection: row,
+      justifyContent: "space-between",
+      paddingVertical: 3,
+    },
+    totalLabel: {
+      fontSize: 8.5,
+      color: INK,
+    },
+    totalValue: {
+      fontSize: 8.5,
+      color: MUTED,
+      textAlign: end,
+    },
+    grandTotalRow: {
+      flexDirection: row,
+      justifyContent: "space-between",
+      alignItems: "baseline",
+      paddingTop: 14,
+    },
     grandTotalLabel: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: "bold",
+      letterSpacing: isRTL ? 0 : 1,
     },
     grandTotalValue: {
       fontSize: 14,
       fontWeight: "bold",
-      color: "#111827",
+    },
+    notesSection: {
+      marginTop: 56,
+    },
+    notesText: {
+      fontSize: 8.5,
+      lineHeight: 1.7,
+      color: MUTED,
+      marginTop: 12,
     },
     footer: {
       position: "absolute",
       bottom: 40,
-      left: 40,
-      right: 40,
+      left: 48,
+      right: 48,
+      borderTopWidth: 0.75,
+      borderTopColor: HAIRLINE,
+      paddingTop: 12,
     },
-    notesSection: {
-      marginBottom: 20,
-    },
-    notesTitle: {
-      fontSize: 9,
-      fontWeight: "bold",
-      color: "#374151",
-      marginBottom: 5,
-    },
-    notesText: {
-      fontSize: 9,
-      color: "#6b7280",
-    },
-    bankDetails: {
-      backgroundColor: "#f9fafb",
-      padding: 15,
-      borderRadius: 4,
+    footerText: {
+      fontSize: 7.5,
+      color: MUTED,
+      textAlign: start,
     },
   })
 }
@@ -257,25 +260,12 @@ const formatCurrency = (
 }
 
 const formatDate = (date: Date, locale: string): string => {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
+  const s = new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   }).format(date)
-}
-
-const getStatusStyle = (
-  status: string,
-  styles: ReturnType<typeof createStyles>
-) => {
-  switch (status) {
-    case "paid":
-      return styles.statusPaid
-    case "overdue":
-      return styles.statusOverdue
-    default:
-      return styles.statusPending
-  }
+  return locale === "ar" ? s : s.toUpperCase()
 }
 
 // ============================================================================
@@ -297,224 +287,236 @@ export function InvoiceTemplate({
 
   const labels = {
     invoice: isRTL ? "فاتورة" : "INVOICE",
-    invoiceNumber: isRTL ? "رقم الفاتورة" : "Invoice Number",
-    issueDate: isRTL ? "تاريخ الإصدار" : "Issue Date",
-    dueDate: isRTL ? "تاريخ الاستحقاق" : "Due Date",
-    status: isRTL ? "الحالة" : "Status",
-    billTo: isRTL ? "فاتورة إلى" : "Bill To",
+    invoiceNumber: isRTL ? "رقم الفاتورة" : "INVOICE NUMBER",
+    invoiceDate: isRTL ? "تاريخ الفاتورة" : "INVOICE DATE",
+    recipient: isRTL ? "المستلم" : "RECIPIENT",
     student: isRTL ? "الطالب" : "Student",
     class: isRTL ? "الفصل" : "Class",
-    description: isRTL ? "الوصف" : "Description",
-    quantity: isRTL ? "الكمية" : "Qty",
-    unitPrice: isRTL ? "السعر" : "Price",
-    total: isRTL ? "المجموع" : "Total",
+    description: isRTL ? "البيان" : "DESCRIPTION",
+    quantity: isRTL ? "الكمية" : "QTY",
+    unitPrice: isRTL ? "السعر" : "PRICE",
+    amount: isRTL ? "المبلغ" : "AMOUNT",
     subtotal: isRTL ? "المجموع الفرعي" : "Subtotal",
     tax: isRTL ? "الضريبة" : "Tax",
     discount: isRTL ? "الخصم" : "Discount",
-    grandTotal: isRTL ? "المجموع الكلي" : "Grand Total",
-    amountPaid: isRTL ? "المبلغ المدفوع" : "Amount Paid",
-    balance: isRTL ? "الرصيد المستحق" : "Balance Due",
-    notes: isRTL ? "ملاحظات" : "Notes",
-    paymentTerms: isRTL ? "شروط الدفع" : "Payment Terms",
-    bankDetails: isRTL ? "تفاصيل البنك" : "Bank Details",
+    grandTotal: isRTL ? "الإجمالي" : "TOTAL",
+    amountPaid: isRTL ? "المدفوع" : "Paid",
+    balance: isRTL ? "الرصيد المستحق" : "Balance due",
+    notes: isRTL ? "ملاحظات" : "NOTES",
+    dueBy: isRTL ? "يُستحق السداد بحلول" : "Payment is due by",
+    bankDetails: isRTL ? "تفاصيل البنك" : "BANK DETAILS",
   }
 
   const statusLabels: Record<string, string> = {
-    paid: isRTL ? "مدفوع" : "Paid",
-    pending: isRTL ? "معلق" : "Pending",
-    overdue: isRTL ? "متأخر" : "Overdue",
-    draft: isRTL ? "مسودة" : "Draft",
-    cancelled: isRTL ? "ملغي" : "Cancelled",
+    paid: isRTL ? "مدفوع" : "PAID",
+    pending: isRTL ? "غير مدفوع" : "UNPAID",
+    overdue: isRTL ? "متأخر" : "OVERDUE",
+    draft: isRTL ? "مسودة" : "DRAFT",
+    cancelled: isRTL ? "ملغي" : "CANCELLED",
   }
+  const statusColor =
+    data.status === "paid" ? INK : data.status === "overdue" ? "#b91c1c" : MUTED
+
+  const schoolName = isRTL
+    ? data.schoolNameAr || data.schoolName
+    : data.schoolName
+  const logoInitial = (schoolName || "•").trim().charAt(0)
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
+        {/* Header — logo start, school identity end */}
         <View style={styles.header}>
-          <View>
-            {data.schoolLogo && (
-              <Image src={data.schoolLogo} style={styles.logo} />
-            )}
-          </View>
-          <View style={styles.schoolInfo}>
-            <Text style={styles.schoolName}>
-              {isRTL ? data.schoolNameAr || data.schoolName : data.schoolName}
-            </Text>
-            {data.schoolAddress && (
-              <Text style={styles.schoolDetail}>{data.schoolAddress}</Text>
-            )}
-            {data.schoolPhone && (
-              <Text style={styles.schoolDetail}>{data.schoolPhone}</Text>
-            )}
-            {data.schoolEmail && (
-              <Text style={styles.schoolDetail}>{data.schoolEmail}</Text>
-            )}
-          </View>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.invoiceTitle}>{labels.invoice}</Text>
-
-        {/* Invoice Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoBlock}>
-            <Text style={styles.label}>{labels.invoiceNumber}</Text>
-            <Text style={styles.value}>{data.invoiceNumber}</Text>
-
-            <Text style={styles.label}>{labels.issueDate}</Text>
-            <Text style={styles.value}>
-              {formatDate(data.issueDate, locale)}
-            </Text>
-
-            <Text style={styles.label}>{labels.dueDate}</Text>
-            <Text style={styles.value}>{formatDate(data.dueDate, locale)}</Text>
-
-            <Text style={styles.label}>{labels.status}</Text>
-            <View
-              style={[styles.statusBadge, getStatusStyle(data.status, styles)]}
-            >
-              <Text>{statusLabels[data.status]}</Text>
+          {data.schoolLogo ? (
+            <Image src={data.schoolLogo} style={styles.logo} />
+          ) : (
+            <View style={styles.logoFallback}>
+              <Text style={styles.logoFallbackText}>{logoInitial}</Text>
+            </View>
+          )}
+          <View style={styles.headerEnd}>
+            <Text style={styles.label}>{schoolName}</Text>
+            <View style={{ marginTop: 14 }}>
+              {data.schoolEmail && (
+                <Text style={styles.mutedLine}>{data.schoolEmail}</Text>
+              )}
+              {data.schoolPhone && (
+                <Text style={styles.mutedLine}>{data.schoolPhone}</Text>
+              )}
+              {data.schoolAddress && (
+                <Text style={styles.mutedLine}>{data.schoolAddress}</Text>
+              )}
             </View>
           </View>
+        </View>
 
-          <View style={styles.infoBlock}>
-            <Text style={styles.label}>{labels.billTo}</Text>
-            <Text style={[styles.value, { fontWeight: "bold" }]}>
-              {data.clientName}
-            </Text>
-            {data.clientEmail && (
-              <Text style={styles.value}>{data.clientEmail}</Text>
-            )}
-            {data.clientPhone && (
-              <Text style={styles.value}>{data.clientPhone}</Text>
-            )}
-            {data.clientAddress && (
-              <Text style={styles.value}>{data.clientAddress}</Text>
-            )}
-
-            {data.studentName && (
-              <>
-                <Text style={[styles.label, { marginTop: 10 }]}>
-                  {labels.student}
+        {/* Recipient start — INVOICE end */}
+        <View style={styles.partiesRow}>
+          <View style={styles.recipientBlock}>
+            <Text style={styles.label}>{labels.recipient}</Text>
+            <View style={{ marginTop: 14 }}>
+              <Text style={{ fontSize: 9, lineHeight: 1.7 }}>
+                {data.clientName}
+              </Text>
+              {data.clientAddress && (
+                <Text style={styles.mutedLine}>{data.clientAddress}</Text>
+              )}
+              {data.studentName && (
+                <Text style={styles.mutedLine}>
+                  {labels.student}: {data.studentName}
                 </Text>
-                <Text style={styles.value}>{data.studentName}</Text>
-              </>
-            )}
-            {data.className && (
-              <>
-                <Text style={styles.label}>{labels.class}</Text>
-                <Text style={styles.value}>{data.className}</Text>
-              </>
-            )}
+              )}
+              {data.className && (
+                <Text style={styles.mutedLine}>
+                  {labels.class}: {data.className}
+                </Text>
+              )}
+            </View>
+            <View style={{ marginTop: 12 }}>
+              {data.clientEmail && (
+                <Text style={styles.mutedLine}>{data.clientEmail}</Text>
+              )}
+              {data.clientPhone && (
+                <Text style={styles.mutedLine}>{data.clientPhone}</Text>
+              )}
+            </View>
+          </View>
+          <View style={styles.titleBlock}>
+            <Text style={styles.invoiceTitle}>{labels.invoice}</Text>
+            <Text style={[styles.label, { marginTop: 18 }]}>
+              {labels.invoiceNumber}
+            </Text>
+            <Text style={styles.invoiceNumber}>{data.invoiceNumber}</Text>
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {statusLabels[data.status] ?? data.status}
+            </Text>
           </View>
         </View>
 
-        {/* Items Table */}
+        {/* Items */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, styles.colDescription]}>
+            <Text style={[styles.label, styles.colDate]}>
+              {labels.invoiceDate}
+            </Text>
+            <Text style={[styles.label, styles.colDescription]}>
               {labels.description}
             </Text>
-            <Text style={[styles.headerText, styles.colQty]}>
-              {labels.quantity}
-            </Text>
-            <Text style={[styles.headerText, styles.colPrice]}>
+            <Text style={[styles.label, styles.colPrice]}>
               {labels.unitPrice}
             </Text>
-            <Text style={[styles.headerText, styles.colTotal]}>
-              {labels.total}
+            <Text style={[styles.label, styles.colQty]}>{labels.quantity}</Text>
+            <Text style={[styles.label, styles.colAmount]}>
+              {labels.amount}
             </Text>
           </View>
 
           {data.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
+              <Text style={[styles.cellText, styles.colDate]}>
+                {index === 0 ? formatDate(data.issueDate, locale) : ""}
+              </Text>
               <Text style={[styles.cellText, styles.colDescription]}>
                 {item.description}
-              </Text>
-              <Text style={[styles.cellText, styles.colQty]}>
-                {item.quantity}
               </Text>
               <Text style={[styles.cellText, styles.colPrice]}>
                 {formatCurrency(item.unitPrice, data.currency, locale)}
               </Text>
-              <Text style={[styles.cellText, styles.colTotal]}>
+              <Text style={[styles.cellText, styles.colQty]}>
+                {item.quantity}
+              </Text>
+              <Text style={[styles.cellText, styles.colAmount]}>
                 {formatCurrency(item.total, data.currency, locale)}
               </Text>
             </View>
           ))}
         </View>
 
-        {/* Totals */}
-        <View style={styles.totalsSection}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>{labels.subtotal}</Text>
-            <Text style={styles.totalValue}>
-              {formatCurrency(data.subtotal, data.currency, locale)}
-            </Text>
+        {/* Totals — hairline, end-aligned block, big bold TOTAL */}
+        <View style={styles.totalsRule}>
+          <View style={styles.totalsBlock}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{labels.subtotal}</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(data.subtotal, data.currency, locale)}
+              </Text>
+            </View>
+
+            {data.discount !== undefined && data.discount > 0 && (
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{labels.discount}</Text>
+                <Text style={styles.totalValue}>
+                  -{formatCurrency(data.discount, data.currency, locale)}
+                </Text>
+              </View>
+            )}
+
+            {data.taxAmount !== undefined && data.taxAmount > 0 && (
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{labels.tax}</Text>
+                <Text style={styles.totalValue}>
+                  {formatCurrency(data.taxAmount, data.currency, locale)}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.grandTotalRow}>
+              <Text style={styles.grandTotalLabel}>{labels.grandTotal}</Text>
+              <Text style={styles.grandTotalValue}>
+                {formatCurrency(data.total, data.currency, locale)}
+              </Text>
+            </View>
+
+            {data.amountPaid !== undefined && data.amountPaid > 0 && (
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{labels.amountPaid}</Text>
+                <Text style={styles.totalValue}>
+                  -{formatCurrency(data.amountPaid, data.currency, locale)}
+                </Text>
+              </View>
+            )}
+
+            {data.balance !== undefined && data.balance > 0 && (
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
+                  {labels.balance}
+                </Text>
+                <Text
+                  style={[
+                    styles.totalValue,
+                    { fontWeight: "bold", color: INK },
+                  ]}
+                >
+                  {formatCurrency(data.balance, data.currency, locale)}
+                </Text>
+              </View>
+            )}
           </View>
+        </View>
 
-          {data.taxAmount !== undefined && data.taxAmount > 0 && (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{labels.tax}</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(data.taxAmount, data.currency, locale)}
+        {/* Notes */}
+        <View style={styles.notesSection}>
+          <Text style={styles.label}>{labels.notes}</Text>
+          <Text style={styles.notesText}>
+            {data.notes ||
+              `${labels.dueBy} ${formatDate(data.dueDate, locale)}.`}
+          </Text>
+          {data.bankDetails && (
+            <>
+              <Text style={[styles.label, { marginTop: 16 }]}>
+                {labels.bankDetails}
               </Text>
-            </View>
-          )}
-
-          {data.discount !== undefined && data.discount > 0 && (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{labels.discount}</Text>
-              <Text style={styles.totalValue}>
-                -{formatCurrency(data.discount, data.currency, locale)}
-              </Text>
-            </View>
-          )}
-
-          <View style={[styles.totalRow, styles.grandTotal]}>
-            <Text style={styles.grandTotalLabel}>{labels.grandTotal}</Text>
-            <Text style={styles.grandTotalValue}>
-              {formatCurrency(data.total, data.currency, locale)}
-            </Text>
-          </View>
-
-          {data.amountPaid !== undefined && data.amountPaid > 0 && (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{labels.amountPaid}</Text>
-              <Text style={styles.totalValue}>
-                -{formatCurrency(data.amountPaid, data.currency, locale)}
-              </Text>
-            </View>
-          )}
-
-          {data.balance !== undefined && (
-            <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
-                {labels.balance}
-              </Text>
-              <Text style={[styles.totalValue, { fontWeight: "bold" }]}>
-                {formatCurrency(data.balance, data.currency, locale)}
-              </Text>
-            </View>
+              <Text style={styles.notesText}>{data.bankDetails}</Text>
+            </>
           )}
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          {data.notes && (
-            <View style={styles.notesSection}>
-              <Text style={styles.notesTitle}>{labels.notes}</Text>
-              <Text style={styles.notesText}>{data.notes}</Text>
-            </View>
-          )}
-
-          {data.bankDetails && (
-            <View style={styles.bankDetails}>
-              <Text style={styles.notesTitle}>{labels.bankDetails}</Text>
-              <Text style={styles.notesText}>{data.bankDetails}</Text>
-            </View>
-          )}
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>
+            {schoolName}
+            {data.schoolEmail ? `  •  ${data.schoolEmail}` : ""}
+          </Text>
         </View>
       </Page>
     </Document>
