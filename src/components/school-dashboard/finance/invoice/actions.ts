@@ -17,7 +17,7 @@ import { resend } from "@/components/school-dashboard/finance/invoice/email.conf
 import { SendInvoiceEmail } from "@/components/school-dashboard/finance/invoice/send-invoice-email"
 import { getText } from "@/components/translation/display"
 
-import { checkCurrentUserPermission } from "../lib/permissions"
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import { InvoiceSchemaZod } from "./validation"
 
 // ============================================================================
@@ -81,6 +81,14 @@ interface SettingsFormData {
 // Helpers
 // ============================================================================
 
+/**
+ * Deliberate deviation from guard.ts's requireFinanceActor: invoice READS and
+ * per-user settings are self-service — a STUDENT/GUARDIAN must reach their own
+ * invoices (dashboard widget, own-invoice detail/PDF) even though
+ * checkFinancePermission denies them the invoice module. Row scoping via
+ * canSeeAllSchoolInvoices() is the authorization for these; every MUTATING
+ * action below gates through requireFinanceActor instead.
+ */
 async function requireAuthAndTenant(): Promise<
   { userId: string; schoolId: string } | ActionResponse<never>
 > {
@@ -226,15 +234,8 @@ export async function createInvoice(
   data: z.infer<typeof InvoiceSchemaZod>
 ): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canCreate = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "create"
-    )
-    if (!canCreate) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "create")
+    if (isFinanceAuthError(ctx)) return ctx
 
     const result = await createInvoiceCore(
       ctx.userId,
@@ -276,15 +277,8 @@ export async function createInvoiceWithAutoNumber(
   data: Omit<z.infer<typeof InvoiceSchemaZod>, "invoice_no">
 ): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canCreate = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "create"
-    )
-    if (!canCreate) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "create")
+    if (isFinanceAuthError(ctx)) return ctx
 
     // Generate number inside transaction to prevent race conditions
     const result = await db.$transaction(async (tx) => {
@@ -364,15 +358,8 @@ export async function updateInvoice(
   data: InvoiceFormData
 ): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canEdit = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "edit"
-    )
-    if (!canEdit) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
 
     // INV-001: privileged roles see all school invoices; others only their own.
     const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
@@ -664,15 +651,8 @@ export async function deleteInvoice({
   id: string
 }): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canDelete = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "delete"
-    )
-    if (!canDelete) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
 
     // INV-001: privileged roles see all school invoices; others only their own.
     const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
@@ -715,15 +695,8 @@ export async function sendInvoiceEmail(
   subject: string
 ): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canExport = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "export"
-    )
-    if (!canExport) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "export")
+    if (isFinanceAuthError(ctx)) return ctx
 
     // INV-001: privileged roles see all school invoices; others only their own.
     const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
@@ -834,15 +807,8 @@ export async function markInvoicePaid(
   invoiceId: string
 ): Promise<ActionResponse> {
   try {
-    const ctx = await requireAuthAndTenant()
-    if (isAuthError(ctx)) return ctx
-
-    const canEdit = await checkCurrentUserPermission(
-      ctx.schoolId,
-      "invoice",
-      "edit"
-    )
-    if (!canEdit) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    const ctx = await requireFinanceActor("invoice", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
 
     const canSeeAll = await canSeeAllSchoolInvoices(ctx.userId)
     const invoice = await db.userInvoice.findFirst({
