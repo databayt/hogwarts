@@ -5,8 +5,10 @@ import { describe, expect, it, vi } from "vitest"
 
 import {
   createExpensePaymentEntry,
+  createFeeAdjustmentEntry,
   createFeeAssignmentEntry,
   createFeePaymentEntry,
+  createFinePaymentEntry,
   createInvoicePaymentEntry,
   createSalaryPaymentEntry,
   createWalletTopupEntry,
@@ -229,6 +231,63 @@ describe("accounting/posting-rules — whole-unit amounts (no cents inflation)",
       (l) => l.accountCode === StandardAccountCodes.ACCOUNTS_PAYABLE
     )
     expect(apLine?.credit).toBe(500)
+    expect(validateDoubleEntry(entry.lines)).toBe(true)
+  })
+})
+
+describe("accounting/posting-rules — fine payment (reachable UI, was never posted)", () => {
+  it("balances DR Cash / CR Other Revenue and keys idempotency on fine:<id>", async () => {
+    const db = makeDb(ALL_CODES)
+
+    const entry = await createFinePaymentEntry(
+      SCHOOL_ID,
+      {
+        fineId: "fine-1",
+        amount: 250,
+        paymentDate: new Date("2026-07-01"),
+      },
+      db as never
+    )
+
+    const cashLine = entry.lines.find(
+      (l) => l.accountCode === StandardAccountCodes.CASH
+    )
+    const revenueLine = entry.lines.find(
+      (l) => l.accountCode === StandardAccountCodes.OTHER_REVENUE
+    )
+    expect(cashLine?.debit).toBe(250)
+    expect(revenueLine?.credit).toBe(250)
+    expect(entry.sourceRecordId).toBe("fine:fine-1")
+    expect(validateDoubleEntry(entry.lines)).toBe(true)
+  })
+})
+
+describe("accounting/posting-rules — fee adjustment (scholarship/discount drift fix)", () => {
+  it("relieves the overstated receivable: DR Fees Revenue / CR Fees Receivable", async () => {
+    const db = makeDb(ALL_CODES)
+
+    const entry = await createFeeAdjustmentEntry(
+      SCHOOL_ID,
+      {
+        assignmentId: "fa-1",
+        adjustmentRef: "feeadj:scholarship:sch-1:fa-1",
+        amount: 1200,
+        adjustedDate: new Date("2026-07-01"),
+        reason: "Scholarship applied",
+      },
+      db as never
+    )
+
+    const revenueLine = entry.lines.find(
+      (l) => l.accountCode === StandardAccountCodes.STUDENT_FEES_REVENUE
+    )
+    const receivableLine = entry.lines.find(
+      (l) => l.accountCode === StandardAccountCodes.STUDENT_FEES_RECEIVABLE
+    )
+    expect(revenueLine?.debit).toBe(1200)
+    expect(receivableLine?.credit).toBe(1200)
+    // Replay protection rides on the caller-supplied unique ref.
+    expect(entry.sourceRecordId).toBe("feeadj:scholarship:sch-1:fa-1")
     expect(validateDoubleEntry(entry.lines)).toBe(true)
   })
 })

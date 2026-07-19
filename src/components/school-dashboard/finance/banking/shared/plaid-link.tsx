@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { createBankAccount } from "@/components/school-dashboard/finance/banking/actions/bank.actions"
 
 interface PlaidLinkProps {
@@ -44,6 +45,7 @@ export function PlaidLink({
   dictionary,
 }: PlaidLinkProps) {
   const router = useRouter()
+  const { locale } = useLocale()
   const { dictionary: dict } = useDictionary()
   const fd = (dict as any)?.finance
   const bp = fd?.bankingPlaid as Record<string, string> | undefined
@@ -149,7 +151,7 @@ export function PlaidLink({
           })
 
           if (bankAccount) {
-            router.push("/banking/my-banks")
+            router.push(`/${locale}/finance/banking/my-banks`)
             router.refresh()
           } else {
             throw new Error(
@@ -166,7 +168,7 @@ export function PlaidLink({
         }
       })
     },
-    [user.id, router]
+    [user.id, router, locale]
   )
 
   // Handle Plaid link exit

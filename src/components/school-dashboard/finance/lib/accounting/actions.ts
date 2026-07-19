@@ -21,8 +21,10 @@ import { db } from "@/lib/db"
 
 import {
   createExpensePaymentEntry,
+  createFeeAdjustmentEntry,
   createFeeAssignmentEntry,
   createFeePaymentEntry,
+  createFinePaymentEntry,
   createInvoicePaymentEntry,
   createSalaryPaymentEntry,
   createWalletTopupEntry,
@@ -194,6 +196,67 @@ export async function postInvoicePayment(
     return await createJournalEntry(schoolId, entryInput, userId)
   } catch (error) {
     console.error("Error posting invoice payment:", error)
+    return {
+      success: false,
+      errors: [error instanceof Error ? error.message : "Unknown error"],
+    }
+  }
+}
+
+/**
+ * Post fine collection to accounting
+ */
+export async function postFinePayment(
+  schoolId: string,
+  fineData: {
+    fineId: string
+    amount: number
+    paymentDate: Date
+  },
+  actorUserId?: string
+): Promise<PostingResult> {
+  try {
+    const userId = await resolveActor(actorUserId)
+    if (!userId) return { success: false, errors: ["Unauthorized"] }
+
+    const entryInput = await createFinePaymentEntry(schoolId, fineData, db)
+    return await createJournalEntry(schoolId, entryInput, userId)
+  } catch (error) {
+    console.error("Error posting fine payment:", error)
+    return {
+      success: false,
+      errors: [error instanceof Error ? error.message : "Unknown error"],
+    }
+  }
+}
+
+/**
+ * Post a post-assignment fee reduction (scholarship / early-payment discount)
+ * to accounting
+ */
+export async function postFeeAdjustment(
+  schoolId: string,
+  adjustmentData: {
+    assignmentId: string
+    adjustmentRef: string
+    amount: number
+    adjustedDate: Date
+    reason: string
+  },
+  actorUserId?: string
+): Promise<PostingResult> {
+  try {
+    const userId = await resolveActor(actorUserId)
+    if (!userId) return { success: false, errors: ["Unauthorized"] }
+
+    const entryInput = await createFeeAdjustmentEntry(
+      schoolId,
+      adjustmentData,
+      db
+    )
+    return await createJournalEntry(schoolId, entryInput, userId)
+  } catch (error) {
+    console.error("Error posting fee adjustment:", error)
     return {
       success: false,
       errors: [error instanceof Error ? error.message : "Unknown error"],

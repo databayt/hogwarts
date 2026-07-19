@@ -38,7 +38,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
               Analyze student grades, exam results, and academic progress.
             </p>
             <Button asChild>
-              <Link href={`/${lang}/exams/results`}>View Academic Reports</Link>
+              <Link href={`/${lang}/exams/result`}>View Academic Reports</Link>
             </Button>
           </CardContent>
         </Card>

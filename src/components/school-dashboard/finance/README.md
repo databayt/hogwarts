@@ -23,6 +23,20 @@ The Finance Block is a feature-based financial management system for multi-tenan
 
 This matrix is the readiness view, mirrored in `ISSUE.md` and at `/docs/finance`. The **Ledger** column is the key honesty signal — it now tracks whether a money event can actually _reach_ the ledger from the UI, not merely whether a posting function has a caller.
 
+> **2026-07-19 — security + ledger-integrity pass (see `ISSUE.md` for the full
+> record).** Supersedes parts of the 07-17 banner below: **payroll's ledger is
+> now REACHABLE** (Disburse Salaries on `runs/[id]` → `processPayments` →
+> `postSalaryPayment`; payslip view + PDF exist), **fines and
+> scholarship/early-payment discounts now post** (new
+> `createFinePaymentEntry` / `createFeeAdjustmentEntry` rules), and the whole
+> block's actions are permission-gated (`requireFinanceActor` /
+> `checkFinancePermission` threaded through salary, timesheet, budget, wallet,
+> accounts, reports, dashboard, payroll, fees fetchers, expenses, receipt,
+> banking — `lib/accounting/actions.ts` is no longer a public "use server"
+> surface). `/finance/permissions` finally has a route. **Wallet remains the
+> one unreachable money path** (`wallet/new` is a stub; `refundWallet` also
+> has no posting rule — do not wire it without one).
+
 > **2026-07-17 — this matrix was wrong in three directions. Verify before trusting it.**
 >
 > 1. It rated salary/payroll i18n "✅" while their nav bars, headings and `metadata.title` were
@@ -46,22 +60,22 @@ This matrix is the readiness view, mirrored in `ISSUE.md` and at `/docs/finance`
 > with **no component behind them** — and that unbuilt disbursement UI is _why_ payroll's ledger
 > posting is dead. The two failures share one root cause.
 
-| Sub-module  | Readiness | Ledger wired                        | Nav             | i18n | Tests  | Docs |
-| ----------- | --------- | ----------------------------------- | --------------- | ---- | ------ | ---- |
-| invoice     | 90%       | 🟢 `markInvoicePaid` → posts        | ✅ all resolve  | 🟢   | 🟢 153 | ✅   |
-| fees        | 85%       | 🟢 payment + assignment (no rollbk) | ✅ all resolve  | ✅   | 🟡 13  | ✅   |
-| budget      | 85%       | ➖ n/a                              | ✅ all resolve  | ✅   | ❌     | ✅   |
-| receipt     | 85%       | ➖ n/a                              | ✅ all resolve  | ✅   | ❌     | ✅   |
-| banking     | 80%       | ➖ n/a                              | ✅ all resolve  | ⚠️   | 🟡 5   | ✅   |
-| dashboard   | 80%       | ➖ n/a (trends are mock)            | ✅ all resolve  | ✅   | ❌     | ✅   |
-| expenses    | 80%       | 🟢 `markExpensePaid` → posts        | ✅ all resolve  | ⚠️   | ❌     | ✅   |
-| accounts    | 75%       | 🟢 engine home                      | ✅ all resolve  | ⚠️   | 🟡 10  | ✅   |
-| permissions | 75%       | ➖ n/a                              | ➖              | ⚠️   | ❌     | ✅   |
-| reports     | 75%       | 🔗 reads ledger (no salary/wallet)  | ✅ all resolve  | ⚠️   | ❌     | ✅   |
-| timesheet   | 75%       | ➖ n/a                              | ✅ all resolve  | ⚠️   | ❌     | ✅   |
-| wallet      | 75%       | 🔴 wired but UNREACHABLE            | ✅ all resolve  | ⚠️   | ❌     | ✅   |
-| salary      | 40%       | ➖ n/a                              | 🔴 2 of 16 real | 🟢   | ❌     | ✅   |
-| payroll     | 35%       | 🔴 wired but UNREACHABLE            | 🔴 2 of 23 real | 🟢   | ❌     | ✅   |
+| Sub-module  | Readiness | Ledger wired                        | Nav            | i18n | Tests  | Docs |
+| ----------- | --------- | ----------------------------------- | -------------- | ---- | ------ | ---- |
+| invoice     | 90%       | 🟢 `markInvoicePaid` → posts        | ✅ all resolve | 🟢   | 🟢 153 | ✅   |
+| fees        | 85%       | 🟢 payment + assignment (no rollbk) | ✅ all resolve | ✅   | 🟡 13  | ✅   |
+| budget      | 85%       | ➖ n/a                              | ✅ all resolve | ✅   | ❌     | ✅   |
+| receipt     | 85%       | ➖ n/a                              | ✅ all resolve | ✅   | ❌     | ✅   |
+| banking     | 80%       | ➖ n/a                              | ✅ all resolve | ⚠️   | 🟡 5   | ✅   |
+| dashboard   | 80%       | ➖ n/a (trends are mock)            | ✅ all resolve | ✅   | ❌     | ✅   |
+| expenses    | 80%       | 🟢 `markExpensePaid` → posts        | ✅ all resolve | ⚠️   | ❌     | ✅   |
+| accounts    | 75%       | 🟢 engine home                      | ✅ all resolve | ⚠️   | 🟡 10  | ✅   |
+| permissions | 75%       | ➖ n/a                              | ➖             | ⚠️   | ❌     | ✅   |
+| reports     | 75%       | 🔗 reads ledger (no salary/wallet)  | ✅ all resolve | ⚠️   | ❌     | ✅   |
+| timesheet   | 75%       | ➖ n/a                              | ✅ all resolve | ⚠️   | ❌     | ✅   |
+| wallet      | 75%       | 🔴 wired but UNREACHABLE            | ✅ all resolve | ⚠️   | ❌     | ✅   |
+| salary      | 55%       | ➖ n/a                              | ✅ 2 real tabs | 🟢   | 🟡     | ✅   |
+| payroll     | 70%       | 🟢 disburse → posts (2026-07-19)    | ✅ 2 real tabs | 🟢   | 🟡     | ✅   |
 
 Legend -- **Ledger**: 🟢 reaches the ledger from the UI · 🔴 posting fn is wired to an action nothing can invoke · 🔗 consumes ledger · ➖ not a money-mover. **Nav**: ✅ every link resolves · 🔴 most advertised routes don't exist (now rendered disabled + "coming soon"). **i18n**: 🟢 verified in a browser on /ar · ✅ believed ready · ⚠️ validation strings still hardcoded English. **Tests**: 🟢 strong · 🟡 partial · ❌ none.
 

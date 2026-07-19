@@ -1163,6 +1163,32 @@ export async function recordPayment(
                   earlyDiscountApplied,
               },
             })
+
+            // Ledger: relieve the pre-discount receivable — DR Student Fees
+            // Revenue / CR Student Fees Receivable. First-payment-only path,
+            // idempotent per assignment; failure logs, never blocks payment.
+            try {
+              const { postFeeAdjustment } =
+                await import("../lib/accounting/actions")
+              const postResult = await postFeeAdjustment(ctx.schoolId, {
+                assignmentId: feeAssignmentId,
+                adjustmentRef: `feeadj:earlybird:${feeAssignmentId}`,
+                amount: earlyDiscountApplied,
+                adjustedDate: new Date(),
+                reason: "Early payment discount",
+              })
+              if (!postResult.success) {
+                console.error(
+                  "[recordPayment] postFeeAdjustment failed:",
+                  postResult.errors
+                )
+              }
+            } catch (ledgerError) {
+              console.error(
+                "[recordPayment] Ledger posting threw (continuing):",
+                ledgerError
+              )
+            }
           }
         }
       }
@@ -1713,6 +1739,31 @@ export async function applyScholarship(
       console.warn("[applyScholarship] Invoice sync failed:", invoiceSyncErr)
     }
 
+    // Ledger: the assignment's receivable was posted pre-discount, so relieve
+    // it — DR Student Fees Revenue / CR Student Fees Receivable. Idempotent
+    // per (scholarship, assignment); fire-and-forget like the other posters.
+    try {
+      const { postFeeAdjustment } = await import("../lib/accounting/actions")
+      const postResult = await postFeeAdjustment(ctx.schoolId, {
+        assignmentId: feeAssignmentId,
+        adjustmentRef: `feeadj:scholarship:${scholarshipId}:${feeAssignmentId}`,
+        amount: scholarshipAmount,
+        adjustedDate: new Date(),
+        reason: "Scholarship applied",
+      })
+      if (!postResult.success) {
+        console.error(
+          "[applyScholarship] postFeeAdjustment failed:",
+          postResult.errors
+        )
+      }
+    } catch (ledgerError) {
+      console.error(
+        "[applyScholarship] Ledger posting threw (continuing):",
+        ledgerError
+      )
+    }
+
     revalidatePath("/finance/fees")
     return { success: true }
   } catch (error) {
@@ -1894,18 +1945,42 @@ export async function payFine(
       return actionError(ACTION_ERRORS.NOT_FOUND)
     }
 
+    // Single-shot: a paid fine cannot be paid again (also keeps the ledger
+    // idempotency key `fine:<id>` honest).
+    if (fine.isPaid) {
+      return actionError(ACTION_ERRORS.ALREADY_EXISTS)
+    }
+
+    const paidDate = new Date()
+
     await db.fine.update({
       where: { id: fineId, schoolId: ctx.schoolId },
       data: {
         isPaid: true,
         paidAmount: amount,
-        paidDate: new Date(),
+        paidDate,
         // Fine model lacks paymentMethod column; append to reason for audit trail
         reason: paymentMethod
           ? `${fine.reason} [Paid via: ${paymentMethod}]`
           : fine.reason,
       },
     })
+
+    // Ledger: DR Cash / CR Other Revenue. Fire-and-forget like the other
+    // posters — a posting failure is logged, never blocks the collection.
+    try {
+      const { postFinePayment } = await import("../lib/accounting/actions")
+      const postResult = await postFinePayment(ctx.schoolId, {
+        fineId,
+        amount,
+        paymentDate: paidDate,
+      })
+      if (!postResult.success) {
+        console.error("[payFine] postFinePayment failed:", postResult.errors)
+      }
+    } catch (ledgerError) {
+      console.error("[payFine] Ledger posting threw (continuing):", ledgerError)
+    }
 
     revalidatePath("/finance/fees")
     return { success: true }

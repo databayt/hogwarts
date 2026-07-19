@@ -15,7 +15,7 @@
 - [x] Real data queries for Teacher dashboard
 - [x] Real data queries for Student dashboard
 - [x] Real data queries for Parent dashboard
-- [x] Principal dashboard with 100% real data
+- [ ] Principal dashboard real data — **claim corrected 2026-07-19: budget (`allocated=2500000` hardcoded), parent-satisfaction scores, board meetings, disciplinary `incidentRate`, and staff-evaluation due dates are fabricated constants** (`dashboard/actions.ts:1444-1611`); only the base counts are real
 - [x] Financial tracking server actions (fee collection, expenses, budget)
 - [x] Emergency alert system with severity levels
 - [x] Loading states with skeleton loaders
@@ -35,7 +35,7 @@
 
 ### P1 -- High
 
-- Accountant and Staff dashboards need full real data integration (currently partial)
+- Accountant and Staff dashboards need full real data integration — **2026-07-19: accountant is ~75% real but weekly-collections / monthly-revenue charts + financial calendar are static (`accountant.tsx:154-283`); staff is ~10% real — `getStaffDashboardData` is self-labeled MOCK (`actions.ts:5332`)**. Also: accountant/principal/staff/admin destructure `dictionary` but never use it — all card titles hardcoded English (principal's `school.principalDashboard` namespace already exists, pure wiring bug; accountant/staff need new namespaces)
 - No data caching strategy -- all data fetched on every page load
 
 ### P2 -- Medium

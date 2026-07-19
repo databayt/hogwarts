@@ -393,7 +393,7 @@ export async function AccountantDashboard({
             value={totalInvoices}
             iconName="FileText"
             iconColor="text-blue-500"
-            href={`/${locale}/invoice`}
+            href={`/${locale}/finance/invoice`}
           />
           <MetricCard
             title="Overdue"

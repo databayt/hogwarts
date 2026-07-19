@@ -21,4 +21,6 @@ Production-ready billing system for managing school subscriptions with Stripe in
 
 ### Status
 
-**Completion:** 90% | **Blockers:** Email notifications (Resend pending), PDF invoice generation, advanced analytics charts
+**Completion:** ~85% | **Blockers:** Email notifications (Resend pending), PDF invoice generation, advanced analytics charts
+
+> **2026-07-19 corrections:** the file list above is stale — the block is now `actions.ts`, `billing-dashboard.tsx`, `config.ts`, `content.tsx`, `invoice-history.tsx`, `types.ts`, `validation.ts` (no `*-demo.tsx`, `dashboard.tsx`, `billing-page.tsx`, `resource-usage.tsx`, or `adapters.ts` exist). Stripe subscription lifecycle is confirmed real. Read actions (`getSubscriptionDetails`/`getInvoices`/`getBillingHistory`/`getPaymentMethods`/`getBillingStats`/`getBillingPreferences`/`updateUsageMetrics`) were tenant-only — **role-gated via `canManageBilling` as of 2026-07-19** (`openCustomerPortal` in school/billing also verifies the Stripe customer belongs to the caller's school). `invoice-history.tsx`/`billing-dashboard.tsx` still hardcode English strings + raw status enums.

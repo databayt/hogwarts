@@ -1,5 +1,7 @@
 # Reports — Production Readiness Tracker
 
+> **2026-07-19 corrections:** `generateReportCards` here is deprecated — the rich path is `grades/actions/report-cards.ts` → `grades/lib/report-cards-core.ts` (2026-07-18 pipeline pass), and BOTH `/exams/report-cards` (this block's UI) and `/grades/reports` are live simultaneously. The "hardcoded grade boundaries" P1 is now _half_-true: `SchoolGradingConfig.customBoundaries` exists and `report-cards-core.ts` reads it, but the only form that writes it (`exams/grading/grading-config-form.tsx`) has no route, and the ADMIN-reachable `ScoreRange` CRUD at `/school/configuration/academic` is a disconnected second system the pipeline never reads — so `DEFAULT_BOUNDARIES` still always applies in practice. RBAC: publish/comment/list here and generate/publish in the grades block were open to any tenant member — **restricted to ADMIN/DEVELOPER/TEACHER as of 2026-07-19**.
+
 **Status:** IN PROGRESS
 **Completion:** 75%
 **Last Updated:** 2026-03-19

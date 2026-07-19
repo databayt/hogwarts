@@ -1,5 +1,7 @@
 # Settings -- Production Readiness Tracker
 
+> **2026-07-19 correction:** this record predates a reorganization. `role-management.tsx`, `permissions-panel.tsx`, `role-switcher.tsx`, `role-preview-actions.ts`, `actions.ts`, `content.tsx`, and the whole `academic/` folder listed in README **no longer exist here** — academic CRUD lives at `school/academic/*` (route `/school/configuration/academic`), role changes at `school/membership/*`. `/settings` today is Appearance / Notifications / Password / Language (`content-enhanced.tsx`). `domain-request/` and `ai-settings-actions.ts` are role-gated but orphaned (no route imports them). README needs a full rewrite.
+
 **Status:** IN PROGRESS
 **Completion:** 85%
 **Last Updated:** 2026-03-19

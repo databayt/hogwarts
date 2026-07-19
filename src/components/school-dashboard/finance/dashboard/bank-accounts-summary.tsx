@@ -91,7 +91,7 @@ export function BankAccountsSummary({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/finance/banking/connect">
+          <Link href={`/${locale}/finance/banking/my-banks`}>
             <Button className="w-full">
               {dp?.connectBankAccount || "Connect Bank Account"}
             </Button>
@@ -114,7 +114,7 @@ export function BankAccountsSummary({
                 : dp?.accounts || "accounts"}
             </CardDescription>
           </div>
-          <Link href="/finance/banking">
+          <Link href={`/${locale}/finance/banking`}>
             <Button variant="outline" size="sm">
               {dp?.manage || "Manage"}
             </Button>

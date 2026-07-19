@@ -595,6 +595,175 @@ export async function createWalletTopupEntry(
 }
 
 /**
+ * Fine Payment Posting Rule
+ *
+ * When a fine is collected:
+ * DR: Cash
+ * CR: Other Revenue
+ *
+ * Fines are never posted as receivables at issue time, so collection is
+ * point-of-receipt income — cash against revenue, no AR leg to relieve.
+ * payFine is single-shot (flips isPaid), so `fine:<id>` is a stable
+ * idempotency key under @@unique(schoolId, sourceModule, sourceRecordId).
+ */
+export async function createFinePaymentEntry(
+  schoolId: string,
+  fineData: {
+    fineId: string
+    amount: number
+    paymentDate: Date
+  },
+  db: AccountingDbClient
+): Promise<JournalEntryInput> {
+  let cashAccountId = await getAccountIdByCode(
+    schoolId,
+    StandardAccountCodes.CASH,
+    db
+  )
+  let revenueAccountId = await getAccountIdByCode(
+    schoolId,
+    StandardAccountCodes.OTHER_REVENUE,
+    db
+  )
+
+  if (!cashAccountId || !revenueAccountId) {
+    const { initializeAccountingSystem } = await import("./seed-accounts")
+    await initializeAccountingSystem(schoolId)
+    cashAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.CASH,
+      db
+    )
+    revenueAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.OTHER_REVENUE,
+      db
+    )
+  }
+
+  if (!cashAccountId || !revenueAccountId) {
+    throw new Error("Required accounts not found in chart of accounts")
+  }
+
+  const amount = fineData.amount
+
+  const lines: JournalEntryLine[] = [
+    {
+      accountId: cashAccountId,
+      accountCode: StandardAccountCodes.CASH,
+      accountName: "Cash",
+      debit: amount,
+      credit: 0,
+      description: `Fine collected`,
+    },
+    {
+      accountId: revenueAccountId,
+      accountCode: StandardAccountCodes.OTHER_REVENUE,
+      accountName: "Other Revenue",
+      debit: 0,
+      credit: amount,
+      description: `Fine revenue`,
+    },
+  ]
+
+  return {
+    entryDate: fineData.paymentDate,
+    description: `Fine payment collected`,
+    reference: fineData.fineId,
+    sourceModule: SourceModule.FEES,
+    sourceRecordId: `fine:${fineData.fineId}`,
+    lines,
+    autoPost: true,
+  }
+}
+
+/**
+ * Fee Adjustment Posting Rule (scholarship / early-payment discount)
+ *
+ * When an already-assigned fee is reduced after its receivable was posted:
+ * DR: Student Fees Revenue    (contra the original revenue recognition)
+ * CR: Student Fees Receivable (relieve AR that will never be collected)
+ *
+ * Without this entry every discount applied after postFeeAssignment leaves
+ * the ledger's receivable permanently overstated vs FeeAssignment.finalAmount.
+ * `adjustmentRef` must be unique per adjustment event (e.g.
+ * `feeadj:scholarship:<scholarshipId>:<assignmentId>`); the DB unique on
+ * (schoolId, sourceModule, sourceRecordId) makes replays idempotent.
+ */
+export async function createFeeAdjustmentEntry(
+  schoolId: string,
+  adjustmentData: {
+    assignmentId: string
+    adjustmentRef: string
+    amount: number
+    adjustedDate: Date
+    reason: string
+  },
+  db: AccountingDbClient
+): Promise<JournalEntryInput> {
+  let revenueAccountId = await getAccountIdByCode(
+    schoolId,
+    StandardAccountCodes.STUDENT_FEES_REVENUE,
+    db
+  )
+  let receivableAccountId = await getAccountIdByCode(
+    schoolId,
+    StandardAccountCodes.STUDENT_FEES_RECEIVABLE,
+    db
+  )
+
+  if (!revenueAccountId || !receivableAccountId) {
+    const { initializeAccountingSystem } = await import("./seed-accounts")
+    await initializeAccountingSystem(schoolId)
+    revenueAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.STUDENT_FEES_REVENUE,
+      db
+    )
+    receivableAccountId = await getAccountIdByCode(
+      schoolId,
+      StandardAccountCodes.STUDENT_FEES_RECEIVABLE,
+      db
+    )
+  }
+
+  if (!revenueAccountId || !receivableAccountId) {
+    throw new Error("Required accounts not found in chart of accounts")
+  }
+
+  const amount = adjustmentData.amount
+
+  const lines: JournalEntryLine[] = [
+    {
+      accountId: revenueAccountId,
+      accountCode: StandardAccountCodes.STUDENT_FEES_REVENUE,
+      accountName: "Student Fees Revenue",
+      debit: amount,
+      credit: 0,
+      description: adjustmentData.reason,
+    },
+    {
+      accountId: receivableAccountId,
+      accountCode: StandardAccountCodes.STUDENT_FEES_RECEIVABLE,
+      accountName: "Student Fees Receivable",
+      debit: 0,
+      credit: amount,
+      description: adjustmentData.reason,
+    },
+  ]
+
+  return {
+    entryDate: adjustmentData.adjustedDate,
+    description: `Fee adjustment - ${adjustmentData.reason}`,
+    reference: adjustmentData.assignmentId,
+    sourceModule: SourceModule.FEES,
+    sourceRecordId: adjustmentData.adjustmentRef,
+    lines,
+    autoPost: true,
+  }
+}
+
+/**
  * Budget Allocation Posting Rule
  * Note: Budget allocations are typically memo entries or don't create journal entries
  * They're tracked separately and compared against actual expenses

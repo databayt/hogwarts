@@ -13,11 +13,97 @@ last_audited: 2026-06-13
 
 # Finance -- Readiness & Verified Gap Register
 
-> Last updated: 2026-06-13 · ~88% ready · 14 sub-modules
->
-> This file is the **engineering source of truth** for finance readiness. The public-facing mirror is `/docs/finance` (hub) + a page per sub-block. The hub's status matrix and `README.md`'s matrix are kept identical to the banner below.
->
-> **Aldar UAE payment readiness:** consolidated trace lives at [hogwarts#356](https://github.com/databayt/hogwarts/issues/356) — payment-method enum extended (APPLE_PAY/GOOGLE_PAY/MADA/KNET/ATM_DEPOSIT), `PENDING_VERIFICATION` flow, currency snapshot on Payment/FeeAssignment/FeeStructure/Receipt, reconciliation report live at `/finance/banking/reconciliation`, server-side receipt PDF.
+> Last updated: 2026-07-19 (security + money-integrity pass) · 14 sub-modules
+
+## Recent Work (2026-07-19 — finance+management security & ledger-integrity pass)
+
+Four-agent audit (money-paths, authz, management blocks, i18n/nav) followed by
+fix waves. Commit `1e4660a58` + follow-up. Verified: tsc 0, finance+school
+suites green.
+
+### Security (P0/P1, all fixed)
+
+- **`lib/accounting/actions.ts` is no longer `"use server"`.** All 12 exports
+  were public POST endpoints taking caller-supplied `schoolId` with only an
+  any-session check — a cross-tenant ledger read/write vector. Now an internal
+  `server-only` module (webhooks still post session-less via `actorUserId`
+  sentinels); the 6 dead duplicate exports were deleted. The trust model is
+  documented in the file header: callers pass a schoolId they already verified.
+- **`banking/actions/bank.actions.ts`** — `getAccounts`/`getAccount`/
+  `syncTransactions` had ZERO auth and returned the Plaid `accessToken`;
+  `getAccount` additionally sat behind a cross-user `unstable_cache`. Now
+  session+ownership scoped, `omit: { accessToken: true }` everywhere, cache
+  removed. Side effect fixed: `getAccounts` now returns the `{success, data}`
+  shape `banking/dashboard/content.tsx` always expected — the banking
+  dashboard had been permanently rendering its empty state. Dead
+  `transfer.actions.ts`/`transaction.actions.ts` (unsafe, zero importers)
+  deleted.
+- **Receipt AI** (`receipt/ai/extract-receipt-data.ts`) de-servered — paid
+  Claude OCR with client-supplied schoolId is internal-only now. Receipt
+  actions gained owner-or-`receipt/*` permission gates (list self-scopes for
+  non-privileged callers).
+- **Module-permission gates threaded through every previously-open module**:
+  salary (all 14 actions), timesheet (incl. `approveTimesheet`), budget,
+  wallet, accounts (manual journal entry create/post!), finance reports
+  (balance sheet / P&L / trial balance), finance dashboard stats, payroll
+  reads + `deletePayrollRun`, fees `fetchXRows` table fetchers, expenses
+  (owner-or-edit + self-scoped list). Payslip reads are owner-or-payroll/view.
+- **`/finance` hub gated** as reports-grade data (`resolveFinanceAccess("reports")`)
+  — it aggregated school-wide revenue/expense/payroll totals for every role.
+- **`/finance/permissions` route created** — the 854-line grant/revoke console
+  existed with no page; granular STAFF/TEACHER grants were unreachable.
+- `banking/reconciliation` checked the wrong module (`"fees"` → `"banking"`).
+
+### Ledger integrity (new money paths wired)
+
+- **Fines now post**: `payFine` → `postFinePayment` → DR Cash / CR Other
+  Revenue (`fine:<id>` idempotency key); double-pay guarded (`isPaid` check).
+  Previously a live UI path collected real cash with zero ledger trace.
+- **Discount drift closed**: `applyScholarship` and the early-payment discount
+  in `recordPayment` reduce `finalAmount` AFTER `postFeeAssignment` posted the
+  pre-discount receivable — the ledger's AR was permanently overstated. Both
+  now post `postFeeAdjustment` → DR Student Fees Revenue / CR Student Fees
+  Receivable with unique refs (`feeadj:scholarship:<sch>:<fa>`,
+  `feeadj:earlybird:<fa>`). New posting rules + balance unit tests.
+- **Stripe reconciliation column fixed**: `banking/reconciliation` read
+  `payload["amount"]` off the raw Stripe Event envelope (field doesn't exist)
+  → every Stripe payment showed as a discrepancy. Now reads
+  `data.object.amount_total` (cents→units) for `fee_payment` sessions only.
+
+### Status changes vs the 2026-07-17 matrix
+
+- **payroll: ledger REACHABLE** since `b6b85685d` (2026-07-19) — "Disburse
+  Salaries" on `runs/[id]` fires `processPayments` → `postSalaryPayment`.
+  Payslip view + PDF exist (`/finance/payroll/my`, `/slips/[id]`).
+- **wallet: still UNREACHABLE** — `wallet/new` remains a (now-localized)
+  coming-soon stub; `topupWallet` has no UI caller. `refundWallet` additionally
+  has NO posting rule (would desync cash if ever wired) — do not wire it
+  without adding one.
+- **Fine/scholarship/earlybird money events: WIRED** (see above).
+- Purchases (`purchase-invoice.ts`) remain intentionally unposted (needs a
+  DR Cash / CR Revenue point-of-sale rule — still open).
+
+### Still open after this pass
+
+- `refundWallet` posting rule + a general refund write-path (Refund model +
+  validation exist; zero server actions create a Refund row).
+- Purchase (course/catalog/video) DR Cash / CR Revenue posting rule.
+- Overtime PAY: hours aggregate onto slips but `overtime` earnings is
+  hardcoded 0; `OVERTIME_MULTIPLIERS` config is dead. Needs a policy decision.
+- `checkFinancePermission` short-circuits ADMIN/ACCOUNTANT/DEVELOPER before
+  the FinancePermission table — partial _restriction_ of an accountant is
+  architecturally impossible (grants for STAFF/TEACHER work fine).
+- STAFF policy inconsistency: `canSeeAllSchoolInvoices` includes STAFF;
+  `FINANCE_ADMIN_ROLES` does not.
+- Reconciliation ledger column is still pro-rata allocated across sources
+  (needs `Payment.journalEntryId` per-row mapping — field exists).
+- i18n: hardcoded `metadata` titles being converted block-wide to
+  `generateMetadata` (2026-07-19); breadcrumbs render raw URL segments on /ar
+  platform-wide (no `platform.breadcrumb` dictionary namespace exists); crons
+  (`fee-due`, `fee-overdue`) still use `isAr ?` ternaries.
+  > This file is the **engineering source of truth** for finance readiness. The public-facing mirror is `/docs/finance` (hub) + a page per sub-block. The hub's status matrix and `README.md`'s matrix are kept identical to the banner below.
+  >
+  > **Aldar UAE payment readiness:** consolidated trace lives at [hogwarts#356](https://github.com/databayt/hogwarts/issues/356) — payment-method enum extended (APPLE_PAY/GOOGLE_PAY/MADA/KNET/ATM_DEPOSIT), `PENDING_VERIFICATION` flow, currency snapshot on Payment/FeeAssignment/FeeStructure/Receipt, reconciliation report live at `/finance/banking/reconciliation`, server-side receipt PDF.
 
 ## Status banner
 

@@ -162,13 +162,13 @@ export function QuickActions({ actions, className }: QuickActionsProps) {
 
         {/* Additional quick stats or actions */}
         <div className="mt-6 grid grid-cols-2 gap-4 border-t pt-6">
-          <Link href="/finance/reports">
+          <Link href={withLocale("/finance/reports", locale)}>
             <Button variant="outline" className="w-full justify-start">
               <BarChart className="me-2 h-4 w-4" />
               {dp?.viewAllReports || "View All Reports"}
             </Button>
           </Link>
-          <Link href="/finance/settings">
+          <Link href={withLocale("/finance/banking/payment-methods", locale)}>
             <Button variant="outline" className="w-full justify-start">
               <Calculator className="me-2 h-4 w-4" />
               {dp?.financeSettings || "Finance Settings"}
@@ -220,7 +220,7 @@ export function QuickActionsCompact({ actions, className }: QuickActionsProps) {
         )
       })}
       {actions.length > 4 && (
-        <Link href="/finance">
+        <Link href={withLocale("/finance", locale)}>
           <Button variant="outline" size="sm">
             <Plus className="h-4 w-4" />
             <span className="ms-2">{dp?.more || "More"}</span>

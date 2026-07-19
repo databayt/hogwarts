@@ -171,13 +171,31 @@ export async function ReconciliationContent({ lang, days = 30 }: Props) {
   // Stripe maps to CREDIT_CARD since that's what our webhook always writes.
   for (const ev of webhookEvents) {
     const payload = ev.payload as Record<string, unknown> | null
-    const amountRaw = payload?.["amount"]
-    const amount =
-      typeof amountRaw === "number"
-        ? amountRaw
-        : typeof amountRaw === "string"
-          ? Number(amountRaw)
-          : 0
+    let amount = 0
+    if (ev.provider === "stripe") {
+      // Stripe rows store the whole Event envelope — there is no top-level
+      // `amount`. The money lives at data.object.amount_total (cents) on
+      // checkout sessions; only fee_payment sessions correspond to Payment
+      // rows, so anything else (subscriptions, purchases, disputes) is
+      // skipped rather than inflating the gateway column.
+      const object = (payload?.data as Record<string, unknown> | undefined)
+        ?.object as Record<string, unknown> | undefined
+      const metadata = object?.metadata as Record<string, unknown> | undefined
+      const cents = object?.amount_total
+      if (metadata?.type === "fee_payment" && typeof cents === "number") {
+        amount = cents / 100
+      }
+    } else {
+      // Tap stores the charge payload itself — `amount` is top-level and
+      // already in whole currency units.
+      const amountRaw = payload?.["amount"]
+      amount =
+        typeof amountRaw === "number"
+          ? amountRaw
+          : typeof amountRaw === "string"
+            ? Number(amountRaw)
+            : 0
+    }
     if (Number.isNaN(amount) || amount <= 0) continue
     const key = ev.provider === "stripe" ? "CREDIT_CARD" : "tap"
     if (!bySource[key]) {

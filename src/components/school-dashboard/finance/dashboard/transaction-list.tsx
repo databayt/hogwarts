@@ -122,7 +122,7 @@ export function TransactionList({
               {dp?.latestActivities || "Latest financial activities"}
             </CardDescription>
           </div>
-          <Link href="/finance/transactions">
+          <Link href={`/${locale}/finance/banking/transaction-history`}>
             <Button variant="outline" size="sm">
               {c?.viewAll || "View All"}
             </Button>
