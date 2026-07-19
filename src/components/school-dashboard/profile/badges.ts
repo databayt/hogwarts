@@ -22,11 +22,14 @@ import type { ProfileRole } from "./types"
 
 const ACHIEVEMENT_BADGE_PREFIX = "achievement_"
 
-// Auto-managed catalog. `key` is stable; titles/descriptions are dictionary keys
-// resolved at render time (stored here as the canonical English source so the
-// translation cache can localize them). icon must match an illustration asset
-// in /public/illustrations (starstruck, galaxy-brain, pull-shark, quickdraw,
-// yolo, pair-extraordinaire, public-sponsor).
+// Auto-managed catalog. `key` is stable; titles/descriptions are CONTENT and
+// follow single-language storage: stored in Arabic (the schools' default
+// content language, matching the seeded orgs/activities) with lang="ar", and
+// localized to English on demand by the profile read's getLabels batch.
+// icon must match a badge asset on the CDN under hogwarts/<icon>.png
+// (starstruck, galaxy-brain, pull-shark, quickdraw, yolo, pair-extraordinaire,
+// public-sponsor — source files in /public/github, uploaded via
+// prisma/scripts/upload-badge-art.ts).
 interface BadgeDef {
   key: string
   title: string
@@ -38,43 +41,43 @@ interface BadgeDef {
 export const BADGE_CATALOG: Record<string, BadgeDef> = {
   community_member: {
     key: "community_member",
-    title: "Community Member",
-    description: "An active member of a school organization",
+    title: "عضو مجتمع",
+    description: "عضو نشط في إحدى المنظمات المدرسية",
     icon: "pair-extraordinaire",
     level: "BRONZE",
   },
   active_contributor: {
     key: "active_contributor",
-    title: "Active Contributor",
-    description: "Consistently active across the school platform",
+    title: "مساهم نشط",
+    description: "نشاط مستمر عبر منصة المدرسة",
     icon: "pull-shark",
     level: "SILVER",
   },
   perfect_attendance: {
     key: "perfect_attendance",
-    title: "Perfect Attendance",
-    description: "Outstanding attendance record this year",
+    title: "حضور مثالي",
+    description: "سجل حضور متميز هذا العام",
     icon: "quickdraw",
     level: "SILVER",
   },
   top_of_class: {
     key: "top_of_class",
-    title: "First of Class",
-    description: "Ranked first by merit",
+    title: "الأول على الفصل",
+    description: "الترتيب الأول بالتفوق الدراسي",
     icon: "galaxy-brain",
     level: "GOLD",
   },
   honor_roll: {
     key: "honor_roll",
-    title: "Honor Roll",
-    description: "Ranked among the top of the cohort",
+    title: "لوحة الشرف",
+    description: "ضمن الأوائل على الدفعة",
     icon: "starstruck",
     level: "GOLD",
   },
   diligent_educator: {
     key: "diligent_educator",
-    title: "Diligent Educator",
-    description: "Marked attendance and graded work consistently",
+    title: "معلّم مجتهد",
+    description: "رصد الحضور والدرجات بانتظام",
     icon: "pull-shark",
     level: "GOLD",
   },
@@ -252,7 +255,7 @@ export async function recomputeProfileBadges(
         const d = BADGE_CATALOG.perfect_attendance
         desired.push({
           ...d,
-          description: "Marked attendance reliably this year",
+          description: "رصد الحضور بانتظام طوال العام",
           context: null,
           earnedAt: now,
         })

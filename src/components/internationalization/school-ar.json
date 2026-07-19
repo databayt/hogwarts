@@ -7650,7 +7650,8 @@
         "subjects": "المواد",
         "achievements": "الإنجازات",
         "classes": "الفصول",
-        "children": "الأبناء"
+        "children": "الأبناء",
+        "organizations": "المنظمات"
       },
       "stats": {
         "subjects": "مادة",
@@ -7658,6 +7659,15 @@
         "classes": "فصل",
         "students": "طالب",
         "children": "ابن"
+      },
+      "achievementsTab": {
+        "empty": "لا توجد إنجازات بعد."
+      },
+      "levels": {
+        "bronze": "برونزي",
+        "silver": "فضي",
+        "gold": "ذهبي",
+        "platinum": "بلاتيني"
       },
       "orgRoles": {
         "member": "عضو",
@@ -7671,7 +7681,8 @@
         "tasks": "مهمة",
         "no": "لا يوجد",
         "loadError": "تعذّر تحميل بيانات النشاط.",
-        "heatmapLabel": "نشاط المساهمات لعام {year}"
+        "heatmapLabel": "نشاط المساهمات لعام {year}",
+        "totalInYear": "{count} {label} في {year}"
       },
       "form": {
         "name": "الاسم",

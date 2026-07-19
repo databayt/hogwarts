@@ -80,6 +80,7 @@ import { seedNotificationTemplates } from "./notification-templates"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
+import { seedProfileActivity } from "./profile-activity"
 import { seedProfileExtras } from "./profile-extras"
 import { seedProfileImages } from "./profile-images"
 import { seedQBank } from "./qbank"
@@ -996,6 +997,13 @@ const SEEDS: Record<string, SeedEntry> = {
     description: "Profile organizations, memberships, and earned badges",
     run: async (prisma, schoolId) => {
       await seedProfileExtras(prisma, schoolId)
+    },
+  },
+  "profile-activity": {
+    description:
+      "Current-year profile life: attendance, activity feed, pins, messages, approvals, badges",
+    run: async (prisma, schoolId) => {
+      await seedProfileActivity(prisma, schoolId)
     },
   },
   "reset-test-applicant": {

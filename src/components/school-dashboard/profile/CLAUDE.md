@@ -34,6 +34,21 @@ live backlog + what shipped this pass.
   `viewerSchoolId === profileSchoolId`. DEVELOPER is the ONLY cross-school role.
   The DB fetch is already schoolId-scoped; the permission check is the
   field-level defense-in-depth layer.
+- **Badge catalog content is Arabic.** `BADGE_CATALOG` titles/descriptions are
+  stored in Arabic (the schools' content language, `lang: "ar"`); English is
+  produced on demand by the getLabels batch in `queries.ts`. Don't revert them
+  to English "canonical" strings — that renders English on the Arabic UI.
+- **Badge art lives on the CDN**, `hogwarts/<icon>.png` (source PNGs in
+  `/public/github`; re-upload via `prisma/scripts/upload-badge-art.ts` — the
+  CDN origin bucket is `databayt-cdn`, NOT the app's `AWS_S3_BUCKET`, and the
+  bucket rejects ACLs).
+- **Profile dates render in UTC** (`timeZone: "UTC"` in every Intl call:
+  activity feed, graph tooltips, sidebar joined/badge dates). Instants near
+  midnight otherwise format to different calendar dates on server vs browser →
+  SSR hydration mismatch. Keep any new date rendering on this rule.
+- **Seed `profile-activity`** keeps the block demonstrable: current-year
+  attendance/feed/pins/messages/approvals + badge recompute, idempotent. If a
+  demo profile looks empty, run `pnpm db:seed:single profile-activity`.
 - **Dictionary lives at `dictionary.school.profile`** — NOT `dictionary.profile`.
   Components receive the already-scoped `p = dictionary.school.profile` object
   from the page. (A long-standing `.profile` bug silently rendered the whole UI

@@ -39,6 +39,7 @@ page.tsx ──> getProfileView(targetId, lang)            // queries.ts (typed,
             ├─ PinnedItems      (real pins; owner reorder/remove, persisted)
             ├─ ContributionGraph(SWR → getContributionData; empty grid when none)
             ├─ ContributionActivity (real UserActivity grouped by month)
+            ├─ AchievementsGrid    (achievements tab: earned-badge grid)
             └─ Student/Teacher/Parent/Staff dashboards (real subjects/classes/children/orgs)
 ```
 
@@ -59,12 +60,26 @@ page.tsx ──> getProfileView(targetId, lang)            // queries.ts (typed,
 GitHub-style fields (`bio`, `website`, `timezone`, `pronouns`, `statusEmoji`,
 `statusMessage`, `socialLinks`) live on `User`.
 
-> **Deploy note:** `profile_badges`, `organizations`, and
-> `organization_memberships` are **deploy-pending**. Apply the additive
-> migration-of-record
-> `prisma/migrations/20260615000000_add_profile_badges_organizations/` to the
-> prod default branch (idempotent `CREATE TABLE IF NOT EXISTS` + guarded enums,
-> validated on a Neon branch), then run `pnpm db:seed:single profile-extras`.
+> **Deploy note:** the migration-of-record
+> `prisma/migrations/20260615000000_add_profile_badges_organizations/` was
+> applied to prod on 2026-06-15. To populate the demo school's profile surfaces
+> run `pnpm db:seed:single profile-extras` then
+> `pnpm db:seed:single profile-activity`.
+
+## Demo data (`profile-activity` seed)
+
+Every profile section renders from real rows, so the demo needs real rows. The
+idempotent `profile-activity` seed (part of `seedMain`) creates, for the demo
+school: current-year attendance for the demo student's section (marked by the
+demo teacher — lights both graphs and earns the attendance badges), an
+Arabic activity feed for demo accounts + roster/teacher/guardian users,
+role-appropriate pinned items derived from real subjects/classes/children/
+organizations, a parent↔teacher conversation whose parent-sent messages light
+the parent graph, expense approvals spread across admin/staff/accountant (staff
+graph), demo-student achievements in distinct categories, and the GitHub-style
+`User` fields (status, website, social links, timezone). Badge artwork is served
+from the CDN at `hogwarts/<icon>.png` (sources in `/public/github`, re-upload
+with `npx tsx prisma/scripts/upload-badge-art.ts`).
 
 ## Badge earning engine
 

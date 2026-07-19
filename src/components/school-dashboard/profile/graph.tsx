@@ -77,9 +77,17 @@ function emptyYearData(role: ProfileRole, year: number): ContributionGraphData {
 }
 
 function formatDate(dateStr: string, locale: string): string {
+  // dateStr is a UTC YYYY-MM-DD key — format in UTC or negative-offset
+  // timezones would label every cell one day early.
   return new Date(dateStr).toLocaleDateString(
     locale === "ar" ? "ar-SA" : "en-US",
-    { weekday: "long", month: "short", day: "numeric", year: "numeric" }
+    {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }
   )
 }
 
@@ -102,8 +110,9 @@ export default function ActivityGraph({
 
   const weekdays = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" })
+    // Rows are Sun..Sat (grid is week-aligned); label Mon/Wed/Fri like GitHub.
     const getDay = (d: number) => formatter.format(new Date(2024, 0, 7 + d))
-    return [getDay(0), "", getDay(1), "", getDay(3), "", getDay(5), ""]
+    return ["", getDay(1), "", getDay(3), "", getDay(5), ""]
   }, [locale])
 
   const roleLabel = p?.graph?.[ROLE_LABEL_KEYS[role]] ?? ""
@@ -128,6 +137,15 @@ export default function ActivityGraph({
   const weeks = useMemo(() => {
     const result: ContributionDataPoint[][] = []
     let currentWeek: ContributionDataPoint[] = []
+    // Week-align the grid: pad the first column so day rows are true weekdays
+    // (server data starts at Jan 1, which is rarely a Sunday).
+    const first = graphData.contributions.find((d) => d.date)
+    if (first) {
+      const offset = new Date(first.date + "T00:00:00Z").getUTCDay()
+      for (let i = 0; i < offset; i++) {
+        currentWeek.push({ date: "", level: 0, count: 0, activities: [] })
+      }
+    }
     graphData.contributions.forEach((day) => {
       currentWeek.push(day)
       if (currentWeek.length === 7) {
@@ -183,6 +201,14 @@ export default function ActivityGraph({
         {error && (
           <p className="text-muted-foreground mb-2 text-xs">
             {p?.graph?.loadError ?? ""}
+          </p>
+        )}
+        {p?.graph?.totalInYear && (
+          <p className="text-foreground mb-3 text-xs font-medium">
+            {p.graph.totalInYear
+              .replace("{count}", String(graphData.totalActivities))
+              .replace("{label}", roleLabel)
+              .replace("{year}", String(year))}
           </p>
         )}
         <div className="overflow-x-auto pb-2">

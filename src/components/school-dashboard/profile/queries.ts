@@ -591,6 +591,14 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   // ---- role-detail lists (real, for the role tab) -------------------------
   const roleDetail = await fetchRoleDetail(role, args.entityId, schoolId)
 
+  // The sidebar "subjects" stat should match the subjects tab: distinct
+  // subjects, not class enrollments (a student can have several classes of
+  // the same subject across terms).
+  if (role === "student") {
+    const subjectsStat = args.stats.find((s) => s.key === "subjects")
+    if (subjectsStat) subjectsStat.value = roleDetail.subjects.length
+  }
+
   // A teacher's primary department is a real organization-like membership —
   // surface it even when there's no explicit OrganizationMembership row.
   if (
@@ -609,21 +617,44 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
 
   // ---- translation (batched, cache-backed) --------------------------------
   let firstName = args.firstName
+  let lastName = args.lastName
   let bio = args.bio
+  let sectionName = args.sectionName ?? null
+  let departmentName = args.departmentName ?? null
   if (displayLang !== "ar") {
+    const pinnedStatLabels = pinnedRows.flatMap((p: any) =>
+      Array.isArray((p.metadata as any)?.stats)
+        ? ((p.metadata as any).stats as Array<{ label?: string }>)
+            .map((s) => s.label ?? "")
+            .filter(Boolean)
+        : []
+    )
     const toTranslate = [
       args.firstName,
+      args.lastName,
       args.bio ?? "",
+      args.sectionName ?? "",
+      args.departmentName ?? "",
       ...badgeRows.map((b: any) => b.title),
       ...badgeRows.map((b: any) => b.description ?? ""),
       ...organizations.map((o) => o.name),
       ...pinnedRows.map((p: any) => p.title),
+      ...pinnedRows.map((p: any) => p.description ?? ""),
+      ...pinnedStatLabels,
+      ...activityRows.map((a: any) => a.title),
+      ...activityRows.map((a: any) => a.description ?? ""),
+      ...roleDetail.subjects.map((s) => s.name),
+      ...roleDetail.classes.flatMap((c) => [c.name, c.subjectName ?? ""]),
+      ...roleDetail.children.flatMap((c) => [c.name, c.sectionName ?? ""]),
     ].filter(Boolean)
     if (toTranslate.length) {
       const map = await getLabels(toTranslate, displayLang, schoolId)
       const tr = (s: string | null) => (s ? (map.get(s) ?? s) : s)
       firstName = tr(args.firstName) ?? args.firstName
+      lastName = tr(args.lastName) ?? args.lastName
       bio = tr(args.bio)
+      sectionName = tr(sectionName)
+      departmentName = tr(departmentName)
       badgeRows.forEach((b: any) => {
         b.title = tr(b.title) ?? b.title
         b.description = tr(b.description)
@@ -633,17 +664,41 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
       })
       pinnedRows.forEach((p: any) => {
         p.title = tr(p.title) ?? p.title
+        p.description = tr(p.description)
+        const stats = (p.metadata as any)?.stats
+        if (Array.isArray(stats)) {
+          p.metadata = {
+            ...(p.metadata as Record<string, unknown>),
+            stats: stats.map((s: { label?: string; value?: unknown }) => ({
+              ...s,
+              label: s.label ? (tr(s.label) ?? s.label) : s.label,
+            })),
+          }
+        }
+      })
+      activityRows.forEach((a: any) => {
+        a.title = tr(a.title) ?? a.title
+        a.description = tr(a.description)
+      })
+      roleDetail.subjects.forEach((s) => {
+        s.name = tr(s.name) ?? s.name
+      })
+      roleDetail.classes.forEach((c) => {
+        c.name = tr(c.name) ?? c.name
+        c.subjectName = tr(c.subjectName)
+      })
+      roleDetail.children.forEach((c) => {
+        c.name = tr(c.name) ?? c.name
+        c.sectionName = tr(c.sectionName)
       })
     }
   }
 
-  const lastName = args.lastName
   const displayName = `${firstName} ${lastName}`.trim() || firstName
 
   const info: ProfileInfoItem[] = []
-  if (args.departmentName)
-    info.push({ icon: "org", value: args.departmentName })
-  if (args.sectionName) info.push({ icon: "org", value: args.sectionName })
+  if (departmentName) info.push({ icon: "org", value: departmentName })
+  if (sectionName) info.push({ icon: "org", value: sectionName })
   if (args.email) info.push({ icon: "mail", value: args.email })
   if (args.city) info.push({ icon: "location", value: args.city })
 
@@ -670,8 +725,8 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     createdAt: args.createdAt.toISOString(),
     email: args.email,
     city: args.city ?? null,
-    sectionName: args.sectionName ?? null,
-    departmentName: args.departmentName ?? null,
+    sectionName,
+    departmentName,
     enrollmentDate: args.enrollmentDate?.toISOString() ?? null,
     joiningDate: args.joiningDate?.toISOString() ?? null,
     stats: args.stats,

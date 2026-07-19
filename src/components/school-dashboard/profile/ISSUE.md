@@ -1,8 +1,8 @@
 # Profile — Production Readiness Tracker
 
-**Status:** READY (DB deploy-pending)
-**Completion:** ~95%
-**Last Updated:** 2026-06-15
+**Status:** READY
+**Completion:** ~98%
+**Last Updated:** 2026-07-19
 
 ---
 
@@ -27,7 +27,40 @@
 - [ ] Session management (view/revoke active sessions) (enhancement)
 - [ ] Privacy settings (control profile visibility) (enhancement)
 
-## Done This Pass (2026-06-15 — full build-out)
+## Done This Pass (2026-07-19 — data-alive + role polish)
+
+- **New seed `profile-activity`** (wired into `seedMain` + `db:seed:single`):
+  current-year section attendance marked by the demo teacher (student + teacher
+  graphs light up), UserActivity feed rows for demo accounts + roster/teachers/
+  guardians, role-appropriate pinned items from real rows, parent↔teacher
+  conversation with parent-sent messages (parent graph), expense approvals
+  spread across admin/staff/accountant (staff graph), demo-student achievements
+  in distinct categories, status/website/social/timezone User fields, badge
+  recompute. Fully idempotent (existing-row guards + deterministic PRNG).
+- **Badge artwork fixed**: source PNGs found in `/public/github` were never on
+  the CDN → uploaded 26 files to the CDN origin bucket as `hogwarts/<icon>.png`
+  (`prisma/scripts/upload-badge-art.ts`); `profile-images` avatar seed fixed
+  (bucket-owner-enforced: no ACL; upload to `databayt-cdn`, not the app bucket).
+- **BADGE_CATALOG titles/descriptions now Arabic** (single-language storage —
+  ar is the schools' content language; EN localizes via the getLabels batch).
+- **Sidebar renders the fields the form edits**: website, social links (LTR,
+  external), joined/enrolled date, pronouns beside the role label.
+- **Achievements tab is real** — earned-badge grid (art, level chip, earn date)
+  instead of duplicating the role dashboard; staff gained an Organizations tab.
+- **Parent children cards link to the child's profile** (orphan-entity path).
+- **Localization coverage**: activity titles/descriptions, lastName, section/
+  department names, pinned descriptions + metadata stat labels, and roleDetail
+  lists (subjects/classes/children) joined the getLabels batch; subjects stat
+  now counts DISTINCT subjects (matches the tab count).
+- **UTC date rendering** across feed/graph/sidebar/achievements — fixes an SSR
+  hydration mismatch for near-midnight timestamps (server TZ ≠ browser TZ) and
+  off-by-one-day graph tooltips in negative-offset timezones; graph grid is now
+  week-aligned (was chunked from Jan 1 regardless of weekday) with a GitHub-style
+  "{count} {label} in {year}" total.
+- Browser-verified on demo (AR + EN): student, teacher, parent, admin; 79/79
+  profile tests + dictionary parity green.
+
+## Done Earlier (2026-06-15 — full build-out)
 
 - **De-fabrication**: removed hardcoded sidebar stats/achievements/organizations,
   `Math.random()` activity, mock pinned items, fake tab counts and the fake
@@ -51,10 +84,17 @@
 
 ### P1
 
-- **DB tables deploy-pending** — apply `20260615000000_add_profile_badges_organizations`
-  to the prod default branch before this ships, then `pnpm db:seed:single profile-extras`.
+- ~~DB tables deploy-pending~~ — applied to prod 2026-06-15. On the next deploy run
+  `pnpm db:seed:single profile-extras && pnpm db:seed:single profile-activity`
+  against the prod demo so its profile surfaces populate (ensure-demo
+  short-circuits an already-seeded school).
 
 ### P2
+
+- Contribution graph is keyed by `User.id` — wizard-created students with no User
+  row (the orphan path parents click through to) show an honest empty graph even
+  when the student has attendance. Keying student graphs by the Student entity
+  would light them.
 
 - Adding a NEW pinned item from the UI is not yet wired (display + reorder + remove
   are). Needs an item picker sourced from subjects/classes/children.

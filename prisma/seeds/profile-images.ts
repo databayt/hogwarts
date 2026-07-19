@@ -79,15 +79,18 @@ async function processAndUpload(
     .toBuffer()
 
   const client = getS3Client()
-  const bucket = process.env.AWS_S3_BUCKET!
+  // cdn.databayt.org's CloudFront origin is the databayt-cdn bucket — NOT the
+  // app's AWS_S3_BUCKET. Uploading to the app bucket yields CDN 403s.
+  const bucket = process.env.CDN_S3_BUCKET || "databayt-cdn"
 
+  // No ACL: the bucket enforces bucket-owner ownership (ACLs disabled);
+  // public access is served via CloudFront on the bucket policy.
   await client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: s3Key,
       Body: webpBuffer,
       ContentType: "image/webp",
-      ACL: "public-read",
     })
   )
 

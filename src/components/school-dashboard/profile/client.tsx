@@ -7,12 +7,14 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   OcticonBook,
+  OcticonOrganization,
   OcticonPackage,
   OcticonRepo,
   OcticonTable,
 } from "@/components/atom/icons"
 import type { Locale } from "@/components/internationalization/config"
 
+import AchievementsGrid from "./achievements"
 import ContributionActivity from "./activity"
 import ContributionGraph from "./graph"
 import ParentDashboard from "./parent"
@@ -73,6 +75,11 @@ function buildTabs(data: ProfileViewData): TabDef[] {
       break
     case "staff":
       tabs.push({
+        id: "organizations",
+        count: data.organizations.length,
+        icon: <OcticonOrganization className="size-4" />,
+      })
+      tabs.push({
         id: "achievements",
         count: data.badges.length,
         icon: <OcticonPackage className="size-4" />,
@@ -96,7 +103,11 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
   const useMobileLayout = isMobile
   const tabs = buildTabs(data)
 
-  const roleDashboard = () => {
+  const tabContent = (tabId: string) => {
+    if (tabId === "achievements")
+      return (
+        <AchievementsGrid badges={data.badges} dictionary={p} lang={lang} />
+      )
     switch (role) {
       case "student":
         return <StudentDashboard data={data} dictionary={p} />
@@ -105,7 +116,7 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
       case "staff":
         return <StaffDashboard data={data} dictionary={p} />
       case "parent":
-        return <ParentDashboard data={data} dictionary={p} />
+        return <ParentDashboard data={data} dictionary={p} lang={lang} />
       default:
         return null
     }
@@ -194,7 +205,7 @@ export default function ProfileContent({ data, dictionary, lang }: Props) {
         {/* Role tabs */}
         {tabs.slice(1).map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-6">
-            {roleDashboard()}
+            {tabContent(tab.id)}
           </TabsContent>
         ))}
       </Tabs>

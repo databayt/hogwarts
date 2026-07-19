@@ -55,9 +55,12 @@ export default function ContributionActivity({
     const map = new Map<string, ProfileActivityView[]>()
     for (const item of items) {
       const d = new Date(item.createdAt)
+      // UTC everywhere: near-midnight instants must group/format to the same
+      // calendar date on server and client (SSR hydration).
       const key = d.toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", {
         month: "long",
         year: "numeric",
+        timeZone: "UTC",
       })
       const arr = map.get(key) ?? []
       arr.push(item)
@@ -108,7 +111,12 @@ export default function ContributionActivity({
                           </p>
                         )}
                         <p className="text-muted-foreground text-xs">
-                          {formatDate(new Date(item.createdAt), locale)}
+                          {formatDate(new Date(item.createdAt), locale, {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            timeZone: "UTC",
+                          })}
                         </p>
                       </div>
                     </li>

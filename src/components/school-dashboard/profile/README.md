@@ -40,7 +40,9 @@ src/components/school-dashboard/profile/
   validation.ts         # Zod schemas (updateGitHubProfile, pinnedItem, …)
   types.ts              # ProfileRole + contribution-graph types only (lean)
   client.tsx            # Orchestrator: tabs (real counts), sidebar + overview layout
-  sidebar.tsx           # Avatar, name, real stats, earned badges, organizations, edit entry
+  achievements.tsx      # Achievements tab: earned-badge grid (art, level chip, earn date)
+  sidebar.tsx           # Avatar, name, real stats, earned badges, organizations, edit entry,
+                        # website + social links + joined/enrolled date (GitHub-style info rows)
   form.tsx              # Edit form: avatar upload + GitHub-style fields (a11y-labelled)
   graph.tsx             # Contribution heatmap (SWR → getContributionData; empty grid when no data; keyboard-accessible cells)
   activity.tsx          # Real UserActivity feed grouped by month (no fabrication)
@@ -64,14 +66,23 @@ the Playwright `profile-flows.spec.ts`.
 - `Organization` (`organizations`) + `OrganizationMembership` (`organization_memberships`) — school clubs/committees/teams and memberships
 - Existing: `UserActivity`, `PinnedItem`, student-only `Achievement`
 
-Migration-of-record: `prisma/migrations/20260615000000_add_profile_badges_organizations/`.
-**DB deploy-pending** — the three tables + two enums must be applied to the prod
-default branch (`br-small-tooth-adscsfmb`) before the feature is live; the SQL is
-additive and idempotent (validated on a Neon branch). Seed: `pnpm db:seed:single profile-extras`.
+Migration-of-record: `prisma/migrations/20260615000000_add_profile_badges_organizations/`
+(**applied to prod 2026-06-15**).
+
+### Seeds
+
+- `pnpm db:seed:single profile-extras` — organizations, memberships, badge recompute
+- `pnpm db:seed:single profile-activity` — current-year life (2026-07-19): section
+  attendance marked by the demo teacher, UserActivity feed, role-appropriate pinned
+  items, a parent↔teacher conversation, expense approvals spread across
+  admin/staff/accountant, demo-student achievements, GitHub-style User fields, and
+  a badge recompute. Idempotent; both run inside `seedMain`.
+- Badge artwork is served from the CDN (`hogwarts/<icon>.png`); source PNGs live in
+  `/public/github`, re-upload with `npx tsx prisma/scripts/upload-badge-art.ts`.
 
 ### Status
 
-**Completion:** ~95% | **Blockers:** DB tables deploy-pending
+**Completion:** ~98% | **Blockers:** none
 
 ### Integration Points
 

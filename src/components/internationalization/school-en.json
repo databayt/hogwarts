@@ -7642,7 +7642,8 @@
         "subjects": "Subjects",
         "achievements": "Achievements",
         "classes": "Classes",
-        "children": "Children"
+        "children": "Children",
+        "organizations": "Organizations"
       },
       "stats": {
         "subjects": "subjects",
@@ -7650,6 +7651,15 @@
         "classes": "classes",
         "students": "students",
         "children": "children"
+      },
+      "achievementsTab": {
+        "empty": "No achievements earned yet."
+      },
+      "levels": {
+        "bronze": "Bronze",
+        "silver": "Silver",
+        "gold": "Gold",
+        "platinum": "Platinum"
       },
       "orgRoles": {
         "member": "Member",
@@ -7663,7 +7673,8 @@
         "tasks": "tasks",
         "no": "No",
         "loadError": "Couldn't load contribution data.",
-        "heatmapLabel": "Contribution activity for {year}"
+        "heatmapLabel": "Contribution activity for {year}",
+        "totalInYear": "{count} {label} in {year}"
       },
       "form": {
         "name": "Name",

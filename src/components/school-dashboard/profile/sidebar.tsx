@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Mail, MapPin, Phone } from "lucide-react"
+import { Calendar, Link as LinkIcon, Mail, MapPin, Phone } from "lucide-react"
 
 import { asset } from "@/lib/asset-url"
 import { formatDate as formatLocaleDate } from "@/lib/i18n-format"
@@ -77,7 +77,12 @@ function BadgePopover({
   lang?: Locale
 }) {
   const earned = badge.earnedAt
-    ? formatLocaleDate(new Date(badge.earnedAt), lang ?? "en")
+    ? formatLocaleDate(new Date(badge.earnedAt), lang ?? "en", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "UTC",
+      })
     : null
   const src = badgeSrc(badge.icon)
   const detailBg = BADGE_DETAIL_BG[badge.icon]
@@ -167,6 +172,20 @@ export default function ProfileSidebar({
 
   const roleLabel = p?.roles?.[data.role] ?? ""
 
+  // GitHub-style link rows: website + social accounts (already stored + edited
+  // via the profile form, previously never displayed).
+  const prettyUrl = (url: string) =>
+    url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")
+  const socialEntries = Object.entries(data.socialLinks ?? {})
+    .filter(([, url]) => typeof url === "string" && url.length > 0)
+    .slice(0, 4)
+
+  // Joined/enrolled row: the most meaningful real date for the role.
+  const joinedDate = data.enrollmentDate ?? data.joiningDate ?? data.createdAt
+  const joinedLabel = data.enrollmentDate
+    ? (p?.sidebar?.enrolled ?? "")
+    : (p?.sidebar?.joined ?? "")
+
   return (
     <TooltipProvider>
       <div className={`space-y-4 ${isMobile ? "max-w-xs" : "w-full max-w-72"}`}>
@@ -214,8 +233,16 @@ export default function ProfileSidebar({
                   {restName}
                 </p>
               )}
-              {roleLabel && (
-                <p className="text-muted-foreground text-sm">{roleLabel}</p>
+              {(roleLabel || data.pronouns) && (
+                <p className="text-muted-foreground text-sm">
+                  {roleLabel}
+                  {data.pronouns && (
+                    <span className="text-muted-foreground/80">
+                      {roleLabel ? " · " : ""}
+                      {data.pronouns}
+                    </span>
+                  )}
+                </p>
               )}
             </div>
 
@@ -260,7 +287,10 @@ export default function ProfileSidebar({
             )}
 
             {/* Info */}
-            {data.info.length > 0 && (
+            {(data.info.length > 0 ||
+              data.website ||
+              socialEntries.length > 0 ||
+              joinedDate) && (
               <div className="space-y-2">
                 {data.info.map((item, idx) => (
                   <div
@@ -273,6 +303,46 @@ export default function ProfileSidebar({
                     <span className="truncate">{item.value}</span>
                   </div>
                 ))}
+                {data.website && (
+                  <a
+                    href={data.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+                  >
+                    <LinkIcon className="text-muted-foreground/70 size-4 shrink-0" />
+                    <span className="truncate hover:underline" dir="ltr">
+                      {prettyUrl(data.website)}
+                    </span>
+                  </a>
+                )}
+                {socialEntries.map(([key, url]) => (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+                  >
+                    <LinkIcon className="text-muted-foreground/70 size-4 shrink-0" />
+                    <span className="truncate hover:underline" dir="ltr">
+                      {prettyUrl(url)}
+                    </span>
+                  </a>
+                ))}
+                {joinedDate && (
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <Calendar className="text-muted-foreground/70 size-4 shrink-0" />
+                    <span className="truncate">
+                      {joinedLabel}{" "}
+                      {formatLocaleDate(new Date(joinedDate), lang ?? "en", {
+                        year: "numeric",
+                        month: "long",
+                        timeZone: "UTC",
+                      })}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </>

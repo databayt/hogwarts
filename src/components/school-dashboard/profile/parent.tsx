@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Users } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -10,17 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
 
 import type { ProfileViewData } from "./queries"
 
 interface ParentDashboardProps {
   data: ProfileViewData
   dictionary?: Record<string, any>
+  lang?: Locale
 }
 
 export default function ParentDashboard({
   data,
   dictionary,
+  lang,
 }: ParentDashboardProps) {
   const pr = dictionary?.parent
   const children = data.roleDetail.children
@@ -43,8 +47,9 @@ export default function ParentDashboard({
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {children.map((child) => (
-                <div
+                <Link
                   key={child.id}
+                  href={`/${lang ?? "ar"}/profile/${child.id}`}
                   className="border-border bg-card hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-3 transition-colors"
                 >
                   <Avatar className="size-10 shrink-0">
@@ -63,7 +68,7 @@ export default function ParentDashboard({
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

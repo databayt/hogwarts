@@ -83,6 +83,7 @@ import { seedMessaging } from "./messages"
 import { seedNotifications } from "./notifications"
 import { seedPayroll } from "./payroll"
 import { seedAllPeople, seedStudentDocuments } from "./people"
+import { seedProfileActivity } from "./profile-activity"
 import { seedProfileExtras } from "./profile-extras"
 import { seedQBank } from "./qbank"
 import { seedSchoolWithBranding } from "./school"
@@ -499,6 +500,11 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // Profile extras (organizations, memberships, earned badges)
     await measureDuration("Profile extras", () =>
       seedProfileExtras(prisma, school.id)
+    )
+
+    // Profile activity (current-year attendance, feed, pins, messages, badges)
+    await measureDuration("Profile activity", () =>
+      seedProfileActivity(prisma, school.id)
     )
 
     // ========================================================================
