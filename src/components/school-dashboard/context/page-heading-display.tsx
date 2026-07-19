@@ -12,7 +12,9 @@ export function PageHeadingDisplay() {
   if (!heading || !heading.title) return null
 
   return (
-    <div className="mb-6">
+    // print:hidden — app chrome; printed pages (invoice sheet, admission
+    // detail, timetable) carry their own document headers.
+    <div className="mb-6 print:hidden">
       <PageHeading title={heading.title} description={heading.description} />
     </div>
   )

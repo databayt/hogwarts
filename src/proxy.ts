@@ -104,6 +104,22 @@ const publicSiteRoutes = [
   "/application/status",
 ]
 
+// Public token-share pages: /{route}/{unguessable-token}. The token IS the
+// credential (crypto-random, globally unique, revocable), so these must be
+// reachable with no session — a parent opens an invoice or report card from a
+// WhatsApp link without an account. They live at the app root
+// (src/app/[lang]/<route>/[token]) and are served globally like auth routes:
+// never subdomain-rewritten, never bounced to login.
+const publicShareRoutes = ["/invoice/", "/report-card/", "/certificate/"]
+
+function isPublicShareRoute(pathWithoutLocale: string): boolean {
+  return publicShareRoutes.some(
+    (route) =>
+      pathWithoutLocale.startsWith(route) &&
+      pathWithoutLocale.length > route.length
+  )
+}
+
 // Lightweight locale detection — pure logic lives in locale-detect.ts so
 // the precedence rules are unit-tested against the code that actually runs.
 function getLocale(request: NextRequest): Locale {
@@ -194,7 +210,8 @@ export async function proxy(req: NextRequest) {
     pathWithoutLocale.startsWith("/features") ||
     pathWithoutLocale.startsWith("/stream") ||
     pathWithoutLocale.startsWith("/community") ||
-    pathWithoutLocale.startsWith("/wa-preview")
+    pathWithoutLocale.startsWith("/wa-preview") ||
+    isPublicShareRoute(pathWithoutLocale)
 
   // Check if it's a public school-marketing route (for subdomains)
   // Handle both clean URLs (/application) and internal paths (/s/{subdomain}/application)
@@ -344,7 +361,10 @@ export async function proxy(req: NextRequest) {
     // Don't rewrite auth routes - they exist globally at /[lang]/(auth)/*
     // NOT within subdomain structure /[lang]/s/[subdomain]/(auth)/*
     // GOTCHA: If you add auth routes to subdomain structure, users see 404
-    if (isAuth) {
+    // Same for public token-share pages (/invoice|report-card|certificate/
+    // {token}) — they live at the app root, so a share link opened on a school
+    // subdomain must NOT be rewritten into the tenant tree (it would 404).
+    if (isAuth || isPublicShareRoute(pathWithoutLocale)) {
       const requestHeaders = new Headers(req.headers)
       requestHeaders.set("x-locale", locale)
       requestHeaders.set("x-subdomain", subdomain)

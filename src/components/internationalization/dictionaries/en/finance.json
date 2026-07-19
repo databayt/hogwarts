@@ -1971,7 +1971,12 @@
     "item": "Item",
     "qty": "Qty",
     "price": "Price",
-    "total": "Total"
+    "total": "Total",
+    "unpaid": "UNPAID",
+    "paid": "PAID",
+    "partial": "PARTIAL",
+    "overdue": "OVERDUE",
+    "cancelled": "CANCELLED"
   },
   "invoiceEmail": {
     "hello": "Hello",
@@ -2084,7 +2089,20 @@
     "qty": "Qty",
     "price": "Price",
     "total": "Total",
-    "back": "Back"
+    "back": "Back",
+    "downloadPdf": "Download PDF",
+    "send": "Send",
+    "markPaid": "Mark paid",
+    "invoiceSent": "Invoice sent",
+    "sendFailed": "Failed to send invoice",
+    "invoicePaidToast": "Invoice marked as paid",
+    "markPaidFailed": "Failed to mark invoice paid",
+    "notFound": "Invoice not found",
+    "linkedPayments": "Linked Payments",
+    "paymentNumber": "Payment #",
+    "paymentDate": "Date",
+    "paymentMethod": "Method",
+    "paymentAmount": "Amount"
   },
   "invoiceWizardItems": {
     "title": "Line Items",

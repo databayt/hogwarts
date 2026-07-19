@@ -163,6 +163,11 @@ async function buildBilingualNameMatch(
 ): Promise<Prisma.SubjectWhereInput[]> {
   const conditions: Prisma.SubjectWhereInput[] = [
     { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+    // Catalog slugs carry the English subject name (e.g. "sd-g11-physics"), so
+    // matching the slug lets an English query find an Arabic-stored course even
+    // before that course's name translation has been cached — no API cost, and
+    // it degrades gracefully (an Arabic query simply won't hit the slug).
+    { slug: { contains: term, mode: Prisma.QueryMode.insensitive } },
   ]
 
   const cached = await db.translation.findMany({

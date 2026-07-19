@@ -50,7 +50,10 @@ export default async function InvoiceLayout({ children, params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeadingSetter title={d?.title || "Invoice"} />
-      <PageNav pages={invoicePages} />
+      {/* print:hidden — the invoice detail prints as a bare document sheet */}
+      <div className="print:hidden">
+        <PageNav pages={invoicePages} />
+      </div>
       {children}
     </div>
   )

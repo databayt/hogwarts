@@ -23,6 +23,7 @@ vi.mock("@/lib/db", () => ({
   db: {
     userInvoice: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn().mockResolvedValue({}),
     },
     userInvoiceSettings: { findUnique: vi.fn() },
@@ -45,6 +46,7 @@ function mockActor() {
 
 const sharedInvoiceRow = {
   id: "inv-1",
+  isPublic: true,
   schoolId: SCHOOL_ID,
   userId: "buyer-1",
   invoice_no: "I26001",
@@ -183,7 +185,7 @@ describe("shareInvoice", () => {
 
 describe("getSharedInvoice", () => {
   it("returns the minimal payload and bumps viewCount for a valid token", async () => {
-    vi.mocked(db.userInvoice.findFirst).mockResolvedValue(
+    vi.mocked(db.userInvoice.findUnique).mockResolvedValue(
       sharedInvoiceRow as never
     )
     vi.mocked(db.userInvoiceSettings.findUnique).mockResolvedValue(null)
@@ -197,9 +199,9 @@ describe("getSharedInvoice", () => {
     expect(result.valid).toBe(true)
     expect(result.data?.invoice_no).toBe("I26001")
     expect(result.data?.items).toHaveLength(1)
-    expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
+    expect(db.userInvoice.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { shareToken: TOKEN, isPublic: true },
+        where: { shareToken: TOKEN },
       })
     )
     expect(db.userInvoice.update).toHaveBeenCalledWith(
@@ -209,14 +211,23 @@ describe("getSharedInvoice", () => {
     )
   })
 
-  it("rejects an unknown or revoked token", async () => {
-    vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+  it("rejects an unknown token", async () => {
+    vi.mocked(db.userInvoice.findUnique).mockResolvedValue(null)
+    const result = await getSharedInvoice(TOKEN)
+    expect(result.valid).toBe(false)
+  })
+
+  it("rejects a revoked token (isPublic false)", async () => {
+    vi.mocked(db.userInvoice.findUnique).mockResolvedValue({
+      ...sharedInvoiceRow,
+      isPublic: false,
+    } as never)
     const result = await getSharedInvoice(TOKEN)
     expect(result.valid).toBe(false)
   })
 
   it("rejects an expired link", async () => {
-    vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
+    vi.mocked(db.userInvoice.findUnique).mockResolvedValue({
       ...sharedInvoiceRow,
       shareExpiry: new Date("2020-01-01"),
     } as never)
@@ -227,7 +238,7 @@ describe("getSharedInvoice", () => {
   it("rejects a too-short token without touching the db", async () => {
     const result = await getSharedInvoice("short")
     expect(result.valid).toBe(false)
-    expect(db.userInvoice.findFirst).not.toHaveBeenCalled()
+    expect(db.userInvoice.findUnique).not.toHaveBeenCalled()
   })
 })
 

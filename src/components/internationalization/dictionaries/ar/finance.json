@@ -1971,7 +1971,12 @@
     "item": "العنصر",
     "qty": "الكمية",
     "price": "السعر",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "unpaid": "غير مدفوعة",
+    "paid": "مدفوعة",
+    "partial": "مدفوعة جزئيًا",
+    "overdue": "متأخرة",
+    "cancelled": "ملغاة"
   },
   "invoiceEmail": {
     "hello": "مرحباً",
@@ -2084,7 +2089,20 @@
     "qty": "الكمية",
     "price": "السعر",
     "total": "الإجمالي",
-    "back": "رجوع"
+    "back": "رجوع",
+    "downloadPdf": "تنزيل PDF",
+    "send": "إرسال",
+    "markPaid": "تعيين كمدفوعة",
+    "invoiceSent": "تم إرسال الفاتورة",
+    "sendFailed": "فشل إرسال الفاتورة",
+    "invoicePaidToast": "تم تعيين الفاتورة كمدفوعة",
+    "markPaidFailed": "فشل تعيين الفاتورة كمدفوعة",
+    "notFound": "الفاتورة غير موجودة",
+    "linkedPayments": "المدفوعات المرتبطة",
+    "paymentNumber": "رقم الدفعة",
+    "paymentDate": "التاريخ",
+    "paymentMethod": "طريقة الدفع",
+    "paymentAmount": "المبلغ"
   },
   "invoiceWizardItems": {
     "title": "بنود الفاتورة",

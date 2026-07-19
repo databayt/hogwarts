@@ -122,10 +122,14 @@ export async function getSharedInvoice(token: string): Promise<{
   try {
     if (!token || token.length < 16) return { valid: false }
 
-    const invoice = await db.userInvoice.findFirst({
-      where: { shareToken: token, isPublic: true },
+    // findUnique on the globally-unique token (isPublic checked in code —
+    // findUnique can't carry extra filters, and this hits the unique index
+    // directly instead of a scan).
+    const invoice = await db.userInvoice.findUnique({
+      where: { shareToken: token },
       select: {
         id: true,
+        isPublic: true,
         schoolId: true,
         userId: true,
         invoice_no: true,
@@ -170,7 +174,7 @@ export async function getSharedInvoice(token: string): Promise<{
       },
     })
 
-    if (!invoice) return { valid: false }
+    if (!invoice || !invoice.isPublic) return { valid: false }
     if (invoice.shareExpiry && invoice.shareExpiry < new Date()) {
       return { valid: false }
     }
