@@ -103,7 +103,7 @@ export const HP_CHARACTERS = {
   dev: {
     nameAr: "سيفيروس سنيب",
     nameEn: "Severus Snape",
-    bio: "Potions Master and Head of Slytherin House.",
+    bio: "أستاذ الجرعات ورئيس منزل سليذرين.",
     gender: "M" as const,
     sourceImage: "/public/site/dumbledore.jpeg",
     personalEmail: "severus-snape@hotmail.com",
@@ -111,7 +111,7 @@ export const HP_CHARACTERS = {
   admin: {
     nameAr: "ألباس دمبلدور",
     nameEn: "Albus Dumbledore",
-    bio: "Headmaster & Chief Warlock\nTransfiguration & Ancient Magic",
+    bio: "مدير المدرسة وكبير السحرة\nالتحويلات والسحر القديم",
     gender: "M" as const,
     sourceImage: "/public/site/dumbledore.jpeg",
     personalEmail: "albus-dumbledore@hotmail.com",
@@ -119,7 +119,7 @@ export const HP_CHARACTERS = {
   accountant: {
     nameAr: "فيليوس فليتويك",
     nameEn: "Filius Flitwick",
-    bio: "Charms Master and Head of Ravenclaw House.",
+    bio: "أستاذ التعاويذ ورئيس منزل رافنكلو.",
     gender: "M" as const,
     sourceImage: "/public/site/dumbledore.jpeg",
     personalEmail: "filius-flitwick@hotmail.com",
@@ -128,7 +128,7 @@ export const HP_CHARACTERS = {
   teacher: {
     nameAr: "مينيرفا ماكغونغال",
     nameEn: "Minerva McGonagall",
-    bio: "Deputy Headmistress and Transfiguration professor.",
+    bio: "نائبة المدير وأستاذة التحويلات.",
     gender: "F" as const,
     sourceImage: "/public/site/mcgonagall.jpeg",
     birthDate: new Date("1935-10-04"),
@@ -138,7 +138,7 @@ export const HP_CHARACTERS = {
   student: {
     nameAr: "هاري بوتر",
     nameEn: "Harry Potter",
-    bio: "The Boy Who Lived.",
+    bio: "الفتى الذي عاش.",
     gender: "M" as const,
     sourceImage: "/public/site/harry.jpg",
     birthDate: new Date("2010-07-31"),
@@ -153,7 +153,7 @@ export const HP_CHARACTERS = {
   guardian0: {
     nameAr: "جيمس بوتر",
     nameEn: "James Potter",
-    bio: "Gryffindor alumni. Marauder.",
+    bio: "من خريجي غريفندور. أحد المشاغبين.",
     gender: "M" as const,
     // Reuse harry image as placeholder (james image not available)
     sourceImage: "/public/site/harry.jpg",
@@ -163,7 +163,7 @@ export const HP_CHARACTERS = {
   guardian1: {
     nameAr: "ليلي بوتر",
     nameEn: "Lily Potter",
-    bio: "Exceptionally gifted witch. Known for her sacrifice.",
+    bio: "ساحرة موهوبة استثنائياً، عُرفت بتضحيتها.",
     gender: "F" as const,
     // Reuse hermione image as placeholder (lily image not available)
     sourceImage: "/public/site/hermione.jpg",
@@ -173,7 +173,7 @@ export const HP_CHARACTERS = {
   staff: {
     nameAr: "روبياس هاغريد",
     nameEn: "Rubeus Hagrid",
-    bio: "Keeper of Keys and Grounds at Hogwarts.",
+    bio: "حارس المفاتيح والأراضي في هوغورتس.",
     gender: "M" as const,
     sourceImage: "/public/site/hagrid.jpeg",
     position: "حارس المفاتيح والأراضي",
@@ -183,7 +183,7 @@ export const HP_CHARACTERS = {
   user: {
     nameAr: "نيفيل لونغبوتوم",
     nameEn: "Neville Longbottom",
-    bio: "Gryffindor student. Future Herbology professor.",
+    bio: "طالب في غريفندور، أستاذ علم الأعشاب المستقبلي.",
     gender: "M" as const,
     // Reuse harry image as placeholder (neville image not available)
     sourceImage: "/public/site/harry.jpg",
@@ -192,7 +192,7 @@ export const HP_CHARACTERS = {
   applicant: {
     nameAr: "لونا لوفغود",
     nameEn: "Luna Lovegood",
-    bio: "Ravenclaw student. Sees what others cannot.",
+    bio: "طالبة في رافنكلو، ترى ما لا يراه الآخرون.",
     gender: "F" as const,
     sourceImage: "/public/site/harry.jpg",
   },

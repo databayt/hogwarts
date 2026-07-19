@@ -31,7 +31,66 @@ import type { PrismaClient, UserActivityType } from "@prisma/client"
 
 import { recomputeProfileBadges } from "@/components/school-dashboard/profile/badges"
 
+import { HP_CHARACTERS } from "./constants"
 import { logSuccess, logWarning } from "./utils"
+
+/**
+ * Pre-2026-07-19 seeds stored the HP persona bios in ENGLISH; the school's
+ * content language is Arabic, so already-seeded DBs need a one-time rewrite.
+ * Matched by exact (email, old bio) so a user-edited bio is never clobbered.
+ */
+const BIO_NORMALIZATION: Array<{ email: string; from: string; to: string }> = [
+  {
+    email: "dev@databayt.org",
+    from: "Potions Master and Head of Slytherin House.",
+    to: HP_CHARACTERS.dev.bio,
+  },
+  {
+    email: "admin@databayt.org",
+    from: "Headmaster & Chief Warlock\nTransfiguration & Ancient Magic",
+    to: HP_CHARACTERS.admin.bio,
+  },
+  {
+    email: "accountant@databayt.org",
+    from: "Charms Master and Head of Ravenclaw House.",
+    to: HP_CHARACTERS.accountant.bio,
+  },
+  {
+    email: "teacher@databayt.org",
+    from: "Deputy Headmistress and Transfiguration professor.",
+    to: HP_CHARACTERS.teacher.bio,
+  },
+  {
+    email: "student@databayt.org",
+    from: "The Boy Who Lived.",
+    to: HP_CHARACTERS.student.bio,
+  },
+  {
+    email: "parent@databayt.org",
+    from: "Gryffindor alumni. Marauder.",
+    to: HP_CHARACTERS.guardian0.bio,
+  },
+  {
+    email: "parent1@databayt.org",
+    from: "Exceptionally gifted witch. Known for her sacrifice.",
+    to: HP_CHARACTERS.guardian1.bio,
+  },
+  {
+    email: "staff@databayt.org",
+    from: "Keeper of Keys and Grounds at Hogwarts.",
+    to: HP_CHARACTERS.staff.bio,
+  },
+  {
+    email: "user@databayt.org",
+    from: "Gryffindor student. Future Herbology professor.",
+    to: HP_CHARACTERS.user.bio,
+  },
+  {
+    email: "applicant@databayt.org",
+    from: "Ravenclaw student. Sees what others cannot.",
+    to: HP_CHARACTERS.applicant.bio,
+  },
+]
 
 // Deterministic PRNG so re-runs regenerate the same shape.
 function mulberry32(seed: number) {
@@ -819,8 +878,16 @@ export async function seedProfileActivity(
   }
 
   // ==========================================================================
-  // 7) GitHub-style User fields for demo accounts (only where null)
+  // 7) Demo User fields — bio language normalization + GitHub-style fields
   // ==========================================================================
+  let biosNormalized = 0
+  for (const b of BIO_NORMALIZATION) {
+    const { count } = await prisma.user.updateMany({
+      where: { email: b.email, bio: b.from },
+      data: { bio: b.to },
+    })
+    biosNormalized += count
+  }
   const fieldSets: Array<{
     user: (typeof demoUsers)[number] | undefined
     statusEmoji: string
@@ -911,6 +978,6 @@ export async function seedProfileActivity(
   logSuccess(
     "Profile activity",
     attendanceCreated + activitiesCreated + pinsCreated + messagesCreated,
-    `${attendanceCreated} attendance, ${activitiesCreated} feed rows, ${pinsCreated} pins, ${messagesCreated} messages, ${approvalsSpread} approvals spread, ${achievementsCreated} achievements, ${badged} users badged`
+    `${attendanceCreated} attendance, ${activitiesCreated} feed rows, ${pinsCreated} pins, ${messagesCreated} messages, ${approvalsSpread} approvals spread, ${achievementsCreated} achievements, ${biosNormalized} bios normalized, ${badged} users badged`
   )
 }
