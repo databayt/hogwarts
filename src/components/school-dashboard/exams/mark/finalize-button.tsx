@@ -4,9 +4,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 /**
- * One-click "auto-mark + aggregate + publish results" for a specific exam.
- * Runs objective auto-marking, writes ExamResult + gradebook Result per student,
- * and notifies students. Subjective answers still need teacher/AI grading first.
+ * One-click "auto-mark + AI-grade subjective + aggregate + publish" for an exam.
+ * Runs objective auto-marking AND AI grading of essay/short-answer questions,
+ * writes ExamResult + gradebook Result per student, and notifies students —
+ * the full finalize in a single click (objective exams also grade instantly on
+ * submit, so this is mainly for exams containing subjective questions).
  */
 import { useState } from "react"
 import { Award, Loader2 } from "lucide-react"
@@ -37,7 +39,10 @@ export function FinalizeResultsButton({
   const handleClick = async () => {
     setIsPending(true)
     try {
-      const res = await finalizeExamResults(examId, { publish: true })
+      const res = await finalizeExamResults(examId, {
+        publish: true,
+        aiGradeSubjective: true,
+      })
       if (res.success && res.data) {
         toast.success(
           successTemplate.replace("{count}", String(res.data.studentsGraded))

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { GenerateWithTemplateButton } from "../../documents/generate-with-template-button"
 import {
   generateReportCards,
   getReportCards,
@@ -177,13 +178,14 @@ export function ReportCardsTable({
               <TableHead>{dict.columns.subjects}</TableHead>
               <TableHead>{dict.columns.attendance}</TableHead>
               <TableHead>{dict.columns.status}</TableHead>
+              <TableHead className="w-[1%]" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="text-muted-foreground py-8 text-center"
                 >
                   {dict.empty}
@@ -233,6 +235,13 @@ export function ReportCardsTable({
                         ? dict.status.published
                         : dict.status.draft}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-end">
+                    <GenerateWithTemplateButton
+                      category="REPORT_CARD"
+                      entityId={rc.id}
+                      variant="ghost"
+                    />
                   </TableCell>
                 </TableRow>
               ))

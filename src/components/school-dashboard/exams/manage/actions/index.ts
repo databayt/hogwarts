@@ -48,13 +48,7 @@ export {
 } from "./conflict-detection"
 
 // Status Management Operations
-export {
-  startExam,
-  completeExam,
-  cancelExam,
-  getExamForTaking,
-  submitExamAnswers,
-} from "./status"
+export { startExam, completeExam, cancelExam } from "./status"
 
 // Quick Paper Generation
 export { createGeneratedExamForPaper } from "./quick-paper"

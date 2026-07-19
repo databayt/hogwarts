@@ -6,9 +6,8 @@ import { notFound } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { getExamForTaking } from "@/components/school-dashboard/exams/manage/actions"
-import { ExamTakingContent } from "@/components/school-dashboard/exams/take/content"
+import { ExamPlayer } from "@/components/school-dashboard/exams/take"
+import { getExamForPlayer } from "@/components/school-dashboard/exams/take/actions"
 
 interface TakeExamPageProps {
   params: Promise<{
@@ -19,23 +18,23 @@ interface TakeExamPageProps {
 
 export default async function TakeExamPage({ params }: TakeExamPageProps) {
   const { lang, id } = await params
-  const dictionary = await getDictionary(lang)
 
-  const result = await getExamForTaking(id)
+  const result = await getExamForPlayer(id)
 
   if (!result.success || !result.data) {
     notFound()
   }
 
-  const { exam, questions, existingAnswers } = result.data
+  const { exam, questions, existingAnswers, initialSession } = result.data
 
   return (
     <Suspense fallback={<LoadingSkeleton />}>
-      <ExamTakingContent
+      <ExamPlayer
         exam={exam}
         questions={questions}
         existingAnswers={existingAnswers}
-        dictionary={dictionary}
+        initialSession={initialSession}
+        locale={lang}
       />
     </Suspense>
   )

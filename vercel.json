@@ -106,6 +106,10 @@
       "schedule": "0 7 * * *"
     },
     {
+      "path": "/api/cron/exam-lifecycle",
+      "schedule": "*/15 * * * *"
+    },
+    {
       "path": "/api/cron/build-tomorrow-trips",
       "schedule": "0 20 * * *"
     },

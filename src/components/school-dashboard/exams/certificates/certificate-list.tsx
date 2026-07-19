@@ -6,6 +6,7 @@ import { useState } from "react"
 import {
   Award,
   ExternalLink,
+  FileText,
   MoreHorizontal,
   Share2,
   XCircle,
@@ -32,6 +33,8 @@ import {
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 
+import { downloadBase64 } from "../../documents/download"
+import { generateFromDefaultTemplate } from "../../documents/generate"
 import { revokeCertificate, shareCertificate } from "./actions"
 
 interface Certificate {
@@ -86,6 +89,25 @@ export function CertificateList({
       toast({
         title: t?.toast?.error ?? "Error",
         description: result.error,
+        variant: "destructive",
+      })
+    }
+  }
+
+  async function handleGenerateDoc(id: string) {
+    setLoading(id)
+    const res = await generateFromDefaultTemplate("CERTIFICATE", id)
+    setLoading(null)
+    if (res.success && res.data) {
+      downloadBase64(res.data.filename, res.data.base64, res.data.mime)
+    } else if (!res.success) {
+      toast({
+        title: t?.toast?.error ?? "Error",
+        description:
+          res.error === "TEMPLATE_NOT_FOUND"
+            ? (cl?.noTemplateUploaded ??
+              "No template uploaded yet. Upload one under Documents first.")
+            : res.error,
         variant: "destructive",
       })
     }
@@ -179,6 +201,12 @@ export function CertificateList({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => handleGenerateDoc(cert.id)}
+                    >
+                      <FileText className="me-2 h-4 w-4" />
+                      {cl?.generateWithTemplate ?? "Generate (my template)"}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleShare(cert.id)}>
                       <Share2 className="me-2 h-4 w-4" />
                       {cl?.share ?? "Share"}

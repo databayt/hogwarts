@@ -255,7 +255,8 @@ export function ExamPlayer({
     answer?: AnswerState
   ) => {
     const options = (question.options || []) as QuestionOption[]
-    const isSingleSelect = options.filter((o) => o.isCorrect).length <= 1
+    // `isMultiSelect` is derived server-side; correct answers never reach here.
+    const isSingleSelect = !question.isMultiSelect
 
     if (isSingleSelect) {
       return (

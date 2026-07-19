@@ -23,6 +23,11 @@ export interface ExamQuestion {
     questionText: string
     questionType: string
     options: QuestionOption[] | null
+    /**
+     * Derived server-side (does the question have >1 correct option) so the
+     * player renders checkboxes vs. radios WITHOUT receiving `isCorrect`.
+     */
+    isMultiSelect?: boolean
     imageUrl: string | null
   }
 }

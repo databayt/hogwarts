@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { GenerateWithTemplateButton } from "../../documents/generate-with-template-button"
 import { getOrCreatePaperConfig, getPaperData } from "./actions"
 import type { PaperConfigWithRelations } from "./actions/types"
 import { ConfigForm } from "./config-form"
@@ -102,6 +103,10 @@ export async function Content({
               <span className="ms-2">{t?.preview || "Preview"}</span>
             </Link>
           </Button>
+          <GenerateWithTemplateButton
+            category="EXAM_PAPER"
+            entityId={generatedExamId}
+          />
           <PaperActions data={paperData} locale={locale} />
         </div>
       </div>

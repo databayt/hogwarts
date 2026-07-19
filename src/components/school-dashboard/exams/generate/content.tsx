@@ -142,7 +142,7 @@ export default async function GenerateContent({
             </p>
           </div>
           <Button asChild>
-            <Link href={`/${lang}/exams/template/add`}>
+            <Link href={`/${lang}/exams/generate/catalog`}>
               <Wand2 className="me-2 h-4 w-4" />
               {gc?.newTemplate ?? "New Template"}
             </Link>
@@ -158,7 +158,7 @@ export default async function GenerateContent({
                   "No templates yet. Create your first template to get started."}
               </p>
               <Button asChild variant="outline">
-                <Link href={`/${lang}/exams/template/add`}>
+                <Link href={`/${lang}/exams/generate/catalog`}>
                   <Plus className="me-2 h-4 w-4" />
                   {gc?.createTemplate ?? "Create Template"}
                 </Link>
@@ -203,18 +203,6 @@ export default async function GenerateContent({
                         {gc?.used ?? "Used"} {t.timesUsed}{" "}
                         {gc?.times ?? "times"}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        asChild
-                      >
-                        <Link
-                          href={`/${lang}/exams/template/add?configId=${t.id}`}
-                        >
-                          {gc?.customize ?? "Customize"}
-                        </Link>
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

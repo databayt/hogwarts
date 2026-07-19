@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { deleteDocumentTemplate, setDefaultTemplate } from "./actions"
+import { downloadBase64 } from "./download"
 import { generateDocument } from "./generate"
 import { UploadTemplateDialog } from "./upload-template-dialog"
 
@@ -33,6 +34,11 @@ const SECTIONS: {
     label: { en: "Exam papers", ar: "أوراق الاختبارات" },
     idHint: { en: "Generated-exam ID", ar: "معرّف الاختبار المُولّد" },
   },
+  {
+    category: "REPORT_CARD",
+    label: { en: "Report cards", ar: "بطاقات الدرجات" },
+    idHint: { en: "Report-card ID", ar: "معرّف بطاقة الدرجات" },
+  },
 ]
 
 const L = {
@@ -43,18 +49,6 @@ const L = {
   default: { en: "Default", ar: "افتراضي" },
   generate: { en: "Generate", ar: "إنشاء" },
 } as const
-
-function downloadBase64(filename: string, base64: string, mime: string) {
-  const bytes = atob(base64)
-  const arr = new Uint8Array(bytes.length)
-  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
-  const url = URL.createObjectURL(new Blob([arr], { type: mime }))
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
 
 export function DocumentsManager({
   templates,

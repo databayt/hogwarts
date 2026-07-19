@@ -46,6 +46,21 @@ Grades — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~94% complete. See [
 - **`resolveStudentClassForSubject` is best-effort** — it returns `null` when
   the student can't be tied to a class. Callers (stream quiz, quick assessment)
   must skip the gradebook write rather than error when null is returned.
+- **Report-card template builder removed (2026-07-18)** — the 4-step
+  `grades/template/` wizard is deleted. Schools upload a `.docx` (category
+  `REPORT_CARD`) under `/documents` and fill it via "Generate (my template)" on the
+  report-cards table (`report-cards/table.tsx`). `/grades/templates` now redirects to
+  `/documents`. The `SchoolGradingConfig.reportCardTemplate` JSON column stays (the
+  react-pdf renderer reads it) but is no longer wizard-authored. The `grades/templates/`
+  react-pdf certificate composition system (different dir) is untouched.
+- **Report-card generation has a cron-callable core (2026-07-18)** — the heavy
+  aggregation moved to `grades/lib/report-cards-core.ts`
+  (`generateReportCardsCore(schoolId, input)`, plain module). `generateReportCards`
+  (actions) is now a thin `auth()`+`getTenantContext()` wrapper. The
+  `/api/cron/term-end-report-cards` cron calls the core for each just-ended term
+  (only when it has zero report cards yet — never clobbers admin-processed terms)
+  to auto-**generate** drafts; it does NOT publish. Admin reviews + clicks Publish
+  (`publishReportCards`), then `process-report-card-pdfs` renders PDFs.
 
 ## Danger Zones
 

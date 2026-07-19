@@ -5,13 +5,7 @@
 import React, { useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import {
-  ArrowRight,
-  LibraryBig,
-  Loader2,
-  PencilRuler,
-  Sparkles,
-} from "lucide-react"
+import { ArrowRight, LibraryBig, Loader2, Sparkles } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -38,17 +32,11 @@ const L = {
     ar: "صف موضوعًا — يصيغ الذكاء الاصطناعي أسئلة في بنكك للمراجعة.",
   },
   aiBadge: { en: "Fast", ar: "سريع" },
-  scratchTitle: { en: "Build from scratch", ar: "ابدأ من الصفر" },
-  scratchDesc: {
-    en: "Define your own structure in a few quick steps.",
-    ar: "حدد بنيتك الخاصة في خطوات سريعة قليلة.",
-  },
-  scratchBadge: { en: "Custom", ar: "مخصص" },
   blank: { en: "Or schedule a blank exam", ar: "أو جدول اختبارًا فارغًا" },
 } as const
 
 interface ModeCard {
-  key: "adopt" | "ai" | "scratch"
+  key: "adopt" | "ai"
   href: string
   icon: React.ComponentType<{ className?: string }>
   title: { en: string; ar: string }
@@ -79,14 +67,6 @@ export default function ExamCreateChooser() {
       desc: L.aiDesc,
       badge: L.aiBadge,
     },
-    {
-      key: "scratch",
-      href: `/${locale}/exams/template/add`,
-      icon: PencilRuler,
-      title: L.scratchTitle,
-      desc: L.scratchDesc,
-      badge: L.scratchBadge,
-    },
   ]
 
   const handleBlankExam = () => {
@@ -105,7 +85,7 @@ export default function ExamCreateChooser() {
         <p className="text-muted-foreground">{L.subtitle[lang]}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
         {modes.map((mode) => {
           const Icon = mode.icon
           return (

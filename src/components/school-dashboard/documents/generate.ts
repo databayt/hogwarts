@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { auth } from "@/auth"
+import type { DocumentTemplateCategory } from "@prisma/client"
 import JSZip from "jszip"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
@@ -16,6 +17,11 @@ import { resolveDocumentData } from "./resolvers"
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 const ZIP_MIME = "application/zip"
+
+// Filling a template with an arbitrary entity id is a staff operation — the
+// resolver scopes by schoolId but not by requester, so gate it to the same
+// roles that manage templates to avoid one student pulling another's data.
+const MANAGER_ROLES = ["ADMIN", "DEVELOPER", "TEACHER"]
 
 interface GeneratedFile {
   filename: string
@@ -52,6 +58,11 @@ export async function generateDocument(
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const role = session.user.role
+    if (!role || !MANAGER_ROLES.includes(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const tpl = await loadTemplate(templateId, schoolId)
     if (!tpl) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
@@ -92,6 +103,11 @@ export async function generateDocumentsBulk(
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const role = session.user.role
+    if (!role || !MANAGER_ROLES.includes(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     if (!entityIds.length) return actionError(ACTION_ERRORS.VALIDATION_ERROR)
 
@@ -138,6 +154,59 @@ export async function generateDocumentsBulk(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to generate documents",
+    }
+  }
+}
+
+/**
+ * Fill the school's default (or most recently updated) active template of
+ * `category` for one entity — the per-domain "Generate with my template"
+ * button uses this so callers never need to know a template id. Returns
+ * `TEMPLATE_NOT_FOUND` when the school has not uploaded a template yet.
+ */
+export async function generateFromDefaultTemplate(
+  category: DocumentTemplateCategory,
+  entityId: string
+): Promise<ActionResponse<GeneratedFile>> {
+  try {
+    const session = await auth()
+    if (!session?.user) return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) return actionError(ACTION_ERRORS.MISSING_SCHOOL)
+
+    const role = session.user.role
+    if (!role || !MANAGER_ROLES.includes(role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const tpl = await db.documentTemplate.findFirst({
+      where: { schoolId, category, isActive: true },
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+    })
+    if (!tpl) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
+
+    const lang = await resolveLang(schoolId)
+    const data = await resolveDocumentData(tpl.category, entityId, {
+      schoolId,
+      lang,
+    })
+    const buffer = await loadTemplateBufferFromUrl(tpl.fileUrl)
+    const filled = fillDocxTemplate(buffer, data)
+
+    return {
+      success: true,
+      data: {
+        filename: `${sanitize(tpl.name)}-${sanitize(entityId)}.docx`,
+        base64: filled.toString("base64"),
+        mime: DOCX_MIME,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to generate document",
     }
   }
 }

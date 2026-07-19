@@ -304,7 +304,10 @@ export async function cancelExam(
 }
 
 /**
- * Get exam with full details for taking
+ * @deprecated DEAD — the take route now uses `getExamForPlayer` (take/actions.ts),
+ * which resolves the real `Student.id`. This bare path used `session.user.id`
+ * (a User id) as `studentId`, which does NOT match the `Student.id` FK on
+ * StudentAnswer/ExamResult/Result. Do not re-wire; delete once verified unused.
  */
 export async function getExamForTaking(examId: string): Promise<
   ActionResponse<{
@@ -492,7 +495,10 @@ export async function getExamForTaking(examId: string): Promise<
 }
 
 /**
- * Submit entire exam at once
+ * @deprecated DEAD — superseded by the proctored `submitExamSession`
+ * (take/actions.ts), which resolves the real `Student.id` and instant-grades
+ * objective papers. This bare path wrote `session.user.id` as `studentId`
+ * (wrong FK) and never marked. Do not re-wire; delete once verified unused.
  */
 export async function submitExamAnswers(
   examId: string,

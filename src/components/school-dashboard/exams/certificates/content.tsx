@@ -181,7 +181,7 @@ export async function CertificateContent({ lang = "ar" }: { lang?: Locale }) {
         </div>
         {canManage && (
           <Button asChild>
-            <a href="certificates/cert-wizard">
+            <a href="certificates/configs/new">
               <Plus className="me-2 h-4 w-4" />
               {cc?.newTemplate ?? "New Template"}
             </a>

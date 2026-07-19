@@ -5,23 +5,24 @@ import { timingSafeEqual } from "node:crypto"
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db"
+import { generateReportCardsCore } from "@/components/school-dashboard/grades/lib/report-cards-core"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 300 // Vercel Pro: bulk report-card publication
+export const maxDuration = 300 // Vercel Pro: bulk report-card aggregation
 
 /**
- * Cron — auto-generate report-card metadata for terms that ended yesterday.
+ * Cron — auto-generate report cards for terms that ended yesterday.
  *
- * Schedule: daily at 03:00 server time (see vercel.json). For each term
- * whose `endDate` was within the last 36 hours and which has zero
- * ReportCard rows yet, we mark a sentinel row so admins see "ready to
- * publish" in `/grades/reports` the next morning.
+ * Schedule: daily at 03:00 server time (see vercel.json). For each term whose
+ * `endDate` was within the last 36 hours and which has zero ReportCard rows
+ * yet, we aggregate the term's results into `ReportCard` + `ReportCardGrade`
+ * rows via `generateReportCardsCore` (the plain core shared with the admin
+ * action). We do NOT publish — the admin reviews the drafts in `/grades/reports`
+ * and clicks Publish; the `process-report-card-pdfs` cron then renders PDFs.
  *
- * Defensive: only acts when there is no existing ReportCard for the
- * term — avoids double-write on terms admins already processed. We do
- * NOT call the full `generateReportCards` action here because that
- * needs auth + tenant context; the cron flags the term as ready and
- * leaves the rich aggregation to the admin-initiated path.
+ * Defensive: only generates when there is no existing ReportCard for the term,
+ * so a term the admin already processed is never clobbered. The window is wider
+ * than 24h so a single missed run doesn't drop a term silently.
  *
  * Auth: shared CRON_SECRET bearer (constant-time comparison).
  */
@@ -57,8 +58,7 @@ export async function GET(request: Request) {
     const windowStart = new Date(now.getTime() - 36 * 60 * 60 * 1000)
     const windowEnd = now
 
-    // Terms whose endDate falls in the last 36h. The window is wider
-    // than 24h so a single missed run doesn't drop a term silently.
+    // Terms whose endDate falls in the last 36h.
     const recentlyEnded = await db.term.findMany({
       where: {
         endDate: { gte: windowStart, lte: windowEnd },
@@ -74,47 +74,69 @@ export async function GET(request: Request) {
     if (recentlyEnded.length === 0) {
       return NextResponse.json({
         success: true,
-        flaggedTerms: 0,
+        generatedTerms: 0,
         skippedTerms: 0,
+        failedTerms: 0,
         durationMs: Date.now() - startedAt,
         timestamp: new Date().toISOString(),
       })
     }
 
-    // For each ended term, check if there are already report cards.
-    // We don't generate anything here — the actual aggregation runs
-    // via the admin "Generate report cards" button (rich pipeline).
-    // The cron's value is the structured log: ops sees which schools
-    // have ended terms still missing report cards each morning.
-    let flagged = 0
+    let generatedTerms = 0
     let skipped = 0
+    let failed = 0
+
     for (const term of recentlyEnded) {
       const existing = await db.reportCard.count({
         where: { schoolId: term.schoolId, termId: term.id },
       })
 
       const logLine = {
-        action: "term_end_report_card_check",
+        action: "term_end_report_card_generate",
         schoolId: term.schoolId,
         termId: term.id,
         termNumber: term.termNumber,
         endDate: term.endDate.toISOString(),
-        existingReportCards: existing,
       }
 
+      // Never clobber a term the admin already processed.
       if (existing > 0) {
         skipped++
-        console.log(JSON.stringify({ ...logLine, status: "already_generated" }))
+        console.log(
+          JSON.stringify({
+            ...logLine,
+            status: "already_generated",
+            existingReportCards: existing,
+          })
+        )
+        continue
+      }
+
+      const res = await generateReportCardsCore(term.schoolId, {
+        termId: term.id,
+      })
+      if (res.success && res.data) {
+        generatedTerms++
+        console.log(
+          JSON.stringify({ ...logLine, status: "generated", ...res.data })
+        )
       } else {
-        flagged++
-        console.log(JSON.stringify({ ...logLine, status: "needs_generation" }))
+        failed++
+        console.log(
+          JSON.stringify({
+            ...logLine,
+            status: "failed",
+            error: !res.success ? res.error : undefined,
+          })
+        )
       }
     }
 
     return NextResponse.json({
       success: true,
-      flaggedTerms: flagged,
+      generatedTerms,
       skippedTerms: skipped,
+      failedTerms: failed,
       durationMs: Date.now() - startedAt,
       timestamp: new Date().toISOString(),
     })

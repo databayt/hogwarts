@@ -19,9 +19,17 @@ import { Prisma } from "@prisma/client"
 import type { ProctorMode, SecurityFlag } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
+import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 
 import { finalizeStudentExam } from "../mark/actions/finalize"
+import type {
+  ExamData,
+  ExamQuestion,
+  ExamSessionData,
+  ExistingAnswer,
+  QuestionOption,
+} from "./types"
 import {
   autoSaveAnswersSchema,
   reportSecurityFlagSchema,
@@ -538,5 +546,154 @@ export async function getExamSession(examId: string) {
   } catch (error) {
     console.error("Get exam session error:", error)
     return actionError(ACTION_ERRORS.EXAM_UPDATE_FAILED)
+  }
+}
+
+/**
+ * Strip answer-correctness out of a question's options before they reach the
+ * browser, and derive whether the question is multi-select (so the player can
+ * render checkboxes vs. radios without ever seeing which option is correct).
+ * Option ORDER is preserved so a selected index still matches the answer key.
+ */
+function sanitizeOptions(
+  raw: unknown,
+  questionType: string
+): { options: QuestionOption[] | null; isMultiSelect: boolean } {
+  if (questionType !== "MULTIPLE_CHOICE" && questionType !== "TRUE_FALSE") {
+    return { options: null, isMultiSelect: false }
+  }
+  if (!Array.isArray(raw)) return { options: null, isMultiSelect: false }
+  let correctCount = 0
+  const options: QuestionOption[] = raw.map((o) => {
+    const opt = o && typeof o === "object" ? (o as Record<string, unknown>) : {}
+    if (opt.isCorrect === true) correctCount++
+    return {
+      text: typeof opt.text === "string" ? opt.text : String(opt.text ?? ""),
+    }
+  })
+  return { options, isMultiSelect: correctCount > 1 }
+}
+
+/**
+ * Server loader for the proctored `ExamPlayer`. Returns the four props the
+ * player needs, resolving the real `Student.id` from the session (the fix for
+ * the old bare path that used the User id) and stripping correct answers from
+ * the payload. `initialSession` is intentionally null — the player starts or
+ * resumes the session client-side via `startExamSession`, which owns attempt
+ * limits, shuffling, and resume.
+ */
+export async function getExamForPlayer(examId: string): Promise<
+  ActionResponse<{
+    exam: ExamData
+    questions: ExamQuestion[]
+    existingAnswers: ExistingAnswer[]
+    initialSession: ExamSessionData | null
+  }>
+> {
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+  const userId = session?.user?.id
+  if (!schoolId || !userId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+
+  try {
+    const exam = await db.schoolExam.findFirst({
+      where: { id: examId, schoolId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        duration: true,
+        totalMarks: true,
+        passingMarks: true,
+        instructions: true,
+        status: true,
+        proctorMode: true,
+        shuffleQuestions: true,
+        shuffleOptions: true,
+        maxAttempts: true,
+        allowLateSubmit: true,
+        lateSubmitMinutes: true,
+      },
+    })
+    if (!exam) return actionError(ACTION_ERRORS.EXAM_NOT_FOUND)
+
+    // Students may only take an IN_PROGRESS exam; staff can preview any state.
+    const role = session.user.role || ""
+    const isStaff = ["ADMIN", "TEACHER", "DEVELOPER"].includes(role)
+    if (!isStaff && exam.status !== "IN_PROGRESS") {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    const generated = await db.generatedExam.findFirst({
+      where: { examId, schoolId },
+      select: {
+        questions: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            questionId: true,
+            order: true,
+            points: true,
+            question: {
+              select: {
+                id: true,
+                questionText: true,
+                questionType: true,
+                options: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const questions: ExamQuestion[] = (generated?.questions ?? []).map((gq) => {
+      const { options, isMultiSelect } = sanitizeOptions(
+        gq.question.options,
+        gq.question.questionType
+      )
+      return {
+        id: gq.id,
+        questionId: gq.questionId,
+        order: gq.order,
+        points: Number(gq.points) || 1,
+        question: {
+          id: gq.question.id,
+          questionText: gq.question.questionText,
+          questionType: gq.question.questionType,
+          options,
+          isMultiSelect,
+          imageUrl: gq.question.imageUrl,
+        },
+      }
+    })
+
+    // Resolve the real Student.id (the bug fix) for answers.
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true },
+    })
+
+    let existingAnswers: ExistingAnswer[] = []
+    if (student) {
+      const answers = await db.studentAnswer.findMany({
+        where: { examId, studentId: student.id, schoolId },
+        select: { questionId: true, answerText: true, selectedOptionIds: true },
+      })
+      existingAnswers = answers.map((a) => ({
+        questionId: a.questionId,
+        answerText: a.answerText,
+        selectedOptionIds: a.selectedOptionIds,
+      }))
+    }
+
+    return {
+      success: true,
+      data: { exam, questions, existingAnswers, initialSession: null },
+    }
+  } catch (error) {
+    console.error("getExamForPlayer error:", error)
+    return actionError(ACTION_ERRORS.LOAD_FAILED)
   }
 }

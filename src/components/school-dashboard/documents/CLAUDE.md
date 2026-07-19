@@ -27,6 +27,18 @@ and [ISSUE](ISSUE.md) for status + the pending additive migration SQL.
   outputs are never stored public — they download directly.
 - **Adding a category** = add a `resolvers/<cat>.ts`, a `case` in `resolvers/index.ts`, a
   `FIELD_VOCAB` entry, and (optionally) a section in `templates-list.tsx`.
+- **This engine is now THE template path (2026-07-18)** — the build-a-template wizards
+  (exam-paper `template-wizard`, `cert-wizard`, grades report-card `builder`) were removed;
+  schools upload a `.docx` instead. `RESOLVABLE_CATEGORIES` = `CERTIFICATE`, `EXAM_PAPER`,
+  `REPORT_CARD` (report-card resolver reads `ReportCard` + `ReportCardGrade[]`). Per-domain
+  **"Generate (my template)"** lives on the certificate list, `/exams/paper/[id]`, and the
+  report-cards table via the reusable `GenerateWithTemplateButton` +
+  `generateFromDefaultTemplate(category, entityId)` (picks the school's default/most-recent
+  active template). Deferred: docx→PDF, HTML templates, the remaining category resolvers.
+- **Generation is role-gated** — `generateDocument`/`generateDocumentsBulk`/
+  `generateFromDefaultTemplate` require `MANAGER_ROLES` (ADMIN/DEVELOPER/TEACHER). The
+  resolver scopes by `schoolId` but takes an arbitrary `entityId`, so without the gate any
+  authenticated school user could fill a template with another student's row.
 
 ## Danger Zones
 

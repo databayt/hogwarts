@@ -26,19 +26,20 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
 
 ## Key Decisions
 
-- **Exam creation = 3-mode chooser, not a long wizard (2026-06-23)** — `/exams/new`
-  is a one-screen chooser (`create/content.tsx`): **Adopt a template** (catalog
-  browse/adopt + `AdoptExamDialog`), **Generate with AI** (→ `/exams/qbank/ai-generate`),
-  **Build from scratch** (the 5-step template wizard). The template wizard
-  (`wizard/template-wizard/`) is exactly 5 one-screen steps —
-  `gallery → basics → questions → difficulty → review` — and is the _fallback_, not
-  the front door. **Appearance is region-preset-only**: the `gallery` step's preset
-  writes the full `blockConfig` (slots + decorations); there are no per-slot layout
-  steps and no print step (defaults come from `parseTemplateToWizardData`). Step order
-  lives in `config.ts` (`getNextStep()`); don't hardcode `nextStep` URLs. Removed/legacy
-  step slugs are remapped by `normalizeTemplateWizardStep()` so old drafts resume on a
-  valid step. `examType` persists in `blockConfig.examType` (no own column) — read it
-  back there, don't hardcode `"MIDTERM"`.
+- **Exam creation = 2-mode chooser; template-BUILD wizard removed (2026-07-18)** —
+  `/exams/new` (`create/content.tsx`) is a one-screen chooser with **Adopt a template**
+  (catalog browse/adopt + `AdoptExamDialog`) and **Generate with AI**
+  (→ `/exams/qbank/ai-generate`). The old **Build from scratch** card and the entire
+  5-step `wizard/template-wizard/` + its `/exams/template/add/**` routes were **deleted** —
+  we no longer build exam-paper templates from primitives in-app. A paper's **layout** is
+  now an uploaded `.docx` (category `EXAM_PAPER`) filled via the
+  `GenerateWithTemplateButton` on `/exams/paper/[id]` (see the `documents` block +
+  `src/lib/docx-fill/`). A paper's **question distribution** still lives on
+  `SchoolExamTemplate`, now populated by adopting a catalog blueprint (`adoptExamTemplate`)
+  or the qbank/generate `createTemplate` actions — NOT a wizard. `generate/content.tsx`
+  template CTAs repoint to `/exams/generate/catalog`; `exam-wizard-v2` (template→exam
+  selection) and the `generate/templates` list are unchanged. `examType` still persists in
+  `blockConfig.examType` (no own column).
 - **Gradebook spine is NOT "use server"** — `grades/lib/gradebook.ts` is a plain
   helper module imported by server actions. Marking it `"use server"` would expose
   each export as an HTTP endpoint. Import it; do not add the directive.
@@ -56,6 +57,24 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
 - **Instant-grade on submit** — `submitExamSession` auto-marks fully-objective
   exams immediately. Exams with subjective questions (Essay, Short Answer) still
   require the manual/AI marking step before `finalizeExamResults` is called.
+- **Take route uses the proctored engine (2026-07-18)** — `/exams/[id]/take`
+  renders `ExamPlayer` (take/exam-player.tsx) fed by the new `getExamForPlayer`
+  loader (take/actions.ts); submit goes through `submitExamSession` (instant
+  objective grade). The old bare `ExamTakingContent` + `submitExamAnswers`/
+  `getExamForTaking` (manage/actions/status.ts) are **DEAD/@deprecated** — they
+  wrote `session.user.id` as `StudentAnswer.studentId`, but that FK is
+  `Student.id` (resolve via `db.student.findFirst({ userId })`). `getExamForPlayer`
+  strips `isCorrect` from options and passes a derived `isMultiSelect` flag so
+  correct answers never reach the browser. **Note:** `PRODUCTION-AUDIT.md`'s claim
+  that this bug was "Fixed 2026-05-08" was stale — the code still had it.
+- **Exam-lifecycle cron auto-opens/closes (2026-07-18)** — `/api/cron/exam-lifecycle`
+  (\*/15) flips PLANNED→IN_PROGRESS at the scheduled start and IN_PROGRESS→COMPLETED
+  after the end (examDate + endTime + lateSubmitMinutes, via `setHours` like
+  `lib/security.ts`). It does NOT mark/finalize (marking is auth/tenant-scoped and
+  has no session in a cron). The "Auto-mark & publish" button now finalizes with
+  `aiGradeSubjective: true` — one click objective-marks + AI-grades subjective +
+  publishes. A fully session-less AI-finalize-at-close is a deferred follow-up
+  (needs cron-callable cores extracted from the auth-bound marking stack).
 
 ## Danger Zones
 
