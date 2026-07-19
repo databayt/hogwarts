@@ -357,7 +357,9 @@ export function ReportsContent({
                   })
                   setPage(1)
                 }}
-                placeholder="Select date range"
+                placeholder={
+                  t?.reportsFilter?.selectDateRange ?? "Select date range"
+                }
               />
             </div>
             <Select
@@ -368,10 +370,16 @@ export function ReportsContent({
               }}
             >
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select section" />
+                <SelectValue
+                  placeholder={
+                    t?.reportsFilter?.selectSection ?? "Select section"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sections</SelectItem>
+                <SelectItem value="all">
+                  {t?.reportsFilter?.allSections ?? "All Sections"}
+                </SelectItem>
                 {sections.map((sec) => (
                   <SelectItem key={sec.id} value={sec.id}>
                     {sec.gradeName} - {sec.name}
@@ -387,7 +395,9 @@ export function ReportsContent({
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select class" />
+                <SelectValue
+                  placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">

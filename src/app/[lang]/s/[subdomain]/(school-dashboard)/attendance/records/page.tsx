@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { RecordsContent } from "@/components/school-dashboard/attendance/records/content"
 
 export async function generateMetadata({
@@ -28,6 +29,7 @@ interface Props {
 }
 
 const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
+const RECORDS_ROLES = ["STUDENT", "GUARDIAN"]
 
 export default async function Page({ params }: Props) {
   const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
@@ -37,6 +39,13 @@ export default async function Page({ params }: Props) {
   // Staff should use Reports instead of Records
   if (STAFF_ROLES.includes(role)) {
     redirect(`/${lang}/attendance/reports`)
+  }
+
+  // Page-level gate: records is the STUDENT/GUARDIAN self-view. The data
+  // actions are ownership-scoped anyway, but every other attendance page
+  // denies inline — this one previously fell through for any non-staff role.
+  if (!RECORDS_ROLES.includes(role)) {
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return <RecordsContent locale={lang} subdomain={subdomain} />

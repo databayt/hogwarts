@@ -355,6 +355,15 @@ export async function getStudentBarcodes(studentId?: string) {
       throw new Error("Unauthorized")
     }
 
+    // SECURITY: barcode values are scan credentials — a full cards-to-names
+    // PII map. Admin-only, matching getStudentIdentifiers in
+    // actions/identifiers.ts. Previously any authenticated role (incl.
+    // STUDENT/GUARDIAN) could enumerate every student's identifier.
+    const role = session.user.role
+    if (role !== "ADMIN" && role !== "DEVELOPER") {
+      throw new Error("Unauthorized")
+    }
+
     const { schoolId } = await getTenantContext()
 
     if (!schoolId) {

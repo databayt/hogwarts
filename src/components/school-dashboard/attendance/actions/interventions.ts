@@ -8,6 +8,7 @@ import type { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
+import { isStaffRole } from "../authorization"
 import type {
   InterventionStatus as InterventionStatusVal,
   InterventionType as InterventionTypeVal,
@@ -913,6 +914,11 @@ export async function getInterventionAssignees(): Promise<
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
+    }
+    // SECURITY: staff directory + caseloads — staff only, matching every
+    // other function in this file (was readable by any authenticated user).
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
     }
 
     // Get all staff users for this school

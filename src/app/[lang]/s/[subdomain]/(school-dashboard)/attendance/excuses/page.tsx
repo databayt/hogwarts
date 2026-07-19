@@ -2,11 +2,11 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { type Metadata } from "next"
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { ExcusesContent } from "@/components/school-dashboard/attendance/excuses/content"
 
 export async function generateMetadata({
@@ -42,8 +42,9 @@ export default async function Page({ params }: Props) {
   const [{ lang, subdomain }, session] = await Promise.all([params, auth()])
 
   const role = session?.user?.role ?? ""
+  // Inline denial, not redirect() (React #310 — see (school-dashboard)/layout.tsx).
   if (!ALLOWED_ROLES.includes(role)) {
-    redirect(`/${lang}/attendance`)
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return <ExcusesContent locale={lang} subdomain={subdomain} role={role} />

@@ -59,6 +59,9 @@ export async function ParentAttendanceContent({
                 },
               },
               attendances: {
+                // Display read — exclude soft-deleted records (matches
+                // getGuardianChildrenAttendance + getParentAttendanceSummary).
+                where: { deletedAt: null },
                 orderBy: {
                   date: "desc",
                 },

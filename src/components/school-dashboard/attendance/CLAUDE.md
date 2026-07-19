@@ -4,11 +4,11 @@ sprint: Q3-2026
 title: Attendance
 file_type: claude
 owner: Abdout
-maturity: Built+Polish
-completion: 85
+maturity: Production-Ready
+completion: 97
 tracker: https://github.com/databayt/hogwarts/issues/322
 docs: https://ed.databayt.org/en/docs/attendance
-last_audited: 2026-05-25
+last_audited: 2026-07-18
 ---
 
 # Attendance Block
@@ -58,6 +58,36 @@ Attendance — Q3 2026 sprint epic 04, maturity `Built+Polish`, ~85% complete. S
   row's `deletedAt` to revive rather than crash on the constraint.
 - **Error contract:** server actions return `actionError(ACTION_ERRORS.*)` codes,
   not English. `guardAttendance` already returns coded errors.
+- **Settings = the school-wide `AttendancePolicy` row** (2026-07-18). The
+  `/attendance/settings` page persists to the `name: "Default"`,
+  `appliesTo: ["ALL"]` policy row via `getAttendanceSettings` /
+  `updateAttendanceSettings` (actions/policy.ts, `manage_settings`-gated,
+  created on first save with a fixed 07:30 startTime). Do NOT reintroduce a
+  separate settings model — the policy engine (`evaluatePolicies`, the
+  attendance-policies cron) reads the same row's `maxDailyAbsences`.
+- **Weekend awareness comes from `SchoolWeekConfig`** (2026-07-18).
+  `getTodaysDashboard` returns `today.isSchoolDay` (termId-null row is the
+  school default; JS `getDay()` convention, `[0..4]` = Sun–Thu; no row →
+  every day counts). Non-school days suppress the unmarked-classes banner
+  server-side. The demo seed creates the row in `seedPeriods`.
+- **Quick Attendance delegates, never reimplements** (2026-07-18). The
+  teacher landing (`quick/`) expands "absent+late lists" into full-roster
+  records and calls `markAttendance` — so revive-on-update, auto-excuse and
+  guardian notifications stay single-sourced. `submitQuickAttendance` adds
+  the two checks markAttendance lacks: teacher-section ownership and
+  roster-intersection of submitted ids. Never bypass it with direct writes.
+- **Clock lanes** (2026-07-18): staff check-in/out → `StaffTimesheetEntry`;
+  teacher check-in/out → finance `TimesheetEntry` (DRAFT, 0h at check-in,
+  hours at check-out, `notes: "in:<ISO>;out:<ISO>"`, month-named OPEN
+  period auto-created). Do NOT add columns to payroll.prisma for this and
+  do NOT auto-provision StaffMember rows for teachers.
+- **Overview follow-ups are structured, not preformatted** (2026-07-18).
+  `getFollowUpStudents` returns `issue` + `count`/`date` (ISO); the client
+  renders dictionary templates + `Intl.DateTimeFormat(locale)` inside
+  `<bdi>`. Never build user-facing sentences (or format dates) inside a
+  server action — that's what bidi-garbled the old "Excuse pending review
+  since 012025/09/" line. actionUrls are locale-prefixed client-side; there
+  is NO `/attendance/excuses/[id]` route — link to the queue.
 
 ## Danger Zones
 

@@ -22,17 +22,18 @@ export default async function Page({ params }: Props) {
     auth(),
     getTenantContext(),
   ])
-  const dictionary = await getDictionary(lang)
-
   // Admin/Developer only for kiosk setup
   if (!["ADMIN", "DEVELOPER"].includes(session?.user?.role ?? "")) {
     return <AttendanceAccessDenied lang={lang} />
   }
 
-  const school = await db.school.findUnique({
-    where: { id: schoolId ?? undefined },
-    select: { name: true, logoUrl: true },
-  })
+  const [dictionary, school] = await Promise.all([
+    getDictionary(lang),
+    db.school.findUnique({
+      where: { id: schoolId ?? undefined },
+      select: { name: true, logoUrl: true },
+    }),
+  ])
 
   return (
     <KioskContent

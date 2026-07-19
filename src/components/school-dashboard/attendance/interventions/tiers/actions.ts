@@ -213,6 +213,15 @@ export async function createTieredIntervention(
       parentNotify,
     } = input
 
+    // TENANT: reject a studentId from another school before the FK write.
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { id: true },
+    })
+    if (!student) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
+
     // Map action to intervention type
     const interventionType =
       actionToInterventionType[action] || ("OTHER" as InterventionType)

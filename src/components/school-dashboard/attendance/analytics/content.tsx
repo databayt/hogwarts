@@ -486,15 +486,23 @@ export default function AnalyticsContent({
                     to: range.to || new Date(),
                   })
                 }
-                placeholder="Select date range"
+                placeholder={
+                  t?.reportsFilter?.selectDateRange ?? "Select date range"
+                }
               />
             </div>
             <Select value={selectedSection} onValueChange={setSelectedSection}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select section" />
+                <SelectValue
+                  placeholder={
+                    t?.reportsFilter?.selectSection ?? "Select section"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sections</SelectItem>
+                <SelectItem value="all">
+                  {t?.reportsFilter?.allSections ?? "All Sections"}
+                </SelectItem>
                 {sections.map((sec) => (
                   <SelectItem key={sec.id} value={sec.id}>
                     {sec.gradeName} - {sec.name}
@@ -504,7 +512,9 @@ export default function AnalyticsContent({
             </Select>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select class" />
+                <SelectValue
+                  placeholder={t?.reportsFilter?.selectClass ?? "Select class"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">

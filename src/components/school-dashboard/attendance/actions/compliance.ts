@@ -6,10 +6,7 @@ import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import {
-  canViewSchoolAnalytics,
-  isAdminRole,
-} from "@/components/school-dashboard/attendance/authorization"
+import { isAdminRole } from "@/components/school-dashboard/attendance/authorization"
 
 import type { ActionResponse } from "./core"
 
@@ -87,7 +84,9 @@ export async function getComplianceDashboard(): Promise<
     if (!session?.user) {
       return { success: false, error: "Unauthorized" }
     }
-    if (!canViewSchoolAnalytics(session.user.role as any)) {
+    // SECURITY: PERMISSION_MATRIX.view_compliance is DEVELOPER/ADMIN only —
+    // was canViewSchoolAnalytics (which also admits TEACHER/STAFF).
+    if (!isAdminRole(session.user.role as any)) {
       return {
         success: false,
         error: "Unauthorized: insufficient role for compliance data",
@@ -235,7 +234,8 @@ export async function getComplianceReport(input?: {
     if (!session?.user) {
       return { success: false, error: "Unauthorized" }
     }
-    if (!canViewSchoolAnalytics(session.user.role as any)) {
+    // SECURITY: matrix-aligned — view_compliance is DEVELOPER/ADMIN only.
+    if (!isAdminRole(session.user.role as any)) {
       return { success: false, error: "Unauthorized: insufficient role" }
     }
 

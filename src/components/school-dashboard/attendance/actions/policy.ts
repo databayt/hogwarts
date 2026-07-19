@@ -18,10 +18,15 @@ import { guardAttendance } from "./helpers"
 // ============================================================================
 
 /**
- * Evaluate all active policies for a school
- * Called from cron job to check attendance thresholds and trigger actions
+ * Evaluate all active policies for the caller's school.
+ * NOTE: the attendance-policies cron does NOT call this action — it has its own
+ * inline, cron-secret-gated implementation. This server action exists for
+ * admin-triggered re-evaluation only.
+ * SECURITY: schoolId comes from guardAttendance (session + tenant), never from
+ * the caller — the previous signature accepted an arbitrary schoolId with no
+ * auth at all, making it an unauthenticated cross-tenant write endpoint.
  */
-export async function evaluatePolicies(schoolId: string): Promise<
+export async function evaluatePolicies(): Promise<
   ActionResponse<{
     studentsEvaluated: number
     triggersCreated: number
@@ -29,6 +34,10 @@ export async function evaluatePolicies(schoolId: string): Promise<
   }>
 > {
   try {
+    const g = await guardAttendance("manage_policy")
+    if (!g.ok) return g.error
+    const { schoolId } = g
+
     // Get all active policies that have maxDailyAbsences set
     const policies = await db.attendancePolicy.findMany({
       where: {
@@ -405,6 +414,168 @@ export async function dismissPolicyTrigger(
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to dismiss trigger",
+    }
+  }
+}
+
+// ============================================================================
+// SCHOOL-WIDE ATTENDANCE SETTINGS (backed by the default AttendancePolicy row)
+// ============================================================================
+
+/** The school-wide default policy row managed by /attendance/settings. */
+const DEFAULT_POLICY_NAME = "Default"
+
+const PICKABLE_METHODS = [
+  "MANUAL",
+  "QR_CODE",
+  "BARCODE",
+  "GEOFENCE",
+  "KIOSK",
+  "BULK_UPLOAD",
+  "RFID",
+  "NFC",
+  "BLUETOOTH",
+  "FINGERPRINT",
+  "FACE_RECOGNITION",
+] as const
+
+const attendanceSettingsSchema = z.object({
+  lateThreshold: z.number().int().min(5).max(60),
+  absentThreshold: z.number().int().min(15).max(120),
+  graceperiod: z.number().int().min(0).max(60),
+  requireCheckOut: z.boolean(),
+  methods: z.array(z.enum(PICKABLE_METHODS)).min(1),
+  maxDailyAbsences: z.number().int().min(1).max(50).nullable(),
+})
+
+export type AttendanceSettings = z.infer<typeof attendanceSettingsSchema>
+
+const SETTINGS_DEFAULTS: AttendanceSettings = {
+  lateThreshold: 15,
+  absentThreshold: 30,
+  graceperiod: 15,
+  requireCheckOut: false,
+  methods: ["MANUAL", "QR_CODE", "BARCODE", "GEOFENCE", "KIOSK", "BULK_UPLOAD"],
+  maxDailyAbsences: null,
+}
+
+async function findDefaultPolicy(schoolId: string) {
+  return (
+    (await db.attendancePolicy.findFirst({
+      where: { schoolId, name: DEFAULT_POLICY_NAME, appliesTo: { has: "ALL" } },
+    })) ??
+    (await db.attendancePolicy.findFirst({
+      where: { schoolId, appliesTo: { has: "ALL" } },
+      orderBy: { priority: "desc" },
+    }))
+  )
+}
+
+/**
+ * Read the school-wide attendance settings (default policy row).
+ * Returns built-in defaults when no policy row exists yet.
+ */
+export async function getAttendanceSettings(): Promise<
+  ActionResponse<AttendanceSettings & { configured: boolean }>
+> {
+  try {
+    const g = await guardAttendance("manage_settings")
+    if (!g.ok) return g.error
+
+    const policy = await findDefaultPolicy(g.schoolId)
+    if (!policy) {
+      return {
+        success: true,
+        data: { ...SETTINGS_DEFAULTS, configured: false },
+      }
+    }
+
+    const methods = policy.methods.filter(
+      (m): m is AttendanceSettings["methods"][number] =>
+        (PICKABLE_METHODS as readonly string[]).includes(m)
+    )
+    return {
+      success: true,
+      data: {
+        lateThreshold: policy.lateThreshold,
+        absentThreshold: policy.absentThreshold,
+        graceperiod: policy.graceperiod,
+        requireCheckOut: policy.requireCheckOut,
+        methods: methods.length > 0 ? methods : SETTINGS_DEFAULTS.methods,
+        maxDailyAbsences: policy.maxDailyAbsences,
+        configured: true,
+      },
+    }
+  } catch (error) {
+    console.error("[getAttendanceSettings] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load settings",
+    }
+  }
+}
+
+/**
+ * Persist the school-wide attendance settings onto the default
+ * AttendancePolicy row (created on first save). ADMIN/DEVELOPER only.
+ */
+export async function updateAttendanceSettings(
+  input: unknown
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const g = await guardAttendance("manage_settings")
+    if (!g.ok) return g.error
+    const { schoolId } = g
+
+    const parsed = attendanceSettingsSchema.parse(input)
+
+    const existing = await findDefaultPolicy(schoolId)
+    const data = {
+      lateThreshold: parsed.lateThreshold,
+      absentThreshold: parsed.absentThreshold,
+      graceperiod: parsed.graceperiod,
+      requireCheckOut: parsed.requireCheckOut,
+      methods: parsed.methods,
+      maxDailyAbsences: parsed.maxDailyAbsences,
+      isActive: true,
+    }
+
+    let id: string
+    if (existing) {
+      // Tenant-scoped write (bare-PK update would bypass schoolId).
+      await db.attendancePolicy.updateMany({
+        where: { id: existing.id, schoolId },
+        data,
+      })
+      id = existing.id
+    } else {
+      const created = await db.attendancePolicy.create({
+        data: {
+          ...data,
+          schoolId,
+          name: DEFAULT_POLICY_NAME,
+          description: "School-wide attendance settings",
+          appliesTo: ["ALL"],
+          priority: 0,
+          // Required Time column; marking flows don't read it yet — a
+          // sensible fixed default until per-policy start times get UI.
+          startTime: new Date("1970-01-01T07:30:00.000Z"),
+        },
+        select: { id: true },
+      })
+      id = created.id
+    }
+
+    revalidatePath("/attendance/settings")
+    return { success: true, data: { id } }
+  } catch (error) {
+    console.error("[updateAttendanceSettings] Error:", error)
+    if (error instanceof z.ZodError) {
+      return { success: false, error: "VALIDATION_ERROR" }
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to save settings",
     }
   }
 }

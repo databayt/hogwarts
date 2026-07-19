@@ -70,7 +70,7 @@ describe("attendance policy actions", () => {
     it("scopes policies and triggers by passed schoolId", async () => {
       vi.mocked(db.attendancePolicy.findMany).mockResolvedValue([])
 
-      await evaluatePolicies(SCHOOL)
+      await evaluatePolicies()
 
       const call = vi.mocked(db.attendancePolicy.findMany).mock.calls[0]?.[0]
       expect(call?.where).toMatchObject({ schoolId: SCHOOL, isActive: true })
@@ -79,7 +79,7 @@ describe("attendance policy actions", () => {
     it("returns a defined result with no active policies", async () => {
       vi.mocked(db.attendancePolicy.findMany).mockResolvedValue([])
 
-      const result = await evaluatePolicies(SCHOOL)
+      const result = await evaluatePolicies()
 
       expect(result).toBeDefined()
     })

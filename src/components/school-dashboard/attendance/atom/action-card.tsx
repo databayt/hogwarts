@@ -7,9 +7,16 @@ import Link from "next/link"
 import {
   Activity,
   ChevronRight,
+  DoorOpen,
   FileText,
+  Layers,
+  Mail,
+  MonitorCheck,
   Pencil,
   QrCode,
+  ScanLine,
+  Sparkles,
+  Trophy,
   Upload,
 } from "lucide-react"
 
@@ -28,6 +35,13 @@ const iconMap: Record<string, ElementType> = {
   Upload,
   FileText,
   Activity,
+  ScanLine,
+  DoorOpen,
+  Layers,
+  Trophy,
+  Sparkles,
+  MonitorCheck,
+  Mail,
 }
 
 interface ActionCardProps {

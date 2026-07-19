@@ -11,10 +11,10 @@
  * authenticated through `/api/mobile/...`.
  */
 
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { GeofenceContent } from "@/components/school-dashboard/attendance/geofencee/content"
 
 interface Props {
@@ -26,8 +26,10 @@ const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 export default async function GeofencePage({ params }: Props) {
   const [{ lang }, session] = await Promise.all([params, auth()])
 
+  // Inline denial, not redirect() — a parent-segment redirect racing a child
+  // stream caused React #310 in production (see (school-dashboard)/layout.tsx).
   if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
-    redirect(`/${lang}/attendance`)
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   return <GeofenceContent />

@@ -260,15 +260,24 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
             setParseErrors(errors)
 
             if (records.length > 0) {
-              toast.success(`Parsed ${records.length} records from file`)
+              toast.success(
+                (
+                  d?.toasts?.parsed ?? "Parsed {count} records from file"
+                ).replace("{count}", String(records.length))
+              )
             }
             if (errors.length > 0) {
-              toast.warning(`${errors.length} rows had issues`)
+              toast.warning(
+                (d?.toasts?.rowsHadIssues ?? "{count} rows had issues").replace(
+                  "{count}",
+                  String(errors.length)
+                )
+              )
             }
           }
         } catch (error) {
           console.error("Error parsing file:", error)
-          toast.error("Failed to parse file")
+          toast.error(d?.toasts?.parseFailed ?? "Failed to parse file")
         }
       }
     },
@@ -281,17 +290,17 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
   const handleProcess = useCallback(async () => {
     if (parsedRecords.length === 0) {
-      toast.error("No valid records to process")
+      toast.error(d?.toasts?.noValidRecords ?? "No valid records to process")
       return
     }
 
     if (!selectedClass) {
-      toast.error("Please select a class")
+      toast.error(d?.toasts?.selectClass ?? "Please select a class")
       return
     }
 
     if (!selectedDate) {
-      toast.error("Please select a date")
+      toast.error(d?.toasts?.selectDate ?? "Please select a date")
       return
     }
 
@@ -339,7 +348,12 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         const uploadsResult = await getRecentBulkUploads(5)
         setRecentUploads(uploadsResult.uploads)
 
-        toast.success(`Processed ${result.successful} records`)
+        toast.success(
+          (d?.toasts?.processed ?? "Processed {count} records").replace(
+            "{count}",
+            String(result.successful)
+          )
+        )
       } else {
         toast.error(
           d?.results?.failed ||
@@ -352,7 +366,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         success: false,
         message: d?.results?.failed || "Processing failed. Please try again.",
       })
-      toast.error("Processing failed")
+      toast.error(d?.toasts?.processingFailed ?? "Processing failed")
     } finally {
       setIsUploading(false)
     }

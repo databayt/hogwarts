@@ -481,6 +481,8 @@ export async function getTodaysDashboard(): Promise<
     today: {
       date: string
       dayName: string
+      /** false when SchoolWeekConfig says today is not a working day */
+      isSchoolDay: boolean
     }
     stats: {
       totalStudents: number
@@ -489,6 +491,8 @@ export async function getTodaysDashboard(): Promise<
       absent: number
       late: number
       attendanceRate: number
+      classesTotal: number
+      classesMarked: number
     }
     unmarkedClasses: Array<{
       id: string
@@ -510,6 +514,8 @@ export async function getTodaysDashboard(): Promise<
       className: string
       status: string
       time: string
+      method: string
+      date: string
     }>
   }>
 > {
@@ -548,14 +554,32 @@ export async function getTodaysDashboard(): Promise<
     }
     if (teacherClassIds) classWhere.id = { in: teacherClassIds }
 
-    const classes = await db.class.findMany({
-      where: classWhere,
-      select: {
-        id: true,
-        name: true,
-        _count: { select: { studentClasses: true } },
-      },
-    })
+    const [classes, weekConfigs] = await Promise.all([
+      db.class.findMany({
+        where: classWhere,
+        select: {
+          id: true,
+          name: true,
+          _count: { select: { studentClasses: true } },
+        },
+      }),
+      // Working-days config: the termId=null row is the school default;
+      // term-specific rows override it. No config → every day counts.
+      db.schoolWeekConfig.findMany({
+        where: { schoolId },
+        select: { termId: true, workingDays: true, updatedAt: true },
+      }),
+    ])
+
+    const weekConfig =
+      weekConfigs.find((c) => c.termId === null) ??
+      weekConfigs.sort(
+        (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+      )[0]
+    // workingDays uses JS getDay() convention: [0,1,2,3,4] = Sun–Thu.
+    const isSchoolDay = weekConfig
+      ? weekConfig.workingDays.includes(today.getDay())
+      : true
 
     // Get today's attendance records (scoped)
     const attendanceWhere: Prisma.AttendanceWhereInput = {
@@ -683,6 +707,8 @@ export async function getTodaysDashboard(): Promise<
         id: true,
         status: true,
         markedAt: true,
+        method: true,
+        date: true,
         student: { select: { firstName: true, lastName: true } },
         class: { select: { name: true } },
       },
@@ -696,6 +722,8 @@ export async function getTodaysDashboard(): Promise<
         hour: "2-digit",
         minute: "2-digit",
       }),
+      method: a.method,
+      date: a.date.toISOString(),
     }))
 
     return {
@@ -704,6 +732,7 @@ export async function getTodaysDashboard(): Promise<
         today: {
           date: today.toISOString().split("T")[0],
           dayName: dayNames[today.getDay()],
+          isSchoolDay,
         },
         stats: {
           totalStudents,
@@ -719,12 +748,21 @@ export async function getTodaysDashboard(): Promise<
                   ((present + late) / Math.max(uniqueStudentsMarked, 1)) * 100
                 )
               : 0,
+          classesTotal: classes.filter((c) => c._count.studentClasses > 0)
+            .length,
+          classesMarked: classes.filter(
+            (c) => markedClassIds.has(c.id) && c._count.studentClasses > 0
+          ).length,
         },
-        unmarkedClasses: unmarkedClasses.map((c) => ({
-          id: c.id,
-          name: c.name,
-          studentCount: c._count.studentClasses,
-        })),
+        // On a non-school day an all-classes-unmarked list is pure noise —
+        // suppress it so the client can show a neutral "no school today" note.
+        unmarkedClasses: isSchoolDay
+          ? unmarkedClasses.map((c) => ({
+              id: c.id,
+              name: c.name,
+              studentCount: c._count.studentClasses,
+            }))
+          : [],
         followUpNeeded: followUpNeeded.slice(0, 5), // Top 5 priority
         recentActivity,
       },
@@ -766,6 +804,11 @@ export async function getTeacherClassesToday(): Promise<
     const session = await auth()
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
+    }
+    // SECURITY: without this, any authenticated role (STUDENT/GUARDIAN/…)
+    // with no Teacher row fell through to the school-wide "admin view" below.
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
     }
 
     const today = new Date()
@@ -877,7 +920,13 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       className: string
       issue: "consecutive_absence" | "low_attendance" | "unexcused_pending"
       severity: "critical" | "warning" | "info"
+      /** Legacy preformatted string — clients should prefer count/date +
+       * their own dictionary template (details is English-only). */
       details: string
+      /** consecutive_absence: number of consecutive days */
+      count?: number
+      /** unexcused_pending: ISO date of the absence awaiting excuse review */
+      date?: string
       actionUrl?: string
     }>
     summary: {
@@ -915,6 +964,8 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
       issue: "consecutive_absence" | "low_attendance" | "unexcused_pending"
       severity: "critical" | "warning" | "info"
       details: string
+      count?: number
+      date?: string
       actionUrl?: string
     }> = []
 
@@ -983,6 +1034,7 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
           issue: "consecutive_absence",
           severity: consecutive >= 5 ? "critical" : "warning",
           details: `Absent ${consecutive} consecutive days`,
+          count: consecutive,
           actionUrl: `/students/${studentId}`,
         })
       }
@@ -1021,7 +1073,9 @@ export async function getFollowUpStudents(input?: { limit?: number }): Promise<
         issue: "unexcused_pending",
         severity: "info",
         details: `Excuse pending review since ${formatDate(excuse.attendance.date, "ar")}`,
-        actionUrl: `/attendance/excuses/${excuse.id}`,
+        date: excuse.attendance.date.toISOString(),
+        // /attendance/excuses/[id] does not exist — link to the review queue.
+        actionUrl: `/attendance/excuses`,
       })
     }
 

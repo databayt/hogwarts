@@ -631,6 +631,10 @@
     "bulkMarked": "Marked attendance for {count} students"
   },
   "reportsFilter": {
+    "selectDateRange": "Select date range",
+    "selectSection": "Select section",
+    "allSections": "All Sections",
+    "selectClass": "Select class",
     "allClasses": "All Classes",
     "allStatuses": "All Statuses"
   },

@@ -275,7 +275,9 @@ export function RecentActivityContent({
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <LoaderCircle className="text-muted-foreground mx-auto mb-4 h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">Loading recent activity...</p>
+          <p className="text-muted-foreground">
+            {(dict as any)?.loadingRecent ?? "Loading recent activity..."}
+          </p>
         </div>
       </div>
     )
@@ -310,7 +312,9 @@ export function RecentActivityContent({
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {(dict as any)?.totalRecords ?? "Total Records"}
+            </CardTitle>
             <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -392,10 +396,16 @@ export function RecentActivityContent({
                 onValueChange={setSelectedSection}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select section" />
+                  <SelectValue
+                    placeholder={
+                      (dict as any)?.selectSection ?? "Select section"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Sections</SelectItem>
+                  <SelectItem value="all">
+                    {(dict as any)?.allSections ?? "All Sections"}
+                  </SelectItem>
                   {sections.map((sec) => (
                     <SelectItem key={sec.id} value={sec.id}>
                       {sec.gradeName} - {sec.name}
@@ -405,10 +415,14 @@ export function RecentActivityContent({
               </Select>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue
+                    placeholder={(dict as any)?.selectClass ?? "Select class"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
+                  <SelectItem value="all">
+                    {(dict as any)?.allClasses ?? "All Classes"}
+                  </SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name}

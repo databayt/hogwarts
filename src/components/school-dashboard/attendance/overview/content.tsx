@@ -7,6 +7,7 @@ import Link from "next/link"
 import {
   AlertCircle,
   AlertTriangle,
+  CalendarOff,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -18,18 +19,24 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { getFollowUpStudents, getTodaysDashboard } from "../actions"
+import { ActionCard } from "../atom/action-card"
+import { RecentTable } from "../atom/recent-table"
+import { ClockCard } from "../quick/clock-card"
+import type { AttendanceMethod, AttendanceStatus } from "../shared/types"
 
 interface AttendanceOverviewContentProps {
   locale: Locale
   subdomain: string
+  role?: string
 }
 
 interface DashboardData {
-  today: { date: string; dayName: string }
+  today: { date: string; dayName: string; isSchoolDay: boolean }
   stats: {
     totalStudents: number
     markedToday: number
@@ -37,6 +44,8 @@ interface DashboardData {
     absent: number
     late: number
     attendanceRate: number
+    classesTotal: number
+    classesMarked: number
   }
   unmarkedClasses: Array<{ id: string; name: string; studentCount: number }>
   followUpNeeded: Array<{
@@ -53,6 +62,8 @@ interface DashboardData {
     className: string
     status: string
     time: string
+    method: string
+    date: string
   }>
 }
 
@@ -64,6 +75,8 @@ interface FollowUpData {
     issue: string
     severity: "critical" | "warning" | "info"
     details: string
+    count?: number
+    date?: string
     actionUrl?: string
   }>
   summary: { critical: number; warning: number; info: number }
@@ -72,6 +85,7 @@ interface FollowUpData {
 export function AttendanceOverviewContent({
   locale,
   subdomain,
+  role,
 }: AttendanceOverviewContentProps) {
   const { dictionary } = useDictionary()
   const [isPending, startTransition] = useTransition()
@@ -82,11 +96,13 @@ export function AttendanceOverviewContent({
   const basePath = `/${locale}/attendance`
   const d = dictionary?.school?.attendance
   const ov = (dictionary?.school?.attendance as any)?.overviewExtras as
-    | Record<string, string>
+    | Record<string, any>
     | undefined
+  const isAdmin = role === "ADMIN" || role === "DEVELOPER"
 
   useEffect(() => {
     loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadData() {
@@ -123,13 +139,126 @@ export function AttendanceOverviewContent({
   }
 
   const stats = dashboard?.stats
-  const markingProgress = stats?.totalStudents
-    ? Math.round((stats.markedToday / stats.totalStudents) * 100)
+  const classesTotal = stats?.classesTotal ?? 0
+  const classesMarked = stats?.classesMarked ?? 0
+  const markingProgress = classesTotal
+    ? Math.round((classesMarked / classesTotal) * 100)
     : 0
   const unmarkedClasses = dashboard?.unmarkedClasses || []
+  const isSchoolDay = dashboard?.today?.isSchoolDay ?? true
+
+  const dateFormatter = new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+
+  // Localized follow-up line: prefer the structured fields + dictionary
+  // template; fall back to the server's preformatted English string.
+  function followUpDetails(student: FollowUpData["students"][number]) {
+    if (student.issue === "consecutive_absence" && student.count != null) {
+      const template = ov?.absentConsecutiveDays as string | undefined
+      if (template) return template.replace("{count}", String(student.count))
+    }
+    if (student.issue === "unexcused_pending" && student.date) {
+      const template = ov?.excusePendingSince as string | undefined
+      if (template) {
+        const formatted = dateFormatter.format(new Date(student.date))
+        const [before, after] = template.split("{date}")
+        return (
+          <>
+            {before}
+            <bdi>{formatted}</bdi>
+            {after}
+          </>
+        )
+      }
+    }
+    return student.details
+  }
+
+  const statusLabels: Partial<Record<AttendanceStatus, string>> = {
+    PRESENT: d?.present,
+    ABSENT: d?.absent,
+    LATE: d?.late,
+    EXCUSED: d?.excused,
+    SICK: (d as any)?.sick,
+    HOLIDAY: d?.holiday,
+  }
+
+  const quickLinks: Array<{
+    key: string
+    href: string
+    label?: string
+    iconName: string
+    adminOnly?: boolean
+  }> = [
+    {
+      key: "recent",
+      href: `${basePath}/recent`,
+      label: (d as any)?.recentActivity,
+      iconName: "Activity",
+    },
+    {
+      key: "bulkUpload",
+      href: `${basePath}/bulk-upload`,
+      label: ov?.bulkUpload,
+      iconName: "Upload",
+    },
+    {
+      key: "barcode",
+      href: `${basePath}/barcode`,
+      label: (d as any)?.navBarcode,
+      iconName: "ScanLine",
+    },
+    {
+      key: "hallPass",
+      href: `${basePath}/hall-pass`,
+      label: ov?.hallPass,
+      iconName: "DoorOpen",
+    },
+    {
+      key: "mtssTiers",
+      href: `${basePath}/interventions/tiers`,
+      label: ov?.mtssTiers,
+      iconName: "Layers",
+    },
+    {
+      key: "gamification",
+      href: `${basePath}/gamification`,
+      label: ov?.gamification,
+      iconName: "Trophy",
+    },
+    {
+      key: "aiInsights",
+      href: `${basePath}/ai`,
+      label: ov?.aiInsights,
+      iconName: "Sparkles",
+    },
+    {
+      key: "kiosk",
+      href: `${basePath}/kiosk`,
+      label: ov?.kiosk,
+      iconName: "MonitorCheck",
+      adminOnly: true,
+    },
+    {
+      key: "letters",
+      href: `${basePath}/letters`,
+      label: ov?.letters,
+      iconName: "Mail",
+      adminOnly: true,
+    },
+  ]
+
+  const showSkeleton = isPending && !dashboard
 
   return (
     <div className="space-y-6">
+      {/* Self-service check-in/out — renders only for users with a
+          teacher/staff identity (timesheet integration) */}
+      <ClockCard locale={locale} dictionary={(d as any)?.quick?.clock} />
+
       {/* Error State */}
       {loadError && !dashboard && (
         <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20">
@@ -153,67 +282,98 @@ export function AttendanceOverviewContent({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="relative overflow-hidden">
-          <div className="absolute end-0 top-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full bg-emerald-500/10 rtl:-translate-x-4" />
-          <CardContent className="p-4">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {d?.present || "Present"}
-            </div>
-            <p className="mt-1 text-2xl font-bold">{stats?.present || 0}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <div className="absolute end-0 top-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full bg-red-500/10 rtl:-translate-x-4" />
-          <CardContent className="p-4">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <AlertCircle className="h-3.5 w-3.5" />
-              {d?.absent || "Absent"}
-            </div>
-            <p className="mt-1 text-2xl font-bold">{stats?.absent || 0}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <div className="absolute end-0 top-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full bg-amber-500/10 rtl:-translate-x-4" />
-          <CardContent className="p-4">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <Clock className="h-3.5 w-3.5" />
-              {d?.late || "Late"}
-            </div>
-            <p className="mt-1 text-2xl font-bold">{stats?.late || 0}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <div className="bg-primary/10 absolute end-0 top-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full rtl:-translate-x-4" />
-          <CardContent className="p-4">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-              <TrendingUp className="h-3.5 w-3.5" />
-              {d?.attendanceRate || "Rate"}
-            </div>
-            <p className="mt-1 text-2xl font-bold">
-              {stats?.attendanceRate || 0}%
-            </p>
-          </CardContent>
-        </Card>
+        {(
+          [
+            {
+              key: "present",
+              icon: CheckCircle2,
+              label: d?.present || "Present",
+              value: stats?.present ?? 0,
+              accent: "bg-emerald-500/10",
+            },
+            {
+              key: "absent",
+              icon: AlertCircle,
+              label: d?.absent || "Absent",
+              value: stats?.absent ?? 0,
+              accent: "bg-red-500/10",
+            },
+            {
+              key: "late",
+              icon: Clock,
+              label: d?.late || "Late",
+              value: stats?.late ?? 0,
+              accent: "bg-amber-500/10",
+            },
+            {
+              key: "rate",
+              icon: TrendingUp,
+              label: d?.attendanceRate || "Rate",
+              value: `${stats?.attendanceRate ?? 0}%`,
+              accent: "bg-primary/10",
+            },
+          ] as const
+        ).map((card) => (
+          <Card key={card.key} className="relative overflow-hidden">
+            <div
+              className={cn(
+                "absolute end-0 top-0 h-16 w-16 translate-x-4 -translate-y-4 rounded-full rtl:-translate-x-4",
+                card.accent
+              )}
+            />
+            <CardContent className="p-4">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                <card.icon className="h-3.5 w-3.5" />
+                {card.label}
+              </div>
+              {showSkeleton ? (
+                <Skeleton className="mt-2 h-7 w-14" />
+              ) : (
+                <p className="mt-1 text-2xl font-bold">{card.value}</p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Today's Marking Progress */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {d?.stats?.overallRate || "Today's Progress"}
-            </span>
-            <span className="font-medium">
-              {stats?.markedToday || 0} / {stats?.totalStudents || 0}
-            </span>
-          </div>
-          <Progress value={markingProgress} className="mt-2 h-2" />
-        </CardContent>
-      </Card>
+      {/* No school today — neutral note instead of alarming zeros */}
+      {!showSkeleton && dashboard && !isSchoolDay && (
+        <Card className="bg-muted/40">
+          <CardContent className="flex items-center gap-3 p-4">
+            <CalendarOff className="text-muted-foreground h-5 w-5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium">
+                {ov?.noSchoolToday || "No school today"}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {ov?.noSchoolTodayDesc ||
+                  "Today is not a school day, so attendance is not expected."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Today's Marking Progress — classes marked / total classes */}
+      {(showSkeleton || isSchoolDay) && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {ov?.classesProgress || "Classes marked today"}
+              </span>
+              {showSkeleton ? (
+                <Skeleton className="h-5 w-16" />
+              ) : (
+                <span className="font-medium">
+                  {classesMarked} / {classesTotal}
+                </span>
+              )}
+            </div>
+            <Progress value={markingProgress} className="mt-2 h-2" />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Unmarked Classes — only shows if there are unmarked classes */}
       {unmarkedClasses.length > 0 && (
@@ -307,11 +467,17 @@ export function AttendanceOverviewContent({
                     {student.studentName}
                   </p>
                   <p className="text-muted-foreground truncate text-xs">
-                    {student.className} — {student.details}
+                    {student.className} — {followUpDetails(student)}
                   </p>
                 </div>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href={student.actionUrl || `${basePath}/analytics`}>
+                  <Link
+                    href={
+                      student.actionUrl
+                        ? `/${locale}${student.actionUrl}`
+                        : `${basePath}/analytics`
+                    }
+                  >
                     <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                   </Link>
                 </Button>
@@ -320,6 +486,67 @@ export function AttendanceOverviewContent({
           </div>
         </div>
       )}
+
+      {/* Recent Activity — today's latest marks */}
+      {dashboard && dashboard.recentActivity.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-medium">
+                {(d as any)?.recentActivity || "Recent Activity"}
+              </h3>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href={`${basePath}/recent`}>
+                  {ov?.viewAll || "View all"}
+                  <ChevronRight className="ms-1 h-4 w-4 rtl:rotate-180" />
+                </Link>
+              </Button>
+            </div>
+            <RecentTable
+              data={dashboard.recentActivity.map((r) => ({
+                id: r.id,
+                studentName: r.studentName,
+                className: r.className,
+                status: r.status as AttendanceStatus,
+                method: r.method as AttendanceMethod,
+                date: r.date,
+              }))}
+              limit={5}
+              dictionary={{
+                status: statusLabels as Record<string, string>,
+                method: ov?.methodLabels,
+                columns: {
+                  student: (d as any)?.columns?.student,
+                  class: (d as any)?.columns?.class,
+                  status: (d as any)?.columns?.status,
+                  time: (d as any)?.columns?.time,
+                  method: (d as any)?.columns?.method,
+                },
+                noRecords: (d as any)?.noRecentRecords,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick access — functional sub-features not in the tab bar */}
+      <div>
+        <h3 className="mb-3 text-sm font-medium">
+          {ov?.quickAccess || "Quick access"}
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {quickLinks
+            .filter((l) => !l.adminOnly || isAdmin)
+            .map((link) => (
+              <ActionCard
+                key={link.key}
+                title={link.label || link.key}
+                href={link.href}
+                iconName={link.iconName}
+              />
+            ))}
+        </div>
+      </div>
     </div>
   )
 }

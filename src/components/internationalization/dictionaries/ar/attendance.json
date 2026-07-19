@@ -631,6 +631,10 @@
     "bulkMarked": "تم تسجيل حضور {count} طالب"
   },
   "reportsFilter": {
+    "selectDateRange": "اختر الفترة الزمنية",
+    "selectSection": "اختر الشعبة",
+    "allSections": "جميع الشعب",
+    "selectClass": "اختر الفصل",
     "allClasses": "جميع الفصول",
     "allStatuses": "جميع الحالات"
   },

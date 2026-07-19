@@ -1,12 +1,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
 import { RecentActivityContent } from "@/components/school-dashboard/attendance/recent/content"
 
 export const metadata = { title: "Dashboard: Recent Attendance Activity" }
@@ -18,13 +18,14 @@ interface Props {
 const STAFF_ROLES = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const session = await auth()
+  // Independent awaits parallelized (params + auth + dictionary).
+  const [{ lang }, session] = await Promise.all([params, auth()])
 
   // Recent activity surfaces every student's marking history across the
-  // school — a staff dashboard, not a student/guardian view.
+  // school — a staff dashboard, not a student/guardian view. Inline denial,
+  // not redirect() (React #310 — see (school-dashboard)/layout.tsx).
   if (!STAFF_ROLES.includes(session?.user?.role ?? "")) {
-    redirect(`/${lang}/attendance`)
+    return <AttendanceAccessDenied lang={lang} />
   }
 
   const dictionary = await getDictionary(lang)

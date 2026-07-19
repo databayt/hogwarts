@@ -131,10 +131,14 @@ describe("bulkUploadAttendance — batched prefetch (issue #335)", () => {
 
     // The prefetch query must be scoped by tenant + classId + date + the
     // student-ID set — never a bare findMany that would leak across tenants.
+    // It must NOT filter deletedAt: a soft-deleted row still occupies the
+    // unique key, and hiding it from the lookup sends the record down the
+    // create path where the constraint violation rolls back the whole batch
+    // (the update path revives via deletedAt: null instead).
     const where = attendanceFindManyCalls[0][0]!.where!
     expect(where.schoolId).toBe(SCHOOL_ID)
     expect(where.classId).toBe(CLASS_ID)
-    expect(where.deletedAt).toBe(null)
+    expect(where.deletedAt).toBeUndefined()
     expect((where.studentId as { in: string[] }).in).toEqual([
       "stu-1",
       "stu-2",

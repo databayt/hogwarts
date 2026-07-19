@@ -33,6 +33,9 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       create: vi.fn(),
     },
+    student: {
+      findFirst: vi.fn(),
+    },
   },
 }))
 
@@ -264,6 +267,10 @@ describe("Gamification Actions - schoolId scoping", () => {
       // beforeEach already sets role TEACHER. Previously this used an invalid
       // `reason`, so it passed only because the swallowed ZodError happened not
       // to equal "UNAUTHORIZED" — it never exercised the create path.
+      // The tenant guard now verifies the student belongs to the school.
+      vi.mocked(db.student.findFirst).mockResolvedValue({
+        id: mockStudentId,
+      } as any)
       vi.mocked(db.attendanceReward.create).mockResolvedValue({
         id: "reward-1",
       } as any)
@@ -280,6 +287,22 @@ describe("Gamification Actions - schoolId scoping", () => {
           }),
         })
       )
+      // Tenant guard: the student lookup must be schoolId-scoped.
+      expect(db.student.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: mockStudentId, schoolId: mockSchoolId },
+        })
+      )
+    })
+
+    it("awardPoints rejects a studentId from another school (no FK write)", async () => {
+      vi.mocked(db.student.findFirst).mockResolvedValue(null)
+
+      const result = await awardPoints(validAward as any)
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe("STUDENT_NOT_FOUND")
+      expect(db.attendanceReward.create).not.toHaveBeenCalled()
     })
   })
 })

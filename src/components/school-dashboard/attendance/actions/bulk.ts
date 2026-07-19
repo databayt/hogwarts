@@ -144,13 +144,17 @@ export async function bulkUploadAttendance(
   // Safe to batch because (schoolId, studentId, classId, date, periodId)
   // is unique — see prisma/models/attendance.prisma:94.
   const uploadDate = new Date(parsed.date)
+  // SOFT-DELETE INVARIANT: this existing-record lookup must NOT filter
+  // deletedAt — a soft-deleted row still occupies the unique key, and
+  // filtering it out sends the record down the create path where the
+  // constraint violation rolls back the WHOLE upload batch. The update
+  // path below revives instead (deletedAt: null).
   const existingRows = await db.attendance.findMany({
     where: {
       schoolId,
       classId: parsed.classId,
       date: uploadDate,
       periodId: null,
-      deletedAt: null,
       studentId: { in: studentIds },
     },
     select: { id: true, studentId: true },
@@ -181,6 +185,8 @@ export async function bulkUploadAttendance(
               notes: record.notes,
               markedBy: session.user.id,
               markedAt: new Date(),
+              // Revive a soft-deleted row on re-upload (see lookup above).
+              deletedAt: null,
             },
           })
         } else {

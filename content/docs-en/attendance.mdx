@@ -9,24 +9,26 @@ The attendance module tracks student attendance across multiple capture methods,
 
 ## Status
 
-| Feature                                                                                     | Status     | Notes                                                |
-| ------------------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------- |
-| Manual / Period / QR / Barcode / Bulk upload                                                | Production | Multiple capture methods (see Capture methods table) |
-| Parent notifications + excuse submission                                                    | Production | In-app + SMS + email; staff reviews                  |
-| Early warning                                                                               | Production | US DoE risk levels, intervention tracking            |
-| Reports export                                                                              | Production | CSV, Excel (5 sheets), PDF (branded)                 |
-| Soft delete + restore                                                                       | Production | `deletedAt`                                          |
-| Auto-excuse                                                                                 | Production | Approved `AbsenceIntention` → EXCUSED                |
-| Locale-aware names                                                                          | Production | `getText()` translates on demand                     |
-| Geofence / Master gate / Policy engine / Compliance reports                                 | Wired      | Functional, surface still maturing                   |
-| Settings                                                                                    | UI only    | Save not connected                                   |
-| AI predictions / Gamification / Hall pass / Kiosk / Absence intentions / Compliance letters | Component  | No route page                                        |
-| ADEK eSIS daily submission                                                                  | Production | Generic connector at `/compliance`, DRY_RUN default  |
-| 2-hour guardian SLA cron                                                                    | Production | `/api/cron/absence-followup`, every 30 min, UTC      |
+| Feature                                                                | Status     | Notes                                                          |
+| ---------------------------------------------------------------------- | ---------- | -------------------------------------------------------------- |
+| Quick Attendance (teacher landing) + staff/teacher clock               | Production | Absent-oriented one-tap marking; check-in/out feeds timesheets |
+| Manual / Period / QR / Barcode / Bulk upload                           | Production | Multiple capture methods (see Capture methods table)           |
+| Parent notifications + excuse submission                               | Production | In-app + SMS + email; staff reviews                            |
+| Early warning                                                          | Production | US DoE risk levels, intervention tracking                      |
+| Reports export                                                         | Production | CSV, Excel (5 sheets), PDF (branded)                           |
+| Soft delete + restore                                                  | Production | `deletedAt`                                                    |
+| Auto-excuse                                                            | Production | Approved `AbsenceIntention` → EXCUSED                          |
+| Locale-aware names                                                     | Production | `getText()` translates on demand                               |
+| Geofence / Master gate / Policy engine / Compliance reports            | Wired      | Functional, surface still maturing                             |
+| Settings                                                               | Production | Persists to the school-wide `AttendancePolicy` row             |
+| AI predictions / Gamification / Hall pass / Kiosk / Compliance letters | Production | Routed; surfaced via the overview Quick-access grid            |
+| Absence intentions / Geofence UI                                       | Wired      | Deep-link only until internals are localized                   |
+| ADEK eSIS daily submission                                             | Production | Generic connector at `/compliance`, DRY_RUN default            |
+| 2-hour guardian SLA cron                                               | Production | `/api/cron/absence-followup`, every 30 min, UTC                |
 
 ## Routes
 
-All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/`. Tabs: `/`, `/manual`, `/qr-code`, `/records`, `/excuses`, `/analytics`, `/reports`, `/settings`. Off-tab pages (URL only): `/barcode`, `/bulk-upload`, `/bulk`, `/interventions`, `/geo`, `/analysis`, `/recent`. `/parent/attendance` redirects to `/attendance/records`. See the Capture methods table below for per-route purpose; see RBAC for per-role access.
+The attendance root is role-aware: TEACHER lands on **Quick Attendance** (mobile-first, absent-oriented — everyone defaults present, taps cycle absent → late → present, one save submits the roster and notifies guardians of absentees), ADMIN/STAFF land on the overview, students/guardians on their self-view. All under `src/app/[lang]/s/[subdomain]/(school-dashboard)/attendance/`. Tabs: `/`, `/manual`, `/qr-code`, `/records`, `/excuses`, `/early-warning`, `/interventions`, `/analytics`, `/reports`, `/settings`. The staff overview's **Quick-access grid** links `/recent`, `/bulk-upload`, `/barcode`, `/hall-pass`, `/interventions/tiers`, `/gamification`, `/ai` (+ `/kiosk`, `/letters` for admins). Deep-link only: `/geo`, `/intentions`, `/bulk`. `/analysis` permanently redirects to `/analytics`; `/parent/attendance` redirects to `/attendance/records`. See the Capture methods table below for per-route purpose; see RBAC for per-role access.
 
 ## RBAC
 

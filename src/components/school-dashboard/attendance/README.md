@@ -19,29 +19,33 @@ All 23 subroutes are **wired and page-level auth-gated**. Client-facing paths
 use `/{lang}/attendance/...` (the `/s/{subdomain}/` segment is internal — the
 middleware maps it). Each has its own `error.tsx` + `loading.tsx`.
 
-| Route (clean path)                                      | Page                     | In primary nav?   |
-| ------------------------------------------------------- | ------------------------ | ----------------- |
-| `/{lang}/attendance`                                    | Overview / Mark          | Yes (Overview)    |
-| `/{lang}/attendance/manual`                             | Manual marking           | Yes (staff)       |
-| `/{lang}/attendance/records`                            | Records (own/child)      | Yes (non-staff)   |
-| `/{lang}/attendance/reports`                            | Reports & export         | Yes (staff)       |
-| `/{lang}/attendance/analytics`                          | Analytics dashboard      | Yes (staff)       |
-| `/{lang}/attendance/qr-code`                            | QR code attendance       | Yes (staff)       |
-| `/{lang}/attendance/geo`                                | Geofence attendance      | Deep-link         |
-| `/{lang}/attendance/barcode`                            | Barcode/RFID scanner     | Deep-link         |
-| `/{lang}/attendance/excuses`                            | Excuse management        | Yes               |
-| `/{lang}/attendance/intentions`                         | Absence intentions       | Deep-link         |
-| `/{lang}/attendance/interventions` (+`/tiers`)          | Interventions / MTSS     | Yes (staff)       |
-| `/{lang}/attendance/early-warning`                      | Early-warning system     | Yes (staff)       |
-| `/{lang}/attendance/kiosk`                              | Kiosk check-in           | Deep-link (admin) |
-| `/{lang}/attendance/letters`                            | Attendance letters       | Deep-link (admin) |
-| `/{lang}/attendance/gamification`                       | Gamification             | Deep-link         |
-| `/{lang}/attendance/ai`                                 | AI risk insights         | Deep-link         |
-| `/{lang}/attendance/{bulk,bulk-upload,analysis,recent}` | Bulk / analysis / recent | Deep-link         |
-| `/{lang}/attendance/settings`                           | Settings (mockup)        | Yes (admin)       |
+| Route (clean path)                             | Page                              | In primary nav?   |
+| ---------------------------------------------- | --------------------------------- | ----------------- |
+| `/{lang}/attendance`                           | TEACHER → Quick; staff → Overview | Yes (Overview)    |
+| `/{lang}/attendance/manual`                    | Manual marking                    | Yes (staff)       |
+| `/{lang}/attendance/records`                   | Records (own/child)               | Yes (non-staff)   |
+| `/{lang}/attendance/reports`                   | Reports & export                  | Yes (staff)       |
+| `/{lang}/attendance/analytics`                 | Analytics dashboard               | Yes (staff)       |
+| `/{lang}/attendance/qr-code`                   | QR code attendance                | Yes (staff)       |
+| `/{lang}/attendance/geo`                       | Geofence attendance               | Deep-link         |
+| `/{lang}/attendance/barcode`                   | Barcode/RFID scanner              | Deep-link         |
+| `/{lang}/attendance/excuses`                   | Excuse management                 | Yes               |
+| `/{lang}/attendance/intentions`                | Absence intentions                | Deep-link         |
+| `/{lang}/attendance/interventions` (+`/tiers`) | Interventions / MTSS              | Yes (staff)       |
+| `/{lang}/attendance/early-warning`             | Early-warning system              | Yes (staff)       |
+| `/{lang}/attendance/kiosk`                     | Kiosk check-in                    | Deep-link (admin) |
+| `/{lang}/attendance/letters`                   | Attendance letters                | Deep-link (admin) |
+| `/{lang}/attendance/gamification`              | Gamification                      | Deep-link         |
+| `/{lang}/attendance/ai`                        | AI risk insights                  | Deep-link         |
+| `/{lang}/attendance/{bulk,bulk-upload,recent}` | Bulk / recent                     | Quick-access grid |
+| `/{lang}/attendance/analysis`                  | → redirects to analytics          | —                 |
+| `/{lang}/attendance/settings`                  | Settings (functional)             | Yes (admin)       |
 
-"Deep-link" = functional + auth-gated but not yet surfaced in `getTabsForRole`
-(see ISSUE.md P2 — a product decision on which to promote to tabs).
+Since 2026-07-18 the staff overview renders a localized, role-aware
+**Quick-access grid** (ActionCard) exposing recent, bulk-upload, barcode,
+hall-pass, interventions/tiers, gamification and ai (+ kiosk and letters for
+admins). Still deep-link-only by design: `geo` and `intentions` (English-only
+internals — ISSUE.md P2.3) and the superseded `bulk` method-chooser.
 
 ### File Structure
 
@@ -143,7 +147,20 @@ src/components/school-dashboard/attendance/
 
 ### Status
 
-**Completion:** ~96% (Production-Ready) | **Deploy blockers:** Vercel Pro (sub-daily compliance crons), Neon DB push (incl. 2 new attendance indexes), env vars — see [ISSUE.md](./ISSUE.md).
+**Completion:** ~97% (Production-Ready) | **Deploy blockers:** Vercel Pro (sub-daily compliance crons), Neon DB push (incl. 2 new attendance indexes), env vars — see [ISSUE.md](./ISSUE.md).
+
+A 2026-07-18 production-readiness re-audit (4 parallel audits: route gates,
+131 server actions, i18n, UI/UX) found and closed a second wave of security
+gaps (an unauthenticated cross-tenant write in `evaluatePolicies`, an
+unauthenticated roster read, barcode-credential enumeration, 3 missing role
+gates, 4 cross-tenant FK writes, a bulk-upload soft-delete batch-rollback)
+and overhauled the staff overview: bidi-safe localized follow-ups, real
+links, classes-based progress, `SchoolWeekConfig`-aware weekend handling,
+skeleton loading, recent-activity table, and a Quick-access grid. The
+**settings page is now functional** — backed by the existing
+`AttendancePolicy` model (no schema change), bilingual, save round-trip
+verified in the browser. `/analysis` now redirects to `/analytics`.
+tsc 0 · 766/766 tests · browser-verified en+ar.
 
 Components, ~140 server actions, validation schemas, 23 wired auth-gated routes
 (each with `error.tsx` + `loading.tsx`), and a comprehensive Vitest suite
@@ -167,6 +184,20 @@ attendance action MUST therefore pass through `guardAttendance(action)`
 (`actions/helpers.ts` — `auth()` + tenant + RBAC matrix) or an equivalent
 explicit `auth()` + role/ownership check. A `schoolId`-only guard is reachable by
 unauthenticated requests to a school subdomain.
+
+### Quick Attendance + staff clock (2026-07-18)
+
+Teachers land on **`quick/content.tsx`** — a mobile-first, absent-oriented
+marking surface: sections auto-resolved from the teacher's homeroom +
+timetable (current period first), everyone defaults present, taps cycle
+absent → late → present, one Save submits the roster via
+`submitQuickAttendance` (ownership-checked, roster-intersected, delegates to
+`markAttendance` so revive/auto-excuse/notifications all apply). The
+post-save panel reports guardians notified and links **Message guardian** →
+`/messages`. `quick/clock-card.tsx` + `actions/clock.ts` add self-service
+check-in/out feeding the timesheets: STAFF → `StaffTimesheetEntry`,
+TEACHER → finance `TimesheetEntry` (DRAFT, auto month period, in/out in
+`notes`, no schema change).
 
 ### Integration Points
 

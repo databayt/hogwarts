@@ -1,80 +1,21 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { type Metadata } from "next"
-import { auth } from "@/auth"
-import { AlertTriangle, BarChart3 } from "lucide-react"
+import { redirect } from "next/navigation"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import AnalyticsContent from "@/components/school-dashboard/attendance/analytics/content"
-import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance/atom/access-denied"
-import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
-import { EarlyWarningContent } from "@/components/school-dashboard/attendance/early-warning/content"
-
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Attendance Analysis",
-    description: "Analyze attendance trends and identify at-risk students",
-  }
-}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
+/**
+ * /attendance/analysis duplicated /attendance/analytics (same
+ * AnalyticsContent, plus an Early Warning tab that has its own route) with
+ * hardcoded-English chrome. Consolidated: permanent redirect to the
+ * canonical, localized analytics page.
+ */
 export default async function Page({ params }: Props) {
-  // Parallelize independent async operations to avoid request waterfalls
-  const [{ lang }, session] = await Promise.all([params, auth()])
-  const dictionary = await getDictionary(lang)
-
-  // Check permissions - only ADMIN and TEACHER can access analytics
-  if (
-    session?.user?.role !== "ADMIN" &&
-    session?.user?.role !== "TEACHER" &&
-    session?.user?.role !== "DEVELOPER"
-  ) {
-    return <AttendanceAccessDenied lang={lang} />
-  }
-
-  return (
-    <AttendanceProvider>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h2>Attendance Analysis</h2>
-          <p className="text-muted-foreground">
-            Analyze attendance patterns and identify students at risk
-          </p>
-        </div>
-
-        {/* Tabs for Analytics and Early Warning */}
-        <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="warning" className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Early Warning
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="analytics" className="mt-6">
-            <AnalyticsContent
-              dictionary={dictionary}
-              locale={lang}
-              schoolId={session?.user?.schoolId || ""}
-            />
-          </TabsContent>
-
-          <TabsContent value="warning" className="mt-6">
-            <EarlyWarningContent locale={lang} />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AttendanceProvider>
-  )
+  const { lang } = await params
+  redirect(`/${lang}/attendance/analytics`)
 }

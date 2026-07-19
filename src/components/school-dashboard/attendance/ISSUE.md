@@ -5,10 +5,10 @@ title: Attendance
 file_type: issue
 owner: Abdout
 maturity: Production-Ready
-completion: 96
+completion: 97
 tracker: https://github.com/databayt/hogwarts/issues/322
 docs: https://ed.databayt.org/en/docs/attendance
-last_audited: 2026-06-19
+last_audited: 2026-07-18
 ---
 
 # Attendance -- Production Readiness Tracker
@@ -100,8 +100,12 @@ _(none open)_
 
 ### P1 -- High
 
-_(none open — the auth/IDOR, multi-tenant and correctness P1s were closed in the
-2026-06-13 hardening pass below.)_
+_(none open — the 2026-06-13 pass closed the original auth/IDOR set; the
+2026-07-18 re-audit found and closed a second wave: an unauthenticated
+cross-tenant write (`evaluatePolicies`), an unauthenticated roster read
+(`getAttendanceList`), a barcode-credential enumeration, three missing role
+gates, a compliance-gate matrix drift, four cross-tenant FK writes, and a
+bulk-upload soft-delete batch-rollback bug — see Recently Fixed below.)_
 
 ### P2 -- Medium (deferred polish — not blocking)
 
@@ -109,44 +113,56 @@ _(none open — the auth/IDOR, multi-tenant and correctness P1s were closed in t
    sub-feature read guards now return `actionError(ACTION_ERRORS.*)` codes, but a
    long tail of English `error:` literals remains across
    `analytics/master/policy/compliance/excuses/interventions.ts` and the
-   sub-feature `actions.ts`. Client-safe (components surface their own
-   `dictionary.*` text, not the raw `result.error`) — convention-conformance, not
-   a visible defect.
-2. **i18n — Zod validation messages** -- `validation.ts`, `shared/validation.ts`,
-   `geofencee/validation.ts` and per-feature schemas use raw English literals.
-   These are **dev-facing only** (server actions `.parse()` and surface their own
-   dictionary text / `VALIDATION_ERROR` codes to users), so converting to
-   `createXSchema(v: ValidationHelper)` factories is low-value/high-churn; deferred.
-3. **i18n — settings page** -- `attendance/settings/page.tsx` is a non-functional
-   static mockup (switches without state, no-op Save); its labels are hardcoded
-   English. Localize **when it is wired to real persistence** (needs a settings
-   model). The page is ADMIN-gated; the "Save" button is a known no-op.
-4. **i18n — client toast literals** -- `toast.*("literal")` calls in the
-   geofencee client components (geo-tracker, geo-live-map, geofence-form/list) and
-   `intentions/submit-form.tsx` JSX bypass `dictionary.messages.toast`. User-visible
-   but English-only; localize next i18n pass.
-5. **Durable scan rate limiter** -- `security.ts` `checkRateLimit`/`recordScanFailure`
-   are in-memory (reset on serverless cold start). A shared Redis-backed limiter
-   exists (`@/lib/rate-limit` `checkUserRateLimit`); migrating the QR/barcode/kiosk
-   scan-failure counter to it needs an async refactor of those call sites. The
-   in-memory store still gives per-instance protection.
-6. **Nav reachability** -- 13 functional auth-gated subroutes are reachable by
-   direct URL but not surfaced in `getTabsForRole`. Product decision: promote the
-   user-facing ones (geo, kiosk, letters, gamification, ai) to tabs vs keep as
-   deep-links.
-7. **PDF compliance reports** -- Automated report generation not built.
+   sub-feature `actions.ts`. NOTE (2026-07-18 audit): NOT all of these are
+   client-safe — `intentions/submit-form.tsx` (setError→render),
+   `geofencee/geofence-form/list` (toast.error(result.error)),
+   `core/attendance-context.tsx` (delete/identifier toasts) and
+   `qr-code/qr-scanner|generator.tsx` render the raw string. Converting those
+   surfaces to the error-code + dictionary pattern is the priority slice.
+2. **i18n — Zod validation messages** -- dev-facing only; deferred (unchanged).
+3. **i18n — geofencee + intentions internals** -- `geo-tracker.tsx`,
+   `geo-live-map.tsx`, `geofence-form.tsx` (never receives a dictionary prop;
+   written against the modular tree) and `intentions/submit-form.tsx` are
+   entirely hardcoded English. Both routes are deliberately EXCLUDED from the
+   overview Quick-access grid until localized (they remain deep-links).
+4. **Durable scan rate limiter** -- `security.ts` in-memory counters; migrate
+   to `@/lib/rate-limit` (unchanged).
+5. **Nav reachability — residual** -- 2026-07-18: overview Quick-access grid
+   now exposes recent/bulk-upload/barcode/hall-pass/tiers/gamification/ai
+   (+kiosk/letters for admins). Still unreachable by design: `geo`,
+   `intentions` (see #3), `bulk` (method-chooser shell, superseded by the
+   grid).
+6. **PDF compliance reports** -- not built (unchanged).
+7. **Dual attendance dictionary trees** -- `school-{en,ar}.json` `school.attendance`
+   (~800 keys) AND `dictionaries/{en,ar}/attendance.json` (~600 keys) both
+   live; ~23 files split between them (some mix within one file). Both are
+   parity-enforced so nothing is user-visible, but it's drift-bait —
+   consolidation is an architecture task, not a quick fix.
+8. **Error boundaries English-only** -- `route-error.tsx` (re-exported by ~21
+   subroutes), root `attendance/error.tsx`, and `error-boundary.tsx` have no
+   dictionary access (error boundaries render without the tree). Failure-path
+   only; localize via useDictionary-with-fallback when touched next.
+9. **AttendanceProvider eager fetch** -- the provider still fires
+   `getAttendanceStats` + `getRecentAttendance({limit:50})` on mount for
+   routes that never consume the context (manual, analytics). Settings no
+   longer mounts it (2026-07-18); making the fetch lazy-on-first-consumer
+   remains open.
 
 ### P3 -- Low (documented, not addressed)
 
-1. **`/attendance/analysis` duplicates `/attendance/analytics`** -- consolidate or
-   redirect one to the other.
-2. **kiosk date-range vs stored midnight** -- `processKioskCheck` queries
-   `gte today / lt tomorrow` but stores `date: today` — fine under UTC, fragile if
-   the server TZ is non-UTC.
-3. **QR class-enrollment check** -- `processQRScan` does not verify the scanner is
-   enrolled in the QR's class before marking PRESENT (low risk: the QR must be
-   physically displayed in the room). Deferred because `StudentClass` population is
-   not guaranteed for section-based schools.
+1. ~~`/attendance/analysis` duplicates `/attendance/analytics`~~ — **CLOSED
+   2026-07-18**: permanent redirect to `/analytics`.
+2. **kiosk date-range vs stored midnight** -- unchanged.
+3. **QR class-enrollment check** -- unchanged.
+4. **Bare-PK writes behind schoolId-scoped lookups (~18 sites)** -- audited
+   2026-07-18: none independently exploitable (every one sits behind a
+   tenant-scoped findFirst), but they violate the stated invariant and become
+   exploitable if the lookup is ever refactored away. Defense-in-depth
+   backlog: convert to `updateMany({ id, schoolId })`.
+5. **Teacher-class intersect on staff-wide reads** -- systemic, deliberate
+   tradeoff: most "staff can view X" reads show the whole school to TEACHERs
+   (analytics-tier functions DO intersect). Within-tenant only. Revisit if a
+   school requests strict teacher scoping.
 
 ### Deploy-time blockers (require owner action — not code)
 
@@ -163,6 +179,145 @@ EXISTS` on the default branch (never `migrate deploy`); Neon-branch-first.
    `LIVEKIT_*`, `FIREBASE_*` in central `.env` + Vercel.
 4. **Browser DRY_RUN E2E** -- compliance esis-submit + absence-followup +
    attendance/excuse/QR smoke on `demo.localhost:3000`.
+
+### Recently Fixed (2026-07-18 -- production-readiness re-audit: security + UI/i18n overhaul)
+
+A 4-agent re-audit (route gates, 131 server actions, i18n, UI/UX+links) one
+month after the last pass found the "no open P0/P1" claim no longer held.
+All fixed; **tsc 0 attendance errors, 766/766 tests green (attendance +
+compliance + API scope), browser-verified en+ar on demo.localhost.**
+
+**Security (P0–P1):**
+
+1. `evaluatePolicies` (policy.ts) — **unauthenticated cross-tenant WRITE**:
+   no auth of any kind, caller-supplied `schoolId`, created PolicyTrigger rows
+   - dispatched staff notifications for any school. Now `guardAttendance("manage_policy")`,
+     schoolId from session; signature dropped the param (zero prod callers; cron
+     has its own inline implementation).
+2. `getAttendanceList` (core.ts) — tenant-context-only guard = unauthenticated
+   roster+status read. Now `guardAttendance("mark")`.
+3. `getStudentBarcodes` (barcode/actions.ts) — any authenticated role could
+   enumerate every student's barcode credential school-wide. Admin-only now
+   (matches `getStudentIdentifiers`).
+4. `getTeacherClassesToday` (dashboard.ts) — non-teacher roles fell through to
+   the school-wide admin view. Staff-gated.
+5. `getPeriodAttendanceAnalytics` (periods.ts) + `getInterventionAssignees`
+   (interventions.ts) — session-only guards; staff-gated now.
+6. `getComplianceDashboard`/`getComplianceReport` — gate said analytics
+   (TEACHER/STAFF admitted) while `PERMISSION_MATRIX.view_compliance` is
+   DEVELOPER/ADMIN; aligned to the matrix (`isAdminRole`).
+7. Cross-tenant FK writes — `createInterventionFromRecommendation` (ai),
+   `awardPoints`/`awardBadge` (gamification), `createTieredIntervention`
+   (tiers) accepted foreign-school studentIds; all now verify
+   `db.student.findFirst({ id, schoolId })` first (+ regression test).
+8. `bulkUploadAttendance` (bulk.ts) — SOFT-DELETE INVARIANT violation: lookup
+   filtered `deletedAt: null`, so a re-upload over a soft-deleted row hit the
+   unique constraint and **rolled back the whole batch**. Lookup unfiltered +
+   revive on update now (test updated to assert the invariant).
+9. parent-portal/attendance/content.tsx — guardian view missing
+   `deletedAt: null` (third parallel implementation; other two were correct).
+
+**UI/UX (browser-verified before/after):**
+
+10. Overview "Needs Attention" — details were server-built English with an
+    ar-formatted date jammed in (bidi-garbled on BOTH locales: "since
+    012025/09/"). Server now returns structured `count`/`date`; client renders
+    dictionary templates + `Intl.DateTimeFormat(locale)` in `<bdi>`.
+11. Overview excuse rows linked to `/attendance/excuses/[id]` — **route does
+    not exist** (404 from the landing page). Now `/attendance/excuses`; all
+    followUp actionUrls locale-prefixed client-side.
+12. Marking progress read "0 / 34920" — students×classes enrollment slots as
+    denominator. Now classes-marked / classes-with-students (matches the
+    banner + workflow).
+13. Weekend noise — "504 classes not marked today" every Fri/Sat. New
+    `SchoolWeekConfig` read in `getTodaysDashboard` → `today.isSchoolDay`;
+    non-school days suppress the banner + progress and show a neutral
+    localized "No school today" note. Demo seed now creates the Sun–Thu
+    config (`seedPeriods`), and the local demo DB was backfilled.
+14. Overview loading — stat cards rendered fake `0` while pending
+    (`isPending` was unused); skeletons now.
+15. Overview now renders the previously-dead `recentActivity` payload via the
+    previously-dead `RecentTable` atom (server adds `method` + `date`), and a
+    localized role-aware **Quick access** grid (previously-dead `ActionCard`
+    atom) exposing 9 of the 13 orphan routes: recent, bulk-upload, barcode,
+    hall-pass, tiers, gamification, ai, kiosk (admin), letters (admin).
+    geo + intentions stay deep-links until their internals are localized.
+16. **Settings page was UI theater** — 378 lines of uncontrolled
+    switches/sliders + a no-op Save, all hardcoded English, ADMIN-facing.
+    Rebuilt end-to-end on the existing `AttendancePolicy` model (NO schema
+    change): `getAttendanceSettings`/`updateAttendanceSettings` in
+    actions/policy.ts (guardAttendance("manage_settings"), Zod, school-wide
+    "Default" appliesTo:["ALL"] row, tenant-scoped updateMany), new
+    `settings/form.tsx` client (controlled, localized en+ar via
+    `attendance.settingsPage`), page loads real data. Sections with no
+    backing field (fake Security/Notifications/Advanced) were REMOVED.
+    Save round-trip browser-verified (row created, values persist across
+    locales).
+17. `/attendance/analysis` — orphaned duplicate of `/analytics` (same
+    component re-wrapped, hardcoded-English chrome, STAFF role-matrix drift).
+    Now a permanent redirect to `/analytics` (P3.1 closed).
+18. Route-gate consistency — `records` had no page-level deny (gate lived two
+    hops down in actions); geo/excuses/interventions/recent denied via
+    `redirect()` (the React #310-fragile pattern the codebase documents).
+    All five now render `AttendanceAccessDenied` inline like the other 18.
+19. i18n — "Early Warning" tab was English on /ar (`earlyWarning.title`
+    missing in BOTH dictionaries — added); `sick` status label added;
+    manual-page empty states read keys that existed in neither tree the prop
+    delivers (`emptyStates.*` added to school-en/ar + component rewired +
+    lang-prefixed hrefs); reports/analytics/recent filter placeholders +
+    "Total Records"/loading literals wired (reportsFilter._ extended in the
+    modular tree, flat keys in the school tree); bulk-upload's 8 toast
+    literals → `bulkUpload.toasts._`.
+20. Platform: `socket-service.ts` no longer attempts `localhost:3001` outside
+    localhost when `NEXT_PUBLIC_SOCKET_URL` is unset — kills the
+    ERR_CONNECTION_REFUSED console spam for every prod user (notifications
+    bell + messaging connect on every dashboard page).
+21. Perf — kiosk + bulk-upload + recent pages parallelized independent awaits;
+    dead `fetcher` removed from content.tsx.
+
+### Shipped (2026-07-18, same session — Quick Attendance + staff/teacher clock)
+
+**Quick Attendance (`quick/`)** — the teacher's new `/attendance` landing
+(TEACHER role on the root page; admin/staff keep the overview). Mobile-first
+centered column, absent-oriented: everyone defaults PRESENT, the teacher
+taps only the exceptions (tap = absent, tap again = late, again = present),
+searches to jump to a name, and one Save submits the whole roster.
+
+- `actions/quick.ts`:
+  - `getQuickMarkingContext()` — one round trip: today + `SchoolWeekConfig`
+    school-day flag + the teacher's own sections (homeroom + timetable),
+    sorted current-period-first (live wall-clock vs Period time window),
+    with today's marked counts. Role-aware: admins get all sections.
+  - `submitQuickAttendance()` — enforces teacher-section ownership (homeroom
+    or timetable slot; markAttendance alone is role-gated only), intersects
+    submitted ids against the section roster (cross-section injection
+    impossible), expands to full-roster records and DELEGATES to the
+    hardened `markAttendance` (revive-on-update, auto-excuse from approved
+    intentions, guardian notifications). Returns counts + how many absent
+    students have a notifiable guardian (excused excluded).
+- Comms integration surfaced: post-save panel shows "Guardians notified for
+  N absent students" + per-absent **Message guardian** links into
+  `/messages`. DB-verified: 27 PRESENT + 2 ABSENT + 1 LATE rows and 4
+  Arabic `attendance_alert` notifications (one per guardian account).
+- **Staff/teacher clock (`actions/clock.ts` + `quick/clock-card.tsx`)** —
+  self-service check-in/out on the attendance landing (quick page for
+  teachers, overview for staff/admin), timesheet-integrated with each
+  system of record left in its lane: STAFF → `StaffTimesheetEntry`
+  (native checkIn/checkOut + PRESENT status + hours), TEACHER → finance's
+  `TimesheetEntry` (created at check-in with 0h inside the OPEN
+  `TimesheetPeriod` covering today — month-named period auto-created when
+  none exists — hours computed at check-out, left DRAFT for the finance
+  submit→approve flow; in/out stamps ride in `notes` as
+  `in:<ISO>;out:<ISO>`, zero schema change). Card hides itself for users
+  with no teacher/staff identity.
+- 19 new Vitest tests (`quick.test.ts` 8, `clock.test.ts` 11): guard/role
+  gates, ownership rejection, roster intersection, absent-oriented
+  expansion, notified-count excused-exclusion, staff+teacher clock
+  lifecycles, period reuse/creation, idempotent check-in.
+- Browser-verified end-to-end on 390×844 mobile in BOTH locales as
+  `teacher@databayt.org`: tap-mark → save → success panel → notifications
+  in DB → clock in/out (0.02h computed) → Arabic reload shows persisted
+  marks + completed day. `quick.*` dictionary subtree added en+ar.
 
 ### Recently Fixed (2026-06-19 -- soft-delete read/write consistency)
 

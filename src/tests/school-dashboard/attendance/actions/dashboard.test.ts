@@ -47,6 +47,9 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
     },
+    schoolWeekConfig: {
+      findMany: vi.fn(),
+    },
     studentClass: {
       findMany: vi.fn(),
     },
@@ -84,6 +87,7 @@ describe("attendance dashboard actions", () => {
     vi.clearAllMocks()
     mockAuth("ADMIN")
     vi.mocked(db.attendance.findMany).mockResolvedValue([])
+    vi.mocked(db.schoolWeekConfig.findMany).mockResolvedValue([])
     vi.mocked(db.attendance.count).mockResolvedValue(0)
     vi.mocked(db.attendance.groupBy).mockResolvedValue([] as any)
     vi.mocked(db.student.findMany).mockResolvedValue([])

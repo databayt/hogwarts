@@ -8,6 +8,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AttendanceOverviewContent } from "@/components/school-dashboard/attendance/overview/content"
 import { StudentGuardianOverview } from "@/components/school-dashboard/attendance/overview/student-guardian-overview"
+import { QuickAttendanceContent } from "@/components/school-dashboard/attendance/quick/content"
 
 export async function generateMetadata({
   params,
@@ -40,5 +41,18 @@ export default async function Page({ params }: Props) {
     return <StudentGuardianOverview locale={lang} subdomain={subdomain} />
   }
 
-  return <AttendanceOverviewContent locale={lang} subdomain={subdomain} />
+  // Teachers land on the absent-oriented quick-marking surface — their job
+  // here is taking attendance, not reading dashboards. Admin/staff keep the
+  // school-wide overview (analytics, unmarked classes, follow-ups).
+  if (role === "TEACHER") {
+    return <QuickAttendanceContent locale={lang} />
+  }
+
+  return (
+    <AttendanceOverviewContent
+      locale={lang}
+      subdomain={subdomain}
+      role={role}
+    />
+  )
 }

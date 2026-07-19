@@ -17,9 +17,8 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
+  const [{ lang }, session] = await Promise.all([params, auth()])
   const dictionary = await getDictionary(lang)
-  const session = await auth()
 
   // Check permissions - staff only
   const staffRoles = ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"]

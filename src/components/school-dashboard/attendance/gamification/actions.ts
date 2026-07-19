@@ -57,6 +57,15 @@ export async function awardPoints(
   try {
     const validated = awardPointsSchema.parse(input)
 
+    // TENANT: reject a studentId from another school before the FK write.
+    const student = await db.student.findFirst({
+      where: { id: validated.studentId, schoolId },
+      select: { id: true },
+    })
+    if (!student) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
+
     const reward = await db.attendanceReward.create({
       data: {
         schoolId,
@@ -275,6 +284,15 @@ export async function awardBadge(
 
   try {
     const validated = awardBadgeSchema.parse(input)
+
+    // TENANT: reject a studentId from another school before the FK write.
+    const student = await db.student.findFirst({
+      where: { id: validated.studentId, schoolId },
+      select: { id: true },
+    })
+    if (!student) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
 
     // Get or create badge template
     let badge = await db.attendanceBadge.findFirst({

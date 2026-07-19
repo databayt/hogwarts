@@ -573,6 +573,11 @@ export async function getPeriodAttendanceAnalytics(input?: {
     if (!session?.user?.id) {
       return { success: false, error: "Authentication required" }
     }
+    // SECURITY: school-wide period analytics — staff only (was readable by
+    // any authenticated STUDENT/GUARDIAN).
+    if (!isStaffRole(session.user.role as any)) {
+      return { success: false, error: "Unauthorized" }
+    }
 
     // Default date range: last 30 days
     const dateFrom = input?.dateFrom

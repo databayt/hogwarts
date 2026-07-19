@@ -261,6 +261,21 @@ class SocketService {
 
       this.isConnecting = true
 
+      // No socket server configured: outside localhost the default
+      // http://localhost:3001 can never be reachable — attempting it just
+      // spams every user's console with ERR_CONNECTION_REFUSED retries.
+      // Realtime features degrade silently (polling/refresh paths still work).
+      if (
+        !process.env.NEXT_PUBLIC_SOCKET_URL &&
+        typeof window !== "undefined" &&
+        !window.location.hostname.endsWith("localhost") &&
+        window.location.hostname !== "127.0.0.1"
+      ) {
+        this.isConnecting = false
+        resolve()
+        return
+      }
+
       try {
         // Fetch signed JWT for production auth; falls back to query params in dev
         const token = await this.fetchSocketToken()

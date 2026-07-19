@@ -489,10 +489,12 @@ export async function getAttendanceList(input: {
   }>
 > {
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) {
-      return actionError(ACTION_ERRORS.MISSING_SCHOOL)
-    }
+    // SECURITY: roster names + statuses — requires an authenticated marking
+    // role, not just a resolvable subdomain (getTenantContext alone is
+    // reachable unauthenticated).
+    const g = await guardAttendance("mark")
+    if (!g.ok) return g.error
+    const { schoolId } = g
 
     const parsed = z
       .object({

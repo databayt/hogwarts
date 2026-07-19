@@ -517,6 +517,16 @@ export async function createInterventionFromRecommendation(
   }
 
   try {
+    // TENANT: reject a studentId that belongs to another school before the
+    // FK write (mirrors createIntervention in actions/interventions.ts).
+    const student = await db.student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { id: true },
+    })
+    if (!student) {
+      return actionError(ACTION_ERRORS.STUDENT_NOT_FOUND)
+    }
+
     // Map recommendation to intervention type
     const typeMap: Record<string, string> = {
       "home visit": "HOME_VISIT",

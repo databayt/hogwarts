@@ -136,7 +136,17 @@ export function AttendanceEmptyState({
   )
 }
 
-export function NoClassesEmptyState({ dictionary }: { dictionary?: any }) {
+export function NoClassesEmptyState({
+  dictionary,
+  locale,
+}: {
+  dictionary?: any
+  locale?: string
+}) {
+  // Keys live under school.attendance.emptyStates (flat reads kept as a
+  // fallback for callers passing an older tree shape).
+  const es = dictionary?.emptyStates ?? dictionary
+  const prefix = locale ? `/${locale}` : ""
   return (
     <div className="flex min-h-[400px] items-center justify-center">
       <Card className="w-full max-w-md">
@@ -144,19 +154,17 @@ export function NoClassesEmptyState({ dictionary }: { dictionary?: any }) {
           <div className="bg-muted mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
             <School className="text-muted-foreground h-6 w-6" />
           </div>
-          <CardTitle>
-            {dictionary?.noClasses || "No Classes Available"}
-          </CardTitle>
+          <CardTitle>{es?.noClasses || "No Classes Available"}</CardTitle>
           <CardDescription className="mt-2">
-            {dictionary?.noClassesDesc ||
+            {es?.noClassesDesc ||
               "You need to create classes before you can track attendance."}
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <Link href="/classrooms/create">
+          <Link href={`${prefix}/classrooms/create`}>
             <Button>
               <Plus className="me-2 h-4 w-4" />
-              {dictionary?.createFirstClass || "Create Your First Class"}
+              {es?.createFirstClass || "Create Your First Class"}
             </Button>
           </Link>
         </CardContent>
@@ -165,7 +173,15 @@ export function NoClassesEmptyState({ dictionary }: { dictionary?: any }) {
   )
 }
 
-export function NoStudentsEmptyState({ dictionary }: { dictionary?: any }) {
+export function NoStudentsEmptyState({
+  dictionary,
+  locale,
+}: {
+  dictionary?: any
+  locale?: string
+}) {
+  const es = dictionary?.emptyStates ?? dictionary
+  const prefix = locale ? `/${locale}` : ""
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -173,22 +189,22 @@ export function NoStudentsEmptyState({ dictionary }: { dictionary?: any }) {
           <CircleAlert className="h-10 w-10 text-orange-600" />
         </div>
         <h3 className="mb-2 text-lg font-semibold">
-          {dictionary?.noStudentsInClass || "No Students in This Section"}
+          {es?.noStudentsInClass || "No Students in This Section"}
         </h3>
         <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          {dictionary?.noStudentsInClassDesc ||
+          {es?.noStudentsInClassDesc ||
             "This section doesn't have any enrolled students yet. Add students to start tracking their attendance."}
         </p>
         <div className="flex gap-3">
-          <Link href="/students/enroll">
+          <Link href={`${prefix}/students/enroll`}>
             <Button variant="outline" size="sm">
               <UserPlus className="me-2 h-4 w-4" />
-              {dictionary?.enrollStudents || "Enroll Students"}
+              {es?.enrollStudents || "Enroll Students"}
             </Button>
           </Link>
-          <Link href="/students">
+          <Link href={`${prefix}/students`}>
             <Button size="sm">
-              {dictionary?.manageStudents || "Manage Students"}
+              {es?.manageStudents || "Manage Students"}
               <ChevronRight className="ms-2 h-4 w-4 rtl:rotate-180" />
             </Button>
           </Link>

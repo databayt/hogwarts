@@ -36,8 +36,6 @@ import { AttendanceErrorBoundary } from "./error-boundary"
 import { AttendanceTableSkeleton } from "./loading-skeleton"
 import { AttendanceTable, type AttendanceRow } from "./table"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
 interface Props {
   dictionary?: Dictionary["school"]
   lang?: string
@@ -238,7 +236,10 @@ export function AttendanceContent({ dictionary, lang }: Props) {
       {isLoading || sectionsLoading ? (
         <AttendanceTableSkeleton rows={10} />
       ) : sections.length === 0 ? (
-        <NoClassesEmptyState dictionary={dictionary?.attendance} />
+        <NoClassesEmptyState
+          dictionary={dictionary?.attendance}
+          locale={lang}
+        />
       ) : (
         <div className="space-y-3">
           <div
@@ -365,7 +366,10 @@ export function AttendanceContent({ dictionary, lang }: Props) {
             </div>
           </div>
           {rows.length === 0 && sectionId && !isLoading ? (
-            <NoStudentsEmptyState dictionary={dictionary?.attendance} />
+            <NoStudentsEmptyState
+              dictionary={dictionary?.attendance}
+              locale={lang}
+            />
           ) : (
             <AttendanceTable
               data={rows}
