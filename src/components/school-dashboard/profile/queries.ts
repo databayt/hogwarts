@@ -650,7 +650,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   ].filter(Boolean)
   if (toTranslate.length) {
     const map = await getLabels(toTranslate, displayLang, schoolId)
-    const tr = (s: string | null) => (s ? (map.get(s) ?? s) : s)
+    const tr = (s?: string | null) => (s ? (map.get(s) ?? s) : (s ?? null))
     firstName = tr(args.firstName) ?? args.firstName
     lastName = tr(args.lastName) ?? args.lastName
     bio = tr(args.bio)
