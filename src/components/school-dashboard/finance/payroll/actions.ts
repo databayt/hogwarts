@@ -21,7 +21,8 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { checkFinancePermission } from "../lib/permissions"
 import { calculateProgressiveTax, calculateSocialSecurity } from "./config"
-import { resolvePayrollPolicy } from "./country-rules/registry"
+import { resolveSchoolPayrollPolicy } from "./country-rules/school-policy"
+import { loadTimesheetSummaries } from "./timesheet-summary"
 import {
   payrollApprovalSchema,
   payrollDisbursementSchema,
@@ -238,7 +239,10 @@ export async function generateSalarySlips(
       where: { id: schoolId },
       select: { country: true, timezone: true, currency: true },
     })
-    const payrollPolicy = resolvePayrollPolicy(schoolForPolicy ?? {})
+    const payrollPolicy = await resolveSchoolPayrollPolicy(
+      schoolId,
+      schoolForPolicy ?? {}
+    )
 
     // Update status to PROCESSING
     await db.payrollRun.update({
@@ -272,6 +276,16 @@ export async function generateSalarySlips(
       },
     })
 
+    // Pull real attendance from APPROVED timesheet entries for the whole run in
+    // ONE query (keyed by teacherId), so the loop below doesn't N+1. Teachers
+    // with no approved entries fall back to the salaried default further down.
+    const timesheetByTeacher = await loadTimesheetSummaries({
+      schoolId,
+      teacherIds: teachers.map((t) => t.id),
+      periodStart: payrollRun.payPeriodStart,
+      periodEnd: payrollRun.payPeriodEnd,
+    })
+
     let slipsGenerated = 0
     let totalGross = 0
     let totalDeductions = 0
@@ -285,10 +299,18 @@ export async function generateSalarySlips(
         continue
       }
 
-      // Calculate working days
-      const daysWorked = 22 // Default, should come from timesheet
-      const daysPresent = 22 // Should come from attendance
-      const daysAbsent = 0
+      // Working days come from APPROVED timesheet entries for this pay period.
+      // A salaried employee with no timesheet on file is assumed to have worked
+      // the standard month (full attendance) — the same behaviour as before, so
+      // schools not using timesheets are unaffected. These counts are shown on
+      // the slip but do not alter pay (base salary is paid in full).
+      const DEFAULT_WORKING_DAYS = 22
+      const timesheet = timesheetByTeacher.get(teacher.id)
+      const daysWorked = timesheet?.daysWorked ?? DEFAULT_WORKING_DAYS
+      const daysPresent = timesheet?.daysPresent ?? DEFAULT_WORKING_DAYS
+      const daysAbsent = timesheet?.daysAbsent ?? 0
+      const hoursWorked = timesheet?.hoursWorked ?? daysWorked * 8
+      const overtimeHours = timesheet?.overtimeHours ?? 0
 
       // Calculate allowances
       const allowances = activeSalaryStructure.allowances.map((a: any) => ({
@@ -366,8 +388,8 @@ export async function generateSalarySlips(
           daysWorked,
           daysPresent,
           daysAbsent,
-          hoursWorked: daysWorked * 8, // 8 hours per day
-          overtimeHours: 0,
+          hoursWorked,
+          overtimeHours,
           status: "GENERATED",
         },
       })

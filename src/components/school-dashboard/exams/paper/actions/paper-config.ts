@@ -8,6 +8,7 @@
  * CRUD operations for exam paper configurations
  */
 import { revalidatePath } from "next/cache"
+import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -165,6 +166,19 @@ export async function createPaperConfig(
       data: config as unknown as PaperConfigWithRelations,
     }
   } catch (error) {
+    // `generatedExamId` is @unique — a concurrent request (the paper page can
+    // fire getOrCreatePaperConfig more than once on first load) may have won the
+    // create race. On the unique violation, return the row that now exists
+    // instead of a spurious "Failed to create" that blanks the whole page.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const existing = await getPaperConfig(input.generatedExamId)
+      if (existing.success && existing.data) {
+        return { success: true, data: existing.data }
+      }
+    }
     console.error("Error creating paper config:", error)
     return {
       success: false,
@@ -396,6 +410,15 @@ export async function getOrCreatePaperConfig(
     return { success: true, data: getResult.data }
   }
 
-  // Create with defaults
-  return createPaperConfig({ generatedExamId })
+  // Create with defaults.
+  const created = await createPaperConfig({ generatedExamId })
+  if (created.success) return created
+
+  // If the create failed but a config now exists (e.g. a concurrent create won
+  // the race), return it rather than blanking the paper page.
+  const retry = await getPaperConfig(generatedExamId)
+  if (retry.success && retry.data) {
+    return { success: true, data: retry.data }
+  }
+  return created
 }

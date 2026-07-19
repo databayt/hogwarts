@@ -245,3 +245,26 @@ model TimesheetEntry {
   @@index([schoolId, entryDate])
   @@index([status])
 }
+
+// Per-school override of the country-derived payroll rules (registry packs).
+// Any non-null field wins over the school's resolved country pack, so an admin
+// can tune rates without forking a country's law. One active override per
+// school; historical payslips reproduce from their own stored amounts, so this
+// row is "current settings", not effective-dated.
+model SchoolPayrollPolicy {
+  id                         String   @id @default(cuid())
+  schoolId                   String   @unique
+  // Force a different country pack than the school's location resolves to.
+  countryOverride            String?
+  // Override the tax brackets entirely: [{ from, to, rate }] in whole units.
+  taxBrackets                Json?
+  socialSecurityEmployeeRate Decimal? @db.Decimal(5, 2)
+  socialSecurityEmployerRate Decimal? @db.Decimal(5, 2)
+  updatedBy                  String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+}

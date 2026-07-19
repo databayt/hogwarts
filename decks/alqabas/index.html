@@ -1,0 +1,1839 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>hogwarts — عرض تعريفي</title>
+    <style>
+      /* ===== Thmanyah (خط ثمانية) — ORIGINAL. local() = installed TTFs; woff2 fallback. ===== */
+      @font-face {
+        font-family: "thmanyah sans";
+        font-weight: 400;
+        font-display: swap;
+        src:
+          local("thmanyah sans Regular"),
+          local("thmanyah sans"),
+          url("./fonts/thmanyah-sans-400.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "thmanyah sans";
+        font-weight: 500;
+        font-display: swap;
+        src:
+          local("thmanyah sans Medium"),
+          url("./fonts/thmanyah-sans-500.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "thmanyah sans";
+        font-weight: 700;
+        font-display: swap;
+        src:
+          local("thmanyah sans Bold"),
+          url("./fonts/thmanyah-sans-700.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "thmanyah sans";
+        font-weight: 900;
+        font-display: swap;
+        src:
+          local("thmanyah sans Black"),
+          url("./fonts/thmanyah-sans-900.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "thmanyah serif display";
+        font-weight: 700;
+        font-display: swap;
+        src:
+          local("thmanyah serif display Bold"),
+          url("./fonts/thmanyah-serif-display-700.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        font-display: swap;
+        src:
+          local("thmanyah serif display Black"),
+          url("./fonts/thmanyah-serif-display-900.woff2") format("woff2");
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      /* ===== One unified background across every slide (ivory) ===== */
+      :root {
+        --bg: #faf9f5;
+        --fg: #141413;
+        --accent: #d97757;
+        --muted: #73726c;
+        --line: #e4e1d6;
+        --panel: #ffffff;
+        --soft: #f3f1ea;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: "thmanyah sans", "Segoe UI", system-ui, sans-serif;
+        background: #0e0e0d;
+        color: var(--fg);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      /* ===== Deck framework — fluid full-viewport slides (fills 3:2, no letterbox) ===== */
+      #deck {
+        position: fixed;
+        inset: 0;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+        color: var(--fg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6vmin 7vmin;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.36s ease;
+      }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+      .inner {
+        width: 100%;
+        max-width: 1580px;
+        margin-inline: auto;
+      }
+      .slide .anim {
+        opacity: 0;
+        transform: translateY(13px);
+      }
+      .slide.active .anim {
+        opacity: 1;
+        transform: none;
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease;
+      }
+      .slide.active .anim:nth-child(1) {
+        transition-delay: 0.05s;
+      }
+      .slide.active .anim:nth-child(2) {
+        transition-delay: 0.12s;
+      }
+      .slide.active .anim:nth-child(3) {
+        transition-delay: 0.19s;
+      }
+      .slide.active .anim:nth-child(4) {
+        transition-delay: 0.26s;
+      }
+      .slide.active .anim:nth-child(5) {
+        transition-delay: 0.33s;
+      }
+
+      /* ===== Typography ===== */
+      .eyebrow {
+        font-weight: 500;
+        font-size: clamp(13px, 1.7vmin, 21px);
+        color: var(--accent);
+        margin-bottom: 2.2vmin;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7ch;
+      }
+      .eyebrow::before {
+        content: "";
+        width: clamp(22px, 3vmin, 42px);
+        height: 3px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      h1.h {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        font-feature-settings: "ss01";
+        line-height: 1.3;
+        color: var(--fg);
+        font-size: clamp(27px, 5.2vmin, 60px);
+      }
+      .cover h1.h {
+        font-size: clamp(34px, 7.2vmin, 86px);
+        line-height: 1.2;
+      }
+      .lead {
+        font-size: clamp(15px, 2.5vmin, 29px);
+        line-height: 1.65;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .accent-word {
+        color: var(--accent);
+      }
+      .body-copy {
+        font-size: clamp(14px, 2.05vmin, 23px);
+        line-height: 1.75;
+        color: var(--fg);
+        font-weight: 400;
+      }
+      .body-copy b {
+        font-weight: 700;
+      }
+
+      /* bullets */
+      ul.points {
+        list-style: none;
+        margin-top: 3vmin;
+        display: grid;
+        gap: 1.9vmin;
+      }
+      ul.points li {
+        position: relative;
+        padding-inline-start: 3.2ch;
+        font-size: clamp(15px, 2.4vmin, 27px);
+        line-height: 1.5;
+        color: var(--fg);
+        font-weight: 500;
+      }
+      ul.points li b {
+        font-weight: 700;
+      }
+      ul.points li::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        top: 0.6em;
+        width: 1.4ch;
+        height: 1.4ch;
+        border-radius: 5px;
+        background: var(--accent);
+        opacity: 0.9;
+      }
+
+      /* chips */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.3vmin;
+        margin-top: 3vmin;
+      }
+      .chip {
+        border: 1.5px solid var(--line);
+        border-radius: 999px;
+        padding: 1vmin 2.4vmin;
+        font-size: clamp(12px, 1.8vmin, 20px);
+        font-weight: 600;
+        color: var(--fg);
+        background: var(--panel);
+      }
+      .chip.solid {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      /* layout */
+      .split {
+        display: grid;
+        grid-template-columns: 1.06fr 0.94fr;
+        gap: 5.5vmin;
+        align-items: center;
+      }
+      .split.wide-visual {
+        grid-template-columns: 0.9fr 1.1fr;
+      }
+
+      /* brand lockup + badge */
+      .lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.72ch;
+      }
+      .lockup .badge {
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: #fff;
+        width: 1.85em;
+        height: 1.85em;
+        border-radius: 0.38em;
+        font-weight: 800;
+        line-height: 1;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .lockup .names {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.04;
+      }
+      .lockup .names .lat {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+      }
+      .lockup .names .ar {
+        font-family: "thmanyah sans";
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 0.8em;
+      }
+      .cover .lockup {
+        font-size: clamp(21px, 3vmin, 40px);
+        margin-bottom: 4vmin;
+      }
+      .cover .subtitle {
+        font-size: clamp(15px, 2.1vmin, 24px);
+        color: var(--muted);
+        font-weight: 600;
+        margin-bottom: 2.4vmin;
+        letter-spacing: 0.02em;
+      }
+      .cover .lead {
+        margin-top: 3vmin;
+        max-width: 44ch;
+      }
+      .cover .from {
+        margin-top: 4.2vmin;
+        color: var(--muted);
+        font-size: clamp(13px, 1.8vmin, 21px);
+      }
+      .cover .from b {
+        color: var(--fg);
+        font-weight: 700;
+      }
+      .cover .from .en {
+        unicode-bidi: isolate;
+      }
+
+      /* metric block (challenge / solution accents) */
+      .metric {
+        background: var(--accent);
+        color: #fff;
+        border-radius: 3vmin;
+        padding: 6vmin 5vmin;
+        text-align: center;
+      }
+      .metric .n {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        font-size: clamp(48px, 11vmin, 150px);
+        line-height: 1;
+      }
+      .metric .l {
+        font-size: clamp(15px, 2.3vmin, 27px);
+        font-weight: 600;
+        margin-top: 2vmin;
+        opacity: 0.95;
+        line-height: 1.5;
+      }
+      .metric.soft {
+        background: var(--soft);
+        color: var(--fg);
+      }
+      .metric.soft .n {
+        color: var(--accent);
+      }
+
+      /* stat / partnership card (about) */
+      .card {
+        background: var(--panel);
+        border: 1.5px solid var(--line);
+        border-radius: 2.6vmin;
+        padding: 4.4vmin 4vmin;
+      }
+      .card .ct {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        font-size: clamp(19px, 2.9vmin, 34px);
+        margin-bottom: 2.6vmin;
+      }
+      .card ul {
+        list-style: none;
+        display: grid;
+        gap: 1.7vmin;
+      }
+      .card li {
+        position: relative;
+        padding-inline-start: 3ch;
+        font-size: clamp(14px, 2.1vmin, 24px);
+        font-weight: 600;
+      }
+      .card li::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        top: 0.55em;
+        width: 1.2ch;
+        height: 1.2ch;
+        border-radius: 4px;
+        background: var(--accent);
+      }
+      .statline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2vmin;
+        margin-top: 2.8vmin;
+      }
+      .statline span {
+        background: var(--soft);
+        border-radius: 999px;
+        padding: 0.9vmin 2.2vmin;
+        font-weight: 700;
+        font-size: clamp(12px, 1.75vmin, 20px);
+      }
+
+      /* journey — numbered flow with connecting line */
+      .journey {
+        margin-top: 2.8vmin;
+        counter-reset: j;
+      }
+      .journey .step {
+        position: relative;
+        padding-inline-start: 4.5ch;
+        padding-bottom: 2.1vmin;
+      }
+      .journey .step:last-child {
+        padding-bottom: 0;
+      }
+      .journey .step::before {
+        counter-increment: j;
+        content: counter(j);
+        position: absolute;
+        inset-inline-start: 0;
+        top: 0;
+        width: 3ch;
+        height: 3ch;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: clamp(12px, 1.65vmin, 19px);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .journey .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        inset-inline-start: calc(1.5ch - 1px);
+        top: 3.2ch;
+        bottom: 0.3vmin;
+        width: 2px;
+        background: var(--line);
+      }
+      .journey .step .t {
+        font-weight: 700;
+        font-size: clamp(14px, 2.25vmin, 26px);
+        color: var(--fg);
+        line-height: 1.35;
+      }
+
+      /* ===== feature icon+title grid (real system icons) ===== */
+      .featuregrid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2vmin;
+        margin-top: 4vmin;
+      }
+      .featuregrid .tile {
+        background: var(--panel);
+        border: 1.5px solid var(--line);
+        border-radius: 2vmin;
+        padding: 2.6vmin 1.6vmin;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.4vmin;
+        text-align: center;
+      }
+      .featuregrid .tile img {
+        width: clamp(38px, 5vmin, 64px);
+        height: clamp(38px, 5vmin, 64px);
+        object-fit: contain;
+      }
+      .featuregrid .tile span {
+        font-size: clamp(12px, 1.75vmin, 21px);
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      /* ===== ClickView subject arts grid ===== */
+      .subjectgrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.8vmin;
+      }
+      .subjectgrid .s {
+        border-radius: 1.8vmin;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        aspect-ratio: 1/1;
+        background: var(--soft);
+      }
+      .subjectgrid .s img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* ===== Apple-inspired video player mockup ===== */
+      .player {
+        width: 100%;
+        border-radius: 2.4vmin;
+        overflow: hidden;
+        box-shadow: 0 2.4vmin 6vmin -2vmin rgba(20, 20, 19, 0.4);
+        aspect-ratio: 16/10;
+        position: relative;
+        background: #141413;
+      }
+      .player .poster {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.9;
+      }
+      .player .veil {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.28),
+          rgba(0, 0, 0, 0.05) 40%,
+          rgba(0, 0, 0, 0.55)
+        );
+      }
+      .player .p-title {
+        position: absolute;
+        inset-block-start: 3.4%;
+        inset-inline-start: 4%;
+        color: #fff;
+        font-weight: 700;
+        font-size: clamp(12px, 1.8vmin, 21px);
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+      }
+      .player .p-next {
+        position: absolute;
+        inset-block-start: 3.4%;
+        inset-inline-end: 4%;
+        color: #fff;
+        font-weight: 600;
+        font-size: clamp(10px, 1.5vmin, 17px);
+        background: rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 999px;
+        padding: 0.7vmin 1.8vmin;
+      }
+      .player .p-play {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: clamp(56px, 9vmin, 120px);
+        height: clamp(56px, 9vmin, 120px);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        display: grid;
+        place-items: center;
+      }
+      .player .p-play::after {
+        content: "";
+        border-style: solid;
+        border-width: clamp(9px, 1.5vmin, 20px) 0 clamp(9px, 1.5vmin, 20px)
+          clamp(15px, 2.5vmin, 33px);
+        border-color: transparent transparent transparent #fff;
+        margin-inline-start: 20%;
+      }
+      .player .p-bar {
+        position: absolute;
+        inset-block-end: 5%;
+        inset-inline: 4%;
+        display: flex;
+        align-items: center;
+        gap: 1.6vmin;
+        background: rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 999px;
+        padding: 1.3vmin 2.4vmin;
+        color: #fff;
+      }
+      .player .p-bar .tri {
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0.7vmin 0 0.7vmin 1.1vmin;
+        border-color: transparent transparent transparent #fff;
+      }
+      .player .p-bar .time {
+        font-size: clamp(10px, 1.4vmin, 16px);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        direction: ltr;
+      }
+      .player .p-bar .scrub {
+        flex: 1;
+        height: 0.55vmin;
+        min-height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.3);
+        position: relative;
+      }
+      .player .p-bar .scrub i {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: 38%;
+        border-radius: 999px;
+        background: #fff;
+      }
+      .player .p-bar .scrub i::after {
+        content: "";
+        position: absolute;
+        inset-inline-end: -0.6vmin;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1.5vmin;
+        height: 1.5vmin;
+        min-width: 11px;
+        min-height: 11px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      }
+      .player .p-bar .dot {
+        width: 1.7vmin;
+        height: 1.7vmin;
+        min-width: 13px;
+        min-height: 13px;
+        border-radius: 5px;
+        border: 1.5px solid rgba(255, 255, 255, 0.85);
+      }
+
+      /* ===== messaging mockup ===== */
+      .browser {
+        width: 100%;
+        border-radius: 2.2vmin;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--line);
+        box-shadow: 0 2.4vmin 6vmin -2vmin rgba(20, 20, 19, 0.32);
+        color: #141413;
+        direction: rtl;
+      }
+      .browser .bar {
+        display: flex;
+        align-items: center;
+        gap: 0.8ch;
+        padding: 1.3vmin 1.8vmin;
+        background: #f1efe9;
+        border-bottom: 1px solid #e4e1d8;
+      }
+      .browser .bar .dot {
+        width: 1.1vmin;
+        height: 1.1vmin;
+        min-width: 8px;
+        min-height: 8px;
+        border-radius: 999px;
+        background: #cdc9bd;
+      }
+      .browser .bar .addr {
+        margin-inline-start: 1.2ch;
+        font-size: clamp(10px, 1.3vmin, 15px);
+        color: #8b877c;
+        font-weight: 600;
+        background: #fff;
+        border: 1px solid #e4e1d8;
+        border-radius: 999px;
+        padding: 0.4vmin 1.5vmin;
+      }
+      .chat {
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        height: clamp(240px, 38vmin, 440px);
+      }
+      .chat .list {
+        border-inline-end: 1px solid #efece3;
+        padding: 1.4vmin;
+        overflow: hidden;
+        background: #faf9f5;
+      }
+      .chat .li {
+        display: flex;
+        flex-direction: column;
+        padding: 1.4vmin;
+        border-radius: 1.2vmin;
+        margin-bottom: 0.6vmin;
+      }
+      .chat .li.on {
+        background: #fff;
+        border: 1px solid #eceadf;
+      }
+      .chat .li b {
+        font-size: clamp(11px, 1.5vmin, 17px);
+        font-weight: 700;
+      }
+      .chat .li span {
+        font-size: clamp(9px, 1.3vmin, 14px);
+        color: #9a9689;
+        margin-top: 0.4vmin;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chat .thread {
+        display: flex;
+        flex-direction: column;
+        padding: 2vmin;
+        gap: 1.3vmin;
+        background: #fff;
+      }
+      .chat .thead {
+        font-weight: 700;
+        font-size: clamp(11px, 1.55vmin, 18px);
+        padding-bottom: 1.2vmin;
+        border-bottom: 1px solid #efece3;
+      }
+      .chat .bub {
+        max-width: 78%;
+        padding: 1.2vmin 1.7vmin;
+        border-radius: 1.6vmin;
+        font-size: clamp(11px, 1.5vmin, 17px);
+        line-height: 1.5;
+      }
+      .chat .bub.in {
+        background: #f1efe9;
+        align-self: flex-start;
+        border-start-start-radius: 0.4vmin;
+      }
+      .chat .bub.out {
+        background: #e4f2ea;
+        color: #1f6b47;
+        align-self: flex-end;
+        border-start-end-radius: 0.4vmin;
+      }
+      .chat .compose {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 1ch;
+        border: 1px solid #eceadf;
+        border-radius: 999px;
+        padding: 1.2vmin 2vmin;
+        color: #9a9689;
+        font-size: clamp(11px, 1.45vmin, 16px);
+      }
+      .chat .compose .send {
+        margin-inline-start: auto;
+        width: 2.4vmin;
+        height: 2.4vmin;
+        min-width: 20px;
+        min-height: 20px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      /* KPI / finance mock */
+      .mock-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 2vmin;
+      }
+      .mock-head .t {
+        font-weight: 800;
+        font-size: clamp(14px, 2vmin, 24px);
+      }
+      .mock-head .ex {
+        font-size: clamp(9px, 1.3vmin, 14px);
+        color: #b6b1a5;
+        border: 1px dashed #d6d2c7;
+        border-radius: 999px;
+        padding: 0.4vmin 1.3vmin;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5vmin;
+        margin-bottom: 2.2vmin;
+      }
+      .kpi {
+        background: #faf9f5;
+        border: 1px solid #eceadf;
+        border-radius: 1.3vmin;
+        padding: 1.7vmin;
+      }
+      .kpi .lab {
+        font-size: clamp(10px, 1.4vmin, 15px);
+        color: #8b877c;
+        font-weight: 600;
+        margin-bottom: 0.7vmin;
+      }
+      .kpi .val {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        font-size: clamp(20px, 3.3vmin, 40px);
+        letter-spacing: -0.01em;
+        direction: ltr;
+      }
+      .kpi.a .val {
+        color: #3f8f6b;
+      }
+      .kpi.b .val {
+        color: #d97757;
+      }
+      .kpi.c .val {
+        color: #141413;
+      }
+      table.fees {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(11px, 1.5vmin, 18px);
+      }
+      table.fees th,
+      table.fees td {
+        text-align: start;
+        padding: 1.25vmin 1vmin;
+        border-bottom: 1px solid #efece3;
+      }
+      table.fees th {
+        color: #8b877c;
+        font-weight: 600;
+        font-size: clamp(10px, 1.3vmin, 15px);
+      }
+      table.fees td {
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.45vmin 1.5vmin;
+        font-size: clamp(9px, 1.3vmin, 14px);
+        font-weight: 700;
+      }
+      .pill.paid {
+        background: #e4f2ea;
+        color: #2f7d59;
+      }
+      .pill.part {
+        background: #fbe9df;
+        color: #b8593a;
+      }
+      .pill.late {
+        background: #fdeede;
+        color: #b98325;
+      }
+      /* admission pipeline */
+      .pipe {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.4vmin;
+      }
+      .pipe .col {
+        background: #faf9f5;
+        border: 1px solid #eceadf;
+        border-radius: 1.3vmin;
+        padding: 1.3vmin;
+      }
+      .pipe .col h4 {
+        font-size: clamp(10px, 1.4vmin, 16px);
+        color: #8b877c;
+        font-weight: 700;
+        margin-bottom: 1.2vmin;
+        display: flex;
+        justify-content: space-between;
+      }
+      .pipe .col h4 span {
+        background: #eceadf;
+        border-radius: 999px;
+        padding: 0 1ch;
+        color: #6b675d;
+      }
+      .pipe .card2 {
+        background: #fff;
+        border: 1px solid #eceadf;
+        border-radius: 1vmin;
+        padding: 1.1vmin 1.2vmin;
+        margin-bottom: 1vmin;
+      }
+      .pipe .card2 .nm {
+        font-weight: 700;
+        font-size: clamp(10px, 1.45vmin, 17px);
+      }
+      .pipe .card2 .mt {
+        color: #9a9689;
+        font-size: clamp(9px, 1.2vmin, 13px);
+        margin-top: 0.3vmin;
+      }
+      .pipe .card2 .ai {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5ch;
+        margin-top: 0.7vmin;
+        font-size: clamp(8px, 1.1vmin, 12px);
+        color: #d97757;
+        font-weight: 700;
+      }
+
+      /* why-us grid */
+      .whygrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2.6vmin 3.4vmin;
+        margin-top: 4vmin;
+      }
+      .whygrid .cell {
+        border-top: 2px solid var(--line);
+        padding-top: 1.6vmin;
+        font-size: clamp(14px, 2.15vmin, 25px);
+        font-weight: 600;
+      }
+      .whygrid .cell::first-line {
+      }
+
+      /* pricing */
+      .price-hero {
+        font-family: "thmanyah serif display";
+        font-weight: 900;
+        color: var(--accent);
+        font-size: clamp(30px, 6vmin, 72px);
+        margin: 1vmin 0 1vmin;
+      }
+      .cols2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4vmin;
+        margin-top: 3.4vmin;
+      }
+      .cols2 .h {
+        font-weight: 700;
+        font-size: clamp(14px, 2.05vmin, 23px);
+        margin-bottom: 1.6vmin;
+        color: var(--muted);
+      }
+      .cols2 ul {
+        list-style: none;
+        display: grid;
+        gap: 1.3vmin;
+      }
+      .cols2 li {
+        position: relative;
+        padding-inline-start: 2.8ch;
+        font-size: clamp(14px, 2.1vmin, 24px);
+        font-weight: 600;
+      }
+      .cols2 li::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 0;
+        top: 0.55em;
+        width: 1.1ch;
+        height: 1.1ch;
+        border-radius: 4px;
+        background: var(--accent);
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 1ch;
+        margin-top: 4.2vmin;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 999px;
+        padding: 1.6vmin 4vmin;
+        font-size: clamp(15px, 2.2vmin, 26px);
+        font-weight: 700;
+      }
+
+      /* closing */
+      .closing .inner {
+        text-align: center;
+        max-width: 1120px;
+      }
+      .closing .lockup {
+        justify-content: center;
+        font-size: clamp(28px, 4.6vmin, 56px);
+        margin-bottom: 3.6vmin;
+      }
+      .closing h1.h {
+        font-size: clamp(28px, 5.2vmin, 62px);
+        margin-bottom: 2.4vmin;
+      }
+      .closing .foot {
+        color: var(--muted);
+        font-size: clamp(13px, 1.85vmin, 22px);
+        margin-top: 2.6vmin;
+      }
+      .closing .foot b {
+        color: var(--fg);
+        font-weight: 700;
+      }
+      .closing .foot .en {
+        unicode-bidi: isolate;
+      }
+      .closing .contact {
+        color: var(--muted);
+        font-size: clamp(14px, 2vmin, 24px);
+        margin-top: 1.4vmin;
+      }
+      .closing .contact b {
+        color: var(--fg);
+        font-weight: 700;
+      }
+
+      /* corner brand mark */
+      .mark {
+        position: absolute;
+        inset-block-end: 3.2vmin;
+        inset-inline-start: 7vmin;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5ch;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: var(--muted);
+        font-size: clamp(12px, 1.6vmin, 19px);
+      }
+      .mark::before {
+        content: "";
+        width: 0.58em;
+        height: 0.58em;
+        border-radius: 0.17em;
+        background: var(--accent);
+      }
+
+      /* nav UI */
+      #progress {
+        position: fixed;
+        inset-block-end: 0;
+        inset-inline-start: 0;
+        height: 4px;
+        background: var(--accent);
+        width: 0;
+        transition: width 0.36s ease;
+        z-index: 40;
+      }
+      #hud {
+        position: fixed;
+        inset-block-end: 2.6vmin;
+        inset-inline-end: 3.4vmin;
+        z-index: 41;
+        display: flex;
+        align-items: center;
+        gap: 1.1ch;
+        font-size: clamp(11px, 1.5vmin, 16px);
+        color: #8a877d;
+      }
+      #hud .btn {
+        cursor: pointer;
+        user-select: none;
+        width: 3.1vmin;
+        height: 3.1vmin;
+        min-width: 26px;
+        min-height: 26px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1.5px solid currentColor;
+        font-size: 1.4em;
+        line-height: 0;
+      }
+      #hud .count {
+        min-width: 5ch;
+        text-align: center;
+        direction: ltr;
+        font-variant-numeric: tabular-nums;
+      }
+      #hint {
+        position: fixed;
+        inset-block-end: 2.8vmin;
+        inset-inline-start: 50%;
+        transform: translateX(50%);
+        z-index: 41;
+        font-size: clamp(11px, 1.5vmin, 15px);
+        color: #8a877d;
+        background: rgba(250, 249, 245, 0.72);
+        backdrop-filter: blur(6px);
+        border-radius: 999px;
+        padding: 0.8vmin 2.2vmin;
+        transition: opacity 0.6s ease;
+      }
+      #hint.gone {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      @media print {
+        @page {
+          size: 1600px 1067px;
+          margin: 0;
+        }
+        html,
+        body {
+          overflow: visible;
+          background: #fff;
+          height: auto;
+        }
+        #deck {
+          position: static;
+        }
+        #progress,
+        #hud,
+        #hint {
+          display: none !important;
+        }
+        .slide {
+          position: relative;
+          inset: auto;
+          opacity: 1 !important;
+          visibility: visible !important;
+          break-after: page;
+          page-break-after: always;
+          height: 1067px;
+          width: 1600px;
+          overflow: hidden;
+        }
+        .slide:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+        .slide .anim {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+      @media screen and (max-aspect-ratio: 13/10) {
+        .split,
+        .split.wide-visual {
+          grid-template-columns: 1fr;
+        }
+        .split .visual {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="deck">
+      <!-- 1 · COVER -->
+      <section class="slide cover active">
+        <div class="inner">
+          <div class="lockup anim">
+            <span class="badge">h</span
+            ><span class="names"
+              ><span class="lat">hogwarts</span
+              ><span class="ar">هوغورتس</span></span
+            >
+          </div>
+          <div class="subtitle anim">نظام إدارة المدارس</div>
+          <h1 class="h anim">
+            إدارة المدرسة… <span class="accent-word">بلا تعقيد.</span>
+          </h1>
+          <p class="lead anim">
+            منصة واحدة لإدارة القبول، الحضور، الرسوم، والتواصل.
+          </p>
+          <p class="from anim">
+            من <b>databayt · داتابيت</b> —
+            <span class="en" dir="ltr">automate the boring</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 2 · ABOUT -->
+      <section class="slide">
+        <div class="inner split">
+          <div class="text">
+            <div
+              class="lockup anim"
+              style="
+                font-size: clamp(19px, 2.7vmin, 34px);
+                margin-bottom: 2.6vmin;
+              "
+            >
+              <span class="badge">d</span
+              ><span class="names"
+                ><span class="lat">databayt</span
+                ><span class="ar">داتابيت</span></span
+              >
+            </div>
+            <div class="eyebrow anim">من نحن</div>
+            <p class="body-copy anim">
+              شركة تقنية متخصصة في <b>أتمتة الأعمال</b>، مقرها بورتسودان. نطوّر
+              حلولاً رقمية تساعد المؤسسات على التخلص من الأعمال اليدوية،
+              واستعادة الوقت، واتخاذ قرارات أفضل.
+            </p>
+            <p class="body-copy anim" style="margin-top: 2vmin">
+              تمتلك databayt محفظة من <b>أربعة منتجات تقنية</b>، يتصدّرها
+              <b>نظام ERP متكامل</b> لإدارة المؤسسات التعليمية. وبخبرة تتجاوز
+              <b>40 عاماً</b> في التطوير والهندسة، نبني أنظمة موثوقة وقابلة
+              للنمو، مصمّمة للواقع المحلي وفق أفضل الممارسات العالمية.
+            </p>
+            <div class="statline anim">
+              <span>4 منتجات</span><span>ERP متكامل</span
+              ><span>أتمتة الأعمال</span>
+            </div>
+          </div>
+          <div class="visual anim">
+            <div class="card">
+              <div class="ct">شراكة تقنية كاملة</div>
+              <ul>
+                <li>تدريب باللغة العربية</li>
+                <li>دعم فني مستمر</li>
+                <li>تطوير ونمو مستقبلي</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 3 · THE CHALLENGE -->
+      <section class="slide">
+        <div class="inner split">
+          <div class="text">
+            <div class="eyebrow anim">التحدي</div>
+            <h1 class="h anim">تكلفة الروتين اليومي</h1>
+            <p class="lead anim" style="margin-top: 2.4vmin">
+              الإدارة اليدوية تستهلك الوقت، وتحدّ من القدرة على اتخاذ القرار.
+            </p>
+            <ul class="points anim">
+              <li>
+                أكثر من <b>40 ساعة عمل</b> تُهدر شهرياً في الأعمال الإدارية.
+              </li>
+              <li>متابعة الرسوم والأقساط تتم يدوياً.</li>
+              <li>السجلات الورقية معرّضة للفقدان وصعبة الاسترجاع.</li>
+              <li>الرواتب والمصروفات تستنزف وقت المحاسبة.</li>
+              <li>غياب رؤية لحظية للتحصيل والأداء المالي.</li>
+            </ul>
+          </div>
+          <div class="visual anim">
+            <div class="metric">
+              <div class="n">+40</div>
+              <div class="l">
+                ساعة عمل تُهدر شهرياً<br />في المهام اليدوية المتكررة
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 4 · THE SOLUTION + feature grid -->
+      <section class="slide">
+        <div class="inner">
+          <div class="eyebrow anim">الحل</div>
+          <h1 class="h anim">
+            منصة واحدة… <span class="accent-word">لكل المدرسة</span>
+          </h1>
+          <p class="lead anim" style="margin-top: 2.2vmin; max-width: 60ch">
+            يدير <b style="color: var(--fg); font-weight: 700">Hogwarts</b> جميع
+            العمليات من مكان واحد — ويعيد ما يصل إلى
+            <b style="color: var(--accent); font-weight: 900">80٪</b> من الوقت
+            الذي يضيع في الأعمال المتكررة.
+          </p>
+          <div class="featuregrid anim">
+            <div class="tile">
+              <img src="./assets/feature/id-card-1.png" alt="" /><span
+                >القبول</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/student.png" alt="" /><span
+                >الطلاب</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/teacher.png" alt="" /><span
+                >المعلمون</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/attendance.png" alt="" /><span
+                >الحضور</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/exam.png" alt="" /><span
+                >الامتحانات</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/gradebook.png" alt="" /><span
+                >الدرجات</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/timetable.png" alt="" /><span
+                >الجدول الدراسي</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/video.png" alt="" /><span
+                >التعلّم الإلكتروني</span
+              >
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/fees.png" alt="" /><span>المالية</span>
+            </div>
+            <div class="tile">
+              <img src="./assets/feature/library.png" alt="" /><span
+                >المكتبة</span
+              >
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 5 · FINANCE -->
+      <section class="slide">
+        <div class="inner split">
+          <div class="text">
+            <div class="eyebrow anim">الإدارة المالية</div>
+            <h1 class="h anim">
+              رحلة الرسوم…
+              <span class="accent-word">من الفاتورة حتى الإيصال</span>
+            </h1>
+            <p class="lead anim" style="margin-top: 2vmin">
+              كل عملية مالية موثّقة ويمكن تتبّعها.
+            </p>
+            <div class="journey anim">
+              <div class="step">
+                <div class="t">إنشاء خطط أقساط مرنة لكل طالب.</div>
+              </div>
+              <div class="step">
+                <div class="t">إصدار الفواتير وإرسال التذكيرات عبر واتساب.</div>
+              </div>
+              <div class="step">
+                <div class="t">استقبال المدفوعات نقداً أو بالتحويل البنكي.</div>
+              </div>
+              <div class="step">
+                <div class="t">اعتماد الدفعات بضغطة واحدة.</div>
+              </div>
+              <div class="step">
+                <div class="t">
+                  تقارير لحظية توضّح المحصّل والمتبقّي لكل فرع.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="visual anim">
+            <div class="browser">
+              <div class="bar">
+                <span class="dot"></span><span class="dot"></span
+                ><span class="dot"></span
+                ><span class="addr">الرسوم · لوحة التحصيل</span>
+              </div>
+              <div style="padding: 2.6vmin">
+                <div class="mock-head">
+                  <span class="t">لوحة التحصيل</span
+                  ><span class="ex">أرقام توضيحية</span>
+                </div>
+                <div class="kpis">
+                  <div class="kpi a">
+                    <div class="lab">المُحصَّل</div>
+                    <div class="val">4.2M</div>
+                  </div>
+                  <div class="kpi b">
+                    <div class="lab">المتبقّي</div>
+                    <div class="val">0.9M</div>
+                  </div>
+                  <div class="kpi c">
+                    <div class="lab">نسبة التحصيل</div>
+                    <div class="val">83%</div>
+                  </div>
+                </div>
+                <table class="fees">
+                  <thead>
+                    <tr>
+                      <th>الطالب</th>
+                      <th>الصف</th>
+                      <th>المتبقّي</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>مريم عثمان</td>
+                      <td>الرابع</td>
+                      <td>0</td>
+                      <td><span class="pill paid">مدفوع</span></td>
+                    </tr>
+                    <tr>
+                      <td>أحمد الطيب</td>
+                      <td>السادس</td>
+                      <td>قسط</td>
+                      <td><span class="pill part">قسط</span></td>
+                    </tr>
+                    <tr>
+                      <td>سلمى إدريس</td>
+                      <td>الثاني</td>
+                      <td>قسطان</td>
+                      <td><span class="pill late">متأخّر</span></td>
+                    </tr>
+                    <tr>
+                      <td>يوسف بابكر</td>
+                      <td>الخامس</td>
+                      <td>0</td>
+                      <td><span class="pill paid">مدفوع</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 6 · ADMISSION -->
+      <section class="slide">
+        <div class="inner split">
+          <div class="text">
+            <div class="eyebrow anim">القبول</div>
+            <h1 class="h anim">
+              رحلة الطالب… <span class="accent-word">من الطلب إلى الفصل</span>
+            </h1>
+            <p class="lead anim" style="margin-top: 2vmin">
+              عملية قبول واضحة وسريعة وشفّافة.
+            </p>
+            <div class="journey anim">
+              <div class="step">
+                <div class="t">تقديم الطلب إلكترونياً.</div>
+              </div>
+              <div class="step"><div class="t">رفع المستندات.</div></div>
+              <div class="step">
+                <div class="t">مراجعة تلقائية بالمساعدة الذكية.</div>
+              </div>
+              <div class="step">
+                <div class="t">قبول ودفع رسوم التسجيل.</div>
+              </div>
+              <div class="step">
+                <div class="t">
+                  إنشاء ملف الطالب، الحساب المالي، والفصل تلقائياً.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="visual anim">
+            <div class="browser">
+              <div class="bar">
+                <span class="dot"></span><span class="dot"></span
+                ><span class="dot"></span
+                ><span class="addr">القبول · مسار المتقدّمين</span>
+              </div>
+              <div style="padding: 2.4vmin">
+                <div class="pipe">
+                  <div class="col">
+                    <h4>طلب <span>5</span></h4>
+                    <div class="card2">
+                      <div class="nm">رنا محمد</div>
+                      <div class="mt">الصف الأول</div>
+                    </div>
+                    <div class="card2">
+                      <div class="nm">خالد آدم</div>
+                      <div class="mt">الصف الثالث</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <h4>مراجعة <span>3</span></h4>
+                    <div class="card2">
+                      <div class="nm">هبة الأمين</div>
+                      <div class="mt">الصف الثاني</div>
+                      <div class="ai">◆ مراجعة ذكية</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <h4>قبول <span>2</span></h4>
+                    <div class="card2">
+                      <div class="nm">أنس بكري</div>
+                      <div class="mt">الصف الخامس</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <h4>تسجيل <span>4</span></h4>
+                    <div class="card2">
+                      <div class="nm">لينا عوض</div>
+                      <div class="mt">الرابع · مقعد مؤكّد</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 7 · E-LEARNING (ClickView subjects + Apple-inspired player) -->
+      <section class="slide">
+        <div class="inner">
+          <div class="eyebrow anim">التعلّم الإلكتروني</div>
+          <h1 class="h anim">
+            تجربة تعلّم… <span class="accent-word">تليق بالطلاب</span>
+          </h1>
+          <div class="split wide-visual anim" style="margin-top: 3.4vmin">
+            <div class="visual">
+              <div class="player">
+                <img
+                  class="poster"
+                  src="./assets/subjects/mathematics.png"
+                  alt=""
+                />
+                <div class="veil"></div>
+                <div class="p-title">الرياضيات · الجبر — الدرس الثالث</div>
+                <div class="p-next">التالي: المعادلات ←</div>
+                <div class="p-play"></div>
+                <div class="p-bar">
+                  <span class="tri"></span><span class="time">4:12</span>
+                  <div class="scrub"><i></i></div>
+                  <span class="time">11:30</span><span class="dot"></span
+                  ><span class="dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="text">
+              <p class="body-copy" style="margin-bottom: 2.6vmin">
+                مكتبة مناهج غنية بأغلفة احترافية، ومشغّل فيديو بتجربة مشاهدة
+                بمعايير عالمية — يعمل من أي جهاز.
+              </p>
+              <div class="subjectgrid">
+                <div class="s">
+                  <img
+                    src="./assets/subjects/mathematics.png"
+                    alt="الرياضيات"
+                  />
+                </div>
+                <div class="s">
+                  <img src="./assets/subjects/the-arts.png" alt="الفنون" />
+                </div>
+                <div class="s">
+                  <img
+                    src="./assets/subjects/biological-sciences.png"
+                    alt="الأحياء"
+                  />
+                </div>
+                <div class="s">
+                  <img
+                    src="./assets/subjects/english.png"
+                    alt="اللغة الإنجليزية"
+                  />
+                </div>
+                <div class="s">
+                  <img src="./assets/subjects/geography.png" alt="الجغرافيا" />
+                </div>
+                <div class="s">
+                  <img src="./assets/subjects/technologies.png" alt="التقنية" />
+                </div>
+              </div>
+              <div class="chips" style="margin-top: 2.4vmin">
+                <span class="chip solid">60+ مادة ومقرر</span
+                ><span class="chip">مشغّل بمعايير آبل</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 8 · MANAGEMENT & COMMUNICATION (messaging) -->
+      <section class="slide">
+        <div class="inner split">
+          <div class="text">
+            <div class="eyebrow anim">الإدارة والتواصل</div>
+            <h1 class="h anim">
+              الجميع… <span class="accent-word">على اطّلاع</span>
+            </h1>
+            <p class="lead anim" style="margin-top: 2vmin">
+              كل المدرسة تعمل من منصة واحدة.
+            </p>
+            <ul class="points anim">
+              <li>تسجيل الحضور والغياب.</li>
+              <li>رسائل واتساب للأهالي.</li>
+              <li>إدارة الموظفين.</li>
+              <li>تقارير موحّدة لجميع الفروع.</li>
+              <li>متابعة الأداء لحظياً من أي مكان.</li>
+            </ul>
+          </div>
+          <div class="visual anim">
+            <div class="browser">
+              <div class="bar">
+                <span class="dot"></span><span class="dot"></span
+                ><span class="dot"></span
+                ><span class="addr">الرسائل · التواصل مع الأهالي</span>
+              </div>
+              <div class="chat">
+                <div class="list">
+                  <div class="li on">
+                    <b>ولي أمر · أحمد الطيب</b
+                    ><span>وصلكم الإيصال عبر واتساب ✓</span>
+                  </div>
+                  <div class="li">
+                    <b>أ. سارة — معلمة</b><span>تم إرسال كشف الدرجات</span>
+                  </div>
+                  <div class="li">
+                    <b>إدارة الفرع</b><span>اجتماع الغد الساعة 9</span>
+                  </div>
+                  <div class="li">
+                    <b>ولي أمر · لينا عوض</b><span>شكراً على المتابعة</span>
+                  </div>
+                </div>
+                <div class="thread">
+                  <div class="thead">ولي أمر · أحمد الطيب</div>
+                  <div class="bub in">
+                    السلام عليكم، هل تم استلام قسط هذا الشهر؟
+                  </div>
+                  <div class="bub out">
+                    وعليكم السلام، نعم تم — وأُرسل الإيصال عبر واتساب ✓
+                  </div>
+                  <div class="bub in">جزاكم الله خيراً</div>
+                  <div class="compose">
+                    <span>اكتب رسالة…</span><span class="send"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 9 · WHY -->
+      <section class="slide">
+        <div class="inner">
+          <div class="eyebrow anim">لماذا Hogwarts؟</div>
+          <h1 class="h anim">
+            مصمَّم <span class="accent-word">لواقع المدارس</span>
+          </h1>
+          <div class="whygrid anim">
+            <div class="cell">لوحة تحكم للإدارة العليا.</div>
+            <div class="cell">تكامل مباشر مع واتساب.</div>
+            <div class="cell">يعمل على الهاتف والكمبيوتر.</div>
+            <div class="cell">مناسب للإنترنت الضعيف.</div>
+            <div class="cell">يدعم الدفع النقدي والتحويلات.</div>
+            <div class="cell">بياناتكم ملكٌ لكم.</div>
+            <div class="cell">تدريب ودعم باللغة العربية.</div>
+            <div class="cell">مفتوح المصدر وقابل للتصدير.</div>
+            <div class="cell">تجهيز وانطلاق خلال أيام.</div>
+          </div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 10 · START -->
+      <section class="slide">
+        <div class="inner">
+          <div class="eyebrow anim">لنبدأ</div>
+          <h1 class="h anim">ابدأوا بفرع واحد</h1>
+          <div class="price-hero anim">ستة أشهر مجاناً.</div>
+          <div class="cols2 anim">
+            <div>
+              <div class="h">نقوم بـ</div>
+              <ul>
+                <li>إعداد النظام.</li>
+                <li>نقل البيانات.</li>
+                <li>تدريب الفريق.</li>
+                <li>متابعة التشغيل.</li>
+              </ul>
+            </div>
+            <div>
+              <div class="h">ثم نقيس معاً</div>
+              <ul>
+                <li>الوقت المستعاد.</li>
+                <li>انخفاض التكاليف.</li>
+                <li>تحسّن التحصيل.</li>
+                <li>كفاءة الإدارة.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="anim"><span class="cta">نبدأ التجهيز ←</span></div>
+        </div>
+        <span class="mark">hogwarts</span>
+      </section>
+
+      <!-- 11 · CLOSING -->
+      <section class="slide closing">
+        <div class="inner">
+          <div class="lockup anim">
+            <span class="badge">h</span
+            ><span class="names"
+              ><span class="lat">hogwarts</span
+              ><span class="ar">هوغورتس</span></span
+            >
+          </div>
+          <h1 class="h anim">
+            نمنحكم الوقت للتركيز على ما يهم…
+            <span class="accent-word">التعليم.</span>
+          </h1>
+          <p class="lead anim">شريككم التقني في رحلة التحوّل الرقمي.</p>
+          <p class="foot anim">
+            من <b>databayt · داتابيت</b> —
+            <span class="en" dir="ltr">automate the boring</span>
+          </p>
+          <p class="contact anim">
+            <b>ed.databayt.org</b>&nbsp;&nbsp;·&nbsp;&nbsp;واتساب للتواصل
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <div id="progress"></div>
+    <div id="hud">
+      <span class="btn" id="prev" title="السابق">‹</span
+      ><span class="count"
+        ><span id="cur">1</span> / <span id="tot">11</span></span
+      ><span class="btn" id="next" title="التالي">›</span
+      ><span class="btn" id="fs" title="ملء الشاشة (F)">⛶</span>
+    </div>
+    <div id="hint">للتنقّل: المسافة أو الأسهم · F لملء الشاشة</div>
+
+    <script>
+      ;(function () {
+        var slides = Array.prototype.slice.call(
+          document.querySelectorAll(".slide")
+        )
+        var i = 0,
+          n = slides.length
+        var curEl = document.getElementById("cur"),
+          bar = document.getElementById("progress"),
+          hint = document.getElementById("hint")
+        document.getElementById("tot").textContent = n
+        function render() {
+          slides.forEach(function (s, k) {
+            s.classList.toggle("active", k === i)
+          })
+          curEl.textContent = i + 1
+          bar.style.width = ((i + 1) / n) * 100 + "%"
+          if (location.hash !== "#" + (i + 1))
+            history.replaceState(null, "", "#" + (i + 1))
+        }
+        function go(k) {
+          i = Math.max(0, Math.min(n - 1, k))
+          render()
+        }
+        function next() {
+          if (i < n - 1) go(i + 1)
+        }
+        function prev() {
+          if (i > 0) go(i - 1)
+        }
+        var start = parseInt((location.hash || "").slice(1), 10)
+        if (start >= 1 && start <= n) i = start - 1
+        render()
+        document.addEventListener("keydown", function (e) {
+          switch (e.key) {
+            case "ArrowRight":
+            case "ArrowUp":
+            case "PageUp":
+              prev()
+              e.preventDefault()
+              break
+            case "ArrowLeft":
+            case "ArrowDown":
+            case "PageDown":
+            case " ":
+            case "Enter":
+              next()
+              e.preventDefault()
+              break
+            case "Home":
+              go(0)
+              break
+            case "End":
+              go(n - 1)
+              break
+            case "f":
+            case "F":
+              toggleFs()
+              break
+          }
+          if (e.key !== "f" && e.key !== "F") dismiss()
+        })
+        document.getElementById("deck").addEventListener("click", function (e) {
+          if (e.target.closest("a,#hud")) return
+          next()
+          dismiss()
+        })
+        document.getElementById("next").addEventListener("click", function (e) {
+          e.stopPropagation()
+          next()
+        })
+        document.getElementById("prev").addEventListener("click", function (e) {
+          e.stopPropagation()
+          prev()
+        })
+        document.getElementById("fs").addEventListener("click", function (e) {
+          e.stopPropagation()
+          toggleFs()
+        })
+        var x0 = null
+        document.addEventListener(
+          "touchstart",
+          function (e) {
+            x0 = e.touches[0].clientX
+          },
+          { passive: true }
+        )
+        document.addEventListener(
+          "touchend",
+          function (e) {
+            if (x0 === null) return
+            var dx = e.changedTouches[0].clientX - x0
+            if (Math.abs(dx) > 45) {
+              dx > 0 ? next() : prev()
+              dismiss()
+            }
+            x0 = null
+          },
+          { passive: true }
+        )
+        function toggleFs() {
+          if (!document.fullscreenElement) {
+            ;(
+              document.documentElement.requestFullscreen || function () {}
+            ).call(document.documentElement)
+          } else {
+            ;(document.exitFullscreen || function () {}).call(document)
+          }
+        }
+        function dismiss() {
+          hint.classList.add("gone")
+        }
+        setTimeout(dismiss, 5000)
+      })()
+    </script>
+  </body>
+</html>

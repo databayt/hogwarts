@@ -1,0 +1,3 @@
+# Thmanyah is fetch-only / self-host — never commit the font binaries.
+# They are copied here from kun/public/fonts/thmanyah at build time.
+fonts/

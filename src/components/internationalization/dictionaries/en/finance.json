@@ -2661,7 +2661,18 @@
     "employeeRate": "Employee rate",
     "employerRate": "Employer rate",
     "notConfiguredTitle": "Tax rules not configured for this school",
-    "notConfiguredBody": "The school's country isn't set, so payroll runs with ZERO statutory withholding. Set the school's country in settings to apply the correct income-tax and social-security rules."
+    "notConfiguredBody": "The school's country isn't set, so payroll runs with ZERO statutory withholding. Set the school's country in settings to apply the correct income-tax and social-security rules.",
+    "overrideTitle": "Adjust rules for this school",
+    "overrideDesc": "Leave a field blank to use the country default above.",
+    "countryOverride": "Country override",
+    "countryOverrideHint": "2-letter code (e.g. AE) — forces a different country pack",
+    "employeeRatePct": "Employee SS rate (%)",
+    "employerRatePct": "Employer SS rate (%)",
+    "inherit": "inherit",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Payroll settings saved.",
+    "saveFailed": "Could not save. Check the values and try again."
   },
   "payrollWorkflow": {
     "generateSlips": "Generate Slips",

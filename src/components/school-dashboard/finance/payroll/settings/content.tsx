@@ -17,7 +17,11 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-import { resolvePayrollPolicy } from "../country-rules/registry"
+import {
+  loadPayrollOverride,
+  resolveSchoolPayrollPolicy,
+} from "../country-rules/school-policy"
+import { PayrollOverrideForm } from "./override-form"
 
 interface Props {
   dictionary: Dictionary
@@ -32,7 +36,10 @@ export default async function PayrollSettingsContent({
   const d = fd?.payrollSettings as Record<string, string> | undefined
   const common = fd?.common as Record<string, string> | undefined
 
-  const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])
+  const { schoolId, can } = await resolveFinanceAccess("payroll", [
+    "view",
+    "edit",
+  ])
   if (!schoolId) {
     return (
       <p className="text-muted-foreground">
@@ -48,7 +55,11 @@ export default async function PayrollSettingsContent({
     where: { id: schoolId },
     select: { country: true, timezone: true, currency: true },
   })
-  const policy = resolvePayrollPolicy(school ?? {})
+  // Resolved policy = country pack + any saved override; the form edits the override.
+  const [policy, override] = await Promise.all([
+    resolveSchoolPayrollPolicy(schoolId, school ?? {}),
+    loadPayrollOverride(schoolId),
+  ])
   const pct = (n: number) =>
     new Intl.NumberFormat(lang, { maximumFractionDigits: 2 }).format(n)
   const amount = (n: number) =>
@@ -138,6 +149,27 @@ export default async function PayrollSettingsContent({
           </div>
         </CardContent>
       </Card>
+
+      {can.edit && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{d?.overrideTitle}</CardTitle>
+            <CardDescription>{d?.overrideDesc}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PayrollOverrideForm
+              labels={d}
+              current={{
+                countryOverride: override?.countryOverride ?? null,
+                socialSecurityEmployeeRate:
+                  override?.socialSecurityEmployeeRate ?? null,
+                socialSecurityEmployerRate:
+                  override?.socialSecurityEmployerRate ?? null,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

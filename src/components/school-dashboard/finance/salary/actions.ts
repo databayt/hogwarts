@@ -20,7 +20,7 @@ import {
   calculateProgressiveTax,
   calculateSocialSecurity,
 } from "../payroll/config"
-import { resolvePayrollPolicy } from "../payroll/country-rules/registry"
+import { resolveSchoolPayrollPolicy } from "../payroll/country-rules/school-policy"
 import {
   salaryAllowanceSchema,
   salaryCalculatorSchema,
@@ -547,7 +547,10 @@ export async function calculateSalary(
       where: { id: schoolId },
       select: { country: true, timezone: true, currency: true },
     })
-    const payrollPolicy = resolvePayrollPolicy(schoolForPolicy ?? {})
+    const payrollPolicy = await resolveSchoolPayrollPolicy(
+      schoolId,
+      schoolForPolicy ?? {}
+    )
 
     // Calculate total allowances
     const totalAllowances = salaryStructure.allowances.reduce(

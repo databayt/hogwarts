@@ -277,6 +277,7 @@ model School {
   salaryDeductions    SalaryDeduction[]
   payrollRuns         PayrollRun[]
   salarySlips         SalarySlip[]
+  payrollPolicy       SchoolPayrollPolicy?
   timesheetPeriods    TimesheetPeriod[]
   timesheetEntries    TimesheetEntry[]
   wallets             Wallet[]

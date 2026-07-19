@@ -57,8 +57,27 @@ export async function Content({
   const configResult = await getOrCreatePaperConfig(generatedExamId)
 
   if (!configResult.success) {
+    // Paper config couldn't load — still render the header so the docx template
+    // fill (which needs only the generated exam, not the config) stays usable.
     return (
-      <div className="container mx-auto py-6">
+      <div
+        className="container mx-auto space-y-6 py-6"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {t?.title || "Exam Paper Generation"}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              {t?.subtitle || "Configure and print exam papers"}
+            </p>
+          </div>
+          <GenerateWithTemplateButton
+            category="EXAM_PAPER"
+            entityId={generatedExamId}
+          />
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>{t?.error || "Error"}</CardTitle>
