@@ -231,7 +231,10 @@ export function StreamCourseDetailContent({
 
             {/* Course progress (shown when enrolled and has progress) */}
             {isEnrolled && courseProgress && (
-              <CourseProgressBar progress={courseProgress} />
+              <CourseProgressBar
+                progress={courseProgress}
+                dictionary={dict?.stream}
+              />
             )}
 
             {/* Already registered */}

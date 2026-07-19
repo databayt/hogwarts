@@ -109,6 +109,60 @@ function pointsForDifficulty(diff: string): number {
   return diff === "EASY" ? 1 : diff === "MEDIUM" ? 2 : 3
 }
 
+/**
+ * Normalize exam-blueprints' MCQ option shape ({label,isCorrect}) into the
+ * contract `Question.options` actually declares — `ChoiceOption` in
+ * stream/dashboard/lesson/quiz-actions.ts is {text,isCorrect}, and that's
+ * what the real SD curriculum (sd-content.ts) already writes. This filler
+ * was the only source of the `label` shape; the lesson quiz renderer
+ * (`stream/dashboard/lesson/content.tsx`) reads `text ?? label` to survive
+ * both today, but new rows should honour the declared contract directly.
+ */
+function toChoiceOptions(
+  options: object[]
+): { text: string; isCorrect: boolean }[] {
+  return options.map((o) => {
+    const opt = o as { label?: string; text?: string; isCorrect: boolean }
+    return { text: opt.text ?? opt.label ?? "", isCorrect: opt.isCorrect }
+  })
+}
+
+/**
+ * A real True/False question has exactly two options. Routing TRUE_FALSE
+ * through getMcqOptions() (as this file used to) hands back a 4-option
+ * {correct + 3 prose distractors} MCQ set — e.g. "A description of a
+ * different artistic movement" as one of four "true/false" choices. Build
+ * the pair directly instead; deterministic per question so re-runs agree.
+ */
+function buildTrueFalseOptions(
+  globalIdx: number
+): { text: string; isCorrect: boolean }[] {
+  const isTrueCorrect = seededRandom(globalIdx * 7 + 3) > 0.5
+  return [
+    { text: "True", isCorrect: isTrueCorrect },
+    { text: "False", isCorrect: !isTrueCorrect },
+  ]
+}
+
+/**
+ * exam-blueprints' getSubjectCategory anchors STEM_MATH/STEM_SCIENCE to the
+ * bare words "math"/"science" (`^math$`/`^science$`), but every subject name
+ * built in this file is grade-suffixed ("Math Grade 3", "Science Grade 7") —
+ * so every math/science subject silently missed those rules and fell
+ * through to the SOCIAL_STUDIES default, handing history-flavoured
+ * templates ("Examine primary sources related to {topic}...") to maths and
+ * science lessons. Retry against the grade-stripped name whenever the full
+ * name lands on the catch-all default; every other category rule in
+ * exam-blueprints already matches on a substring, so this only changes
+ * outcomes for those two anchored rules.
+ */
+function classifySubject(name: string): SubjectCategory {
+  const direct = getSubjectCategory(name)
+  if (direct !== "SOCIAL_STUDIES") return direct
+  const bare = name.replace(/\s+Grade\s+\d+$/i, "").trim()
+  return bare === name ? direct : getSubjectCategory(bare)
+}
+
 /** Build question data for a given scope */
 function buildQuestion(
   category: SubjectCategory,
@@ -132,10 +186,7 @@ function buildQuestion(
     globalIdx
   )
 
-  const isObjective =
-    qType === "MULTIPLE_CHOICE" ||
-    qType === "TRUE_FALSE" ||
-    qType === "MULTI_SELECT"
+  const isChoice = qType === "MULTIPLE_CHOICE" || qType === "MULTI_SELECT"
 
   return {
     ...scopeIds,
@@ -144,7 +195,12 @@ function buildQuestion(
     difficulty,
     bloomLevel,
     points: pointsForDifficulty(difficulty),
-    options: isObjective ? getMcqOptions(category, topicName) : undefined,
+    options:
+      qType === "TRUE_FALSE"
+        ? buildTrueFalseOptions(globalIdx)
+        : isChoice
+          ? toChoiceOptions(getMcqOptions(category, topicName))
+          : undefined,
     sampleAnswer:
       qType === "SHORT_ANSWER" || qType === "ESSAY"
         ? `Sample answer demonstrating understanding of ${topicName} at ${difficulty.toLowerCase()} level.`
@@ -332,7 +388,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
 
   for (let si = 0; si < subjects.length; si++) {
     const subject = subjects[si]
-    const category = getSubjectCategory(subject.name)
+    const category = classifySubject(subject.name)
     const level = extractSchoolLevel(subject.slug)
 
     const isRealContent = realContentSubjectIds.has(subject.id)
@@ -873,7 +929,7 @@ export async function seedCatalogContent(prisma: PrismaClient): Promise<void> {
   // 4. Summary with category breakdown
   const categoryBreakdown = new Map<string, number>()
   for (const subject of subjects) {
-    const cat = getSubjectCategory(subject.name)
+    const cat = classifySubject(subject.name)
     categoryBreakdown.set(cat, (categoryBreakdown.get(cat) || 0) + 1)
   }
 

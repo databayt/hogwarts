@@ -5,6 +5,7 @@ export { VideoPlayer } from "./video-player"
 export type {
   NextLesson,
   UpNextOverlayProps,
+  VideoPlayerLabels,
   VideoPlayerProps,
   VideoProgress,
 } from "./types"

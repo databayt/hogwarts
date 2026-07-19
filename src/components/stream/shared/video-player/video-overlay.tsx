@@ -7,6 +7,8 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
+import type { VideoPlayerLabels } from "./types"
+
 const glassStyle = {
   background: "rgba(20, 20, 20, 0.4)",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
@@ -79,6 +81,7 @@ interface VideoOverlayProps {
   showControls: boolean
   onTogglePlay: () => void
   onSkip?: (seconds: number) => void
+  labels?: VideoPlayerLabels
 }
 
 export function VideoOverlay({
@@ -88,6 +91,7 @@ export function VideoOverlay({
   showControls,
   onTogglePlay,
   onSkip,
+  labels,
 }: VideoOverlayProps) {
   if (isLoading) {
     return (
@@ -132,7 +136,7 @@ export function VideoOverlay({
               "flex h-[50px] w-[50px] items-center justify-center"
             )}
             style={glassStyle}
-            aria-label="Rewind 10 seconds"
+            aria-label={labels?.rewind ?? "Rewind 10 seconds"}
           >
             <SkipBackward className="h-[22px] w-[22px] text-white" />
           </motion.button>
@@ -152,7 +156,9 @@ export function VideoOverlay({
               "flex h-20 w-20 items-center justify-center"
             )}
             style={glassStyle}
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={
+              isPlaying ? (labels?.pause ?? "Pause") : (labels?.play ?? "Play")
+            }
           >
             {isPlaying ? (
               <PauseIcon className="h-8 w-8 text-white" />
@@ -176,7 +182,7 @@ export function VideoOverlay({
               "flex h-[50px] w-[50px] items-center justify-center"
             )}
             style={glassStyle}
-            aria-label="Forward 10 seconds"
+            aria-label={labels?.forward ?? "Forward 10 seconds"}
           >
             <SkipForward className="h-[22px] w-[22px] text-white" />
           </motion.button>

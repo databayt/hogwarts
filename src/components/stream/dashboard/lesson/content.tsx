@@ -42,6 +42,7 @@ import type {
 import { InstructorSwitcher } from "@/components/stream/lesson/instructor-switcher"
 import {
   VideoPlayer,
+  type VideoPlayerLabels,
   type VideoProgress,
 } from "@/components/stream/shared/video-player"
 import { purchaseVideo } from "@/components/stream/video/video-purchase-actions"
@@ -92,6 +93,36 @@ export function StreamLessonContent({
     "own-school": d?.yourSchool || "Your School",
     featured: d?.featured || "Featured",
     "other-school": d?.community || "Community",
+  }
+  // VideoPlayer + VideoUpNext display strings. chapterShort/lessonShort are
+  // REUSED from `dictionary.lesson` (the same keys used a few lines below for
+  // the hero's own "C1 L2" badge) rather than duplicated under videoPlayer —
+  // everything else is new (stream.videoPlayer namespace).
+  const vp = (dictionary as Record<string, any>)?.videoPlayer
+  const playerLabels: VideoPlayerLabels = {
+    play: vp?.play,
+    pause: vp?.pause,
+    rewind: vp?.rewind,
+    forward: vp?.forward,
+    pictureInPicture: vp?.pictureInPicture,
+    share: vp?.share,
+    copyLink: vp?.copyLink,
+    airdrop: vp?.airdrop,
+    messages: vp?.messages,
+    notes: vp?.notes,
+    reminders: vp?.reminders,
+    volume: vp?.volume,
+    mute: vp?.mute,
+    unmute: vp?.unmute,
+    chapterShort: d?.chapterShort,
+    lessonShort: d?.lessonShort,
+    upNext: vp?.upNext,
+    playNow: vp?.playNow,
+    cancelAutoPlay: vp?.cancelAutoPlay,
+    keyboardHint: vp?.keyboardHint,
+    minUnit: vp?.minUnit,
+    hourUnit: vp?.hourUnit,
+    minuteUnit: vp?.minuteUnit,
   }
   const [showHero, setShowHero] = useState(true)
   const [isCompleted, setIsCompleted] = useState(
@@ -720,6 +751,7 @@ export function StreamLessonContent({
             lessonNumber={lesson.position}
             courseTitle={lesson.chapter.course.title}
             className="h-full w-full"
+            labels={playerLabels}
           />
         ) : null}
       </div>

@@ -36,7 +36,13 @@
  * hand-verified maps (files predate the g1 rebuild).
  *
  * Lesson mapping is what feeds the lesson-page practice quiz
- * (`get-lesson-content.ts` queries `Question.catalogLessonId`).
+ * (`get-lesson-content.ts` queries `Question.catalogLessonId`). Authored ids
+ * that only encode a unit (no lesson number — g1-g4, g7/g8, g12 military)
+ * resolve a chapter but not a lesson; those questions are distributed
+ * round-robin across that chapter's own lessons (see `fallbackLessonId`
+ * below) instead of being left lesson-less. That gap is what left every
+ * sd-g1-* lesson with zero quiz questions despite ~298 verified questions
+ * existing for the g1 subjects (psql-verified 2026-07-17).
  *
  * Videos are deliberately NOT seeded for SD lessons: the stream lesson player
  * falls back to the marketing story clip (`asset("/media/story.mp4")`) when a
@@ -370,6 +376,7 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
     questions: number
     chapterMapped: number
     lessonMapped: number
+    lessonFallbackMapped: number
     exams: number
     links: number
   }
@@ -467,9 +474,28 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
         where: { catalogSubjectId: subject.id },
       })
 
+      // Round-robin fallback: when resolveScope finds a chapter but no
+      // lesson (unit-only ids — see parseQuestionId), spread those questions
+      // evenly across the RESOLVED chapter's own lessons rather than leaving
+      // them lesson-less. Chapter-scoped (never crosses into another
+      // chapter's lessons) and deterministic (stable ordering across
+      // re-ingests — the outer loop always walks `byText` in the same
+      // qbank-then-exams order). Never overrides a real, source-derived
+      // lessonId.
+      const chaptersById = new Map(subject.chapters.map((c) => [c.id, c]))
+      const fallbackLessonCursor = new Map<string, number>()
+      function fallbackLessonId(chapterId: string): string | null {
+        const chapter = chaptersById.get(chapterId)
+        if (!chapter || chapter.lessons.length === 0) return null
+        const cursor = fallbackLessonCursor.get(chapterId) ?? 0
+        fallbackLessonCursor.set(chapterId, cursor + 1)
+        return chapter.lessons[cursor % chapter.lessons.length].id
+      }
+
       const questionData: Prisma.QuestionCreateManyInput[] = []
       let chapterMapped = 0
       let lessonMapped = 0
+      let lessonFallbackMapped = 0
       for (const q of byText.values()) {
         const type = mapType(q.type)
         const needsSampleAnswer =
@@ -482,10 +508,17 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
         )
         if (scope.chapterId) chapterMapped++
         if (scope.lessonId) lessonMapped++
+
+        let lessonId = scope.lessonId
+        if (scope.chapterId && !lessonId) {
+          lessonId = fallbackLessonId(scope.chapterId)
+          if (lessonId) lessonFallbackMapped++
+        }
+
         questionData.push({
           catalogSubjectId: subject.id,
           catalogChapterId: scope.chapterId,
-          catalogLessonId: scope.lessonId,
+          catalogLessonId: lessonId,
           questionText: q.question,
           questionType: type,
           difficulty,
@@ -558,16 +591,18 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
         linkCount += links.length
       }
 
+      const totalLessonMapped = lessonMapped + lessonFallbackMapped
       bySlug.set(dbSlug, {
         dir: `${grade}/${dir}`,
         questions: questionData.length,
         chapterMapped,
-        lessonMapped,
+        lessonMapped: totalLessonMapped,
+        lessonFallbackMapped,
         exams: examCount,
         links: linkCount,
       })
       console.log(
-        `   ${dbSlug}: ${questionData.length} questions (${chapterMapped} chapter-mapped, ${lessonMapped} lesson-mapped), ${examCount} exam(s)`
+        `   ${dbSlug}: ${questionData.length} questions (${chapterMapped} chapter-mapped, ${totalLessonMapped} lesson-mapped${lessonFallbackMapped ? ` [${lessonFallbackMapped} via fallback]` : ""}), ${examCount} exam(s)`
       )
     }
   }
@@ -590,7 +625,7 @@ export async function seedSdContent(prisma: PrismaClient): Promise<void> {
   logSuccess(
     "SD questions",
     sum((s) => s.questions),
-    `${sum((s) => s.chapterMapped)} chapter-mapped, ${sum((s) => s.lessonMapped)} lesson-mapped`
+    `${sum((s) => s.chapterMapped)} chapter-mapped, ${sum((s) => s.lessonMapped)} lesson-mapped (${sum((s) => s.lessonFallbackMapped)} via fallback)`
   )
   logSuccess(
     "SD exams",

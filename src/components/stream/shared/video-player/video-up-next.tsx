@@ -3,11 +3,12 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useCallback, useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import { Play, X } from "lucide-react"
 import { motion } from "motion/react"
 
 import { UP_NEXT_COUNTDOWN } from "./constants"
-import type { UpNextOverlayProps } from "./types"
+import type { UpNextOverlayProps, VideoPlayerLabels } from "./types"
 
 // Circular countdown ring component
 function CountdownRing({
@@ -55,13 +56,38 @@ function CountdownRing({
   )
 }
 
-// Format duration in minutes
-function formatDuration(minutes?: number): string {
+// Format duration in minutes. Units are dict-driven with English fallbacks so
+// a missing key never blanks the label.
+function formatDuration(
+  minutes: number | undefined,
+  labels?: Pick<VideoPlayerLabels, "minUnit" | "hourUnit" | "minuteUnit">
+): string {
   if (!minutes) return ""
-  if (minutes < 60) return `${minutes} min`
+  const minUnit = labels?.minUnit ?? "min"
+  const hourUnit = labels?.hourUnit ?? "h"
+  const minuteUnit = labels?.minuteUnit ?? "m"
+  if (minutes < 60) return `${minutes} ${minUnit}`
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+  return mins > 0
+    ? `${hours}${hourUnit} ${mins}${minuteUnit}`
+    : `${hours}${hourUnit}`
+}
+
+// Renders the "Press {enter} to play or {esc} to cancel" hint, splitting the
+// dict template on its literal `{enter}`/`{esc}` tokens and swapping in <kbd>
+// elements so the key-badge styling survives translation/word-reordering.
+function renderKeyboardHint(template: string): ReactNode[] {
+  return template.split(/(\{enter\}|\{esc\})/g).map((part, i) => {
+    if (part === "{enter}" || part === "{esc}") {
+      return (
+        <kbd key={i} className="rounded bg-white/10 px-1.5 py-0.5 font-mono">
+          {part === "{enter}" ? "Enter" : "Esc"}
+        </kbd>
+      )
+    }
+    return part
+  })
 }
 
 export function VideoUpNext({
@@ -69,6 +95,7 @@ export function VideoUpNext({
   countdown: initialCountdown = UP_NEXT_COUNTDOWN,
   onPlayNext,
   onCancel,
+  labels,
 }: UpNextOverlayProps) {
   const [countdown, setCountdown] = useState(initialCountdown)
   const [isCancelled, setIsCancelled] = useState(false)
@@ -133,7 +160,9 @@ export function VideoUpNext({
 
         {/* Next lesson info */}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-white/60">Up Next</p>
+          <p className="text-sm font-medium text-white/60">
+            {labels?.upNext ?? "Up Next"}
+          </p>
           <h4 className="mt-1 truncate font-semibold text-white">
             {nextLesson.title}
           </h4>
@@ -141,7 +170,7 @@ export function VideoUpNext({
             {nextLesson.chapterTitle}
             {nextLesson.duration && (
               <span className="ms-2">
-                &bull; {formatDuration(nextLesson.duration)}
+                &bull; {formatDuration(nextLesson.duration, labels)}
               </span>
             )}
           </p>
@@ -155,11 +184,11 @@ export function VideoUpNext({
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 font-medium text-black transition-colors hover:bg-white/90"
         >
           <Play className="h-4 w-4" />
-          Play Now
+          {labels?.playNow ?? "Play Now"}
         </button>
         <button
           onClick={handleCancel}
-          aria-label="Cancel auto-play"
+          aria-label={labels?.cancelAutoPlay ?? "Cancel auto-play"}
           className="rounded-lg bg-white/10 px-3 py-2.5 text-white transition-colors hover:bg-white/20"
         >
           <X className="h-4 w-4" />
@@ -168,11 +197,9 @@ export function VideoUpNext({
 
       {/* Keyboard hint */}
       <p className="mt-3 text-center text-xs text-white/40">
-        Press{" "}
-        <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">Enter</kbd>{" "}
-        to play or{" "}
-        <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">Esc</kbd>{" "}
-        to cancel
+        {renderKeyboardHint(
+          labels?.keyboardHint ?? "Press {enter} to play or {esc} to cancel"
+        )}
       </p>
     </motion.div>
   )

@@ -198,6 +198,7 @@ export function VideoPlayer({
   chapterNumber,
   lessonNumber,
   courseTitle,
+  labels,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -489,10 +490,14 @@ export function VideoPlayer({
           ? VolumeMidIcon
           : VolumeHighIcon
 
-  // Info label parts
+  // Info label parts. chapterShort/lessonShort are reused from
+  // `stream.lesson.*` (already fixed once in dashboard/lesson/content.tsx) —
+  // NOT a new player-owned key, per the dictionary reuse convention.
+  const chapterShort = labels?.chapterShort ?? "C"
+  const lessonShort = labels?.lessonShort ?? "L"
   const infoSubtitle =
     chapterNumber != null && lessonNumber != null
-      ? `C${chapterNumber} L${lessonNumber}${courseTitle ? ` ${courseTitle}` : ""}`
+      ? `${chapterShort}${chapterNumber} ${lessonShort}${lessonNumber}${courseTitle ? ` ${courseTitle}` : ""}`
       : null
   const infoTitle = title || null
 
@@ -536,6 +541,7 @@ export function VideoPlayer({
         showControls={state.showControls}
         onTogglePlay={actions.togglePlay}
         onSkip={actions.skip}
+        labels={labels}
       />
 
       {/* Top-left controls: PiP + Share */}
@@ -567,7 +573,7 @@ export function VideoPlayer({
                   }
                 }}
                 className="flex h-7 w-6 items-center justify-center transition-opacity hover:opacity-70"
-                aria-label="Picture in Picture"
+                aria-label={labels?.pictureInPicture ?? "Picture in Picture"}
               >
                 <PipIcon className="h-3.5 w-3.5 text-white" />
               </button>
@@ -578,7 +584,7 @@ export function VideoPlayer({
                     setShowShareMenu((prev) => !prev)
                   }}
                   className="flex h-7 w-6 items-center justify-center transition-opacity hover:opacity-70"
-                  aria-label="Share"
+                  aria-label={labels?.share ?? "Share"}
                 >
                   <ShareIcon className="h-3.5 w-3.5 text-white" />
                 </button>
@@ -608,7 +614,7 @@ export function VideoPlayer({
                           <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">
                             {courseTitle}
                             {chapterNumber != null
-                              ? ` · C${chapterNumber}, L${lessonNumber}`
+                              ? ` · ${chapterShort}${chapterNumber}, ${lessonShort}${lessonNumber}`
                               : ""}
                           </p>
                         </div>
@@ -620,16 +626,19 @@ export function VideoPlayer({
                       {[
                         {
                           icon: "🔗",
-                          label: "Copy Link",
+                          label: labels?.copyLink ?? "Copy Link",
                           action: () => {
                             navigator.clipboard.writeText(window.location.href)
                             setShowShareMenu(false)
                           },
                         },
-                        { icon: "📨", label: "AirDrop" },
-                        { icon: "💬", label: "Messages" },
-                        { icon: "📝", label: "Notes" },
-                        { icon: "📋", label: "Reminders" },
+                        { icon: "📨", label: labels?.airdrop ?? "AirDrop" },
+                        { icon: "💬", label: labels?.messages ?? "Messages" },
+                        { icon: "📝", label: labels?.notes ?? "Notes" },
+                        {
+                          icon: "📋",
+                          label: labels?.reminders ?? "Reminders",
+                        },
                       ].map((item) => (
                         <button
                           key={item.label}
@@ -679,7 +688,7 @@ export function VideoPlayer({
                 style={{
                   background: `linear-gradient(to right, rgba(255,255,255,0.9) ${state.isMuted ? 0 : state.volume}%, rgba(255,255,255,0.3) ${state.isMuted ? 0 : state.volume}%)`,
                 }}
-                aria-label="Volume"
+                aria-label={labels?.volume ?? "Volume"}
                 onClick={(e) => e.stopPropagation()}
               />
               <button
@@ -688,7 +697,11 @@ export function VideoPlayer({
                   actions.toggleMute()
                 }}
                 className="flex shrink-0 items-center justify-center transition-opacity hover:opacity-80"
-                aria-label={state.isMuted ? "Unmute" : "Mute"}
+                aria-label={
+                  state.isMuted
+                    ? (labels?.unmute ?? "Unmute")
+                    : (labels?.mute ?? "Mute")
+                }
               >
                 <VolumeIcon className="h-3.5 w-3.5 text-white" />
               </button>
@@ -763,6 +776,7 @@ export function VideoPlayer({
             countdown={state.upNextCountdown}
             onPlayNext={handlePlayNext}
             onCancel={handleCancelUpNext}
+            labels={labels}
           />
         )}
       </AnimatePresence>

@@ -333,6 +333,21 @@ export async function seedPeriods(
     periodDefs.map((p) => p.name)
   )
 
+  // School week (Sun–Thu, the Sudan/Gulf default). Without this row the
+  // attendance dashboard treats Fri/Sat as school days and shows an
+  // all-classes-unmarked warning every weekend. schoolId+termId(null) is the
+  // school-wide default; term-specific rows can override later.
+  const existingWeek = await prisma.schoolWeekConfig.findFirst({
+    where: { schoolId, termId: null },
+    select: { id: true },
+  })
+  if (!existingWeek) {
+    await prisma.schoolWeekConfig.create({
+      data: { schoolId, workingDays: [0, 1, 2, 3, 4] },
+    })
+    logSuccess("School week config", 1, "Sun–Thu")
+  }
+
   // Count the definitions we actually seeded — reading SCHOOL_PERIODS here
   // reported the hand-rolled 8/2 split regardless of the structure applied.
   const teachingPeriods = periodDefs.filter((p) => !p.isBreak).length

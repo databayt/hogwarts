@@ -9,20 +9,28 @@ import type { CourseProgressData } from "@/components/stream/data/catalog/get-co
 
 interface Props {
   progress: CourseProgressData
+  // The `stream` dictionary subtree (same convention as sibling components).
+  dictionary?: Record<string, any>
 }
 
-export function CourseProgressBar({ progress }: Props) {
+export function CourseProgressBar({ progress, dictionary }: Props) {
   const {
     totalLessons,
     completedLessons,
     progressPercent,
     estimatedRemainingMinutes,
   } = progress
+  const d = dictionary?.courseProgress ?? {}
 
   const remainingDisplay =
     estimatedRemainingMinutes >= 60
       ? `${Math.floor(estimatedRemainingMinutes / 60)}h ${estimatedRemainingMinutes % 60}m`
       : `${estimatedRemainingMinutes}m`
+
+  const percentLabel = (d.percentComplete ?? "{percent}% complete").replace(
+    "{percent}",
+    String(progressPercent)
+  )
 
   return (
     <div
@@ -31,25 +39,25 @@ export function CourseProgressBar({ progress }: Props) {
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-medium" style={{ color: "#141413" }}>
-          {progressPercent}% complete
+          {percentLabel}
         </span>
         <span className="text-xs" style={{ color: "#5e5b4e" }}>
-          {completedLessons}/{totalLessons} lessons
+          {completedLessons}/{totalLessons} {d.lessons ?? "lessons"}
         </span>
       </div>
       <Progress value={progressPercent} className="mb-3 h-2" />
       <div className="flex gap-4 text-xs" style={{ color: "#5e5b4e" }}>
         <span className="flex items-center gap-1">
           <CheckCircle2 className="size-3.5" />
-          {completedLessons} done
+          {completedLessons} {d.done ?? "done"}
         </span>
         <span className="flex items-center gap-1">
           <BookOpen className="size-3.5" />
-          {totalLessons - completedLessons} remaining
+          {totalLessons - completedLessons} {d.remaining ?? "remaining"}
         </span>
         {estimatedRemainingMinutes > 0 && (
           <span className="flex items-center gap-1">
-            <Clock className="size-3.5" />~{remainingDisplay} left
+            <Clock className="size-3.5" />~{remainingDisplay} {d.left ?? "left"}
           </span>
         )}
       </div>

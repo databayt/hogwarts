@@ -3,52 +3,56 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
+import { ClipboardCheck, Users, Video } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
 import type { StreamContentProps } from "../types"
 
+// The real teacher contribution flow this block supports: record → submit for
+// review → goes live for enrolled students. Replaces the verbatim Udemy
+// "become an instructor" copy + hotlinked Udemy images. Icons are lucide.
 const steps = [
   {
-    id: "plan",
-    title: "Plan your curriculum",
-    description:
-      "You start with your passion and knowledge. Then choose a promising topic with the help of our Marketplace Insights tool.",
-    tip: "The way that you teach — what you bring to it — is up to you.",
-    helpTitle: "How we help you",
-    helpText:
-      "We offer plenty of resources on how to create your first course. And, our instructor dashboard and curriculum pages help keep you organized.",
-    image: "https://s.udemycdn.com/teaching/plan-your-curriculum-2x-v3.jpg",
-  },
-  {
     id: "record",
-    title: "Record your video",
+    Icon: Video,
+    title: "Record your lesson",
     description:
-      "Use basic tools like a smartphone or a DSLR camera. Add a good microphone and you're ready to start.",
-    tip: "If you don't like being on camera, just capture your screen. Either way, we can help you produce your first course.",
+      "Use your phone or a screen recorder to capture a lesson — no studio needed.",
+    tip: "Keep each video focused on one topic so students can find it easily.",
     helpTitle: "How we help you",
     helpText:
-      "We provide production guidelines, course management features, and support from our Trust & Safety team.",
-    image: "https://s.udemycdn.com/teaching/record-your-video-2x-v3.jpg",
+      "Upload straight from the propose dialog with a live progress bar; large files stream directly to storage.",
   },
   {
-    id: "launch",
-    title: "Launch your course",
+    id: "review",
+    Icon: ClipboardCheck,
+    title: "Submit for review",
     description:
-      "Gather your first ratings and reviews by promoting your course through social media and your professional networks.",
-    tip: "Your course will be discoverable in our marketplace where you earn revenue from each paid enrollment.",
+      "Attach the video to a lesson and send it in. Your school admin reviews it before it goes live.",
+    tip: "You'll get a notification the moment it's approved or sent back.",
     helpTitle: "How we help you",
     helpText:
-      "Our custom coupon tool lets you offer enrollment incentives while our global promotions drive traffic to courses.",
-    image: "https://s.udemycdn.com/teaching/launch-your-course-2x-v3.jpg",
+      "Admins see every pending video in one review queue, so nothing waits longer than it needs to.",
+  },
+  {
+    id: "live",
+    Icon: Users,
+    title: "It goes live for your students",
+    description:
+      "Once approved, your video appears inside the lesson for every enrolled student.",
+    tip: "Replace or update a video any time — students always see the latest version.",
+    helpTitle: "How we help you",
+    helpText:
+      "Progress and quiz results are tracked automatically as students watch your lesson.",
   },
 ]
 
 export function HowToBeginSection({
   dictionary,
-  lang,
 }: Omit<StreamContentProps, "schoolId">) {
   const [activeStep, setActiveStep] = useState(0)
+  const ActiveIcon = steps[activeStep].Icon
 
   return (
     <section className="py-16 sm:py-20 md:py-24">
@@ -82,7 +86,7 @@ export function HowToBeginSection({
         </div>
       </div>
 
-      {/* Content - Text left (40%), Image right (60%) */}
+      {/* Content - Text (40%), Illustration (60%) */}
       <div className="flex flex-col items-center gap-8 md:flex-row md:gap-16">
         {/* Text Content */}
         <div className="space-y-4 text-start md:w-[40%]">
@@ -107,14 +111,15 @@ export function HowToBeginSection({
           </div>
         </div>
 
-        {/* Image */}
+        {/* Illustration */}
         <div className="flex justify-center md:w-[60%]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={steps[activeStep].image}
-            alt={steps[activeStep].title}
-            className="w-full max-w-lg rtl:[transform:scaleX(-1)]"
-          />
+          <div className="bg-muted flex aspect-video w-full max-w-lg items-center justify-center rounded-xl">
+            <ActiveIcon
+              className="text-muted-foreground/60 h-24 w-24"
+              strokeWidth={1}
+              aria-hidden="true"
+            />
+          </div>
         </div>
       </div>
     </section>

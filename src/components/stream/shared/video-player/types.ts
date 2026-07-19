@@ -23,6 +23,43 @@ export interface VideoPlayerProps {
   chapterNumber?: number
   lessonNumber?: number
   courseTitle?: string
+  // i18n — every field is optional with an English fallback at each call
+  // site, so a missing key never blanks the UI. Built by the caller (today,
+  // only dashboard/lesson/content.tsx) from the `stream` dictionary subtree.
+  labels?: VideoPlayerLabels
+}
+
+// Display strings for the player + its Up Next overlay. Every consumer reads
+// with `labels?.x ?? "English fallback"` — see VideoPlayerProps.labels.
+export interface VideoPlayerLabels {
+  play?: string
+  pause?: string
+  rewind?: string
+  forward?: string
+  pictureInPicture?: string
+  share?: string
+  copyLink?: string
+  airdrop?: string
+  messages?: string
+  notes?: string
+  reminders?: string
+  volume?: string
+  mute?: string
+  unmute?: string
+  // Reused from `stream.lesson.chapterShort`/`lessonShort` — NOT duplicated
+  // into a player-owned key (see dashboard/lesson/content.tsx).
+  chapterShort?: string
+  lessonShort?: string
+  upNext?: string
+  playNow?: string
+  cancelAutoPlay?: string
+  // Template with literal `{enter}`/`{esc}` tokens — VideoUpNext splits on
+  // them and renders <kbd> elements in place so the key-badge styling
+  // survives translation/reordering.
+  keyboardHint?: string
+  minUnit?: string
+  hourUnit?: string
+  minuteUnit?: string
 }
 
 export interface NextLesson {
@@ -138,4 +175,5 @@ export interface UpNextOverlayProps {
   countdown: number
   onPlayNext: () => void
   onCancel: () => void
+  labels?: VideoPlayerLabels
 }

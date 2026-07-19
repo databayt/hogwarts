@@ -11,14 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { CatalogCourseType } from "../data/catalog/get-all-courses"
 import type { ContinueWatchingItem } from "../data/catalog/get-continue-watching"
 import type { StreamContentProps } from "../types"
-import { AIFluencySection } from "./ai-fluency-section"
 import { ContinueWatchingSection } from "./continue-watching-section"
 import { CurriculumSection } from "./curriculum-section"
 import { EducationAnimation } from "./education-animation"
 import { HotReleasesSection } from "./hot-releases-section"
 import { HowToBeginSection } from "./how-to-begin-section"
-import { ReasonsSection } from "./reasons-section"
-import { SkillsSection } from "./skills-section"
 import { TeachingHeroSection } from "./teaching-hero-section"
 
 type Feature = {
@@ -172,10 +169,6 @@ export function StreamHomeContent({
         />
       )}
 
-      <AIFluencySection dictionary={dictionary} lang={lang} />
-
-      <SkillsSection dictionary={dictionary} lang={lang} />
-
       <HotReleasesSection
         dictionary={dictionary}
         lang={lang}
@@ -185,8 +178,6 @@ export function StreamHomeContent({
       <CurriculumSection dictionary={dictionary} lang={lang} />
 
       <TeachingHeroSection dictionary={dictionary} lang={lang} />
-
-      <ReasonsSection dictionary={dictionary} lang={lang} />
 
       <HowToBeginSection dictionary={dictionary} lang={lang} />
     </>
