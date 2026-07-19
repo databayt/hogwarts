@@ -234,3 +234,130 @@ describe("ensureInvoicesForAssignment", () => {
     )
   })
 })
+
+// ---------------------------------------------------------------------------
+// Itemization (single-installment invoices break into component line items)
+// ---------------------------------------------------------------------------
+
+describe("ensureInvoicesForAssignment — itemization", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
+    vi.mocked(db.userInvoice.count).mockResolvedValue(0)
+    setupSchool()
+    setupAddresses()
+    vi.mocked(db.userInvoice.create).mockResolvedValue({} as never)
+  })
+
+  function assignmentWith(
+    components: Record<string, number | null>,
+    finalAmount: number,
+    otherFees: Array<{ name: string; amount: number }> | null = null
+  ) {
+    vi.mocked(db.feeAssignment.findFirst).mockResolvedValue({
+      id: FEE_ASSIGNMENT_ID,
+      schoolId: SCHOOL_ID,
+      finalAmount,
+      feeStructure: {
+        name: "Grade 7 Fees",
+        installments: 1,
+        paymentSchedule: null,
+        tuitionFee: null,
+        admissionFee: null,
+        registrationFee: null,
+        examFee: null,
+        libraryFee: null,
+        laboratoryFee: null,
+        sportsFee: null,
+        transportFee: null,
+        hostelFee: null,
+        otherFees,
+        ...components,
+      },
+      student: {
+        userId: "u1",
+        firstName: "Ada",
+        middleName: null,
+        lastName: "Lovelace",
+        email: "ada@example.com",
+      },
+    } as never)
+  }
+
+  function createdData() {
+    return vi.mocked(db.userInvoice.create).mock.calls[0][0].data as {
+      sub_total: number
+      discount?: number
+      total: number
+      items: { create: Array<{ item_name: string; total: number }> }
+    }
+  }
+
+  it("creates one line per non-zero component", async () => {
+    assignmentWith(
+      { tuitionFee: 1000, libraryFee: 50, transportFee: 100 },
+      1150
+    )
+
+    await ensureInvoicesForAssignment(SCHOOL_ID, FEE_ASSIGNMENT_ID)
+
+    const data = createdData()
+    expect(data.items.create).toHaveLength(3)
+    expect(data.items.create.map((i) => i.total)).toEqual([1000, 50, 100])
+    expect(data.sub_total).toBe(1150)
+    expect(data.discount).toBeUndefined()
+    expect(data.total).toBe(1150)
+  })
+
+  it("reconciles a scholarship via the invoice discount field", async () => {
+    // Components sum to 1150 but the assignment bills 1050 → 100 discount.
+    assignmentWith(
+      { tuitionFee: 1000, libraryFee: 50, transportFee: 100 },
+      1050
+    )
+
+    await ensureInvoicesForAssignment(SCHOOL_ID, FEE_ASSIGNMENT_ID)
+
+    const data = createdData()
+    expect(data.items.create).toHaveLength(3)
+    expect(data.sub_total).toBe(1150)
+    expect(data.discount).toBe(100)
+    expect(data.total).toBe(1050)
+  })
+
+  it("adds an adjustment line when billed above component sum", async () => {
+    assignmentWith({ tuitionFee: 1000 }, 1200)
+
+    await ensureInvoicesForAssignment(SCHOOL_ID, FEE_ASSIGNMENT_ID)
+
+    const data = createdData()
+    expect(data.items.create).toHaveLength(2)
+    expect(data.items.create[1].total).toBe(200)
+    expect(data.sub_total).toBe(1200)
+    expect(data.total).toBe(1200)
+  })
+
+  it("includes otherFees entries as their own lines", async () => {
+    assignmentWith({ tuitionFee: 500 }, 575, [{ name: "Uniform", amount: 75 }])
+
+    await ensureInvoicesForAssignment(SCHOOL_ID, FEE_ASSIGNMENT_ID)
+
+    const data = createdData()
+    expect(data.items.create.map((i) => i.item_name)).toContain("Uniform")
+    expect(data.sub_total).toBe(575)
+    expect(data.total).toBe(575)
+  })
+
+  it("keeps the lump-sum line when no components exist (zero excluded)", async () => {
+    // tuitionFee 0 is a real Decimal zero — must be excluded, not itemized.
+    assignmentWith({ tuitionFee: 0 }, 900)
+
+    await ensureInvoicesForAssignment(SCHOOL_ID, FEE_ASSIGNMENT_ID)
+
+    const data = createdData()
+    expect(data.items.create).toHaveLength(1)
+    expect(data.items.create[0].item_name).toBe("Grade 7 Fees")
+    expect(data.items.create[0].total).toBe(900)
+    expect(data.total).toBe(900)
+  })
+})

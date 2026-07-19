@@ -96,6 +96,7 @@ async function CoursesRenderer({
         page={1}
         perPage={12}
         activeGrade=""
+        search=""
         userRole={userRole}
         userId={userId}
       />
@@ -121,6 +122,7 @@ async function CoursesRenderer({
       page={search.page}
       perPage={search.perPage}
       activeGrade={search.level || ""}
+      search={search.search}
       userRole={userRole}
       userId={userId}
     />

@@ -170,3 +170,30 @@ describe("allocatePaymentToInvoices — exclusions & edges", () => {
     expect(orderBy).toEqual({ due_date: "asc" })
   })
 })
+
+describe("allocatePaymentToInvoices — transaction client", () => {
+  it("uses the provided tx client, never the db singleton", async () => {
+    // confirmEnrollment's fix depends on this: its invoices are uncommitted
+    // rows only the transaction client can see.
+    const tx = {
+      userInvoice: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ id: "inv-tx", total: 500, amountPaid: 0 }]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+    }
+
+    await allocatePaymentToInvoices(SCHOOL, FA, 500, tx as never)
+
+    expect(db.userInvoice.findMany).not.toHaveBeenCalled()
+    expect(db.userInvoice.update).not.toHaveBeenCalled()
+    expect(tx.userInvoice.findMany).toHaveBeenCalledTimes(1)
+    expect(tx.userInvoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "inv-tx" },
+        data: { amountPaid: 500, status: "PAID" },
+      })
+    )
+  })
+})
