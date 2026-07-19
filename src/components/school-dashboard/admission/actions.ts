@@ -1469,6 +1469,29 @@ export async function confirmEnrollment(params: {
                       ledgerErr
                     )
                   }
+
+                  // Sync the payment onto the auto-generated UserInvoice(s) for
+                  // this assignment (created moments ago by provisionStudent →
+                  // ensureInvoicesForAssignment inside this same transaction).
+                  // Without this the invoice stays UNPAID forever while the
+                  // Payment/ledger say collected. `tx` is load-bearing: the
+                  // invoices are uncommitted, so the plain db client can't see
+                  // them.
+                  try {
+                    const { allocatePaymentToInvoices } =
+                      await import("@/components/school-dashboard/finance/lib/invoice-allocation")
+                    await allocatePaymentToInvoices(
+                      schoolId,
+                      regAssignment.id,
+                      regAmount,
+                      tx
+                    )
+                  } catch (allocErr) {
+                    console.warn(
+                      "[confirmEnrollment] Registration fee invoice allocation failed:",
+                      allocErr
+                    )
+                  }
                 }
               } else {
                 // No matching registration FeeStructure was found — warn admin

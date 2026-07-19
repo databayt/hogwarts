@@ -151,10 +151,6 @@ vi.mock("@/lib/dispatch-notification", () => ({
   dispatchNotification: vi.fn().mockResolvedValue("notif-1"),
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
-  createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
-}))
-
 // updateApplicationStatus dynamically imports these for the dedicated
 // SELECTED-offer email — mock so a real Resend client is never constructed.
 vi.mock("@/lib/email-templates/admission", () => ({

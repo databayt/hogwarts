@@ -22,6 +22,7 @@ interface DashboardData {
   unpaidInvoices: number
   recentInvoices: any[]
   chartData: any[]
+  currency?: string
 }
 
 interface Props {
@@ -84,7 +85,7 @@ export function DashboardContent({ dictionary, lang, initialData }: Props) {
           stats={{
             totalRevenue: new Intl.NumberFormat(lang, {
               style: "currency",
-              currency: "SAR",
+              currency: initialData?.currency ?? "USD",
             }).format(data.totalRevenue),
             totalInvoice: data.totalInvoice,
             paidInvoice: data.paidInvoice,

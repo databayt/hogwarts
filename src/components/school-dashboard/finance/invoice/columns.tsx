@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
-import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
@@ -166,9 +165,6 @@ export const getInvoiceColumns = (
     header: () => <span className="sr-only">{ic?.actions || "Actions"}</span>,
     cell: ({ row }) => {
       const invoice = row.original
-      const { openModal } = useModal()
-
-      const onEdit = () => openModal(invoice.id)
 
       const onDelete = () => {
         callbacks?.onDelete?.(invoice)
@@ -186,7 +182,7 @@ export const getInvoiceColumns = (
           <ActionMenuItem
             icon={Pencil}
             label={ic?.edit || "Edit"}
-            onClick={onEdit}
+            href={`/${lang}/finance/invoice/invoice/edit/${invoice.id}`}
           />
           <ActionMenuItem
             icon={Trash2}

@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import type { Prisma } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -51,6 +52,23 @@ export async function getInvoiceForWizard(
   }
 }
 
+// Sequential per-school invoice number: prefix + 2-digit year + 3-digit
+// sequence (I25001, I25002, ...). Runs inside the caller's transaction.
+async function nextInvoiceNumber(
+  tx: Prisma.TransactionClient,
+  schoolId: string
+): Promise<string> {
+  const yearPrefix = new Date().getFullYear().toString().slice(-2)
+  const latest = await tx.userInvoice.findFirst({
+    where: { schoolId, invoice_no: { startsWith: `I${yearPrefix}` } },
+    orderBy: { invoice_no: "desc" },
+    select: { invoice_no: true },
+  })
+  if (!latest) return `I${yearPrefix}001`
+  const next = parseInt(latest.invoice_no.slice(3), 10) + 1
+  return `I${yearPrefix}${String(Number.isFinite(next) ? next : 1).padStart(3, "0")}`
+}
+
 /** Create a draft invoice record to start the wizard */
 export async function createDraftInvoice(): Promise<
   ActionResponse<{ id: string }>
@@ -61,6 +79,22 @@ export async function createDraftInvoice(): Promise<
     const { schoolId } = ctx
 
     const invoice = await db.$transaction(async (tx) => {
+      // Default the draft to the school's configured currency, not USD.
+      const school = await tx.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+
+      // Prefill a real unique number: `@@unique([schoolId, invoice_no])` means
+      // a second `""`-numbered draft would P2002; the suggestion also spares
+      // the admin inventing a number in the details step.
+      let invoiceNo = await nextInvoiceNumber(tx, schoolId)
+      const clash = await tx.userInvoice.findFirst({
+        where: { schoolId, invoice_no: invoiceNo },
+        select: { id: true },
+      })
+      if (clash) invoiceNo = `${invoiceNo}-${Date.now().toString(36)}`
+
       // Create from address
       const fromAddress = await tx.userInvoiceAddress.create({
         data: {
@@ -84,10 +118,10 @@ export async function createDraftInvoice(): Promise<
       // Create invoice with linked addresses
       return tx.userInvoice.create({
         data: {
-          invoice_no: "",
+          invoice_no: invoiceNo,
           invoice_date: new Date(),
           due_date: new Date(),
-          currency: "USD",
+          currency: school?.currency ?? "USD",
           sub_total: 0,
           total: 0,
           status: "UNPAID",

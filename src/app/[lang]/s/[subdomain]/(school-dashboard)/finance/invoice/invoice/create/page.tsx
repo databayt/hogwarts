@@ -4,25 +4,26 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
 import { createDraftInvoice } from "@/components/school-dashboard/finance/invoice/wizard/actions"
 
 export default function InvoiceCreate() {
   const router = useRouter()
+  const { lang } = useParams<{ lang: string }>()
 
   useEffect(() => {
     async function create() {
       const result = await createDraftInvoice()
       if (result.success && result.data) {
-        router.replace(`/finance/invoice/add/${result.data.id}/details`)
+        router.replace(`/${lang}/finance/invoice/add/${result.data.id}/details`)
       } else {
         router.back()
       }
     }
     create()
-  }, [router])
+  }, [router, lang])
 
   return (
     <div className="flex items-center justify-center p-8">

@@ -120,6 +120,16 @@ export async function updateInvoiceDetails(
 
     return { success: true }
   } catch (error) {
+    // Duplicate invoice number within this school — surface a translatable
+    // error code, not the raw Prisma P2002 message.
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: string }).code === "P2002"
+    ) {
+      return actionError(ACTION_ERRORS.INVOICE_DUPLICATE_NUMBER)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to save",

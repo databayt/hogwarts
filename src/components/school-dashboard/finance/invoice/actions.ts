@@ -1072,6 +1072,7 @@ export async function getDashboardStats(): Promise<ActionResponse> {
       paidInvoices,
       unpaidInvoices,
       recentInvoices,
+      school,
     ] = await Promise.all([
       db.userInvoice.findMany({
         where: baseWhere,
@@ -1089,6 +1090,10 @@ export async function getDashboardStats(): Promise<ActionResponse> {
         orderBy: { createdAt: "desc" },
         take: 5,
         include: { from: true, to: true },
+      }),
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: { currency: true },
       }),
     ])
 
@@ -1112,6 +1117,7 @@ export async function getDashboardStats(): Promise<ActionResponse> {
         unpaidInvoices,
         recentInvoices,
         chartData,
+        currency: school?.currency ?? "USD",
       },
     }
   } catch (error) {

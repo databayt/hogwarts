@@ -128,10 +128,6 @@ vi.mock("@/lib/grade-utils", () => ({
   extractGradeNumber: vi.fn().mockReturnValue(null),
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
-  createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
-}))
-
 // confirmEnrollment dynamically imports this to mint a password-setup link
 // for brand-new guest Users (no password set on create).
 vi.mock("@/components/auth/tokens", () => ({

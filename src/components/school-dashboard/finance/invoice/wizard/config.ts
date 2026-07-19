@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { currencyOption } from "@/lib/utils"
 import type { WizardConfig } from "@/components/form/wizard"
 
 type Dict = Record<string, any> | undefined
@@ -36,15 +37,13 @@ export const getInvoiceStatusOptions = (d?: Dict) => {
   ]
 }
 
-/** Get localized currency options from dictionary */
+/** Get localized currency options from dictionary.
+ *  Derives from the canonical `currencyOption` list in `@/lib/utils` so the
+ *  invoice wizard never maintains its own divergent currency set. */
 export const getCurrencyOptions = (d?: Dict) => {
   const c = d?.currency as Record<string, string> | undefined
-  return [
-    { label: c?.USD || "USD", value: "USD" },
-    { label: c?.EUR || "EUR", value: "EUR" },
-    { label: c?.GBP || "GBP", value: "GBP" },
-    { label: c?.SDG || "SDG", value: "SDG" },
-    { label: c?.SAR || "SAR", value: "SAR" },
-    { label: c?.AED || "AED", value: "AED" },
-  ]
+  return currencyOption.map(({ value }) => ({
+    label: c?.[value] || value,
+    value,
+  }))
 }

@@ -463,7 +463,7 @@ export async function getFinancialAlerts(
         `${overdueInvoices} invoice(s) are overdue and require attention`,
       action: {
         label: da?.viewInvoices || "View Invoices",
-        href: "/finance/invoice/overdue",
+        href: "/finance/invoice?status=OVERDUE",
       },
       timestamp: now,
     })

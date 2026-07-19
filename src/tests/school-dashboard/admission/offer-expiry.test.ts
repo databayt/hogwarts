@@ -97,10 +97,6 @@ vi.mock("@/lib/grade-utils", () => ({
   extractGradeNumber: vi.fn().mockReturnValue(null),
 }))
 
-vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
-  createInvoiceFromEnrollment: vi.fn().mockResolvedValue({ success: true }),
-}))
-
 // Mock the authorization module to let calls through
 vi.mock("@/components/school-dashboard/admission/authorization", () => ({
   assertAdmissionPermission: vi.fn(),

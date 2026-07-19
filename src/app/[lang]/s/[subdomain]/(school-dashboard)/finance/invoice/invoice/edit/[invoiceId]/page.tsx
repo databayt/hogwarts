@@ -8,6 +8,6 @@ interface Props {
 }
 
 export default async function EditInvoice({ params }: Props) {
-  const { invoiceId } = await params
-  redirect(`/finance/invoice/add/${invoiceId}/details`)
+  const { lang, invoiceId } = await params
+  redirect(`/${lang}/finance/invoice/add/${invoiceId}/details`)
 }

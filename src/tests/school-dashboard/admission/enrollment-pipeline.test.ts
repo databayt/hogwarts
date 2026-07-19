@@ -8,7 +8,6 @@ import { db } from "@/lib/db"
 import { ensureInvoicesForAssignment } from "@/lib/fee-invoice-sync"
 import { confirmEnrollment } from "@/components/school-dashboard/admission/actions"
 import { getCampaignsList } from "@/components/school-dashboard/admission/queries"
-import { createInvoiceFromEnrollment } from "@/components/school-dashboard/finance/invoice/actions"
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -142,13 +141,6 @@ vi.mock("@/lib/enrollment-sync", () => ({
 
 vi.mock("@/lib/grade-utils", () => ({
   extractGradeNumber: vi.fn().mockReturnValue(null),
-}))
-
-vi.mock("@/components/school-dashboard/finance/invoice/actions", () => ({
-  createInvoiceFromEnrollment: vi.fn().mockResolvedValue({
-    success: true,
-    invoiceId: "inv-auto-1",
-  }),
 }))
 
 // Invoice fan-out for newly-created fee assignments is delegated to the

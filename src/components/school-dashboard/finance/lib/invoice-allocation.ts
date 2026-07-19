@@ -1,9 +1,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { InvoiceStatus } from "@prisma/client"
+import { InvoiceStatus, type Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+
+type DbClient = typeof db | Prisma.TransactionClient
 
 /**
  * Allocate a single cleared payment across a fee assignment's invoices,
@@ -42,13 +44,20 @@ import { db } from "@/lib/db"
  * Non-fatal by contract: callers wrap this in try/catch. A payment is already
  * recorded and the ledger already posted before invoice sync runs, so a sync
  * failure is logged, never rolled back.
+ *
+ * Accepts an optional transaction client: a caller whose Payment AND invoices
+ * were created inside a still-open $transaction (confirmEnrollment) MUST pass
+ * its `tx` — the plain `db` singleton cannot see those uncommitted rows and
+ * the allocation would silently no-op.
  */
 export async function allocatePaymentToInvoices(
   schoolId: string,
   feeAssignmentId: string,
-  paymentAmount: number
+  paymentAmount: number,
+  tx?: Prisma.TransactionClient
 ): Promise<void> {
-  const invoices = await db.userInvoice.findMany({
+  const client: DbClient = tx ?? db
+  const invoices = await client.userInvoice.findMany({
     where: {
       schoolId,
       feeAssignmentId,
@@ -72,7 +81,7 @@ export async function allocatePaymentToInvoices(
     const newAmountPaid = alreadyPaid + applying
     remaining -= applying
 
-    await db.userInvoice.update({
+    await client.userInvoice.update({
       where: { id: inv.id },
       data: {
         amountPaid: newAmountPaid,
