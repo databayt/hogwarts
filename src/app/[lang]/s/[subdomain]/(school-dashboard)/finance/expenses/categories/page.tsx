@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
@@ -12,10 +13,18 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Expense Categories" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.expensesPage?.expenseCategories ||
+      "Expense Categories",
+  }
 }
 
 export default async function ExpenseCategoriesPage({ params }: Props) {

@@ -6,6 +6,7 @@
  * Follows Hogwarts page pattern - server component that fetches single receipt
  */
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { type Locale } from "@/components/internationalization/config"
@@ -13,12 +14,18 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getReceiptById } from "@/components/school-dashboard/finance/receipt/actions"
 import { ReceiptDetail } from "@/components/school-dashboard/finance/receipt/receipt-detail"
 
-export const metadata = {
-  title: "Receipt Details | Expense Tracker",
-}
-
 interface Props {
   params: Promise<{ id: string; lang: Locale }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.receipt?.receiptDetails ||
+      "Receipt Details | Expense Tracker",
+  }
 }
 
 export default async function ReceiptDetailPage({ params }: Props) {

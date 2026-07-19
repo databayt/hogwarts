@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -8,10 +10,17 @@ import { type FeeAssignmentRow } from "@/components/school-dashboard/finance/fee
 import { FeeAssignmentsTable } from "@/components/school-dashboard/finance/fees/assignment-table"
 import { getFeeAssignmentList } from "@/components/school-dashboard/finance/fees/queries"
 
-export const metadata = { title: "Fee Assignments" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.fees?.myFees?.feeAssignments || "Fee Assignments",
+  }
 }
 
 export default async function FeeAssignmentsPage({ params }: Props) {

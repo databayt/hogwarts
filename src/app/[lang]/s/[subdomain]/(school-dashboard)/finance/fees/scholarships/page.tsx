@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -8,10 +10,16 @@ import { getScholarshipList } from "@/components/school-dashboard/finance/fees/q
 import { type ScholarshipRow } from "@/components/school-dashboard/finance/fees/scholarship-columns"
 import { ScholarshipsTable } from "@/components/school-dashboard/finance/fees/scholarship-table"
 
-export const metadata = { title: "Scholarships" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.feesPage?.scholarships || "Scholarships",
+  }
 }
 
 export default async function ScholarshipsPage({ params }: Props) {

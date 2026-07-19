@@ -13,10 +13,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-export const metadata: Metadata = { title: "My Payslips" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.payslip?.myPayslips || "My Payslips" }
 }
 
 export default async function MyPayslipsPage({ params }: Props) {

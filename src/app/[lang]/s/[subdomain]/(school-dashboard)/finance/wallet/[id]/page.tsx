@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -14,10 +15,16 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Wallet Details" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.walletPage?.walletDetails || "Wallet Details",
+  }
 }
 
 export default async function WalletDetailPage({ params }: Props) {

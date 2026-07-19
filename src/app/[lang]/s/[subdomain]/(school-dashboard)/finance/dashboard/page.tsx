@@ -7,17 +7,24 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceDashboardContent } from "@/components/school-dashboard/finance/dashboard/content"
 
-export const metadata: Metadata = {
-  title: "Financial Dashboard | Finance",
-  description:
-    "Comprehensive financial overview and key performance indicators",
+interface Props {
+  params: Promise<{ lang: Locale }>
 }
 
-export default async function FinanceDashboardPage({
-  params,
-}: {
-  params: Promise<{ lang: Locale }>
-}) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.dashboardPage?.financialDashboard ||
+      "Financial Dashboard | Finance",
+    description:
+      dictionary?.finance?.dashboardPage?.overviewDescription ||
+      "Comprehensive financial overview and key performance indicators",
+  }
+}
+
+export default async function FinanceDashboardPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return <FinanceDashboardContent lang={lang} />

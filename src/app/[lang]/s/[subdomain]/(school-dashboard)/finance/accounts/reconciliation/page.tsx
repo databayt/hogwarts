@@ -6,14 +6,25 @@
  * (accounts + banking) pointed here pre-P2.3; we expose the same view at
  * both URLs so existing navigation works without a redirect.
  */
-import type { Locale } from "@/components/internationalization/config"
-import { ReconciliationContent } from "@/components/school-dashboard/finance/banking/reconciliation/content"
+import type { Metadata } from "next"
 
-export const metadata = { title: "Reconciliation Report" }
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ReconciliationContent } from "@/components/school-dashboard/finance/banking/reconciliation/content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
   searchParams: Promise<{ days?: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.accounts?.navigation?.reconciliation ||
+      "Reconciliation Report",
+  }
 }
 
 export default async function AccountsReconciliationPage({

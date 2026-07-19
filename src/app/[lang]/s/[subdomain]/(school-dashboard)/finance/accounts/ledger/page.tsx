@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { db } from "@/lib/db"
 import { formatCurrency, formatDate } from "@/lib/i18n-format"
 import { Badge } from "@/components/ui/badge"
@@ -10,10 +12,16 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "General Ledger" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.accountsPage?.generalLedger || "General Ledger",
+  }
 }
 
 export default async function GeneralLedgerPage({ params }: Props) {

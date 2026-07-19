@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { detectFeeProvisioningDrift } from "@/lib/fee-provisioning"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
@@ -11,11 +13,17 @@ import { getFeeStructureList } from "@/components/school-dashboard/finance/fees/
 import { FeeStructuresTable } from "@/components/school-dashboard/finance/fees/table"
 import { getLabels } from "@/components/translation/person"
 
-export const metadata = { title: "Fee Structures" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.feesPage?.feeStructures || "Fee Structures",
+  }
 }
 
 export default async function FeeStructuresPage({ params }: Props) {

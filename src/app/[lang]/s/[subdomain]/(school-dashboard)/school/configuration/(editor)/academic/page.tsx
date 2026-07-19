@@ -9,14 +9,21 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { AcademicContent } from "@/components/school-dashboard/school/academic/content"
 
-export const metadata: Metadata = {
-  title: "Configuration: Academic",
-  description:
-    "Configure academic years, terms, periods, year levels, and grading scale",
-}
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.school?.schoolAdmin?.configSections?.academic?.title ||
+      "Configuration: Academic",
+    description:
+      dictionary?.school?.schoolAdmin?.configSections?.academic?.description ||
+      "Configure academic years, terms, periods, year levels, and grading scale",
+  }
 }
 
 export default async function AcademicConfigPage({ params }: Props) {

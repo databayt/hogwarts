@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -28,10 +29,18 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { getFeeStats } from "@/components/school-dashboard/finance/fees/queries"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Fee Collection Report" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.finance?.fees?.reports?.feeCollectionReport ||
+      "Fee Collection Report",
+  }
 }
 
 export default async function FeeReportsPage({ params }: Props) {

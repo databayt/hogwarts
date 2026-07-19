@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -10,10 +11,16 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { FineDetail } from "@/components/school-dashboard/finance/fees/fine-detail"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Fine Details" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.fees?.fine?.fineDetails || "Fine Details",
+  }
 }
 
 export default async function FineDetailPage({ params }: Props) {

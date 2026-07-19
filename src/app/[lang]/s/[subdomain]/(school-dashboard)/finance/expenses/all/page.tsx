@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
@@ -14,10 +15,14 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { ExpenseRowActions } from "@/components/school-dashboard/finance/expenses/expense-row-actions"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Expenses" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.expensesPage?.expenses || "Expenses" }
 }
 
 const statusVariant = (status: string) => {

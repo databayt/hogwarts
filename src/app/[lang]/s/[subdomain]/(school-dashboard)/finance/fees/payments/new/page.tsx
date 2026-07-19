@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import { db } from "@/lib/db"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -8,10 +10,16 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import PaymentForm from "@/components/school-dashboard/finance/fees/payment-form"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
 
-export const metadata = { title: "Record Payment" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.feesPage?.recordPayment || "Record Payment",
+  }
 }
 
 export default async function RecordPaymentPage({ params }: Props) {

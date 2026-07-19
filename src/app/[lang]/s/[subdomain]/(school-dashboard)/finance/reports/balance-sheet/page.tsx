@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 
 import { db } from "@/lib/db"
@@ -15,10 +16,16 @@ import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guar
 import { generateBalanceSheet } from "@/components/school-dashboard/finance/reports/actions"
 import type { BalanceSheetData } from "@/components/school-dashboard/finance/reports/types"
 
-export const metadata = { title: "Balance Sheet" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.finance?.reports?.balanceSheet || "Balance Sheet",
+  }
 }
 
 export default async function BalanceSheetPage({ params }: Props) {

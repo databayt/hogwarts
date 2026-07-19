@@ -15,10 +15,14 @@ import { FinanceAccessDenied } from "@/components/school-dashboard/finance/acces
 import { checkFinancePermission } from "@/components/school-dashboard/finance/lib/permissions"
 import { PayslipBreakdown } from "@/components/school-dashboard/finance/payroll/payslip/breakdown"
 
-export const metadata: Metadata = { title: "Payslip" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.finance?.payslip?.payslip || "Payslip" }
 }
 
 type Line = { name: string; amount: number }
