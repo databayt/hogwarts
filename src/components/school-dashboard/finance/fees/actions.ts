@@ -207,10 +207,13 @@ export async function createFeeStructure(
     })
 
     if (!parsed.success) {
-      return {
-        success: false,
-        error: parsed.error.issues.map((issue) => issue.message).join(", "),
-      }
+      // Error CODE only — raw Zod messages are English and would leak into
+      // the toast on /ar. Field-level messages come from the client-side
+      // i18n schema; `details` keeps the server reason for logs.
+      return actionError(
+        ACTION_ERRORS.VALIDATION_ERROR,
+        parsed.error.issues.map((issue) => issue.message).join(", ")
+      )
     }
 
     const feeStructure = await db.feeStructure.create({

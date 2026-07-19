@@ -228,6 +228,91 @@ Forward-looking work beyond closing the gaps above.
 
 > Note: where a sub-module README still claims it posts journal entries (salary, payroll, invoice, expenses, wallet), that is captured in P0 above; correcting each sub-README is a tracked follow-up, not done this docs pass.
 
+## Recent Work (2026-07-19 — ship-readiness audit: routes, i18n, seed, UI)
+
+Full-block audit ahead of first client use (routes crawled EN as admin against
+the local demo; i18n + seed audited by agents; fixes browser-verified).
+Complements the same-day security pass above. tsc 0; i18n suite 276 passed
+(the 2 ratchet fails are `/documents` + `/exams/new`, outside finance).
+
+### Route health (fixed)
+
+- **`/finance/receipt` crashed** into the finance error boundary — Prisma
+  `Decimal` `transactionAmount` serializes to a string across the RSC
+  boundary, then `receipt-card` called `.toFixed()` on it. `getReceipts`/
+  `getReceiptById` now normalize via `toClientReceipt()`. Page renders all
+  seeded receipts.
+- **`/finance/banking/payment-transfer` was dead on load** — `form.tsx`
+  wrapped `AccountSelect` in a MODULE-LEVEL `useMemo` (invalid hook call at
+  import time). Now a plain function component; route renders.
+- **Every finance route showed "Settings" as its page H1** (dashboard,
+  receipt, wallet… any segment without its own deeper `PageHeadingSetter`) —
+  `finance/layout.tsx` read `dictionary.school.settings` ("uses settings
+  dictionary for now"). Now reads `finance.title` (Finance/المالية).
+
+### Dashboard correctness (`dashboard/actions.ts` rewritten to DB aggregation)
+
+- `getCachedDashboardData` fetched RAW ROWS (all invoices + students-with-
+  assignments-with-payments…) → ~6.7MB payload, over `unstable_cache`'s 2MB
+  limit → unhandled rejection spam on every load + no caching. Now 12
+  aggregate/groupBy queries; Decimals converted to numbers INSIDE the cached
+  fn (cache-hit revival returns strings otherwise).
+- **Fee metrics could never match**: filter was `academicYear:
+  new Date().getFullYear().toString()` (`"2026"`) while data stores
+  `"YYYY-YYYY"`. Now resolved from latest `SchoolYear.yearName` (same rule as
+  fee-provisioning).
+- `FinanceDashboardContent` gates via `resolveFinanceAccess("reports")` and
+  renders `FinanceAccessDenied` instead of throwing into the error boundary;
+  `getRecentTransactions` takes `lang` and no longer server-builds the
+  English "Fee payment from X" sentence / "Student Fees" category.
+
+### i18n (agent audit: 2,467-key EN/AR parity = 100%; fixes applied)
+
+- `en/finance.json` `common.delete` was literally `"حذف"` → `"Delete"`.
+- `createFeeStructure` returned raw joined English Zod messages as `error`
+  (and `fees/form.tsx` toasted it verbatim in both locales) → returns
+  `ACTION_ERRORS.VALIDATION_ERROR`; form maps codes, never raw.
+- Raw enum table cells now use the same translated maps as their filters:
+  fees `payment-columns` (method + status), `assignment-columns` (status).
+- `fees/drift-banner.tsx` had zero dictionary wiring → new `finance.feeDrift`
+  group (EN+AR), `<bdi>` around values.
+- `banking/transaction-history/table.tsx`: content passed the WHOLE
+  dictionary while the table read flat keys — every lookup silently fell back
+  to English. Now receives the `bankingTransactions` slice + 10 leftover
+  literals wired (export menu, pagination, "All Accounts", aria labels).
+- `banking/payment-transfer/form.tsx` rendered the server's raw English
+  `error.message` → maps `error.code` to new `banking.transferError*` keys
+  (EN+AR); initial empty-code state no longer shows a phantom error alert.
+- `receipt/table.tsx` + `invoice/dashboard/data-table.tsx` empty/pagination
+  strings wired (`receiptPage.*`, `finance.common.noResults`).
+- Section dashboards (wallet, expenses, budget, payroll) formatted money with
+  DEFAULT `"USD"`/en-US — now thread `School.currency` + locale (SDG renders
+  correctly; was `$` on all four).
+
+### Seed
+
+- **New `prisma/seeds/wallet.ts`** — wallet was the only finance module with
+  ZERO seed (all 5 routes empty): school wallet + 30 student wallets + ~140
+  Arabic-description transactions with coherent running balances; idempotent
+  count-guard; registered as `db:seed:single wallet` and in the main walk
+  after Banking. Verified locally: 31 wallets / 140 txns / SDG.
+- Seed-audit findings (agent, documented for follow-up): dashboard month
+  window shows zeros against stale seed dates (payments 2024, payroll runs
+  2025) — real schools entering live data are unaffected; 876 current-year
+  PAID `FeeAssignment`s have no Payment trail (seed `take: 600` without
+  `orderBy` exhausts on 2024-2025); `ensure-demo` fast path never verifies
+  finance tables.
+
+### Still open after this pass
+
+- ChartOfAccount / JournalEntry / seeded DB content renders English on /ar —
+  finance models still lack `lang` + localize() routing (long-standing P1).
+- `banking/transaction-history` shows a raw `getAccounts` result regression
+  risk if shapes change again — covered by the security pass's shape fix.
+- Ratchet fails on `/documents` + `/exams/new` (other blocks' sessions).
+- Local-only noise: stray FY 2026-2027 fiscal year + 6k `ENR-` invoice burst
+  in the local DB are test artifacts, not prod state.
+
 ## Recent Work (2026-06-13 — Admission+Finance production-readiness pass)
 
 ### Schema

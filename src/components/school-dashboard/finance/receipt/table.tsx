@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -41,6 +42,10 @@ function DataTableInner<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const { dictionary } = useDictionary()
+  const rp = (dictionary as any)?.finance?.receiptPage as
+    | Record<string, string>
+    | undefined
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -65,7 +70,7 @@ function DataTableInner<TData, TValue>({
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Input
-          placeholder="Filter by merchant..."
+          placeholder={rp?.filterByMerchant || "Filter by merchant..."}
           value={
             (table.getColumn("merchantName")?.getFilterValue() as string) ?? ""
           }
@@ -119,7 +124,7 @@ function DataTableInner<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No receipts found.
+                  {rp?.noReceiptsFound || "No receipts found."}
                 </TableCell>
               </TableRow>
             )}
@@ -134,7 +139,7 @@ function DataTableInner<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          {rp?.previous || "Previous"}
         </Button>
         <Button
           variant="outline"
@@ -142,7 +147,7 @@ function DataTableInner<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          {rp?.next || "Next"}
         </Button>
       </div>
     </div>

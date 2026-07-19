@@ -30,77 +30,187 @@ function decimalToNumber(value: Decimal | null | undefined): number {
   return typeof value === "number" ? value : parseFloat(value.toString())
 }
 
-// Cached data fetching for dashboard (5 min TTL)
+/**
+ * All dashboard numbers are aggregated in the database. Fetching raw rows
+ * here previously produced a ~6.7MB payload that exceeded unstable_cache's
+ * 2MB item limit (unhandled rejection on every dashboard load) and shipped
+ * thousands of invoice rows to compute a handful of sums.
+ *
+ * Every Decimal is converted to number BEFORE returning: on a cache hit the
+ * value is revived from JSON, so Decimal instances would come back as
+ * strings and .toFixed()/arithmetic downstream would break.
+ *
+ * `todayIso` is date-only so the cache key stays stable within a day while
+ * the overdue cutoff still advances.
+ */
 const getCachedDashboardData = unstable_cache(
-  async (schoolId: string, startDate: Date, endDate: Date) => {
+  async (
+    schoolId: string,
+    startIso: string,
+    endIso: string,
+    todayIso: string,
+    academicYear: string
+  ) => {
+    const startDate = new Date(startIso)
+    const endDate = new Date(endIso)
+    const today = new Date(todayIso)
+    const invoiceWindow = {
+      schoolId,
+      invoice_date: { gte: startDate, lte: endDate },
+    }
+    const overdueWhere = {
+      ...invoiceWindow,
+      OR: [
+        { status: "OVERDUE" as const },
+        { status: "UNPAID" as const, due_date: { lt: today } },
+      ],
+    }
+
     const [
-      invoices,
-      payments,
-      expenses,
+      invoiceAgg,
+      invoiceStatusGroups,
+      overdueAgg,
+      paymentAgg,
+      expenseGroups,
+      expenseCategoryRows,
       bankAccounts,
       budgets,
-      feeStructures,
-      students,
-      payrollRuns,
-      wallets,
-      transactions,
+      totalStudents,
+      paidStudentGroups,
+      feeAgg,
+      payrollGroups,
     ] = await Promise.all([
-      db.userInvoice.findMany({
-        where: { schoolId, invoice_date: { gte: startDate, lte: endDate } },
+      db.userInvoice.aggregate({
+        where: invoiceWindow,
+        _sum: { total: true },
+        _count: { _all: true },
       }),
-      db.payment.findMany({
+      db.userInvoice.groupBy({
+        by: ["status"],
+        where: invoiceWindow,
+        _count: { _all: true },
+      }),
+      db.userInvoice.aggregate({
+        where: overdueWhere,
+        _sum: { total: true },
+        _count: { _all: true },
+      }),
+      db.payment.aggregate({
         where: {
           schoolId,
           paymentDate: { gte: startDate, lte: endDate },
           status: "SUCCESS",
         },
+        _sum: { amount: true },
       }),
-      db.expense.findMany({
+      db.expense.groupBy({
+        by: ["categoryId"],
         where: { schoolId, expenseDate: { gte: startDate, lte: endDate } },
-        include: { category: true },
+        _sum: { amount: true },
       }),
-      db.bankAccount.findMany({ where: { schoolId } }),
+      db.expenseCategory.findMany({
+        where: { schoolId },
+        select: { id: true, name: true },
+      }),
+      db.bankAccount.findMany({
+        where: { schoolId },
+        select: { name: true, currentBalance: true, type: true },
+      }),
       db.budget.findMany({
         where: { schoolId, status: "ACTIVE" },
-        include: { allocations: { include: { category: true } } },
-      }),
-      db.feeStructure.findMany({ where: { schoolId, isActive: true } }),
-      db.student.findMany({
-        where: { schoolId },
-        include: {
-          feeAssignments: {
-            where: { academicYear: new Date().getFullYear().toString() },
-            include: { payments: { where: { status: "SUCCESS" } } },
+        select: {
+          allocations: {
+            select: {
+              allocated: true,
+              spent: true,
+              remaining: true,
+              category: { select: { name: true } },
+            },
           },
         },
       }),
-      db.payrollRun.findMany({
-        where: { schoolId, payDate: { gte: startDate, lte: endDate } },
+      db.student.count({ where: { schoolId } }),
+      db.payment.groupBy({
+        by: ["studentId"],
+        where: { schoolId, status: "SUCCESS", feeAssignment: { academicYear } },
       }),
-      db.wallet.findMany({ where: { schoolId } }),
-      db.transaction.findMany({
-        where: { schoolId, date: { gte: startDate, lte: endDate } },
-        orderBy: { date: "desc" },
-        take: 10,
+      db.feeAssignment.aggregate({
+        where: { schoolId, academicYear },
+        _sum: { finalAmount: true },
+      }),
+      db.payrollRun.groupBy({
+        by: ["status"],
+        where: { schoolId, payDate: { gte: startDate, lte: endDate } },
+        _sum: { totalNet: true },
+        _count: { _all: true },
       }),
     ])
 
     return {
-      invoices,
-      payments,
-      expenses,
-      bankAccounts,
-      budgets,
-      feeStructures,
-      students,
-      payrollRuns,
-      wallets,
-      transactions,
+      totalRevenue: decimalToNumber(invoiceAgg._sum.total),
+      totalInvoices: invoiceAgg._count._all,
+      invoiceStatusCounts: Object.fromEntries(
+        invoiceStatusGroups.map((g) => [g.status, g._count._all])
+      ) as Record<string, number>,
+      overdueInvoices: overdueAgg._count._all,
+      overdueAmount: decimalToNumber(overdueAgg._sum.total),
+      collectedRevenue: decimalToNumber(paymentAgg._sum.amount),
+      expenseByCategory: expenseGroups.map((g) => ({
+        categoryId: g.categoryId,
+        amount: decimalToNumber(g._sum.amount),
+      })),
+      expenseCategoryNames: Object.fromEntries(
+        expenseCategoryRows.map((c) => [c.id, c.name])
+      ) as Record<string, string>,
+      bankAccounts: bankAccounts.map((acc) => ({
+        name: acc.name,
+        balance: decimalToNumber(acc.currentBalance),
+        type: acc.type,
+      })),
+      budgetCategories: budgets.flatMap((budget) =>
+        budget.allocations.map((alloc) => {
+          const allocated = decimalToNumber(alloc.allocated)
+          const spent = decimalToNumber(alloc.spent)
+          return {
+            category: alloc.category.name,
+            allocated,
+            spent,
+            remaining: decimalToNumber(alloc.remaining),
+            percentage: allocated > 0 ? (spent / allocated) * 100 : 0,
+          }
+        })
+      ),
+      totalStudents,
+      studentsWithPayments: paidStudentGroups.length,
+      totalFeeAmount: decimalToNumber(feeAgg._sum.finalAmount),
+      payroll: payrollGroups.map((g) => ({
+        status: g.status,
+        totalNet: decimalToNumber(g._sum.totalNet),
+        count: g._count._all,
+      })),
     }
   },
   [FINANCE_DASHBOARD_TAG],
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: [FINANCE_DASHBOARD_TAG] }
 )
+
+/**
+ * Fee data stores academicYear as a "YYYY-YYYY" range keyed to the school's
+ * latest SchoolYear (same resolution as fee-auto-assign/fee-provisioning).
+ * The previous bare-calendar-year filter ("2026") could never match, so the
+ * fee metrics were permanently zero.
+ */
+async function resolveCurrentAcademicYear(schoolId: string): Promise<string> {
+  const currentYear = await db.schoolYear.findFirst({
+    where: { schoolId },
+    orderBy: { startDate: "desc" },
+    select: { yearName: true },
+  })
+  return (
+    currentYear?.yearName ??
+    `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`
+  )
+}
 
 export async function getDashboardStats(
   dateRange: "month" | "quarter" | "year" = "month"
@@ -142,64 +252,44 @@ export async function getDashboardStats(
       break
   }
 
-  // Use cached data fetching (5 min TTL) for performance
-  const {
-    invoices,
-    payments,
-    expenses,
-    bankAccounts,
-    budgets,
-    feeStructures,
-    students,
-    payrollRuns,
-    wallets,
-    transactions,
-  } = await getCachedDashboardData(schoolId, startDate, endDate)
-
-  // Calculate Revenue Metrics
-  const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
-  const collectedRevenue = payments.reduce(
-    (sum, pay) => sum + decimalToNumber(pay.amount),
-    0
+  // Aggregated in the DB, cached 5 min. Date-only args keep the key stable.
+  const academicYear = await resolveCurrentAcademicYear(schoolId)
+  const data = await getCachedDashboardData(
+    schoolId,
+    startDate.toISOString(),
+    endDate.toISOString(),
+    now.toISOString().slice(0, 10),
+    academicYear
   )
+
+  // Revenue Metrics
+  const totalRevenue = data.totalRevenue
+  const collectedRevenue = data.collectedRevenue
   const outstandingRevenue = totalRevenue - collectedRevenue
   const collectionRate =
     totalRevenue > 0 ? (collectedRevenue / totalRevenue) * 100 : 0
 
-  // Calculate Expense Metrics
-  const totalExpenses = expenses.reduce(
-    (sum, exp) => sum + decimalToNumber(exp.amount),
+  // Expense Metrics
+  const totalExpenses = data.expenseByCategory.reduce(
+    (sum, g) => sum + g.amount,
     0
   )
+  const expenseCategories = data.expenseByCategory.map((g) => ({
+    category:
+      (g.categoryId && data.expenseCategoryNames[g.categoryId]) || "Other",
+    amount: g.amount,
+    percentage: totalExpenses > 0 ? (g.amount / totalExpenses) * 100 : 0,
+  }))
 
-  // Group expenses by category
-  const expenseByCategory = expenses.reduce(
-    (acc, exp) => {
-      const category = exp.category?.name || "Other"
-      if (!acc[category]) acc[category] = 0
-      acc[category] += decimalToNumber(exp.amount)
-      return acc
-    },
-    {} as Record<string, number>
-  )
-
-  const expenseCategories = Object.entries(expenseByCategory).map(
-    ([category, amount]) => ({
-      category,
-      amount,
-      percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
-    })
-  )
-
-  // Calculate Profit Metrics
+  // Profit Metrics
   const grossProfit = collectedRevenue - totalExpenses
   const netProfit = grossProfit // Simplified - should include other deductions
   const profitMargin =
     collectedRevenue > 0 ? (netProfit / collectedRevenue) * 100 : 0
 
-  // Calculate Cash Metrics
-  const cashBalance = bankAccounts.reduce(
-    (sum, acc) => sum + decimalToNumber(acc.currentBalance),
+  // Cash Metrics
+  const cashBalance = data.bankAccounts.reduce(
+    (sum, acc) => sum + acc.balance,
     0
   )
   const cashInflow = collectedRevenue
@@ -208,78 +298,33 @@ export async function getDashboardStats(
   const cashRunway =
     monthlyExpenses > 0 ? Math.floor(cashBalance / monthlyExpenses) : 999
 
-  // Calculate Invoice Metrics
-  const totalInvoices = invoices.length
-  const paidInvoices = invoices.filter((inv) => inv.status === "PAID").length
-  const pendingInvoices = invoices.filter(
-    (inv) => inv.status === "UNPAID"
-  ).length
-  const overdueInvoices = invoices.filter(
-    (inv) =>
-      inv.status === "OVERDUE" ||
-      (inv.status === "UNPAID" && inv.due_date < now)
-  ).length
-  const overdueAmount = invoices
-    .filter(
-      (inv) =>
-        inv.status === "OVERDUE" ||
-        (inv.status === "UNPAID" && inv.due_date < now)
-    )
-    .reduce((sum, inv) => sum + Number(inv.total), 0)
+  // Invoice Metrics
+  const totalInvoices = data.totalInvoices
+  const paidInvoices = data.invoiceStatusCounts["PAID"] ?? 0
+  const pendingInvoices = data.invoiceStatusCounts["UNPAID"] ?? 0
+  const overdueInvoices = data.overdueInvoices
+  const overdueAmount = data.overdueAmount
 
-  // Calculate Payroll Metrics
-  const totalPayroll = payrollRuns.reduce(
-    (sum, run) => sum + decimalToNumber(run.totalNet),
-    0
-  )
-  const payrollProcessed = payrollRuns.filter(
-    (run) => run.status === "PAID"
-  ).length
-  const pendingPayroll = payrollRuns.filter(
-    (run) => run.status !== "PAID" && run.status !== "CANCELLED"
-  ).length
+  // Payroll Metrics
+  const totalPayroll = data.payroll.reduce((sum, g) => sum + g.totalNet, 0)
+  const payrollProcessed = data.payroll
+    .filter((g) => g.status === "PAID")
+    .reduce((sum, g) => sum + g.count, 0)
+  const pendingPayroll = data.payroll
+    .filter((g) => g.status !== "PAID" && g.status !== "CANCELLED")
+    .reduce((sum, g) => sum + g.count, 0)
 
-  // Calculate Fee Metrics
-  const totalStudents = students.length
-  const studentsWithPayments = students.filter((s) =>
-    s.feeAssignments.some((fa) => fa.payments.length > 0)
-  ).length
+  // Fee Metrics (scoped to the school's current academic year)
+  const totalStudents = data.totalStudents
+  const studentsWithPayments = data.studentsWithPayments
   const studentsWithoutPayments = totalStudents - studentsWithPayments
-  const totalFeeAmount = students.reduce(
-    (sum, s) =>
-      sum +
-      s.feeAssignments.reduce(
-        (fSum, fa) => fSum + decimalToNumber(fa.finalAmount),
-        0
-      ),
-    0
-  )
   const averageFeePerStudent =
-    totalStudents > 0 ? totalFeeAmount / totalStudents : 0
+    totalStudents > 0 ? data.totalFeeAmount / totalStudents : 0
 
-  // Bank Accounts
-  const bankAccountsData = bankAccounts.map((acc) => ({
-    name: acc.name,
-    balance: decimalToNumber(acc.currentBalance),
-    type: acc.type,
-  }))
+  const bankAccountsData = data.bankAccounts
+  const budgetCategories = data.budgetCategories
 
-  // Budget Categories
-  const budgetCategories = budgets.flatMap((budget) =>
-    budget.allocations.map((alloc) => ({
-      category: alloc.category.name,
-      allocated: decimalToNumber(alloc.allocated),
-      spent: decimalToNumber(alloc.spent),
-      remaining: decimalToNumber(alloc.remaining),
-      percentage:
-        decimalToNumber(alloc.allocated) > 0
-          ? (decimalToNumber(alloc.spent) / decimalToNumber(alloc.allocated)) *
-            100
-          : 0,
-    }))
-  )
-
-  // Calculate budget totals
+  // Budget totals
   const budgetTotal = budgetCategories.reduce(
     (sum, cat) => sum + cat.allocated,
     0
@@ -352,7 +397,8 @@ export async function getDashboardStats(
 }
 
 export async function getRecentTransactions(
-  limit = 10
+  limit = 10,
+  lang: Locale = "ar"
 ): Promise<RecentTransaction[]> {
   const session = await auth()
   if (!session?.user?.schoolId) {
@@ -371,6 +417,11 @@ export async function getRecentTransactions(
   }
 
   const schoolId = session.user.schoolId
+
+  const dictionary = await getFinanceDictionary(lang)
+  const dp = (dictionary as any)?.finance?.dashboardPage as
+    | Record<string, string>
+    | undefined
 
   // Fetch recent transactions from multiple sources
   const [bankTransactions, expenses, payments] = await Promise.all([
@@ -429,7 +480,10 @@ export async function getRecentTransactions(
     recentTransactions.push({
       id: pay.id,
       type: "income",
-      description: `Fee payment from ${pay.student.firstName} ${pay.student.lastName}`,
+      description: (dp?.feePaymentFrom || "Fee payment from {name}").replace(
+        "{name}",
+        `${pay.student.firstName} ${pay.student.lastName}`
+      ),
       amount: decimalToNumber(pay.amount),
       date: pay.paymentDate,
       status:
@@ -438,7 +492,7 @@ export async function getRecentTransactions(
           : pay.status === "FAILED"
             ? "failed"
             : "pending",
-      category: "Student Fees",
+      category: dp?.studentFeesCategory || "Student Fees",
       reference: pay.receiptNumber,
     })
   })

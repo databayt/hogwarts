@@ -284,15 +284,15 @@ function TransactionsTableImprovedInner({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Download className="me-2 h-4 w-4" />
-                    Export
+                    {dictionary?.export || "Export"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => onExport("csv")}>
-                    Export as CSV
+                    {dictionary?.exportCSV || "Export as CSV"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onExport("pdf")}>
-                    Export as PDF
+                    {dictionary?.exportPDF || "Export as PDF"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -375,7 +375,9 @@ function TransactionsTableImprovedInner({
                   <SelectValue placeholder={dictionary?.account || "Account"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Accounts</SelectItem>
+                  <SelectItem value="">
+                    {dictionary?.allAccounts || "All Accounts"}
+                  </SelectItem>
                   {accounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.name}
@@ -399,7 +401,9 @@ function TransactionsTableImprovedInner({
                       paginatedTransactions.length > 0
                     }
                     onCheckedChange={toggleAllRows}
-                    aria-label="Select all transactions"
+                    aria-label={
+                      dictionary?.selectAll || "Select all transactions"
+                    }
                   />
                 </TableHead>
                 {visibleColumns.date && (
@@ -536,7 +540,8 @@ function TransactionsTableImprovedInner({
                       >
                         <Ellipsis className="h-4 w-4" />
                         <span className="sr-only">
-                          View transaction details
+                          {dictionary?.viewDetails ||
+                            "View transaction details"}
                         </span>
                       </Button>
                     </TableCell>
@@ -551,9 +556,11 @@ function TransactionsTableImprovedInner({
         {totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(startIndex + pageSize, sortedTransactions.length)} of{" "}
-              {sortedTransactions.length} transactions
+              {dictionary?.showing || "Showing"} {startIndex + 1}{" "}
+              {dictionary?.to || "to"}{" "}
+              {Math.min(startIndex + pageSize, sortedTransactions.length)}{" "}
+              {dictionary?.of || "of"} {sortedTransactions.length}{" "}
+              {dictionary?.transactions || "transactions"}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -562,10 +569,11 @@ function TransactionsTableImprovedInner({
                 onClick={() => onPageChange?.(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Previous
+                {dictionary?.previous || "Previous"}
               </Button>
               <span className="text-sm">
-                Page {currentPage} of {totalPages}
+                {dictionary?.page || "Page"} {currentPage}{" "}
+                {dictionary?.of || "of"} {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -573,7 +581,7 @@ function TransactionsTableImprovedInner({
                 onClick={() => onPageChange?.(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {dictionary?.next || "Next"}
               </Button>
             </div>
           </div>

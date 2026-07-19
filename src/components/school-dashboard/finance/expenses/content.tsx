@@ -34,6 +34,14 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   const c = fd?.common as Record<string, string> | undefined
 
   const { schoolId } = await getTenantContext()
+  const school = schoolId
+    ? await db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+    : null
+  const currency = school?.currency ?? "USD"
+  const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   if (!schoolId) {
     return (
@@ -118,7 +126,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
       <DashboardGrid type="stats">
         <StatsCard
           title={ep?.totalExpenses || "Total Expenses"}
-          value={formatCurrency(totalExpenses)}
+          value={formatCurrency(totalExpenses, bcp, currency)}
           description={ep?.approvedExpenses || "Approved expenses"}
           icon={DollarSign}
         />

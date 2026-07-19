@@ -60,7 +60,7 @@ export async function TransactionHistoryContent({
         transactions={allTransactions}
         accounts={accounts}
         currentPage={page}
-        dictionary={dictionary}
+        dictionary={bt}
       />
     </div>
   )

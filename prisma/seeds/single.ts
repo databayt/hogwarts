@@ -105,6 +105,7 @@ import type {
   YearLevelRef,
 } from "./types"
 import { logSuccess, measureDuration } from "./utils"
+import { seedWallets } from "./wallet"
 
 // ============================================================================
 // DB RESOLVERS - Fetch existing data instead of re-seeding
@@ -852,6 +853,14 @@ const SEEDS: Record<string, SeedEntry> = {
     run: async (prisma, schoolId) => {
       const { adminUsers } = await resolveUsers(prisma, schoolId)
       await seedBanking(prisma, schoolId, adminUsers)
+    },
+  },
+  wallet: {
+    description: "School + student wallets with transaction history",
+    run: async (prisma, schoolId) => {
+      const students = await resolveStudents(prisma, schoolId)
+      const { adminUsers } = await resolveUsers(prisma, schoolId)
+      await seedWallets(prisma, schoolId, students, adminUsers)
     },
   },
 

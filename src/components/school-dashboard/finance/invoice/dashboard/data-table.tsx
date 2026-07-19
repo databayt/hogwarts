@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 import {
   Table,
   TableBody,
@@ -27,6 +28,10 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const { dictionary } = useDictionary()
+  const nr =
+    ((dictionary as any)?.finance?.common?.noResults as string | undefined) ||
+    "No results."
   const table = useReactTable({
     data,
     columns,
@@ -71,7 +76,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                {nr}
               </TableCell>
             </TableRow>
           )}

@@ -124,10 +124,9 @@ export default function FeeStructureForm({
           )
           router.push(`/${lang}/finance/fees/structures`)
         } else {
+          // result.error is an ACTION_ERRORS code, never a display string.
           ErrorToast(
-            result.error ||
-              ff?.failedCreateFeeStructure ||
-              "Failed to save fee structure"
+            ff?.failedCreateFeeStructure || "Failed to save fee structure"
           )
         }
       })

@@ -98,6 +98,7 @@ import {
   logSummary,
   measureDuration,
 } from "./utils"
+import { seedWallets } from "./wallet"
 
 // ============================================================================
 // SEED STATUS — the single source of truth for "is the demo fully seeded?"
@@ -433,6 +434,10 @@ export async function seedMain(externalPrisma?: PrismaClient) {
     // ========================================================================
     await measureDuration("Banking", () =>
       seedBanking(prisma, school.id, adminUsers)
+    )
+
+    await measureDuration("Wallets", () =>
+      seedWallets(prisma, school.id, students, adminUsers)
     )
 
     // ========================================================================

@@ -151,9 +151,20 @@ export const getPaymentColumns = (
       cell: ({ getValue }) => {
         const method = getValue<string>()
         const color = PAYMENT_METHOD_COLORS[method] ?? ""
+        const methodLabels: Record<string, string | undefined> = {
+          CASH: col?.cash,
+          CHEQUE: col?.cheque,
+          BANK_TRANSFER: col?.bankTransfer,
+          CREDIT_CARD: col?.creditCard,
+          DEBIT_CARD: col?.debitCard,
+          UPI: col?.upi,
+          NET_BANKING: col?.netBanking,
+          WALLET: col?.wallet,
+          OTHER: col?.other,
+        }
         return (
           <Badge variant="outline" className={color}>
-            {method.replace(/_/g, " ")}
+            {methodLabels[method] || method.replace(/_/g, " ")}
           </Badge>
         )
       },
@@ -189,9 +200,16 @@ export const getPaymentColumns = (
       cell: ({ getValue }) => {
         const status = getValue<string>()
         const color = STATUS_COLORS[status as keyof typeof STATUS_COLORS] ?? ""
+        const statusLabels: Record<string, string | undefined> = {
+          PENDING: col?.pending,
+          SUCCESS: col?.success,
+          FAILED: col?.failed,
+          CANCELLED: col?.cancelled,
+          REFUNDED: col?.refunded,
+        }
         return (
           <Badge variant="outline" className={color}>
-            {status}
+            {statusLabels[status] || status}
           </Badge>
         )
       },

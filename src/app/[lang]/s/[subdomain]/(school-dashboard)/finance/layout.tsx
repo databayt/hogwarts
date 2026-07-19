@@ -13,7 +13,7 @@ interface Props {
 export default async function FinanceLayout({ children, params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang as Locale)
-  const d = dictionary?.school?.settings // Finance uses settings dictionary for now
+  const d = (dictionary as { finance?: { title?: string } })?.finance
 
   return (
     <div className="space-y-6">

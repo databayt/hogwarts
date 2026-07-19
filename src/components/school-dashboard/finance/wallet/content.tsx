@@ -78,9 +78,15 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   let transactionsCount = 0
   let totalBalance = 0
   let totalTopups = 0
+  let currency = "USD"
 
   if (schoolId) {
     try {
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+      if (school?.currency) currency = school.currency
       ;[walletsCount, transactionsCount] = await Promise.all([
         db.wallet.count({ where: { schoolId, isActive: true } }),
         db.walletTransaction.count({ where: { schoolId } }),
@@ -107,13 +113,14 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   }
 
   const wp = fd?.walletPage as Record<string, string> | undefined
+  const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   return (
     <div className="space-y-6">
       <DashboardGrid type="stats">
         <StatsCard
           title={wp?.totalBalance || "Total Balance"}
-          value={formatCurrency(totalBalance)}
+          value={formatCurrency(totalBalance, bcp, currency)}
           description={wp?.acrossAllWallets || "Across all wallets"}
           icon={DollarSign}
         />
@@ -131,7 +138,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
         />
         <StatsCard
           title={wp?.totalTopUps || "Total Top-ups"}
-          value={formatCurrency(totalTopups)}
+          value={formatCurrency(totalTopups, bcp, currency)}
           description={wp?.lifetimeTopUps || "Lifetime top-ups"}
           icon={CircleArrowUp}
         />

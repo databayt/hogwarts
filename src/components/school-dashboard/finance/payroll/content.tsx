@@ -41,6 +41,14 @@ interface Props {
 
 export default async function PayrollContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+  const school = schoolId
+    ? await db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+    : null
+  const currency = school?.currency ?? "USD"
+  const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   const fd = (dictionary as any)?.finance
   const c = fd?.common as Record<string, string> | undefined
@@ -149,7 +157,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
       <DashboardGrid type="stats">
         <StatsCard
           title={pp?.currentMonthPayroll || "Current Month Payroll"}
-          value={formatCurrency(monthlyPayroll)}
+          value={formatCurrency(monthlyPayroll, bcp, currency)}
           description={pp?.totalNetSalaries || "Total net salaries"}
           icon={DollarSign}
         />

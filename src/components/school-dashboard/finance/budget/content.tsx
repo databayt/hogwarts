@@ -35,6 +35,14 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   const c = fd?.common as Record<string, string> | undefined
 
   const { schoolId } = await getTenantContext()
+  const school = schoolId
+    ? await db.school.findUnique({
+        where: { id: schoolId },
+        select: { currency: true },
+      })
+    : null
+  const currency = school?.currency ?? "USD"
+  const bcp = lang === "ar" ? "ar-SA" : "en-US"
 
   if (!schoolId) {
     return (
@@ -117,19 +125,19 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
       <DashboardGrid type="stats">
         <StatsCard
           title={bp?.totalBudget || "Total Budget"}
-          value={formatCurrency(totalBudget)}
+          value={formatCurrency(totalBudget, bcp, currency)}
           description={bp?.allocatedBudget || "Allocated budget"}
           icon={DollarSign}
         />
         <StatsCard
           title={bp?.spent || "Spent"}
-          value={formatCurrency(totalSpent)}
+          value={formatCurrency(totalSpent, bcp, currency)}
           description={`${formatPercentage(utilizationRate)} utilization`}
           icon={TrendingUp}
         />
         <StatsCard
           title={bp?.remaining || "Remaining"}
-          value={formatCurrency(variance)}
+          value={formatCurrency(variance, bcp, currency)}
           description={bp?.availableBudget || "Available budget"}
           icon={CircleCheck}
         />

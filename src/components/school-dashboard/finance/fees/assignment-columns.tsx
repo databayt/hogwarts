@@ -155,9 +155,16 @@ export const getFeeAssignmentColumns = (
       cell: ({ getValue }) => {
         const status = getValue<string>()
         const color = STATUS_COLORS[status as keyof typeof STATUS_COLORS] ?? ""
+        const statusLabels: Record<string, string | undefined> = {
+          PENDING: col?.pending,
+          PARTIAL: col?.partial,
+          PAID: col?.paid,
+          OVERDUE: col?.overdue,
+          CANCELLED: col?.cancelled,
+        }
         return (
           <Badge variant="outline" className={color}>
-            {status.replace(/_/g, " ")}
+            {statusLabels[status] || status.replace(/_/g, " ")}
           </Badge>
         )
       },

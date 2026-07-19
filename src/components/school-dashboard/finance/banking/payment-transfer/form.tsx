@@ -47,44 +47,43 @@ interface AccountSelectProps {
 }
 
 /**
- * AccountSelect - Memoized select component for account selection
- * Only re-renders when accounts or selectedAccount changes
+ * AccountSelect - plain component for account selection. (This was wrapped
+ * in a module-level useMemo, which is an invalid hook call at import time
+ * and crashed the whole payment-transfer route on load.)
  */
-const AccountSelect = useMemo(() => {
-  return function AccountSelectComponent({
-    accounts,
-    selectedAccount,
-    onValueChange,
-    dictionary,
-  }: AccountSelectProps) {
-    return (
-      <Select
-        value={selectedAccount}
-        onValueChange={onValueChange}
-        name="accountId"
-        required
-      >
-        <SelectTrigger id="source-account">
-          <SelectValue
-            placeholder={dictionary?.selectAccount || "Select an account"}
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {accounts.map((account) => (
-            <SelectItem key={account.id} value={account.id}>
-              <div className="flex w-full items-center justify-between">
-                <span>{account.name}</span>
-                <span className="text-muted-foreground ms-2 text-sm">
-                  {formatAmount(Number(account.currentBalance))}
-                </span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    )
-  }
-}, [])
+function AccountSelect({
+  accounts,
+  selectedAccount,
+  onValueChange,
+  dictionary,
+}: AccountSelectProps) {
+  return (
+    <Select
+      value={selectedAccount}
+      onValueChange={onValueChange}
+      name="accountId"
+      required
+    >
+      <SelectTrigger id="source-account">
+        <SelectValue
+          placeholder={dictionary?.selectAccount || "Select an account"}
+        />
+      </SelectTrigger>
+      <SelectContent>
+        {accounts.map((account) => (
+          <SelectItem key={account.id} value={account.id}>
+            <div className="flex w-full items-center justify-between">
+              <span>{account.name}</span>
+              <span className="text-muted-foreground ms-2 text-sm">
+                {formatAmount(Number(account.currentBalance))}
+              </span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
 
 function PaymentTransferForm(props: Props) {
   const [selectedFromAccount, setSelectedFromAccount] = useState("")
@@ -127,12 +126,26 @@ function PaymentTransferForm(props: Props) {
 
   return (
     <form id="transfer-form" action={formAction} className="space-y-6">
-      {/* Status Messages */}
-      {!state.success && (
+      {/* Status Messages — map server error CODES to localized strings;
+          never render the server's raw English message. The initial state
+          carries an empty code, so only render after a real failure. */}
+      {!state.success && state.error.code && (
         <Alert variant="destructive">
           <Icons.circleAlert className="h-4 w-4" />
           <AlertDescription>
-            {state.error.message || "An error occurred"}
+            {(
+              {
+                UNAUTHORIZED: props.dictionary?.transferErrorUnauthorized,
+                NO_SCHOOL_CONTEXT: props.dictionary?.transferErrorNoSchool,
+                VALIDATION_ERROR: props.dictionary?.transferErrorValidation,
+                NOT_FOUND: props.dictionary?.transferErrorNotFound,
+                INSUFFICIENT_FUNDS:
+                  props.dictionary?.transferErrorInsufficientFunds,
+                INTERNAL_ERROR: props.dictionary?.transferErrorInternal,
+              } as Record<string, string | undefined>
+            )[state.error.code] ||
+              props.dictionary?.transferErrorInternal ||
+              "An error occurred"}
           </AlertDescription>
         </Alert>
       )}

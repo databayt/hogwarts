@@ -34,6 +34,23 @@ import {
 } from "./validation"
 
 /**
+ * Prisma returns transactionAmount as a Decimal, which serializes to a
+ * string across the RSC boundary — the UI then crashes calling .toFixed()
+ * on it. Convert to a plain number before returning rows to components.
+ */
+function toClientReceipt<T extends { transactionAmount: unknown }>(
+  receipt: T
+): T {
+  return {
+    ...receipt,
+    transactionAmount:
+      receipt.transactionAmount == null
+        ? null
+        : Number(receipt.transactionAmount),
+  }
+}
+
+/**
  * Upload a new receipt file and create database record
  * Automatically triggers AI extraction in background
  */
@@ -255,7 +272,7 @@ export async function getReceipts(input?: {
     return {
       success: true,
       data: {
-        receipts: receipts as ExpenseReceipt[],
+        receipts: receipts.map(toClientReceipt) as ExpenseReceipt[],
         total,
       },
     }
@@ -322,7 +339,7 @@ export async function getReceiptById(
 
     return {
       success: true,
-      data: receipt as ExpenseReceipt,
+      data: toClientReceipt(receipt) as ExpenseReceipt,
     }
   } catch (error) {
     logger.error(

@@ -18,6 +18,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
+import { FinanceAccessDenied } from "../access-denied"
+import { resolveFinanceAccess } from "../guard"
 import { formatMoney } from "../lib/format"
 import {
   getDashboardStats,
@@ -48,6 +50,13 @@ export async function FinanceDashboardContent({
   const dp = fd?.dashboardPage as Record<string, string> | undefined
   const c = fd?.common as Record<string, string> | undefined
 
+  // Same grant the stats actions enforce — deny with UI instead of letting
+  // the action throw into the segment error boundary.
+  const { can } = await resolveFinanceAccess("reports", ["view"])
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="reports" />
+  }
+
   const userRole = session.user.role || "USER"
 
   // Look up tenant currency once so every downstream formatter renders the
@@ -66,7 +75,7 @@ export async function FinanceDashboardContent({
   // Fetch all lab data in parallel
   const [stats, transactions, alerts, quickActions] = await Promise.all([
     getDashboardStats("month"),
-    getRecentTransactions(5),
+    getRecentTransactions(5, lang as Locale),
     getFinancialAlerts(lang as Locale),
     getQuickActionsForRole(userRole, lang as Locale),
   ])
