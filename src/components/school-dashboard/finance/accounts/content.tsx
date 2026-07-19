@@ -190,67 +190,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
             label: ap?.viewLedger || "View Ledger",
             href: `/${lang}/finance/accounts/ledger`,
           }}
-          secondaryAction={{
-            label: ap?.accountBalances || "Account Balances",
-            href: `/${lang}/finance/accounts/ledger/balances`,
-          }}
         />
-        {canPencil && (
-          <FeatureCard
-            title={ap?.fiscalYears || d?.fiscalYear || "Fiscal Years"}
-            description={
-              ap?.manageAccountingPeriods || "Manage accounting periods"
-            }
-            icon={Calendar}
-            primaryAction={{
-              label: ap?.fiscalYears || "Fiscal Years",
-              href: `/${lang}/finance/accounts/fiscal`,
-              count: fiscalYearsCount,
-            }}
-            secondaryAction={
-              canCreate
-                ? {
-                    label: ap?.newYear || "New Year",
-                    href: `/${lang}/finance/accounts/fiscal/new`,
-                  }
-                : undefined
-            }
-          />
-        )}
-        {canApprove && (
-          <FeatureCard
-            title={ap?.periodClosing || "Period Closing"}
-            description={
-              ap?.closeAccountingPeriods || "Close accounting periods"
-            }
-            icon={Lock}
-            primaryAction={{
-              label: ap?.closePeriod || "Close Period",
-              href: `/${lang}/finance/accounts/closing`,
-            }}
-            secondaryAction={{
-              label: c?.history || "History",
-              href: `/${lang}/finance/accounts/closing/history`,
-            }}
-          />
-        )}
-        {canPencil && (
-          <FeatureCard
-            title={ap?.accountingSettings || "Accounting Settings"}
-            description={
-              ap?.configureAccountingRules || "Configure accounting rules"
-            }
-            icon={Settings}
-            primaryAction={{
-              label: c?.settings || "Settings",
-              href: `/${lang}/finance/accounts/settings`,
-            }}
-            secondaryAction={{
-              label: ap?.postingRules || "Posting Rules",
-              href: `/${lang}/finance/accounts/settings/rules`,
-            }}
-          />
-        )}
       </DashboardGrid>
     </div>
   )

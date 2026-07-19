@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import type { Metadata } from "next"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { db } from "@/lib/db"
@@ -12,6 +13,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { PayrollRunActions } from "@/components/school-dashboard/finance/payroll/run-actions"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
@@ -34,7 +36,11 @@ export default async function PayrollRunDetailPage({ params }: Props) {
   const slipStatus = dictionary?.finance?.slipStatus as
     | Record<string, string>
     | undefined
-  const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])
+  const { schoolId, can } = await resolveFinanceAccess("payroll", [
+    "view",
+    "process",
+    "approve",
+  ])
 
   if (!schoolId) {
     return (
@@ -86,6 +92,14 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         <Badge>{runStatus?.[run.status] ?? run.status}</Badge>
       </div>
 
+      <PayrollRunActions
+        runId={run.id}
+        status={run.status}
+        labels={dictionary?.finance?.payrollWorkflow}
+        canProcess={can.process}
+        canApprove={can.approve}
+      />
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -131,36 +145,45 @@ export default async function PayrollRunDetailPage({ params }: Props) {
         </h4>
         <div className="space-y-2">
           {run.salarySlips.map((slip) => (
-            <Card key={slip.id}>
-              <CardContent className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium">
-                    {[slip.teacher?.firstName, slip.teacher?.lastName]
-                      .filter(Boolean)
-                      .join(" ")}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {slip.slipNumber}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-end">
+            <Link
+              key={slip.id}
+              href={`/${lang}/finance/payroll/slips/${slip.id}`}
+            >
+              <Card className="hover:bg-muted/50 transition-colors">
+                <CardContent className="flex items-center justify-between py-3">
+                  <div>
                     <p className="font-medium">
-                      {formatCurrency(Number(slip.netSalary), lang, currency)}
+                      {[slip.teacher?.firstName, slip.teacher?.lastName]
+                        .filter(Boolean)
+                        .join(" ")}
                     </p>
                     <p className="text-muted-foreground text-xs">
-                      {c?.gross || "Gross"}:{" "}
-                      {formatCurrency(Number(slip.grossSalary), lang, currency)}
+                      {slip.slipNumber}
                     </p>
                   </div>
-                  <Badge
-                    variant={slip.status === "PAID" ? "default" : "secondary"}
-                  >
-                    {slipStatus?.[slip.status] ?? slip.status}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex items-center gap-3">
+                    <div className="text-end">
+                      <p className="font-medium">
+                        {formatCurrency(Number(slip.netSalary), lang, currency)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {c?.gross || "Gross"}:{" "}
+                        {formatCurrency(
+                          Number(slip.grossSalary),
+                          lang,
+                          currency
+                        )}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={slip.status === "PAID" ? "default" : "secondary"}
+                    >
+                      {slipStatus?.[slip.status] ?? slip.status}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

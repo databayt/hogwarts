@@ -22,19 +22,28 @@ export default async function PayrollLayout({ children, params }: Props) {
   const role = (session?.user?.role ?? null) as Role | null
   const d = dictionary?.finance?.payroll
   const ps = dictionary?.finance?.payrollSettings
+  const pay = dictionary?.finance?.payslip
   const canView = isRoleIn(role, FINANCE_VIEW_ROLES)
 
-  // Only routes that exist are listed. Processing / history / deductions /
-  // benefits / reports have no page or component yet — their labels stay in the
-  // dictionary (finance.payroll.navigation) for whenever they get built.
+  // Non-finance staff get only their own payslips (own-data, like /fees/my);
+  // finance roles get the admin nav. Only routes that exist are listed.
   const n = d?.navigation
   const payrollPages: PageNavItem[] = !canView
-    ? []
+    ? [
+        {
+          name: pay?.myPayslips || "My Payslips",
+          href: `/${lang}/finance/payroll/my`,
+        },
+      ]
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/payroll` },
         {
           name: n?.runs || "Payroll Runs",
           href: `/${lang}/finance/payroll/runs`,
+        },
+        {
+          name: pay?.myPayslips || "My Payslips",
+          href: `/${lang}/finance/payroll/my`,
         },
         {
           name: ps?.title || "Payroll Settings",

@@ -45,10 +45,6 @@ export default async function AccountsLayout({ children, params }: Props) {
           name: n?.reconciliation || "Reconciliation",
           href: `/${lang}/finance/accounts/reconciliation`,
         },
-        {
-          name: n?.settings || "Settings",
-          href: `/${lang}/finance/accounts/settings`,
-        },
       ]
 
   return (

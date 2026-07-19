@@ -30,28 +30,16 @@ export default async function ReportsLayout({ children, params }: Props) {
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/reports` },
         {
-          name: n?.financial || "Financial Statements",
-          href: `/${lang}/finance/reports/financial`,
-        },
-        {
-          name: n?.cashFlow || "Cash Flow",
-          href: `/${lang}/finance/reports/cashflow`,
-        },
-        {
-          name: n?.profitLoss || "Profit & Loss",
-          href: `/${lang}/finance/reports/profitloss`,
-        },
-        {
           name: n?.balanceSheet || "Balance Sheet",
           href: `/${lang}/finance/reports/balance-sheet`,
         },
         {
-          name: n?.custom || "Custom Reports",
-          href: `/${lang}/finance/reports/custom`,
+          name: n?.profitLoss || "Profit & Loss",
+          href: `/${lang}/finance/reports/profit-loss`,
         },
         {
-          name: n?.schedule || "Schedule Reports",
-          href: `/${lang}/finance/reports/schedule`,
+          name: n?.trialBalance || "Trial Balance",
+          href: `/${lang}/finance/reports/trial-balance`,
         },
       ]
 

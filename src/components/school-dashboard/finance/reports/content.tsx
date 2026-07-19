@@ -167,11 +167,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                 {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/profit-loss/history`}>
-                {c?.viewHistory || "View History"}
-              </Link>
-            </Button>
           </CardContent>
         </Card>
 
@@ -190,36 +185,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
             <Button asChild className="w-full">
               <Link href={`/${lang}/finance/reports/balance-sheet`}>
                 {c?.generateReport || "Generate Report"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/balance-sheet/comparative`}>
-                {rp?.comparative || "Comparative"}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              {rp?.cashFlowStatement || "Cash Flow Statement"}
-            </CardTitle>
-            <CardDescription>
-              {rp?.cashFlowDesc ||
-                "Operating, investing, and financing cash flows"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href={`/${lang}/finance/reports/cash-flow`}>
-                {c?.generateReport || "Generate Report"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/cash-flow/projection`}>
-                {rp?.projection || "Projection"}
               </Link>
             </Button>
           </CardContent>
@@ -242,85 +207,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                 {c?.generateReport || "Generate Report"}
               </Link>
             </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/trial-balance/adjusted`}>
-                {rp?.adjusted || "Adjusted"}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              {rp?.revenueAnalysis || "Revenue Analysis"}
-            </CardTitle>
-            <CardDescription>
-              {rp?.revenueAnalysisDesc ||
-                "Detailed breakdown of revenue sources"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href={`/${lang}/finance/reports/revenue`}>
-                {c?.generateReport || "Generate Report"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/revenue/trends`}>
-                {rp?.trends || "Trends"}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              {rp?.expenseAnalysis || "Expense Analysis"}
-            </CardTitle>
-            <CardDescription>
-              {rp?.expenseAnalysisDesc ||
-                "Detailed breakdown of expense categories"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href={`/${lang}/finance/reports/expense`}>
-                {c?.generateReport || "Generate Report"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/expense/variance`}>
-                {rp?.variance || "Variance"}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {rp?.customReports || "Custom Reports"}
-            </CardTitle>
-            <CardDescription>
-              {rp?.buildCustomReports || "Build custom financial reports"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button asChild className="w-full">
-              <Link href={`/${lang}/finance/reports/custom`}>
-                {rp?.createCustom || "Create Custom"}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/custom/templates`}>
-                {rp?.templates || "Templates"}
-              </Link>
-            </Button>
           </CardContent>
         </Card>
 
@@ -341,11 +227,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
                   "{count}",
                   String(reportsCount)
                 )}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="w-full" size="sm">
-              <Link href={`/${lang}/finance/reports/schedule`}>
-                {rp?.scheduleReports || "Schedule Reports"}
               </Link>
             </Button>
           </CardContent>

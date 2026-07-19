@@ -244,10 +244,6 @@ export const getSalaryStructureColumns = (
               label={t.view}
               href={`/${lang}/finance/salary/structures/${salary.id}`}
             />
-            <ActionMenuItem
-              label={t.edit}
-              href={`/${lang}/finance/salary/structures/${salary.id}/edit`}
-            />
           </ActionMenu>
         )
       },

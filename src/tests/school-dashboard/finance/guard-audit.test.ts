@@ -26,16 +26,20 @@ import { auditFinanceGuards } from "../../../../scripts/finance-guard-audit"
 //   • banking/{my-banks,payment-transfer,transaction-history} — banking sub-block,
 //     under separate active work.
 //   • receipt/{page,[id]} — receipt sub-block, currently auth-only (no module gate).
-// Drive this to 0 as each sub-block is reviewed. Do NOT raise it.
-const BASELINE_UNGATED_PAGES = 7
+//   • payroll/my/page.tsx — a staff member's OWN payslips, scoped by
+//     teacher.userId = session.user.id (own-data, exactly like fees/my); a
+//     module gate would wrongly block staff from their own pay. (Added 2026-07-18.)
+// Drive this to 0 as each sub-block is reviewed. Do NOT raise it except for a
+// verified own-data page (session-scoped, no cross-user read).
+const BASELINE_UNGATED_PAGES = 8
 
 // ── Dead internal links ─────────────────────────────────────────────────────
-// Internal /finance/... <Link> targets with no route on disk — the "coming
-// soon" facade quantified (budget/expenses/wallet/timesheet/accounts/payroll/
-// salary all advertise unbuilt routes). Measured 2026-07-17 (94), ratcheted to
-// 93 when /finance/payroll/settings was built. Phase 3 drives this to 0 by
-// building or removing each. Do NOT raise it.
-const BASELINE_DEAD_LINKS = 93
+// Internal /finance/... <Link> targets with no route on disk. Was 93 (the
+// "coming soon" facade: budget/expenses/wallet/timesheet/accounts/payroll/
+// reports/salary all advertised unbuilt routes); Phase 3 (2026-07-18) trimmed
+// every module's nav + dashboard to only routes that exist → 0. Now locked:
+// a new dead link fails the build. Do NOT raise it.
+const BASELINE_DEAD_LINKS = 0
 
 describe("finance guard audit — ratchets", () => {
   const audit = auditFinanceGuards()

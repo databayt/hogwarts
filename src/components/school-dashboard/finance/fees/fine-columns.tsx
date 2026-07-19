@@ -229,11 +229,6 @@ export const getFineColumns = (
                   {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/${lang}/finance/fees/fines/${fine.id}/edit`}>
-                  {col?.edit || "Edit"}
-                </Link>
-              </DropdownMenuItem>
               {callbacks?.onDelete && !fine.isPaid && !fine.isWaived && (
                 <>
                   <DropdownMenuSeparator />

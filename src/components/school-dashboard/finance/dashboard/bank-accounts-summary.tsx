@@ -166,7 +166,7 @@ export function BankAccountsSummary({
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-2 border-t pt-4">
-            <Link href={`/${locale}/finance/banking/transfer`}>
+            <Link href={`/${locale}/finance/banking/payment-transfer`}>
               <Button variant="outline" size="sm" className="w-full">
                 {dp?.transferFunds || "Transfer Funds"}
               </Button>

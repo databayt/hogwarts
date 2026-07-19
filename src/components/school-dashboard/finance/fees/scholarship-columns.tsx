@@ -281,13 +281,6 @@ export const getScholarshipColumns = (
                   {col?.view || "View"}
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href={`/${lang}/finance/fees/scholarships/${scholarship.id}/edit`}
-                >
-                  {col?.edit || "Edit"}
-                </Link>
-              </DropdownMenuItem>
               {callbacks?.onDelete && (
                 <>
                   <DropdownMenuSeparator />

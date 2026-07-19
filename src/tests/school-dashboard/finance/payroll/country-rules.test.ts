@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   calculateProgressiveTax,
+  calculateSocialSecurity,
   TAX_BRACKETS,
 } from "@/components/school-dashboard/finance/payroll/config"
 import {
@@ -89,5 +90,44 @@ describe("resolvePayrollPolicy — auto-provision from location, fail-safe", () 
     )
     expect(policy.country).toBe("AE")
     expect(calculateProgressiveTax(250_000, policy.taxBrackets)).toBe(0)
+  })
+})
+
+describe("social security — withheld per country policy", () => {
+  it("calculateSocialSecurity applies the rate to the base, rounded to cents", () => {
+    expect(calculateSocialSecurity(100_000, 7)).toBe(7_000)
+    expect(calculateSocialSecurity(0, 7)).toBe(0)
+    expect(calculateSocialSecurity(1234.5, 7)).toBe(86.42) // 86.415 → 86.42
+  })
+
+  it("a Sudan employee has 7% SS withheld on basic salary", () => {
+    const policy = resolvePayrollPolicy({ country: "SD" })
+    expect(
+      calculateSocialSecurity(100_000, policy.socialSecurityEmployeeRate)
+    ).toBe(7_000)
+  })
+
+  it("a UAE / fail-safe employee has NO SS withheld", () => {
+    const ae = resolvePayrollPolicy({ country: "AE" })
+    expect(
+      calculateSocialSecurity(100_000, ae.socialSecurityEmployeeRate)
+    ).toBe(0)
+    const failsafe = resolvePayrollPolicy({ currency: "USD" })
+    expect(
+      calculateSocialSecurity(100_000, failsafe.socialSecurityEmployeeRate)
+    ).toBe(0)
+  })
+
+  it("net = gross − tax − ss − otherDeductions (SD worked example)", () => {
+    const policy = resolvePayrollPolicy({ country: "SD" })
+    const base = 100_000
+    const gross = base // no allowances in this example
+    const tax = calculateProgressiveTax(base, policy.taxBrackets)
+    const ss = calculateSocialSecurity(base, policy.socialSecurityEmployeeRate)
+    const net = gross - tax - ss
+    // 100k: tax = 0*20k + 10%*30k + 15%*50k = 3000+7500 = 10500; ss = 7000.
+    expect(tax).toBe(10_500)
+    expect(ss).toBe(7_000)
+    expect(net).toBe(82_500)
   })
 })

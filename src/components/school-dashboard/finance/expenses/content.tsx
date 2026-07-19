@@ -164,24 +164,6 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
               : undefined
           }
         />
-        {canApprove && (
-          <FeatureCard
-            title={ep?.approvalWorkflow || "Approval Workflow"}
-            description={
-              ep?.reviewApproveExpenses || "Review and approve expense requests"
-            }
-            icon={CircleCheck}
-            primaryAction={{
-              label: c?.pendingApproval || "Pending Approval",
-              href: `/${lang}/finance/expenses/approval`,
-              count: pendingExpensesCount,
-            }}
-            secondaryAction={{
-              label: fd?.approved || "Approved",
-              href: `/${lang}/finance/expenses/approved`,
-            }}
-          />
-        )}
         {canPencil && (
           <FeatureCard
             title={ep?.expenseCategories || "Expense Categories"}
@@ -192,48 +174,6 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
             primaryAction={{
               label: ep?.viewCategories || "View Categories",
               href: `/${lang}/finance/expenses/categories`,
-            }}
-            secondaryAction={
-              canCreate
-                ? {
-                    label: ep?.createCategory || "Create Category",
-                    href: `/${lang}/finance/expenses/categories/new`,
-                  }
-                : undefined
-            }
-          />
-        )}
-        {canApprove && (
-          <FeatureCard
-            title={ep?.reimbursements || "Reimbursements"}
-            description={
-              ep?.processReimbursements || "Process expense reimbursements"
-            }
-            icon={DollarSign}
-            primaryAction={{
-              label: c?.process || "Process",
-              href: `/${lang}/finance/expenses/reimbursement`,
-            }}
-            secondaryAction={{
-              label: c?.history || "History",
-              href: `/${lang}/finance/expenses/reimbursement/history`,
-            }}
-          />
-        )}
-        {canExport && (
-          <FeatureCard
-            title={ep?.expenseReports || "Expense Reports"}
-            description={
-              ep?.generateExpenseReports || "Generate expense analysis reports"
-            }
-            icon={TrendingUp}
-            primaryAction={{
-              label: c?.viewReports || "View Reports",
-              href: `/${lang}/finance/expenses/reports`,
-            }}
-            secondaryAction={{
-              label: fd?.export || "Export",
-              href: `/${lang}/finance/expenses/reports/export`,
             }}
           />
         )}

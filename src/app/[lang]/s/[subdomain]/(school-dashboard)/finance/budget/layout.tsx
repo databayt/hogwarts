@@ -27,29 +27,7 @@ export default async function BudgetLayout({ children, params }: Props) {
   const n = d?.navigation
   const budgetPages: PageNavItem[] = !canView
     ? []
-    : [
-        { name: n?.overview || "Overview", href: `/${lang}/finance/budget` },
-        {
-          name: n?.planning || "Budget Planning",
-          href: `/${lang}/finance/budget/planning`,
-        },
-        {
-          name: n?.tracking || "Budget Tracking",
-          href: `/${lang}/finance/budget/tracking`,
-        },
-        {
-          name: n?.variance || "Variance Analysis",
-          href: `/${lang}/finance/budget/variance`,
-        },
-        {
-          name: n?.forecasting || "Forecasting",
-          href: `/${lang}/finance/budget/forecasting`,
-        },
-        {
-          name: n?.approval || "Approval Workflow",
-          href: `/${lang}/finance/budget/approval`,
-        },
-      ]
+    : [{ name: n?.overview || "Overview", href: `/${lang}/finance/budget` }]
 
   return (
     <div className="space-y-6">

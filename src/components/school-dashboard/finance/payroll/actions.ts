@@ -19,7 +19,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 
-import { calculateProgressiveTax } from "./config"
+import { checkFinancePermission } from "../lib/permissions"
+import { calculateProgressiveTax, calculateSocialSecurity } from "./config"
 import { resolvePayrollPolicy } from "./country-rules/registry"
 import {
   payrollApprovalSchema,
@@ -147,6 +148,16 @@ export async function createPayrollRun(
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "create"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const formData = Object.fromEntries(data)
 
@@ -195,6 +206,16 @@ export async function generateSalarySlips(
 
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "process"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Get payroll run
@@ -304,7 +325,15 @@ export async function generateSalarySlips(
         baseSalary + taxableAllowances,
         payrollPolicy.taxBrackets
       )
-      const netSalary = grossSalary - taxAmount - totalDeductionsAmount
+      // Employee social-security contribution on the basic salary, at the
+      // school's country rate (0 for AE / the fail-safe pack). Withheld from
+      // net and remitted to the SS-payable account by the ledger poster.
+      const socialSecurityAmount = calculateSocialSecurity(
+        baseSalary,
+        payrollPolicy.socialSecurityEmployeeRate
+      )
+      const netSalary =
+        grossSalary - taxAmount - socialSecurityAmount - totalDeductionsAmount
 
       // Generate slip number
       const slipNumber =
@@ -327,10 +356,12 @@ export async function generateSalarySlips(
           bonus: 0,
           grossSalary,
           taxAmount,
+          socialSecurityAmount,
           insurance: 0,
           loanDeduction: 0,
           otherDeductions: deductions,
-          totalDeductions: taxAmount + totalDeductionsAmount,
+          totalDeductions:
+            taxAmount + socialSecurityAmount + totalDeductionsAmount,
           netSalary,
           daysWorked,
           daysPresent,
@@ -440,6 +471,16 @@ export async function approvePayroll(
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "approve"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Verify payroll run exists and is in correct status
     const payrollRun = await db.payrollRun.findFirst({
@@ -520,6 +561,16 @@ export async function rejectPayroll(
 
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "approve"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({
@@ -603,6 +654,16 @@ export async function processPayments(
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "process"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     // Verify payroll run is approved
     const payrollRun = await db.payrollRun.findFirst({
@@ -642,6 +703,7 @@ export async function processPayments(
         teacherId: true,
         grossSalary: true,
         taxAmount: true,
+        socialSecurityAmount: true,
         netSalary: true,
         teacher: { select: { userId: true, firstName: true, lastName: true } },
       },
@@ -654,8 +716,9 @@ export async function processPayments(
     // re-enters, re-posts (no double), then claims the gate below. Doing the gate
     // flip first (as before) made a crash here unrecoverable — the run was PAID
     // but the ledger was partial, and re-entry was blocked by the APPROVED guard.
-    // socialSecurityAmount is 0 — payroll does not withhold SS yet, so the
-    // residual (gross − net − tax) is credited to Accounts Payable.
+    // socialSecurityAmount is withheld per the school's country policy and
+    // credited to the SS-payable account; any remaining residual (gross − net −
+    // tax − ss) goes to Accounts Payable.
     try {
       const { postSalaryPayment } = await import("../lib/accounting/actions")
       for (const slip of paidSlips) {
@@ -664,7 +727,7 @@ export async function processPayments(
           teacherId: slip.teacherId,
           grossSalary: Number(slip.grossSalary),
           taxAmount: Number(slip.taxAmount),
-          socialSecurityAmount: 0,
+          socialSecurityAmount: Number(slip.socialSecurityAmount),
           netSalary: Number(slip.netSalary),
           paymentDate: new Date(),
         })

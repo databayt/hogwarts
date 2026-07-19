@@ -159,23 +159,6 @@ export default async function WalletContent({ dictionary, lang }: Props) {
               : undefined
           }
         />
-        {canProcess && (
-          <FeatureCard
-            title={wp?.topUpWallet || "Top-up Wallet"}
-            description={
-              wp?.addFundsToWallets || "Add funds to parent or school wallets"
-            }
-            icon={CircleArrowUp}
-            primaryAction={{
-              label: wp?.topUp || "Top-up",
-              href: `/${lang}/finance/wallet/topup`,
-            }}
-            secondaryAction={{
-              label: wp?.bulkTopUp || "Bulk Top-up",
-              href: `/${lang}/finance/wallet/topup/bulk`,
-            }}
-          />
-        )}
         <FeatureCard
           title={wp?.transactions || "Transactions"}
           description={
@@ -186,65 +169,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
             label: wp?.viewTransactions || "View Transactions",
             href: `/${lang}/finance/wallet/transactions`,
           }}
-          secondaryAction={
-            canExport
-              ? {
-                  label: fd?.export || "Export",
-                  href: `/${lang}/finance/wallet/transactions/export`,
-                }
-              : undefined
-          }
         />
-        {canProcess && (
-          <FeatureCard
-            title={wp?.refunds || "Refunds"}
-            description={
-              wp?.processRefunds || "Process wallet refunds and adjustments"
-            }
-            icon={CircleArrowDown}
-            primaryAction={{
-              label: wp?.processRefund || "Process Refund",
-              href: `/${lang}/finance/wallet/refund`,
-            }}
-            secondaryAction={{
-              label: wp?.refundHistory || "Refund History",
-              href: `/${lang}/finance/wallet/refund/history`,
-            }}
-          />
-        )}
-        <FeatureCard
-          title={wp?.parentWallets || "Parent Wallets"}
-          description={
-            wp?.manageParentWallets || "Manage parent wallet accounts"
-          }
-          icon={Users}
-          primaryAction={{
-            label: wp?.viewParentWallets || "View Parent Wallets",
-            href: `/${lang}/finance/wallet/parents`,
-          }}
-          secondaryAction={{
-            label: wp?.statements || "Statements",
-            href: `/${lang}/finance/wallet/parents/statements`,
-          }}
-        />
-        {canExport && (
-          <FeatureCard
-            title={wp?.walletReports || "Wallet Reports"}
-            description={
-              wp?.generateWalletReports ||
-              "Generate wallet balance and transaction reports"
-            }
-            icon={DollarSign}
-            primaryAction={{
-              label: c?.viewReports || "View Reports",
-              href: `/${lang}/finance/wallet/reports`,
-            }}
-            secondaryAction={{
-              label: wp?.balanceSheet || "Balance Sheet",
-              href: `/${lang}/finance/wallet/reports/balance`,
-            }}
-          />
-        )}
       </DashboardGrid>
     </div>
   )

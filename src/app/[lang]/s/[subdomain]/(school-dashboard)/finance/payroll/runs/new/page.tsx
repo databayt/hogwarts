@@ -7,6 +7,7 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { FinanceAccessDenied } from "@/components/school-dashboard/finance/access-denied"
 import { resolveFinanceAccess } from "@/components/school-dashboard/finance/guard"
+import { PayrollRunForm } from "@/components/school-dashboard/finance/payroll/run-form"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -22,7 +23,7 @@ export default async function NewPayrollRunPage({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   const d = dictionary?.finance?.payrollPage
-  const { schoolId, can } = await resolveFinanceAccess("payroll", ["view"])
+  const { schoolId, can } = await resolveFinanceAccess("payroll", ["create"])
 
   if (!schoolId) {
     return (
@@ -33,7 +34,7 @@ export default async function NewPayrollRunPage({ params }: Props) {
     )
   }
 
-  if (!can.view) {
+  if (!can.create) {
     return <FinanceAccessDenied dictionary={dictionary} module="payroll" />
   }
 
@@ -43,7 +44,10 @@ export default async function NewPayrollRunPage({ params }: Props) {
         <h3 className="text-lg font-medium">{d?.createPayrollRun}</h3>
         <p className="text-muted-foreground text-sm">{d?.startNewPayrollRun}</p>
       </div>
-      <p className="text-muted-foreground">{d?.payrollRunFormComingSoon}</p>
+      <PayrollRunForm
+        lang={lang}
+        labels={dictionary?.finance?.payrollWorkflow}
+      />
     </div>
   )
 }

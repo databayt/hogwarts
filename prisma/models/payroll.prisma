@@ -145,11 +145,12 @@ model SalarySlip {
   grossSalary Decimal @db.Decimal(10, 2)
 
   // Deductions
-  taxAmount       Decimal @db.Decimal(10, 2)
-  insurance       Decimal @default(0) @db.Decimal(10, 2)
-  loanDeduction   Decimal @default(0) @db.Decimal(10, 2)
-  otherDeductions Json // Array of {name, amount}
-  totalDeductions Decimal @db.Decimal(10, 2)
+  taxAmount            Decimal @db.Decimal(10, 2)
+  socialSecurityAmount Decimal @default(0) @db.Decimal(10, 2)
+  insurance            Decimal @default(0) @db.Decimal(10, 2)
+  loanDeduction        Decimal @default(0) @db.Decimal(10, 2)
+  otherDeductions      Json // Array of {name, amount}
+  totalDeductions      Decimal @db.Decimal(10, 2)
 
   // Net
   netSalary Decimal @db.Decimal(10, 2)

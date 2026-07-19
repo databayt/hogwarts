@@ -167,6 +167,9 @@ export function auditFinanceGuards(): FinanceGuardAudit {
     const src = readFileSync(file, "utf8")
     for (const m of src.matchAll(LINK_RE)) {
       const target = m[1].replace(/\$\{[^}]+\}/g, "[id]").replace(/\/$/, "")
+      // `/finance/[id]` is the buildFinanceSubTabs base template (`/finance/${module}`),
+      // not a literal route — module names resolve at call time. Skip it.
+      if (target === "/finance/[id]") continue
       const key = `${file}::${target}`
       if (seen.has(key)) continue
       seen.add(key)

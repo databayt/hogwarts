@@ -30,22 +30,6 @@ export default async function ExpensesLayout({ children, params }: Props) {
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/expenses` },
         {
-          name: n?.submit || "Submit Expense",
-          href: `/${lang}/finance/expenses/submit`,
-        },
-        {
-          name: n?.pending || "Pending Approval",
-          href: `/${lang}/finance/expenses/pending`,
-        },
-        {
-          name: n?.approved || "Approved",
-          href: `/${lang}/finance/expenses/approved`,
-        },
-        {
-          name: n?.reports || "Reports",
-          href: `/${lang}/finance/expenses/reports`,
-        },
-        {
           name: n?.categories || "Categories",
           href: `/${lang}/finance/expenses/categories`,
         },

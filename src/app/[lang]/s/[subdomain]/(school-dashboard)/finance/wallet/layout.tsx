@@ -23,28 +23,16 @@ export default async function WalletLayout({ children, params }: Props) {
   const d = dictionary?.finance?.wallet
   const canView = isRoleIn(role, FINANCE_VIEW_ROLES)
 
-  // Define wallet page navigation
+  // Only routes that exist are listed; balance / top-up / withdraw / reports
+  // have no page yet (labels stay in finance.wallet.navigation for later).
   const n = d?.navigation
   const walletPages: PageNavItem[] = !canView
     ? []
     : [
         { name: n?.overview || "Overview", href: `/${lang}/finance/wallet` },
         {
-          name: n?.balance || "Balance",
-          href: `/${lang}/finance/wallet/balance`,
-        },
-        {
           name: n?.transactions || "Transactions",
           href: `/${lang}/finance/wallet/transactions`,
-        },
-        { name: n?.topUp || "Top Up", href: `/${lang}/finance/wallet/top-up` },
-        {
-          name: n?.withdraw || "Withdraw",
-          href: `/${lang}/finance/wallet/withdraw`,
-        },
-        {
-          name: n?.reports || "Reports",
-          href: `/${lang}/finance/wallet/reports`,
         },
       ]
 

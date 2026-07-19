@@ -160,14 +160,6 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/timesheet/periods`,
               count: periodsCount,
             }}
-            secondaryAction={
-              canCreate
-                ? {
-                    label: tp?.createPeriod || "Create Period",
-                    href: `/${lang}/finance/timesheet/periods/new`,
-                  }
-                : undefined
-            }
           />
         )}
         <FeatureCard
@@ -189,70 +181,6 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
                 }
               : undefined
           }
-        />
-        {canApprove && (
-          <FeatureCard
-            title={c?.approvalQueue || "Approval Queue"}
-            description={
-              tp?.reviewApproveEntries || "Review and approve timesheet entries"
-            }
-            icon={CircleCheck}
-            primaryAction={{
-              label: tp?.approveEntries || "Approve Entries",
-              href: `/${lang}/finance/timesheet/approve`,
-              count: pendingEntriesCount,
-            }}
-            secondaryAction={{
-              label: tp?.bulkApprove || "Bulk Approve",
-              href: `/${lang}/finance/timesheet/approve/bulk`,
-            }}
-          />
-        )}
-        <FeatureCard
-          title={tp?.staffTimesheets || "Staff Timesheets"}
-          description={tp?.viewByStaff || "View timesheets by staff member"}
-          icon={Users}
-          primaryAction={{
-            label: tp?.viewByStaffButton || "View By Staff",
-            href: `/${lang}/finance/timesheet/staff`,
-          }}
-          secondaryAction={{
-            label: tp?.staffSummary || "Staff Summary",
-            href: `/${lang}/finance/timesheet/staff/summary`,
-          }}
-        />
-        {canExport && (
-          <FeatureCard
-            title={tp?.timesheetReports || "Timesheet Reports"}
-            description={
-              tp?.generateTimesheetReports ||
-              "Generate timesheet reports and analytics"
-            }
-            icon={FileText}
-            primaryAction={{
-              label: c?.viewReports || "View Reports",
-              href: `/${lang}/finance/timesheet/reports`,
-            }}
-            secondaryAction={{
-              label: tp?.hoursReport || "Hours Report",
-              href: `/${lang}/finance/timesheet/reports/hours`,
-            }}
-          />
-        )}
-        <FeatureCard
-          title={tp?.calendarView || "Calendar View"}
-          description={
-            tp?.visualCalendar || "Visual calendar of timesheet entries"
-          }
-          icon={Calendar}
-          primaryAction={{
-            label: tp?.viewCalendar || "View Calendar",
-            href: `/${lang}/finance/timesheet/calendar`,
-          }}
-          secondaryAction={{
-            label: tp?.monthView || "Month View",
-            href: `/${lang}/finance/timesheet/calendar/month`,
-          }}
         />
       </DashboardGrid>
     </div>

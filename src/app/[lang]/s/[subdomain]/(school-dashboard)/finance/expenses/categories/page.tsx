@@ -58,12 +58,6 @@ export default async function ExpenseCategoriesPage({ params }: Props) {
         <h3 className="text-lg font-medium">
           {d?.expenseCategories || "Expense Categories"}
         </h3>
-        <Link
-          href={`/${lang}/finance/expenses/categories/new`}
-          className={buttonVariants()}
-        >
-          {d?.createCategory || "Create Category"}
-        </Link>
       </div>
       {categories.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">

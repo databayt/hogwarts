@@ -16,7 +16,10 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 
-import { calculateProgressiveTax } from "../payroll/config"
+import {
+  calculateProgressiveTax,
+  calculateSocialSecurity,
+} from "../payroll/config"
 import { resolvePayrollPolicy } from "../payroll/country-rules/registry"
 import {
   salaryAllowanceSchema,
@@ -567,6 +570,12 @@ export async function calculateSalary(
       taxableIncome,
       payrollPolicy.taxBrackets
     )
+    // Employee social security on the basic salary — same base/rate the real
+    // payroll run (generateSalarySlips) uses, so the preview matches the slip.
+    const socialSecurityAmount = calculateSocialSecurity(
+      baseSalary,
+      payrollPolicy.socialSecurityEmployeeRate
+    )
 
     // Calculate total deductions
     const totalDeductions = salaryStructure.deductions.reduce(
@@ -575,7 +584,8 @@ export async function calculateSalary(
     )
 
     // Calculate net salary
-    const netSalary = grossSalary - taxAmount - totalDeductions
+    const netSalary =
+      grossSalary - taxAmount - socialSecurityAmount - totalDeductions
 
     return {
       success: true,
@@ -590,6 +600,7 @@ export async function calculateSalary(
         grossSalary,
         taxableIncome,
         taxAmount,
+        socialSecurityAmount,
         deductions: salaryStructure.deductions.map((d) => ({
           name: d.name,
           amount: Number(d.amount),
