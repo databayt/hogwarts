@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface PaymentScheduleEntry {
   dueDate: string
@@ -9,6 +10,27 @@ interface PaymentScheduleEntry {
 }
 
 type DbClient = typeof db | Prisma.TransactionClient
+
+interface InvoiceLine {
+  name: string
+  amount: number
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+// FeeStructure component columns → dictionary key under finance.feeComponents
+// (label falls back to English when the key is missing).
+const COMPONENT_FIELDS = [
+  ["tuitionFee", "Tuition Fee"],
+  ["admissionFee", "Admission Fee"],
+  ["registrationFee", "Registration Fee"],
+  ["examFee", "Exam Fee"],
+  ["libraryFee", "Library Fee"],
+  ["laboratoryFee", "Laboratory Fee"],
+  ["sportsFee", "Sports Fee"],
+  ["transportFee", "Transport Fee"],
+  ["hostelFee", "Hostel Fee"],
+] as const
 
 /**
  * Idempotent invoice generator for a FeeAssignment.
@@ -40,6 +62,16 @@ export async function ensureInvoicesForAssignment(
           name: true,
           installments: true,
           paymentSchedule: true,
+          tuitionFee: true,
+          admissionFee: true,
+          registrationFee: true,
+          examFee: true,
+          libraryFee: true,
+          laboratoryFee: true,
+          sportsFee: true,
+          transportFee: true,
+          hostelFee: true,
+          otherFees: true,
         },
       },
       student: {
@@ -67,7 +99,12 @@ export async function ensureInvoicesForAssignment(
 
   const school = await client.school.findUnique({
     where: { id: schoolId },
-    select: { name: true, address: true, currency: true },
+    select: {
+      name: true,
+      address: true,
+      currency: true,
+      preferredLanguage: true,
+    },
   })
 
   const installments = assignment.feeStructure.installments ?? 1
@@ -76,41 +113,117 @@ export async function ensureInvoicesForAssignment(
     | null
   const finalAmount = Number(assignment.finalAmount)
 
-  const rows: Array<{ amount: number; dueDate: Date; description: string }> = []
+  const rows: Array<{
+    /** Amount billed by this invoice (its `total`). */
+    total: number
+    /** Sum of the line items (`sub_total`); differs from `total` only when a
+     *  discount reconciles component prices down to `finalAmount`. */
+    subTotal: number
+    /** Invoice-level discount = subTotal − total, when positive. */
+    discount?: number
+    dueDate: Date
+    description: string
+    lines: InvoiceLine[]
+  }> = []
 
   if (installments === 1) {
-    rows.push({
-      amount: finalAmount,
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      description: assignment.feeStructure.name,
-    })
+    // Itemize: one line per non-zero FeeStructure component (plus otherFees
+    // entries), reconciled to the authoritative billed amount `finalAmount`
+    // via the invoice's own discount field — a real school invoice shows
+    // "Tuition / Exam Fee / Library Fee", not one lump line.
+    const dictionary = await getDictionary(
+      school?.preferredLanguage === "ar" ? "ar" : "en"
+    )
+    const componentLabels = (dictionary as Record<string, any>)?.finance
+      ?.feeComponents as Record<string, string> | undefined
+
+    const lines: InvoiceLine[] = []
+    for (const [field, fallback] of COMPONENT_FIELDS) {
+      const amount = round2(Number(assignment.feeStructure[field] ?? 0))
+      if (!Number.isFinite(amount) || amount <= 0) continue
+      lines.push({ name: componentLabels?.[field] || fallback, amount })
+    }
+    const otherFees = assignment.feeStructure.otherFees as Array<{
+      name?: string
+      amount?: number
+    }> | null
+    if (Array.isArray(otherFees)) {
+      for (const fee of otherFees) {
+        const amount = round2(Number(fee?.amount ?? 0))
+        if (!fee?.name || !Number.isFinite(amount) || amount <= 0) continue
+        lines.push({ name: fee.name, amount })
+      }
+    }
+
+    const componentSum = round2(lines.reduce((s, l) => s + l.amount, 0))
+    const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+    if (componentSum <= 0) {
+      // No usable component breakdown — keep the lump-sum line.
+      rows.push({
+        total: finalAmount,
+        subTotal: finalAmount,
+        dueDate,
+        description: assignment.feeStructure.name,
+        lines: [{ name: assignment.feeStructure.name, amount: finalAmount }],
+      })
+    } else if (componentSum > finalAmount) {
+      // Scholarship/custom amount below list price → discount reconciles.
+      rows.push({
+        total: finalAmount,
+        subTotal: componentSum,
+        discount: round2(componentSum - finalAmount),
+        dueDate,
+        description: assignment.feeStructure.name,
+        lines,
+      })
+    } else {
+      // Custom amount at or above list price → adjustment line tops up.
+      if (componentSum < finalAmount) {
+        lines.push({
+          name: componentLabels?.adjustment || "Adjustment",
+          amount: round2(finalAmount - componentSum),
+        })
+      }
+      rows.push({
+        total: finalAmount,
+        subTotal: finalAmount,
+        dueDate,
+        description: assignment.feeStructure.name,
+        lines,
+      })
+    }
   } else if (schedule && Array.isArray(schedule) && schedule.length > 0) {
     schedule.forEach((entry, i) => {
       const amount = Number(entry.amount)
       if (!Number.isFinite(amount) || amount <= 0) return
+      const description =
+        entry.description ??
+        `${assignment.feeStructure.name} — Installment ${i + 1}`
       rows.push({
-        amount,
+        total: amount,
+        subTotal: amount,
         dueDate: new Date(entry.dueDate),
-        description:
-          entry.description ??
-          `${assignment.feeStructure.name} — Installment ${i + 1}`,
+        description,
+        lines: [{ name: description, amount }],
       })
     })
   } else {
-    const per = Math.round((finalAmount / installments) * 100) / 100
+    const per = round2(finalAmount / installments)
     let running = 0
     for (let i = 0; i < installments; i++) {
       const isLast = i === installments - 1
-      const amount = isLast
-        ? Math.round((finalAmount - running) * 100) / 100
-        : per
+      const amount = isLast ? round2(finalAmount - running) : per
       running += amount
       const dueDate = new Date()
       dueDate.setMonth(dueDate.getMonth() + i + 1)
+      const description = `${assignment.feeStructure.name} — Installment ${i + 1} of ${installments}`
       rows.push({
-        amount,
+        total: amount,
+        subTotal: amount,
         dueDate,
-        description: `${assignment.feeStructure.name} — Installment ${i + 1} of ${installments}`,
+        description,
+        lines: [{ name: description, amount }],
       })
     }
   }
@@ -159,8 +272,9 @@ export async function ensureInvoicesForAssignment(
         currency: school?.currency ?? "USD",
         fromAddressId: fromAddress.id,
         toAddressId: toAddress.id,
-        sub_total: row.amount,
-        total: row.amount,
+        sub_total: row.subTotal,
+        discount: row.discount,
+        total: row.total,
         status: "UNPAID",
         feeAssignmentId,
         notes:
@@ -168,13 +282,13 @@ export async function ensureInvoicesForAssignment(
             ? `${row.description} — auto-generated from enrollment`
             : "Auto-generated from enrollment",
         items: {
-          create: {
+          create: row.lines.map((line) => ({
             schoolId,
-            item_name: row.description,
+            item_name: line.name,
             quantity: 1,
-            price: row.amount,
-            total: row.amount,
-          },
+            price: line.amount,
+            total: line.amount,
+          })),
         },
       },
     })

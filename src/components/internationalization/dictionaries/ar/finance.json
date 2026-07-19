@@ -2717,5 +2717,30 @@
     "viewPayslip": "عرض",
     "backToPayslips": "العودة إلى قسائم رواتبي",
     "downloadPdf": "تحميل PDF"
+  },
+  "feeComponents": {
+    "tuitionFee": "الرسوم الدراسية",
+    "admissionFee": "رسوم القبول",
+    "registrationFee": "رسوم التسجيل",
+    "examFee": "رسوم الامتحانات",
+    "libraryFee": "رسوم المكتبة",
+    "laboratoryFee": "رسوم المختبر",
+    "sportsFee": "رسوم الأنشطة الرياضية",
+    "transportFee": "رسوم النقل",
+    "hostelFee": "رسوم السكن الداخلي",
+    "discount": "خصم",
+    "adjustment": "تسوية"
+  },
+  "transportProvisioning": {
+    "button": "ترحيل إلى الفوترة",
+    "title": "ترحيل رسوم النقل",
+    "description": "ينشئ تعيينات الرسوم والفواتير لكل طالب مسجّل في مسار برسوم شهرية، للشهر المحدد. إعادة التشغيل آمنة.",
+    "monthLabel": "شهر الفوترة",
+    "confirm": "ترحيل",
+    "provisioning": "جارٍ الترحيل…",
+    "cancel": "إلغاء",
+    "successSummary": "تم ترحيل {students} طالبًا وإنشاء {invoices} فاتورة.",
+    "nothingNew": "تم الترحيل مسبقًا — لا جديد.",
+    "error": "فشل الترحيل. حاول مرة أخرى."
   }
 }

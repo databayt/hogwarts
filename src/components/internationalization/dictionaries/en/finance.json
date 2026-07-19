@@ -2717,5 +2717,30 @@
     "viewPayslip": "View",
     "backToPayslips": "Back to My Payslips",
     "downloadPdf": "Download PDF"
+  },
+  "feeComponents": {
+    "tuitionFee": "Tuition Fee",
+    "admissionFee": "Admission Fee",
+    "registrationFee": "Registration Fee",
+    "examFee": "Exam Fee",
+    "libraryFee": "Library Fee",
+    "laboratoryFee": "Laboratory Fee",
+    "sportsFee": "Sports Fee",
+    "transportFee": "Transport Fee",
+    "hostelFee": "Hostel Fee",
+    "discount": "Discount",
+    "adjustment": "Adjustment"
+  },
+  "transportProvisioning": {
+    "button": "Provision to billing",
+    "title": "Provision transport fees",
+    "description": "Creates fee assignments and invoices for every student actively assigned to a fee-bearing route, for the selected month. Safe to re-run.",
+    "monthLabel": "Billing month",
+    "confirm": "Provision",
+    "provisioning": "Provisioning…",
+    "cancel": "Cancel",
+    "successSummary": "Provisioned {students} students, {invoices} invoices created.",
+    "nothingNew": "Already provisioned — nothing new.",
+    "error": "Provisioning failed. Try again."
   }
 }

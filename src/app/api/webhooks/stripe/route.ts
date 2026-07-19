@@ -52,6 +52,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { getTierIdFromStripePrice } from "@/components/saas-marketing/pricing/lib/get-tier-id"
 import { stripe } from "@/components/saas-marketing/pricing/lib/stripe"
+import { createPurchaseInvoiceForCheckout } from "@/components/school-dashboard/finance/invoice/purchase-invoice"
 
 // Lightweight shape for the bits of a Stripe Subscription we read.
 interface StripeSubscriptionLike {
@@ -703,6 +704,41 @@ export async function POST(req: Request) {
         } catch (error) {
           return releaseDedupeAndFail("video purchase", error)
         }
+
+        // PAID invoice for the buyer. Non-fatal: the purchase write above
+        // already succeeded — an invoice failure must never fail the webhook.
+        try {
+          const purchaseSchoolId = session.metadata.schoolId ?? null
+          if (purchaseSchoolId) {
+            const video = await db.video.findUnique({
+              where: { id: session.metadata.videoId },
+              select: { title: true },
+            })
+            await createPurchaseInvoiceForCheckout({
+              schoolId: purchaseSchoolId,
+              userId: session.metadata.userId,
+              amount:
+                ((session as unknown as { amount_total?: number })
+                  .amount_total ?? 0) / 100,
+              currency:
+                (
+                  session as unknown as { currency?: string }
+                ).currency?.toUpperCase() ?? "USD",
+              itemName: video?.title ?? "Video purchase",
+              sessionId: (session as unknown as { id?: string }).id ?? "",
+              purchaseType: "video_purchase",
+            })
+          } else {
+            console.log(
+              "[Webhook] Video purchase without schoolId — skipping invoice"
+            )
+          }
+        } catch (invoiceErr) {
+          console.error(
+            "[Webhook] Video purchase invoice failed (continuing):",
+            invoiceErr
+          )
+        }
       }
 
       return new Response(null, { status: 200 })
@@ -737,6 +773,45 @@ export async function POST(req: Request) {
         } catch (error) {
           return releaseDedupeAndFail("catalog enrollment", error)
         }
+
+        // PAID invoice for the buyer. Non-fatal (see video branch).
+        try {
+          const enrollment = await db.enrollment.findUnique({
+            where: { id: session.metadata.enrollmentId },
+            select: {
+              userId: true,
+              schoolId: true,
+              subject: { select: { name: true } },
+            },
+          })
+          const purchaseSchoolId =
+            session.metadata.schoolId ?? enrollment?.schoolId ?? null
+          if (enrollment && purchaseSchoolId) {
+            await createPurchaseInvoiceForCheckout({
+              schoolId: purchaseSchoolId,
+              userId: enrollment.userId,
+              amount:
+                ((session as unknown as { amount_total?: number })
+                  .amount_total ?? 0) / 100,
+              currency:
+                (
+                  session as unknown as { currency?: string }
+                ).currency?.toUpperCase() ?? "USD",
+              itemName: enrollment.subject?.name ?? "Course enrollment",
+              sessionId: (session as unknown as { id?: string }).id ?? "",
+              purchaseType: "catalog_enrollment",
+            })
+          } else {
+            console.log(
+              "[Webhook] Catalog enrollment without schoolId — skipping invoice"
+            )
+          }
+        } catch (invoiceErr) {
+          console.error(
+            "[Webhook] Catalog enrollment invoice failed (continuing):",
+            invoiceErr
+          )
+        }
       }
 
       return new Response(null, { status: 200 })
@@ -770,6 +845,39 @@ export async function POST(req: Request) {
           console.error("[Webhook] Failed to activate enrollment:", error)
           // Don't throw - return 200 so Stripe doesn't retry
           // The success page verification will handle this
+        }
+
+        // PAID invoice for the buyer. Non-fatal (see video branch).
+        try {
+          const enrollment = await db.streamEnrollment.findUnique({
+            where: { id: session.metadata.enrollmentId },
+            select: {
+              userId: true,
+              schoolId: true,
+              course: { select: { title: true } },
+            },
+          })
+          if (enrollment) {
+            await createPurchaseInvoiceForCheckout({
+              schoolId: enrollment.schoolId,
+              userId: enrollment.userId,
+              amount:
+                ((session as unknown as { amount_total?: number })
+                  .amount_total ?? 0) / 100,
+              currency:
+                (
+                  session as unknown as { currency?: string }
+                ).currency?.toUpperCase() ?? "USD",
+              itemName: enrollment.course?.title ?? "Course enrollment",
+              sessionId: (session as unknown as { id?: string }).id ?? "",
+              purchaseType: "course_enrollment",
+            })
+          }
+        } catch (invoiceErr) {
+          console.error(
+            "[Webhook] Course enrollment invoice failed (continuing):",
+            invoiceErr
+          )
         }
       }
 
