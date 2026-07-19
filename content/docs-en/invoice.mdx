@@ -1,300 +1,94 @@
 ---
 title: Invoice
-description: Billing lifecycle — creation (modal + wizard), PDF / print / email delivery, school branding, dashboard analytics, and multi-role service areas.
+description: Billing lifecycle — wizard creation, auto-generation from enrollment / transport / purchases, itemized lines, print-first document view, public share links, PDF and email delivery.
 ---
 
-The invoice module manages billing from draft to payment. Two creation flows (3-step modal + multi-page wizard with draft persistence), bulk generation from fee structures, email delivery via Resend, and a dashboard with analytics. All operations enforce `getTenantContext()` + `checkCurrentUserPermission()`.
+The invoice module is the school's central billing surface. Invoices are created manually through a wizard or generated automatically by every billable event (enrollment fees, transport route fees, course/video purchases), rendered as a print-first minimalist document, and delivered by public share link, PDF, or email. Mutations gate through the finance guard (`requireFinanceActor`); reads are owner-scoped so students and guardians always reach their own invoices.
 
 ## Status
 
-| Sub-module     | Status     | Notes                                             |
-| -------------- | ---------- | ------------------------------------------------- |
-| Invoice list   | Production | DataTable with filtering, sorting, pagination     |
-| Modal form     | Production | 3-step (basic info, items, review)                |
-| Wizard flow    | Production | Multi-page with draft persistence                 |
-| Dashboard      | Production | Revenue analytics, status breakdown, 30-day stats |
-| Settings       | Production | Logo, signature, invoice preferences              |
-| Email delivery | Production | Resend (basic template, no school branding yet)   |
-| Onboarding     | Production | First-time profile setup                          |
-| A4 PDF export  | Ready      | Template exists, not wired                        |
-| Browser print  | Ready      | Hook exists, not wired                            |
-| CSV export     | Ready      | Utility exists, no UI button                      |
-| Bulk generate  | Stubbed    | Placeholder UI                                    |
-| Recurring      | Planned    | Scheduled recurring invoices                      |
+| Sub-module         | Status     | Notes                                                       |
+| ------------------ | ---------- | ----------------------------------------------------------- |
+| Invoice list       | Production | DataTable with filtering, sorting, pagination, `?status=`   |
+| Wizard flow        | Production | The creation/edit flow — details + items, draft persistence |
+| Document view      | Production | Full-page minimalist sheet (monospace design), print-ready  |
+| Public share links | Production | Token URL a parent can open and print without an account    |
+| A4 PDF export      | Production | Same design; IBM Plex Mono / Rubik (Arabic)                 |
+| Email delivery     | Production | Resend, bilingual, links the public page when shared        |
+| Auto-generation    | Production | Enrollment fees, transport route fees, Stripe purchases     |
+| Itemized lines     | Production | One line per fee component; discount/adjustment reconcile   |
+| Dashboard          | Production | Revenue analytics in the school currency, 30-day stats      |
+| Settings           | Production | Logo + signature branding (PDF, email, sheet, public page)  |
+| CSV export         | Ready      | Utility exists, no UI button yet                            |
+| Recurring          | Planned    | Scheduled recurring invoices                                |
 
 ## Routes
 
-| Route                                          | Page                         | Component                         |
-| ---------------------------------------------- | ---------------------------- | --------------------------------- |
-| `.../finance/invoice`                          | Dashboard                    | `dashboard/content.tsx`           |
-| `.../finance/invoice/list`                     | Invoice list                 | `content.tsx`                     |
-| `.../finance/invoice/invoice/create`           | Create (redirects to wizard) | `invoice/create-edit-content.tsx` |
-| `.../finance/invoice/invoice/edit/[invoiceId]` | Edit (redirects to wizard)   | Redirect                          |
-| `.../finance/invoice/invoice/view/[id]`        | View (modal)                 | `invoice/view-content.tsx`        |
-| `.../finance/invoice/invoice/paid/[invoiceId]` | Mark as paid                 | `invoice/paid-content.tsx`        |
-| `.../finance/invoice/add/[id]/details`         | Wizard — details             | `wizard/details/content.tsx`      |
-| `.../finance/invoice/add/[id]/items`           | Wizard — items               | `wizard/items/content.tsx`        |
-| `.../finance/invoice/settings`                 | Settings (logo, signature)   | `settings/content.tsx`            |
-| `.../finance/invoice/onboarding`               | First-time profile           | `onboarding/content.tsx`          |
+| Route                                          | Page                                    | Component                    |
+| ---------------------------------------------- | --------------------------------------- | ---------------------------- |
+| `.../finance/invoice`                          | Invoice list                            | `content.tsx`                |
+| `.../finance/invoice/analysis`                 | Analytics dashboard                     | `dashboard/content.tsx`      |
+| `.../finance/invoice/invoice/create`           | Creates a draft, redirects into wizard  | route page                   |
+| `.../finance/invoice/invoice/edit/[invoiceId]` | Redirects into wizard details           | route page                   |
+| `.../finance/invoice/invoice/view/[id]`        | Full-page document + action toolbar     | `invoice/view-content.tsx`   |
+| `.../finance/invoice/add/[id]/details`         | Wizard — details (number prefilled)     | `wizard/details/content.tsx` |
+| `.../finance/invoice/add/[id]/items`           | Wizard — items (server-verified totals) | `wizard/items/content.tsx`   |
+| `.../finance/invoice/settings`                 | Branding (logo, signature)              | `settings/content.tsx`       |
+| `.../finance/invoice/onboarding`               | First-time profile                      | `onboarding/content.tsx`     |
+| `/[lang]/invoice/[token]` (public)             | Shared invoice — view + print, no auth  | root-level route             |
 
 ## Server actions
 
-All in `actions.ts`, gated by `requireAuthAndTenant()`:
+| Action                   | Gate                                   | Purpose                                              |
+| ------------------------ | -------------------------------------- | ---------------------------------------------------- |
+| `getInvoicesWithFilters` | auth + tenant, owner-scoped            | Filtered list (privileged roles see all; others own) |
+| `getInvoiceById`         | auth + tenant, owner-scoped            | Detail + linked payments + branding + share state    |
+| `deleteInvoice`          | `requireFinanceActor(invoice, delete)` | Delete with orphan-address cleanup                   |
+| `sendInvoiceEmail`       | `requireFinanceActor(invoice, export)` | Resend email (public link when shared)               |
+| `markInvoicePaid`        | `requireFinanceActor(invoice, edit)`   | Race-safe flip + ledger posting                      |
+| `shareInvoice`           | `requireFinanceActor(invoice, edit)`   | Mint/reuse the public token (`share.ts`)             |
+| `revokeInvoiceShare`     | `requireFinanceActor(invoice, edit)`   | Disable the link, keep the token (`share.ts`)        |
+| `getSharedInvoice`       | public — token is the credential       | Minimal display payload + view counter (`share.ts`)  |
+| `updateSettings`         | auth + tenant (own row)                | Branding logo + signature                            |
+| `getDashboardStats`      | auth + tenant, owner-scoped            | 30-day stats + school currency                       |
 
-```typescript
-async function requireAuthAndTenant() {
-  const session = await auth()
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" }
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) return { success: false, error: "Missing school context" }
-  return { userId: session.user.id, schoolId }
-}
-```
+Reads deliberately skip the permission gate (owner row-scoping is the authorization) so the student/guardian portal keeps working — the rationale is documented on `requireAuthAndTenant` in `actions.ts`.
 
-| Action                        | Auth | RBAC             | Tx  | Purpose                            |
-| ----------------------------- | :--: | ---------------- | :-: | ---------------------------------- |
-| `createInvoice`               |  Y   | `invoice:create` |  Y  | Create with addresses + items      |
-| `createInvoiceWithAutoNumber` |  Y   | `invoice:create` |  Y  | Auto-number then create            |
-| `getNextInvoiceNumber`        |  Y   | —                |  —  | Next `INV-XXXXXX` sequence         |
-| `updateInvoice`               |  Y   | `invoice:edit`   |  —  | Update by ID                       |
-| `deleteInvoice`               |  Y   | `invoice:delete` |  —  | Delete (returns error, no throw)   |
-| `getInvoices`                 |  Y   | —                |  —  | Paginated (excludes drafts)        |
-| `getInvoicesWithFilters`      |  Y   | —                |  —  | Filtered + sorted + paginated      |
-| `getInvoiceById`              |  Y   | —                |  —  | Single invoice (Decimal converted) |
-| `sendInvoiceEmail`            |  Y   | `invoice:export` |  —  | Send via Resend                    |
-| `updateSettings`              |  Y   | —                |  —  | Upsert user invoice settings       |
-| `getSettings`                 |  Y   | —                |  —  | Get invoice settings               |
-| `getDashboardStats`           |  Y   | —                |  —  | 30-day aggregated stats            |
-| `createInvoiceFromEnrollment` |  N   | —                |  Y  | Internal — called from admission   |
-| `updateUser`                  |  Y   | —                |  —  | Update profile (name, currency)    |
+## How invoices are generated
 
-Creation wraps address + invoice + items in `db.$transaction` to prevent orphans:
+| Source                     | Trigger                                                | Result                                                            |
+| -------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------- |
+| Manual                     | "Create Invoice" → wizard                              | Draft in the school currency with a prefilled sequential number   |
+| Enrollment / student added | `ensureStudentFeeAssignments` → `fee-invoice-sync`     | `ENR-` invoices per fee assignment, itemized per fee component    |
+| Transport route fees       | "Provision to billing" on the transportation fees page | Per route + month structure → assignments → invoices (idempotent) |
+| Course / video purchase    | Stripe webhook on successful checkout                  | `PUR-` invoice already marked PAID (retry-idempotent)             |
 
-```typescript
-const invoice = await db.$transaction(async (tx) => {
-  const fromAddr = await tx.userAddress.create({ data: fromData })
-  const toAddr = await tx.userAddress.create({ data: toData })
-  const inv = await tx.userInvoice.create({
-    data: { ...invoiceData, fromId: fromAddr.id, toId: toAddr.id },
-  })
-  await tx.userInvoiceItem.createMany({ data: itemsData })
-  return inv
-})
-```
+Registration fees collected at offer acceptance are allocated onto their auto-generated invoice inside the enrollment transaction, so the invoice shows PAID the moment enrollment completes.
 
-## Creation flows
+### Itemization
 
-### Modal (3-step)
+Single-installment invoices carry one line per non-zero fee component (tuition, admission, registration, exam, library, laboratory, sports, transport, hostel, plus custom `otherFees`), labeled in the school's language. When a scholarship bills below list price the gap lands in the invoice discount field; billing above adds an adjustment line. Multi-installment invoices keep one "Installment N of M" line each.
 
-```
-Step 1 — Basic info: from (pre-filled), to (client name, email, address)
-Step 2 — Client & items: invoice number (auto: I{YY}{NNN}), dates, currency, line items
-Step 3 — Review: summary, subtotal / discount / tax / total, notes
-```
+## Print, share, PDF
 
-Per-step validation via `form.trigger(STEP_FIELDS[step])` against `InvoiceSchemaZod`.
+- **Print** — the document view and the public share page both print as a clean A4 sheet via the browser (app chrome is stripped by global print styles).
+- **Share** — the Share dialog mints a public link (`/invoice/{token}`); anyone with the link can view and print, no account needed. Revoking disables access but keeps the token, so re-enabling restores the exact same URL. Send via WhatsApp or email straight from the dialog.
+- **PDF** — Download PDF renders the same minimalist design via `@react-pdf` (IBM Plex Mono for English, Rubik for Arabic).
+- **Email** — the Resend email is bilingual and links the public page when sharing is enabled, otherwise the authed detail view.
 
-### Wizard (multi-page)
+## Role access
 
-```
-/add/[id]/details  →  /add/[id]/items  →  Complete
-```
+| Role                           | Access                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Admin / Accountant / Developer | Full — create, edit, delete, mark paid, share, email, settings          |
+| Student / Guardian             | Own invoices only — list scoping, dashboard "Fee Payments", detail, PDF |
+| Link holder (no account)       | View + print the shared invoice page                                    |
 
-Drafts saved to DB with `wizardStep` field. Wizard actions (`wizard/actions.ts`):
+## Accounting
 
-- `createDraftInvoice` — creates draft with `wizardStep`
-- `getInvoiceForWizard` — loads draft (tenant-scoped)
-- `completeInvoiceWizard` — validates and finalizes
-- `updateInvoiceWizardStep` — track progress
-- `deleteDraftInvoice` — draft-only with cascading cleanup
+`markInvoicePaid` posts DR Cash / CR Accounts Receivable to the double-entry ledger (race-safe, keyed on the invoice id). Purchase invoices are created without a journal entry for now — a point-of-sale posting rule (DR Cash / CR Revenue) is tracked as a follow-up.
 
-## Output formats
+## Related
 
-### A4 PDF (ready, not wired)
-
-| Component         | Path                                                   |
-| ----------------- | ------------------------------------------------------ |
-| `InvoiceTemplate` | `src/components/file/generate/invoice.tsx` (524 lines) |
-| `useGenerate()`   | `src/components/file/generate/use-generate.ts`         |
-| `InvoiceData`     | `src/components/file/generate/types.ts`                |
-
-Features: A4 + 40pt padding, RTL with Rubik (Arabic) / GeistSans (English), school header (logo 80×80, name, address, phone, email), invoice details with color-coded status badge, client + line items with per-item tax, totals (subtotal, tax, discount, total, paid, balance), footer (notes, bank details, terms). Styles: `classic | modern | minimal | elegant`.
-
-```typescript
-interface InvoiceData extends DocumentMetadata {
-  invoiceNumber: string
-  dueDate: Date
-  status: "draft" | "pending" | "paid" | "overdue" | "cancelled"
-  clientName: string
-  clientEmail?: string
-  clientPhone?: string
-  clientAddress?: string
-  studentName?: string
-  className?: string
-  items: InvoiceItem[] // { description, quantity, unitPrice, total }
-  subtotal: number
-  taxAmount?: number
-  discount?: number
-  total: number
-  amountPaid?: number
-  balance?: number
-  currency: string
-  bankDetails?: string
-  notes?: string
-}
-```
-
-Gap: `UserInvoice` uses `item_name` / `price`, template expects `description` / `unitPrice`. Mapping function + download button needed.
-
-### Browser print (ready, not wired)
-
-| Component     | Path                                         |
-| ------------- | -------------------------------------------- |
-| `usePrint()`  | `src/components/file/print/use-print.ts`     |
-| `PrintButton` | `src/components/file/print/print-button.tsx` |
-
-Features: hidden iframe isolation, `@page` (A4 / Letter, custom margins, orientation), RTL via `document.documentElement.dir`, grayscale via `print-color-adjust`, page break classes, auto-copy stylesheets. Methods: `print(element)`, `printById(id)`, `printHtml(html)`. Gap: no print button in any invoice view.
-
-### Email (Resend)
-
-`send-invoice-email.tsx` — inline-styled React template:
-
-- `"Hello {firstName},"` + "Your invoice is ready for review."
-- Detail box: invoice no, due date, total
-- "View Invoice" CTA → `invoiceURL`
-- Footer
-
-Limitations: no school branding (logo / name), no itemized breakdown (total only), no signature, hardcoded English, sender `Invoice App <onboarding@resend.dev>` (placeholder), plain JSX (not React Email primitives).
-
-`sendInvoiceEmail(id, email)` requires `invoice:export`.
-
-### CSV (ready, not wired)
-
-`exportInvoiceToCSV()` in `util.ts`. Export button in `all.tsx` has no click handler.
-
-## School branding
-
-`settings/content.tsx` provides two accordions:
-
-1. **Invoice Logo** — `FileUploader` to `finance/invoice-logos/`, max 5 MB.
-2. **Invoice Signature** — name + image to `finance/signatures/`, max 2 MB.
-
-Storage:
-
-```
-UserInvoiceSettings { id, userId (unique), schoolId, invoiceLogo?, signature → UserInvoiceSignature }
-UserInvoiceSignature { id, settingsId (unique), schoolId, name?, image? }
-```
-
-Branding is stored but **not consumed**: PDF expects `schoolLogo` / `schoolName` / `schoolAddress`; email expects no branding fields. Currently orphaned data.
-
-## Service areas
-
-Six consumers across the platform:
-
-1. **Admin / Accountant management** — full CRUD via `/finance/invoice/`
-2. **Student fee invoices** — auto-generated by `confirmEnrollment()`:
-
-   ```
-   FeeStructure → FeeAssignment (PENDING) → confirmEnrollment()
-     → createInvoiceFromEnrollment() → UserInvoice (ENR- prefix)
-   ```
-
-   Maps `FeeStructure.name → item_name`, `FeeAssignment.finalAmount → price`. Status `UNPAID`, due 30 days. Non-fatal — enrollment succeeds even if invoice fails. No FK between `FeeAssignment` and `UserInvoice`; runtime-only connection.
-
-3. **Student dashboard** — `InvoiceHistorySection` ("Fee Payments") via `getInvoicesByRole("STUDENT")`
-4. **Guardian dashboard** — same component, fetches children's invoices via `getInvoicesByRole("GUARDIAN")`
-5. **Accountant dashboard** — `accountant.tsx` with metrics, `ProgressCard` ("Invoices Paid"), `InvoiceHistorySection`
-6. **Finance hub** — `finance/content.tsx` shows "Unpaid Invoices" stat + quick-link
-
-## Schema
-
-5 Prisma models:
-
-- **`UserInvoice`** — primary record. Fields: `id`, `invoice_no`, `invoice_date`, `due_date`, `currency` (default `USD`), `sub_total` / `discount` / `tax_percentage` / `total` (Decimal), `notes`, `status` (`InvoiceStatus`, default `UNPAID`), `wizardStep` (null = complete). Relations: `userId`, `schoolId`, `journalEntryId`. Addresses: one-to-one `fromAddressId` + `toAddressId`. Indexes: `@@unique([schoolId, invoice_no])`, `[userId]`, `[schoolId]`, `[status]`.
-- **`UserInvoiceItem`** — `id`, `item_name`, `quantity`, `price` (Decimal), `total` (Decimal), `invoiceId`, `schoolId`.
-- **`UserInvoiceAddress`** — `id`, `name`, `email?`, `address1`, `address2?`, `address3?`, `schoolId`.
-- **`UserInvoiceSettings`** — per-user settings (see Branding).
-- **`UserInvoiceSignature`** — signature storage (see Branding).
-
-```typescript
-enum InvoiceStatus {
-  PAID
-  UNPAID    // default
-  OVERDUE
-  CANCELLED
-}
-```
-
-Distinction: **`UserInvoice`** = school-level (this module). **`Invoice`** = Stripe platform billing (`@@map("invoices")`); the `Receipt` model links to `Invoice`, not `UserInvoice`.
-
-## Calculations
-
-In `util.ts`:
-
-```typescript
-calculateSubtotal(items)                                  → number
-calculateDiscount(subtotal, discountRate)                 → number
-calculateTax(taxableAmount, taxRate)                      → number
-calculateTotal(items, taxRate, discountRate)              → { subtotal, discount, taxableAmount, tax, total }
-
-isInvoiceOverdue(dueDate, status)                         → boolean
-getDaysOverdue(dueDate) / getDaysUntilDue(dueDate)        → number
-formatDueStatus(dueDate, status)                          → "Paid" | "Due in 5 days" | "Overdue by 3 days"
-getInvoiceStatusColor(status)                             → "green" | "blue" | "red" | "gray"
-```
-
-## RBAC
-
-| Role       | create | edit | delete | export (email) | view |
-| ---------- | :----: | :--: | :----: | :------------: | :--: |
-| Admin      |   Y    |  Y   |   Y    |       Y        |  Y   |
-| Accountant |   Y    |  Y   |   —    |       Y        |  Y   |
-| Teacher    |   —    |  —   |   —    |       —        | Own  |
-| Student    |   —    |  —   |   —    |       —        | Own  |
-| Guardian   |   —    |  —   |   —    |       —        | Own  |
-
-`checkCurrentUserPermission(schoolId, "invoice", action)`.
-
-## Dashboard analytics
-
-`getDashboardStats` returns: total invoices (all time), total revenue (paid), outstanding (unpaid + overdue), overdue count, 30-day revenue trend, status distribution.
-
-## Configuration
-
-Currency options: `USD`, `EUR`, `GBP`, `INR`, `CAD`, `AUD`. Wizard adds `SDG`, `SAR`, `AED`.
-
-```typescript
-STEP_FIELDS = {
-  1: ["from", "to"],
-  2: ["invoice_no", "currency", "invoice_date", "due_date", "items"],
-  3: ["sub_total", "discount", "tax_percentage", "total", "notes"],
-}
-```
-
-Number formats:
-
-- Modal — `I{YY}{NNN}` (e.g., `I26042`), client-generated
-- Auto-number — `INV-{NNNNNN}` (e.g., `INV-000042`), server sequential
-- Enrollment — `INV-{NNNNNN}` same auto-number pattern
-
-## Stubs
-
-| File                    | Status                                             |
-| ----------------------- | -------------------------------------------------- |
-| `bulk-generate.tsx`     | Displays "Bulk invoice generation is unavailable"  |
-| `content-enhanced.tsx`  | Displays "Enhanced invoice content is unavailable" |
-| `all.tsx` Export button | No click handler                                   |
-| `onboarding/actions.ts` | `export {}`                                        |
-| `settings/actions.ts`   | `export {}`                                        |
-
-## Tests
-
-131 tests across 5 files in `__tests__/`: `actions.test.ts` (50+), `create-from-enrollment.test.ts` (20+), `wizard-actions.test.ts` (25+), `validation.test.ts` (20+), `util.test.ts` (20+). All mock Prisma, auth, and tenant context via `src/test/mocks/`.
-
-## See also
-
-- [Finance](/docs/finance) — finance block overview + status matrix
-- [Fees](/docs/fees) — fee structures and assignments
-- [Admission](/docs/admission) — enrollment auto-generates invoices
-- [Multi-tenancy](/docs/multi-tenancy) — `schoolId` scoping
+- [Fees](/docs/fees) — fee structures, assignments, payments that feed invoices
+- [Finance](/docs/finance) — the finance block umbrella

@@ -135,9 +135,8 @@ describe("provisionTransportFees", () => {
   })
 
   it("denies without fees.create permission", async () => {
-    const { checkFinancePermission } = await import(
-      "@/components/school-dashboard/finance/lib/permissions"
-    )
+    const { checkFinancePermission } =
+      await import("@/components/school-dashboard/finance/lib/permissions")
     vi.mocked(checkFinancePermission).mockResolvedValueOnce(false)
 
     const result = await provisionTransportFees({ billingMonth: "2026-07" })

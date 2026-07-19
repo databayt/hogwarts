@@ -83,7 +83,7 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
       <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
         <div className="text-center lg:text-start">
           <h1 className="font-heading mb-4 text-4xl font-extrabold whitespace-pre-line md:text-5xl">
-            <span className="md:hidden">FAQ</span>
+            <span className="md:hidden">{faqsDict.title}</span>
             <span className="hidden md:inline">
               {faqsDict.titleBreak || faqsDict.title}
             </span>

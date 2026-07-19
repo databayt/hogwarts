@@ -2,6 +2,49 @@
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
+## Recently Completed (2026-07-19 — Production-readiness + integrations + Milan print/share pass)
+
+### Bug fixes
+
+- [x] **Registration-fee invoice desync** — `confirmEnrollment` recorded the Payment + ledger but never synced the invoice; `allocatePaymentToInvoices` gained a `tx` param (uncommitted rows are invisible to the plain client) and is now called inside the enrollment transaction.
+- [x] List "Edit" action was dead UI (opened a ModalContext modal no ancestor mounts) — now routes into the wizard.
+- [x] 4 broken links fixed: view `returnTo` + paid-page `/${lang}/invoice` (404), dashboard `/finance/invoice/overdue` (→ `?status=OVERDUE`), 2× quick-action `/finance/invoice/create` (→ `/finance/invoice/invoice/create`).
+- [x] `InvoiceHistorySection` no longer shows fabricated SAR rows to students/guardians with no data (real empty state; `getDefaultInvoicesByRole` deleted).
+- [x] Currency: drafts default to `School.currency` (was hardcoded USD); analysis revenue stat uses school currency (was hardcoded SAR); wizard currency options derive from the canonical `lib/utils` list.
+- [x] Draft invoices get a prefilled sequential number at creation (a second `""`-numbered draft used to violate `@@unique([schoolId, invoice_no])`); duplicate numbers surface `INVOICE_DUPLICATE_NUMBER`.
+- [x] Locale-prefixed wizard redirects (was relying on the proxy locale-guess fallback hop).
+- [x] Removed the orphaned `invoice/paid/[invoiceId]` flow (bypassed the ledger via legacy `updateInvoice`).
+- [x] Stale `createInvoiceFromEnrollment` test imports/mocks removed (export deleted 2026-07-12; docs updated).
+
+### Guard migration (finance/CLAUDE.md 2026-07-17 convention)
+
+- [x] Mutations gate through `requireFinanceActor`; `content.tsx` uses `resolveFinanceAccess` + inline `FinanceAccessDenied`. Reads stay deliberately owner-scoped (students/guardians self-service) — documented on `requireAuthAndTenant`.
+
+### Integrations
+
+- [x] **Itemized invoices**: single-installment invoices now carry one line per non-zero FeeStructure component (+`otherFees`), reconciled to `finalAmount` via the invoice `discount` field / an Adjustment line; labels from `finance.feeComponents` (en+ar).
+- [x] **Transport route fees → billing**: `finance/fees/transport-provisioning.ts` (`fees:create` gated) + "Provision to billing" dialog on the transportation fees page; idempotent at structure/assignment/invoice layers.
+- [x] **Purchases → PAID invoice**: Stripe webhook video/catalog/course branches create `PUR-<sessionId>` invoices (retry-idempotent; school-less checkouts skipped; never fails the webhook).
+
+### Print & Share (Milan minimalist-monospace redesign)
+
+- [x] `InvoiceSheet` print-first document (IBM Plex Mono EN, Arabic faces for AR prose, logical-property RTL); detail view converted from modal to full page with toolbar.
+- [x] "Print" button via `window.print()` + existing global print CSS (clean A4, chrome stripped).
+- [x] **Share via link shipped** (P3 item): `share.ts` trio + public `/[lang]/invoice/[token]` route (noindex) + share dialog (toggle, copy, WhatsApp/email channels). Revoke preserves the token.
+- [x] PDF template restyled to the same design (verified IBM Plex Mono TTFs; Rubik for AR); data contract unchanged.
+- [x] `sendInvoiceEmail` links the public page when sharing is enabled.
+
+### Cleanup
+
+- [x] ~40% of block files deleted (legacy modal form + steps/, duplicate dashboard island, profile components, stubs incl. `bulk-generate.tsx`/`all.tsx`, root `config.ts`, Mongoose-era `/api/invoice` + `/api/email` stubs, unvalidated legacy actions `createInvoice`/`createInvoiceWithAutoNumber`/`updateInvoice`/`getInvoices`/`getNextInvoiceNumber`).
+- [x] Tests: share / purchase-invoice / transport-provisioning / itemization / allocation-tx suites added; 532 green across finance+admission+lib. tsc 0, build clean.
+
+### Deferred (new follow-ups from this pass)
+
+- [ ] **Purchase ledger posting** — purchases need DR Cash / CR Revenue; no posting rule exists (`createPurchaseRevenueEntry` + actor-less wrapper like `postFeePayment`'s webhook pattern). Invoices are created without journal entries until then.
+- [ ] confirmEnrollment registration-fee end-to-end test (allocator tx behavior is unit-pinned; the full-transaction integration case is not).
+- [ ] Public share page: show school payment instructions (Bankak/Cashi manual rail) so a parent can act on the invoice.
+
 ## Recently Completed (2026-06-13 — Admission+Finance production-readiness pass)
 
 - [x] `InvoiceStatus` extended with `PARTIAL` — webhook multi-installment allocation credits oldest-unpaid invoice first; status flips UNPAID → PARTIAL → PAID as payments arrive.
@@ -63,7 +106,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [x] PDF data adapter — `mapInvoiceToInvoiceData` (`invoice-pdf-data.ts`): `UserInvoice` → `InvoiceData`, item_name→description, price→unitPrice; tested
 - [x] "Download PDF" button on the invoice view (`DownloadInvoiceButton` → `useGenerate().generateInvoice`)
 - [x] Wire school logo (`UserInvoiceSettings.invoiceLogo`) into PDF `schoolLogo` — `getInvoiceById` fetches it → `InvoiceForPdf` → adapter → template (template already renders it RTL + Rubik) (2026-06-21 `eb4e88574`)
-- [ ] "Print" button (`usePrint().printById`) — prints a DOM element; Download-PDF covers the core need, low priority
+- [x] "Print" button — shipped 2026-07-19 via `window.print()` + global print CSS (the `usePrint()` iframe toolkit stays unused by design)
 - [ ] PDF download action in the DataTable row menu (`columns.tsx`)
 - [ ] Signature in the PDF footer — `InvoiceData` has no signature field (Certificate/ReportCard do); needs a type + template addition
 
@@ -79,11 +122,11 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ### P1: Settings → Output Wiring
 
 - [x] Fetch logo in the PDF flow (`getInvoiceById`) + logo & signature in the email flow (`sendInvoiceEmail`)
-- [ ] Display school logo + signature in the on-screen `invoice/view-content.tsx` (the PDF + email are branded; the screen view is not yet) · low priority
+- [x] School logo shown in the on-screen view — `InvoiceSheet` renders `schoolLogo` (2026-07-19); signature remains PDF/email-only
 
 ### P1: CSV Export Wiring
 
-- [ ] Wire Export button in `all.tsx` to `exportInvoiceToCSV()` from `util.ts`
+- [ ] Add an Export CSV button to the invoice list (`table.tsx`) wired to `exportInvoiceToCSV()` from `util.ts` (its old host `all.tsx` was dead code, deleted 2026-07-19)
 
 ### P1: Ledger Posting Not Wired
 
@@ -91,15 +134,13 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### P2: Stubs to Complete
 
-- [ ] Implement `bulk-generate.tsx` -- generate invoices from `FeeAssignment` records for a class/year
+- [x] ~~`bulk-generate.tsx`~~ — stub deleted 2026-07-19; bulk generation already exists via `ensureInvoicesForAssignment` (enrollment) + `provisionTransportFees` (transport). A per-class re-sweep UI can come later if needed.
 
 ### P2: i18n Migration
 
-- [ ] Migrate `InvoiceSchemaZod` consumers to `createInvoiceSchema(dictionary)` (6 files: form.tsx, 3 steps/, actions.ts)
-- [ ] Migrate `onboardingSchema` consumers to `createOnboardingSchema(dictionary)` (2 files: onboarding/content.tsx, user-edit-profile.tsx)
-- [ ] Remove hardcoded English fallbacks in form.tsx toast messages
-- [ ] Add dictionary keys for all invoice UI text
-- [ ] Translate email template text via dictionary
+- [x] ~~`InvoiceSchemaZod` consumers~~ — schema + its dead consumers (form.tsx, steps/) deleted 2026-07-19; live validation is wizard-scoped i18n factories
+- [x] `onboardingSchema` consumer migrated — `onboarding/content.tsx` uses `createOnboardingSchema(dictionary)` with the static schema only as pre-load fallback (`user-edit-profile.tsx` deleted)
+- [ ] Remove remaining `|| "English"` fallback literals across the block (dictionary keys exist with full parity; fallbacks are dead paths but violate convention)
 
 ### P3: Missing Features
 
@@ -107,7 +148,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [x] ~~Partial payment tracking (amountPaid field exists in PDF template but not in Prisma model)~~ — `UserInvoice.amountPaid` now in Prisma schema + PARTIAL status (2026-06-13)
 - [ ] Invoice duplication (clone existing invoice)
 - [ ] Invoice preview before email send
-- [ ] Share invoice via link (generate public URL)
+- [x] Share invoice via link (generate public URL) — shipped 2026-07-19 (`share.ts` + `/[lang]/invoice/[token]` + share dialog)
 - [ ] True PARTIAL → PAID transition from `recordPayment` edge cases (deferred)
 
 ### P4: UI Improvements
@@ -139,8 +180,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### P8: Testing Gaps
 
-- [ ] E2E tests for complete invoice workflow
-- [ ] Component tests for form.tsx multi-step flow
+- [ ] E2E tests for complete invoice workflow (wizard → view → share → public page → print)
 - [ ] Component tests for table.tsx with mock data
 - [ ] Integration tests for wizard/ sub-module actions
 

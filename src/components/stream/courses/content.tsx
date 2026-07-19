@@ -28,6 +28,8 @@ interface Props {
   page: number
   perPage: number
   activeGrade: string
+  /** Active free-text search query (empty when browsing). */
+  search?: string
   userRole?: string | null
   userId?: string | null
 }
@@ -40,6 +42,7 @@ export function StreamCoursesContent({
   page,
   perPage,
   activeGrade,
+  search,
   userRole,
   userId,
 }: Props) {
@@ -60,7 +63,7 @@ export function StreamCoursesContent({
   // itself would reset on every server render — and calling the load-more
   // action re-renders this route, which used to wipe the appended pages the
   // moment they arrived.
-  const serverKey = `${activeGrade}|${page}|${totalCount}`
+  const serverKey = `${activeGrade}|${search ?? ""}|${page}|${totalCount}`
   const [prevServerKey, setPrevServerKey] = useState(serverKey)
   if (serverKey !== prevServerKey) {
     setPrevServerKey(serverKey)
@@ -75,6 +78,7 @@ export function StreamCoursesContent({
       const params = new URLSearchParams(searchParams.toString())
       params.set("level", grade)
       params.delete("page")
+      params.delete("search")
       const qs = params.toString()
       router.push(qs ? `${pathname}?${qs}` : pathname)
     },
@@ -88,6 +92,7 @@ export function StreamCoursesContent({
         page: nextPage,
         perPage,
         grade: activeGrade ? parseInt(activeGrade) : undefined,
+        search: search || undefined,
         lang,
       })
       setAllCourses((prev) => [...prev, ...rows])

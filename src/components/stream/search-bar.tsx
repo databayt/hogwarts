@@ -4,7 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowRight, ChevronDown, Search as SearchIcon, X } from "lucide-react"
 
@@ -32,6 +32,7 @@ const DEFAULT_POPULAR_TERMS = [
 
 export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const d = dictionary?.search ?? {}
   const [query, setQuery] = React.useState("")
   const [isFocused, setIsFocused] = React.useState(false)
@@ -78,14 +79,25 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [isDropdownOpen])
 
+  // Navigate to the courses page in search mode, PRESERVING the existing
+  // params (grade level, etc.) so a search keeps its browsing context and
+  // clearing it returns there. `page` is dropped so results start at page 1.
+  const navigateToSearch = React.useCallback(
+    (term: string) => {
+      const trimmed = term.trim()
+      if (!trimmed) return
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("search", trimmed)
+      params.delete("page")
+      setIsDropdownOpen(false)
+      router.push(`/${lang}/stream/courses?${params.toString()}`)
+    },
+    [router, searchParams, lang]
+  )
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (query.trim()) {
-      setIsDropdownOpen(false)
-      router.push(
-        `/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`
-      )
-    }
+    navigateToSearch(query)
   }
 
   const handleClear = () => {
@@ -94,8 +106,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
   }
 
   const handleQuickSearch = (term: string) => {
-    setIsDropdownOpen(false)
-    router.push(`/${lang}/stream/courses?search=${encodeURIComponent(term)}`)
+    navigateToSearch(term)
   }
 
   return (

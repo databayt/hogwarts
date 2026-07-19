@@ -2,188 +2,107 @@
 
 ### Overview
 
-Full invoice lifecycle management from draft to payment, with bulk generation, email delivery via Resend, wizard-based creation, and payment tracking. Includes a standalone invoice dashboard, onboarding flow, settings, and user profile management. All server actions enforce multi-tenant isolation via `getTenantContext()` and RBAC via `checkCurrentUserPermission()`.
+Full invoice lifecycle from draft to payment: wizard-based creation, auto-generation from enrollment/transport/purchases, itemized line items, a print-first document view (Milan minimalist-monospace design), public share links, PDF download, email delivery via Resend, and ledger posting on payment. Server actions gate through `finance/guard.ts` (`requireFinanceActor`); reads are deliberately owner-scoped so students/guardians reach their own invoices (see `requireAuthAndTenant` doc-comment in `actions.ts`).
 
 ### Capabilities by Role
 
-- **Admin**: Full access -- create, edit, delete, send email, export, manage settings
-- **Accountant**: Create, edit, send email, export (no delete)
-- **Teacher/Staff**: View own salary invoices
-- **Student/Guardian**: View fee invoices, check payment status
+- **Admin / Accountant / Developer**: full access — create, edit via wizard, delete, mark paid, share, send email, settings
+- **Student/Guardian**: view own invoices only (list scoping + dashboard "Fee Payments" section + own-invoice detail/PDF); no mutations
+- **Anyone with a share link**: view + print the public invoice page (token is the credential)
 
 ### Routes
 
-| Route                                  | Page                        | Status |
-| -------------------------------------- | --------------------------- | ------ |
-| `.../finance/invoice`                  | Invoice list (DataTable)    | Ready  |
-| `.../finance/invoice/create`           | Create invoice (modal form) | Ready  |
-| `.../finance/invoice/add/[id]/details` | Wizard: details step        | Ready  |
-| `.../finance/invoice/add/[id]/items`   | Wizard: items step          | Ready  |
-| `.../finance/invoice/settings`         | Invoice settings            | Ready  |
-| `.../finance/invoice/onboarding`       | Setup wizard                | Ready  |
+| Route                                    | Page                                           | Status |
+| ---------------------------------------- | ---------------------------------------------- | ------ |
+| `.../finance/invoice`                    | Invoice list (DataTable, `?status=` filter)    | Ready  |
+| `.../finance/invoice/analysis`           | Stats dashboard (school-currency revenue stat) | Ready  |
+| `.../finance/invoice/invoice/create`     | Creates draft → redirects into wizard          | Ready  |
+| `.../finance/invoice/invoice/edit/[id]`  | Redirects into wizard details                  | Ready  |
+| `.../finance/invoice/invoice/view/[id]`  | Full-page InvoiceSheet + toolbar (print/share) | Ready  |
+| `.../finance/invoice/add/[id]/details`   | Wizard: details step (number prefilled)        | Ready  |
+| `.../finance/invoice/add/[id]/items`     | Wizard: items step (server-recomputed totals)  | Ready  |
+| `.../finance/invoice/settings`           | Invoice branding (logo + signature)            | Ready  |
+| `.../finance/invoice/onboarding`         | Profile/currency setup                         | Ready  |
+| `/[lang]/invoice/[token]` (public, root) | Shared invoice — view + print, no auth         | Ready  |
 
 ### File Structure
 
 ```
 invoice/
-├── __tests__/                  # 5 test files, 131 tests, 2059 LOC
-│   ├── actions.test.ts         # Server action tests (auth, RBAC, CRUD, email)
-│   ├── create-from-enrollment.test.ts  # Admission integration tests
-│   ├── util.test.ts            # Utility function tests
-│   ├── validation.test.ts      # Zod schema tests
-│   └── wizard-actions.test.ts  # Wizard flow tests
-├── actions.ts                  # Server actions (getTenantContext + RBAC + $transaction)
-├── config.ts                   # Step definitions, currency options
-├── content.tsx                 # Server component (main list page)
-├── types.ts                    # TypeScript interfaces (Invoice, Address, Item)
-├── validation.ts               # Zod schemas (InvoiceSchemaZod + i18n factory)
-├── list-params.ts              # URL search param config (nuqs)
-├── form.tsx                    # Multi-step create/edit form (3 steps)
-├── table.tsx                   # Invoice DataTable
-├── columns.tsx                 # Column definitions
-├── card.tsx                    # Invoice card component
-├── featured.tsx                # Featured invoice display
-├── all.tsx                     # All invoices list view
-├── create.tsx                  # Invoice creation flow
-├── bulk-generate.tsx           # Bulk invoice generation
-├── send-invoice-email.tsx      # Email template (Resend)
-├── chart-invoice.tsx           # Invoice analytics chart
-├── loading.tsx                 # Loading skeleton
-├── submit-button.tsx           # Submit button with loading state
-├── logo.tsx                    # Invoice logo component
-├── util.ts                     # Calculation, formatting, status utilities
-├── currency-format.ts          # Currency formatting helpers
-├── email.config.ts             # Resend email configuration
-├── user.ts                     # User-related helpers
-├── user-profile.tsx            # User profile display
-├── user-profile-dropdown.tsx   # Profile dropdown
-├── user-edit-profile.tsx       # Profile editing
-├── get-avatar-name.ts          # Avatar name extraction
-├── dashboard-header.tsx        # Dashboard header
-├── dashboard-sidebar.tsx       # Dashboard sidebar
-├── steps/                      # Form wizard steps
-│   ├── basic-information.tsx   # Step 1: From/To addresses
-│   ├── client-items.tsx        # Step 2: Items, dates, currency
-│   └── review-submit.tsx       # Step 3: Review & submit
-├── dashboard/                  # Invoice dashboard sub-module
-│   ├── actions.ts
-│   ├── card.tsx
-│   ├── chart-invoice.tsx
-│   ├── config.ts
-│   ├── content.tsx
-│   ├── data-table.tsx
-│   └── header.tsx
-├── invoice/                    # Detail views
-│   ├── create-edit-content.tsx
-│   ├── paid-content.tsx
-│   └── view-content.tsx
-├── onboarding/                 # Onboarding wizard
-│   ├── actions.ts
-│   ├── card.tsx
-│   └── content.tsx
-├── settings/                   # Invoice settings
-│   ├── actions.ts
-│   ├── card.tsx
-│   ├── content.tsx
-│   └── imagebase64.ts
-└── wizard/                     # Multi-step invoice creation wizard
-    ├── actions.ts              # Wizard CRUD (correct tenant pattern)
-    ├── config.ts
+├── actions.ts                  # Reads (owner-scoped) + delete/send/markPaid/settings (guard-gated)
+├── share.ts                    # shareInvoice / getSharedInvoice / revokeInvoiceShare
+├── purchase-invoice.ts         # PAID invoice from Stripe checkout (webhook-only, NOT "use server")
+├── invoice-sheet.tsx           # Print-first Milan-design document (server, presentational)
+├── invoice-share-dialog.tsx    # Public-link toggle + copy + WhatsApp/email channels
+├── invoice-print-button.tsx    # window.print() (global print CSS strips chrome)
+├── content.tsx                 # List page (resolveFinanceAccess + FinanceAccessDenied)
+├── table.tsx / columns.tsx     # DataTable (Edit routes into the wizard)
+├── types.ts                    # TS interfaces
+├── validation.ts               # Onboarding schemas only (wizard has its own validation)
+├── list-params.ts              # nuqs URL state
+├── send-invoice-email.tsx      # Resend template (bilingual; links public page when shared)
+├── email.config.ts             # Resend client
+├── invoice-pdf-data.ts         # UserInvoice → InvoiceData adapter for the PDF
+├── download-invoice.tsx        # Download-PDF / Send / Mark-paid buttons
+├── util.ts                     # Calc/format/status helpers + CSV export (no UI button)
+├── loading.tsx                 # Skeleton
+├── dashboard/                  # Analysis page (content/card/chart/config/data-table/header)
+├── invoice/view-content.tsx    # Full-page detail: toolbar + InvoiceSheet + linked payments
+├── onboarding/                 # Profile + currency form
+├── settings/                   # Branding (logo/signature upload)
+└── wizard/                     # THE creation/edit flow (details + items steps)
+    ├── actions.ts              # Draft create (school currency + prefilled number)
+    ├── config.ts               # Wizard config; currency options derive from lib/utils
     ├── use-invoice-wizard.ts
-    ├── details/
-    │   ├── actions.ts
-    │   ├── content.tsx
-    │   ├── form.tsx
-    │   └── validation.ts
-    └── items/
-        ├── actions.ts
-        ├── content.tsx
-        ├── form.tsx
-        └── validation.ts
+    ├── details/  (actions/content/form/validation)
+    └── items/    (actions/content/form/validation — server recomputes totals)
 ```
+
+Tests: `src/tests/school-dashboard/finance/invoice/` (actions, wizard-actions, share, purchase-invoice, mark-invoice-paid, invoice-pdf-data, util, validation) + `src/tests/lib/fee-invoice-sync.test.ts` (itemization) + `src/tests/school-dashboard/finance/lib/invoice-allocation.test.ts`.
 
 ### Server Action Exports (actions.ts)
 
-| Function                      | Auth | RBAC             | Tx  | Purpose                                             |
-| ----------------------------- | ---- | ---------------- | --- | --------------------------------------------------- |
-| `createInvoice`               | Yes  | `invoice:create` | Yes | Create invoice with addresses + items               |
-| `createInvoiceWithAutoNumber` | Yes  | `invoice:create` | Yes | Auto-generate invoice number, then create           |
-| `getNextInvoiceNumber`        | Yes  | --               | --  | Get next `INV-XXXXXX` number                        |
-| `updateInvoice`               | Yes  | `invoice:edit`   | --  | Update invoice by ID                                |
-| `deleteInvoice`               | Yes  | `invoice:delete` | --  | Delete invoice (returns error, not throws)          |
-| `getInvoices`                 | Yes  | --               | --  | Paginated list (excludes wizard drafts)             |
-| `getInvoicesWithFilters`      | Yes  | --               | --  | Filtered + sorted + paginated list                  |
-| `getInvoiceById`              | Yes  | --               | --  | Single invoice with Decimal conversion              |
-| `sendInvoiceEmail`            | Yes  | `invoice:export` | --  | Send invoice via Resend                             |
-| `updateUser`                  | Yes  | --               | --  | Update user profile (firstName, lastName, currency) |
-| `updateSettings`              | Yes  | --               | --  | Upsert invoice settings (signature, details)        |
-| `getSettings`                 | Yes  | --               | --  | Get user's invoice settings                         |
-| `getDashboardStats`           | Yes  | --               | --  | Aggregated stats (30-day window)                    |
-| `createInvoiceFromEnrollment` | No   | --               | Yes | Create invoice from admission (internal)            |
+| Function                 | Gate                                   | Purpose                                              |
+| ------------------------ | -------------------------------------- | ---------------------------------------------------- |
+| `getInvoicesWithFilters` | auth+tenant, owner-scoped              | Filtered list (privileged roles see all; others own) |
+| `getInvoiceById`         | auth+tenant, owner-scoped              | Detail + linked payments + branding + share fields   |
+| `deleteInvoice`          | `requireFinanceActor(invoice, delete)` | Delete + orphan-address cleanup                      |
+| `sendInvoiceEmail`       | `requireFinanceActor(invoice, export)` | Resend email (public link when shared)               |
+| `markInvoicePaid`        | `requireFinanceActor(invoice, edit)`   | Race-safe flip + `postInvoicePayment` ledger entry   |
+| `updateUser`             | auth (own row)                         | Profile firstName/lastName/currency                  |
+| `updateSettings`         | auth+tenant (own row)                  | Branding logo + signature                            |
+| `getSettings`            | auth+tenant (own row)                  | Branding read (feeds PDF)                            |
+| `getDashboardStats`      | auth+tenant, owner-scoped              | 30-day stats + school currency                       |
 
-### Key Patterns
+Share trio lives in `share.ts` (`shareInvoice`/`revokeInvoiceShare` gated `invoice:edit`; `getSharedInvoice` public by design — token lookup only, minimal select).
 
-- **Auth + Tenant**: `requireAuthAndTenant()` helper returns `{ userId, schoolId }` or `ActionResponse` error
-- **Type guard**: `isAuthError(ctx)` narrows the return type
-- **Transactions**: Create operations use `db.$transaction` for atomicity (addresses + invoice + items)
-- **Validation**: `InvoiceSchemaZod` (static) for forms; `createInvoiceSchema(dictionary)` for i18n
-- **Status enum**: `InvoiceStatus` from `@prisma/client` (`PAID | UNPAID | OVERDUE | CANCELLED`)
+### Invoice Generation Paths (all auto-paths idempotent)
+
+| Source                        | Entry                                                   | Result                                                             |
+| ----------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| Manual                        | wizard (`createDraftInvoice` → details → items)         | Draft in school currency, prefilled sequential number              |
+| Enrollment / student creation | `lib/fee-auto-assign.ts` → `lib/fee-invoice-sync.ts`    | `ENR-` invoices per assignment; **itemized** per fee component     |
+| Transport route fees          | `finance/fees/transport-provisioning.ts` (admin button) | Per route+month FeeStructure → assignments → invoices              |
+| Course/catalog/video purchase | Stripe webhook → `purchase-invoice.ts`                  | `PUR-<sessionId>` PAID invoice (skipped when checkout school-less) |
+
+Registration fees collected at offer acceptance are allocated onto their invoice inside `confirmEnrollment`'s transaction via `allocatePaymentToInvoices(…, tx)` — the `tx` parameter is load-bearing (uncommitted rows).
+
+### Itemization (fee-invoice-sync)
+
+Single-installment invoices break into one line per non-zero `FeeStructure` component (tuition, admission, registration, exam, library, laboratory, sports, transport, hostel + `otherFees`), labeled via `finance.feeComponents` dictionary in the school's language. `sub_total` = component sum; scholarship gap goes to the invoice `discount` field; above-list billing adds an Adjustment line; zero components fall back to the lump-sum line. Multi-installment invoices keep "Installment N of M" lines.
 
 ### Output Infrastructure
 
-| Capability          | Infrastructure                                  | Location                        | Wired?                 |
-| ------------------- | ----------------------------------------------- | ------------------------------- | ---------------------- |
-| A4 PDF download     | `@react-pdf/renderer` InvoiceTemplate (524 LOC) | `file/generate/invoice.tsx`     | No                     |
-| PDF generation hook | `useGenerate().generateInvoice(data)`           | `file/generate/use-generate.ts` | No                     |
-| Browser print       | `usePrint()` hook (hidden iframe, A4, RTL)      | `file/print/use-print.ts`       | No                     |
-| Print button        | `PrintButton` component                         | `file/print/print-button.tsx`   | No                     |
-| Email send          | Resend + inline-styled React template           | `send-invoice-email.tsx`        | Yes                    |
-| CSV export          | `exportInvoiceToCSV()` function                 | `util.ts`                       | Partial (no UI button) |
+| Capability      | Infrastructure                                              | Wired? |
+| --------------- | ----------------------------------------------------------- | ------ |
+| Print (browser) | `window.print()` + global `@media print` chrome-strip       | Yes    |
+| A4 PDF download | `@react-pdf` InvoiceTemplate (Milan design, IBM Plex Mono)  | Yes    |
+| Public share    | `shareToken` route `/[lang]/invoice/[token]` + share dialog | Yes    |
+| Email send      | Resend bilingual template                                   | Yes    |
+| CSV export      | `util.ts::exportInvoiceToCSV()`                             | No UI  |
 
-**PDF template features:** RTL/LTR fonts (Rubik/Inter), school logo+header, invoice details, line items table, totals (subtotal/tax/discount/total/paid/balance), notes, bank details footer, 4 template styles.
-
-**Field mapping needed:** Invoice block uses `item_name`/`price`, PDF template expects `description`/`unitPrice`. A `mapInvoiceToGenerateData()` adapter is required.
-
-### Settings → Output Data Flow
-
-```
-Settings UI → UserInvoiceSettings (invoiceLogo) + UserInvoiceSignature (name, image)
-                    ↓ NOT WIRED
-PDF Template expects: schoolLogo, schoolName, schoolAddress
-Email Template expects: (no branding fields at all)
-View Component expects: (no branding)
-```
-
-Logo and signature are configurable and stored in DB but never appear in any output.
-
-### Cross-Block Integration
-
-| Consumer             | Location                                       | What It Reads                                                                                |
-| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Admission enrollment | `admission/actions.ts` → `confirmEnrollment()` | Calls `createInvoiceFromEnrollment()`                                                        |
-| Student dashboard    | `dashboard/student.tsx`                        | `InvoiceHistorySection` ("Fee Payments")                                                     |
-| Guardian dashboard   | `dashboard/parent.tsx`                         | `InvoiceHistorySection` ("Fee Payments")                                                     |
-| Accountant dashboard | `dashboard/accountant.tsx`                     | Invoice count/payment rate metrics                                                           |
-| Finance hub          | `finance/content.tsx`                          | `db.userInvoice.count()` for stats                                                           |
-| BillingSDK           | `billingsdk/invoice-history.tsx`               | Shared `InvoiceHistory` table component                                                      |
-| Accounting engine    | `finance/lib/accounting/`                      | `postInvoicePayment` exists but **unwired** -- no journal entries yet (umbrella ISSUE.md P0) |
-
-### Fee-to-Invoice Flow
-
-```
-FeeStructure → FeeAssignment (PENDING, finalAmount)
-    → confirmEnrollment() reads pending fee assignments
-    → createInvoiceFromEnrollment() maps name→item_name, finalAmount→price
-    → UserInvoice (ENR- prefix, UNPAID, due +30 days)
-```
-
-No FK between FeeAssignment and UserInvoice -- connection is runtime only.
+Branding: per-user `UserInvoiceSettings.invoiceLogo` overrides the school logo in the PDF, email, sheet, and public page.
 
 ### Status
 
-**Completion:** 90% | **Test Coverage:** 131 tests (5 files, 2059 LOC) | **TS Errors:** 0
-
-### Stubs
-
-- `bulk-generate.tsx` -- "Bulk invoice generation is currently unavailable" (blocked on deleted `actions-enhanced.ts`)
-- `all.tsx` Export button -- not wired to `exportInvoiceToCSV()`
+**Completion:** ~97% — remaining items tracked in `ISSUE.md` (purchase ledger posting rule, invoice lifecycle notifications, i18n fallback debt).

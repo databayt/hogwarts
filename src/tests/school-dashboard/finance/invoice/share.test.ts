@@ -74,7 +74,13 @@ const sharedInvoiceRow = {
     address3: null,
   },
   items: [
-    { id: "it-1", item_name: "Tuition Fee", quantity: 1, price: 1000, total: 1000 },
+    {
+      id: "it-1",
+      item_name: "Tuition Fee",
+      quantity: 1,
+      price: 1000,
+      total: 1000,
+    },
   ],
 }
 
@@ -166,9 +172,8 @@ describe("shareInvoice", () => {
   })
 
   it("denies without invoice.edit permission", async () => {
-    const { checkFinancePermission } = await import(
-      "@/components/school-dashboard/finance/lib/permissions"
-    )
+    const { checkFinancePermission } =
+      await import("@/components/school-dashboard/finance/lib/permissions")
     vi.mocked(checkFinancePermission).mockResolvedValueOnce(false)
 
     const result = await shareInvoice("inv-1")
