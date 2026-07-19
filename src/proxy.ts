@@ -202,6 +202,21 @@ export async function proxy(req: NextRequest) {
     ? pathWithoutLocale.replace(`/s/${subdomain}`, "")
     : pathWithoutLocale
 
+  // Legacy clean-URL alias: /apply → /application (the auth-gated admission entry).
+  // The public /apply rewrite was dropped when application became auth-coupled
+  // (see publicSiteRoutes note above); redirect old links/bookmarks to the live
+  // route, which itself sends unauthenticated visitors to login. Redirect early —
+  // before the auth checks — so callbackUrl carries /application, not the dead /apply.
+  if (
+    subdomain &&
+    (pathForRouteCheck === "/apply" || pathForRouteCheck.startsWith("/apply/"))
+  ) {
+    const rest = pathForRouteCheck.slice("/apply".length)
+    const applyRedirect = new URL(`/${locale}/application${rest}`, req.url)
+    applyRedirect.search = url.search
+    return NextResponse.redirect(applyRedirect)
+  }
+
   const isPublicSiteRoute =
     subdomain &&
     (pathWithoutLocale === "/" ||
