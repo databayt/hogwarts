@@ -1,5 +1,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
+//
+// Invoice creation/editing validates in wizard/{details,items}/validation.ts
+// (the live flow). This file keeps only the onboarding (profile + currency)
+// schemas used by onboarding/content.tsx.
 
 import z from "zod"
 
@@ -7,7 +11,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getValidationMessages } from "@/components/internationalization/helpers"
 
 // ============================================================================
-// Schema Factory Functions (i18n-enabled)
+// Schema Factory (i18n-enabled)
 // ============================================================================
 
 export function createOnboardingSchema(dictionary: Dictionary) {
@@ -26,66 +30,8 @@ export function createOnboardingSchema(dictionary: Dictionary) {
   })
 }
 
-export function createInvoiceSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary)
-
-  return z.object({
-    invoice_no: z.string().min(1, { message: v.get("invoiceNumberRequired") }),
-    invoice_date: z.date({ message: v.get("dateRequired") }),
-    due_date: z.date({ message: v.get("dueDateRequired") }),
-    currency: z.string().min(1, { message: v.get("currencyRequired") }),
-    from: z.object({
-      name: z
-        .string()
-        .min(3, { message: v.get("nameRequired") })
-        .max(100, { message: v.maxLength(100) }),
-      email: z.string().email({ message: v.email() }),
-      address1: z.string().min(5, { message: v.get("addressRequired") }),
-      address2: z.string().optional(),
-      address3: z.string().optional(),
-    }),
-    to: z.object({
-      name: z
-        .string()
-        .min(3, { message: v.get("nameRequired") })
-        .max(100, { message: v.maxLength(100) }),
-      email: z.string().email({ message: v.email() }),
-      address1: z.string().min(5, { message: v.get("addressRequired") }),
-      address2: z.string().optional(),
-      address3: z.string().optional(),
-    }),
-    items: z
-      .array(
-        z.object({
-          item_name: z
-            .string()
-            .min(3, { message: v.get("nameRequired") })
-            .max(100, { message: v.maxLength(100) }),
-          quantity: z
-            .number()
-            .min(1, { message: v.get("quantityCantBeNegative") }),
-          price: z.number().min(0, { message: v.get("pricePositive") }),
-          total: z.number().min(0, { message: v.get("totalRequired") }),
-        })
-      )
-      .min(1, { message: v.get("atLeastOne") }),
-    sub_total: z.number().min(0, { message: v.get("nonNegative") }),
-    discount: z
-      .number()
-      .min(0, { message: v.get("nonNegative") })
-      .optional(),
-    tax_percentage: z
-      .number()
-      .min(0, { message: v.get("nonNegative") })
-      .optional(),
-    total: z.number().min(0, { message: v.get("totalRequired") }),
-    notes: z.string().optional(),
-    status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]).optional(),
-  })
-}
-
 // ============================================================================
-// Legacy Schemas (used by onboarding + form.tsx + steps/)
+// Static fallback (pre-dictionary-load render only)
 // ============================================================================
 
 export const onboardingSchema = z.object({
@@ -98,56 +44,4 @@ export const onboardingSchema = z.object({
     .min(3, { message: "Last name is required" })
     .max(50, { message: "Last Name max 50 character" }),
   currency: z.string({ message: "Select currency" }).optional(),
-})
-
-export const InvoiceSchemaZod = z.object({
-  invoice_no: z.string().min(1, { message: "Invoice number is required" }),
-  invoice_date: z.date({ message: "Invoice date is required" }),
-  due_date: z.date({ message: "Due date is required" }),
-  currency: z.string().min(1, { message: "Currency is required" }),
-  from: z.object({
-    name: z
-      .string()
-      .min(3, { message: "Name is required" })
-      .max(100, { message: "Name max 100 character" }),
-    email: z.string().email({ message: "Valid email is required" }),
-    address1: z.string().min(5, { message: "Address is required" }),
-    address2: z.string().optional(),
-    address3: z.string().optional(),
-  }),
-  to: z.object({
-    name: z
-      .string()
-      .min(3, { message: "Name is required" })
-      .max(100, { message: "Name max 100 character" }),
-    email: z.string().email({ message: "Valid email is required" }),
-    address1: z.string().min(5, { message: "Address is required" }),
-    address2: z.string().optional(),
-    address3: z.string().optional(),
-  }),
-  items: z
-    .array(
-      z.object({
-        item_name: z
-          .string()
-          .min(3, { message: "Item name is required" })
-          .max(100, { message: "Max character will be 100" }),
-        quantity: z.number().min(1, { message: "Quantity must be at least 1" }),
-        price: z.number().min(0, { message: "Price can't be negative" }),
-        total: z.number().min(0, { message: "Total is required" }),
-      })
-    )
-    .min(1, { message: "At least one item is required" }),
-  sub_total: z.number().min(0, { message: "Sub total can't be negative" }),
-  discount: z
-    .number()
-    .min(0, { message: "Discount can't be negative" })
-    .optional(),
-  tax_percentage: z
-    .number()
-    .min(0, { message: "Tax percentage can't be negative" })
-    .optional(),
-  total: z.number().min(0, { message: "Total is required" }),
-  notes: z.string().optional(),
-  status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]).optional(),
 })

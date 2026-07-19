@@ -15,7 +15,13 @@ last_audited: 2026-06-14
 
 **Status:** BUILT — gradebook spine live, report-card PDF deferred
 **Completion:** ~94%
-**Last Updated:** 2026-06-14
+**Last Updated:** 2026-07-19
+
+---
+
+## Recently Added
+
+- **Term-end report-card auto-generation + cron-callable core (2026-07-19)** — extracted the aggregation into `grades/lib/report-cards-core.ts` (`generateReportCardsCore(schoolId, input)`, a plain module mirroring the gradebook-spine pattern); the `generateReportCards` action is now a thin `auth()`+`getTenantContext()` wrapper. The `/api/cron/term-end-report-cards` cron (daily 03:00) was rewritten from flag-only to actually **generate** report-card drafts for just-ended terms via the core — but only when the term has zero report cards yet, so an admin-processed term is never clobbered. It does NOT publish: the admin reviews in `/grades/reports` and clicks Publish, then `process-report-card-pdfs` renders PDFs. Also wired the `REPORT_CARD` docx template-fill (see the documents block): a new `documents/resolvers/report-card.ts` reads `ReportCard`+`ReportCardGrade[]`, surfaced as a "Generate (my template)" button on `report-cards/table.tsx`. The 4-step `grades/template/` report-card builder wizard was removed (`/grades/templates` now redirects to `/documents`). tsc 0.
 
 ---
 

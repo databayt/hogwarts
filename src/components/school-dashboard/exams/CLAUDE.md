@@ -75,6 +75,15 @@ Exams — Q3 2026 sprint epic 03, maturity `Built+Polish`, ~78% complete. See [R
   `aiGradeSubjective: true` — one click objective-marks + AI-grades subjective +
   publishes. A fully session-less AI-finalize-at-close is a deferred follow-up
   (needs cron-callable cores extracted from the auth-bound marking stack).
+- **Paper-config is race-safe (2026-07-19)** — `ExamPaperConfig.generatedExamId`
+  is `@unique`. On a paper page's first load, `getOrCreatePaperConfig` can fire
+  concurrently; both see "no config", both create, and the loser hits a P2002 that
+  was swallowed as "Failed to create paper configuration" — blanking the WHOLE
+  paper page (button included). `createPaperConfig` now returns the winning row on
+  P2002; `getOrCreatePaperConfig` re-fetches on any create failure; and
+  `paper/content.tsx` renders the header + "Generate (my template)" button even
+  when config can't load (the docx fill needs only the generated-exam id). Don't
+  re-gate the template-fill button behind paper-config success.
 
 ## Danger Zones
 

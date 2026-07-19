@@ -10,6 +10,10 @@ last_audited: 2026-06-23
 
 **Status:** BUILT (v1), migration-pending. tsc 0.
 
+## Recently Added
+
+- **This engine is now THE template path + REPORT_CARD resolver + role-gating (2026-07-18)** — the build-a-template WIZARDS (exam-paper `template-wizard`, `cert-wizard`, grades report-card `builder`) were removed; certs / exam papers / report cards are now "upload a `.docx` under `/documents` → auto-fill." `RESOLVABLE_CATEGORIES` = `CERTIFICATE`, `EXAM_PAPER`, `REPORT_CARD` (new `resolvers/report-card.ts` reads `ReportCard`+`ReportCardGrade[]`). Per-domain **"Generate (my template)"** lives on the certificate list, `/exams/paper/[id]`, and the report-cards table via the reusable `GenerateWithTemplateButton` + a new `generateFromDefaultTemplate(category, entityId)` action (picks the school's default/most-recent active template). **SECURITY:** `generateDocument`/`generateDocumentsBulk`/`generateFromDefaultTemplate` are now role-gated to `MANAGER_ROLES` (ADMIN/DEVELOPER/TEACHER) — the resolver scopes by `schoolId` but takes an arbitrary `entityId`, so without the gate any authenticated school user could fill a template with another student's row. The react-pdf region-preset track + `config-form` are kept (two rendering tracks, on purpose). **Deferred:** docx→PDF conversion, HTML template format, remaining category resolvers (TRANSCRIPT/LETTER/RECEIPT/ID_CARD — vocab already scaffolded in `field-vocab.ts`).
+
 ## Pending migration (additive — apply Neon-branch-first at deploy)
 
 The `document_templates` table + enum do not exist on prod yet. The change is

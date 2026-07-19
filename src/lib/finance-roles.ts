@@ -404,7 +404,7 @@ export function getQuickActionsForFinanceRole(role: string) {
       id: "create-invoice",
       label: "Create Invoice",
       icon: "FileText",
-      href: "/finance/invoice/create",
+      href: "/finance/invoice/invoice/create",
       module: FinanceModules.INVOICE,
       action: FinanceActions.CREATE,
     },

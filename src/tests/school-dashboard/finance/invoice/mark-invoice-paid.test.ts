@@ -14,6 +14,7 @@ vi.mock("@/lib/tenant-context", () => ({ getTenantContext: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 vi.mock("@/components/school-dashboard/finance/lib/permissions", () => ({
   checkCurrentUserPermission: vi.fn().mockResolvedValue(true),
+  checkFinancePermission: vi.fn().mockResolvedValue(true),
 }))
 vi.mock("@/components/school-dashboard/finance/lib/accounting/actions", () => ({
   postInvoicePayment: vi.fn().mockResolvedValue({ success: true }),

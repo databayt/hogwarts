@@ -12,6 +12,7 @@ import { getSortingStateParser } from "@/components/table/lib/parsers"
 export const streamCoursesSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(12),
+  search: parseAsString.withDefault(""),
   title: parseAsString.withDefault(""),
   category: parseAsString.withDefault(""),
   level: parseAsString.withDefault("1"),

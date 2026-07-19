@@ -250,41 +250,48 @@ pnpm db:seed:single exam-blueprints          # regional structures (SD, SA, …)
 
 ## Automation pipeline
 
-The full scoring loop runs without manual intervention once questions are loaded into the bank.
+The scoring loop is largely hands-off once questions are in the bank. Objective exams need zero manual marking; exams with subjective questions take one click.
 
 ```
-1. Configure a template
-   └─ set question distribution per type/difficulty + Bloom balance
+1. Auto-generate from the bank  (exam-wizard-v2 → "Auto-generate from template")
+   └─ autoGenerateExamQuestions() selects questions per the template distribution,
+      assigns per-question points, writes GeneratedExamQuestion rows, drops the
+      stale answer key. (Adopting a catalog exam does the same in one transaction.)
 
-2. Auto-generate from the bank  (wizard → "Auto-generate" button)
-   └─ autoGenerateExamQuestions() selects questions, assigns per-question
-      point values, writes GeneratedExamQuestion rows, drops stale answer key
+2. Exam opens on schedule  (/api/cron/exam-lifecycle, */15)
+   └─ PLANNED → IN_PROGRESS at the scheduled start; IN_PROGRESS → COMPLETED after
+      the end window (examDate + endTime + lateSubmitMinutes).
 
-3. Students submit
-   └─ submitExamSession() instant-grades fully-objective exams;
-      exams with subjective questions queue for manual/AI marking
+3. Students take + submit  (take route → ExamPlayer)
+   └─ getExamForPlayer() loads the proctored runner, resolving the real Student.id
+      and stripping isCorrect from options. submitExamSession() instant-grades a
+      fully-objective paper on submit → finalizeStudentExam() → ExamResult + Result.
 
-4. Finalize  (mark/actions/finalize.ts)
-   └─ finalizeExamResults() aggregates MarkingResult rows
-      → ExamResult (exam analytics, certificates)
-      → Result (unified gradebook — grades UI + report cards)
-      → dispatchNotificationsToAudience("exam_results_published", class)
+4. Finalize exams with subjective questions  (one click)
+   └─ "Auto-mark & publish" → finalizeExamResults({ aiGradeSubjective: true,
+      publish: true }): objective auto-mark + AI-grade essay/short-answer, aggregate
+      MarkingResult → ExamResult (analytics, certificates) + Result (gradebook),
+      notify students.
 
-5. Report cards auto-generate  (grades/actions/report-cards.ts)
-   └─ generateReportCards() deduplicates by examId; no duplicate rows on re-runs
+5. Report cards auto-generate at term end  (/api/cron/term-end-report-cards, daily)
+   └─ generateReportCardsCore() aggregates each term's results into ReportCard +
+      ReportCardGrade (dedup by examId). Drafts only — does not publish.
 
-6. Publish report cards
-   └─ publishReportCards() → dispatchNotificationsToAudience("report_card_ready", class)
+6. Admin reviews + publishes
+   └─ publishReportCards() → notifies guardians/students; process-report-card-pdfs
+      cron renders the PDF out-of-band → S3 → pdfUrl.
 
-7. Printable PDF + shareable link
-   └─ certificate cron renders PDF out-of-band → S3 → pdfUrl
-   └─ /[lang]/certificate/[shareToken] — public share page (no React-PDF in bundle)
+7. Official documents  (documents block)
+   └─ Upload a .docx template (EXAM_PAPER / CERTIFICATE / REPORT_CARD) and fill it
+      with real data via "Generate (my template)" (generateFromDefaultTemplate).
 
 8. Reminders  (/api/cron/exam-reminders)
-   └─ sweeps upcoming exams, dispatches advance notifications to students + teachers
+   └─ sweeps upcoming exams, dispatches advance notifications to students + teachers.
 ```
 
 Key invariant: `grades/lib/gradebook.ts` is the single write path for ALL automated scoring surfaces (exams, quick assessments, stream lesson quizzes). It is not `"use server"` — import it from server actions.
+
+Deferred: a fully **session-less** AI-finalize-at-close cron. The marking stack (`getOrCreateAnswerKey`, `batchAutoGradeWithKey`, `batchAIGrade`) derives `schoolId` from `auth()`, so a timer can't drive it until cron-callable cores are extracted — until then, subjective exams finalize with the one-click "Auto-mark & publish" button.
 
 ## See also
 

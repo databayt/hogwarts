@@ -616,7 +616,7 @@ export async function getQuickActionsForRole(
       id: "create-invoice",
       label: qa?.createInvoice || "Create Invoice",
       icon: "FileText",
-      href: "/finance/invoice/create",
+      href: "/finance/invoice/invoice/create",
       color: "blue",
       description: qa?.createInvoiceDesc || "Generate a new invoice",
       permission: "invoice.create",

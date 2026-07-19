@@ -46,6 +46,8 @@ vi.mock("@/lib/db", () => {
         cb({
           userInvoice: {
             create: vi.fn().mockResolvedValue({ id: "draft-1" }),
+            // Draft numbering: latest-number lookup + clash pre-check.
+            findFirst: vi.fn().mockResolvedValue(null),
             deleteMany: vi.fn(),
           },
           userInvoiceAddress: {
@@ -54,6 +56,9 @@ vi.mock("@/lib/db", () => {
           },
           userInvoiceItem: {
             deleteMany: vi.fn(),
+          },
+          school: {
+            findUnique: vi.fn().mockResolvedValue({ currency: "SDG" }),
           },
         })
       ),

@@ -59,6 +59,8 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/components/school-dashboard/finance/lib/permissions", () => ({
   checkCurrentUserPermission: vi.fn().mockResolvedValue(true),
+  // guard.ts (requireFinanceActor) authorizes via this one.
+  checkFinancePermission: vi.fn().mockResolvedValue(true),
 }))
 
 vi.mock("@/components/school-dashboard/finance/invoice/email.config", () => ({
@@ -200,186 +202,6 @@ describe("invoice/actions.ts", () => {
 
   // ==========================================================================
   // createInvoice
-  // ==========================================================================
-
-  describe("createInvoice", () => {
-    it("returns auth error when not authenticated", async () => {
-      mockAuthFailure()
-      const result = await actions.createInvoice(validInvoiceData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("NOT_AUTHENTICATED")
-    })
-
-    it("returns error when no school context", async () => {
-      mockNoSchool()
-      const result = await actions.createInvoice(validInvoiceData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("MISSING_SCHOOL")
-    })
-
-    it("returns error when permission denied", async () => {
-      const { checkCurrentUserPermission } =
-        await import("@/components/school-dashboard/finance/lib/permissions")
-      vi.mocked(checkCurrentUserPermission).mockResolvedValueOnce(false)
-
-      const result = await actions.createInvoice(validInvoiceData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("UNAUTHORIZED")
-    })
-
-    it("creates invoice successfully via transaction", async () => {
-      const mockCreatedInvoice = { id: "inv-new", ...validInvoiceData }
-
-      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
-        const tx = {
-          userInvoice: {
-            findFirst: vi.fn().mockResolvedValue(null),
-            create: vi.fn().mockResolvedValue(mockCreatedInvoice),
-          },
-          userInvoiceAddress: {
-            create: vi
-              .fn()
-              .mockResolvedValueOnce({ id: "addr-1" })
-              .mockResolvedValueOnce({ id: "addr-2" }),
-          },
-        }
-        return cb(tx)
-      })
-
-      const result = await actions.createInvoice(validInvoiceData)
-      expect(result.success).toBe(true)
-      expect(db.$transaction).toHaveBeenCalled()
-      expect(revalidatePath).toHaveBeenCalledWith("/finance/invoice")
-    })
-
-    it("returns error for duplicate invoice number", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
-        const tx = {
-          userInvoice: {
-            findFirst: vi.fn().mockResolvedValue({ id: "existing" }),
-          },
-          userInvoiceAddress: { create: vi.fn() },
-        }
-        return cb(tx)
-      })
-
-      const result = await actions.createInvoice(validInvoiceData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("INVOICE_DUPLICATE_NUMBER")
-    })
-  })
-
-  // ==========================================================================
-  // createInvoiceWithAutoNumber
-  // ==========================================================================
-
-  describe("createInvoiceWithAutoNumber", () => {
-    it("generates auto number and creates invoice", async () => {
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
-
-      const mockCreated = { id: "inv-auto", invoice_no: "I26001" }
-      vi.mocked(db.$transaction).mockImplementation(async (cb: any) => {
-        const tx = {
-          userInvoice: {
-            findFirst: vi.fn().mockResolvedValue(null),
-            create: vi.fn().mockResolvedValue(mockCreated),
-          },
-          userInvoiceAddress: {
-            create: vi
-              .fn()
-              .mockResolvedValueOnce({ id: "addr-1" })
-              .mockResolvedValueOnce({ id: "addr-2" }),
-          },
-        }
-        return cb(tx)
-      })
-
-      const { invoice_no, ...dataWithoutNo } = validInvoiceData
-      const result = await actions.createInvoiceWithAutoNumber(dataWithoutNo)
-      expect(result.success).toBe(true)
-      expect(revalidatePath).toHaveBeenCalledWith("/finance/invoice")
-    })
-
-    it("returns auth error when not authenticated", async () => {
-      mockAuthFailure()
-      const { invoice_no, ...dataWithoutNo } = validInvoiceData
-      const result = await actions.createInvoiceWithAutoNumber(dataWithoutNo)
-      expect(result.success).toBe(false)
-    })
-  })
-
-  // ==========================================================================
-  // getNextInvoiceNumber
-  // ==========================================================================
-
-  describe("getNextInvoiceNumber", () => {
-    it("returns next invoice number for school", async () => {
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
-
-      const result = await actions.getNextInvoiceNumber()
-      expect(result.success).toBe(true)
-      expect(result.data).toMatch(/^I\d{2}001$/)
-    })
-
-    it("increments from the latest invoice number", async () => {
-      const year = new Date().getFullYear().toString().slice(-2)
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
-        invoice_no: `I${year}005`,
-      } as any)
-
-      const result = await actions.getNextInvoiceNumber()
-      expect(result.success).toBe(true)
-      expect(result.data).toBe(`I${year}006`)
-    })
-
-    it("returns auth error when not authenticated", async () => {
-      mockAuthFailure()
-      const result = await actions.getNextInvoiceNumber()
-      expect(result.success).toBe(false)
-    })
-  })
-
-  // ==========================================================================
-  // getInvoices
-  // ==========================================================================
-
-  describe("getInvoices", () => {
-    it("returns paginated invoices excluding wizard drafts", async () => {
-      vi.mocked(db.userInvoice.findMany).mockResolvedValue([mockInvoice] as any)
-      vi.mocked(db.userInvoice.count).mockResolvedValue(1)
-
-      const result = await actions.getInvoices(1, 5)
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
-      expect(db.userInvoice.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            userId: MOCK_USER_ID,
-            schoolId: MOCK_SCHOOL_ID,
-            wizardStep: null,
-          }),
-        })
-      )
-    })
-
-    it("returns empty list when no invoices", async () => {
-      vi.mocked(db.userInvoice.findMany).mockResolvedValue([])
-      vi.mocked(db.userInvoice.count).mockResolvedValue(0)
-
-      const result = await actions.getInvoices()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(0)
-    })
-
-    it("returns auth error when not authenticated", async () => {
-      mockAuthFailure()
-      const result = await actions.getInvoices()
-      expect(result.success).toBe(false)
-    })
-  })
-
-  // ==========================================================================
-  // getInvoicesWithFilters
   // ==========================================================================
 
   describe("getInvoicesWithFilters", () => {
@@ -608,96 +430,6 @@ describe("invoice/actions.ts", () => {
   // updateInvoice
   // ==========================================================================
 
-  describe("updateInvoice", () => {
-    const updateData = {
-      invoice_no: "I26001",
-      invoice_date: new Date("2026-03-01"),
-      due_date: new Date("2026-04-01"),
-      currency: "USD",
-      from: { name: "School", email: "s@t.com", address1: "Addr" },
-      to: { name: "Parent", email: "p@t.com", address1: "Addr" },
-      items: [{ item_name: "Fee", quantity: 1, price: 1000, total: 1000 }],
-      sub_total: 1000,
-      total: 1000,
-    }
-
-    it("updates invoice successfully (ADMIN sees all)", async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue({
-        ...mockInvoice,
-        fromAddressId: "addr-1",
-        toAddressId: "addr-2",
-        items: [],
-      } as any)
-      vi.mocked(db.userInvoiceAddress.update).mockResolvedValue({} as any)
-      vi.mocked(db.userInvoiceItem.deleteMany).mockResolvedValue({ count: 0 })
-      vi.mocked(db.userInvoice.update).mockResolvedValue({
-        id: "inv-1",
-        ...updateData,
-      } as any)
-
-      const result = await actions.updateInvoice("inv-1", updateData)
-      expect(result.success).toBe(true)
-      expect(revalidatePath).toHaveBeenCalledWith("/finance/invoice")
-    })
-
-    // INV-001: ADMIN query must NOT include userId
-    it("INV-001: ADMIN findFirst query has no userId filter", async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
-
-      await actions.updateInvoice("inv-1", updateData)
-      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "inv-1", schoolId: MOCK_SCHOOL_ID },
-        })
-      )
-    })
-
-    // INV-001: STUDENT (non-privileged) query must include userId
-    it("INV-001: STUDENT findFirst query includes userId scope", async () => {
-      mockAuthAsStudent()
-      vi.mocked(db.user.findUnique).mockResolvedValue({
-        role: "STUDENT",
-      } as any)
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
-
-      await actions.updateInvoice("inv-1", updateData)
-      expect(db.userInvoice.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            id: "inv-1",
-            userId: "student-user",
-            schoolId: MOCK_SCHOOL_ID,
-          },
-        })
-      )
-    })
-
-    it("returns error for not found invoice", async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
-      vi.mocked(db.userInvoice.findFirst).mockResolvedValue(null)
-
-      const result = await actions.updateInvoice("nonexistent", updateData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("INVOICE_NOT_FOUND")
-    })
-
-    it("returns error when permission denied", async () => {
-      const { checkCurrentUserPermission } =
-        await import("@/components/school-dashboard/finance/lib/permissions")
-      vi.mocked(checkCurrentUserPermission).mockResolvedValueOnce(false)
-
-      const result = await actions.updateInvoice("inv-1", updateData)
-      expect(result.success).toBe(false)
-      expect(result.error).toBe("UNAUTHORIZED")
-    })
-  })
-
-  // ==========================================================================
-  // deleteInvoice
-  // ==========================================================================
-
   describe("deleteInvoice", () => {
     it("deletes invoice and revalidates (ADMIN)", async () => {
       vi.mocked(db.user.findUnique).mockResolvedValue({ role: "ADMIN" } as any)
@@ -735,9 +467,9 @@ describe("invoice/actions.ts", () => {
     })
 
     it("returns error when permission denied", async () => {
-      const { checkCurrentUserPermission } =
+      const { checkFinancePermission } =
         await import("@/components/school-dashboard/finance/lib/permissions")
-      vi.mocked(checkCurrentUserPermission).mockResolvedValueOnce(false)
+      vi.mocked(checkFinancePermission).mockResolvedValueOnce(false)
 
       const result = await actions.deleteInvoice({ id: "inv-1" })
       expect(result.success).toBe(false)

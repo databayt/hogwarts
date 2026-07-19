@@ -22,6 +22,8 @@ export async function getAllCatalogCourses(
   params: {
     page?: number
     perPage?: number
+    /** Bilingual free-text query over the course name (see buildBilingualNameMatch). */
+    search?: string
     title?: string
     category?: string
     grade?: number
@@ -80,7 +82,9 @@ export async function getAllCatalogCourses(
     return { rows: [] as CatalogCourseType[], count: 0 }
   }
 
-  // Build where clause — scoped to school's selected subjects
+  const searchTerm = params.search?.trim()
+
+  // Build where clause — scoped to school's selected subjects.
   const where: Prisma.SubjectWhereInput = {
     id: { in: subjectIds },
     status: "PUBLISHED",
@@ -93,7 +97,14 @@ export async function getAllCatalogCourses(
         }
       : {}),
     ...(params.category ? { department: params.category } : {}),
-    ...(params.grade ? { grades: { has: params.grade } } : {}),
+    // A search spans every grade the school offers — a query that only looked
+    // inside one grade would miss most matches — so the grade filter applies
+    // to plain browsing only.
+    ...(params.grade && !searchTerm ? { grades: { has: params.grade } } : {}),
+  }
+
+  if (searchTerm) {
+    where.OR = await buildBilingualNameMatch(searchTerm, schoolId)
   }
 
   const [subjects, count] = await Promise.all([
@@ -135,6 +146,40 @@ export async function getAllCatalogCourses(
   })
 
   return { rows, count }
+}
+
+/**
+ * Name-match conditions for a course search, bilingual via the `Translation`
+ * cache: matches the stored course name directly AND any subject whose cached
+ * translation contains the term — so a query typed in Arabic or English finds
+ * the course regardless of the language it is stored in. Cache-only: it reads
+ * the indexed `Translation` table and NEVER triggers a translation API call (a
+ * search keystroke must never cost one), mirroring
+ * `@/components/translation/search`.
+ */
+async function buildBilingualNameMatch(
+  term: string,
+  schoolId: string
+): Promise<Prisma.SubjectWhereInput[]> {
+  const conditions: Prisma.SubjectWhereInput[] = [
+    { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+  ]
+
+  const cached = await db.translation.findMany({
+    where: {
+      schoolId,
+      translatedText: { contains: term, mode: Prisma.QueryMode.insensitive },
+    },
+    select: { sourceText: true },
+    take: 200,
+  })
+
+  if (cached.length > 0) {
+    const sources = [...new Set(cached.map((c) => c.sourceText))]
+    conditions.push({ name: { in: sources } })
+  }
+
+  return conditions
 }
 
 const subjectSelect = {

@@ -77,6 +77,7 @@ async function CoursesRenderer({
   search: {
     page: number
     perPage: number
+    search: string
     title: string
     category: string
     level: string
@@ -104,6 +105,7 @@ async function CoursesRenderer({
   const { rows, count } = await getAllCatalogCourses({
     page: search.page,
     perPage: search.perPage,
+    search: search.search || undefined,
     title: search.title || undefined,
     category: search.category || undefined,
     grade: search.level ? parseInt(search.level) : undefined,
