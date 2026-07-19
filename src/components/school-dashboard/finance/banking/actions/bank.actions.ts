@@ -19,11 +19,25 @@ const CACHE_TAGS = {
   institutions: "bank-institutions",
 }
 
+// Bank accounts are personal (linked per user via Plaid); ownership is the
+// authorization boundary. Every read/write below resolves the session itself
+// and scopes to the session user — the Plaid accessToken never leaves the
+// server (omitted from every result).
+
 // Cached function for getting accounts with React cache
 export const getAccounts = cache(async ({ userId }: { userId: string }) => {
   try {
+    const session = await auth()
+    if (!session?.user?.id || session.user.id !== userId) {
+      return { success: false as const, error: "Unauthorized" }
+    }
+
     const accounts = await db.bankAccount.findMany({
-      where: { userId },
+      where: {
+        userId: session.user.id,
+        ...(session.user.schoolId && { schoolId: session.user.schoolId }),
+      },
+      omit: { accessToken: true },
       include: {
         transactions: {
           take: 5,
@@ -37,80 +51,89 @@ export const getAccounts = cache(async ({ userId }: { userId: string }) => {
       return total + Number(account.currentBalance)
     }, 0)
 
-    return parseStringify({
-      data: accounts,
-      totalBanks,
-      totalCurrentBalance,
-    })
+    return {
+      success: true as const,
+      data: parseStringify({
+        data: accounts,
+        totalBanks,
+        totalCurrentBalance,
+      }),
+    }
   } catch (error) {
     console.error("Error getting accounts:", error)
+    return { success: false as const, error: "Failed to load accounts" }
+  }
+})
+
+// Per-request memo only (react cache) — a shared unstable_cache keyed by
+// accountId would serve one user's account rows to another user.
+export const getAccount = cache(async (accountId: string) => {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return null
+
+    const account = await db.bankAccount.findFirst({
+      where: { id: accountId, userId: session.user.id },
+      omit: { accessToken: true },
+      include: {
+        transactions: {
+          orderBy: { date: "desc" },
+          take: 50,
+        },
+      },
+    })
+
+    return parseStringify(account)
+  } catch (error) {
+    console.error("Error getting account:", error)
     return null
   }
 })
 
-// Optimized account fetching with Next.js unstable_cache
-export const getAccount = unstable_cache(
-  async (accountId: string) => {
-    try {
-      const account = await db.bankAccount.findUnique({
-        where: { id: accountId },
-        include: {
-          transactions: {
-            orderBy: { date: "desc" },
-            take: 50,
-          },
-        },
-      })
+// Institution metadata is public-ish and rarely changes — cache it by
+// institutionId only, after the ownership check has already passed.
+const getInstitutionInfo = unstable_cache(
+  async (institutionId: string) => {
+    const institutionResponse = await plaidClient.institutionsGetById({
+      institution_id: institutionId,
+      country_codes: ["US"] as CountryCode[],
+    })
 
-      return parseStringify(account)
-    } catch (error) {
-      console.error("Error getting account:", error)
-      return null
-    }
+    const institution = institutionResponse.data.institution
+
+    return parseStringify({
+      name: institution.name,
+      logo: institution.logo,
+      primaryColor: institution.primary_color,
+    })
   },
-  ["get-account"],
-  {
-    tags: [CACHE_TAGS.accounts],
-    revalidate: 60, // Revalidate every minute for fresh data
-  }
-)
-
-// Cached bank info with longer TTL since institution data rarely changes
-export const getBankInfo = unstable_cache(
-  async (accountId: string) => {
-    try {
-      const account = await db.bankAccount.findUnique({
-        where: { id: accountId },
-        select: { institutionId: true },
-      })
-
-      if (!account) {
-        return null
-      }
-
-      const institutionResponse = await plaidClient.institutionsGetById({
-        institution_id: account.institutionId,
-        country_codes: ["US"] as CountryCode[],
-      })
-
-      const institution = institutionResponse.data.institution
-
-      return parseStringify({
-        name: institution.name,
-        logo: institution.logo,
-        primaryColor: institution.primary_color,
-      })
-    } catch (error) {
-      console.error("Error getting bank info:", error)
-      return null
-    }
-  },
-  ["get-bank-info"],
+  ["get-institution-info"],
   {
     tags: [CACHE_TAGS.institutions],
     revalidate: 3600, // Cache for 1 hour
   }
 )
+
+export async function getBankInfo(accountId: string) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return null
+
+    const account = await db.bankAccount.findFirst({
+      where: { id: accountId, userId: session.user.id },
+      select: { institutionId: true },
+    })
+
+    if (!account) {
+      return null
+    }
+
+    return await getInstitutionInfo(account.institutionId)
+  } catch (error) {
+    console.error("Error getting bank info:", error)
+    return null
+  }
+}
 
 // Optimized bank account creation with proper revalidation
 export async function createBankAccount({
@@ -202,13 +225,20 @@ export async function syncTransactions({
   endDate?: Date
 }) {
   try {
-    const account = await db.bankAccount.findUnique({
-      where: { id: accountId },
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Ownership gate: the account must belong to the caller. This also uses
+    // the stored accessToken server-side only.
+    const account = await db.bankAccount.findFirst({
+      where: { id: accountId, userId: session.user.id },
       select: { id: true, accessToken: true, accountId: true, schoolId: true },
     })
 
     if (!account) {
-      throw new Error("Account not found")
+      return { success: false, error: "Account not found" }
     }
 
     // Default date range: last 90 days

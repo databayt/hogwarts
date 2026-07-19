@@ -8,11 +8,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { WalletActionResult } from "./types"
 import {
   walletRefundSchema,
@@ -24,10 +24,9 @@ export async function createWallet(
   formData: FormData
 ): Promise<WalletActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("wallet", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       type: formData.get("type"),
@@ -40,9 +39,9 @@ export async function createWallet(
     const wallet = await db.wallet.create({
       data: {
         walletType: validated.type,
-        ownerId: validated.userId || session.user.schoolId,
+        ownerId: validated.userId || schoolId,
         isActive: validated.isActive,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         balance: 0,
       },
       include: {
@@ -63,10 +62,9 @@ export async function createWallet(
 
 export async function topupWallet(formData: FormData) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("wallet", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const data = {
       walletId: formData.get("walletId"),
@@ -82,7 +80,7 @@ export async function topupWallet(formData: FormData) {
       const wallet = await tx.wallet.update({
         where: {
           id: validated.walletId,
-          schoolId: session.user.schoolId,
+          schoolId: schoolId,
         },
         data: {
           balance: {
@@ -99,9 +97,9 @@ export async function topupWallet(formData: FormData) {
           type: "CREDIT",
           description:
             validated.description || `Top-up via ${validated.paymentMethod}`,
-          schoolId: session.user.schoolId!,
+          schoolId: schoolId,
           balanceAfter: wallet.balance,
-          createdBy: session.user.id,
+          createdBy: userId,
         },
       })
 
@@ -114,7 +112,7 @@ export async function topupWallet(formData: FormData) {
     // tracked separately from wiring the orphan posters).
     try {
       const { postWalletTopup } = await import("../lib/accounting/actions")
-      const postResult = await postWalletTopup(session.user.schoolId, {
+      const postResult = await postWalletTopup(schoolId, {
         transactionId: result.transaction.id,
         amount: validated.amount,
         topupDate: result.transaction.createdAt,
@@ -145,10 +143,9 @@ export async function topupWallet(formData: FormData) {
 
 export async function refundWallet(formData: FormData) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("wallet", "approve")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const data = {
       walletId: formData.get("walletId"),
@@ -162,7 +159,7 @@ export async function refundWallet(formData: FormData) {
     const wallet = await db.wallet.findUnique({
       where: {
         id: validated.walletId,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
       },
     })
 
@@ -192,9 +189,9 @@ export async function refundWallet(formData: FormData) {
           amount: validated.amount,
           type: "DEBIT",
           description: `Refund: ${validated.reason}`,
-          schoolId: session.user.schoolId!,
+          schoolId: schoolId,
           balanceAfter: updatedWallet.balance,
-          createdBy: session.user.id,
+          createdBy: userId,
         },
       })
 
@@ -217,14 +214,13 @@ export async function getWallets(filters?: {
   isActive?: boolean
 }) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("wallet", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const wallets = await db.wallet.findMany({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         ...(filters?.type && { type: filters.type as any }),
         ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
       },

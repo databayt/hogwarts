@@ -21,6 +21,8 @@ import {
   importTeachers,
 } from "@/components/file/import/csv-import"
 
+import { requireSchoolRole } from "../require-school-admin"
+
 async function fileToCSVWithDocx(file: File): Promise<string> {
   const name = file.name.toLowerCase()
   if (name.endsWith(".docx") || name.endsWith(".doc")) {
@@ -132,10 +134,7 @@ interface SmartImportResult {
 export async function bulkParseAndValidate(
   formData: FormData
 ): Promise<ParseResult> {
-  const session = await auth()
-  if (!session?.user?.schoolId) {
-    throw new Error("Not authenticated or missing school context")
-  }
+  await requireSchoolRole()
 
   const file = formData.get("file") as File | null
   const type = formData.get("type") as string
@@ -184,9 +183,8 @@ export async function bulkParseAndValidate(
 export async function bulkSmartImport(
   formData: FormData
 ): Promise<SmartImportResult> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-  if (!schoolId) throw new Error("Not authenticated or missing school context")
+  // Mass account creation — admin-only, never mere tenant membership.
+  const { schoolId } = await requireSchoolRole()
 
   const type = formData.get("type") as string
   if (!type || !VALID_TYPES.includes(type as ImportType)) {
@@ -228,18 +226,14 @@ export async function bulkSmartImport(
 }
 
 export async function createDepartment(formData: FormData) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-  if (!schoolId) throw new Error("Unauthorized")
+  await requireSchoolRole()
 
   revalidatePath("/school/bulk")
   return { success: true, message: "Department creation coming soon" }
 }
 
 export async function createClassroom(formData: FormData) {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId
-  if (!schoolId) throw new Error("Unauthorized")
+  await requireSchoolRole()
 
   revalidatePath("/school/bulk")
   return { success: true, message: "Classroom creation coming soon" }

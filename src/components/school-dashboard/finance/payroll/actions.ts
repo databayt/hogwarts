@@ -75,6 +75,17 @@ export async function getPayrollRuns(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const whereClause: any = { schoolId }
     if (status) {
       whereClause.status = status
@@ -105,6 +116,17 @@ export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
 
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({
@@ -842,6 +864,23 @@ export async function getTeacherSalarySlips(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    // Staff read their own slips; anyone else's require payroll/view.
+    const canViewAll = await checkFinancePermission(
+      session.user.id,
+      schoolId,
+      "payroll",
+      "view"
+    )
+    if (!canViewAll) {
+      const ownTeacher = await db.teacher.findFirst({
+        where: { userId: session.user.id, schoolId },
+        select: { id: true },
+      })
+      if (!ownTeacher || ownTeacher.id !== teacherId) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
+
     const salarySlips = await db.salarySlip.findMany({
       where: { schoolId, teacherId },
       include: {
@@ -885,6 +924,7 @@ export async function getSalarySlip(
         teacher: {
           select: {
             id: true,
+            userId: true,
             firstName: true,
             lastName: true,
             employeeId: true,
@@ -903,6 +943,19 @@ export async function getSalarySlip(
 
     if (!salarySlip) {
       return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    // A slip is the teacher's own document; anyone else needs payroll/view.
+    if (salarySlip.teacher?.userId !== session.user.id) {
+      const canView = await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "view"
+      )
+      if (!canView) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     return { success: true, data: salarySlip }
@@ -926,6 +979,17 @@ export async function getPayrollSummary(): Promise<ActionResult<any>> {
 
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const [totalRuns, pendingApproval, approvedRuns, paidRuns, totalPayments] =
@@ -968,6 +1032,17 @@ export async function deletePayrollRun(runId: string): Promise<ActionResult> {
 
     if (!session?.user?.id || !schoolId) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
+    }
+
+    if (
+      !(await checkFinancePermission(
+        session.user.id,
+        schoolId,
+        "payroll",
+        "delete"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     const payrollRun = await db.payrollRun.findFirst({

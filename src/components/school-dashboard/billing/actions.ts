@@ -161,6 +161,10 @@ export async function getSubscriptionDetails(): Promise<
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const subscription = await db.subscription.findFirst({
       where: { schoolId },
       include: {
@@ -405,6 +409,10 @@ export async function getPaymentMethods(): Promise<
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const paymentMethods = await db.billingPaymentMethod.findMany({
       where: { schoolId, status: "active" },
       include: {
@@ -614,6 +622,10 @@ export async function getInvoices(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validated = filters
       ? invoiceFilterSchema.parse(filters)
       : invoiceFilterSchema.parse({})
@@ -689,6 +701,10 @@ export async function getBillingHistory(
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!canManageBilling(session.user.role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -793,6 +809,10 @@ export async function getBillingStats(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!canManageBilling(session.user.role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -964,6 +984,10 @@ export async function updateUsageMetrics(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!canManageBilling(session.user.role)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validated = updateUsageMetricsSchema.parse(input)
 
     const subscription = await db.subscription.findFirst({
@@ -1031,6 +1055,10 @@ export async function getBillingPreferences(): Promise<
     const { schoolId } = await getTenantContext()
 
     if (!session?.user || !schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!canManageBilling(session.user.role)) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 

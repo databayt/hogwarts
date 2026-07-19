@@ -32,6 +32,21 @@ vi.mock(
   () => ledgerMock
 )
 
+// topupWallet now gates through requireFinanceActor (wallet/create). These
+// tests cover the ledger wiring, not the gate — guard.test.ts covers that —
+// so resolve the actor directly.
+vi.mock("@/components/school-dashboard/finance/guard", () => ({
+  requireFinanceActor: vi.fn().mockResolvedValue({
+    userId: "test-user-id",
+    schoolId: "test-school-id",
+  }),
+  isFinanceAuthError: (result: unknown) =>
+    typeof result === "object" &&
+    result !== null &&
+    "success" in result &&
+    (result as { success: boolean }).success === false,
+}))
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------

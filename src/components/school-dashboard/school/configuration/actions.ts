@@ -50,6 +50,12 @@ type ActionResult = {
   error?: string
 }
 
+// Tenant membership is not authorization — every school member (student,
+// guardian, teacher) shares the schoolId, and these actions rewrite identity,
+// pricing, capacity and module toggles for the whole school. Server Actions
+// are public POST endpoints, so the role gate must live here, not in the UI.
+const SCHOOL_CONFIG_ROLES: ReadonlySet<string> = new Set(["ADMIN", "DEVELOPER"])
+
 export async function updateSchoolIdentity(
   schoolId: string,
   data: z.infer<typeof schoolIdentitySchema>
@@ -59,6 +65,10 @@ export async function updateSchoolIdentity(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -121,6 +131,10 @@ export async function updateSchoolBranding(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -188,6 +202,10 @@ export async function updateHeroImage(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validatedData = heroImageSchema.parse(data)
 
     await db.schoolBranding.upsert({
@@ -241,6 +259,10 @@ export async function updateSchoolLocation(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validatedData = schoolLocationSchema.parse(data)
 
     const updated = await db.school.update({
@@ -291,6 +313,10 @@ export async function updateSchoolPricing(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validatedData = schoolPricingSchema.parse(data)
 
     const updated = await db.school.update({
@@ -337,6 +363,10 @@ export async function updatePlanLimits(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -394,6 +424,10 @@ export async function updateSchoolCapacity(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     // Validate input
     const validatedData = capacitySchema.parse(data)
 
@@ -436,6 +470,10 @@ export async function updateEnabledModules(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -488,6 +526,10 @@ export async function updateSchoolName(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
@@ -552,6 +594,10 @@ export async function requestSubdomainChange(
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const validated = subdomainRequestSchema.parse(data)
 
     const school = await db.school.findUnique({
@@ -610,6 +656,10 @@ export async function updateSchoolNameFormat(
     const userSchoolId = session?.user?.schoolId
 
     if (!userSchoolId || userSchoolId !== schoolId) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    if (!SCHOOL_CONFIG_ROLES.has(session?.user?.role ?? "")) {
       return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 

@@ -156,6 +156,7 @@ describe("deleteReceipt — revalidatePath (R-P2-1)", () => {
     vi.mocked(db.expenseReceipt.findFirst).mockResolvedValue({
       id: "receipt-1",
       schoolId: "school-1",
+      userId: "user-1", // owner path — non-owners now need receipt/* grants
       fileUrl: "https://cdn.example.com/r.pdf",
     } as any)
     vi.mocked(db.expenseReceipt.deleteMany).mockResolvedValue({ count: 1 })
@@ -176,6 +177,7 @@ describe("retryReceiptExtraction — revalidatePath (R-P2-1)", () => {
     vi.mocked(db.expenseReceipt.findFirst).mockResolvedValue({
       id: "receipt-1",
       schoolId: "school-1",
+      userId: "user-1", // owner path — non-owners now need receipt/* grants
       fileUrl: "https://cdn.example.com/r.pdf",
     } as any)
 

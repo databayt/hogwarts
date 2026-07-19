@@ -3,11 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+
+import { requireSchoolRole } from "../../require-school-admin"
 
 export async function getRoleStats() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const users = await db.user.findMany({
     where: { schoolId },
@@ -69,5 +69,6 @@ const PERMISSION_MATRIX: Record<string, string[]> = {
 }
 
 export async function getPermissionMatrix() {
+  await requireSchoolRole()
   return PERMISSION_MATRIX
 }

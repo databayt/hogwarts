@@ -14,6 +14,7 @@ import { AccountType } from "@prisma/client"
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { checkFinancePermission } from "../lib/permissions"
 import type {
   AccountSummary,
   BalanceSheetData,
@@ -112,6 +113,17 @@ export async function generateBalanceSheet(
       return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
+    if (
+      !(await checkFinancePermission(
+        session.user.id!,
+        session.user.schoolId,
+        "reports",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     // As-of statement: cumulative up to endDate (startDate is unused here — a
     // balance sheet carries forward all prior activity, not just the period's).
     const activity = await getLedgerAccountActivity(session.user.schoolId, {
@@ -186,6 +198,17 @@ export async function generateIncomeStatement(
       return actionError(ACTION_ERRORS.PAYMENT_FAILED)
     }
 
+    if (
+      !(await checkFinancePermission(
+        session.user.id!,
+        session.user.schoolId,
+        "reports",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     // Period statement: only entries within [startDate, endDate].
     const activity = await getLedgerAccountActivity(session.user.schoolId, {
       from: startDate,
@@ -226,6 +249,17 @@ export async function generateTrialBalance(
     const session = await auth()
     if (!session?.user?.schoolId) {
       return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+    }
+
+    if (
+      !(await checkFinancePermission(
+        session.user.id!,
+        session.user.schoolId,
+        "reports",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // As-of: every posted line up to endDate, one row per account.
@@ -277,6 +311,17 @@ export async function getAvailableReports() {
     const session = await auth()
     if (!session?.user?.schoolId) {
       return actionError(ACTION_ERRORS.PAYMENT_FAILED)
+    }
+
+    if (
+      !(await checkFinancePermission(
+        session.user.id!,
+        session.user.schoolId,
+        "reports",
+        "view"
+      ))
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
     }
 
     // Return list of available reports (labels resolved via dictionary on client)

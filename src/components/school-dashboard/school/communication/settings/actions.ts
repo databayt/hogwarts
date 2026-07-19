@@ -3,19 +3,17 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { requireSchoolRole } from "../../require-school-admin"
 import {
   communicationSettingsSchema,
   type CommunicationSettingsInput,
 } from "../validation"
 
 export async function getAnnouncementConfig() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   let config = await db.announcementConfig.findUnique({
     where: { schoolId },
@@ -34,9 +32,7 @@ export async function getAnnouncementConfig() {
 export async function updateAnnouncementConfig(
   input: CommunicationSettingsInput
 ) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user || !schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const validated = communicationSettingsSchema.parse(input)
 

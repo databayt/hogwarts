@@ -77,7 +77,7 @@ export async function ReconciliationContent({ lang, days = 30 }: Props) {
     )
   }
 
-  const canView = await checkCurrentUserPermission(schoolId, "fees", "view")
+  const canView = await checkCurrentUserPermission(schoolId, "banking", "view")
   if (!canView) {
     return (
       <p className="text-muted-foreground">

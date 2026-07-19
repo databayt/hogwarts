@@ -2,10 +2,9 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { auth } from "@/auth"
-
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
+
+import { requireSchoolRole } from "../../require-school-admin"
 
 export async function getAuditLogs(filters?: {
   page?: number
@@ -16,9 +15,8 @@ export async function getAuditLogs(filters?: {
   dateFrom?: Date
   dateTo?: Date
 }) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user || !schoolId) throw new Error("Unauthorized")
+  // Full audit trail (actor identity, actions, timestamps) is admin-only.
+  const { schoolId } = await requireSchoolRole()
 
   const page = filters?.page || 1
   const limit = filters?.limit || 20
@@ -54,8 +52,7 @@ export async function getAuditLogs(filters?: {
 }
 
 export async function getAuditStats() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

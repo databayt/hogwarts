@@ -3,11 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { requireSchoolRole } from "../../require-school-admin"
 import {
   templateSchema,
   templateUpdateSchema,
@@ -15,8 +14,7 @@ import {
 } from "../validation"
 
 export async function getTemplates() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   return db.notificationTemplate.findMany({
     where: { schoolId },
@@ -25,9 +23,7 @@ export async function getTemplates() {
 }
 
 export async function createTemplate(input: TemplateInput) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user || !schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const validated = templateSchema.parse(input)
 
@@ -43,9 +39,7 @@ export async function createTemplate(input: TemplateInput) {
 }
 
 export async function updateTemplate(input: unknown) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user || !schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const validated = templateUpdateSchema.parse(input)
   const { id, ...data } = validated
@@ -65,9 +59,7 @@ export async function updateTemplate(input: unknown) {
 }
 
 export async function deleteTemplate(id: string) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user || !schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   const existing = await db.notificationTemplate.findFirst({
     where: { id, schoolId },

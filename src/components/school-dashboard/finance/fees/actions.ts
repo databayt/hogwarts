@@ -2431,13 +2431,14 @@ export async function submitManualPaymentProof(
 export async function fetchAssignmentRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
-  const session = await auth()
-  if (!session?.user) return { rows: [], total: 0 }
+  // School-wide table data (every student's assignments/payments/fines/
+  // scholarships) — fees/view is required; empty result, not a throw, keeps
+  // the DataTable contract.
+  const gate = await requireFeePermission("view")
+  if (isAuthError(gate)) return { rows: [], total: 0 }
+  const { schoolId } = gate
   const { page, perPage } = params
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return { rows: [], total: 0 }
-
     const result = await getFeeAssignmentList(schoolId, { page, perPage })
     const rows = result.rows.map((fa: any) => ({
       id: fa.id,
@@ -2468,13 +2469,14 @@ export async function fetchAssignmentRows(
 export async function fetchPaymentRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
-  const session = await auth()
-  if (!session?.user) return { rows: [], total: 0 }
+  // School-wide table data (every student's assignments/payments/fines/
+  // scholarships) — fees/view is required; empty result, not a throw, keeps
+  // the DataTable contract.
+  const gate = await requireFeePermission("view")
+  if (isAuthError(gate)) return { rows: [], total: 0 }
+  const { schoolId } = gate
   const { page, perPage } = params
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return { rows: [], total: 0 }
-
     const result = await getPaymentList(schoolId, { page, perPage })
     const rows = result.rows.map((p: any) => ({
       id: p.id,
@@ -2507,13 +2509,14 @@ export async function fetchPaymentRows(
 export async function fetchFineRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
-  const session = await auth()
-  if (!session?.user) return { rows: [], total: 0 }
+  // School-wide table data (every student's assignments/payments/fines/
+  // scholarships) — fees/view is required; empty result, not a throw, keeps
+  // the DataTable contract.
+  const gate = await requireFeePermission("view")
+  if (isAuthError(gate)) return { rows: [], total: 0 }
+  const { schoolId } = gate
   const { page, perPage } = params
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return { rows: [], total: 0 }
-
     const result = await getFineList(schoolId, { page, perPage })
     const rows = result.rows.map((f: any) => ({
       id: f.id,
@@ -2545,13 +2548,14 @@ export async function fetchFineRows(
 export async function fetchScholarshipRows(
   params: Record<string, unknown> & { page: number; perPage: number }
 ): Promise<{ rows: any[]; total: number }> {
-  const session = await auth()
-  if (!session?.user) return { rows: [], total: 0 }
+  // School-wide table data (every student's assignments/payments/fines/
+  // scholarships) — fees/view is required; empty result, not a throw, keeps
+  // the DataTable contract.
+  const gate = await requireFeePermission("view")
+  if (isAuthError(gate)) return { rows: [], total: 0 }
+  const { schoolId } = gate
   const { page, perPage } = params
   try {
-    const { schoolId } = await getTenantContext()
-    if (!schoolId) return { rows: [], total: 0 }
-
     const result = await getScholarshipList(schoolId, { page, perPage })
     const rows = result.rows.map((s: any) => ({
       id: s.id,

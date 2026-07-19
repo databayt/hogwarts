@@ -4,10 +4,15 @@
 /**
  * AI-Powered Receipt Data Extraction
  * Uses Vercel AI SDK with Claude 3.5 Sonnet for OCR
- * Follows Hogwarts server action pattern
+ *
+ * Deliberately NOT "use server": these functions take a caller-supplied
+ * schoolId and invoke a paid model with no session check, so they must never
+ * be public POST endpoints. Only the gated actions in ../actions.ts (and the
+ * cron-drained document-job queue) may call them, passing a schoolId they
+ * have already verified.
  */
 
-"use server"
+import "server-only"
 
 import { anthropic } from "@ai-sdk/anthropic"
 import { generateObject } from "ai"

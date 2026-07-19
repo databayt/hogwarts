@@ -9,11 +9,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import { JOURNAL_ENTRY_NUMBER_FORMAT, StandardAccountCodes } from "./config"
 import type { AccountActionResult, JournalEntryActionResult } from "./types"
 import {
@@ -30,10 +30,9 @@ export async function createAccount(
   formData: FormData
 ): Promise<AccountActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("accounts", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       code: formData.get("code"),
@@ -49,7 +48,7 @@ export async function createAccount(
     // Check if account code already exists
     const existing = await db.chartOfAccount.findFirst({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId,
         code: validated.code,
       },
     })
@@ -66,7 +65,7 @@ export async function createAccount(
       data: {
         ...validated,
         normalBalance,
-        schoolId: session.user.schoolId,
+        schoolId,
       },
     })
 
@@ -87,10 +86,8 @@ export async function updateAccount(
   formData: FormData
 ): Promise<AccountActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("accounts", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
 
     const data = {
       code: formData.get("code"),
@@ -110,7 +107,7 @@ export async function updateAccount(
     const account = await db.chartOfAccount.update({
       where: {
         id: accountId,
-        schoolId: session.user.schoolId,
+        schoolId: ctx.schoolId,
       },
       data: {
         ...validated,
@@ -138,14 +135,12 @@ export async function deleteAccount(
   accountId: string
 ): Promise<AccountActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("accounts", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
 
     // Check if account has been used in any ledger entries
     const usageCount = await db.ledgerEntry.count({
-      where: { accountId },
+      where: { accountId, schoolId: ctx.schoolId },
     })
 
     if (usageCount > 0) {
@@ -159,7 +154,7 @@ export async function deleteAccount(
     const account = await db.chartOfAccount.update({
       where: {
         id: accountId,
-        schoolId: session.user.schoolId,
+        schoolId: ctx.schoolId,
       },
       data: { isActive: false },
     })
@@ -184,10 +179,9 @@ export async function createJournalEntry(
   formData: FormData
 ): Promise<JournalEntryActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("accounts", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const entriesData = JSON.parse(formData.get("entries") as string)
 
@@ -206,7 +200,7 @@ export async function createJournalEntry(
 
     const lastEntry = await db.journalEntry.findFirst({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId,
         entryNumber: {
           startsWith: `${JOURNAL_ENTRY_NUMBER_FORMAT.prefix}-${yearMonth}`,
         },
@@ -231,12 +225,12 @@ export async function createJournalEntry(
         entryDate: validated.entryDate,
         description: validated.description,
         fiscalYearId: validated.fiscalYearId,
-        schoolId: session.user.schoolId,
+        schoolId,
         sourceModule: "MANUAL",
-        createdBy: session.user.id!,
+        createdBy: userId,
         ledgerEntries: {
           create: validated.entries.map((entry) => ({
-            school: { connect: { id: session.user.schoolId! } },
+            school: { connect: { id: schoolId } },
             account: { connect: { id: entry.accountId } },
             debit: entry.debit,
             credit: entry.credit,
@@ -281,15 +275,14 @@ export async function postJournalEntry(
   journalEntryId: string
 ): Promise<JournalEntryActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("accounts", "approve")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const journalEntry = await db.journalEntry.findUnique({
       where: {
         id: journalEntryId,
-        schoolId: session.user.schoolId,
+        schoolId,
       },
       include: {
         ledgerEntries: true,
@@ -308,12 +301,12 @@ export async function postJournalEntry(
     const updated = await db.journalEntry.update({
       where: {
         id: journalEntryId,
-        schoolId: session.user.schoolId,
+        schoolId,
       },
       data: {
         isPosted: true,
         postedAt: new Date(),
-        postedBy: session.user?.id,
+        postedBy: userId,
       },
       include: {
         ledgerEntries: {
@@ -352,14 +345,12 @@ export async function getChartOfAccounts(filters?: {
   isActive?: boolean
 }) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("accounts", "view")
+    if (isFinanceAuthError(ctx)) return ctx
 
     const accounts = await db.chartOfAccount.findMany({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId: ctx.schoolId,
         ...(filters?.type && { type: filters.type as any }),
         ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
       },
@@ -382,14 +373,12 @@ export async function getJournalEntries(filters?: {
   fiscalYearId?: string
 }) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("accounts", "view")
+    if (isFinanceAuthError(ctx)) return ctx
 
     const entries = await db.journalEntry.findMany({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId: ctx.schoolId,
         ...(filters?.isPosted !== undefined && { isPosted: filters.isPosted }),
         ...(filters?.fiscalYearId && { fiscalYearId: filters.fiscalYearId }),
       },

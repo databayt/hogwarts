@@ -8,11 +8,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { BudgetActionResult } from "./types"
 import { budgetAllocationSchema, budgetSchema } from "./validation"
 
@@ -20,10 +20,9 @@ export async function createBudget(
   formData: FormData
 ): Promise<BudgetActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("budget", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const data = {
       name: formData.get("name"),
@@ -40,8 +39,8 @@ export async function createBudget(
     const budget = await db.budget.create({
       data: {
         ...validated,
-        schoolId: session.user.schoolId,
-        createdBy: session.user.id!,
+        schoolId: schoolId,
+        createdBy: userId,
       },
       include: {
         allocations: true,
@@ -61,10 +60,9 @@ export async function updateBudget(
   formData: FormData
 ): Promise<BudgetActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("budget", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       name: formData.get("name"),
@@ -81,7 +79,7 @@ export async function updateBudget(
     const budget = await db.budget.update({
       where: {
         id: budgetId,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
       },
       data: validated,
       include: {
@@ -102,10 +100,9 @@ export async function updateBudget(
 
 export async function createBudgetAllocation(formData: FormData) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("budget", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       budgetId: formData.get("budgetId"),
@@ -120,7 +117,7 @@ export async function createBudgetAllocation(formData: FormData) {
       data: {
         budgetId: validated.budgetId,
         categoryId: validated.categoryId,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         allocated: validated.allocatedAmount,
         spent: 0,
         remaining: validated.allocatedAmount,
@@ -145,14 +142,13 @@ export async function getBudgets(filters?: {
   fiscalYearId?: string
 }) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.UNAUTHORIZED)
-    }
+    const ctx = await requireFinanceActor("budget", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const budgets = await db.budget.findMany({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         ...(filters?.status && { status: filters.status as any }),
         ...(filters?.fiscalYearId && { fiscalYearId: filters.fiscalYearId }),
       },

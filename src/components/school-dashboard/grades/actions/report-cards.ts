@@ -16,6 +16,14 @@ import {
 } from "../lib/report-cards-core"
 import { sendBatchGradeNotifications } from "./notifications"
 
+// Generating/publishing report cards fans out notifications to every
+// student/guardian — staff-level, never open to any tenant member.
+const REPORT_CARD_ROLES: ReadonlySet<string> = new Set([
+  "ADMIN",
+  "DEVELOPER",
+  "TEACHER",
+])
+
 // ============================================================================
 // GENERATE REPORT CARDS
 // ============================================================================
@@ -34,6 +42,9 @@ export async function generateReportCards(
   const session = await auth()
   if (!session?.user) {
     return { success: false, error: "Not authenticated" }
+  }
+  if (!REPORT_CARD_ROLES.has(session.user.role ?? "")) {
+    return { success: false, error: "Unauthorized" }
   }
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
@@ -54,6 +65,9 @@ export async function publishReportCards(input: {
     const session = await auth()
     if (!session?.user) {
       return { success: false, error: "Not authenticated" }
+    }
+    if (!REPORT_CARD_ROLES.has(session.user.role ?? "")) {
+      return { success: false, error: "Unauthorized" }
     }
     const { schoolId } = await getTenantContext()
     if (!schoolId) {

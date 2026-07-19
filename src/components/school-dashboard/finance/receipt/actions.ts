@@ -17,6 +17,7 @@ import { logger } from "@/lib/logger"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getProvider } from "@/components/file"
 
+import { checkFinancePermission } from "../lib/permissions"
 import { extractReceiptData, retryExtraction } from "./ai/extract-receipt-data"
 import type {
   ExpenseReceipt,
@@ -207,12 +208,22 @@ export async function getReceipts(input?: {
       schoolId,
     })
 
-    // 4. Build query filters
+    // 4. Build query filters. School-wide listing is privileged; callers
+    // without the receipt/view grant only ever see their own uploads.
+    const canViewAll = await checkFinancePermission(
+      session.user.id!,
+      schoolId,
+      "receipt",
+      "view"
+    )
+
     const where: any = {
       schoolId,
     }
 
-    if (validated.userId) {
+    if (!canViewAll) {
+      where.userId = session.user.id
+    } else if (validated.userId) {
       where.userId = validated.userId
     }
 
@@ -296,6 +307,19 @@ export async function getReceiptById(
       return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
     }
 
+    // Owner always sees their own upload; anyone else needs receipt/view.
+    if (receipt.userId !== session.user.id) {
+      const canView = await checkFinancePermission(
+        session.user.id!,
+        schoolId,
+        "receipt",
+        "view"
+      )
+      if (!canView) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
+
     return {
       success: true,
       data: receipt as ExpenseReceipt,
@@ -345,6 +369,19 @@ export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
 
     if (!receipt) {
       return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
+    }
+
+    // Owner may delete their own upload; anyone else needs receipt/delete.
+    if (receipt.userId !== session.user.id) {
+      const canDelete = await checkFinancePermission(
+        session.user.id!,
+        schoolId,
+        "receipt",
+        "delete"
+      )
+      if (!canDelete) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     // 5. Delete file from storage using centralized provider
@@ -419,6 +456,20 @@ export async function retryReceiptExtraction(
 
     if (!receipt) {
       return actionError(ACTION_ERRORS.RECEIPT_NOT_FOUND)
+    }
+
+    // Retry burns a paid AI call — owner may retry their own receipt;
+    // anyone else needs receipt/edit.
+    if (receipt.userId !== session.user.id) {
+      const canEdit = await checkFinancePermission(
+        session.user.id!,
+        schoolId,
+        "receipt",
+        "edit"
+      )
+      if (!canEdit) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
     }
 
     // 4. Trigger extraction retry (schoolId-scoped end-to-end)

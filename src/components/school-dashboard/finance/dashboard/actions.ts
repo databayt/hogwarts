@@ -17,6 +17,7 @@ import { db } from "@/lib/db"
 import type { Locale } from "@/components/internationalization/config"
 import { getFinanceDictionary } from "@/components/internationalization/dictionaries"
 
+import { checkFinancePermission } from "../lib/permissions"
 import type { DashboardStats, FinancialAlert, RecentTransaction } from "./types"
 
 // Cache tags for invalidation
@@ -106,6 +107,17 @@ export async function getDashboardStats(
 ): Promise<DashboardStats> {
   const session = await auth()
   if (!session?.user?.schoolId) {
+    throw new Error("Unauthorized")
+  }
+
+  if (
+    !(await checkFinancePermission(
+      session.user.id!,
+      session.user.schoolId,
+      "reports",
+      "view"
+    ))
+  ) {
     throw new Error("Unauthorized")
   }
 
@@ -347,6 +359,17 @@ export async function getRecentTransactions(
     throw new Error("Unauthorized")
   }
 
+  if (
+    !(await checkFinancePermission(
+      session.user.id!,
+      session.user.schoolId,
+      "reports",
+      "view"
+    ))
+  ) {
+    throw new Error("Unauthorized")
+  }
+
   const schoolId = session.user.schoolId
 
   // Fetch recent transactions from multiple sources
@@ -431,6 +454,17 @@ export async function getFinancialAlerts(
 ): Promise<FinancialAlert[]> {
   const session = await auth()
   if (!session?.user?.schoolId) {
+    throw new Error("Unauthorized")
+  }
+
+  if (
+    !(await checkFinancePermission(
+      session.user.id!,
+      session.user.schoolId,
+      "reports",
+      "view"
+    ))
+  ) {
     throw new Error("Unauthorized")
   }
 

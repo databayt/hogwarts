@@ -25,6 +25,14 @@ type ActionResponse<T = void> =
   | { success: true; data?: T }
   | { success: false; error: string }
 
+// Publish/comment/list operate on every student's academic record and fire
+// guardian-facing notifications — staff-level, never any tenant member.
+const REPORT_CARD_ROLES: ReadonlySet<string> = new Set([
+  "ADMIN",
+  "DEVELOPER",
+  "TEACHER",
+])
+
 /**
  * Publish report cards (make visible to students/guardians)
  */
@@ -35,6 +43,9 @@ export async function publishReportCards(input: {
     const session = await auth()
     const schoolId = session?.user?.schoolId
     if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!REPORT_CARD_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     await db.reportCard.updateMany({
       where: {
@@ -77,6 +88,9 @@ export async function updateReportCardComments(input: {
     const session = await auth()
     const schoolId = session?.user?.schoolId
     if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!REPORT_CARD_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     await db.reportCard.update({
       where: { id: input.reportCardId, schoolId },
@@ -122,6 +136,9 @@ export async function getReportCards(input: {
     const session = await auth()
     const schoolId = session?.user?.schoolId
     if (!schoolId) return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    if (!REPORT_CARD_ROLES.has(session?.user?.role ?? "")) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     const reportCards = await db.reportCard.findMany({
       where: {

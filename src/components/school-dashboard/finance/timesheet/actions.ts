@@ -8,11 +8,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
 
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import type { TimesheetActionResult } from "./types"
 import {
   timesheetApprovalSchema,
@@ -24,10 +24,9 @@ export async function createTimesheet(
   formData: FormData
 ): Promise<TimesheetActionResult> {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("timesheet", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       name: formData.get("name"),
@@ -40,7 +39,7 @@ export async function createTimesheet(
     const timesheet = await db.timesheetPeriod.create({
       data: {
         ...validated,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         status: "OPEN",
       },
       include: {
@@ -61,10 +60,9 @@ export async function createTimesheet(
 
 export async function addTimesheetEntry(formData: FormData) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("timesheet", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const data = {
       periodId: formData.get("periodId"),
@@ -88,7 +86,7 @@ export async function addTimesheetEntry(formData: FormData) {
       const entry = await tx.timesheetEntry.create({
         data: {
           ...validated,
-          schoolId: session.user.schoolId!,
+          schoolId: schoolId,
         },
       })
 
@@ -96,7 +94,7 @@ export async function addTimesheetEntry(formData: FormData) {
       const timesheet = await tx.timesheetPeriod.findUnique({
         where: {
           id: validated.periodId,
-          schoolId: session.user.schoolId,
+          schoolId: schoolId,
         },
         include: {
           entries: true,
@@ -119,19 +117,18 @@ export async function addTimesheetEntry(formData: FormData) {
 
 export async function submitTimesheet(timesheetId: string) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("timesheet", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const timesheet = await db.timesheetPeriod.update({
       where: {
         id: timesheetId,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
       },
       data: {
         status: "CLOSED",
-        closedBy: session.user.id,
+        closedBy: userId,
         closedAt: new Date(),
       },
       include: {
@@ -152,10 +149,9 @@ export async function submitTimesheet(timesheetId: string) {
 
 export async function approveTimesheet(formData: FormData) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId || !session?.user?.id) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("timesheet", "approve")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId, userId } = ctx
 
     const data = {
       timesheetId: formData.get("timesheetId"),
@@ -168,11 +164,11 @@ export async function approveTimesheet(formData: FormData) {
     const timesheet = await db.timesheetPeriod.update({
       where: {
         id: validated.timesheetId,
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
       },
       data: {
         status: validated.status,
-        closedBy: session.user.id,
+        closedBy: userId,
         closedAt: new Date(),
       },
       include: {
@@ -196,14 +192,13 @@ export async function getTimesheets(filters?: {
   userId?: string
 }) {
   try {
-    const session = await auth()
-    if (!session?.user?.schoolId) {
-      return actionError(ACTION_ERRORS.PAYMENT_FAILED)
-    }
+    const ctx = await requireFinanceActor("timesheet", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const timesheets = await db.timesheetPeriod.findMany({
       where: {
-        schoolId: session.user.schoolId,
+        schoolId: schoolId,
         ...(filters?.status && { status: filters.status as any }),
       },
       include: {

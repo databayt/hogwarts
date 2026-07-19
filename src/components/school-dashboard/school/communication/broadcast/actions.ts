@@ -3,17 +3,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import { processNotificationBatch } from "@/components/school-dashboard/notifications/email-service"
 
+import { requireSchoolRole } from "../../require-school-admin"
 import { broadcastSchema, type BroadcastInput } from "../validation"
 
 export async function getRecentBatches() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   return db.notificationBatch.findMany({
     where: { schoolId },
@@ -28,9 +26,7 @@ export async function getRecentBatches() {
 }
 
 export async function sendBroadcast(input: BroadcastInput) {
-  const session = await auth()
-  const { schoolId } = await getTenantContext()
-  if (!session?.user?.id || !schoolId) throw new Error("Unauthorized")
+  const { userId, schoolId } = await requireSchoolRole()
 
   const validated = broadcastSchema.parse(input)
 
@@ -45,13 +41,13 @@ export async function sendBroadcast(input: BroadcastInput) {
       targetClassId: validated.targetClassId,
       targetUserIds: validated.targetUserIds,
       scheduledFor: validated.scheduledFor,
-      createdBy: session.user.id,
+      createdBy: userId,
     },
   })
 
   // If not scheduled, process immediately
   if (!validated.scheduledFor) {
-    await processNotificationBatch(batch.id, schoolId, session.user.id)
+    await processNotificationBatch(batch.id, schoolId, userId)
   }
 
   revalidatePath("/school/communication/broadcast")
@@ -59,8 +55,7 @@ export async function sendBroadcast(input: BroadcastInput) {
 }
 
 export async function getTargetClasses() {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Unauthorized")
+  const { schoolId } = await requireSchoolRole()
 
   return db.class.findMany({
     where: { schoolId },

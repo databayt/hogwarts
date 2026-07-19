@@ -10,12 +10,11 @@
  * Includes: salary structures, allowances, deductions, and salary calculations
  */
 import { revalidatePath } from "next/cache"
-import { auth } from "@/auth"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
+import { isFinanceAuthError, requireFinanceActor } from "../guard"
 import {
   calculateProgressiveTax,
   calculateSocialSecurity,
@@ -51,12 +50,9 @@ export async function getSalaryStructures(
   teacherId?: string
 ): Promise<ActionResult<any[]>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const whereClause: any = { schoolId }
     if (teacherId) {
@@ -104,12 +100,9 @@ export async function getSalaryStructure(
   structureId: string
 ): Promise<ActionResult<any>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const salaryStructure = await db.salaryStructure.findFirst({
       where: { id: structureId, schoolId },
@@ -163,12 +156,9 @@ export async function createSalaryStructure(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -218,12 +208,9 @@ export async function updateSalaryStructure(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -269,12 +256,9 @@ export async function deactivateSalaryStructure(
   structureId: string
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     await db.salaryStructure.update({
       where: { id: structureId, schoolId },
@@ -303,12 +287,9 @@ export async function addAllowance(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -340,12 +321,9 @@ export async function updateAllowance(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -383,12 +361,9 @@ export async function deleteAllowance(
   allowanceId: string
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     await db.salaryAllowance.delete({
       where: { id: allowanceId, schoolId },
@@ -413,12 +388,9 @@ export async function addDeduction(
   data: FormData
 ): Promise<ActionResult<string>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "create")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -450,12 +422,9 @@ export async function updateDeduction(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
 
@@ -490,12 +459,9 @@ export async function deleteDeduction(
   deductionId: string
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "delete")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     await db.salaryDeduction.delete({
       where: { id: deductionId, schoolId },
@@ -521,12 +487,9 @@ export async function calculateSalary(
   period: { start: Date; end: Date }
 ): Promise<ActionResult<any>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const salaryStructure = await db.salaryStructure.findFirst({
       where: { id: structureId, schoolId },
@@ -627,12 +590,9 @@ export async function applySalaryIncrement(
   data: FormData
 ): Promise<ActionResult> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "edit")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const formData = Object.fromEntries(data)
     const incrementType = formData.incrementType as
@@ -700,12 +660,9 @@ export async function applySalaryIncrement(
  */
 export async function getSalarySummary(): Promise<ActionResult<any>> {
   try {
-    const session = await auth()
-    const { schoolId } = await getTenantContext()
-
-    if (!session?.user?.id || !schoolId) {
-      return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
-    }
+    const ctx = await requireFinanceActor("salary", "view")
+    if (isFinanceAuthError(ctx)) return ctx
+    const { schoolId } = ctx
 
     const [
       totalStructures,

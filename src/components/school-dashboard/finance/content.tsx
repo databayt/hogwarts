@@ -16,7 +16,6 @@ import {
 
 import { asset } from "@/lib/asset-url"
 import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 import {
   Card,
   CardContent,
@@ -30,6 +29,8 @@ import { AreaChartStacked } from "@/components/school-dashboard/dashboard/chart-
 import { InteractiveBarChart } from "@/components/school-dashboard/dashboard/chart-interactive-bar"
 import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-radial-text"
 
+import { FinanceAccessDenied } from "./access-denied"
+import { resolveFinanceAccess } from "./guard"
 import { formatMoney } from "./lib/format"
 
 interface Props {
@@ -38,7 +39,13 @@ interface Props {
 }
 
 export default async function FinanceContent({ dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext()
+  // The hub aggregates school-wide revenue/expense/payroll totals — that is
+  // reports-grade data, so it needs the same gate as the reports module.
+  // Students/guardians reach their own money surface at /finance/fees/my.
+  const { schoolId, can } = await resolveFinanceAccess("reports", ["view"])
+  if (!can.view) {
+    return <FinanceAccessDenied dictionary={dictionary} module="reports" />
+  }
 
   // Currency follows the school's chosen ISO code; fall back to USD for safety.
   let currency = "USD"

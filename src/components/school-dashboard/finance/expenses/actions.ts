@@ -78,6 +78,30 @@ export async function updateExpense(
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const existing = await db.expense.findFirst({
+      where: { id: expenseId, schoolId: session.user.schoolId },
+      select: { submittedBy: true, status: true },
+    })
+    if (!existing) {
+      return actionError(ACTION_ERRORS.NOT_FOUND)
+    }
+
+    // The submitter may edit their own expense while it is still pending;
+    // anything else (other people's rows, post-decision edits) needs
+    // expenses/edit.
+    const isOwnPending =
+      existing.submittedBy === session.user.id && existing.status === "PENDING"
+    if (!isOwnPending) {
+      const canEdit = await checkCurrentUserPermission(
+        session.user.schoolId,
+        "expenses",
+        "edit"
+      )
+      if (!canEdit) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+    }
+
     const data = {
       amount: Number(formData.get("amount")),
       description: formData.get("description"),
@@ -243,6 +267,15 @@ export async function createExpenseCategory(formData: FormData) {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    const canCreate = await checkCurrentUserPermission(
+      session.user.schoolId,
+      "expenses",
+      "create"
+    )
+    if (!canCreate) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
     const data = {
       name: formData.get("name"),
       description: formData.get("description") || undefined,
@@ -276,9 +309,17 @@ export async function getExpenses(filters?: {
       return actionError(ACTION_ERRORS.NOT_AUTHENTICATED)
     }
 
+    // Without expenses/view the caller only ever sees their own submissions.
+    const canViewAll = await checkCurrentUserPermission(
+      session.user.schoolId,
+      "expenses",
+      "view"
+    )
+
     const expenses = await db.expense.findMany({
       where: {
         schoolId: session.user.schoolId,
+        ...(canViewAll ? {} : { submittedBy: session.user.id! }),
         ...(filters?.status && { status: filters.status as any }),
         ...(filters?.categoryId && { categoryId: filters.categoryId }),
       },
