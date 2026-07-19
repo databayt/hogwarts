@@ -619,79 +619,80 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
   let firstName = args.firstName
   let lastName = args.lastName
   let bio = args.bio
+  let statusMessage = args.statusMessage ?? null
   let sectionName = args.sectionName ?? null
   let departmentName = args.departmentName ?? null
-  if (displayLang !== "ar") {
-    const pinnedStatLabels = pinnedRows.flatMap((p: any) =>
-      Array.isArray((p.metadata as any)?.stats)
-        ? ((p.metadata as any).stats as Array<{ label?: string }>)
-            .map((s) => s.label ?? "")
-            .filter(Boolean)
-        : []
-    )
-    const toTranslate = [
-      args.firstName,
-      args.lastName,
-      args.bio ?? "",
-      args.sectionName ?? "",
-      args.departmentName ?? "",
-      ...badgeRows.map((b: any) => b.title),
-      ...badgeRows.map((b: any) => b.description ?? ""),
-      ...organizations.map((o) => o.name),
-      ...pinnedRows.map((p: any) => p.title),
-      ...pinnedRows.map((p: any) => p.description ?? ""),
-      ...pinnedStatLabels,
-      ...activityRows.map((a: any) => a.title),
-      ...activityRows.map((a: any) => a.description ?? ""),
-      ...roleDetail.subjects.map((s) => s.name),
-      ...roleDetail.classes.flatMap((c) => [c.name, c.subjectName ?? ""]),
-      ...roleDetail.children.flatMap((c) => [c.name, c.sectionName ?? ""]),
-    ].filter(Boolean)
-    if (toTranslate.length) {
-      const map = await getLabels(toTranslate, displayLang, schoolId)
-      const tr = (s: string | null) => (s ? (map.get(s) ?? s) : s)
-      firstName = tr(args.firstName) ?? args.firstName
-      lastName = tr(args.lastName) ?? args.lastName
-      bio = tr(args.bio)
-      sectionName = tr(sectionName)
-      departmentName = tr(departmentName)
-      badgeRows.forEach((b: any) => {
-        b.title = tr(b.title) ?? b.title
-        b.description = tr(b.description)
-      })
-      organizations.forEach((o) => {
-        o.name = tr(o.name) ?? o.name
-      })
-      pinnedRows.forEach((p: any) => {
-        p.title = tr(p.title) ?? p.title
-        p.description = tr(p.description)
-        const stats = (p.metadata as any)?.stats
-        if (Array.isArray(stats)) {
-          p.metadata = {
-            ...(p.metadata as Record<string, unknown>),
-            stats: stats.map((s: { label?: string; value?: unknown }) => ({
-              ...s,
-              label: s.label ? (tr(s.label) ?? s.label) : s.label,
-            })),
-          }
+  const pinnedStatLabels = pinnedRows.flatMap((p: any) =>
+    Array.isArray((p.metadata as any)?.stats)
+      ? ((p.metadata as any).stats as Array<{ label?: string }>)
+          .map((s) => s.label ?? "")
+          .filter(Boolean)
+      : []
+  )
+  const toTranslate = [
+    args.firstName,
+    args.lastName,
+    args.bio ?? "",
+    args.statusMessage ?? "",
+    args.sectionName ?? "",
+    args.departmentName ?? "",
+    ...badgeRows.map((b: any) => b.title),
+    ...badgeRows.map((b: any) => b.description ?? ""),
+    ...organizations.map((o) => o.name),
+    ...pinnedRows.map((p: any) => p.title),
+    ...pinnedRows.map((p: any) => p.description ?? ""),
+    ...pinnedStatLabels,
+    ...activityRows.map((a: any) => a.title),
+    ...activityRows.map((a: any) => a.description ?? ""),
+    ...roleDetail.subjects.map((s) => s.name),
+    ...roleDetail.classes.flatMap((c) => [c.name, c.subjectName ?? ""]),
+    ...roleDetail.children.flatMap((c) => [c.name, c.sectionName ?? ""]),
+  ].filter(Boolean)
+  if (toTranslate.length) {
+    const map = await getLabels(toTranslate, displayLang, schoolId)
+    const tr = (s: string | null) => (s ? (map.get(s) ?? s) : s)
+    firstName = tr(args.firstName) ?? args.firstName
+    lastName = tr(args.lastName) ?? args.lastName
+    bio = tr(args.bio)
+    statusMessage = tr(args.statusMessage)
+    sectionName = tr(sectionName)
+    departmentName = tr(departmentName)
+    badgeRows.forEach((b: any) => {
+      b.title = tr(b.title) ?? b.title
+      b.description = tr(b.description)
+    })
+    organizations.forEach((o) => {
+      o.name = tr(o.name) ?? o.name
+    })
+    pinnedRows.forEach((p: any) => {
+      p.title = tr(p.title) ?? p.title
+      p.description = tr(p.description)
+      const stats = (p.metadata as any)?.stats
+      if (Array.isArray(stats)) {
+        p.metadata = {
+          ...(p.metadata as Record<string, unknown>),
+          stats: stats.map((s: { label?: string; value?: unknown }) => ({
+            ...s,
+            label: s.label ? (tr(s.label) ?? s.label) : s.label,
+          })),
         }
-      })
-      activityRows.forEach((a: any) => {
-        a.title = tr(a.title) ?? a.title
-        a.description = tr(a.description)
-      })
-      roleDetail.subjects.forEach((s) => {
-        s.name = tr(s.name) ?? s.name
-      })
-      roleDetail.classes.forEach((c) => {
-        c.name = tr(c.name) ?? c.name
-        c.subjectName = tr(c.subjectName)
-      })
-      roleDetail.children.forEach((c) => {
-        c.name = tr(c.name) ?? c.name
-        c.sectionName = tr(c.sectionName)
-      })
-    }
+      }
+    })
+    activityRows.forEach((a: any) => {
+      a.title = tr(a.title) ?? a.title
+      a.description = tr(a.description)
+    })
+    roleDetail.subjects.forEach((s) => {
+      s.name = tr(s.name) ?? s.name
+    })
+    roleDetail.classes.forEach((c) => {
+      c.name = tr(c.name) ?? c.name
+      c.subjectName = tr(c.subjectName)
+    })
+    roleDetail.children.forEach((c) => {
+      c.name = tr(c.name) ?? c.name
+      c.sectionName = tr(c.sectionName)
+    })
   }
 
   const displayName = `${firstName} ${lastName}`.trim() || firstName
@@ -720,7 +721,7 @@ async function assembleShared(args: AssembleArgs): Promise<ProfileViewData> {
     timezone: args.timezone ?? null,
     pronouns: args.pronouns ?? null,
     statusEmoji: args.statusEmoji ?? null,
-    statusMessage: args.statusMessage ?? null,
+    statusMessage,
     socialLinks: args.socialLinks ?? null,
     createdAt: args.createdAt.toISOString(),
     email: args.email,
