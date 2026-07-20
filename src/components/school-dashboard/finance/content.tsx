@@ -31,7 +31,7 @@ import { RadialTextChart } from "@/components/school-dashboard/dashboard/chart-r
 
 import { FinanceAccessDenied } from "./access-denied"
 import { resolveFinanceAccess } from "./guard"
-import { formatMoney } from "./lib/format"
+import { formatCompactMoney } from "./lib/format"
 
 interface Props {
   dictionary: Dictionary
@@ -191,7 +191,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatMoney(totalRevenue, currency, lang)}
+                {formatCompactMoney(totalRevenue, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.fromCompletedPayments || "Completed"}
@@ -208,7 +208,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatMoney(totalExpenses, currency, lang)}
+                {formatCompactMoney(totalExpenses, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.approvedExpenses || "Approved"}
@@ -225,7 +225,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatMoney(pendingPayments, currency, lang)}
+                {formatCompactMoney(pendingPayments, currency, lang)}
               </div>
               <p className="text-muted-foreground text-xs">
                 {d?.stats?.awaitingProcessing || "Awaiting"}
