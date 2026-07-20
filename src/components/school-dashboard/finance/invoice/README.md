@@ -101,7 +101,7 @@ Single-installment invoices break into one line per non-zero `FeeStructure` comp
 | Email send      | Resend bilingual template                                   | Yes    |
 | CSV export      | `util.ts::exportInvoiceToCSV()`                             | No UI  |
 
-Branding: per-user `UserInvoiceSettings.invoiceLogo` overrides the school logo in the PDF, email, sheet, and public page.
+Branding: per-user `UserInvoiceSettings.invoiceLogo` overrides the school logo in the PDF, email, sheet, and public page. The settings page mirrors this: with no custom logo it previews the inherited `School.logoUrl` (caption "موروث من شعار المدرسة"), and `getSettings` returns `schoolLogo` alongside `invoiceLogo` for that purpose.
 
 ### Status
 

@@ -1850,7 +1850,12 @@
     "failedToDelete": "Failed to delete invoice",
     "failedToDeleteFallback": "Failed to delete",
     "createInvoice": "Create Invoice",
-    "reset": "Reset"
+    "reset": "Reset",
+    "searchColumns": "Search columns...",
+    "noColumns": "No columns found.",
+    "all": "All",
+    "loadMore": "Load more",
+    "loading": "Loading..."
   },
   "invoiceFeatured": {
     "totalRevenue": "Total Revenue",
@@ -1977,7 +1982,8 @@
     "changeSignature": "Change Signature",
     "uploadSignature": "Upload Signature",
     "uploadInvoiceLogo": "Upload Invoice Logo",
-    "profileSetup": "Profile Setup"
+    "profileSetup": "Profile Setup",
+    "inheritedFromSchool": "Inherited from the school logo"
   },
   "invoiceStatus": {
     "invoiceStatusUpdated": "Invoice status updated",

@@ -162,6 +162,11 @@ function InvoiceTableInner({
       hasMore={hasMore}
       isLoading={isLoading}
       onLoadMore={handleLoadMore}
+      translations={{
+        loadMore: il?.loadMore,
+        loading: il?.loading,
+        noResults: il?.noInvoicesFound,
+      }}
     >
       {/* Atom-based toolbar — start group holds filters, end group holds view + create */}
       <Toolbar className="p-1">
@@ -206,7 +211,15 @@ function InvoiceTableInner({
         </ToolbarGroup>
 
         <ToolbarGroup position="end">
-          <DataTableViewOptions table={table} />
+          <DataTableViewOptions
+            table={table}
+            translations={{
+              view: ic?.view,
+              searchColumns: il?.searchColumns,
+              noColumns: il?.noColumns,
+              all: il?.all,
+            }}
+          />
           <Button
             type="button"
             variant="outline"

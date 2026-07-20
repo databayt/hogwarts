@@ -659,11 +659,27 @@ export async function getSettings(): Promise<ActionResponse> {
     const ctx = await requireAuthAndTenant()
     if (isAuthError(ctx)) return ctx
 
-    const settings = await db.userInvoiceSettings.findUnique({
-      where: { userId: ctx.userId },
-      include: { signature: true },
-    })
-    return { success: true, data: settings }
+    // schoolLogo rides along so the settings UI can show the inherited default:
+    // PDF generation already falls back settings.invoiceLogo ?? school.logoUrl,
+    // and the page must reflect that same effective logo.
+    const [settings, school] = await Promise.all([
+      db.userInvoiceSettings.findUnique({
+        where: { userId: ctx.userId },
+        include: { signature: true },
+      }),
+      db.school.findUnique({
+        where: { id: ctx.schoolId },
+        select: { logoUrl: true },
+      }),
+    ])
+    return {
+      success: true,
+      data: {
+        invoiceLogo: settings?.invoiceLogo ?? null,
+        signature: settings?.signature ?? null,
+        schoolLogo: school?.logoUrl ?? null,
+      },
+    }
   } catch (error) {
     return actionError(ACTION_ERRORS.PAYMENT_FAILED)
   }

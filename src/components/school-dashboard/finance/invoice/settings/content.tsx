@@ -51,6 +51,9 @@ export function SettingsContent({ dictionary, lang }: Props) {
   const is = fd?.invoiceSettings as Record<string, string> | undefined
 
   const [logo, setLogo] = useState<string>("")
+  // School logo — the inherited default when no custom invoice logo is set
+  // (PDF generation already resolves invoiceLogo ?? school.logoUrl).
+  const [schoolLogo, setSchoolLogo] = useState<string>("")
   const [signatureData, setSignatureData] = useState<TSignatureData>({
     name: "",
     image: "",
@@ -108,6 +111,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
       const result = await getSettings()
       if (result.success && result.data) {
         setLogo(result.data.invoiceLogo || "")
+        setSchoolLogo(result.data.schoolLogo || "")
         setSignatureData(result.data.signature || { name: "", image: "" })
       }
     } catch (error) {
@@ -153,27 +157,37 @@ export function SettingsContent({ dictionary, lang }: Props) {
           <AccordionContent>
             <form
               className="grid w-full gap-4"
-              onSubmit={(e) => handleSubmit(e, { logo })}
+              onSubmit={(e) => handleSubmit(e, { invoiceLogo: logo })}
             >
               <div className="w-full max-w-xs">
-                {logo ? (
+                {logo || schoolLogo ? (
                   <div className="relative">
                     <Image
                       className="aspect-video h-20 max-h-20 rounded-lg border-2 border-dotted object-scale-down"
-                      src={logo}
+                      src={logo || schoolLogo}
                       width={250}
                       height={96}
                       alt="Invoice logo"
                     />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -end-2 -top-2 h-6 w-6"
-                      onClick={() => setLogo("")}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    {/* Only a custom logo can be removed — the inherited school
+                        logo is the fallback, not a per-user value. */}
+                    {logo && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -end-2 -top-2 h-6 w-6"
+                        onClick={() => setLogo("")}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {!logo && schoolLogo && (
+                      <p className="text-muted-foreground mt-2 text-center text-xs">
+                        {is?.inheritedFromSchool ||
+                          "Inherited from the school logo"}
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="flex aspect-video h-20 items-center justify-center rounded-lg border-2 border-dotted">

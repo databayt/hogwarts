@@ -37,10 +37,8 @@ export default async function InvoiceLayout({ children, params }: Props) {
           name: n?.analysis || "Analysis",
           href: `/${lang}/finance/invoice/analysis`,
         },
-        {
-          name: n?.createNew || "Create Invoice",
-          href: `/${lang}/finance/invoice/invoice/create`,
-        },
+        // "Create New" tab removed — creation lives on the All tab's + button
+        // (createDraftInvoice → wizard), so the tab was a duplicate entry point.
         {
           name: n?.settings || "Settings",
           href: `/${lang}/finance/invoice/settings`,

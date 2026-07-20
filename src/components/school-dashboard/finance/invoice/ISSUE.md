@@ -210,5 +210,14 @@ All new implementations must:
 
 - [x] `/ar/finance/invoice` -- "الفواتير" title, Arabic columns (فاتورة #, العميل, الإجمالي, الحالة, تاريخ الاستحقاق, تاريخ الإنشاء), placeholders translated, empty state loads
 - [x] Dates show Arabic format (٢٠٢٦/٠٤/٢٠) via `formatDate(locale)` util
-- [ ] "View" button + "No results." empty-state copy not translated on filtered list
+- [x] "View" button + "No results." empty-state copy not translated on filtered list — fixed 2026-07-20 (translations wired into `DataTableViewOptions` + `DataTable`)
 - [ ] Page `<title>` metadata still English ("Fees & Penalties", "Dashboard: Salary Management") -- generateMetadata needs locale arg
+
+## QA Pass (2026-07-20, demo.databayt.org report)
+
+User-reported: toolbar looks bad + English "View" on /ar, list empty ("no seeds"), settings logo should inherit school logo, remove انشاء جديد tab.
+
+- **List empty on prod was NOT a seed gap** — prod demo had 10 UserInvoice rows all along. Migration `20260717000000` (school_payment_settings + UserInvoice share columns + Application.registrationFeeProofUrl) had never actually been applied to prod acct#2, so every unselected `userInvoice` read threw P2022 (`shareToken` missing) and `getInvoicesWithFilters` catch-fell to an empty list. Applied the (fully `IF NOT EXISTS`-guarded) migration via psql in one transaction on 2026-07-20; list renders 10 invoices on prod immediately, no deploy needed.
+- Toolbar "View" + column popover + "No results."/"Load more" now read `finance.invoiceList`/`invoiceColumns` keys (en+ar added: `searchColumns`, `noColumns`, `all`, `loadMore`, `loading`).
+- "Create New" tab removed from the invoice PageNav — creation lives on the All tab's `+` (createDraftInvoice wizard). Route `/invoice/create` left intact.
+- Invoice settings now shows the **inherited school logo** when no custom logo is set (`getSettings` returns `schoolLogo`; UI renders `logo || schoolLogo` + "موروث من شعار المدرسة" caption; trash only on custom). Also fixed a silent no-op: the logo form submitted `{ logo }` while `updateSettings` reads `data.invoiceLogo` — custom logo saves never persisted.

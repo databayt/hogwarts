@@ -1850,7 +1850,12 @@
     "failedToDelete": "فشل حذف الفاتورة",
     "failedToDeleteFallback": "فشل في الحذف",
     "createInvoice": "إنشاء فاتورة",
-    "reset": "إعادة تعيين"
+    "reset": "إعادة تعيين",
+    "searchColumns": "بحث في الأعمدة...",
+    "noColumns": "لا توجد أعمدة.",
+    "all": "الكل",
+    "loadMore": "تحميل المزيد",
+    "loading": "جارٍ التحميل..."
   },
   "invoiceFeatured": {
     "totalRevenue": "إجمالي الإيرادات",
@@ -1977,7 +1982,8 @@
     "changeSignature": "تغيير التوقيع",
     "uploadSignature": "تحميل توقيع",
     "uploadInvoiceLogo": "تحميل شعار الفاتورة",
-    "profileSetup": "إعداد الملف الشخصي"
+    "profileSetup": "إعداد الملف الشخصي",
+    "inheritedFromSchool": "موروث من شعار المدرسة"
   },
   "invoiceStatus": {
     "invoiceStatusUpdated": "تم تحديث حالة الفاتورة",
