@@ -28,6 +28,7 @@ Real-time multi-channel notification system. 24 types × 4 priorities × 5 chann
 - **Role allow-lists**: TEACHER / ACCOUNTANT / STAFF have explicit allow-lists in `ROLE_SEND_TYPES` (authorization.ts). Add new role-restricted types here.
 - **`db.$transaction` for preferences**: `updateNotificationPreferences` upserts inside a transaction so partial failures don't leave the user with a half-updated preference set. Test mocks must include a callable `$transaction`.
 - **`getText` for cross-language reads**: notifications are stored in one language (`lang` field). The notification center and bell-icon translate on-demand to the viewer's locale via `getText`. Translations are cached in `Translation`.
+- **`lang` is detected, never assumed**: `dispatchNotification` / `dispatchNotificationsToAudience` store `params.lang ?? detectScript(title + body)`. A mislabeled `lang` permanently breaks localization for the row (translator no-ops when contentLang === displayLang) — this is exactly how the legacy English seed rows became untranslatable. Don't reintroduce a hardcoded `"ar"` default.
 - **Single source for notification types**: `NOTIFICATION_TYPE_CONFIG`, `NOTIFICATION_EXPIRATION`, validation enum, dictionary key sets — all must list the same 24 types. `config.test.ts` and `rbac-matrix.test.ts` enforce this.
 
 ## Danger Zones

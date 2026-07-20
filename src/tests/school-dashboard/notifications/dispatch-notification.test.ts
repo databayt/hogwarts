@@ -44,7 +44,7 @@ describe("dispatchNotification", () => {
     body: "Test body",
   }
 
-  it("creates notification with defaults", async () => {
+  it("creates notification with defaults (lang detected from the text)", async () => {
     mockDb.notificationPreference.findUnique.mockResolvedValue(null)
     mockDb.notification.create.mockResolvedValue({
       id: "notif-1",
@@ -60,11 +60,39 @@ describe("dispatchNotification", () => {
         type: "announcement",
         title: "Test",
         body: "Test body",
-        lang: "ar",
+        // No explicit lang -> detected from the Latin-script text. Storing
+        // "ar" here (the old default) made the row untranslatable forever.
+        lang: "en",
         priority: "normal",
         channels: ["in_app"],
         actorId: null,
       }),
+    })
+  })
+
+  it("detects Arabic text as lang ar when no lang is passed", async () => {
+    mockDb.notificationPreference.findUnique.mockResolvedValue(null)
+    mockDb.notification.create.mockResolvedValue({ id: "notif-ar" } as any)
+
+    await dispatchNotification({
+      ...baseParams,
+      title: "\u0648\u0627\u062c\u0628 \u062c\u062f\u064a\u062f",
+      body: "\u062a\u0645 \u0646\u0634\u0631 \u0648\u0627\u062c\u0628 \u062c\u062f\u064a\u062f",
+    })
+
+    expect(mockDb.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ lang: "ar" }),
+    })
+  })
+
+  it("an explicit lang always wins over detection", async () => {
+    mockDb.notificationPreference.findUnique.mockResolvedValue(null)
+    mockDb.notification.create.mockResolvedValue({ id: "notif-x" } as any)
+
+    await dispatchNotification({ ...baseParams, lang: "ar" })
+
+    expect(mockDb.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ lang: "ar" }),
     })
   })
 

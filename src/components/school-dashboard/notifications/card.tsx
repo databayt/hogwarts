@@ -11,12 +11,13 @@ import { Check, Loader2, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { deleteNotification, markNotificationAsRead } from "./actions"
-import { NOTIFICATION_TYPE_CONFIG } from "./config"
+import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
 import type { NotificationDTO } from "./types"
 
 interface NotificationCardProps {
@@ -36,7 +37,10 @@ function formatNotificationDate(dateStr: string, locale: "ar" | "en") {
   if (days < 7) {
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale })
   }
-  return format(date, "MMM d, yyyy", { locale: dateLocale })
+  // Arabic reads day-first without the comma ("٢٠ يوليو ٢٠٢٦")
+  return format(date, locale === "ar" ? "d MMMM yyyy" : "MMM d, yyyy", {
+    locale: dateLocale,
+  })
 }
 
 export function NotificationCard({
@@ -105,16 +109,48 @@ export function NotificationCard({
     if (notification.metadata && typeof notification.metadata === "object") {
       const metadata = notification.metadata as Record<string, unknown>
       if (metadata.url && typeof metadata.url === "string") {
-        router.push(metadata.url)
+        navigateToTarget(metadata.url)
       }
+    }
+  }
+
+  // Stored action URLs are absolute (dispatch resolves them against the
+  // school's canonical host for email buttons). For in-app clicks, rebase
+  // same-host URLs onto the current locale so navigation stays client-side
+  // and language-correct; keep genuinely foreign hosts as full navigations.
+  const navigateToTarget = (raw: string) => {
+    try {
+      const target = new URL(raw, window.location.origin)
+      if (target.host !== window.location.host) {
+        window.location.assign(target.href)
+        return
+      }
+      const path = target.pathname.replace(/^\/(en|ar)(?=\/|$)/, "")
+      router.push(`/${locale}${path || "/"}${target.search}`)
+    } catch {
+      // Malformed stored URL — ignore rather than break the card.
     }
   }
 
   const formattedDate = formatNotificationDate(notification.createdAt, locale)
 
-  // Actor display name
-  const actorName =
-    notification.actor?.username || notification.actor?.email || ""
+  // Actor display name. Email addresses read as noise in a notification
+  // feed, so only a real username is shown — the title/body already carry
+  // the human context.
+  const actorName = notification.actor?.username || ""
+
+  // Localized category label — always in the viewer's language, so the
+  // notification stays understandable even when its stored title is in the
+  // school's other language. Shown only when it adds information.
+  const typeLabel = (dictionary.types as Record<string, string | undefined>)[
+    notification.type
+  ]
+  const showTypeLabel = Boolean(typeLabel && typeLabel !== notification.title)
+  const showPriority =
+    notification.priority === "urgent" || notification.priority === "high"
+  const priorityLabel = (
+    dictionary.priorities.badge as Record<string, string | undefined>
+  )[notification.priority]
 
   return (
     <motion.div
@@ -178,6 +214,23 @@ export function NotificationCard({
 
         {/* Content */}
         <div className="min-w-0 flex-1">
+          {(showTypeLabel || showPriority) && (
+            <div className="mb-0.5 flex items-center gap-1.5">
+              {showTypeLabel && (
+                <span className="text-muted-foreground text-[11px] font-medium">
+                  {typeLabel}
+                </span>
+              )}
+              {showPriority && priorityLabel && (
+                <Badge
+                  variant={PRIORITY_CONFIG[notification.priority].badgeVariant}
+                  className="h-4 px-1.5 text-[10px]"
+                >
+                  {priorityLabel}
+                </Badge>
+              )}
+            </div>
+          )}
           <p
             className={cn(
               "text-sm",

@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client"
 import { db } from "@/lib/db"
 import { renderTemplate } from "@/lib/notifications/render-template"
 import { prewarm } from "@/components/translation/prewarm"
+import { detectScript } from "@/components/translation/util"
 
 // Default expiration: 30 days
 const NOTIFICATION_EXPIRATION_DAYS = 30
@@ -202,7 +203,10 @@ export async function dispatchNotification(params: {
         type: params.type,
         title: params.title,
         body: params.body,
-        lang: params.lang ?? "ar",
+        // A wrong lang label permanently breaks localization for the row
+        // (the translator no-ops when contentLang === displayLang), so when
+        // the caller doesn't state the language, read it off the actual text.
+        lang: params.lang ?? detectScript(`${params.title} ${params.body}`),
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
         channels: enabledChannels,
@@ -325,6 +329,11 @@ export async function dispatchNotificationsToAudience(params: {
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + NOTIFICATION_EXPIRATION_DAYS)
 
+    // Same self-labeling rule as the single-dispatch path: never store a
+    // language the text visibly isn't.
+    const resolvedLang =
+      params.lang ?? detectScript(`${params.title} ${params.body}`)
+
     // BUG-5: fetch ALL disabled preferences for this type across ALL requested
     // channels in one query, then compute per-user enabled channel lists.
     const disabledPrefs = await db.notificationPreference.findMany({
@@ -374,7 +383,7 @@ export async function dispatchNotificationsToAudience(params: {
         type: params.type,
         title: params.title,
         body: params.body,
-        lang: params.lang ?? "ar",
+        lang: resolvedLang,
         priority: params.priority ?? "normal",
         actorId: params.actorId ?? null,
         channels: enabledChannels,

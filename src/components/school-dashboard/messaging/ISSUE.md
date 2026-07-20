@@ -13,6 +13,18 @@ last_audited: 2026-05-25
 
 # Messaging — Production Readiness Tracker
 
+## 2026-07-20 — legacy English demo data purge (seed self-heals)
+
+The pre-i18n messages seed left English conversations ("Sports Team Chat",
+"Class 1 Discussion", …) and English message bodies in Arabic-default demo
+schools; the per-title existence guards never replaced them. `seedConversations`
+now runs `purgeLegacyEnglishSeed` first: deletes conversations by the legacy
+English title list (cascade takes participants/messages), deletes messages by
+the legacy English body list (covers title-less direct conversations), then
+drops direct conversations left empty (> 1 day old). Ran locally: 49
+conversations + 146 messages purged, 45 Arabic conversations + 378 Arabic
+messages created. Prod demo self-heals on next deploy (prebuild `ensure-demo`).
+
 **Status:** 🟢 CODE PRODUCTION-READY (incl. group WhatsApp) — remaining work is ops/env only
 **Completion:** 100% code, ops in progress (Oracle VM)
 **Last Updated:** 2026-06-13

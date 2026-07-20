@@ -63,7 +63,7 @@ Comprehensive notification center with in-app delivery, user preferences, and RB
 
 ### Status
 
-**Completion:** 90% | **Done:** Resend email delivery, batch processing, RBAC, real-time hooks, full i18n, quiet hours, digest preferences, 254 tests
+**Completion:** 90% | **Done:** Resend email delivery, batch processing, RBAC, real-time hooks, full i18n, quiet hours, digest preferences, 281 tests; 2026-07-20: legacy English seed rows purge (self-healing), script-detected `lang` at dispatch, card type-label kicker + priority badge + locale-aware click-through
 **Remaining:** Push notifications (channel reserved, no provider), SMS (channel reserved, no provider), WhatsApp (channel reserved, Evolution API not wired)
 
 ### Agents & Skills

@@ -86,6 +86,131 @@ const ANNOUNCEMENT_TEMPLATES = [
   "تم تمديد ساعات عمل المكتبة خلال فترة الامتحانات.",
 ]
 
+// ============================================================================
+// LEGACY CLEANUP
+// ============================================================================
+
+// Conversation titles + message bodies written by the pre-i18n version of
+// this seed. They render as raw English inside an Arabic-language school and
+// the per-title existence guards below never replace them — so purge them
+// first and let the guards re-create the Arabic set.
+const LEGACY_EN_CONVERSATION_TITLES = [
+  // group
+  "Grade 10 Mathematics Group",
+  "Science Club Discussion",
+  "Student Council",
+  "PTA Committee",
+  "Sports Team Chat",
+  "Art Club Members",
+  "Debate Team",
+  "Music Ensemble",
+  "Chess Club",
+  "Drama Group",
+  // class ("Class 1 Discussion" … "Class 10 Discussion")
+  ...Array.from({ length: 10 }, (_, i) => `Class ${i + 1} Discussion`),
+  // department
+  "Languages Department",
+  "Sciences Department",
+  "Humanities Team",
+  "Administration Group",
+  "ICT Team",
+  "Arts & PE Faculty",
+  // announcement
+  "School Announcements",
+  "Urgent Notices",
+  "Weekly Updates",
+  "Academic Calendar",
+  "Event Announcements",
+]
+
+const LEGACY_EN_MESSAGE_BODIES = [
+  "Thank you for your dedication to my child's education.",
+  "Could we schedule a meeting to discuss progress?",
+  "I noticed improvement in the last homework assignment.",
+  "Is there any additional support available?",
+  "The parent-teacher conference was very helpful.",
+  "Please let me know if there are any concerns.",
+  "My child mentioned enjoying your class.",
+  "Are there any recommended resources for home study?",
+  "Can you share the curriculum materials?",
+  "Let's coordinate on the upcoming project.",
+  "The staff meeting was productive.",
+  "Do you have time to discuss the assessment?",
+  "I'll send the updated lesson plan.",
+  "Thanks for covering my class yesterday.",
+  "Please review the attached document.",
+  "The deadline has been extended.",
+  "Thank you for the quick response.",
+  "I'll follow up on this matter.",
+  "Reminder: Assignment due tomorrow",
+  "Great work on the project presentation!",
+  "Tomorrow's class will start 10 minutes late.",
+  "Study materials have been uploaded.",
+  "Please complete the survey by Friday.",
+  "Congratulations to everyone on the exam results!",
+  "The field trip permission forms are due.",
+  "Extra practice questions are available.",
+  "Department meeting scheduled for Thursday.",
+  "New curriculum guidelines are attached.",
+  "Please submit your quarterly reports.",
+  "Professional development session next week.",
+  "Sharing best practices from the workshop.",
+  "Budget allocation has been approved.",
+  "School will be closed on Monday for the holiday.",
+  "Registration for next semester is now open.",
+  "Important: Updated safety protocols.",
+  "Congratulations to our award winners!",
+  "Annual sports day is scheduled for next month.",
+  "Parent-teacher conferences begin next week.",
+  "Final exam schedule has been posted.",
+  "Library hours extended during exam period.",
+]
+
+/**
+ * Remove conversations + messages created by the legacy English seed.
+ * Cascades (Conversation → participants/messages, Message → reactions/
+ * receipts/attachments/etc.) make the deletes safe. Direct conversations
+ * carry no title, so their legacy messages are purged by exact body match
+ * and any direct conversation left empty (and not just created) is dropped.
+ */
+async function purgeLegacyEnglishSeed(
+  prisma: PrismaClient,
+  schoolId: string
+): Promise<void> {
+  const convs = await prisma.conversation.deleteMany({
+    where: { schoolId, title: { in: LEGACY_EN_CONVERSATION_TITLES } },
+  })
+
+  const msgs = await prisma.message.deleteMany({
+    where: {
+      conversation: { schoolId },
+      content: { in: LEGACY_EN_MESSAGE_BODIES },
+    },
+  })
+
+  let emptied = 0
+  if (msgs.count > 0) {
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const emptyDirects = await prisma.conversation.deleteMany({
+      where: {
+        schoolId,
+        type: "direct",
+        messages: { none: {} },
+        createdAt: { lt: dayAgo },
+      },
+    })
+    emptied = emptyDirects.count
+  }
+
+  if (convs.count > 0 || msgs.count > 0 || emptied > 0) {
+    logSuccess(
+      "Messaging cleanup",
+      convs.count + emptied,
+      `legacy English conversations purged (+${msgs.count} messages)`
+    )
+  }
+}
+
 const CONVERSATION_TITLES = {
   group: [
     "مجموعة رياضيات الصف العاشر",
@@ -172,6 +297,9 @@ export async function seedConversations(
   adminUsers: UserRef[]
 ): Promise<{ conversationIds: string[]; userIdMap: Map<string, string[]> }> {
   logPhase(14, "COMMUNICATIONS", "الرسائل والإشعارات")
+
+  // Self-heal environments still carrying the pre-i18n English demo data.
+  await purgeLegacyEnglishSeed(prisma, schoolId)
 
   const conversationIds: string[] = []
   const userIdMap = new Map<string, string[]>() // conversationId -> participant userIds

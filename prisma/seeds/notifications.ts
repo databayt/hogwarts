@@ -20,6 +20,35 @@ import type { StudentRef, TeacherRef, UserRef } from "./types"
 import { logSuccess, processBatch, randomElement, randomNumber } from "./utils"
 
 // ============================================================================
+// LEGACY CLEANUP
+// ============================================================================
+
+// Titles written by the pre-i18n version of this seed (English text stored
+// with the schema default lang "ar"). Mislabeled rows can never be localized
+// — the translator sees contentLang === displayLang and returns them as-is —
+// so an Arabic viewer gets raw English. Purge them before the count guard so
+// any environment that still carries them self-heals on the next seed run.
+const LEGACY_EN_TITLES = [
+  "New Assignment Posted",
+  "Assignment Due Soon",
+  "Assignment Graded",
+  "New Grade Posted",
+  "Attendance Recorded",
+  "Student Absence Alert",
+  "Fee Payment Due",
+  "Overdue Payment Notice",
+  "Payment Received",
+  "New Announcement",
+  "Event Reminder",
+  "Class Cancelled",
+  "Class Rescheduled",
+  "System Notification",
+  "Welcome to Hogwarts Academy",
+  "Document Shared",
+  "Report Ready",
+]
+
+// ============================================================================
 // NOTIFICATION TEMPLATES
 // ============================================================================
 
@@ -302,8 +331,20 @@ export async function seedNotifications(
   students: StudentRef[],
   adminUsers: UserRef[]
 ): Promise<number> {
+  // Self-heal: drop rows left behind by the old English seed (see
+  // LEGACY_EN_TITLES). Exact-title match keeps organic rows untouched.
+  const purged = await prisma.notification.deleteMany({
+    where: { schoolId, title: { in: LEGACY_EN_TITLES } },
+  })
+  if (purged.count > 0) {
+    logSuccess("Notifications", purged.count, "legacy English rows purged")
+  }
+
+  // Guard against re-seeding a populated table, but don't let a handful of
+  // organic rows (real dispatches) block the demo fill after a purge — this
+  // seed targets ~550 rows, so anything above 50 means it already ran.
   const existing = await prisma.notification.count({ where: { schoolId } })
-  if (existing > 0) {
+  if (existing > 50) {
     logSuccess("Notifications", existing, "already seeded – skipping")
     return existing
   }

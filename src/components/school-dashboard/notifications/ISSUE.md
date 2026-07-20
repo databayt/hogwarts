@@ -50,6 +50,31 @@ last_audited: 2026-05-25
 
 _Chronological close log — appended as items ship._
 
+- **2026-07-20 — "Notifications I don't understand" (user report) fixed at
+  data + dispatch + card level.**
+  1. **Legacy English demo rows purged + seed self-heals** — the pre-i18n
+     seed had stored English titles/bodies ("Assignment Graded", …) with
+     `lang: "ar"`; mislabeled rows can never be localized (translator no-ops
+     when contentLang === displayLang), so Arabic viewers saw raw English.
+     `seedNotifications` now deletes rows matching `LEGACY_EN_TITLES` before
+     its guard (guard loosened to `> 50` so a purged table refills without
+     duplicating organic rows). Ran locally: 550 purged, 550 Arabic created.
+     Prod demo self-heals on next deploy (prebuild `ensure-demo` → seedMain).
+  2. **`dispatchNotification` / `dispatchNotificationsToAudience` no longer
+     blind-stamp `lang: "ar"`** — when the caller omits `lang`, the stored
+     language is now `detectScript(title + body)`, so a future English-text
+     dispatch stays translatable instead of permanently mislabeled.
+  3. **Card comprehension** (card.tsx): localized type-label kicker
+     (`dictionary.types[type]`) shown when it differs from the stored title —
+     the category is always readable in the viewer's language; urgent/high
+     priority badge (`dictionary.priorities.badge`); actor no longer falls
+     back to a raw email address; Arabic long-date format (`d MMMM yyyy`);
+     click-through rebases stored absolute action URLs onto the current
+     locale for client-side navigation (verified: alert → `/ar/admission/
+applications/<id>`).
+     Tests: 281/281 notifications (2 new lang-detection cases), 210/210
+     messaging. Browser-verified EN-free bell + center + messages on /ar.
+
 - **2026-06-14 — Exam automation notifications wired.**
   Three new notification paths now call `dispatchNotification` /
   `dispatchNotificationsToAudience` from `@/lib/dispatch-notification`:
