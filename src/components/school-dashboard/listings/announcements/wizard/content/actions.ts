@@ -9,6 +9,7 @@ import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { prewarm } from "@/components/translation/prewarm"
 
+import { getAllowedScopes } from "../../authorization"
 import { guardAnnouncement } from "../../guard"
 import { contentSchema, type ContentFormData } from "./validation"
 
@@ -27,6 +28,9 @@ export async function getAnnouncementContent(
         body: true,
         lang: true,
         priority: true,
+        scope: true,
+        classId: true,
+        role: true,
       },
     })
 
@@ -46,6 +50,9 @@ export async function getAnnouncementContent(
           | "high"
           | "urgent"
           | undefined,
+        scope: (announcement.scope as "school" | "class" | "role") ?? "school",
+        classId: announcement.classId ?? undefined,
+        role: announcement.role ?? undefined,
       },
     }
   } catch {
@@ -60,9 +67,13 @@ export async function updateAnnouncementContent(
   try {
     const guard = await guardAnnouncement(announcementId, "update")
     if (!guard.ok) return guard.denied
-    const { schoolId } = guard.value
+    const { authContext, schoolId } = guard.value
 
     const parsed = contentSchema.parse(input)
+
+    if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
 
     await db.announcement.updateMany({
       where: { id: announcementId, schoolId },
@@ -71,6 +82,9 @@ export async function updateAnnouncementContent(
         body: parsed.body,
         lang: parsed.lang,
         priority: parsed.priority ?? "normal",
+        scope: parsed.scope,
+        classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
+        role: parsed.scope === "role" ? (parsed.role ?? null) : null,
       },
     })
 

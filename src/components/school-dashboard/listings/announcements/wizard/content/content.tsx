@@ -27,17 +27,21 @@ export default function AnnouncementContentContent() {
   // Set initial validity from loaded data
   useEffect(() => {
     if (data) {
-      setIsValid(
-        (data.title?.trim().length ?? 0) >= 1 &&
-          (data.body?.trim().length ?? 0) >= 1
-      )
+      const isTitleValid = (data.title?.trim().length ?? 0) >= 1
+      const isBodyValid = (data.body?.trim().length ?? 0) >= 1
+      const isScopeValid =
+        data.scope === "class"
+          ? !!data.classId
+          : data.scope === "role"
+            ? !!data.role
+            : true
+      setIsValid(isTitleValid && isBodyValid && isScopeValid)
     }
   }, [data])
 
   return (
     <WizardStep
       entityId={announcementId}
-      nextStep={`/announcements/add/${announcementId}/targeting`}
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}
@@ -64,6 +68,10 @@ export default function AnnouncementContentContent() {
                     | "high"
                     | "urgent"
                     | undefined,
+                  scope:
+                    (data.scope as "school" | "class" | "role") ?? "school",
+                  classId: data.classId ?? undefined,
+                  role: data.role ?? undefined,
                 }
               : undefined
           }

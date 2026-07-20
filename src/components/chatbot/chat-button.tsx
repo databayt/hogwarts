@@ -117,7 +117,9 @@ export function ChatButton({
             height={56}
             className={cn(
               "h-full w-full transition-all duration-500",
-              usingSchoolLogo ? "rounded-full object-cover" : "object-contain",
+              usingSchoolLogo
+                ? "rounded-full object-cover"
+                : "object-contain dark:invert",
               !usingSchoolLogo && shouldInvert && "invert"
             )}
             unoptimized={

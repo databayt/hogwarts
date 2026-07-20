@@ -31,6 +31,10 @@ export interface WizardValidationContextType {
   enableNext: () => void
   disableNext: () => void
 
+  // Field progress within current step (0-100)
+  fieldProgress?: number
+  setFieldProgress: (progress: number | undefined) => void
+
   // Custom navigation handlers
   customNavigation?: CustomNavigation
   setCustomNavigation: (navigation?: CustomNavigation) => void
@@ -105,6 +109,7 @@ export function WizardValidationProvider({
 }: WizardValidationProviderProps) {
   // Core validation state - default to disabled (pages must explicitly enable)
   const [isNextDisabled, setIsNextDisabled] = useState(true)
+  const [fieldProgress, setFieldProgress] = useState<number | undefined>(undefined)
   const customNavigationRef = useRef<CustomNavigation | undefined>(undefined)
   const [onSave, setOnSave] = useState<(() => Promise<void>) | undefined>(
     undefined
@@ -182,6 +187,8 @@ export function WizardValidationProvider({
       setIsNextDisabled,
       enableNext,
       disableNext,
+      fieldProgress,
+      setFieldProgress,
       customNavigation: customNavigationRef.current,
       setCustomNavigation,
       getCustomNavigation,
@@ -198,6 +205,8 @@ export function WizardValidationProvider({
       isNextDisabled,
       enableNext,
       disableNext,
+      fieldProgress,
+      setFieldProgress,
       setCustomNavigation,
       getCustomNavigation,
       onSave,

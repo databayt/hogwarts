@@ -258,7 +258,7 @@ Complements the same-day security pass above. tsc 0; i18n suite 276 passed
   aggregate/groupBy queries; Decimals converted to numbers INSIDE the cached
   fn (cache-hit revival returns strings otherwise).
 - **Fee metrics could never match**: filter was `academicYear:
-  new Date().getFullYear().toString()` (`"2026"`) while data stores
+new Date().getFullYear().toString()` (`"2026"`) while data stores
   `"YYYY-YYYY"`. Now resolved from latest `SchoolYear.yearName` (same rule as
   fee-provisioning).
 - `FinanceDashboardContent` gates via `resolveFinanceAccess("reports")` and
@@ -297,8 +297,7 @@ Complements the same-day security pass above. tsc 0; i18n suite 276 passed
   count-guard; registered as `db:seed:single wallet` and in the main walk
   after Banking. Verified locally: 31 wallets / 140 txns / SDG.
 - Seed-audit findings (agent, documented for follow-up): dashboard month
-  window shows zeros against stale seed dates (payments 2024, payroll runs
-  2025) — real schools entering live data are unaffected; 876 current-year
+  window shows zeros against stale seed dates (payments 2024, payroll runs 2025) — real schools entering live data are unaffected; 876 current-year
   PAID `FeeAssignment`s have no Payment trail (seed `take: 600` without
   `orderBy` exhausts on 2024-2025); `ensure-demo` fast path never verifies
   finance tables.

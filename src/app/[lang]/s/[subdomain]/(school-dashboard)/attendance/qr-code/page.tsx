@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { auth } from "@/auth"
 
 import { type Locale } from "@/components/internationalization/config"
@@ -9,7 +10,21 @@ import { AttendanceAccessDenied } from "@/components/school-dashboard/attendance
 import { AttendanceProvider } from "@/components/school-dashboard/attendance/core/attendance-context"
 import QRCodeAttendanceContent from "@/components/school-dashboard/attendance/qr-code/content"
 
-export const metadata = { title: "Dashboard: QR Code Attendance" }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+
+  return {
+    title: dictionary?.attendance?.qrCode?.title || "QR Code Attendance",
+    description:
+      dictionary?.attendance?.qrCode?.teacherDescription ||
+      "Generate and display QR codes for students to scan",
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

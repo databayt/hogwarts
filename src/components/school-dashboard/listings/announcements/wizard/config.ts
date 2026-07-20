@@ -5,20 +5,15 @@ import type { WizardConfig } from "@/components/form/wizard"
 
 export const ANNOUNCEMENT_WIZARD_CONFIG: WizardConfig = {
   id: "announcement",
-  steps: ["content", "targeting"],
+  steps: ["content"],
   groups: {
     1: ["content"],
-    2: ["targeting"],
   },
-  groupLabels: ["Content", "Targeting & Publishing"],
+  groupLabels: ["Content"],
   i18nGroupLabels: {
-    ar: ["المحتوى", "الاستهداف والنشر"],
-    en: ["Content", "Targeting & Publishing"],
+    ar: ["المحتوى"],
+    en: ["Content"],
   },
   requiredSteps: ["content"],
-  finalLabel: "Publish",
-  i18nFinalLabel: {
-    ar: "نشر",
-    en: "Publish",
-  },
+  finalDestination: "/announcements",
 }

@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress"
 import { formatRelativeTime } from "@/components/file/formatters"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { ReportIssue } from "@/components/report-issue"
+import { useWizardValidationOptional } from "@/components/form/template/wizard-validation-context"
 
 // =============================================================================
 // TYPES
@@ -267,6 +268,9 @@ export function FormFooter({
     }
   }
 
+  const validationContext = useWizardValidationOptional()
+  const fieldProgress = validationContext?.fieldProgress
+
   // Calculate progress for each step group
   const getStepProgress = (stepNumber: number) => {
     if (currentStepGroup > stepNumber) return 100
@@ -276,7 +280,20 @@ export function FormFooter({
       const currentStepInGroup = groupSteps.findIndex(
         (step) => step === currentStepSlug
       )
-      return Math.max(10, ((currentStepInGroup + 1) / groupSteps.length) * 100)
+      const baseProgress = (currentStepInGroup / groupSteps.length) * 100
+      const stepPortion = (1 / groupSteps.length) * 100
+
+      if (typeof fieldProgress === "number") {
+        return Math.min(
+          100,
+          Math.max(10, baseProgress + (fieldProgress / 100) * stepPortion)
+        )
+      }
+
+      const isStepValid = !nextDisabled && !contextNextDisabled
+      return isStepValid
+        ? baseProgress + stepPortion
+        : Math.max(10, baseProgress + stepPortion * 0.35)
     }
     return 0
   }

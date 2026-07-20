@@ -28,7 +28,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg">
           <img
-            src={asset("/photos/site-h.jpeg")}
+            src={asset("/photos/map.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -62,7 +62,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-destructive to-primary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src={asset("/photos/site-a.jpeg")}
+            src={asset("/photos/gryffindor.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -79,7 +79,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-secondary to-muted flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src={asset("/photos/site-b.jpeg")}
+            src={asset("/photos/snape.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -96,7 +96,7 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-primary to-accent flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src={asset("/photos/site-h.jpeg")}
+            src={asset("/photos/trian.jpeg")}
             width={400}
             height={300}
             className="h-full w-full object-cover"
@@ -113,10 +113,10 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
       content: (
         <div className="from-accent to-secondary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
           <img
-            src={asset("/illustrations/site-ball.png")}
+            src={asset("/photos/harry-potter.png")}
             width={400}
             height={300}
-            className="h-full w-full object-contain p-8"
+            className="h-full w-full object-cover"
             alt="Golden Snitch - the heart of Quidditch"
           />
         </div>

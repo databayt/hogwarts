@@ -11,12 +11,27 @@ import type { ValidationHelper } from "@/components/internationalization/helpers
  * fallbacks only apply on the server, where no dictionary is in scope.
  */
 export function createContentSchema(v?: ValidationHelper) {
-  return z.object({
-    title: z.string().min(1, v?.required() || "Title is required"),
-    body: z.string().min(1, v?.required() || "Body is required"),
-    lang: z.enum(["ar", "en"]).default("ar"),
-    priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
-  })
+  return z
+    .object({
+      title: z.string().min(1, v?.required() || "Title is required"),
+      body: z.string().min(1, v?.required() || "Body is required"),
+      lang: z.enum(["ar", "en"]).default("ar"),
+      priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+      scope: z.enum(["school", "class", "role"]).default("school"),
+      classId: z.string().optional().nullable(),
+      role: z.string().optional().nullable(),
+    })
+    .refine(
+      (data) => {
+        if (data.scope === "class") return !!data.classId
+        if (data.scope === "role") return !!data.role
+        return true
+      },
+      {
+        message: v?.required() || "Required",
+        path: ["scope"],
+      }
+    )
 }
 
 /** Dictionary-free schema for server actions and other non-UI contexts. */

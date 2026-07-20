@@ -33,7 +33,7 @@ export function TabsNav({
       <ScrollArea className="max-w-[600px] lg:max-w-none">
         <nav
           className={cn(
-            "flex items-center gap-2 rtl:flex-row-reverse",
+            "flex items-center gap-2",
             className
           )}
           {...props}

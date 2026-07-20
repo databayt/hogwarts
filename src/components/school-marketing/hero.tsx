@@ -4,6 +4,7 @@
 import Link from "next/link"
 
 import { asset } from "@/lib/asset-url"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AnimatedButton } from "@/components/atom/animated-button"
 import type { Locale } from "@/components/internationalization/config"
@@ -22,6 +23,8 @@ export function Hero({
   dictionary,
   heroImageUrl,
 }: HeroProps) {
+  const isRTL = lang === "ar"
+
   // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
 
@@ -49,12 +52,22 @@ export function Hero({
         {/* Content for mobile */}
         <div className="px-container relative flex h-full flex-col items-start justify-center lg:hidden">
           <div className="max-w-xl">
-            <h1 className="font-heading py-4 text-4xl font-black tracking-tighter text-white sm:text-5xl">
+            <h1
+              className={cn(
+                "font-heading py-4 font-black tracking-tighter text-white",
+                isRTL ? "text-5xl sm:text-6xl" : "text-4xl sm:text-5xl"
+              )}
+            >
               {titleParts[0]}
               <br />
               {titleParts[1]}
             </h1>
-            <p className="max-w-[80%] pb-6 text-white/80">
+            <p
+              className={cn(
+                "max-w-[80%] text-white/80",
+                isRTL ? "py-4 pb-8" : "pb-6"
+              )}
+            >
               {t?.subtitle ||
                 "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
@@ -84,12 +97,24 @@ export function Hero({
       {/* Desktop Content */}
       <div className="relative hidden h-full items-center lg:flex">
         <div className="max-w-xl">
-          <h1 className="font-heading py-4 text-5xl font-black tracking-tighter lg:text-6xl xl:text-7xl">
+          <h1
+            className={cn(
+              "font-heading py-4 font-black tracking-tighter",
+              isRTL
+                ? "text-6xl lg:text-7xl xl:text-8xl"
+                : "text-5xl lg:text-6xl xl:text-7xl"
+            )}
+          >
             {titleParts[0]}
             <br />
             {titleParts[1]}
           </h1>
-          <p className="text-muted-foreground max-w-[80%] pb-6">
+          <p
+            className={cn(
+              "text-muted-foreground max-w-[80%]",
+              isRTL ? "py-4 pb-8" : "pb-6"
+            )}
+          >
             {t?.subtitle ||
               "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>

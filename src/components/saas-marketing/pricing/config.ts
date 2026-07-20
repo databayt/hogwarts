@@ -32,6 +32,11 @@ type PricingDict =
         pro?: { title?: string; description?: string; benefits?: string[] }
         ultra?: { title?: string; description?: string; benefits?: string[] }
       }
+      comparePlans?: {
+        features?: Record<string, string>
+        values?: Record<string, string>
+        tooltips?: Record<string, string>
+      }
     }
   | undefined
 
@@ -237,9 +242,64 @@ export const comparePlans: PlansRow[] = [
   },
 ]
 
+// Maps the canonical English row data to dictionary keys so the compare
+// table can be rendered in the active locale.
+const compareFeatureKeys: Record<string, string> = {
+  "Analytics & reporting": "analyticsReporting",
+  "Custom branding": "customBranding",
+  Support: "support",
+  "Advanced reporting": "advancedReporting",
+  "Dedicated manager": "dedicatedManager",
+  "API access": "apiAccess",
+  "Monthly webinars": "monthlyWebinars",
+  "Custom integrations": "customIntegrations",
+  "Roles & permissions": "rolesPermissions",
+  "Onboarding assistance": "onboardingAssistance",
+}
+
+const compareValueKeys: Record<string, string> = {
+  Custom: "custom",
+  Unlimited: "unlimited",
+  Priority: "priority",
+  "24/7": "support24_7",
+  "24/7 Support": "support24_7Support",
+  Limited: "limited",
+  Standard: "standard",
+  Enhanced: "enhanced",
+  Full: "full",
+  Available: "available",
+  Basic: "basic",
+  Advanced: "advanced",
+  "Self-service": "selfService",
+  Assisted: "assisted",
+  "Full Service": "fullService",
+}
+
 // Get compare plans with dictionary translations applied
 export const getComparePlans = (pricing?: PricingDict): PlansRow[] => {
-  // For now, return the default comparePlans since the feature names
-  // in the dictionary use a different structure than the current hardcoded data
-  return comparePlans
+  const compare = pricing?.comparePlans
+  if (!compare) return comparePlans
+
+  const translateValue = (
+    value: string | boolean | null
+  ): string | boolean | null => {
+    if (typeof value !== "string") return value
+    const key = compareValueKeys[value]
+    return (key && compare.values?.[key]) || value
+  }
+
+  return comparePlans.map((row) => {
+    const featureKey = compareFeatureKeys[row.feature]
+    return {
+      ...row,
+      feature: (featureKey && compare.features?.[featureKey]) || row.feature,
+      tooltip: row.tooltip
+        ? (featureKey && compare.tooltips?.[featureKey]) || row.tooltip
+        : row.tooltip,
+      hobby: translateValue(row.hobby),
+      pro: translateValue(row.pro),
+      ultra: translateValue(row.ultra),
+      enterprise: translateValue(row.enterprise),
+    }
+  })
 }

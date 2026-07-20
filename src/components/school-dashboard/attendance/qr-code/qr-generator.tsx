@@ -54,7 +54,13 @@ export function QRGenerator({
   dictionary,
   locale = "en",
 }: QRGeneratorProps) {
-  const t = dictionary?.attendance?.qrActions
+  const attendanceDict = dictionary?.attendance as
+    | Record<string, any>
+    | undefined
+  const t = attendanceDict?.qrCode as Record<string, string> | undefined
+  const tActions = attendanceDict?.qrActions as
+    | Record<string, string>
+    | undefined
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [qrCode, setQRCode] = useState<string>("")
   const [qrData, setQRData] = useState<string>("")
@@ -86,7 +92,9 @@ export function QRGenerator({
       })
 
       if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to generate QR code")
+        throw new Error(
+          result.error || t?.failedToGenerate || "Failed to generate QR code"
+        )
       }
 
       // Store the QR data for display and sharing
@@ -118,20 +126,25 @@ export function QRGenerator({
       )
 
       toast({
-        title: "QR Code Generated",
-        description: `Valid for ${expiresIn} seconds. Stored in database.`,
+        title: t?.qrCodeGenerated || "QR Code Generated",
+        description: (
+          t?.validForSeconds ||
+          "Valid for {seconds} seconds. Stored in database."
+        ).replace("{seconds}", expiresIn.toString()),
       })
     } catch (error) {
       toast({
-        title: "Generation Failed",
+        title: t?.generationFailed || "Generation Failed",
         description:
-          error instanceof Error ? error.message : "Failed to generate QR code",
+          error instanceof Error
+            ? error.message
+            : t?.failedToGenerate || "Failed to generate QR code",
         variant: "destructive",
       })
     } finally {
       setIsGenerating(false)
     }
-  }, [classId, config, resetTimer])
+  }, [classId, config, resetTimer, t])
 
   useEffect(() => {
     generateNewQR()
@@ -146,25 +159,26 @@ export function QRGenerator({
     link.click()
 
     toast({
-      title: t?.downloaded ?? "Downloaded",
-      description: t?.savedToDevice ?? "QR code saved to your device",
+      title: tActions?.downloaded ?? "Downloaded",
+      description: tActions?.savedToDevice ?? "QR code saved to your device",
     })
   }
 
   const copyQRData = () => {
     navigator.clipboard.writeText(qrData)
     toast({
-      title: t?.copied ?? "Copied",
-      description: t?.copiedToClipboard ?? "QR data copied to clipboard",
+      title: tActions?.copied ?? "Copied",
+      description: tActions?.copiedToClipboard ?? "QR data copied to clipboard",
     })
   }
 
   const shareQR = async () => {
     if (!navigator.share) {
       toast({
-        title: t?.notSupported ?? "Not Supported",
+        title: tActions?.notSupported ?? "Not Supported",
         description:
-          t?.sharingNotSupported ?? "Sharing is not supported on this device",
+          tActions?.sharingNotSupported ??
+          "Sharing is not supported on this device",
       })
       return
     }
@@ -176,8 +190,11 @@ export function QRGenerator({
       const file = new File([blob], "attendance-qr.png", { type: "image/png" })
 
       await navigator.share({
-        title: "Attendance QR Code",
-        text: `Scan this QR code to mark attendance for class ${classId}`,
+        title: tActions?.attendanceQRCode ?? "Attendance QR Code",
+        text: (
+          t?.shareText ||
+          "Scan this QR code to mark attendance for class {classId}"
+        ).replace("{classId}", classId),
         files: [file],
       })
     } catch (error) {
@@ -189,6 +206,8 @@ export function QRGenerator({
     setShowFullscreen(!showFullscreen)
   }
 
+  const secUnit = locale === "ar" ? "ث" : "s"
+
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -196,7 +215,7 @@ export function QRGenerator({
         <Card className="relative overflow-hidden">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Active QR Code</CardTitle>
+              <CardTitle>{t?.activeQRCode || "Active QR Code"}</CardTitle>
               <Badge
                 variant={
                   timeLeft > 30
@@ -208,11 +227,13 @@ export function QRGenerator({
                 className="font-mono"
               >
                 <Clock className="me-1 h-3 w-3" />
-                {timeLeft}s
+                {timeLeft}
+                {secUnit}
               </Badge>
             </div>
             <CardDescription>
-              Students scan this code to mark attendance
+              {t?.scanToMarkDescription ||
+                "Students scan this code to mark attendance"}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
@@ -223,7 +244,7 @@ export function QRGenerator({
                 <div className="absolute end-4 top-4">
                   <Badge variant="outline" className="bg-background">
                     <Shield className="me-1 h-3 w-3" />
-                    Protected
+                    {t?.protected || "Protected"}
                   </Badge>
                 </div>
               </div>
@@ -248,18 +269,21 @@ export function QRGenerator({
               {config.requireStudentAuth && (
                 <Badge variant="outline">
                   <CircleCheck className="me-1 h-3 w-3" />
-                  Auth Required
+                  {t?.authRequired || "Auth Required"}
                 </Badge>
               )}
               {config.includeLocation && (
                 <Badge variant="outline">
                   <MapPin className="me-1 h-3 w-3" />
-                  Location Tracked
+                  {t?.locationTracked || "Location Tracked"}
                 </Badge>
               )}
               <Badge variant="outline">
                 <QrCode className="me-1 h-3 w-3" />
-                Class: {classId}
+                {(t?.classLabel || "Class: {classId}").replace(
+                  "{classId}",
+                  classId
+                )}
               </Badge>
             </div>
           </CardContent>
@@ -272,11 +296,11 @@ export function QRGenerator({
                 disabled={isGenerating}
               >
                 <RefreshCw className="me-2 h-4 w-4" />
-                Refresh
+                {t?.refresh || "Refresh"}
               </Button>
               <Button size="sm" variant="outline" onClick={toggleFullscreen}>
                 <Maximize2 className="me-2 h-4 w-4" />
-                Fullscreen
+                {t?.fullscreen || "Fullscreen"}
               </Button>
             </div>
             <div className="flex gap-2">
@@ -296,15 +320,16 @@ export function QRGenerator({
         {/* Configuration Panel */}
         <Card>
           <CardHeader>
-            <CardTitle>QR Code Configuration</CardTitle>
+            <CardTitle>{t?.configTitle || "QR Code Configuration"}</CardTitle>
             <CardDescription>
-              Customize security and validation settings
+              {t?.configDescription ||
+                "Customize security and validation settings"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Refresh Interval */}
             <div className="space-y-2">
-              <Label>Refresh Interval</Label>
+              <Label>{t?.refreshInterval || "Refresh Interval"}</Label>
               <div className="flex items-center gap-4">
                 <Slider
                   value={[config.refreshInterval]}
@@ -317,17 +342,19 @@ export function QRGenerator({
                   className="flex-1"
                 />
                 <span className="w-16 font-mono text-sm">
-                  {config.refreshInterval}s
+                  {config.refreshInterval}
+                  {secUnit}
                 </span>
               </div>
               <p className="text-muted-foreground text-xs">
-                How often to generate a new QR code
+                {t?.refreshIntervalDesc ||
+                  "How often to generate a new QR code"}
               </p>
             </div>
 
             {/* Validity Period */}
             <div className="space-y-2">
-              <Label>Validity Period</Label>
+              <Label>{t?.validityPeriod || "Validity Period"}</Label>
               <div className="flex items-center gap-4">
                 <Slider
                   value={[config.validityPeriod]}
@@ -340,11 +367,12 @@ export function QRGenerator({
                   className="flex-1"
                 />
                 <span className="w-16 font-mono text-sm">
-                  {config.validityPeriod}s
+                  {config.validityPeriod}
+                  {secUnit}
                 </span>
               </div>
               <p className="text-muted-foreground text-xs">
-                How long each QR code remains valid
+                {t?.validityPeriodDesc || "How long each QR code remains valid"}
               </p>
             </div>
 
@@ -352,9 +380,12 @@ export function QRGenerator({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Require Student Authentication</Label>
+                  <Label>
+                    {t?.requireStudentAuth || "Require Student Authentication"}
+                  </Label>
                   <p className="text-muted-foreground text-xs">
-                    Students must be logged in to scan
+                    {t?.requireStudentAuthDesc ||
+                      "Students must be logged in to scan"}
                   </p>
                 </div>
                 <Switch
@@ -370,9 +401,12 @@ export function QRGenerator({
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Include Location Verification</Label>
+                  <Label>
+                    {t?.includeLocation || "Include Location Verification"}
+                  </Label>
                   <p className="text-muted-foreground text-xs">
-                    Verify student location when scanning
+                    {t?.includeLocationDesc ||
+                      "Verify student location when scanning"}
                   </p>
                 </div>
                 <Switch
@@ -385,9 +419,13 @@ export function QRGenerator({
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Prevent Screenshot Sharing</Label>
+                  <Label>
+                    {t?.preventScreenshotSharing ||
+                      "Prevent Screenshot Sharing"}
+                  </Label>
                   <p className="text-muted-foreground text-xs">
-                    Add visual protection against screenshots
+                    {t?.preventScreenshotSharingDesc ||
+                      "Add visual protection against screenshots"}
                   </p>
                 </div>
                 <Switch
@@ -405,7 +443,7 @@ export function QRGenerator({
             {/* Apply Button */}
             <Button className="w-full" onClick={generateNewQR}>
               <Settings className="me-2 h-4 w-4" />
-              Apply Changes & Generate New QR
+              {t?.applyAndGenerate || "Apply Changes & Generate New QR"}
             </Button>
           </CardContent>
         </Card>
@@ -438,7 +476,9 @@ export function QRGenerator({
               </Button>
 
               <div className="flex flex-col items-center space-y-4">
-                <h3 className="text-2xl font-bold">Scan to Mark Attendance</h3>
+                <h3 className="text-2xl font-bold">
+                  {t?.scanToMarkAttendance || "Scan to Mark Attendance"}
+                </h3>
                 <div className="rounded-lg bg-white p-8 shadow-2xl">
                   <canvas
                     ref={canvasRef}
@@ -446,10 +486,17 @@ export function QRGenerator({
                   />
                 </div>
                 <div className="space-y-2 text-center">
-                  <p className="text-lg">Class: {classId}</p>
+                  <p className="text-lg">
+                    {(t?.classLabel || "Class: {classId}").replace(
+                      "{classId}",
+                      classId
+                    )}
+                  </p>
                   <Badge variant="secondary" className="px-4 py-2 text-lg">
                     <Clock className="me-2 h-4 w-4" />
-                    Expires in {timeLeft} seconds
+                    {(
+                      t?.expiresInSeconds || "Expires in {seconds} seconds"
+                    ).replace("{seconds}", timeLeft.toString())}
                   </Badge>
                 </div>
               </div>

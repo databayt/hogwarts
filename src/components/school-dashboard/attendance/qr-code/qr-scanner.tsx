@@ -102,7 +102,17 @@ export function QRScanner({
   dictionary,
   locale = "en",
 }: QRScannerProps) {
-  const t = dictionary?.attendance
+  const attendanceDict = dictionary?.attendance as
+    | Record<string, any>
+    | undefined
+  const t = attendanceDict?.qrCode as Record<string, string> | undefined
+  const tActions = attendanceDict?.qrActions as
+    | Record<string, string>
+    | undefined
+  const tDevice = attendanceDict?.deviceAccess as
+    | Record<string, string>
+    | undefined
+
   const [scanning, setScanning] = useState(false)
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
@@ -174,13 +184,13 @@ export function QRScanner({
         try {
           qrData = JSON.parse(scanData)
         } catch {
-          throw new Error("Invalid QR code format")
+          throw new Error(t?.invalid || "Invalid QR code format")
         }
 
         // Validate QR payload
         const validation = validateQRPayload(qrData.payload)
         if (!validation.valid) {
-          throw new Error(validation.error || "Invalid QR code")
+          throw new Error(validation.error || t?.invalid || "Invalid QR code")
         }
 
         // Check if location is required
@@ -188,7 +198,8 @@ export function QRScanner({
           if (!location) {
             requestLocation()
             throw new Error(
-              "Location required. Please enable location services."
+              attendanceDict?.errors?.consentRequired ||
+                "Location required. Please enable location services."
             )
           }
         }
@@ -216,7 +227,9 @@ export function QRScanner({
         })
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to process QR scan")
+          throw new Error(
+            result.error || tActions?.scanFailed || "Failed to process QR scan"
+          )
         }
 
         // Success feedback: haptic + audio
@@ -225,13 +238,12 @@ export function QRScanner({
 
         setScanResult({
           success: true,
-          message: "Attendance marked successfully!",
+          message: t?.successMessage || "Attendance marked successfully!",
         })
 
         toast({
-          title: "Success",
-          description:
-            t?.qrCode?.scanSuccess ?? "Your attendance has been marked",
+          title: attendanceDict?.success?.attendanceMarked || "Success",
+          description: t?.scanSuccess ?? "Your attendance has been marked",
         })
 
         onScanSuccess?.(qrData)
@@ -243,7 +255,9 @@ export function QRScanner({
         }, 3000)
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Failed to process QR code"
+          error instanceof Error
+            ? error.message
+            : tActions?.scanFailed || "Failed to process QR code"
 
         // Error feedback: double vibration + low beep
         triggerHaptic([100, 50, 100])
@@ -255,7 +269,7 @@ export function QRScanner({
         })
 
         toast({
-          title: t?.qrActions?.scanFailed ?? "Scan Failed",
+          title: tActions?.scanFailed ?? "Scan Failed",
           description: message,
         })
 
@@ -277,6 +291,9 @@ export function QRScanner({
       requestLocation,
       onScanSuccess,
       onScanError,
+      t,
+      tActions,
+      attendanceDict,
     ]
   )
 
@@ -302,9 +319,9 @@ export function QRScanner({
     reader.onload = (e) => {
       // In production, you would decode the QR from image
       toast({
-        title: t?.qrActions?.fileUpload ?? "File Upload",
+        title: tActions?.fileUpload ?? "File Upload",
         description:
-          t?.qrActions?.fileUploadNotImplemented ??
+          tActions?.fileUploadNotImplemented ??
           "QR code file upload is not yet implemented",
       })
     }
@@ -324,10 +341,11 @@ export function QRScanner({
         <CardHeader className={cn(isFullscreen && "bg-background/90 py-3")}>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>QR Code Scanner</CardTitle>
+              <CardTitle>{t?.scannerTitle || "QR Code Scanner"}</CardTitle>
               {!isFullscreen && (
                 <CardDescription>
-                  Position the QR code within the camera frame
+                  {t?.scannerDescription ||
+                    "Position the QR code within the camera frame"}
                 </CardDescription>
               )}
             </div>
@@ -335,7 +353,7 @@ export function QRScanner({
               {scanning && (
                 <Badge variant="secondary" className="animate-pulse">
                   <Scan className="me-1 h-3 w-3" />
-                  Scanning
+                  {t?.scanning || "Scanning"}
                 </Badge>
               )}
               {/* Fullscreen toggle for mobile */}
@@ -344,7 +362,11 @@ export function QRScanner({
                 size="icon"
                 onClick={toggleFullscreen}
                 className="h-8 w-8"
-                title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
+                title={
+                  isFullscreen
+                    ? t?.exitFullscreen || "Exit fullscreen"
+                    : t?.fullscreenMode || "Fullscreen mode"
+                }
               >
                 {isFullscreen ? (
                   <Minimize2 className="h-4 w-4" />
@@ -373,7 +395,9 @@ export function QRScanner({
                   onScan={handleScan}
                   onError={(error) => {
                     console.error("Scanner error:", error)
-                    setCameraError("Camera error. Please try again.")
+                    setCameraError(
+                      tDevice?.scannerError || "Camera error. Please try again."
+                    )
                   }}
                   constraints={{
                     facingMode: "environment",
@@ -406,7 +430,7 @@ export function QRScanner({
                     <div className="space-y-3 text-center">
                       <LoaderCircle className="mx-auto h-12 w-12 animate-spin sm:h-8 sm:w-8" />
                       <p className="text-base font-medium sm:text-sm">
-                        Processing...
+                        {t?.processing || "Processing..."}
                       </p>
                     </div>
                   </div>
@@ -439,7 +463,7 @@ export function QRScanner({
               <div className="flex h-full flex-col items-center justify-center p-8 text-center">
                 <Camera className="text-muted-foreground mb-4 h-20 w-20 sm:h-16 sm:w-16" />
                 <p className="text-muted-foreground mb-4 text-lg sm:text-base">
-                  Camera is not active
+                  {t?.cameraInactive || "Camera is not active"}
                 </p>
                 {/* Large touch-friendly button for mobile */}
                 <Button
@@ -448,7 +472,7 @@ export function QRScanner({
                   className="h-14 px-8 text-lg sm:h-10 sm:px-4 sm:text-sm"
                 >
                   <Camera className="me-2 h-5 w-5" />
-                  Start Camera
+                  {t?.startCamera || "Start Camera"}
                 </Button>
               </div>
             )}
@@ -458,7 +482,7 @@ export function QRScanner({
           {cameraError && (
             <Alert variant="destructive">
               <CircleAlert className="h-4 w-4" />
-              <AlertTitle>Camera Error</AlertTitle>
+              <AlertTitle>{tDevice?.scannerError || "Camera Error"}</AlertTitle>
               <AlertDescription>{cameraError}</AlertDescription>
             </Alert>
           )}
@@ -467,16 +491,20 @@ export function QRScanner({
           {hasPermission === false && (
             <Alert>
               <CircleAlert className="h-4 w-4" />
-              <AlertTitle>Camera Permission Required</AlertTitle>
+              <AlertTitle>
+                {tDevice?.cameraPermissionDenied ||
+                  "Camera Permission Required"}
+              </AlertTitle>
               <AlertDescription>
-                Please allow camera access to scan QR codes.
+                {tDevice?.allowCameraAccess ||
+                  "Please allow camera access to scan QR codes."}
                 <Button
                   size="sm"
                   variant="outline"
                   className="ms-4"
                   onClick={requestPermission}
                 >
-                  Grant Permission
+                  {t?.grantPermission || "Grant Permission"}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -497,7 +525,7 @@ export function QRScanner({
                 className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
               >
                 <CameraOff className="me-2 h-5 w-5" />
-                Stop
+                {t?.stop || "Stop"}
               </Button>
             ) : (
               <Button
@@ -506,7 +534,7 @@ export function QRScanner({
                 className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
               >
                 <Camera className="me-2 h-5 w-5" />
-                Scan
+                {t?.scan || "Scan"}
               </Button>
             )}
             <Button
@@ -516,7 +544,7 @@ export function QRScanner({
               onClick={() => document.getElementById("qr-upload")?.click()}
             >
               <Upload className="me-2 h-5 w-5" />
-              Upload
+              {tActions?.fileUpload || "Upload"}
             </Button>
             {isFullscreen && (
               <Button
@@ -526,7 +554,7 @@ export function QRScanner({
                 onClick={toggleFullscreen}
               >
                 <Minimize2 className="me-2 h-5 w-5" />
-                Exit
+                {t?.exit || "Exit"}
               </Button>
             )}
             <input
@@ -544,11 +572,13 @@ export function QRScanner({
             <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
               <MapPin className="h-3 w-3" />
               <span>
-                Location: {location.coords.latitude.toFixed(4)},{" "}
-                {location.coords.longitude.toFixed(4)}
-              </span>
-              <span className="text-xs">
-                (Accuracy: {location.coords.accuracy.toFixed(0)}m)
+                {(
+                  t?.locationText ||
+                  "Location: {lat}, {lon} (Accuracy: {accuracy}m)"
+                )
+                  .replace("{lat}", location.coords.latitude.toFixed(4))
+                  .replace("{lon}", location.coords.longitude.toFixed(4))
+                  .replace("{accuracy}", location.coords.accuracy.toFixed(0))}
               </span>
             </div>
           )}
@@ -559,25 +589,38 @@ export function QRScanner({
       {!isFullscreen && (
         <Card>
           <CardHeader>
-            <CardTitle>Scanning Instructions</CardTitle>
+            <CardTitle>
+              {t?.instructionsTitle || "Scanning Instructions"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ol className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-primary font-semibold">1.</span>
-                <span>Allow camera access when prompted</span>
+                <span>
+                  {t?.instructionStep1 || "Allow camera access when prompted"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary font-semibold">2.</span>
-                <span>Position the QR code within the camera frame</span>
+                <span>
+                  {t?.instructionStep2 ||
+                    "Position the QR code within the camera frame"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary font-semibold">3.</span>
-                <span>Hold steady until the code is recognized</span>
+                <span>
+                  {t?.instructionStep3 ||
+                    "Hold steady until the code is recognized"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary font-semibold">4.</span>
-                <span>Wait for confirmation that attendance is marked</span>
+                <span>
+                  {t?.instructionStep4 ||
+                    "Wait for confirmation that attendance is marked"}
+                </span>
               </li>
             </ol>
           </CardContent>

@@ -18,18 +18,17 @@ export default function AnnouncementWizardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { locale } = useLocale()
-
   return (
     <WizardLayout
       config={ANNOUNCEMENT_WIZARD_CONFIG}
       dataProvider={AnnouncementWizardProvider}
       loadHook={useAnnouncementWizard}
       basePath="/announcements/add"
+      wizardStepField="wizardStep"
       onStepChange={(entityId, step) => {
         updateAnnouncementWizardStep(entityId, step)
       }}
-      finalLabel={resolveFinalLabel(ANNOUNCEMENT_WIZARD_CONFIG, locale)}
+      finalDestination="/announcements"
     >
       {children}
     </WizardLayout>

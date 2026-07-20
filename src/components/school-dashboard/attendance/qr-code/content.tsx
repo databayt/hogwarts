@@ -21,11 +21,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { getClassesForSelection } from "../actions"
 import { useAttendanceContext } from "../core/attendance-context"
 import { AttendanceStats } from "../core/attendance-stats"
 import { QRGenerator } from "./qr-generator"
@@ -42,8 +50,13 @@ export default function QRCodeAttendanceContent({
   locale = "en",
   schoolId,
 }: QRCodeAttendanceContentProps) {
-  const { dictionary: dict } = useDictionary()
-  const t = (dict?.school?.attendance as any)?.qrCode as
+  const { dictionary: contextDict } = useDictionary()
+  const activeDict = dictionary || contextDict
+  const attendanceDict = activeDict?.attendance as
+    | Record<string, any>
+    | undefined
+  const t = attendanceDict?.qrCode as Record<string, string> | undefined
+  const statusDict = attendanceDict?.status as
     | Record<string, string>
     | undefined
 
@@ -51,8 +64,14 @@ export default function QRCodeAttendanceContent({
     "generate"
   )
   const [isTeacherMode, setIsTeacherMode] = useState(true) // Should come from auth/role
+  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
+  const [loadingClasses, setLoadingClasses] = useState(true)
+
   const {
     selectedClass,
+    setSelectedClass,
     selectedDate,
     attendance,
     stats,
@@ -64,6 +83,26 @@ export default function QRCodeAttendanceContent({
     // Set the current method to QR_CODE when component mounts
     setCurrentMethod("QR_CODE")
   }, [setCurrentMethod])
+
+  // Fetch available classes and auto-select the first class if none selected
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        const res = await getClassesForSelection()
+        if (res.success && res.data?.classes) {
+          setClasses(res.data.classes)
+          if (!selectedClass && res.data.classes.length > 0) {
+            setSelectedClass(res.data.classes[0].id)
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load classes for selection:", e)
+      } finally {
+        setLoadingClasses(false)
+      }
+    }
+    loadClasses()
+  }, [selectedClass, setSelectedClass])
 
   useEffect(() => {
     // Fetch attendance when class or date changes
@@ -80,7 +119,7 @@ export default function QRCodeAttendanceContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-purple-100 p-3">
             <QrCode className="h-6 w-6 text-purple-600" />
@@ -98,10 +137,31 @@ export default function QRCodeAttendanceContent({
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="text-purple-600">
-          <QrCode className="me-1 h-3 w-3" />
-          {t?.modeActive || "QR Mode Active"}
-        </Badge>
+
+        {/* Class Selector Dropdown */}
+        <div className="flex items-center gap-3">
+          {classes.length > 0 && (
+            <Select
+              value={selectedClass || ""}
+              onValueChange={(val) => setSelectedClass(val)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder={t?.selectClass || "اختر الفصل"} />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Badge variant="outline" className="shrink-0 text-purple-600">
+            <QrCode className="me-1 h-3 w-3" />
+            {t?.modeActive || "QR Mode Active"}
+          </Badge>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -110,6 +170,7 @@ export default function QRCodeAttendanceContent({
           stats={stats}
           records={attendance}
           showDetails={false}
+          dictionary={activeDict as any}
         />
       )}
 
@@ -144,15 +205,39 @@ export default function QRCodeAttendanceContent({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="py-4 text-center">
-                  <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+                <div className="flex flex-col items-center gap-4 py-6">
+                  <CircleAlert className="text-muted-foreground h-12 w-12" />
+                  {classes.length > 0 ? (
+                    <Select
+                      value={selectedClass || ""}
+                      onValueChange={(val) => setSelectedClass(val)}
+                    >
+                      <SelectTrigger className="w-[240px]">
+                        <SelectValue
+                          placeholder={t?.selectClass || "اختر الفصل"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            {cls.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : loadingClasses ? (
+                    <p className="text-muted-foreground text-sm">
+                      {attendanceDict?.loading?.classes ||
+                        "جاري تحميل الفصول..."}
+                    </p>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
           ) : (
             <QRGenerator
               classId={selectedClass}
-              dictionary={dictionary}
+              dictionary={activeDict || undefined}
               locale={locale}
             />
           )}
@@ -169,7 +254,7 @@ export default function QRCodeAttendanceContent({
                   "Attendance has been marked successfully",
               })
             }}
-            dictionary={dictionary}
+            dictionary={activeDict || undefined}
             locale={locale}
           />
         </TabsContent>
@@ -212,7 +297,7 @@ export default function QRCodeAttendanceContent({
                               {record.studentName || "Student"}
                             </p>
                             <p className="text-muted-foreground text-sm">
-                              ID: {record.studentId}
+                              {t?.studentIdPrefix || "ID"}: {record.studentId}
                             </p>
                           </div>
                         </div>
@@ -224,13 +309,13 @@ export default function QRCodeAttendanceContent({
                                 : "secondary"
                             }
                           >
-                            {record.status}
+                            {statusDict?.[record.status] || record.status}
                           </Badge>
                           <p className="text-muted-foreground mt-1 text-xs">
                             {record.checkInTime
-                              ? new Date(
-                                  record.checkInTime
-                                ).toLocaleTimeString()
+                              ? new Date(record.checkInTime).toLocaleTimeString(
+                                  locale
+                                )
                               : ""}
                           </p>
                         </div>

@@ -193,7 +193,6 @@ export function AttendanceStats({
           icon={<UserCheck className="text-chart-2 h-4 w-4" />}
           description={`${calculateAttendancePercentage(stats.present, stats.total)}% ${(t?.title as string | undefined)?.toLowerCase() || "attendance"}`}
           color="bg-chart-2/10"
-          percentage={calculateAttendancePercentage(stats.present, stats.total)}
         />
         <StatCard
           title={statusDict?.ABSENT || "Absent"}
