@@ -16,6 +16,7 @@ import { cache } from "react"
 import { Prisma } from "@prisma/client"
 
 import { db } from "@/lib/db"
+import { search } from "@/components/translation/search"
 
 // ============================================================================
 // Types
@@ -31,6 +32,8 @@ export type ResultListFilters = {
   yearLevelId?: string
   grade?: string
   search?: string // Search by student name or assignment title
+  /** UI display language — only consulted when `search` is set. */
+  displayLang?: "ar" | "en"
 }
 
 export type PaginationParams = {
@@ -306,6 +309,48 @@ export async function getResultsList(
   params: Partial<ResultQueryParams> = {}
 ) {
   const where = buildResultWhere(schoolId, params)
+
+  // Bilingual search: append reverse-translated OR conditions (cache-only,
+  // no API cost) on top of the raw `contains` clauses `buildResultWhere`
+  // already built, so a query typed in the display language also matches
+  // student/assignment/exam text stored in the other language.
+  // buildResultWhere() itself stays synchronous (its own unit tests assert
+  // that) — this only ADDS coverage after the fact.
+  if (params.search) {
+    const displayLang = params.displayLang ?? "ar"
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { preferredLanguage: true },
+    })
+    const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+
+    const [nameConditions, titleConditions] = await Promise.all([
+      search(
+        params.search,
+        ["firstName", "lastName"],
+        schoolId,
+        storageLang,
+        displayLang
+      ),
+      search(params.search, ["title"], schoolId, storageLang, displayLang),
+    ])
+
+    const additional: Prisma.ResultWhereInput[] = [
+      ...nameConditions.map((c) => ({ student: c }) as Prisma.ResultWhereInput),
+      ...titleConditions.map(
+        (c) => ({ assignment: c }) as Prisma.ResultWhereInput
+      ),
+      ...titleConditions.map((c) => ({ exam: c }) as Prisma.ResultWhereInput),
+    ]
+
+    const w = where as any
+    w.OR = Array.isArray(w.OR)
+      ? [...w.OR, ...additional]
+      : w.OR
+        ? [w.OR, ...additional]
+        : additional
+  }
+
   const orderBy = buildResultOrderBy(params.sort)
   const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 10)
 

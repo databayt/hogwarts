@@ -39,10 +39,15 @@ export async function getTenants(input: GetTenantsInput) {
     async () => {
       const skip = (input.page - 1) * input.perPage
       const where: Prisma.SchoolWhereInput = {
+        // `name` holds the school's own-language name; the English-name column
+        // holds what an admin supplied. The /en view DISPLAYS the latter, so
+        // filtering on `name` alone meant an operator typing what they saw on
+        // screen matched nothing.
         ...(input.search
           ? {
               OR: [
                 { name: { contains: input.search, mode: "insensitive" } },
+                { nameEn: { contains: input.search, mode: "insensitive" } },
                 { domain: { contains: input.search, mode: "insensitive" } },
               ],
             }

@@ -17,6 +17,7 @@ import {
 } from "@/components/atom/toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
 import { useDataTable } from "@/components/table/use-data-table"
@@ -46,6 +47,7 @@ function QuestionBankTableInner({
 }: QuestionBankTableProps) {
   const router = useRouter()
   const { dictionary: hookDict } = useDictionary()
+  const { locale } = useLocale()
   const t = hookDict?.school?.exams?.qbankUi
 
   // State for incremental loading
@@ -67,8 +69,10 @@ function QuestionBankTableInner({
   const handleDelete = useCallback(
     async (question: QuestionBankRow) => {
       try {
+        // Never build the sentence from the question text — that mixes
+        // scripts mid-string and breaks bidi rendering in Arabic.
         const ok = await confirmDeleteDialog(
-          `Delete question "${question.questionText.substring(0, 50)}..."?`
+          t?.deleteConfirm ?? "Delete this question?"
         )
         if (!ok) return
 
@@ -92,17 +96,21 @@ function QuestionBankTableInner({
         )
       }
     },
-    [refresh]
+    [refresh, t]
   )
 
   // Generate columns with callbacks
   const columns = useMemo(
     () =>
       getQuestionBankColumns({
+        // Without this the columns fall back to their "en" default, so the
+        // whole table rendered English on /ar even though every header has
+        // an Arabic string ready.
+        lang: locale,
         onDelete: handleDelete,
         subjects,
       }),
-    [handleDelete, subjects]
+    [handleDelete, subjects, locale]
   )
 
   const handleLoadMore = useCallback(async () => {

@@ -9,13 +9,43 @@ import { cn } from "@/lib/utils"
 import type { ViewMode } from "@/hooks/use-platform-view"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Toolbar, ToolbarGroup } from "@/components/atom/toolbar"
 import { Icons } from "@/components/icons"
+import { useOptionalDictionary } from "@/components/internationalization/dictionary-context"
+import { useLocale } from "@/components/internationalization/use-locale"
 // Simple filter component for select/multiSelect
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter"
 import { DataTableViewOptions } from "@/components/table/data-table-view-options"
 
 import { ExportButton, type ExportFormat } from "./export-button"
 import { ViewToggle } from "./view-toggle"
+
+/**
+ * Stable empty array for columns without static `meta.options`.
+ *
+ * WHY: `options={meta.options || []}` allocated a fresh `[]` on every render,
+ * which changed the prop identity passed into the `React.memo`'d
+ * `DataTableFacetedFilter` and defeated its memoization entirely.
+ */
+const EMPTY_OPTIONS: ReadonlyArray<{ label: string; value: string }> = []
+
+export interface PlatformToolbarTranslations {
+  search?: string
+  create?: string
+  reset?: string
+  tableView?: string
+  gridView?: string
+  switchToTable?: string
+  switchToGrid?: string
+  export?: string
+  exportCSV?: string
+  exporting?: string
+  view?: string
+  searchColumns?: string
+  noColumns?: string
+  all?: string
+  toggleColumns?: string
+}
 
 interface PlatformToolbarProps<TData> {
   /** TanStack table instance (for table view) */
@@ -42,30 +72,134 @@ interface PlatformToolbarProps<TData> {
   filters?: Record<string, unknown>
   /** Show column visibility toggle (table view only) */
   showColumnToggle?: boolean
+  /** Hide the grid/table view toggle (for table-only surfaces) */
+  showViewToggle?: boolean
   /** Additional actions to render */
   additionalActions?: React.ReactNode
-  /** i18n translations */
-  translations?: {
-    search?: string
-    create?: string
-    reset?: string
-    tableView?: string
-    gridView?: string
-    switchToTable?: string
-    switchToGrid?: string
-    export?: string
-    exportCSV?: string
-    exporting?: string
-    view?: string
-    searchColumns?: string
-    noColumns?: string
-    all?: string
-  }
+  /**
+   * i18n overrides. Any key omitted falls back to `school.common.*` from the
+   * dictionary context, so call sites only pass what genuinely differs.
+   */
+  translations?: PlatformToolbarTranslations
   /** Additional class names */
   className?: string
 }
 
-export function PlatformToolbar<TData>({
+const DEFAULT_EXPORT_FORMATS: ExportFormat[] = ["csv"]
+
+/**
+ * Resolves toolbar labels from, in priority order:
+ *   1. the explicit `translations` prop (per-call-site override)
+ *   2. `school.common.*` in the dictionary context (the shared source)
+ *   3. an English literal (only reachable outside a DictionaryProvider —
+ *      tests, Storybook, standalone previews)
+ *
+ * WHY a hook: previously every call site had to hand-assemble all 14 keys, so
+ * most passed only a partial object and the rest silently rendered English to
+ * Arabic users. Defaulting from the dictionary makes the localized path the
+ * one you get for free.
+ */
+/**
+ * Last-resort strings for when no DictionaryProvider is mounted (tests,
+ * Storybook, standalone previews). Mirrors the shape used by
+ * `use-table-translations.ts`, which covers the load-more/empty-state chrome —
+ * this hook covers the toolbar chrome. The two sets of keys are disjoint.
+ */
+const FALLBACK: Record<"ar" | "en", Required<PlatformToolbarTranslations>> = {
+  en: {
+    search: "Search...",
+    create: "Create",
+    reset: "Reset",
+    tableView: "Table View",
+    gridView: "Grid View",
+    switchToTable: "Switch to table view",
+    switchToGrid: "Switch to grid view",
+    export: "Export",
+    exportCSV: "Export CSV",
+    exporting: "Exporting...",
+    view: "View",
+    searchColumns: "Search columns...",
+    noColumns: "No columns found.",
+    all: "All",
+    toggleColumns: "Toggle columns",
+  },
+  ar: {
+    search: "بحث...",
+    create: "إنشاء",
+    reset: "إعادة تعيين",
+    tableView: "عرض الجدول",
+    gridView: "عرض الشبكة",
+    switchToTable: "التبديل إلى عرض الجدول",
+    switchToGrid: "التبديل إلى عرض الشبكة",
+    export: "تصدير",
+    exportCSV: "تصدير CSV",
+    exporting: "جاري التصدير...",
+    view: "عرض",
+    searchColumns: "البحث في الأعمدة...",
+    noColumns: "لم يتم العثور على أعمدة.",
+    all: "الكل",
+    toggleColumns: "تبديل الأعمدة",
+  },
+}
+
+function useToolbarTranslations(
+  overrides: PlatformToolbarTranslations | undefined
+): Required<PlatformToolbarTranslations> {
+  const { locale } = useLocale()
+  const dictionary = useOptionalDictionary()
+  const common = dictionary?.school?.common as
+    | Record<string, string>
+    | undefined
+
+  // WHY PER-KEY DEPS (not the object identity): nearly every call site builds
+  // `translations={{ ... }}` as a fresh literal each render. Depending on the
+  // object would recompute — and hand fresh prop objects to the memoized
+  // children — on every keystroke. Depending on the values keeps `t` stable.
+  return React.useMemo(() => {
+    const base = FALLBACK[locale === "ar" ? "ar" : "en"]
+    const pick = (key: keyof PlatformToolbarTranslations): string =>
+      overrides?.[key] || common?.[key] || base[key]
+
+    return {
+      search: pick("search"),
+      create: pick("create"),
+      reset: pick("reset"),
+      tableView: pick("tableView"),
+      gridView: pick("gridView"),
+      switchToTable: pick("switchToTable"),
+      switchToGrid: pick("switchToGrid"),
+      export: pick("export"),
+      exportCSV: pick("exportCSV"),
+      exporting: pick("exporting"),
+      view: pick("view"),
+      searchColumns: pick("searchColumns"),
+      noColumns: pick("noColumns"),
+      all: pick("all"),
+      toggleColumns: pick("toggleColumns"),
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    locale,
+    common,
+    overrides?.search,
+    overrides?.create,
+    overrides?.reset,
+    overrides?.tableView,
+    overrides?.gridView,
+    overrides?.switchToTable,
+    overrides?.switchToGrid,
+    overrides?.export,
+    overrides?.exportCSV,
+    overrides?.exporting,
+    overrides?.view,
+    overrides?.searchColumns,
+    overrides?.noColumns,
+    overrides?.all,
+    overrides?.toggleColumns,
+  ])
+}
+
+function PlatformToolbarInner<TData>({
   table,
   view,
   onToggleView,
@@ -75,38 +209,39 @@ export function PlatformToolbar<TData>({
   onCreate,
   getCSV,
   entityName = "data",
-  exportFormats = ["csv"],
+  exportFormats = DEFAULT_EXPORT_FORMATS,
   filters,
   showColumnToggle = true,
+  showViewToggle = true,
   additionalActions,
-  translations = {},
+  translations,
   className,
 }: PlatformToolbarProps<TData>) {
-  const t = {
-    search: translations.search || "Search...",
-    create: translations.create || "Create",
-    reset: translations.reset || "Reset",
-    tableView: translations.tableView || "Table View",
-    gridView: translations.gridView || "Grid View",
-    switchToTable: translations.switchToTable || "Switch to table view",
-    switchToGrid: translations.switchToGrid || "Switch to grid view",
-    export: translations.export || "Export",
-    exportCSV: translations.exportCSV || "Export CSV",
-    exporting: translations.exporting || "Exporting...",
-    view: translations.view || "View",
-    searchColumns: translations.searchColumns || "Search columns...",
-    noColumns: translations.noColumns || "No columns found.",
-    all: translations.all || "All",
-  }
+  const t = useToolbarTranslations(translations)
 
-  // Check if there are active filters (from table state or search)
-  const hasActiveFilters = React.useMemo(() => {
-    if (searchValue) return true
-    if (table) {
-      return table.getState().columnFilters.length > 0
-    }
-    return false
-  }, [searchValue, table])
+  // WHY memoized: this ran a .filter().map() plus a JSX allocation per column
+  // on every render — i.e. on every keystroke, for tables with 15-30 columns.
+  const filterableColumns = React.useMemo(
+    () =>
+      table
+        ? table
+            .getAllColumns()
+            .filter((column) => column.getCanFilter())
+            .filter((column) => {
+              const meta = column.columnDef.meta
+              return Boolean(meta?.variant) && meta?.variant !== "text"
+            })
+        : [],
+    [table]
+  )
+
+  // WHY NOT useMemo: `table` is referentially stable and its filter state
+  // mutates in place, so a `[searchValue, table]` dep list never invalidates on
+  // a column-filter change — the Reset button stayed hidden forever. Same trap
+  // as `allVisible` in DataTableViewOptions. This read is trivially cheap.
+  const hasActiveFilters = Boolean(
+    searchValue || (table && table.getState().columnFilters.length > 0)
+  )
 
   const handleReset = React.useCallback(() => {
     onSearchChange?.("")
@@ -115,52 +250,66 @@ export function PlatformToolbar<TData>({
     }
   }, [onSearchChange, table])
 
+  const handleSearchChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onSearchChange?.(event.target.value)
+    },
+    [onSearchChange]
+  )
+
+  // Stable prop objects for the memoized children below. Without these, each
+  // render handed them a fresh object and their React.memo never held.
+  const viewOptionsTranslations = React.useMemo(
+    () => ({
+      view: t.view,
+      searchColumns: t.searchColumns,
+      noColumns: t.noColumns,
+      all: t.all,
+      toggleColumns: t.toggleColumns,
+    }),
+    [t.view, t.searchColumns, t.noColumns, t.all, t.toggleColumns]
+  )
+
+  const viewToggleTranslations = React.useMemo(
+    () => ({
+      tableView: t.tableView,
+      gridView: t.gridView,
+      switchToTable: t.switchToTable,
+      switchToGrid: t.switchToGrid,
+    }),
+    [t.tableView, t.gridView, t.switchToTable, t.switchToGrid]
+  )
+
+  const exportTranslations = React.useMemo(
+    () => ({
+      export: t.export,
+      exportCSV: t.exportCSV,
+      exporting: t.exporting,
+    }),
+    [t.export, t.exportCSV, t.exporting]
+  )
+
   return (
-    <div
-      role="toolbar"
-      aria-orientation="horizontal"
-      className={cn("flex w-full flex-wrap items-center gap-2 p-1", className)}
-    >
-      {/* Left side: Search and filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Search input */}
+    <Toolbar className={cn("flex-wrap p-1", className)}>
+      {/* Start: search and filters */}
+      <ToolbarGroup>
         {onSearchChange && (
           <div className="relative">
             <Icons.search className="text-muted-foreground absolute start-2.5 top-2.5 h-4 w-4" />
             <Input
               placeholder={searchPlaceholder || t.search}
               value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={handleSearchChange}
               className="h-9 w-40 ps-8 lg:w-56"
             />
           </div>
         )}
 
         {/* Column filters (available in both table and grid views) */}
-        {table && (
-          <>
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanFilter())
-              .map((column) => {
-                const meta = column.columnDef.meta
-                if (!meta?.variant || meta.variant === "text") return null
+        {filterableColumns.map((column) => (
+          <PlatformToolbarFilter key={column.id} column={column} />
+        ))}
 
-                // Render select/multiSelect filters
-                return (
-                  <DataTableFilter
-                    key={column.id}
-                    column={column}
-                    title={meta.label || column.id}
-                    options={meta.options || []}
-                    multiple={meta.variant === "multiSelect"}
-                  />
-                )
-              })}
-          </>
-        )}
-
-        {/* Reset button */}
         {hasActiveFilters && (
           <Button
             variant="outline"
@@ -172,36 +321,25 @@ export function PlatformToolbar<TData>({
             {t.reset}
           </Button>
         )}
-      </div>
+      </ToolbarGroup>
 
-      {/* Right side: Actions */}
-      <div className="flex items-center gap-2">
-        {/* Column visibility (table view only) */}
+      {/* End: actions */}
+      <ToolbarGroup position="end">
         {view === "table" && table && showColumnToggle && (
           <DataTableViewOptions
             table={table}
-            translations={{
-              view: t.view,
-              searchColumns: t.searchColumns,
-              noColumns: t.noColumns,
-              all: t.all,
-            }}
+            translations={viewOptionsTranslations}
           />
         )}
 
-        {/* View toggle */}
-        <ViewToggle
-          view={view}
-          onToggle={onToggleView}
-          translations={{
-            tableView: t.tableView,
-            gridView: t.gridView,
-            switchToTable: t.switchToTable,
-            switchToGrid: t.switchToGrid,
-          }}
-        />
+        {showViewToggle && (
+          <ViewToggle
+            view={view}
+            onToggle={onToggleView}
+            translations={viewToggleTranslations}
+          />
+        )}
 
-        {/* Export button */}
         {getCSV && (
           <ExportButton
             getCSV={getCSV}
@@ -209,18 +347,12 @@ export function PlatformToolbar<TData>({
             entityName={entityName}
             formats={exportFormats}
             size="icon"
-            translations={{
-              export: t.export,
-              exportCSV: t.exportCSV,
-              exporting: t.exporting,
-            }}
+            translations={exportTranslations}
           />
         )}
 
-        {/* Additional actions */}
         {additionalActions}
 
-        {/* Create button */}
         {onCreate && (
           <Button
             type="button"
@@ -234,30 +366,49 @@ export function PlatformToolbar<TData>({
             <Icons.plus className="h-4 w-4" />
           </Button>
         )}
-      </div>
-    </div>
+      </ToolbarGroup>
+    </Toolbar>
   )
 }
 
-interface DataTableFilterProps<TData> {
+interface PlatformToolbarFilterProps<TData> {
   column: Column<TData>
-  title: string
-  options: Array<{ label: string; value: string }>
-  multiple?: boolean
 }
 
-function DataTableFilter<TData>({
+function PlatformToolbarFilterInner<TData>({
   column,
-  title,
-  options,
-  multiple = false,
-}: DataTableFilterProps<TData>) {
+}: PlatformToolbarFilterProps<TData>) {
+  const meta = column.columnDef.meta
+
   return (
     <DataTableFacetedFilter
       column={column}
-      title={title}
-      options={options as any}
-      multiple={multiple}
+      title={meta?.label || column.id}
+      options={(meta?.options ?? EMPTY_OPTIONS) as never}
+      multiple={meta?.variant === "multiSelect"}
     />
   )
 }
+
+/**
+ * DELIBERATELY NOT React.memo'd — see the note on PlatformToolbar below. This
+ * wrapper receives a TanStack `Column`, which has the same stable-identity
+ * hazard as `table`.
+ */
+const PlatformToolbarFilter = PlatformToolbarFilterInner
+
+/**
+ * DELIBERATELY NOT wrapped in React.memo.
+ *
+ * TanStack's `table` object is referentially STABLE and mutates in place, so a
+ * shallow prop compare cannot see a state change. Now that `translations` and
+ * `options` are identity-stable, memoizing here would make every prop compare
+ * equal after a facet-filter change — and `hasActiveFilters` (which reads
+ * `table.getState().columnFilters`) would silently render stale, leaving the
+ * Reset button stuck. The same trap was found empirically on DataTable /
+ * DataTableLoadMore, where the memo swallowed newly loaded rows.
+ *
+ * The per-keystroke win comes from the memoized `filterableColumns` and the
+ * stable child prop objects below, not from memoizing this component.
+ */
+export const PlatformToolbar = PlatformToolbarInner

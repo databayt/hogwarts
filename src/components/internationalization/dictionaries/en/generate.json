@@ -1,10 +1,8 @@
 {
   "title": "Auto-Generate Exams",
   "description": "Create, manage, and generate exams with intelligent question selection",
-
   "pageTitle": "Auto-Generate Exams",
   "pageDescription": "Create, manage, and generate exams with intelligent question selection",
-
   "stats": {
     "questions": "Questions",
     "templates": "Templates",
@@ -13,7 +11,6 @@
     "reusableBlueprints": "Reusable blueprints",
     "examsCreated": "Exams created"
   },
-
   "actions": {
     "viewQuestions": "View Questions",
     "addQuestion": "Add Question",
@@ -32,7 +29,6 @@
     "remove": "Remove",
     "actions": "Actions"
   },
-
   "cards": {
     "questionBank": {
       "title": "Question Bank",
@@ -55,7 +51,6 @@
       "details": "View detailed analytics on question usage, success rates, and perceived difficulty. Identify questions that work well and those that need adjustment."
     }
   },
-
   "quickStart": {
     "title": "Quick Start Guide",
     "description": "Get started with auto-generating exams in 3 easy steps",
@@ -72,13 +67,11 @@
       "description": "Select a template and let the system intelligently pick questions. Preview and customize before finalizing."
     }
   },
-
   "questionBank": {
     "title": "Question Bank",
     "createQuestion": "Create Question",
     "editQuestion": "Edit Question",
     "viewQuestion": "View Question",
-
     "form": {
       "subjectLabel": "Subject",
       "subjectPlaceholder": "Select subject",
@@ -96,7 +89,7 @@
       "optionsLabel": "Options",
       "addOption": "Add Option",
       "optionPlaceholder": "Option {{number}}",
-      "explanationPlaceholder": "Explanation (optional)",
+      "explanationPlaceholder": "Explain the concept or provide additional context...",
       "acceptedAnswersLabel": "Accepted Answers",
       "addAnswer": "Add Answer",
       "answerPlaceholder": "Answer {{number}}",
@@ -110,10 +103,8 @@
       "tagsDescription": "Press Enter to add tags (e.g., algebra, geometry)",
       "tagsPlaceholder": "Type and press Enter",
       "explanationLabel": "Explanation (Optional)",
-      "explanationPlaceholder": "Explain the concept or provide additional context...",
       "imageUrlLabel": "Image URL (Optional)"
     },
-
     "columns": {
       "question": "Question",
       "type": "Type",
@@ -128,7 +119,6 @@
       "timesUsed": "{{count}} times",
       "noData": "-"
     },
-
     "messages": {
       "questionCreated": "Question created!",
       "questionUpdated": "Question updated!",
@@ -138,7 +128,6 @@
       "failedToDelete": "Failed to delete"
     }
   },
-
   "columns": {
     "templateName": "Template Name",
     "subject": "Subject",
@@ -166,7 +155,6 @@
     "edit": "Edit",
     "useTemplate": "Use Template"
   },
-
   "form": {
     "templateNameLabel": "Template Name",
     "templateNamePlaceholder": "e.g., Midterm Template - Mathematics",
@@ -196,14 +184,12 @@
     "update": "Update",
     "create": "Create"
   },
-
   "templates": {
     "title": "Exam Templates",
     "description": "Create reusable exam blueprints with specific question distribution rules",
     "createTemplate": "Create Exam Template",
     "editTemplate": "Edit Template",
     "viewTemplate": "View Template",
-
     "form": {
       "templateNameLabel": "Template Name",
       "templateNamePlaceholder": "e.g., Midterm Template - Mathematics",
@@ -217,7 +203,6 @@
       "distributionDescription": "Total Questions: {{count}}",
       "bloomDistributionLabel": "Bloom Distribution (Optional)"
     },
-
     "distribution": {
       "title": "Question Distribution",
       "description": "Specify how many questions of each type and difficulty level",
@@ -229,7 +214,6 @@
       "columnTotal": "Column Total",
       "grandTotal": "Grand Total"
     },
-
     "columns": {
       "templateName": "Template Name",
       "subject": "Subject",
@@ -244,7 +228,6 @@
       "questionsFormat": "{{count}} questions",
       "usedFormat": "{{count}} times"
     },
-
     "messages": {
       "templateCreated": "Template created!",
       "templateUpdated": "Template updated!",
@@ -254,7 +237,6 @@
       "failedToDelete": "Failed to delete"
     }
   },
-
   "questionTypes": {
     "MULTIPLE_CHOICE": {
       "label": "Multiple Choice",
@@ -277,7 +259,6 @@
       "description": "Extended written response with detailed analysis"
     }
   },
-
   "difficultyLevels": {
     "EASY": {
       "label": "Easy",
@@ -292,7 +273,6 @@
       "description": "Evaluation and creation"
     }
   },
-
   "bloomLevels": {
     "REMEMBER": {
       "label": "Remember",
@@ -325,13 +305,11 @@
       "examples": "Design, Construct, Develop, Formulate"
     }
   },
-
   "sources": {
     "MANUAL": "Manual",
     "AI": "AI",
     "IMPORTED": "Imported"
   },
-
   "common": {
     "loading": "Loading...",
     "noResults": "No results found",
@@ -345,7 +323,6 @@
     "loadMore": "Load More",
     "showingResults": "Showing {{count}} of {{total}} results"
   },
-
   "paper": {
     "title": "Exam Paper Generation",
     "subtitle": "Configure and print exam papers",
@@ -359,7 +336,6 @@
     "generate": "Generate",
     "papers": "Papers",
     "settings": "Settings",
-
     "config": {
       "template_layout": "Template & Layout",
       "template_layout_desc": "Choose the exam paper style and layout",
@@ -414,7 +390,6 @@
       "config_saved": "Paper configuration saved successfully",
       "unexpected_error": "An unexpected error occurred"
     },
-
     "generation": {
       "generate_single": "Generate Single Version",
       "generate_single_desc": "Generate a single version of the exam paper",
@@ -437,7 +412,6 @@
       "generating_all": "Generating all versions",
       "generating_answer_key": "Generating answer key"
     },
-
     "list": {
       "generated_papers": "Generated Papers",
       "no_papers_desc": "No papers have been generated yet",
@@ -452,18 +426,15 @@
       "status": "Status",
       "delete": "Delete"
     },
-
     "preview_title": "Preview",
     "loading_preview": "Loading preview...",
     "no_preview_data": "No data available for preview",
-
     "conflict": {
       "available": "Available",
       "click_to_select": "Click to select this time",
       "proposed_exam": "Proposed Exam",
       "conflicts_detected": "{count} Conflict{s} Detected"
     },
-
     "export": {
       "exam_list": "Exam List",
       "export_label": "Export",
@@ -471,7 +442,6 @@
       "exporting": "Exporting..."
     }
   },
-
   "wizard": {
     "steps": {
       "gallery": {
@@ -527,5 +497,30 @@
       "title": "Preview & Generate",
       "description": "Review the exam configuration before generating."
     }
+  },
+  "contributions": {
+    "title": "My contributions",
+    "description": "Track exams and templates you contributed to the global catalog.",
+    "total": "Total",
+    "approved": "Approved",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "tabExams": "Exams",
+    "tabTemplates": "Templates",
+    "noExams": "No exam contributions yet",
+    "noExamsHint": "Contribute exams from the generation page to see them here.",
+    "noTemplates": "No template contributions yet",
+    "noTemplatesHint": "Contribute exam templates to see them here.",
+    "minutes": "min",
+    "marks": "marks"
+  },
+  "catalog": {
+    "title": "Exam catalog",
+    "description": "Browse and adopt exams from the global catalog"
+  },
+  "versions": {
+    "title": "Exam versions",
+    "description": "Manage generated versions of this exam",
+    "emptyDescription": "Select an exam to view its versions."
   }
 }

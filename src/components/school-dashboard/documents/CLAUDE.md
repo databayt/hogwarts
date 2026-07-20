@@ -35,6 +35,19 @@ and [ISSUE](ISSUE.md) for status + the pending additive migration SQL.
   report-cards table via the reusable `GenerateWithTemplateButton` +
   `generateFromDefaultTemplate(category, entityId)` (picks the school's default/most-recent
   active template). Deferred: docx→PDF, HTML templates, the remaining category resolvers.
+- **No standalone route — hosted by exams + grades (2026-07-20).** `/documents` and its
+  sidebar entry were deleted. `content.tsx` takes a `categories` prop and is mounted at
+  `/exams/templates` (`EXAM_PAPER` + `CERTIFICATE`) and `/grades/templates`
+  (`REPORT_CARD`). `revalidatePath` in `actions.ts` now targets those two paths.
+  `DocumentsManager` + `UploadTemplateDialog` read `dictionary.school.documents.*` —
+  the hardcoded bilingual `L` objects are gone.
+- **`EXAM_PAPER` has a coupling flow, not an id box (2026-07-20).** `use-exam-template-dialog.tsx`
+  - `exam-paper-flow.ts` bind a layout to exam data: pick an existing `GeneratedExam`, or
+    pick a blueprint (`SchoolExamTemplate`) + class + title + date and let
+    `generateExamPaperFromTemplate` create `SchoolExam`+`GeneratedExam` in one transaction,
+    run `autoGenerateExamQuestions`, then fill. Coverage badges intersect the template's
+    detected `mergeFields` with `FIELD_VOCAB[category]` so unsupported tags are visible
+    BEFORE generating. Other categories still use the entity-id input.
 - **Generation is role-gated** — `generateDocument`/`generateDocumentsBulk`/
   `generateFromDefaultTemplate` require `MANAGER_ROLES` (ADMIN/DEVELOPER/TEACHER). The
   resolver scopes by `schoolId` but takes an arbitrary `entityId`, so without the gate any

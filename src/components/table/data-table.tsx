@@ -1,6 +1,8 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+"use client"
+
 import * as React from "react"
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
 
@@ -17,6 +19,10 @@ import {
 } from "@/components/ui/table"
 import { DataTableLoadMore } from "@/components/table/data-table-load-more"
 import { DataTablePagination } from "@/components/table/data-table-pagination"
+import {
+  useTableTranslations,
+  type TableTranslations,
+} from "@/components/table/use-table-translations"
 import { getCommonPinningStyles } from "@/components/table/utils"
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
@@ -27,12 +33,7 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   isLoading?: boolean
   onLoadMore?: () => void
   getRowClassName?: (row: TData) => string | undefined
-  translations?: {
-    loadMore?: string
-    loading?: string
-    noResults?: string
-    rowsSelected?: string
-  }
+  translations?: TableTranslations
 }
 
 function DataTableInner<TData>({
@@ -48,6 +49,28 @@ function DataTableInner<TData>({
   translations,
   ...props
 }: DataTableProps<TData>) {
+  const t = useTableTranslations(translations)
+
+  // KEEP pageSize IN STEP WITH THE LOADED ROWS (load-more mode only).
+  //
+  // Call sites size their single page with `initialState.pagination.pageSize =
+  // data.length`. But TanStack reads `initialState` ONCE, on the first render —
+  // it is not reactive. So after "load more" grew `data` from 20 to 40, pageSize
+  // stayed pinned at 20: the extra rows were fetched, stored, and then silently
+  // clipped by the pagination row model. The button appeared to do nothing.
+  //
+  // Re-syncing here fixes every load-more table at once, and works no matter how
+  // the caller built its table instance.
+  const coreRowCount = table.getCoreRowModel().rows.length
+  const currentPageSize = table.getState().pagination.pageSize
+
+  React.useEffect(() => {
+    if (paginationMode !== "load-more") return
+    if (coreRowCount > 0 && currentPageSize !== coreRowCount) {
+      table.setPageSize(coreRowCount)
+    }
+  }, [paginationMode, coreRowCount, currentPageSize, table])
+
   return (
     <div className={cn("flex w-full flex-col gap-2.5", className)} {...props}>
       {children}
@@ -128,7 +151,7 @@ function DataTableInner<TData>({
                   colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
-                  {translations?.noResults || "No results."}
+                  {t.noResults}
                 </TableCell>
               </TableRow>
             )}
@@ -155,4 +178,15 @@ function DataTableInner<TData>({
   )
 }
 
-export const DataTable = React.memo(DataTableInner) as typeof DataTableInner
+// NOT memoized, deliberately.
+//
+// Everything this component renders — rows, headers, selection — is read off
+// the TanStack `table` object, which is referentially STABLE and mutates in
+// place. A shallow prop compare therefore cannot see new rows arriving, so
+// React.memo here would skip the very re-render that shows them.
+//
+// It only ever "worked" because `onLoadMore` used to get a fresh identity on
+// every parent render, accidentally busting the memo each time. Once that
+// callback was stabilized the bug surfaced: "load more" fetched rows that were
+// never painted. Correctness beats a memo that was never actually holding.
+export const DataTable = DataTableInner

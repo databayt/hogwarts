@@ -15,7 +15,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { ActionMenu, ActionMenuItem } from "@/components/atom/action-menu"
-import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -27,6 +26,7 @@ import { DataTableColumnHeader } from "@/components/table/data-table-column-head
 export interface ColumnCallbacks {
   onDelete?: (announcement: AnnouncementRow) => void
   onTogglePublish?: (announcement: AnnouncementRow) => void
+  onEdit?: (announcement: AnnouncementRow) => void
   permissions?: UIPermissions
 }
 
@@ -153,9 +153,13 @@ export const getAnnouncementColumns = (
       header: () => <span className="sr-only">{columns.actions}</span>,
       cell: ({ row }) => {
         const announcement = row.original
-        const { openModal } = useModal()
 
-        const onEdit = () => openModal(announcement.id)
+        // Was `useModal().openModal(id)`, which both broke the rules of hooks
+        // (a cell renderer is not a component) and opened nothing — no modal
+        // was ever mounted for announcements. Edit is a plain callback now.
+        const onEdit = () => {
+          callbacks?.onEdit?.(announcement)
+        }
         const onToggle = () => {
           // Use callback for instant optimistic update
           callbacks?.onTogglePublish?.(announcement)

@@ -57,27 +57,33 @@ questionText,questionType,difficulty,bloomLevel,points,options,sampleAnswer,tags
 "What is 2+2?",MULTIPLE_CHOICE,EASY,REMEMBER,1,"[{""text"":""4"",""isCorrect"":true},{""text"":""3"",""isCorrect"":false}]","","math,arithmetic"
 ```
 
-## Create an exam — three modes
+## Create an exam — two modes
 
-The front door (`/exams/new`) is a single screen offering three creation modes. All three converge on the same downstream — a `GeneratedExam` with questions → paper preview → schedule — and differ only in how the blueprint and questions are seeded. This mirrors the market's fastest patterns (see [assessment tools](/docs/competitors#assessment--exam-creation-tools)); the long configuration wizard is demoted to the short "from scratch" fallback.
+The front door (`/exams/new`) is a single screen offering two creation modes. Both converge on the same downstream — a `GeneratedExam` with questions → paper preview → schedule — and differ only in how the blueprint and questions are seeded.
 
-| Mode                   | Route                      | Seeds from                                                                       | Speed   |
-| ---------------------- | -------------------------- | -------------------------------------------------------------------------------- | ------- |
-| **Adopt a template**   | `/exams/generate/catalog`  | A platform-curated, curriculum-aligned `ExamTemplate` (browse → preview → Adopt) | Fastest |
-| **Generate with AI**   | `/exams/qbank/ai-generate` | A topic prompt → AI-drafted questions into your bank (review before saving)      | Fast    |
-| **Build from scratch** | `/exams/template/add`      | A short 5-step wizard you fill in                                                | Custom  |
+| Mode                 | Route                      | Seeds from                                                                       | Speed   |
+| -------------------- | -------------------------- | -------------------------------------------------------------------------------- | ------- |
+| **Adopt a template** | `/exams/generate/catalog`  | A platform-curated, curriculum-aligned `ExamTemplate` (browse → preview → Adopt) | Fastest |
+| **Generate with AI** | `/exams/qbank/ai-generate` | A topic prompt → AI-drafted questions into your bank (review before saving)      | Fast    |
 
-The **build-from-scratch wizard** is 5 one-screen steps — `gallery → basics → questions → difficulty → review` — never scrolling past the first screen:
+The in-app "build a template from primitives" wizard was removed — a paper's **layout** is now an uploaded `.docx` (see [Document templates](#document-templates) below), while its **question distribution** lives on a `SchoolExamTemplate` blueprint seeded by adopting a catalog blueprint.
 
-| Step       | Collects                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| Start      | Pick a **region preset** (sd/sa/us/mena or blank) — one choice sets the whole paper appearance |
-| Basics     | Name, subject, exam type, duration, total marks                                                |
-| Questions  | Question types + count each                                                                    |
-| Difficulty | One compact table (types × Easy/Medium/Hard), pre-filled and balanced                          |
-| Review     | Summary + passing score → save                                                                 |
+## Document templates
 
-Appearance is **region-preset only** — a single curriculum-aligned layout choice, not per-slot configuration (the over-engineering documented in the [design lessons](/docs/competitors#assessment--exam-creation-tools)). The preset writes a complete `blockConfig` (slots + decorations) + `printConfig`, so the printed paper loses no fidelity.
+Schools print on their own mandated stationery, so the paper's **layout** is a `.docx` the school uploads — not something built in-app. `/exams/templates` (staff only: DEVELOPER / ADMIN / TEACHER) manages two categories, **Exam papers** and **Certificates**; report-card layouts live at `/grades/templates`. There is no standalone `/documents` page.
+
+Author the Word file with `{{tag}}` placeholders and `{#loop}…{/loop}` sections, upload it, and the merge fields are detected automatically and shown back to you. The full vocabulary per category is listed in the upload dialog.
+
+### Filling an exam paper
+
+An uploaded exam-paper template is bound to real exam data through **Use template**, which offers two sources:
+
+| Source           | What you pick                                        | What happens                                                                                              |
+| ---------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| An existing exam | A `GeneratedExam` that already has questions         | Fills your layout directly                                                                                |
+| Build one now    | A blueprint + class + paper title + date + exam type | Creates the `SchoolExam` + `GeneratedExam`, auto-selects questions from the bank per the blueprint, fills |
+
+Before generating, the dialog shows **coverage** — every tag detected in your template, marked as either fillable or unsupported — so a mismatch is visible before you download rather than as a blank in the printed paper. Output is `.docx`; PDF conversion is deferred.
 
 ## Generation
 
@@ -88,6 +94,7 @@ Appearance is **region-preset only** — a single curriculum-aligned layout choi
 | `/exams/qbank/ai-generate`      | AI-drafted questions from a topic prompt       |
 | `/exams/generate/versions`      | Multiple shuffled versions                     |
 | `/exams/generate/contributions` | Author tracking                                |
+| `/exams/templates`              | Your own `.docx` layouts (upload + fill)       |
 
 Smart selection: group by type and difficulty, fill distribution, apply Bloom distribution, seeded randomization, prevent duplicates across versions.
 

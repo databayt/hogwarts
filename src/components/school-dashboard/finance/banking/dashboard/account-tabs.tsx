@@ -7,16 +7,20 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoaderCircle } from "lucide-react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { formatAmount } from "@/components/school-dashboard/finance/banking/lib/utils"
 
 interface AccountTabsProps {
   accounts: any[]
   currentAccountId: string
   dictionary: any
+  currency: string
 }
 
 interface AccountTabTriggerProps {
   account: any
+  currency: string
+  locale: string
 }
 
 /**
@@ -25,21 +29,25 @@ interface AccountTabTriggerProps {
  */
 const AccountTabTrigger = memo(function AccountTabTrigger({
   account,
+  currency,
+  locale,
 }: AccountTabTriggerProps) {
   // Format amount once and memoize
   const formattedBalance = useMemo(
-    () => formatAmount(account.currentBalance),
-    [account.currentBalance]
+    () => formatAmount(account.currentBalance, locale, currency),
+    [account.currentBalance, locale, currency]
   )
 
   return (
     <TabsTrigger
       key={account.id}
       value={account.id}
-      className="flex flex-col items-start gap-1 text-start"
+      className="data-[state=active]:bg-muted h-auto flex-col items-start gap-1 rounded-lg border-0 px-4 py-3 text-start shadow-none data-[state=active]:shadow-none"
     >
       <span className="text-sm font-medium">{account.name}</span>
-      <span className="text-muted-foreground text-xs">{formattedBalance}</span>
+      <span className="text-muted-foreground text-xs tabular-nums">
+        {formattedBalance}
+      </span>
     </TabsTrigger>
   )
 })
@@ -54,7 +62,9 @@ export const AccountTabs = memo(function AccountTabs({
   accounts,
   currentAccountId,
   dictionary,
+  currency,
 }: AccountTabsProps) {
+  const { locale } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -87,9 +97,17 @@ export const AccountTabs = memo(function AccountTabs({
   return (
     <div className="relative">
       <Tabs value={currentAccountId} onValueChange={handleAccountChange}>
-        <TabsList className="grid w-full" style={gridTemplate}>
+        <TabsList
+          className="grid h-auto w-full gap-1 bg-transparent p-0"
+          style={gridTemplate}
+        >
           {accounts.map((account: any) => (
-            <AccountTabTrigger key={account.id} account={account} />
+            <AccountTabTrigger
+              key={account.id}
+              account={account}
+              currency={currency}
+              locale={locale}
+            />
           ))}
         </TabsList>
       </Tabs>

@@ -22,7 +22,15 @@ export default async function CertificateVerifyPage({
 }: VerifyPageProps) {
   const { code, lang } = await params
   const dictionary = await getDictionary(lang)
+  const d = dictionary?.school?.exams?.certificateVerify
   const result = await verifyCertificate({ code })
+
+  // Public page: pin the calendar + zone so the server and client agree.
+  const formatDate = (value: Date | string) =>
+    new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    }).format(new Date(value))
 
   if (!result.success) {
     return (
@@ -42,15 +50,18 @@ export default async function CertificateVerifyPage({
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold">Certificate Not Found</h2>
+        <h2 className="text-xl font-semibold">{d?.notFoundTitle}</h2>
         <p className="text-muted-foreground max-w-md text-center text-sm">
-          The verification code is invalid or the certificate has been revoked.
+          {d?.notFoundDesc}
         </p>
       </div>
     )
   }
 
   const cert = result.data!
+  const statusLabels = d?.status as
+    | Record<string, string | undefined>
+    | undefined
 
   return (
     <div className="mx-auto max-w-lg space-y-6 py-12">
@@ -70,50 +81,50 @@ export default async function CertificateVerifyPage({
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold">Certificate Verified</h2>
+        <h2 className="text-2xl font-bold">{d?.verifiedTitle}</h2>
+        <p className="text-muted-foreground text-sm">{d?.verifiedDesc}</p>
         <p className="text-muted-foreground text-sm">
-          This certificate is authentic and currently {cert.status}.
+          {d?.statusLabel}:{" "}
+          <span className="font-medium">
+            {statusLabels?.[cert.status?.toLowerCase()] ?? cert.status}
+          </span>
         </p>
       </div>
 
       <div className="rounded-lg border p-6">
         <dl className="space-y-4">
           <div>
-            <dt className="text-muted-foreground text-sm">Recipient</dt>
+            <dt className="text-muted-foreground text-sm">{d?.recipient}</dt>
             <dd className="text-lg font-medium">{cert.recipientName}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-sm">Exam</dt>
+            <dt className="text-muted-foreground text-sm">{d?.exam}</dt>
             <dd className="font-medium">{cert.examTitle}</dd>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-muted-foreground text-sm">Score</dt>
+              <dt className="text-muted-foreground text-sm">{d?.score}</dt>
               <dd className="font-medium">{cert.score.toFixed(1)}%</dd>
             </div>
             {cert.grade && (
               <div>
-                <dt className="text-muted-foreground text-sm">Grade</dt>
+                <dt className="text-muted-foreground text-sm">{d?.grade}</dt>
                 <dd className="font-medium">{cert.grade}</dd>
               </div>
             )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-muted-foreground text-sm">Exam Date</dt>
-              <dd className="font-medium">
-                {new Date(cert.examDate).toLocaleDateString()}
-              </dd>
+              <dt className="text-muted-foreground text-sm">{d?.examDate}</dt>
+              <dd className="font-medium">{formatDate(cert.examDate)}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground text-sm">Issued</dt>
-              <dd className="font-medium">
-                {new Date(cert.issuedAt).toLocaleDateString()}
-              </dd>
+              <dt className="text-muted-foreground text-sm">{d?.issued}</dt>
+              <dd className="font-medium">{formatDate(cert.issuedAt)}</dd>
             </div>
           </div>
           <div>
-            <dt className="text-muted-foreground text-sm">School</dt>
+            <dt className="text-muted-foreground text-sm">{d?.school}</dt>
             <dd className="font-medium">{cert.schoolName}</dd>
           </div>
         </dl>

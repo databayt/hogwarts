@@ -1789,7 +1789,22 @@
     "noTransactions": "No transactions found",
     "noMatchingTransactions": "No matching transactions found",
     "noTransactionHistory": "No transaction history",
-    "connectBankForHistory": "Connect a bank account to see your transaction history"
+    "connectBankForHistory": "Connect a bank account to see your transaction history",
+    "categories": {
+      "tuition": "Tuition",
+      "registration": "Registration",
+      "activities": "Activities",
+      "cafeteria": "Cafeteria",
+      "donation": "Donations",
+      "salary": "Salaries",
+      "utilities": "Utilities",
+      "maintenance": "Maintenance",
+      "supplies": "Supplies",
+      "educational": "Educational",
+      "equipment": "Equipment",
+      "technology": "Technology",
+      "transport": "Transport"
+    }
   },
   "bankingMisc": {
     "enhancedUnavailable": "Enhanced banking content is currently unavailable.",

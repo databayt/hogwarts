@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { bulkAutoGradeAll } from "./actions/bulk-auto-grade-all"
 
@@ -33,6 +34,8 @@ export function BulkAutoGradeDialog({
   pendingAutoGradable,
   totalPending,
 }: BulkAutoGradeDialogProps) {
+  const { dictionary } = useDictionary()
+  const m = dictionary?.marking?.messages
   const [isGrading, setIsGrading] = useState(false)
   const [result, setResult] = useState<{
     graded: number
@@ -54,10 +57,12 @@ export function BulkAutoGradeDialog({
           )
         }
       } else {
-        toast.error(response.error || "Auto-grading failed")
+        toast.error(
+          response.error || m?.autoGradeFailed || "Auto-grading failed"
+        )
       }
     } catch {
-      toast.error("An unexpected error occurred")
+      toast.error(m?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsGrading(false)
     }

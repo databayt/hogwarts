@@ -6,6 +6,8 @@ import { BookOpen, GraduationCap, HelpCircle, Zap } from "lucide-react"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { getEnrolledSubjectIds } from "../lib/scope"
 import { getStudentAttempts } from "../shared/attempt-actions"
@@ -17,7 +19,9 @@ import {
 } from "./actions"
 import { QuizList } from "./list"
 
-export async function QuizContent() {
+export async function QuizContent({ lang }: { lang?: Locale } = {}) {
+  const dictionary = await getDictionary((lang ?? "ar") as Locale)
+  const d = dictionary?.school?.exams?.quizUi
   const { schoolId } = await getTenantContext()
   const session = await auth()
   const role = session?.user?.role
@@ -55,54 +59,62 @@ export async function QuizContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Quizzes</h2>
-        <p className="text-muted-foreground">
-          Browse quizzes and diagnostics from the catalog by chapter and lesson
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{d?.title}</h2>
+        <p className="text-muted-foreground">{d?.description}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.totalQuizzes}
+            </CardTitle>
             <Zap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{quizzes.length}</div>
-            <p className="text-muted-foreground text-xs">Available quizzes</p>
+            <p className="text-muted-foreground text-xs">
+              {d?.availableQuizzes}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Question Pool</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.questionPoolStat}
+            </CardTitle>
             <HelpCircle className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalQuestionPool}</div>
-            <p className="text-muted-foreground text-xs">Catalog questions</p>
+            <p className="text-muted-foreground text-xs">
+              {d?.catalogQuestions}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subjects</CardTitle>
+            <CardTitle className="text-sm font-medium">{d?.subjects}</CardTitle>
             <GraduationCap className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{subjects.length}</div>
-            <p className="text-muted-foreground text-xs">Across subjects</p>
+            <p className="text-muted-foreground text-xs">{d?.acrossSubjects}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Questions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {d?.avgQuestions}
+            </CardTitle>
             <BookOpen className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgQuestions}</div>
-            <p className="text-muted-foreground text-xs">Per quiz</p>
+            <p className="text-muted-foreground text-xs">{d?.perQuiz}</p>
           </CardContent>
         </Card>
       </div>
@@ -114,7 +126,7 @@ export async function QuizContent() {
       />
 
       {isStudentOrGuardian && attempts.length > 0 && (
-        <AttemptHistory attempts={attempts} title="My Quiz Attempts" />
+        <AttemptHistory attempts={attempts} title={d?.myAttempts} />
       )}
     </div>
   )

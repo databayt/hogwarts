@@ -101,6 +101,17 @@ export interface BankingDictionary {
   transferSuccess?: string
   transferFailed?: string
   insufficientFunds?: string
+
+  // Table toolbar + pagination
+  export?: string
+  exportCSV?: string
+  exportPDF?: string
+  allAccounts?: string
+  selectAll?: string
+  showing?: string
+  to?: string
+  of?: string
+  page?: string
 }
 
 // ============================================================================
@@ -109,10 +120,16 @@ export interface BankingDictionary {
 
 export interface DashboardHeaderProps {
   user: User
+  /** `User.username` from the DB -- the session carries no display name. */
+  displayName?: string | null
   accounts: BankAccountWithTransactions[]
   totalBanks: number
   totalCurrentBalance: number
   dictionary?: BankingDictionary
+  /** ISO 4217 code from `School.currency`. */
+  currency: string
+  /** Active UI locale, for numeral shaping and punctuation. */
+  lang: string
 }
 
 export interface DashboardContentProps {

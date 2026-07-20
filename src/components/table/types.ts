@@ -80,13 +80,6 @@ export interface SearchParams {
 
 export type PaginationType = "pages" | "seeMore"
 
-export interface SeeMorePaginationState {
-  loadedCount: number
-  batchSize: number
-  hasMore: boolean
-  total?: number
-}
-
 export interface ServerPaginationResult<TData> {
   data: TData[]
   hasMore: boolean

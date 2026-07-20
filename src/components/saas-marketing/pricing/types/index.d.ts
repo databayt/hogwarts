@@ -68,9 +68,12 @@ export type UserSubscriptionPlan = SubscriptionPlan &
   }
 
 // compare plans
-export type ColumnType = string | boolean | null
+export type ColumnType = string | boolean | null | undefined
 export type PlansRow = { feature: string; tooltip?: string } & {
-  [key in (typeof plansColumns)[number]]: ColumnType
+  hobby: string | boolean | null
+  pro: string | boolean | null
+  ultra: string | boolean | null
+  enterprise: string | boolean | null
 }
 
 // landing sections

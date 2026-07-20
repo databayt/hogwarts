@@ -10,6 +10,7 @@ import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
+import { ANNOUNCEMENT_WIZARD_CONFIG } from "../config"
 import { useAnnouncementWizard } from "../use-announcement-wizard"
 import { ContentForm } from "./form"
 
@@ -45,6 +46,8 @@ export default function AnnouncementContentContent() {
       isValid={isValid}
       formRef={formRef}
       isLoading={isLoading}
+      // Single-step wizard: saving IS finishing, so return to the list.
+      finalDestination={ANNOUNCEMENT_WIZARD_CONFIG.finalDestination}
     >
       <FormLayout>
         <FormHeading

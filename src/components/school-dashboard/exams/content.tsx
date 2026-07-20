@@ -748,11 +748,15 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <Separator className="my-4" />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-muted/50 border-border/50 rounded-2xl border p-3">
-                <p className="text-muted-foreground text-xs">Completion Rate</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.dashboard?.completionRate || "Completion rate"}
+                </p>
                 <p className="text-lg font-semibold">{completionRate}%</p>
               </div>
               <div className="bg-muted/50 border-border/50 rounded-2xl border p-3">
-                <p className="text-muted-foreground text-xs">Avg. Score</p>
+                <p className="text-muted-foreground text-xs">
+                  {d?.dashboard?.avgScore || "Avg. score"}
+                </p>
                 <p className="text-lg font-semibold">--</p>
               </div>
             </div>

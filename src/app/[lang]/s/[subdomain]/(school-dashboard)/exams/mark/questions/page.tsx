@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { type Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
@@ -15,9 +16,19 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = {
-  title: "Question Bank",
-  description: "Manage your question library",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.marking?.questionBank?.title || "Question Bank",
+    description:
+      dictionary?.marking?.questionBank?.description ||
+      "Manage your question library",
+  }
 }
 
 export default async function QuestionBankPage({
@@ -79,7 +90,7 @@ export default async function QuestionBankPage({
     <PageContainer>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <PageHeadingSetter title="Questions" />
+          <PageHeadingSetter title={dict.questionBank.title} />
           <Button asChild>
             <Link href={`/${lang}/exams/mark/questions/create`}>
               <Plus className="me-2 h-4 w-4" />

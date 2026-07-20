@@ -68,8 +68,13 @@ function FeeStructuresTableInner({
     initialData,
     total,
     perPage,
+    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
     fetcher: async (params) => {
-      const result = await getFeeStructures()
+      // `search` arrives via the filters object above; getFeeStructures gained
+      // an optional search param so the query — not the client — does the work.
+      const result = await getFeeStructures(
+        typeof params.search === "string" ? params.search : undefined
+      )
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }

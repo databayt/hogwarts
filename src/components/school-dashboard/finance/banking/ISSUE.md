@@ -10,6 +10,9 @@
 - [x] `bank-actions.tsx` uses `ERROR_MAP` + error codes (not raw English messages)
 - [x] Payment-transfer flow + Dwolla SDK
 - [x] AR dictionary parity (20 orphan keys filled)
+- [x] Dashboard renders in `School.currency` (was hardcoded `USD` in `formatAmount`)
+- [x] Transaction categories translated (13 keys under `bankingTransactions.categories`)
+- [x] Greeting shows the real user name (was "Guest" for **every** user)
 - [ ] Plaid sandbox credential run on `demo.databayt.org` (needs live creds)
 - [ ] Migrate `lib/validation.ts` + `payment-transfer/validation.ts` to `ValidationHelper`
 - [ ] Test coverage beyond tenant isolation

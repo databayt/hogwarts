@@ -35,6 +35,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { allocatePaymentToInvoices } from "../lib/invoice-allocation"
 import { checkCurrentUserPermission } from "../lib/permissions"
 import {
+  buildFeeStructureWhere,
   calculateSiblingDiscount,
   getFeeAssignmentList,
   getFineList,
@@ -134,13 +135,15 @@ async function userOwnsAssignment(args: {
 /**
  * Get all fee structures for the current school
  */
-export async function getFeeStructures(): Promise<ActionResult<any[]>> {
+export async function getFeeStructures(
+  search?: string
+): Promise<ActionResult<any[]>> {
   try {
     const ctx = await requireFeePermission("view")
     if (isAuthError(ctx)) return ctx
 
     const feeStructures = await db.feeStructure.findMany({
-      where: { schoolId: ctx.schoolId },
+      where: buildFeeStructureWhere(ctx.schoolId, search ? { search } : {}),
       include: {
         class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
@@ -2516,8 +2519,13 @@ export async function fetchAssignmentRows(
   if (isAuthError(gate)) return { rows: [], total: 0 }
   const { schoolId } = gate
   const { page, perPage } = params
+  const search = typeof params.search === "string" ? params.search : undefined
   try {
-    const result = await getFeeAssignmentList(schoolId, { page, perPage })
+    const result = await getFeeAssignmentList(schoolId, {
+      page,
+      perPage,
+      search,
+    })
     const rows = result.rows.map((fa: any) => ({
       id: fa.id,
       studentName: [fa.student?.firstName, fa.student?.lastName]
@@ -2554,8 +2562,9 @@ export async function fetchPaymentRows(
   if (isAuthError(gate)) return { rows: [], total: 0 }
   const { schoolId } = gate
   const { page, perPage } = params
+  const search = typeof params.search === "string" ? params.search : undefined
   try {
-    const result = await getPaymentList(schoolId, { page, perPage })
+    const result = await getPaymentList(schoolId, { page, perPage, search })
     const rows = result.rows.map((p: any) => ({
       id: p.id,
       paymentNumber: p.paymentNumber,
@@ -2594,8 +2603,9 @@ export async function fetchFineRows(
   if (isAuthError(gate)) return { rows: [], total: 0 }
   const { schoolId } = gate
   const { page, perPage } = params
+  const search = typeof params.search === "string" ? params.search : undefined
   try {
-    const result = await getFineList(schoolId, { page, perPage })
+    const result = await getFineList(schoolId, { page, perPage, search })
     const rows = result.rows.map((f: any) => ({
       id: f.id,
       studentName: [f.student?.firstName, f.student?.lastName]
@@ -2633,8 +2643,13 @@ export async function fetchScholarshipRows(
   if (isAuthError(gate)) return { rows: [], total: 0 }
   const { schoolId } = gate
   const { page, perPage } = params
+  const search = typeof params.search === "string" ? params.search : undefined
   try {
-    const result = await getScholarshipList(schoolId, { page, perPage })
+    const result = await getScholarshipList(schoolId, {
+      page,
+      perPage,
+      search,
+    })
     const rows = result.rows.map((s: any) => ({
       id: s.id,
       name: s.name,

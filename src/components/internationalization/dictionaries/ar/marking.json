@@ -2,7 +2,6 @@
   "title": "التصحيح الآلي",
   "dashboard": "لوحة التصحيح",
   "description": "تصحيح إجابات الطلاب بمساعدة الذكاء الاصطناعي",
-
   "navigation": {
     "dashboard": "لوحة التحكم",
     "questionBank": "بنك الأسئلة",
@@ -10,7 +9,6 @@
     "grading": "التصحيح",
     "analytics": "التحليلات"
   },
-
   "statistics": {
     "totalSubmissions": "إجمالي الإجابات",
     "notStarted": "لم يبدأ",
@@ -23,14 +21,12 @@
     "autoGradable": "قابل للتصحيح الآلي",
     "withRubrics": "مع معايير التقييم"
   },
-
   "tabs": {
     "all": "الكل",
     "pending": "قيد الانتظار",
     "review": "يحتاج مراجعة",
     "completed": "مكتمل"
   },
-
   "questionTypes": {
     "multipleChoice": "اختيار من متعدد",
     "trueFalse": "صح وخطأ",
@@ -39,13 +35,11 @@
     "fillInBlank": "املأ الفراغ",
     "matching": "مطابقة"
   },
-
   "difficulty": {
     "easy": "سهل",
     "medium": "متوسط",
     "hard": "صعب"
   },
-
   "bloomLevels": {
     "remember": "التذكر",
     "understand": "الفهم",
@@ -54,19 +48,16 @@
     "evaluate": "التقييم",
     "create": "الإبداع"
   },
-
   "gradingMethods": {
     "auto": "تلقائي",
     "aiAssisted": "بمساعدة الذكاء الاصطناعي",
     "manual": "يدوي"
   },
-
   "submissionTypes": {
     "digital": "رقمي",
     "upload": "رفع ملف",
     "ocr": "معالج بالتعرف البصري"
   },
-
   "status": {
     "notStarted": "لم يبدأ",
     "inProgress": "قيد التنفيذ",
@@ -75,7 +66,6 @@
     "reviewed": "تمت المراجعة",
     "completed": "مكتمل"
   },
-
   "table": {
     "student": "الطالب",
     "question": "السؤال",
@@ -91,9 +81,9 @@
     "submissions": "إجابة",
     "search": "البحث عن الطلاب أو الأسئلة...",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "answerKey": "نموذج الإجابة"
   },
-
   "buttons": {
     "newQuestion": "سؤال جديد",
     "createQuestion": "إنشاء سؤال",
@@ -117,7 +107,6 @@
     "previous": "السابق",
     "submit": "إرسال"
   },
-
   "questionBank": {
     "title": "بنك الأسئلة",
     "description": "إدارة مكتبة الأسئلة القابلة لإعادة الاستخدام",
@@ -127,7 +116,6 @@
     "criteria": "معايير",
     "tags": "الوسوم"
   },
-
   "questionForm": {
     "questionText": "نص السؤال",
     "questionTextPlaceholder": "أدخل سؤالك هنا...",
@@ -150,7 +138,6 @@
     "imageUrl": "رابط الصورة (اختياري)",
     "imageUrlPlaceholder": "https://example.com/image.jpg"
   },
-
   "options": {
     "title": "خيارات الإجابة",
     "addOption": "إضافة خيار",
@@ -160,7 +147,6 @@
     "atLeastTwo": "أضف خيارين على الأقل",
     "atLeastOneCorrect": "حدد خياراً صحيحاً واحداً على الأقل"
   },
-
   "rubric": {
     "title": "معايير التقييم",
     "description": "حدد معايير التقييم للأسئلة الذاتية",
@@ -179,7 +165,6 @@
     "totalPoints": "مجموع النقاط",
     "noRubric": "لم يتم تحديد معايير تقييم لهذا السؤال"
   },
-
   "grading": {
     "title": "تصحيح الإجابة",
     "question": "السؤال",
@@ -202,7 +187,6 @@
     "maxPoints": "الحد الأقصى",
     "confidence": "الثقة"
   },
-
   "aiGrading": {
     "processing": "الذكاء الاصطناعي يقوم بالتصحيح...",
     "highConfidence": "ثقة عالية في التصحيح بالذكاء الاصطناعي",
@@ -212,7 +196,6 @@
     "needsReview": "هذه الدرجة تحتاج إلى مراجعة المعلم",
     "approve": "اعتماد تقييم الذكاء الاصطناعي"
   },
-
   "ocr": {
     "processing": "جاري معالجة التعرف البصري...",
     "highConfidence": "ثقة عالية في استخراج النص",
@@ -222,7 +205,6 @@
     "extractedText": "النص المستخرج",
     "confidence": "الثقة"
   },
-
   "override": {
     "title": "تجاوز الدرجة",
     "reason": "سبب التجاوز",
@@ -231,7 +213,6 @@
     "newScore": "الدرجة الجديدة",
     "confirmOverride": "تأكيد التجاوز"
   },
-
   "bulkGrading": {
     "title": "تصحيح جماعي للامتحان",
     "selectStudents": "اختر الطلاب",
@@ -245,7 +226,6 @@
     "failed": "فشل",
     "total": "الإجمالي"
   },
-
   "messages": {
     "questionCreated": "تم إنشاء السؤال بنجاح",
     "questionUpdated": "تم تحديث السؤال بنجاح",
@@ -259,9 +239,10 @@
     "error": "حدث خطأ",
     "unauthorized": "غير مصرح",
     "notFound": "غير موجود",
-    "invalidData": "بيانات غير صالحة"
+    "invalidData": "بيانات غير صالحة",
+    "autoGradeFailed": "فشل التصحيح التلقائي",
+    "unexpectedError": "حدث خطأ غير متوقع"
   },
-
   "errors": {
     "questionRequired": "نص السؤال مطلوب",
     "questionMinLength": "يجب أن يكون السؤال 10 أحرف على الأقل",
@@ -282,7 +263,6 @@
     "reasonRequired": "السبب مطلوب لتجاوز الدرجة",
     "reasonMinLength": "يجب أن يكون السبب 10 أحرف على الأقل"
   },
-
   "analytics": {
     "title": "تحليلات التصحيح",
     "overview": "نظرة عامة",
@@ -298,7 +278,6 @@
     "totalTime": "إجمالي وقت التصحيح",
     "averageTime": "متوسط الوقت لكل إجابة"
   },
-
   "bulkMarking": "التصحيح الجماعي",
   "bulkMarkingFeature": "ميزة التصحيح الجماعي",
   "bulkMarkingDescription": "تصحيح امتحانات متعددة دفعة واحدة",

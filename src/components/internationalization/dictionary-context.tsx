@@ -24,6 +24,18 @@ export function DictionaryProvider({
   )
 }
 
+/**
+ * Non-throwing variant of `useDictionaryContext`.
+ *
+ * Shared primitives (DataTable, load-more controls) render both inside and
+ * outside a DictionaryProvider — tests, Storybook, and standalone previews have
+ * no provider. Those call sites need to degrade to a built-in locale fallback
+ * rather than crash, so they read the dictionary through this hook.
+ */
+export function useOptionalDictionary(): Dictionary | null {
+  return useContext(DictionaryContext)
+}
+
 export function useDictionaryContext() {
   const dict = useContext(DictionaryContext)
   if (!dict) {

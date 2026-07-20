@@ -661,6 +661,10 @@ export function getExamTabsForRole(
       name: d.upcoming || "Upcoming",
       href: `/${lang}/exams/upcoming`,
     },
+    templates: {
+      name: d.templates || "Templates",
+      href: `/${lang}/exams/templates`,
+    },
   }
 
   switch (role) {
@@ -676,6 +680,7 @@ export function getExamTabsForRole(
         tabs.quiz,
         tabs.mock,
         tabs.upcoming,
+        tabs.templates,
       ]
     case "TEACHER":
       return [
@@ -688,6 +693,7 @@ export function getExamTabsForRole(
         tabs.quiz,
         tabs.mock,
         tabs.upcoming,
+        tabs.templates,
       ]
     case "STUDENT":
       return [

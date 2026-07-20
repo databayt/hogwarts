@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { type Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
@@ -16,10 +17,14 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "Pending Exams - Marking" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.marking?.pendingTitle || "Pending Exams" }
 }
 
 export default async function PendingPage({ params }: Props) {
@@ -63,7 +68,10 @@ export default async function PendingPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeadingSetter title="Pending" />
+        <PageHeadingSetter
+          title={d?.pendingTitle || "Pending"}
+          description={d?.pendingDescription}
+        />
 
         {pendingExams.length === 0 ? (
           <Card>

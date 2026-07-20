@@ -3,13 +3,13 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useMemo } from "react"
 
 import {
   FULL_UI_PERMISSIONS,
   type UIPermissions,
 } from "@/lib/rbac/ui-permissions"
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import { useModal } from "@/components/atom/modal/context"
@@ -51,10 +51,8 @@ function ClassroomsTableInner({
   types,
   grades,
 }: ClassroomsTableProps) {
-  const router = useRouter()
   const { openModal, modal } = useModal()
-  const [isPending, startTransition] = useTransition()
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const { dictionary } = useDictionary()
   const d = dictionary?.school?.classrooms as Record<string, string> | undefined
@@ -71,11 +69,12 @@ function ClassroomsTableInner({
           name: params.name ?? "",
           typeId: "",
           building: "",
+          lang,
         })
         if (!result.success || !result.data) return { rows: [], total: 0 }
         return { rows: result.data as ClassroomRow[], total: result.total ?? 0 }
       },
-      filters: searchValue ? { name: searchValue } : undefined,
+      filters: debouncedSearch ? { name: debouncedSearch } : undefined,
     })
 
   const handleDelete = useCallback(
@@ -144,9 +143,8 @@ function ClassroomsTableInner({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => router.refresh())
     },
-    [router]
+    [setSearchValue]
   )
 
   return (
@@ -174,7 +172,7 @@ function ClassroomsTableInner({
         table={table}
         paginationMode="load-more"
         hasMore={hasMore}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading}
         onLoadMore={loadMore}
       />
 

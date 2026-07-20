@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormLayout } from "@/components/form/template/layout"
 import { useWizardValidation } from "@/components/form/template/wizard-validation-context"
+import { useLocale } from "@/components/internationalization/use-locale"
 
 import type { WizardFormRef } from "./config"
 
@@ -49,6 +50,15 @@ interface WizardStepProps {
   entityId: string
   /** Full URL path for the next step (e.g., "/teachers/add/{id}/contact") */
   nextStep?: string
+  /**
+   * Where to go once the final step saves, e.g. "/announcements".
+   *
+   * Without this a last step is a dead end: `setCustomNavigation` takes
+   * precedence over FormFooter's own `finalDestination` handling, so the save
+   * succeeds and the user is simply left sitting on the completed form.
+   * Locale prefix is added here — pass the unprefixed path.
+   */
+  finalDestination?: string
   /** Whether the current step's form is valid (controls enableNext/disableNext) */
   isValid: boolean
   /** Ref to the form component (must expose saveAndNext) */
@@ -63,6 +73,7 @@ interface WizardStepProps {
 export function WizardStep({
   entityId,
   nextStep,
+  finalDestination,
   isValid,
   formRef,
   isLoading = false,
@@ -70,6 +81,7 @@ export function WizardStep({
   children,
 }: WizardStepProps) {
   const router = useRouter()
+  const { locale } = useLocale()
   const { enableNext, disableNext, setCustomNavigation, setOnSave } =
     useWizardValidation()
   const isSavingRef = useRef(false)
@@ -97,6 +109,12 @@ export function WizardStep({
         await formRef.current?.saveAndNext()
         if (nextStep) {
           router.push(nextStep)
+        } else if (finalDestination) {
+          router.push(
+            finalDestination.startsWith(`/${locale}`)
+              ? finalDestination
+              : `/${locale}${finalDestination}`
+          )
         }
       } catch {
         // Error handled in form
@@ -128,6 +146,8 @@ export function WizardStep({
   }, [
     entityId,
     nextStep,
+    finalDestination,
+    locale,
     router,
     setCustomNavigation,
     setOnSave,

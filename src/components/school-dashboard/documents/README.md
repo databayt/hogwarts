@@ -3,7 +3,7 @@ title: Documents (Fill Engine)
 file_type: readme
 owner: Abdout
 maturity: Built (v1)
-last_audited: 2026-06-23
+last_audited: 2026-07-20
 ---
 
 # Documents — bring-your-own `.docx` template fill engine
@@ -19,9 +19,16 @@ presets = "we design it for you"; this engine = "bring your mandated format, we 
 
 ## Routes
 
-| Route        | Purpose                                                                       |
-| ------------ | ----------------------------------------------------------------------------- |
-| `/documents` | Template manager — upload, see detected fields, set default, delete, generate |
+There is **no standalone `/documents` page** — it was deleted 2026-07-20. This block is a
+shared engine, hosted by the blocks whose documents it fills:
+
+| Route               | Categories shown            | Purpose                                                    |
+| ------------------- | --------------------------- | ---------------------------------------------------------- |
+| `/exams/templates`  | `EXAM_PAPER`, `CERTIFICATE` | Upload, see detected fields, set default, delete, generate |
+| `/grades/templates` | `REPORT_CARD`               | Same manager, report-card section only                     |
+
+Both render `content.tsx` with a `categories` prop; the `templates` tab is staff-only
+(DEVELOPER / ADMIN / TEACHER).
 
 ## Structure
 
@@ -30,6 +37,8 @@ documents/
 ├── content.tsx              # server — fetches templates, renders manager
 ├── templates-list.tsx       # client — DocumentsManager (sections per category)
 ├── upload-template-dialog.tsx # client — upload .docx + field vocab reference
+├── use-exam-template-dialog.tsx # client — couple a layout to exam data, then fill
+├── exam-paper-flow.ts       # server — listExam/Blueprint/ClassOptions + generateExamPaperFromTemplate
 ├── actions.ts               # createDocumentTemplate / list / setDefault / delete
 ├── generate.ts              # generateDocument / generateDocumentsBulk (→ base64 .docx/.zip)
 ├── field-vocab.ts           # canonical {{tag}} vocabulary per category

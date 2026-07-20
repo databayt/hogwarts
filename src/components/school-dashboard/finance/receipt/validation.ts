@@ -79,6 +79,8 @@ export const createGetReceiptsSchema = (v: ValidationHelper) =>
     schoolId: z.string().min(1, v.required()),
     userId: z.string().optional(),
     status: z.enum(["pending", "processing", "processed", "error"]).optional(),
+    /** Free-text search across merchantName/fileDisplayName/fileName. */
+    search: z.string().optional(),
     limit: z.number().int().positive().max(100).default(50).optional(),
     offset: z.number().int().nonnegative().default(0).optional(),
     startDate: z.date().optional(),
@@ -160,6 +162,8 @@ export const getReceiptsSchema = z.object({
   schoolId: z.string().min(1, "School ID is required"),
   userId: z.string().optional(),
   status: z.enum(["pending", "processing", "processed", "error"]).optional(),
+  /** Free-text search across merchantName/fileDisplayName/fileName. */
+  search: z.string().optional(),
   limit: z.number().int().positive().max(100).default(50).optional(),
   offset: z.number().int().nonnegative().default(0).optional(),
   startDate: z.date().optional(),

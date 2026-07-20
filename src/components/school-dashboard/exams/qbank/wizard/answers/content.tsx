@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useQuestionWizard } from "../use-question-wizard"
 import { getQuestionAnswers } from "./actions"
@@ -15,6 +16,8 @@ import { AnswersForm } from "./form"
 import type { AnswersFormData } from "./validation"
 
 export default function AnswersContent() {
+  const { dictionary } = useDictionary()
+  const tw = dictionary?.school?.exams?.qbankUi?.wizard?.answers
   const params = useParams()
   const questionId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -51,8 +54,10 @@ export default function AnswersContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Answer Options"
-          description="Configure the answer options for this question."
+          title={tw?.title ?? "Answer Options"}
+          description={
+            tw?.description ?? "Configure the answer options for this question."
+          }
         />
         <AnswersForm
           ref={formRef}

@@ -36,8 +36,7 @@
  * Initial data comes from server (SSR). We skip refetching on first render
  * to prevent unnecessary network requests.
  */
-import { useCallback, useEffect, useRef, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface UsePlatformDataOptions<TData, TFilters> {
   initialData: TData[]
@@ -81,8 +80,6 @@ export function usePlatformData<
     filters = {} as TFilters,
   } = options
 
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
   const [data, setData] = useState<TData[]>(initialData)
   const [total, setTotal] = useState(initialTotal)
   const [currentPage, setCurrentPage] = useState(1)
@@ -90,41 +87,108 @@ export function usePlatformData<
 
   const hasMore = data.length < total
 
+  // WHY LATEST-REFS:
+  // Call sites pass `fetcher` as an inline arrow and `filters` as an inline
+  // object literal, so both get a fresh identity on every render. Reading them
+  // through refs keeps `loadMore`/`refresh` referentially STABLE, which is what
+  // lets React.memo on DataTable/DataTableLoadMore actually hold — otherwise
+  // every table re-rendered its entire body on every keystroke.
+  const fetcherRef = useRef(fetcher)
+  const filtersRef = useRef(filters)
+  const perPageRef = useRef(perPage)
+  useEffect(() => {
+    fetcherRef.current = fetcher
+    filtersRef.current = filters
+    perPageRef.current = perPage
+  })
+
+  // Mirror page/length into refs so the stable callbacks below never close over
+  // stale state.
+  const pageRef = useRef(1)
+  const dataLengthRef = useRef(initialData.length)
+  useEffect(() => {
+    dataLengthRef.current = data.length
+  }, [data.length])
+
+  // WHY A REQUEST TOKEN:
+  // Responses can land out of order — a slow loadMore resolving after a filter
+  // change would append rows matching the OLD filter onto the new result set.
+  // Every request captures the token it started with and discards itself if the
+  // token has since moved on.
+  const requestTokenRef = useRef(0)
+
+  // WHY A REF (not the isLoading state) FOR THE IN-FLIGHT GUARD:
+  // State updates are async, so two clicks dispatched before React re-renders
+  // both observe isLoading === false and fire duplicate requests. A ref flips
+  // synchronously.
+  const inFlightRef = useRef(false)
+
   // Load more items (infinite scroll / load more button)
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return
+    if (inFlightRef.current) return
 
+    inFlightRef.current = true
+    const token = requestTokenRef.current
     setIsLoading(true)
     try {
-      const nextPage = currentPage + 1
-      const result = await fetcher({ ...filters, page: nextPage, perPage })
+      // Read page from the setter to avoid capturing a stale currentPage.
+      const nextPage = pageRef.current + 1
+      const result = await fetcherRef.current({
+        ...filtersRef.current,
+        page: nextPage,
+        perPage: perPageRef.current,
+      })
+
+      if (token !== requestTokenRef.current) return // superseded — drop it
 
       if (result.rows.length > 0) {
-        setData((prev) => [...prev, ...result.rows])
+        // WHY DEDUPE: offset pagination re-serves a row whenever a record is
+        // inserted or removed between pages. Appending blindly produced
+        // duplicate React keys and visibly repeated rows.
+        setData((prev) => {
+          const seen = new Set(prev.map((item) => item.id))
+          const fresh = result.rows.filter((row) => !seen.has(row.id))
+          return fresh.length > 0 ? [...prev, ...fresh] : prev
+        })
+        pageRef.current = nextPage
         setCurrentPage(nextPage)
         setTotal(result.total)
+      } else {
+        // Server has nothing further; stop advertising more.
+        setTotal((prevTotal) => Math.min(prevTotal, dataLengthRef.current))
       }
     } catch (error) {
       console.error("Failed to load more:", error)
     } finally {
-      setIsLoading(false)
+      inFlightRef.current = false
+      if (token === requestTokenRef.current) setIsLoading(false)
     }
-  }, [currentPage, perPage, isLoading, hasMore, fetcher, filters])
+  }, [])
 
   // Refresh data from server (reset to page 1 with current filters)
   const refresh = useCallback(async () => {
+    // Invalidate anything in flight — its rows belong to a superseded query.
+    const token = ++requestTokenRef.current
     setIsLoading(true)
     try {
-      const result = await fetcher({ ...filters, page: 1, perPage })
+      const result = await fetcherRef.current({
+        ...filtersRef.current,
+        page: 1,
+        perPage: perPageRef.current,
+      })
+
+      if (token !== requestTokenRef.current) return
+
       setData(result.rows)
       setTotal(result.total)
+      pageRef.current = 1
       setCurrentPage(1)
     } catch (error) {
       console.error("Failed to refresh:", error)
     } finally {
-      setIsLoading(false)
+      if (token === requestTokenRef.current) setIsLoading(false)
     }
-  }, [fetcher, filters, perPage])
+  }, [])
 
   // WHY REFS:
   // - prevFiltersRef: Compare current vs previous without triggering re-renders
@@ -133,26 +197,23 @@ export function usePlatformData<
   const isFirstRender = useRef(true)
 
   // Auto-refetch when filters change (skip first render)
+  const filtersKey = JSON.stringify(filters)
   useEffect(() => {
-    // WHY JSON.stringify: Deep comparison of filter objects
-    // GOTCHA: Different object references with same values will compare equal
-    const currentFilters = JSON.stringify(filters)
-
     // WHY SKIP FIRST RENDER:
     // initialData comes from server-side rendering with current filters.
     // Refetching would cause flash and wasted network request.
     if (isFirstRender.current) {
       isFirstRender.current = false
-      prevFiltersRef.current = currentFilters
+      prevFiltersRef.current = filtersKey
       return
     }
 
     // Only refetch if filters actually changed (prevents infinite loop)
-    if (currentFilters !== prevFiltersRef.current) {
-      prevFiltersRef.current = currentFilters
+    if (filtersKey !== prevFiltersRef.current) {
+      prevFiltersRef.current = filtersKey
       refresh()
     }
-  }, [filters, refresh])
+  }, [filtersKey, refresh])
 
   // OPTIMISTIC OPERATIONS:
   // Update local state immediately for instant UI feedback.
@@ -184,7 +245,7 @@ export function usePlatformData<
     data,
     total,
     currentPage,
-    isLoading: isLoading || isPending,
+    isLoading,
     hasMore,
     loadMore,
     refresh,

@@ -37,6 +37,24 @@ banking/
 
 **Completion:** 80% | **Blockers:** Reconciliation panel stubbed; Plaid sync not implemented (needs sandbox creds); Dwolla webhook handler missing
 
+### Conventions (dashboard)
+
+- **Money** goes through `lib/utils.ts → formatAmount(amount, locale, currency)`, which
+  delegates to `@/lib/payment/currency`. `currency` is `School.currency`, fetched once in
+  `dashboard/content.tsx` and prop-drilled. Never hardcode a symbol -- `formatAmount` used to
+  pin `USD` and printed `$US` to every tenant regardless of their actual currency.
+- **Display name**: `User` has **no `name` column** and the session carries no display name,
+  so `session.user.name` is always undefined. Read `User.username` from the DB (as
+  `content.tsx` does) -- relying on `user.name` greets literally every user as "Guest".
+- **Transaction categories** are raw slugs in the DB (`tuition`, `salary`, ...). Translate via
+  `finance.bankingTransactions.categories.<slug>`; add a key there when a new slug appears.
+- **Two `BankingDictionary` types exist** -- `types/index.ts` declares one _and_ re-exports
+  `component.types.ts`. The local declaration wins, so `types/index.ts` is the live one.
+  Tech debt: they should be merged.
+- Dashboard chrome is deliberately **borderless** (tinted fills, not outlines). `AnimatedCounter`
+  renders a `<span>`, not a `<div>` -- it sits inside a `<p>` and a block element there is a
+  hydration error.
+
 ### Integration Points
 
 - Reconciles against payroll disbursements, expense payments, fee deposits -- does **not** itself post to the ledger

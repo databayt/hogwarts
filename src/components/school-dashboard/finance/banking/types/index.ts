@@ -125,6 +125,19 @@ export interface BankingDictionary {
   completeInformation?: string
   location?: string
 
+  // Table toolbar + pagination (read as flat keys by transaction-history/table.tsx)
+  export?: string
+  exportCSV?: string
+  exportPDF?: string
+  allAccounts?: string
+  selectAll?: string
+  showing?: string
+  to?: string
+  of?: string
+  previous?: string
+  page?: string
+  next?: string
+
   // Chart related
   chartTitle?: string
   chartNoData?: string

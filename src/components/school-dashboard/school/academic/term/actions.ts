@@ -324,9 +324,26 @@ export async function getTerms(
 
     const sp = getTermsSchema.parse(input ?? {})
 
+    // The toolbar previously bound its free-text box to `yearId`, so typing
+    // sent arbitrary text as a relation id and the search never matched.
+    const termNumber = sp.name ? Number.parseInt(sp.name, 10) : Number.NaN
+    const nameFilter = sp.name
+      ? {
+          OR: [
+            {
+              schoolYear: {
+                yearName: { contains: sp.name, mode: "insensitive" as const },
+              },
+            },
+            ...(Number.isFinite(termNumber) ? [{ termNumber }] : []),
+          ],
+        }
+      : {}
+
     const where: Record<string, unknown> = {
       schoolId,
       ...(sp.yearId ? { yearId: sp.yearId } : {}),
+      ...nameFilter,
     }
 
     const skip = (sp.page - 1) * sp.perPage

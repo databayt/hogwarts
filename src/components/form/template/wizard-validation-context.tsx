@@ -109,7 +109,9 @@ export function WizardValidationProvider({
 }: WizardValidationProviderProps) {
   // Core validation state - default to disabled (pages must explicitly enable)
   const [isNextDisabled, setIsNextDisabled] = useState(true)
-  const [fieldProgress, setFieldProgress] = useState<number | undefined>(undefined)
+  const [fieldProgress, setFieldProgress] = useState<number | undefined>(
+    undefined
+  )
   const customNavigationRef = useRef<CustomNavigation | undefined>(undefined)
   const [onSave, setOnSave] = useState<(() => Promise<void>) | undefined>(
     undefined

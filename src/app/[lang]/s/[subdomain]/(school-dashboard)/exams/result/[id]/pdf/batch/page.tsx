@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { FileDown, FileText } from "lucide-react"
 
@@ -22,7 +23,11 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "Batch PDF Generation" }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.results?.batchPDF || "Batch PDF Generation" }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>

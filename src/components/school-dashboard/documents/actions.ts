@@ -71,7 +71,8 @@ export async function createDocumentTemplate(
       },
     })
 
-    revalidatePath("/documents")
+    revalidatePath("/exams/templates")
+    revalidatePath("/grades/templates")
     return { success: true, data: { id: tpl.id, mergeFields } }
   } catch (error) {
     return {
@@ -129,7 +130,8 @@ export async function setDefaultTemplate(id: string): Promise<ActionResponse> {
       }),
     ])
 
-    revalidatePath("/documents")
+    revalidatePath("/exams/templates")
+    revalidatePath("/grades/templates")
     return { success: true }
   } catch (error) {
     return {
@@ -159,7 +161,8 @@ export async function deleteDocumentTemplate(
     })
     if (count === 0) return actionError(ACTION_ERRORS.TEMPLATE_NOT_FOUND)
 
-    revalidatePath("/documents")
+    revalidatePath("/exams/templates")
+    revalidatePath("/grades/templates")
     return { success: true }
   } catch (error) {
     return {

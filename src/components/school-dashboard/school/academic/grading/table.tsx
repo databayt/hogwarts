@@ -3,9 +3,9 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useMemo } from "react"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
@@ -37,9 +37,7 @@ function ScoreRangeTableInner({
   lang,
   perPage = 20,
 }: ScoreRangeTableProps) {
-  const router = useRouter()
   const { openModal } = useModal()
-  const [isPending, startTransition] = useTransition()
 
   // Translations
   const t = {
@@ -50,8 +48,8 @@ function ScoreRangeTableInner({
     reset: lang === "ar" ? "إعادة تعيين" : "Reset",
   }
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("")
+  // Search state (debounced)
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
@@ -66,7 +64,7 @@ function ScoreRangeTableInner({
         }
         return { rows: result.data.rows, total: result.data.total }
       },
-      filters: searchValue ? { grade: searchValue } : undefined,
+      filters: debouncedSearch ? { grade: debouncedSearch } : undefined,
     })
 
   // Handle delete with optimistic update
@@ -123,11 +121,8 @@ function ScoreRangeTableInner({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Toolbar translations
@@ -155,7 +150,7 @@ function ScoreRangeTableInner({
         table={table}
         paginationMode="load-more"
         hasMore={hasMore}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading}
         onLoadMore={loadMore}
       />
 

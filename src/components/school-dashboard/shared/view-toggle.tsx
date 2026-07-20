@@ -29,7 +29,7 @@ interface ViewToggleProps {
   className?: string
 }
 
-export function ViewToggle({
+function ViewToggleInner({
   view,
   onToggle,
   translations = {},
@@ -129,3 +129,5 @@ export function ViewToggleSegmented({
     </div>
   )
 }
+
+export const ViewToggle = React.memo(ViewToggleInner)

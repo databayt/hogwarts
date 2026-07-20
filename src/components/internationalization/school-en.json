@@ -5306,7 +5306,10 @@
         "mark": "Mark",
         "record": "Record",
         "quiz": "Quiz",
-        "mock": "Mock"
+        "mock": "Mock",
+        "upcoming": "Upcoming",
+        "practice": "Practice",
+        "templates": "Templates"
       },
       "allExams": "All Exams",
       "createExam": "Create Exam",
@@ -5470,7 +5473,9 @@
             "title": "Generate Results",
             "description": "Calculate final marks, assign grades, generate PDF reports, and analyze performance metrics."
           }
-        }
+        },
+        "completionRate": "Completion rate",
+        "avgScore": "Avg. score"
       },
       "qbank": {
         "questionDetails": "Question Details",
@@ -5600,6 +5605,27 @@
             "style": "Style",
             "issued": "Issued",
             "created": "Created"
+          },
+          "pageTitle": "Certificate Configurations",
+          "pageDescription": "Manage certificate templates and settings",
+          "newConfiguration": "New Configuration",
+          "newTitle": "New Certificate Configuration",
+          "newDescription": "Create a new template for exam certificates",
+          "editTitle": "Edit Certificate Configuration",
+          "unauthorized": "Unauthorized"
+        },
+        "verify": {
+          "notFoundTitle": "Certificate Not Found",
+          "notFoundDescription": "The verification code is invalid or the certificate has been revoked.",
+          "verifiedTitle": "Certificate Verified",
+          "verifiedDescription": "This certificate is authentic and currently {status}.",
+          "recipient": "Recipient",
+          "exam": "Exam",
+          "issued": "Issued",
+          "school": "School",
+          "status": {
+            "active": "active",
+            "revoked": "revoked"
           }
         }
       },
@@ -6094,13 +6120,16 @@
             "enterLeft": "Enter left side item",
             "enterRight": "Enter matching right side item",
             "correctOrder": "Items in Correct Order",
-            "enterItem": "Enter item text"
+            "enterItem": "Enter item text",
+            "title": "Answer Options",
+            "description": "Configure the answer options for this question."
           }
         },
         "tabbedLayout": {
           "catalog": "Catalog"
         },
-        "deleteFailed": "Failed to delete"
+        "deleteFailed": "Failed to delete",
+        "deleteConfirm": "Delete this question?"
       },
       "generateUi": {
         "catalog": {
@@ -6262,6 +6291,10 @@
         "content": {
           "error": "Error",
           "loadFailed": "Failed to load data"
+        },
+        "preview": {
+          "title": "Exam Paper Preview",
+          "version": "Version {version}"
         }
       },
       "quizUi": {
@@ -6438,7 +6471,9 @@
             "descriptionPlaceholder": "Enter exam description (optional)",
             "selectClass": "Select a class",
             "selectSubject": "Select a subject",
-            "examType": "Exam Type"
+            "examType": "Exam Type",
+            "title": "Exam Details",
+            "description": "Enter the basic exam information."
           },
           "exam": {
             "examTitle": "Exam Title",
@@ -6659,6 +6694,43 @@
         "gradeUpdatedBody": "Your {subject} grade changed from {old} to {new}.",
         "examNotification": "Exam Notification",
         "newNotificationBody": "You have a new exam notification."
+      },
+      "reportCards": "Report Cards",
+      "create": {
+        "title": "Create an exam",
+        "subtitle": "Choose how you want to start.",
+        "adoptTitle": "Start from a template",
+        "adoptDesc": "Pick a ready, curriculum-aligned blueprint and adopt it.",
+        "adoptBadge": "Fastest",
+        "aiTitle": "Generate with AI",
+        "aiDesc": "Describe a topic — AI drafts questions into your bank to review.",
+        "aiBadge": "Fast",
+        "blank": "Or schedule a blank exam"
+      },
+      "certificateVerify": {
+        "notFoundTitle": "Certificate not found",
+        "notFoundDesc": "The verification code is invalid or the certificate has been revoked.",
+        "verifiedTitle": "Certificate verified",
+        "verifiedDesc": "This certificate is authentic.",
+        "statusLabel": "Status",
+        "status": {
+          "active": "Active",
+          "revoked": "Revoked",
+          "expired": "Expired"
+        },
+        "recipient": "Recipient",
+        "exam": "Exam",
+        "score": "Score",
+        "grade": "Grade",
+        "examDate": "Exam date",
+        "issued": "Issued",
+        "school": "School"
+      },
+      "errors": {
+        "unableToLoad": "Unable to load content",
+        "unexpectedError": "An unexpected error occurred while loading this page.",
+        "errorReference": "Error reference",
+        "backToExams": "Back to exams"
       }
     },
     "events": {
@@ -8834,7 +8906,8 @@
         "rankLabel": "Class Rank",
         "rankOf": "of",
         "termLabel": "Term"
-      }
+      },
+      "navTemplates": "Templates"
     },
     "classrooms": {
       "title": "Classrooms",
@@ -9116,6 +9189,14 @@
       "english": "English",
       "exportCSV": "Export CSV",
       "exporting": "Exporting...",
+      "tableView": "Table View",
+      "gridView": "Grid View",
+      "switchToTable": "Switch to table view",
+      "switchToGrid": "Switch to grid view",
+      "searchColumns": "Search columns...",
+      "noColumns": "No columns found.",
+      "all": "All",
+      "toggleColumns": "Toggle columns",
       "loading": "Loading...",
       "loadMore": "Load More",
       "failedToDelete": "Failed to delete",
@@ -11555,6 +11636,73 @@
           "createdOn": "Created on",
           "recently": "Recently"
         }
+      }
+    },
+    "documents": {
+      "title": "Document templates",
+      "description": "Upload your own .docx templates and we fill them with school data.",
+      "sections": {
+        "CERTIFICATE": "Certificates",
+        "EXAM_PAPER": "Exam papers",
+        "REPORT_CARD": "Report cards"
+      },
+      "idHint": {
+        "CERTIFICATE": "Certificate ID",
+        "EXAM_PAPER": "Generated-exam ID",
+        "REPORT_CARD": "Report-card ID"
+      },
+      "upload": "Upload template",
+      "none": "No templates yet.",
+      "fields": "fields",
+      "setDefault": "Set default",
+      "default": "Default",
+      "generate": "Generate",
+      "use": "Use template",
+      "delete": "Delete template",
+      "generateFailed": "Could not generate the document.",
+      "dialog": {
+        "title": "Upload a .docx template",
+        "desc": "Your Word template with tags — we fill it with school data.",
+        "name": "Template name",
+        "namePlaceholder": "e.g. Ministry certificate",
+        "pickFile": "Choose .docx file",
+        "available": "Available fields",
+        "loopHint": "Repeating sections use loop tags for questions and subjects.",
+        "detected": "Detected in your template",
+        "uploaded": "Template saved",
+        "done": "Done",
+        "saveFailed": "Could not save the template."
+      },
+      "useDialog": {
+        "title": "Use this template",
+        "desc": "Choose the exam data that fills your layout, then download the finished paper.",
+        "source": "Source",
+        "sourceExisting": "An existing exam",
+        "sourceBlueprint": "Build one now",
+        "exam": "Exam",
+        "blueprint": "Question blueprint",
+        "class": "Class",
+        "examTitle": "Paper title",
+        "examTitlePlaceholder": "e.g. Geography — final",
+        "examDate": "Exam date",
+        "examType": "Exam type",
+        "types": {
+          "MIDTERM": "Midterm",
+          "FINAL": "Final",
+          "QUIZ": "Quiz",
+          "TEST": "Test",
+          "PRACTICAL": "Practical"
+        },
+        "coverage": "Fields detected in your template",
+        "filled": "will be filled",
+        "unsupported": "not supported",
+        "questionsNote": "Questions are selected automatically from the question bank.",
+        "noExams": "No exams with questions yet.",
+        "noBlueprints": "No question blueprints yet. Create one under Generate.",
+        "submit": "Generate and download",
+        "generating": "Generating…",
+        "cancel": "Cancel",
+        "failed": "Could not generate the paper."
       }
     }
   },

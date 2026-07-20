@@ -11,10 +11,8 @@
 import * as React from "react"
 import {
   ColumnDef,
-  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
@@ -36,33 +34,42 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  /** Current search box value — controlled by the parent (server-driven search). */
+  searchValue?: string
+  /** Debounced by the parent; fires the server search across the whole dataset. */
+  onSearchChange?: (value: string) => void
+  /** True row count in the DB for the current search/status scope (honest total,
+   * independent of how many rows `data` currently holds). */
+  total?: number
 }
 
 function DataTableInner<TData, TValue>({
   columns,
   data,
+  searchValue = "",
+  onSearchChange,
+  total,
 }: DataTableProps<TData, TValue>) {
   const { dictionary } = useDictionary()
   const rp = (dictionary as any)?.finance?.receiptPage as
     | Record<string, string>
     | undefined
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
 
+  // Filtering by merchant used to run client-side over `data` (getFilteredRowModel),
+  // but `data` only ever holds one server page (limit defaults to 50, max 100) —
+  // a school with more receipts than that could never reach row 51+ via search.
+  // Search is now pushed to the server (see actions.ts `getReceipts({ search })`);
+  // this table just renders whatever page the server already filtered.
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
-      columnFilters,
     },
   })
 
@@ -71,14 +78,15 @@ function DataTableInner<TData, TValue>({
       <div className="flex items-center gap-2">
         <Input
           placeholder={rp?.filterByMerchant || "Filter by merchant..."}
-          value={
-            (table.getColumn("merchantName")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("merchantName")?.setFilterValue(event.target.value)
-          }
+          value={searchValue}
+          onChange={(event) => onSearchChange?.(event.target.value)}
           className="max-w-sm"
         />
+        {typeof total === "number" && (
+          <span className="text-muted-foreground text-sm">
+            {rp?.totalReceipts || "Total Receipts"}: {total}
+          </span>
+        )}
       </div>
 
       <div className="rounded-md border">

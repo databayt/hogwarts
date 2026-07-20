@@ -1,14 +1,20 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { createDraftGeneratedExam } from "@/components/school-dashboard/exams/wizard/exam-wizard-v2/wizard-actions"
 
-export const metadata = { title: "Dashboard: Generate Exam" }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.generate?.pageTitle || "Generate Exam" }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

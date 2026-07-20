@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath, revalidateTag } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -28,6 +29,7 @@ import {
   resultCreateSchema,
   resultUpdateSchema,
 } from "@/components/school-dashboard/listings/grades/validation"
+import { getLabels } from "@/components/translation/person"
 
 // ============================================================================
 // Types
@@ -511,6 +513,22 @@ export async function getResults(
     // Parse and validate input
     const sp = getResultsSchema.parse(input ?? {})
 
+    // Display language: the ROUTE [lang] (passed by the client table) is the
+    // source of truth; the NEXT_LOCALE cookie is only a fallback for
+    // non-routed callers.
+    let displayLang: "ar" | "en" = "ar"
+    if (sp.lang) {
+      displayLang = sp.lang
+    } else {
+      try {
+        const cookieStore = await cookies()
+        displayLang =
+          cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
+      } catch {
+        displayLang = "ar"
+      }
+    }
+
     // GUARDIAN auto-scope: restrict the list to this user's children.
     // STUDENT auto-scope: restrict to the user's own student record.
     // Without this, a guardian who hits /grades sees every grade in the school.
@@ -541,10 +559,29 @@ export async function getResults(
       classId: sp.classId || undefined,
       grade: sp.grade || undefined,
       sort: sp.sort,
+      search: sp.search || undefined,
+      displayLang,
     })
 
-    // Map results using helper function
-    const mapped: ResultListResult[] = rows.map((r) => formatResultRow(r))
+    // Map, then translate ALL text columns in ONE batched, deduped pass
+    // (getLabels) — matches content.tsx's SSR path so client-side
+    // search/load-more doesn't regress rows from translated back to raw.
+    const rawMapped: ResultListResult[] = rows.map((r) => formatResultRow(r))
+    const labels = await getLabels(
+      rawMapped.flatMap((row) => [
+        row.studentName,
+        row.assignmentTitle,
+        row.className,
+      ]),
+      displayLang,
+      schoolId
+    )
+    const mapped: ResultListResult[] = rawMapped.map((row) => ({
+      ...row,
+      studentName: labels.get(row.studentName) ?? row.studentName,
+      assignmentTitle: labels.get(row.assignmentTitle) ?? row.assignmentTitle,
+      className: labels.get(row.className) ?? row.className,
+    }))
 
     return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {

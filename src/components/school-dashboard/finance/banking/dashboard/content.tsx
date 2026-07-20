@@ -3,6 +3,7 @@
 
 import { Suspense } from "react"
 
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   getAccount,
@@ -12,7 +13,6 @@ import {
 import { checkFinancePermission } from "../../lib/permissions"
 import { DashboardHeader } from "./header"
 import { DashboardMainContent } from "./main-content"
-import { DashboardSidebar } from "./sidebar"
 import { DashboardSkeleton } from "./skeleton"
 
 interface BankingDashboardContentProps {
@@ -35,11 +35,9 @@ export async function BankingDashboardContent({
 
   if (!schoolId) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          {bd?.schoolContextNotFound || "School context not found"}
-        </p>
-      </div>
+      <EmptyState>
+        {bd?.schoolContextNotFound || "School context not found"}
+      </EmptyState>
     )
   }
 
@@ -54,20 +52,30 @@ export async function BankingDashboardContent({
   // If user can't view banking, show permission denied
   if (!canView) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          {bd?.noPermissionBanking ||
-            "You don't have permission to view banking"}
-        </p>
-      </div>
+      <EmptyState>
+        {bd?.noPermissionBanking || "You don't have permission to view banking"}
+      </EmptyState>
     )
   }
 
   const currentPage = Number(searchParams?.page) || 1
 
-  const accountsResult = await getAccounts({
-    userId: user.id,
-  })
+  // Money is rendered in the school's own currency -- never a hardcoded symbol.
+  // `username` is fetched here because the session carries no display name
+  // (the User model has no `name` column), which made the greeting fall through
+  // to "Guest" for every user.
+  const [accountsResult, school, profile] = await Promise.all([
+    getAccounts({ userId: user.id }),
+    db.school.findUnique({
+      where: { id: schoolId },
+      select: { currency: true },
+    }),
+    db.user.findUnique({
+      where: { id: user.id },
+      select: { username: true },
+    }),
+  ])
+  const currency = school?.currency ?? "USD"
 
   // Handle error or no accounts
   if (
@@ -76,12 +84,10 @@ export async function BankingDashboardContent({
     accountsResult.data.data.length === 0
   ) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          {bd?.noAccountsFound ||
-            "No accounts found. Please connect a bank account."}
-        </p>
-      </div>
+      <EmptyState>
+        {bd?.noAccountsFound ||
+          "No accounts found. Please connect a bank account."}
+      </EmptyState>
     )
   }
 
@@ -91,14 +97,17 @@ export async function BankingDashboardContent({
   const account = accountId ? await getAccount(accountId) : null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardHeader
           user={user}
+          displayName={profile?.username ?? null}
           accounts={accountsData}
           totalBanks={accounts.totalBanks}
           totalCurrentBalance={accounts.totalCurrentBalance}
           dictionary={bd}
+          currency={currency}
+          lang={lang}
         />
 
         <DashboardMainContent
@@ -107,8 +116,19 @@ export async function BankingDashboardContent({
           accountId={accountId}
           currentPage={currentPage}
           dictionary={bd}
+          currency={currency}
         />
       </Suspense>
+    </div>
+  )
+}
+
+/** Centred message for the three terminal states, sized to the content area
+ *  rather than `h-screen` (which pushed the message below the fold). */
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <p className="text-muted-foreground text-sm">{children}</p>
     </div>
   )
 }

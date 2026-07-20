@@ -2,48 +2,54 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import CountUp from "react-countup"
+
+import { formatAmount } from "@/components/school-dashboard/finance/banking/lib/utils"
 
 interface AnimatedCounterProps {
   amount: number
-  prefix?: string
-  decimals?: number
+  /** ISO 4217 code from `School.currency`. */
+  currency?: string
+  /** UI locale ("ar" | "en") -- drives digit shaping and symbol placement. */
+  locale?: string
   duration?: number
 }
 
 /**
  * AnimatedCounter - Client component for animated number counting
  *
- * This component is memoized to prevent unnecessary re-renders when
- * parent components update. Only re-renders when the amount changes.
+ * Each intermediate frame is run through `formatAmount`, so the counter animates
+ * in the school's own currency and the locale's own numerals instead of the
+ * hardcoded "$1,234.00" it used to print regardless of tenant.
  *
- * @param amount - The target number to count up to
- * @param prefix - Optional prefix (default: '$')
- * @param decimals - Number of decimal places (default: 2)
- * @param duration - Animation duration in seconds (default: 2)
+ * Memoized to prevent unnecessary re-renders when parent components update.
  */
 export const AnimatedCounter = memo(function AnimatedCounter({
   amount,
-  prefix = "$",
-  decimals = 2,
+  currency = "USD",
+  locale = "ar",
   duration = 2,
 }: AnimatedCounterProps) {
   // Validate amount to prevent NaN issues
   const validAmount = typeof amount === "number" && !isNaN(amount) ? amount : 0
 
+  const format = useCallback(
+    (value: number) => formatAmount(value, locale, currency),
+    [locale, currency]
+  )
+
+  // A <span>, not a <div>: this renders inside the <p> of a stat card, and a
+  // block element there is invalid HTML -- React logs it as a hydration error.
   return (
-    <div className="w-full">
+    <span className="block w-full tabular-nums">
       <CountUp
         end={validAmount}
-        decimals={decimals}
-        decimal="."
-        prefix={prefix}
-        separator=","
         duration={duration}
+        formattingFn={format}
         preserveValue
         useEasing
       />
-    </div>
+    </span>
   )
 })

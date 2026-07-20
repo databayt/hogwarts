@@ -30,6 +30,7 @@ interface DataTableViewOptionsProps<TData> {
     searchColumns?: string
     noColumns?: string
     all?: string
+    toggleColumns?: string
   }
 }
 
@@ -42,6 +43,7 @@ function DataTableViewOptionsInner<TData>({
     searchColumns: translations.searchColumns || "Search columns...",
     noColumns: translations.noColumns || "No columns found.",
     all: translations.all || "All",
+    toggleColumns: translations.toggleColumns || "Toggle columns",
   }
   const columns = React.useMemo(
     () =>
@@ -54,11 +56,12 @@ function DataTableViewOptionsInner<TData>({
     [table]
   )
 
-  // Check if all columns are visible
-  const allVisible = React.useMemo(
-    () => columns.every((col) => col.getIsVisible()),
-    [columns]
-  )
+  // WHY NOT useMemo: `columns` is memoized on the referentially-stable `table`,
+  // so a `[columns]` dep never invalidates — visibility is TanStack state that
+  // mutates in place behind the same object identity. Memoizing this pinned
+  // `allVisible` to its mount-time value forever, so the "All" checkmark and
+  // the toggle-all direction went stale after the first column toggle.
+  const allVisible = columns.every((col) => col.getIsVisible())
 
   // Toggle all columns visibility
   const toggleAll = React.useCallback(() => {
@@ -69,7 +72,7 @@ function DataTableViewOptionsInner<TData>({
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          aria-label="Toggle columns"
+          aria-label={t.toggleColumns}
           role="combobox"
           variant="outline"
           size="sm"
@@ -123,6 +126,14 @@ function DataTableViewOptionsInner<TData>({
   )
 }
 
-export const DataTableViewOptions = React.memo(
-  DataTableViewOptionsInner
-) as typeof DataTableViewOptionsInner
+/**
+ * DELIBERATELY NOT React.memo'd.
+ *
+ * TanStack's `table`/`column` objects are referentially STABLE and mutate in
+ * place, so a shallow prop compare cannot observe a state change. Memoizing
+ * here made the column-visibility checkmarks render stale whenever the surrounding props happened to be
+ * stable; it only ever appeared to work because a caller was passing a fresh
+ * object/array literal each render and accidentally busting the compare.
+ * Same trap as DataTable / DataTableLoadMore.
+ */
+export const DataTableViewOptions = DataTableViewOptionsInner

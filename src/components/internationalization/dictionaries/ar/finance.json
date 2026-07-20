@@ -54,7 +54,7 @@
     "overview": "نظرة عامة",
     "invoice": "فاتورة",
     "receipt": "إيصال",
-    "banking": "الخدمات المصرفية",
+    "banking": "المصرف",
     "fees": "الرسوم",
     "salary": "الراتب",
     "payroll": "كشف الرواتب",
@@ -101,7 +101,7 @@
       "upload": "تحميل إيصال"
     },
     "banking": {
-      "title": "الخدمات المصرفية",
+      "title": "المصرف",
       "description": "إدارة الحسابات البنكية والمعاملات",
       "details": "ربط الحسابات البنكية، تتبع المعاملات، إدارة التحويلات، والتسوية.",
       "viewAccounts": "عرض الحسابات",
@@ -1020,7 +1020,7 @@
     "creditCard": "بطاقة ائتمان",
     "debitCard": "بطاقة خصم",
     "upi": "UPI",
-    "netBanking": "الخدمات المصرفية",
+    "netBanking": "المصرف",
     "wallet": "محفظة",
     "other": "أخرى",
     "success": "ناجح",
@@ -1626,7 +1626,7 @@
     "myBanks": "بنوكي",
     "paymentTransfer": "تحويل المدفوعات",
     "transactionHistory": "سجل المعاملات",
-    "title": "الخدمات المصرفية",
+    "title": "المصرف",
     "totalBalance": "الرصيد الإجمالي",
     "bankAccount": "حساب بنكي",
     "bankAccounts": "الحسابات البنكية",
@@ -1689,7 +1689,7 @@
   },
   "bankingDashboard": {
     "schoolContextNotFound": "لم يتم العثور على سياق المدرسة",
-    "noPermissionBanking": "ليس لديك صلاحية لعرض الخدمات المصرفية",
+    "noPermissionBanking": "ليس لديك صلاحية لعرض المصرف",
     "noAccountsFound": "لم يتم العثور على حسابات. يرجى ربط حساب مصرفي.",
     "welcome": "مرحباً بعودتك",
     "guest": "ضيف",
@@ -1716,8 +1716,8 @@
     "user": "مستخدم"
   },
   "bankingNav": {
-    "title": "الخدمات المصرفية",
-    "banking": "الخدمات المصرفية",
+    "title": "المصرف",
+    "banking": "المصرف",
     "dashboard": "لوحة التحكم",
     "myBanks": "بنوكي",
     "paymentTransfer": "تحويل الدفعات",
@@ -1789,7 +1789,22 @@
     "noTransactions": "لم يتم العثور على معاملات",
     "noMatchingTransactions": "لم يتم العثور على معاملات مطابقة",
     "noTransactionHistory": "لا يوجد سجل معاملات",
-    "connectBankForHistory": "اربط حساباً مصرفياً لعرض سجل المعاملات"
+    "connectBankForHistory": "اربط حساباً مصرفياً لعرض سجل المعاملات",
+    "categories": {
+      "tuition": "رسوم دراسية",
+      "registration": "رسوم تسجيل",
+      "activities": "أنشطة",
+      "cafeteria": "المقصف",
+      "donation": "تبرعات",
+      "salary": "رواتب",
+      "utilities": "خدمات ومرافق",
+      "maintenance": "صيانة",
+      "supplies": "مستلزمات",
+      "educational": "مواد تعليمية",
+      "equipment": "معدات",
+      "technology": "تقنية",
+      "transport": "نقل"
+    }
   },
   "bankingMisc": {
     "enhancedUnavailable": "المحتوى المصرفي المحسن غير متاح حالياً.",
@@ -2378,7 +2393,7 @@
       "EXPENSES": "المصروفات",
       "INVOICE": "الفواتير",
       "WALLET": "المحفظة",
-      "BANKING": "الخدمات المصرفية",
+      "BANKING": "المصرف",
       "MANUAL": "إدخال يدوي"
     },
     "financialStatementLabels": {

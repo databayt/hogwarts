@@ -13,8 +13,7 @@ src/components/table/
 ├── data-table-toolbar.tsx          # Toolbar with filters
 ├── data-table-advanced-toolbar.tsx # Advanced toolbar
 ├── data-table-pagination.tsx       # Page-based pagination
-├── data-table-see-more.tsx         # "See more" pagination
-├── data-table-load-more.tsx        # Load more variant
+├── data-table-load-more.tsx        # "See more" / load-more controls (self-i18n)
 ├── data-table-skeleton.tsx         # Loading skeleton
 ├── data-table-column-header.tsx    # Column header
 ├── data-table-faceted-filter.tsx   # Faceted filter
@@ -32,7 +31,7 @@ src/components/table/
 ├── shell.tsx                       # Table shell
 ├── icons.tsx                       # Table-specific icons
 ├── use-data-table.ts               # Page-based pagination hook
-├── use-see-more.ts                 # "See more" pagination hook
+├── use-table-translations.ts       # Shared i18n for table chrome
 ├── use-debounced-callback.ts       # Debounce helper
 ├── use-callback-ref.ts             # Callback ref hook
 ├── use-media-query.ts              # Media query hook
@@ -62,6 +61,27 @@ src/components/table/
 ├── layouts/                        # Layout components
 └── MIGRATION_GUIDE.md              # Migration instructions
 ```
+
+### "See more" / load-more contract
+
+`<DataTable paginationMode="load-more" />` backed by `usePlatformData` drives ~39
+tables. Three invariants keep it working — breaking any one reintroduces a bug
+that already shipped once:
+
+1. **`DataTable` and `DataTableLoadMore` must NOT be wrapped in `React.memo`.**
+   Both read rows and selection off the TanStack `table` object, which is
+   referentially stable and mutates in place. A shallow prop compare cannot see
+   new rows, so a memo silently swallows the re-render that paints them.
+2. **pageSize must track the loaded row count.** Call sites seed it via
+   `initialState.pagination.pageSize`, which TanStack reads exactly once, so
+   `DataTable` re-syncs it on every change while in load-more mode.
+3. **Appends are deduped by `id`.** Offset pagination re-serves rows whenever a
+   record shifts underneath the cursor; appending blindly yields duplicate React
+   keys and visibly repeated rows.
+
+Strings come from `useTableTranslations` (explicit `translations` prop →
+`dictionary.common.*` → built-in ar/en), so a table needs no i18n wiring of its
+own to render correctly in Arabic. Guarded by `src/tests/table/load-more.test.tsx`.
 
 ### Status
 

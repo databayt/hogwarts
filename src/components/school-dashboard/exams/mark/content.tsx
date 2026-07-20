@@ -61,22 +61,32 @@ export async function MarkingContent({
     ...(teacherClassIds ? { exam: { classId: { in: teacherClassIds } } } : {}),
   }
 
-  // Fetch submissions scoped by role
-  const submissions = await db.studentAnswer.findMany({
-    where,
-    include: {
-      student: true,
-      question: true,
-      markingResult: true,
-    },
-    orderBy: {
-      submittedAt: "desc",
-    },
-    take: 100,
-  })
+  // Fetch submissions scoped by role. The marking queue is intentionally
+  // capped at 100 — it's a working set for the grader, not a full archive —
+  // but `submissions.length` used to double as the "Total Submissions" KPI
+  // and the table's "Showing X of Y" denominator, silently lying once a
+  // school passed 100 ungraded answers (a search box over that fixed 100-row
+  // array can never reach row 101+ either). `total` below is now the TRUE
+  // schoolId-scoped count so the KPI and the table are honest about how many
+  // submissions exist; the per-status breakdown counts intentionally stay
+  // scoped to the loaded 100-row queue (that's what the tabs/table operate on).
+  const [submissions, total] = await Promise.all([
+    db.studentAnswer.findMany({
+      where,
+      include: {
+        student: true,
+        question: true,
+        markingResult: true,
+      },
+      orderBy: {
+        submittedAt: "desc",
+      },
+      take: 100,
+    }),
+    db.studentAnswer.count({ where }),
+  ])
 
-  // Calculate statistics
-  const total = submissions.length
+  // Calculate statistics (scoped to the loaded 100-row queue, not `total`)
   const notStarted = submissions.filter((s) => !s.markingResult).length
   const inProgress = submissions.filter(
     (s) => s.markingResult && s.markingResult.status === "IN_PROGRESS"
@@ -225,7 +235,11 @@ export async function MarkingContent({
         </TabsList>
 
         <TabsContent value="all">
-          <MarkingTable data={submissions} dictionary={dictionary} />
+          <MarkingTable
+            data={submissions}
+            dictionary={dictionary}
+            totalCount={total}
+          />
         </TabsContent>
 
         <TabsContent value="pending">

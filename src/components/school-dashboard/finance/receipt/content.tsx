@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useDebouncedCallback } from "@/components/table/use-debounced-callback"
 
 import { getReceipts } from "./actions"
 import { getColumns } from "./columns"
@@ -52,21 +53,29 @@ export function ReceiptsContent({
 
   const [receipts, setReceipts] =
     React.useState<ExpenseReceipt[]>(initialReceipts)
+  // True DB row count for the current search scope — `receipts.length` alone
+  // is capped by getReceipts' server-side limit (default 50, max 100), so it
+  // understates how many receipts actually exist once a school passes that.
+  const [totalReceipts, setTotalReceipts] = React.useState(
+    initialReceipts.length
+  )
   const [isLoading, setIsLoading] = React.useState(false)
   const [viewMode, setViewMode] = React.useState<"grid" | "table">("grid")
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
+  const [searchTerm, setSearchTerm] = React.useState("")
 
   const columns = React.useMemo(
     () => getColumns(fd, rp, locale),
     [fd, rp, locale]
   )
 
-  const loadReceipts = React.useCallback(async () => {
+  const loadReceipts = React.useCallback(async (search?: string) => {
     setIsLoading(true)
     try {
-      const result = await getReceipts()
+      const result = await getReceipts(search ? { search } : undefined)
       if (result.success && result.data) {
         setReceipts(result.data.receipts)
+        setTotalReceipts(result.data.total)
       }
     } catch (error) {
       console.error("Failed to load receipts:", error)
@@ -81,6 +90,21 @@ export function ReceiptsContent({
     }
   }, [initialReceipts.length, loadReceipts])
 
+  // Search is server-side (see actions.ts `getReceipts({ search })`) so it
+  // covers the whole tenant-scoped dataset, not just the loaded page. Debounced
+  // to avoid a request per keystroke.
+  const debouncedSearch = useDebouncedCallback((value: string) => {
+    void loadReceipts(value || undefined)
+  }, 300)
+
+  const handleSearchChange = React.useCallback(
+    (value: string) => {
+      setSearchTerm(value)
+      debouncedSearch(value)
+    },
+    [debouncedSearch]
+  )
+
   // Auto-refresh every 10 seconds to check for processing updates
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -88,23 +112,23 @@ export function ReceiptsContent({
         (r) => r.status === "processing" || r.status === "pending"
       )
       if (hasProcessing) {
-        void loadReceipts()
+        void loadReceipts(searchTerm || undefined)
       }
     }, 10000)
 
     return () => clearInterval(interval)
-  }, [receipts, loadReceipts])
+  }, [receipts, loadReceipts, searchTerm])
 
   const stats = React.useMemo(() => {
     return {
-      total: receipts.length,
+      total: totalReceipts,
       processed: receipts.filter((r) => r.status === "processed").length,
       pending: receipts.filter(
         (r) => r.status === "pending" || r.status === "processing"
       ).length,
       error: receipts.filter((r) => r.status === "error").length,
     }
-  }, [receipts])
+  }, [receipts, totalReceipts])
 
   return (
     <div className="space-y-6">
@@ -213,7 +237,7 @@ export function ReceiptsContent({
         <div className="flex items-center justify-center py-12">
           <LoaderCircle className="text-primary h-8 w-8 animate-spin" />
         </div>
-      ) : receipts.length === 0 ? (
+      ) : receipts.length === 0 && !searchTerm ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">
@@ -223,6 +247,17 @@ export function ReceiptsContent({
               <Plus className="me-2 h-4 w-4" />
               {rp?.uploadFirstReceipt || "Upload Your First Receipt"}
             </Button>
+          </CardContent>
+        </Card>
+      ) : receipts.length === 0 ? (
+        // Search matched nothing — distinct from a truly empty tenant above,
+        // otherwise a school with receipts would see the "upload your first
+        // receipt" empty state while searching.
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">
+              {rp?.noReceiptsFound || "No receipts found."}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -238,7 +273,13 @@ export function ReceiptsContent({
               ))}
             </div>
           ) : (
-            <DataTable columns={columns} data={receipts} />
+            <DataTable
+              columns={columns}
+              data={receipts}
+              searchValue={searchTerm}
+              onSearchChange={handleSearchChange}
+              total={totalReceipts}
+            />
           )}
         </>
       )}

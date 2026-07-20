@@ -45,9 +45,17 @@ type MarkingQueueItem = StudentAnswer & {
 interface MarkingTableProps {
   data: MarkingQueueItem[]
   dictionary: Dictionary
+  /** True schoolId-scoped row count, independent of the (max 100) loaded
+   * queue in `data`. Falls back to `data.length` when the caller doesn't know
+   * the true total, preserving prior behavior for sub-filtered tabs. */
+  totalCount?: number
 }
 
-function MarkingTableInner({ data, dictionary }: MarkingTableProps) {
+function MarkingTableInner({
+  data,
+  dictionary,
+  totalCount,
+}: MarkingTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -131,8 +139,15 @@ function MarkingTableInner({ data, dictionary }: MarkingTableProps) {
 
       <div className="flex items-center justify-between">
         <div className="text-muted-foreground text-sm">
+          {/* Denominator prefers the true schoolId-scoped count over data.length
+              — data is capped at 100 (see content.tsx), so data.length alone
+              silently understated how many submissions exist once a school
+              passed that cap. Search only ever runs against the loaded `data`
+              (a fixed working queue, not the full archive), so once totalCount
+              exceeds data.length this line itself is the "limited results"
+              signal — e.g. "Showing 100 of 452 submissions". */}
           {dict.table.showing} {table.getFilteredRowModel().rows.length}{" "}
-          {dict.table.of} {data.length} {dict.table.submissions}
+          {dict.table.of} {totalCount ?? data.length} {dict.table.submissions}
         </div>
         <div className="flex items-center gap-2">
           <Button

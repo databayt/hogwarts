@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Calendar, TrendingUp, Users } from "lucide-react"
 
@@ -14,7 +15,11 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "Recent Results" }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.results?.recentResults || "Recent Results" }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -57,7 +62,9 @@ export default async function RecentPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeadingSetter title="Recent" />
+        <PageHeadingSetter
+          title={dictionary?.results?.recentResults || "Recent Results"}
+        />
 
         {recentExams.length === 0 ? (
           <Card>

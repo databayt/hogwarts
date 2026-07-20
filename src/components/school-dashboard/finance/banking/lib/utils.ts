@@ -4,6 +4,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+import { formatCurrency } from "@/lib/payment/currency"
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -68,14 +70,21 @@ export const formatDateTime = (dateString: Date, locale: string = "en") => {
   }
 }
 
-export function formatAmount(amount: number, locale: string = "ar"): string {
-  const formatter = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  })
-
-  return formatter.format(amount)
+/**
+ * Format a bank amount in the school's own currency.
+ *
+ * `currency` is `School.currency` (ISO 4217), threaded down from `content.tsx` --
+ * never hardcode a symbol here. Delegates to the shared payment formatter so
+ * zero-decimal (JPY) and three-decimal (KWD) currencies render correctly and
+ * banking matches the rest of the finance block.
+ */
+export function formatAmount(
+  amount: number,
+  locale: string = "ar",
+  currency: string = "USD"
+): string {
+  const bcp47 = locale === "ar" ? "ar-SD" : "en-US"
+  return formatCurrency(amount, currency, bcp47)
 }
 
 export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value))

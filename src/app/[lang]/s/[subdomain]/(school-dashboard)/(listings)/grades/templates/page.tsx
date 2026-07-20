@@ -1,21 +1,27 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import { redirect } from "next/navigation"
+import type { Metadata } from "next"
 
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import DocumentsContent from "@/components/school-dashboard/documents/content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
-/**
- * Report-card templates are no longer built with an in-app wizard. Schools now
- * upload their own `.docx` template (category REPORT_CARD) under Documents and
- * the report-cards screen fills it via "Generate (my template)". This route is
- * kept only to redirect the existing "Templates" nav entry to that flow.
- */
-export default async function GradeTemplatePage({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params
-  redirect(`/${lang}/documents`)
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.school?.documents?.title }
+}
+
+/**
+ * Report-card templates are not built in-app — a school uploads its own `.docx`
+ * (category REPORT_CARD) here and the report-cards screen fills it.
+ */
+export default async function GradeTemplatesPage({ params }: Props) {
+  const { lang } = await params
+  return <DocumentsContent lang={lang} categories={["REPORT_CARD"]} />
 }

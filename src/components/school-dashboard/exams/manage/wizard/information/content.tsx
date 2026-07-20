@@ -8,11 +8,14 @@ import { useParams } from "next/navigation"
 import { FormHeading, FormLayout } from "@/components/form"
 import type { WizardFormRef } from "@/components/form/wizard"
 import { WizardStep } from "@/components/form/wizard"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 import { useExamWizard } from "../use-exam-wizard"
 import { InformationForm } from "./form"
 
 export default function InformationContent() {
+  const { dictionary } = useDictionary()
+  const tw = dictionary?.school?.exams?.wizard?.examWizard?.information
   const params = useParams()
   const examId = params.id as string
   const formRef = useRef<WizardFormRef>(null)
@@ -41,8 +44,8 @@ export default function InformationContent() {
     >
       <FormLayout>
         <FormHeading
-          title="Exam Details"
-          description="Enter the basic exam information."
+          title={tw?.title ?? "Exam Details"}
+          description={tw?.description ?? "Enter the basic exam information."}
         />
         <InformationForm
           ref={formRef}

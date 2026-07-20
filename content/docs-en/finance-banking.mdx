@@ -55,6 +55,23 @@ Not a ledger money-mover. Banking tracks external bank rails and is _intended_ t
 
 `prisma/models/finance-banking.prisma`: `BankAccount`, `Transaction`, `Transfer`, `PlaidItem`, `DwollaCustomer`, `BankReconciliation` — all `schoolId`-scoped. No `lang` field.
 
+## Localization & currency
+
+The banking dashboard renders money in the school's own currency, not a fixed one.
+`lib/utils.ts → formatAmount(amount, locale, currency)` delegates to
+`@/lib/payment/currency`, and `currency` is `School.currency`, read once in
+`dashboard/content.tsx` and passed down. A Sudanese tenant therefore sees
+`٢٬٠١٠٬٠٠٠٫٠٠ ج.س.` on `/ar` and `SDG 2,010,000.00` on `/en`.
+
+Transaction categories are stored as raw slugs (`tuition`, `salary`, `utilities`, …) and
+translated for display through `finance.bankingTransactions.categories.<slug>`. When a new
+category slug reaches the data, add the key in both `dictionaries/en/finance.json` and
+`dictionaries/ar/finance.json` — the UI falls back to printing the bare slug otherwise.
+
+The greeting reads `User.username` from the database. The `User` model has no `name`
+column and the NextAuth session carries no display name, so anything relying on
+`session.user.name` renders "Guest" for every user.
+
 ## Stubs
 
 - `banking/reconciliation-panel.tsx` — renders "Enhanced reconciliation panel is currently unavailable"; TODO to regenerate from the current Prisma schema.

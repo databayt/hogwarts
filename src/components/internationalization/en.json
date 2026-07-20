@@ -228,6 +228,8 @@
     "rowsPerPage": "Rows per page",
     "pageOf": "Page {current} of {total}",
     "rowsSelected": "{selected} of {total} row(s) selected.",
+    "loadMore": "Load more",
+    "allLoaded": "All {total} loaded",
     "areYouSure": "Are you sure?",
     "deleteItem": "Delete item",
     "cannotBeUndone": "This action cannot be undone.",
@@ -421,7 +423,8 @@
       "FILE_NOT_FOUND": "File not found",
       "FILE_TOO_LARGE": "File is too large",
       "INVALID_FILE_TYPE": "Invalid file type"
-    }
+    },
+    "tryAgain": "Try again"
   },
   "navigation": {
     "menu": "Menu",

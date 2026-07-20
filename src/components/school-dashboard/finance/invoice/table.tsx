@@ -3,7 +3,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import { useRouter } from "next/navigation"
 import type { Column } from "@tanstack/react-table"
 import { Plus, X } from "lucide-react"
@@ -23,6 +30,7 @@ import { DataTable } from "@/components/table/data-table"
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter"
 import { DataTableViewOptions } from "@/components/table/data-table-view-options"
 import { useDataTable } from "@/components/table/use-data-table"
+import { useDebouncedCallback } from "@/components/table/use-debounced-callback"
 
 import { deleteInvoice, getInvoicesWithFilters } from "./actions"
 import { getInvoiceColumns, type InvoiceRow } from "./columns"
@@ -51,6 +59,9 @@ function InvoiceTableInner({
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
+  // total is server-driven and changes as filters narrow/widen the result set —
+  // the `total` prop only ever reflects the server's initial unfiltered render.
+  const [totalCount, setTotalCount] = useState(total)
 
   // Refresh function for Modal callback
   const refresh = useCallback(() => {
@@ -59,7 +70,7 @@ function InvoiceTableInner({
     })
   }, [router])
 
-  const hasMore = data.length < total
+  const hasMore = data.length < totalCount
 
   // Handle delete with optimistic update (must be before columns useMemo)
   const handleDelete = useCallback(
@@ -106,25 +117,6 @@ function InvoiceTableInner({
     [lang, handleDelete, ic]
   )
 
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return
-
-    setIsLoading(true)
-    try {
-      const nextPage = currentPage + 1
-      const result = await getInvoicesWithFilters({ page: nextPage, perPage })
-
-      if (result.success && result.data.length > 0) {
-        setData((prev) => [...prev, ...result.data])
-        setCurrentPage(nextPage)
-      }
-    } catch (error) {
-      console.error("Failed to load more invoices:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [currentPage, perPage, isLoading, hasMore])
-
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<InvoiceRow>({
     data,
@@ -138,18 +130,107 @@ function InvoiceTableInner({
     },
   })
 
+  // Resolve filterable columns once so the toolbar JSX stays declarative.
+  const invoiceNoCol = table.getColumn("invoice_no")
+  const clientCol = table.getColumn("client_name")
+  const statusCol = table.getColumn("status")
+  const isFiltered = table.getState().columnFilters.length > 0
+
+  // `useDataTable` sets manualFiltering: true (see use-data-table.ts) because
+  // invoices are server-paginated — getFilteredRowModel() intentionally returns
+  // the UNFILTERED rows in that mode, so filtering must be done server-side.
+  // getInvoicesWithFilters already supports invoice_no/client_name/status; we
+  // just need to call it whenever these column filters change.
+  const invoiceNoFilter = (invoiceNoCol?.getFilterValue() as string) ?? ""
+  const clientNameFilter = (clientCol?.getFilterValue() as string) ?? ""
+  const statusFilterValues = statusCol?.getFilterValue() as string[] | undefined
+  const statusFilter = statusFilterValues?.[0] ?? ""
+
+  const fetchFiltered = useCallback(
+    async (filters: {
+      invoice_no: string
+      client_name: string
+      status: string
+    }) => {
+      setIsLoading(true)
+      try {
+        const result = await getInvoicesWithFilters({
+          page: 1,
+          perPage,
+          ...filters,
+        })
+        if (result.success) {
+          setData(result.data)
+          setCurrentPage(1)
+          setTotalCount(result.total ?? 0)
+        }
+      } catch (error) {
+        console.error("Failed to filter invoices:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [perPage]
+  )
+
+  const debouncedFetchFiltered = useDebouncedCallback(fetchFiltered, 300)
+
+  // content.tsx already runs the initial filtered fetch server-side from the
+  // URL's searchParams, so skip the redundant client fetch on mount and only
+  // react to filters actually changing afterward.
+  const isFirstFilterRun = useRef(true)
+  useEffect(() => {
+    if (isFirstFilterRun.current) {
+      isFirstFilterRun.current = false
+      return
+    }
+    debouncedFetchFiltered({
+      invoice_no: invoiceNoFilter,
+      client_name: clientNameFilter,
+      status: statusFilter,
+    })
+  }, [invoiceNoFilter, clientNameFilter, statusFilter, debouncedFetchFiltered])
+
+  const handleLoadMore = useCallback(async () => {
+    if (isLoading || !hasMore) return
+
+    setIsLoading(true)
+    try {
+      const nextPage = currentPage + 1
+      const result = await getInvoicesWithFilters({
+        page: nextPage,
+        perPage,
+        invoice_no: invoiceNoFilter,
+        client_name: clientNameFilter,
+        status: statusFilter,
+      })
+
+      if (result.success && result.data.length > 0) {
+        setData((prev) => [...prev, ...result.data])
+        setCurrentPage(nextPage)
+        if (typeof result.total === "number") setTotalCount(result.total)
+      }
+    } catch (error) {
+      console.error("Failed to load more invoices:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    currentPage,
+    perPage,
+    isLoading,
+    hasMore,
+    invoiceNoFilter,
+    clientNameFilter,
+    statusFilter,
+  ])
+
   const handleCreate = useCallback(async () => {
     const result = await createDraftInvoice()
     if (result.success && result.data) {
       router.push(`/${lang}/finance/invoice/add/${result.data.id}/details`)
     }
   }, [router, lang])
-
-  // Resolve filterable columns once so the toolbar JSX stays declarative.
-  const invoiceNoCol = table.getColumn("invoice_no")
-  const clientCol = table.getColumn("client_name")
-  const statusCol = table.getColumn("status")
-  const isFiltered = table.getState().columnFilters.length > 0
 
   const onReset = useCallback(() => {
     table.resetColumnFilters()

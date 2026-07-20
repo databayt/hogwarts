@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
 import { auth } from "@/auth"
 import { z } from "zod"
 
@@ -20,6 +21,35 @@ import {
   subjectCreateSchema,
   subjectUpdateSchema,
 } from "@/components/school-dashboard/listings/subjects/validation"
+import { getLabels } from "@/components/translation/person"
+import { search } from "@/components/translation/search"
+
+/**
+ * Evaluates the simple Prisma-shaped conditions `search()` returns
+ * (`{ contains, mode }` or `{ in }`) against an in-memory value. `getSubjects`
+ * filters an already-materialized array (via `getSchoolSubjects`), not a live
+ * Prisma query, so `search()`'s OR conditions can't be handed to `findMany`
+ * directly — this re-implements the same match semantics locally.
+ * Not exported — "use server" modules may only export async functions.
+ */
+function matchesFieldConditions(
+  value: string | null | undefined,
+  fieldKey: string,
+  conditions: Record<string, any>[]
+): boolean {
+  if (!value) return false
+  return conditions.some((cond) => {
+    const clause = cond[fieldKey]
+    if (!clause) return false
+    if ("contains" in clause) {
+      return value.toLowerCase().includes(String(clause.contains).toLowerCase())
+    }
+    if ("in" in clause) {
+      return (clause.in as string[]).includes(value)
+    }
+    return false
+  })
+}
 
 // ============================================================================
 // Mutations
@@ -341,14 +371,46 @@ export async function getSubjects(
 
     const sp = getSubjectsSchema.parse(input ?? {})
 
+    // Display language: the ROUTE [lang] (passed by the client table) is the
+    // source of truth; the NEXT_LOCALE cookie is only a fallback for
+    // non-routed callers.
+    let displayLang: "ar" | "en" = "ar"
+    if (sp.lang) {
+      displayLang = sp.lang
+    } else {
+      try {
+        const cookieStore = await cookies()
+        displayLang =
+          cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "ar"
+      } catch {
+        displayLang = "ar"
+      }
+    }
+
     // Get all school subjects from catalog via bridge table
     let subjects = await getSchoolSubjects(schoolId)
 
-    // Filter by name
+    // Filter by name — bilingual + cache-only (search()'s reverse translation
+    // lookup), so a user typing what they SEE on /en also matches subjects
+    // whose catalog name/department is stored in Arabic. getSchoolSubjects()
+    // returns an in-memory array (not a live Prisma query), so search()'s
+    // Prisma-shaped OR conditions are evaluated locally instead of handed to
+    // findMany.
     if (sp.name) {
-      const searchLower = sp.name.toLowerCase()
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { preferredLanguage: true },
+      })
+      const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+      const nameConditions = await search(
+        sp.name,
+        ["name"],
+        schoolId,
+        storageLang,
+        displayLang
+      )
       subjects = subjects.filter((s) =>
-        s.name.toLowerCase().includes(searchLower)
+        matchesFieldConditions(s.name, "name", nameConditions)
       )
     }
 
@@ -377,10 +439,20 @@ export async function getSubjects(
     const skip = (sp.page - 1) * sp.perPage
     const paged = subjects.slice(skip, skip + sp.perPage)
 
+    // Translate for display — same batched helper + same direction as
+    // content.tsx, so a row doesn't flip from translated to raw once a
+    // search narrows the result set.
+    const labels = await getLabels(
+      paged.flatMap((s) => [s.name, s.department]),
+      displayLang,
+      schoolId
+    )
     const mapped: SubjectListResult[] = paged.map((s) => ({
       id: s.id,
-      name: s.name,
-      department: s.department || "Unknown",
+      name: labels.get(s.name) ?? s.name,
+      department: s.department
+        ? (labels.get(s.department) ?? s.department)
+        : "",
       createdAt: s.createdAt.toISOString(),
     }))
 

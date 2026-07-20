@@ -30,9 +30,11 @@ export default async function ExamVersionsPage({
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Exam Versions</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {dictionary?.generate?.versions?.title || "Exam versions"}
+          </h2>
           <p className="text-muted-foreground">
-            Select an exam to view its versions.
+            {dictionary?.generate?.versions?.emptyDescription}
           </p>
         </div>
       </div>
@@ -42,9 +44,11 @@ export default async function ExamVersionsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Exam Versions</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {dictionary?.generate?.versions?.title || "Exam versions"}
+        </h2>
         <p className="text-muted-foreground">
-          Manage generated versions of this exam
+          {dictionary?.generate?.versions?.description}
         </p>
       </div>
       <VersionLibrary examId={examId} />

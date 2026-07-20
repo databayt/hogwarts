@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import { type Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { Zap } from "lucide-react"
@@ -14,10 +15,14 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "Bulk Marking" }
-
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.marking?.bulkMarking || "Bulk Marking" }
 }
 
 export default async function BulkMarkingPage({ params }: Props) {
@@ -58,7 +63,7 @@ export default async function BulkMarkingPage({ params }: Props) {
     <PageContainer>
       <div className="flex flex-col gap-4">
         <PageHeadingSetter
-          title="Bulk Grade"
+          title={d?.bulkMarking || "Bulk Grade"}
           description={`${exam.class?.name} - ${exam.subject?.name}`}
         />
 

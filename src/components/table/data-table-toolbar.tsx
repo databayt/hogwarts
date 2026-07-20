@@ -150,6 +150,14 @@ function DataTableToolbarFilter<TData>({
   }
 }
 
-export const DataTableToolbar = React.memo(
-  DataTableToolbarInner
-) as typeof DataTableToolbarInner
+/**
+ * DELIBERATELY NOT React.memo'd.
+ *
+ * TanStack's `table`/`column` objects are referentially STABLE and mutate in
+ * place, so a shallow prop compare cannot observe a state change. Memoizing
+ * here made the active-filter Reset button render stale whenever the surrounding props happened to be
+ * stable; it only ever appeared to work because a caller was passing a fresh
+ * object/array literal each render and accidentally busting the compare.
+ * Same trap as DataTable / DataTableLoadMore.
+ */
+export const DataTableToolbar = DataTableToolbarInner

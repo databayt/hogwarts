@@ -1,13 +1,19 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
+
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/school-dashboard/context/page-heading-setter"
 import { ReportCardsContent } from "@/components/school-dashboard/reports/content"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "Report Cards" }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return { title: dictionary?.school?.exams?.reportCards || "Report Cards" }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -22,7 +28,9 @@ export default async function ReportCardsPage({ params, searchParams }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeadingSetter title="Report Cards" />
+        <PageHeadingSetter
+          title={dictionary?.school?.exams?.reportCards || "Report Cards"}
+        />
         <ReportCardsContent
           locale={lang}
           dictionary={dictionary}

@@ -3,9 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useMemo, useState, useTransition } from "react"
+import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import {
@@ -42,8 +43,7 @@ function PaymentsTableInner({
   perPage = 20,
 }: PaymentsTableProps) {
   const router = useRouter()
-  const [searchValue, setSearchValue] = useState("")
-  const [isPending, startTransition] = useTransition()
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
   const { dictionary } = useDictionary()
   const col = (dictionary as any)?.finance?.columns as
@@ -55,12 +55,13 @@ function PaymentsTableInner({
 
   const { data, isLoading, hasMore, loadMore } = usePlatformData<
     PaymentRow,
-    Record<string, unknown>
+    { search?: string }
   >({
     initialData,
     total,
     perPage,
     fetcher: fetchPaymentRows,
+    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
   })
 
   const columns = useMemo(
@@ -86,11 +87,8 @@ function PaymentsTableInner({
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   const handleCreate = useCallback(() => {
@@ -176,7 +174,7 @@ function PaymentsTableInner({
         table={table}
         paginationMode="load-more"
         hasMore={hasMore}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading}
         onLoadMore={loadMore}
       />
       <BulkActionsToolbar table={table} actions={bulkActions} lang={lang} />

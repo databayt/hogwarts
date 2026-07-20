@@ -5314,7 +5314,10 @@
         "mark": "تصحيح",
         "record": "السجلات",
         "quiz": "اختبار تفاعلي",
-        "mock": "اختبار تجريبي"
+        "mock": "اختبار تجريبي",
+        "upcoming": "القادمة",
+        "practice": "تدريب",
+        "templates": "القوالب"
       },
       "allExams": "جميع الامتحانات",
       "createExam": "إنشاء امتحان",
@@ -5478,7 +5481,9 @@
             "title": "إنشاء النتائج",
             "description": "حساب الدرجات النهائية، تعيين التقديرات، إنشاء تقارير PDF، وتحليل مقاييس الأداء."
           }
-        }
+        },
+        "completionRate": "نسبة الإكمال",
+        "avgScore": "متوسط الدرجة"
       },
       "qbank": {
         "questionDetails": "تفاصيل السؤال",
@@ -5608,6 +5613,27 @@
             "style": "النمط",
             "issued": "الصادرة",
             "created": "تاريخ الإنشاء"
+          },
+          "pageTitle": "إعدادات الشهادات",
+          "pageDescription": "إدارة قوالب وإعدادات الشهادات",
+          "newConfiguration": "إعداد جديد",
+          "newTitle": "إعداد شهادة جديد",
+          "newDescription": "إنشاء قالب جديد لشهادات الامتحانات",
+          "editTitle": "تعديل إعداد الشهادة",
+          "unauthorized": "غير مصرح"
+        },
+        "verify": {
+          "notFoundTitle": "الشهادة غير موجودة",
+          "notFoundDescription": "رمز التحقق غير صالح أو تم إلغاء الشهادة.",
+          "verifiedTitle": "تم التحقق من الشهادة",
+          "verifiedDescription": "هذه الشهادة أصلية وحالتها حالياً {status}.",
+          "recipient": "المستلم",
+          "exam": "الامتحان",
+          "issued": "تاريخ الإصدار",
+          "school": "المدرسة",
+          "status": {
+            "active": "نشطة",
+            "revoked": "ملغاة"
           }
         }
       },
@@ -6102,13 +6128,16 @@
             "enterLeft": "أدخل العنصر الأيسر",
             "enterRight": "أدخل العنصر المطابق الأيمن",
             "correctOrder": "العناصر بالترتيب الصحيح",
-            "enterItem": "أدخل نص العنصر"
+            "enterItem": "أدخل نص العنصر",
+            "title": "خيارات الإجابة",
+            "description": "قم بتكوين خيارات الإجابة لهذا السؤال."
           }
         },
         "tabbedLayout": {
           "catalog": "الكتالوج"
         },
-        "deleteFailed": "فشل الحذف"
+        "deleteFailed": "فشل الحذف",
+        "deleteConfirm": "هل تريد حذف هذا السؤال؟"
       },
       "generateUi": {
         "catalog": {
@@ -6270,6 +6299,10 @@
         "content": {
           "error": "خطأ",
           "loadFailed": "فشل تحميل البيانات"
+        },
+        "preview": {
+          "title": "معاينة ورقة الاختبار",
+          "version": "نسخة {version}"
         }
       },
       "quizUi": {
@@ -6446,7 +6479,9 @@
             "descriptionPlaceholder": "أدخل وصف الامتحان (اختياري)",
             "selectClass": "اختر الفصل",
             "selectSubject": "اختر المادة",
-            "examType": "نوع الامتحان"
+            "examType": "نوع الامتحان",
+            "title": "تفاصيل الامتحان",
+            "description": "أدخل المعلومات الأساسية للامتحان."
           },
           "exam": {
             "examTitle": "عنوان الامتحان",
@@ -6667,6 +6702,43 @@
         "gradeUpdatedBody": "تغير تقدير {subject} من {old} إلى {new}.",
         "examNotification": "إشعار اختبار",
         "newNotificationBody": "لديك إشعار اختبار جديد."
+      },
+      "reportCards": "بطاقات التقرير",
+      "create": {
+        "title": "إنشاء اختبار",
+        "subtitle": "اختر طريقة البدء.",
+        "adoptTitle": "ابدأ من قالب",
+        "adoptDesc": "اختر قالبًا جاهزًا متوافقًا مع المنهج وتبنّه.",
+        "adoptBadge": "الأسرع",
+        "aiTitle": "إنشاء بالذكاء الاصطناعي",
+        "aiDesc": "صف موضوعًا — يصيغ الذكاء الاصطناعي أسئلة في بنكك للمراجعة.",
+        "aiBadge": "سريع",
+        "blank": "أو جدول اختبارًا فارغًا"
+      },
+      "certificateVerify": {
+        "notFoundTitle": "الشهادة غير موجودة",
+        "notFoundDesc": "رمز التحقق غير صالح أو تم إلغاء الشهادة.",
+        "verifiedTitle": "تم التحقق من الشهادة",
+        "verifiedDesc": "هذه الشهادة أصلية.",
+        "statusLabel": "الحالة",
+        "status": {
+          "active": "سارية",
+          "revoked": "ملغاة",
+          "expired": "منتهية"
+        },
+        "recipient": "المستفيد",
+        "exam": "الاختبار",
+        "score": "الدرجة",
+        "grade": "التقدير",
+        "examDate": "تاريخ الاختبار",
+        "issued": "تاريخ الإصدار",
+        "school": "المدرسة"
+      },
+      "errors": {
+        "unableToLoad": "تعذّر تحميل المحتوى",
+        "unexpectedError": "حدث خطأ غير متوقع أثناء تحميل هذه الصفحة.",
+        "errorReference": "مرجع الخطأ",
+        "backToExams": "العودة إلى الاختبارات"
       }
     },
     "events": {
@@ -8842,7 +8914,8 @@
         "rankLabel": "الترتيب في الفصل",
         "rankOf": "من",
         "termLabel": "الفصل الدراسي"
-      }
+      },
+      "navTemplates": "القوالب"
     },
     "classrooms": {
       "title": "الغرف الدراسية",
@@ -9124,6 +9197,14 @@
       "english": "إنجليزي",
       "exportCSV": "تصدير CSV",
       "exporting": "جاري التصدير...",
+      "tableView": "عرض الجدول",
+      "gridView": "عرض الشبكة",
+      "switchToTable": "التبديل إلى عرض الجدول",
+      "switchToGrid": "التبديل إلى عرض الشبكة",
+      "searchColumns": "البحث في الأعمدة...",
+      "noColumns": "لم يتم العثور على أعمدة.",
+      "all": "الكل",
+      "toggleColumns": "تبديل الأعمدة",
       "loading": "جاري التحميل...",
       "loadMore": "تحميل المزيد",
       "failedToDelete": "فشل الحذف",
@@ -11184,7 +11265,7 @@
       },
       "bankingDashboard": {
         "schoolContextNotFound": "لم يتم العثور على سياق المدرسة",
-        "noPermissionBanking": "ليس لديك صلاحية لعرض الخدمات المصرفية",
+        "noPermissionBanking": "ليس لديك صلاحية لعرض المصرف",
         "noAccountsFound": "لا توجد حسابات. يرجى ربط حساب بنكي.",
         "welcome": "مرحباً بعودتك",
         "guest": "ضيف",
@@ -11211,7 +11292,7 @@
         "paymentTransfer": "تحويل المدفوعات",
         "transactionHistory": "سجل المعاملات",
         "settings": "الإعدادات",
-        "banking": "الخدمات المصرفية",
+        "banking": "المصرف",
         "signOut": "تسجيل الخروج"
       },
       "bankingTransactions": {
@@ -11250,7 +11331,7 @@
       "myBanks": {
         "userIdNotFound": "لم يتم العثور على معرف المستخدم",
         "noBanks": "لا توجد بنوك متصلة",
-        "connectYourBank": "اربط حسابك البنكي للبدء بالخدمات المصرفية.",
+        "connectYourBank": "اربط حسابك البنكي للبدء بالمصرف.",
         "accounts": "الحسابات",
         "connectBank": "ربط بنك",
         "totalBalance": "الرصيد الإجمالي",
@@ -11563,6 +11644,73 @@
           "createdOn": "تم الإنشاء في",
           "recently": "مؤخراً"
         }
+      }
+    },
+    "documents": {
+      "title": "قوالب المستندات",
+      "description": "ارفع قوالب .docx الخاصة بك ونملؤها ببيانات المدرسة.",
+      "sections": {
+        "CERTIFICATE": "الشهادات",
+        "EXAM_PAPER": "أوراق الاختبارات",
+        "REPORT_CARD": "بطاقات الدرجات"
+      },
+      "idHint": {
+        "CERTIFICATE": "معرّف الشهادة",
+        "EXAM_PAPER": "معرّف الاختبار المُولّد",
+        "REPORT_CARD": "معرّف بطاقة الدرجات"
+      },
+      "upload": "رفع قالب",
+      "none": "لا توجد قوالب بعد.",
+      "fields": "حقول",
+      "setDefault": "تعيين افتراضي",
+      "default": "افتراضي",
+      "generate": "إنشاء",
+      "use": "استخدام القالب",
+      "delete": "حذف القالب",
+      "generateFailed": "تعذّر إنشاء المستند.",
+      "dialog": {
+        "title": "رفع قالب .docx",
+        "desc": "قالب Word الخاص بك مع الوسوم — نملؤه ببيانات المدرسة.",
+        "name": "اسم القالب",
+        "namePlaceholder": "مثال: شهادة الوزارة",
+        "pickFile": "اختر ملف .docx",
+        "available": "الحقول المتاحة",
+        "loopHint": "الأقسام المتكررة تستخدم وسوم التكرار للأسئلة والمواد.",
+        "detected": "اكتُشف في قالبك",
+        "uploaded": "تم حفظ القالب",
+        "done": "تم",
+        "saveFailed": "تعذّر حفظ القالب."
+      },
+      "useDialog": {
+        "title": "استخدام هذا القالب",
+        "desc": "اختر بيانات الامتحان التي تملأ تصميمك، ثم نزّل الورقة الجاهزة.",
+        "source": "المصدر",
+        "sourceExisting": "امتحان موجود",
+        "sourceBlueprint": "إنشاء الآن",
+        "exam": "الامتحان",
+        "blueprint": "مخطط الأسئلة",
+        "class": "الفصل",
+        "examTitle": "عنوان الورقة",
+        "examTitlePlaceholder": "مثال: الجغرافيا — نهائي",
+        "examDate": "تاريخ الامتحان",
+        "examType": "نوع الامتحان",
+        "types": {
+          "MIDTERM": "نصف الفصل",
+          "FINAL": "نهائي",
+          "QUIZ": "اختبار قصير",
+          "TEST": "اختبار",
+          "PRACTICAL": "عملي"
+        },
+        "coverage": "الحقول المكتشفة في قالبك",
+        "filled": "سيتم ملؤه",
+        "unsupported": "غير مدعوم",
+        "questionsNote": "يتم اختيار الأسئلة تلقائياً من بنك الأسئلة.",
+        "noExams": "لا توجد امتحانات تحتوي على أسئلة بعد.",
+        "noBlueprints": "لا توجد مخططات أسئلة بعد. أنشئ واحداً من صفحة الإنشاء.",
+        "submit": "إنشاء وتنزيل",
+        "generating": "جارٍ الإنشاء…",
+        "cancel": "إلغاء",
+        "failed": "تعذّر إنشاء الورقة."
       }
     }
   },

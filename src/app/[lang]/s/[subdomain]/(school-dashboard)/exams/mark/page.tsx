@@ -2,6 +2,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
 import { Suspense } from "react"
+import { type Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -10,9 +11,19 @@ import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { MarkingContent } from "@/components/school-dashboard/exams/mark/content"
 
-export const metadata = {
-  title: "Auto-Marking Dashboard",
-  description: "Grade student submissions with AI assistance",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title: dictionary?.marking?.dashboard || "Marking Dashboard",
+    description:
+      dictionary?.marking?.description ||
+      "Grade student submissions with AI assistance",
+  }
 }
 
 function LoadingSkeleton() {

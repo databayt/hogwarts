@@ -16,7 +16,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { createDraftAnnouncement } from "@/components/school-dashboard/listings/announcements/wizard/actions"
+import {
+  createDraftAnnouncement,
+  submitAnnouncementWizard,
+} from "@/components/school-dashboard/listings/announcements/wizard/actions"
 import { updateAnnouncementContent } from "@/components/school-dashboard/listings/announcements/wizard/content/actions"
 import { updateAnnouncementTargeting } from "@/components/school-dashboard/listings/announcements/wizard/targeting/actions"
 
@@ -228,6 +231,144 @@ describe("announcement wizard authorization", () => {
 
       expect(result.success).toBe(true)
       expect(db.announcement.updateMany).toHaveBeenCalled()
+    })
+  })
+
+  /**
+   * The modal submits through one action instead of the
+   * createDraft -> updateContent -> complete chain, so the create branch has to
+   * re-prove on its own everything that chain used to check step by step.
+   */
+  describe("submitAnnouncementWizard", () => {
+    const content = {
+      title: "Title",
+      body: "Body",
+      lang: "en",
+      priority: "normal",
+      scope: "school",
+    } as any
+
+    it("rejects an unauthenticated caller even though the tenant resolves", async () => {
+      signInAs(null)
+
+      const result = await submitAnnouncementWizard(content)
+
+      expect(result.success).toBe(false)
+      expect(db.announcement.create).not.toHaveBeenCalled()
+    })
+
+    it.each(["STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF"])(
+      "refuses %s, who may not author announcements",
+      async (role) => {
+        signInAs(role)
+
+        const result = await submitAnnouncementWizard(content)
+
+        expect(result.success).toBe(false)
+        expect(db.announcement.create).not.toHaveBeenCalled()
+      }
+    )
+
+    it("refuses a TEACHER creating school-wide in a single shot", async () => {
+      signInAs("TEACHER", "teacher-1")
+
+      const result = await submitAnnouncementWizard(content)
+
+      expect(result.success).toBe(false)
+      expect(db.announcement.create).not.toHaveBeenCalled()
+    })
+
+    it("lets a TEACHER create a class-scoped announcement they own", async () => {
+      signInAs("TEACHER", "teacher-1")
+
+      const result = await submitAnnouncementWizard({
+        ...content,
+        scope: "class",
+        classId: "class-1",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.announcement.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: SCHOOL,
+            scope: "class",
+            classId: "class-1",
+            createdBy: "teacher-1",
+            // Submitting IS completing — nothing is left half-finished.
+            wizardStep: null,
+          }),
+        })
+      )
+    })
+
+    it("creates a completed announcement for an ADMIN, scoped to their school", async () => {
+      signInAs("ADMIN", "admin-1")
+
+      const result = await submitAnnouncementWizard(content)
+
+      expect(result.success).toBe(true)
+      expect(db.announcement.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            schoolId: SCHOOL,
+            scope: "school",
+            createdBy: "admin-1",
+            wizardStep: null,
+          }),
+        })
+      )
+    })
+
+    it("drops classId/role that do not belong to the chosen scope", async () => {
+      signInAs("ADMIN", "admin-1")
+
+      await submitAnnouncementWizard({
+        ...content,
+        scope: "school",
+        classId: "class-1",
+        role: "STUDENT",
+      })
+
+      expect(db.announcement.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ classId: null, role: null }),
+        })
+      )
+    })
+
+    it("updates in place when an id is passed, never creating a second row", async () => {
+      signInAs("ADMIN", "admin-1")
+      existingAnnouncement({ createdBy: "admin-1" })
+
+      const result = await submitAnnouncementWizard({
+        ...content,
+        id: "ann-1",
+        title: "Edited",
+      })
+
+      expect(result.success).toBe(true)
+      expect(db.announcement.create).not.toHaveBeenCalled()
+      expect(db.announcement.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: "ann-1", schoolId: SCHOOL }),
+          data: expect.objectContaining({ title: "Edited", wizardStep: null }),
+        })
+      )
+    })
+
+    it("refuses a STUDENT editing someone else's announcement by id", async () => {
+      signInAs("STUDENT", "student-1")
+      existingAnnouncement({ createdBy: "admin-1" })
+
+      const result = await submitAnnouncementWizard({
+        ...content,
+        id: "ann-1",
+        title: "Injected",
+      })
+
+      expect(result.success).toBe(false)
+      expect(db.announcement.updateMany).not.toHaveBeenCalled()
     })
   })
 })

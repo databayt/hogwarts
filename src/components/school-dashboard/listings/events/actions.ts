@@ -24,6 +24,7 @@ import {
 } from "@/components/school-dashboard/listings/events/validation"
 import { localize, localizeOne } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
+import { search } from "@/components/translation/search"
 
 type EventSelectResult = {
   id: string
@@ -438,21 +439,43 @@ export async function getEvents(
     }
 
     const sp = getEventsSchema.parse(input ?? {})
+    const displayLang = sp.displayLang ?? "ar"
+
+    // Bilingual search: queries in either language match content stored in
+    // the other language via the translation cache — no API cost. Mirrors
+    // the SSR path in content.tsx so this client-side search/load-more path
+    // doesn't regress rows to raw/untranslated matching.
+    const school =
+      sp.title || sp.location
+        ? await db.school.findUnique({
+            where: { id: schoolId },
+            select: { preferredLanguage: true },
+          })
+        : null
+    const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+
+    const [titleConditions, locationConditions] = await Promise.all([
+      sp.title
+        ? search(sp.title, ["title"], schoolId, storageLang, displayLang)
+        : Promise.resolve(null),
+      sp.location
+        ? search(sp.location, ["location"], schoolId, storageLang, displayLang)
+        : Promise.resolve(null),
+    ])
+
+    const andClauses: object[] = []
+    if (titleConditions) andClauses.push({ OR: titleConditions })
+    if (locationConditions) andClauses.push({ OR: locationConditions })
 
     const where: any = {
       schoolId,
       // Exclude in-flight wizard drafts — they have a blank title until the
       // wizard completes and would otherwise pollute the list and its count.
       wizardStep: null,
-      ...(sp.title
-        ? { title: { contains: sp.title, mode: "insensitive" } }
-        : {}),
+      ...(andClauses.length ? { AND: andClauses } : {}),
       ...(sp.eventType ? { eventType: sp.eventType } : {}),
       ...(sp.status ? { status: sp.status } : {}),
       ...(sp.eventDate ? { eventDate: new Date(sp.eventDate) } : {}),
-      ...(sp.location
-        ? { location: { contains: sp.location, mode: "insensitive" } }
-        : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
@@ -480,7 +503,6 @@ export async function getEvents(
 
     // Match the SSR path: translate + resolve placeholder labels in-locale, so
     // search/load-more rows don't regress to English after the first render.
-    const displayLang = sp.displayLang ?? "ar"
     const [localizedRows, d] = await Promise.all([
       localize("Event", rows as any[], { schoolId, lang: displayLang }),
       getEventsDictionary(displayLang),
@@ -548,18 +570,29 @@ export async function getEventsCSV(
     }
 
     const sp = getEventsSchema.parse(input ?? {})
+    const displayLang = sp.displayLang ?? "ar"
+
+    // Same bilingual search as getEvents — an exported CSV should reflect the
+    // same rows the (translated) UI search would have found.
+    const school = sp.title
+      ? await db.school.findUnique({
+          where: { id: schoolId },
+          select: { preferredLanguage: true },
+        })
+      : null
+    const storageLang = (school?.preferredLanguage as "ar" | "en") || "ar"
+    const titleConditions = sp.title
+      ? await search(sp.title, ["title"], schoolId, storageLang, displayLang)
+      : null
 
     const where: any = {
       schoolId,
       wizardStep: null,
-      ...(sp.title
-        ? { title: { contains: sp.title, mode: "insensitive" } }
-        : {}),
+      ...(titleConditions ? { OR: titleConditions } : {}),
       ...(sp.eventType ? { eventType: sp.eventType } : {}),
       ...(sp.status ? { status: sp.status } : {}),
     }
 
-    const displayLang = sp.displayLang ?? "ar"
     const [events, dictionary] = await Promise.all([
       db.event.findMany({
         where,

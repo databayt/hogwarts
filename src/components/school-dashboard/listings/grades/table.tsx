@@ -71,12 +71,15 @@ function ResultsTableInner({
     loadMore,
     refresh,
     optimisticRemove,
-  } = usePlatformData<ResultRow, { studentName?: string }>({
+  } = usePlatformData<ResultRow, { search?: string }>({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getResults(params)
+      // Pass the route locale so search/load-more translate to the SAME
+      // language as the initial server render (content.tsx) — the
+      // NEXT_LOCALE cookie can disagree with the URL.
+      const result = await getResults({ ...params, lang })
       if (result.success) {
         return {
           rows: result.data.rows as ResultRow[],
@@ -85,7 +88,7 @@ function ResultsTableInner({
       }
       return { rows: [], total: 0 }
     },
-    filters: debouncedSearch ? { studentName: debouncedSearch } : undefined,
+    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
   })
 
   // Handle search

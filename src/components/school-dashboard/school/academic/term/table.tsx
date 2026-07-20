@@ -6,6 +6,7 @@ import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
@@ -53,11 +54,11 @@ function TermTableInner({
   }
 
   // Search state
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
-    usePlatformData<TermRow, { yearId?: string }>({
+    usePlatformData<TermRow, { name?: string; yearId?: string }>({
       initialData,
       total,
       perPage,
@@ -68,7 +69,7 @@ function TermTableInner({
         }
         return { rows: result.data.rows, total: result.data.total }
       },
-      filters: searchValue ? { yearId: searchValue } : undefined,
+      filters: debouncedSearch ? { name: debouncedSearch } : undefined,
     })
 
   // Handle delete with optimistic update
@@ -143,14 +144,14 @@ function TermTableInner({
   })
 
   // Handle search
+  // NOTE: no router.refresh() here — usePlatformData's filter-change effect
+  // already refetches. Refreshing the route per keystroke re-ran the whole
+  // server component tree, doubling the round-trips for the same result.
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Toolbar translations

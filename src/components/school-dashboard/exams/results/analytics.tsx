@@ -35,6 +35,7 @@ export default async function ResultsAnalyticsContent({
   lang,
 }: Props) {
   const { schoolId } = await getTenantContext()
+  const r = dictionary?.results
 
   let totalExams = 0
   let totalResults = 0
@@ -150,13 +151,16 @@ export default async function ResultsAnalyticsContent({
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <PageHeadingSetter
-          title="Results Analytics"
-          description="Comprehensive analysis of exam performance and trends"
+          title={r?.cards?.analytics?.title || "Results Analytics"}
+          description={
+            r?.cards?.analytics?.description ||
+            "Comprehensive analysis of exam performance and trends"
+          }
         />
         <Button variant="ghost" size="sm" asChild className="w-fit">
           <Link href={`/${lang}/exams/result`}>
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-            Back
+            {r?.actions?.back || "Back"}
           </Link>
         </Button>
 
@@ -165,13 +169,13 @@ export default async function ResultsAnalyticsContent({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                Completed Exams
+                {r?.statistics?.completedExams || "Completed Exams"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalExams}</div>
               <p className="text-muted-foreground text-xs">
-                Total examinations
+                {r?.statistics?.totalExaminations || "Total examinations"}
               </p>
             </CardContent>
           </Card>
@@ -179,13 +183,14 @@ export default async function ResultsAnalyticsContent({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Results
+                {r?.statistics?.totalResults || "Total Results"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalResults}</div>
               <p className="text-muted-foreground text-xs">
-                Student results generated
+                {r?.statistics?.studentResultsGenerated ||
+                  "Student results generated"}
               </p>
             </CardContent>
           </Card>
@@ -193,7 +198,7 @@ export default async function ResultsAnalyticsContent({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                Average Score
+                {r?.statistics?.averageScore || "Average Score"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -201,19 +206,21 @@ export default async function ResultsAnalyticsContent({
                 {overallAveragePercentage.toFixed(1)}%
               </div>
               <p className="text-muted-foreground text-xs">
-                Overall performance
+                {r?.statistics?.overallPerformance || "Overall performance"}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {r?.statistics?.passRate || "Pass Rate"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{passRate.toFixed(1)}%</div>
               <p className="text-muted-foreground text-xs">
-                Success percentage
+                {r?.statistics?.successPercentage || "Success percentage"}
               </p>
             </CardContent>
           </Card>
@@ -222,18 +229,24 @@ export default async function ResultsAnalyticsContent({
         {/* Performance Indicators */}
         <Card>
           <CardHeader>
-            <CardTitle>Performance Indicators</CardTitle>
+            <CardTitle>
+              {r?.sections?.performanceIndicators || "Performance Indicators"}
+            </CardTitle>
             <CardDescription>
-              Key metrics and trends in examination results
+              {r?.cards?.indicators?.description ||
+                "Key metrics and trends in examination results"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Overall Performance</p>
+                  <p className="font-medium">
+                    {r?.statistics?.overallPerformance || "Overall Performance"}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Average across all exams
+                    {r?.statistics?.averageAcrossAllExams ||
+                      "Average across all exams"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -254,19 +267,23 @@ export default async function ResultsAnalyticsContent({
                     }
                   >
                     {overallAveragePercentage >= 70
-                      ? "Excellent"
+                      ? r?.performance?.excellent || "Excellent"
                       : overallAveragePercentage >= 50
-                        ? "Satisfactory"
-                        : "Needs Improvement"}
+                        ? r?.performance?.satisfactory || "Satisfactory"
+                        : r?.performance?.needsImprovement ||
+                          "Needs Improvement"}
                   </Badge>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Pass Rate</p>
+                  <p className="font-medium">
+                    {r?.statistics?.passRate || "Pass Rate"}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Percentage of students passing
+                    {r?.statistics?.percentageOfStudentsPassing ||
+                      "Percentage of students passing"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

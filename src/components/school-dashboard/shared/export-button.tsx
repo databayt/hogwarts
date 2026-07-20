@@ -70,7 +70,7 @@ interface ExportButtonProps {
 /**
  * @deprecated Use ExportButton from @/components/file instead
  */
-export function ExportButton({
+function ExportButtonInner({
   getCSV,
   filters,
   entityName,
@@ -234,3 +234,5 @@ export {
   ExportButton as NewExportButton,
   SimpleExportButton,
 } from "@/components/file"
+
+export const ExportButton = React.memo(ExportButtonInner)

@@ -126,7 +126,10 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
       {/* Tabs */}
       <div className="border-b-[0.5px] py-3">
         <div className="relative">
-          <ScrollArea className="max-w-[600px] lg:max-w-none" dir={isAr ? "rtl" : "ltr"}>
+          <ScrollArea
+            className="max-w-[600px] lg:max-w-none"
+            dir={isAr ? "rtl" : "ltr"}
+          >
             <nav className="flex items-center gap-2">
               {tabs.map((tab) => (
                 <button

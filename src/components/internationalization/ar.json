@@ -228,6 +228,8 @@
     "rowsPerPage": "صفوف في الصفحة",
     "pageOf": "صفحة {current} من {total}",
     "rowsSelected": "{selected} من {total} صف(وف) محدد.",
+    "loadMore": "تحميل المزيد",
+    "allLoaded": "تم تحميل الكل ({total})",
     "areYouSure": "هل أنت متأكد؟",
     "deleteItem": "حذف العنصر",
     "cannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
@@ -421,7 +423,8 @@
       "FILE_NOT_FOUND": "الملف غير موجود",
       "FILE_TOO_LARGE": "الملف كبير جداً",
       "INVALID_FILE_TYPE": "نوع الملف غير صالح"
-    }
+    },
+    "tryAgain": "إعادة المحاولة"
   },
   "navigation": {
     "menu": "القائمة",

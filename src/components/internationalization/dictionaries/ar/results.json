@@ -26,7 +26,11 @@
     "totalResults": "إجمالي النتائج",
     "overallPerformance": "الأداء العام",
     "successPercentage": "نسبة النجاح",
-    "completionRate": "معدل الإنجاز"
+    "completionRate": "معدل الإنجاز",
+    "totalExaminations": "إجمالي الامتحانات",
+    "studentResultsGenerated": "نتائج الطلاب المُولدة",
+    "averageAcrossAllExams": "المتوسط عبر جميع الامتحانات",
+    "percentageOfStudentsPassing": "نسبة الطلاب الناجحين"
   },
 
   "status": {
@@ -77,7 +81,8 @@
     "absent": "غائب",
     "passed": "ناجح",
     "failed": "راسب",
-    "examResults": "نتائج الامتحانات"
+    "examResults": "نتائج الامتحانات",
+    "status": "الحالة"
   },
 
   "actions": {
@@ -92,7 +97,8 @@
     "share": "مشاركة",
     "goToExams": "الذهاب إلى الامتحانات",
     "viewReport": "عرض التقرير",
-    "generateReport": "إنشاء تقرير"
+    "generateReport": "إنشاء تقرير",
+    "back": "رجوع"
   },
 
   "pdf": {
@@ -161,6 +167,9 @@
     "trends": {
       "title": "اتجاهات الأداء",
       "description": "التحليل المرئي والمخططات"
+    },
+    "indicators": {
+      "description": "المقاييس والاتجاهات الرئيسية في نتائج الامتحانات"
     }
   },
 

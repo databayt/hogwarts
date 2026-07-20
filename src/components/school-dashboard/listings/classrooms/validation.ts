@@ -22,4 +22,6 @@ export const getClassroomsSchema = z.object({
   name: z.string().optional().default(""),
   typeId: z.string().optional().default(""),
   building: z.string().optional().default(""),
+  /** Display locale — drives translation-aware search and localized rows. */
+  lang: z.enum(["ar", "en"]).optional(),
 })

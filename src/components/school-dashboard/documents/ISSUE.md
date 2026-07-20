@@ -8,15 +8,22 @@ last_audited: 2026-06-23
 
 # Documents — Production Readiness
 
-**Status:** BUILT (v1), migration-pending. tsc 0.
+**Status:** BUILT (v1), schema LIVE on prod. tsc 0.
 
 ## Recently Added
 
+- **Templates moved into exams + grades; `/documents` deleted (2026-07-20)** — the standalone `/documents` route and its sidebar entry are gone. `content.tsx` takes a `categories` prop and is mounted at `/exams/templates` (`EXAM_PAPER` + `CERTIFICATE`, staff-only tab) and `/grades/templates` (`REPORT_CARD`). `DocumentsManager` + `UploadTemplateDialog` now read `dictionary.school.documents.*` instead of hardcoded bilingual `L` objects. **New coupling flow for exam papers:** `use-exam-template-dialog.tsx` + `exam-paper-flow.ts` replace the paste-an-entity-id box — pick an existing `GeneratedExam`, or pick a blueprint + class + title + date and `generateExamPaperFromTemplate` creates `SchoolExam`+`GeneratedExam` in one transaction, runs `autoGenerateExamQuestions`, then fills; **it rolls the exam pair back** if selection or fill fails, so a failed generate never leaves an empty exam on the schedule. Coverage badges intersect detected `mergeFields` with `FIELD_VOCAB`. Tests: `src/tests/school-dashboard/documents/exam-paper-flow.test.ts` (6).
 - **This engine is now THE template path + REPORT_CARD resolver + role-gating (2026-07-18)** — the build-a-template WIZARDS (exam-paper `template-wizard`, `cert-wizard`, grades report-card `builder`) were removed; certs / exam papers / report cards are now "upload a `.docx` under `/documents` → auto-fill." `RESOLVABLE_CATEGORIES` = `CERTIFICATE`, `EXAM_PAPER`, `REPORT_CARD` (new `resolvers/report-card.ts` reads `ReportCard`+`ReportCardGrade[]`). Per-domain **"Generate (my template)"** lives on the certificate list, `/exams/paper/[id]`, and the report-cards table via the reusable `GenerateWithTemplateButton` + a new `generateFromDefaultTemplate(category, entityId)` action (picks the school's default/most-recent active template). **SECURITY:** `generateDocument`/`generateDocumentsBulk`/`generateFromDefaultTemplate` are now role-gated to `MANAGER_ROLES` (ADMIN/DEVELOPER/TEACHER) — the resolver scopes by `schoolId` but takes an arbitrary `entityId`, so without the gate any authenticated school user could fill a template with another student's row. The react-pdf region-preset track + `config-form` are kept (two rendering tracks, on purpose). **Deferred:** docx→PDF conversion, HTML template format, remaining category resolvers (TRANSCRIPT/LETTER/RECEIPT/ID_CARD — vocab already scaffolded in `field-vocab.ts`).
 
-## Pending migration (additive — apply Neon-branch-first at deploy)
+## Migration — APPLIED (verified 2026-07-20)
 
-The `document_templates` table + enum do not exist on prod yet. The change is
+~~Pending.~~ `document_templates` + `DocumentTemplateCategory` **exist on prod**
+(acct#2), verified 2026-07-20 via the `vercel env pull --environment=production` →
+`psql "$DIRECT_URL"` lane: table present, enum present, all 14 columns match
+`prisma/models/document-template.prisma`, 0 rows. **No DDL is owed for this block.**
+The SQL below is kept only as the reference for provisioning a fresh environment.
+
+The change was
 **purely additive** (1 table + 1 enum + 1 FK to `schools`) — no existing table is
 touched. Do NOT run `prisma db push` (the prod DB has pre-existing drift; db push
 would try to reconcile all of it). Apply this targeted SQL on a Neon branch first,

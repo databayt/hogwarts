@@ -74,7 +74,7 @@ export default async function ResultDetailContent({
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/${lang}/results`}>
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-              Back
+              {r?.actions?.back || "Back"}
             </Link>
           </Button>
           <Button variant="outline">
@@ -149,7 +149,8 @@ export default async function ResultDetailContent({
                   {summary.lowestMarks} - {summary.highestMarks}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Out of {summary.totalMarks} marks
+                  {r?.labels?.outOf || "Out of"} {summary.totalMarks}{" "}
+                  {r?.labels?.marks || "marks"}
                 </p>
               </CardContent>
             </Card>
@@ -159,9 +160,12 @@ export default async function ResultDetailContent({
         {/* Student Results List */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Results</CardTitle>
+            <CardTitle>
+              {r?.cards?.individual?.title || "Student Results"}
+            </CardTitle>
             <CardDescription>
-              Individual performance and rankings for all students
+              {r?.cards?.individual?.description ||
+                "Individual performance and rankings for all students"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,7 +191,9 @@ export default async function ResultDetailContent({
 
                   <div className="flex items-center gap-6">
                     <div className="text-end">
-                      <p className="text-muted-foreground text-sm">Marks</p>
+                      <p className="text-muted-foreground text-sm">
+                        {r?.labels?.marks || "Marks"}
+                      </p>
                       <p className="font-semibold">
                         {formatMarks(result.marksObtained, result.totalMarks)}
                       </p>
@@ -195,7 +201,7 @@ export default async function ResultDetailContent({
 
                     <div className="text-end">
                       <p className="text-muted-foreground text-sm">
-                        Percentage
+                        {r?.labels?.percentage || "Percentage"}
                       </p>
                       <p className="font-semibold">
                         {formatPercentage(result.percentage)}
@@ -204,13 +210,17 @@ export default async function ResultDetailContent({
 
                     {result.grade && (
                       <div className="text-end">
-                        <p className="text-muted-foreground text-sm">Grade</p>
+                        <p className="text-muted-foreground text-sm">
+                          {r?.labels?.grade || "Grade"}
+                        </p>
                         <Badge>{result.grade}</Badge>
                       </div>
                     )}
 
                     <div className="text-end">
-                      <p className="text-muted-foreground text-sm">Status</p>
+                      <p className="text-muted-foreground text-sm">
+                        {r?.labels?.status || "Status"}
+                      </p>
                       <Badge
                         variant={
                           result.isAbsent
@@ -222,10 +232,10 @@ export default async function ResultDetailContent({
                         }
                       >
                         {result.isAbsent
-                          ? "Absent"
+                          ? r?.status?.absent || "Absent"
                           : result.marksObtained >= (summary?.passingMarks || 0)
-                            ? "Pass"
-                            : "Fail"}
+                            ? r?.status?.pass || "Pass"
+                            : r?.status?.fail || "Fail"}
                       </Badge>
                     </div>
 

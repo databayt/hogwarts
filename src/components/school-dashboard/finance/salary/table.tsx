@@ -82,8 +82,14 @@ function SalaryStructuresTableInner({
     initialData,
     total,
     perPage,
+    filters: debouncedSearch ? { search: debouncedSearch } : undefined,
     fetcher: async (params) => {
-      const result = await getSalaryStructures()
+      // getSalaryStructures(teacherId?, search?) — no teacher scope here, so
+      // pass undefined and let the query filter by the typed term.
+      const result = await getSalaryStructures(
+        undefined,
+        typeof params.search === "string" ? params.search : undefined
+      )
       if (!result.success || !result.data) {
         return { rows: [], total: 0 }
       }

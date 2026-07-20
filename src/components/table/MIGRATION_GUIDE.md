@@ -82,6 +82,13 @@ export function StudentsTable({ data, pageCount }) {
 
 ### Path 2: Migrate to "See More" Pagination (Recommended for New Features)
 
+> **OUTDATED (2026-07-20).** The `useSeeMore` hook and `DataTableSeeMore`
+> component described below were never adopted by a single call site and have
+> been deleted. The live pattern is `usePlatformData` (`src/hooks/`) driving
+> `<DataTable paginationMode="load-more" />`; see the "See more / load-more
+> contract" section in `README.md`. The steps below are kept only as historical
+> context for the server-action shape — do not follow the client snippet.
+
 For new features or when you want to improve UX with infinite scroll:
 
 #### Step 1: Update Server Action

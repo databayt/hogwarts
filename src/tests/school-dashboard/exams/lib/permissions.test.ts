@@ -110,6 +110,15 @@ describe("exams/permissions — getExamTabsForRole", () => {
     }
   })
 
+  it("templates tab is staff-only (docx upload + fill is a manager action)", () => {
+    for (const role of ["DEVELOPER", "ADMIN", "TEACHER"]) {
+      expect(hrefs(role), role).toContain("/en/exams/templates")
+    }
+    for (const role of ["STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF", "USER"]) {
+      expect(hrefs(role), role).not.toContain("/en/exams/templates")
+    }
+  })
+
   it("STUDENT gets practice/results but NOT management tabs", () => {
     const h = hrefs("STUDENT")
     expect(h).toContain("/en/exams") // overview

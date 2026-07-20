@@ -201,6 +201,8 @@ export async function uploadReceipt(
 export async function getReceipts(input?: {
   userId?: string
   status?: "pending" | "processing" | "processed" | "error"
+  /** Free-text search across merchantName/fileDisplayName/fileName. */
+  search?: string
   limit?: number
   offset?: number
   startDate?: Date
@@ -246,6 +248,23 @@ export async function getReceipts(input?: {
 
     if (validated.status) {
       where.status = validated.status
+    }
+
+    // A school with more than one `limit`/`take` page of receipts could never
+    // reach rows past the first page via search before this — the search box
+    // only ever filtered the already-loaded slice client-side. Pushing it into
+    // the WHERE clause makes search cover the whole tenant-scoped dataset.
+    if (validated.search) {
+      where.OR = [
+        { merchantName: { contains: validated.search, mode: "insensitive" } },
+        {
+          fileDisplayName: {
+            contains: validated.search,
+            mode: "insensitive",
+          },
+        },
+        { fileName: { contains: validated.search, mode: "insensitive" } },
+      ]
     }
 
     if (validated.startDate || validated.endDate) {

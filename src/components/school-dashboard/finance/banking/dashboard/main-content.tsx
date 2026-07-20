@@ -10,6 +10,7 @@ interface DashboardMainContentProps {
   accountId: string
   currentPage: number
   dictionary: any
+  currency: string
 }
 
 export function DashboardMainContent({
@@ -18,29 +19,28 @@ export function DashboardMainContent({
   accountId,
   currentPage,
   dictionary,
+  currency,
 }: DashboardMainContentProps) {
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
       <AccountTabs
         accounts={accounts}
         currentAccountId={accountId}
         dictionary={dictionary}
+        currency={currency}
       />
 
-      <div className="bg-card rounded-lg border">
-        <div className="border-b p-6">
-          <h2 className="text-lg font-semibold">
-            {dictionary?.recentTransactions || "Recent Transactions"}
-          </h2>
-        </div>
-        <div className="p-6">
-          <RecentTransactionsList
-            transactions={transactions}
-            currentPage={currentPage}
-            dictionary={dictionary}
-          />
-        </div>
-      </div>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">
+          {dictionary?.recentTransactions || "Recent Transactions"}
+        </h2>
+        <RecentTransactionsList
+          transactions={transactions}
+          currentPage={currentPage}
+          dictionary={dictionary}
+          currency={currency}
+        />
+      </section>
     </div>
   )
 }

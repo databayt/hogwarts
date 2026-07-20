@@ -26,7 +26,11 @@
     "totalResults": "Total Results",
     "overallPerformance": "Overall Performance",
     "successPercentage": "Success Percentage",
-    "completionRate": "Completion Rate"
+    "completionRate": "Completion Rate",
+    "totalExaminations": "Total examinations",
+    "studentResultsGenerated": "Student results generated",
+    "averageAcrossAllExams": "Average across all exams",
+    "percentageOfStudentsPassing": "Percentage of students passing"
   },
 
   "status": {
@@ -77,7 +81,8 @@
     "absent": "Absent",
     "passed": "Passed",
     "failed": "Failed",
-    "examResults": "Exam Results"
+    "examResults": "Exam Results",
+    "status": "Status"
   },
 
   "actions": {
@@ -92,7 +97,8 @@
     "share": "Share",
     "goToExams": "Go to Exams",
     "viewReport": "View Report",
-    "generateReport": "Generate Report"
+    "generateReport": "Generate Report",
+    "back": "Back"
   },
 
   "pdf": {
@@ -161,6 +167,9 @@
     "trends": {
       "title": "Performance Trends",
       "description": "Visual analysis and charts"
+    },
+    "indicators": {
+      "description": "Key metrics and trends in examination results"
     }
   },
 

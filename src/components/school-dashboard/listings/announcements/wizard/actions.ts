@@ -3,13 +3,17 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
+import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
+import { prewarm } from "@/components/translation/prewarm"
 
-import { getAllowedScopes } from "../authorization"
+import { checkAnnouncementPermission, getAllowedScopes } from "../authorization"
 import { guardAnnouncement, resolveContext } from "../guard"
+import { contentSchema, type ContentFormData } from "./content/validation"
 import type { AnnouncementWizardData } from "./use-announcement-wizard"
 
 /** Fetch full announcement data for the wizard */
@@ -89,6 +93,105 @@ export async function createDraftAnnouncement(): Promise<
     return { success: true, data: { id: announcement.id } }
   } catch {
     return actionError(ACTION_ERRORS.ANNOUNCEMENT_CREATE_FAILED)
+  }
+}
+
+/**
+ * Create-or-update an announcement and mark the wizard complete, in ONE call.
+ *
+ * The routed wizard needed three sequential round-trips to produce an
+ * announcement (createDraft on click → updateContent on submit → complete), and
+ * the first of them ran before the form was even visible, which is what left a
+ * trail of empty drafts behind every abandoned "+" click. Collapsing all three
+ * into a single action lets the modal open instantly with no server work at
+ * all, and pays exactly one round-trip when the user actually submits.
+ */
+export async function submitAnnouncementWizard(
+  input: ContentFormData & { id?: string | null }
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const { id, ...rest } = input
+    const parsed = contentSchema.parse(rest)
+
+    const fields = {
+      title: parsed.title,
+      body: parsed.body,
+      lang: parsed.lang,
+      priority: parsed.priority ?? "normal",
+      scope: parsed.scope,
+      classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
+      role:
+        parsed.scope === "role" ? ((parsed.role as UserRole) ?? null) : null,
+      // Completing the wizard is what clears the step marker.
+      wizardStep: null,
+    }
+
+    // ---- Edit: guard the existing row, then update in place ----
+    if (id) {
+      const guard = await guardAnnouncement(id, "update")
+      if (!guard.ok) return guard.denied
+      const { authContext, schoolId } = guard.value
+
+      if (!getAllowedScopes(authContext.role).includes(parsed.scope)) {
+        return actionError(ACTION_ERRORS.UNAUTHORIZED)
+      }
+
+      await db.announcement.updateMany({
+        where: { id, schoolId },
+        data: fields,
+      })
+
+      after(() =>
+        prewarm(
+          "Announcement",
+          { id, title: parsed.title, body: parsed.body },
+          { schoolId }
+        )
+      )
+      revalidatePath("/announcements")
+      return { success: true, data: { id } }
+    }
+
+    // ---- Create: no row exists yet, so authorize the caller directly ----
+    const ctx = await resolveContext()
+    if (!ctx.ok) return ctx.denied
+    const { authContext, schoolId } = ctx.value
+
+    // Both checks matter: getAllowedScopes() covers which scopes the role may
+    // ever address, checkAnnouncementPermission() covers the create right
+    // itself (a TEACHER passes only for a class-scoped announcement).
+    if (
+      !getAllowedScopes(authContext.role).includes(parsed.scope) ||
+      !checkAnnouncementPermission(authContext, "create", {
+        schoolId,
+        scope: parsed.scope,
+      })
+    ) {
+      return actionError(ACTION_ERRORS.UNAUTHORIZED)
+    }
+
+    const created = await db.announcement.create({
+      data: {
+        ...fields,
+        schoolId,
+        // Without this the ownership checks in checkAnnouncementPermission()
+        // can never pass, so teachers lose access to their own announcements.
+        createdBy: authContext.userId,
+      },
+      select: { id: true },
+    })
+
+    after(() =>
+      prewarm(
+        "Announcement",
+        { id: created.id, title: parsed.title, body: parsed.body },
+        { schoolId }
+      )
+    )
+    revalidatePath("/announcements")
+    return { success: true, data: { id: created.id } }
+  } catch {
+    return actionError(ACTION_ERRORS.SAVE_FAILED)
   }
 }
 

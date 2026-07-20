@@ -3,9 +3,10 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import * as React from "react"
-import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import { useCallback, useMemo } from "react"
 import { Building2 } from "lucide-react"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
 import {
@@ -14,6 +15,7 @@ import {
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
+import { useLocale } from "@/components/internationalization/use-locale"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
@@ -34,9 +36,12 @@ export function TenantsTable({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
-  // Search state with debouncing
-  const [searchInput, setSearchInput] = useState("")
-  const deferredSearch = useDeferredValue(searchInput)
+  const { locale } = useLocale()
+
+  // Real 300ms debounce. This was useDeferredValue, which is a RENDER-priority
+  // hint, not a timer — it does not coalesce keystrokes before they reach the
+  // server action, so every character fired its own round-trip.
+  const [searchInput, deferredSearch, setSearchInput] = useDebouncedSearch(300)
 
   // Build filters object
   const filters = useMemo(() => {
@@ -65,6 +70,9 @@ export function TenantsTable({
           page: params.page,
           perPage: params.perPage,
           search: (deferredSearch as string) || undefined,
+          // Without this the search path returns untranslated names and the
+          // list visibly flips language mid-search.
+          lang: locale === "en" ? "en" : "ar",
         })
         return {
           rows: result.data as TenantRow[],

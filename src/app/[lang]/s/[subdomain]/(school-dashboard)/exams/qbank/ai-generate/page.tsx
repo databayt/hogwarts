@@ -1,6 +1,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
@@ -11,7 +12,14 @@ import { PageHeadingSetter } from "@/components/school-dashboard/context/page-he
 import { AIGenerateContent } from "@/components/school-dashboard/exams/qbank/ai-generate-content"
 import { Shell as PageContainer } from "@/components/table/shell"
 
-export const metadata = { title: "AI Question Generation" }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return {
+    title:
+      dictionary?.generate?.actions?.generateWithAI || "AI Question Generation",
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -42,7 +50,9 @@ export default async function AIGeneratePage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeadingSetter title="AI Generate" />
+        <PageHeadingSetter
+          title={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+        />
         <AIGenerateContent subjects={subjectOptions} />
       </div>
     </PageContainer>

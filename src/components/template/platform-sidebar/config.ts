@@ -137,13 +137,6 @@ export const platformNav: PlatformNavItem[] = [
     className: "-ms-[1px] h-4.5 w-4.5",
   },
   {
-    key: "documents",
-    title: "Documents",
-    href: "/documents",
-    icon: "file",
-    roles: ["ADMIN", "STAFF", "TEACHER"],
-  },
-  {
     key: "events",
     title: "Events",
     href: "/events",

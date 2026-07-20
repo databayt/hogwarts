@@ -76,7 +76,7 @@ export function getColumns(
     },
     {
       id: "answerKey",
-      header: "Answer Key",
+      header: dict.table.answerKey,
       cell: ({ row }) => {
         return (
           <AnswerKeyCell

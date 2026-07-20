@@ -7,6 +7,7 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export default function Error({
   error,
@@ -15,6 +16,8 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { dictionary } = useDictionary()
+
   useEffect(() => {
     console.error("Exam paper page error:", error)
   }, [error])
@@ -38,7 +41,9 @@ export default function Error({
               Error ID: {error.digest}
             </p>
           )}
-          <Button onClick={reset}>Try Again</Button>
+          <Button onClick={reset}>
+            {dictionary?.common?.tryAgain || "Try again"}
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -155,4 +155,67 @@ Not committed; not deployed.
 
 ---
 
-**Last Review:** 2026-07-17
+## 2026-07-20 — create/edit moved into a modal
+
+User report: `/ar/announcements` "is not fast", does "not auto close when
+create/update", and opening `/add` has "some disturbance". All three were real,
+and all three came from the same place — create/edit being a **route**.
+
+**Create used to cost three sequential round-trips before the form was usable.**
+Clicking `+` called `createDraftAnnouncement()` (a DB write) with no pending
+state, then `router.push`'d to `/announcements/add/{id}/content`, where
+`WizardLayout` re-fetched the draft it had just created — a draft that is empty
+by construction — behind a skeleton. That fetch-what-you-just-made round-trip
+plus the route transition **is** the "disturbance". Submitting then cost two
+more calls (`updateAnnouncementContent` → `completeAnnouncementWizard`).
+
+**Nothing auto-closed, and this was systemic, not local.** `WizardStep` calls
+`setCustomNavigation({ onNext })`, and `FormFooter.handleNext` checks custom
+navigation _before_ its own `finalDestination` handling. Every wizard's last step
+passes `nextStep={undefined}` (verified across all 12 wizard blocks), so on the
+final step the save succeeded and then simply… nothing. The user was left sitting
+on a completed form. Fixed generically: `WizardStep` now takes an optional
+`finalDestination` and navigates there when there is no `nextStep`. Only
+announcements is wired to it so far — **the other 11 wizard blocks still dead-end
+on their last step** and should each pass it.
+
+**Edit was entirely dead.** `columns.tsx` called `useModal().openModal(id)`, but
+no modal was ever mounted for announcements (`AnnouncementCreateForm` in
+`form.tsx` has zero importers). It also broke the rules of hooks — a TanStack
+cell renderer is not a component. Edit is now a plain `onEdit` callback.
+
+**What replaced it.** `wizard/modal.tsx` renders the _exact_ component stack the
+route rendered — same `fixed inset-0 z-50` overlay, same `FormLayout` /
+`FormHeading` / `ContentForm`, same `FormFooter` and progress bar — mounted in
+place. `FormFooter` needed no changes: it already accepts `onNext`/`onClose`
+overrides, and its pathname-derived step resolution falls through to step 0,
+which is correct for a one-step wizard.
+
+- Opening now costs **zero** server calls; submitting costs **one**, via the new
+  `submitAnnouncementWizard()`, which creates-or-updates _and_ completes.
+- No more orphan drafts. The old flow wrote a row on every `+` click and
+  abandoned it if the user backed out; one such draft ("ي", 2026-07-19) was
+  still sitting in the demo DB.
+- `getClassesForAnnouncement()` was fetched on every form mount; it is now
+  deferred until `scope === "class"` and cached per page load.
+
+**Still open.** The `/announcements/add/[id]` route is intentionally left working
+(deep links, and prod may hold `wizardStep != null` drafts), so create/edit logic
+now exists in two shapes. `wizard/targeting/` is unreachable — `config.steps` is
+`["content"]` and the content form absorbed the scope/class/role fields — and
+`form.tsx` + `information.tsx` + `scope.tsx` are dead alongside it. Removing all
+of it is a follow-up, not part of this pass.
+
+**Verification.** `tsc` clean for this block and for `components/form/`; 43
+announcements tests pass (11 new, covering the single-shot action's create and
+edit authorization branches); 791 tests pass across all wizard-consuming blocks.
+Browser-verified on `demo.localhost:3000/ar/announcements` as ADMIN: create
+opened with no navigation, auto-closed 1.5s after submit with
+"تم إنشاء الإعلان", row landed as a draft; edit opened in 300ms prefilled with
+title _and_ body, footer label switched to "تحديث", auto-closed in 300ms with
+"تم تحديث الإعلان" and patched the row in place. DB showed exactly one row,
+`wizardStep: null`, `createdBy` and `schoolId` set. Not committed; not deployed.
+
+---
+
+**Last Review:** 2026-07-20

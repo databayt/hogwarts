@@ -24,9 +24,11 @@ export default async function ContributionsPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">My Contributions</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {dictionary?.generate?.contributions?.title || "My contributions"}
+        </h2>
         <p className="text-muted-foreground">
-          Track your exam and template contributions to the catalog
+          {dictionary?.generate?.contributions?.description}
         </p>
       </div>
       <ExamContributionsContent />

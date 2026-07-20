@@ -31,13 +31,7 @@ export function TabsNav({
   return (
     <div className="relative">
       <ScrollArea className="max-w-[600px] lg:max-w-none">
-        <nav
-          className={cn(
-            "flex items-center gap-2",
-            className
-          )}
-          {...props}
-        >
+        <nav className={cn("flex items-center gap-2", className)} {...props}>
           {defaultTab && (
             <TabLink tab={defaultTab} isActive={pathname === defaultTab.href} />
           )}

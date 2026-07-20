@@ -24,9 +24,11 @@ export default async function ExamBrowsePage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Exam Catalog</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {dictionary?.generate?.catalog?.title || "Exam catalog"}
+        </h2>
         <p className="text-muted-foreground">
-          Browse and adopt exams from the global catalog
+          {dictionary?.generate?.catalog?.description}
         </p>
       </div>
       <ExamBrowseTab />

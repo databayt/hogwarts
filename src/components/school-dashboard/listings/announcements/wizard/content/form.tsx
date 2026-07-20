@@ -16,8 +16,8 @@ import { resolveActionError } from "@/lib/resolve-action-error"
 import { Form } from "@/components/ui/form"
 import { ErrorToast } from "@/components/atom/toast"
 import { InputField, SelectField, TextareaField } from "@/components/form"
-import type { WizardFormRef } from "@/components/form/wizard"
 import { useWizardValidationOptional } from "@/components/form/template/wizard-validation-context"
+import type { WizardFormRef } from "@/components/form/wizard"
 import { createI18nHelpers } from "@/components/internationalization/helpers"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -27,14 +27,32 @@ import { getClassesForAnnouncement } from "../targeting/actions"
 import { updateAnnouncementContent } from "./actions"
 import { createContentSchema, type ContentFormData } from "./validation"
 
+/**
+ * Class options are the same for every announcement in the school and never
+ * change mid-session, so resolve them once per page load instead of on every
+ * mount — reopening the modal is then free.
+ */
+let classOptionsCache: Promise<{ label: string; value: string }[]> | null = null
+
+function loadClassOptions() {
+  classOptionsCache ??= getClassesForAnnouncement()
+  return classOptionsCache
+}
+
 interface ContentFormProps {
-  announcementId: string
+  /** Omitted when creating: the row does not exist until submit. */
+  announcementId?: string
   initialData?: Partial<ContentFormData>
   onValidChange?: (isValid: boolean) => void
+  /**
+   * Override the save pipeline. The routed wizard leaves this unset and keeps
+   * its update-then-complete pair; the modal passes a single-round-trip submit.
+   */
+  onSubmit?: (data: ContentFormData) => Promise<void>
 }
 
 export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
-  ({ announcementId, initialData, onValidChange }, ref) => {
+  ({ announcementId, initialData, onValidChange, onSubmit }, ref) => {
     const [isPending, startTransition] = useTransition()
     const { dictionary } = useDictionary()
     const { locale } = useLocale()
@@ -97,10 +115,6 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
       },
     ]
 
-    useEffect(() => {
-      getClassesForAnnouncement().then(setClassOptions)
-    }, [])
-
     const schema = React.useMemo(() => {
       const messages = dictionary?.messages
       if (!messages) return createContentSchema()
@@ -127,6 +141,19 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
     const scope = form.watch("scope")
     const classId = form.watch("classId")
     const role = form.watch("role")
+
+    // School-wide is the common case, so don't spend a round-trip on the class
+    // list until a class-scoped announcement is actually being written.
+    useEffect(() => {
+      if (scope !== "class") return
+      let active = true
+      loadClassOptions().then((opts) => {
+        if (active) setClassOptions(opts)
+      })
+      return () => {
+        active = false
+      }
+    }, [scope])
 
     const validationContext = useWizardValidationOptional()
     const setFieldProgress = validationContext?.setFieldProgress
@@ -175,6 +202,20 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
                 return
               }
               const data = form.getValues()
+
+              // Modal mode: one round-trip that creates-or-updates and
+              // completes. Errors are surfaced by the caller.
+              if (onSubmit) {
+                await onSubmit(data)
+                resolve()
+                return
+              }
+
+              if (!announcementId) {
+                reject(new Error("Missing announcement id"))
+                return
+              }
+
               const result = await updateAnnouncementContent(
                 announcementId,
                 data
@@ -202,7 +243,8 @@ export const ContentForm = forwardRef<WizardFormRef, ContentFormProps>(
               resolve()
             } catch (err) {
               // Never surface a raw JS Error message — it is always English.
-              ErrorToast(w?.failedToSave)
+              // In modal mode the caller has already reported the failure.
+              if (!onSubmit) ErrorToast(w?.failedToSave)
               reject(err)
             }
           })

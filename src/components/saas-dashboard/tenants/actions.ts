@@ -8,6 +8,7 @@ import type { School } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getText } from "@/components/translation/display"
 import {
   repairProvisioning,
   type RepairResult,
@@ -328,11 +329,35 @@ export async function tenantStopImpersonation(input?: {
  * Get tenants with pagination (can be called from client)
  * This is a wrapper around the getTenants query that can be used in client components
  */
-export async function fetchTenants(input: GetTenantsInput) {
+export async function fetchTenants(
+  input: GetTenantsInput & { lang?: "ar" | "en" }
+) {
   try {
     await requireOperator()
     const result = await getTenantsQuery(input)
-    return result
+
+    // The initial SSR render (content.tsx) shows the translated school name,
+    // but this action backs live search and load-more. Returning raw rows made
+    // the visible names flip from translated to stored the moment an operator
+    // typed. Mirror content.tsx's resolution exactly: prefer the admin-supplied
+    // English-name column on /en, else translate on demand (LRU + DB cached).
+    const lang = input.lang ?? "ar"
+    const data = await Promise.all(
+      (result.data as Array<Record<string, any>>).map(async (tenant) => {
+        const name =
+          lang === "en" && tenant.nameEn
+            ? tenant.nameEn
+            : await getText(
+                tenant.name,
+                (tenant.preferredLanguage ?? "ar") as "en" | "ar",
+                lang,
+                tenant.id
+              )
+        return { ...tenant, name }
+      })
+    )
+
+    return { ...result, data }
   } catch (error) {
     console.error("Failed to fetch tenants:", error)
     return {

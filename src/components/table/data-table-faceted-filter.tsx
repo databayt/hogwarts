@@ -192,6 +192,14 @@ function DataTableFacetedFilterInner<TData, TValue>({
   )
 }
 
-export const DataTableFacetedFilter = React.memo(
-  DataTableFacetedFilterInner
-) as typeof DataTableFacetedFilterInner
+/**
+ * DELIBERATELY NOT React.memo'd.
+ *
+ * TanStack's `table`/`column` objects are referentially STABLE and mutate in
+ * place, so a shallow prop compare cannot observe a state change. Memoizing
+ * here made the selected-facet checkmarks render stale whenever the surrounding props happened to be
+ * stable; it only ever appeared to work because a caller was passing a fresh
+ * object/array literal each render and accidentally busting the compare.
+ * Same trap as DataTable / DataTableLoadMore.
+ */
+export const DataTableFacetedFilter = DataTableFacetedFilterInner

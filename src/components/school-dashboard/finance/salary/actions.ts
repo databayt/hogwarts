@@ -20,6 +20,7 @@ import {
   calculateSocialSecurity,
 } from "../payroll/config"
 import { resolveSchoolPayrollPolicy } from "../payroll/country-rules/school-policy"
+import { buildSalaryStructureWhere } from "./queries"
 import {
   salaryAllowanceSchema,
   salaryCalculatorSchema,
@@ -47,20 +48,16 @@ type ActionResult<T = void> = {
  * Get all salary structures for the school
  */
 export async function getSalaryStructures(
-  teacherId?: string
+  teacherId?: string,
+  search?: string
 ): Promise<ActionResult<any[]>> {
   try {
     const ctx = await requireFinanceActor("salary", "view")
     if (isFinanceAuthError(ctx)) return ctx
     const { schoolId } = ctx
 
-    const whereClause: any = { schoolId }
-    if (teacherId) {
-      whereClause.teacherId = teacherId
-    }
-
     const salaryStructures = await db.salaryStructure.findMany({
-      where: whereClause,
+      where: buildSalaryStructureWhere(schoolId, { teacherId, search }),
       include: {
         teacher: {
           select: {

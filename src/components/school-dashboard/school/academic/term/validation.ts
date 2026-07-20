@@ -60,6 +60,12 @@ export const getTermsSchema = z.object({
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(200).default(20),
   yearId: z.string().optional(),
+  /**
+   * Free-text search. Term has no text column of its own — `termNumber` is an
+   * int and the human-readable name lives on the related school year — so this
+   * matches the year name, plus the term number when the term parses as one.
+   */
+  name: z.string().optional(),
   sort: z.array(sortItemSchema).optional().default([]),
 })
 

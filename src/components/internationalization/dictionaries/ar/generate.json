@@ -1,10 +1,8 @@
 {
   "title": "إنشاء الاختبارات تلقائياً",
   "description": "إنشاء وإدارة وتوليد الاختبارات باستخدام اختيار ذكي للأسئلة",
-
   "pageTitle": "إنشاء الاختبارات تلقائياً",
   "pageDescription": "إنشاء وإدارة وتوليد الاختبارات باستخدام اختيار ذكي للأسئلة",
-
   "stats": {
     "questions": "الأسئلة",
     "templates": "القوالب",
@@ -13,7 +11,6 @@
     "reusableBlueprints": "قوالب قابلة لإعادة الاستخدام",
     "examsCreated": "اختبارات تم إنشاؤها"
   },
-
   "actions": {
     "viewQuestions": "عرض الأسئلة",
     "addQuestion": "إضافة سؤال",
@@ -32,7 +29,6 @@
     "remove": "إزالة",
     "actions": "الإجراءات"
   },
-
   "cards": {
     "questionBank": {
       "title": "بنك الأسئلة",
@@ -55,7 +51,6 @@
       "details": "عرض تحليلات مفصلة حول استخدام الأسئلة ومعدلات النجاح والصعوبة المتصورة. حدد الأسئلة التي تعمل بشكل جيد وتلك التي تحتاج إلى تعديل."
     }
   },
-
   "quickStart": {
     "title": "دليل البدء السريع",
     "description": "ابدأ في إنشاء الاختبارات تلقائياً في 3 خطوات سهلة",
@@ -72,13 +67,11 @@
       "description": "اختر قالباً ودع النظام يختار الأسئلة بذكاء. معاينة وتخصيص قبل الانتهاء."
     }
   },
-
   "questionBank": {
     "title": "بنك الأسئلة",
     "createQuestion": "إنشاء سؤال",
     "editQuestion": "تعديل سؤال",
     "viewQuestion": "عرض سؤال",
-
     "form": {
       "subjectLabel": "المادة",
       "subjectPlaceholder": "اختر المادة",
@@ -96,7 +89,7 @@
       "optionsLabel": "الخيارات",
       "addOption": "إضافة خيار",
       "optionPlaceholder": "الخيار {{number}}",
-      "explanationPlaceholder": "التوضيح (اختياري)",
+      "explanationPlaceholder": "اشرح المفهوم أو قدم سياقاً إضافياً...",
       "acceptedAnswersLabel": "الإجابات المقبولة",
       "addAnswer": "إضافة إجابة",
       "answerPlaceholder": "الإجابة {{number}}",
@@ -110,10 +103,8 @@
       "tagsDescription": "اضغط Enter لإضافة وسوم (مثل: الجبر، الهندسة)",
       "tagsPlaceholder": "اكتب واضغط Enter",
       "explanationLabel": "التوضيح (اختياري)",
-      "explanationPlaceholder": "اشرح المفهوم أو قدم سياقاً إضافياً...",
       "imageUrlLabel": "رابط الصورة (اختياري)"
     },
-
     "columns": {
       "question": "السؤال",
       "type": "النوع",
@@ -128,7 +119,6 @@
       "timesUsed": "{{count}} مرة",
       "noData": "-"
     },
-
     "messages": {
       "questionCreated": "تم إنشاء السؤال!",
       "questionUpdated": "تم تحديث السؤال!",
@@ -138,7 +128,6 @@
       "failedToDelete": "فشل في الحذف"
     }
   },
-
   "columns": {
     "templateName": "اسم القالب",
     "subject": "المادة",
@@ -166,7 +155,6 @@
     "edit": "تعديل",
     "useTemplate": "استخدام القالب"
   },
-
   "form": {
     "templateNameLabel": "اسم القالب",
     "templateNamePlaceholder": "مثال: قالب اختبار منتصف الفصل - الرياضيات",
@@ -196,14 +184,12 @@
     "update": "تحديث",
     "create": "إنشاء"
   },
-
   "templates": {
     "title": "قوالب الاختبارات",
     "description": "إنشاء قوالب اختبارات قابلة لإعادة الاستخدام مع قواعد توزيع أسئلة محددة",
     "createTemplate": "إنشاء قالب اختبار",
     "editTemplate": "تعديل قالب",
     "viewTemplate": "عرض قالب",
-
     "form": {
       "templateNameLabel": "اسم القالب",
       "templateNamePlaceholder": "مثال: قالب اختبار منتصف الفصل - الرياضيات",
@@ -217,7 +203,6 @@
       "distributionDescription": "إجمالي الأسئلة: {{count}}",
       "bloomDistributionLabel": "توزيع بلوم (اختياري)"
     },
-
     "distribution": {
       "title": "توزيع الأسئلة",
       "description": "حدد عدد الأسئلة من كل نوع ومستوى صعوبة",
@@ -229,7 +214,6 @@
       "columnTotal": "مجموع العمود",
       "grandTotal": "المجموع الكلي"
     },
-
     "columns": {
       "templateName": "اسم القالب",
       "subject": "المادة",
@@ -244,7 +228,6 @@
       "questionsFormat": "{{count}} سؤال",
       "usedFormat": "{{count}} مرة"
     },
-
     "messages": {
       "templateCreated": "تم إنشاء القالب!",
       "templateUpdated": "تم تحديث القالب!",
@@ -254,7 +237,6 @@
       "failedToDelete": "فشل في الحذف"
     }
   },
-
   "questionTypes": {
     "MULTIPLE_CHOICE": {
       "label": "اختيار من متعدد",
@@ -277,7 +259,6 @@
       "description": "استجابة كتابية موسعة مع تحليل مفصل"
     }
   },
-
   "difficultyLevels": {
     "EASY": {
       "label": "سهل",
@@ -292,7 +273,6 @@
       "description": "تقييم وإبداع"
     }
   },
-
   "bloomLevels": {
     "REMEMBER": {
       "label": "تذكر",
@@ -325,13 +305,11 @@
       "examples": "صمم، ابنِ، طوّر، صغ"
     }
   },
-
   "sources": {
     "MANUAL": "يدوي",
     "AI": "ذكاء اصطناعي",
     "IMPORTED": "مستورد"
   },
-
   "common": {
     "loading": "جارٍ التحميل...",
     "noResults": "لا توجد نتائج",
@@ -345,7 +323,6 @@
     "loadMore": "تحميل المزيد",
     "showingResults": "عرض {{count}} من {{total}} نتيجة"
   },
-
   "paper": {
     "title": "إنشاء ورقة الاختبار",
     "subtitle": "إعداد وطباعة أوراق الاختبارات",
@@ -359,7 +336,6 @@
     "generate": "إنشاء",
     "papers": "الأوراق",
     "settings": "الإعدادات",
-
     "config": {
       "template_layout": "القالب والتخطيط",
       "template_layout_desc": "اختر نمط وتخطيط ورقة الاختبار",
@@ -414,7 +390,6 @@
       "config_saved": "تم حفظ إعدادات الورقة بنجاح",
       "unexpected_error": "حدث خطأ غير متوقع"
     },
-
     "generation": {
       "generate_single": "إنشاء نسخة واحدة",
       "generate_single_desc": "إنشاء نسخة واحدة من ورقة الاختبار",
@@ -437,7 +412,6 @@
       "generating_all": "جارٍ إنشاء جميع النسخ",
       "generating_answer_key": "جارٍ إنشاء مفتاح الإجابة"
     },
-
     "list": {
       "generated_papers": "الأوراق المُنشأة",
       "no_papers_desc": "لم يتم إنشاء أوراق بعد",
@@ -452,18 +426,15 @@
       "status": "الحالة",
       "delete": "حذف"
     },
-
     "preview_title": "معاينة",
     "loading_preview": "جارٍ تحميل المعاينة...",
     "no_preview_data": "لا توجد بيانات للمعاينة",
-
     "conflict": {
       "available": "متاح",
       "click_to_select": "انقر لاختيار هذا الوقت",
       "proposed_exam": "الاختبار المقترح",
       "conflicts_detected": "تم اكتشاف {count} تعارض"
     },
-
     "export": {
       "exam_list": "قائمة الاختبارات",
       "export_label": "تصدير",
@@ -471,7 +442,6 @@
       "exporting": "جارٍ التصدير..."
     }
   },
-
   "wizard": {
     "steps": {
       "gallery": {
@@ -527,5 +497,30 @@
       "title": "المعاينة والإنشاء",
       "description": "راجع إعدادات الاختبار قبل الإنشاء."
     }
+  },
+  "contributions": {
+    "title": "مساهماتي",
+    "description": "تتبّع الاختبارات والقوالب التي ساهمت بها في الكتالوج العام.",
+    "total": "الإجمالي",
+    "approved": "مقبولة",
+    "pending": "قيد المراجعة",
+    "rejected": "مرفوضة",
+    "tabExams": "الاختبارات",
+    "tabTemplates": "القوالب",
+    "noExams": "لا توجد مساهمات باختبارات بعد",
+    "noExamsHint": "ساهم باختبارات من صفحة الإنشاء لتظهر هنا.",
+    "noTemplates": "لا توجد مساهمات بقوالب بعد",
+    "noTemplatesHint": "ساهم بقوالب اختبارات لتظهر هنا.",
+    "minutes": "دقيقة",
+    "marks": "درجة"
+  },
+  "catalog": {
+    "title": "كتالوج الاختبارات",
+    "description": "تصفّح واعتمد اختبارات من الكتالوج العام"
+  },
+  "versions": {
+    "title": "نسخ الاختبار",
+    "description": "إدارة النسخ المُولّدة لهذا الاختبار",
+    "emptyDescription": "اختر اختباراً لعرض نسخه."
   }
 }

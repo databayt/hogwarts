@@ -6,8 +6,7 @@ import { memo, useCallback, useMemo, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoaderCircle } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -27,11 +26,49 @@ interface RecentTransactionsListProps {
   transactions: any[]
   currentPage: number
   dictionary: any
+  currency: string
 }
 
 interface TransactionRowProps {
   transaction: any
   dictionary: any
+  /** Raw category slug -> translated label. Falls back to the slug when a new
+   *  category appears in the data before it is added to the dictionary. */
+  categoryLabels: Record<string, string>
+}
+
+/**
+ * Borderless filter pill. Selection reads from fill weight rather than an
+ * outline, so a long category row stays quiet instead of rendering as a
+ * wall of boxes.
+ */
+function CategoryChip({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean
+  disabled?: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      className={cn(
+        "rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50",
+        active
+          ? "bg-foreground text-background"
+          : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+    >
+      {children}
+    </button>
+  )
 }
 
 /**
@@ -41,11 +78,13 @@ interface TransactionRowProps {
 const TransactionRow = memo(function TransactionRow({
   transaction,
   dictionary,
+  categoryLabels,
   locale,
-}: TransactionRowProps & { locale: string }) {
+  currency,
+}: TransactionRowProps & { locale: string; currency: string }) {
   const formattedAmount = useMemo(
-    () => formatAmount(Math.abs(transaction.amount), locale),
-    [transaction.amount, locale]
+    () => formatAmount(Math.abs(transaction.amount), locale, currency),
+    [transaction.amount, locale, currency]
   )
 
   const formattedDate = useMemo(
@@ -54,14 +93,15 @@ const TransactionRow = memo(function TransactionRow({
   )
 
   const amountColorClass =
-    transaction.type === "credit" ? "text-green-600" : "text-red-600"
-  const statusVariant = transaction.pending ? "secondary" : "default"
+    transaction.type === "credit"
+      ? "text-emerald-600 dark:text-emerald-500"
+      : "text-muted-foreground"
   const statusText = transaction.pending
     ? dictionary?.pending || "Pending"
     : dictionary?.completed || "Completed"
 
   return (
-    <TableRow>
+    <TableRow className="border-0">
       <TableCell className="font-medium">
         <div>
           <p className="font-medium">{transaction.name}</p>
@@ -73,16 +113,26 @@ const TransactionRow = memo(function TransactionRow({
         </div>
       </TableCell>
       <TableCell>
-        <span className={`font-medium ${amountColorClass}`}>
+        <span className={`font-medium tabular-nums ${amountColorClass}`}>
           {formattedAmount}
         </span>
       </TableCell>
       <TableCell>
-        <Badge variant={statusVariant}>{statusText}</Badge>
+        <span
+          className={
+            transaction.pending
+              ? "text-muted-foreground text-sm"
+              : "text-foreground text-sm"
+          }
+        >
+          {statusText}
+        </span>
       </TableCell>
-      <TableCell className="text-muted-foreground">{formattedDate}</TableCell>
-      <TableCell>
-        <Badge variant="outline">{transaction.category}</Badge>
+      <TableCell className="text-muted-foreground tabular-nums">
+        {formattedDate}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {categoryLabels[transaction.category] || transaction.category}
       </TableCell>
     </TableRow>
   )
@@ -98,11 +148,13 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
   transactions = [],
   currentPage,
   dictionary,
+  currency,
 }: RecentTransactionsListProps) {
   const { dictionary: globalDict } = useDictionary()
   const { locale } = useLocale()
   const fd = (globalDict as any)?.finance
-  const bt = fd?.bankingTransactions as Record<string, string> | undefined
+  const bt = fd?.bankingTransactions as Record<string, any> | undefined
+  const categoryLabels = (bt?.categories ?? {}) as Record<string, string>
 
   const router = useRouter()
   const pathname = usePathname()
@@ -162,35 +214,35 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
     <div className="space-y-4">
       {/* Category Filters */}
       {categories.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleCategoryChange(null)}
+        <div className="flex flex-wrap items-center gap-2">
+          <CategoryChip
+            active={selectedCategory === null}
             disabled={isPending}
+            onClick={() => handleCategoryChange(null)}
           >
             {bt?.all || dictionary?.all || "All"}
-          </Button>
+          </CategoryChip>
           {categories.map((category: string) => (
-            <Button
+            <CategoryChip
               key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCategoryChange(category)}
+              active={selectedCategory === category}
               disabled={isPending}
+              onClick={() => handleCategoryChange(category)}
             >
-              {category}
-            </Button>
+              {categoryLabels[category] || category}
+            </CategoryChip>
           ))}
-          {isPending && <LoaderCircle className="h-4 w-4 animate-spin" />}
+          {isPending && (
+            <LoaderCircle className="text-muted-foreground h-4 w-4 animate-spin" />
+          )}
         </div>
       )}
 
       {/* Transactions Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>
                 {bt?.transaction || dictionary?.transaction || "Transaction"}
               </TableHead>
@@ -212,7 +264,9 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
                 key={transaction.id}
                 transaction={transaction}
                 dictionary={bt || dictionary}
+                categoryLabels={categoryLabels}
                 locale={locale}
+                currency={currency}
               />
             ))}
           </TableBody>

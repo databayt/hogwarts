@@ -43,7 +43,10 @@ import {
 } from "./actions"
 import type { AnnouncementRow } from "./columns"
 import { getAnnouncementColumns } from "./columns"
-import { createDraftAnnouncement } from "./wizard/actions"
+import {
+  AnnouncementWizardModal,
+  type AnnouncementSaveResult,
+} from "./wizard/modal"
 
 interface AnnouncementsTableProps {
   initialData: AnnouncementRow[]
@@ -219,15 +222,49 @@ function AnnouncementsTableInner({
     [t, optimisticUpdate, refresh]
   )
 
+  // Wizard modal — replaces the /announcements/add/[id] route. Opening costs
+  // no server round-trip, so the form paints on the click.
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [wizardId, setWizardId] = useState<string | null>(null)
+
+  const handleCreate = useCallback(() => {
+    setWizardId(null)
+    setWizardOpen(true)
+  }, [])
+
+  const handleEdit = useCallback((id: string) => {
+    setWizardId(id)
+    setWizardOpen(true)
+  }, [])
+
+  // Reconcile the list without a full refetch: patch the edited row in place,
+  // and pull the new row from the server only when one was actually created.
+  const handleWizardSaved = useCallback(
+    (saved: AnnouncementSaveResult) => {
+      if (saved.isNew) {
+        refresh()
+        return
+      }
+      optimisticUpdate(saved.id, (item) => ({
+        ...item,
+        title: saved.values.title,
+        scope: saved.values.scope,
+        priority: saved.values.priority ?? item.priority,
+      }))
+    },
+    [refresh, optimisticUpdate]
+  )
+
   // Generate columns with dictionary, locale, and optimistic callbacks
   const columns = useMemo(
     () =>
       getAnnouncementColumns(t, lang, {
         onDelete: handleDelete,
         onTogglePublish: handleTogglePublish,
+        onEdit: (announcement) => handleEdit(announcement.id),
         permissions,
       }),
-    [t, lang, handleDelete, handleTogglePublish, permissions]
+    [t, lang, handleDelete, handleTogglePublish, handleEdit, permissions]
   )
 
   // Table instance (for table view)
@@ -254,24 +291,6 @@ function AnnouncementsTableInner({
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value)
   }, [])
-
-  // Handle create via wizard
-  const handleCreate = useCallback(async () => {
-    const result = await createDraftAnnouncement()
-    if (result.success && result.data) {
-      router.push(`/${lang}/announcements/add/${result.data.id}/content`)
-    } else {
-      ErrorToast(result.error || t.failedToCreate)
-    }
-  }, [router, lang])
-
-  // Handle edit
-  const handleEdit = useCallback(
-    (id: string) => {
-      router.push(`/${lang}/announcements/add/${id}/content`)
-    },
-    [router, lang]
-  )
 
   // Handle view
   const handleView = useCallback(
@@ -327,6 +346,14 @@ function AnnouncementsTableInner({
 
   return (
     <>
+      <AnnouncementWizardModal
+        open={wizardOpen}
+        announcementId={wizardId}
+        dictionary={t}
+        onOpenChange={setWizardOpen}
+        onSaved={handleWizardSaved}
+      />
+
       <PlatformToolbar
         table={table}
         view={view}

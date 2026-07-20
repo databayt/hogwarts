@@ -42,4 +42,9 @@ export const getResultsSchema = z.object({
   classId: z.string().optional().default(""),
   grade: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
+  // Free-text search across student name / assignment / exam title.
+  search: z.string().optional().default(""),
+  // Display language: the ROUTE [lang] (passed by the client table) is the source
+  // of truth; the NEXT_LOCALE cookie is only a fallback for non-routed callers.
+  lang: z.enum(["ar", "en"]).optional(),
 })

@@ -6,6 +6,7 @@ import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
+import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
@@ -52,7 +53,7 @@ function SchoolYearTableInner({
   }
 
   // Search state
-  const [searchValue, setSearchValue] = useState("")
+  const [searchValue, debouncedSearch, setSearchValue] = useDebouncedSearch(300)
 
   // Data management with optimistic updates
   const {
@@ -74,7 +75,7 @@ function SchoolYearTableInner({
       }
       return { rows: result.data.rows, total: result.data.total }
     },
-    filters: searchValue ? { yearName: searchValue } : undefined,
+    filters: debouncedSearch ? { yearName: debouncedSearch } : undefined,
   })
 
   // Handle delete with optimistic update
@@ -128,14 +129,14 @@ function SchoolYearTableInner({
   })
 
   // Handle search
+  // NOTE: no router.refresh() here — usePlatformData's filter-change effect
+  // already refetches. Refreshing the route per keystroke re-ran the whole
+  // server component tree, doubling the round-trips for the same result.
   const handleSearchChange = useCallback(
     (value: string) => {
       setSearchValue(value)
-      startTransition(() => {
-        router.refresh()
-      })
     },
-    [router]
+    [setSearchValue]
   )
 
   // Toolbar translations

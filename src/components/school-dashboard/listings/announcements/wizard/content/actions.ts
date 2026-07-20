@@ -3,6 +3,7 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { after } from "next/server"
+import type { UserRole } from "@prisma/client"
 
 import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
@@ -84,7 +85,10 @@ export async function updateAnnouncementContent(
         priority: parsed.priority ?? "normal",
         scope: parsed.scope,
         classId: parsed.scope === "class" ? (parsed.classId ?? null) : null,
-        role: parsed.scope === "role" ? (parsed.role ?? null) : null,
+        // Announcement.role is the UserRole enum; the form validates it as a
+        // plain string, so the cast is what makes the write type-check.
+        role:
+          parsed.scope === "role" ? ((parsed.role as UserRole) ?? null) : null,
       },
     })
 

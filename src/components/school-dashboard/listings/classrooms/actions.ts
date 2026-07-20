@@ -11,7 +11,9 @@ import { ACTION_ERRORS, actionError } from "@/lib/action-errors"
 import type { ActionResponse } from "@/lib/action-response"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+import { localize } from "@/components/translation/localize"
 import { prewarm } from "@/components/translation/prewarm"
+import { search } from "@/components/translation/search"
 
 import { assertClassroomPermission, getAuthContext } from "./authorization"
 import {
@@ -42,18 +44,33 @@ export async function getClassrooms(
   }
 
   const parsed = getClassroomsSchema.parse(input)
-  const { page, perPage, name, typeId, building } = parsed
+  const { page, perPage, name, typeId, building, lang } = parsed
+
+  // Room names are stored in ONE language and translated for display, so a
+  // raw `contains` only ever matched users who typed the stored form. `search`
+  // adds a cache-only reverse lookup (translated text -> source text), letting
+  // a reader of the English UI find a room by the label actually on screen.
+  const displayLang: "ar" | "en" = lang === "en" ? "en" : "ar"
+  const school = await db.school.findUnique({
+    where: { id: schoolId },
+    select: { preferredLanguage: true },
+  })
+  const storageLang = school?.preferredLanguage || "ar"
 
   const where: Record<string, unknown> = { schoolId }
   if (typeId) where.typeId = typeId
 
+  const nameConditions = name
+    ? await search(name, ["roomName"], schoolId, storageLang, displayLang)
+    : []
+
   if (name && building) {
     where.AND = [
-      { roomName: { contains: name, mode: "insensitive" } },
+      { OR: nameConditions },
       { roomName: { startsWith: building, mode: "insensitive" } },
     ]
   } else if (name) {
-    where.roomName = { contains: name, mode: "insensitive" }
+    where.OR = nameConditions
   } else if (building) {
     where.roomName = { startsWith: building, mode: "insensitive" }
   }
@@ -79,12 +96,21 @@ export async function getClassrooms(
     db.classroom.count({ where }),
   ])
 
+  // Room names must be localized on THIS path too, not just in content.tsx —
+  // this action also backs search and load-more, so returning raw values made
+  // the visible names flip from translated back to stored the moment a user
+  // typed anything. Batched (one resolution for N rows), never per-row.
+  const localizedRows = (await localize("Classroom", rows as any[], {
+    schoolId,
+    lang: displayLang,
+  })) as typeof rows
+
   // Room-type label (localized via the `roomTypes` dictionary in the column) and
   // grade label (derived from gradeNumber in the column) are both resolved
-  // client-side, so the query returns the raw stored values.
+  // client-side.
   return {
     success: true as const,
-    data: rows.map((r) => ({
+    data: localizedRows.map((r) => ({
       id: r.id,
       roomName: r.roomName,
       capacity: r.capacity,
