@@ -3,7 +3,7 @@ title: Leads
 description: Lead tracking — definition, sources, current pipeline, lifecycle, discovery script, follow-up cadence, owners.
 ---
 
-A lead is a named school with a named contact in a target MENA country. Anything less is a prospect or a hope. This page is the operational layer beneath [Pilot](/docs/pilot) and [Sales](/docs/sales) — how a school enters the funnel, moves through stages, and either converts or exits. The single source of truth for the live pipeline is [`kun/.claude/memory/customers.json`](https://github.com/databayt/kun/blob/main/.claude/memory/customers.json).
+A lead is a named school with a named contact in a target MENA country. Anything less is a prospect or a hope. This page is the operational layer beneath [Pilot](/docs/pilot) and [Sales](/docs/sales) — how a school enters the funnel, moves through stages, and either converts or exits. The single source of truth for the live pipeline is the **hogwarts CRM workspace** at [`hogwarts.crm.databayt.org`](https://hogwarts.crm.databayt.org) (Companies carry `stage`/`tier`/`source`/`country`/`nextActionAt`; Opportunities track the paid conversion). The `kun/.claude/memory` JSON files are now a read-only historical archive of the pre-CRM pipeline.
 
 ## Lead vs prospect vs cold
 
@@ -101,13 +101,15 @@ Three to four touches max in any 21-day window. Quality outreach is finite. Afte
 
 ## Where leads are tracked
 
-| File                                    | Holds                                                               |
+| Source                                  | Holds                                                               |
 | --------------------------------------- | ------------------------------------------------------------------- |
-| `kun/.claude/memory/customers.json`     | All schools, all stages, primary contact, last_contact, next_action |
-| `kun/.claude/memory/pipeline.json`      | Active deals + weekly targets                                       |
+| **`hogwarts.crm.databayt.org`** (Twenty) | Live pipeline — Companies (stage/tier/source/country/next action), People (contacts), Opportunities (paid conversion + MRR). The source of truth. |
+| `crm.databayt.org` (hub)                | Always-up read-only mirror of the CRM (cached tables), for when the backend machine is off |
+| `kun/.claude/memory/customers.json`     | Read-only archive of the pre-CRM roster (migrated 2026-07-21)       |
 | `kun/.claude/memory/captain_journal.md` | Free-text journal: what we learned per conversation                 |
 
-Schema migration to `pilots[]` array (capacity 10) is part of the current refresh. See [Pilot](/docs/pilot) for the cohort layout.
+Leads live in the CRM; edit them there. The kun JSON files stay for history only — the
+one-time migration is `twenty-deploy/import-hogwarts-leads.mjs`.
 
 ## Owners
 
