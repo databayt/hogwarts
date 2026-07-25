@@ -32,19 +32,28 @@ If a single channel exceeds 50% of the funnel we are concentrated — diversify 
 
 ## Current pipeline
 
-| #   | School             | Country | Stage      | Source              | Owner | Last contact | Next action                           |
-| --- | ------------------ | ------- | ---------- | ------------------- | ----- | ------------ | ------------------------------------- |
-| 1   | King Fahad Schools | Sudan   | pilot      | Direct (Ali)        | Ali   | 2026-04-15   | Conversion conversation 2026-06-15    |
-| 2   | _open_             | Sudan   | recruiting | KF referral target  | Ali   | —            | Ask Ahmed Baha for 3 peer intros      |
-| 3   | _open_             | Sudan   | recruiting | KF referral target  | Ali   | —            | Ask Ahmed Baha for 3 peer intros      |
-| 4   | _open_             | Saudi   | recruiting | Sedon LinkedIn      | Sedon | —            | Research 5 Riyadh private schools     |
-| 5   | _open_             | Saudi   | recruiting | Sedon LinkedIn      | Sedon | —            | Research 5 Jeddah Islamic schools     |
-| 6–7 | _open_             | Egypt   | recruiting | LinkedIn / MSAR     | Ali   | —            | Cairo + Alex language-school list     |
-| 8   | _open_             | Jordan  | recruiting | Orange Corners      | Ali   | —            | Tap 249Startups Jordan network        |
-| 9   | _open_             | Morocco | recruiting | 249Startups network | Ali   | —            | Research 5 Casablanca private schools |
-| 10  | _open_             | UAE     | recruiting | LinkedIn directory  | Ali   | —            | Dubai international schools list      |
+The live pipeline is **not duplicated here** — a table in a doc goes stale the day it is
+written and then quietly contradicts the CRM. Open the
+[Pipeline board](https://hogwarts.crm.databayt.org) (Companies, Kanban by `stage`) instead.
+Every school carries an owner, a `nextAction` and a `nextActionAt`, so the board and the
+08:00 Slack digest are the same source.
 
-Migrating to the multi-pilot schema in `customers.json` is the operational backbone. See [Pilot](/docs/pilot) for the MENA-10 cohort map.
+What the board looked like on 2026-07-25, for orientation only:
+
+- **624 schools** — 573 cold, 22 prospect, 1 pilot (King Fahad Schools), 28 retired as
+  not-K-12. No paid conversions yet.
+- **98% Sudan** (609 of 624). Only 15 schools sit in the rest of MENA-10 — the geography
+  split this page describes is aspirational, not the current book.
+- **Contactable: 22.** The other 574 have no verified phone, email or social page. The
+  binding constraint is contact discovery, not lead volume.
+- Ownership: all leads are assigned to Ali Aseel.
+
+Two things the board will not tell you but the war does: Khartoum American School now
+operates from Alexandria, Egypt, and the École Française Internationale de Khartoum has been
+closed since 2023-04-15. Expect more of the Sudan book to be non-operational — verify a
+school is open before counting it as a lead.
+
+See [Pilot](/docs/pilot) for the MENA-10 cohort map.
 
 ## Lifecycle
 
@@ -64,7 +73,7 @@ cold → prospect → warm (reply) → discovery → demo → trial → pilot �
 | trial     | School poking around on demo subdomain               | School asks "what's next?" — propose       |
 | pilot     | Free Pilot Proposal signed                           | Subdomain provisioned + Day 0 deliverables |
 | paid      | Paid Conversion Proposal signed                      | First invoice paid                         |
-| lost      | School declined or went silent ≥21 days at any stage | Log reason in `lost_reason` field          |
+| lost      | School declined or went silent ≥21 days at any stage | Log reason in the CRM `lostReason` field   |
 
 Movement is one-way except `pilot → extension` and `lost → re-engaged` (a school can come back, capture the reason).
 
