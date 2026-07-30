@@ -198,6 +198,7 @@
     "pg": "^8.16.3",
     "pizzip": "^3.2.0",
     "plaid": "^39.0.0",
+    "posthog-js": "^1.409.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "radix-ui": "latest",
