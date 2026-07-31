@@ -1,0 +1,80 @@
+{
+  "brand": "hogwarts",
+  "slug": "sms-pillars",
+  "title": { "ar": "ركائز إعلانات هوجورتس", "en": "The hogwarts ad pillars" },
+  "slides": [
+    {
+      "type": "grid",
+      "headline": {
+        "ar": "كل المدرسة في نظام واحد",
+        "en": "The whole school in one system"
+      },
+      "hub": { "ar": "هوجورتس", "en": "hogwarts" },
+      "cells": [
+        {
+          "label": { "ar": "القبول", "en": "Admissions" },
+          "art": "Hands-Document.svg"
+        },
+        {
+          "label": { "ar": "الحضور", "en": "Attendance" },
+          "art": "People-Motion-01.svg"
+        },
+        {
+          "label": { "ar": "الامتحانات", "en": "Exams" },
+          "art": "Hands-Stack.svg"
+        },
+        {
+          "label": { "ar": "المالية", "en": "Finance" },
+          "art": "Abstract-Curves-01.svg"
+        }
+      ],
+      "theme": "ivory"
+    },
+    {
+      "type": "split",
+      "headline": { "ar": "وداعاً للأوراق", "en": "Say goodbye to paperwork" },
+      "beforeLabel": {
+        "ar": "أكوام أوراق وجداول مبعثرة",
+        "en": "Paper stacks and scattered sheets"
+      },
+      "afterLabel": {
+        "ar": "لوحة واحدة من هاتفك",
+        "en": "One dashboard, from your phone"
+      },
+      "beforeArt": "Hands-Document.svg",
+      "afterArt": "Scene-Complex-01.svg",
+      "theme": "oat"
+    },
+    {
+      "type": "stat",
+      "value": "20+",
+      "label": {
+        "ar": "ساعة إدارية تُوفَّر كل أسبوع",
+        "en": "admin hours saved every week"
+      },
+      "support": {
+        "ar": "التسجيل والحضور والدرجات والفواتير — في نظام واحد بدل أربعة.",
+        "en": "Enrollment, attendance, grades and invoices — one system instead of four."
+      },
+      "theme": "dark"
+    },
+    {
+      "type": "quote",
+      "text": {
+        "ar": "الإدارة الجيدة لا تُرى — تُحَسّ في يومٍ يمضي بلا عوائق",
+        "en": "Good administration is invisible — you feel it in a day that just flows"
+      },
+      "theme": "clay"
+    }
+  ],
+  "captions": {
+    "base": {
+      "ar": "أربع ركائز لإعلانات هوجورتس: المنظومة، المقارنة، الرقم، والثقة.",
+      "en": "The four hogwarts ad pillars: ecosystem, comparison, the number, and trust."
+    },
+    "hashtags": ["#hogwarts", "#edtech"],
+    "link": "https://ed.databayt.org"
+  },
+  "createdAt": "2026-07-31",
+  "status": "draft"
+}

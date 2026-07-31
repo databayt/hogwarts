@@ -1,8 +1,12 @@
 # Carousels — العرض المتحرك
 
 Bilingual social-carousel decks for the hogwarts brand. Each `<slug>.json` is
-one deck (3–10 slides, every text field `{ar, en}`), validated by the kun
-engine's contract (`kun/src/components/root/carousel/schema.ts`).
+one deck (1–10 slides, every text field `{ar, en}`), validated by the kun
+engine's contract (`kun/src/components/root/carousel/schema.ts`). A 1-slide
+deck is a single-image template asset (og card, testimonial, stat card); the
+3-slide album floor applies at publish time, not here. Archetypes:
+`cover · point · stat · quote · steps · cta · split · grid`; sizes include
+`1200x630` for landscape og/banner cards.
 
 The engine renders them:
 
