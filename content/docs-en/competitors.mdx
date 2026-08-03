@@ -1,11 +1,11 @@
 ---
 title: Competitors
-description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, open-source peers, and how Hogwarts compares.
+description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, British-curriculum MIS, open-source peers, their landing-page copy, and how Hogwarts compares.
 ---
 
 Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
 
-This page maps three distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) at the bottom is the prose for proposals and discovery calls.
+This page maps four distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [landing-page teardown](#landing-page-teardown) captures how the category writes its marketing copy, and the [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
 
 <Callout type="info">
   Market figures below were last verified **August 2026**. Every number is
@@ -58,13 +58,33 @@ These are the vendors we actually meet in a deal. Only some compete for the syst
 | Odoo/Zoho education integrators (iWesabe, SowaanERP, Shyphan)             | KSA / UAE        | Per-project implementations; Arabic RTL, MoE reporting                                                                             | **Direct** — custom ERP builds |
 | [Alef Education](https://www.alefeducation.com/)                          | UAE (ADX-listed) | ~2.0M students, 84K educators, 19,000 schools (UAE, Indonesia, Morocco)                                                            | Budget — AI content, not SIS   |
 | [Noon Academy](https://www.noonacademy.com/)                              | Saudi            | Social learning, live classes, peer tutoring                                                                                       | Budget — B2C tutoring          |
-| [Madrasati](https://schools.madrasati.sa/)                                | Saudi MoE        | 6M+ students at peak; national blended-learning platform                                                                           | Budget — free public baseline  |
+| [Madrasati](https://madrasati.sa/)                                        | Saudi MoE        | 6M+ students at peak; national blended-learning platform                                                                           | Budget — free public baseline  |
 
 **What the regional set tells us:**
 
 - **Arabic-first is real competition here, not a gap.** Madrasati, Noon, Edraak, and Alef all render RTL correctly and design Arabic-first. Our Arabic advantage holds against the _global_ incumbents and against Odoo/Edusys-style ports — it does not hold automatically against Classera or Alef. Lead with architecture and price in those rooms, not with "we support Arabic."
 - **The regional leaders are funded and consolidating.** Classera's $40M Series A and its ERP acquisition mean the mid-market is being rolled up. Speed of onboarding and price for a single small school is where a solo school still gets a worse deal from them than from us.
 - **Free national platforms set the floor.** In Saudi, "Madrasati is free" is the first objection. The answer is administration — fees, payroll, transport, admissions — which national learning platforms do not do.
+
+## British-curriculum MIS
+
+The UK calls it MIS (Management Information System), not SIS. This set matters to us because **British-curriculum private schools are dense across the Gulf, Egypt, Jordan and Sudan** — a BSO-accredited or Cambridge/Pearson-following school in Riyadh or Khartoum is far likelier to shortlist iSAMS or Tes Engage than PowerSchool. They arrive through the British Council Partner Schools network (2,000+ schools delivering UK qualifications) and through UK head-office procurement, not through a MENA sales channel.
+
+| Vendor                                               | Segment                     | Reach                                                | Note                                                                                                      |
+| ---------------------------------------------------- | --------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [iSAMS](https://www.isams.com/)                      | Independent + international | 1,800+ schools & groups; 1.7M student profiles       | Since 2005; modular, multilingual, multi-currency finance — the default for British international schools |
+| [Tes Engage](https://www.tes.com/for-schools/engage) | Independent + international | Case studies in KSA, Kenya, South Africa             | Single-database core; Stripe payments; used by British International School of Jeddah                     |
+| [Arbor](https://arbor-education.com/)                | UK state + trusts           | 12,500+ schools and trusts; ~37% of UK schools       | Overtook SIMS as UK #1; absorbing Integris + ScholarPack by Feb 2026                                      |
+| [ESS SIMS](https://www.ess-sims.co.uk/)              | UK state                    | ~7,600 schools (~28% UK), down from 85% a decade ago | The cautionary tale: lock-in, a CMA investigation, then collapse                                          |
+| [Bromcom](https://bromcom.com/)                      | UK state + trusts           | 5,600+ schools, 390+ MATs, 3.3M users                | 40+ years; finance and BI bundled rather than sold as add-ons                                             |
+| [WCBS HUBmis](https://www.wcbs.co.uk/)               | Independent                 | UK + international independents                      | Fees/finance heritage; strong bursary and billing depth                                                   |
+
+**What this set tells us:**
+
+- **Fee billing is the entry requirement, not a nice-to-have.** Every vendor here leads with admissions → fees → billing → parent payments, because their schools are fee-paying. That is the same shape as our MENA private-school buyer, and it validates the finance block being first-class rather than a module.
+- **Multi-currency and multi-curriculum are shortlist filters.** iSAMS sells "foreign student enrollment, multi-currency finance, exam management" as the international differentiator. A British-curriculum school in Khartoum billing in USD and reporting in SDG will ask us this on the first call.
+- **The SIMS story is our best anti-lock-in evidence.** A vendor with 85% share lost more than half of it in a decade after a competition-authority investigation into contract lock-in. Schools remember; "you can export everything and leave" lands harder here than anywhere.
+- **Where they beat us:** UK exam-board integrations (Cambridge, Pearson, UCAS), safeguarding workflows, and decades of independent-school finance edge cases. Where we beat them: price for a single school, Arabic, local payment rails, and no UK-timezone support dependency.
 
 ## Open-source peers
 
@@ -74,7 +94,7 @@ Architecturally the closest set: schools can read the code, self-host, and leave
 | ----------------------------------------------- | ---------------- | ----------------------------------------------------------------------------- |
 | [Gibbon](https://gibbonedu.org/)                | PHP              | Started 2010 (Hong Kong); fully free, no paid add-ons — the purest OSS option |
 | [RosarioSIS](https://www.rosariosis.org/)       | PHP + PostgreSQL | Modular, lightweight, paid add-on modules                                     |
-| [openSIS](https://www.opensis.com/)             | PHP              | Community edition + commercial tiers; K-12 and higher ed                      |
+| [openSIS](https://opensis.com/)                 | PHP              | Community edition + commercial tiers; K-12 and higher ed                      |
 | [Fedena](https://www.fedena.com/)               | Ruby on Rails    | Open core, 22 modules, global install base                                    |
 | [OpenEduCat](https://openeducat.org/)           | Odoo / Python    | ERP-shaped; inherits the Odoo module ecosystem                                |
 | [Frappe Education](https://frappe.io/education) | Frappe / ERPNext | Self-host or Frappe Cloud; admissions, fees, assessments, portals             |
@@ -104,7 +124,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 | [ProProfs](https://www.proprofs.com/quiz-school/)                                                                                     | Gallery + AI                | minutes             | 1M+ question library, adaptive difficulty, Bloom tags                                            |
 | [Pear / Edulastic](https://www.peardeck.com/blog/harness-the-power-of-ai-with-pear-assessment-question-generator-and-assisted-rubric) | Question-bank assembly + AI | 20–40 min           | 100k+ items, DOK selector, assisted rubric; standards-tagging gaps                               |
 | [Edcite](https://www.edcite.com/)                                                                                                     | Question-bank assembly      | —                   | 60+ tech-enhanced item types; US-standards focus                                                 |
-| [AssessPrep](https://www.assessprep.com/curriculum/igcse)                                                                             | Question-bank + AI          | ~60 min saved       | 60k IGCSE/IB examiner-written Qs; Paper Mode QR scan-back — closest to our international segment |
+| [AssessPrep](https://www.assessprep.com/)                                                                                             | Question-bank + AI          | ~60 min saved       | 60k IGCSE/IB examiner-written Qs; Paper Mode QR scan-back — closest to our international segment |
 | [Teachmint](https://www.teachmint.com/features/tests)                                                                                 | Question-bank               | 3 steps             | 2M+ Qs across 25 Indian boards                                                                   |
 | [Toddle](https://www.toddleapp.com/ib-myp/)                                                                                           | Question-bank / formative   | —                   | IB-aligned, AI rubric/comment; no exam-paper generation                                          |
 | [ExamSoft](https://examsoft.com/resources/exam-creation-workflow/)                                                                    | Blueprint-first             | days–weeks          | Institutional governance, Bloom blueprint, validator approval                                    |
@@ -260,6 +280,63 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 | Certificate generation | Partial  | Yes               | Templates roadmap      |
 | Transcripts            | Yes      | Yes               | Per-term, multilingual |
 
+## Landing-page teardown
+
+Captured verbatim from each vendor's homepage (August 2026) as reference for our own marketing hero and section order. Use it to see how the category talks about itself — then deliberately say something different.
+
+### Hero copy
+
+| Vendor          | Headline                                                                                                      | Subheadline                                                                                                                      | Primary CTA                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| PowerSchool     | "More Power Stronger School"                                                                                  | "The world's most comprehensive K-12 software, unifying education ecosystems for over 60 million students in 90 countries."      | "Configure Your Own K-12 OS" |
+| Infinite Campus | "A **boldly different** company and student information system"                                               | —                                                                                                                                | "Learn More"                 |
+| Arbor           | "Choose a _better_ way to work"                                                                               | "The UK's _most popular_ MIS and school management software"                                                                     | "Book a demo"                |
+| iSAMS           | "Managing every area of school life just got easier, wherever you are"                                        | "Just ask"                                                                                                                       | "Book a demo"                |
+| Tes Engage      | "The world's premium school management information system"                                                    | "Experience the ultimate in school efficiency with our all-in-one intuitive School Management Information System (SMIS)."        | "Book a demo"                |
+| Bromcom         | "Let's Improve Education Together."                                                                           | "…our cloud-based Management Information System supports each step of your students' journey, while keeping data secure…"        | "Schedule a Call"            |
+| Classera        | "The Learning Super Platform for Smart, Joyful Learning"                                                      | "Classera goes beyond traditional LMS to deliver a complete ecosystem with ERP, Fintech Solutions, Educational Marketplace…"     | "Request a demo"             |
+| Skolera         | "Get All Your School Administrative Stuff Automated with Skolera…"                                            | "…helps you manage all your school administrative stuff, and provides you with accurate and real-time reports"                   | "Request Free Demo"          |
+| EduX            | "The school management system built for MENA, Gulf & Africa"                                                  | "EduX is a bilingual cloud-based School Information System (SIS) built for schools across Saudi Arabia, the UAE, Egypt, Kuwait…" | "Start 30-day Free Trial"    |
+| Alef Education  | "Alef Education Ranked No. 1 EdTech Company in MEA, 13th Globally by TIME…" (award banner in place of a hero) | —                                                                                                                                | "Request a demo"             |
+
+### Proof numbers in the hero band
+
+Every vendor puts a scale row immediately under or beside the hero. This is the single most consistent pattern in the category.
+
+| Vendor          | Numbers shown                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| PowerSchool     | 60M students · 90 countries                                                                    |
+| Infinite Campus | 11M students · 3,200 districts · 46 states · 10 state agencies                                 |
+| Arbor           | 12,500 schools · 117+ min saved per staff/week · 81% better data use · 74% better working life |
+| iSAMS           | 1,800+ schools & groups · 1.7M student profiles                                                |
+| Bromcom         | 3.3M users · 1.2M+ students · 5,600+ schools · 390+ MATs · 40+ years                           |
+| Classera        | 30M+ users · 200+ partners · 45+ countries · 25+ services                                      |
+| Alef Education  | ~2M students · 19K+ schools · 50M+ daily data points                                           |
+| EduX            | 40+ modules · 48-hour activation · 30-day free trial · AR/EN                                   |
+
+### Section order
+
+The category has converged on one skeleton. Nine of the ten homepages above follow it almost exactly:
+
+1. **Hero** — headline + demo CTA
+2. **Proof band** — scale numbers or customer logos
+3. **Who it's for** — by school type (independent / international / state / trust) or by role (leader / teacher / parent)
+4. **Everything in one place** — the anti-add-on pitch; Bromcom and Skolera both build a whole section on it
+5. **Module grid** — SIS, finance, HR, transport, library, comms
+6. **Outcome proof** — testimonials, then case studies with named schools and student counts
+7. **Content marketing** — blog, podcast, annual report, events
+8. **Awards / partners**
+9. **Closing CTA** — book a demo
+
+### What to steal, and what to avoid
+
+- **Steal the proof band.** It is universal and we currently lead with features instead. Ours should be honest and specific rather than inflated — modules shipped, languages, payment rails, time-to-subdomain.
+- **Steal the named case study with a student count.** "British International School of Jeddah, 1,300+ students" does more work than any feature list. This is the strongest argument for publishing real deployments once schools consent.
+- **Avoid "book a demo" as the only door.** Eight of ten vendors have no self-serve path at all. EduX's "Start 30-day Free Trial" is the outlier — and it is the one positioned closest to us. Our free tier is a structural advantage over the entire category; the hero should say so, not hide it behind a contact form.
+- **Avoid the superlative arms race.** "World's most comprehensive," "world's premium," "the ultimate in school efficiency" — the category is saturated with unfalsifiable claims, which is exactly why a concrete, checkable one cuts through.
+- **Note the regional lesson.** EduX's headline names its geography ("built for MENA, Gulf & Africa") and its subheadline lists countries. That is the positioning we are competing for directly, and they got there first on the landing page even though we get there first in the product.
+- **Note Arbor's angle.** It is the only vendor selling _time_, not features — "reclaim hours every week," "117+ minutes saved per staff member weekly." For overloaded school administrators that reframe is the most persuasive copy in the set.
+
 ## Differentiators
 
 - **Arabic-first, RTL-native** — every screen designed for Arabic first, English second.
@@ -297,6 +374,10 @@ Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) disc
 - [Zawya — Alef Education UAE private-school reach](https://www.zawya.com/en/press-release/companies-news/alef-education-scales-ai-learning-reach-across-uae-private-schools-boosting-arabic-proficiency-b7rcpqlg)
 - [ThirdRock — GCC EdTech market 2026](https://www.thirdrocktechkno.com/blog/gcc-edtech-market-2026-growth-drivers-and-the-opportunity/) and [Best EdTech platforms in Saudi Arabia 2026](https://www.thirdrocktechkno.com/blog/best-edtech-platforms-in-saudi-arabia-the-complete-2026-guide/)
 - [RosarioSIS — Top open-source self-hosted school management systems](https://www.rosariosis.org/articles/top-5-free-open-source-self-hosted-school-management-systems/) and [frappe/education on GitHub](https://github.com/frappe/education)
+- [WhichMIS? — Arbor takes No. 1 spot from ESS SIMS](https://www.whichmis.com/arbor-takes-no-1-spot-from-ess-sims/) and [Tes — ESS SIMS loses market dominance](https://www.tes.com/magazine/news/general/ess-sims-loses-market-dominance-school-information-systems-mis) — UK MIS share
+- [Classroom365 — Best MIS for independent schools](https://www.classroom365.co.uk/services/school-mis/independent-schools/) — iSAMS / Engage / HUBmis segmentation
+- [British Council Partner Schools](https://www.britishcouncil.org/exam/international/partner-schools) — 2,000+ schools delivering UK qualifications
+- Landing-page copy captured directly from each vendor homepage, August 2026 (see the [teardown](#landing-page-teardown) for the URLs)
 - [Gartner Peer Insights — K-12 Student Information Systems](https://www.gartner.com/reviews/market/k-12-education-student-information-systems) — buyer reviews, refresh before quoting
 
 ## See also
