@@ -8,13 +8,21 @@
 // - `:root`/`html`/`body` selectors → `.zenda-clone`; everything else → `.zenda-clone <sel>`
 import { readFileSync, writeFileSync } from "node:fs"
 
-// Scope the Webflow shared stylesheet (the bulk — testimonial/hiw/services/
-// parents-ease layout) FIRST, then zenda's local globals.css (tokens +
-// overrides) so the overrides win. Strip CSS comments first: their `{ } ;`
-// would desync the brace tokenizer.
+// Order matters, and it is the opposite of what "globals.css is the override
+// layer" suggests. Measured on zenda itself: Next's CSS bundle (globals.css) is
+// document.styleSheets[0] and the Webflow CDN <link> is [2], so the CDN loads
+// LAST and wins ties. Zenda's globals.css is written knowing that -- it reaches
+// for `!important` twenty times precisely because it cannot win on order alone.
+//
+// Concatenating the other way round silently inverted the cascade for every
+// tie. It cost real fidelity: `.schools_lottie-wrap` is `width: 100%` in
+// globals.css and `width: 132%` in the CDN's <=479px block, so the mobile
+// Lottie rendered 351px wide against zenda's 463px.
+//
+// Strip CSS comments first: their `{ } ;` would desync the brace tokenizer.
 const SRC_FILES = [
-  "/Users/abdout/hogwarts/scripts/zenda-webflow-shared.css",
   "/Users/abdout/zenda/app/globals.css",
+  "/Users/abdout/hogwarts/scripts/zenda-webflow-shared.css",
 ]
 const src = SRC_FILES.map((f) =>
   readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "")
@@ -117,10 +125,14 @@ function emitRules(units, sink) {
 
 emitRules(tokenize(src), out)
 
+// No `@import` for DM Sans here, though the clone needs it: Next concatenates
+// this file after globals.css, and an `@import` that is not at the top of the
+// resulting stylesheet is invalid and gets dropped -- which is exactly what
+// happened, leaving the whole clone in system Helvetica. DM Sans and Poppins
+// are loaded via next/font instead, in src/components/atom/fonts.ts.
 const css =
   `/* Generated from zenda app/globals.css — every selector prefixed with .zenda-clone.\n` +
   ` * Do not edit by hand; regenerate with scope-zenda.mjs. */\n\n` +
-  `@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");\n\n` +
   keyframes.join("\n") +
   `\n\n` +
   out.join("\n") +

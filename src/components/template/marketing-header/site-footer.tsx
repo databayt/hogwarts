@@ -17,7 +17,6 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
   const footerDict = (dictionary?.marketing as any)?.footer || {
     inspiredBy: "Inspired by",
     builtBy: "Built by",
-    sourceCode: "The source code is available on",
   }
 
   return (
@@ -35,16 +34,6 @@ export function SiteFooter({ dictionary, locale = "en" }: SiteFooterProps) {
             className="font-medium underline underline-offset-4"
           >
             Databayt
-          </a>
-          {", "}
-          {footerDict.sourceCode}{" "}
-          <a
-            href={siteConfig.links.github}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium underline underline-offset-4"
-          >
-            GitHub
           </a>
           {" · "}
           <ReportIssue />

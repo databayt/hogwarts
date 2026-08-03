@@ -51,9 +51,16 @@ const BASELINE_BY_PATTERN: Record<PatternName, number> = {
 /**
  * Routes whose page closure shows NO dictionary wiring (i18n-audit.ts).
  * Driven 21 → 0 on 2026-06-11 (exam wizard, parent portal, transcript
- * verify). Every route now has dictionary wiring — keep it at zero.
+ * verify).
+ *
+ * Raised 0 → 1 on 2026-08-03: the tenant homepage
+ * (`/[lang]/s/[subdomain]/page.tsx`) now renders a verbatim clone of zenda.com's
+ * homepage, which is hardcoded English by design — the copy IS the deliverable,
+ * so there is nothing to look up in a dictionary yet. Arabic and RTL for that
+ * page are deliberately deferred; when they land, this goes back to 0. Do not
+ * raise it further for any other route.
  */
-const BASELINE_STATIC_GAP = 0
+const BASELINE_STATIC_GAP = 1
 
 describe("hardcoded-string ratchet", () => {
   const report = scanHardcodedStrings()

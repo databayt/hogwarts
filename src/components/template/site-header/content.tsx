@@ -9,9 +9,9 @@ import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
-import { getText } from "@/components/translation/display"
 
 import { marketingConfig } from "./config"
+import { resolveSchoolDisplayName } from "./display-name"
 import { MainNav } from "./main-nav"
 import { SearchMenu } from "./search-menu"
 import { SiteMobileNav } from "./site-mobile-nav"
@@ -48,16 +48,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
     | Record<string, string>
     | undefined
 
-  // Translate nav items via dictionary
-  // Use nameEn for English locale if available, otherwise fall back to translation
-  const contentLang = (school.preferredLanguage || "ar") as "ar" | "en"
-  const displayLang = locale as "ar" | "en"
-  const displayName =
-    displayLang === "en" && school.nameEn
-      ? school.nameEn
-      : displayLang === "ar"
-        ? school.name
-        : await getText(school.name, contentLang, displayLang, school.id)
+  const displayName = await resolveSchoolDisplayName(school, locale)
 
   const translatedNav = marketingConfig.mainNav.map((item) => ({
     ...item,

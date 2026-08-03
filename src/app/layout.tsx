@@ -14,6 +14,7 @@ import {
 
 import "./globals.css"
 import "@/styles/zenda-clone.css"
+import "@/styles/zenda-shell.css"
 import "@/styles/apple-clone.css"
 
 export const metadata: Metadata = {
@@ -57,6 +58,55 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var m=window.location.pathname.match(/^\\/(${localeAlternation})/);var l=m?m[1]:'${i18n.defaultLocale}';document.documentElement.lang=l;document.documentElement.dir=${rtlLocales}.indexOf(l)>-1?'rtl':'ltr'})()`,
+          }}
+        />
+        {/*
+          Drives --reveal-corner for the zenda footer reveal: the main wrapper's
+          bottom corners are round while the footer is sliding into view and
+          sharpen as it lands. Ported from zenda's own layout. Bails out when
+          .main-wrapper / footer aren't on the page, so it costs a no-op scroll
+          listener everywhere else.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var html = document.documentElement;
+                var scrolled = false;
+                var ticking = false;
+                function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+                function update() {
+                  ticking = false;
+                  var mw = document.querySelector('.main-wrapper');
+                  var footer = document.querySelector('.zenda-footer-slot');
+                  if (!mw || !footer) return;
+                  // The fixed overlap (computed padding-bottom) doubles as the
+                  // max corner. It is 0 on mobile (reveal disabled), which
+                  // zeroes the corner too.
+                  var baseR = parseFloat(getComputedStyle(mw).paddingBottom) || 0;
+                  if (baseR <= 0) { html.style.setProperty('--reveal-corner', '0px'); return; }
+                  var mwBottom = mw.getBoundingClientRect().bottom;
+                  var f = footer.getBoundingClientRect();
+                  var denom = (f.bottom - f.top) - baseR;
+                  var p = denom > 0 ? clamp((f.bottom - mwBottom) / denom, 0, 1) : 0;
+                  // ease-in keeps the corner rounder through most of the reveal,
+                  // then sharpens near the end so it visibly rests sharp.
+                  var corner = baseR * (1 - p * p);
+                  html.style.setProperty('--reveal-corner', corner.toFixed(2) + 'px');
+                }
+                function onScroll() {
+                  if (!scrolled) { scrolled = true; html.classList.add('scrolled'); }
+                  if (!ticking) { ticking = true; requestAnimationFrame(update); }
+                }
+                window.addEventListener('scroll', onScroll, { passive: true });
+                window.addEventListener('resize', onScroll, { passive: true });
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', function(){ requestAnimationFrame(update); });
+                } else {
+                  requestAnimationFrame(update);
+                }
+              })();
+            `,
           }}
         />
       </head>

@@ -54,7 +54,7 @@ export default async function Academic({ params }: AcademicProps) {
 
   return (
     <div
-      className="school-content"
+      className="school-content marketing-container"
       data-school-id={school.id}
       data-subdomain={subdomain}
     >

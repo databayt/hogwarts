@@ -1,0 +1,213 @@
+/* Zenda page shell — the handful of layout rules that CANNOT live inside the
+ * `.zenda-clone` scope.
+ *
+ * `zenda-clone.css` carries the same rules as `.zenda-clone .page-wrapper`,
+ * `.zenda-clone .main-wrapper` and `.zenda-clone .page-wrapper > footer`. Using
+ * those would mean putting `.zenda-clone` on the page wrapper, which makes every
+ * sibling marketing page (/about, /academic, /admissions, ...) a descendant of
+ * the scope. That matters because the generated sheet also carries unlayered
+ * bare-tag rules -- `.zenda-clone a`, `h1`, `p`, `button`, `img`, `label` -- and
+ * unlayered CSS beats anything in Tailwind's `@layer utilities`, so those pages
+ * would be silently restyled with no way to opt out.
+ *
+ * So: the shell is hand-ported here without the scope, and `.zenda-clone` stays
+ * on three small wrappers (nav, footer slot, home content) that never contain
+ * another page's markup.
+ *
+ * Source: src/styles/zenda-clone.css:24193-24238. Two deliberate changes --
+ * `background-color` is hardcoded to zenda's cream because outside the scope
+ * `--background` resolves to hogwarts' white, and the footer rule targets the
+ * `.zenda-footer-slot` wrapper rather than a direct `footer` child.
+ */
+
+.page-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  /* Escape the root .layout-container gutter (src/app/[lang]/layout.tsx puts
+   * `layout-container` on <body>). Zenda's chrome runs edge to edge and gutters
+   * itself with .padding-global-v2, so the outer padding has to come off or the
+   * nav band and footer stop short of the screen edges. */
+  margin-inline: calc(-1 * var(--container-px, 0px));
+}
+
+.main-wrapper {
+  position: relative;
+  z-index: 10;
+
+  /* Opaque, so the footer it slides over doesn't show through. Sibling pages
+   * follow the theme; only the zenda homepage is pinned to zenda's cream (the
+   * rule below), because pinning every page would strand the siblings on a
+   * light background in dark mode. */
+  background-color: var(--background);
+
+  padding-bottom: var(--reveal-radius, 2.5rem);
+  flex-grow: 1;
+
+  border-bottom-left-radius: var(--reveal-corner, var(--reveal-radius, 2.5rem));
+  border-bottom-right-radius: var(
+    --reveal-corner,
+    var(--reveal-radius, 2.5rem)
+  );
+
+  overflow-x: clip;
+}
+
+/* The homepage is the zenda clone, so it carries zenda's cream all the way --
+ * including the reveal overlap below the last section, which sits outside the
+ * page's own `.body-v2.bg-beige-home` wrapper and would otherwise show a strip
+ * of theme background above the footer. */
+.main-wrapper:has(> .school-content > .zenda-clone) {
+  background-color: #f5f4ee;
+}
+
+/* The footer pins to the bottom and the main wrapper scrolls up off it. In the
+ * reference the `<footer>` itself is the sticky element; here it sits inside a
+ * wrapper that carries the scope class, so the wrapper takes the sticky and the
+ * footer inside it goes back to static flow. */
+.zenda-footer-slot {
+  position: sticky;
+  bottom: 0;
+  margin-top: calc(-1 * var(--reveal-radius, 2.5rem));
+}
+
+.zenda-footer-slot .footer_component {
+  position: static;
+}
+
+/* Mobile drops the reveal entirely: the footer is just the last block. */
+@media screen and (max-width: 991px) {
+  .main-wrapper {
+    padding-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .zenda-footer-slot {
+    position: relative;
+    bottom: auto;
+    margin-top: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Nav overrides.
+ *
+ * These carry the `.zenda-clone` prefix on purpose. The generated sheet styles
+ * the nav at `.zenda-clone .nav_*` (specificity 0,2,0); a bare `.nav_*` here
+ * would lose on specificity no matter which file loads last. They belong in
+ * this file rather than in the generated one because they are ours, and
+ * regenerating zenda-clone.css must not wipe them.
+ *
+ * What they change, versus zenda.com:
+ *   - the logo shrinks to a mark with the school's name beside it (zenda's is a
+ *     wordmark 10.8rem wide that needs no label)
+ *   - links and hamburger group at the end of the bar
+ *   - the hamburger is on at every width, not just below 991px
+ *   - search / language / theme / account move into a panel that hamburger
+ *     opens, instead of sitting loose in the bar
+ * ------------------------------------------------------------------------- */
+
+.zenda-clone .nav_logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  max-width: none;
+}
+
+/* Beats `.zenda-clone .img-auto { width: 100% }` on specificity. */
+.zenda-clone .nav_logo-link img {
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+}
+
+.zenda-clone .nav_logo-text {
+  color: #000;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.zenda-clone .nav_right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+
+  /* Anchors the utility panel, which drops out of the hamburger. */
+  position: relative;
+}
+
+/* The reference cancels the last link's 1.5rem padding so its text sits flush
+ * with the container edge. The hamburger now follows the links, so that pull
+ * would drag it under them. */
+.zenda-clone .nav_menu {
+  margin-right: 0;
+}
+
+/* On at every width now -- the utility panel is behind it, so hiding it above
+ * 991px (as the reference does) would strand those four controls. */
+.zenda-clone .nav_menu-btn {
+  z-index: 999999;
+  width: 2rem;
+  height: 2rem;
+  display: block;
+  position: relative;
+}
+
+/* The reference only defines the bars below 991px, since that is the only place
+ * its hamburger appears. Lifted out of the media query. */
+.zenda-clone .nav_hamburger_wrap {
+  grid-column-gap: var(--gap);
+  grid-row-gap: var(--gap);
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+}
+
+.zenda-clone .nav_hamburger_line {
+  width: var(--width);
+  height: var(--thickness);
+  background-color: currentColor;
+  border-radius: 100vw;
+  flex: none;
+  padding: 0;
+}
+
+.zenda-clone .nav_hamburger_embed {
+  position: absolute;
+}
+
+/* The utility panel: hidden until the hamburger opens, then dropped beneath it.
+ * One instance at every width -- rendering a second copy inside the mobile
+ * overlay would register the search hotkey twice. Its z-index clears the mobile
+ * overlay (9999) and the close button (999999) so it stays on top there too. */
+.zenda-clone .nav_utility-wrap {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 9999999;
+  gap: 0.125rem;
+  padding: 0.375rem;
+  border-radius: 0.75rem;
+  background-color: #fff;
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 12%),
+    0 2px 6px rgb(0 0 0 / 8%);
+}
+
+.zenda-clone .nav_utility-wrap.is-active {
+  display: flex;
+  align-items: center;
+}

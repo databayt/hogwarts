@@ -20,6 +20,41 @@ The school-marketing block powers the public website that each school gets on it
 The homepage was rebranded on 2026-08-03 away from its Harry Potter theming to a
 template a real school can actually publish. See "Homepage rebrand" below.
 
+### Homepage is a zenda.com clone (2026-08-03)
+
+The tenant homepage no longer renders `content.tsx`. It renders
+`zenda-home/content.tsx` — a verbatim copy of zenda.com's homepage: Hero,
+PhoneMockup, Rewards, Schools, HowItWorks, Testimonials, Benefits, CTA, plus
+`hero-intro` and the four `*-scroll` files that drive their GSAP timelines. The
+nav and footer (`template/zenda-nav`, `template/zenda-footer`) replace
+`SiteHeader` across the entire block. Copy and imagery are zenda's, verbatim and
+in English.
+
+The Webflow CSS was already vendored and scoped before this work:
+`src/styles/zenda-clone.css` (25,580 lines, generated from
+`scripts/zenda-webflow-shared.css` + zenda's `globals.css` by
+`scripts/scope-zenda.mjs`, imported in `src/app/layout.tsx`). Every selector in
+it is prefixed `.zenda-clone`.
+
+**Where `.zenda-clone` may go.** On the nav wrapper, the footer slot, and the
+homepage body — never on an ancestor of `<main>`. The generated sheet contains
+unlayered bare-tag rules (`.zenda-clone a`, `h1`, `p`, `button`, `img`,
+`label`), and unlayered CSS wins against Tailwind's `@layer utilities`
+regardless of specificity, so a sibling page rendered underneath that class gets
+restyled with no way to opt out. The page-shell rules that would have forced
+that (`zenda-clone.css:24193-24238`) are hand-ported **unscoped** into
+`src/styles/zenda-shell.css` instead, which also owns `.nav_utility-wrap` (the
+search/language/theme/account cluster zenda has no equivalent for). Regenerating
+`zenda-clone.css` will not regenerate that file.
+
+Because the clone's chrome runs edge to edge and gutters itself with
+`.padding-global-v2`, `.marketing-container` came off the block layout and moved
+onto the sibling pages' own `.school-content` divs.
+
+`content.tsx` and the 16 sections below are **not deleted** — sibling pages
+import them, and the Arabic homepage will need them when RTL lands. Their
+history follows.
+
 ### Homepage rebrand (2026-08-03)
 
 The homepage used to be Harry Potter fan fiction: Gryffindor/Ravenclaw/Hufflepuff/
@@ -61,6 +96,23 @@ departments and figures, never invented named individuals with portraits.
 
 ```
 school-marketing/
+├── zenda-home/                  # WHAT THE HOMEPAGE ACTUALLY RENDERS -- verbatim
+│   │                            #   zenda.com clone, runs under `.zenda-clone`
+│   ├── content.tsx              # Section order (Hero → … → CTA)
+│   ├── hero.tsx                 # Only edited section: two CTA pills, not one
+│   ├── hero-intro.tsx           # GSAP intro; also animates the nav's logo/links
+│   ├── phone-mockup.tsx         # "You juggle life -- we handle fees"
+│   ├── rewards.tsx              # + rewards-scroll.tsx
+│   ├── schools.tsx              # + schools-scroll.tsx, schools-lottie.tsx
+│   ├── how-it-works.tsx         # + hiw-scroll.tsx (marquee)
+│   ├── testimonials.tsx         # Swiper slider
+│   ├── benefits.tsx             # + benefits-scroll.tsx
+│   ├── features-scroll.tsx      # Drives the phone-mockup assembly
+│   └── cta.tsx                  # Closing card
+│
+│   # Everything below is the previous real-school template. Still live on the
+│   # sibling pages (/about, /academic, /admissions) and needed for the Arabic
+│   # homepage -- do not delete.
 ├── content.tsx                  # Root marketing page (assembles all homepage sections)
 ├── hero.tsx                     # Full-bleed opening tile (school photo or ink panel)
 ├── trust.tsx                    # Marquee of subjects taught

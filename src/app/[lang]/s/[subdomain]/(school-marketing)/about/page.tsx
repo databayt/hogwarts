@@ -57,7 +57,7 @@ export default async function About({ params }: AboutProps) {
 
   return (
     <div
-      className="school-content"
+      className="school-content marketing-container"
       data-school-id={school.id}
       data-subdomain={subdomain}
     >

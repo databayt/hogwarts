@@ -59,7 +59,10 @@ export default async function Admission({ params }: AdmissionProps) {
   const flags = await getAdmissionPortalFlags(school.id)
   if (!flags.enablePublicPortal) {
     return (
-      <div className="school-content" data-school-id={school.id}>
+      <div
+        className="school-content marketing-container"
+        data-school-id={school.id}
+      >
         <div className="mx-auto max-w-2xl px-4 py-24 text-center">
           <h1 className="mb-3 text-2xl font-semibold">
             {lang === "ar" ? "القبول مغلق حالياً" : "Admissions are closed"}
@@ -76,7 +79,7 @@ export default async function Admission({ params }: AdmissionProps) {
 
   return (
     <div
-      className="school-content"
+      className="school-content marketing-container"
       data-school-id={school.id}
       data-subdomain={subdomain}
     >

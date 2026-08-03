@@ -1,0 +1,362 @@
+// Copyright (c) 2025-present databayt
+// Licensed under SSPL-1.0 -- see LICENSE for details
+
+// Ported from zenda (template/header). Renders under the `.zenda-clone` CSS
+// scope (see src/styles/zenda-clone.css), which owns `.nav_component` and
+// everything below it.
+//
+// Two deviations from the source. The four links come from `marketingConfig`
+// rather than zenda's own, so this stays in step with the rest of the school
+// site. And the search / language / theme / account controls that used to live
+// in SiteHeader move in beside them -- zenda has no such cluster, so
+// `.nav_utility-wrap` is ours (styled in src/styles/zenda-shell.css).
+//
+// The `hero-logo` / `hero-link` attributes are load-bearing: <HeroIntro/> on
+// the homepage animates them as part of one timeline with the hero itself.
+
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { gsap } from "gsap"
+
+import { UserButton } from "@/components/auth/user-button"
+import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
+import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
+import { marketingConfig } from "@/components/template/site-header/config"
+import { SearchMenu } from "@/components/template/site-header/search-menu"
+
+// The hand-drawn squiggle zenda.com sweeps under a nav link on hover. Stroke uses
+// currentColor, which the .link-draw__box class paints purple.
+const DRAW_LINE_PATH =
+  "M17.0039 33.582C32.2307 33.7406 47.4552 33.7271 62.676 33.7113C67.3044 33.7064 96.546 33.9549 104.728 32.9769C113.615 31.9146 104.516 29.2022 102.022 28.1821C89.9573 23.2459 77.3751 19.9248 65.0451 15.9546C57.8987 13.6536 37.2813 9.3934 44.2314 7.00157C50.9667 4.68363 64.2873 6.71856 70.4249 6.86582C105.866 7.71618 141.306 8.48751 176.75 9.49827C217.874 10.671 258.906 11.9547 300 15.3886"
+
+interface NavDrawLinkProps {
+  href: string
+  label: string
+  isCurrent: boolean
+  onClick: () => void
+}
+
+// A nav link whose underline is "drawn" on hover by tweening the SVG path's
+// stroke-dashoffset (the same draw-on / draw-off micro-interaction as zenda.com).
+function NavDrawLink({ href, label, isCurrent, onClick }: NavDrawLinkProps) {
+  const pathRef = useRef<SVGPathElement>(null)
+  const lenRef = useRef(0)
+
+  useEffect(() => {
+    const path = pathRef.current
+    if (!path) return
+    const len = path.getTotalLength()
+    lenRef.current = len
+    // dash = len, gap = 2*len. At offset `len + 2` the whole path sits inside the gap, so
+    // it is fully hidden with no round-cap "dot" at either end (robust to sub-px rounding).
+    gsap.set(path, {
+      strokeDasharray: `${len} ${len * 2}`,
+      strokeDashoffset: len + 2,
+    })
+  }, [])
+
+  const drawIn = () => {
+    const path = pathRef.current
+    if (!path) return
+    gsap.killTweensOf(path)
+    gsap.to(path, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" })
+  }
+
+  const drawOut = () => {
+    const path = pathRef.current
+    if (!path) return
+    gsap.killTweensOf(path)
+    gsap.to(path, {
+      strokeDashoffset: lenRef.current + 2,
+      duration: 0.4,
+      ease: "power2.out",
+    })
+  }
+
+  return (
+    <Link
+      nav-link=""
+      hero-link=""
+      data-draw-line=""
+      href={href}
+      onClick={onClick}
+      onMouseEnter={drawIn}
+      onMouseLeave={drawOut}
+      className={`nav_link w-inline-block ${isCurrent ? "w--current" : ""}`}
+      aria-current={isCurrent ? "page" : undefined}
+    >
+      <div>{label}</div>
+      <div data-draw-line-box="" className="link-draw__box">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="100%"
+          viewBox="0 0 310 41"
+          fill="none"
+          preserveAspectRatio="none"
+          className="text-draw__box-svg"
+        >
+          <path
+            ref={pathRef}
+            d={DRAW_LINE_PATH}
+            stroke="currentColor"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    </Link>
+  )
+}
+
+interface ZendaNavProps {
+  /** Locale prefix for every link, e.g. "en". */
+  locale: string
+  /** School name already resolved for display -- alt text on the logo. */
+  displayName: string
+  /** Tenant subdomain, for the account menu's links back into the dashboard. */
+  subdomain: string
+  logoUrl?: string | null
+  /** Translated nav labels, keyed as in `dictionary.marketing.site.nav`. */
+  navLabels?: Record<string, string>
+}
+
+export function ZendaNav({
+  locale,
+  displayName,
+  subdomain,
+  logoUrl,
+  navLabels,
+}: ZendaNavProps) {
+  const [isActive, setIsActive] = useState(false)
+  const pathname = usePathname() || ""
+
+  const navLinks = marketingConfig.mainNav.map((item) => ({
+    // `path` is the unprefixed route the active check compares against; `href`
+    // is what the browser follows.
+    path: item.href,
+    href: `/${locale}${item.href}`,
+    label: (item.key && navLabels?.[item.key]) || item.title,
+  }))
+
+  const navRef = useRef<HTMLElement>(null)
+  const isActiveRef = useRef(isActive)
+  // True after the for-schools hero intro: the nav is parked above the fold and the
+  // page rests nudged down by a nav height, until the first scroll-up reveals it.
+  const tuckedRef = useRef(false)
+
+  const isActiveLink = (href: string) => {
+    // Normalize path by stripping the locale prefix (e.g. /en/for-schools -> /for-schools)
+    const normalizedPath = pathname.replace(/^\/[a-z]{2}(\/|$)/, "/")
+    return normalizedPath === href || (normalizedPath === "/" && href === "/")
+  }
+
+  // Close the mobile menu on Escape and whenever the route changes.
+  useEffect(() => {
+    if (!isActive) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsActive(false)
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [isActive])
+
+  // Close the mobile menu whenever the route changes. The reference did this in
+  // an effect; React 19's lint rule rejects a synchronous setState there, so
+  // this is the documented adjust-state-during-render form instead — same
+  // outcome, one fewer render pass.
+  const [lastPathname, setLastPathname] = useState(pathname)
+  if (lastPathname !== pathname) {
+    setLastPathname(pathname)
+    setIsActive(false)
+  }
+
+  // Let the scroll handler (bound once) read the latest menu state.
+  useEffect(() => {
+    isActiveRef.current = isActive
+  }, [isActive])
+
+  // Sticky nav that "stays a bit, then gets knocked out of the way": after a 100px
+  // grace it slides up out of view while scrolling down, and drops back in when
+  // scrolling up — the same GSAP hide/show (y:-100% / y:0%, 0.4s power2.out) that
+  // zenda.com uses. Skipped while the mobile menu is open so the menu can't shift.
+  //
+  // Plus the for-schools "tuck": the hero fires `zenda:hero-mounted` as it mounts, and
+  // we INSTANTLY park the page one nav-height down so it *loads* with the hero flush at
+  // the top edge and the nav just above the fold. The splash overlay hides the jump. It
+  // stays parked until the first scroll-up brings the nav back, then normal behaviour resumes.
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    let lastScrollTop = 0
+    let ticking = false
+    gsap.set(nav, { y: 0 })
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop
+        if (tuckedRef.current) {
+          // Parked above the fold: hold until the user scrolls up, then reveal once.
+          if (scrollTop < lastScrollTop) {
+            tuckedRef.current = false
+            gsap.to(nav, {
+              y: "0%",
+              duration: 0.4,
+              ease: "power2.out",
+              overwrite: true,
+            })
+          } else {
+            gsap.set(nav, { y: "-101%" }) // fully off (avoid a sub-pixel sliver)
+          }
+        } else {
+          const hide =
+            !isActiveRef.current && scrollTop > lastScrollTop && scrollTop > 100
+          gsap.to(nav, {
+            y: hide ? "-100%" : "0%",
+            duration: 0.4,
+            ease: "power2.out",
+            overwrite: true,
+          })
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop
+        ticking = false
+      })
+    }
+    const onHeroMounted = () => {
+      const h = nav.offsetHeight || 80
+      tuckedRef.current = true
+      gsap.set(nav, { y: "-101%" }) // park fully above the fold (no sub-pixel sliver)
+      // Load the page already scrolled down by one nav height (instant, not smooth) so
+      // the hero renders flush at the top edge. lastScrollTop tracks it so the next
+      // upward scroll is detected and reveals the nav.
+      window.scrollTo(0, h)
+      lastScrollTop = h
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("zenda:hero-mounted", onHeroMounted)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("zenda:hero-mounted", onHeroMounted)
+      gsap.killTweensOf(nav)
+    }
+  }, [])
+
+  return (
+    <nav ref={navRef} id="mainNav" nav-component="" className="nav_component">
+      <div className="nav_wrap">
+        <Link
+          hero-logo=""
+          aria-label="Go to the Home page"
+          href={`/${locale}`}
+          className={`nav_logo-link w-nav-brand ${isActiveLink("/") ? "w--current" : ""}`}
+        >
+          {/* Stays a plain <img>: the Webflow `img-auto` / `nav_logo-link`
+              rules size it, and next/image's wrapper would break them. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl || "/feather.png"}
+            alt=""
+            width={477}
+            height={105}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="img-auto"
+          />
+          {/* Zenda's logo is a wordmark that reads as the brand on its own; a
+              school's is a crest, so the name is set beside it. */}
+          <span className="nav_logo-text">{displayName}</span>
+        </Link>
+
+        {/* Links, then the hamburger, all pushed to the end of the bar. Also
+            the positioning context the utility panel drops out of. */}
+        <div className="nav_right">
+          <div
+            id="nav-menu"
+            nav-menu-layer-1=""
+            className={`nav_menu-wrap ${isActive ? "is-active" : ""}`}
+            style={{ display: isActive ? "block" : undefined }}
+          >
+            <div nav-menu-layer-3="" className="nav_menu_layer_1">
+              <div className="nav_menu">
+                {navLinks.map(({ path, href, label }) => (
+                  <NavDrawLink
+                    key={href}
+                    href={href}
+                    label={label}
+                    isCurrent={isActiveLink(path)}
+                    onClick={() => setIsActive(false)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div nav-menu-layer-2="" className="nav_menu_layer_2"></div>
+          </div>
+
+          {/* Search, language, theme and account -- not part of the zenda clone,
+              these came over from SiteHeader. They live in a panel the hamburger
+              opens rather than sitting in the bar, so the bar keeps zenda's
+              logo-and-links proportions at every width. */}
+          <div className={`nav_utility-wrap ${isActive ? "is-active" : ""}`}>
+            <SearchMenu />
+            <LangSwitcher />
+            <ModeSwitcher />
+            <UserButton variant="site" subdomain={subdomain} />
+          </div>
+
+          {/* `hero-link` puts the hamburger into the homepage intro's staggered
+              nav fade-in. Without it the bar is empty during the centred splash
+              except for one stray hamburger, which the reference has nothing
+              standing in for. */}
+          <button
+            type="button"
+            hero-link=""
+            fs-scrolldisable-element="toggle"
+            nav-menu-btn=""
+            className={`nav_menu-btn ${isActive ? "is-active" : ""}`}
+            onClick={() => setIsActive((prev) => !prev)}
+            aria-label={isActive ? "Close menu" : "Open menu"}
+            aria-expanded={isActive}
+            aria-controls="nav-menu"
+          >
+            <div className="nav_hamburger_component">
+              <div
+                className={`nav_hamburger_wrap ${isActive ? "is-active" : ""}`}
+              >
+                <div className="nav_hamburger_line"></div>
+                <div className="nav_hamburger_embed w-embed">
+                  {/* The reference only ran the bars-to-X transition below
+                      991px, where its hamburger was the only nav. Ours is on at
+                      every width, so the media query comes off. */}
+                  <style>{`
+                    .nav_hamburger_wrap {
+                      --thickness: 0.22rem;
+                      --gap: 0.28rem;
+                      --rotate: 45;
+                      --width: 100%;
+                    }
+                    .is-active .nav_hamburger_line:first-child {
+                      transform: translateY(calc(var(--thickness) * 0.5 + var(--gap) * 0.5)) rotate(calc(var(--rotate) * 3 * -1deg));
+                    }
+                    .is-active .nav_hamburger_line:last-child {
+                      transform: translateY(calc(var(--thickness) * -0.5  + var(--gap) * -0.5)) rotate(calc(var(--rotate) * 3 * 1deg));
+                    }
+                    .nav_hamburger_line {
+                      transition-property: transform;
+                      transition-duration: 460ms;
+                      transition-timing-function: cubic-bezier(.164, .84, .44, 1);
+                    }
+                  `}</style>
+                </div>
+                <div className="nav_hamburger_line"></div>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
+}
