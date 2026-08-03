@@ -27,8 +27,8 @@ src/components/saas-marketing/
 ├── logo-cloud.tsx                  # Partner logos
 ├── story-section.tsx               # Story/about section
 ├── mission-cards.tsx               # Mission value cards
-├── boost.tsx                       # Boost/benefits section
-├── open-source.tsx                 # Open-source section
+├── boost.tsx                       # Donations/patron section (NOT rendered on the homepage)
+├── open-source.tsx                 # Open-source section (NOT rendered on the homepage)
 ├── lets-work-together.tsx          # Contact CTA
 ├── time.tsx                        # Time/clock component
 ├── clock.tsx                       # Clock display

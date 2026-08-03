@@ -21,9 +21,9 @@ export default function MissionCards({ dictionary, lang }: MissionCardsProps) {
   const dict = (dictionary?.marketing as any)?.missionCards || {
     heading: "A restoration of time, elimination of repetitive.",
     description:
-      "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source school-dashboard transforms fragmented systems into unified infrastructure, cutting operational costs by 60%.",
+      "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our unified platform transforms fragmented systems into one connected infrastructure, cutting operational costs by 60%.",
     values:
-      "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Open-source is participatory development: communities inspect, modify, and own their tools. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
+      "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Schools shape the platform around their own practice: configure it, extend it, and own their data. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
     studentSuccess: "Student Success",
     schoolOperations: "School Operations",
     openAcademy: "Open Academy",

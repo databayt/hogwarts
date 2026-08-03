@@ -125,8 +125,6 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   saasPricingQuestion: "What are the pricing plans?",
   saasGetStarted: "Get Started",
   saasGetStartedQuestion: "How do I get started with Databayt?",
-  saasOpenSource: "Open Source",
-  saasOpenSourceQuestion: "Is Databayt open source?",
   schoolAdmission: "Admission",
   schoolAdmissionQuestion: "How do I apply to this school?",
   schoolFees: "Fees",

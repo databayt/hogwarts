@@ -116,8 +116,6 @@
     "saasPricingQuestion": "What are the pricing plans?",
     "saasGetStarted": "Get Started",
     "saasGetStartedQuestion": "How do I get started with Databayt?",
-    "saasOpenSource": "Open Source",
-    "saasOpenSourceQuestion": "Is Databayt open source?",
     "schoolAdmission": "Admission",
     "schoolAdmissionQuestion": "How do I apply to this school?",
     "schoolFees": "Fees",
@@ -585,13 +583,12 @@
       "subtitle": "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
       "badge": "700+ School automated",
       "appointment": "Get Started",
-      "liveDemo": "Live Demo",
-      "services": "GitHub"
+      "liveDemo": "Live Demo"
     },
     "features": {
       "badge": "Conference: live virtual classrooms",
       "title": "Automate the boring",
-      "subtitle": "Wave goodbye to busywork. Every spell your school needs — in one enchanted platform. Open Source. Open Code.",
+      "subtitle": "Wave goodbye to busywork. Every module your school needs — in one connected platform.",
       "searchPlaceholder": "Search features...",
       "allCategories": "All",
       "noResults": "No features match your search. Try a different keyword.",
@@ -749,8 +746,8 @@
     },
     "missionCards": {
       "heading": "A restoration of time, elimination of repetitive.",
-      "description": "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%.",
-      "values": "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Open-source is participatory development: communities inspect, modify, and own their tools. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
+      "description": "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our unified platform transforms fragmented systems into one connected infrastructure, cutting operational costs by 60%.",
+      "values": "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Schools shape the platform around their own practice: configure it, extend it, and own their data. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
       "studentSuccess": "Student Success",
       "schoolOperations": "School Operations",
       "openAcademy": "Open Academy"
@@ -830,14 +827,6 @@
       "title": "Frequently Asked Questions",
       "titleBreak": "Frequently\nAsked\nQuestions",
       "subtitle": "Everything you need to know about our platform and services.",
-      "openSourceTitle": "Is the educational platform really open source?",
-      "openSourceDesc": "Yes! Every component and building block is open source. We charge for crafting fully functional educational solutions and ensuring their ongoing reliability.",
-      "openSourceItems": [
-        "All educational components and templates are freely available",
-        "Contributors earn a share of the value they help create",
-        "Full transparency in development and educational processes",
-        "Community-driven innovation in education technology"
-      ],
       "items": [
         {
           "question": "How much does it cost?",
@@ -904,7 +893,7 @@
           "answer": "We offer multiple support channels to help your team get up and running quickly and stay productive.",
           "list": [
             "Comprehensive documentation and video tutorials",
-            "Community support via Discord and GitHub Discussions",
+            "Community support via our Discord channel",
             "Onboarding workshops for administrators and teachers",
             "Premium support packages with dedicated account managers"
           ]
@@ -915,7 +904,6 @@
           "list": [
             "Browse our documentation",
             "Join our Discord community",
-            "Start a discussion on GitHub",
             "Email us at hello@databayt.org"
           ],
           "links": [
@@ -928,10 +916,6 @@
               "href": "https://discord.gg/uPa4gGG62c"
             },
             {
-              "text": "Start a discussion on GitHub",
-              "href": "https://github.com/databayt/hogwarts/discussions"
-            },
-            {
               "text": "Email us at hello@databayt.org",
               "href": "mailto:hello@databayt.org"
             }
@@ -942,7 +926,6 @@
     "footer": {
       "inspiredBy": "Inspired by",
       "builtBy": "Built by",
-      "sourceCode": "The source code is available on",
       "product": "Product",
       "company": "Company",
       "services": "Services",
@@ -2223,6 +2206,7 @@
     "subtitle": "Discover features you love",
     "highlight": "features",
     "headlineLead": "FIND",
+    "headlineMid": "YOUR",
     "headlineTrail": "YOUR BOOST",
     "included": "included!",
     "module": "module",

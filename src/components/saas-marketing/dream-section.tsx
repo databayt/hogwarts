@@ -92,12 +92,23 @@ const categoryCards = [
   { key: "tech" as const, icon: Cpu, color: "bg-green-500" },
 ]
 
+// Scroll-linked box geometry. The LTR final height stays the original
+// pixel-tuned 470px; RTL measures its own (see rtlBoxMaxHeight below).
+const BOX_FINAL_Y = 170
+const BOX_START_HEIGHT = 105
+
 export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
   const isRTL = lang === "ar"
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set())
   const [hoveredTag, setHoveredTag] = useState<string | null>(null)
   const [animationComplete, setAnimationComplete] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
+  const boxAnchorRef = useRef<HTMLDivElement>(null)
+  const tagCloudRef = useRef<HTMLDivElement>(null)
+  // RTL only: final box height measured so the expanded box lands flush with
+  // the tag-cloud bottom (the 470px LTR constant was tuned against the English
+  // cloud; Arabic labels wrap differently at every width).
+  const [rtlBoxMaxHeight, setRtlBoxMaxHeight] = useState(470)
   const { resolvedTheme } = useTheme()
   // `resolvedTheme` is undefined during SSR, so gate it behind mount to avoid a
   // hydration mismatch on the theme-dependent subtitle color (server renders the
@@ -120,16 +131,22 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
   })
 
   // Box animations - starts at 0 (when section reaches top), completes at 0.4
-  const boxY = useTransform(smoothProgress, [0, 0.4], [5, 170])
-  const boxHeight = useTransform(smoothProgress, [0, 0.4], ["105px", "470px"])
+  const boxY = useTransform(smoothProgress, [0, 0.4], [5, BOX_FINAL_Y])
+  const boxHeight = useTransform(
+    smoothProgress,
+    [0, 0.4],
+    [`${BOX_START_HEIGHT}px`, isRTL ? `${rtlBoxMaxHeight}px` : "470px"]
+  )
   const boxBgColor = useTransform(
     smoothProgress,
     [0, 0.4],
     ["#E5E5E5", "#E8704E"]
   )
 
-  // Text animations ("YOUR BOOST" moves left, both texts turn gray suddenly at end)
-  const textX = useTransform(smoothProgress, [0, 0.4], [0, -195])
+  // Text animations: the trail words slide toward the box as it grows —
+  // physically left in LTR ("YOUR BOOST"), right in RTL ("مصدر قوتك") — then
+  // both texts turn gray suddenly at the end.
+  const textX = useTransform(smoothProgress, [0, 0.4], [0, isRTL ? 195 : -195])
   const textColor = useTransform(
     smoothProgress,
     [0.35, 0.4],
@@ -151,12 +168,62 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
     setAnimationComplete(latest >= 0.35)
   })
 
+  // RTL: measure how far the box may grow so its bottom lines up with the
+  // last row of the tag cloud. Both rects live in the same sticky container,
+  // so the difference is scroll-invariant; re-measure on resize and once the
+  // Arabic webfont settles (it changes tag wrapping).
+  useEffect(() => {
+    if (!isRTL) return
+    const measure = () => {
+      const anchor = boxAnchorRef.current
+      const cloud = tagCloudRef.current
+      if (!anchor || !cloud) return
+      if (anchor.getClientRects().length === 0) return // hidden below md
+      const span =
+        cloud.getBoundingClientRect().bottom -
+        anchor.getBoundingClientRect().top -
+        BOX_FINAL_Y
+      if (span > BOX_START_HEIGHT) setRtlBoxMaxHeight(Math.round(span))
+    }
+    // Every Arabic text block grows a few px when the webfont settles, and
+    // that settle can land seconds after hydration (observed ~1.7s in dev)
+    // without a catchable one-shot event — so poll briefly until the layout
+    // is stable, then rely on ResizeObserver + resize for later changes.
+    // setState bails out when the rounded value is unchanged, so the poll is
+    // render-free once settled.
+    measure()
+    const settlePoll = window.setInterval(measure, 250)
+    const settleStop = window.setTimeout(
+      () => window.clearInterval(settlePoll),
+      4000
+    )
+    document.fonts?.ready.then(measure).catch(() => {})
+    const observer =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null
+    if (observer) {
+      const cloud = tagCloudRef.current
+      const titleRow = boxAnchorRef.current?.parentElement
+      const subtitle = cloud?.parentElement?.previousElementSibling
+      for (const el of [titleRow, subtitle, cloud]) {
+        if (el) observer.observe(el)
+      }
+    }
+    window.addEventListener("resize", measure)
+    return () => {
+      window.clearInterval(settlePoll)
+      window.clearTimeout(settleStop)
+      observer?.disconnect()
+      window.removeEventListener("resize", measure)
+    }
+  }, [isRTL])
+
   const dreamDict = dictionary.dream as {
     title: string
     titleAr: string
     subtitle: string
     highlight: string
     headlineLead: string
+    headlineMid: string
     headlineTrail: string
     included: string
     module: string
@@ -208,7 +275,10 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
   // The animated "?" box is language-neutral, so both the LTR and RTL
   // headlines render the exact same element.
   const animatedBox = (
-    <div className="relative w-[clamp(6rem,15vw,13rem)] flex-shrink-0 self-start">
+    <div
+      ref={boxAnchorRef}
+      className="relative w-[clamp(6rem,15vw,13rem)] flex-shrink-0 self-start"
+    >
       {/* Animated ? box - absolutely positioned so height expansion doesn't affect layout */}
       <motion.div
         className="absolute start-0 top-0 flex w-full flex-col items-center justify-center overflow-hidden rounded-lg will-change-transform"
@@ -364,10 +434,10 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
           </div>
         )}
 
-        {/* Desktop Title Row (RTL): اكتشف [?] قوتك — mirrors the LTR spatial
-            rhythm (lead + box hug the start edge, trail sweeps to the end) so
-            the growing box stays clear of the tag cloud; no vertical/slide
-            typography, which are English-only devices. */}
+        {/* Desktop Title Row (RTL): اكتشف [?] مصدر قوتك — full mirror of the
+            LTR kinetic device: the trail slides toward the box as it grows
+            (+x, mirroring LTR's -x) and مصدر is the vertical small word (≙
+            YOUR), flipped to read top-to-bottom per Arabic spine convention. */}
         {isRTL && (
           <div className="mb-8 hidden w-full items-center gap-1 md:mb-12 md:flex md:gap-1.5">
             {/* اكتشف — scaled so lead + box stay within the start half (Arabic
@@ -383,15 +453,35 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
             {/* Animated ? box (shared LTR/RTL) */}
             {animatedBox}
 
-            {/* قوتك */}
-            <div className="flex flex-grow items-center justify-end">
+            {/* مصدر قوتك - animated container */}
+            <motion.div
+              className="-ms-3 flex flex-grow items-center justify-end"
+              style={{ x: textX }}
+            >
+              {/* مصدر - vertical text. RTL script flows bottom-to-top in
+                  vertical-lr, so the 180° flip makes it read top-to-bottom
+                  with glyph tops facing left — the Arabic book-spine
+                  convention (joins stay intact; no tracking, which would
+                  break them). */}
               <motion.span
-                className="text-[clamp(1.75rem,7.5vw,7rem)] leading-[0.85] font-black"
+                className="flex-shrink-0 text-[clamp(0.95rem,1.9vw,1.5rem)] font-extrabold"
+                style={{
+                  writingMode: "vertical-lr",
+                  transform: "rotate(180deg)",
+                  color: textColor,
+                }}
+              >
+                {dreamDict.headlineMid}
+              </motion.span>
+
+              {/* قوتك */}
+              <motion.span
+                className="-ms-2 text-[clamp(1.75rem,7.5vw,7rem)] leading-[0.85] font-black"
                 style={{ color: textColor }}
               >
                 {dreamDict.headlineTrail}
               </motion.span>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -412,7 +502,8 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
           </div>
         )}
 
-        {/* Mobile Title Row (RTL): اكتشف [?] قوتك on one line */}
+        {/* Mobile Title Row (RTL): اكتشف [?] / مصدر قوتك on two lines,
+            matching the LTR mobile structure (lead + box, trail below). */}
         {isRTL && (
           <div className="mb-8 flex flex-col items-center gap-2 md:hidden">
             <div className="flex items-center gap-3">
@@ -422,10 +513,10 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
               <div className="flex h-10 w-12 items-center justify-center rounded-md bg-neutral-200">
                 <span className="text-2xl font-light text-white">?</span>
               </div>
-              <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
-                {dreamDict.headlineTrail}
-              </span>
             </div>
+            <span className="text-4xl leading-[0.9] font-black text-[#E8704E]">
+              {dreamDict.headlineMid} {dreamDict.headlineTrail}
+            </span>
           </div>
         )}
 
@@ -445,7 +536,10 @@ export function DreamSection({ dictionary, lang = "en" }: DreamSectionProps) {
 
         {/* Hashtag Tag Cloud - mobile: centered, desktop: aligned with YOUR at half screen */}
         <div className="pe-0 md:ms-[50%] md:pe-8 lg:pe-16 xl:pe-24">
-          <div className="flex flex-wrap justify-center gap-2.5 md:justify-start">
+          <div
+            ref={tagCloudRef}
+            className="flex flex-wrap justify-center gap-2.5 md:justify-start"
+          >
             {tags.map((tag) => {
               const isSelected = selectedTags.has(tag.id)
               const isHovered = hoveredTag === tag.id

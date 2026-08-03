@@ -26,7 +26,6 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
       "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
     appointment: "Get Started",
     liveDemo: "Live Demo",
-    services: "GitHub",
   }
 
   // Construct demo URL based on environment

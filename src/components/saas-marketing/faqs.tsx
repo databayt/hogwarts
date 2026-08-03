@@ -24,14 +24,6 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
     title: "Frequently Asked Questions",
     titleBreak: "FAQ",
     subtitle: "Everything you need to know.",
-    openSourceTitle: "Is this really open source?",
-    openSourceDesc:
-      "Yes! All components are open source. We charge for complete solutions and ongoing support.",
-    openSourceItems: [
-      "Free components and templates",
-      "Contributors earn revenue share",
-      "Transparent development process",
-    ],
     items: [],
   }
 
@@ -54,24 +46,15 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
     {
       question: "Do you provide support?",
       answer:
-        "Yes. Documentation, community Discord, and premium support packages available.",
-    },
-    {
-      question: "Can I contribute?",
-      answer:
-        "Absolutely! Contribute code, earn revenue share. No minimum commitment required.",
+        "Yes. Documentation, onboarding workshops, and premium support packages available.",
     },
     {
       question: "Still have questions?",
       answer: "",
-      list: ["GitHub Discussions", "Discord Community", "Documentation"],
+      list: ["Documentation", "Talk to us"],
       links: [
-        {
-          text: "GitHub Discussions",
-          href: "https://github.com/databayt/hogwarts/discussions",
-        },
-        { text: "Discord Community", href: "https://discord.gg/uPa4gGG62c" },
         { text: "Documentation", href: "/docs" },
+        { text: "Talk to us", href: "mailto:hello@databayt.org" },
       ],
     },
   ]
@@ -91,24 +74,7 @@ export default function FAQs({ dictionary, lang }: FAQsProps) {
           <p className="muted">{faqsDict.subtitle}</p>
         </div>
         <div className="sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
-          <Accordion type="single" collapsible defaultValue="item-opensource">
-            {/* Open Source Question - First Item */}
-            <AccordionItem value="item-opensource">
-              <AccordionTrigger className="text-start">
-                {faqsDict.openSourceTitle}
-              </AccordionTrigger>
-              <AccordionContent className="text-start">
-                <p className="muted mb-4">{faqsDict.openSourceDesc}</p>
-                <ul className="list-outside list-disc space-y-2 ps-4">
-                  {faqsDict.openSourceItems?.map((item, index) => (
-                    <li key={index} className="muted">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-            {/* Other FAQ Items */}
+          <Accordion type="single" collapsible defaultValue="item-0">
             {items.map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
                 <AccordionTrigger className="text-start">

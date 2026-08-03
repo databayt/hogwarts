@@ -5,7 +5,6 @@ import type { Locale } from "@/components/internationalization/config"
 // import { Gallery } from "@/components/landing/gallery";
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-import Boost from "./boost"
 // import Wizard from "@/components/wizard";
 import { DreamSection } from "./dream-section"
 // import Automated from "@/components/automated/featured";
@@ -15,7 +14,6 @@ import Hero from "./hero"
 import LetsWorkTogether from "./lets-work-together"
 import LogoCloud from "./logo-cloud"
 import MissionCards from "./mission-cards"
-import OpenSource from "./open-source"
 import StorySection from "./story-section"
 // import Stack from "./stack";
 import Testimonial from "./testimonial"
@@ -47,10 +45,10 @@ export default function HomeContent(props: Props) {
       {/* <Wizard /> */}
       <Testimonial dictionary={dictionary} lang={lang} />
       <LogoCloud dictionary={dictionary} lang={lang} />
-      <OpenSource dictionary={dictionary} lang={lang} />
+      {/* OpenSource + Boost hidden — the SaaS homepage sells the product,
+          not the repo or donations. Components kept in the block. */}
       <FAQs dictionary={dictionary} lang={lang} />
       <LetsWorkTogether dictionary={dictionary} lang={lang} />
-      <Boost dictionary={dictionary} lang={lang} />
     </main>
   )
 }

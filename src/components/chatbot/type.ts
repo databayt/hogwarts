@@ -137,8 +137,6 @@ export interface ChatbotDictionary {
   saasPricingQuestion: string
   saasGetStarted: string
   saasGetStartedQuestion: string
-  saasOpenSource: string
-  saasOpenSourceQuestion: string
   schoolAdmission: string
   schoolAdmissionQuestion: string
   schoolFees: string

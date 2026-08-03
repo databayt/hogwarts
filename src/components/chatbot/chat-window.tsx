@@ -105,11 +105,6 @@ export const ChatWindow = memo(function ChatWindow({
         question: dictionary.saasGetStartedQuestion,
         icon: TimeIcon,
       },
-      {
-        label: dictionary.saasOpenSource,
-        question: dictionary.saasOpenSourceQuestion,
-        icon: InfoIcon,
-      },
     ]
   }, [promptType, dictionary, schoolContext])
 
