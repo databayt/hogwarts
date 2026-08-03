@@ -8,26 +8,73 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/327
 docs: https://databayt.org
-last_audited: 2026-06-13
+last_audited: 2026-08-03
 ---
 
 ## School Marketing — Public-facing school website and admission portal
 
 ### Overview
 
-The school-marketing block powers the public website that each school gets on its subdomain (e.g., `demo.databayt.org`). It includes the marketing homepage (hero, features, faculty, testimonials, FAQs, newsletter), the admission landing page with campaign-based enrollment, a multi-step application form (apply), school visit booking, academic program pages, and an about page. All content is i18n-aware and renders within the `(school-marketing)` route group.
+The school-marketing block powers the public website that each school gets on its subdomain (e.g., `demo.databayt.org`). It includes the marketing homepage, the admission landing page with campaign-based enrollment, a multi-step application form (apply), school visit booking, academic program pages, and an about page. All content is i18n-aware and renders within the `(school-marketing)` route group.
+
+The homepage was rebranded on 2026-08-03 away from its Harry Potter theming to a
+template a real school can actually publish. See "Homepage rebrand" below.
+
+### Homepage rebrand (2026-08-03)
+
+The homepage used to be Harry Potter fan fiction: Gryffindor/Ravenclaw/Hufflepuff/
+Slytherin "houses" with a sorting quiz, Dumbledore and Snape as faculty portraits,
+and a trust strip citing the Ministry of Magic and Gringotts Bank. Because this
+block renders for **every tenant**, that copy shipped verbatim on real schools'
+public websites. Replacing it was a correctness fix, not a taste one.
+
+Sections now borrow their mechanics from four reference sites:
+
+| Section          | Mechanic                                    | From     |
+| ---------------- | ------------------------------------------- | -------- |
+| `hero`           | full-bleed opening tile, capsule bottom     | apple    |
+| `trust`          | edge-faded marquee                          | topmate  |
+| `stats`          | scroll-triggered count-up                   | zenda    |
+| `stages`         | 2-up promo tile grid, first tile spans both | apple    |
+| `why`            | horizontal snap card rail                   | apple    |
+| `life`           | irregular bento via column-span math        | topmate  |
+| `academics`      | auto-advancing accordion + synced preview   | topmate  |
+| `testimonials`   | translucent cards on a colored band         | topmate  |
+| `admissions-cta` | colored capsule panel                       | almersal |
+
+**Design system**: `src/styles/school-marketing.css` defines the display type ramp
+(`.display-1..3`, `.display-intro`, `.eyebrow`), the section rhythm (`.section-y`),
+the color bands (`.band-ink/warm/cool/sand` + `.band-muted`), `.capsule-t/b`, and
+`.tile`. Use these instead of raw `text-*`/`font-*`/hex colors. The ramp carries an
+`[dir="rtl"]` step-down because Arabic sets ~1.3x wider than Latin at equal px, and
+zeroes letter-spacing (spacing breaks Arabic letter joins).
+
+**No stock photography.** A shared template cannot ship photographs of a campus it
+has never seen, so a school without an uploaded `branding.heroImageUrl` gets a
+typographic ink panel, and tiles carry color rather than art. Faculty shows
+departments and figures, never invented named individuals with portraits.
+
+**The Harry Potter version is preserved on the `hogwarts` branch** (also tagged
+`harry-potter-homepage-2026-08-02`), with the hogwarts site name and logo intact.
 
 ### File Structure
 
 ```
 school-marketing/
 ├── content.tsx                  # Root marketing page (assembles all homepage sections)
-├── hero.tsx                     # Hero section
-├── features.tsx                 # School features grid
-├── faculty.tsx                  # Faculty showcase
-├── testimonials.tsx             # Testimonial cards
-├── faqs.tsx                     # FAQ accordion
+├── hero.tsx                     # Full-bleed opening tile (school photo or ink panel)
+├── trust.tsx                    # Marquee of subjects taught
+├── stats.tsx                    # Scroll-triggered count-up figures
+├── stages.tsx                   # 2-up promo tile grid (Primary/Middle/Secondary)
+├── why.tsx                      # Horizontal card rail of value propositions
+├── life.tsx                     # Bento grid -- what a week looks like
+├── academics.tsx                # Auto-advancing accordion + synced preview panel
+├── faculty.tsx                  # Department cards + staff figures
+├── testimonials.tsx             # Parent quotes on a colored band
+├── admissions-cta.tsx           # Ink capsule CTA + 4 numbered steps
+├── faqs.tsx                     # FAQ accordion (5/7 split, sticky heading)
 ├── newsletter.tsx               # Newsletter signup
+├── format.ts                    # Locale-aware numerals (client-safe)
 ├── footer.tsx                   # Shared footer
 ├── houses.tsx                   # School houses display
 ├── core.tsx                     # Core values section

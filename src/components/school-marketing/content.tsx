@@ -5,23 +5,21 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { ReportIssue } from "@/components/report-issue"
 
-import { CTA } from "./admission-process"
-import { Core } from "./core"
-import EventCard from "./event"
+import { Academics } from "./academics"
+import { AdmissionsCTA } from "./admissions-cta"
 import { Faculty } from "./faculty"
 import FAQs from "./faqs"
-import { Features } from "./features"
 import Footer from "./footer"
 import { Hero } from "./hero"
-import { Houses } from "./houses"
-import LetsWorkTogether from "./lets-work-together"
-import LogoCloud from "./logo-cloud"
+import { Life } from "./life"
 import { NewComers } from "./new-comers"
 import Newsletter from "./newsletter"
-import { SpecialOffers } from "./offer"
 import { PhoneMockup } from "./phone-mockup"
-import { BackgroundGradientAnimationDemo } from "./ready"
+import { Stages } from "./stages"
+import { Stats } from "./stats"
 import { Testimonials } from "./testimonials"
+import Trust from "./trust"
+import { Why } from "./why"
 
 interface School {
   id: string
@@ -51,6 +49,19 @@ interface SiteProps {
   subdomain?: string
 }
 
+/**
+ * The public homepage every tenant school gets on its subdomain.
+ *
+ * Order is the argument a visiting parent walks through: what this school is
+ * (Hero) -> what it teaches (Trust) -> whether it is any good (Stats) -> where
+ * my child would go (Stages) -> why here and not the school down the road (Why)
+ * -> what daily life looks like (PhoneMockup, Life, Academics) -> who teaches
+ * (Faculty) -> who else trusted it (Testimonials) -> how to apply (AdmissionsCTA).
+ *
+ * Colored bands alternate deliberately: Trust (sand) and Testimonials (cool)
+ * and AdmissionsCTA (ink) break the page into three acts. Adjacent sections
+ * must not both carry a band, or the page reads as stripes.
+ */
 export default function SiteContent({
   school,
   dictionary,
@@ -66,19 +77,18 @@ export default function SiteContent({
         subdomain={subdomainValue}
         dictionary={dictionary}
         heroImageUrl={school.branding?.heroImageUrl}
+        schoolName={school.name}
       />
+      <Trust />
+      <Stats />
+      <Stages lang={lang} dictionary={dictionary} />
+      <Why dictionary={dictionary} />
       <PhoneMockup dictionary={dictionary} lang={lang} />
-      <Houses />
-      <Features />
-      <Core />
+      <Life dictionary={dictionary} />
+      <Academics />
       <Faculty />
       <Testimonials />
-      <CTA />
-      <SpecialOffers />
-      <LogoCloud />
-      <EventCard />
-      <LetsWorkTogether />
-      <BackgroundGradientAnimationDemo lang={lang} subdomain={subdomainValue} />
+      <AdmissionsCTA lang={lang} dictionary={dictionary} />
       <Newsletter />
       <FAQs />
       <NewComers lang={lang} subdomain={subdomainValue} />

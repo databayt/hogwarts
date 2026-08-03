@@ -8,7 +8,7 @@ maturity: Built+Polish
 completion: 93
 tracker: https://github.com/databayt/hogwarts/issues/327
 docs: https://databayt.org
-last_audited: 2026-06-13
+last_audited: 2026-08-03
 ---
 
 # School Marketing — Production Readiness Tracker
@@ -24,14 +24,22 @@ last_audited: 2026-06-13
 ### Homepage
 
 - [x] Hero section
-- [x] Features grid
-- [x] Faculty showcase
 - [x] Testimonials
 - [x] FAQ accordion
 - [x] Newsletter signup
 - [x] Footer
-- [x] Houses, core values, special offers, events
 - [x] Metadata generation
+- [x] **De-Pottered for real tenants (2026-08-03)** — Houses/core values/special
+      offers/events sections deleted along with the Harry Potter copy that shipped
+      on every tenant's public site. Replaced by `trust`, `stats`, `stages`, `why`,
+      `life`, `academics`, `admissions-cta`. Old version preserved on the
+      `hogwarts` branch.
+- [ ] Hero photography — schools with no `branding.heroImageUrl` fall back to a
+      typographic ink panel. Fine as a default, but prompting admins to upload a
+      hero image during onboarding would lift every tenant's homepage.
+- [ ] Demo tenant figures are placeholders (18 per class, 94% placement, 62 staff).
+      Real tenants must edit these; consider sourcing them from the DB where the
+      numbers already exist (student/teacher counts are computable).
 
 ### Admission Landing
 
@@ -158,6 +166,11 @@ Active step order: **attachments → personal → location → academic → fees
 - [ ] **INQUIRY_SOURCES / DEFAULT_GRADES i18n migration** — constants still hardcoded in English; needs config factory pattern (see translation rules)
 - [ ] **payment/content.tsx dead-file cleanup** — payment step file can be removed now that application is always free
 - [ ] **Leads tab i18n sweep** — `src/components/school-dashboard/admission/leads/` was added without full i18n coverage (tracked in dashboard-admission block)
+
+### Mobile edge-to-edge — hero + sticky header (2026-08-02)
+
+- [x] **Hero photo left an 8px strip on both sides on mobile** — `hero.tsx` negated `--marketing-px` only, but a marketing page stacks two gutters (root `.layout-container` `--container-px` + `.marketing-container` `--marketing-px`), so the image landed at x=8 instead of x=0. Now `.bleed-page` (negates the new `--page-px` sum) with `lg:mx-0` unchanged; the mobile copy block moved `px-container` → `px-page` so the heading stays on the same rail as the rest of the page.
+- [x] **Sticky header background stopped 16px short of both edges** — the full-bleed hero scrolled through the gap. `site-header/content.tsx` gained `.bleed-bg`, which paints the header's own background across the viewport from an absolutely positioned `::before`. Header markup and nav alignment are untouched, and because the bleed is out of flow it adds no scrollable width. Fixes desktop too (background now reaches both edges at every width). Verified 390px and 1440px, `/ar` + `/en`: `document.scrollWidth === innerWidth` in all four.
 
 ### Arabic (/ar) QA pass — apply wizard (2026-07-16)
 

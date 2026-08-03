@@ -3,7 +3,6 @@
 
 import Link from "next/link"
 
-import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AnimatedButton } from "@/components/atom/animated-button"
@@ -15,118 +14,78 @@ interface HeroProps {
   subdomain?: string
   dictionary?: Dictionary
   heroImageUrl?: string | null
+  schoolName?: string
 }
 
+/**
+ * Full-bleed opening tile: the school's own photograph, its name, and the two
+ * things a visiting parent actually wants to do -- book a visit, or start an
+ * application.
+ *
+ * A school that hasn't uploaded a hero image gets a typographic panel rather
+ * than stock photography of someone else's campus -- this renders for every
+ * tenant, so the fallback has to be honest about having no photograph.
+ */
 export function Hero({
   lang = "en",
-  subdomain,
   dictionary,
   heroImageUrl,
+  schoolName,
 }: HeroProps) {
-  const isRTL = lang === "ar"
-
-  // Get translations with fallbacks
   const t = dictionary?.marketing?.site?.hero
-
-  // Parse title to handle newlines
-  const titleParts = t?.title?.split("\n") || [
-    "Beautiful Mind,",
-    "Curious. Wonder.",
-  ]
+  const titleLines = (t?.title ?? "").split("\n").filter(Boolean)
 
   return (
-    <section className="grid h-[calc(100vh-3.5rem)] w-full grid-cols-1 lg:grid-cols-2 lg:py-8">
-      {/* Image Half */}
-      <div className="relative -mx-[var(--marketing-px)] h-full lg:order-last lg:mx-0">
-        <div
-          className="absolute inset-0 overflow-hidden rounded-none lg:inset-y-8 lg:rounded-sm"
-          style={{
-            backgroundImage: `url('${heroImageUrl || asset("/photos/harry-potter.png")}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 lg:bg-gradient-to-r lg:from-black/60 lg:to-black/40" />
-        </div>
+    <section
+      className={cn(
+        "bleed-page capsule-b relative isolate flex min-h-[85vh] flex-col justify-end overflow-hidden",
+        !heroImageUrl && "band-ink"
+      )}
+    >
+      {heroImageUrl && (
+        <>
+          <div
+            className="absolute inset-0 -z-10 bg-cover bg-center"
+            style={{ backgroundImage: `url('${heroImageUrl}')` }}
+          />
+          {/* Scrim: heavier at the bottom, where the type sits. */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
+        </>
+      )}
 
-        {/* Content for mobile */}
-        <div className="px-container relative flex h-full flex-col items-start justify-center lg:hidden">
-          <div className="max-w-xl">
-            <h1
-              className={cn(
-                "font-heading py-4 font-black tracking-tighter text-white",
-                isRTL ? "text-5xl sm:text-6xl" : "text-4xl sm:text-5xl"
-              )}
-            >
-              {titleParts[0]}
-              <br />
-              {titleParts[1]}
-            </h1>
-            <p
-              className={cn(
-                "max-w-[80%] text-white/80",
-                isRTL ? "py-4 pb-8" : "pb-6"
-              )}
-            >
-              {t?.subtitle ||
-                "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
+      <div className="px-page pb-16 md:pb-24">
+        <div className="max-w-3xl">
+          {(t?.eyebrow || schoolName) && (
+            <p className="eyebrow mb-4 text-white/70">
+              {schoolName ? `${schoolName} — ${t?.eyebrow}` : t?.eyebrow}
             </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href={`/${lang}/tour`}>
-                <AnimatedButton
-                  size="lg"
-                  className="w-full max-w-[200px] sm:w-auto sm:max-w-none"
-                >
-                  {t?.scheduleVisit || "Schedule a Visit"}
-                </AnimatedButton>
-              </Link>
-              <Link href={`/${lang}/admissions`}>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full max-w-[200px] border-white bg-transparent text-white hover:bg-white/10 sm:w-auto sm:max-w-none"
-                >
-                  {t?.learnMore || "Learn More"}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+          )}
 
-      {/* Desktop Content */}
-      <div className="relative hidden h-full items-center lg:flex">
-        <div className="max-w-xl">
-          <h1
-            className={cn(
-              "font-heading py-4 font-black tracking-tighter",
-              isRTL
-                ? "text-6xl lg:text-7xl xl:text-8xl"
-                : "text-5xl lg:text-6xl xl:text-7xl"
-            )}
-          >
-            {titleParts[0]}
-            <br />
-            {titleParts[1]}
+          <h1 className="display-1 text-white">
+            {titleLines.map((line, i) => (
+              <span key={i} className="block">
+                {line}
+              </span>
+            ))}
           </h1>
-          <p
-            className={cn(
-              "text-muted-foreground max-w-[80%]",
-              isRTL ? "py-4 pb-8" : "pb-6"
-            )}
-          >
-            {t?.subtitle ||
-              "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
+
+          <p className="display-intro mt-6 max-w-xl text-white/80">
+            {t?.subtitle}
           </p>
-          <div className="flex flex-row gap-4">
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href={`/${lang}/tour`}>
-              <AnimatedButton size="lg">
-                {t?.scheduleVisit || "Schedule a Visit"}
+              <AnimatedButton size="lg" className="w-full sm:w-auto">
+                {t?.scheduleVisit}
               </AnimatedButton>
             </Link>
             <Link href={`/${lang}/admissions`}>
-              <Button variant="outline" size="lg">
-                {t?.learnMore || "Learn More"}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full border-white/70 bg-transparent text-white hover:bg-white/10 hover:text-white sm:w-auto"
+              >
+                {t?.learnMore}
               </Button>
             </Link>
           </div>

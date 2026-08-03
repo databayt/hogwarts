@@ -641,7 +641,10 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": ["Unlimited students", "Custom integrations"]
+          "benefits": [
+            "Unlimited students",
+            "Custom integrations"
+          ]
         }
       },
       "constants": {
@@ -1185,28 +1188,28 @@
     "site": {
       "about": {
         "castle": {
-          "title": "The Castle of Hogwarts",
-          "description": "Founded over a thousand years ago by the four greatest witches and wizards of the age, Hogwarts School of Witchcraft and Wizardry stands as a magnificent castle in the Scottish Highlands. Our ancient walls have witnessed countless magical moments and housed generations of extraordinary students."
+          "title": "Our campus",
+          "description": "Twenty-four classrooms, three science laboratories, a library, and a sports ground, on one site the whole school shares. Every space is used every day — nothing here is kept for the brochure."
         },
         "greatHall": {
-          "title": "The Great Hall",
-          "description": "The heart of Hogwarts, where students gather for meals, celebrations, and the annual Sorting Ceremony. The enchanted ceiling reflects the sky above, and floating candles provide a magical ambiance. This is where house unity and school pride flourish."
+          "title": "The hall",
+          "description": "Where the school gathers: morning assembly, prize days, concerts, parents' evenings, and the exams that decide where students go next. It seats the whole school at once, which matters more often than you would think."
         },
         "gryffindor": {
-          "title": "Gryffindor House",
-          "description": "Home to the brave and daring, Gryffindor House values courage, chivalry, and determination. Founded by Godric Gryffindor, this house has produced some of the most famous witches and wizards, including Harry Potter himself."
+          "title": "How the day runs",
+          "description": "Seven periods with two breaks, first bell at eight and last bus at half past four. Clubs run in the hour between the end of lessons and the buses, so joining one costs a family nothing in extra journeys."
         },
         "studies": {
-          "title": "Magical Studies",
-          "description": "From Herbology in the greenhouses to Defense Against the Dark Arts, Hogwarts offers a comprehensive magical education. Students learn to brew potions, cast spells, and understand the mysteries of the magical world under expert guidance."
+          "title": "What students study",
+          "description": "The national curriculum through to school-leaving examinations, with sciences taught separately from Grade 9 and both Arabic and English carried to full academic standard throughout."
         },
         "friendship": {
-          "title": "The Bonds of Friendship",
-          "description": "At Hogwarts, friendships are forged that last a lifetime. Through shared adventures, challenges, and magical discoveries, students form unbreakable bonds that support them through their darkest hours and greatest triumphs."
+          "title": "Belonging here",
+          "description": "Classes stay together across a stage, so friendships have time to form and teachers get years rather than months with each student. New arrivals are paired with a classmate for their first fortnight."
         },
         "quidditch": {
-          "title": "Quidditch Pitch",
-          "description": "The magical sport of Quidditch brings excitement and house rivalry to new heights. Our pitch has witnessed legendary matches and continues to be where young witches and wizards discover their passion for flying and the thrill of chasing the Golden Snitch."
+          "title": "Sport and activity",
+          "description": "Two timetabled periods a week plus club afternoons — football, basketball, athletics, and volleyball, with teams that play other schools across the city through the season."
         }
       },
       "nav": {
@@ -1219,11 +1222,12 @@
         "search": "Search"
       },
       "hero": {
-        "title": "Beautiful Mind,\nCurious. Wonder.",
-        "subtitle": "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school",
-        "scheduleVisit": "Schedule a Visit",
-        "learnMore": "Learn More",
-        "logoAlt": "Hogwarts Logo"
+        "eyebrow": "Now enrolling",
+        "title": "A school that\nknows your child.",
+        "subtitle": "Small classes, teachers who stay, and a curriculum that takes every student somewhere specific. Come see a normal Tuesday.",
+        "scheduleVisit": "Book a visit",
+        "learnMore": "Explore admissions",
+        "logoAlt": "School logo"
       },
       "academic": {
         "hero": {
@@ -1316,8 +1320,8 @@
       },
       "admission": {
         "hero": {
-          "title": "Hogwarts\nletter",
-          "subtitle": "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office.",
+          "title": "Your place\nstarts here",
+          "subtitle": "Applications are free and take about twenty minutes. Save halfway and come back whenever you like — we answer every application within two weeks.",
           "startApplication": "Start application",
           "learnMore": "Learn more"
         },
@@ -1418,384 +1422,151 @@
         "liveChat": "Live chat"
       },
       "newsletter": {
-        "title": "Newsletter",
-        "description": "Stay Updated with Hogwarts",
-        "emailPlaceholder": "Email Address",
+        "title": "Term dates, results, and what's on",
+        "description": "One email a month. Open days, exam timetables, and the things worth turning up for.",
+        "emailPlaceholder": "Your email address",
         "subscribe": "Subscribe"
       },
       "faqs": {
-        "title": "Frequently Asked Questions",
-        "subtitle": "Your guide to joining Hogwarts.",
+        "title": "Questions we get asked",
+        "subtitle": "If yours isn't here, call the office — someone picks up.",
         "questions": [
           {
-            "question": "How do I get my Hogwarts letter?",
-            "answer": "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office.",
+            "question": "When does enrolment open?",
+            "answer": "Applications for the next academic year open in the spring term and stay open until places fill. We keep a waiting list per grade and move down it as places come free, so it is worth applying even if a grade shows as full.",
+            "listItems": []
+          },
+          {
+            "question": "Does it cost anything to apply?",
+            "answer": "No. The application itself is free and always will be. Fees begin only if you accept a place — a registration fee on acceptance, then tuition by the schedule you choose.",
+            "listItems": []
+          },
+          {
+            "question": "Can my child join partway through the year?",
+            "answer": "Usually yes, if there is a place in that grade. Mid-year joiners get a settling-in plan and a check-in with their class teacher at two weeks and at six.",
+            "listItems": []
+          },
+          {
+            "question": "What do I need to send with the application?",
+            "answer": "Have these ready before you start — you can upload photographs of them from your phone.",
             "listItems": [
-              "Letters are automatically sent to all magical children on their birthday.",
-              "Muggle-born students may experience delays due to protective enchantments.",
-              "If your letter is lost, a Hogwarts representative will visit you personally."
+              "The student's birth certificate",
+              "Last school report or transcript",
+              "A copy of the guardian's ID",
+              "Vaccination record",
+              "Two passport photographs"
             ]
           },
           {
-            "question": "What house will I be sorted into?",
-            "answer": "The Sorting Hat will determine your house during the Welcome Feast. It considers your personality, values, and preferences to place you in Gryffindor, Hufflepuff, Ravenclaw, or Slytherin."
+            "question": "How will I know how my child is doing?",
+            "answer": "Marks, attendance, and behaviour notes appear in the parent portal the same day they are recorded. There are two parents' evenings a year, and you can ask for a meeting with any teacher at any point.",
+            "listItems": []
           },
           {
-            "question": "What supplies do I need for school?",
-            "answer": "Your Hogwarts letter includes a complete list of required books and equipment. You can purchase everything at Diagon Alley.",
-            "listItems": [
-              "Standard spell books, cauldron, and magical ingredients",
-              "A wand from Ollivanders (the wand chooses the wizard!)",
-              "Robes, pointed hat, and protective gloves",
-              "Optional: owl, cat, or toad as a pet"
-            ]
-          },
-          {
-            "question": "How do I contact the school?",
-            "answer": "You can send an owl to Hogwarts School, or use the Floo Network to speak with our admissions office. Muggle post is also accepted but may take longer to reach us."
-          }
-        ]
-      },
-      "houses": {
-        "title": "Houses",
-        "description": "Find where your passion belongs.",
-        "sortingQuiz": "Take Sorting Quiz",
-        "items": [
-          {
-            "name": "Gryffindor Academy",
-            "description": "Leadership & Social",
-            "longDescription": "Develop courage and leadership skills through history, government, and community service programs.",
-            "features": [
-              "History & Government",
-              "Leadership Training",
-              "Community Service",
-              "Public Speaking"
-            ]
-          },
-          {
-            "name": "Ravenclaw Institute",
-            "description": "Sciences & Innovation",
-            "longDescription": "Pursue wisdom through cutting-edge STEM programs and innovative problem-solving challenges.",
-            "features": [
-              "Advanced Sciences",
-              "Research Projects",
-              "Technology Integration",
-              "Innovation Labs"
-            ]
-          },
-          {
-            "name": "Hufflepuff College",
-            "description": "Arts & Humanities",
-            "longDescription": "Cultivate creativity and empathy through comprehensive arts, literature, and humanities programs.",
-            "features": [
-              "Visual & Performing Arts",
-              "Literature Studies",
-              "Cultural Diversity",
-              "Creative Writing"
-            ]
-          },
-          {
-            "name": "Slytherin School",
-            "description": "Business & Mathematics",
-            "longDescription": "Foster determination and strategic reasoning through finance, business studies, and innovation programs.",
-            "features": [
-              "Advanced Mathematics",
-              "Economics",
-              "Entrepreneurship",
-              "Financial Literacy"
-            ]
-          }
-        ]
-      },
-      "features": {
-        "title": "Features",
-        "description": "What makes us special",
-        "numbersTitle": "Numbers",
-        "numbersDescription": "Numbers that reflect our commitment to excellence and the magical transformations happening in our classrooms every day.",
-        "items": [
-          {
-            "title": "Immersive Learning",
-            "description": "Interactive and immersive education that transforms traditional learning into an enchanting adventure."
-          },
-          {
-            "title": "Dynamic Programs",
-            "description": "Carefully crafted programs that blend core academics with creative thinking and real-world applications."
-          },
-          {
-            "title": "House Community",
-            "description": "Close-knit learning communities that foster friendship, collaboration, and mutual support among students."
-          },
-          {
-            "title": "Champions League",
-            "description": "Academic competitions, sports tournaments, and creative challenges that celebrate every student's unique talents."
-          },
-          {
-            "title": "Worldwide Adventures",
-            "description": "Global exchange programs and virtual international collaborations that expand horizons beyond our castle walls."
-          },
-          {
-            "title": "Innovation Potions",
-            "description": "STEAM laboratories and maker spaces where students concoct creative solutions to real-world challenges."
-          }
-        ],
-        "stats": [
-          {
-            "number": "98%",
-            "label": "Graduation Rate"
-          },
-          {
-            "number": "15:1",
-            "label": "Student-Teacher Ratio"
-          },
-          {
-            "number": "40+",
-            "label": "Magical Programs"
-          },
-          {
-            "number": "25",
-            "label": "Years of Excellence"
-          }
-        ]
-      },
-      "core": {
-        "title": "Core",
-        "description": "These values guide everything we do at our school.",
-        "items": [
-          {
-            "title": "Courage",
-            "description": "Be brave, take risks, and stand up for what's right."
-          },
-          {
-            "title": "Wisdom",
-            "description": "Reflect deeply and pursue understanding beyond facts."
-          },
-          {
-            "title": "Loyalty",
-            "description": "Support each other and stay committed to shared goals."
-          },
-          {
-            "title": "Ambition",
-            "description": "Excel, innovate, and make positive changes in the world."
+            "question": "Is transport available?",
+            "answer": "We run bus routes across the city. Routes and stops are confirmed each August once enrolment closes, and the fee is billed termly alongside tuition.",
+            "listItems": []
           }
         ]
       },
       "faculty": {
-        "title": "Faculty",
-        "description": "Meet the wizards who make learning magical",
+        "title": "Our teachers",
+        "description": "Sixty-two teachers across three stages. Most have been here longer than the students.",
         "stats": [
           {
-            "label": "Average Experience",
-            "value": "15+ Years"
+            "label": "Teachers on staff",
+            "value": "62"
           },
           {
-            "label": "Advanced Degrees",
-            "value": "100%"
+            "label": "Hold a postgraduate degree",
+            "value": "78%"
           },
           {
-            "label": "Published Researchers",
-            "value": "85%"
+            "label": "Average years with us",
+            "value": "12"
           },
           {
-            "label": "Student Satisfaction",
-            "value": "98%"
+            "label": "Students per teacher",
+            "value": "15:1"
           }
         ],
-        "professors": [
+        "departments": [
           {
-            "name": "Albus Dumbledore",
-            "title": "Headmaster & Chief Warlock",
-            "subject": "Transfiguration & Ancient Magic",
-            "description": "Leading our school with wisdom and extraordinary magical knowledge, Professor Dumbledore guides students through the most complex magical arts.",
-            "specialties": ["Ancient Magic", "Transfiguration", "Leadership"],
-            "experience": "50+ years",
-            "education": "Order of Merlin, First Class",
-            "quote": "It is our choices that show what we truly are, far more than our abilities."
+            "name": "Sciences",
+            "lead": "Head of Sciences",
+            "body": "Fourteen teachers across physics, chemistry, and biology, with three technicians keeping the labs running."
           },
           {
-            "name": "Severus Snape",
-            "title": "Potions Master & Head of Slytherin",
-            "subject": "Potions & Dark Arts Defense",
-            "description": "With precision and dedication, Professor Snape guides students through the intricate art of potion-making and magical defense.",
-            "specialties": ["Potions", "Dark Arts Defense", "Occlumency"],
-            "experience": "20+ years",
-            "education": "Master of Potions, Hogwarts",
-            "quote": "Attention to detail separates the exceptional from the merely adequate."
+            "name": "Mathematics",
+            "lead": "Head of Mathematics",
+            "body": "Nine teachers covering everything from early number work to university-entrance calculus."
           },
           {
-            "name": "Minerva McGonagall",
-            "title": "Deputy & Head of Gryffindor",
-            "subject": "Transfiguration",
-            "description": "Professor McGonagall transforms students' understanding of magic through her mastery of Transfiguration and unwavering dedication to excellence.",
-            "specialties": ["Transfiguration", "Animagus Studies", "Quidditch"],
-            "experience": "40+ years",
-            "education": "Transfiguration Mistress, Hogwarts",
-            "quote": "We teachers are rather good at magic, you know."
+            "name": "Languages",
+            "lead": "Head of Languages",
+            "body": "Sixteen teachers of Arabic, English, and French, including two specialists in reading support."
           },
           {
-            "name": "Rubeus Hagrid",
-            "title": "Keeper of Keys & Grounds",
-            "subject": "Care of Magical Creatures",
-            "description": "Hagrid nurtures both magical creatures and students with his boundless enthusiasm and deep knowledge of the magical world.",
-            "specialties": [
-              "Magical Creatures",
-              "Groundskeeping",
-              "Dragon Studies"
-            ],
-            "experience": "30+ years",
-            "education": "Hogwarts School (Expelled, later cleared)",
-            "quote": "What's comin' will come, and we'll meet it when it does."
+            "name": "Humanities & Islamic Studies",
+            "lead": "Head of Humanities",
+            "body": "Eleven teachers of history, geography, and Islamic studies, plus the school's research-project supervisors."
           }
         ]
       },
       "testimonials": {
-        "title": "Testimonials",
-        "description": "Hear from our students, alumni, and parents about the transformative power of education and the magical moments that happen within our school community every day.",
+        "title": "From our families",
+        "description": "Collected at the end of last year, published unedited.",
         "stats": [
           {
-            "value": "4.9/5",
-            "label": "Parent Satisfaction"
+            "value": "96%",
+            "label": "of parents would recommend us"
           },
           {
-            "value": "98%",
-            "label": "College Acceptance"
+            "value": "91%",
+            "label": "say they hear from us often enough"
           },
           {
-            "value": "500+",
-            "label": "Happy Families"
+            "value": "4.8",
+            "label": "average parent rating"
           },
           {
-            "value": "25+",
-            "label": "Years of Trust"
+            "value": "89%",
+            "label": "of siblings enrol here too"
           }
         ],
         "items": [
           {
-            "quote": "This school didn't just teach me subjects—it taught me to believe in magic, both in learning and in myself. The teachers here don't just educate; they inspire and transform.",
-            "name": "Emily Harrison",
-            "title": "Class of 2023, Gryffindor Academy"
+            "quote": "My daughter was two years behind in reading when she joined. Nobody made her feel it, and nobody let it slide either. She reads for pleasure now.",
+            "name": "Amal Hassan",
+            "title": "Parent, Grade 5"
           },
           {
-            "quote": "The innovation labs here are incredible! I've been able to work on real research projects and even present at science fairs. It's like having access to a magical laboratory.",
-            "name": "Michael Chen",
-            "title": "Current Student, Ravenclaw Institute"
+            "quote": "What sold me was the visit. I watched a maths lesson where the teacher knew, without checking, which three students hadn't understood.",
+            "name": "Osman Bashir",
+            "title": "Parent, Grade 8"
           },
           {
-            "quote": "Watching my daughter flourish here has been magical. She's gained confidence, made lifelong friends, and discovered passions I never knew she had. The community feeling is extraordinary.",
-            "name": "Sarah Martinez",
-            "title": "Parent of Sofia Martinez"
+            "quote": "I get a message the same afternoon if he misses a class. After our last school, that alone was worth the move.",
+            "name": "Nadia Elamin",
+            "title": "Parent, Grade 10"
           },
           {
-            "quote": "The arts program here is phenomenal. I discovered my love for theater and creative writing, and the teachers supported every creative endeavor. It truly felt like Hogwarts for artists.",
-            "name": "James Wilson",
-            "title": "Class of 2022, Hufflepuff College"
+            "quote": "The university counsellor started working with my son in Grade 10. He had his offer before the exams even finished.",
+            "name": "Tarig Abdelrahman",
+            "title": "Parent, Grade 12"
           },
           {
-            "quote": "As an educator myself, I was impressed by the innovative teaching methods and genuine care for each student's individual growth. The house system creates such meaningful connections.",
-            "name": "Dr. Patricia Kumar",
-            "title": "Parent of Arjun Kumar"
-          },
-          {
-            "quote": "The business and entrepreneurship program opened my eyes to possibilities I never imagined. I've already started my own small venture with guidance from our amazing teachers!",
-            "name": "Olivia Thompson",
-            "title": "Current Student, Slytherin School"
-          }
-        ]
-      },
-      "process": {
-        "title": "Process",
-        "description": "Starting your journey is easier than casting a spell.",
-        "steps": [
-          {
-            "title": "Submit Application",
-            "description": "Complete our application form online with all required documents and personal information."
-          },
-          {
-            "title": "Campus Tour",
-            "description": "Experience our enchanting campus firsthand with a guided tour to all facilities and departments."
-          },
-          {
-            "title": "Meet & Greet",
-            "description": "Get in touch with faculty members and current students in a welcoming environment."
-          },
-          {
-            "title": "Join Family",
-            "description": "Complete your enrollment process and officially join our educational family to begin your journey."
-          }
-        ]
-      },
-      "offers": {
-        "title": "Benefits",
-        "description": "Financial support options designed to make your wizarding journey more affordable.",
-        "items": [
-          {
-            "title": "Early Bird Special",
-            "description": "Apply before Jul 1st, to receive a 10% tuition discount",
-            "badge": "Limited Time"
-          },
-          {
-            "title": "Sibling Discount",
-            "description": "Families with multiple students receive additional savings",
-            "badge": "Family Benefit"
-          },
-          {
-            "title": "Merit Scholarships",
-            "description": "Outstanding students may qualify for academic scholarships",
-            "badge": "Academic Excellence"
-          }
-        ]
-      },
-      "logoCloud": {
-        "trustedBy": "Trusted by magical institutions",
-        "items": [
-          "Ministry of Magic",
-          "Diagon Alley",
-          "Gringotts Bank",
-          "St. Mungo's Hospital",
-          "Quidditch League",
-          "Ollivanders",
-          "Daily Prophet",
-          "Beauxbatons Academy"
-        ]
-      },
-      "events": {
-        "title": "Events",
-        "description": "what's happening",
-        "feedTimeAgo": "4 minutes ago in",
-        "feedChannel": "#events",
-        "feedHandle": "@hogwarts",
-        "feedText": "Hogwarts School of Witchcraft and Wizardry invites you to attend our Welcome Feast - where we'll present our magical curriculum, discuss the challenges ahead, and open dialogue about our shared journey in the wizarding world.",
-        "items": [
-          {
-            "month": "September",
-            "title": "Hogwarts Welcome Feast",
-            "time": "7PM — 10PM",
-            "location": "@ Great Hall, Hogwarts Castle"
-          },
-          {
-            "month": "October",
-            "title": "Defense Against Dark Arts Seminar",
-            "time": "2PM — 5PM",
-            "location": "@ Defense, Hogwarts"
-          },
-          {
-            "month": "October",
-            "title": "Halloween Feast & Celebration",
-            "time": "6PM — 11PM",
-            "location": "@ Great Hall, Hogwarts Castle"
-          },
-          {
-            "month": "December",
-            "title": "Christmas Holiday Feast",
-            "time": "5PM — 9PM",
-            "location": "@ Great Hall, Hogwarts Castle"
+            "quote": "Three of my children have been through this school. The same teachers greeted the youngest by surname on her first day.",
+            "name": "Sara Mohamed",
+            "title": "Parent, alumni family"
           }
         ]
       },
       "newComers": {
-        "internal": "Internal",
-        "title": "New Comers",
-        "subtitle": "Welcome on board",
-        "button": "Onboarding"
+        "internal": "Already enrolled?",
+        "title": "New here?",
+        "subtitle": "Set up your parent account and see marks, attendance, and fees in one place.",
+        "button": "Open the parent portal"
       },
       "footer": {
         "getDirections": "Get Directions",
@@ -1805,27 +1576,27 @@
         "activities": "Activities",
         "support": "Support",
         "links": {
-          "houses": "Houses",
+          "stages": "Stages",
           "curriculum": "Curriculum",
-          "faculty": "Faculty",
+          "faculty": "Our teachers",
           "library": "Library",
           "subjects": "Subjects",
-          "exams": "Exams",
+          "exams": "Exams & results",
           "admissions": "Admissions",
-          "dormitories": "Dormitories",
-          "greatHall": "Great Hall",
-          "quidditch": "Quidditch",
-          "grounds": "Grounds",
+          "transport": "Transport",
+          "facilities": "Facilities",
+          "sport": "Sport",
+          "grounds": "Campus",
           "clubs": "Clubs",
           "events": "Events",
-          "sports": "Sports",
+          "sports": "Sport",
           "competitions": "Competitions",
           "tournaments": "Tournaments",
           "ceremonies": "Ceremonies",
-          "traditions": "Traditions",
+          "traditions": "School life",
           "about": "About",
           "contact": "Contact",
-          "helpCenter": "Help Center",
+          "helpCenter": "Help centre",
           "alumni": "Alumni",
           "careers": "Careers"
         },
@@ -1833,6 +1604,210 @@
         "sourceCode": ", source code available on",
         "terms": "Terms",
         "privacy": "Privacy"
+      },
+      "trust": {
+        "label": "What we teach",
+        "items": [
+          "Mathematics",
+          "Arabic Language",
+          "English Language",
+          "Physics",
+          "Chemistry",
+          "Biology",
+          "Islamic Studies",
+          "History & Geography",
+          "Computer Science",
+          "Art & Design",
+          "Physical Education"
+        ]
+      },
+      "stats": {
+        "title": "Where we stand",
+        "description": "The numbers we watch, published as we measure them.",
+        "items": [
+          {
+            "value": 18,
+            "suffix": "",
+            "label": "students in an average class, so no one goes a week without being asked a question"
+          },
+          {
+            "value": 94,
+            "suffix": "%",
+            "label": "of our graduates go on to their first-choice university programme"
+          },
+          {
+            "value": 12,
+            "suffix": " yrs",
+            "label": "average time our teachers have been with the school"
+          }
+        ]
+      },
+      "stages": {
+        "eyebrow": "Stages",
+        "title": "Three stages, one school.",
+        "description": "A student can arrive at five and leave at eighteen without ever changing schools — or join us at any point and be known within a week.",
+        "items": [
+          {
+            "name": "Primary",
+            "ages": "Ages 6–11",
+            "summary": "Reading, numbers, and the habit of asking why. One class teacher who knows every child's name, mood, and reading level.",
+            "cta": "About Primary"
+          },
+          {
+            "name": "Middle",
+            "ages": "Ages 12–14",
+            "summary": "Subject specialists take over. Students choose their first electives and learn to manage their own week.",
+            "cta": "About Middle"
+          },
+          {
+            "name": "Secondary",
+            "ages": "Ages 15–18",
+            "summary": "Exam preparation with a university counsellor from day one. Streams in sciences, humanities, and business.",
+            "cta": "About Secondary"
+          }
+        ]
+      },
+      "why": {
+        "eyebrow": "Why families choose us",
+        "title": "The things that actually\nmake a difference.",
+        "description": "Not the marble in the lobby. The parts that change what a student can do in five years.",
+        "items": [
+          {
+            "topic": "Class size",
+            "headline": "Eighteen to a class.",
+            "body": "Capped, not averaged. A teacher can hold eighteen students in their head — the difference shows up in the marking, not the brochure."
+          },
+          {
+            "topic": "Teaching staff",
+            "headline": "Teachers who stay.",
+            "body": "Most of our staff have taught here over a decade. Your child's Grade 9 teacher will still be here when their sibling reaches Grade 9."
+          },
+          {
+            "topic": "Reporting",
+            "headline": "You see what we see.",
+            "body": "Attendance, marks, and behaviour land in your phone the same day they're recorded. No waiting for a termly envelope."
+          },
+          {
+            "topic": "Support",
+            "headline": "Nobody quietly falls behind.",
+            "body": "Weekly checks flag a student who slipped before it becomes a failed term. Extra sessions are scheduled, not offered."
+          },
+          {
+            "topic": "Beyond lessons",
+            "headline": "Something to be good at.",
+            "body": "Football, debate, robotics, choir, volunteering. Every student carries at least one thing that isn't graded."
+          },
+          {
+            "topic": "After school",
+            "headline": "University from Grade 10.",
+            "body": "Applications, entrance exams, and scholarship deadlines are mapped two years out, with a counsellor who owns the calendar."
+          }
+        ]
+      },
+      "life": {
+        "eyebrow": "A day here",
+        "title": "What the week\nactually looks like.",
+        "description": "Between the first bell and the last bus.",
+        "items": [
+          {
+            "tag": "Mornings",
+            "title": "Assembly, then straight into it",
+            "body": "The day opens with fifteen minutes together — announcements, a reading, results worth clapping for — and then everyone is in a classroom by ten past eight."
+          },
+          {
+            "tag": "Labs",
+            "title": "Science you can smell",
+            "body": "Three working labs. Practical work is timetabled every week, not saved for the term before the exam."
+          },
+          {
+            "tag": "Library",
+            "title": "Open until the last bus",
+            "body": "Quiet floor, group floor, and a librarian who will find the book."
+          },
+          {
+            "tag": "Sport",
+            "title": "Everyone plays",
+            "body": "Two periods a week plus club afternoons. Teams are picked, but the pitch is never empty."
+          },
+          {
+            "tag": "Arts",
+            "title": "A concert every term",
+            "body": "Choir, oud, drama, and a gallery wall that changes with the season."
+          },
+          {
+            "tag": "Meals",
+            "title": "Lunch is cooked here",
+            "body": "One kitchen, one menu, published a week ahead so you can plan around it."
+          }
+        ]
+      },
+      "academics": {
+        "eyebrow": "Academics",
+        "title": "What we teach,\nand how we teach it.",
+        "description": "The national curriculum, taught properly, with room for the students who want to go further.",
+        "items": [
+          {
+            "title": "Sciences",
+            "body": "Physics, chemistry, and biology as separate subjects from Grade 9, each with weekly lab time and their own specialist teacher.",
+            "points": [
+              "Weekly practical work",
+              "Separate sciences from Grade 9",
+              "Olympiad preparation for those who want it"
+            ]
+          },
+          {
+            "title": "Mathematics",
+            "body": "Set by attainment, reviewed every term. A student who pulls ahead moves up; a student who struggles gets a smaller group, not a lower ceiling.",
+            "points": [
+              "Sets reviewed termly",
+              "Small-group catch-up built into the timetable",
+              "Advanced track to university entrance level"
+            ]
+          },
+          {
+            "title": "Languages",
+            "body": "Arabic and English taught to full academic standard — students write essays, argue, and sit exams in both.",
+            "points": [
+              "Arabic and English throughout",
+              "Debate and public speaking",
+              "Third language from Grade 7"
+            ]
+          },
+          {
+            "title": "Humanities",
+            "body": "History, geography, and Islamic studies taught as ways of thinking about evidence, not as lists to memorise.",
+            "points": [
+              "Source-based history",
+              "Fieldwork in geography",
+              "Research project in Grade 11"
+            ]
+          }
+        ]
+      },
+      "admissions": {
+        "eyebrow": "Admissions",
+        "title": "Applying takes\nabout twenty minutes.",
+        "description": "It is free, it is online, and you can stop halfway and come back. We answer every application, whichever way it goes.",
+        "primaryCta": "Start an application",
+        "secondaryCta": "Book a visit first",
+        "steps": [
+          {
+            "title": "Visit",
+            "description": "Come during a school day and see a real lesson, not a staged one."
+          },
+          {
+            "title": "Apply",
+            "description": "Fill in the form online. Free, and you can save it and return."
+          },
+          {
+            "title": "Assessment",
+            "description": "A short conversation and a placement check, so we start your child in the right set."
+          },
+          {
+            "title": "Offer",
+            "description": "A written answer within two weeks, with the fees set out in full."
+          }
+        ]
       }
     },
     "onboarding": {
@@ -1968,9 +1943,22 @@
         "WordPress",
         "Shopify"
       ],
-      "company": ["About", "Careers", "Blog", "Case Studies"],
-      "services": ["Startups", "Agencies"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
+      "company": [
+        "About",
+        "Careers",
+        "Blog",
+        "Case Studies"
+      ],
+      "services": [
+        "Startups",
+        "Agencies"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ]
     },
     "links": {
       "product": "Product",
@@ -1979,10 +1967,29 @@
       "legal": "Legal"
     },
     "sections": {
-      "product": ["Features", "Pricing", "Updates", "Roadmap"],
-      "company": ["About", "Blog", "Careers", "Partners"],
-      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
-      "legal": ["Privacy", "Terms", "License"]
+      "product": [
+        "Features",
+        "Pricing",
+        "Updates",
+        "Roadmap"
+      ],
+      "company": [
+        "About",
+        "Blog",
+        "Careers",
+        "Partners"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ],
+      "legal": [
+        "Privacy",
+        "Terms",
+        "License"
+      ]
     }
   },
   "errors": {

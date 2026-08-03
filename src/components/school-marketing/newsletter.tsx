@@ -31,14 +31,14 @@ export default function Newsletter() {
     <section className="py-16 md:py-24">
       <SectionHeading
         title={newsletter?.title || "Newsletter"}
-        description={newsletter?.description || "Stay Updated with Hogwarts"}
+        description={newsletter?.description}
       />
 
       <div className="mx-auto max-w-xs py-6">
         <div className="mb-2 flex justify-start">
           <Image
             src={asset("/illustrations/glass.png")}
-            alt="Hogwarts Glasses"
+            alt=""
             width={48}
             height={48}
             className="-rotate-12 object-contain dark:invert"

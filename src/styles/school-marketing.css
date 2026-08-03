@@ -1,0 +1,304 @@
+/* Copyright (c) 2025-present databayt
+ * Licensed under SSPL-1.0 -- see LICENSE for details
+ *
+ * ===== SCHOOL MARKETING DESIGN SYSTEM =====
+ *
+ * The public website every tenant school gets on its subdomain. These are
+ * display-scale primitives -- deliberately larger and looser than the
+ * dashboard's typography, because a marketing page is read from across the
+ * room, not leaned into.
+ *
+ * Two ideas carry the whole page:
+ *
+ *   1. A display type ramp (.display-1 .. .eyebrow) sized in absolute px at
+ *      three breakpoints. Marketing headlines need exact optical sizes that
+ *      Tailwind's text-* steps can't express, and putting them here keeps
+ *      hardcoded text-[96px] out of the JSX.
+ *
+ *   2. Color bands (.band-*). Sections alternate background color to segment
+ *      the page instead of relying on rules and whitespace. Every value is an
+ *      OKLCH token so dark mode and per-tenant theming stay possible.
+ *
+ * Arabic renders ~1.3x wider than Latin at the same px, so the ramp carries
+ * an [dir="rtl"] step-down -- otherwise Arabic headlines overflow two lines
+ * where English fits one.
+ */
+
+@layer utilities {
+  /* ===== DISPLAY TYPE RAMP ===== */
+  /* Breakpoints follow the reference sites: 1068px (desktop -> laptop) and
+   * 734px (laptop -> phone), not Tailwind's, because the type has to break
+   * where the layout does. */
+
+  .display-1 {
+    font-family: var(--font-heading);
+    font-size: 5rem; /* 80px */
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .display-2 {
+    font-family: var(--font-heading);
+    font-size: 3.5rem; /* 56px */
+    line-height: 1.07;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .display-3 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem; /* 40px */
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  /* Standfirst under a display heading. */
+  .display-intro {
+    font-size: 1.3125rem; /* 21px */
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    color: var(--muted-foreground);
+    text-wrap: pretty;
+  }
+
+  /* Small caps-ish label above a heading -- names the section. */
+  .eyebrow {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 1068px) {
+    .display-1 {
+      font-size: 3.75rem; /* 60px */
+    }
+    .display-2 {
+      font-size: 2.75rem; /* 44px */
+    }
+    .display-3 {
+      font-size: 2rem; /* 32px */
+    }
+    .display-intro {
+      font-size: 1.1875rem; /* 19px */
+    }
+  }
+
+  @media (max-width: 734px) {
+    .display-1 {
+      font-size: 2.5rem; /* 40px */
+      letter-spacing: -0.02em;
+    }
+    .display-2 {
+      font-size: 2rem; /* 32px */
+    }
+    .display-3 {
+      font-size: 1.625rem; /* 26px */
+    }
+    .display-intro {
+      font-size: 1.0625rem; /* 17px */
+    }
+    .eyebrow {
+      font-size: 0.8125rem; /* 13px */
+    }
+  }
+
+  /* Arabic sets wider than Latin at equal px. Step the display ramp down so
+   * an Arabic headline breaks on the same line count as its English twin. */
+  :root[dir="rtl"] .display-1 {
+    font-size: 4.25rem; /* 68px */
+    letter-spacing: 0;
+  }
+  :root[dir="rtl"] .display-2 {
+    font-size: 3rem; /* 48px */
+    letter-spacing: 0;
+  }
+  :root[dir="rtl"] .display-3 {
+    font-size: 2.25rem; /* 36px */
+    letter-spacing: 0;
+  }
+  :root[dir="rtl"] .eyebrow {
+    letter-spacing: 0; /* Arabic must never be letter-spaced -- it breaks joins */
+    text-transform: none;
+  }
+
+  @media (max-width: 1068px) {
+    :root[dir="rtl"] .display-1 {
+      font-size: 3.25rem; /* 52px */
+    }
+    :root[dir="rtl"] .display-2 {
+      font-size: 2.5rem; /* 40px */
+    }
+    :root[dir="rtl"] .display-3 {
+      font-size: 1.875rem; /* 30px */
+    }
+  }
+
+  @media (max-width: 734px) {
+    :root[dir="rtl"] .display-1 {
+      font-size: 2.25rem; /* 36px */
+    }
+    :root[dir="rtl"] .display-2 {
+      font-size: 1.875rem; /* 30px */
+    }
+    :root[dir="rtl"] .display-3 {
+      font-size: 1.5rem; /* 24px */
+    }
+  }
+
+  /* ===== SECTION RHYTHM ===== */
+  /* One knob for vertical section spacing so the whole page breathes
+   * consistently -- 96px desktop, 64px phone. */
+  .section-y {
+    padding-block: 6rem;
+  }
+
+  @media (max-width: 734px) {
+    .section-y {
+      padding-block: 4rem;
+    }
+  }
+
+  /* ===== COLOR BANDS ===== */
+  /* Alternating full-width backgrounds segment the page. Pair with
+   * .bleed-page so the color reaches both viewport edges while the content
+   * inside stays on the page grid. */
+
+  .band-ink {
+    background-color: var(--band-ink);
+    color: var(--band-ink-foreground);
+  }
+
+  .band-warm {
+    background-color: var(--band-warm);
+    color: var(--band-warm-foreground);
+  }
+
+  .band-cool {
+    background-color: var(--band-cool);
+    color: var(--band-cool-foreground);
+  }
+
+  .band-sand {
+    background-color: var(--band-sand);
+    color: var(--band-sand-foreground);
+  }
+
+  /* Muted text that stays legible on a colored band -- the global
+   * --muted-foreground assumes the page background and goes invisible on ink. */
+  .band-ink .band-muted,
+  .band-cool .band-muted {
+    color: color-mix(in oklch, currentColor 72%, transparent);
+  }
+
+  .band-warm .band-muted,
+  .band-sand .band-muted {
+    color: color-mix(in oklch, currentColor 78%, transparent);
+  }
+
+  /* ===== CAPSULE ===== */
+  /* Big soft corner on a full-bleed section, so a colored band reads as a
+   * panel laid on the page rather than a stripe painted across it. */
+  .capsule-b {
+    border-end-start-radius: 2.5rem;
+    border-end-end-radius: 2.5rem;
+  }
+
+  .capsule-t {
+    border-start-start-radius: 2.5rem;
+    border-start-end-radius: 2.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .capsule-b {
+      border-end-start-radius: 4rem;
+      border-end-end-radius: 4rem;
+    }
+    .capsule-t {
+      border-start-start-radius: 4rem;
+      border-start-end-radius: 4rem;
+    }
+  }
+
+  /* ===== TILE ===== */
+  /* The 2-up promo tile: sharp corners, tight gap to its neighbour.
+   *
+   * Apple pins tile copy to the top because a product photograph fills the
+   * space beneath it. These tiles carry no art -- a school template can't ship
+   * photographs of a campus it has never seen -- so the copy centres instead,
+   * and the tile is shorter than Apple's. Pinning to the top here just leaves
+   * a large empty band under three lines of text. */
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 340px;
+    padding-block: 3.5rem;
+    isolation: isolate;
+  }
+
+  @media (min-width: 768px) {
+    .tile {
+      min-height: 380px;
+    }
+  }
+
+  @media (min-width: 1069px) {
+    .tile {
+      min-height: 420px;
+    }
+  }
+}
+
+@theme inline {
+  --color-band-ink: var(--band-ink);
+  --color-band-ink-foreground: var(--band-ink-foreground);
+  --color-band-warm: var(--band-warm);
+  --color-band-warm-foreground: var(--band-warm-foreground);
+  --color-band-cool: var(--band-cool);
+  --color-band-cool-foreground: var(--band-cool-foreground);
+  --color-band-sand: var(--band-sand);
+  --color-band-sand-foreground: var(--band-sand-foreground);
+}
+
+:root {
+  /* Near-black, not pure -- pure black vibrates against white type. */
+  --band-ink: oklch(0.18 0.006 265);
+  --band-ink-foreground: oklch(0.98 0 0);
+
+  /* Warm terracotta. Carried over from the existing palette (#D97757) so the
+   * rebrand still feels like the same product. */
+  --band-warm: oklch(0.94 0.028 55);
+  --band-warm-foreground: oklch(0.24 0.03 45);
+
+  /* Cool slate-teal -- the calm band, for testimonials and quiet proof. */
+  --band-cool: oklch(0.35 0.042 220);
+  --band-cool-foreground: oklch(0.97 0.005 220);
+
+  /* Paper. The default alternate to plain background. */
+  --band-sand: oklch(0.96 0.012 85);
+  --band-sand-foreground: oklch(0.24 0.015 85);
+}
+
+.dark {
+  --band-ink: oklch(0.14 0.006 265);
+  --band-ink-foreground: oklch(0.98 0 0);
+
+  --band-warm: oklch(0.28 0.035 45);
+  --band-warm-foreground: oklch(0.96 0.015 55);
+
+  --band-cool: oklch(0.26 0.038 220);
+  --band-cool-foreground: oklch(0.96 0.005 220);
+
+  --band-sand: oklch(0.22 0.012 85);
+  --band-sand-foreground: oklch(0.95 0.008 85);
+}

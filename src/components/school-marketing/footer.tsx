@@ -30,7 +30,7 @@ const Footer = () => {
           <div className="relative mb-4 aspect-[3/2] w-[75%] overflow-hidden">
             <Image
               src={asset("/photos/map.jpeg")}
-              alt="Hogwarts Castle Map"
+              alt=""
               fill
               className="object-contain"
               sizes="(max-width: 768px) 70vw, (max-width: 1200px) 40vw, 33vw"
@@ -40,10 +40,7 @@ const Footer = () => {
           {/* Address & Hours */}
           <div className="space-y-2 pb-4">
             <div>
-              <p className="text-muted-foreground text-sm">
-                {t?.address ||
-                  "123 Magical Learning Lane, \n Education City, EC 12345"}
-              </p>
+              <p className="text-muted-foreground text-sm">{t?.address}</p>
             </div>
           </div>
 
@@ -75,10 +72,10 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/houses"
+                  href="/academic"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.houses || "Houses"}
+                  {links?.stages}
                 </Link>
               </li>
               <li>
@@ -86,7 +83,7 @@ const Footer = () => {
                   href="/curriculum"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.curriculum || "Curriculum"}
+                  {links?.curriculum}
                 </Link>
               </li>
               <li>
@@ -94,7 +91,7 @@ const Footer = () => {
                   href="/faculty"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.faculty || "Faculty"}
+                  {links?.faculty}
                 </Link>
               </li>
               <li>
@@ -102,7 +99,7 @@ const Footer = () => {
                   href="/library"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.library || "Library"}
+                  {links?.library}
                 </Link>
               </li>
               <li>
@@ -110,7 +107,7 @@ const Footer = () => {
                   href="/subjects"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.subjects || "Subjects"}
+                  {links?.subjects}
                 </Link>
               </li>
               <li>
@@ -118,7 +115,7 @@ const Footer = () => {
                   href="/exams"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.exams || "Exams"}
+                  {links?.exams}
                 </Link>
               </li>
             </ul>
@@ -132,34 +129,34 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/admission"
+                  href="/admissions"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.admissions || "Admissions"}
+                  {links?.admissions}
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/dormitories"
+                  href="/transport"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.dormitories || "Dormitories"}
+                  {links?.transport}
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/great-hall"
+                  href="/facilities"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.greatHall || "Great Hall"}
+                  {links?.facilities}
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/quidditch"
+                  href="/sport"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.quidditch || "Quidditch"}
+                  {links?.sport}
                 </Link>
               </li>
               <li>
@@ -167,7 +164,7 @@ const Footer = () => {
                   href="/grounds"
                   className="muted hover:text-primary transition-colors"
                 >
-                  {links?.grounds || "Grounds"}
+                  {links?.grounds}
                 </Link>
               </li>
             </ul>
