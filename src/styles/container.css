@@ -42,6 +42,13 @@
 
     /* Dashboard: no horizontal spacing for data-dense views */
     --dashboard-px: 0; /* 0px */
+
+    /* Total gutter a marketing page puts between content and the viewport
+     * edge: the root .layout-container padding plus the .marketing-container
+     * padding. Both operands are re-declared per breakpoint below and custom
+     * properties resolve at use time, so this stays correct without repeating.
+     */
+    --page-px: calc(var(--container-px) + var(--marketing-px));
   }
 
   /* sm breakpoint (640px) */
@@ -179,6 +186,43 @@
   .breakout {
     margin-inline-start: calc(-1 * var(--container-px));
     margin-inline-end: calc(-1 * var(--container-px));
+  }
+
+  /* ===== MARKETING EDGE-TO-EDGE ===== */
+
+  /* Escape the whole marketing gutter so an element sits flush with the
+   * viewport edge. Unlike .full-bleed this uses the real padding values
+   * instead of 100vw, so a desktop scrollbar can never push it off-screen.
+   * Exact while .marketing-container is below its max-width (every phone and
+   * tablet viewport) — pair with `lg:mx-0` to re-enter the grid on desktop. */
+  .bleed-page {
+    margin-inline-start: calc(-1 * var(--page-px));
+    margin-inline-end: calc(-1 * var(--page-px));
+  }
+
+  /* Padding matching the full marketing gutter — realigns content inside a
+   * .bleed-page element with the rest of the page. */
+  .px-page {
+    padding-inline-start: var(--page-px);
+    padding-inline-end: var(--page-px);
+  }
+
+  /* Paint an element's own background across the full viewport width while
+   * the element itself stays in the content grid — a sticky header's
+   * background reaches both screen edges but its nav stays aligned with the
+   * page below it. The bleed is an absolutely positioned pseudo-element, so
+   * it adds no scrollable width and needs no layout change. */
+  .bleed-bg {
+    position: relative;
+  }
+
+  .bleed-bg::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(50% - 50vw);
+    z-index: -1;
+    background-color: inherit;
   }
 
   /* Simple spacing utilities using the same values */
