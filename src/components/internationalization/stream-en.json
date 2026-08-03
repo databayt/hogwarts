@@ -33,7 +33,7 @@
     "title": "Stream LMS",
     "description": "Learning Management System",
     "home": {
-      "badge": "Welcome to Hogwarts",
+      "badge": "Welcome to balqalam",
       "title": "Lumos",
       "description": "Shine a light.",
       "exploreCourses": "Explore Courses",
@@ -144,7 +144,7 @@
       "notes": "Notes",
       "discussion": "Discussion",
       "grade": "Grade",
-      "brandName": "Hogwarts",
+      "brandName": "balqalam",
       "more": "MORE",
       "free": "Free",
       "freePreview": "Free Preview",
@@ -511,7 +511,7 @@
         "private": "Private — proposer only",
         "paid": "Paid — unlock per user"
       },
-      "featured": "Mark as featured (\"Hogwarts\" default instructor)",
+      "featured": "Mark as featured (\"balqalam\" default instructor)",
       "price": "Price",
       "currency": "Currency",
       "cancel": "Cancel",
@@ -525,7 +525,7 @@
       }
     },
     "instructorSwitcher": {
-      "hogwarts": "Hogwarts",
+      "hogwarts": "balqalam",
       "yourSchool": "Your school",
       "partnerSchool": "Partner school",
       "unlock": "Unlock",

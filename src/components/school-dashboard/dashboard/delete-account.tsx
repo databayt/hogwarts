@@ -8,7 +8,7 @@ import { useDeleteAccountModal } from "@/components/saas-marketing/pricing/modal
 import { Icons } from "@/components/saas-marketing/pricing/shared/icons"
 import { SectionColumns } from "@/components/school-dashboard/dashboard/section-columns"
 
-const siteConfig = { name: "Hogwarts" } as const
+const siteConfig = { name: "balqalam" } as const
 
 export function DeleteAccountSection() {
   const { dictionary } = useDictionary()

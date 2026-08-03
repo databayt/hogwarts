@@ -6,7 +6,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries"
 import OnboardingContent from "@/components/onboarding/content"
 
 export const metadata = {
-  title: "School Onboarding | Hogwarts SaaS",
+  title: "School Onboarding | balqalam SaaS",
   description:
     "Create and manage your school in our multi-tenant school-dashboard. Start with templates or build from scratch.",
 }

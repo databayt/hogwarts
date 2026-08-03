@@ -3,12 +3,10 @@
 
 import type { MetadataRoute } from "next"
 
-import { asset } from "@/lib/asset-url"
-
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hogwarts School Management",
-    short_name: "Hogwarts",
+    name: "balqalam School Management",
+    short_name: "balqalam",
     description:
       "A comprehensive school automation school-dashboard that manages students, faculty, and academic processes with an intuitive interface. Features QR code attendance and geofence tracking.",
     start_url: "/",
@@ -19,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
-        src: asset("/icons/logo.png"),
+        src: "/feather.png",
         sizes: "any",
         type: "image/png",
       },

@@ -6,7 +6,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
 
-import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 
 import { MainNavItem } from "./types"
@@ -57,7 +56,7 @@ export function MainNav({
       >
         <div className="pt-0.5">
           <Image
-            src={school.logoUrl || asset("/icons/logo.png")}
+            src={school.logoUrl || "/feather.png"}
             alt={`${displayName} Logo`}
             width={18}
             height={18}

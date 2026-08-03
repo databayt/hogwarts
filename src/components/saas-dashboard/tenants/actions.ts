@@ -8,7 +8,6 @@ import type { School } from "@prisma/client"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
-import { getText } from "@/components/translation/display"
 import {
   repairProvisioning,
   type RepairResult,
@@ -19,6 +18,7 @@ import {
   requireNotImpersonating,
   requireOperator,
 } from "@/components/saas-dashboard/lib/operator-auth"
+import { getText } from "@/components/translation/display"
 
 import { getTenants as getTenantsQuery, type GetTenantsInput } from "./queries"
 

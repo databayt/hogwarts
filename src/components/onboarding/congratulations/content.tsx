@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { rootDomainFromLocation } from "@/lib/root-domain"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
@@ -61,36 +62,11 @@ export default function CongratulationsContent(props: Props) {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Get root domain from env or derive from hostname
-  const getRootDomain = () => {
-    // Use env var if available
-    if (process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
-      return process.env.NEXT_PUBLIC_ROOT_DOMAIN
-    }
-
-    // Fallback: derive from current hostname
-    const hostname = window.location.hostname
-
-    // Handle localhost
-    if (hostname === "localhost" || hostname.includes("localhost")) {
-      return "localhost:3000"
-    }
-
-    // Handle Vercel preview deployments (tenant---branch.vercel.app)
-    if (hostname.includes("vercel.app")) {
-      return hostname
-    }
-
-    // Handle production (ed.databayt.org → databayt.org)
-    // Remove common prefixes like "ed.", "www.", or subdomain
-    const parts = hostname.split(".")
-    if (parts.length >= 2) {
-      // Take last two parts (e.g., databayt.org)
-      return parts.slice(-2).join(".")
-    }
-
-    return hostname
-  }
+  // Root domain derived from the current hostname (databayt.org,
+  // balqalam.com, previews, localhost) — see src/lib/root-domain.ts.
+  // NOTE: deliberately NOT env-driven — NEXT_PUBLIC_ROOT_DOMAIN holds the
+  // MAIN HOST (ed.databayt.org), which would render school.ed.databayt.org.
+  const getRootDomain = () => rootDomainFromLocation()
 
   useEffect(() => {
     async function fetchSchoolData() {

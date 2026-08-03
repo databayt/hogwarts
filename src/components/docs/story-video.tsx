@@ -32,7 +32,7 @@ export function StoryVideo() {
       <div className="absolute inset-0 bg-black/10" />
 
       <div className="absolute end-4 bottom-4 flex items-center gap-2">
-        <span className="text-sm font-medium text-white">hogwarts</span>
+        <span className="text-sm font-medium text-white">balqalam</span>
       </div>
     </div>
   )

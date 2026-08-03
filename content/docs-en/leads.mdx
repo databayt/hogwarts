@@ -110,12 +110,12 @@ Three to four touches max in any 21-day window. Quality outreach is finite. Afte
 
 ## Where leads are tracked
 
-| Source                                  | Holds                                                               |
-| --------------------------------------- | ------------------------------------------------------------------- |
+| Source                                   | Holds                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`hogwarts.crm.databayt.org`** (Twenty) | Live pipeline — Companies (stage/tier/source/country/next action), People (contacts), Opportunities (paid conversion + MRR). The source of truth. |
-| `crm.databayt.org` (hub)                | Always-up read-only mirror of the CRM (cached tables), for when the backend machine is off |
-| `kun/.claude/memory/customers.json`     | Read-only archive of the pre-CRM roster (migrated 2026-07-21)       |
-| `kun/.claude/memory/captain_journal.md` | Free-text journal: what we learned per conversation                 |
+| `crm.databayt.org` (hub)                 | Always-up read-only mirror of the CRM (cached tables), for when the backend machine is off                                                        |
+| `kun/.claude/memory/customers.json`      | Read-only archive of the pre-CRM roster (migrated 2026-07-21)                                                                                     |
+| `kun/.claude/memory/captain_journal.md`  | Free-text journal: what we learned per conversation                                                                                               |
 
 Leads live in the CRM; edit them there. The kun JSON files stay for history only — the
 one-time migration is `twenty-deploy/import-hogwarts-leads.mjs`.

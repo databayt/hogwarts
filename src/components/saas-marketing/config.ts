@@ -4,7 +4,7 @@
 import { SiteConfig } from "./types"
 
 export const siteConfig: SiteConfig = {
-  name: "Hogwarts",
+  name: "balqalam",
   description:
     "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
   url: "https://ed.databayt.org",

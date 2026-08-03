@@ -71,7 +71,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
   }))
 
   return (
-    <header className="bg-background sticky top-0 z-50 w-full">
+    <header className="bleed-bg bg-background sticky top-0 z-50 w-full">
       <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
         {/* Desktop: MainNav */}
         <MainNav

@@ -7,6 +7,11 @@ import { useSearchParams } from "next/navigation"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { signIn } from "next-auth/react"
 
+import {
+  cookieDomainForHost,
+  getSubdomainFromHost,
+  tenantOriginFromLocation,
+} from "@/lib/root-domain"
 import { Button } from "@/components/ui/button"
 
 // Function to clean Facebook URL hash
@@ -96,21 +101,15 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
       tenantFromParams: tenant,
     })
 
-    // Check if we're on a subdomain
+    // Check if we're on a subdomain (any root: databayt.org, balqalam.com)
     const currentHost = window.location.hostname
-    const isProdSubdomain =
-      currentHost.endsWith(".databayt.org") && currentHost !== "ed.databayt.org"
-    const isDevSubdomain =
-      currentHost.includes(".localhost") && currentHost !== "localhost"
-    const isSubdomain = isProdSubdomain || isDevSubdomain
+    const subdomainFromHost = getSubdomainFromHost(window.location.host)
+    const isSubdomain = !!subdomainFromHost
 
     console.log("🔍 Host detection debug:", {
       currentHost,
-      isProdSubdomain,
-      isDevSubdomain,
+      subdomainFromHost,
       isSubdomain,
-      endsWithDatabayt: currentHost.endsWith(".databayt.org"),
-      notEdDatabayt: currentHost !== "ed.databayt.org",
     })
 
     console.log("🚀 OAUTH FLOW INITIATED:", {
@@ -125,8 +124,8 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
     // Determine tenant - use subdomain detection or URL parameter
     let tenantSubdomain = null
 
-    if (isSubdomain) {
-      tenantSubdomain = currentHost.split(".")[0]
+    if (subdomainFromHost) {
+      tenantSubdomain = subdomainFromHost
       console.log("🎯 Tenant from subdomain detection:", tenantSubdomain)
     } else if (tenant) {
       tenantSubdomain = tenant
@@ -135,11 +134,9 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
 
     // If we have a tenant (either from subdomain or parameter), use custom OAuth flow
     if (tenantSubdomain) {
-      // Build base URL for tenant, then honor original callbackUrl if present
-      const baseUrl =
-        process.env.NODE_ENV === "production"
-          ? `https://${tenantSubdomain}.databayt.org`
-          : `http://${tenantSubdomain}.localhost:3000`
+      // Build base URL for the tenant on the CURRENT root domain, then honor
+      // original callbackUrl if present
+      const baseUrl = tenantOriginFromLocation(tenantSubdomain)
       const targetUrl = callbackUrl
         ? `${baseUrl}${callbackUrl}`
         : `${baseUrl}/dashboard`
@@ -151,9 +148,7 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
         callbackUrl,
         currentHost,
         environment: process.env.NODE_ENV,
-        source: isSubdomain ? "subdomain_detection" : "url_parameter",
-        isProdSubdomain,
-        isDevSubdomain,
+        source: subdomainFromHost ? "subdomain_detection" : "url_parameter",
       })
 
       // Store tenant info for fallback
@@ -237,9 +232,8 @@ export const Social = ({ dictionary }: SocialProps = {}) => {
           })
         }
 
-        // Store as a cookie with proper domain settings
-        const cookieDomain =
-          process.env.NODE_ENV === "production" ? ".databayt.org" : ""
+        // Store as a cookie scoped to the current root domain
+        const cookieDomain = cookieDomainForHost(window.location.hostname) ?? ""
         const cookieString = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax${cookieDomain ? `; Domain=${cookieDomain}` : ""}`
         document.cookie = cookieString
         console.log("🍪 Stored in client cookie:", {

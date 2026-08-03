@@ -43,7 +43,7 @@ export async function generateMetadata({
   const config = localeConfig[lang as Locale]
 
   return {
-    title: dictionary.metadata?.title || "Hogwarts - School Management System",
+    title: dictionary.metadata?.title || "balqalam - School Management System",
     description:
       dictionary.metadata?.description ||
       "A comprehensive school management school-dashboard",

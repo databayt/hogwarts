@@ -8,6 +8,7 @@ import {
   type Role,
 } from "@/routes"
 
+import { getSubdomainFromHost, isMainDomainHost } from "@/lib/root-domain"
 import { i18n, type Locale } from "@/components/internationalization/config"
 import {
   detectLocale,
@@ -177,26 +178,17 @@ export async function proxy(req: NextRequest) {
     : url.pathname
 
   // Detect subdomain early - needed for auth redirects and URL rewriting
-  // CRITICAL: ed.databayt.org is the main domain (saas-marketing school-marketing), NOT a tenant
-  let subdomain: string | null = null
-
-  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
-    // Production: school.databayt.org → "school"
-    subdomain = host.split(".")[0]
-  } else if (host.includes("---") && host.endsWith(".vercel.app")) {
-    // Vercel preview: tenant---branch.vercel.app → "tenant"
-    subdomain = host.split("---")[0]
-  } else if (host.includes("localhost") && host.includes(".")) {
-    // Development: subdomain.localhost:3000 → "subdomain"
-    const parts = host.split(".")
-    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
-      subdomain = parts[0]
-    }
-  }
+  // CRITICAL: marketing hosts (ed.databayt.org, balqalam.com, www.*) are NOT
+  // tenants. Host → tenant parsing for every root domain (databayt.org,
+  // balqalam.com), Vercel previews and *.localhost lives in
+  // src/lib/root-domain.ts — shared with auth so both stay in lockstep.
+  let subdomain: string | null = getSubdomainFromHost(host)
 
   // Custom domain detection (e.g., school.edu.sa → resolve to subdomain via Redis)
-  // Only check if no subdomain was found via standard patterns
-  if (!subdomain) {
+  // Only check if no subdomain was found via standard patterns. Marketing
+  // hosts are excluded so our own root domains can never be remapped to a
+  // tenant through a Redis entry.
+  if (!subdomain && !isMainDomainHost(host)) {
     const customSubdomain = await resolveCustomDomain(host)
     if (customSubdomain) {
       subdomain = customSubdomain
@@ -326,12 +318,9 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // Main domain handling
-  if (
-    host === "ed.databayt.org" ||
-    host === "localhost:3000" ||
-    host === "localhost"
-  ) {
+  // Main domain handling (marketing/platform host of every root + localhost:
+  // ed.databayt.org, balqalam.com, www.balqalam.com, localhost:3000)
+  if (isMainDomainHost(host)) {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`
       const response = NextResponse.redirect(url)

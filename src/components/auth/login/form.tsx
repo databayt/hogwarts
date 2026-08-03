@@ -18,6 +18,10 @@ import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 
+import {
+  getSubdomainFromHost,
+  tenantOriginFromLocation,
+} from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -76,15 +80,7 @@ export const LoginForm = ({
   const subdomain = useMemo(() => {
     if (subdomainParam) return subdomainParam
     if (typeof window === "undefined") return null
-    const host = window.location.hostname
-    if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
-      return host.split(".")[0]
-    }
-    if (host.includes(".localhost") && host !== "localhost") {
-      const sub = host.split(".")[0]
-      if (sub !== "www" && sub !== "localhost") return sub
-    }
-    return null
+    return getSubdomainFromHost(window.location.host)
   }, [subdomainParam])
 
   // Override context to "school" when subdomain is detected
@@ -134,15 +130,8 @@ export const LoginForm = ({
     const tenant = searchParams.get("tenant")
 
     if (tenant && success) {
-      const useHttps =
-        typeof window !== "undefined" && window.location.protocol === "https:"
-      const protocol = useHttps ? "https" : "http"
-      const tenantUrl =
-        process.env.NODE_ENV === "production"
-          ? `https://${tenant}.databayt.org/dashboard`
-          : `${protocol}://${tenant}.localhost:3000/dashboard`
-
-      window.location.href = tenantUrl
+      // Tenant dashboard on the current root domain (databayt.org / balqalam.com)
+      window.location.href = `${tenantOriginFromLocation(tenant)}/dashboard`
     }
   }, [success, searchParams])
 

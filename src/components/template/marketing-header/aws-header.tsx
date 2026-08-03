@@ -17,7 +17,6 @@ import {
   Settings,
 } from "lucide-react"
 
-import { asset } from "@/lib/asset-url"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { LangSwitcher } from "./lang-switcher"
@@ -36,7 +35,7 @@ export function AWSHeader({
   dictionary,
   locale = "en",
   accountId = "4467-3125-8367",
-  organizationName = "Hogwarts",
+  organizationName = "balqalam",
   breadcrumbs,
   pageTitle,
 }: AWSHeaderProps) {
@@ -53,8 +52,8 @@ export function AWSHeader({
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
               <Image
-                src={asset("/icons/logo.png")}
-                alt="Logo"
+                src="/feather.png"
+                alt="balqalam Logo"
                 width={28}
                 height={28}
                 className="invert"

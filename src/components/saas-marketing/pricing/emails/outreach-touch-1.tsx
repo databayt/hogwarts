@@ -60,7 +60,7 @@ export default function OutreachTouch1({
       {isAr ? (
         <>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
-            {ratingLine} أعمل على منصة إدارة مدارس عربية الأصل (Hogwarts) ولدي
+            {ratingLine} أعمل على منصة إدارة مدارس عربية الأصل (balqalam) ولدي
             سؤال محدد:
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
@@ -76,7 +76,7 @@ export default function OutreachTouch1({
         <>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             {ratingLine} I&apos;m building an Arabic-first school management
-            platform (Hogwarts) and have one specific question:
+            platform (balqalam) and have one specific question:
           </Text>
           <Text className="mb-4 text-base leading-relaxed text-zinc-800">
             How does {school} handle attendance + parent communication today —

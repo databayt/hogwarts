@@ -127,7 +127,7 @@ async function getSubjectsWithInstructors(schoolId: string) {
         id: v.schoolId ?? v.user.id,
         name:
           v.isFeatured && !v.schoolId
-            ? "Hogwarts"
+            ? "balqalam"
             : (v.school?.name ?? v.user.username ?? "Unknown"),
         videoCount: 1,
         totalViews: v.viewCount,

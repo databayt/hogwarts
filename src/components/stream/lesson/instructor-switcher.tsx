@@ -40,7 +40,7 @@ export function InstructorSwitcher({
   // so descend a single level (not `?.stream?.instructorSwitcher`).
   const d = dictionary?.instructorSwitcher ?? {}
   const labels = {
-    hogwarts: d.hogwarts ?? "Hogwarts",
+    hogwarts: d.hogwarts ?? "balqalam",
     yourSchool: d.yourSchool ?? "Your school",
     partnerSchool: d.partnerSchool ?? "Partner school",
   }

@@ -347,14 +347,14 @@ export function StreamLessonContent({
               {/* Creator */}
               <div className="mt-1.5 flex items-center gap-2">
                 <Image
-                  src={asset("/icons/logo.png")}
-                  alt={d?.brandName || "Hogwarts"}
+                  src="/feather.png"
+                  alt={d?.brandName || "balqalam"}
                   width={16}
                   height={16}
                   className="rounded-sm brightness-0 invert"
                 />
                 <span className="text-sm font-medium text-white">
-                  {d?.brandName || "Hogwarts"}
+                  {d?.brandName || "balqalam"}
                 </span>
               </div>
 

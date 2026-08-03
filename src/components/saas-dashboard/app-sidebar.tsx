@@ -44,7 +44,7 @@ export default function AppSidebar({
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <h6>Hogwarts Admin</h6>
+                <h6>balqalam Admin</h6>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

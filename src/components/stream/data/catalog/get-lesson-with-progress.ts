@@ -402,7 +402,7 @@ export const getLessonWithProgress = cache(async function getLessonWithProgress(
           id: v.user.id,
           name:
             v.isFeatured && !v.schoolId
-              ? "Hogwarts"
+              ? "balqalam"
               : (v.user.username ?? v.school?.name ?? null),
           image:
             v.isFeatured && !v.schoolId

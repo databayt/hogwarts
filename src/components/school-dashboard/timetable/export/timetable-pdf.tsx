@@ -391,7 +391,7 @@ export function TimetablePDF({
               day: "2-digit",
             }).format(generatedAt)}
           </Text>
-          <Text style={styles.footerText}>Powered by Hogwarts</Text>
+          <Text style={styles.footerText}>Powered by balqalam</Text>
         </View>
       </Page>
     </Document>

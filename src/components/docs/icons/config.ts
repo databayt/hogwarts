@@ -24,7 +24,7 @@ export const iconItems: IconItem[] = [
     name: "Logo",
     category: IconCategory.SYSTEM,
     tags: ["system", "branding", "logo"],
-    description: "Hogwarts school-dashboard logo icon",
+    description: "balqalam logo icon",
   },
   {
     id: "patreon",

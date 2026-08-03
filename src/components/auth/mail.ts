@@ -23,7 +23,7 @@ function emailLayout(content: string, locale: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>${isRTL ? "هوغورتس" : "Hogwarts"}</title>
+  <title>${isRTL ? "بالقلم" : "balqalam"}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:${fontFamily};-webkit-font-smoothing:antialiased;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;">
@@ -33,7 +33,7 @@ function emailLayout(content: string, locale: string): string {
           <!-- Logo -->
           <tr>
             <td align="center" style="padding:32px 40px 0 40px;">
-              <img src="https://ed.databayt.org/logo.png" alt="Hogwarts" height="64" style="height:64px;width:auto;display:block;" />
+              <img src="https://ed.databayt.org/logo.png" alt="balqalam" height="64" style="height:64px;width:auto;display:block;" />
             </td>
           </tr>
           <!-- Content -->
@@ -104,7 +104,7 @@ ${emailCode(token)}
         "en"
       ),
     twoFactorText: (token: string) =>
-      `Your verification code: ${token}\n\nEnter this code to complete your sign-in.\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+      `Your verification code: ${token}\n\nEnter this code to complete your sign-in.\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— balqalam (ed.databayt.org)`,
 
     resetSubject: "Reset your password",
     resetBody: (link: string) =>
@@ -116,7 +116,7 @@ ${emailButton(link, "Reset Password")}
         "en"
       ),
     resetText: (link: string) =>
-      `Reset your password\n\nUse the link below to set a new password:\n${link}\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+      `Reset your password\n\nUse the link below to set a new password:\n${link}\n\nIf you didn't request this, you can safely ignore this email.\n\n— balqalam (ed.databayt.org)`,
 
     resetCodeSubject: "Your password reset code",
     resetCodeBody: (code: string) =>
@@ -128,7 +128,7 @@ ${emailCode(code)}
         "en"
       ),
     resetCodeText: (code: string) =>
-      `Reset your password\n\nYour password reset code: ${code}\n\nEnter this code in the app to set a new password.\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+      `Reset your password\n\nYour password reset code: ${code}\n\nEnter this code in the app to set a new password.\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— balqalam (ed.databayt.org)`,
 
     verifySubject: "Confirm your email",
     verifyBody: (code: string) =>
@@ -140,7 +140,7 @@ ${emailCode(code)}
         "en"
       ),
     verifyText: (code: string) =>
-      `Confirm your email\n\nYour verification code: ${code}\n\nThis code expires in 30 minutes.\n\nIf you didn't create an account, you can safely ignore this email.\n\n— Hogwarts (ed.databayt.org)`,
+      `Confirm your email\n\nYour verification code: ${code}\n\nThis code expires in 30 minutes.\n\nIf you didn't create an account, you can safely ignore this email.\n\n— balqalam (ed.databayt.org)`,
   },
   ar: {
     twoFactorSubject: "رمز التحقق",
@@ -153,7 +153,7 @@ ${emailCode(token)}
         "ar"
       ),
     twoFactorText: (token: string) =>
-      `رمز التحقق: ${token}\n\nأدخل هذا الرمز لإتمام تسجيل الدخول.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
+      `رمز التحقق: ${token}\n\nأدخل هذا الرمز لإتمام تسجيل الدخول.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا الرمز، يمكنك تجاهل هذا البريد بأمان.\n\n— بالقلم (ed.databayt.org)`,
 
     resetSubject: "إعادة تعيين كلمة المرور",
     resetBody: (link: string) =>
@@ -165,7 +165,7 @@ ${emailButton(link, "إعادة التعيين")}
         "ar"
       ),
     resetText: (link: string) =>
-      `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
+      `إعادة تعيين كلمة المرور\n\nاستخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n${link}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— بالقلم (ed.databayt.org)`,
 
     resetCodeSubject: "رمز إعادة تعيين كلمة المرور",
     resetCodeBody: (code: string) =>
@@ -177,7 +177,7 @@ ${emailCode(code)}
         "ar"
       ),
     resetCodeText: (code: string) =>
-      `إعادة تعيين كلمة المرور\n\nرمز إعادة التعيين: ${code}\n\nأدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
+      `إعادة تعيين كلمة المرور\n\nرمز إعادة التعيين: ${code}\n\nأدخل هذا الرمز في التطبيق لتعيين كلمة مرور جديدة.\nينتهي صلاحية هذا الرمز خلال 10 دقائق.\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد بأمان.\n\n— بالقلم (ed.databayt.org)`,
 
     verifySubject: "تأكيد بريدك الإلكتروني",
     verifyBody: (code: string) =>
@@ -189,7 +189,7 @@ ${emailCode(code)}
         "ar"
       ),
     verifyText: (code: string) =>
-      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 30 دقيقة.\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— هوغورتس (ed.databayt.org)`,
+      `تأكيد بريدك الإلكتروني\n\nرمز التحقق: ${code}\n\nينتهي صلاحية هذا الرمز خلال 30 دقيقة.\n\nإذا لم تنشئ حسابًا، يمكنك تجاهل هذا البريد بأمان.\n\n— بالقلم (ed.databayt.org)`,
   },
 } as const
 
@@ -218,7 +218,7 @@ export const sendTwoFactorTokenEmail = async (
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Hogwarts <noreply@databayt.org>",
+      from: "balqalam <noreply@databayt.org>",
       to: email,
       subject: t.twoFactorSubject,
       html: t.twoFactorBody(token),
@@ -255,7 +255,7 @@ export const sendPasswordResetEmail = async (
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Hogwarts <noreply@databayt.org>",
+      from: "balqalam <noreply@databayt.org>",
       to: email,
       subject: t.resetSubject,
       html: t.resetBody(resetLink),
@@ -292,7 +292,7 @@ export const sendPasswordResetCodeEmail = async (
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Hogwarts <noreply@databayt.org>",
+      from: "balqalam <noreply@databayt.org>",
       to: email,
       subject: t.resetCodeSubject,
       html: t.resetCodeBody(code),
@@ -334,7 +334,7 @@ export const sendVerificationEmail = async (
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Hogwarts <noreply@databayt.org>",
+      from: "balqalam <noreply@databayt.org>",
       to: email,
       subject: t.verifySubject,
       html: t.verifyBody(code || "----"),

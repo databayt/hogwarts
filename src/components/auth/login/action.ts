@@ -2,7 +2,7 @@
 
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { signIn } from "@/auth"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { AuthError } from "next-auth"
@@ -10,6 +10,7 @@ import * as z from "zod"
 
 import { isBruteForceBlocked, logLoginAttempt } from "@/lib/audit-log"
 import { db } from "@/lib/db"
+import { cookieDomainForHost, tenantOriginForHost } from "@/lib/root-domain"
 import {
   sendTwoFactorTokenEmail,
   sendVerificationEmail,
@@ -68,6 +69,13 @@ export const login = async (
   } else {
     callbackUrl = callbackUrlOrOptions
   }
+
+  // Current request host → keep tenant redirects + cookies on the SAME root
+  // domain the user logged in from (databayt.org vs balqalam.com)
+  const requestHeaders = await headers()
+  const requestHost =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
+
   const validatedFields = LoginSchema.safeParse(values)
 
   if (!validatedFields.success) {
@@ -239,13 +247,9 @@ export const login = async (
         })
 
         if (school?.domain === subdomain) {
-          // User is a member of this school - construct absolute URL
-          const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
-          const protocol = useHttps ? "https" : "http"
-          const schoolBaseUrl =
-            process.env.NODE_ENV === "production"
-              ? `https://${subdomain}.databayt.org`
-              : `${protocol}://${subdomain}.localhost:3000`
+          // User is a member of this school - construct absolute URL on the
+          // root domain the login came from
+          const schoolBaseUrl = tenantOriginForHost(requestHost, subdomain)
           finalRedirectUrl = `${schoolBaseUrl}${callbackUrl}`
           console.log(
             "[LOGIN-ACTION] 🏫 School member accessing their dashboard:",
@@ -312,13 +316,8 @@ export const login = async (
   else {
     // Determine where to "stay" based on context
     if (context === "school" && subdomain) {
-      // Logged in from school marketing
-      const useHttps = process.env.NEXTAUTH_URL?.startsWith("https")
-      const protocol = useHttps ? "https" : "http"
-      const baseUrl =
-        process.env.NODE_ENV === "production"
-          ? `https://${subdomain}.databayt.org`
-          : `${protocol}://${subdomain}.localhost:3000`
+      // Logged in from school marketing — stay on the same root domain
+      const baseUrl = tenantOriginForHost(requestHost, subdomain)
 
       // STUDENT and GUARDIAN exist on the platform primarily to view + pay
       // their own fees. Sending them to school marketing forces a manual
@@ -382,8 +381,7 @@ export const login = async (
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
+        domain: cookieDomainForHost(requestHost),
         maxAge: 24 * 60 * 60,
       })
     } catch {

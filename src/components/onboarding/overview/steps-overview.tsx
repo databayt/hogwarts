@@ -61,7 +61,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({
               <h2 className="text-4xl font-bold tracking-tight">
                 It's easy to
                 <br />
-                get started on Hogwarts
+                get started on balqalam
               </h2>
             </div>
 

@@ -50,7 +50,7 @@ export function OutreachShell({
               as="h1"
               className="mb-6 text-lg font-semibold text-zinc-900"
             >
-              Hogwarts · Databayt
+              balqalam · Databayt
             </Heading>
             {children}
             <Hr className="my-6 border-t border-zinc-200" />

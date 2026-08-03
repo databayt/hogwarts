@@ -69,7 +69,7 @@ export default async function DashboardContent({
     // Provide default translations if dictionary is not provided
     const dashboardDict = dictionary?.dashboard || {
       title: "Dashboard",
-      welcome: "Welcome to Hogwarts",
+      welcome: "Welcome to balqalam",
     }
 
     const renderDashboard = () => {

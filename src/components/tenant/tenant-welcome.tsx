@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { formatDate } from "@/lib/i18n-format"
+import { rootDomainFromLocation } from "@/lib/root-domain"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -99,7 +100,9 @@ export default function TenantWelcome({
               </div>
               <div>
                 <h4 className="text-gray-900">{school.name}</h4>
-                <p className="text-gray-500">{subdomain}.databayt.org</p>
+                <p className="text-gray-500">
+                  {subdomain}.{rootDomainFromLocation()}
+                </p>
               </div>
             </div>
 

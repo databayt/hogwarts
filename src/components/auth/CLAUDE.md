@@ -26,7 +26,7 @@ Multi-tenant authentication layer (NextAuth v5): OAuth (Google, Facebook), crede
 ## Key Decisions
 
 - `src/auth.ts` is the central config (777 lines) -- JWT callbacks embed `schoolId` and `role` in tokens
-- Cross-subdomain SSO via `.databayt.org` cookie domain -- all schools share one auth session
+- Cross-subdomain SSO via per-root cookie domain (`.databayt.org` on databayt hosts, `.balqalam.com` on balqalam hosts) -- derived per request in `src/auth.ts` via Auth.js v5 lazy init + `src/lib/root-domain.ts`; SSO spans subdomains of ONE root, never across roots
 - OAuth callback URL preserved via httpOnly cookies (not URL params) -- see `src/auth.ts` redirect logic
 - `authjs.role` cookie synced on login for middleware RBAC checks (edge-compatible)
 - Custom Prisma adapter in `prisma-adapter.ts` handles multi-tenant user lookup
@@ -37,7 +37,7 @@ Multi-tenant authentication layer (NextAuth v5): OAuth (Google, Facebook), crede
 - `src/auth.ts` -- 777 lines, extremely complex; small changes break auth across all tenants
 - `src/routes.ts` -- RBAC matrix; incorrect changes lock out roles or expose protected routes
 - `prisma-adapter.ts` -- custom adapter; changes affect all OAuth flows
-- Cookie domain (`.databayt.org`) -- changing this breaks cross-subdomain SSO
+- Cookie domain -- computed per request by `cookieDomainForHost()` (`src/lib/root-domain.ts`); hardcoding a root or breaking the lazy `NextAuth(req => ...)` init silently drops sessions on the other root domain
 - `authjs.role` cookie -- must stay in sync with JWT role; stale cookie = access denied
 
 ## Related Blocks

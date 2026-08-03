@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react"
 
+import { rootDomainFromLocation } from "@/lib/root-domain"
 import { getCurrentTimeInTimezone } from "@/lib/timezone"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -311,7 +312,9 @@ export default function TenantDashboard({
                   <label className="muted">
                     {t?.schoolInfo?.subdomain || "Subdomain"}
                   </label>
-                  <p>{subdomain}.databayt.org</p>
+                  <p>
+                    {subdomain}.{rootDomainFromLocation()}
+                  </p>
                 </div>
                 <div>
                   <label className="muted">

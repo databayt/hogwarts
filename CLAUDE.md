@@ -69,10 +69,17 @@ Before ANY schema change or data operation that could affect existing data:
 ### Subdomain Routing
 
 ```
-Production:    school.databayt.org → /[lang]/s/school/...
+Production:    school.databayt.org → /[lang]/s/school/...   (main host: ed.databayt.org)
+               school.balqalam.com → /[lang]/s/school/...   (main host: balqalam.com apex)
 Preview:       tenant---branch.vercel.app → /[lang]/s/tenant/...
 Development:   subdomain.localhost → /[lang]/s/subdomain/...
 ```
+
+Root domains are registered in `src/lib/root-domain.ts` — the single source of
+truth for host → tenant/main classification, cookie Domain scoping
+(`.databayt.org` / `.balqalam.com`, per root, never cross-root) and
+tenant/main origin building. To serve another apex: add it there, add the
+domains to the Vercel project, point DNS at Vercel.
 
 ### Server Action Pattern (MANDATORY)
 
@@ -248,6 +255,6 @@ All business models include `schoolId` field with `@@index([schoolId])` and `@@u
 
 ## Project Information
 
-- **Production**: https://ed.databayt.org
+- **Production**: https://ed.databayt.org + https://balqalam.com (same app, two root domains; tenants on `*.databayt.org` and `*.balqalam.com`)
 - **Database**: PostgreSQL on Neon
 - **Full docs**: https://ed.databayt.org/docs

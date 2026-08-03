@@ -619,7 +619,7 @@ export async function getAvailableInstructors(
           id: v.schoolId ?? v.user.id,
           name:
             v.isFeatured && !v.schoolId
-              ? "Hogwarts"
+              ? "balqalam"
               : (v.school?.name ?? v.user.username ?? "Unknown"),
           image: v.user.image,
           videoCount: 1,

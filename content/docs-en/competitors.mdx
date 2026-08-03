@@ -1,23 +1,90 @@
 ---
 title: Competitors
-description: Market landscape and competitor analysis — how Hogwarts compares to industry-leading school information systems.
+description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, open-source peers, and how Hogwarts compares.
 ---
 
-Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org), with a live pilot at [kingfahad.databayt.org](https://kingfahad.databayt.org) (King Fahad Schools — founding member of the [MENA-10 free pilot cohort](/docs/pilot)). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets. Browse the vendors below for inspiration; the feature comparison sets a baseline for parity and the [battle-card section](#why-mena-schools-choose-hogwarts) at the bottom is the prose for proposals and discovery calls.
+Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
 
-## Industry leaders
+This page maps three distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) at the bottom is the prose for proposals and discovery calls.
 
-| Vendor                                             | Reach                            | Note                                          |
-| -------------------------------------------------- | -------------------------------- | --------------------------------------------- |
-| [PowerSchool](https://www.powerschool.com/)        | 60M+ students                    | $5.6B valuation; North-American market leader |
-| [Skyward](https://www.skyward.com/)                | 2,500+ districts                 | Qmlativ platform                              |
-| [Infinite Campus](https://www.infinitecampus.com/) | 10 SEAs, 34+ US states           | State-level deployments                       |
-| [Classter](https://www.classter.com/)              | 500+ institutions, 40+ countries | International coverage                        |
-| [Blackbaud](https://www.blackbaud.com/)            | 40+ years                        | Private K-12 specialist                       |
-| [Veracross](https://www.veracross.com/)            | Private K-12                     | Independent schools focus                     |
-| [FACTS SIS](https://factsmgt.com/)                 | Faith-based + private            | Tuition + SIS bundle                          |
-| [Fedena](https://www.fedena.com/)                  | Global reach                     | 22 core modules                               |
-| [OpenEduCat](https://openeducat.org/)              | Open source                      | Odoo-based                                    |
+<Callout type="info">
+  Market figures below were last verified **August 2026**. Every number is
+  sourced in [Sources](#sources); refresh the citations before reusing them in a
+  deck or a proposal.
+</Callout>
+
+## Market at a glance
+
+| Metric                                  | Figure                                      | Read-across for us                                                  |
+| --------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| SIS market size                         | $8.36B (2026) → $15.36B (2031), 12.9% CAGR  | The category is growing, not consolidating into a winner            |
+| Broader school-management-system market | $25.83B (2026) → $42.66B (2030), 13.4% CAGR | SIS is a slice; fees, HR, transport, LMS are the rest of the wallet |
+| GCC EdTech market                       | $3.2B+ (2025)                               | Our beachhead region is funded and buying                           |
+| Largest single K-12 SIS segment (NA)    | "Others" — ~25% of implementations          | **Fragmentation is the opening**: no vendor owns the long tail      |
+
+The last row is the most important line on this page. Even in the most consolidated SIS market on earth, a quarter of districts run something outside the top seven vendors. In MENA — where Arabic-first UX, ministry reporting formats, and local payment rails all differ — that long tail is the whole market.
+
+## Global SIS incumbents
+
+Market share is North-America-only, from ListEdTech's database of 23,000+ US and Canadian districts (November 2025). It sets the **feature baseline** we must reach; it says nothing about MENA, where none of these vendors lead.
+
+| Vendor                                             | NA K-12 SIS share | Known for                                                          |
+| -------------------------------------------------- | ----------------- | ------------------------------------------------------------------ |
+| [PowerSchool](https://www.powerschool.com/)        | 23%               | Market leader; acquired by Bain Capital for $5.6B (Oct 2024)       |
+| [FACTS SIS](https://factsmgt.com/)                 | 15%               | Private + faith-based; tuition and SIS bundled                     |
+| [Infinite Campus](https://www.infinitecampus.com/) | 10%               | State-level deployments; the main PowerSchool switch target        |
+| [Skyward](https://www.skyward.com/)                | 7%                | Qmlativ platform; strong ERP/finance side                          |
+| [Blackbaud](https://www.blackbaud.com/)            | 3%                | Independent K-12; fundraising + SIS                                |
+| [Ascender (TxEIS)](https://ascendertx.com/)        | 3%                | Texas ESC co-op; 850+ of ~1,250 Texas LEAs; state-reporting native |
+| [Synergy (Edupoint)](https://www.edupoint.com/)    | 3%                | Single-database SIS + LMS + MTSS                                   |
+| [Veracross](https://www.veracross.com/)            | —                 | Independent schools; single-record architecture                    |
+| [Classter](https://www.classter.com/)              | —                 | 500+ institutions, 40+ countries; Microsoft-ecosystem native       |
+
+**Two trends worth naming in a sales call:**
+
+- **Security is now a switching trigger, not a checkbox.** PowerSchool disclosed a breach in January 2025 exposing data on ~60M students and ~10M teachers; North Carolina districts have since migrated to Infinite Campus, citing security alongside features. Litigation reached the private-equity owner. Every school board in 2026 asks where the data lives — which is exactly the question open source and self-hosting answer well.
+- **AI moved from add-on to differentiator.** Predictive analytics and workflow automation are now embedded in the major platforms rather than sold as modules. Our AI-assisted admission and auto-marking are table stakes going forward, not a moat on their own.
+
+## MENA regional players
+
+These are the vendors we actually meet in a deal. Only some compete for the system-of-record; the B2C and content platforms compete for the same school budget and the same parent mindshare, which matters just as much.
+
+| Player                                                                    | Base             | Reach                                                                                                                              | Competes with us on            |
+| ------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| [Classera](https://www.classera.com/)                                     | Saudi / SV       | Millions of students, 30+ countries, 10+ ministries; $40M Series A led by Sanabil (PIF); acquired Expert Solutions (education ERP) | **Direct** — LMS + SIS + ERP   |
+| [Skolera](https://skolera.com/)                                           | Egypt (2015)     | ~35 schools across Egypt, Oman, KSA, Kenya; selected for Egyptian Nile schools                                                     | **Direct** — LMS + SMS         |
+| [EduX](https://dc-edux.com/en/)                                           | MENA / Gulf      | KSA, UAE, Egypt, Kuwait, Qatar; bilingual Arabic/English                                                                           | **Direct** — cloud SIS/ERP     |
+| [Edusys](https://www.edusyserp.com/en-ae/school-management-software.html) | India → Gulf     | UAE, Kuwait, Qatar, Oman, KSA                                                                                                      | **Direct** — school ERP        |
+| Odoo/Zoho education integrators (iWesabe, SowaanERP, Shyphan)             | KSA / UAE        | Per-project implementations; Arabic RTL, MoE reporting                                                                             | **Direct** — custom ERP builds |
+| [Alef Education](https://www.alefeducation.com/)                          | UAE (ADX-listed) | ~2.0M students, 84K educators, 19,000 schools (UAE, Indonesia, Morocco)                                                            | Budget — AI content, not SIS   |
+| [Noon Academy](https://www.noonacademy.com/)                              | Saudi            | Social learning, live classes, peer tutoring                                                                                       | Budget — B2C tutoring          |
+| [Madrasati](https://schools.madrasati.sa/)                                | Saudi MoE        | 6M+ students at peak; national blended-learning platform                                                                           | Budget — free public baseline  |
+
+**What the regional set tells us:**
+
+- **Arabic-first is real competition here, not a gap.** Madrasati, Noon, Edraak, and Alef all render RTL correctly and design Arabic-first. Our Arabic advantage holds against the _global_ incumbents and against Odoo/Edusys-style ports — it does not hold automatically against Classera or Alef. Lead with architecture and price in those rooms, not with "we support Arabic."
+- **The regional leaders are funded and consolidating.** Classera's $40M Series A and its ERP acquisition mean the mid-market is being rolled up. Speed of onboarding and price for a single small school is where a solo school still gets a worse deal from them than from us.
+- **Free national platforms set the floor.** In Saudi, "Madrasati is free" is the first objection. The answer is administration — fees, payroll, transport, admissions — which national learning platforms do not do.
+
+## Open-source peers
+
+Architecturally the closest set: schools can read the code, self-host, and leave. This is the group we are benchmarked against by technical buyers and by the community.
+
+| Project                                         | Stack            | Note                                                                          |
+| ----------------------------------------------- | ---------------- | ----------------------------------------------------------------------------- |
+| [Gibbon](https://gibbonedu.org/)                | PHP              | Started 2010 (Hong Kong); fully free, no paid add-ons — the purest OSS option |
+| [RosarioSIS](https://www.rosariosis.org/)       | PHP + PostgreSQL | Modular, lightweight, paid add-on modules                                     |
+| [openSIS](https://www.opensis.com/)             | PHP              | Community edition + commercial tiers; K-12 and higher ed                      |
+| [Fedena](https://www.fedena.com/)               | Ruby on Rails    | Open core, 22 modules, global install base                                    |
+| [OpenEduCat](https://openeducat.org/)           | Odoo / Python    | ERP-shaped; inherits the Odoo module ecosystem                                |
+| [Frappe Education](https://frappe.io/education) | Frappe / ERPNext | Self-host or Frappe Cloud; admissions, fees, assessments, portals             |
+
+**Where Hogwarts diverges from the peer set:**
+
+- **Multi-tenant SaaS by default, not a per-school install.** Every peer above is architected as one deployment per institution. Hogwarts is `schoolId`-scoped with subdomain routing — one deployment serves many schools, which is what makes a free tier and a 24-hour onboarding possible.
+- **Modern stack, not PHP/Rails/Odoo.** Next.js 16 + React 19 + Prisma + TypeScript is what a 2026 contributor already knows.
+- **Arabic-first rather than Arabic-translated.** No peer above treats RTL as the default rendering path.
+- **Where they are ahead:** install-base maturity, plugin ecosystems (Odoo/Frappe especially), and years of edge cases in state reporting. Do not claim parity on breadth of deployment history.
 
 ## Assessment & exam-creation tools
 
@@ -49,7 +116,6 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 | [MagicSchool AI](https://www.magicschool.ai/)                                                                                         | AI generation               | 2–3 min             | Teacher AI suite; topic → quiz                                                                   |
 | [Monsha](https://monsha.ai/)                                                                                                          | AI generation               | —                   | 9-step granular; DOK/Bloom/Lexile; exports to Forms/Kahoot/Quizizz                               |
 | [QuestionPaper.ai](https://questionpaper.ai/)                                                                                         | AI generation               | 3 steps             | Bloom K1–K6, OBE-aligned; Indian higher-ed                                                       |
-| [ProProfs Quiz Maker](https://www.proprofs.com/quiz-school/features/ai-quiz-maker/)                                                   | Gallery + AI                | minutes             | (see above) AI quiz maker tier                                                                   |
 | [LEAD School](https://leadschool.in/)                                                                                                 | Vertically integrated       | —                   | Curriculum + textbook + assessment bundle (India)                                                |
 
 \* IF a publisher bank exists for the textbook; otherwise no path from custom content.
@@ -66,7 +132,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ## Feature comparison
 
-The "Industry standard" column means at least 5 of the 9 vendors above ship the capability. "Hogwarts" reflects what is shipped in production today; aspirational items are called out in the Notes column.
+"Industry standard" means at least 5 of the 9 [global incumbents](#global-sis-incumbents) ship the capability. "Hogwarts" reflects what is shipped in production today; aspirational items are called out in the Notes column.
 
 ### Core
 
@@ -130,10 +196,11 @@ The "Industry standard" column means at least 5 of the 9 vendors above ship the 
 
 ### Analytics
 
-| Feature               | Hogwarts | Industry standard | Notes                                      |
-| --------------------- | -------- | ----------------- | ------------------------------------------ |
-| Reports and analytics | Yes      | Yes               | Per-feature dashboards                     |
-| Dashboard builder     | Partial  | Partial           | Fixed dashboards today; custom widgets WIP |
+| Feature                  | Hogwarts | Industry standard | Notes                                       |
+| ------------------------ | -------- | ----------------- | ------------------------------------------- |
+| Reports and analytics    | Yes      | Yes               | Per-feature dashboards                      |
+| Dashboard builder        | Partial  | Partial           | Fixed dashboards today; custom widgets WIP  |
+| Predictive / AI insights | Partial  | Yes               | AI in admission + marking; risk scoring WIP |
 
 ### Communication
 
@@ -170,11 +237,12 @@ The "Industry standard" column means at least 5 of the 9 vendors above ship the 
 
 ### Enterprise
 
-| Feature                      | Hogwarts | Industry standard | Notes                                  |
-| ---------------------------- | -------- | ----------------- | -------------------------------------- |
-| Multi-campus support         | Yes      | Yes               | Subdomain per school; tenant isolation |
-| Government / state reporting | Partial  | Yes               | Custom exports per ministry            |
-| API and integrations         | Yes      | Yes               | REST + Bearer-token webhooks           |
+| Feature                      | Hogwarts | Industry standard | Notes                                           |
+| ---------------------------- | -------- | ----------------- | ----------------------------------------------- |
+| Multi-campus support         | Yes      | Yes               | Subdomain per school; tenant isolation          |
+| Government / state reporting | Partial  | Yes               | Custom exports per ministry                     |
+| API and integrations         | Yes      | Yes               | REST + Bearer-token webhooks                    |
+| Self-hosting                 | Yes      | No                | Source-available; schools can run it themselves |
 
 ### E-learning
 
@@ -203,25 +271,36 @@ The "Industry standard" column means at least 5 of the 9 vendors above ship the 
 
 ## Why MENA schools choose Hogwarts
 
-Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) discovery calls. Each row is one line a school admin should hear in 60 seconds, paired with the regional incumbent it counters.
+Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) discovery calls. Each row is one line a school admin should hear in 60 seconds, paired with the incumbent it counters.
 
-| Concern                                      | What incumbents offer                                                  | What Hogwarts offers                                                            |
-| -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Arabic UI quality                            | English UI translated, RTL bolted on (Classera, Noon, Blackboard MENA) | RTL is the default, every screen, every role; English is the translation        |
-| Cost for a small private school              | $5K–$50K / year all-in (Classera, regional incumbents)                 | Free for ≤100 students; $1.50 / student / month thereafter                      |
-| Data residency and audit                     | Closed binaries, opaque storage (most regional SaaS)                   | Open source, schools can self-host or audit; tenant data isolated by `schoolId` |
-| Speed of onboarding                          | Weeks of setup; vendor implementation team                             | Subdomain in 24 hours; Day-0 to Day-30 founder-led onboarding                   |
-| Roadmap influence                            | Closed roadmap, annual user-group conference                           | Weekly feedback call during pilot; co-design partner status at Year 1           |
-| Vendor lock-in                               | Proprietary data formats, exit fees                                    | Full CSV / JSON export any time, SSPL-1.0 license                               |
-| MENA payment rails                           | Stripe-only or none                                                    | Stripe + bankak (Sudan) + tap (Saudi) + cash + bank transfer + mobile money     |
-| Post-conflict / emerging-market deployment   | Designed for large districts with fast internet                        | Schools coming online — mobile-responsive, low-bandwidth tolerant               |
-| Time to first paying customer (from contact) | 6–12 months sales cycle                                                | 14-day trial → 6-month free pilot → 30%-off paid Year 1                         |
+| Concern                                    | What incumbents offer                                             | What Hogwarts offers                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Arabic UI quality                          | English UI translated, RTL bolted on (global SIS, Odoo/ERP ports) | RTL is the default, every screen, every role; English is the translation        |
+| Cost for a small private school            | $5K–$50K / year all-in (regional incumbents)                      | Free for ≤100 students; $1.50 / student / month thereafter                      |
+| Data residency and audit                   | Closed binaries, opaque storage; breach exposure at scale         | Open source, schools can self-host or audit; tenant data isolated by `schoolId` |
+| Speed of onboarding                        | Weeks of setup; vendor implementation team                        | Subdomain in 24 hours; founder-led Day-0 to Day-30 onboarding                   |
+| Roadmap influence                          | Closed roadmap, annual user-group conference                      | Public issue tracker, direct line to maintainers, PRs accepted                  |
+| Vendor lock-in                             | Proprietary data formats, exit fees                               | Full CSV / JSON export any time, SSPL-1.0 license                               |
+| MENA payment rails                         | Stripe-only or none                                               | Stripe + bankak (Sudan) + tap (Saudi) + cash + bank transfer + mobile money     |
+| Post-conflict / emerging-market deployment | Designed for large districts with fast internet                   | Schools coming online — mobile-responsive, low-bandwidth tolerant               |
+| Free national platform is "good enough"    | Learning only — no fees, payroll, transport, or admissions        | Full school administration, alongside whatever the ministry platform provides   |
+| Time to value                              | 6–12 month sales cycle                                            | Self-serve signup; free tier runs indefinitely; pay when the school outgrows it |
 
-For the active offer this battle-card is selling into — see [Pilot](/docs/pilot).
+## Sources
+
+- [ListEdTech — The 2025 K-12 SIS Market](https://www.listedtech.com/blog/the-2025-k-12-sis-market/) — NA market share (Nov 2025), 23,000+ districts
+- [MarketsandMarkets — Student Information System Market to $15.36B by 2031](https://www.barchart.com/story/news/3556949/student-information-system-market-to-reach-15-36-billion-by-2031-driven-by-ai-powered-campus-digitalization-report-by-marketsandmarkets)
+- [Research and Markets — School Management System Market Report 2026](https://www.researchandmarkets.com/reports/5980322/school-management-system-market-report)
+- [TechCrunch — PowerSchool breach disclosure](https://techcrunch.com/2025/01/08/edtech-giant-powerschool-says-hackers-accessed-personal-data-of-students-and-teachers/) and [National Law Review — Bain Capital liability ruling](https://natlawreview.com/article/unprecedented-private-equity-firm-potentially-hook-portfolio-companys-data-breach)
+- [Global EdTech — Classera $40M Series A led by Sanabil](https://global-edtech.com/mena-edtech-platform-classera-receives-40m-in-edtech-series-a-funding/) and [Classera acquires Expert Solutions](https://www.classera.com/en/company/news_details/classera-acquires-largest-erp-company-for-education-sector-in-the-middle-east/)
+- [EgyptInnovate — Skolera profile](https://egyptinnovate.com/en/success-stories/skolera-a-unified-learning-system-founded-by-a-brilliant-egyptian-to-develop-education)
+- [Zawya — Alef Education UAE private-school reach](https://www.zawya.com/en/press-release/companies-news/alef-education-scales-ai-learning-reach-across-uae-private-schools-boosting-arabic-proficiency-b7rcpqlg)
+- [ThirdRock — GCC EdTech market 2026](https://www.thirdrocktechkno.com/blog/gcc-edtech-market-2026-growth-drivers-and-the-opportunity/) and [Best EdTech platforms in Saudi Arabia 2026](https://www.thirdrocktechkno.com/blog/best-edtech-platforms-in-saudi-arabia-the-complete-2026-guide/)
+- [RosarioSIS — Top open-source self-hosted school management systems](https://www.rosariosis.org/articles/top-5-free-open-source-self-hosted-school-management-systems/) and [frappe/education on GitHub](https://github.com/frappe/education)
+- [Gartner Peer Insights — K-12 Student Information Systems](https://www.gartner.com/reviews/market/k-12-education-student-information-systems) — buyer reviews, refresh before quoting
 
 ## See also
 
-- [Pilot](/docs/pilot) — MENA-10 free cohort (where the battle-card lands)
 - [Proposal](/docs/proposal) — uses these rows verbatim in the "Why us" section
 - [Leads](/docs/leads) — discovery-call references
 - [Sales](/docs/sales) — B2B process and objection handling

@@ -36,6 +36,6 @@ export default async function GeofencePage({ params }: Props) {
 }
 
 export const metadata = {
-  title: "Geofence Tracking | Hogwarts",
+  title: "Geofence Tracking | balqalam",
   description: "Automatic attendance tracking using GPS location",
 }

@@ -44,6 +44,7 @@ export default function AttachmentsContent({
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation()
   const { getStepData, session } = useApplySession()
+  const sessionReady = !session.isLoading
   const attachmentsFormRef = useRef<AttachmentsFormRef>(null)
 
   const initialData = getStepData("attachments")
@@ -105,8 +106,12 @@ export default function AttachmentsContent({
           stepDict.description || ATTACHMENTS_STEP_CONFIG.description(isRTL)
         }
       />
-      {documentsMissing && (
-        <Alert variant="destructive">
+      {/* Informational, not destructive: on arrival the applicant has simply
+          not uploaded yet — that is the expected state, not an error. Held back
+          until the draft has loaded so a returning applicant whose uploads are
+          still in flight doesn't see a false "missing documents" flash. */}
+      {documentsMissing && sessionReady && (
+        <Alert>
           <AlertDescription>
             {stepDict.requiredHint ||
               (isRTL

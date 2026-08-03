@@ -80,7 +80,7 @@
     }
   },
   "metadata": {
-    "title": "Hogwarts - School Management System",
+    "title": "balqalam - School Management System",
     "description": "Comprehensive school management platform for educational institutions"
   },
   "chatbot": {
@@ -130,7 +130,7 @@
     "schoolScholarshipsQuestion": "What scholarships are available?",
     "schoolEvents": "Events",
     "schoolEventsQuestion": "What upcoming events does the school have?",
-    "welcomeSaas": "Welcome to Hogwarts.",
+    "welcomeSaas": "Welcome to balqalam.",
     "welcomeSchoolTemplate": "Hi! I'm the {name} assistant",
     "ctaTryFree": "Try free",
     "ctaSeePricing": "See pricing",
@@ -216,7 +216,7 @@
     "dark": "Dark",
     "system": "System",
     "platform": "Platform",
-    "brandName": "Hogwarts",
+    "brandName": "balqalam",
     "unauthorized": "Unauthorized access",
     "switchLanguage": "Switch language",
     "create": "Create",
@@ -434,7 +434,7 @@
     "community": "Community",
     "pricing": "Pricing",
     "documentation": "Documentation",
-    "brandName": "Hogwarts"
+    "brandName": "balqalam"
   },
   "community": {
     "title": "The Room of Requirement",
@@ -641,10 +641,7 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": [
-            "Unlimited students",
-            "Custom integrations"
-          ]
+          "benefits": ["Unlimited students", "Custom integrations"]
         }
       },
       "constants": {
@@ -763,7 +760,7 @@
     },
     "openSource": {
       "title": "Proudly Open Source",
-      "description": "Hogwarts is open source and powered by open source software.",
+      "description": "balqalam is open source and powered by open source software.",
       "descriptionLine2": "The code is available on",
       "github": "GitHub",
       "contributors": "Contributors"
@@ -1030,7 +1027,7 @@
         "category": "Real Estate Platform"
       },
       "hogwarts": {
-        "title": "Hogwarts",
+        "title": "balqalam",
         "description": "Organization automation, attendance, exams, grades and more",
         "category": "Education System"
       },
@@ -1101,7 +1098,7 @@
         "secondaryCtaText": "Learn more"
       },
       "acme": {
-        "logo": "HOGWARTS",
+        "logo": "BALQALAM",
         "title": "Education Management System",
         "description": "Education automation. managing grades, attendance, assignments, and student progress tracking.",
         "ctaText": "Live Preview",
@@ -1926,7 +1923,7 @@
     "privacy": "Privacy",
     "safety": "Safety",
     "status": "Status",
-    "brandName": "Hogwarts",
+    "brandName": "balqalam",
     "newsletter": {
       "title": "Newsletter",
       "emailPlaceholder": "Email address",
@@ -1943,22 +1940,9 @@
         "WordPress",
         "Shopify"
       ],
-      "company": [
-        "About",
-        "Careers",
-        "Blog",
-        "Case Studies"
-      ],
-      "services": [
-        "Startups",
-        "Agencies"
-      ],
-      "support": [
-        "Help Center",
-        "Contact",
-        "Documentation",
-        "Service Status"
-      ]
+      "company": ["About", "Careers", "Blog", "Case Studies"],
+      "services": ["Startups", "Agencies"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
     },
     "links": {
       "product": "Product",
@@ -1967,29 +1951,10 @@
       "legal": "Legal"
     },
     "sections": {
-      "product": [
-        "Features",
-        "Pricing",
-        "Updates",
-        "Roadmap"
-      ],
-      "company": [
-        "About",
-        "Blog",
-        "Careers",
-        "Partners"
-      ],
-      "support": [
-        "Help Center",
-        "Contact",
-        "Documentation",
-        "Service Status"
-      ],
-      "legal": [
-        "Privacy",
-        "Terms",
-        "License"
-      ]
+      "product": ["Features", "Pricing", "Updates", "Roadmap"],
+      "company": ["About", "Blog", "Careers", "Partners"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"],
+      "legal": ["Privacy", "Terms", "License"]
     }
   },
   "errors": {

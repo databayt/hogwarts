@@ -7,7 +7,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
 
-import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 
 import { siteConfig } from "./config"
@@ -28,8 +27,8 @@ export function MainNav({ items, children }: MainNavProps) {
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center gap-2 md:flex">
         <Image
-          src={asset("/icons/logo.png")}
-          alt="Hogwarts Logo"
+          src="/feather.png"
+          alt="balqalam Logo"
           width={20}
           height={20}
           className="dark:invert"

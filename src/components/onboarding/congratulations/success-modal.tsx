@@ -18,6 +18,7 @@ import {
   Zap,
 } from "lucide-react"
 
+import { rootDomainFromLocation } from "@/lib/root-domain"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -205,8 +206,7 @@ export default function SuccessModal({
                   </p>
                 </div>
                 <p className="text-primary scroll-m-20 text-xl font-semibold tracking-tight">
-                  {schoolData.domain}.
-                  {process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"}
+                  {schoolData.domain}.{rootDomainFromLocation()}
                 </p>
               </motion.div>
             </motion.div>

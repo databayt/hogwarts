@@ -10,6 +10,7 @@ import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { buttonVariants } from "../ui/button"
+import { DemoLink } from "./demo-link"
 import { HeroIllustration } from "./hero-illustration"
 
 interface HeroProps {
@@ -88,14 +89,13 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             >
               {heroDict.appointment}
             </Link>
-            <Link
-              href={getDemoUrl()}
-              target="_blank"
-              rel="noreferrer"
+            <DemoLink
+              fallbackHref={getDemoUrl()}
+              lang={lang || "en"}
               className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
             >
               {heroDict.liveDemo || "Live Demo"}
-            </Link>
+            </DemoLink>
           </div>
         </div>
       </div>

@@ -17,7 +17,7 @@ import "@/styles/zenda-clone.css"
 import "@/styles/apple-clone.css"
 
 export const metadata: Metadata = {
-  title: "Hogwarts",
+  title: "balqalam",
   description: "School automation",
 }
 

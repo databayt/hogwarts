@@ -48,7 +48,7 @@
     ],
     "ask": []
   },
-  "model": "claude-opus-4-8",
+  "model": "claude-opus-5",
   "enableAllProjectMcpServers": true,
   "includeCoAuthoredBy": true,
   "env": {
@@ -59,8 +59,8 @@
     "BMAD_ENABLED": "true",
     "AUTOMATION_LEVEL": "maximum",
     "TDD_ENFORCE": "true",
-    "ORCHESTRATOR_MODEL": "claude-opus-4-8",
-    "DEFAULT_MODEL": "claude-opus-4-8",
+    "ORCHESTRATOR_MODEL": "claude-opus-5",
+    "DEFAULT_MODEL": "claude-opus-5",
     "COVERAGE_TARGET": "95"
   },
   "hooks": {

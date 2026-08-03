@@ -6,7 +6,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { asset } from "@/lib/asset-url"
 import { cn } from "@/lib/utils"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
@@ -27,8 +26,8 @@ export function MainNav({ dictionary }: MainNavProps) {
       >
         <div className="pt-0.5">
           <Image
-            src={asset("/icons/logo.png")}
-            alt="Hogwarts Logo"
+            src="/feather.png"
+            alt="balqalam Logo"
             width={18}
             height={18}
             className="dark:invert"

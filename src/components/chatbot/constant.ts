@@ -53,7 +53,7 @@ export const DEFAULT_DICTIONARY: ChatbotDictionary = {
   listening: "Listening...",
 
   // Welcomes
-  welcomeSaas: "Welcome to Hogwarts.",
+  welcomeSaas: "Welcome to balqalam.",
   welcomeSchoolTemplate: "Hi! I'm the {name} assistant",
 
   // CTA chip labels

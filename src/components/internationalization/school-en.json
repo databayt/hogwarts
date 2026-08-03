@@ -53,7 +53,7 @@
     },
     "dashboard": {
       "title": "Overview",
-      "welcome": "Welcome to Hogwarts",
+      "welcome": "Welcome to balqalam",
       "overview": "Overview",
       "quickStats": "Quick Statistics",
       "totalStudents": "Total Students",
@@ -7818,7 +7818,7 @@
     },
     "onboarding": {
       "title": "School Setup",
-      "welcome": "Welcome to Hogwarts",
+      "welcome": "Welcome to balqalam",
       "welcomeBack": "Welcome back",
       "welcomeStatic": "Welcome",
       "letsGetStarted": "Let's get your school set up",
@@ -8054,7 +8054,7 @@
       "finishSetupDescription": "Review your school setup and complete the onboarding process.",
       "clickNextToFinish": "Click next to finish and go to your dashboard.",
       "overview": {
-        "title": "It's easy to get started\non Hogwarts",
+        "title": "It's easy to get started\non balqalam",
         "getStarted": "Get started",
         "creatingSchool": "Creating school...",
         "steps": {

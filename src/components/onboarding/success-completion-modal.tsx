@@ -12,6 +12,7 @@ import React, {
 import { Check, Copy } from "lucide-react"
 import { useSession } from "next-auth/react"
 
+import { rootDomainFromLocation } from "@/lib/root-domain"
 import { CelebrationAnimation } from "@/components/atom/celebration-animation"
 import { Modal } from "@/components/atom/modal"
 
@@ -46,9 +47,9 @@ export default function SuccessCompletionModal({
     if (pw) setPassword(pw)
   }, [])
 
-  // Strip common prefixes (ed., www.) so school URL is school.databayt.org
-  const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "databayt.org"
-  const rootDomain = rawRoot.replace(/^(ed\.|www\.)/, "") || rawRoot
+  // Root domain from the current hostname so the school URL matches the root
+  // the admin onboarded on (databayt.org vs balqalam.com)
+  const rootDomain = rootDomainFromLocation()
   const fullDomain = `${schoolData.domain}.${rootDomain}`
 
   const handleCopy = useCallback(() => {

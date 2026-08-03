@@ -33,7 +33,7 @@
     "title": "ستريم - نظام إدارة التعلم",
     "description": "نظام إدارة التعلم الإلكتروني",
     "home": {
-      "badge": "أهلاً بك في هوغورتس",
+      "badge": "أهلاً بك في بالقلم",
       "title": "لوموس",
       "description": "أضئ نورًا.",
       "exploreCourses": "استكشف الدورات",
@@ -144,7 +144,7 @@
       "notes": "الملاحظات",
       "discussion": "النقاش",
       "grade": "الصف",
-      "brandName": "هوغورتس",
+      "brandName": "بالقلم",
       "more": "المزيد",
       "free": "مجاني",
       "freePreview": "معاينة مجانية",
@@ -511,7 +511,7 @@
         "private": "خاص — المقترح فقط",
         "paid": "مدفوع — يُفتح لكل مستخدم"
       },
-      "featured": "مميز (المعلم الافتراضي «Hogwarts»)",
+      "featured": "مميز (المعلم الافتراضي «بالقلم»)",
       "price": "السعر",
       "currency": "العملة",
       "cancel": "إلغاء",
@@ -525,7 +525,7 @@
       }
     },
     "instructorSwitcher": {
-      "hogwarts": "هوغورتس",
+      "hogwarts": "بالقلم",
       "yourSchool": "مدرستك",
       "partnerSchool": "مدرسة شريكة",
       "unlock": "فتح",

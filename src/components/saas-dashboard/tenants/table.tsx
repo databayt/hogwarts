@@ -9,13 +9,13 @@ import { Building2 } from "lucide-react"
 import { useDebouncedSearch } from "@/hooks/use-debounced-search"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
+import { useLocale } from "@/components/internationalization/use-locale"
 import {
   GridCard,
   GridContainer,
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/school-dashboard/shared"
-import { useLocale } from "@/components/internationalization/use-locale"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 

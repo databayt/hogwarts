@@ -4,6 +4,7 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useEffect } from "react"
 
+import { mainOriginFromLocation } from "@/lib/root-domain"
 import { Button } from "@/components/ui/button"
 
 interface TenantLoginRedirectProps {
@@ -22,11 +23,8 @@ export function TenantLoginRedirect({
       console.log("💾 Stored tenant for auth:", subdomain)
     }
 
-    // Redirect to central auth with tenant context
-    const loginUrl =
-      process.env.NODE_ENV === "production"
-        ? `https://ed.databayt.org/login?tenant=${subdomain}`
-        : `http://localhost:3000/login?tenant=${subdomain}`
+    // Redirect to central auth on the current root domain with tenant context
+    const loginUrl = `${mainOriginFromLocation()}/login?tenant=${subdomain}`
 
     console.log("🔗 TENANT LOGIN REDIRECT:", {
       subdomain,

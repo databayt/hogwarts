@@ -53,7 +53,7 @@
     },
     "dashboard": {
       "title": "نظرة عامة",
-      "welcome": "مرحباً بك في هوغورتس",
+      "welcome": "مرحباً بك في بالقلم",
       "overview": "نظرة عامة",
       "quickStats": "إحصائيات سريعة",
       "totalStudents": "إجمالي الطلاب",
@@ -8062,7 +8062,7 @@
       "finishSetupDescription": "راجع إعداد مدرستك وأكمل عملية الإعداد.",
       "clickNextToFinish": "انقر على التالي للإنهاء والذهاب إلى لوحة التحكم.",
       "overview": {
-        "title": "من السهل البدء\nفي هوغورتس",
+        "title": "من السهل البدء\nفي بالقلم",
         "getStarted": "ابدأ الآن",
         "creatingSchool": "جاري إنشاء المدرسة...",
         "steps": {

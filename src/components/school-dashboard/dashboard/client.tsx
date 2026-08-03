@@ -17,12 +17,12 @@ export function DashboardClient({ dictionary }: DashboardClientProps) {
 
   const dashboardDict = dictionary?.dashboard || {
     title: "Dashboard",
-    welcome: "Welcome to Hogwarts",
+    welcome: "Welcome to balqalam",
   }
 
   return (
     <div className="text-muted-foreground">
-      <p>{dashboardDict.welcome.replace("Hogwarts", schoolName)}</p>
+      <p>{dashboardDict.welcome.replace("balqalam", schoolName)}</p>
       <p>School Domain: {school?.domain}</p>
       <p>School ID: {school?.id}</p>
     </div>
