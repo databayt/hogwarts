@@ -163,7 +163,7 @@ export const ChatWindow = memo(function ChatWindow({
   // Inline assistant avatars use the generic robot — the chatbot is uniform
   // across every tenant, never school-branded (falls back to "AI" text if the
   // image fails to load).
-  const assistantAvatarSrc = asset("/illustrations/robot.png")
+  const assistantAvatarSrc = asset("/illustrations/robot-fill.png")
   const assistantAvatarAlt = "AI"
 
   // Auto focus input when chat opens on desktop

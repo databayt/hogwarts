@@ -162,7 +162,7 @@ export const DEFAULT_CONFIG: Required<
   locale: "en",
   dictionary: DEFAULT_DICTIONARY,
   theme: DEFAULT_THEME,
-  avatar: asset("/illustrations/robot.png"),
+  avatar: asset("/illustrations/robot-fill.png"),
   // The chatbot does not consume `api` — `actions.ts:sendMessage` calls Groq
   // directly via the AI SDK. This field is preserved as `undefined` to keep
   // the public `ChatbotConfig` type backwards-compatible.

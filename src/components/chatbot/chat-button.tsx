@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button"
 import { CHATBOT_POSITIONS } from "./constant"
 import type { ChatButtonProps } from "./type"
 
-const DEFAULT_AVATAR = asset("/illustrations/robot.png")
+// The filled robot mark, shared with the marketing site. Published under its
+// own CDN key rather than overwriting `robot.png` — that object is served
+// `immutable`, so returning visitors would keep the old outline art for a year.
+const DEFAULT_AVATAR = asset("/illustrations/robot-fill.png")
 
 export function ChatButton({
   onClick,
