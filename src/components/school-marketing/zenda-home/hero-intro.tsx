@@ -31,18 +31,29 @@ import { gsap } from "gsap"
  */
 export function HeroIntro() {
   useEffect(() => {
-    // The reference starts `.page-wrapper` at opacity 0 and reveals it here, so
-    // the settled layout never flashes before the timeline's start frame lands.
-    // We deliberately don't: `.page-wrapper` is in the shared marketing layout,
-    // so gating it would blank /about, /academic and the rest, which have no
-    // HeroIntro to turn them back on. And on a school's public homepage, "hide
-    // everything until JS says otherwise" fails badly when JS doesn't.
-    //
-    // The cost is at most one frame of settled layout before the .from() tweens
-    // apply their start state — cheap next to a blank page.
+    // Clear the gate the page renders (`.page-wrapper{opacity:0}`) so the
+    // settled layout never paints before the timeline stages its first frame.
+    // Inline style, so it beats the stylesheet rule on specificity.
+    const reveal = () => {
+      const wrapper = document.querySelector<HTMLElement>(".page-wrapper")
+      if (wrapper) wrapper.style.opacity = "1"
+    }
+
+    // The reference has only a <noscript> guard, which covers JS being off but
+    // not JS being broken. This is a school's public homepage: if anything below
+    // throws, a visitor should still get the page rather than a blank screen.
+    const failsafe = window.setTimeout(reveal, 2500)
 
     // Honour reduced-motion: skip the intro and show the settled hero.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.clearTimeout(failsafe)
+      reveal()
+      return
+    }
+
+    // Safe to reveal before building the timeline: `.from()` stages its start
+    // values synchronously on creation, so no paint happens in between.
+    reveal()
 
     const ctx = gsap.context(() => {
       if (window.innerWidth > 991) {
@@ -114,7 +125,10 @@ export function HeroIntro() {
       }
     })
 
-    return () => ctx.revert()
+    return () => {
+      window.clearTimeout(failsafe)
+      ctx.revert()
+    }
   }, [])
 
   return null

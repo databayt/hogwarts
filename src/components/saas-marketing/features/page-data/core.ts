@@ -350,119 +350,119 @@ export const corePageData: Record<string, FeaturePageData> = {
         type: "hero",
         heading: "Student Information System",
         description:
-          "Collect and oversee all student-related information in a single location, including personal details, attendance records, disciplinary incidents, accomplishments both in and outside of school, and much more.",
+          "One record per student — identity, guardians, enrollment, attendance, results and documents — created at admission and kept current until graduation. No parallel spreadsheets, no retyping the same child into five systems.",
       },
       {
         type: "role-cards",
-        heading: "What Are The Benefits Of The Student Management System?",
+        heading: "Who gets their time back",
         cards: [
           {
-            title: "For Admins",
+            title: "Admins",
             description:
-              "Simplified admission process, efficient day-to-day operations, centralized data storage facility, and advanced data security measures.",
+              "Enrollment, transfers and records handled from one directory — the filing cabinet retires and the audit trail writes itself.",
           },
           {
-            title: "For Teachers",
+            title: "Teachers",
             description:
-              "Communication with students and parents, data-driven reports on student progress, centralized grade management, and comprehensive student records.",
+              "Class lists, profiles and guardian contacts always current — walk into any lesson or parent meeting already briefed.",
           },
           {
-            title: "For Students",
+            title: "Students",
             description:
-              "Efficient communication with educators, performance monitoring, access to attendance, timetable, and examination schedules, and immediate alerts for crucial events.",
+              "Timetable, results and announcements on their own login — no more photographing the noticeboard.",
           },
           {
-            title: "For Parents",
+            title: "Parents",
             description:
-              "Monitor and trace students' progress, convenient fee payment, improved communication with instructors, and increased participation in creative programs.",
+              "Fees, attendance and progress for every child from one portal, in Arabic or English — without calling the office.",
           },
         ],
       },
       {
         type: "cta-banner",
         heading:
-          "Elevate Your Education Journey: Get Started with Our Student Information System Today!",
+          "Import your students from a spreadsheet and go live this week.",
       },
       {
         type: "feature-cards",
-        heading: "Student Information Management System Capabilities",
+        heading: "Everything the record connects to",
         description:
-          "Explore the robust capabilities from streamlined data handling to insightful analytics that transform education administration.",
+          "The student record isn't a page — it's the spine of the school. Every module below reads and writes the same record.",
         cards: [
           {
-            title: "Student Data Management",
+            title: "Admission",
             description:
-              "Store and organize all student data, including personal details, academic progress, documents, and attendance.",
+              "Applications become student records on acceptance — nothing is retyped, documents carry over.",
           },
           {
-            title: "Admission Management",
+            title: "Attendance",
             description:
-              "Automate admissions to reduce errors, manage student and parent info, customize forms, and streamline document handling.",
+              "Digital registers per period write straight to the record — streaks and patterns surface on the overview.",
           },
           {
-            title: "Library Management",
+            title: "Gradebook",
             description:
-              "Use barcode scanning to track book availability, prevent theft, identify books, and classify books by subject.",
+              "Exam and assignment results accumulate per term — report cards and transcripts generate from the same marks.",
           },
           {
-            title: "Attendance Management",
+            title: "Timetable",
             description:
-              "Automate attendance tracking with biometric or RFID, mark attendance by subject or day, and send instant alerts to parents.",
+              "Each student's week follows their section — changes propagate the moment the grid changes.",
           },
           {
-            title: "Report Generation",
+            title: "Fees & invoices",
             description:
-              "Provides diverse reports like attendance, fee pending, and exam results. Easily customize fields to match your institute's unique requirements.",
+              "Enrollment provisions the invoices; payments on any local rail reconcile to the student's account.",
           },
           {
-            title: "Online Fees Payment",
+            title: "Parent portal",
             description:
-              "Automate fee submissions, send instant alerts on pending fees to parents and students, and apply taxes and discounts.",
+              "Guardians link once and see fees, attendance and results for each of their children.",
           },
           {
-            title: "Examination Management",
+            title: "Transport",
             description:
-              "Automate the entire examination process, from scheduling exams to sending notifications and sharing results.",
+              "Route and bus assignments per student, boarding tracked per trip.",
           },
           {
-            title: "Transport Management",
+            title: "Library",
             description:
-              "Track vehicles and stops in real time with GPS integration, manage transportation fees, and ensure student safety.",
+              "Borrowing history tied to the student — returns chase themselves.",
           },
           {
-            title: "Alumni Management",
+            title: "Stream LMS",
             description:
-              "Facilitate student-alumni connections via SMS or email, enabling alumni to mentor students for future challenges.",
+              "Course enrollment and progress live on the same record as everything else.",
           },
           {
-            title: "Hostel Management",
+            title: "Documents",
             description:
-              "Streamline room allocation, fees, and security, and offer a comprehensive view of campus hostels.",
+              "Report cards, transcripts and letters generated from live data — bilingual templates included.",
           },
           {
-            title: "Communication System",
+            title: "Announcements",
             description:
-              "Improve communication between parents, teachers, and students by integrating SMS and email with customizable messages.",
+              "School, grade or class-targeted — students and guardians see what concerns them.",
           },
           {
-            title: "Mobile App",
+            title: "Arabic-first",
             description:
-              "Access all features from anywhere, anytime. View timetable, mark attendance, check exam results, and interact with teachers.",
+              "Every screen designed right-to-left first — English is the translation, not the other way around.",
           },
         ],
       },
       {
         type: "checklist",
-        heading: "Why Choose Our Student Information Management System?",
+        heading: "Why schools pick this student system",
         items: [
-          { text: "Open Source" },
-          { text: "Comprehensive Feature Set" },
-          { text: "User-Friendly Interface" },
-          { text: "Customization" },
-          { text: "Data Security" },
-          { text: "Cost-Effective" },
-          { text: "Mobile Accessibility" },
-          { text: "Community Building" },
+          { text: "Free for your first 200 students" },
+          { text: "Arabic-first, RTL-native interface" },
+          { text: "Import from a spreadsheet in minutes" },
+          { text: "Export everything to CSV or JSON, anytime" },
+          { text: "Role-based access for 8 school roles" },
+          { text: "Local payment rails, one ledger" },
+          { text: "Works on any device — no app install required" },
+          { text: "Bilingual report cards and transcripts" },
         ],
       },
     ],

@@ -192,3 +192,41 @@ export interface FeaturePageData {
   sections: FeaturePageSection[]
   relatedFeatures?: string[]
 }
+
+// ─── Showcase (zenda Services–style sticky deck) ───
+
+export interface ShowcaseCard {
+  /** Pill label, e.g. "DIRECTORY". */
+  tag: string
+  /** Lucide icon name resolved via getIconComponent. */
+  icon: string
+  title: string
+  description: string
+  /** Product screenshot under public/, e.g. /features/shots/students.png. */
+  image: string
+  width: number
+  height: number
+}
+
+export interface ShowcaseData {
+  /** Small tag above the heading, e.g. the feature title. */
+  eyebrow: string
+  /** Section heading; "\n" splits lines. */
+  heading: string
+  cards: ShowcaseCard[]
+}
+
+// ─── Why band (apple why-Mac–style gallery) ───
+
+export interface WhyCard {
+  id: string
+  topic: string
+  headline: string
+  body: string
+  /** Product screenshot under public/. */
+  image: string
+  /** Locale-relative href, e.g. "/pricing" → `/${lang}/pricing`. */
+  href: string
+  /** CSS object-position for the cropped image; defaults to "center top". */
+  objectPosition?: string
+}

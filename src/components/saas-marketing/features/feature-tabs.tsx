@@ -75,9 +75,16 @@ const FEATURE_IMAGES: Record<string, string> = {
   "microsoft-teams": "/feature/teams.png",
   zoom: "/feature/zoom.png",
   "whatsapp-integration": "/feature/phone.png", // "WhatsApp"
-  // AI
-  "ai-powered": "/feature/robot.png",
+  // AI — the same filled robot mark the chatbot FAB/avatar uses
+  // (public/illustrations/robot-fill.png), copied into /feature/ so the grid
+  // keeps serving icons locally instead of through the flat CDN namespace.
+  "ai-powered": "/feature/robot-fill.png",
 }
+
+// Full-color brand marks. The monochrome glyphs are inverted in dark mode so
+// they stay visible on a dark card; doing that to a brand logo mangles its
+// colors, so these opt out of the dark filters entirely.
+const COLOR_ICONS = new Set<string>(["google-meet"])
 
 // Icons whose artwork reads visually heavier than the rest — rendered one
 // step smaller (28px vs the default 32px) so the grid looks balanced.
@@ -174,7 +181,10 @@ export default function FeatureTabs({ lang }: FeatureTabsProps) {
                     alt={title}
                     width={dim}
                     height={dim}
-                    className="dark:brightness-90 dark:contrast-125 dark:invert"
+                    className={cn(
+                      !COLOR_ICONS.has(feature.id) &&
+                        "dark:brightness-90 dark:contrast-125 dark:invert"
+                    )}
                   />
                 ) : (
                   <Icon />

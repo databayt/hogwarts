@@ -10041,7 +10041,16 @@
         "submit": "تقديم"
       },
       "sections": {
+        "stats": {
+          "free": "مجاناً",
+          "freeLabel": "التقديم بلا أي رسوم",
+          "minutes": "٢٠ دقيقة",
+          "minutesLabel": "لإكمال الطلب",
+          "weeks": "أسبوعان",
+          "weeksLabel": "كحد أقصى لتلقي الرد"
+        },
         "process": {
+          "eyebrow": "الخطوات",
           "title": "عملية القبول",
           "subtitle": "أربع خطوات بسيطة للانضمام إلى مجتمعنا التعليمي",
           "submitApplication": "تقديم الطلب",
@@ -10054,6 +10063,7 @@
           "joinFamilyDesc": "أكمل التسجيل وابدأ رحلتك التعليمية معنا"
         },
         "requirements": {
+          "eyebrow": "ما تحتاجه",
           "title": "متطلبات القبول",
           "academicRecords": "السجلات الأكاديمية",
           "officialTranscripts": "الشهادات الرسمية",
@@ -10066,9 +10076,10 @@
           "applicationForms": "نماذج الطلب",
           "completedForm": "استمارة التقديم المكتملة",
           "parentQuestionnaire": "استبيان الوالدين",
-          "applicationFee": "رسوم التقديم"
+          "recentPhotograph": "صورة شخصية حديثة"
         },
         "values": {
+          "eyebrow": "لماذا نحن",
           "title": "لماذا تختارنا",
           "academicExcellence": "التميز الأكاديمي",
           "globalPerspective": "منظور عالمي",
@@ -10076,6 +10087,7 @@
           "characterDevelopment": "بناء الشخصية"
         },
         "dates": {
+          "eyebrow": "الجدول الزمني",
           "title": "التواريخ المهمة",
           "sept1": "1 سبتمبر",
           "applicationsOpen": "بدء التقديم",

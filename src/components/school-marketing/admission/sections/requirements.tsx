@@ -50,34 +50,37 @@ export function AdmissionRequirements({
       items: [
         dict.completedForm || "Completed application form",
         dict.parentQuestionnaire || "Parent questionnaire",
-        dict.applicationFee || "Application fee",
+        // Applying is always free -- never list a fee here.
+        dict.recentPhotograph || "Recent photograph",
       ],
     },
   ]
 
   return (
-    <SectionContainer className="bg-muted/30">
-      <h2 className="font-heading mb-16 text-3xl font-bold md:text-4xl">
-        {dict.title || "Admission Requirements"}
-      </h2>
+    <SectionContainer>
+      <div className="mb-16 text-center">
+        <p className="eyebrow band-muted mb-3">
+          {dict.eyebrow || "What you need"}
+        </p>
+        <h2 className="font-heading text-3xl font-bold text-neutral-900 md:text-4xl">
+          {dict.title || "Admission Requirements"}
+        </h2>
+      </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         {categories.map((category, index) => (
-          <div
-            key={index}
-            className="bg-card border-border rounded-lg border p-6"
-          >
-            <category.icon className="text-primary mb-4 h-8 w-8" />
-            <h3 className="font-heading mb-4 text-lg font-semibold">
+          <div key={index} className="rounded-3xl bg-white p-6 md:p-8">
+            <category.icon className="mb-4 h-8 w-8 text-neutral-900" />
+            <h3 className="font-heading mb-4 text-lg font-semibold text-neutral-900">
               {category.title}
             </h3>
             <ul className="space-y-3">
               {category.items.map((item, i) => (
                 <li
                   key={i}
-                  className="text-muted-foreground flex items-start gap-3 text-sm"
+                  className="flex items-start gap-3 text-sm text-neutral-600"
                 >
-                  <span className="bg-primary mt-2 h-1.5 w-1.5 shrink-0 rounded-full" />
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-900" />
                   {item}
                 </li>
               ))}

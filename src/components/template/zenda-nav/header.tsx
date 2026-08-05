@@ -143,9 +143,6 @@ export function ZendaNav({
 
   const navRef = useRef<HTMLElement>(null)
   const isActiveRef = useRef(isActive)
-  // True after the for-schools hero intro: the nav is parked above the fold and the
-  // page rests nudged down by a nav height, until the first scroll-up reveals it.
-  const tuckedRef = useRef(false)
 
   const isActiveLink = (href: string) => {
     // Normalize path by stripping the locale prefix (e.g. /en/for-schools -> /for-schools)
@@ -183,10 +180,13 @@ export function ZendaNav({
   // scrolling up — the same GSAP hide/show (y:-100% / y:0%, 0.4s power2.out) that
   // zenda.com uses. Skipped while the mobile menu is open so the menu can't shift.
   //
-  // Plus the for-schools "tuck": the hero fires `zenda:hero-mounted` as it mounts, and
-  // we INSTANTLY park the page one nav-height down so it *loads* with the hero flush at
-  // the top edge and the nav just above the fold. The splash overlay hides the jump. It
-  // stays parked until the first scroll-up brings the nav back, then normal behaviour resumes.
+  // The reference also listens for a `zenda:hero-mounted` event and responds with
+  // `window.scrollTo(0, navHeight)` — its for-schools page loads deliberately
+  // nudged down so that hero sits flush at the top edge. That is dropped here:
+  // we never ported for-schools, so nothing dispatches the event, and the
+  // homepage must open at the very top with the logo centred. Keeping a dead
+  // listener whose whole job is to scroll the page down is a landmine, not
+  // fidelity.
   useEffect(() => {
     const nav = navRef.current
     if (!nav) return
@@ -198,48 +198,21 @@ export function ZendaNav({
       ticking = true
       requestAnimationFrame(() => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop
-        if (tuckedRef.current) {
-          // Parked above the fold: hold until the user scrolls up, then reveal once.
-          if (scrollTop < lastScrollTop) {
-            tuckedRef.current = false
-            gsap.to(nav, {
-              y: "0%",
-              duration: 0.4,
-              ease: "power2.out",
-              overwrite: true,
-            })
-          } else {
-            gsap.set(nav, { y: "-101%" }) // fully off (avoid a sub-pixel sliver)
-          }
-        } else {
-          const hide =
-            !isActiveRef.current && scrollTop > lastScrollTop && scrollTop > 100
-          gsap.to(nav, {
-            y: hide ? "-100%" : "0%",
-            duration: 0.4,
-            ease: "power2.out",
-            overwrite: true,
-          })
-        }
+        const hide =
+          !isActiveRef.current && scrollTop > lastScrollTop && scrollTop > 100
+        gsap.to(nav, {
+          y: hide ? "-100%" : "0%",
+          duration: 0.4,
+          ease: "power2.out",
+          overwrite: true,
+        })
         lastScrollTop = scrollTop <= 0 ? 0 : scrollTop
         ticking = false
       })
     }
-    const onHeroMounted = () => {
-      const h = nav.offsetHeight || 80
-      tuckedRef.current = true
-      gsap.set(nav, { y: "-101%" }) // park fully above the fold (no sub-pixel sliver)
-      // Load the page already scrolled down by one nav height (instant, not smooth) so
-      // the hero renders flush at the top edge. lastScrollTop tracks it so the next
-      // upward scroll is detected and reveals the nav.
-      window.scrollTo(0, h)
-      lastScrollTop = h
-    }
     window.addEventListener("scroll", onScroll, { passive: true })
-    window.addEventListener("zenda:hero-mounted", onHeroMounted)
     return () => {
       window.removeEventListener("scroll", onScroll)
-      window.removeEventListener("zenda:hero-mounted", onHeroMounted)
       gsap.killTweensOf(nav)
     }
   }, [])

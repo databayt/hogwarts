@@ -10033,7 +10033,16 @@
         "submit": "Submit"
       },
       "sections": {
+        "stats": {
+          "free": "Free",
+          "freeLabel": "to apply — no application fee",
+          "minutes": "20 min",
+          "minutesLabel": "to complete the application",
+          "weeks": "2 weeks",
+          "weeksLabel": "at most to receive a decision"
+        },
         "process": {
+          "eyebrow": "How it works",
           "title": "Admission Process",
           "subtitle": "Four simple steps to join our educational community",
           "submitApplication": "Submit Application",
@@ -10046,6 +10055,7 @@
           "joinFamilyDesc": "Complete enrollment and begin your educational journey with us"
         },
         "requirements": {
+          "eyebrow": "What you need",
           "title": "Admission Requirements",
           "academicRecords": "Academic Records",
           "officialTranscripts": "Official transcripts",
@@ -10058,9 +10068,10 @@
           "applicationForms": "Application Forms",
           "completedForm": "Completed application form",
           "parentQuestionnaire": "Parent questionnaire",
-          "applicationFee": "Application fee"
+          "recentPhotograph": "Recent photograph"
         },
         "values": {
+          "eyebrow": "Why us",
           "title": "Why Choose Us",
           "academicExcellence": "Academic Excellence",
           "globalPerspective": "Global Perspective",
@@ -10068,6 +10079,7 @@
           "characterDevelopment": "Character Development"
         },
         "dates": {
+          "eyebrow": "Timeline",
           "title": "Key Dates",
           "sept1": "Sept 1",
           "applicationsOpen": "Applications Open",

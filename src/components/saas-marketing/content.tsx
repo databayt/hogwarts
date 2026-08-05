@@ -5,10 +5,11 @@ import type { Locale } from "@/components/internationalization/config"
 // import { Gallery } from "@/components/landing/gallery";
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-// import Wizard from "@/components/wizard";
-import { DreamSection } from "./dream-section"
 // import Automated from "@/components/automated/featured";
 // import Codebase from "@/components/landing/codebase";
+import DownloadApp from "./download-app"
+// import Wizard from "@/components/wizard";
+import { DreamSection } from "./dream-section"
 import FAQs from "./faqs"
 import Hero from "./hero"
 import LetsWorkTogether from "./lets-work-together"
@@ -49,6 +50,7 @@ export default function HomeContent(props: Props) {
           not the repo or donations. Components kept in the block. */}
       <FAQs dictionary={dictionary} lang={lang} />
       <LetsWorkTogether dictionary={dictionary} lang={lang} />
+      <DownloadApp dictionary={dictionary} lang={lang} />
     </main>
   )
 }

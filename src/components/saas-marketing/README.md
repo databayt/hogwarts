@@ -60,12 +60,14 @@ src/components/saas-marketing/
 │   │   ├── cta-banner-section.tsx
 │   │   ├── section-heading.tsx
 │   │   ├── related-features.tsx    # Related-feature cards (reuses the `Card` atom + Glyph)
+│   │   ├── feature-showcase.tsx    # zenda Services deck per feature (GSAP sticky cards + real screenshots, .zenda-clone band)
+│   │   ├── why-databayt.tsx        # apple why-Mac gallery (battle-card deck, paddle nav) on every detail page
 │   │   ├── bottom-cta.tsx          # Clean centered closing CTA (border-top, dual buttons)
 │   │   ├── info-card.tsx           # Clean content card mirroring the `Card` atom (Glyph + title + desc)
 │   │   ├── glyph.tsx               # 'use client' bare glyph: real /feature PNG (dark:invert) else Lucide
 │   │   ├── card-art.ts             # title→real-PNG keyword map (artForTitle), server-safe
 │   │   └── card-icons.ts           # title→Lucide-name keyword map (iconNameForTitle) — Glyph fallback
-│   ├── imported/                   # Static zenda/apple sections rendered below the detail page (to tweak later)
+│   ├── imported/                   # zenda/apple demo sections — UNREFERENCED since 2026-08-05 (superseded by feature-showcase + why-databayt)
 │   │   ├── index.tsx               # <ImportedSections /> — stacks the six
 │   │   ├── how-it-works.tsx        # zenda "Transform the way you pay fees" + $2Bn/150k/4.8
 │   │   ├── parents-voice.tsx       # zenda testimonials (static grid)
@@ -74,6 +76,7 @@ src/components/saas-marketing/
 │   │   ├── apple-store.tsx         # apple Store hero + product rail (public/store/nav/*.png)
 │   │   └── why-apple-mac.tsx       # apple "Why Apple is the best place to buy Mac" value props
 │   └── page-data/                  # Per-feature page content
+│       ├── showcase/               # Showcase decks (24 features) + WHY_CARDS — screenshots in public/features/shots/
 │       ├── index.ts
 │       ├── core.ts
 │       ├── essential.ts

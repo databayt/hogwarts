@@ -10,12 +10,14 @@ import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 import { CATEGORIES, FEATURE_DETAILS, FEATURES } from "./constants"
-import { ImportedSections } from "./imported"
 import { FEATURE_PAGE_DATA } from "./page-data"
+import { FEATURE_SHOWCASE } from "./page-data/showcase"
 import { BottomCta } from "./sections/bottom-cta"
+import { FeatureShowcase } from "./sections/feature-showcase"
 import { Glyph } from "./sections/glyph"
 import { RelatedFeatures } from "./sections/related-features"
 import { SectionRenderer } from "./sections/section-renderer"
+import { WhyDatabayt } from "./sections/why-databayt"
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -79,14 +81,32 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
   )
 
   const pageData = FEATURE_PAGE_DATA[id]
+  const showcase = FEATURE_SHOWCASE[id]
+  const showcaseBlock = showcase ? <FeatureShowcase data={showcase} /> : null
+  const whyBand = <WhyDatabayt lang={lang} />
 
   // ─── Section-based rendering ───
   if (pageData) {
+    // The showcase deck slots right after the hero, before supporting
+    // sections — mirroring zenda's for-schools page order.
+    const heroCount = pageData.sections[0]?.type === "hero" ? 1 : 0
+
     return (
       <div dir={isRTL ? "rtl" : "ltr"} className="py-12 md:py-16">
         {header}
 
-        {pageData.sections.map((section, i) => (
+        {pageData.sections.slice(0, heroCount).map((section, i) => (
+          <SectionRenderer
+            key={i}
+            section={section}
+            lang={lang}
+            ctaLabel={t.ctaGetStarted}
+          />
+        ))}
+
+        {showcaseBlock}
+
+        {pageData.sections.slice(heroCount).map((section, i) => (
           <SectionRenderer
             key={i}
             section={section}
@@ -101,9 +121,9 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
           heading={t.relatedFeatures}
         />
 
-        {bottomCta}
+        {whyBand}
 
-        <ImportedSections />
+        {bottomCta}
       </div>
     )
   }
@@ -124,6 +144,8 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
           {details?.longDescription || feature.description}
         </p>
       </section>
+
+      {showcaseBlock}
 
       {details && (
         <>
@@ -178,9 +200,9 @@ export default function FeatureDetails({ dictionary, lang, id }: Props) {
         </>
       )}
 
-      {bottomCta}
+      {whyBand}
 
-      <ImportedSections />
+      {bottomCta}
     </div>
   )
 }

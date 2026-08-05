@@ -829,6 +829,15 @@
       "rateLimited": "محاولات كثيرة جداً. حاول مرة أخرى بعد ساعة.",
       "validationFailed": "يرجى التحقق من الحقول."
     },
+    "downloadApp": {
+      "title": "حمّل تطبيق الجوال",
+      "description": "المنصة كاملة في جيب الإدارة والمعلمين والطلاب وأولياء الأمور.",
+      "appStoreLead": "حمّله من",
+      "appStore": "App Store",
+      "googlePlayLead": "احصل عليه من",
+      "googlePlay": "Google Play",
+      "comingSoon": "قريباً على iOS و Android"
+    },
     "faqs": {
       "title": "الأسئلة الشائعة",
       "titleBreak": "الأسئلة\nالشائعة",

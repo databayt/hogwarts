@@ -9,7 +9,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 import { getIconComponent } from "../icon-map"
-import { artForTitle } from "./card-art"
+import { artForTitle, isColorArt } from "./card-art"
 import { iconNameForTitle } from "./card-icons"
 
 interface Props {
@@ -37,7 +37,11 @@ export function Glyph({ title, size = 36, className }: Props) {
         width={size}
         height={size}
         aria-hidden="true"
-        className={cn("object-contain dark:invert", className)}
+        className={cn(
+          "object-contain",
+          !isColorArt(art) && "dark:invert",
+          className
+        )}
       />
     )
   }

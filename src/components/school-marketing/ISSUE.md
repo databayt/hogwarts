@@ -66,6 +66,19 @@ last_audited: 2026-08-03
 - [x] Application status banner
 - [x] AdmissionCTA + AdmissionDates rendered on /admissions
 - [x] New-lead notifications to ADMIN+STAFF on inquiry/tour booking
+- [x] **`/admissions` restyled to the zenda surface language (2026-08-05)** —
+      page now flows seamlessly between the zenda nav and footer: full-bleed
+      cream (`.band-cream`, byte-equal to zenda's `#f5f4ee`), centered
+      eyebrow + headline headers, flat white `rounded-3xl` cards, charcoal
+      date badges and a `rounded-[2.5rem]` charcoal CTA panel
+      (`.band-charcoal` = zenda's rendered `#383940`). Hero kept, re-seated
+      on cream. New zenda-style stat trio (Free / 20 min / 2 weeks — the
+      hero's own promises, nothing fabricated). Native Tailwind + dictionary
+      keys, NOT `.zenda-clone` markup, so ar/RTL is fully preserved. Fixed:
+      double footer (old map footer removed; layout's zenda footer serves),
+      invisible white-on-white CTA outline button, and the requirements list
+      claiming an "Application fee" (applying is always free — key replaced
+      with `recentPhotograph` in en+ar).
 
 ### Admission Actions
 
@@ -120,8 +133,15 @@ Active step order: **attachments → personal → location → academic → fees
 
 ### About Page
 
-- [x] Content page
-- [x] Config
+- [x] **Replaced by a verbatim zenda.com/about-us clone (2026-08-05)** — the
+      about route now renders `zenda-about/` (10 sections: PARENT/SCHOOL flip-card
+      hero, what-we-do char-reveal, growth-journey timeline, team marquee, makers,
+      investors, mission, values accordion, trusted logos, events swiper; 4 GSAP
+      drivers + 1 Swiper) under the same `.zenda-clone` scope + `ZendaRootScale`
+      shell as the homepage. Old `about/content.tsx` + `config.ts` deleted (were
+      orphaned — only the route imported them). Assets at `public/images/about/`
+      (58 files, 16MB), same `/images/about/…` paths as zenda. English/LTR only,
+      like the homepage clone; `/ar/about` renders the same LTR page.
 
 ### Testing
 
@@ -227,11 +247,34 @@ which the test browser sets — the intro has to be measured with
 - [x] **The hamburger sat alone in an otherwise empty bar** through the splash.
       Given a `hero-link` attribute so it joins the staggered nav fade-in.
 
-Verified after: the intro matches zenda frame for frame — video hold
-`62,44,1290` and heading `336` are exact, and the settled first screen is
-box-for-box identical (nav, hero section, heading, paragraph, buttons, video).
+- [x] **The settled layout painted for ~300ms before the splash.** The reference
+      holds its whole page at `opacity: 0` until the timeline has staged its
+      first frame; removing `LoadingWrapper` left nothing doing that job, so the
+      hero rendered settled and then visibly snapped back to the centred hold.
+      The gate is now a rule rendered from `page.tsx`
+      (`.page-wrapper{opacity:0}` + a `<noscript>` override), so it exists on
+      the homepage only — the shared layout owns `.page-wrapper`, and the
+      sibling pages have no `HeroIntro` to turn it back on. `HeroIntro` clears
+      it, with a 2.5s failsafe behind that so a thrown error can't leave a blank
+      public homepage.
+- [x] **Removed the scroll-tuck listener from the nav.** The reference answers
+      `zenda:hero-mounted` with `window.scrollTo(0, navHeight)` so its
+      for-schools hero loads flush to the top edge. We never ported that page,
+      so nothing dispatched it — but a dead listener whose only job is to scroll
+      the page down is a landmine on a homepage that must open at the very top.
+
+Verified after: the whole sequence matches the reference — page held invisible,
+then revealed already in the centred splash (logo dead centre at 720, video
+`62,44,1290` big and centred, nav empty), ~1.6s hold, then the split (logo
+travelling out, video scaling `1097 → 977 → 930 → 922`, nav links staggering
+`0.65 → 0.95 → 1`), settling to a first screen that is box-for-box identical to
+zenda. `scrollY` is 0 across every sampled frame and the nav never displaces.
 Only the nav-link width differs, because "About" is a shorter word than "For
 schools".
+
+Checked alongside: mobile (390px) settles correctly, `prefers-reduced-motion`
+reveals the page instead of blanking it, and `/about`, `/academic`,
+`/admissions` never inherit the gate.
 
 Known and left alone: the chatbot bubble sits over the bottom-right of the
 first screen; zenda has nothing there. It is a product feature, not clone drift.

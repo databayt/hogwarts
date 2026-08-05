@@ -57,17 +57,29 @@ export default async function Admission({ params }: AdmissionProps) {
 
   // Honor the school's public-portal master switch (default on when unset).
   const flags = await getAdmissionPortalFlags(school.id)
+
+  /*
+   * The zenda chrome (nav above, footer below) paints its cream edge to edge
+   * and this page must flow seamlessly between them. The content sits inside
+   * `.marketing-container` (max-width + gutters), so a background on the
+   * content itself can never reach the viewport edge -- paint `.main-wrapper`
+   * instead, route-scoped the same way the homepage scopes its opacity gate.
+   * Value must equal zenda's `.bg-beige-home` cream (see .band-cream).
+   */
+  const creamGate = <style>{`.main-wrapper{background-color:#f5f4ee}`}</style>
+
   if (!flags.enablePublicPortal) {
     return (
       <div
-        className="school-content marketing-container"
+        className="school-content marketing-container band-cream"
         data-school-id={school.id}
       >
+        {creamGate}
         <div className="mx-auto max-w-2xl px-4 py-24 text-center">
           <h1 className="mb-3 text-2xl font-semibold">
             {lang === "ar" ? "القبول مغلق حالياً" : "Admissions are closed"}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="band-muted">
             {lang === "ar"
               ? "بوابة القبول غير متاحة في الوقت الحالي. يرجى التحقق لاحقاً."
               : "The admissions portal is not open right now. Please check back later."}
@@ -83,6 +95,7 @@ export default async function Admission({ params }: AdmissionProps) {
       data-school-id={school.id}
       data-subdomain={subdomain}
     >
+      {creamGate}
       <AdmissionContent school={school} dictionary={dictionary} lang={lang} />
     </div>
   )

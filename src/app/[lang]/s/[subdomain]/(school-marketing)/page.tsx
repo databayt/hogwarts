@@ -74,6 +74,23 @@ export default async function Site({ params }: SiteProps) {
         the page and animates the nav's logo and links alongside the hero.
       */}
       <ZendaRootScale />
+      {/*
+        Hold the page invisible until the intro has staged its first frame.
+        Without it the browser paints the settled layout first and the hero
+        visibly snaps back to the centred splash a beat later -- measured at
+        ~300ms of wrong-frame, not the single frame it might sound like.
+
+        The reference does this with `style={{opacity: 0}}` on its own
+        `.page-wrapper`. Ours lives in the shared layout, so the gate is a rule
+        rendered from the page instead: it exists on this route only, and the
+        sibling marketing pages -- which have no HeroIntro to turn them back on
+        -- never see it. Server-rendered, so it applies from the very first
+        paint. <HeroIntro/> clears it, with a failsafe timer behind that.
+      */}
+      <style>{`.page-wrapper{opacity:0}`}</style>
+      <noscript>
+        <style>{`.page-wrapper{opacity:1!important}`}</style>
+      </noscript>
       <div className="zenda-clone" dir="ltr">
         <div className="body-v2 bg-beige-home">
           <HomeContent lang={lang} />

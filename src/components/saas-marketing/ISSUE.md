@@ -30,6 +30,8 @@ last_audited: 2026-05-25
 - [x] Server/client component separation
 - [x] Feature page data for 10 categories
 - [x] Section renderer system (9 section types)
+- [x] Per-feature showcase decks with real product screenshots (2026-08-05: 24 features, zenda Services pattern)
+- [x] Why-Databayt value-props band on every detail page (apple why-Mac pattern)
 - [ ] Typography compliance (semantic HTML, no hardcoded text classes)
 - [ ] Remove/archive legacy backup-SDG folder
 - [ ] Consistent file naming (kebab-case)
@@ -48,6 +50,8 @@ None
 
 ### P2 -- Medium
 
+- Feature detail body copy (page-data + showcase decks) is English-only; the `student` entry was rewritten in the honest/time-saved voice (2026-08-05) but the other 30 page-data entries still carry OpenEduCat-style copy with unshipped claims (RFID, GPS, hostel) — rewrite them the same way
+- No showcase decks yet for: conference trio (google-meet/zoom/teams, demo has no meetings), whatsapp-integration (demo disconnected), sales, discussion, assignment, mobile-application — capture screens once demo data exists
 - Large static data in client components could move to server components
 - Missing lazy loading for images in some sections
 - Blog system needs MDX support, categories, tags, and author profiles

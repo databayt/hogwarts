@@ -823,6 +823,15 @@
       "rateLimited": "Too many requests. Please try again in an hour.",
       "validationFailed": "Please check the form for errors."
     },
+    "downloadApp": {
+      "title": "Get the mobile app",
+      "description": "The whole platform in every pocket — for admins, teachers, students and parents.",
+      "appStoreLead": "Download on the",
+      "appStore": "App Store",
+      "googlePlayLead": "Get it on",
+      "googlePlay": "Google Play",
+      "comingSoon": "Coming soon to iOS and Android"
+    },
     "faqs": {
       "title": "Frequently Asked Questions",
       "titleBreak": "Frequently\nAsked\nQuestions",

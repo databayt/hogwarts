@@ -23,17 +23,19 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
   // Parse title to handle newlines
   const titleParts = t?.title?.split("\n") || ["Hogwarts", "letter"]
 
+  // 5.5rem ~= the zenda nav's rendered height (84.5px). Colors are pinned to
+  // the light scheme -- the page lives on the zenda cream, which never flips.
   return (
-    <section id="hero" className="bg-background min-h-[calc(100vh-3.5rem)]">
-      <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
+    <section id="hero" className="min-h-[calc(100svh-5.5rem)]">
+      <div className="grid min-h-[calc(100svh-5.5rem)] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
         {/* Left: Content */}
         <div className="space-y-6 py-12 lg:py-0">
-          <h1 className="font-heading text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
+          <h1 className="font-heading text-5xl font-black tracking-tight text-neutral-900 sm:text-6xl lg:text-7xl xl:text-8xl">
             <span className="block">{titleParts[0]}</span>
             <span className="block">{titleParts[1]}</span>
           </h1>
 
-          <p className="text-muted-foreground max-w-md text-lg">
+          <p className="band-muted max-w-md text-lg">
             {t?.subtitle ||
               "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office."}
           </p>
@@ -41,7 +43,10 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href={`/${lang}/application`}
-              className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "band-charcoal w-full hover:bg-neutral-700 sm:w-auto"
+              )}
             >
               {t?.startApplication || "Start application"}
             </Link>
@@ -49,7 +54,7 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
               href={`/${lang}/admissions`}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "group w-full sm:w-auto"
+                "group w-full border-neutral-900/15 bg-transparent text-neutral-900 hover:bg-white hover:text-neutral-900 sm:w-auto"
               )}
             >
               {t?.learnMore || "Learn more"}

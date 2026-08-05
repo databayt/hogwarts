@@ -190,15 +190,34 @@
     color: var(--band-sand-foreground);
   }
 
+  /* Zenda-clone surfaces. The tenant chrome (zenda nav + footer) paints
+   * zenda's cream and never flips dark, so a page sitting between them must
+   * match it byte-exact or a seam shows at the nav boundary. Literal hex,
+   * deliberately outside the OKLCH token system and with no .dark override --
+   * these must equal the values in zenda-clone.css / zenda-shell.css.
+   * #f5f4ee = zenda .bg-beige-home; #383940 = zenda's dark panel (.cta_wrap
+   * as rendered). */
+  .band-cream {
+    background-color: #f5f4ee;
+    color: #333333; /* zenda --_primitives---colors--neutral */
+  }
+
+  .band-charcoal {
+    background-color: #383940;
+    color: #ffffff;
+  }
+
   /* Muted text that stays legible on a colored band -- the global
    * --muted-foreground assumes the page background and goes invisible on ink. */
   .band-ink .band-muted,
-  .band-cool .band-muted {
+  .band-cool .band-muted,
+  .band-charcoal .band-muted {
     color: color-mix(in oklch, currentColor 72%, transparent);
   }
 
   .band-warm .band-muted,
-  .band-sand .band-muted {
+  .band-sand .band-muted,
+  .band-cream .band-muted {
     color: color-mix(in oklch, currentColor 78%, transparent);
   }
 

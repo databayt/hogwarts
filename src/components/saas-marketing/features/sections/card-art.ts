@@ -80,7 +80,7 @@ const RULES: ReadonlyArray<readonly [keyword: string, src: string]> = [
   ["zoom", "/feature/zoom.png"],
   ["teams", "/feature/teams.png"],
   ["whatsapp", "/feature/phone.png"],
-  ["ai", "/feature/robot.png"],
+  ["ai", "/feature/robot-fill.png"],
   ["support", "/feature/headphone.png"],
   ["help", "/feature/headphone.png"],
   ["login", "/feature/login.png"],
@@ -89,6 +89,17 @@ const RULES: ReadonlyArray<readonly [keyword: string, src: string]> = [
   ["vote", "/feature/poll.png"],
   ["survey", "/feature/poll.png"],
 ]
+
+/**
+ * Full-color brand marks among the glyphs above. Monochrome art is inverted in
+ * dark mode; a colored logo must not be, so callers check this first.
+ */
+const COLOR_ART = new Set<string>(["/feature/meet.png"])
+
+/** True when the glyph is a brand logo that must render un-inverted. */
+export function isColorArt(src: string): boolean {
+  return COLOR_ART.has(src)
+}
 
 /** Resolve a real glyph path for a card title, or null to fall back to Lucide. */
 export function artForTitle(title: string): string | null {
