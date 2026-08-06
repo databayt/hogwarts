@@ -1,0 +1,32 @@
+{
+  "brand": "hogwarts",
+  "slug": "attendance-one-tap",
+  "block": "attendance",
+  "title": { "ar": "الحضور بنقرة", "en": "Attendance in one tap" },
+  "slides": [
+    {
+      "type": "cover",
+      "eyebrow": { "ar": "ed.databayt.org", "en": "ed.databayt.org" },
+      "headline": {
+        "ar": "الصف كله في نقرة واحدة",
+        "en": "The whole class, in one tap"
+      },
+      "sub": {
+        "ar": "المعلم يرصد الصف من الشاشة، والكشف يجمع نفسه في آخر الشهر.",
+        "en": "A teacher marks the class on screen, and the monthly register adds itself up."
+      },
+      "theme": "ivory",
+      "art": "People-Motion-01.svg"
+    }
+  ],
+  "captions": {
+    "base": {
+      "ar": "الصف كله في نقرة واحدة — وأول الحصة يعود إلى الدرس.",
+      "en": "The whole class in one tap — and the start of the lesson goes back to the lesson."
+    },
+    "hashtags": ["#هوجورتس"],
+    "link": "https://ed.databayt.org"
+  },
+  "createdAt": "2026-08-06",
+  "status": "draft"
+}
