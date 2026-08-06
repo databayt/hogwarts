@@ -1,0 +1,627 @@
+---
+title: Competitor FAQ
+description: Every question and fear a school brings to an evaluation — cost, breach, residency, lock-in, migration, adoption, AI — with the public answer and how to handle it honestly.
+category: business
+---
+
+A school choosing a platform is not shopping for features. It is managing risk — of losing data, of losing money, of looking foolish in front of a board, of picking a vendor that disappears. This page catalogues every one of those fears, harvested from competitors' own FAQ pages, from buyer's-guide questionnaires the category tells schools to use against vendors, and from published research on why school technology projects fail.
+
+Each entry has a **public answer** — polished, ready for the website or a proposal — followed by an internal note giving the real fear underneath, where we are genuinely exposed, and the counter that works.
+
+<Callout type="warning" title="Read this before quoting anything here">
+  The internal notes name real gaps. They are written to be used in a call, not
+  published. Never paste a `<Callout>` block into a proposal, a website page, or
+  anything a prospect sees.
+</Callout>
+
+Vendor profiles are in [Competitors](/docs/competitors); how the category markets itself is in the [landing-page teardown](/docs/competitors/landing-page).
+
+## Cost and commercial risk
+
+### What does it actually cost?
+
+Free for up to 100 students, permanently — not a trial. Above that, Pro is $1.50 per enrolled student per month with a $30 monthly minimum, and Enterprise is $1.00 per student per month, custom-quoted for networks above 1,000 students. Billing annually takes 20% off both. Canonical tiers live in [Business model](/docs/business-model).
+
+### What are the hidden costs?
+
+There are none to disclose: no setup fee, no implementation fee, no per-module upsell, no charge for adding teachers or parents. The price you calculate is the price you pay.
+
+<Callout
+  type="warning"
+  title="Internal — this is the strongest single answer we have"
+>
+  The category's own buyer's guides tell schools to budget **implementation at
+  5–20% of first-year licence, training at $1,000–$10,000, and data migration at
+  $2,000–$15,000** on top of the subscription. Ask the prospect what the other
+  vendor quoted for those three lines. Most have not been told yet.
+</Callout>
+
+### What counts as a "student"?
+
+Any student profile with an active enrolment. Graduated, withdrawn and archived students do not count toward your total, so the number falls at the end of an academic year rather than accumulating forever.
+
+### Will the price go up at renewal?
+
+Per-student pricing is published, not negotiated per school, so a change would be public and would apply to everyone. There is no auto-escalator clause and no multi-year commitment that locks you in while the price moves.
+
+<Callout
+  type="warning"
+  title="Internal — we have no published price-change policy yet"
+>
+  True today because we have no renewal history, not because a policy protects
+  them. Do not promise a price freeze you cannot honour. If pressed for a
+  contractual cap, escalate rather than improvising one.
+</Callout>
+
+### What happens when we outgrow the free tier?
+
+You get a notice as you approach 100 students and choose to upgrade or stay. Nothing is deleted, nothing is locked, no feature is switched off mid-term.
+
+### Is the free plan a trial that expires?
+
+No. No clock, no credit card, no feature lock. Schools under 100 students run on it indefinitely.
+
+<Callout type="warning" title="Internal — the disbelief is the objection">
+  Nobody in the category offers this, so the reflex is to hunt for the catch.
+  Answer the economics directly: multi-tenant means one deployment serves every
+  school, so a small school costs us almost nothing to host, and some of them
+  grow. Fourteen of twenty competitors have no self-serve door at all — see the
+  [CTA gating table](/docs/competitors/landing-page#cta-gating).
+</Callout>
+
+### Can we pay in local currency, or by bank transfer?
+
+Subscriptions are billed in USD via Stripe. That is separate from how you collect tuition from parents, which runs through Stripe, bankak, tap, cash and bank transfer.
+
+<Callout
+  type="warning"
+  title="Internal — genuine friction for Sudan and some Gulf buyers"
+>
+  A school that cannot hold a USD card cannot self-serve onto Pro, however much
+  it wants to. Treat as a manual-invoice conversation, not a "no".
+</Callout>
+
+## Data security and breach
+
+### Is our data secure?
+
+Data is encrypted in transit and at rest, access is governed by eight distinct roles, every tenant's records are isolated at the query layer, and backups run continuously with point-in-time recovery.
+
+### How do we know a breach at another school will not expose ours?
+
+Every database query is scoped by school identifier, and each school is served on its own subdomain. There is no shared view in which one school's records can be reached from another's session — the isolation is enforced in the data layer, not by a UI filter.
+
+### Has a school platform actually been breached?
+
+Yes — repeatedly, and at the largest vendors. In December 2024 PowerSchool, the North American market leader, had data exfiltrated through its customer-support portal, exposing names, dates of birth, medical alerts and social security numbers for tens of millions of students and teachers. Independent research puts **82% of K-12 schools experiencing a cyber incident between July 2023 and December 2024**, with 3.9 million records exposed across confirmed attacks in 2025 alone — a 27% rise year on year.
+
+<Callout type="warning" title="Internal — the detail that ends the argument">
+  PowerSchool **paid the ransom** and said so publicly, then a threat actor
+  extorted individual districts with the same stolen data months later. Their
+  own words: "there was a risk that the bad actors would not delete the data
+  they stole, despite assurances." Large, closed and expensively hosted is not
+  the same as safe. Use this when a board argues that a big vendor is the safe
+  choice — but state it factually and do not gloat; the audience is frightened,
+  not partisan.
+</Callout>
+
+### What happens if you get ransomware?
+
+Point-in-time backups mean a tenant can be restored to a moment before an incident. Because each school's data is isolated rather than pooled, the blast radius of any single compromise is bounded.
+
+<Callout type="warning" title="Internal — do not overclaim here">
+  We have no published incident-response runbook, no SOC 2 report and no
+  third-party penetration test to point at. Average education ransom demands ran
+  at $464,000 in 2025. If a buyer's security questionnaire asks for a formal
+  attestation, the honest answer is that we do not have one yet and that the
+  source code is available for their own review instead.
+</Callout>
+
+### Who on your team can see our data?
+
+Access is limited to what is required to operate and support the platform, and support access to a school's records is a deliberate action rather than a standing permission.
+
+### Do you have audit logs?
+
+Yes — actions are logged per user and per school, which is what a ministry or an insurer asks for after an incident.
+
+## Privacy, compliance and data residency
+
+### Where is our data physically stored?
+
+The hosted platform runs on managed PostgreSQL infrastructure with continuous backup. Schools with a hard in-country requirement can self-host the entire platform on their own infrastructure — the source is available and the deployment is documented.
+
+<Callout
+  type="warning"
+  title="Internal — the honest gap, and the one to prepare for"
+>
+  Hosted tenants sit on Neon Postgres in EU/US regions — **not in-Kingdom, not
+  in-country**. Saudi Arabia's PDPL has been fully enforceable since 14
+  September 2024 and requires a residency assessment plus controls on
+  cross-border transfer; the UAE's Federal PDPL bites on 1 January 2027, with
+  DIFC and ADGM frameworks already live. A KSA or UAE buyer with a residency
+  clause cannot use our hosted tier as it stands. Self-hosting is the real
+  answer — say so early rather than discovering it in procurement.
+</Callout>
+
+### Are you compliant with our country's data protection law?
+
+The platform is built to the practices those laws require — explicit consent, role-based access, per-tenant isolation, full export and deletion on request. Where a specific regime requires data to remain in-country, self-hosting satisfies it.
+
+<Callout type="warning" title="Internal — never claim a certification">
+  We hold no PDPL, GDPR, FERPA or COPPA certification, and the amended COPPA
+  Rule has been in full enforcement since 22 April 2026. Describe practices,
+  never status. "Built to what the law asks for" is defensible; "we are
+  compliant" is not, and a procurement lawyer will ask for the certificate.
+</Callout>
+
+### Can we delete a student's data entirely?
+
+Yes. Records can be exported and permanently deleted on request, which is what most privacy regimes require you to be able to demonstrate.
+
+### Who owns the data?
+
+The school does. Not the platform, not a hosting provider. That is the default position and it does not change if you stop paying.
+
+### Can we meet our ministry's reporting requirements?
+
+Reporting exports are configurable per ministry format, and existing deployments already produce ministry-shaped reports. New formats are added as schools need them.
+
+<Callout
+  type="warning"
+  title="Internal — a per-ministry build, not a shipped feature"
+>
+  Government reporting is **Partial** in the feature matrix. Every new ministry
+  format is real work. Scope it as an Enterprise commitment with a timeline, not
+  as something that already exists. Abu Dhabi's ADEK eSIS integration is the one
+  worked example — see [Compliance](/docs/compliance).
+</Callout>
+
+## Vendor viability
+
+### Will you still exist in five years?
+
+The honest structural answer matters more than a promise: the platform is source-available and self-hostable, so its survival does not depend on ours. If we disappeared tomorrow, a school could take the code, its own data export, and keep running.
+
+<Callout
+  type="warning"
+  title="Internal — the hardest question we get, and we have a real answer"
+>
+  Five of twenty competitors lead with a longevity claim — FACTS, Bromcom and
+  ParentPay all say "40+ years", Skyward "since 1980". We cannot compete on age
+  and should not try. What we have is **escrow by default**: enterprise buyers
+  routinely pay third parties for source-code escrow precisely to survive a
+  vendor's collapse, and every escrow guide warns those deposits are often
+  incomplete or unbuildable. Ours is public, complete and continuously built.
+  The cautionary case is Skybox Security, which ceased operations abruptly in
+  February 2025 and left customers with nothing.
+</Callout>
+
+### How big is your team?
+
+Small and named. You will talk to the people who write the code, not a tiered support queue — which is why onboarding is founder-led and why a bug you report gets fixed rather than triaged.
+
+<Callout type="warning" title="Internal — reframe, do not dodge">
+  Team size is a genuine risk to a large buyer and pretending otherwise reads as
+  evasion. The reframe that lands: at PowerSchool your school is one of tens of
+  thousands; here you can change the roadmap. Pair it with the escrow answer
+  above so "small" arrives attached to "and you are not trapped if we fail".
+</Callout>
+
+### What happens to our data if you shut down?
+
+You already hold it. Every record exports to CSV or JSON at any time, and the platform you were running is available to deploy yourself.
+
+### Who else uses this?
+
+Schools in production today, with real students, fees and timetables running through it.
+
+<Callout
+  type="warning"
+  title="Internal — we cannot name a reference school yet"
+>
+  Eleven of twenty competitors run named case studies with student counts, and
+  it is the highest-leverage asset we lack. Do not invent one, do not imply
+  scale we do not have. Offer a live demo tenant instead, and ask a pilot school
+  for consent to be named — that is the fix.
+</Callout>
+
+## Lock-in and exit
+
+### Can we get our data out?
+
+Every record — students, grades, attendance, fees, documents — exports to CSV or JSON at any time, without asking us and without a fee.
+
+### Are there exit fees or a minimum term?
+
+No exit fees and no minimum term. You can stop at the end of any billing period.
+
+### What if we want to leave?
+
+Export everything, and if you were self-hosting you simply keep running. There is no process to negotiate and nothing to withhold.
+
+<Callout type="warning" title="Internal — the evidence that makes this land">
+  ESS SIMS held about 85% of the UK schools market and lost more than half of it
+  within a decade after a competition-authority investigation into contract
+  lock-in; its own domain now redirects into a payments group. Schools remember
+  this. "You can export everything and leave" is a stronger claim in the UK and
+  British-curriculum segment than anywhere else on earth — see the
+  [teardown](/docs/competitors/landing-page#british-curriculum-mis).
+</Callout>
+
+### Is the file format proprietary?
+
+No. CSV and JSON, with documented field names. Anything you export can be read by a spreadsheet or loaded into another system.
+
+## Migration and data loss
+
+### How do we get our existing records in?
+
+Bulk import from Excel or CSV, which is the format almost every school's current records are actually in — including the ones nominally held in another system.
+
+### What about our historical data — past years, old students?
+
+Historical records import alongside current ones. Archived students do not count toward your billing tier, so there is no cost reason to leave history behind.
+
+### How long does migration take?
+
+Days rather than months for a typical single school. The category's own guides put implementation at 2–8 weeks; the difference is that there is no vendor implementation team to schedule.
+
+<Callout type="warning" title="Internal — where this actually goes wrong">
+  Import speed is not the risk; **data quality is**. Schools arrive with
+  duplicate students, inconsistent name spellings across Arabic and English, and
+  fee records that do not reconcile. Budget the cleanup conversation explicitly
+  or the school will experience our import as our bug.
+</Callout>
+
+### Can we run both systems in parallel first?
+
+Yes, and it is the recommended approach — run a term in parallel, reconcile, then switch. The free tier means the parallel period costs nothing for a small school.
+
+### Can we switch mid-year?
+
+Yes, though the natural boundary is a term or year start. Attendance and grades are term-scoped, so a mid-year switch means importing the completed part of the year.
+
+### What if the migration goes wrong?
+
+Your original system and your original export still exist — nothing is destroyed by importing it here. That is the point of running in parallel before committing.
+
+## Staff adoption and disruption
+
+### Our teachers are not technical. Will they cope?
+
+The interfaces teachers touch daily — attendance, grades, messages — are built to be usable without training. Everything else is administrative and touched by a handful of staff.
+
+<Callout type="warning" title="Internal — the real blocker in most deals">
+  Roughly 40% of educators report hesitancy about adopting new technology, and
+  published research finds teachers resist systems they believe will be used to
+  evaluate *them*. If a principal is buying this as a monitoring tool, the
+  rollout will fail regardless of the software. Ask early who the system is for;
+  if the answer is surveillance, say plainly that adoption will suffer.
+</Callout>
+
+### How much training do we need?
+
+Onboarding is founder-led for the first month, in Arabic or English. There is no mandatory paid training course.
+
+### Will this disrupt the term?
+
+The common pattern is to introduce one module at a time — attendance first, then grades, then fees — rather than switching everything on at once.
+
+### What if staff simply refuse to use it?
+
+Then the project fails, as it would with any platform. The mitigations that work are picking one enthusiastic teacher per grade first, and starting with the module that removes the most tedious work rather than the one that adds the most oversight.
+
+<Callout type="warning" title="Internal — do not sell past this">
+  Answering "our onboarding solves that" is a lie the school will remember.
+  Naming the failure mode honestly builds far more credibility than promising it
+  away, and it positions the pilot as the way to find out cheaply.
+</Callout>
+
+### Who administers it day to day?
+
+One school administrator, part-time. There is no requirement for an IT department.
+
+## Reliability, connectivity and offline
+
+### What happens when the internet goes down?
+
+Core daily workflows are built to tolerate interruption and reconcile when the connection returns — see [Offline](/docs/offline). The platform is designed for schools coming online, not schools with campus fibre.
+
+### What about power cuts?
+
+Nothing is stored only on a device in the classroom. When power returns, the record is on the server, not on the laptop that died.
+
+### Will it work on cheap phones and slow connections?
+
+Yes — the interface is mobile-responsive and built to be tolerant of low bandwidth, because a large part of the target market reaches it over mobile data.
+
+### Is there a native mobile app?
+
+The platform is fully usable in a mobile browser today. A native app is on the roadmap.
+
+<Callout type="warning" title="Internal — a real competitive gap">
+  EduX puts "native parent app" in its hero subheadline; mobile app is
+  **Partial** in our feature matrix. Parents are the group most likely to judge
+  on this. Do not describe the responsive web app as an app — schools discover
+  the difference and it damages everything else you said.
+</Callout>
+
+### What uptime do you guarantee?
+
+A formal 99.9% service level is part of Enterprise. Below that tier there is no contractual SLA.
+
+## Functional fit
+
+### Does it handle our curriculum?
+
+National, international and custom curricula are all supported, with configurable grading scales and localised report cards.
+
+### Can it produce report cards in our format?
+
+Report cards are template-driven and multilingual, and transcripts are per-term. Matching an unusual house format is a configuration exercise rather than a code change.
+
+### Can it produce Arabic exam papers?
+
+Yes — and this is the clearest functional advantage we have. No major assessment tool in the category formats Arabic-primary exam papers or bilingual report cards well. See [Exams](/docs/exams).
+
+### Can we run several campuses from one place?
+
+Yes. Each school is an isolated tenant with its own subdomain, and a group can operate several.
+
+### What is not there yet?
+
+Payroll, hostel management, cafeteria and special-education (IEP) records are not shipped. Staff records, leave and the rest of HR are. The full state of every module is in the [feature matrix](/docs/competitors#feature-comparison).
+
+<Callout type="warning" title="Internal — volunteer the gaps">
+  The matrix is public and honest; a prospect will find it. Naming the four
+  missing modules before they do converts a discovered weakness into evidence
+  that everything else you claimed is true. If any of the four is a hard
+  requirement, disqualify the deal early rather than promising a roadmap date.
+</Callout>
+
+## Integration
+
+### Does it work with Google Workspace or Microsoft 365?
+
+Single sign-on with both is supported, which is how most schools want staff and students to log in.
+
+### Can it talk to our accounting system?
+
+There is a REST API with token-authenticated webhooks, and every financial record exports in standard formats.
+
+### Which payment gateways do you support?
+
+Stripe, bankak, tap, cash and bank transfer, plus mobile money. That combination is the main reason the platform works in markets the global vendors do not serve.
+
+### Do you have an API?
+
+Yes — REST, documented, with Bearer-token webhooks, on every tier.
+
+### Can it replace our LMS?
+
+There is a native learning module — courses, assignments, submissions, rubrics and grading — so for most schools it removes the need for a separate LMS. Video conferencing integrates with whatever you already use.
+
+## Parents and students
+
+### Will parents actually use it?
+
+Parents get their own role with access limited to their own children — attendance, grades, fees, messages — and communication reaches them by in-app message, email, SMS and WhatsApp rather than requiring them to log in first.
+
+<Callout type="info">
+  The WhatsApp bridge is a genuine category outlier: no major competitor ships
+  it, and in MEA it is where parents already are.
+</Callout>
+
+### Can parents see other children's data?
+
+No. A guardian sees only students explicitly linked to them.
+
+### Is this surveillance of our students?
+
+The system records what a school already records — attendance, grades, fees, discipline. It does not monitor browsing, capture screens, or track location outside the transport module, where geofenced bus boarding is opt-in and exists so parents know their child boarded.
+
+<Callout
+  type="warning"
+  title="Internal — a rising objection, especially with older students"
+>
+  Student-privacy advocacy has moved edtech surveillance into mainstream
+  coverage. The bus geofence is the feature that sounds worst when described by
+  someone else first. Describe it plainly and voluntarily.
+</Callout>
+
+### What happens to a student's data after they graduate?
+
+It moves to archived status: retained for transcripts and alumni records, excluded from billing, and deletable on request.
+
+## Support
+
+### What support do we get?
+
+Community support on Free; priority support on Pro; a dedicated account manager and a 99.9% SLA on Enterprise. Documentation and onboarding materials are open to everyone.
+
+### Can we get support in Arabic?
+
+Yes. Support is bilingual, and onboarding runs in whichever language the school works in.
+
+### What if something breaks during exam week?
+
+The buyer's guides tell schools to ask exactly this, and it is the right question. Escalation goes directly to the people who wrote the code rather than through a support tier, which is the practical advantage of a small team.
+
+<Callout
+  type="warning"
+  title="Internal — no published response-time guarantee below Enterprise"
+>
+  Do not invent one. "Direct line to the maintainers" is true and often more
+  reassuring than a tiered SLA a school has learned to distrust — but if a
+  procurement document requires a contractual response time, that is an
+  Enterprise conversation.
+</Callout>
+
+### What are your support hours, and what timezone?
+
+The team works in the region it serves, which is the difference from a UK or US vendor whose support day starts after the MENA school day ends.
+
+## Open source
+
+### Does open source mean anyone can see our school's data?
+
+No — and this is the single most common misunderstanding in the whole evaluation. Open source means the **software's source code** is public, not your data. Anyone can read how the system works; nobody can read what is in your instance. Publishing a building's blueprints does not unlock its doors.
+
+<Callout
+  type="warning"
+  title="Internal — expect this from non-technical boards, and lead with it"
+>
+  This conflation kills deals silently, because the board never asks it out
+  loud. Raise it yourself. The follow-on point is that public code means public
+  scrutiny — vulnerabilities get found and fixed rather than sitting
+  undiscovered in a closed binary, which is how the 2024 support-portal
+  exfiltration at PowerSchool went unnoticed.
+</Callout>
+
+### Is open source safe for something this important?
+
+The code being auditable is a security property, not a risk. A school's own IT staff, or an independent consultant, can review exactly how student data is handled — something no closed vendor in the category permits.
+
+### What licence is it under?
+
+SSPL-1.0. Schools can run it, modify it and self-host it. The licence is designed to prevent a third party re-selling the platform as a competing hosted service, not to restrict schools using it.
+
+### Is it free if we self-host?
+
+Yes — you run it on your own infrastructure at your own hosting cost, with no licence fee. Self-hosting also answers the data-residency requirement that our hosted tier cannot.
+
+<Callout
+  type="warning"
+  title="Internal — self-hosting is a real cost, not a free lunch"
+>
+  A school self-hosting needs someone who can run PostgreSQL, apply upgrades and
+  hold backups. Most cannot. Present it as the guarantee that they are never
+  trapped, and the answer to a residency clause — not as the cheap option.
+</Callout>
+
+### Does "open source" mean unsupported hobby software?
+
+The platform runs schools in production, with paid tiers, an SLA at Enterprise, and a public issue tracker where you can see what is broken and what is being fixed — which is more visibility than any closed vendor gives you.
+
+### Can we modify it ourselves?
+
+Yes, and contributions are accepted. A school that needs a specific ministry report can build it and have it merged, rather than waiting for a roadmap slot.
+
+## AI
+
+### Is our student data used to train AI models?
+
+No. Student data is not used to train models.
+
+<Callout type="warning" title="Internal — verify the wording holds end to end">
+  Fast-moving regulation: California AB 1159 would ban using student data to
+  train AI models, 134 AI-in-education bills were introduced across 31 states in
+  2026, and buyers increasingly ask for this in writing. Before committing the
+  sentence above to a contract, confirm the no-training terms of every model
+  provider in the chain. This is a promise the whole company has to keep, not a
+  sales line.
+</Callout>
+
+### What does the AI actually do here?
+
+It classifies uploaded admission documents, extracts data from bank-transfer receipts, assists merit ranking in admissions, and helps mark structured exam answers. Each is a defined task with a human decision at the end.
+
+### Does AI decide who gets admitted?
+
+No. It ranks and summarises; a human admits. Any school that wants the assistance switched off can run admissions manually.
+
+### Who sees the documents we upload?
+
+They are processed within your tenant for the task requested and stored against your school's records. They are not pooled across schools.
+
+### Can we turn AI features off?
+
+Yes. Every AI-assisted step has a manual path, because plenty of schools have a policy requiring one.
+
+## Procurement and governance
+
+### What do we show the board?
+
+The [proposal template](/docs/proposal) covers scope, pricing, timeline and the differentiators a board asks about. The feature matrix and this page are public, which means a board can verify claims rather than take them on trust.
+
+### Can we pilot before committing?
+
+Yes. A pilot is the standard route: a defined period, agreed success criteria, real data, no obligation. For a school under 100 students the free tier makes the pilot indefinite.
+
+### Will you sign our contract, DPA, or security questionnaire?
+
+Data-processing agreements and security questionnaires are expected and handled. Where an answer is "not yet" — a formal certification, an in-country hosting commitment — it is answered as "not yet" rather than fudged.
+
+<Callout
+  type="warning"
+  title="Internal — the questionnaire is where deals quietly die"
+>
+  Enterprise security questionnaires ask for SOC 2, ISO 27001, penetration-test
+  reports and named sub-processors. We have none of the first three. Get sight
+  of the questionnaire early; if it is a hard gate, the deal is not winnable
+  today and the time is better spent elsewhere.
+</Callout>
+
+### Do we need ministry approval?
+
+That depends on the jurisdiction and whether the school is public or private. Private schools generally procure independently; national systems do not.
+
+### What about insurance and liability?
+
+Standard terms apply, and specific liability requirements are an Enterprise contract conversation.
+
+### Our ministry already gives us a free platform. Why pay?
+
+National platforms like Madrasati do learning — content, classes, assignments. They do not do fees, payroll, transport, admissions or HR. Most schools run both: the ministry platform for teaching, this for running the school.
+
+<Callout
+  type="warning"
+  title="Internal — the first objection in Saudi, every time"
+>
+  Do not argue against the ministry platform. Concede it entirely on learning,
+  then ask how they currently handle fee collection and payroll. The answer is
+  almost always a spreadsheet.
+</Callout>
+
+## Fear-to-battle-card index
+
+Each cluster maps to a row of the battle card in [Competitors](/docs/competitors#why-mena-schools-choose-hogwarts), so a call can move between the detailed answer and the one-line version.
+
+| Fear cluster                      | Battle-card row                            |
+| --------------------------------- | ------------------------------------------ |
+| Cost and commercial risk          | Cost for a small private school            |
+| Data security and breach          | Data residency and audit                   |
+| Privacy, compliance and residency | Data residency and audit                   |
+| Vendor viability                  | Vendor lock-in                             |
+| Lock-in and exit                  | Vendor lock-in                             |
+| Migration and data loss           | Speed of onboarding                        |
+| Staff adoption and disruption     | Speed of onboarding · Time to value        |
+| Reliability and offline           | Post-conflict / emerging-market deployment |
+| Functional fit                    | Arabic UI quality                          |
+| Integration                       | MENA payment rails                         |
+| Parents and students              | MENA payment rails                         |
+| Support                           | Roadmap influence                          |
+| Open source                       | Data residency and audit · Vendor lock-in  |
+| AI                                | Roadmap influence                          |
+| Procurement and governance        | Free national platform is "good enough"    |
+
+## Sources
+
+- Competitor FAQ pages, captured August 2026: [Classter](https://www.classter.com/), [openSIS](https://opensis.com/), [Fedena](https://www.fedena.com/), [Edusys](https://www.edusyserp.com/en-ae/school-management-software.html), [Bromcom](https://bromcom.com/faqs)
+- [PowerSchool cybersecurity incident FAQ](https://www.powerschool.com/security/sis-incident/) — breach scope, ransom payment, subsequent extortion
+- [Classe365 — 10 questions to ask before buying school management software](https://www.classe365.com/blog/10-questions-to-ask-before-buying-a-school-management-software-expert-buyers-guide/) and [OpenEduCat buyer's guide](https://openeducat.org/articles/school-management-software-buyers-guide/) — implementation, training and migration cost bands
+- [Comparitech — education ransomware roundup H1 2026](https://www.comparitech.com/news/education-ransomware-roundup-h1-2026-stats-on-attacks-ransoms-and-data-breaches/) and [K-12 Dive](https://www.k12dive.com/news/ransomware-attacks-against-education-sector-slow-worldwide/811133/) — attack volumes, records exposed, ransom demands
+- [PwC Middle East — Saudi PDPL](https://www.pwc.com/m1/en/services/consulting/technology/cyber-security/navigating-data-privacy-regulations/ksa-data-protection-law.html) and [DataGuidance — data residency under the PDPL](https://www.dataguidance.com/opinion/saudi-arabia-data-residency-under-pdpl-part-1) — residency and cross-border transfer
+- [MultiState — how states are regulating AI in education, 2026](https://www.multistate.us/insider/2026/4/9/how-states-are-regulating-ai-in-education-this-legislative-session) and [Hireplicity — EdTech compliance 2026](https://www.hireplicity.com/blog/edtech-compliance-2026-ferpa-coppa-ai) — AB 1159, COPPA amendment
+- [Teachers Institute — overcoming resistance to technology integration](https://teachers.institute/educational-technology-overview/overcoming-resistance-technology-integration-education/) — adoption resistance
+- [Codekeeper — software escrow for vendor risk management](https://codekeeper.co/articles/software-escrow-for-vendor-risk-management) — escrow, and the Skybox Security shutdown
+
+## See also
+
+- [Competitors](/docs/competitors) — vendor profiles, market share, feature matrix, battle card
+- [Landing-page teardown](/docs/competitors/landing-page) — how the category markets itself
+- [Sales](/docs/sales) — the three top objections in short form
+- [Proposal](/docs/proposal) — where these answers go in writing
+- [Business model](/docs/business-model) — canonical pricing
+- [Offline](/docs/offline) — connectivity tolerance

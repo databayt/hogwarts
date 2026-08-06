@@ -1,8 +1,15 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
+// Single source of truth for SaaS plan data. Per-student pricing:
+// Free ($0, ≤100 students) · Pro ($1.50/student/mo, $30/mo minimum) ·
+// Enterprise ($1.00/student/mo reference, custom-quoted for 1,000+).
+// Yearly unit prices are the 20%-off rates. The dictionary overlays
+// display text only — ids and numbers live here.
+
 import { env } from "@/env.mjs"
 import type {
+  PlanId,
   PlansRow,
   SubscriptionPlan,
 } from "@/components/saas-marketing/pricing/types"
@@ -12,15 +19,19 @@ type PricingDict =
   | {
       constants?: {
         free?: string
+        custom?: string
         includes?: string
-        everythingInHobby?: string
+        everythingInFree?: string
         everythingInPro?: string
         startTrial?: string
         getPro?: string
-        getUltra?: string
         monthly?: string
         yearly?: string
         perMonth?: string
+        perStudentPerMonth?: string
+        minimumNote?: string
+        billedAnnuallyNote?: string
+        contactToUpgrade?: string
         moreInfo?: string
         loading?: string
         unavailable?: string
@@ -28,9 +39,17 @@ type PricingDict =
         getPlan?: string
       }
       plans?: {
-        hobby?: { title?: string; description?: string; benefits?: string[] }
+        free?: { title?: string; description?: string; benefits?: string[] }
         pro?: { title?: string; description?: string; benefits?: string[] }
-        ultra?: { title?: string; description?: string; benefits?: string[] }
+        enterprise?: {
+          title?: string
+          description?: string
+          benefits?: string[]
+        }
+      }
+      enterprise?: {
+        talkToSales?: string
+        contactHref?: string
       }
       comparePlans?: {
         features?: Record<string, string>
@@ -40,53 +59,74 @@ type PricingDict =
     }
   | undefined
 
-export const isProTitle = (title: string): boolean =>
-  title.toLowerCase() === "pro"
-
-export const isStarterTitle = (title: string): boolean =>
-  title.toLowerCase() === "hobby"
+export const isFreePlan = (id: PlanId): boolean => id === "free"
+export const isProPlan = (id: PlanId): boolean => id === "pro"
+export const isEnterprisePlan = (id: PlanId): boolean => id === "enterprise"
 
 export const getIncludesHeading = (
-  title: string,
+  id: PlanId,
   pricing?: PricingDict
 ): string =>
-  isStarterTitle(title)
+  isFreePlan(id)
     ? pricing?.constants?.includes || "Includes"
-    : isProTitle(title)
-      ? pricing?.constants?.everythingInHobby || "Everything in Hobby, plus"
+    : isProPlan(id)
+      ? pricing?.constants?.everythingInFree || "Everything in Free, plus"
       : pricing?.constants?.everythingInPro || "Everything in Pro, plus"
 
-export const getCtaLabel = (title: string, pricing?: PricingDict): string =>
-  isStarterTitle(title)
-    ? pricing?.constants?.startTrial || "Start trial"
-    : isProTitle(title)
+export const getCtaLabel = (id: PlanId, pricing?: PricingDict): string =>
+  isEnterprisePlan(id)
+    ? pricing?.enterprise?.talkToSales || "Talk to Sales"
+    : isProPlan(id)
       ? pricing?.constants?.getPro || "Get Pro"
-      : pricing?.constants?.getUltra || "Get Ultra"
+      : pricing?.constants?.startTrial || "Get started free"
 
 export const getPriceDisplay = (
   offer: SubscriptionPlan,
   isYearly: boolean,
   pricing?: PricingDict
 ): string => {
-  if (offer.prices.monthly === 0) return pricing?.constants?.free || "Free"
-  if (isYearly) {
-    const discountedPerMonth = offer.prices.monthly * 0.8
-    return `$${discountedPerMonth}`
-  }
-  return `$${offer.prices.monthly}`
+  if (isEnterprisePlan(offer.id)) return pricing?.constants?.custom || "Custom"
+  // "$0" not "Free" — the card title already says Free; repeating it reads odd.
+  if (offer.prices.monthly === 0) return "$0"
+  const unit = isYearly ? offer.prices.yearly : offer.prices.monthly
+  return `$${unit.toFixed(2)}`
 }
 
+/** Per-student ANNUAL unit rate when billed yearly (e.g. Pro: $14.40). */
 export const getYearlyTotal = (offer: SubscriptionPlan): number => {
-  if (offer.prices.monthly === 0) return 0
-  return offer.prices.monthly * 12 * 0.8
+  if (isFreePlan(offer.id) || isEnterprisePlan(offer.id)) return 0
+  return offer.prices.yearly * 12
+}
+
+/**
+ * Monthly cost for a given student count — shared by the pricing card's
+ * minimum-note math and the calculator. Applies the plan's monthly floor.
+ */
+export const getMonthlyCost = (
+  offer: SubscriptionPlan,
+  studentCount: number,
+  isYearly: boolean
+): number => {
+  if (isFreePlan(offer.id)) return 0
+  const unit = isYearly ? offer.prices.yearly : offer.prices.monthly
+  const raw = unit * studentCount
+  return offer.minimumMonthly ? Math.max(raw, offer.minimumMonthly) : raw
 }
 
 // Default pricing data (fallback when no dictionary)
 export const pricingData: SubscriptionPlan[] = [
   {
-    title: "Hobby",
-    description: "Get started for free",
-    benefits: ["Up to 100 students", "Up to 10 teachers", "Core features"],
+    // lib/subscription.ts falls back to pricingData[0] — Free stays first.
+    id: "free",
+    title: "Free",
+    description: "Great for small schools getting started",
+    benefits: [
+      "Up to 100 students",
+      "Up to 10 teachers",
+      "Core features — admissions, attendance, exams, fees, timetable",
+      "1 GB storage",
+      "Community support",
+    ],
     limitations: [],
     prices: {
       monthly: 0,
@@ -96,34 +136,51 @@ export const pricingData: SubscriptionPlan[] = [
       monthly: null,
       yearly: null,
     },
+    studentRange: { min: 0, max: 100 },
   },
   {
+    id: "pro",
     title: "Pro",
-    description: "For growing schools",
+    description: "For growing schools ready to scale",
     benefits: [
-      "Up to 500 students",
+      "Unlimited students, billed per student",
       "Unlimited teachers",
-      "Advanced reports and exports",
+      "10 GB storage",
+      "Priority support",
       "Custom branding",
+      "Advanced analytics & parent push notifications",
     ],
     limitations: [],
     prices: {
-      monthly: 20,
-      yearly: 192,
+      monthly: 1.5,
+      yearly: 1.2,
     },
+    minimumMonthly: 30,
     stripeIds: {
       monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID ?? null,
       yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID ?? null,
     },
+    studentRange: { min: 1, max: null },
   },
   {
-    title: "Ultra",
-    description: "For large organizations",
-    benefits: ["Unlimited students and teachers", "Custom integrations"],
+    id: "enterprise",
+    // The card headline renders "Custom" (see getPriceDisplay), but these
+    // unit prices are REAL consumers' inputs: the chatbot quotes them and the
+    // calculator estimates from them. Don't remove them as "unused".
+    title: "Enterprise",
+    description: "For networks and government contracts, 1,000+ students",
+    benefits: [
+      "Unlimited storage & API",
+      "Dedicated account manager",
+      "99.9% uptime SLA",
+      "White-label branding",
+      "SSO (SAML/OAuth)",
+      "Custom integrations",
+    ],
     limitations: [],
     prices: {
-      monthly: 200,
-      yearly: 1920,
+      monthly: 1.0,
+      yearly: 0.8,
     },
     stripeIds: {
       monthly:
@@ -135,6 +192,7 @@ export const pricingData: SubscriptionPlan[] = [
         env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID ??
         null,
     },
+    studentRange: { min: 1000, max: null },
   },
 ]
 
@@ -143,11 +201,12 @@ export const getPricingData = (pricing?: PricingDict): SubscriptionPlan[] => {
   if (!pricing?.plans) return pricingData
 
   return pricingData.map((plan) => {
-    const key = plan.title.toLowerCase() as "hobby" | "pro" | "ultra"
-    const dictPlan = pricing.plans?.[key]
+    const dictPlan = pricing.plans?.[plan.id]
     if (!dictPlan) return plan
 
     return {
+      // id spreads from ...plan and is never overwritten — CTA branching
+      // stays correct in every locale.
       ...plan,
       title: dictPlan.title || plan.title,
       description: dictPlan.description || plan.description,
@@ -156,123 +215,123 @@ export const getPricingData = (pricing?: PricingDict): SubscriptionPlan[] => {
   })
 }
 
-export const plansColumns = ["hobby", "pro", "ultra", "enterprise"] as const
+export const plansColumns = ["free", "pro", "enterprise"] as const
 
 export const comparePlans: PlansRow[] = [
   {
-    feature: "Analytics & reporting",
-    hobby: true,
-    pro: true,
-    ultra: true,
-    enterprise: "Custom",
-    tooltip: "All plans include basic reports; advanced in Pro/Business.",
+    feature: "Students included",
+    free: "Up to 100",
+    pro: "Unlimited, billed per student",
+    enterprise: "1,000+ (custom)",
+    tooltip:
+      "Free is capped at 100 students. Pro and Enterprise bill per student with no hard cap.",
   },
   {
-    feature: "Custom branding",
-    hobby: null,
-    pro: true,
-    ultra: true,
+    feature: "Teachers",
+    free: "Up to 10",
+    pro: "Unlimited",
     enterprise: "Unlimited",
-    tooltip: "Brand colors and logo available from Pro.",
+  },
+  {
+    feature: "Admissions, attendance, exams, fees, timetable, messaging",
+    free: true,
+    pro: true,
+    enterprise: true,
+  },
+  {
+    feature: "Storage",
+    free: "1 GB",
+    pro: "10 GB",
+    enterprise: "Unlimited",
   },
   {
     feature: "Support",
-    hobby: null,
+    free: "Community",
     pro: "Priority",
-    ultra: "24/7",
-    enterprise: "24/7 Support",
+    enterprise: "Dedicated account manager",
   },
   {
-    feature: "Advanced reporting",
-    hobby: null,
-    pro: null,
-    ultra: true,
-    enterprise: "Custom",
-    tooltip:
-      "Advanced reporting is available in Business and Enterprise plans.",
-  },
-  {
-    feature: "Dedicated manager",
-    hobby: null,
-    pro: null,
-    ultra: null,
-    enterprise: true,
-    tooltip: "Enterprise plan includes a dedicated account manager.",
+    feature: "Custom branding",
+    free: null,
+    pro: true,
+    enterprise: "Yes, white-label",
   },
   {
     feature: "API access",
-    hobby: "Limited",
-    pro: "Standard",
-    ultra: "Enhanced",
-    enterprise: "Full",
+    free: null,
+    pro: "1,000 req/hr",
+    enterprise: "Unlimited",
+    tooltip:
+      "Free has no API access. Pro is rate-limited; Enterprise is unlimited.",
   },
   {
-    feature: "Monthly webinars",
-    hobby: false,
+    feature: "Analytics & reporting",
+    free: "Basic",
+    pro: "Advanced",
+    enterprise: "Advanced + custom",
+  },
+  {
+    feature: "Parent push notifications",
+    free: null,
     pro: true,
-    ultra: true,
-    enterprise: "Custom",
-    tooltip: "Pro and higher plans include access to monthly webinars.",
+    enterprise: true,
   },
   {
-    feature: "Custom integrations",
-    hobby: false,
-    pro: false,
-    ultra: "Available",
-    enterprise: "Available",
-    tooltip:
-      "Custom integrations are available in Business and Enterprise plans.",
+    feature: "SSO (SAML/OAuth)",
+    free: null,
+    pro: null,
+    enterprise: true,
+    tooltip: "Single sign-on via SAML or OAuth — Enterprise only.",
   },
   {
-    feature: "Roles & permissions",
-    hobby: null,
-    pro: "Basic",
-    ultra: "Advanced",
-    enterprise: "Advanced",
-    tooltip:
-      "User roles and permissions management improves with higher plans.",
+    feature: "Uptime SLA",
+    free: null,
+    pro: null,
+    enterprise: "99.9%",
+    tooltip: "Enterprise includes a contractual 99.9% uptime guarantee.",
   },
   {
-    feature: "Onboarding assistance",
-    hobby: false,
-    pro: "Self-service",
-    ultra: "Assisted",
-    enterprise: "Full Service",
-    tooltip: "Higher plans include more comprehensive onboarding assistance.",
+    feature: "Data export, anytime",
+    free: true,
+    pro: true,
+    enterprise: true,
   },
 ]
 
 // Maps the canonical English row data to dictionary keys so the compare
 // table can be rendered in the active locale.
 const compareFeatureKeys: Record<string, string> = {
-  "Analytics & reporting": "analyticsReporting",
-  "Custom branding": "customBranding",
+  "Students included": "students",
+  Teachers: "teachers",
+  "Admissions, attendance, exams, fees, timetable, messaging": "coreModules",
+  Storage: "storage",
   Support: "support",
-  "Advanced reporting": "advancedReporting",
-  "Dedicated manager": "dedicatedManager",
+  "Custom branding": "customBranding",
   "API access": "apiAccess",
-  "Monthly webinars": "monthlyWebinars",
-  "Custom integrations": "customIntegrations",
-  "Roles & permissions": "rolesPermissions",
-  "Onboarding assistance": "onboardingAssistance",
+  "Analytics & reporting": "analyticsReporting",
+  "Parent push notifications": "parentNotifications",
+  "SSO (SAML/OAuth)": "sso",
+  "Uptime SLA": "sla",
+  "Data export, anytime": "dataExport",
 }
 
 const compareValueKeys: Record<string, string> = {
-  Custom: "custom",
+  "Up to 100": "upTo100",
+  "Unlimited, billed per student": "unlimitedPerStudent",
+  "1,000+ (custom)": "students1000Plus",
   Unlimited: "unlimited",
+  "Up to 10": "upTo10",
+  "1 GB": "oneGb",
+  "10 GB": "tenGb",
+  Community: "community",
   Priority: "priority",
-  "24/7": "support24_7",
-  "24/7 Support": "support24_7Support",
-  Limited: "limited",
-  Standard: "standard",
-  Enhanced: "enhanced",
-  Full: "full",
-  Available: "available",
+  "Dedicated account manager": "dedicatedAm",
   Basic: "basic",
   Advanced: "advanced",
-  "Self-service": "selfService",
-  Assisted: "assisted",
-  "Full Service": "fullService",
+  "Advanced + custom": "advancedPlus",
+  "1,000 req/hr": "rateLimited",
+  "99.9%": "sla999",
+  "Yes, white-label": "whiteLabel",
 }
 
 // Get compare plans with dictionary translations applied
@@ -296,9 +355,8 @@ export const getComparePlans = (pricing?: PricingDict): PlansRow[] => {
       tooltip: row.tooltip
         ? (featureKey && compare.tooltips?.[featureKey]) || row.tooltip
         : row.tooltip,
-      hobby: translateValue(row.hobby),
+      free: translateValue(row.free),
       pro: translateValue(row.pro),
-      ultra: translateValue(row.ultra),
       enterprise: translateValue(row.enterprise),
     }
   })

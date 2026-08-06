@@ -3,26 +3,28 @@
 
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
+// English fallbacks mirroring marketing.pricing.faqs.questions — the
+// dictionary version is what renders in production.
 const defaultFaqs = [
   {
-    question: "What's included in the One Project plan?",
+    question: 'What counts as a "student"?',
     answer:
-      "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment.",
+      "Any student profile with an active enrollment in your school. Graduated, withdrawn, or archived students don't count toward your plan's student count.",
   },
   {
-    question: "How does the hourly billing work for Strategic Partner?",
+    question: "How does per-student billing work?",
     answer:
-      "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources.",
+      "Pro is $1.50 per enrolled student per month (minimum $30/mo), billed monthly based on your active student count. Enterprise is $1.00 per student per month, custom-priced for networks of 1,000+ students.",
   },
   {
-    question: "Can I switch between plans?",
+    question: "Is the free plan really free?",
     answer:
-      "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
+      "Yes. Free is $0 forever for up to 100 students — no trial period, no credit card, no feature lock. Upgrade to Pro only when you outgrow it.",
   },
   {
-    question: "Do you offer enterprise solutions?",
+    question: "Can I cancel or export my data?",
     answer:
-      "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote.",
+      "Cancel anytime from your billing settings — no exit fees. Every record exports to CSV or JSON whenever you want, so your data is never locked in.",
   },
 ]
 

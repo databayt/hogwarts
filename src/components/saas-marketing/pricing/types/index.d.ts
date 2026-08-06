@@ -44,14 +44,26 @@ export type DocsConfig = {
 }
 
 // subcriptions
+/** Stable plan identifier — never overlaid by the dictionary. */
+export type PlanId = "free" | "pro" | "enterprise"
+
 export type SubscriptionPlan = {
+  id: PlanId
   title: string
   description: string
   benefits: string[]
   limitations: string[]
+  /** Per-student unit price in USD/month; yearly = 20%-off unit when billed annually. */
   prices: {
     monthly: number
     yearly: number
+  }
+  /** Monthly floor for per-student plans (Pro: $30). */
+  minimumMonthly?: number
+  /** Student-count range the plan is designed for; max null = uncapped. */
+  studentRange?: {
+    min: number
+    max: number | null
   }
   stripeIds: {
     monthly: string | null
@@ -69,12 +81,10 @@ export type UserSubscriptionPlan = SubscriptionPlan &
 
 // compare plans
 export type ColumnType = string | boolean | null | undefined
-export type PlansRow = { feature: string; tooltip?: string } & {
-  hobby: string | boolean | null
-  pro: string | boolean | null
-  ultra: string | boolean | null
-  enterprise: string | boolean | null
-}
+export type PlansRow = { feature: string; tooltip?: string } & Record<
+  PlanId,
+  string | boolean | null
+>
 
 // landing sections
 export type InfoList = {

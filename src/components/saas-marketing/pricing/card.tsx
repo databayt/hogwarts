@@ -28,8 +28,9 @@ import {
   getIncludesHeading,
   getPriceDisplay,
   getYearlyTotal,
-  isProTitle,
-  isStarterTitle,
+  isEnterprisePlan,
+  isFreePlan,
+  isProPlan,
 } from "./config"
 
 interface PricingCardProps {
@@ -52,19 +53,51 @@ export function PricingCard({
   dictionary,
 }: PricingCardProps) {
   const pricing = dictionary?.marketing?.pricing
-  const isPro = isProTitle(offer.title)
-  const isStarter = isStarterTitle(offer.title)
+  const isFree = isFreePlan(offer.id)
+  const isPro = isProPlan(offer.id)
+  const isEnterprise = isEnterprisePlan(offer.id)
   const priceDisplay = getPriceDisplay(offer, isYearly, pricing)
+  const contactHref =
+    pricing?.enterprise?.contactHref ||
+    "mailto:contact@databayt.org?subject=Enterprise%20plan"
 
-  const ctaArea = (
+  const priceSuffix =
+    !isEnterprise && offer.prices.monthly > 0
+      ? pricing?.constants?.perStudentPerMonth || "/ student / month"
+      : ""
+
+  const minimumNote =
+    isPro && offer.minimumMonthly
+      ? (pricing?.constants?.minimumNote || "${amount}/mo minimum").replace(
+          "{amount}",
+          String(offer.minimumMonthly)
+        )
+      : null
+
+  const yearlyNote =
+    isPro && isYearly
+      ? (
+          pricing?.constants?.billedAnnuallyNote ||
+          "billed annually at ${amount}/student/year"
+        ).replace("{amount}", getYearlyTotal(offer).toFixed(2))
+      : null
+
+  const ctaArea = isEnterprise ? (
+    <Link
+      href={contactHref}
+      className={cn(buttonVariants({ variant: "outline" }))}
+    >
+      {getCtaLabel(offer.id, pricing)}
+    </Link>
+  ) : (
     <>
       {userId && subscriptionPlan ? (
-        isStarter ? (
+        isFree ? (
           <Link
             href={`/${lang}/dashboard`}
             className={cn(buttonVariants({ variant: "default" }))}
           >
-            {pricing?.constants?.startTrial || "Start trial"}
+            {pricing?.constants?.startTrial || "Get started free"}
           </Link>
         ) : (
           <BillingFormButton
@@ -77,14 +110,7 @@ export function PricingCard({
         )
       ) : (
         <Link
-          href={(() => {
-            const monthly = offer.stripeIds.monthly
-            const yearly = offer.stripeIds.yearly
-            const priceId = (isYearly ? yearly : monthly) || monthly
-            return priceId
-              ? `/${lang}/starter/dashboard/billing/checkout?price=${encodeURIComponent(priceId)}`
-              : `/${lang}/starter/dashboard/billing`
-          })()}
+          href={`/${lang}/onboarding`}
           className={cn(
             buttonVariants({
               variant: "default",
@@ -93,7 +119,7 @@ export function PricingCard({
             "transition-transform hover:scale-[1.01]"
           )}
         >
-          {getCtaLabel(offer.title, pricing)}
+          {getCtaLabel(offer.id, pricing)}
         </Link>
       )}
       {(!userId || !subscriptionPlan) && isPro && (
@@ -106,11 +132,11 @@ export function PricingCard({
     </>
   )
 
-  const includesHeading = getIncludesHeading(offer.title, pricing)
+  const includesHeading = getIncludesHeading(offer.id, pricing)
 
   return (
     <Card
-      key={offer.title}
+      key={offer.id}
       className={cn(
         "bg-muted text-card-foreground relative flex h-full w-full flex-col items-start overflow-hidden rounded-2xl border-none text-start shadow-none"
       )}
@@ -119,12 +145,14 @@ export function PricingCard({
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight">
           {priceDisplay}
-          <span className="muted ms-1">
-            {offer.prices.monthly > 0
-              ? pricing?.constants?.perMonth || "/mo"
-              : ""}
-          </span>
+          {priceSuffix && <span className="muted ms-1">{priceSuffix}</span>}
         </CardTitle>
+        <p className="muted">{offer.description}</p>
+        {(minimumNote || yearlyNote) && (
+          <p className="muted text-xs">
+            {[minimumNote, yearlyNote].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </CardHeader>
       <div className="w-full px-6 py-2">
         <Separator />

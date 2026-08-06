@@ -15,7 +15,6 @@ interface EnterpriseSectionProps {
 }
 
 export default function EnterpriseSection({
-  lang,
   dictionary,
 }: EnterpriseSectionProps) {
   const enterprise = dictionary?.marketing?.pricing?.enterprise
@@ -24,19 +23,22 @@ export default function EnterpriseSection({
     <div className="flex w-full max-w-3xl flex-col gap-6 pt-16 text-center">
       <div className="flex justify-center">
         <Badge className="bg-muted text-foreground">
-          {enterprise?.badge || "Enterprise"}
+          {enterprise?.badge || "For networks"}
         </Badge>
       </div>
       <h1 className="font-heading text-4xl font-extrabold md:text-5xl">
-        {enterprise?.title || "Need Something Bigger?"}
+        {enterprise?.title || "Running more than one school?"}
       </h1>
       <p className="muted">
         {enterprise?.description ||
-          "For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements."}
+          "Multi-campus networks and government contracts get a dedicated account manager, a 99.9% uptime SLA, white-label branding, and SSO — priced per student for 1,000+ students."}
       </p>
       <div className="flex justify-center">
         <Link
-          href={`/${lang}/docs/community/support`}
+          href={
+            enterprise?.contactHref ||
+            "mailto:contact@databayt.org?subject=Enterprise%20plan"
+          }
           className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
         >
           {enterprise?.talkToSales || "Talk to Sales"}

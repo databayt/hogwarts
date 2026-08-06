@@ -1,22 +1,14 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 
-import Link from "next/link"
-
-import { buttonVariants } from "@/components/ui/button"
 import { currentUser } from "@/components/auth/auth"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { ComparePlans } from "@/components/saas-marketing/pricing/compare-plans"
 import { getUserSubscriptionPlan } from "@/components/saas-marketing/pricing/lib/subscription"
-import {
-  cn,
-  constructMetadata,
-} from "@/components/saas-marketing/pricing/lib/utils"
 import { PricingCards } from "@/components/saas-marketing/pricing/pricing-cards"
-import { PricingFaq } from "@/components/saas-marketing/pricing/pricing-faq"
-import { Callout } from "@/components/saas-marketing/pricing/shared/callout"
 
+import { Calculator } from "./calculator"
 import EnterpriseSection from "./enterprise-section"
 import PricingFAQs from "./pricing-faqs"
 import PricingHeader from "./pricing-header"
@@ -54,9 +46,9 @@ export default async function PricingContent(props: Props) {
         lang={lang}
         dictionary={dictionary}
       />
+      <Calculator dictionary={dictionary} />
       <ComparePlans dictionary={dictionary} />
       <SecurePayment dictionary={dictionary} />
-      {/* <PricingFaq /> */}
       <PricingFAQs dictionary={dictionary} />
       <EnterpriseSection lang={lang} dictionary={dictionary} />
     </div>

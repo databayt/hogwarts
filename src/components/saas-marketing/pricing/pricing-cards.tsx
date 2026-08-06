@@ -4,15 +4,13 @@
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useState } from "react"
 
-import { HeaderSection } from "@/components/atom/header-section"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
-import MaxWidthWrapper from "@/components/saas-marketing/pricing/shared/max-width-wrapper"
 import { UserSubscriptionPlan } from "@/components/saas-marketing/pricing/types"
 
 import { BillingToggle } from "./billing-toggle"
 import { PricingCard } from "./card"
-import { getPricingData, pricingData } from "./config"
+import { getPricingData } from "./config"
 
 interface PricingCardsProps {
   userId?: string
@@ -52,7 +50,7 @@ export function PricingCards({
         {plans.map((offer) => (
           <PricingCard
             offer={offer}
-            key={offer.title}
+            key={offer.id}
             isYearly={isYearly}
             userId={userId}
             subscriptionPlan={subscriptionPlan}

@@ -26,9 +26,8 @@ export function ComparePlans({ dictionary }: ComparePlansProps) {
   const plans = getComparePlans(pricing)
 
   const planNameMap: Record<string, string> = {
-    hobby: pricing?.planNames?.hobby || "hobby",
+    free: pricing?.planNames?.free || "free",
     pro: pricing?.planNames?.pro || "pro",
-    ultra: pricing?.planNames?.ultra || "ultra",
     enterprise: pricing?.planNames?.enterprise || "enterprise",
   }
 

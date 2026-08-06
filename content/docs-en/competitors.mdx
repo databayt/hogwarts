@@ -1,11 +1,26 @@
 ---
 title: Competitors
-description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, British-curriculum MIS, open-source peers, their landing-page copy, and how Hogwarts compares.
+description: Market landscape and competitor analysis — global SIS incumbents, MENA regional players, British-curriculum MIS, open-source peers, and how Hogwarts compares.
 ---
 
 Hogwarts is an open-source, multi-tenant K-12 platform shipping in production at [ed.databayt.org](https://ed.databayt.org). Where the established SIS vendors target large North-American districts with closed, English-first stacks, Hogwarts is Arabic-first, RTL-native, subdomain-isolated per school, and priced for emerging-market budgets.
 
-This page maps four distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [landing-page teardown](#landing-page-teardown) captures how the category writes its marketing copy, and the [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
+This page maps four distinct competitive sets — **global SIS incumbents** (the feature baseline), **MENA regional players** (who we actually meet in a deal), **British-curriculum MIS** (who the international schools shortlist), and **open-source peers** (the closest architectural analogues) — plus the assessment tools that shaped the exams module. The [battle-card section](#why-mena-schools-choose-hogwarts) is the prose for proposals and discovery calls.
+
+Two companion pages go deeper:
+
+<CardGrid cols={2}>
+  <DocCard
+    title="Landing-page teardown"
+    href="/docs/competitors/landing-page"
+    description="Hero copy, proof bands, CTA gating and pricing transparency across 20 vendors — and where ours diverges."
+  />
+  <DocCard
+    title="Competitor FAQ"
+    href="/docs/competitors/faq"
+    description="Every question and fear a school brings to an evaluation, with the public answer and how to handle it honestly."
+  />
+</CardGrid>
 
 <Callout type="info">
   Market figures below were last verified **August 2026**. Every number is
@@ -282,60 +297,7 @@ Five **creation models** exist in the market. The fastest are blueprint-adopt an
 
 ## Landing-page teardown
 
-Captured verbatim from each vendor's homepage (August 2026) as reference for our own marketing hero and section order. Use it to see how the category talks about itself — then deliberately say something different.
-
-### Hero copy
-
-| Vendor          | Headline                                                                                                      | Subheadline                                                                                                                      | Primary CTA                  |
-| --------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| PowerSchool     | "More Power Stronger School"                                                                                  | "The world's most comprehensive K-12 software, unifying education ecosystems for over 60 million students in 90 countries."      | "Configure Your Own K-12 OS" |
-| Infinite Campus | "A **boldly different** company and student information system"                                               | —                                                                                                                                | "Learn More"                 |
-| Arbor           | "Choose a _better_ way to work"                                                                               | "The UK's _most popular_ MIS and school management software"                                                                     | "Book a demo"                |
-| iSAMS           | "Managing every area of school life just got easier, wherever you are"                                        | "Just ask"                                                                                                                       | "Book a demo"                |
-| Tes Engage      | "The world's premium school management information system"                                                    | "Experience the ultimate in school efficiency with our all-in-one intuitive School Management Information System (SMIS)."        | "Book a demo"                |
-| Bromcom         | "Let's Improve Education Together."                                                                           | "…our cloud-based Management Information System supports each step of your students' journey, while keeping data secure…"        | "Schedule a Call"            |
-| Classera        | "The Learning Super Platform for Smart, Joyful Learning"                                                      | "Classera goes beyond traditional LMS to deliver a complete ecosystem with ERP, Fintech Solutions, Educational Marketplace…"     | "Request a demo"             |
-| Skolera         | "Get All Your School Administrative Stuff Automated with Skolera…"                                            | "…helps you manage all your school administrative stuff, and provides you with accurate and real-time reports"                   | "Request Free Demo"          |
-| EduX            | "The school management system built for MENA, Gulf & Africa"                                                  | "EduX is a bilingual cloud-based School Information System (SIS) built for schools across Saudi Arabia, the UAE, Egypt, Kuwait…" | "Start 30-day Free Trial"    |
-| Alef Education  | "Alef Education Ranked No. 1 EdTech Company in MEA, 13th Globally by TIME…" (award banner in place of a hero) | —                                                                                                                                | "Request a demo"             |
-
-### Proof numbers in the hero band
-
-Every vendor puts a scale row immediately under or beside the hero. This is the single most consistent pattern in the category.
-
-| Vendor          | Numbers shown                                                                                  |
-| --------------- | ---------------------------------------------------------------------------------------------- |
-| PowerSchool     | 60M students · 90 countries                                                                    |
-| Infinite Campus | 11M students · 3,200 districts · 46 states · 10 state agencies                                 |
-| Arbor           | 12,500 schools · 117+ min saved per staff/week · 81% better data use · 74% better working life |
-| iSAMS           | 1,800+ schools & groups · 1.7M student profiles                                                |
-| Bromcom         | 3.3M users · 1.2M+ students · 5,600+ schools · 390+ MATs · 40+ years                           |
-| Classera        | 30M+ users · 200+ partners · 45+ countries · 25+ services                                      |
-| Alef Education  | ~2M students · 19K+ schools · 50M+ daily data points                                           |
-| EduX            | 40+ modules · 48-hour activation · 30-day free trial · AR/EN                                   |
-
-### Section order
-
-The category has converged on one skeleton. Nine of the ten homepages above follow it almost exactly:
-
-1. **Hero** — headline + demo CTA
-2. **Proof band** — scale numbers or customer logos
-3. **Who it's for** — by school type (independent / international / state / trust) or by role (leader / teacher / parent)
-4. **Everything in one place** — the anti-add-on pitch; Bromcom and Skolera both build a whole section on it
-5. **Module grid** — SIS, finance, HR, transport, library, comms
-6. **Outcome proof** — testimonials, then case studies with named schools and student counts
-7. **Content marketing** — blog, podcast, annual report, events
-8. **Awards / partners**
-9. **Closing CTA** — book a demo
-
-### What to steal, and what to avoid
-
-- **Steal the proof band.** It is universal and we currently lead with features instead. Ours should be honest and specific rather than inflated — modules shipped, languages, payment rails, time-to-subdomain.
-- **Steal the named case study with a student count.** "British International School of Jeddah, 1,300+ students" does more work than any feature list. This is the strongest argument for publishing real deployments once schools consent.
-- **Avoid "book a demo" as the only door.** Eight of ten vendors have no self-serve path at all. EduX's "Start 30-day Free Trial" is the outlier — and it is the one positioned closest to us. Our free tier is a structural advantage over the entire category; the hero should say so, not hide it behind a contact form.
-- **Avoid the superlative arms race.** "World's most comprehensive," "world's premium," "the ultimate in school efficiency" — the category is saturated with unfalsifiable claims, which is exactly why a concrete, checkable one cuts through.
-- **Note the regional lesson.** EduX's headline names its geography ("built for MENA, Gulf & Africa") and its subheadline lists countries. That is the positioning we are competing for directly, and they got there first on the landing page even though we get there first in the product.
-- **Note Arbor's angle.** It is the only vendor selling _time_, not features — "reclaim hours every week," "117+ minutes saved per staff member weekly." For overloaded school administrators that reframe is the most persuasive copy in the set.
+Moved to its own page: [Landing-page teardown](/docs/competitors/landing-page) — hero copy, proof bands, CTA gating, pricing transparency and section order captured verbatim across 20 vendors, plus a gap table against our own marketing page.
 
 ## Differentiators
 
@@ -377,11 +339,13 @@ Battle-card content for [Proposal](/docs/proposal) and [Sales](/docs/sales) disc
 - [WhichMIS? — Arbor takes No. 1 spot from ESS SIMS](https://www.whichmis.com/arbor-takes-no-1-spot-from-ess-sims/) and [Tes — ESS SIMS loses market dominance](https://www.tes.com/magazine/news/general/ess-sims-loses-market-dominance-school-information-systems-mis) — UK MIS share
 - [Classroom365 — Best MIS for independent schools](https://www.classroom365.co.uk/services/school-mis/independent-schools/) — iSAMS / Engage / HUBmis segmentation
 - [British Council Partner Schools](https://www.britishcouncil.org/exam/international/partner-schools) — 2,000+ schools delivering UK qualifications
-- Landing-page copy captured directly from each vendor homepage, August 2026 (see the [teardown](#landing-page-teardown) for the URLs)
+- Landing-page copy captured directly from each vendor homepage, August 2026 (see the [teardown](/docs/competitors/landing-page#sources) for the URLs)
 - [Gartner Peer Insights — K-12 Student Information Systems](https://www.gartner.com/reviews/market/k-12-education-student-information-systems) — buyer reviews, refresh before quoting
 
 ## See also
 
+- [Landing-page teardown](/docs/competitors/landing-page) — how the category writes its marketing copy
+- [Competitor FAQ](/docs/competitors/faq) — every question and fear a school brings to an evaluation
 - [Proposal](/docs/proposal) — uses these rows verbatim in the "Why us" section
 - [Leads](/docs/leads) — discovery-call references
 - [Sales](/docs/sales) — B2B process and objection handling

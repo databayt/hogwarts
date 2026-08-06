@@ -3,9 +3,11 @@
 // Copyright (c) 2025-present databayt
 // Licensed under SSPL-1.0 -- see LICENSE for details
 import { useTransition } from "react"
+import Link from "next/link"
 import { UserRole } from "@prisma/client"
 
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { generateUserStripe } from "@/components/saas-marketing/pricing/actions/generate-user-stripe"
 import { Icons } from "@/components/saas-marketing/pricing/shared/icons"
@@ -13,6 +15,8 @@ import {
   SubscriptionPlan,
   UserSubscriptionPlan,
 } from "@/components/saas-marketing/pricing/types"
+
+import { isProPlan } from "../config"
 
 interface BillingFormButtonProps {
   offer: SubscriptionPlan
@@ -48,11 +52,27 @@ export function BillingFormButton({
 
   const isAvailable = Boolean(selectedPriceId)
 
+  // No Stripe price configured for this plan — a disabled "Unavailable"
+  // button dead-ends the page, so route the intent to sales instead.
+  if (!isAvailable) {
+    return (
+      <Link
+        href={
+          pricing?.enterprise?.contactHref ||
+          "mailto:contact@databayt.org?subject=Upgrade"
+        }
+        className={cn(buttonVariants({ variant: "default" }))}
+      >
+        {pricing?.constants?.contactToUpgrade || "Contact us to upgrade"}
+      </Link>
+    )
+  }
+
   return (
     <Button
       variant={"default"}
       className=""
-      disabled={isPending || !isAvailable}
+      disabled={isPending}
       onClick={stripeSessionAction}
     >
       {isPending ? (
@@ -62,15 +82,11 @@ export function BillingFormButton({
         </>
       ) : (
         <>
-          {!isAvailable
-            ? pricing?.constants?.unavailable || "Unavailable"
-            : userOffer
-              ? pricing?.constants?.manageSubscription || "Manage Subscription"
-              : offer.title.toLowerCase() === "pro"
-                ? pricing?.constants?.getPro || "Get Pro"
-                : offer.title.toLowerCase() === "ultra"
-                  ? pricing?.constants?.getUltra || "Get Ultra"
-                  : pricing?.constants?.getPlan || "Get plan"}
+          {userOffer
+            ? pricing?.constants?.manageSubscription || "Manage Subscription"
+            : isProPlan(offer.id)
+              ? pricing?.constants?.getPro || "Get Pro"
+              : pricing?.constants?.getPlan || "Get plan"}
         </>
       )}
     </Button>
